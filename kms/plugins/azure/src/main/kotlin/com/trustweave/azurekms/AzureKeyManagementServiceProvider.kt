@@ -11,9 +11,11 @@ import com.trustweave.kms.spi.KeyManagementServiceProvider
  *
  * **Example:**
  * ```kotlin
- * val providers = ServiceLoader.load(KeyManagementServiceProvider::class.java)
- * val azureProvider = providers.find { it.name == "azure" }
- * val kms = azureProvider?.create(mapOf("vaultUrl" to "https://myvault.vault.azure.net"))
+ * import com.trustweave.kms.*
+ * 
+ * val kms = KeyManagementServices.create("azure", mapOf(
+ *     "vaultUrl" to "https://myvault.vault.azure.net"
+ * ))
  * ```
  */
 class AzureKeyManagementServiceProvider : KeyManagementServiceProvider {

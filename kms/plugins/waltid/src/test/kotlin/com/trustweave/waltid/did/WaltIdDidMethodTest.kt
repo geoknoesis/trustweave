@@ -19,7 +19,7 @@ class WaltIdKeyMethodTest {
         val document = method.createDid()
 
         assertNotNull(document.id)
-        assertTrue(document.id.startsWith("did:key:"))
+        assertTrue(document.id.value.startsWith("did:key:"))
         assertEquals(1, document.verificationMethod.size)
         assertEquals(1, document.authentication.size)
     }
@@ -45,7 +45,7 @@ class WaltIdKeyMethodTest {
         val document = method.createDid()
 
         val updated = method.updateDid(document.id) { doc ->
-            doc.copy(alsoKnownAs = listOf("did:web:example.com"))
+            doc.copy(alsoKnownAs = listOf(com.trustweave.did.identifiers.Did("did:web:example.com")))
         }
 
         assertEquals(1, updated.alsoKnownAs.size)
@@ -79,7 +79,7 @@ class WaltIdWebMethodTest {
         )
 
         assertNotNull(document.id)
-        assertEquals("did:web:example.com", document.id)
+        assertEquals("did:web:example.com", document.id.value)
         assertEquals(1, document.verificationMethod.size)
     }
 

@@ -1,6 +1,6 @@
 package com.trustweave.kms
 
-import com.trustweave.core.types.KeyId
+import com.trustweave.core.identifiers.KeyId
 
 /**
  * Represents key specifications with algorithm validation support.
@@ -11,13 +11,21 @@ import com.trustweave.core.types.KeyId
  *
  * **Example Usage:**
  * ```kotlin
- * val keyHandle = kms.getPublicKey(keyId)
- * val keySpec = KeySpec.fromKeyHandle(keyHandle)
- *
- * // Validate algorithm before signing
- * val algorithm = Algorithm.Ed25519
- * require(keySpec.supports(algorithm)) {
- *     "Key ${keySpec.id} does not support algorithm ${algorithm.name}"
+ * when (val result = kms.getPublicKey(keyId)) {
+ *     is GetPublicKeyResult.Success -> {
+ *         val keySpec = KeySpec.fromKeyHandle(result.keyHandle)
+ *         
+ *         // Validate algorithm before signing
+ *         val algorithm = Algorithm.Ed25519
+ *         if (keySpec.supports(algorithm)) {
+ *             // Proceed with signing
+ *         } else {
+ *             // Handle unsupported algorithm
+ *         }
+ *     }
+ *     is GetPublicKeyResult.Failure.KeyNotFound -> {
+ *         // Handle key not found
+ *     }
  * }
  * ```
  */
@@ -44,17 +52,6 @@ data class KeySpec(
      */
     fun supports(required: Algorithm): Boolean {
         return algorithm == required
-    }
-
-    /**
-     * Checks if this key spec supports the given algorithm by name.
-     *
-     * @param algorithmName The algorithm name to check
-     * @return true if the key supports the algorithm, false otherwise
-     */
-    fun supports(algorithmName: String): Boolean {
-        val alg = Algorithm.parse(algorithmName) ?: return false
-        return supports(alg)
     }
 
     /**
@@ -86,17 +83,6 @@ data class KeySpec(
                     "Cannot parse algorithm '${keyHandle.algorithm}' from key handle for key: ${keyHandle.id.value}"
                 )
             return KeySpec(keyHandle.id, algorithm)
-        }
-
-        /**
-         * Creates a KeySpec from a key ID and algorithm.
-         *
-         * @param keyId The key identifier
-         * @param algorithm The algorithm
-         * @return A KeySpec instance
-         */
-        fun from(keyId: KeyId, algorithm: Algorithm): KeySpec {
-            return KeySpec(keyId, algorithm)
         }
     }
 }

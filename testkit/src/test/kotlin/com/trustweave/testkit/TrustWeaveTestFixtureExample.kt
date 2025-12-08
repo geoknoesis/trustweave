@@ -85,7 +85,7 @@ class TrustWeaveTestFixtureExample {
                 val (provenanceArtifact, provenanceDigest) = TestDataBuilders.createProvenanceArtifact(
                     id = "provenance-1",
                     activity = "data-collection",
-                    agent = issuerDoc.id
+                    agent = issuerDoc.id.value
                 )
 
                 // Create Linkset
@@ -109,7 +109,7 @@ class TrustWeaveTestFixtureExample {
                     put("linkset", linkset)
                 }
                 val vc = TestDataBuilders.buildVc(
-                    issuerDid = issuerDoc.id,
+                    issuerDid = issuerDoc.id.value,
                     subject = vcSubject,
                     digestMultibase = DigestUtils.sha256DigestMultibase(vcSubject)
                 )

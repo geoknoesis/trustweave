@@ -1,6 +1,6 @@
 package com.trustweave.did.registry
 
-import com.trustweave.did.Did
+import com.trustweave.did.identifiers.Did
 import com.trustweave.did.DidMethod
 import com.trustweave.did.exception.DidException
 import com.trustweave.did.resolver.DidResolutionResult
@@ -32,13 +32,13 @@ class DefaultDidMethodRegistry : DidMethodRegistry {
     override fun getAllMethods(): Map<String, DidMethod> = HashMap(methods)
 
     override suspend fun resolve(did: String): DidResolutionResult {
-        val parsed = Did.parse(did)
+        val parsed = Did(did)
         val method = get(parsed.method)
             ?: throw DidException.DidMethodNotRegistered(
                 method = parsed.method,
                 availableMethods = getAllMethodNames()
             )
-        return method.resolveDid(did)
+        return method.resolveDid(parsed)
     }
 
     override fun unregister(methodName: String): Boolean = methods.remove(methodName) != null

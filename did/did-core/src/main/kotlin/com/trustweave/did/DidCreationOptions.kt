@@ -1,5 +1,7 @@
 package com.trustweave.did
 
+import com.trustweave.did.model.DidDocument
+
 /**
  * Type-safe options for DID creation.
  *
@@ -42,79 +44,6 @@ data class DidCreationOptions(
         }
     }
 
-    /**
-     * Supported cryptographic algorithms for DID key generation.
-     */
-    enum class KeyAlgorithm(val algorithmName: String) {
-        /** Ed25519 signature algorithm (recommended) */
-        ED25519("Ed25519"),
-
-        /** secp256k1 (Bitcoin/Ethereum curve) */
-        SECP256K1("secp256k1"),
-
-        /** P-256 (NIST curve) */
-        P256("P-256"),
-
-        /** P-384 (NIST curve) */
-        P384("P-384"),
-
-        /** P-521 (NIST curve) */
-        P521("P-521");
-
-        companion object {
-            /**
-             * Gets algorithm by name (case-insensitive).
-             *
-             * @param name Algorithm name
-             * @return KeyAlgorithm or null if not found
-             */
-            fun fromName(name: String): KeyAlgorithm? {
-                return values().firstOrNull {
-                    it.algorithmName.equals(name, ignoreCase = true)
-                }
-            }
-        }
-    }
-
-    /**
-     * Key purposes as defined in DID Core spec.
-     */
-    enum class KeyPurpose(val purposeName: String) {
-        /** For authentication (proving control of DID) */
-        AUTHENTICATION("authentication"),
-
-        /**
-         * For making assertions (issuing credentials).
-         *
-         * Note: The enum name is `ASSERTION` but the DID spec purpose name is "assertionMethod".
-         * This is intentional to keep the enum name concise while matching the spec.
-         */
-        ASSERTION("assertionMethod"),
-
-        /** For key agreement (encryption) */
-        KEY_AGREEMENT("keyAgreement"),
-
-        /** For invoking capabilities */
-        CAPABILITY_INVOCATION("capabilityInvocation"),
-
-        /** For delegating capabilities */
-        CAPABILITY_DELEGATION("capabilityDelegation");
-
-        companion object {
-            /**
-             * Gets purpose by name (case-insensitive).
-             *
-             * @param name Purpose name
-             * @return KeyPurpose or null if not found
-             */
-            fun fromName(name: String): KeyPurpose? {
-                return values().firstOrNull {
-                    it.purposeName.equals(name, ignoreCase = true)
-                }
-            }
-        }
-    }
-
     companion object {
         /**
          * Creates options from legacy Map format.
@@ -148,6 +77,7 @@ data class DidCreationOptions(
     }
 }
 
+
 /**
  * Extension function to convert DidCreationOptions to Map for backward compatibility.
  */
@@ -160,8 +90,8 @@ fun DidCreationOptions.asMap(): Map<String, Any?> = toMap()
  * ```kotlin
  * val options = didCreationOptions {
  *     algorithm = KeyAlgorithm.ED25519
- *     purpose(KeyPurpose.AUTHENTICATION)
- *     purpose(KeyPurpose.ASSERTION)
+ *     forAuthentication()
+ *     forAssertion()
  *     property("customKey", "customValue")
  * }
  * ```
@@ -181,24 +111,71 @@ suspend fun DidMethod.createDid(
 
 /**
  * Builder for DidCreationOptions.
+ *
+ * Provides a fluent API for constructing DID creation options.
+ *
+ * **Example Usage:**
+ * ```kotlin
+ * val options = didCreationOptions {
+ *     algorithm = KeyAlgorithm.ED25519
+ *     forAuthentication()
+ *     forAssertion()
+ *     forKeyAgreement()
+ * }
+ * ```
  */
 class DidCreationOptionsBuilder {
-    var algorithm: DidCreationOptions.KeyAlgorithm = DidCreationOptions.KeyAlgorithm.ED25519
-    private val purposes = mutableListOf<DidCreationOptions.KeyPurpose>()
+    var algorithm: KeyAlgorithm = KeyAlgorithm.ED25519
+    private val purposes = mutableListOf<KeyPurpose>()
     private val properties = mutableMapOf<String, Any?>()
 
     /**
      * Adds a key purpose.
      */
-    fun purpose(purpose: DidCreationOptions.KeyPurpose) {
+    fun purpose(purpose: KeyPurpose) {
         purposes.add(purpose)
     }
 
     /**
      * Adds multiple key purposes.
      */
-    fun purposes(vararg purposes: DidCreationOptions.KeyPurpose) {
+    fun purposes(vararg purposes: KeyPurpose) {
         this.purposes.addAll(purposes)
+    }
+
+    /**
+     * Adds authentication purpose (fluent method).
+     */
+    fun forAuthentication() {
+        purposes.add(KeyPurpose.AUTHENTICATION)
+    }
+
+    /**
+     * Adds assertion purpose (fluent method).
+     */
+    fun forAssertion() {
+        purposes.add(KeyPurpose.ASSERTION)
+    }
+
+    /**
+     * Adds key agreement purpose (fluent method).
+     */
+    fun forKeyAgreement() {
+        purposes.add(KeyPurpose.KEY_AGREEMENT)
+    }
+
+    /**
+     * Adds capability invocation purpose (fluent method).
+     */
+    fun forCapabilityInvocation() {
+        purposes.add(KeyPurpose.CAPABILITY_INVOCATION)
+    }
+
+    /**
+     * Adds capability delegation purpose (fluent method).
+     */
+    fun forCapabilityDelegation() {
+        purposes.add(KeyPurpose.CAPABILITY_DELEGATION)
     }
 
     /**
@@ -214,7 +191,7 @@ class DidCreationOptionsBuilder {
     fun build(): DidCreationOptions {
         return DidCreationOptions(
             algorithm = algorithm,
-            purposes = if (purposes.isEmpty()) listOf(DidCreationOptions.KeyPurpose.AUTHENTICATION) else purposes,
+            purposes = if (purposes.isEmpty()) listOf(KeyPurpose.AUTHENTICATION) else purposes,
             additionalProperties = properties
         )
     }

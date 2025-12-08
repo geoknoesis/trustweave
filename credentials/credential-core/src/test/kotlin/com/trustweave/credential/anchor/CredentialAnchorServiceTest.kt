@@ -1,10 +1,11 @@
 package com.trustweave.credential.anchor
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import kotlinx.datetime.Clock
 
 /**
  * Comprehensive tests for CredentialAnchorService API.
@@ -19,7 +20,7 @@ class CredentialAnchorServiceTest {
         val credential = createTestCredential(
             proof = com.trustweave.credential.models.Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:issuer#key-1",
                 proofPurpose = "assertionMethod"
             )
@@ -138,7 +139,7 @@ class CredentialAnchorServiceTest {
             put("id", "did:key:subject")
             put("name", "John Doe")
         },
-        issuanceDate: String = java.time.Instant.now().toString(),
+        issuanceDate: String = Clock.System.now().toString(),
         proof: com.trustweave.credential.models.Proof? = null,
         evidence: List<com.trustweave.credential.models.Evidence>? = null
     ): VerifiableCredential {

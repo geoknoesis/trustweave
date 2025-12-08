@@ -1,10 +1,9 @@
 package com.trustweave.credential.chapi.models
 
-import com.trustweave.credential.exchange.CredentialPreview
-import com.trustweave.credential.exchange.RequestedAttribute
-import com.trustweave.credential.exchange.RequestedPredicate
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.models.VerifiablePresentation
+import com.trustweave.credential.exchange.model.CredentialPreview
+import com.trustweave.credential.exchange.request.AttributeRequest
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiablePresentation
 import kotlinx.serialization.json.JsonObject
 
 /**
@@ -33,8 +32,8 @@ data class ChapiStoreResult(
 data class ChapiProofRequest(
     val requestId: String,
     val verifierDid: String,
-    val requestedAttributes: Map<String, RequestedAttribute>,
-    val requestedPredicates: Map<String, RequestedPredicate>,
+    val requestedAttributes: Map<String, AttributeRequest>,
+    val requestedPredicates: Map<String, AttributeRequest>, // Predicates are now AttributeRequest with restrictions
     val chapiMessage: JsonObject
 )
 

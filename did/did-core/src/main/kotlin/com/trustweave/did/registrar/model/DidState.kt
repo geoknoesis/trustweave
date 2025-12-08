@@ -1,6 +1,6 @@
 package com.trustweave.did.registrar.model
 
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 

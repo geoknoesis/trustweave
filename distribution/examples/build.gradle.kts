@@ -8,7 +8,7 @@ plugins {
 
 group = "com.trustweave"
 dependencies {
-    implementation(project(":credentials:credential-core"))
+    implementation(project(":credentials:credential-api"))
 
     implementation(project(":trust"))
     implementation(project(":distribution:all"))
@@ -18,6 +18,7 @@ dependencies {
     implementation(project(":testkit"))
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.datetime)
 
     // For blockchain examples
     implementation(project(":anchors:plugins:ganache"))

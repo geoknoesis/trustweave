@@ -1,6 +1,6 @@
 package com.trustweave.credential.oidc4vci.models
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.serialization.Serializable
 
 /**

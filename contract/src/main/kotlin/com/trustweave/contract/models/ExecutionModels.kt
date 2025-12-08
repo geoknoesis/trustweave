@@ -3,7 +3,7 @@ package com.trustweave.contract.models
 import com.trustweave.anchor.AnchorRef
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
-import java.time.Instant
+import kotlinx.datetime.Instant
 
 /**
  * Execution context for contract execution.

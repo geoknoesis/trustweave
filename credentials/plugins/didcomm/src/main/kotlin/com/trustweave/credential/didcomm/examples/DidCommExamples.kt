@@ -3,8 +3,10 @@ package com.trustweave.credential.didcomm.examples
 import com.trustweave.credential.didcomm.*
 import com.trustweave.credential.didcomm.protocol.*
 import com.trustweave.credential.didcomm.utils.DidCommUtils
-import com.trustweave.did.DidDocument
-import com.trustweave.did.VerificationMethod
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.VerificationMethod
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
 import com.trustweave.kms.KeyManagementService
 import kotlinx.coroutines.runBlocking
 
@@ -22,12 +24,14 @@ object DidCommExamples {
         val holderDid = "did:key:holder"
 
         // Mock DID resolution
-        val resolveDid: suspend (String) -> DidDocument? = { did ->
+        val resolveDid: suspend (String) -> DidDocument? = { didStr ->
+            val did = Did(didStr)
+            val vmId = VerificationMethodId.parse("$didStr#key-1", did)
             DidDocument(
                 id = did,
                 verificationMethod = listOf(
                     VerificationMethod(
-                        id = "$did#key-1",
+                        id = vmId,
                         type = "Ed25519VerificationKey2020",
                         controller = did,
                         publicKeyJwk = mapOf(
@@ -37,7 +41,7 @@ object DidCommExamples {
                         )
                     )
                 ),
-                keyAgreement = listOf("$did#key-1")
+                keyAgreement = listOf(vmId)
             )
         }
 
@@ -45,10 +49,10 @@ object DidCommExamples {
         val didcomm = DidCommFactory.createInMemoryService(kms, resolveDid)
 
         // Step 1: Issuer creates credential offer
-        val preview = com.trustweave.credential.exchange.CredentialPreview(
+        val preview = com.trustweave.credential.exchange.model.CredentialPreview(
             attributes = listOf(
-                com.trustweave.credential.exchange.CredentialAttribute("name", "Alice"),
-                com.trustweave.credential.exchange.CredentialAttribute("email", "alice@example.com")
+                com.trustweave.credential.exchange.model.CredentialAttribute("name", "Alice"),
+                com.trustweave.credential.exchange.model.CredentialAttribute("email", "alice@example.com")
             )
         )
 
@@ -98,18 +102,20 @@ object DidCommExamples {
         val aliceDid = "did:key:alice"
         val bobDid = "did:key:bob"
 
-        val resolveDid: suspend (String) -> DidDocument? = { did ->
+        val resolveDid: suspend (String) -> DidDocument? = { didStr ->
+            val did = Did(didStr)
+            val vmId = VerificationMethodId.parse("$didStr#key-1", did)
             DidDocument(
                 id = did,
                 verificationMethod = listOf(
                     VerificationMethod(
-                        id = "$did#key-1",
+                        id = vmId,
                         type = "Ed25519VerificationKey2020",
                         controller = did,
                         publicKeyJwk = mapOf("kty" to "OKP", "crv" to "Ed25519", "x" to "test")
                     )
                 ),
-                keyAgreement = listOf("$did#key-1")
+                keyAgreement = listOf(vmId)
             )
         }
 
@@ -146,17 +152,19 @@ object DidCommExamples {
      * Example: Finding key agreement keys from DID documents.
      */
     fun keyAgreementExample() = runBlocking {
+        val did = Did("did:key:example")
+        val vmId = VerificationMethodId.parse("did:key:example#key-1", did)
         val document = DidDocument(
-            id = "did:key:example",
+            id = did,
             verificationMethod = listOf(
                 VerificationMethod(
-                    id = "did:key:example#key-1",
+                    id = vmId,
                     type = "X25519KeyAgreementKey2020",
-                    controller = "did:key:example",
+                    controller = did,
                     publicKeyJwk = mapOf("kty" to "OKP", "crv" to "X25519", "x" to "key")
                 )
             ),
-            keyAgreement = listOf("did:key:example#key-1")
+            keyAgreement = listOf(vmId)
         )
 
         // Find key agreement key

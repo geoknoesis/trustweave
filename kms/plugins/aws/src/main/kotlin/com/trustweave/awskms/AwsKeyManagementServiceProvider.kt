@@ -2,6 +2,7 @@ package com.trustweave.awskms
 
 import com.trustweave.kms.Algorithm
 import com.trustweave.kms.KeyManagementService
+import com.trustweave.kms.KmsCreationOptions
 import com.trustweave.kms.spi.KeyManagementServiceProvider
 
 /**
@@ -11,9 +12,12 @@ import com.trustweave.kms.spi.KeyManagementServiceProvider
  *
  * **Example:**
  * ```kotlin
- * val providers = ServiceLoader.load(KeyManagementServiceProvider::class.java)
- * val awsProvider = providers.find { it.name == "aws" }
- * val kms = awsProvider?.create(mapOf("region" to "us-east-1"))
+ * import com.trustweave.kms.*
+ * import com.trustweave.awskms.awsKmsOptions
+ * 
+ * val kms = KeyManagementServices.create("aws", awsKmsOptions {
+ *     region = "us-east-1"
+ * })
  * ```
  */
 class AwsKeyManagementServiceProvider : KeyManagementServiceProvider {
@@ -65,6 +69,12 @@ class AwsKeyManagementServiceProvider : KeyManagementServiceProvider {
         }
 
         return AwsKeyManagementService(config)
+    }
+
+    override fun create(options: KmsCreationOptions): KeyManagementService {
+        // Convert typed options to map, preserving additionalProperties
+        val optionsMap = options.toMap()
+        return create(optionsMap)
     }
 }
 

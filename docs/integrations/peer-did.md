@@ -104,18 +104,31 @@ println("Created: ${document.id}") // did:peer:2...
 ### Resolving a did:peer
 
 ```kotlin
-val result = method.resolveDid("did:peer:2...")
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.resolver.DidResolutionResult
 
-result.document?.let { doc ->
-    println("Resolved: ${doc.id}")
-    println("Verification methods: ${doc.verificationMethod.size}")
-} ?: println("Not found")
+val did = Did("did:peer:2...")
+val result = method.resolveDid(did)
+
+when (result) {
+    is DidResolutionResult.Success -> {
+        println("Resolved: ${result.document.id}")
+        println("Verification methods: ${result.document.verificationMethod.size}")
+    }
+    is DidResolutionResult.Failure.NotFound -> {
+        println("DID not found: ${result.did.value}")
+    }
+    else -> println("Resolution failed")
+}
 ```
 
 ### Updating a did:peer
 
 ```kotlin
-val document = method.updateDid("did:peer:2...") { currentDoc ->
+import com.trustweave.did.identifiers.Did
+
+val did = Did("did:peer:2...")
+val document = method.updateDid(did) { currentDoc ->
     currentDoc.copy(
         service = currentDoc.service + Service(
             id = "${currentDoc.id}#didcomm",
@@ -129,7 +142,10 @@ val document = method.updateDid("did:peer:2...") { currentDoc ->
 ### Deactivating a did:peer
 
 ```kotlin
-val deactivated = method.deactivateDid("did:peer:2...")
+import com.trustweave.did.identifiers.Did
+
+val did = Did("did:peer:2...")
+val deactivated = method.deactivateDid(did)
 println("Deactivated: $deactivated")
 ```
 

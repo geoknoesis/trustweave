@@ -1,6 +1,6 @@
 package com.trustweave.trust.dsl
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.trust.dsl.TrustWeaveConfig
 import com.trustweave.trust.dsl.trustWeave
@@ -10,7 +10,8 @@ import com.trustweave.trust.dsl.credential.credential
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 import kotlin.test.*
 
 /**
@@ -33,7 +34,7 @@ class VerificationDslTest {
                 custom(kmsRef)
                 // Provide signer function directly to avoid reflection
                 signer { data, keyId ->
-                    kmsRef.sign(com.trustweave.core.types.KeyId(keyId), data)
+                    kmsRef.sign(com.trustweave.core.identifiers.KeyId(keyId), data)
                 }
             }
 
@@ -54,7 +55,7 @@ class VerificationDslTest {
                 id("did:key:subject")
                 "name" to "John Doe"
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val result = trustWeave.verify {
@@ -73,7 +74,7 @@ class VerificationDslTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val result = trustWeave.verify {
@@ -94,7 +95,7 @@ class VerificationDslTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val result = trustWeave.verify {
@@ -114,7 +115,7 @@ class VerificationDslTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val result = trustWeave.verify {
@@ -134,7 +135,7 @@ class VerificationDslTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val result = trustWeave.verify {
@@ -154,7 +155,7 @@ class VerificationDslTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val result = trustWeave.verify {
@@ -174,7 +175,7 @@ class VerificationDslTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val result = trustWeave.verify {

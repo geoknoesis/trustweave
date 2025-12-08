@@ -1,8 +1,8 @@
 package com.trustweave.did.resolver
 
-import com.trustweave.core.types.Did
-import com.trustweave.did.DidDocument
-import com.trustweave.did.DidDocumentMetadata
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.DidDocumentMetadata
 
 /**
  * Result of DID resolution following W3C DID Core specification.

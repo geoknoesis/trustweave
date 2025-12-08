@@ -1,26 +1,38 @@
 package com.trustweave.kms.thalesluna
 
-import com.trustweave.core.exception.TrustWeaveException
-import com.trustweave.core.types.KeyId
+import com.trustweave.core.identifiers.KeyId
 import com.trustweave.kms.Algorithm
-import com.trustweave.kms.KeyHandle
 import com.trustweave.kms.KeyManagementService
-import com.trustweave.kms.KeyNotFoundException
-import com.trustweave.kms.UnsupportedAlgorithmException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.trustweave.kms.results.DeleteKeyResult
+import com.trustweave.kms.results.GenerateKeyResult
+import com.trustweave.kms.results.GetPublicKeyResult
+import com.trustweave.kms.results.SignResult
 
 /**
  * Thales Luna Network HSM implementation of KeyManagementService.
  *
- * Supports all Thales Luna HSM-compatible algorithms.
+ * **⚠️ EXPERIMENTAL - NOT YET IMPLEMENTED ⚠️**
  *
- * **Note:** This is a placeholder implementation. Thales Luna HSM integration
- * requires access to Thales Luna SDK and HSM access.
+ * This plugin is a placeholder and will throw [UnsupportedOperationException] if used.
+ * Thales Luna HSM integration requires access to Thales Luna SDK and HSM access.
+ *
+ * **Status**: Implementation pending.
+ *
+ * **Supported Algorithms** (when implemented):
+ * - Ed25519, secp256k1, P-256, P-384, P-521
+ * - RSA-2048, RSA-3072, RSA-4096
  */
 class ThalesLunaKeyManagementService(
     private val config: ThalesLunaKmsConfig
 ) : KeyManagementService {
+
+    init {
+        throw UnsupportedOperationException(
+            "Thales Luna KMS plugin is not yet implemented. " +
+            "This plugin requires Thales Luna SDK and HSM access. " +
+            "See https://github.com/trustweave/trustweave/issues for implementation status."
+        )
+    }
 
     companion object {
         val SUPPORTED_ALGORITHMS = setOf(
@@ -40,40 +52,24 @@ class ThalesLunaKeyManagementService(
     override suspend fun generateKey(
         algorithm: Algorithm,
         options: Map<String, Any?>
-    ): KeyHandle = withContext(Dispatchers.IO) {
-        if (!supportsAlgorithm(algorithm)) {
-            throw UnsupportedAlgorithmException(
-                "Algorithm '${algorithm.name}' is not supported by Thales Luna HSM. " +
-                "Supported: ${SUPPORTED_ALGORITHMS.joinToString(", ") { it.name }}"
-            )
-        }
-        // TODO: Implement Thales Luna HSM API integration
-        throw TrustWeaveException.Unknown(
-            message = "Thales Luna HSM integration not yet implemented"
-        )
+    ): GenerateKeyResult {
+        throw UnsupportedOperationException("Thales Luna KMS plugin is not yet implemented")
     }
 
-    override suspend fun getPublicKey(keyId: KeyId): KeyHandle = withContext(Dispatchers.IO) {
-        // TODO: Implement Thales Luna HSM API integration
-        throw TrustWeaveException.Unknown(
-            message = "Thales Luna HSM integration not yet implemented"
-        )
+    override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult {
+        throw UnsupportedOperationException("Thales Luna KMS plugin is not yet implemented")
     }
 
     override suspend fun sign(
         keyId: KeyId,
         data: ByteArray,
         algorithm: Algorithm?
-    ): ByteArray = withContext(Dispatchers.IO) {
-        // TODO: Implement Thales Luna HSM API integration
-        throw TrustWeaveException.Unknown(
-            message = "Thales Luna HSM integration not yet implemented"
-        )
+    ): SignResult {
+        throw UnsupportedOperationException("Thales Luna KMS plugin is not yet implemented")
     }
 
-    override suspend fun deleteKey(keyId: KeyId): Boolean = withContext(Dispatchers.IO) {
-        // TODO: Implement Thales Luna HSM API integration
-        false
+    override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult {
+        throw UnsupportedOperationException("Thales Luna KMS plugin is not yet implemented")
     }
 }
 

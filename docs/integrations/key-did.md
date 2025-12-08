@@ -97,13 +97,22 @@ println("Created: ${document.id}") // did:key:z6Mk...
 ### Resolving a did:key
 
 ```kotlin
-// Resolve DID (derived from public key)
-val result = method.resolveDid("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
+import com.trustweave.did.identifiers.Did
 
-result.document?.let { doc ->
-    println("Resolved: ${doc.id}")
-    println("Verification methods: ${doc.verificationMethod.size}")
-} ?: println("Not found")
+// Resolve DID (derived from public key)
+val did = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
+val result = method.resolveDid(did)
+
+when (result) {
+    is DidResolutionResult.Success -> {
+        println("Resolved: ${result.document.id}")
+        println("Verification methods: ${result.document.verificationMethod.size}")
+    }
+    is DidResolutionResult.Failure.NotFound -> {
+        println("DID not found: ${result.did.value}")
+    }
+    else -> println("Resolution failed")
+}
 ```
 
 ### Using Different Algorithms

@@ -2,10 +2,14 @@ package com.trustweave.did.base
 
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.DidDocumentMetadata
 import com.trustweave.kms.KeyManagementService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -33,7 +37,7 @@ import java.util.concurrent.ConcurrentHashMap
  *         // Implement method-specific creation logic
  *     }
  *
- *     override suspend fun resolveDid(did: String): DidResolutionResult {
+ *     override suspend fun resolveDid(did: Did): DidResolutionResult {
  *         // Implement method-specific resolution logic
  *     }
  * }
@@ -61,12 +65,13 @@ abstract class AbstractDidMethod(
      * Subclasses can override for methods that require external updates.
      */
     override suspend fun updateDid(
-        did: String,
+        did: Did,
         updater: (DidDocument) -> DidDocument
     ): DidDocument = withContext(Dispatchers.IO) {
         validateDidFormat(did)
 
-        val current = documents[did]
+        val didString = did.value
+        val current = documents[didString]
             ?: throw com.trustweave.did.exception.DidException.DidNotFound(
                 did = did,
                 availableMethods = listOf(method)
@@ -75,9 +80,9 @@ abstract class AbstractDidMethod(
         val updated = updater(current)
 
         // Update document and metadata
-        documents[did] = updated
-        val now = Instant.now()
-        documentMetadata[did] = (documentMetadata[did] ?: DidDocumentMetadata(created = now))
+        documents[didString] = updated
+        val now = Clock.System.now()
+        documentMetadata[didString] = (documentMetadata[didString] ?: DidDocumentMetadata(created = now))
             .copy(updated = now)
 
         updated
@@ -88,11 +93,12 @@ abstract class AbstractDidMethod(
      *
      * Subclasses can override for methods that require external deactivation.
      */
-    override suspend fun deactivateDid(did: String): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun deactivateDid(did: Did): Boolean = withContext(Dispatchers.IO) {
         validateDidFormat(did)
 
-        val removed = documents.remove(did) != null
-        documentMetadata.remove(did)
+        val didString = did.value
+        val removed = documents.remove(didString) != null
+        documentMetadata.remove(didString)
         removed
     }
 
@@ -102,9 +108,12 @@ abstract class AbstractDidMethod(
      * @param did The DID to validate
      * @throws IllegalArgumentException if the DID format is invalid
      */
-    protected fun validateDidFormat(did: String) {
-        if (!did.startsWith("did:$method:")) {
-            throw IllegalArgumentException("Invalid DID format for method $method: expected did:$method:*, got $did")
+    protected fun validateDidFormat(did: Did) {
+        if (!did.value.startsWith("did:$method:")) {
+            throw IllegalArgumentException("Invalid DID format for method $method: expected did:$method:*, got ${did.value}")
+        }
+        if (did.method != method) {
+            throw IllegalArgumentException("DID method mismatch: expected $method, got ${did.method}")
         }
     }
 
@@ -113,14 +122,19 @@ abstract class AbstractDidMethod(
      *
      * Useful for methods that need to cache resolved documents.
      *
-     * @param did The DID identifier
+     * @param did The DID identifier (can be Did object or String)
      * @param document The DID document
      * @param created Optional creation timestamp (defaults to now)
      */
-    protected fun storeDocument(did: String, document: DidDocument, created: Instant? = null) {
-        documents[did] = document
-        val now = created ?: Instant.now()
-        documentMetadata[did] = DidDocumentMetadata(
+    protected fun storeDocument(did: Any, document: DidDocument, created: Instant? = null) {
+        val didString = when (did) {
+            is Did -> did.value
+            is String -> did
+            else -> throw IllegalArgumentException("did must be Did or String, got ${did::class}")
+        }
+        documents[didString] = document
+        val now = created ?: Clock.System.now()
+        documentMetadata[didString] = DidDocumentMetadata(
             created = now,
             updated = now
         )
@@ -129,21 +143,31 @@ abstract class AbstractDidMethod(
     /**
      * Gets a stored DID document.
      *
-     * @param did The DID identifier
+     * @param did The DID identifier (can be Did object or String)
      * @return The DID document or null if not found
      */
-    protected fun getStoredDocument(did: String): DidDocument? {
-        return documents[did]
+    protected fun getStoredDocument(did: Any): DidDocument? {
+        val didString = when (did) {
+            is Did -> did.value
+            is String -> did
+            else -> throw IllegalArgumentException("did must be Did or String, got ${did::class}")
+        }
+        return documents[didString]
     }
 
     /**
      * Gets document metadata.
      *
-     * @param did The DID identifier
+     * @param did The DID identifier (can be Did object or String)
      * @return The document metadata or null if not found
      */
-    protected fun getDocumentMetadata(did: String): DidDocumentMetadata? {
-        return documentMetadata[did]
+    protected fun getDocumentMetadata(did: Any): DidDocumentMetadata? {
+        val didString = when (did) {
+            is Did -> did.value
+            is String -> did
+            else -> throw IllegalArgumentException("did must be Did or String, got ${did::class}")
+        }
+        return documentMetadata[didString]
     }
 
     /**

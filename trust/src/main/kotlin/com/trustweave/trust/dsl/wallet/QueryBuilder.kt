@@ -1,6 +1,6 @@
 package com.trustweave.trust.dsl.wallet
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.wallet.CredentialOrganization
 import com.trustweave.wallet.CredentialQueryBuilder
 import com.trustweave.wallet.Wallet

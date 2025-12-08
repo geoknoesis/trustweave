@@ -1,7 +1,8 @@
 package com.trustweave.credential.schema
 
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.SchemaFormat
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.SchemaFormat
+import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -352,7 +353,7 @@ class ShaclValidator : SchemaValidator {
             "xsd:dateTime" -> {
                 if (value is kotlinx.serialization.json.JsonPrimitive && value.isString) {
                     try {
-                        java.time.Instant.parse(value.content)
+                        Instant.parse(value.content)
                     } catch (e: Exception) {
                         errors.add(SchemaValidationError(
                             path = "/credentialSubject/$fieldName",

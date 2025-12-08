@@ -1,7 +1,8 @@
 package com.trustweave.wallet
 
-import com.trustweave.credential.models.VerifiableCredential
-import java.time.Instant
+import com.trustweave.credential.model.vc.VerifiableCredential
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 
 /**
  * Unified wallet interface.
@@ -28,7 +29,7 @@ import java.time.Instant
  *     val presentation = wallet.createPresentation(
  *         credentialIds = listOf(id),
  *         holderDid = "did:key:holder",
- *         options = PresentationOptions(...)
+ *         options = proofOptions { ... }
  *     )
  * }
  *
@@ -105,30 +106,20 @@ interface Wallet : CredentialStorage {
      */
     suspend fun getStatistics(): WalletStatistics {
         val credentials = list()
-        val now = Instant.now()
+        val now = Clock.System.now()
 
         return WalletStatistics(
             totalCredentials = credentials.size,
             validCredentials = credentials.count { credential ->
                 credential.proof != null &&
                 (credential.expirationDate?.let { expirationDate ->
-                    try {
-                        val expiration = Instant.parse(expirationDate)
-                        now.isBefore(expiration)
-                    } catch (e: Exception) {
-                        false
-                    }
+                    now < expirationDate
                 } ?: true) &&
                 credential.credentialStatus == null
             },
             expiredCredentials = credentials.count { credential ->
                 credential.expirationDate?.let { expirationDate ->
-                    try {
-                        val expiration = Instant.parse(expirationDate)
-                        now.isAfter(expiration)
-                    } catch (e: Exception) {
-                        false
-                    }
+                    now > expirationDate
                 } ?: false
             },
             revokedCredentials = credentials.count { it.credentialStatus != null },

@@ -1,11 +1,12 @@
 package com.trustweave.trust.dsl.credential
 
-import com.trustweave.credential.PresentationOptions
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.models.VerifiablePresentation
-import com.trustweave.credential.presentation.PresentationService
-import com.trustweave.credential.proof.ProofGenerator
-import com.trustweave.credential.verifier.CredentialVerifier
+import com.trustweave.credential.CredentialService
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiablePresentation
+import com.trustweave.credential.requests.PresentationRequest
+import com.trustweave.credential.proof.ProofOptions
+import com.trustweave.credential.proof.ProofPurpose
+import com.trustweave.did.identifiers.Did
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -29,16 +30,14 @@ import kotlinx.coroutines.withContext
  * ```
  */
 class PresentationBuilder(
-    private val presentationService: PresentationService = PresentationService()
+    private val credentialService: CredentialService
 ) {
     private val credentials = mutableListOf<VerifiableCredential>()
-    private var holderDid: String? = null
-    private var proofType: String = "Ed25519Signature2020"
-    private var keyId: String? = null
+    private var holderDid: Did? = null
     private var challenge: String? = null
     private var domain: String? = null
-    private var selectiveDisclosure: Boolean = false
-    private val disclosedFields = mutableListOf<String>()
+    private var verificationMethod: String? = null
+    private val disclosedClaims = mutableSetOf<String>()
 
     /**
      * Add credentials to presentation.
@@ -58,28 +57,21 @@ class PresentationBuilder(
      * Set holder DID.
      */
     fun holder(did: String) {
+        this.holderDid = Did(did)
+    }
+
+    /**
+     * Set holder DID.
+     */
+    fun holder(did: Did) {
         this.holderDid = did
     }
 
     /**
-     * Set proof type.
+     * Set verification method for signing.
      */
-    fun proofType(type: String) {
-        this.proofType = type
-    }
-
-    /**
-     * Set key ID for signing.
-     */
-    /**
-     * Set key ID for signing the presentation.
-     * 
-     * @param keyId The key ID (can be just the fragment or full key ID)
-     * @throws IllegalArgumentException if keyId is blank
-     */
-    fun keyId(keyId: String) {
-        require(keyId.isNotBlank()) { "Key ID cannot be blank" }
-        this.keyId = keyId
+    fun verificationMethod(verificationMethod: String) {
+        this.verificationMethod = verificationMethod
     }
 
     /**
@@ -100,10 +92,9 @@ class PresentationBuilder(
      * Configure selective disclosure.
      */
     fun selectiveDisclosure(block: SelectiveDisclosureBuilder.() -> Unit) {
-        selectiveDisclosure = true
         val builder = SelectiveDisclosureBuilder()
         builder.block()
-        disclosedFields.addAll(builder.revealedFields)
+        disclosedClaims.addAll(builder.revealedFields)
     }
 
     /**
@@ -120,20 +111,20 @@ class PresentationBuilder(
             )
         }
 
-        val options = PresentationOptions(
-            holderDid = holder,
-            proofType = proofType,
-            keyId = keyId,
-            challenge = challenge,
-            domain = domain,
-            selectiveDisclosure = selectiveDisclosure,
-            disclosedFields = disclosedFields
+        val request = PresentationRequest(
+            disclosedClaims = if (disclosedClaims.isNotEmpty()) disclosedClaims else null,
+            predicates = emptyList(),
+            proofOptions = ProofOptions(
+                purpose = ProofPurpose.Authentication,
+                challenge = challenge,
+                domain = domain,
+                verificationMethod = verificationMethod
+            )
         )
 
-        presentationService.createPresentation(
+        credentialService.createPresentation(
             credentials = credentials,
-            holderDid = holder,
-            options = options
+            request = request
         )
     }
 }
@@ -174,20 +165,10 @@ class SelectiveDisclosureBuilder {
 /**
  * DSL function to create a presentation.
  */
-suspend fun presentation(block: PresentationBuilder.() -> Unit): VerifiablePresentation {
-    val builder = PresentationBuilder()
-    builder.block()
-    return builder.build()
-}
-
-/**
- * DSL function to create a presentation with a custom [PresentationService].
- */
-suspend fun presentation(
-    service: PresentationService,
-    block: PresentationBuilder.() -> Unit
-): VerifiablePresentation {
-    val builder = PresentationBuilder(service)
+suspend fun CredentialDslProvider.presentation(block: PresentationBuilder.() -> Unit): VerifiablePresentation {
+    val credentialService = getIssuer() as? CredentialService
+        ?: throw IllegalStateException("CredentialService is not available. Configure it in TrustWeave.build { ... }")
+    val builder = PresentationBuilder(credentialService)
     builder.block()
     return builder.build()
 }

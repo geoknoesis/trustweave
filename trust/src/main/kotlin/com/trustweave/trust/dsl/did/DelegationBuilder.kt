@@ -2,6 +2,7 @@ package com.trustweave.trust.dsl.did
 
 import com.trustweave.did.verifier.DidDocumentDelegationVerifier
 import com.trustweave.did.verifier.DelegationChainResult
+import com.trustweave.did.identifiers.Did
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -42,17 +43,19 @@ class DelegationBuilder(private val provider: DidDslProvider) {
     }
 
     suspend fun verify(): DelegationChainResult = withContext(Dispatchers.IO) {
-        val delegator = delegatorDid ?: throw IllegalStateException("Delegator DID is required. Use from(\"did:key:...\")")
-        val delegate = delegateDid ?: throw IllegalStateException("Delegate DID is required. Use to(\"did:key:...\")")
+        val delegatorStr = delegatorDid ?: throw IllegalStateException("Delegator DID is required. Use from(\"did:key:...\")")
+        val delegateStr = delegateDid ?: throw IllegalStateException("Delegate DID is required. Use to(\"did:key:...\")")
+        val delegator = Did(delegatorStr)
+        val delegate = Did(delegateStr)
         return@withContext verifier.verify(delegator, delegate)
     }
 
     suspend fun verifyChain(delegatorDid: String, delegateDid: String): DelegationChainResult {
-        return verifier.verify(delegatorDid, delegateDid)
+        return verifier.verify(Did(delegatorDid), Did(delegateDid))
     }
 
     suspend fun verifyChain(chain: List<String>): DelegationChainResult {
-        return verifier.verifyChain(chain)
+        return verifier.verifyChain(chain.map { Did(it) })
     }
 }
 

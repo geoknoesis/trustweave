@@ -7,7 +7,7 @@ description = "TrustWeave All-in-One Module"
 
 dependencies {
     // Include all core modules
-    api(project(":credentials:credential-core"))
+    api(project(":credentials:credential-api"))
     api(project(":kms:kms-core"))
     api(project(":did:did-core"))
     api(project(":anchors:anchor-core"))

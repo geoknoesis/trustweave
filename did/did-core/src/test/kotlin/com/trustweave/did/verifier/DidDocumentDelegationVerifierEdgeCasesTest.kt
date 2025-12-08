@@ -2,9 +2,11 @@
 
 package com.trustweave.did.verifier
 
-import com.trustweave.did.DidDocument
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.VerificationMethod
 import com.trustweave.did.resolver.DidResolutionResult
-import com.trustweave.did.VerificationMethod
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -27,19 +29,19 @@ class DidDocumentDelegationVerifierEdgeCasesTest {
             when (did) {
                 delegatorDid -> DidResolutionResult.Success(
                     document = DidDocument(
-                        id = delegatorDid,
+                        id = Did(delegatorDid),
                         capabilityDelegation = emptyList()
                     )
                 )
                 delegateDid -> DidResolutionResult.Success(
-                    document = DidDocument(id = delegateDid)
+                    document = DidDocument(id = Did(delegateDid))
                 )
                 else -> null
             }
         }
 
         val verifier = DidDocumentDelegationVerifier(resolveDid)
-        val result = verifier.verify(delegatorDid, delegateDid)
+        val result = verifier.verify(Did(delegatorDid), Did(delegateDid))
 
         assertFalse(result.valid)
         assertTrue(result.errors.any { it.contains("capabilityDelegation") })
@@ -54,25 +56,25 @@ class DidDocumentDelegationVerifierEdgeCasesTest {
             when (did) {
                 delegatorDid -> DidResolutionResult.Success(
                     document = DidDocument(
-                        id = delegatorDid,
-                        capabilityDelegation = listOf("$delegateDid#key-1"),
+                        id = Did(delegatorDid),
+                        capabilityDelegation = listOf(VerificationMethodId.parse("$delegateDid#key-1")),
                         verificationMethod = listOf(
                             VerificationMethod(
-                                id = "$delegateDid#key-1",
+                                id = VerificationMethodId.parse("$delegateDid#key-1"),
                                 type = "Ed25519VerificationKey2020",
-                                controller = delegateDid
+                                controller = Did(delegateDid)
                             )
                         )
                     )
                 )
                 delegateDid -> DidResolutionResult.Success(
                     document = DidDocument(
-                        id = delegateDid,
+                        id = Did(delegateDid),
                         verificationMethod = listOf(
                             VerificationMethod(
-                                id = "$delegateDid#key-1",
+                                id = VerificationMethodId.parse("$delegateDid#key-1"),
                                 type = "Ed25519VerificationKey2020",
-                                controller = delegateDid
+                                controller = Did(delegateDid)
                             )
                         )
                     )
@@ -82,7 +84,7 @@ class DidDocumentDelegationVerifierEdgeCasesTest {
         }
 
         val verifier = DidDocumentDelegationVerifier(resolveDid)
-        val result = verifier.verify(delegatorDid, delegateDid)
+        val result = verifier.verify(Did(delegatorDid), Did(delegateDid))
 
         assertTrue(result.valid)
     }
@@ -96,19 +98,19 @@ class DidDocumentDelegationVerifierEdgeCasesTest {
             when (did) {
                 delegatorDid -> DidResolutionResult.Success(
                     document = DidDocument(
-                        id = delegatorDid,
-                        capabilityDelegation = listOf("#key-1")
+                        id = Did(delegatorDid),
+                        capabilityDelegation = listOf(VerificationMethodId.parse("#key-1"))
                     )
                 )
                 delegateDid -> DidResolutionResult.Success(
-                    document = DidDocument(id = delegateDid)
+                    document = DidDocument(id = Did(delegateDid))
                 )
                 else -> null
             }
         }
 
         val verifier = DidDocumentDelegationVerifier(resolveDid)
-        val result = verifier.verify(delegatorDid, delegateDid)
+        val result = verifier.verify(Did(delegatorDid), Did(delegateDid))
 
         // Relative reference may not match delegate DID
         assertNotNull(result)
@@ -119,7 +121,7 @@ class DidDocumentDelegationVerifierEdgeCasesTest {
         val resolveDid: suspend (String) -> DidResolutionResult? = { null }
 
         val verifier = DidDocumentDelegationVerifier(resolveDid)
-        val result = verifier.verifyChain(listOf("did:key:single"))
+        val result = verifier.verifyChain(listOf(Did("did:key:single")))
 
         assertFalse(result.valid)
         assertTrue(result.errors.any { it.contains("at least 2") })
@@ -144,15 +146,15 @@ class DidDocumentDelegationVerifierEdgeCasesTest {
             if (d == did) {
                 DidResolutionResult.Success(
                     document = DidDocument(
-                        id = did,
-                        capabilityDelegation = listOf("$did#key-1")
+                        id = Did(did),
+                        capabilityDelegation = listOf(VerificationMethodId.parse("$did#key-1"))
                     )
                 )
             } else null
         }
 
         val verifier = DidDocumentDelegationVerifier(resolveDid)
-        val result = verifier.verify(did, did)
+        val result = verifier.verify(Did(did), Did(did))
 
         // Self-delegation should be valid if in capabilityDelegation
         assertTrue(result.valid)
@@ -188,7 +190,7 @@ class DidDocumentDelegationVerifierEdgeCasesTest {
     fun `test verify delegation chain with boolean resolver returns invalid`() = runBlocking {
         val resolveDid: suspend (String) -> DidResolutionResult? = { _: String -> null }
         val verifier = DidDocumentDelegationVerifier(resolveDid)
-        val result = verifier.verify("did:key:delegator", "did:key:delegate")
+        val result = verifier.verify(Did("did:key:delegator"), Did("did:key:delegate"))
 
         assertFalse(result.valid)
         assertTrue(result.errors.any { error -> error.contains("DID document", ignoreCase = true) || error.contains("Failed to resolve", ignoreCase = true) })

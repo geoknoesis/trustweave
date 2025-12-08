@@ -1,6 +1,8 @@
 package com.trustweave.azurekms
 
 import com.trustweave.kms.Algorithm
+import com.trustweave.kms.JwkKeys
+import com.trustweave.kms.JwkKeyTypes
 import com.azure.security.keyvault.keys.models.KeyType
 import com.azure.security.keyvault.keys.models.KeyCurveName
 import com.azure.security.keyvault.keys.cryptography.models.SignatureAlgorithm
@@ -86,13 +88,8 @@ object AlgorithmMapping {
                     val params = publicKey.params
                     val point = publicKey.w
 
-                    val curveName = when (algorithm) {
-                        is Algorithm.Secp256k1 -> "secp256k1"
-                        is Algorithm.P256 -> "P-256"
-                        is Algorithm.P384 -> "P-384"
-                        is Algorithm.P521 -> "P-521"
-                        else -> throw IllegalArgumentException("Unsupported EC algorithm")
-                    }
+                    val curveName = algorithm.curveName
+                        ?: throw IllegalArgumentException("Unsupported EC algorithm: ${algorithm.name}")
 
                     // Extract x and y coordinates from affine coordinates
                     val affineX = point.affineX
@@ -121,10 +118,10 @@ object AlgorithmMapping {
                     System.arraycopy(yBytes, yStart, y, yOffset, minOf(yBytes.size, coordinateLength))
 
                     mapOf(
-                        "kty" to "EC",
-                        "crv" to curveName,
-                        "x" to Base64.getUrlEncoder().withoutPadding().encodeToString(x),
-                        "y" to Base64.getUrlEncoder().withoutPadding().encodeToString(y)
+                        JwkKeys.KTY to JwkKeyTypes.EC,
+                        JwkKeys.CRV to curveName,
+                        JwkKeys.X to Base64.getUrlEncoder().withoutPadding().encodeToString(x),
+                        JwkKeys.Y to Base64.getUrlEncoder().withoutPadding().encodeToString(y)
                     )
                 }
                 is Algorithm.RSA -> {
@@ -134,9 +131,9 @@ object AlgorithmMapping {
                     val exponent = publicKey.publicExponent
 
                     mapOf(
-                        "kty" to "RSA",
-                        "n" to Base64.getUrlEncoder().withoutPadding().encodeToString(modulus.toByteArray()),
-                        "e" to Base64.getUrlEncoder().withoutPadding().encodeToString(exponent.toByteArray())
+                        JwkKeys.KTY to JwkKeyTypes.RSA,
+                        JwkKeys.N to Base64.getUrlEncoder().withoutPadding().encodeToString(modulus.toByteArray()),
+                        JwkKeys.E to Base64.getUrlEncoder().withoutPadding().encodeToString(exponent.toByteArray())
                     )
                 }
                 else -> throw IllegalArgumentException("Unsupported algorithm for JWK conversion: ${algorithm.name}")

@@ -42,11 +42,11 @@ class WaltIdEndToEndTest {
         // Create a DID
         val document = keyMethod!!.createDid()
         assertNotNull(document.id, "DID should have an ID")
-        assertTrue(document.id.startsWith("did:key:"), "DID should be did:key format")
+        assertTrue(document.id.value.startsWith("did:key:"), "DID should be did:key format")
         assertTrue(document.verificationMethod.isNotEmpty(), "DID document should have verification methods")
 
         // Resolve the DID
-        val resolutionResult = registry.resolve(document.id)
+        val resolutionResult = registry.resolve(document.id.value)
         assertTrue(resolutionResult is DidResolutionResult.Success, "DID should resolve successfully")
         val successResult = resolutionResult as DidResolutionResult.Success
         assertEquals(document.id, successResult.document.id, "Resolved document should match created document")
@@ -63,12 +63,12 @@ class WaltIdEndToEndTest {
         val document = webMethod!!.createDid(
             didCreationOptions {
                 property("domain", "example.com")
-                algorithm = DidCreationOptions.KeyAlgorithm.ED25519
+                algorithm = com.trustweave.did.KeyAlgorithm.ED25519
             }
         )
 
         assertNotNull(document.id)
-        assertEquals("did:web:example.com", document.id)
+        assertEquals("did:web:example.com", document.id.value)
         assertTrue(document.verificationMethod.isNotEmpty())
     }
 
@@ -84,7 +84,7 @@ class WaltIdEndToEndTest {
         val issuerDid = issuerDoc.id
 
         // 2. Verify the DID can be resolved
-        val resolutionResult = registry.resolve(issuerDid)
+        val resolutionResult = registry.resolve(issuerDid.value)
         assertTrue(resolutionResult is DidResolutionResult.Success)
         val successResult = resolutionResult as DidResolutionResult.Success
         assertEquals(issuerDid, successResult.document.id)
@@ -117,8 +117,8 @@ class WaltIdEndToEndTest {
             }
         )
 
-        assertTrue(keyDoc.id.startsWith("did:key:"))
-        assertTrue(webDoc.id.startsWith("did:web:"))
+        assertTrue(keyDoc.id.value.startsWith("did:key:"))
+        assertTrue(webDoc.id.value.startsWith("did:web:"))
     }
 }
 

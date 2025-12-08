@@ -1,12 +1,14 @@
 package com.trustweave.testkit.credential
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.wallet.CredentialFilter
 import com.trustweave.wallet.CredentialQueryBuilder
 import com.trustweave.wallet.CredentialStorage
 import com.trustweave.wallet.Wallet
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -35,7 +37,7 @@ class BasicWallet(
     private val credentials = ConcurrentHashMap<String, VerifiableCredential>()
 
     override suspend fun store(credential: VerifiableCredential): String {
-        val id = credential.id ?: UUID.randomUUID().toString()
+        val id = credential.id?.value ?: UUID.randomUUID().toString()
         credentials[id] = credential
         return id
     }
@@ -53,20 +55,15 @@ class BasicWallet(
 
         val filterType = filter.type // Store in local variable to avoid smart cast issue
         return allCredentials.filter { credential ->
-            (filter.issuer == null || credential.issuer == filter.issuer) &&
-            (filterType == null || filterType.any { credential.type.contains(it) }) &&
+            (filter.issuer == null || credential.issuer.id.value == filter.issuer) &&
+            (filterType == null || filterType.any { typeStr -> credential.type.any { ct -> ct.value == typeStr } }) &&
             (filter.subjectId == null || {
-                credential.credentialSubject.jsonObject["id"]?.jsonPrimitive?.content == filter.subjectId
+                credential.credentialSubject.id?.value == filter.subjectId
             }()) &&
             (filter.expired == null || {
                 credential.expirationDate?.let { expirationDate ->
-                    try {
-                        val expiration = java.time.Instant.parse(expirationDate)
-                        val isExpired = java.time.Instant.now().isAfter(expiration)
-                        isExpired == filter.expired
-                    } catch (e: Exception) {
-                        false
-                    }
+                    val isExpired = kotlinx.datetime.Clock.System.now() > expirationDate
+                    isExpired == filter.expired
                 } ?: (filter.expired == false)
             }()) &&
             (filter.revoked == null || {

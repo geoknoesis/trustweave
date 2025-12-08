@@ -1,13 +1,14 @@
 package com.trustweave.credential.revocation
 
-import com.trustweave.credential.models.CredentialStatus
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.CredentialStatus
+import com.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import kotlinx.datetime.Clock
 
 /**
  * Comprehensive tests for InMemoryStatusListManager API.
@@ -277,7 +278,7 @@ class InMemoryStatusListManagerTest {
             put("id", "did:key:subject")
             put("name", "John Doe")
         },
-        issuanceDate: String = java.time.Instant.now().toString(),
+        issuanceDate: String = Clock.System.now().toString(),
         credentialStatus: CredentialStatus? = null
     ): VerifiableCredential {
         return VerifiableCredential(

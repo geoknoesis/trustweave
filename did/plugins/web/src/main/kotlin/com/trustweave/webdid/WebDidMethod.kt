@@ -3,9 +3,12 @@ package com.trustweave.webdid
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.*
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.base.AbstractWebDidMethod
 import com.trustweave.did.base.DidMethodUtils
 import com.trustweave.kms.KeyManagementService
+import com.trustweave.kms.results.GenerateKeyResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.*
@@ -130,7 +133,23 @@ class WebDidMethod(
 
             // Generate key using KMS
             val algorithm = options.algorithm.algorithmName
-            val keyHandle = kms.generateKey(algorithm, options.additionalProperties)
+            val generateResult = kms.generateKey(algorithm, options.additionalProperties)
+            val keyHandle = when (generateResult) {
+                is GenerateKeyResult.Success -> generateResult.keyHandle
+                is GenerateKeyResult.Failure.UnsupportedAlgorithm -> throw TrustWeaveException.Unknown(
+                    code = "UNSUPPORTED_ALGORITHM",
+                    message = generateResult.reason ?: "Algorithm not supported"
+                )
+                is GenerateKeyResult.Failure.InvalidOptions -> throw TrustWeaveException.Unknown(
+                    code = "INVALID_OPTIONS",
+                    message = generateResult.reason
+                )
+                is GenerateKeyResult.Failure.Error -> throw TrustWeaveException.Unknown(
+                    code = "KEY_GENERATION_ERROR",
+                    message = generateResult.reason,
+                    cause = generateResult.cause
+                )
+            }
 
             // Create verification method
             val verificationMethod = DidMethodUtils.createVerificationMethod(
@@ -143,9 +162,9 @@ class WebDidMethod(
             val document = DidMethodUtils.buildDidDocument(
                 did = did,
                 verificationMethod = listOf(verificationMethod),
-                authentication = listOf(verificationMethod.id),
-                assertionMethod = if (options.purposes.contains(DidCreationOptions.KeyPurpose.ASSERTION)) {
-                    listOf(verificationMethod.id)
+                authentication = listOf(verificationMethod.id.value),
+                assertionMethod = if (options.purposes.contains(KeyPurpose.ASSERTION)) {
+                    listOf(verificationMethod.id.value)
                 } else null
             )
 
@@ -177,32 +196,33 @@ class WebDidMethod(
         }
     }
 
-    override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
+    override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
-            resolveFromHttp(did)
+            resolveFromHttp(did.value)
         } catch (e: TrustWeaveException.NotFound) {
-            DidMethodUtils.createErrorResolutionResult("notFound", e.message, method)
+            DidMethodUtils.createErrorResolutionResult("notFound", e.message, method, did.value)
         } catch (e: TrustWeaveException) {
-            DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method)
+            DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
         } catch (e: Exception) {
-            DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method)
+            DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
         }
     }
 
     override suspend fun updateDid(
-        did: String,
+        did: Did,
         updater: (DidDocument) -> DidDocument
     ): DidDocument = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
 
+            val didString = did.value
             // Resolve current document
-            val currentResult = resolveFromHttp(did)
+            val currentResult = resolveFromHttp(didString)
             val currentDocument = when (currentResult) {
                 is DidResolutionResult.Success -> currentResult.document
                 else -> throw TrustWeaveException.NotFound(
-                    message = "DID document not found: $did"
+                    message = "DID document not found: $didString"
                 )
             }
 
@@ -210,8 +230,8 @@ class WebDidMethod(
             val updatedDocument = updater(currentDocument)
 
             // Publish updated document
-            val url = getDocumentUrl(did)
-            updateDocumentOnHttp(did, updatedDocument)
+            val url = getDocumentUrl(didString)
+            updateDocumentOnHttp(didString, updatedDocument)
 
             updatedDocument
         } catch (e: TrustWeaveException.NotFound) {
@@ -227,12 +247,13 @@ class WebDidMethod(
         }
     }
 
-    override suspend fun deactivateDid(did: String): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun deactivateDid(did: Did): Boolean = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
 
+            val didString = did.value
             // Resolve current document
-            val currentResult = resolveFromHttp(did)
+            val currentResult = resolveFromHttp(didString)
             val currentDocument = when (currentResult) {
                 is DidResolutionResult.Success -> currentResult.document
                 else -> return@withContext false
@@ -249,8 +270,8 @@ class WebDidMethod(
             )
 
             // Publish deactivated document
-            val url = getDocumentUrl(did)
-            deactivateDocumentOnHttp(did, deactivatedDocument)
+            val url = getDocumentUrl(didString)
+            deactivateDocumentOnHttp(didString, deactivatedDocument)
 
             true
         } catch (e: TrustWeaveException.NotFound) {

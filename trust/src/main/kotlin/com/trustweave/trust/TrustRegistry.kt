@@ -1,10 +1,11 @@
 package com.trustweave.trust
 
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.did.identifiers.Did
 import com.trustweave.trust.types.IssuerIdentity
 import com.trustweave.trust.types.VerifierIdentity
-import com.trustweave.trust.types.CredentialType
-import com.trustweave.core.types.Did
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 
 /**
  * Trust registry for managing trust anchors and discovering trust paths.
@@ -22,7 +23,7 @@ import java.time.Instant
  *     metadata = TrustAnchorMetadata(
  *         credentialTypes = listOf("EducationCredential"),
  *         description = "Trusted university",
- *         addedAt = Instant.now()
+ *         addedAt = Clock.System.now()
  *     )
  * )
  *
@@ -51,7 +52,7 @@ interface TrustRegistry {
      * @return true if the issuer is trusted, false otherwise
      */
     suspend fun isTrustedIssuer(issuer: IssuerIdentity, credentialType: CredentialType?): Boolean {
-        return isTrustedIssuer(issuer.did.value, credentialType?.value)
+        return isTrustedIssuer(issuer.value, credentialType?.value)
     }
 
     /**
@@ -116,7 +117,7 @@ interface TrustRegistry {
 data class TrustAnchorMetadata(
     val credentialTypes: List<String>? = null,
     val description: String? = null,
-    val addedAt: Instant = Instant.now()
+    val addedAt: Instant = Clock.System.now()
 )
 
 /**

@@ -1,19 +1,18 @@
 package com.trustweave.credential.oidc4vci.exception
 
-import com.trustweave.credential.exchange.exception.ExchangeException
+import com.trustweave.core.exception.TrustWeaveException
 
 /**
  * OIDC4VCI-specific exception types.
  *
- * These exceptions extend ExchangeException and provide OIDC4VCI-specific error information.
- * All OIDC4VCI exceptions are part of the ExchangeException hierarchy for consistent handling.
+ * These exceptions extend TrustWeaveException and provide OIDC4VCI-specific error information.
  */
 sealed class Oidc4VciException(
     override val code: String,
     override val message: String,
     override val context: Map<String, Any?> = emptyMap(),
     override val cause: Throwable? = null
-) : ExchangeException(code, message, context, cause) {
+) : TrustWeaveException(code, message, context, cause) {
 
     /**
      * Exception thrown when an OIDC4VCI HTTP request fails.

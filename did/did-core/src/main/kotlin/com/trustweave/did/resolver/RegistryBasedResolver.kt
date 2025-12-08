@@ -1,7 +1,6 @@
 package com.trustweave.did.resolver
 
-import com.trustweave.core.types.Did
-import com.trustweave.did.Did as DidModel
+import com.trustweave.did.identifiers.Did
 import com.trustweave.did.DidMethod
 import com.trustweave.did.exception.DidException
 import com.trustweave.did.registry.DidMethodRegistry
@@ -26,7 +25,7 @@ class RegistryBasedResolver(
     private val registry: DidMethodRegistry
 ) : DidResolver {
 
-    override suspend fun resolve(did: Did): DidResolutionResult? {
+    override suspend fun resolve(did: Did): DidResolutionResult {
         val didString = did.value
         // Validate DID format
         val validationResult = DidValidator.validateFormat(didString)
@@ -42,7 +41,7 @@ class RegistryBasedResolver(
         }
 
         try {
-            val parsed = DidModel.parse(didString)
+            val parsed = Did(didString)
             val method = registry.get(parsed.method)
 
             if (method == null) {
@@ -57,7 +56,8 @@ class RegistryBasedResolver(
                 )
             }
 
-            return method.resolveDid(didString)
+            // Use type-safe resolveDid(Did) method
+            return method.resolveDid(parsed)
         } catch (e: IllegalArgumentException) {
             // Invalid DID format
             return DidResolutionResult.Failure.InvalidFormat(

@@ -2,9 +2,8 @@ package com.trustweave.contract
 
 import com.trustweave.contract.models.*
 import com.trustweave.credential.CredentialService
-import com.trustweave.credential.CredentialServiceRegistry
 import com.trustweave.anchor.BlockchainAnchorRegistry
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import kotlin.Result
 
 /**
@@ -33,14 +32,11 @@ import kotlin.Result
  * ```
  */
 class ContractService(
-    credentialRegistry: CredentialServiceRegistry? = null,
+    credentialService: CredentialService? = null,
     blockchainRegistry: BlockchainAnchorRegistry? = null
 ) : SmartContractService {
     private val delegate: SmartContractService by lazy {
-        // Get credential service from registry (optional - null is allowed)
-        val credentialService = credentialRegistry?.getAll()?.values?.firstOrNull()
-
-        // Create DefaultSmartContractService with the registries
+        // Create DefaultSmartContractService with the service
         DefaultSmartContractService(
             credentialService = credentialService,
             blockchainRegistry = blockchainRegistry

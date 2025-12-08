@@ -1,7 +1,8 @@
 package com.trustweave.godiddy.did
 
 import com.trustweave.core.exception.TrustWeaveException
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.identifiers.Did
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.godiddy.GodiddyClient
 import com.trustweave.godiddy.GodiddyConfig
@@ -63,7 +64,7 @@ class GodiddyDidMethodTest {
         val method = GodiddyDidMethod("test", resolver, null)
 
         assertFailsWith<TrustWeaveException> {
-            method.updateDid("did:test:123") { it }
+            method.updateDid(Did("did:test:123")) { it }
         }
 
         client.close()
@@ -93,7 +94,7 @@ class GodiddyDidMethodTest {
         val method = GodiddyDidMethod("test", resolver, null)
 
         assertFailsWith<TrustWeaveException> {
-            method.deactivateDid("did:test:123")
+            method.deactivateDid(Did("did:test:123"))
         }
 
         client.close()
@@ -108,7 +109,7 @@ class GodiddyDidMethodTest {
 
         // This will fail with HTTP error, but tests the code path
         try {
-            method.resolveDid("did:test:123")
+            method.resolveDid(Did("did:test:123"))
         } catch (e: Exception) {
             // Expected - HTTP call will fail without real server
             assertIs<TrustWeaveException>(e)

@@ -1,11 +1,11 @@
 package com.trustweave.trust.dsl.credential
 
-import com.trustweave.credential.models.CredentialSchema
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.schema.SchemaRegistry
 import com.trustweave.credential.schema.SchemaRegistrationResult
 import com.trustweave.credential.schema.SchemaValidationResult
-import com.trustweave.credential.SchemaFormat
+import com.trustweave.credential.model.SchemaFormat
+import com.trustweave.credential.identifiers.SchemaId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
@@ -56,9 +56,10 @@ import com.trustweave.trust.dsl.credential.JsonObjectBuilder
  *     .validate(credential)
  * ```
  */
-class SchemaBuilder {
+class SchemaBuilder(
+    private val schemaRegistry: SchemaRegistry? = null
+) {
     private var schemaId: String? = null
-    private var schemaType: String = "JsonSchemaValidator2018"
     private var format: SchemaFormat = SchemaFormat.JSON_SCHEMA
     private var definition: JsonObject? = null
 
@@ -67,13 +68,6 @@ class SchemaBuilder {
      */
     fun id(schemaId: String) {
         this.schemaId = schemaId
-    }
-
-    /**
-     * Set schema validator type.
-     */
-    fun type(type: String) {
-        this.schemaType = type
     }
 
     /**
@@ -88,7 +82,6 @@ class SchemaBuilder {
      */
     fun jsonSchema(block: JsonObjectBuilder.() -> Unit) {
         this.format = SchemaFormat.JSON_SCHEMA
-        this.schemaType = "JsonSchemaValidator2018"
         val builder = JsonObjectBuilder()
         builder.block()
         this.definition = builder.build()
@@ -99,7 +92,6 @@ class SchemaBuilder {
      */
     fun shacl(block: JsonObjectBuilder.() -> Unit) {
         this.format = SchemaFormat.SHACL
-        this.schemaType = "ShaclValidator2020"
         val builder = JsonObjectBuilder()
         builder.block()
         this.definition = builder.build()
@@ -118,6 +110,9 @@ class SchemaBuilder {
      * @return Registration result
      */
     suspend fun register(): SchemaRegistrationResult = withContext(Dispatchers.IO) {
+        val registry = schemaRegistry ?: throw IllegalStateException(
+            "SchemaRegistry is not available. Configure it in TrustWeave.build { ... }"
+        )
         val id = schemaId ?: throw IllegalStateException(
             "Schema ID is required. Use id(\"https://example.com/schemas/...\")"
         )
@@ -125,13 +120,7 @@ class SchemaBuilder {
             "Schema definition is required. Use jsonSchema { } or shacl { }"
         )
 
-        val schema = CredentialSchema(
-            id = id,
-            type = schemaType,
-            schemaFormat = format
-        )
-
-        SchemaRegistry.registerSchema(schema, def)
+        registry.registerSchema(SchemaId(id), format, def)
     }
 
     /**
@@ -141,11 +130,14 @@ class SchemaBuilder {
      * @return Validation result
      */
     suspend fun validate(credential: VerifiableCredential): SchemaValidationResult = withContext(Dispatchers.IO) {
+        val registry = schemaRegistry ?: throw IllegalStateException(
+            "SchemaRegistry is not available. Configure it in TrustWeave.build { ... }"
+        )
         val id = schemaId ?: throw IllegalStateException(
             "Schema ID is required. Use id(\"https://example.com/schemas/...\")"
         )
 
-        SchemaRegistry.validateCredential(credential, id)
+        registry.validate(credential, SchemaId(id))
     }
 }
 
@@ -154,8 +146,9 @@ class SchemaBuilder {
 /**
  * Extension function to access schema operations.
  */
-fun schema(schemaId: String? = null, block: SchemaBuilder.() -> Unit = {}): SchemaBuilder {
-    val builder = SchemaBuilder()
+fun CredentialDslProvider.schema(schemaId: String? = null, block: SchemaBuilder.() -> Unit = {}): SchemaBuilder {
+    val schemaRegistry = getSchemaRegistry() as? SchemaRegistry
+    val builder = SchemaBuilder(schemaRegistry)
     if (schemaId != null) {
         builder.id(schemaId)
     }
@@ -166,8 +159,9 @@ fun schema(schemaId: String? = null, block: SchemaBuilder.() -> Unit = {}): Sche
 /**
  * Extension function to register a schema.
  */
-suspend fun registerSchema(block: SchemaBuilder.() -> Unit): SchemaRegistrationResult {
-    val builder = SchemaBuilder()
+suspend fun CredentialDslProvider.registerSchema(block: SchemaBuilder.() -> Unit): SchemaRegistrationResult {
+    val schemaRegistry = getSchemaRegistry()
+    val builder = SchemaBuilder(schemaRegistry)
     builder.block()
     return builder.register()
 }

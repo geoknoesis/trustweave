@@ -1,11 +1,9 @@
 package com.trustweave.credential.chapi
 
 import com.trustweave.credential.chapi.models.*
-import com.trustweave.credential.exchange.CredentialPreview
-import com.trustweave.credential.exchange.RequestedAttribute
-import com.trustweave.credential.exchange.RequestedPredicate
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.models.VerifiablePresentation
+import com.trustweave.credential.exchange.model.CredentialPreview
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiablePresentation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -83,8 +81,20 @@ class ChapiService {
                 ))
             })
             put("issuer", issuerDid)
-            credentialPreview.goalCode?.let { put("goalCode", it) }
-            credentialPreview.replacementId?.let { put("replacementId", it) }
+            credentialPreview.options.metadata["goalCode"]?.let { 
+                if (it is kotlinx.serialization.json.JsonPrimitive) {
+                    put("goalCode", it.content)
+                } else {
+                    put("goalCode", it)
+                }
+            }
+            credentialPreview.options.metadata["replacementId"]?.let { 
+                if (it is kotlinx.serialization.json.JsonPrimitive) {
+                    put("replacementId", it.content)
+                } else {
+                    put("replacementId", it)
+                }
+            }
         }
 
         val offer = ChapiOffer(
@@ -111,7 +121,7 @@ class ChapiService {
         credential: VerifiableCredential,
         holderDid: String
     ): ChapiStoreResult = withContext(Dispatchers.IO) {
-        val credentialId = credential.id ?: UUID.randomUUID().toString()
+        val credentialId = credential.id?.value ?: UUID.randomUUID().toString()
 
         // Create CHAPI-compatible credential
         val json = Json { prettyPrint = false; encodeDefaults = false }
@@ -149,8 +159,8 @@ class ChapiService {
      */
     suspend fun createProofRequest(
         verifierDid: String,
-        requestedAttributes: Map<String, RequestedAttribute>,
-        requestedPredicates: Map<String, RequestedPredicate>
+        requestedAttributes: Map<String, com.trustweave.credential.exchange.request.AttributeRequest>,
+        requestedPredicates: Map<String, com.trustweave.credential.exchange.request.AttributeRequest>
     ): ChapiProofRequest = withContext(Dispatchers.IO) {
         val requestId = UUID.randomUUID().toString()
 
@@ -169,9 +179,9 @@ class ChapiService {
                         put("restrictions", JsonArray(
                             attr.restrictions.map { restriction ->
                                 buildJsonObject {
-                                    restriction.issuerDid?.let { put("issuer", it) }
-                                    restriction.schemaId?.let { put("schema_id", it) }
-                                    restriction.credentialDefinitionId?.let { put("cred_def_id", it) }
+                                    restriction.issuerDid?.let { put("issuer", JsonPrimitive(it.toString())) }
+                                    restriction.schemaId?.let { put("schema_id", JsonPrimitive(it.toString())) }
+                                    restriction.metadata["credentialDefinitionId"]?.let { put("cred_def_id", it) }
                                 }
                             }
                         ))
@@ -182,14 +192,17 @@ class ChapiService {
                 requestedPredicates.mapValues { (_, pred) ->
                     buildJsonObject {
                         put("name", pred.name)
-                        put("p_type", pred.pType)
-                        put("p_value", pred.pValue)
+                        // Predicate type and value should be in restrictions metadata
+                        pred.restrictions.firstOrNull()?.let { restriction ->
+                            restriction.metadata["p_type"]?.let { put("p_type", it) }
+                            restriction.metadata["p_value"]?.let { put("p_value", it) }
+                        }
                         put("restrictions", JsonArray(
                             pred.restrictions.map { restriction ->
                                 buildJsonObject {
-                                    restriction.issuerDid?.let { put("issuer", it) }
-                                    restriction.schemaId?.let { put("schema_id", it) }
-                                    restriction.credentialDefinitionId?.let { put("cred_def_id", it) }
+                                    restriction.issuerDid?.let { put("issuer", JsonPrimitive(it.toString())) }
+                                    restriction.schemaId?.let { put("schema_id", JsonPrimitive(it.toString())) }
+                                    restriction.metadata["credentialDefinitionId"]?.let { put("cred_def_id", it) }
                                 }
                             }
                         ))

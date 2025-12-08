@@ -8,7 +8,8 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 
 /**
  * Edge case and comprehensive tests for Trust Registry.
@@ -139,7 +140,7 @@ class TrustRegistryEdgeCasesTest {
 
     @Test
     fun `test trust anchor metadata with all fields`() = runBlocking {
-        val now = Instant.now()
+        val now = Clock.System.now()
         val metadata = TrustAnchorMetadata(
             credentialTypes = listOf("Type1", "Type2"),
             description = "Test anchor",

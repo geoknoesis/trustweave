@@ -1,8 +1,8 @@
 package com.trustweave.credential.exchange
 
 import com.trustweave.credential.exchange.exception.ExchangeException
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.models.VerifiablePresentation
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiablePresentation
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -10,6 +10,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
+import kotlinx.datetime.Clock
 
 /**
  * Unit tests for exception handling in CredentialExchangeProtocolRegistry.
@@ -182,7 +183,7 @@ class CredentialExchangeProtocolRegistryExceptionTest {
             credentialSubject = buildJsonObject {
                 put("name", "Alice")
             },
-            issuanceDate = java.time.Instant.now().toString()
+            issuanceDate = Clock.System.now().toString()
         )
     }
 

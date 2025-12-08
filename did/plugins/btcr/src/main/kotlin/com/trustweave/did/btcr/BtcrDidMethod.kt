@@ -2,6 +2,8 @@ package com.trustweave.did.btcr
 
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.base.AbstractDidMethod
 import com.trustweave.kms.KeyManagementService
@@ -47,10 +49,10 @@ class BtcrDidMethod(
         )
     }
 
-    override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
-        require(did.startsWith("did:btcr:")) {
-            "Invalid did:btcr format: $did"
-        }
+    override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
+        validateDidFormat(did)
+        
+        val didString = did.value
 
         // TODO: Implement Bitcoin Reference DID resolution
         // 1. Extract transaction index from DID

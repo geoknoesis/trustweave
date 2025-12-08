@@ -1,26 +1,38 @@
 package com.trustweave.kms.entrust
 
-import com.trustweave.core.exception.TrustWeaveException
-import com.trustweave.core.types.KeyId
+import com.trustweave.core.identifiers.KeyId
 import com.trustweave.kms.Algorithm
-import com.trustweave.kms.KeyHandle
 import com.trustweave.kms.KeyManagementService
-import com.trustweave.kms.KeyNotFoundException
-import com.trustweave.kms.UnsupportedAlgorithmException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.trustweave.kms.results.DeleteKeyResult
+import com.trustweave.kms.results.GenerateKeyResult
+import com.trustweave.kms.results.GetPublicKeyResult
+import com.trustweave.kms.results.SignResult
 
 /**
  * Entrust nShield HSM implementation of KeyManagementService.
  *
- * Supports all Entrust nShield HSM-compatible algorithms.
+ * **⚠️ EXPERIMENTAL - NOT YET IMPLEMENTED ⚠️**
  *
- * **Note:** This is a placeholder implementation. Entrust nShield HSM integration
- * requires access to Entrust SDK and HSM access.
+ * This plugin is a placeholder and will throw [UnsupportedOperationException] if used.
+ * Entrust nShield HSM integration requires access to Entrust SDK and HSM access.
+ *
+ * **Status**: Implementation pending.
+ *
+ * **Supported Algorithms** (when implemented):
+ * - Ed25519, secp256k1, P-256, P-384, P-521
+ * - RSA-2048, RSA-3072, RSA-4096
  */
 class EntrustKeyManagementService(
     private val config: EntrustKmsConfig
 ) : KeyManagementService {
+
+    init {
+        throw UnsupportedOperationException(
+            "Entrust nShield KMS plugin is not yet implemented. " +
+            "This plugin requires Entrust SDK and HSM access. " +
+            "See https://github.com/trustweave/trustweave/issues for implementation status."
+        )
+    }
 
     companion object {
         val SUPPORTED_ALGORITHMS = setOf(
@@ -40,40 +52,24 @@ class EntrustKeyManagementService(
     override suspend fun generateKey(
         algorithm: Algorithm,
         options: Map<String, Any?>
-    ): KeyHandle = withContext(Dispatchers.IO) {
-        if (!supportsAlgorithm(algorithm)) {
-            throw UnsupportedAlgorithmException(
-                "Algorithm '${algorithm.name}' is not supported by Entrust nShield HSM. " +
-                "Supported: ${SUPPORTED_ALGORITHMS.joinToString(", ") { it.name }}"
-            )
-        }
-        // TODO: Implement Entrust nShield HSM API integration
-        throw TrustWeaveException.Unknown(
-            message = "Entrust nShield HSM integration not yet implemented"
-        )
+    ): GenerateKeyResult {
+        throw UnsupportedOperationException("Entrust nShield KMS plugin is not yet implemented")
     }
 
-    override suspend fun getPublicKey(keyId: KeyId): KeyHandle = withContext(Dispatchers.IO) {
-        // TODO: Implement Entrust nShield HSM API integration
-        throw TrustWeaveException.Unknown(
-            message = "Entrust nShield HSM integration not yet implemented"
-        )
+    override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult {
+        throw UnsupportedOperationException("Entrust nShield KMS plugin is not yet implemented")
     }
 
     override suspend fun sign(
         keyId: KeyId,
         data: ByteArray,
         algorithm: Algorithm?
-    ): ByteArray = withContext(Dispatchers.IO) {
-        // TODO: Implement Entrust nShield HSM API integration
-        throw TrustWeaveException.Unknown(
-            message = "Entrust nShield HSM integration not yet implemented"
-        )
+    ): SignResult {
+        throw UnsupportedOperationException("Entrust nShield KMS plugin is not yet implemented")
     }
 
-    override suspend fun deleteKey(keyId: KeyId): Boolean = withContext(Dispatchers.IO) {
-        // TODO: Implement Entrust nShield HSM API integration
-        false
+    override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult {
+        throw UnsupportedOperationException("Entrust nShield KMS plugin is not yet implemented")
     }
 }
 

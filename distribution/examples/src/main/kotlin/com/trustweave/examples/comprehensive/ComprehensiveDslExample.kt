@@ -7,8 +7,8 @@ import com.trustweave.trust.dsl.credential.CredentialTypes
 import com.trustweave.trust.dsl.credential.SchemaValidatorTypes
 import com.trustweave.trust.dsl.credential.ServiceTypes
 import com.trustweave.trust.dsl.credential.registerSchema
-import com.trustweave.trust.types.ProofType
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.ProofType
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.SchemaFormat
 import com.trustweave.wallet.CredentialOrganization
 import com.trustweave.wallet.Wallet
@@ -21,7 +21,8 @@ import com.trustweave.trust.types.*
 import com.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 
 /**
  * Comprehensive DSL Example.
@@ -153,7 +154,7 @@ fun main() = runBlocking {
                     "year" to "2023"
                 }
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
             schema("https://example.com/schemas/degree", SchemaValidatorTypes.JSON_SCHEMA)
         }
         signedBy(issuerDid = issuerDid.value, keyId = "key-1")

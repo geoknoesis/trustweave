@@ -1,9 +1,10 @@
 package com.trustweave.trust.dsl.did
 
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.DidMethod
-import com.trustweave.did.DidService
-import com.trustweave.did.VerificationMethod
+import com.trustweave.did.model.DidService
+import com.trustweave.did.model.VerificationMethod
+import com.trustweave.did.identifiers.Did
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -158,8 +159,9 @@ class DidDocumentBuilder(
             )
 
         // Update DID document using proper types
-        val updatedDoc = didMethod.updateDid(targetDid) { currentDoc ->
-            updateDocument(currentDoc, targetDid)
+        val targetDidObj = Did(targetDid)
+        val updatedDoc = didMethod.updateDid(targetDidObj) { currentDoc ->
+            updateDocument(currentDoc, targetDidObj)
         }
 
         updatedDoc
@@ -168,18 +170,18 @@ class DidDocumentBuilder(
     /**
      * Update document using proper types (no reflection).
      */
-    private fun updateDocument(currentDoc: DidDocument, targetDid: String): DidDocument {
+    private fun updateDocument(currentDoc: DidDocument, targetDid: Did): DidDocument {
         // Filter out removed verification methods
         val filteredVm = currentDoc.verificationMethod.filter { vm ->
-            !removedVerificationMethods.any { removed -> vm.id.contains(removed) }
+            !removedVerificationMethods.any { removed -> vm.id.value.contains(removed) }
         }
 
         // Create new verification method objects
         val newVmObjects = newVerificationMethods.map { vmData ->
             VerificationMethod(
-                id = vmData.id,
+                id = com.trustweave.did.identifiers.VerificationMethodId.parse(vmData.id, targetDid),
                 type = vmData.type,
-                controller = vmData.controller,
+                controller = Did(vmData.controller),
                 publicKeyJwk = vmData.publicKeyJwk,
                 publicKeyMultibase = vmData.publicKeyMultibase
             )
@@ -201,23 +203,31 @@ class DidDocumentBuilder(
 
         // Update authentication and assertion method lists
         val filteredAuth = currentDoc.authentication.filter { auth ->
-            val authStr = auth.toString()
+            val authStr = auth.value
             !removedVerificationMethods.any { removed -> authStr.contains(removed) }
-        }.plus(newVerificationMethods.map { it.id })
+        }.plus(newVerificationMethods.map { 
+            com.trustweave.did.identifiers.VerificationMethodId.parse(it.id, targetDid)
+        })
 
         val filteredAssertion = currentDoc.assertionMethod.filter { assertion ->
-            val assertionStr = assertion.toString()
+            val assertionStr = assertion.value
             !removedVerificationMethods.any { removed -> assertionStr.contains(removed) }
-        }.plus(newVerificationMethods.map { it.id })
+        }.plus(newVerificationMethods.map { 
+            com.trustweave.did.identifiers.VerificationMethodId.parse(it.id, targetDid)
+        })
 
         // Update capability invocation and delegation
         val updatedCapabilityInvocation = currentDoc.capabilityInvocation
-            .filter { !removedCapabilityInvocation.contains(it) }
-            .plus(addedCapabilityInvocation)
+            .filter { !removedCapabilityInvocation.contains(it.value) }
+            .plus(addedCapabilityInvocation.map { 
+                com.trustweave.did.identifiers.VerificationMethodId.parse(it, targetDid)
+            })
 
         val updatedCapabilityDelegation = currentDoc.capabilityDelegation
-            .filter { !removedCapabilityDelegation.contains(it) }
-            .plus(addedCapabilityDelegation)
+            .filter { !removedCapabilityDelegation.contains(it.value) }
+            .plus(addedCapabilityDelegation.map { 
+                com.trustweave.did.identifiers.VerificationMethodId.parse(it, targetDid)
+            })
 
         // Use context from builder or keep current
         val updatedContext = contextValues ?: currentDoc.context

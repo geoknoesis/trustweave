@@ -1,7 +1,7 @@
 package com.trustweave.credential.schema
 
 import com.trustweave.credential.models.CredentialSchema
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.schema.JsonSchemaValidator
 import com.trustweave.credential.schema.SchemaValidatorRegistry
 import com.trustweave.credential.SchemaFormat
@@ -11,6 +11,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import kotlinx.datetime.Clock
 
 /**
  * Comprehensive tests for SchemaRegistry API.
@@ -221,7 +222,7 @@ class SchemaRegistryTest {
                 put("id", "did:key:subject")
                 put("name", "John Doe")
             },
-            issuanceDate = java.time.Instant.now().toString()
+            issuanceDate = Clock.System.now().toString()
         )
 
         val result = SchemaRegistry.validateCredential(credential, schemaId)
@@ -238,7 +239,7 @@ class SchemaRegistryTest {
             credentialSubject = buildJsonObject {
                 put("id", "did:key:subject")
             },
-            issuanceDate = java.time.Instant.now().toString()
+            issuanceDate = Clock.System.now().toString()
         )
 
         assertFailsWith<IllegalArgumentException> {

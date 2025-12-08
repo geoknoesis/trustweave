@@ -1,12 +1,24 @@
 package com.trustweave.testkit.credential
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.vc.CredentialStatus
+import com.trustweave.credential.identifiers.StatusListId
+import com.trustweave.credential.model.StatusPurpose
+import com.trustweave.did.identifiers.Did
+import com.trustweave.core.identifiers.Iri
 import com.trustweave.wallet.CredentialFilter
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Comprehensive branch coverage tests for InMemoryWallet.
@@ -64,7 +76,7 @@ class InMemoryWalletBranchCoverageTest {
         val result = wallet.get("cred-1")
 
         assertNotNull(result)
-        assertEquals("cred-1", result?.id)
+        assertEquals("cred-1", result?.id?.value)
     }
 
     @Test
@@ -76,7 +88,7 @@ class InMemoryWalletBranchCoverageTest {
         val result = wallet.get("cred-archived")
 
         assertNotNull(result)
-        assertEquals("cred-archived", result?.id)
+        assertEquals("cred-archived", result?.id?.value)
     }
 
     @Test
@@ -110,7 +122,7 @@ class InMemoryWalletBranchCoverageTest {
         val result = wallet.list(CredentialFilter(issuer = "did:key:issuer1"))
 
         assertEquals(1, result.size)
-        assertEquals("cred-1", result.first().id)
+        assertEquals("cred-1", result.first().id?.value)
     }
 
     @Test
@@ -133,7 +145,7 @@ class InMemoryWalletBranchCoverageTest {
         val result = wallet.list(CredentialFilter(type = listOf("PersonCredential")))
 
         assertEquals(1, result.size)
-        assertEquals("cred-1", result.first().id)
+        assertEquals("cred-1", result.first().id?.value)
     }
 
     @Test
@@ -158,11 +170,11 @@ class InMemoryWalletBranchCoverageTest {
     fun `test branch list with expired filter true`() = runBlocking {
         val cred1 = createTestCredential(
             id = "cred-1",
-            expirationDate = java.time.Instant.now().minusSeconds(86400).toString()
+            expirationDate = Clock.System.now().minus(86400.seconds).toString()
         )
         val cred2 = createTestCredential(
             id = "cred-2",
-            expirationDate = java.time.Instant.now().plusSeconds(86400).toString()
+            expirationDate = Clock.System.now().plus(86400.seconds).toString()
         )
         wallet.store(cred1)
         wallet.store(cred2)
@@ -170,18 +182,18 @@ class InMemoryWalletBranchCoverageTest {
         val result = wallet.list(CredentialFilter(expired = true))
 
         assertEquals(1, result.size)
-        assertEquals("cred-1", result.first().id)
+        assertEquals("cred-1", result.first().id?.value)
     }
 
     @Test
     fun `test branch list with expired filter false`() = runBlocking {
         val cred1 = createTestCredential(
             id = "cred-1",
-            expirationDate = java.time.Instant.now().minusSeconds(86400).toString()
+            expirationDate = Clock.System.now().minus(86400.seconds).toString()
         )
         val cred2 = createTestCredential(
             id = "cred-2",
-            expirationDate = java.time.Instant.now().plusSeconds(86400).toString()
+            expirationDate = Clock.System.now().plus(86400.seconds).toString()
         )
         wallet.store(cred1)
         wallet.store(cred2)
@@ -189,7 +201,7 @@ class InMemoryWalletBranchCoverageTest {
         val result = wallet.list(CredentialFilter(expired = false))
 
         assertEquals(1, result.size)
-        assertEquals("cred-2", result.first().id)
+        assertEquals("cred-2", result.first().id?.value)
     }
 
     @Test
@@ -206,9 +218,10 @@ class InMemoryWalletBranchCoverageTest {
     fun `test branch list with revoked filter true`() = runBlocking {
         val cred1 = createTestCredential(
             id = "cred-1",
-            credentialStatus = com.trustweave.credential.models.CredentialStatus(
-                id = "https://example.com/status/1",
-                type = "StatusList2021Entry"
+            credentialStatus = CredentialStatus(
+                id = StatusListId("https://example.com/status/1"),
+                type = "StatusList2021Entry",
+                statusPurpose = StatusPurpose.REVOCATION
             )
         )
         val cred2 = createTestCredential(id = "cred-2", credentialStatus = null)
@@ -218,16 +231,17 @@ class InMemoryWalletBranchCoverageTest {
         val result = wallet.list(CredentialFilter(revoked = true))
 
         assertEquals(1, result.size)
-        assertEquals("cred-1", result.first().id)
+        assertEquals("cred-1", result.first().id?.value)
     }
 
     @Test
     fun `test branch list with revoked filter false`() = runBlocking {
         val cred1 = createTestCredential(
             id = "cred-1",
-            credentialStatus = com.trustweave.credential.models.CredentialStatus(
-                id = "https://example.com/status/1",
-                type = "StatusList2021Entry"
+            credentialStatus = CredentialStatus(
+                id = StatusListId("https://example.com/status/1"),
+                type = "StatusList2021Entry",
+                statusPurpose = StatusPurpose.REVOCATION
             )
         )
         val cred2 = createTestCredential(id = "cred-2", credentialStatus = null)
@@ -237,7 +251,7 @@ class InMemoryWalletBranchCoverageTest {
         val result = wallet.list(CredentialFilter(revoked = false))
 
         assertEquals(1, result.size)
-        assertEquals("cred-2", result.first().id)
+        assertEquals("cred-2", result.first().id?.value)
     }
 
     // ========== delete() Branch Coverage ==========
@@ -390,17 +404,22 @@ class InMemoryWalletBranchCoverageTest {
             put("id", "did:key:subject")
             put("name", "John Doe")
         },
-        issuanceDate: String = java.time.Instant.now().toString(),
+        issuanceDate: String = Clock.System.now().toString(),
         expirationDate: String? = null,
-        credentialStatus: com.trustweave.credential.models.CredentialStatus? = null
+        credentialStatus: CredentialStatus? = null
     ): VerifiableCredential {
+        val subjectId = subject["id"]?.jsonPrimitive?.content ?: "did:key:subject"
+        val claims = subject.toMutableMap().apply { remove("id") }
         return VerifiableCredential(
-            id = id,
-            type = types,
-            issuer = issuerDid,
-            credentialSubject = subject,
-            issuanceDate = issuanceDate,
-            expirationDate = expirationDate,
+            id = id?.let { CredentialId(it) },
+            type = types.map { CredentialType.Custom(it) },
+            issuer = Issuer.fromDid(Did(issuerDid)),
+            credentialSubject = CredentialSubject.fromIri(
+                Iri(subjectId),
+                claims = claims
+            ),
+            issuanceDate = Instant.parse(issuanceDate),
+            expirationDate = expirationDate?.let { Instant.parse(it) },
             credentialStatus = credentialStatus
         )
     }

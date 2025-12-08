@@ -1,6 +1,8 @@
 package com.trustweave.kms.cyberark
 
 import com.trustweave.kms.Algorithm
+import com.trustweave.kms.JwkKeys
+import com.trustweave.kms.JwkKeyTypes
 import java.math.BigInteger
 import java.security.KeyFactory
 import java.security.interfaces.ECPublicKey
@@ -78,22 +80,17 @@ object AlgorithmMapping {
                     }
 
                     mapOf(
-                        "kty" to "OKP",
-                        "crv" to "Ed25519",
-                        "x" to Base64.getUrlEncoder().withoutPadding().encodeToString(rawKey)
+                        JwkKeys.KTY to JwkKeyTypes.OKP,
+                        JwkKeys.CRV to Algorithm.Ed25519.curveName,
+                        JwkKeys.X to Base64.getUrlEncoder().withoutPadding().encodeToString(rawKey)
                     )
                 }
                 is Algorithm.Secp256k1, is Algorithm.P256, is Algorithm.P384, is Algorithm.P521 -> {
                     val keyFactory = KeyFactory.getInstance("EC")
                     val publicKey = keyFactory.generatePublic(X509EncodedKeySpec(publicKeyBytes)) as ECPublicKey
                     val point = publicKey.w
-                    val curveName = when (algorithm) {
-                        is Algorithm.Secp256k1 -> "secp256k1"
-                        is Algorithm.P256 -> "P-256"
-                        is Algorithm.P384 -> "P-384"
-                        is Algorithm.P521 -> "P-521"
-                        else -> throw IllegalArgumentException("Unsupported EC algorithm")
-                    }
+                    val curveName = algorithm.curveName
+                        ?: throw IllegalArgumentException("Unsupported EC algorithm: ${algorithm.name}")
 
                     val affineX = point.affineX
                     val affineY = point.affineY
@@ -120,10 +117,10 @@ object AlgorithmMapping {
                     val y = toUnsignedByteArray(affineY, coordinateLength)
 
                     mapOf(
-                        "kty" to "EC",
-                        "crv" to curveName,
-                        "x" to Base64.getUrlEncoder().withoutPadding().encodeToString(x),
-                        "y" to Base64.getUrlEncoder().withoutPadding().encodeToString(y)
+                        JwkKeys.KTY to JwkKeyTypes.EC,
+                        JwkKeys.CRV to curveName,
+                        JwkKeys.X to Base64.getUrlEncoder().withoutPadding().encodeToString(x),
+                        JwkKeys.Y to Base64.getUrlEncoder().withoutPadding().encodeToString(y)
                     )
                 }
                 is Algorithm.RSA -> {
@@ -141,9 +138,9 @@ object AlgorithmMapping {
                     }
 
                     mapOf(
-                        "kty" to "RSA",
-                        "n" to Base64.getUrlEncoder().withoutPadding().encodeToString(toUnsignedByteArray(modulus)),
-                        "e" to Base64.getUrlEncoder().withoutPadding().encodeToString(toUnsignedByteArray(exponent))
+                        JwkKeys.KTY to JwkKeyTypes.RSA,
+                        JwkKeys.N to Base64.getUrlEncoder().withoutPadding().encodeToString(toUnsignedByteArray(modulus)),
+                        JwkKeys.E to Base64.getUrlEncoder().withoutPadding().encodeToString(toUnsignedByteArray(exponent))
                     )
                 }
                 else -> throw IllegalArgumentException("Unsupported algorithm for JWK conversion: ${algorithm.name}")

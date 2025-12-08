@@ -4,7 +4,7 @@ import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.types.VerificationResult
 import com.trustweave.trust.types.*
 import com.trustweave.core.*
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import com.trustweave.testkit.integrity.IntegrityVerifier
 import com.trustweave.testkit.integrity.TestDataBuilders
@@ -19,7 +19,8 @@ import com.trustweave.trust.types.DidCreationResult
 import com.trustweave.trust.types.IssuanceResult
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 
 /**
  * Earth Observation (EO) Data Integrity Example - Complete Scenario
@@ -72,7 +73,7 @@ fun main() = runBlocking {
         keys {
             custom(kmsRef)
             signer { data, keyId ->
-                kmsRef.sign(com.trustweave.core.types.KeyId(keyId), data)
+                kmsRef.sign(com.trustweave.core.identifiers.KeyId(keyId), data)
             }
             algorithm("Ed25519")
         }
@@ -393,7 +394,7 @@ fun main() = runBlocking {
                     }
                 }
             }
-            issued(java.time.Instant.now())
+            issued(Clock.System.now())
         }
         signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
     }
@@ -508,7 +509,7 @@ fun main() = runBlocking {
         put("digestMultibase", vcDigest) // Also include as digestMultibase for verifier
         put("issuer", issuerDid.value)
         put("linksetDigest", linksetDigest)
-        put("timestamp", Instant.now().toString())
+        put("timestamp", Clock.System.now().toString())
     }
     println("  Payload to anchor:")
     println(anchorJson.encodeToString(JsonObject.serializer(), vcDigestPayload))

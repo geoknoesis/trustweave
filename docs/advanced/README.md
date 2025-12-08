@@ -9,6 +9,10 @@ This section is aimed at teams who are moving past the quick starts and now need
 
 ## Published Guides
 
+- [Identifier Design Specification](identifier-design.md) — comprehensive design for modeling identifiers and types in TrustWeave. Covers the distinction between identifiers (identity references) and types (classifications), type safety through value classes, validation, and serialization strategy. Essential for understanding the type system architecture.
+- [Credential-Agnostic API Design Specification](credential-agnostic-api-design.md) — initial design for a credential-agnostic API that supports multiple credential standards (VC 1.1/2.0, SD-JWT-VC, AnonCreds, mDL, X.509, PassKeys) through a pluggable proof adapter layer. Defines the `CredentialEnvelope` abstraction and `ProofAdapter` SPI for format plugins.
+- [Credential-Agnostic API Design Review](credential-agnostic-api-design-review.md) — expert review of the credential-agnostic API design, identifying weaknesses and proposing concrete improvements. Covers type safety, error handling consistency, API ergonomics, missing features, and performance considerations. Essential reading before implementation.
+- [Credential-Agnostic API Design v2 - Gorgeous DX Edition](credential-agnostic-api-design-v2.md) — **Recommended**: The ultimate design prioritizing gorgeous developer experience. Features fluent DSL builders, sealed class hierarchies for exhaustive error handling, type-safe everything, and zero backward compatibility compromises. This is the design to implement.
 - [Key Rotation](key-rotation.md) — how to plan, automate, and test cryptographic key rollovers using the same registries and KMS interfaces that power the facade. Ideal for security engineers and ops teams.
 - [Verification Policies](verification-policies.md) — modelling advanced validation rules (anchors, revocation, domain checks) with `CredentialVerificationOptions` and interpreting the structured `CredentialVerificationResult`.
 - [Error Handling](error-handling.md) — structured error handling with `TrustWeaveError` types, `Result<T>` utilities, and input validation. Essential for production applications.

@@ -1,9 +1,20 @@
 package com.trustweave.testkit.credential
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.vc.CredentialStatus
+import com.trustweave.credential.identifiers.StatusListId
+import com.trustweave.credential.model.StatusPurpose
+import com.trustweave.did.identifiers.Did
+import com.trustweave.core.identifiers.Iri
 import com.trustweave.wallet.CredentialFilter
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
@@ -60,7 +71,7 @@ class BasicWalletBranchCoverageTest {
         val filtered = wallet.list(CredentialFilter(issuer = "did:key:issuer1"))
 
         assertEquals(1, filtered.size)
-        assertEquals("cred-1", filtered.first().id)
+        assertEquals("cred-1", filtered.first().id?.value)
     }
 
     @Test
@@ -83,7 +94,7 @@ class BasicWalletBranchCoverageTest {
         val filtered = wallet.list(CredentialFilter(type = listOf("PersonCredential")))
 
         assertEquals(1, filtered.size)
-        assertTrue(filtered.first().type.contains("PersonCredential"))
+        assertTrue(filtered.first().type.any { it.value == "PersonCredential" })
     }
 
     @Test
@@ -137,9 +148,9 @@ class BasicWalletBranchCoverageTest {
 
     @Test
     fun `test BasicWallet list with expired filter true`() = runBlocking {
-        val pastDate = java.time.Instant.now().minusSeconds(86400).toString()
+        val pastDate = Clock.System.now().minus(kotlin.time.Duration.parse("PT24H")).toString()
         val cred1 = createTestCredential(id = "cred-1", expirationDate = pastDate)
-        val futureDate = java.time.Instant.now().plusSeconds(86400).toString()
+        val futureDate = Clock.System.now().plus(kotlin.time.Duration.parse("PT24H")).toString()
         val cred2 = createTestCredential(id = "cred-2", expirationDate = futureDate)
         wallet.store(cred1)
         wallet.store(cred2)
@@ -147,14 +158,14 @@ class BasicWalletBranchCoverageTest {
         val filtered = wallet.list(CredentialFilter(expired = true))
 
         assertEquals(1, filtered.size)
-        assertEquals("cred-1", filtered.first().id)
+        assertEquals("cred-1", filtered.first().id?.value)
     }
 
     @Test
     fun `test BasicWallet list with expired filter false`() = runBlocking {
-        val pastDate = java.time.Instant.now().minusSeconds(86400).toString()
+        val pastDate = Clock.System.now().minus(kotlin.time.Duration.parse("PT24H")).toString()
         val cred1 = createTestCredential(id = "cred-1", expirationDate = pastDate)
-        val futureDate = java.time.Instant.now().plusSeconds(86400).toString()
+        val futureDate = Clock.System.now().plus(kotlin.time.Duration.parse("PT24H")).toString()
         val cred2 = createTestCredential(id = "cred-2", expirationDate = futureDate)
         wallet.store(cred1)
         wallet.store(cred2)
@@ -162,7 +173,7 @@ class BasicWalletBranchCoverageTest {
         val filtered = wallet.list(CredentialFilter(expired = false))
 
         assertEquals(1, filtered.size)
-        assertEquals("cred-2", filtered.first().id)
+        assertEquals("cred-2", filtered.first().id?.value)
     }
 
     @Test
@@ -190,9 +201,10 @@ class BasicWalletBranchCoverageTest {
     fun `test BasicWallet list with revoked filter true`() = runBlocking {
         val cred1 = createTestCredential(
             id = "cred-1",
-            credentialStatus = com.trustweave.credential.models.CredentialStatus(
-                id = "status-list-1",
-                type = "StatusList2021Entry"
+            credentialStatus = CredentialStatus(
+                id = StatusListId("status-list-1"),
+                type = "StatusList2021Entry",
+                statusPurpose = StatusPurpose.REVOCATION
             )
         )
         val cred2 = createTestCredential(id = "cred-2", credentialStatus = null)
@@ -202,16 +214,17 @@ class BasicWalletBranchCoverageTest {
         val filtered = wallet.list(CredentialFilter(revoked = true))
 
         assertEquals(1, filtered.size)
-        assertEquals("cred-1", filtered.first().id)
+        assertEquals("cred-1", filtered.first().id?.value)
     }
 
     @Test
     fun `test BasicWallet list with revoked filter false`() = runBlocking {
         val cred1 = createTestCredential(
             id = "cred-1",
-            credentialStatus = com.trustweave.credential.models.CredentialStatus(
-                id = "status-list-1",
-                type = "StatusList2021Entry"
+            credentialStatus = CredentialStatus(
+                id = StatusListId("status-list-1"),
+                type = "StatusList2021Entry",
+                statusPurpose = StatusPurpose.REVOCATION
             )
         )
         val cred2 = createTestCredential(id = "cred-2", credentialStatus = null)
@@ -221,7 +234,7 @@ class BasicWalletBranchCoverageTest {
         val filtered = wallet.list(CredentialFilter(revoked = false))
 
         assertEquals(1, filtered.size)
-        assertEquals("cred-2", filtered.first().id)
+        assertEquals("cred-2", filtered.first().id?.value)
     }
 
     @Test
@@ -247,7 +260,7 @@ class BasicWalletBranchCoverageTest {
         )
 
         assertEquals(1, filtered.size)
-        assertEquals("cred-1", filtered.first().id)
+        assertEquals("cred-1", filtered.first().id?.value)
     }
 
     @Test
@@ -293,7 +306,7 @@ class BasicWalletBranchCoverageTest {
 
     @Test
     fun `test BasicWallet query with multiple filters`() = runBlocking {
-        val futureDate = java.time.Instant.now().plusSeconds(86400).toString()
+        val futureDate = Clock.System.now().plus(kotlin.time.Duration.parse("PT24H")).toString()
         val cred1 = createTestCredential(
             id = "cred-1",
             issuerDid = "did:key:issuer1",
@@ -313,7 +326,7 @@ class BasicWalletBranchCoverageTest {
         }
 
         assertEquals(1, results.size)
-        assertEquals("cred-1", results.first().id)
+        assertEquals("cred-1", results.first().id?.value)
     }
 
     private fun createTestCredential(
@@ -324,17 +337,22 @@ class BasicWalletBranchCoverageTest {
             put("id", "did:key:subject")
             put("name", "John Doe")
         },
-        issuanceDate: String = java.time.Instant.now().toString(),
+        issuanceDate: String = kotlinx.datetime.Clock.System.now().toString(),
         expirationDate: String? = null,
-        credentialStatus: com.trustweave.credential.models.CredentialStatus? = null
+        credentialStatus: com.trustweave.credential.model.vc.CredentialStatus? = null
     ): VerifiableCredential {
+        val subjectId = subject["id"]?.jsonPrimitive?.content ?: "did:key:subject"
+        val claims = subject.toMutableMap().apply { remove("id") }
         return VerifiableCredential(
-            id = id,
-            type = types,
-            issuer = issuerDid,
-            credentialSubject = subject,
-            issuanceDate = issuanceDate,
-            expirationDate = expirationDate,
+            id = id?.let { com.trustweave.credential.identifiers.CredentialId(it) },
+            type = types.map { com.trustweave.credential.model.CredentialType.Custom(it) },
+            issuer = com.trustweave.credential.model.vc.Issuer.fromDid(com.trustweave.did.identifiers.Did(issuerDid)),
+            credentialSubject = com.trustweave.credential.model.vc.CredentialSubject.fromIri(
+                com.trustweave.core.identifiers.Iri(subjectId),
+                claims = claims
+            ),
+            issuanceDate = kotlinx.datetime.Instant.parse(issuanceDate),
+            expirationDate = expirationDate?.let { kotlinx.datetime.Instant.parse(it) },
             credentialStatus = credentialStatus
         )
     }

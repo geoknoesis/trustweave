@@ -1,13 +1,15 @@
 package com.trustweave.trust.dsl
 
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.verifier.CredentialVerifier
+import com.trustweave.credential.model.vc.VerifiableCredential
+// TODO: CredentialVerifier is from credential-core - needs migration to credential-api
+// import com.trustweave.credential.verifier.CredentialVerifier
 import com.trustweave.trust.dsl.credential.*
 import com.trustweave.wallet.Wallet
 import com.trustweave.trust.dsl.wallet.*
 import com.trustweave.trust.dsl.did.*
-import com.trustweave.credential.anchor.CredentialAnchorService
-import com.trustweave.did.DidDocument
+// TODO: CredentialAnchorService is from credential-core - needs migration
+// import com.trustweave.credential.anchor.CredentialAnchorService
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.DidMethod
 import com.trustweave.did.registry.DidMethodRegistry
 import com.trustweave.did.resolver.DidResolver
@@ -16,15 +18,15 @@ import com.trustweave.did.verifier.DelegationChainResult
 import com.trustweave.anchor.BlockchainAnchorClient
 import com.trustweave.kms.KeyManagementService
 import com.trustweave.kms.services.KmsService
-import com.trustweave.credential.revocation.StatusListManager
+import com.trustweave.credential.revocation.CredentialRevocationManager
 import com.trustweave.credential.schema.SchemaRegistry
 import com.trustweave.wallet.services.WalletFactory
 import com.trustweave.trust.TrustRegistry
-import com.trustweave.trust.types.ProofType
-import com.trustweave.trust.types.Did
-import com.trustweave.trust.types.VerificationResult
+import com.trustweave.credential.model.ProofType
+import com.trustweave.did.identifiers.Did
 import com.trustweave.trust.types.DidCreationResult
-import com.trustweave.trust.types.IssuanceResult
+import com.trustweave.credential.results.IssuanceResult
+import com.trustweave.trust.types.VerificationResult
 import com.trustweave.trust.types.WalletCreationResult
 import com.trustweave.trust.dsl.KeyRotationBuilder
 import kotlinx.coroutines.Dispatchers
@@ -75,7 +77,10 @@ class TrustWeaveContext(
     override fun getDidResolver(): DidResolver {
         return DidResolver { did ->
             runCatching { config.registries.didRegistry.resolve(did.value) }
-                .getOrNull()
+                .getOrElse { null } ?: DidResolutionResult.Failure.ResolutionError(
+                    did = did,
+                    reason = "DID resolution failed"
+                )
         }
     }
 
@@ -104,15 +109,18 @@ class TrustWeaveContext(
     }
 
     // CredentialDslProvider implementation
-    override fun getIssuer() = config.issuer
+    override fun getIssuer() = config.issuer // TODO: Replace with CredentialService from credential-api
 
-    override fun getVerifier(): CredentialVerifier {
-        val resolver = config.didResolver ?: getDidResolver()
-        return CredentialVerifier(defaultDidResolver = resolver)
+    override fun getVerifier(): Any? {
+        // TODO: CredentialVerifier is from credential-core - needs migration to credential-api
+        // The credential-api uses CredentialService.verify() instead
+        // val resolver = config.didResolver ?: getDidResolver()
+        // return CredentialVerifier(defaultDidResolver = resolver)
+        return null
     }
 
-    override fun getStatusListManager(): StatusListManager? {
-        return config.statusListManager
+    override fun getRevocationManager(): CredentialRevocationManager? {
+        return config.revocationManager
     }
 
     override fun getDefaultProofType(): ProofType {
@@ -122,20 +130,22 @@ class TrustWeaveContext(
     /**
      * Get the credential anchor service.
      */
-    fun getAnchorService(): CredentialAnchorService {
-        val anchorClient = config.registries.blockchainRegistry.getAllClients().values.firstOrNull()
-            ?: throw IllegalStateException(
-                "No anchor client configured. " +
-                "Configure it in TrustWeave.build { anchor { chain(\"algorand:testnet\") { provider(\"inMemory\") } } }"
-            )
-        return CredentialAnchorService(anchorClient)
+    fun getAnchorService(): Any? {
+        // TODO: CredentialAnchorService is from credential-core - needs migration
+        // val anchorClient = config.registries.blockchainRegistry.getAllClients().values.firstOrNull()
+        //     ?: throw IllegalStateException(
+        //         "No anchor client configured. " +
+        //         "Configure it in TrustWeave.build { anchor { chain(\"algorand:testnet\") { provider(\"inMemory\") } } }"
+        //     )
+        // return CredentialAnchorService(anchorClient)
+        return null
     }
 
     /**
      * Get the schema registry.
      */
-    fun getSchemaRegistry(): SchemaRegistry {
-        return SchemaRegistry
+    override fun getSchemaRegistry(): SchemaRegistry? {
+        return com.trustweave.credential.schema.SchemaRegistries.default()
     }
 
     /**
@@ -271,8 +281,8 @@ class TrustWeaveContext(
      * This operation uses the configured dispatcher for I/O-bound work.
      */
     suspend fun revoke(block: com.trustweave.trust.dsl.credential.RevocationBuilder.() -> Unit): Boolean {
-        val statusListManager = getStatusListManager()
-        val builder = com.trustweave.trust.dsl.credential.RevocationBuilder(statusListManager)
+        val revocationManager = getRevocationManager()
+        val builder = com.trustweave.trust.dsl.credential.RevocationBuilder(revocationManager)
         builder.block()
         return withContext(config.ioDispatcher) {
             builder.revoke()

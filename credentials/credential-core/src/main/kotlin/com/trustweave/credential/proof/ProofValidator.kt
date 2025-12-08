@@ -1,7 +1,7 @@
 package com.trustweave.credential.proof
 
-import com.trustweave.did.DidDocument
-import com.trustweave.did.VerificationMethod
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.VerificationMethod
 import com.trustweave.did.resolver.DidResolver
 import com.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.Dispatchers
@@ -35,7 +35,14 @@ class ProofValidator(
     constructor(
         resolveDid: suspend (String) -> DidResolutionResult?
     ) : this(
-        DidResolver { did -> resolveDid(did.value) }
+        DidResolver { did -> 
+            val result = resolveDid(did.value)
+            result ?: DidResolutionResult.Failure.NotFound(
+                did = did,
+                reason = "DID not found",
+                resolutionMetadata = emptyMap()
+            )
+        }
     )
 
     /**
@@ -55,7 +62,7 @@ class ProofValidator(
 
         // Resolve issuer DID document
         val resolutionResult = try {
-            didResolver.resolve(com.trustweave.core.types.Did(issuerDid))
+            didResolver.resolve(com.trustweave.did.identifiers.Did(issuerDid))
         } catch (e: IllegalArgumentException) {
             // Invalid DID format
             return@withContext ProofPurposeValidationResult(
@@ -81,27 +88,27 @@ class ProofValidator(
 
         // Check if VM exists in verificationMethod list
         val vmExistsInList = verificationMethods.any { vm ->
-            vm.id == normalizedVmRef || vm.id == verificationMethod
+            vm.id.value == normalizedVmRef || vm.id.value == verificationMethod
         }
 
         // Check if proof purpose matches verification relationship
         val isValid = when (proofPurpose) {
             "assertionMethod" -> {
                 document.assertionMethod.any { ref ->
-                    ref == normalizedVmRef || ref == verificationMethod ||
-                    ref == "#${verificationMethod.substringAfterLast("#")}"
+                    ref.value == normalizedVmRef || ref.value == verificationMethod ||
+                    ref.value == "#${verificationMethod.substringAfterLast("#")}"
                 }
             }
             "authentication" -> {
                 document.authentication.any { ref ->
-                    ref == normalizedVmRef || ref == verificationMethod ||
-                    ref == "#${verificationMethod.substringAfterLast("#")}"
+                    ref.value == normalizedVmRef || ref.value == verificationMethod ||
+                    ref.value == "#${verificationMethod.substringAfterLast("#")}"
                 }
             }
             "keyAgreement" -> {
                 document.keyAgreement.any { ref ->
-                    ref == normalizedVmRef || ref == verificationMethod ||
-                    ref == "#${verificationMethod.substringAfterLast("#")}"
+                    ref.value == normalizedVmRef || ref.value == verificationMethod ||
+                    ref.value == "#${verificationMethod.substringAfterLast("#")}"
                 }
             }
             "capabilityInvocation" -> {

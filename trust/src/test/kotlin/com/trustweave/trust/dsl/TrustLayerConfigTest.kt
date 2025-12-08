@@ -8,7 +8,7 @@ import com.trustweave.trust.dsl.TrustWeaveConfig
 import com.trustweave.trust.dsl.trustWeave
 import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.trust.types.ProofType
+import com.trustweave.credential.model.ProofType
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.BeforeEach

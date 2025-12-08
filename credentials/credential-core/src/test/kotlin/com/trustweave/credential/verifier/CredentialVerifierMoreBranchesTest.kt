@@ -2,9 +2,9 @@ package com.trustweave.credential.verifier
 
 import com.trustweave.credential.CredentialVerificationOptions
 import com.trustweave.credential.models.CredentialSchema
-import com.trustweave.credential.models.CredentialStatus
+import com.trustweave.credential.model.vc.CredentialStatus
 import com.trustweave.credential.models.Proof
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.schema.JsonSchemaValidator
 import com.trustweave.credential.schema.SchemaRegistry
 import com.trustweave.credential.schema.SchemaValidatorRegistry
@@ -15,7 +15,9 @@ import kotlinx.serialization.json.*
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.seconds
 import kotlin.test.*
 
 /**
@@ -48,7 +50,7 @@ class CredentialVerifierMoreBranchesTest {
     @Test
     fun `test verify with options checkExpiration false`() = runBlocking {
         val credential = createTestCredential(
-            expirationDate = Instant.now().minusSeconds(86400).toString() // Expired
+            expirationDate = Clock.System.now().minus(86400.seconds).toString() // Expired
         )
         val options = CredentialVerificationOptions(checkExpiration = false)
 
@@ -134,7 +136,7 @@ class CredentialVerifierMoreBranchesTest {
     @Test
     fun `test verify with expirationDate in future`() = runBlocking {
         val credential = createTestCredential(
-            expirationDate = Instant.now().plusSeconds(86400).toString()
+            expirationDate = Clock.System.now().plus(86400.seconds).toString()
         )
 
         val result = verifier.verify(credential)
@@ -145,7 +147,7 @@ class CredentialVerifierMoreBranchesTest {
     @Test
     fun `test verify with expirationDate exactly now`() = runBlocking {
         val credential = createTestCredential(
-            expirationDate = Instant.now().toString()
+            expirationDate = Clock.System.now().toString()
         )
 
         val result = verifier.verify(credential)
@@ -156,7 +158,7 @@ class CredentialVerifierMoreBranchesTest {
     @Test
     fun `test verify with expirationDate in past`() = runBlocking {
         val credential = createTestCredential(
-            expirationDate = Instant.now().minusSeconds(86400).toString()
+            expirationDate = Clock.System.now().minus(86400.seconds).toString()
         )
 
         val result = verifier.verify(credential)
@@ -303,7 +305,7 @@ class CredentialVerifierMoreBranchesTest {
         val credential = createTestCredential(
             proof = Proof(
                 type = "Ed25519Signature2020",
-                created = Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:issuer123#key-1",
                 proofPurpose = "assertionMethod",
                 proofValue = "proof-value-123",
@@ -321,7 +323,7 @@ class CredentialVerifierMoreBranchesTest {
         val credential = createTestCredential(
             proof = Proof(
                 type = "Ed25519Signature2020",
-                created = Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:issuer123#key-1",
                 proofPurpose = "assertionMethod",
                 proofValue = "proof-value-123",
@@ -339,7 +341,7 @@ class CredentialVerifierMoreBranchesTest {
         val credential = createTestCredential(
             proof = Proof(
                 type = "Ed25519Signature2020",
-                created = Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:issuer123#key-1",
                 proofPurpose = "assertionMethod",
                 proofValue = null,
@@ -367,7 +369,7 @@ class CredentialVerifierMoreBranchesTest {
         schema: CredentialSchema? = null,
         proof: Proof? = Proof(
             type = "Ed25519Signature2020",
-            created = Instant.now().toString(),
+            created = Clock.System.now().toString(),
             verificationMethod = "did:key:issuer123#key-1",
             proofPurpose = "assertionMethod"
         ),
@@ -377,7 +379,7 @@ class CredentialVerifierMoreBranchesTest {
             id = id,
             type = types,
             issuer = issuerDid,
-            issuanceDate = Instant.now().toString(),
+            issuanceDate = Clock.System.now().toString(),
             expirationDate = expirationDate,
             credentialSubject = credentialSubject,
             credentialStatus = credentialStatus,

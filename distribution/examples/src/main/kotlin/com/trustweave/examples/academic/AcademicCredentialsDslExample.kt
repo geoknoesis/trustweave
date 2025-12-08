@@ -14,8 +14,10 @@ import com.trustweave.wallet.CredentialOrganization
 import com.trustweave.wallet.Wallet
 import com.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
-import java.time.Instant
-import java.time.temporal.ChronoUnit
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.days
+import com.trustweave.credential.model.ProofType
 
 /**
  * Academic Credentials Example using DSL.
@@ -116,8 +118,8 @@ fun main() = runBlocking {
                     "gpa" to "3.8"
                 }
             }
-            issued(Instant.now())
-            expires(365 * 10, ChronoUnit.DAYS) // Valid for 10 years
+            issued(Clock.System.now())
+            expires((365 * 10).days) // Valid for 10 years
         }
         signedBy(issuerDid = universityDid.value, keyId = issuerKey.id.value)
         withRevocation() // Auto-create status list

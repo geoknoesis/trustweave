@@ -1,7 +1,7 @@
 package com.trustweave.credential.issuer
 
 import com.trustweave.credential.CredentialIssuanceOptions
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.proof.Ed25519ProofGenerator
 import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.credential.schema.JsonSchemaValidator
@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.UUID
 import kotlin.test.*
+import kotlinx.datetime.Clock
 
 /**
  * Comprehensive branch coverage tests for CredentialIssuer.
@@ -275,7 +276,7 @@ class CredentialIssuerBranchCoverageTest {
             put("id", "did:key:subject")
             put("name", "John Doe")
         },
-        issuanceDate: String = java.time.Instant.now().toString(),
+        issuanceDate: String = Clock.System.now().toString(),
         schema: com.trustweave.credential.models.CredentialSchema? = null
     ): VerifiableCredential {
         return VerifiableCredential(

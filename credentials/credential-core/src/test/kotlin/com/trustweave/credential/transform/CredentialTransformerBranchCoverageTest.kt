@@ -1,10 +1,12 @@
 package com.trustweave.credential.transform
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Comprehensive branch coverage tests for CredentialTransformer.
@@ -88,7 +90,7 @@ class CredentialTransformerBranchCoverageTest {
         val credential = createTestCredential(
             proof = com.trustweave.credential.models.Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:issuer#key-1",
                 proofPurpose = "assertionMethod",
                 proofValue = "test-proof"
@@ -104,14 +106,14 @@ class CredentialTransformerBranchCoverageTest {
     fun `test CredentialTransformer toJsonLd with all fields`() = runBlocking {
         val transformer = CredentialTransformer()
         val credential = createTestCredential(
-            expirationDate = java.time.Instant.now().plusSeconds(86400).toString(),
-            credentialStatus = com.trustweave.credential.models.CredentialStatus(
+            expirationDate = Clock.System.now().plus(86400.seconds).toString(),
+            credentialStatus = com.trustweave.credential.model.vc.CredentialStatus(
                 id = "status-list-1",
                 type = "StatusList2021Entry"
             ),
             proof = com.trustweave.credential.models.Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:issuer#key-1",
                 proofPurpose = "assertionMethod",
                 proofValue = "test-proof"
@@ -167,9 +169,9 @@ class CredentialTransformerBranchCoverageTest {
             put("id", "did:key:subject")
             put("name", "John Doe")
         },
-        issuanceDate: String = java.time.Instant.now().toString(),
+        issuanceDate: String = Clock.System.now().toString(),
         expirationDate: String? = null,
-        credentialStatus: com.trustweave.credential.models.CredentialStatus? = null,
+        credentialStatus: com.trustweave.credential.model.vc.CredentialStatus? = null,
         proof: com.trustweave.credential.models.Proof? = null
     ): VerifiableCredential {
         return VerifiableCredential(

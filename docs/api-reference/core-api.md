@@ -352,10 +352,13 @@ data class DidResolutionMetadata(
 
 **Example:**
 ```kotlin
+import com.trustweave.did.identifiers.Did
+
 // Simple usage - access resolver via DSL context
 val context = trustLayer.getDslContext()
 val resolver = context.getDidResolver()
-val result = resolver?.resolve("did:key:z6Mk...")
+val did = Did("did:key:z6Mk...")
+val result = resolver?.resolve(did)
 if (result?.document != null) {
     println("DID resolved: ${result.document.id}")
 } else {
@@ -393,10 +396,13 @@ suspend fun updateDid(block: DidUpdateBuilder.() -> Unit): DidUpdateResult
 
 **Example:**
 ```kotlin
+import com.trustweave.did.identifiers.Did
+
+val did = Did("did:key:example")
 val updateResult = trustLayer.updateDid {
-    did("did:key:example")
+    did(did.value)  // DSL builder accepts string for convenience
     addService {
-        id("${did}#service-1")
+        id("${did.value}#service-1")
         type("LinkedDomains")
         endpoint("https://example.com/service")
     }
@@ -426,13 +432,13 @@ when (updateResult) {
 Deactivates a DID, marking it as no longer active.
 
 ```kotlin
-suspend fun deactivate(did: String): Boolean
+suspend fun deactivateDid(did: Did): Boolean
 ```
 
 **Access via:** `trustLayer.getDslContext().deactivateDid(did)` or use DID method directly
 
 **Parameters:**
-- **`did`** (String, required): The DID to deactivate
+- **`did`** (Did, required): Type-safe DID identifier to deactivate
 
 **Returns:** `Boolean` - `true` if deactivated successfully, `false` otherwise
 
@@ -443,9 +449,12 @@ suspend fun deactivate(did: String): Boolean
 
 **Example:**
 ```kotlin
+import com.trustweave.did.identifiers.Did
+
 // Access via DSL context
 val context = trustLayer.getDslContext()
-val deactivated = context.deactivateDid("did:key:example")
+val did = Did("did:key:example")
+val deactivated = context.deactivateDid(did)
 if (deactivated) {
     println("DID deactivated successfully")
 }

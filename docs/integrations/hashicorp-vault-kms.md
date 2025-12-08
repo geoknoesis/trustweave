@@ -22,11 +22,12 @@ Add the HashiCorp Vault KMS module to your dependencies:
 
 ```kotlin
 dependencies {
+    // Only need to add the HashiCorp Vault KMS plugin - core dependencies are included transitively
     implementation("com.trustweave.kms:hashicorp:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 }
 ```
+
+**Note:** The HashiCorp Vault KMS plugin automatically includes `trustweave-kms` and `trustweave-common` as transitive dependencies, so you don't need to declare them explicitly.
 
 ## Prerequisites
 
@@ -59,14 +60,9 @@ The Vault KMS provider can be configured via options map or environment variable
 
 ```kotlin
 import com.trustweave.kms.*
-import java.util.ServiceLoader
 
-// Discover Vault provider
-val providers = ServiceLoader.load(KeyManagementServiceProvider::class.java)
-val vaultProvider = providers.find { it.name == "vault" }
-
-// Create KMS with explicit configuration
-val kms = vaultProvider?.create(mapOf(
+// Simple factory API - no ServiceLoader needed!
+val kms = KeyManagementServices.create("vault", mapOf(
     "address" to "http://localhost:8200",
     "token" to "hvs.xxx"
 ))
@@ -182,25 +178,36 @@ if (kms?.supportsAlgorithm(Algorithm.Ed25519) == true) {
 
 ```kotlin
 import com.trustweave.kms.*
+import com.trustweave.kms.KmsOptionKeys
+import com.trustweave.kms.results.*
 
 // Generate Ed25519 key with auto-generated name
-val key = kms.generateKey(Algorithm.Ed25519)
+val result = kms.generateKey(Algorithm.Ed25519)
+when (result) {
+    is GenerateKeyResult.Success -> {
+        val keyHandle = result.keyHandle
+        println("Key created: ${keyHandle.id}")
+    }
+    is GenerateKeyResult.Failure -> {
+        println("Error: ${result.reason}")
+    }
+}
 
 // Generate key with custom name
-val keyWithName = kms.generateKey(
+val keyWithNameResult = kms.generateKey(
     algorithm = Algorithm.Ed25519,
     options = mapOf(
-        "keyName" to "did-issuer-key",
-        "exportable" to false,
-        "allowPlaintextBackup" to false
+        KmsOptionKeys.KEY_ID to "did-issuer-key",
+        KmsOptionKeys.EXPORTABLE to false,
+        KmsOptionKeys.ALLOW_PLAINTEXT_BACKUP to false
     )
 )
 
 // Generate P-256 key for FIPS compliance
-val fipsKey = kms.generateKey(
+val fipsKeyResult = kms.generateKey(
     algorithm = Algorithm.P256,
     options = mapOf(
-        "keyName" to "fips-compliant-key"
+        KmsOptionKeys.KEY_ID to "fips-compliant-key"
     )
 )
 ```
@@ -209,13 +216,22 @@ val fipsKey = kms.generateKey(
 
 ```kotlin
 // Sign with key name (KeyId value class)
-val signature = kms.sign(KeyId("did-issuer-key"), data.toByteArray())
+val sign = kms.sign(KeyId("did-issuer-key"), data.toByteArray())
+when (sign) {
+    is SignResult.Success -> {
+        val signature = sign.signature
+        // Use signature
+    }
+    is SignResult.Failure -> {
+        println("Error: ${sign.reason}")
+    }
+}
 
 // Sign with full key path
-val signature = kms.sign(KeyId("transit/keys/did-issuer-key"), data.toByteArray())
+val sign = kms.sign(KeyId("transit/keys/did-issuer-key"), data.toByteArray())
 
 // Sign with algorithm override
-val signature = kms.sign(
+val sign = kms.sign(
     keyId = KeyId("did-issuer-key"),
     data = data.toByteArray(),
     algorithm = Algorithm.Ed25519
@@ -226,21 +242,33 @@ val signature = kms.sign(
 
 ```kotlin
 // Get public key by key name (KeyId value class)
-val publicKey = kms.getPublicKey(KeyId("did-issuer-key"))
+val publicKeyResult = kms.getPublicKey(KeyId("did-issuer-key"))
+when (publicKeyResult) {
+    is GetPublicKeyResult.Success -> {
+        val publicKey = publicKeyResult.keyHandle
+        // Access JWK format
+        val jwk = publicKey.publicKeyJwk
+        println("Public key JWK: $jwk")
+    }
+    is GetPublicKeyResult.Failure -> {
+        println("Error: ${publicKeyResult.reason}")
+    }
+}
 
 // Get public key by full path
-val publicKey = kms.getPublicKey(KeyId("transit/keys/did-issuer-key"))
-
-// Access JWK format
-val jwk = publicKey.publicKeyJwk
-println("Public key JWK: $jwk")
+val publicKeyResult = kms.getPublicKey(KeyId("transit/keys/did-issuer-key"))
 ```
 
 ### Key Deletion
 
 ```kotlin
 // Delete key (requires deletion policy in Vault)
-val deleted = kms.deleteKey(KeyId("did-issuer-key"))
+val deleteResult = kms.deleteKey(KeyId("did-issuer-key"))
+when (deleteResult) {
+    is DeleteKeyResult.Deleted -> println("Key deleted")
+    is DeleteKeyResult.NotFound -> println("Key not found (already deleted)")
+    is DeleteKeyResult.Failure.Error -> println("Error: ${deleteResult.reason}")
+}
 ```
 
 **Note**: Key deletion in Vault Transit requires special policy configuration. By default, keys cannot be deleted for security reasons.
@@ -325,22 +353,29 @@ The plugin automatically uses the latest key version for signing operations.
 The plugin maps Vault exceptions to TrustWeave exceptions:
 
 ```kotlin
-try {
-    val key = kms.generateKey(Algorithm.Ed25519)
-} catch (e: UnsupportedAlgorithmException) {
-    println("Algorithm not supported: ${e.message}")
-} catch (e: KeyNotFoundException) {
-    println("Key not found: ${e.message}")
-} catch (e: TrustWeaveException) {
-    when {
-        e.message?.contains("Access denied") == true -> {
-            println("Check Vault policies")
-        }
-        e.message?.contains("Authentication failed") == true -> {
-            println("Check Vault token or credentials")
-        }
-        else -> {
-            println("Error: ${e.message}")
+val result = kms.generateKey(Algorithm.Ed25519)
+when (result) {
+    is GenerateKeyResult.Success -> {
+        val keyHandle = result.keyHandle
+        // Use key handle
+    }
+    is GenerateKeyResult.Failure.UnsupportedAlgorithm -> {
+        println("Algorithm not supported: ${result.algorithm.name}")
+    }
+    is GenerateKeyResult.Failure.InvalidOptions -> {
+        println("Invalid options: ${result.reason}")
+    }
+    is GenerateKeyResult.Failure.Error -> {
+        when {
+            result.reason.contains("Access denied", ignoreCase = true) -> {
+                println("Check Vault policies")
+            }
+            result.reason.contains("Authentication failed", ignoreCase = true) -> {
+                println("Check Vault token or credentials")
+            }
+            else -> {
+                println("Error: ${result.reason}")
+            }
         }
     }
 }

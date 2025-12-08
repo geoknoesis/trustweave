@@ -4,7 +4,7 @@ import com.trustweave.did.registrar.model.DidRegistrationResponse
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.sql.Timestamp
-import java.time.Instant
+import kotlinx.datetime.Clock
 import javax.sql.DataSource
 
 /**
@@ -118,7 +118,7 @@ class DatabaseJobStorage(
 
     override fun store(jobId: String, response: DidRegistrationResponse) {
         val jsonData = json.encodeToString(response)
-        val now = Timestamp.from(Instant.now())
+        val now = Timestamp.from(java.time.Instant.ofEpochSecond(Clock.System.now().epochSeconds))
 
         dataSource.connection.use { conn ->
             // Use INSERT ... ON CONFLICT UPDATE (PostgreSQL) or REPLACE INTO (MySQL/H2)

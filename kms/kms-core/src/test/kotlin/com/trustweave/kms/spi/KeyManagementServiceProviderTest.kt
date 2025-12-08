@@ -1,10 +1,10 @@
 package com.trustweave.kms.spi
 
-import com.trustweave.core.types.KeyId
+import com.trustweave.core.identifiers.KeyId
 import com.trustweave.kms.Algorithm
 import com.trustweave.kms.KeyHandle
 import com.trustweave.kms.KeyManagementService
-import com.trustweave.kms.KeyNotFoundException
+import com.trustweave.kms.results.*
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.*
@@ -44,7 +44,9 @@ class KeyManagementServiceProviderTest {
         val provider = createMockProvider()
         val kms = provider.create()
 
-        val handle = kms.generateKey("Ed25519")
+        val result = kms.generateKey("Ed25519")
+        assertTrue(result is GenerateKeyResult.Success)
+        val handle = result.keyHandle
 
         assertNotNull(handle)
         assertEquals("Ed25519", handle.algorithm)
@@ -64,33 +66,35 @@ class KeyManagementServiceProviderTest {
                         return setOf(Algorithm.Ed25519, Algorithm.Secp256k1, Algorithm.P256)
                     }
 
-                    override suspend fun generateKey(algorithm: Algorithm, options: Map<String, Any?>): KeyHandle {
+                    override suspend fun generateKey(algorithm: Algorithm, options: Map<String, Any?>): GenerateKeyResult {
                         val keyId = KeyId("key-${keys.size + 1}")
                         val handle = KeyHandle(
                             id = keyId,
                             algorithm = algorithm.name
                         )
                         keys[handle.id] = handle
-                        return handle
+                        return GenerateKeyResult.Success(handle)
                     }
 
-                    override suspend fun getPublicKey(keyId: KeyId): KeyHandle {
-                        return keys[keyId] ?: throw KeyNotFoundException(keyId = keyId.value)
+                    override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult {
+                        return keys[keyId]?.let { GetPublicKeyResult.Success(it) }
+                            ?: GetPublicKeyResult.Failure.KeyNotFound(keyId)
                     }
 
-                    override suspend fun sign(keyId: KeyId, data: ByteArray, algorithm: Algorithm?): ByteArray {
-                        keys[keyId] ?: throw KeyNotFoundException(keyId = keyId.value)
-                        return ByteArray(64)
+                    override suspend fun sign(keyId: KeyId, data: ByteArray, algorithm: Algorithm?): SignResult {
+                        return keys[keyId]?.let { SignResult.Success(ByteArray(64)) }
+                            ?: SignResult.Failure.KeyNotFound(keyId)
                     }
 
-                    override suspend fun deleteKey(keyId: KeyId): Boolean {
-                        return keys.remove(keyId) != null
+                    override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult {
+                        return if (keys.remove(keyId) != null) {
+                            DeleteKeyResult.Deleted
+                        } else {
+                            DeleteKeyResult.NotFound
+                        }
                     }
                 }
             }
         }
     }
 }
-
-
-

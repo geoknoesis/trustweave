@@ -1,7 +1,7 @@
 package com.trustweave.credential.didcomm.utils
 
-import com.trustweave.did.DidDocument
-import com.trustweave.did.VerificationMethod
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.VerificationMethod
 
 /**
  * Utility functions for DIDComm operations.
@@ -21,21 +21,21 @@ object DidCommUtils {
         // If preferred key ID is provided, try to find it first
         if (preferredKeyId != null) {
             val preferred = document.verificationMethod.find { vm ->
-                vm.id == preferredKeyId || vm.id.endsWith("#$preferredKeyId")
+                vm.id.toString() == preferredKeyId || vm.id.toString().endsWith("#$preferredKeyId")
             }
-            if (preferred != null && document.keyAgreement.contains(preferred.id)) {
+            if (preferred != null && document.keyAgreement.any { it.toString() == preferred.id.toString() }) {
                 return preferred
             }
         }
 
         // Find first key agreement key
-        val keyAgreementIds = document.keyAgreement
+        val keyAgreementIds = document.keyAgreement.map { it.toString() }
         if (keyAgreementIds.isEmpty()) {
             // Fallback to authentication keys if no key agreement keys
-            val authIds = document.authentication
+            val authIds = document.authentication.map { it.toString() }
             if (authIds.isNotEmpty()) {
                 return document.verificationMethod.find { vm ->
-                    authIds.contains(vm.id) || authIds.any { id -> vm.id.endsWith(id) }
+                    authIds.contains(vm.id.toString()) || authIds.any { id -> vm.id.toString().endsWith(id) }
                 }
             }
             return null
@@ -43,8 +43,8 @@ object DidCommUtils {
 
         // Find verification method for key agreement
         return document.verificationMethod.find { vm ->
-            keyAgreementIds.contains(vm.id) ||
-            keyAgreementIds.any { id -> vm.id.endsWith(id) }
+            keyAgreementIds.contains(vm.id.toString()) ||
+            keyAgreementIds.any { id -> vm.id.toString().endsWith(id) }
         } ?: document.verificationMethod.firstOrNull()
     }
 

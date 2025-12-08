@@ -4,8 +4,10 @@ import com.trustweave.trust.TrustWeave
 import com.trustweave.anchor.AnchorRef
 import com.trustweave.anchor.exceptions.BlockchainException
 import com.trustweave.core.*
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.did.DidDocument
+import com.trustweave.core.identifiers.KeyId
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.did.model.DidDocument
+import com.trustweave.trust.types.VerificationResult
 import com.trustweave.wallet.Wallet
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.testkit.services.TestkitDidMethodFactory
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import kotlin.test.*
+import kotlinx.datetime.Clock
 
 /**
  * Comprehensive end-to-end test scenario for Indy integration.
@@ -62,7 +65,10 @@ class IndyIntegrationScenarioTest {
             keys {
                 custom(kmsRef)
                 signer { data, keyId ->
-                    kmsRef.sign(com.trustweave.core.types.KeyId(keyId), data)
+                    when (val result = kmsRef.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
+                        is com.trustweave.kms.results.SignResult.Success -> result.signature
+                        else -> throw IllegalStateException("Signing failed: $result")
+                    }
                 }
             }
             did {
@@ -94,7 +100,7 @@ class IndyIntegrationScenarioTest {
             is com.trustweave.did.resolver.DidResolutionResult.Success -> resolution.document
             else -> throw IllegalStateException("Failed to resolve issuer DID")
         }
-        val issuerKeyId = issuerDidDoc.verificationMethod.first().id.substringAfter("#")
+        val issuerKeyId = issuerDidDoc.verificationMethod.first().id.value.substringAfter("#")
         println("  ✓ Issuer Key ID: $issuerKeyId")
 
         // Step 3: Issue a verifiable credential
@@ -112,7 +118,7 @@ class IndyIntegrationScenarioTest {
                     "university" to "Test University"
                     "graduationDate" to "2024-05-15"
                 }
-                issued(java.time.Instant.now())
+                issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
         }.getOrFail()
@@ -120,7 +126,7 @@ class IndyIntegrationScenarioTest {
         println("  ✓ Credential Issuer: ${credential.issuer}")
         println("  ✓ Credential Types: ${credential.type}")
         assertNotNull(credential.proof, "Credential should have proof")
-        assertTrue(credential.type.contains("UniversityDegreeCredential"), "Should contain expected type")
+        assertTrue(credential.type.any { it.value == "UniversityDegreeCredential" }, "Should contain expected type")
 
         // Step 4: Verify the credential
         println("\nStep 3: Verifying credential...")
@@ -141,7 +147,7 @@ class IndyIntegrationScenarioTest {
 
         // Step 6: Retrieve credential from wallet
         val storedCredentialId = requireNotNull(credential.id) { "Credential should have an ID" }
-        val storedCredential = wallet.get(storedCredentialId)
+        val storedCredential = wallet.get(storedCredentialId.value)
         assertNotNull(storedCredential, "Should retrieve credential from wallet")
         assertEquals(storedCredentialId, storedCredential?.id, "Retrieved credential should match stored credential")
 
@@ -297,7 +303,7 @@ class IndyIntegrationScenarioTest {
             is com.trustweave.did.resolver.DidResolutionResult.Success -> issuerDidResolution.document
             else -> throw IllegalStateException("Failed to resolve issuer DID")
         }
-        val issuerKeyId = issuerDidDoc.verificationMethod.first().id.substringAfter("#")
+        val issuerKeyId = issuerDidDoc.verificationMethod.first().id.value.substringAfter("#")
 
         // Issue multiple credentials
         val credentials = mutableListOf<VerifiableCredential>()
@@ -314,7 +320,7 @@ class IndyIntegrationScenarioTest {
                         "credentialNumber" to i.toString()
                         "type" to "TestCredential$i"
                     }
-                    issued(java.time.Instant.now())
+                    issued(Clock.System.now())
                 }
                 signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
             }.getOrFail()

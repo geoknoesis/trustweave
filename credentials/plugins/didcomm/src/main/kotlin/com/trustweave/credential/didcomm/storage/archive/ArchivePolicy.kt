@@ -1,8 +1,10 @@
 package com.trustweave.credential.didcomm.storage.archive
 
 import com.trustweave.credential.didcomm.models.DidCommMessage
-import java.time.Instant
-import java.time.temporal.ChronoUnit
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
 
 /**
  * Defines when messages should be archived.
@@ -37,8 +39,10 @@ class AgeBasedArchivePolicy(
             }
         } ?: return false
 
-        val age = ChronoUnit.DAYS.between(created, Instant.now())
-        return age > maxAgeDays
+        val now = Clock.System.now()
+        val ageSeconds = now.epochSeconds - created.epochSeconds
+        val age = Duration.parse("PT${ageSeconds}S")
+        return age.inWholeDays > maxAgeDays
     }
 }
 

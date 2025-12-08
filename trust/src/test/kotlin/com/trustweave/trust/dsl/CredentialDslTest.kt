@@ -1,12 +1,13 @@
 package com.trustweave.trust.dsl
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.trust.dsl.credential.credential
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Test
-import java.time.Instant
-import java.time.temporal.ChronoUnit
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.days
 import kotlin.test.*
 
 /**
@@ -23,7 +24,7 @@ class CredentialDslTest {
                 id("did:key:subject")
                 "name" to "John Doe"
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         assertNotNull(credential)
@@ -36,8 +37,8 @@ class CredentialDslTest {
 
     @Test
     fun `test credential builder with all fields`() {
-        val now = Instant.now()
-        val expires = now.plus(365 * 10, ChronoUnit.DAYS)
+        val now = Clock.System.now()
+        val expires = now.plus((365 * 10).days)
 
         val credential = credential {
             id("https://example.edu/credentials/123")
@@ -80,8 +81,8 @@ class CredentialDslTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
-            expires(365, ChronoUnit.DAYS)
+            issued(Clock.System.now())
+            expires(365.days)
         }
 
         assertNotNull(credential.expirationDate)
@@ -95,7 +96,7 @@ class CredentialDslTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
             status {
                 id("https://example.com/status/1")
                 type("StatusList2021Entry")
@@ -118,7 +119,7 @@ class CredentialDslTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
             evidence {
                 id("evidence-1")
                 type("DocumentVerification")
@@ -127,7 +128,7 @@ class CredentialDslTest {
                     "verifiedBy" to "did:key:verifier"
                 }
                 verifier("did:key:verifier")
-                date(Instant.now().toString())
+                date(Clock.System.now().toString())
             }
         }
 
@@ -145,7 +146,7 @@ class CredentialDslTest {
                 subject {
                     id("did:key:subject")
                 }
-                issued(Instant.now())
+                issued(Clock.System.now())
                 // Missing issuer
             }
         }
@@ -157,7 +158,7 @@ class CredentialDslTest {
             credential {
                 type("Credential")
                 issuer("did:key:issuer")
-                issued(Instant.now())
+                issued(Clock.System.now())
                 // Missing subject
             }
         }
@@ -185,7 +186,7 @@ class CredentialDslTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         assertTrue(credential.type.contains("VerifiableCredential"))
@@ -209,7 +210,7 @@ class CredentialDslTest {
                     "city" to "Anytown"
                 }
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val personalInfo = credential.credentialSubject.jsonObject["personalInfo"]?.jsonObject

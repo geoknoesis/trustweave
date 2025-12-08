@@ -1,8 +1,9 @@
 package com.trustweave.iondid
 
 import com.trustweave.core.exception.TrustWeaveException
-import com.trustweave.did.DidDocument
-import com.trustweave.did.DidService
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.DidService
+import com.trustweave.did.model.VerificationMethod
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -264,16 +265,16 @@ class SidetreeClient(
     private fun documentToJsonObject(document: DidDocument): JsonObject {
         return buildJsonObject {
             put("@context", JsonArray(document.context.map { JsonPrimitive(it) }))
-            put("id", document.id)
+            put("id", JsonPrimitive(document.id.value))
 
             if (document.verificationMethod.isNotEmpty()) {
                 put("verificationMethod", JsonArray(document.verificationMethod.map { vmToJsonObject(it) }))
             }
             if (document.authentication.isNotEmpty()) {
-                put("authentication", JsonArray(document.authentication.map { JsonPrimitive(it) }))
+                put("authentication", JsonArray(document.authentication.map { JsonPrimitive(it.value) }))
             }
             if (document.assertionMethod.isNotEmpty()) {
-                put("assertionMethod", JsonArray(document.assertionMethod.map { JsonPrimitive(it) }))
+                put("assertionMethod", JsonArray(document.assertionMethod.map { JsonPrimitive(it.value) }))
             }
             if (document.service.isNotEmpty()) {
                 put("service", JsonArray(document.service.map { serviceToJsonObject(it) }))
@@ -281,16 +282,16 @@ class SidetreeClient(
         }
     }
 
-    private fun vmToJsonObject(vm: com.trustweave.did.VerificationMethod): JsonObject {
+    private fun vmToJsonObject(vm: VerificationMethod): JsonObject {
         return buildJsonObject {
-            put("id", vm.id)
-            put("type", vm.type)
-            put("controller", vm.controller)
+            put("id", JsonPrimitive(vm.id.value))
+            put("type", JsonPrimitive(vm.type))
+            put("controller", JsonPrimitive(vm.controller.value))
             vm.publicKeyJwk?.let { jwk ->
                 put("publicKeyJwk", mapToJsonObject(jwk))
             }
             vm.publicKeyMultibase?.let {
-                put("publicKeyMultibase", it)
+                put("publicKeyMultibase", JsonPrimitive(it))
             }
         }
     }

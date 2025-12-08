@@ -1,5 +1,7 @@
 package com.trustweave.did
 
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.model.DidDocument
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -21,31 +23,12 @@ class DidTest {
         registry = DefaultDidMethodRegistry()
     }
 
+    // Basic Did constructor tests - comprehensive coverage in DidParseBranchCoverageTest
     @Test
-    fun `Did toString should format correctly`() {
-        val did = Did(method = "web", id = "example.com")
-        assertEquals("did:web:example.com", did.toString())
-    }
-
-    @Test
-    fun `Did parse should parse valid DID strings`() {
-        val did = Did.parse("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
+    fun `Did constructor should parse valid DID strings`() {
+        val did = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
         assertEquals("key", did.method)
-        assertEquals("z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK", did.id)
-    }
-
-    @Test
-    fun `Did parse should throw for invalid format`() {
-        assertFailsWith<InvalidDidFormat> {
-            Did.parse("not-a-did")
-        }
-    }
-
-    @Test
-    fun `Did parse with complex id`() {
-        val did = Did.parse("did:web:example.com:path:to:resource")
-        assertEquals("web", did.method)
-        assertEquals("example.com:path:to:resource", did.id)
+        assertEquals("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK", did.value)
     }
 }
 
@@ -62,10 +45,12 @@ class DidRegistryTest {
     fun `DidRegistry should register and retrieve methods`() {
         val mockMethod = object : DidMethod {
             override val method = "test"
-            override suspend fun createDid(options: DidCreationOptions) = TODO()
-            override suspend fun resolveDid(did: String) = TODO()
-            override suspend fun updateDid(did: String, updater: (DidDocument) -> DidDocument) = TODO()
-            override suspend fun deactivateDid(did: String) = TODO()
+            override suspend fun createDid(options: DidCreationOptions) = DidDocument(id = Did("did:test:123"))
+            override suspend fun resolveDid(did: Did) = DidResolutionResult.Success(
+                document = DidDocument(id = did)
+            )
+            override suspend fun updateDid(did: Did, updater: (com.trustweave.did.model.DidDocument) -> com.trustweave.did.model.DidDocument) = DidDocument(id = did)
+            override suspend fun deactivateDid(did: Did) = true
         }
 
         registry.register(mockMethod)
@@ -140,7 +125,7 @@ class DidRegistryTest {
 
         assertTrue(result is DidResolutionResult.Success)
         assertNotNull(result.document)
-        assertEquals("did:web:example.com", result.document.id)
+        assertEquals("did:web:example.com", result.document.id.value)
     }
 
     private fun createMockDidMethod(methodName: String): DidMethod {
@@ -148,16 +133,16 @@ class DidRegistryTest {
             override val method = methodName
 
             override suspend fun createDid(options: DidCreationOptions) = DidDocument(
-                id = "did:$methodName:123"
+                id = Did("did:$methodName:123")
             )
 
-            override suspend fun resolveDid(did: String) = DidResolutionResult.Success(
+            override suspend fun resolveDid(did: Did) = DidResolutionResult.Success(
                 document = DidDocument(id = did)
             )
 
-            override suspend fun updateDid(did: String, updater: (DidDocument) -> DidDocument) = DidDocument(id = did)
+            override suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument) = DidDocument(id = did)
 
-            override suspend fun deactivateDid(did: String) = true
+            override suspend fun deactivateDid(did: Did) = true
         }
     }
 }

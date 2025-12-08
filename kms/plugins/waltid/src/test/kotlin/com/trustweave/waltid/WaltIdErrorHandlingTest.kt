@@ -3,7 +3,6 @@ package com.trustweave.waltid
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.didCreationOptions
 import com.trustweave.did.resolver.DidResolutionResult
-import com.trustweave.kms.KeyNotFoundException
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
@@ -17,21 +16,19 @@ import kotlin.test.assertTrue
 class WaltIdErrorHandlingTest {
 
     @Test
-    fun `KMS should throw KeyNotFoundException for non-existent key`() = runBlocking {
+    fun `KMS should return KeyNotFound result for non-existent key`() = runBlocking {
         val kms = WaltIdKeyManagementService()
 
-        assertFailsWith<KeyNotFoundException> {
-            kms.getPublicKey(com.trustweave.core.types.KeyId("nonexistent-key-id"))
-        }
+        val result = kms.getPublicKey(com.trustweave.core.identifiers.KeyId("nonexistent-key-id"))
+        assertTrue(result is com.trustweave.kms.results.GetPublicKeyResult.Failure.KeyNotFound)
     }
 
     @Test
-    fun `KMS should throw KeyNotFoundException when signing with non-existent key`() = runBlocking {
+    fun `KMS should return KeyNotFound result when signing with non-existent key`() = runBlocking {
         val kms = WaltIdKeyManagementService()
 
-        assertFailsWith<KeyNotFoundException> {
-            kms.sign(com.trustweave.core.types.KeyId("nonexistent-key-id"), "test data".toByteArray())
-        }
+        val result = kms.sign(com.trustweave.core.identifiers.KeyId("nonexistent-key-id"), "test data".toByteArray())
+        assertTrue(result is com.trustweave.kms.results.SignResult.Failure.KeyNotFound)
     }
 
     @Test
@@ -51,7 +48,7 @@ class WaltIdErrorHandlingTest {
         val keyMethod = com.trustweave.waltid.did.WaltIdKeyMethod(kms)
 
         // Resolving a DID that was never created should return null document
-        val result = keyMethod.resolveDid("did:key:zNonexistent")
+        val result = keyMethod.resolveDid(com.trustweave.did.identifiers.Did("did:key:zNonexistent"))
         assertTrue(result is com.trustweave.did.resolver.DidResolutionResult.Failure || result !is com.trustweave.did.resolver.DidResolutionResult.Success, "Non-existent DID should not resolve successfully")
     }
 
@@ -61,7 +58,7 @@ class WaltIdErrorHandlingTest {
         val keyMethod = com.trustweave.waltid.did.WaltIdKeyMethod(kms)
 
         assertFailsWith<IllegalArgumentException> {
-            keyMethod.updateDid("did:key:zNonexistent") { it }
+            keyMethod.updateDid(com.trustweave.did.identifiers.Did("did:key:zNonexistent")) { it }
         }
     }
 

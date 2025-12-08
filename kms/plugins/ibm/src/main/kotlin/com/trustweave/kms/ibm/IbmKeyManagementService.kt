@@ -1,12 +1,16 @@
 package com.trustweave.kms.ibm
 
-import com.trustweave.core.exception.TrustWeaveException
-import com.trustweave.core.types.KeyId
+import com.trustweave.core.identifiers.KeyId
 import com.trustweave.kms.Algorithm
 import com.trustweave.kms.KeyHandle
 import com.trustweave.kms.KeyManagementService
-import com.trustweave.kms.exception.KmsException
-import com.trustweave.kms.UnsupportedAlgorithmException
+import com.trustweave.kms.results.DeleteKeyResult
+import com.trustweave.kms.results.GenerateKeyResult
+import com.trustweave.kms.results.GetPublicKeyResult
+import com.trustweave.kms.results.SignResult
+import com.trustweave.kms.KmsOptionKeys
+import com.trustweave.kms.util.KmsErrorHandler
+import com.trustweave.kms.util.KmsInputValidator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -16,7 +20,9 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.MediaType.Companion.toMediaType
+import org.slf4j.LoggerFactory
 import java.util.Base64
+import java.util.UUID
 
 /**
  * IBM Key Protect / Hyper Protect Crypto Services implementation of KeyManagementService.
@@ -35,7 +41,11 @@ import java.util.Base64
  *     .region("us-south")
  *     .build()
  * val kms = IbmKeyManagementService(config)
- * val key = kms.generateKey(Algorithm.Ed25519)
+ * val result = kms.generateKey(Algorithm.Ed25519)
+ * when (result) {
+ *     is GenerateKeyResult.Success -> println("Key created: ${result.keyHandle.id}")
+ *     is GenerateKeyResult.Failure -> println("Error: ${result.reason}")
+ * }
  * ```
  */
 class IbmKeyManagementService(
@@ -44,6 +54,7 @@ class IbmKeyManagementService(
 ) : KeyManagementService, AutoCloseable {
 
     private val baseUrl = IbmKmsClientFactory.getServiceUrl(config.region, config.serviceUrl)
+    private val logger = LoggerFactory.getLogger(IbmKeyManagementService::class.java)
 
     companion object {
         /**
@@ -66,17 +77,31 @@ class IbmKeyManagementService(
     override suspend fun generateKey(
         algorithm: Algorithm,
         options: Map<String, Any?>
-    ): KeyHandle = withContext(Dispatchers.IO) {
+    ): GenerateKeyResult = withContext(Dispatchers.IO) {
         if (!supportsAlgorithm(algorithm)) {
-            throw UnsupportedAlgorithmException(
-                "Algorithm '${algorithm.name}' is not supported by IBM Key Protect. " +
-                "Supported: ${SUPPORTED_ALGORITHMS.joinToString(", ") { it.name }}"
+            return@withContext GenerateKeyResult.Failure.UnsupportedAlgorithm(
+                algorithm = algorithm,
+                supportedAlgorithms = SUPPORTED_ALGORITHMS
             )
+        }
+
+        // Validate key name if provided
+        val keyName = (options[KmsOptionKeys.NAME] as? String)?.takeIf { it.isNotBlank() }
+        keyName?.let {
+            val validationError = KmsInputValidator.validateKeyId(it)
+            if (validationError != null) {
+                logger.warn("Invalid key name provided: keyName={}, error={}", it, validationError)
+                return@withContext GenerateKeyResult.Failure.InvalidOptions(
+                    algorithm = algorithm,
+                    reason = "Invalid key name: $validationError",
+                    invalidOptions = options
+                )
+            }
         }
 
         try {
             val keyType = AlgorithmMapping.toIbmKeyType(algorithm)
-            val keyName = options["name"] as? String ?: generateKeyName(algorithm)
+            val finalKeyName = keyName ?: generateKeyName(algorithm)
 
             // IBM Key Protect API: POST /api/v2/keys
             val requestBody = buildJsonObject {
@@ -87,9 +112,9 @@ class IbmKeyManagementService(
                 put("resources", buildJsonArray {
                     add(buildJsonObject {
                         put("type", keyType)
-                        put("name", keyName)
-                        (options["description"] as? String)?.let { put("description", it) }
-                        (options["extractable"] as? Boolean)?.let { put("extractable", it) }
+                        put("name", finalKeyName)
+                        (options[KmsOptionKeys.DESCRIPTION] as? String)?.let { put("description", it) }
+                        (options[KmsOptionKeys.EXTRACTABLE] as? Boolean)?.let { put("extractable", it) }
                     })
                 })
             }
@@ -103,46 +128,104 @@ class IbmKeyManagementService(
             val responseBody = response.body?.string()
 
             if (!response.isSuccessful) {
-                throw TrustWeaveException.Unknown(
-                    message = "IBM Key Protect API error: ${response.code} - ${response.message ?: "Unknown error"}. " +
-                    "Response: $responseBody"
+                val context = KmsErrorHandler.createErrorContext(
+                    algorithm = algorithm,
+                    operation = "generateKey",
+                    additional = mapOf(
+                        "statusCode" to response.code,
+                        "region" to config.region,
+                        "instanceId" to config.instanceId
+                    )
                 )
+                
+                when (response.code) {
+                    400, 403 -> {
+                        logger.error("Invalid request to IBM Key Protect", context)
+                        GenerateKeyResult.Failure.InvalidOptions(
+                            algorithm = algorithm,
+                            reason = "IBM Key Protect API error: ${response.code} - ${response.message ?: "Unknown error"}. Response: $responseBody",
+                            invalidOptions = options
+                        )
+                    }
+                    401 -> {
+                        logger.error("Authentication failed with IBM Key Protect", context)
+                        GenerateKeyResult.Failure.Error(
+                            algorithm = algorithm,
+                            reason = "Authentication failed. Check API key: ${response.message ?: "Unknown error"}",
+                            cause = null
+                        )
+                    }
+                    else -> {
+                        logger.error("Failed to generate key in IBM Key Protect", context)
+                        GenerateKeyResult.Failure.Error(
+                            algorithm = algorithm,
+                            reason = "IBM Key Protect API error: ${response.code} - ${response.message ?: "Unknown error"}. Response: $responseBody",
+                            cause = null
+                        )
+                    }
+                }
+            } else {
+                // Parse response to get key ID and CRN
+                val jsonResponse = kotlinx.serialization.json.Json.parseToJsonElement(responseBody ?: "{}").jsonObject
+                val resources = jsonResponse["resources"]?.jsonArray ?: return@withContext GenerateKeyResult.Failure.Error(
+                    algorithm = algorithm,
+                    reason = "Invalid response from IBM Key Protect: missing resources"
+                )
+                val keyResource = resources.firstOrNull()?.jsonObject ?: return@withContext GenerateKeyResult.Failure.Error(
+                    algorithm = algorithm,
+                    reason = "Invalid response from IBM Key Protect: no key in response"
+                )
+
+                val keyId = keyResource["id"]?.jsonPrimitive?.content
+                    ?: return@withContext GenerateKeyResult.Failure.Error(
+                        algorithm = algorithm,
+                        reason = "Key ID not found in response"
+                    )
+                val keyCrn = keyResource["crn"]?.jsonPrimitive?.content ?: keyId
+
+                // Get public key
+                val publicKeyResult = getPublicKey(KeyId(keyCrn))
+                when (publicKeyResult) {
+                    is GetPublicKeyResult.Success -> {
+                        logger.info("Generated key in IBM Key Protect: keyId={}, algorithm={}", keyCrn, algorithm.name)
+                        GenerateKeyResult.Success(
+                            KeyHandle(
+                                id = KeyId(keyCrn),
+                                algorithm = algorithm.name,
+                                publicKeyJwk = publicKeyResult.keyHandle.publicKeyJwk
+                            )
+                        )
+                    }
+                    is GetPublicKeyResult.Failure.KeyNotFound -> {
+                        GenerateKeyResult.Failure.Error(
+                            algorithm = algorithm,
+                            reason = "Failed to retrieve public key after key creation: Key not found",
+                            cause = null
+                        )
+                    }
+                    is GetPublicKeyResult.Failure.Error -> {
+                        GenerateKeyResult.Failure.Error(
+                            algorithm = algorithm,
+                            reason = "Failed to retrieve public key after key creation: ${publicKeyResult.reason}",
+                            cause = publicKeyResult.cause
+                        )
+                    }
+                }
             }
-
-            // Parse response to get key ID and CRN
-            val jsonResponse = kotlinx.serialization.json.Json.parseToJsonElement(responseBody ?: "{}").jsonObject
-            val resources = jsonResponse["resources"]?.jsonArray ?: throw TrustWeaveException.Unknown(
-                message = "Invalid response from IBM Key Protect"
-            )
-            val keyResource = resources.firstOrNull()?.jsonObject ?: throw TrustWeaveException.Unknown(
-                message = "No key in response"
-            )
-
-            val keyId = keyResource["id"]?.jsonPrimitive?.content
-                ?: throw TrustWeaveException.Unknown(
-                    message = "Key ID not found in response"
-                )
-            val keyCrn = keyResource["crn"]?.jsonPrimitive?.content ?: keyId
-
-            // Get public key
-            val publicKeyHandle = getPublicKey(KeyId(keyCrn))
-
-            KeyHandle(
-                id = KeyId(keyCrn),
-                algorithm = algorithm.name,
-                publicKeyJwk = publicKeyHandle.publicKeyJwk
-            )
-        } catch (e: TrustWeaveException) {
-            throw e
         } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                message = "Failed to generate key: ${e.message ?: "Unknown error"}",
+            logger.error("Unexpected error generating key in IBM Key Protect", mapOf(
+                "algorithm" to algorithm.name,
+                "region" to config.region
+            ), e)
+            GenerateKeyResult.Failure.Error(
+                algorithm = algorithm,
+                reason = "Failed to generate key: ${e.message ?: "Unknown error"}",
                 cause = e
             )
         }
     }
 
-    override suspend fun getPublicKey(keyId: KeyId): KeyHandle = withContext(Dispatchers.IO) {
+    override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult = withContext(Dispatchers.IO) {
         try {
             val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId.value)
 
@@ -157,30 +240,40 @@ class IbmKeyManagementService(
 
             if (!response.isSuccessful) {
                 if (response.code == 404) {
-                    throw KmsException.KeyNotFound(keyId = keyId.value)
+                    logger.debug("Key not found in IBM Key Protect: keyId={}", keyId.value)
+                    return@withContext GetPublicKeyResult.Failure.KeyNotFound(keyId = keyId)
                 }
-                throw TrustWeaveException.Unknown(
-                    message = "IBM Key Protect API error: ${response.code} - ${response.message ?: "Unknown error"}. " +
-                    "Response: $responseBody"
+                logger.error("Failed to get key from IBM Key Protect", mapOf(
+                    "keyId" to keyId.value,
+                    "statusCode" to response.code,
+                    "region" to config.region
+                ))
+                return@withContext GetPublicKeyResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "IBM Key Protect API error: ${response.code} - ${response.message ?: "Unknown error"}. Response: $responseBody"
                 )
             }
 
             // Parse response to get key metadata
             val jsonResponse = kotlinx.serialization.json.Json.parseToJsonElement(responseBody ?: "{}").jsonObject
-            val resources = jsonResponse["resources"]?.jsonArray ?: throw TrustWeaveException.Unknown(
-                message = "Invalid response from IBM Key Protect"
+            val resources = jsonResponse["resources"]?.jsonArray ?: return@withContext GetPublicKeyResult.Failure.Error(
+                keyId = keyId,
+                reason = "Invalid response from IBM Key Protect: missing resources"
             )
-            val keyResource = resources.firstOrNull()?.jsonObject ?: throw TrustWeaveException.Unknown(
-                message = "No key in response"
+            val keyResource = resources.firstOrNull()?.jsonObject ?: return@withContext GetPublicKeyResult.Failure.Error(
+                keyId = keyId,
+                reason = "Invalid response from IBM Key Protect: no key in response"
             )
 
             val keyType = keyResource["type"]?.jsonPrimitive?.content
-                ?: throw TrustWeaveException.Unknown(
-                    message = "Key type not found in response"
+                ?: return@withContext GetPublicKeyResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Key type not found in response"
                 )
             val algorithm = AlgorithmMapping.fromIbmKeyType(keyType)
-                ?: throw TrustWeaveException.Unknown(
-                    message = "Unknown key type: $keyType"
+                ?: return@withContext GetPublicKeyResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Unknown key type: $keyType"
                 )
 
             // Get public key material
@@ -194,41 +287,52 @@ class IbmKeyManagementService(
             val publicKeyBody = publicKeyResponse.body?.string()
 
             if (!publicKeyResponse.isSuccessful) {
-                throw TrustWeaveException.Unknown(
-                    message = "Failed to get public key: ${publicKeyResponse.code} - ${publicKeyResponse.message ?: "Unknown error"}. " +
-                    "Response: $publicKeyBody"
+                logger.error("Failed to get public key material from IBM Key Protect", mapOf(
+                    "keyId" to keyId.value,
+                    "statusCode" to publicKeyResponse.code,
+                    "region" to config.region
+                ))
+                return@withContext GetPublicKeyResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Failed to get public key: ${publicKeyResponse.code} - ${publicKeyResponse.message ?: "Unknown error"}. Response: $publicKeyBody"
                 )
             }
 
             val publicKeyJson = kotlinx.serialization.json.Json.parseToJsonElement(publicKeyBody ?: "{}").jsonObject
-            val publicKeyResources = publicKeyJson["resources"]?.jsonArray ?: throw TrustWeaveException.Unknown(
-                message = "Invalid public key response"
+            val publicKeyResources = publicKeyJson["resources"]?.jsonArray ?: return@withContext GetPublicKeyResult.Failure.Error(
+                keyId = keyId,
+                reason = "Invalid public key response from IBM Key Protect"
             )
-            val publicKeyResource = publicKeyResources.firstOrNull()?.jsonObject ?: throw TrustWeaveException.Unknown(
-                message = "No public key in response"
+            val publicKeyResource = publicKeyResources.firstOrNull()?.jsonObject ?: return@withContext GetPublicKeyResult.Failure.Error(
+                keyId = keyId,
+                reason = "No public key in response from IBM Key Protect"
             )
 
             val publicKeyBase64 = publicKeyResource["publicKey"]?.jsonPrimitive?.content
-                ?: throw TrustWeaveException.Unknown(
-                    message = "Public key not found in response"
+                ?: return@withContext GetPublicKeyResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Public key not found in response"
                 )
             val publicKeyBytes = Base64.getDecoder().decode(publicKeyBase64)
 
             val publicKeyJwk = AlgorithmMapping.publicKeyToJwk(publicKeyBytes, algorithm)
             val keyCrn = keyResource["crn"]?.jsonPrimitive?.content ?: resolvedKeyId
 
-            KeyHandle(
-                id = KeyId(keyCrn),
-                algorithm = algorithm.name,
-                publicKeyJwk = publicKeyJwk
+            GetPublicKeyResult.Success(
+                KeyHandle(
+                    id = KeyId(keyCrn),
+                    algorithm = algorithm.name,
+                    publicKeyJwk = publicKeyJwk
+                )
             )
-        } catch (e: KmsException.KeyNotFound) {
-            throw e
-        } catch (e: TrustWeaveException) {
-            throw e
         } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                message = "Failed to get public key: ${e.message ?: "Unknown error"}",
+            logger.error("Unexpected error getting public key from IBM Key Protect", mapOf(
+                "keyId" to keyId.value,
+                "region" to config.region
+            ), e)
+            GetPublicKeyResult.Failure.Error(
+                keyId = keyId,
+                reason = "Failed to get public key: ${e.message ?: "Unknown error"}",
                 cause = e
             )
         }
@@ -238,21 +342,78 @@ class IbmKeyManagementService(
         keyId: KeyId,
         data: ByteArray,
         algorithm: Algorithm?
-    ): ByteArray = withContext(Dispatchers.IO) {
+    ): SignResult = withContext(Dispatchers.IO) {
+        // Validate input data
+        val dataValidationError = KmsInputValidator.validateSignData(data)
+        if (dataValidationError != null) {
+            logger.warn("Invalid data for signing: keyId={}, error={}", keyId.value, dataValidationError)
+            return@withContext SignResult.Failure.Error(
+                keyId = keyId,
+                reason = dataValidationError
+            )
+        }
+
         try {
             val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId.value)
 
             // Determine signing algorithm
             val signingAlgorithm = algorithm ?: run {
                 // Get key metadata to determine algorithm
-                val keyHandle = getPublicKey(keyId)
-                Algorithm.parse(keyHandle.algorithm)
-                    ?: throw TrustWeaveException.Unknown(
-                        message = "Cannot determine signing algorithm for key: ${keyId.value}"
-                    )
+                val keyResult = getPublicKey(keyId)
+                when (keyResult) {
+                    is GetPublicKeyResult.Success -> {
+                        Algorithm.parse(keyResult.keyHandle.algorithm)
+                            ?: return@withContext SignResult.Failure.Error(
+                                keyId = keyId,
+                                reason = "Cannot determine signing algorithm for key: ${keyId.value}"
+                            )
+                    }
+                    is GetPublicKeyResult.Failure.KeyNotFound -> {
+                        return@withContext SignResult.Failure.KeyNotFound(keyId = keyId)
+                    }
+                    is GetPublicKeyResult.Failure.Error -> {
+                        return@withContext SignResult.Failure.Error(
+                            keyId = keyId,
+                            reason = "Failed to get key metadata: ${keyResult.reason}"
+                        )
+                    }
+                }
+                null // This should never be reached due to return@withContext above
             }
 
-            val ibmSigningAlgorithm = AlgorithmMapping.toIbmSigningAlgorithm(signingAlgorithm)
+            // Check algorithm compatibility if algorithm was provided
+            if (algorithm != null) {
+                val keyResult = getPublicKey(keyId)
+                when (keyResult) {
+                    is GetPublicKeyResult.Success -> {
+                        val keyAlgorithm = Algorithm.parse(keyResult.keyHandle.algorithm)
+                        if (keyAlgorithm != null && !algorithm.isCompatibleWith(keyAlgorithm)) {
+                            logger.warn("Algorithm incompatibility: keyId={}, requestedAlgorithm={}, keyAlgorithm={}", 
+                                keyId.value, algorithm.name, keyAlgorithm.name)
+                            return@withContext SignResult.Failure.UnsupportedAlgorithm(
+                                keyId = keyId,
+                                requestedAlgorithm = algorithm,
+                                keyAlgorithm = keyAlgorithm,
+                                reason = "Algorithm '${algorithm.name}' is not compatible with key algorithm '${keyAlgorithm.name}'"
+                            )
+                        }
+                    }
+                    is GetPublicKeyResult.Failure.KeyNotFound -> {
+                        return@withContext SignResult.Failure.KeyNotFound(keyId = keyId)
+                    }
+                    is GetPublicKeyResult.Failure.Error -> {
+                        return@withContext SignResult.Failure.Error(
+                            keyId = keyId,
+                            reason = "Failed to get key metadata: ${keyResult.reason}"
+                        )
+                    }
+                }
+            }
+
+            val ibmSigningAlgorithm = AlgorithmMapping.toIbmSigningAlgorithm(signingAlgorithm ?: return@withContext SignResult.Failure.Error(
+                keyId = keyId,
+                reason = "Cannot determine signing algorithm for key: ${keyId.value}"
+            ))
             val dataBase64 = Base64.getEncoder().encodeToString(data)
 
             // IBM Key Protect API: POST /api/v2/keys/{id}/sign
@@ -279,48 +440,63 @@ class IbmKeyManagementService(
 
             if (!response.isSuccessful) {
                 if (response.code == 404) {
-                    throw KmsException.KeyNotFound(keyId = keyId.value)
+                    logger.debug("Key not found for signing in IBM Key Protect: keyId={}", keyId.value)
+                    return@withContext SignResult.Failure.KeyNotFound(keyId = keyId)
                 }
-                throw TrustWeaveException.Unknown(
-                    message = "IBM Key Protect API error: ${response.code} - ${response.message ?: "Unknown error"}. " +
-                    "Response: $responseBody"
+                logger.error("Failed to sign data in IBM Key Protect", mapOf(
+                    "keyId" to keyId.value,
+                    "statusCode" to response.code,
+                    "region" to config.region
+                ))
+                return@withContext SignResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "IBM Key Protect API error: ${response.code} - ${response.message ?: "Unknown error"}. Response: $responseBody"
                 )
             }
 
             // Parse response to get signature
             val jsonResponse = kotlinx.serialization.json.Json.parseToJsonElement(responseBody ?: "{}").jsonObject
-            val resources = jsonResponse["resources"]?.jsonArray ?: throw TrustWeaveException.Unknown(
-                message = "Invalid response from IBM Key Protect"
+            val resources = jsonResponse["resources"]?.jsonArray ?: return@withContext SignResult.Failure.Error(
+                keyId = keyId,
+                reason = "Invalid response from IBM Key Protect: missing resources"
             )
-            val signResource = resources.firstOrNull()?.jsonObject ?: throw TrustWeaveException.Unknown(
-                message = "No signature in response"
+            val signResource = resources.firstOrNull()?.jsonObject ?: return@withContext SignResult.Failure.Error(
+                keyId = keyId,
+                reason = "Invalid response from IBM Key Protect: no signature in response"
             )
 
             val signatureBase64 = signResource["signature"]?.jsonPrimitive?.content
-                ?: throw TrustWeaveException.Unknown(
-                    message = "Signature not found in response"
+                ?: return@withContext SignResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Signature not found in response"
                 )
 
-            Base64.getDecoder().decode(signatureBase64)
-        } catch (e: KmsException.KeyNotFound) {
-            throw e
-        } catch (e: TrustWeaveException) {
-            throw e
+            val signature = Base64.getDecoder().decode(signatureBase64)
+            
+            logger.debug("Successfully signed data: keyId={}, algorithm={}, dataSize={}, signatureSize={}", 
+                keyId.value, signingAlgorithm.name, data.size, signature.size)
+
+            SignResult.Success(signature)
         } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                message = "Failed to sign data: ${e.message ?: "Unknown error"}",
+            logger.error("Unexpected error signing data in IBM Key Protect", mapOf(
+                "keyId" to keyId.value,
+                "region" to config.region
+            ), e)
+            SignResult.Failure.Error(
+                keyId = keyId,
+                reason = "Failed to sign data: ${e.message ?: "Unknown error"}",
                 cause = e
             )
         }
     }
 
-    override suspend fun deleteKey(keyId: KeyId): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult = withContext(Dispatchers.IO) {
         try {
             val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId.value)
 
             // IBM Key Protect API: DELETE /api/v2/keys/{id}
             // Note: IBM Key Protect requires setting deletion date first, then deleting
-            // For immediate deletion, we use the DELETE endpoint with force parameter
+            // For immediate deletion, we use the DELETE endpoint
 
             // First, try to schedule immediate deletion
             val requestBody = buildJsonObject {
@@ -350,20 +526,66 @@ class IbmKeyManagementService(
                     .build()
 
                 val deleteResponse = httpClient.newCall(deleteRequest).execute()
-                deleteResponse.isSuccessful
+                if (deleteResponse.isSuccessful) {
+                    logger.info("Deleted key from IBM Key Protect: keyId={}", keyId.value)
+                    DeleteKeyResult.Deleted
+                } else {
+                    if (deleteResponse.code == 404) {
+                        logger.debug("Key not found for deletion in IBM Key Protect: keyId={}", keyId.value)
+                        DeleteKeyResult.NotFound
+                    } else {
+                        logger.error("Failed to delete key from IBM Key Protect", mapOf(
+                            "keyId" to keyId.value,
+                            "statusCode" to deleteResponse.code,
+                            "region" to config.region
+                        ))
+                        DeleteKeyResult.Failure.Error(
+                            keyId = keyId,
+                            reason = "Failed to delete key: ${deleteResponse.code} - ${deleteResponse.message ?: "Unknown error"}"
+                        )
+                    }
+                }
             } else {
                 // If scheduling fails, try direct deletion
-                val deleteRequest = Request.Builder()
-                    .url("$baseUrl/api/v2/keys/$resolvedKeyId")
-                    .delete()
-                    .build()
+                if (scheduleResponse.code == 404) {
+                    logger.debug("Key not found for deletion in IBM Key Protect: keyId={}", keyId.value)
+                    DeleteKeyResult.NotFound
+                } else {
+                    val deleteRequest = Request.Builder()
+                        .url("$baseUrl/api/v2/keys/$resolvedKeyId")
+                        .delete()
+                        .build()
 
-                val deleteResponse = httpClient.newCall(deleteRequest).execute()
-                deleteResponse.isSuccessful
+                    val deleteResponse = httpClient.newCall(deleteRequest).execute()
+                    if (deleteResponse.isSuccessful) {
+                        logger.info("Deleted key from IBM Key Protect: keyId={}", keyId.value)
+                        DeleteKeyResult.Deleted
+                    } else if (deleteResponse.code == 404) {
+                        logger.debug("Key not found for deletion in IBM Key Protect: keyId={}", keyId.value)
+                        DeleteKeyResult.NotFound
+                    } else {
+                        logger.error("Failed to delete key from IBM Key Protect", mapOf(
+                            "keyId" to keyId.value,
+                            "statusCode" to deleteResponse.code,
+                            "region" to config.region
+                        ))
+                        DeleteKeyResult.Failure.Error(
+                            keyId = keyId,
+                            reason = "Failed to delete key: ${deleteResponse.code} - ${deleteResponse.message ?: "Unknown error"}"
+                        )
+                    }
+                }
             }
         } catch (e: Exception) {
-            // Return false on error rather than throwing
-            false
+            logger.error("Unexpected error deleting key from IBM Key Protect", mapOf(
+                "keyId" to keyId.value,
+                "region" to config.region
+            ), e)
+            DeleteKeyResult.Failure.Error(
+                keyId = keyId,
+                reason = "Failed to delete key: ${e.message ?: "Unknown error"}",
+                cause = e
+            )
         }
     }
 
@@ -380,12 +602,10 @@ class IbmKeyManagementService(
             is Algorithm.RSA -> "rsa${algorithm.keySize}"
             else -> "key"
         }
-        return "$prefix-${java.util.UUID.randomUUID().toString().take(8)}"
+        return "$prefix-${UUID.randomUUID().toString().take(8)}"
     }
-
 
     override fun close() {
         // IBM Key Protect client cleanup if needed
     }
 }
-

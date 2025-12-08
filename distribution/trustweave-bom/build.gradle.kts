@@ -11,7 +11,7 @@ javaPlatform {
 
 dependencies {
     constraints {
-        api(project(":credentials:credential-core"))
+        api(project(":credentials:credential-api"))
         api(project(":json"))
         api(project(":kms:kms-core"))
         api(project(":did:did-core"))

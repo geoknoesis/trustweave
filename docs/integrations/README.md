@@ -22,11 +22,12 @@ dependencies {
     implementation("com.trustweave.did:key:1.0.0-SNAPSHOT")
 
     // KMS plugins use hierarchical group IDs
+    // Core dependencies (trustweave-kms, trustweave-common) are included transitively
     implementation("com.trustweave.kms:aws:1.0.0-SNAPSHOT")
 }
 ```
 
-**Result:** Gradle brings in the Algorand client plus its SPI adapter so your application can anchor digests on Algorand networks with zero additional wiring.
+**Result:** Gradle brings in the Algorand client plus its SPI adapter so your application can anchor digests on Algorand networks with zero additional wiring. KMS plugins automatically include `trustweave-kms` and `trustweave-common` as transitive dependencies.
 
 ## Blockchain Anchor Integrations
 
@@ -75,7 +76,8 @@ KMS integrations enable TrustWeave to use various key management services for se
 | **Azure Key Vault** | `com.trustweave.kms:azure` | [Azure KMS Guide](azure-kms.md) | Algorithm support (secp256k1, P-256/P-384/P-521, RSA). Managed Identity and Service Principal authentication |
 | **Google Cloud KMS** | `com.trustweave.kms:google` | [Google KMS Guide](google-kms.md) | Algorithm support (secp256k1, P-256/P-384, RSA). Application Default Credentials and service account authentication |
 | **HashiCorp Vault** | `com.trustweave.kms:hashicorp` | [HashiCorp Vault Guide](hashicorp-vault-kms.md) | Transit engine integration with algorithm support (Ed25519, secp256k1, P-256/P-384/P-521, RSA). Token and AppRole authentication |
-| **IBM Key Protect** | `com.trustweave.kms:ibm` | Documentation coming soon | IBM Cloud Key Protect integration with full REST API support |
+| **IBM Key Protect** | `com.trustweave.kms:ibm` | [IBM Key Protect Guide](ibm-key-protect-kms.md) | IBM Cloud Key Protect integration with full REST API support. FIPS 140-3 Level 4 compliance |
+| **InMemory KMS** | `com.trustweave.kms:inmemory` | [InMemory KMS Guide](inmemory-kms.md) | Native TrustWeave in-memory KMS for development and testing. No external dependencies |
 | **Thales CipherTrust** | `com.trustweave.kms:thales` | Documentation coming soon | Thales CipherTrust Manager integration with OAuth2 authentication |
 | **CyberArk Conjur** | `com.trustweave.kms:cyberark` | Documentation coming soon | CyberArk Conjur integration with secrets management |
 | **Fortanix DSM** | `com.trustweave.kms:fortanix` | Documentation coming soon | Fortanix DSM multi-cloud key management integration |

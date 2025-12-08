@@ -1,9 +1,16 @@
 package com.trustweave.testkit.did
 
 import com.trustweave.did.*
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.DidDocumentMetadata
+import com.trustweave.did.model.VerificationMethod
 import com.trustweave.did.resolver.DidResolutionResult
+import com.trustweave.kms.Algorithm
 import com.trustweave.kms.KeyManagementService
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 import java.util.*
 
 /**
@@ -19,20 +26,41 @@ class DidKeyMockMethod(
     private val documents = mutableMapOf<String, DidDocument>()
 
     override suspend fun createDid(options: DidCreationOptions): DidDocument {
-        val algorithm = options.algorithm.algorithmName
-        val keyHandle = kms.generateKey(algorithm, options.additionalProperties)
+        // Convert KeyAlgorithm to Algorithm
+        val algorithm = when (options.algorithm) {
+            KeyAlgorithm.ED25519 -> Algorithm.Ed25519
+            KeyAlgorithm.SECP256K1 -> Algorithm.Secp256k1
+            KeyAlgorithm.P256 -> Algorithm.P256
+            KeyAlgorithm.P384 -> Algorithm.P384
+            KeyAlgorithm.P521 -> Algorithm.P521
+        }
+
+        val generateResult = kms.generateKey(algorithm, options.additionalProperties)
+        val keyHandle = when (generateResult) {
+            is com.trustweave.kms.results.GenerateKeyResult.Success -> generateResult.keyHandle
+            is com.trustweave.kms.results.GenerateKeyResult.Failure.UnsupportedAlgorithm -> {
+                throw IllegalArgumentException("Algorithm not supported: ${generateResult.algorithm}")
+            }
+            is com.trustweave.kms.results.GenerateKeyResult.Failure.InvalidOptions -> {
+                throw IllegalArgumentException("Invalid options: ${generateResult.reason}")
+            }
+            is com.trustweave.kms.results.GenerateKeyResult.Failure.Error -> {
+                throw IllegalArgumentException("Failed to generate key: ${generateResult.reason}")
+            }
+        }
 
         // Create a simplified did:key identifier
         val didId = "z${UUID.randomUUID().toString().replace("-", "")}"
-        val did = "did:$method:$didId"
+        val didString = "did:$method:$didId"
+        val did = Did(didString)
 
-        val verificationMethodId = "$did#${keyHandle.id}"
+        val verificationMethodId = VerificationMethodId.parse("$didString#${keyHandle.id.value}")
 
         val verificationMethod = VerificationMethod(
             id = verificationMethodId,
-            type = when (algorithm.uppercase()) {
-                "ED25519" -> "Ed25519VerificationKey2020"
-                "SECP256K1" -> "EcdsaSecp256k1VerificationKey2019"
+            type = when (options.algorithm) {
+                KeyAlgorithm.ED25519 -> "Ed25519VerificationKey2020"
+                KeyAlgorithm.SECP256K1 -> "EcdsaSecp256k1VerificationKey2019"
                 else -> "JsonWebKey2020"
             },
             controller = did,
@@ -46,13 +74,13 @@ class DidKeyMockMethod(
             assertionMethod = listOf(verificationMethodId)
         )
 
-        documents[did] = document
+        documents[didString] = document
         return document
     }
 
-    override suspend fun resolveDid(did: String): DidResolutionResult {
-        val document = documents[did]
-        val now = Instant.now()
+    override suspend fun resolveDid(did: Did): DidResolutionResult {
+        val document = documents[did.value]
+        val now = Clock.System.now()
         return if (document != null) {
             DidResolutionResult.Success(
                 document = document,
@@ -67,7 +95,7 @@ class DidKeyMockMethod(
             )
         } else {
             DidResolutionResult.Failure.NotFound(
-                did = com.trustweave.core.types.Did(did),
+                did = did,
                 reason = "DID not found in mock registry",
                 resolutionMetadata = mapOf("method" to method, "mock" to true)
             )
@@ -75,18 +103,18 @@ class DidKeyMockMethod(
     }
 
     override suspend fun updateDid(
-        did: String,
+        did: Did,
         updater: (DidDocument) -> DidDocument
     ): DidDocument {
-        val current = documents[did]
-            ?: throw IllegalArgumentException("DID not found: $did")
+        val current = documents[did.value]
+            ?: throw IllegalArgumentException("DID not found: ${did.value}")
         val updated = updater(current)
-        documents[did] = updated
+        documents[did.value] = updated
         return updated
     }
 
-    override suspend fun deactivateDid(did: String): Boolean {
-        return documents.remove(did) != null
+    override suspend fun deactivateDid(did: Did): Boolean {
+        return documents.remove(did.value) != null
     }
 
     /**

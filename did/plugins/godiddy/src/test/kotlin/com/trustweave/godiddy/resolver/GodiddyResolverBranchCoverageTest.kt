@@ -2,7 +2,6 @@ package com.trustweave.godiddy.resolver
 
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.resolver.DidResolutionResult
-import com.trustweave.did.resolver.getDocumentOrNull
 import com.trustweave.godiddy.GodiddyClient
 import com.trustweave.godiddy.GodiddyConfig
 import kotlinx.coroutines.runBlocking
@@ -41,10 +40,14 @@ class GodiddyResolverBranchCoverageTest {
         // This will fail in real scenario, but we test the branch
         try {
             val result = resolver.resolveDid("did:key:nonexistent")
-            // If it doesn't throw, check for null document
-            val document = result.getDocumentOrNull()
-            if (document == null) {
-                assertTrue(result is DidResolutionResult.Failure)
+            // If it doesn't throw, check for failure
+            when (result) {
+                is DidResolutionResult.Success -> {
+                    assertNotNull(result.document)
+                }
+                is DidResolutionResult.Failure -> {
+                    assertTrue(true) // Expected behavior
+                }
             }
         } catch (e: Exception) {
             // Expected to fail without mock
@@ -120,9 +123,14 @@ class GodiddyResolverBranchCoverageTest {
         // This will fail in real scenario, but we test the branch
         try {
             val result = resolver.resolveDid("did:key:invalid")
-            // If conversion fails, document should be null
-            if (result.getDocumentOrNull() == null) {
-                assertTrue(true) // Expected behavior
+            // If conversion fails, result should be a failure
+            when (result) {
+                is DidResolutionResult.Success -> {
+                    assertNotNull(result.document)
+                }
+                is DidResolutionResult.Failure -> {
+                    assertTrue(true) // Expected behavior
+                }
             }
         } catch (e: Exception) {
             // Expected to fail without mock

@@ -1,16 +1,32 @@
 package com.trustweave.trust.dsl.credential
 
-import com.trustweave.credential.models.CredentialSchema
-import com.trustweave.credential.models.CredentialStatus
-import com.trustweave.credential.models.Evidence
-import com.trustweave.credential.models.RefreshService
-import com.trustweave.credential.models.TermsOfUse
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.SchemaFormat
-import com.trustweave.trust.types.CredentialType
+import com.trustweave.credential.model.vc.CredentialSchema
+import com.trustweave.credential.model.vc.CredentialStatus
+import com.trustweave.credential.model.Evidence
+import com.trustweave.credential.model.vc.RefreshService
+import com.trustweave.credential.model.vc.TermsOfUse
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.SchemaFormat
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.model.StatusPurpose
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.credential.identifiers.SchemaId
+import com.trustweave.credential.identifiers.StatusListId
+import com.trustweave.core.identifiers.Iri
 import kotlinx.serialization.json.*
-import java.time.Instant
-import java.time.temporal.ChronoUnit
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.microseconds
+import kotlin.time.Duration.Companion.nanoseconds
+
+// Extension for years (not in standard library)
+private val Int.years: kotlin.time.Duration get() = (this * 365).days
 
 /**
  * Credential Builder DSL.
@@ -32,7 +48,7 @@ import java.time.temporal.ChronoUnit
  *         }
  *     }
  *     issued(Instant.now())
- *     expires(Instant.now().plus(10, ChronoUnit.YEARS))
+ *     expires(Clock.System.now().plus(10.years))
  *     schema("https://example.edu/schemas/degree.json")
  * }
  * ```
@@ -41,13 +57,13 @@ class CredentialBuilder {
     private var id: String? = null
     private val types = mutableListOf<String>()
     private var issuer: String? = null
-    private var subjectBuilder: SubjectBuilder? = null
+    private var subjectBuilder: com.trustweave.credential.model.vc.SubjectBuilder? = null
     private var issuanceDate: Instant? = null
     private var expirationDate: Instant? = null
     private var credentialStatus: CredentialStatus? = null
     private var credentialSchema: CredentialSchema? = null
     private val evidenceList = mutableListOf<Evidence>()
-    private var termsOfUse: TermsOfUse? = null
+    private var termsOfUse: List<TermsOfUse>? = null
     private var refreshService: RefreshService? = null
 
     /**
@@ -101,8 +117,26 @@ class CredentialBuilder {
     /**
      * Configure credential subject.
      */
-    fun subject(block: SubjectBuilder.() -> Unit) {
-        val builder = SubjectBuilder()
+    fun subject(block: com.trustweave.credential.model.vc.SubjectBuilder.() -> Unit) {
+        val builder = com.trustweave.credential.model.vc.SubjectBuilder()
+        builder.block()
+        subjectBuilder = builder
+    }
+    
+    /**
+     * Configure credential subject with DID.
+     */
+    fun subject(did: com.trustweave.did.identifiers.Did, block: com.trustweave.credential.model.vc.SubjectBuilder.() -> Unit = {}) {
+        val builder = com.trustweave.credential.model.vc.SubjectBuilder(did)
+        builder.block()
+        subjectBuilder = builder
+    }
+    
+    /**
+     * Configure credential subject with IRI string.
+     */
+    fun subject(iri: String, block: com.trustweave.credential.model.vc.SubjectBuilder.() -> Unit = {}) {
+        val builder = com.trustweave.credential.model.vc.SubjectBuilder(Iri(iri))
         builder.block()
         subjectBuilder = builder
     }
@@ -124,9 +158,9 @@ class CredentialBuilder {
     /**
      * Set expiration date as duration from now.
      */
-    fun expires(duration: Long, unit: ChronoUnit) {
-        val now = Instant.now()
-        this.expirationDate = now.plus(duration, unit)
+    fun expires(duration: kotlin.time.Duration) {
+        val now = Clock.System.now()
+        this.expirationDate = now.plus(duration)
     }
 
     /**
@@ -151,7 +185,7 @@ class CredentialBuilder {
         require(schemaId.matches(Regex("^[a-zA-Z][a-zA-Z0-9+.-]*:.*"))) { 
             "Schema ID must be a valid URI. Got: $schemaId" 
         }
-        credentialSchema = CredentialSchema(schemaId, type, format)
+        credentialSchema = CredentialSchema(SchemaId(schemaId), type)
     }
 
     /**
@@ -169,7 +203,7 @@ class CredentialBuilder {
     fun termsOfUse(block: TermsOfUseBuilder.() -> Unit) {
         val builder = TermsOfUseBuilder()
         builder.block()
-        termsOfUse = builder.build()
+        termsOfUse = listOf(builder.build())
     }
 
     /**
@@ -190,7 +224,7 @@ class CredentialBuilder {
         require(endpoint.matches(Regex("^[a-zA-Z][a-zA-Z0-9+.-]*:.*"))) { 
             "Refresh service endpoint must be a valid URI. Got: $endpoint" 
         }
-        refreshService = RefreshService(id, type, endpoint)
+        refreshService = RefreshService(Iri(id), type)
     }
 
     /**
@@ -204,25 +238,27 @@ class CredentialBuilder {
             types
         }
 
-        val subject = subjectBuilder?.build()
-            ?: throw IllegalStateException(
-                "Credential subject is required. Use subject { ... } to build the credential subject."
-            )
 
-        val issuanceDateStr = issuanceDate?.toString()
+        val issuanceDateInstant = issuanceDate
             ?: throw IllegalStateException(
                 "Issuance date is required. Use issued(Instant) to set the issuance date."
             )
 
+        val subjectCredential = subjectBuilder?.build()
+            ?: throw IllegalStateException(
+                "Credential subject is required. Use subject { ... } to build the credential subject."
+            )
+
         return VerifiableCredential(
-            id = id,
-            type = allTypes,
-            issuer = issuer ?: throw IllegalStateException(
-                "Issuer is required. Use issuer(did) to specify the credential issuer DID."
-            ),
-            credentialSubject = subject,
-            issuanceDate = issuanceDateStr,
-            expirationDate = expirationDate?.toString(),
+            id = id?.let { CredentialId(it) },
+            type = allTypes.map { com.trustweave.credential.model.CredentialType.fromString(it) },
+            issuer = issuer?.let { com.trustweave.credential.model.vc.Issuer.from(it) } 
+                ?: throw IllegalStateException(
+                    "Issuer is required. Use issuer(did) to specify the credential issuer DID."
+                ),
+            credentialSubject = subjectCredential,
+            issuanceDate = issuanceDateInstant,
+            expirationDate = expirationDate,
             credentialStatus = credentialStatus,
             credentialSchema = credentialSchema,
             evidence = if (evidenceList.isEmpty()) null else evidenceList,
@@ -427,7 +463,7 @@ class JsonObjectBuilder {
 class CredentialStatusBuilder {
     private var id: String? = null
     private var type: String = "StatusList2021Entry"
-    private var statusPurpose: String = "revocation"
+    private var statusPurpose: StatusPurpose = StatusPurpose.REVOCATION
     private var statusListIndex: String? = null
     private var statusListCredential: String? = null
 
@@ -440,7 +476,11 @@ class CredentialStatusBuilder {
     }
 
     fun statusPurpose(purpose: String) {
-        this.statusPurpose = purpose
+        this.statusPurpose = when (purpose.lowercase()) {
+            "revocation" -> StatusPurpose.REVOCATION
+            "suspension" -> StatusPurpose.SUSPENSION
+            else -> throw IllegalArgumentException("Invalid status purpose: $purpose. Must be 'revocation' or 'suspension'")
+        }
     }
 
     fun statusListIndex(index: String) {
@@ -452,12 +492,13 @@ class CredentialStatusBuilder {
     }
 
     fun build(): CredentialStatus {
+        val statusId = id ?: throw IllegalStateException("Status ID is required")
         return CredentialStatus(
-            id = id ?: throw IllegalStateException("Status ID is required"),
+            id = StatusListId(statusId),
             type = type,
             statusPurpose = statusPurpose,
             statusListIndex = statusListIndex,
-            statusListCredential = statusListCredential
+            statusListCredential = statusListCredential?.let { StatusListId(it) }
         )
     }
 }
@@ -496,10 +537,10 @@ class EvidenceBuilder {
 
     fun build(): Evidence {
         return Evidence(
-            id = id,
+            id = id?.let { com.trustweave.credential.identifiers.CredentialId(it) },
             type = if (types.isEmpty()) listOf("Evidence") else types,
             evidenceDocument = evidenceDocument,
-            verifier = verifier,
+            verifier = verifier?.let { com.trustweave.credential.identifiers.IssuerId(it) },
             evidenceDate = evidenceDate
         )
     }
@@ -528,10 +569,11 @@ class TermsOfUseBuilder {
     }
 
     fun build(): TermsOfUse {
+        val termsObj = terms as? JsonObject ?: buildJsonObject { }
         return TermsOfUse(
             id = id,
             type = type,
-            termsOfUse = terms ?: buildJsonObject { }
+            additionalProperties = termsObj
         )
     }
 }

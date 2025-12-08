@@ -1,6 +1,10 @@
 package com.trustweave.kms
 
-import com.trustweave.core.types.KeyId
+import com.trustweave.core.identifiers.KeyId
+import com.trustweave.kms.results.DeleteKeyResult
+import com.trustweave.kms.results.GenerateKeyResult
+import com.trustweave.kms.results.GetPublicKeyResult
+import com.trustweave.kms.results.SignResult
 
 /**
  * Represents a key handle with metadata about the key.
@@ -15,15 +19,7 @@ data class KeyHandle(
     val algorithm: String,
     val publicKeyJwk: Map<String, Any?>? = null,
     val publicKeyMultibase: String? = null
-) {
-    /**
-     * Backward compatibility: get id as string.
-     * @deprecated Use id.value instead
-     */
-    @Deprecated("Use id.value instead", ReplaceWith("id.value"))
-    val idString: String
-        get() = id.value
-}
+)
 
 /**
  * Abstract interface for key management operations.
@@ -74,37 +70,64 @@ interface KeyManagementService {
     /**
      * Generates a new cryptographic key.
      *
+     * Returns a [GenerateKeyResult] for type-safe error handling.
+     *
+     * **Example Usage:**
+     * ```kotlin
+     * when (val result = kms.generateKey(Algorithm.Ed25519)) {
+     *     is GenerateKeyResult.Success -> {
+     *         val handle = result.keyHandle
+     *         // Use key handle
+     *     }
+     *     is GenerateKeyResult.Failure.UnsupportedAlgorithm -> {
+     *         // Algorithm not supported
+     *         println("Algorithm not supported. Supported: ${result.supportedAlgorithms}")
+     *     }
+     *     is GenerateKeyResult.Failure.InvalidOptions -> {
+     *         // Invalid options provided
+     *         println("Invalid options: ${result.reason}")
+     *     }
+     *     is GenerateKeyResult.Failure.Error -> {
+     *         // Unexpected error
+     *         println("Error: ${result.reason}")
+     *     }
+     * }
+     * ```
+     *
      * @param algorithm The algorithm to use
      * @param options Additional options for key generation
-     * @return A KeyHandle for the newly generated key
-     * @throws UnsupportedAlgorithmException if the algorithm is not supported
+     * @return Result containing the key handle or failure information
      */
     suspend fun generateKey(
         algorithm: Algorithm,
         options: Map<String, Any?> = emptyMap()
-    ): KeyHandle
+    ): GenerateKeyResult
 
     /**
      * Generates a new cryptographic key by algorithm name.
      *
-     * Convenience method that parses the algorithm name.
+     * Convenience method that parses the algorithm name and returns a Result.
      *
      * @param algorithmName The algorithm name (e.g., "Ed25519", "secp256k1")
      * @param options Additional options for key generation
-     * @return A KeyHandle for the newly generated key
-     * @throws UnsupportedAlgorithmException if the algorithm is not supported or invalid
+     * @return Result containing the key handle or failure information
      */
     suspend fun generateKey(
         algorithmName: String,
         options: Map<String, Any?> = emptyMap()
-    ): KeyHandle {
+    ): GenerateKeyResult {
         val algorithm = Algorithm.parse(algorithmName)
-            ?: throw UnsupportedAlgorithmException("Unknown algorithm: $algorithmName")
+            ?: return GenerateKeyResult.Failure.UnsupportedAlgorithm(
+                algorithm = Algorithm.Custom(algorithmName), // Will be rejected by validation
+                supportedAlgorithms = getSupportedAlgorithms(),
+                reason = "Unknown or invalid algorithm: $algorithmName. " +
+                    "Algorithm name must be a recognized standard algorithm or a valid custom algorithm name."
+            )
 
         if (!supportsAlgorithm(algorithm)) {
-            throw UnsupportedAlgorithmException(
-                "Algorithm '$algorithmName' is not supported by this KMS. " +
-                "Supported algorithms: ${getSupportedAlgorithms().joinToString(", ") { it.name }}"
+            return GenerateKeyResult.Failure.UnsupportedAlgorithm(
+                algorithm = algorithm,
+                supportedAlgorithms = getSupportedAlgorithms()
             )
         }
 
@@ -114,49 +137,87 @@ interface KeyManagementService {
     /**
      * Retrieves the public key information for a given key ID.
      *
+     * Returns a [GetPublicKeyResult] for type-safe error handling.
+     * Key not found is an expected failure and is represented as a result.
+     *
+     * **Example Usage:**
+     * ```kotlin
+     * when (val result = kms.getPublicKey(keyId)) {
+     *     is GetPublicKeyResult.Success -> {
+     *         val handle = result.keyHandle
+     *         // Use key handle
+     *     }
+     *     is GetPublicKeyResult.Failure.KeyNotFound -> {
+     *         // Expected: Key doesn't exist
+     *         println("Key not found: ${result.keyId}")
+     *     }
+     *     is GetPublicKeyResult.Failure.Error -> {
+     *         // Unexpected error
+     *         println("Error: ${result.reason}")
+     *     }
+     * }
+     * ```
+     *
      * @param keyId Type-safe key identifier
-     * @return A KeyHandle containing the public key information
-     * @throws KeyNotFoundException if the key does not exist
+     * @return Result containing the key handle or failure information
      */
-    suspend fun getPublicKey(keyId: KeyId): KeyHandle
+    suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult
 
     /**
      * Signs data using the specified key.
      *
-     * **Algorithm Validation:**
-     * Implementations SHOULD validate that the provided algorithm (if any) is compatible
-     * with the key's actual algorithm. Use [validateSigningAlgorithm] to perform this validation.
+     * Returns a [SignResult] for type-safe error handling.
+     * Key not found and unsupported algorithm are expected failures.
+     *
+     * **Example Usage:**
+     * ```kotlin
+     * when (val result = kms.sign(keyId, data, algorithm)) {
+     *     is SignResult.Success -> {
+     *         val signature = result.signature
+     *         // Use signature
+     *     }
+     *     is SignResult.Failure.KeyNotFound -> {
+     *         // Expected: Key doesn't exist
+     *         println("Key not found: ${result.keyId}")
+     *     }
+     *     is SignResult.Failure.UnsupportedAlgorithm -> {
+     *         // Algorithm incompatible with key
+     *         println("Algorithm ${result.requestedAlgorithm} not compatible with key algorithm ${result.keyAlgorithm}")
+     *     }
+     *     is SignResult.Failure.Error -> {
+     *         // Unexpected error
+     *         println("Error: ${result.reason}")
+     *     }
+     * }
+     * ```
      *
      * @param keyId Type-safe key identifier
      * @param data The data to sign
      * @param algorithm Optional algorithm override (if null, uses the key's default algorithm).
      *                  If provided, MUST be compatible with the key's algorithm.
-     * @return The signature bytes
-     * @throws KeyNotFoundException if the key does not exist
-     * @throws UnsupportedAlgorithmException if the provided algorithm is incompatible with the key
+     * @return Result containing the signature or failure information
      */
     suspend fun sign(
         keyId: KeyId,
         data: ByteArray,
         algorithm: Algorithm? = null
-    ): ByteArray
+    ): SignResult
 
     /**
      * Signs data using the specified key by algorithm name.
      *
-     * Convenience method that parses the algorithm name.
+     * Convenience method that parses the algorithm name and returns a Result.
      *
      * @param keyId Type-safe key identifier
      * @param data The data to sign
      * @param algorithmName Optional algorithm name override (if null, uses the key's default algorithm)
-     * @return The signature bytes
-     * @throws KeyNotFoundException if the key does not exist
+     * @return Result containing the signature or failure information
      */
     suspend fun sign(
         keyId: KeyId,
         data: ByteArray,
         algorithmName: String?
-    ): ByteArray {
+    ): SignResult {
         val algorithm = algorithmName?.let { Algorithm.parse(it) }
         return sign(keyId, data, algorithm)
     }
@@ -164,51 +225,31 @@ interface KeyManagementService {
     /**
      * Deletes a key from the key management service.
      *
-     * @param keyId Type-safe key identifier
-     * @return true if the key was deleted, false if it did not exist
-     */
-    suspend fun deleteKey(keyId: KeyId): Boolean
-
-    /**
-     * Validates that a requested algorithm is compatible with a key's actual algorithm.
+     * Returns a [DeleteKeyResult] for type-safe error handling.
+     * The operation is idempotent - deleting a non-existent key is considered success.
      *
-     * This helper method can be used by implementations to validate algorithm compatibility
-     * before performing signing operations. It retrieves the key's specification and
-     * validates that the requested algorithm (if provided) is compatible.
-     *
-     * **Example Usage in Implementation:**
+     * **Example Usage:**
      * ```kotlin
-     * override suspend fun sign(keyId: KeyId, data: ByteArray, algorithm: Algorithm?): ByteArray {
-     *     // Validate algorithm compatibility
-     *     val effectiveAlgorithm = algorithm ?: validateSigningAlgorithm(keyId, null)
-     *     validateSigningAlgorithm(keyId, effectiveAlgorithm)
-     *
-     *     // Proceed with signing...
+     * when (val result = kms.deleteKey(keyId)) {
+     *     is DeleteKeyResult.Deleted -> {
+     *         // Key was deleted
+     *         println("Key deleted")
+     *     }
+     *     is DeleteKeyResult.NotFound -> {
+     *         // Key didn't exist (idempotent success)
+     *         println("Key not found (already deleted)")
+     *     }
+     *     is DeleteKeyResult.Failure.Error -> {
+     *         // Unexpected error
+     *         println("Error: ${result.reason}")
+     *     }
      * }
      * ```
      *
-     * @param keyId The key identifier
-     * @param requestedAlgorithm The algorithm to validate (null means use key's default)
-     * @return The algorithm to use for signing (either requested or key's default)
-     * @throws KeyNotFoundException if the key does not exist
-     * @throws UnsupportedAlgorithmException if the requested algorithm is incompatible
+     * @param keyId Type-safe key identifier
+     * @return Result indicating deletion status
      */
-    suspend fun validateSigningAlgorithm(
-        keyId: KeyId,
-        requestedAlgorithm: Algorithm?
-    ): Algorithm {
-        val keyHandle = getPublicKey(keyId)
-        val keySpec = KeySpec.fromKeyHandle(keyHandle)
-
-        return if (requestedAlgorithm != null) {
-            // Validate that the requested algorithm is compatible
-            keySpec.requireSupports(requestedAlgorithm)
-            requestedAlgorithm
-        } else {
-            // Use the key's default algorithm
-            keySpec.algorithm
-        }
-    }
+    suspend fun deleteKey(keyId: KeyId): DeleteKeyResult
 }
 
 /**
@@ -218,17 +259,4 @@ class UnsupportedAlgorithmException(
     message: String,
     cause: Throwable? = null
 ) : IllegalArgumentException(message, cause)
-
-/**
- * Exception thrown when a requested key is not found.
- *
- * @deprecated Use KmsException.KeyNotFound instead
- */
-@Deprecated("Use KmsException.KeyNotFound instead", ReplaceWith("KmsException.KeyNotFound(keyId)"))
-class KeyNotFoundException(message: String, cause: Throwable? = null) : Exception(message, cause) {
-    constructor(keyId: String) : this(
-        message = "Key not found: $keyId",
-        cause = null
-    )
-}
 

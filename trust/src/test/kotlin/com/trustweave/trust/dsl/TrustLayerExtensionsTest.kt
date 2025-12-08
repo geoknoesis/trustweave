@@ -1,6 +1,6 @@
 package com.trustweave.trust.dsl
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.testkit.credential.InMemoryWallet
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.testkit.services.TestkitDidMethodFactory
@@ -12,7 +12,8 @@ import com.trustweave.trust.dsl.wallet.organize
 import com.trustweave.testkit.getOrFail
 import com.trustweave.trust.types.IssuanceResult
 import kotlinx.coroutines.runBlocking
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.junit.jupiter.api.BeforeEach
@@ -41,7 +42,7 @@ class TrustLayerExtensionsTest {
             )
             keys {
                 custom(kms)
-                signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
+                signer { data, keyId -> kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
             }
             did {
                 method("key") {

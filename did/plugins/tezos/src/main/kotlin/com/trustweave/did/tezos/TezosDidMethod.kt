@@ -2,6 +2,8 @@ package com.trustweave.did.tezos
 
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.base.AbstractDidMethod
 import com.trustweave.kms.KeyManagementService
@@ -38,10 +40,10 @@ class TezosDidMethod(
         )
     }
 
-    override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
-        require(did.startsWith("did:tz:")) {
-            "Invalid did:tz format: $did"
-        }
+    override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
+        validateDidFormat(did)
+        
+        val didString = did.value
 
         // TODO: Implement Tezos DID resolution
         // 1. Extract network and address from DID

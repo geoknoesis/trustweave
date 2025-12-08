@@ -2,10 +2,13 @@ package com.trustweave.keydid
 
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.base.AbstractDidMethod
 import com.trustweave.did.base.DidMethodUtils
 import com.trustweave.kms.KeyManagementService
+import com.trustweave.kms.results.GenerateKeyResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.security.MessageDigest
@@ -43,7 +46,23 @@ class KeyDidMethod(
         try {
             // Generate key using KMS
             val algorithm = options.algorithm.algorithmName
-            val keyHandle = kms.generateKey(algorithm, options.additionalProperties)
+            val generateResult = kms.generateKey(algorithm, options.additionalProperties)
+            val keyHandle = when (generateResult) {
+                is GenerateKeyResult.Success -> generateResult.keyHandle
+                is GenerateKeyResult.Failure.UnsupportedAlgorithm -> throw TrustWeaveException.Unknown(
+                    code = "UNSUPPORTED_ALGORITHM",
+                    message = generateResult.reason ?: "Algorithm not supported"
+                )
+                is GenerateKeyResult.Failure.InvalidOptions -> throw TrustWeaveException.Unknown(
+                    code = "INVALID_OPTIONS",
+                    message = generateResult.reason
+                )
+                is GenerateKeyResult.Failure.Error -> throw TrustWeaveException.Unknown(
+                    code = "KEY_GENERATION_ERROR",
+                    message = generateResult.reason,
+                    cause = generateResult.cause
+                )
+            }
 
             // Get public key bytes
             val publicKeyBytes = getPublicKeyBytes(keyHandle, algorithm)
@@ -71,14 +90,14 @@ class KeyDidMethod(
             val document = DidMethodUtils.buildDidDocument(
                 did = did,
                 verificationMethod = listOf(verificationMethod),
-                authentication = listOf(verificationMethod.id),
-                assertionMethod = if (options.purposes.contains(DidCreationOptions.KeyPurpose.ASSERTION)) {
-                    listOf(verificationMethod.id)
+                authentication = listOf(verificationMethod.id.value),
+                assertionMethod = if (options.purposes.contains(KeyPurpose.ASSERTION)) {
+                    listOf(verificationMethod.id.value)
                 } else null
             )
 
             // Store locally (did:key documents are derived, not stored externally)
-            storeDocument(document.id, document)
+            storeDocument(document.id.value, document)
 
             document
         } catch (e: TrustWeaveException) {
@@ -94,12 +113,12 @@ class KeyDidMethod(
         }
     }
 
-    override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
+    override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
 
             // Extract multibase-encoded public key from DID
-            val multibaseEncoded = did.substringAfter("did:key:")
+            val multibaseEncoded = did.value.substringAfter("did:key:")
 
             // Decode multibase to get prefixed key
             val prefixedKey = try {
@@ -109,7 +128,7 @@ class KeyDidMethod(
                     "invalidDid",
                     "Invalid multibase encoding: ${e.message}",
                     method,
-                    did
+                    did.value
                 )
             }
 
@@ -119,7 +138,7 @@ class KeyDidMethod(
                     "invalidDid",
                     "Unsupported multicodec prefix",
                     method,
-                    did
+                    did.value
                 )
 
             // Check local storage first (for keys we generated)
@@ -140,21 +159,21 @@ class KeyDidMethod(
                 "notFound",
                 "DID document not found. did:key documents are typically derived from public keys.",
                 method,
-                did
+                did.value
             )
         } catch (e: TrustWeaveException) {
             DidMethodUtils.createErrorResolutionResult(
                 "invalidDid",
                 e.message,
                 method,
-                did
+                did.value
             )
         } catch (e: Exception) {
             DidMethodUtils.createErrorResolutionResult(
                 "invalidDid",
                 e.message,
                 method,
-                did
+                did.value
             )
         }
     }

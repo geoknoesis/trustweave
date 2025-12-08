@@ -3,7 +3,7 @@ package com.trustweave.credential.didcomm.protocol
 import com.trustweave.credential.didcomm.models.DidCommMessage
 import com.trustweave.credential.didcomm.models.DidCommMessageTypes
 import kotlinx.serialization.json.*
-import java.time.Instant
+import kotlinx.datetime.Clock
 import java.util.*
 
 /**
@@ -40,7 +40,7 @@ object BasicMessageProtocol {
             from = fromDid,
             to = listOf(toDid),
             body = body,
-            created = Instant.now().toString(),
+            created = Clock.System.now().toString(),
             thid = thid
         )
     }

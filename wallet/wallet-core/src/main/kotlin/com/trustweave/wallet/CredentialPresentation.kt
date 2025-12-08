@@ -1,7 +1,7 @@
 package com.trustweave.wallet
 
-import com.trustweave.credential.models.VerifiablePresentation
-import com.trustweave.credential.PresentationOptions
+import com.trustweave.credential.model.vc.VerifiablePresentation
+import com.trustweave.credential.proof.ProofOptions
 
 /**
  * Credential presentation capabilities.
@@ -17,10 +17,9 @@ import com.trustweave.credential.PresentationOptions
  *     val presentation = wallet.createPresentation(
  *         credentialIds = listOf("cred1", "cred2"),
  *         holderDid = "did:key:holder",
- *         options = PresentationOptions(
- *             holderDid = "did:key:holder",
- *             proofType = "Ed25519Signature2020"
- *         )
+     *         options = proofOptions {
+     *             challenge = "random-nonce"
+     *         }
  *     )
  *
  *     // Create selective disclosure
@@ -28,7 +27,7 @@ import com.trustweave.credential.PresentationOptions
  *         credentialIds = listOf("cred1"),
  *         disclosedFields = listOf("name", "email"),
  *         holderDid = "did:key:holder",
- *         options = PresentationOptions(...)
+     *         options = proofOptions { ... }
  *     )
  * }
  * ```
@@ -46,7 +45,7 @@ interface CredentialPresentation {
     suspend fun createPresentation(
         credentialIds: List<String>,
         holderDid: String,
-        options: PresentationOptions
+        options: ProofOptions
     ): VerifiablePresentation
 
     /**
@@ -65,7 +64,7 @@ interface CredentialPresentation {
         credentialIds: List<String>,
         disclosedFields: List<String>,
         holderDid: String,
-        options: PresentationOptions
+        options: ProofOptions
     ): VerifiablePresentation
 }
 

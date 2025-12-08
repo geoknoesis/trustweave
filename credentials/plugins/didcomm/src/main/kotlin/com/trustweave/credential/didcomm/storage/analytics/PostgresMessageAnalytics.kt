@@ -3,8 +3,11 @@ package com.trustweave.credential.didcomm.storage.analytics
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.sql.Timestamp
-import java.time.Instant
-import java.time.temporal.ChronoUnit
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
+import java.time.Instant as JavaInstant
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
 import javax.sql.DataSource
 
 /**
@@ -37,8 +40,8 @@ class PostgresMessageAnalytics(
                 FROM didcomm_messages
                 WHERE created_time >= ? AND created_time <= ?
             """).use { stmt ->
-                stmt.setTimestamp(1, Timestamp.from(startTime))
-                stmt.setTimestamp(2, Timestamp.from(endTime))
+                stmt.setTimestamp(1, Timestamp.from(JavaInstant.ofEpochSecond(startTime.epochSeconds)))
+                stmt.setTimestamp(2, Timestamp.from(JavaInstant.ofEpochSecond(endTime.epochSeconds)))
                 stmt.executeQuery().use { rs ->
                     if (rs.next()) {
                         val total = rs.getInt("total")
@@ -80,8 +83,8 @@ class PostgresMessageAnalytics(
                 ORDER BY count DESC
                 LIMIT 5
             """).use { stmt ->
-                stmt.setTimestamp(1, Timestamp.from(startTime))
-                stmt.setTimestamp(2, Timestamp.from(endTime))
+                stmt.setTimestamp(1, Timestamp.from(JavaInstant.ofEpochSecond(startTime.epochSeconds)))
+                stmt.setTimestamp(2, Timestamp.from(JavaInstant.ofEpochSecond(endTime.epochSeconds)))
                 stmt.executeQuery().use { rs ->
                     val peakHours = buildList {
                         while (rs.next()) {
@@ -90,13 +93,14 @@ class PostgresMessageAnalytics(
                     }
 
                     // Get average messages per hour
-                    val totalHours = ChronoUnit.HOURS.between(startTime, endTime).coerceAtLeast(1)
+                    val durationSeconds = endTime.epochSeconds - startTime.epochSeconds
+                    val totalHours = (durationSeconds / 3600.0).toInt().coerceAtLeast(1)
                     val totalMessages = conn.prepareStatement("""
                         SELECT COUNT(*) FROM didcomm_messages
                         WHERE created_time >= ? AND created_time <= ?
                     """).use { stmt2 ->
-                        stmt2.setTimestamp(1, Timestamp.from(startTime))
-                        stmt2.setTimestamp(2, Timestamp.from(endTime))
+                        stmt2.setTimestamp(1, Timestamp.from(JavaInstant.ofEpochSecond(startTime.epochSeconds)))
+                        stmt2.setTimestamp(2, Timestamp.from(JavaInstant.ofEpochSecond(endTime.epochSeconds)))
                         stmt2.executeQuery().use { rs2 ->
                             if (rs2.next()) rs2.getInt(1) else 0
                         }
@@ -115,8 +119,8 @@ class PostgresMessageAnalytics(
                         ORDER BY count DESC
                         LIMIT 1
                     """).use { stmt2 ->
-                        stmt2.setTimestamp(1, Timestamp.from(startTime))
-                        stmt2.setTimestamp(2, Timestamp.from(endTime))
+                        stmt2.setTimestamp(1, Timestamp.from(JavaInstant.ofEpochSecond(startTime.epochSeconds)))
+                        stmt2.setTimestamp(2, Timestamp.from(JavaInstant.ofEpochSecond(endTime.epochSeconds)))
                         stmt2.executeQuery().use { rs2 ->
                             if (rs2.next()) rs2.getString("day").trim() else "Unknown"
                         }
@@ -162,10 +166,10 @@ class PostgresMessageAnalytics(
             """).use { stmt ->
                 var paramIndex = 1
                 if (startTime != null) {
-                    stmt.setTimestamp(paramIndex++, Timestamp.from(startTime))
+                    stmt.setTimestamp(paramIndex++, Timestamp.from(JavaInstant.ofEpochSecond(startTime.epochSeconds)))
                 }
                 if (endTime != null) {
-                    stmt.setTimestamp(paramIndex++, Timestamp.from(endTime))
+                    stmt.setTimestamp(paramIndex++, Timestamp.from(JavaInstant.ofEpochSecond(endTime.epochSeconds)))
                 }
                 stmt.setInt(paramIndex, limit)
 
@@ -209,10 +213,10 @@ class PostgresMessageAnalytics(
             """).use { stmt ->
                 var paramIndex = 1
                 if (startTime != null) {
-                    stmt.setTimestamp(paramIndex++, Timestamp.from(startTime))
+                    stmt.setTimestamp(paramIndex++, Timestamp.from(JavaInstant.ofEpochSecond(startTime.epochSeconds)))
                 }
                 if (endTime != null) {
-                    stmt.setTimestamp(paramIndex++, Timestamp.from(endTime))
+                    stmt.setTimestamp(paramIndex++, Timestamp.from(JavaInstant.ofEpochSecond(endTime.epochSeconds)))
                 }
 
                 stmt.executeQuery().use { rs ->
@@ -242,8 +246,8 @@ class PostgresMessageAnalytics(
             ORDER BY time_bucket
         """).use { stmt ->
             stmt.setString(1, dateFormat)
-            stmt.setTimestamp(2, Timestamp.from(startTime))
-            stmt.setTimestamp(3, Timestamp.from(endTime))
+            stmt.setTimestamp(2, Timestamp.from(JavaInstant.ofEpochSecond(startTime.epochSeconds)))
+            stmt.setTimestamp(3, Timestamp.from(JavaInstant.ofEpochSecond(endTime.epochSeconds)))
             stmt.executeQuery().use { rs ->
                 buildList {
                     while (rs.next()) {

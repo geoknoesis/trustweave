@@ -1,14 +1,19 @@
 package com.trustweave.testkit.integration
 
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.did.DidDocument
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.did.model.DidDocument
 import com.trustweave.testkit.TrustWeaveTestFixture
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.test.assertEquals
@@ -42,7 +47,7 @@ class CredentialLifecycleScenario(
         // 2. Issue credential
         val credential = issueCredential(issuerDid, holderDid)
         kotlin.test.assertNotNull(credential)
-        kotlin.test.assertEquals(issuerDid.id, credential.issuer)
+        kotlin.test.assertEquals(issuerDid.id.value, credential.issuer.id.value)
 
         // 3. Store credential (if wallet is available)
         // This would use fixture.getWallet() if available
@@ -65,7 +70,7 @@ class CredentialLifecycleScenario(
         holderDid: DidDocument
     ): VerifiableCredential {
         val credentialSubject = fixture.createTestCredentialSubject(
-            id = holderDid.id,
+            id = holderDid.id.value,
             additionalClaims = mapOf(
                 "name" to "Test User",
                 "email" to "test@example.com"
@@ -74,12 +79,16 @@ class CredentialLifecycleScenario(
 
         // In a real scenario, this would use the credential service
         // For now, create a minimal credential structure
+        val subjectId = (credentialSubject["id"] as? kotlinx.serialization.json.JsonPrimitive)?.content 
+            ?: holderDid.id.value
+        val subjectClaims = credentialSubject.filterKeys { it != "id" }
+        
         return VerifiableCredential(
-            id = "vc:test:${System.currentTimeMillis()}",
-            type = listOf("VerifiableCredential", "TestCredential"),
-            issuer = issuerDid.id,
-            credentialSubject = credentialSubject as JsonElement,
-            issuanceDate = Instant.now().toString(),
+            id = CredentialId("vc:test:${System.currentTimeMillis()}"),
+            type = listOf(CredentialType.Custom("VerifiableCredential"), CredentialType.Custom("TestCredential")),
+            issuer = Issuer.fromDid(issuerDid.id),
+            credentialSubject = CredentialSubject.fromIri(subjectId, claims = subjectClaims),
+            issuanceDate = Clock.System.now(),
             expirationDate = null,
             credentialStatus = null,
             credentialSchema = null,

@@ -1,6 +1,6 @@
 package com.trustweave.wallet
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 
 /**
  * Credential organization capabilities.

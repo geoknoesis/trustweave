@@ -10,11 +10,12 @@ import com.trustweave.testkit.services.TestkitBlockchainAnchorClientFactory
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.dsl.TrustWeaveConfig
 import com.trustweave.trust.dsl.trustWeave
-import com.trustweave.trust.types.ProofType
+import com.trustweave.credential.model.ProofType
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 import kotlin.test.*
 
 /**
@@ -41,7 +42,7 @@ class TrustLayerConfigBranchCoverageTest {
             keys {
                 provider("waltid") // This should be ignored
                 custom(customKms)
-                signer { data, keyId -> customKms.sign(com.trustweave.core.types.KeyId(keyId), data) }
+                signer { data, keyId -> customKms.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
             }
             did {
                 method("key") {}
@@ -150,7 +151,7 @@ class TrustLayerConfigBranchCoverageTest {
             )
             keys {
                 custom(kms)
-                signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
+                signer { data, keyId -> kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
             }
             did {
                 method("key") {
@@ -172,7 +173,7 @@ class TrustLayerConfigBranchCoverageTest {
                 )
                 keys {
                     custom(kms)
-                    signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
+                    signer { data, keyId -> kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
                 }
                 did {
                     method("waltid") {
@@ -201,7 +202,7 @@ class TrustLayerConfigBranchCoverageTest {
                 )
                 keys {
                     custom(kms)
-                    signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
+                    signer { data, keyId -> kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
                 }
                 did {
                     method("godiddy") {
@@ -230,7 +231,7 @@ class TrustLayerConfigBranchCoverageTest {
                 )
                 keys {
                     custom(kms)
-                    signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
+                    signer { data, keyId -> kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
                 }
                 did {
                     method("nonexistent") {}
@@ -248,7 +249,7 @@ class TrustLayerConfigBranchCoverageTest {
             )
             keys {
                 custom(kms)
-                signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
+                signer { data, keyId -> kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
             }
             did {
                 method("key") {}

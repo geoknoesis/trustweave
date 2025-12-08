@@ -2,8 +2,9 @@ package com.trustweave.trust.dsl.did
 
 import com.trustweave.did.DidCreationOptions
 import com.trustweave.did.DidCreationOptionsBuilder
+import com.trustweave.did.KeyAlgorithm
 import com.trustweave.did.DidMethod
-import com.trustweave.trust.types.Did
+import com.trustweave.did.identifiers.Did
 import com.trustweave.trust.types.DidCreationResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineDispatcher
@@ -53,7 +54,7 @@ class DidBuilder(
      * For type safety, prefer using algorithm(value: DidCreationOptions.KeyAlgorithm).
      */
     fun algorithm(name: String) {
-        val keyAlgorithm = DidCreationOptions.KeyAlgorithm.fromName(name)
+        val keyAlgorithm = KeyAlgorithm.fromName(name)
             ?: throw IllegalArgumentException("Unsupported key algorithm: $name")
         optionsBuilder.algorithm = keyAlgorithm
     }
@@ -63,7 +64,7 @@ class DidBuilder(
      * 
      * This is the preferred method for compile-time type safety.
      */
-    fun algorithm(value: DidCreationOptions.KeyAlgorithm) {
+    fun algorithm(value: KeyAlgorithm) {
         optionsBuilder.algorithm = value
     }
 
@@ -109,7 +110,7 @@ class DidBuilder(
         try {
             val document = didMethod.createDid(optionsBuilder.build())
             DidCreationResult.Success(
-                did = Did(document.id),
+                did = Did(document.id.value),
                 document = document
             )
         } catch (e: com.trustweave.core.exception.TrustWeaveException) {

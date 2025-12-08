@@ -2,7 +2,7 @@ package com.trustweave.examples.quickstart
 
 import com.trustweave.TrustWeave
 import com.trustweave.anchor.BlockchainAnchorRegistry
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.proof.ProofType
 import com.trustweave.core.util.DigestUtils
 import com.trustweave.services.IssuanceConfig

@@ -98,13 +98,23 @@ println("Created: ${document.id}") // did:jwk:eyJ...
 ### Resolving a did:jwk
 
 ```kotlin
-// Resolve DID (derived from JWK)
-val result = method.resolveDid("did:jwk:eyJkIjoieCIsImNydiI6IkVkMjU1MTkiLCJrdHkiOiJPS1AifQ")
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.resolver.DidResolutionResult
 
-result.document?.let { doc ->
-    println("Resolved: ${doc.id}")
-    println("Verification methods: ${doc.verificationMethod.size}")
-} ?: println("Not found")
+// Resolve DID (derived from JWK)
+val did = Did("did:jwk:eyJkIjoieCIsImNydiI6IkVkMjU1MTkiLCJrdHkiOiJPS1AifQ")
+val result = method.resolveDid(did)
+
+when (result) {
+    is DidResolutionResult.Success -> {
+        println("Resolved: ${result.document.id}")
+        println("Verification methods: ${result.document.verificationMethod.size}")
+    }
+    is DidResolutionResult.Failure.NotFound -> {
+        println("DID not found: ${result.did.value}")
+    }
+    else -> println("Resolution failed")
+}
 ```
 
 ### Using Different Key Types

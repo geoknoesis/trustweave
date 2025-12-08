@@ -1,72 +1,51 @@
 package com.trustweave.did
 
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.DidDocumentMetadata
+import com.trustweave.did.model.DidService
+import com.trustweave.did.model.VerificationMethod
+import com.trustweave.did.resolver.DidResolutionResult
+import com.trustweave.did.exception.DidException.InvalidDidFormat
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
-import java.time.Instant
-import com.trustweave.did.resolver.DidResolutionResult
-import com.trustweave.did.exception.DidException.InvalidDidFormat
+import kotlinx.datetime.Instant
 
 /**
  * Comprehensive tests for Did models and DidRegistry.
  */
 class DidModelsTest {
 
-    @Test
-    fun `test Did parse`() {
-        val did = Did.parse("did:web:example.com")
-
-        assertEquals("web", did.method)
-        assertEquals("example.com", did.id)
-        assertEquals("did:web:example.com", did.toString())
-    }
-
-    @Test
-    fun `test Did parse with complex id`() {
-        val did = Did.parse("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
-
-        assertEquals("key", did.method)
-        assertTrue(did.id.startsWith("z6Mk"))
-    }
-
-    @Test
-    fun `test Did parse fails without did prefix`() {
-        assertFailsWith<InvalidDidFormat> {
-            Did.parse("web:example.com")
-        }
-    }
-
-    @Test
-    fun `test Did parse fails with invalid format`() {
-        assertFailsWith<InvalidDidFormat> {
-            Did.parse("did:web")
-        }
-    }
+    // Basic Did constructor tests - comprehensive coverage in DidModelsBranchCoverageTest
 
     @Test
     fun `test VerificationMethod with all fields`() {
+        val did = Did("did:key:issuer")
         val vm = VerificationMethod(
-            id = "did:key:issuer#key-1",
+            id = VerificationMethodId.parse("did:key:issuer#key-1"),
             type = "Ed25519VerificationKey2020",
-            controller = "did:key:issuer",
-            publicKeyJwk = mapOf("kty" to "OKP", "crv" to "Ed25519"),
+            controller = did,
+            publicKeyJwk = mapOf<String, Any?>("kty" to "OKP", "crv" to "Ed25519"),
             publicKeyMultibase = "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
         )
 
-        assertEquals("did:key:issuer#key-1", vm.id)
+        assertEquals("did:key:issuer#key-1", vm.id.value)
         assertEquals("Ed25519VerificationKey2020", vm.type)
-        assertEquals("did:key:issuer", vm.controller)
+        assertEquals("did:key:issuer", vm.controller.value)
         assertNotNull(vm.publicKeyJwk)
         assertNotNull(vm.publicKeyMultibase)
     }
 
     @Test
     fun `test VerificationMethod with defaults`() {
+        val did = Did("did:key:issuer")
         val vm = VerificationMethod(
-            id = "did:key:issuer#key-1",
+            id = VerificationMethodId.parse("did:key:issuer#key-1"),
             type = "Ed25519VerificationKey2020",
-            controller = "did:key:issuer"
+            controller = did
         )
 
         assertNull(vm.publicKeyJwk)
@@ -100,10 +79,12 @@ class DidModelsTest {
 
     @Test
     fun `test DidDocument with all fields`() {
+        val did = Did("did:key:issuer")
+        val vmId = VerificationMethodId.parse("did:key:issuer#key-1")
         val vm = VerificationMethod(
-            id = "did:key:issuer#key-1",
+            id = vmId,
             type = "Ed25519VerificationKey2020",
-            controller = "did:key:issuer"
+            controller = did
         )
         val service = DidService(
             id = "did:key:issuer#service-1",
@@ -112,17 +93,17 @@ class DidModelsTest {
         )
 
         val doc = DidDocument(
-            id = "did:key:issuer",
-            alsoKnownAs = listOf("did:web:example.com"),
-            controller = listOf("did:key:controller"),
+            id = did,
+            alsoKnownAs = listOf(Did("did:web:example.com")),
+            controller = listOf(Did("did:key:controller")),
             verificationMethod = listOf(vm),
-            authentication = listOf("did:key:issuer#key-1"),
-            assertionMethod = listOf("did:key:issuer#key-1"),
-            keyAgreement = listOf("did:key:issuer#key-2"),
+            authentication = listOf(vmId),
+            assertionMethod = listOf(vmId),
+            keyAgreement = listOf(VerificationMethodId.parse("did:key:issuer#key-2")),
             service = listOf(service)
         )
 
-        assertEquals("did:key:issuer", doc.id)
+        assertEquals("did:key:issuer", doc.id.value)
         assertEquals(1, doc.alsoKnownAs.size)
         assertEquals(1, doc.verificationMethod.size)
         assertEquals(1, doc.service.size)
@@ -130,7 +111,7 @@ class DidModelsTest {
 
     @Test
     fun `test DidDocument with defaults`() {
-        val doc = DidDocument(id = "did:key:issuer")
+        val doc = DidDocument(id = Did("did:key:issuer"))
 
         assertTrue(doc.alsoKnownAs.isEmpty())
         assertTrue(doc.controller.isEmpty())
@@ -143,11 +124,11 @@ class DidModelsTest {
 
     @Test
     fun `test DidResolutionResult with document`() {
-        val doc = DidDocument(id = "did:key:issuer")
+        val doc = DidDocument(id = Did("did:key:issuer"))
         val result = DidResolutionResult.Success(
             document = doc,
             documentMetadata = DidDocumentMetadata(
-                created = Instant.parse("2024-01-01T00:00:00Z")
+                created = kotlinx.datetime.Instant.parse("2024-01-01T00:00:00Z")
             ),
             resolutionMetadata = mapOf("duration" to 100L)
         )
@@ -160,7 +141,7 @@ class DidModelsTest {
     @Test
     fun `test DidResolutionResult with defaults`() {
         val result = DidResolutionResult.Failure.NotFound(
-            did = com.trustweave.core.types.Did("did:key:test"),
+            did = Did("did:key:test"),
             resolutionMetadata = emptyMap()
         )
 

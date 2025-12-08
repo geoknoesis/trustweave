@@ -1,17 +1,22 @@
 package com.trustweave.trust.dsl.credential
 
-import com.trustweave.credential.CredentialIssuanceOptions
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.models.CredentialStatus
-import com.trustweave.credential.revocation.StatusPurpose
+import com.trustweave.credential.CredentialService
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.CredentialStatus
+import com.trustweave.credential.model.StatusPurpose
+import com.trustweave.credential.requests.IssuanceRequest
+import com.trustweave.credential.requests.issuanceRequest
+import com.trustweave.credential.format.ProofSuiteId
+import com.trustweave.credential.revocation.CredentialRevocationManager
+import com.trustweave.credential.identifiers.StatusListId
+import com.trustweave.credential.proof.ProofOptions
+import com.trustweave.credential.proof.ProofPurpose
 import com.trustweave.trust.dsl.credential.CredentialBuilder
-import com.trustweave.credential.issuer.CredentialIssuer
-import com.trustweave.credential.revocation.StatusListManager
 import com.trustweave.trust.types.IssuerIdentity
-import com.trustweave.trust.types.ProofType
-import com.trustweave.trust.types.Did
-import com.trustweave.trust.types.KeyId
-import com.trustweave.trust.types.IssuanceResult
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
+import com.trustweave.credential.results.IssuanceResult
+import com.trustweave.credential.model.vc.Issuer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -36,7 +41,7 @@ import kotlinx.coroutines.withContext
  *                 "name" to "Bachelor of Science"
  *             }
  *         }
- *         issued(Instant.now())
+ *         issued(Clock.System.now())
  *         withRevocation() // Auto-creates status list if needed
  *     }
  *     signedBy("did:key:university", "key-1")
@@ -45,9 +50,9 @@ import kotlinx.coroutines.withContext
  * ```
  */
 class IssuanceBuilder(
-    private val issuer: CredentialIssuer,
-    private val statusListManager: StatusListManager? = null,
-    private val defaultProofType: ProofType = ProofType.Ed25519Signature2020,
+    private val credentialService: CredentialService,
+    private val revocationManager: CredentialRevocationManager? = null,
+    private val defaultProofSuite: ProofSuiteId = ProofSuiteId.VC_LD,
     /**
      * Coroutine dispatcher for I/O-bound operations.
      * Defaults to [Dispatchers.IO] if not provided.
@@ -55,8 +60,9 @@ class IssuanceBuilder(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private var credential: VerifiableCredential? = null
-    private var issuerIdentity: IssuerIdentity? = null
-    private var proofType: ProofType? = null
+    private var issuerDid: Did? = null
+    private var issuerKeyId: String? = null
+    private var proofSuite: ProofSuiteId? = null
     private var challenge: String? = null
     private var domain: String? = null
     private var autoRevocation: Boolean = false
@@ -80,10 +86,12 @@ class IssuanceBuilder(
     /**
      * Set issuer identity for signing.
      *
-     * @param issuer The issuer identity containing DID and key ID
+     * @param issuer The issuer identity (DID)
      */
     fun signedBy(issuer: IssuerIdentity) {
-        this.issuerIdentity = issuer
+        this.issuerDid = issuer
+        // Extract keyId from DID if it's a full verification method ID
+        // Otherwise, assume it's just the DID and keyId will be set separately
     }
 
     /**
@@ -101,16 +109,17 @@ class IssuanceBuilder(
             "Issuer DID must start with 'did:'. Got: $issuerDid" 
         }
         require(keyId.isNotBlank()) { "Key ID cannot be blank" }
-        this.issuerIdentity = IssuerIdentity.from(issuerDid, keyId)
+        this.issuerDid = Did(issuerDid)
+        this.issuerKeyId = keyId
     }
 
     /**
-     * Set proof type.
+     * Set proof suite.
      *
-     * @param type The proof type to use for signing
+     * @param suite The proof suite to use for signing
      */
-    fun withProof(type: ProofType) {
-        this.proofType = type
+    fun withProof(suite: ProofSuiteId) {
+        this.proofSuite = suite
     }
 
     /**
@@ -143,25 +152,39 @@ class IssuanceBuilder(
      * @return Sealed result type with success or detailed failure information
      */
     suspend fun build(): IssuanceResult = withContext(ioDispatcher) {
-        val cred = credential ?: return@withContext IssuanceResult.Failure.InvalidCredential(
+        val cred = credential ?: return@withContext IssuanceResult.Failure.InvalidRequest(
+            field = "credential",
             reason = "Credential is required. Use credential { ... } to build the credential."
         )
-        val resolvedIssuerIdentity = issuerIdentity ?: return@withContext IssuanceResult.Failure.InvalidCredential(
-            reason = "Issuer identity is required. Use signedBy(IssuerIdentity.from(issuerDid, keyId)) to specify the issuer."
+        val resolvedIssuerDid = issuerDid ?: return@withContext IssuanceResult.Failure.InvalidRequest(
+            field = "issuerIdentity",
+            reason = "Issuer DID is required. Use signedBy(issuerDid, keyId) to specify the issuer."
         )
+        val resolvedKeyId = issuerKeyId ?: return@withContext IssuanceResult.Failure.InvalidRequest(
+            field = "issuerKeyId",
+            reason = "Issuer key ID is required. Use signedBy(issuerDid, keyId) to specify the issuer."
+        )
+        
+        // Build verification method ID
+        val verificationMethodId = if (resolvedKeyId.contains("#")) {
+            resolvedKeyId // Already a full verification method ID
+        } else {
+            "${resolvedIssuerDid.value}#$resolvedKeyId" // Construct full ID from DID + fragment
+        }
 
         // Handle auto-revocation if enabled
         var credentialToIssue = cred
         if (autoRevocation && cred.credentialStatus == null) {
-            if (statusListManager != null) {
+            if (revocationManager != null) {
                 // Explicit error handling - don't silently fail
-                val statusList = try {
-                    statusListManager.createStatusList(
-                        issuerDid = resolvedIssuerIdentity.did.value,
+                val statusListId = try {
+                    revocationManager.createStatusList(
+                        issuerDid = resolvedIssuerDid.value,
                         purpose = StatusPurpose.REVOCATION
                     )
                 } catch (e: Exception) {
-                    return@withContext IssuanceResult.Failure.Other(
+                    return@withContext IssuanceResult.Failure.AdapterError(
+                        format = proofSuite ?: defaultProofSuite,
                         reason = "Failed to create status list for revocation. " +
                                 "This is required when withRevocation() is enabled. " +
                                 "Error: ${e.message}",
@@ -171,79 +194,53 @@ class IssuanceBuilder(
 
                 // Add credential status to credential
                 val credentialStatus = CredentialStatus(
-                    id = "${statusList.id}#0",
+                    id = StatusListId("${statusListId.value}#0"),
                     type = "StatusList2021Entry",
-                    statusPurpose = "revocation",
+                    statusPurpose = StatusPurpose.REVOCATION,
                     statusListIndex = "0",
-                    statusListCredential = statusList.id
+                    statusListCredential = statusListId
                 )
 
                 credentialToIssue = cred.copy(credentialStatus = credentialStatus)
             } else {
-                return@withContext IssuanceResult.Failure.Other(
-                    reason = "Revocation requested but status list manager is not configured. " +
+                return@withContext IssuanceResult.Failure.AdapterError(
+                    format = proofSuite ?: defaultProofSuite,
+                    reason = "Revocation requested but revocation manager is not configured. " +
                             "Configure it in TrustWeave.build { revocation { provider(\"inMemory\") } }"
                 )
             }
         }
 
-        val proofTypeToUse = proofType ?: defaultProofType
+        val proofSuiteToUse = proofSuite ?: defaultProofSuite
 
-        val options = CredentialIssuanceOptions(
-            proofType = proofTypeToUse.value,
-            keyId = resolvedIssuerIdentity.keyId.value,
-            issuerDid = resolvedIssuerIdentity.did.value,
-            challenge = challenge,
-            domain = domain,
-            anchorToBlockchain = false, // Anchoring should be handled by orchestration layer
-            chainId = null,
-            additionalOptions = mapOf("verificationMethod" to resolvedIssuerIdentity.verificationMethodId)
+        // Build IssuanceRequest from VerifiableCredential
+        val request = IssuanceRequest(
+            format = proofSuiteToUse,
+            issuer = cred.issuer, // Use issuer directly since IssuanceRequest accepts Issuer
+            issuerKeyId = try {
+                VerificationMethodId.parse(verificationMethodId)
+            } catch (e: Exception) {
+                null // If parsing fails, let CredentialService handle it
+            },
+            credentialSubject = cred.credentialSubject,
+            type = cred.type,
+            id = cred.id,
+            issuedAt = cred.issuanceDate,
+            validFrom = cred.validFrom,
+            validUntil = cred.expirationDate,
+            credentialStatus = credentialToIssue.credentialStatus,
+            credentialSchema = cred.credentialSchema,
+            evidence = cred.evidence,
+            proofOptions = ProofOptions(
+                purpose = ProofPurpose.AssertionMethod,
+                challenge = challenge,
+                domain = domain,
+                verificationMethod = verificationMethodId
+            )
         )
 
-        // Issue credential - use the class property issuer (CredentialIssuer instance)
-        try {
-            val issuedCredential = issuer.issue(
-                credential = credentialToIssue,
-                issuerDid = resolvedIssuerIdentity.did.value,
-                keyId = resolvedIssuerIdentity.keyId.value,
-                options = options
-            )
-            IssuanceResult.Success(issuedCredential)
-        } catch (e: com.trustweave.did.exception.DidException.DidResolutionFailed) {
-            IssuanceResult.Failure.IssuerResolutionFailed(
-                issuerDid = resolvedIssuerIdentity.did.value,
-                reason = e.message ?: "Failed to resolve issuer DID"
-            )
-        } catch (e: com.trustweave.kms.exception.KmsException.KeyNotFound) {
-            IssuanceResult.Failure.KeyNotFound(
-                keyId = resolvedIssuerIdentity.keyId.value,
-                reason = e.message ?: "Key not found"
-            )
-        } catch (e: com.trustweave.credential.exception.CredentialException) {
-            when (e) {
-                is com.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed -> {
-                    IssuanceResult.Failure.Other(
-                        reason = e.reason ?: "Credential issuance failed",
-                        cause = e
-                    )
-                }
-                else -> {
-                    IssuanceResult.Failure.Other(
-                        reason = e.message ?: "Credential error",
-                        cause = e
-                    )
-                }
-            }
-        } catch (e: IllegalArgumentException) {
-            IssuanceResult.Failure.InvalidCredential(
-                reason = e.message ?: "Invalid credential parameters"
-            )
-        } catch (e: Exception) {
-            IssuanceResult.Failure.Other(
-                reason = e.message ?: "Unknown error during credential issuance",
-                cause = e
-            )
-        }
+        // Issue credential using CredentialService
+        credentialService.issue(request)
     }
 }
 
@@ -258,10 +255,28 @@ class IssuanceBuilder(
 suspend fun CredentialDslProvider.issue(block: IssuanceBuilder.() -> Unit): IssuanceResult {
     val dispatcher = (this as? com.trustweave.trust.dsl.TrustWeaveContext)?.getConfig()?.ioDispatcher
         ?: Dispatchers.IO
+    
+    // Get CredentialService - try from getIssuer() or return error
+    val issuerAny = getIssuer()
+    val credentialService = issuerAny as? CredentialService
+        ?: return IssuanceResult.Failure.AdapterNotReady(
+            format = ProofSuiteId.VC_LD,
+            reason = "CredentialService is not available. Issuer must be a CredentialService instance."
+        )
+    
+    // Convert ProofType to ProofSuiteId
+    val defaultProofType = getDefaultProofType()
+    val defaultProofSuite = when (defaultProofType) {
+        is com.trustweave.credential.model.ProofType.Ed25519Signature2020 -> ProofSuiteId.VC_LD
+        is com.trustweave.credential.model.ProofType.JsonWebSignature2020 -> ProofSuiteId.VC_JWT
+        is com.trustweave.credential.model.ProofType.BbsBlsSignature2020 -> ProofSuiteId.SD_JWT_VC
+        is com.trustweave.credential.model.ProofType.Custom -> ProofSuiteId.VC_LD // Default fallback
+    }
+    
     val builder = IssuanceBuilder(
-        issuer = getIssuer(),
-        statusListManager = getStatusListManager(),
-        defaultProofType = getDefaultProofType(),
+        credentialService = credentialService,
+        revocationManager = getRevocationManager() as? CredentialRevocationManager,
+        defaultProofSuite = defaultProofSuite,
         ioDispatcher = dispatcher
     )
     builder.block()

@@ -2,7 +2,7 @@ package com.trustweave.credential.issuer
 
 import com.trustweave.credential.CredentialIssuanceOptions
 import com.trustweave.credential.models.CredentialSchema
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.proof.Ed25519ProofGenerator
 import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.credential.schema.JsonSchemaValidator
@@ -16,6 +16,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 import java.util.UUID
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Comprehensive tests for CredentialIssuer API.
@@ -284,7 +286,7 @@ class CredentialIssuerTest {
 
     @Test
     fun `test issue credential with expiration date`() = runBlocking {
-        val expirationDate = java.time.Instant.now().plusSeconds(86400).toString()
+        val expirationDate = Clock.System.now().plus(86400.seconds).toString()
         val credential = createTestCredential(expirationDate = expirationDate)
 
         val issued = issuer.issue(
@@ -300,7 +302,7 @@ class CredentialIssuerTest {
     @Test
     fun `test issue credential with credential status`() = runBlocking {
         val credential = createTestCredential(
-            credentialStatus = com.trustweave.credential.models.CredentialStatus(
+            credentialStatus = com.trustweave.credential.model.vc.CredentialStatus(
                 id = "https://example.com/status/1",
                 type = "StatusList2021Entry"
             )
@@ -324,10 +326,10 @@ class CredentialIssuerTest {
             put("id", "did:key:subject")
             put("name", "John Doe")
         },
-        issuanceDate: String = java.time.Instant.now().toString(),
+        issuanceDate: String = Clock.System.now().toString(),
         expirationDate: String? = null,
         schema: CredentialSchema? = null,
-        credentialStatus: com.trustweave.credential.models.CredentialStatus? = null
+        credentialStatus: com.trustweave.credential.model.vc.CredentialStatus? = null
     ): VerifiableCredential {
         return VerifiableCredential(
             id = id,

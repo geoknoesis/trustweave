@@ -6,10 +6,11 @@ plugins {
 group = "com.trustweave.chains"
 dependencies {
     implementation(project(":common"))
-    implementation(project(":credentials:credential-core"))
+    implementation(project(":credentials:credential-api"))
     implementation(project(":anchors:anchor-core"))
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.datetime)
     implementation(libs.bundles.ktor.client)
 
     // Test dependencies

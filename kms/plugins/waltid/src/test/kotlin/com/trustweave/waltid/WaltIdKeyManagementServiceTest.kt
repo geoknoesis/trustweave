@@ -13,7 +13,9 @@ class WaltIdKeyManagementServiceTest {
     fun `generateKey should create Ed25519 key`() = runBlocking {
         val kms = WaltIdKeyManagementService()
 
-        val handle = kms.generateKey("Ed25519")
+        val result = kms.generateKey(com.trustweave.kms.Algorithm.Ed25519)
+        assertTrue(result is com.trustweave.kms.results.GenerateKeyResult.Success)
+        val handle = (result as com.trustweave.kms.results.GenerateKeyResult.Success).keyHandle
 
         assertNotNull(handle.id)
         assertEquals("Ed25519", handle.algorithm)
@@ -23,34 +25,39 @@ class WaltIdKeyManagementServiceTest {
     @Test
     fun `getPublicKey should retrieve key handle`() = runBlocking {
         val kms = WaltIdKeyManagementService()
-        val handle = kms.generateKey("Ed25519")
+        val generateResult = kms.generateKey(com.trustweave.kms.Algorithm.Ed25519)
+        assertTrue(generateResult is com.trustweave.kms.results.GenerateKeyResult.Success)
+        val handle = (generateResult as com.trustweave.kms.results.GenerateKeyResult.Success).keyHandle
 
-        val retrieved = kms.getPublicKey(handle.id)
+        val getResult = kms.getPublicKey(handle.id)
+        assertTrue(getResult is com.trustweave.kms.results.GetPublicKeyResult.Success)
+        val retrieved = (getResult as com.trustweave.kms.results.GetPublicKeyResult.Success).keyHandle
 
         assertEquals(handle.id, retrieved.id)
         assertEquals(handle.algorithm, retrieved.algorithm)
     }
 
     @Test
-    fun `getPublicKey should throw KeyNotFoundException for non-existent key`() = runBlocking {
+    fun `getPublicKey should return KeyNotFound result for non-existent key`() = runBlocking {
         val kms = WaltIdKeyManagementService()
 
-        try {
-            kms.getPublicKey(com.trustweave.core.types.KeyId("nonexistent"))
-            assert(false) { "Should have thrown KmsException.KeyNotFound" }
-        } catch (e: KmsException.KeyNotFound) {
-            assertNotNull(e.message)
-            assertEquals("nonexistent", e.keyId)
-        }
+        val result = kms.getPublicKey(com.trustweave.core.identifiers.KeyId("nonexistent"))
+        assertTrue(result is com.trustweave.kms.results.GetPublicKeyResult.Failure.KeyNotFound)
+        val failure = result as com.trustweave.kms.results.GetPublicKeyResult.Failure.KeyNotFound
+        assertEquals(com.trustweave.core.identifiers.KeyId("nonexistent"), failure.keyId)
     }
 
     @Test
     fun `sign should produce signature`() = runBlocking {
         val kms = WaltIdKeyManagementService()
-        val handle = kms.generateKey("Ed25519")
+        val generateResult = kms.generateKey(com.trustweave.kms.Algorithm.Ed25519)
+        assertTrue(generateResult is com.trustweave.kms.results.GenerateKeyResult.Success)
+        val handle = (generateResult as com.trustweave.kms.results.GenerateKeyResult.Success).keyHandle
         val data = "test data".toByteArray()
 
-        val signature = kms.sign(handle.id, data)
+        val signResult = kms.sign(handle.id, data)
+        assertTrue(signResult is com.trustweave.kms.results.SignResult.Success)
+        val signature = (signResult as com.trustweave.kms.results.SignResult.Success).signature
 
         assertNotNull(signature)
         assertTrue(signature.isNotEmpty())
@@ -59,18 +66,15 @@ class WaltIdKeyManagementServiceTest {
     @Test
     fun `deleteKey should remove key`() = runBlocking {
         val kms = WaltIdKeyManagementService()
-        val handle = kms.generateKey("Ed25519")
+        val generateResult = kms.generateKey(com.trustweave.kms.Algorithm.Ed25519)
+        assertTrue(generateResult is com.trustweave.kms.results.GenerateKeyResult.Success)
+        val handle = (generateResult as com.trustweave.kms.results.GenerateKeyResult.Success).keyHandle
 
-        val deleted = kms.deleteKey(handle.id)
+        val deleteResult = kms.deleteKey(handle.id)
 
-        assertTrue(deleted)
-        try {
-            kms.getPublicKey(handle.id)
-            assert(false) { "Should have thrown KmsException.KeyNotFound" }
-        } catch (e: KmsException.KeyNotFound) {
-            // Expected
-            assertEquals(handle.id.value, e.keyId)
-        }
+        assertTrue(deleteResult is com.trustweave.kms.results.DeleteKeyResult.Deleted)
+        val getResult = kms.getPublicKey(handle.id)
+        assertTrue(getResult is com.trustweave.kms.results.GetPublicKeyResult.Failure.KeyNotFound)
     }
 }
 

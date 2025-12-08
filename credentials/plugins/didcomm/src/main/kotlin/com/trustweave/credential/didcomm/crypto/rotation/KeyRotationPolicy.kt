@@ -1,7 +1,9 @@
 package com.trustweave.credential.didcomm.crypto.rotation
 
-import java.time.Instant
-import java.time.temporal.ChronoUnit
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
 
 /**
  * Defines when keys should be rotated.
@@ -40,11 +42,10 @@ class TimeBasedRotationPolicy(
         keyId: String,
         keyMetadata: KeyMetadata
     ): Boolean {
-        val age = ChronoUnit.DAYS.between(
-            keyMetadata.createdAt,
-            Instant.now()
-        )
-        return age >= maxAgeDays
+        val now = Clock.System.now()
+        val ageSeconds = now.epochSeconds - keyMetadata.createdAt.epochSeconds
+        val age = Duration.parse("PT${ageSeconds}S")
+        return age.inWholeDays >= maxAgeDays
     }
 }
 

@@ -6,7 +6,7 @@ plugins {
 group = "com.trustweave.did"
 dependencies {
     implementation(project(":common"))
-    implementation(project(":credentials:credential-core"))
+    implementation(project(":credentials:credential-api"))
     implementation(project(":did:did-core"))
     implementation(project(":did:plugins:base"))
     implementation(project(":did:plugins:ethr")) // Reuse ethr for Ethereum integration
@@ -14,6 +14,7 @@ dependencies {
     implementation(project(":kms:kms-core"))
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.datetime)
 
 
     // Web3j for Ethereum blockchain interaction

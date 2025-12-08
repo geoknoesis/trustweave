@@ -3,7 +3,7 @@ package com.trustweave.trust
 import com.trustweave.anchor.services.BlockchainService
 import com.trustweave.contract.ContractService
 import com.trustweave.trust.dsl.*
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.trust.dsl.credential.IssuanceBuilder
 import com.trustweave.trust.dsl.credential.VerificationBuilder
 import com.trustweave.wallet.Wallet
@@ -12,19 +12,19 @@ import com.trustweave.trust.dsl.did.DidBuilder
 import com.trustweave.trust.dsl.did.DidDocumentBuilder
 import com.trustweave.trust.dsl.did.DelegationBuilder
 import com.trustweave.trust.dsl.KeyRotationBuilder
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.verifier.DelegationChainResult
 import com.trustweave.did.resolver.DidResolutionResult
-import com.trustweave.core.types.Did as CoreDid
-import com.trustweave.trust.types.Did
+import com.trustweave.did.identifiers.Did
+import com.trustweave.trust.types.DidCreationResult
+import com.trustweave.credential.results.IssuanceResult
+import com.trustweave.credential.model.CredentialType
 import com.trustweave.trust.types.VerificationResult
 import com.trustweave.trust.types.IssuerIdentity
 import com.trustweave.trust.types.VerifierIdentity
 import com.trustweave.trust.types.HolderIdentity
-import com.trustweave.trust.types.CredentialType
-import com.trustweave.trust.types.DidCreationResult
-import com.trustweave.trust.types.IssuanceResult
 import com.trustweave.trust.types.WalletCreationResult
+import kotlinx.datetime.Clock
 import kotlinx.coroutines.withTimeout
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -155,7 +155,7 @@ class TrustWeave private constructor(
      */
     val contracts: ContractService by lazy {
         ContractService(
-            credentialRegistry = config.registries.credentialRegistry,
+            credentialService = null, // TODO: Replace with credential-api CredentialService
             blockchainRegistry = config.registries.blockchainRegistry
         )
     }
@@ -249,14 +249,28 @@ class TrustWeave private constructor(
                     this.subject {
                         if (subjectId != null) {
                             id(subjectId)
-                            // Add other properties (excluding id)
-                            addClaims(subject.filterKeys { it != "id" })
+                            // Add other properties (excluding id) using infix 'to' operator
+                            subject.filterKeys { it != "id" }.forEach { (key, value) ->
+                                when (value) {
+                                    is String -> key to value
+                                    is Number -> key to value
+                                    is Boolean -> key to value
+                                    else -> key to value.toString()
+                                }
+                            }
                         } else {
                             // Add all properties including id if present
-                            addClaims(subject)
+                            subject.forEach { (key, value) ->
+                                when (value) {
+                                    is String -> key to value
+                                    is Number -> key to value
+                                    is Boolean -> key to value
+                                    else -> key to value.toString()
+                                }
+                            }
                         }
                     }
-                    issued(java.time.Instant.now())
+                    issued(Clock.System.now())
                 }
                 signedBy(issuerDid = issuer, keyId = keyId)
             }
@@ -427,7 +441,7 @@ class TrustWeave private constructor(
                 }
                 val availableMethods = config.registries.didRegistry.getAllMethodNames()
                 DidResolutionResult.Failure.ResolutionError(
-                    did = CoreDid(did),
+                    did = Did(did),
                     reason = e.message ?: "Unknown resolution error",
                     cause = e
                 )

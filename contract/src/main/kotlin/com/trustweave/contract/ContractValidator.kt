@@ -3,7 +3,8 @@ package com.trustweave.contract
 import com.trustweave.contract.models.*
 import com.trustweave.core.util.ValidationResult
 import com.trustweave.did.validation.DidValidator
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 
 /**
  * Validates contract-related data.
@@ -126,7 +127,7 @@ object ContractValidator {
             }
 
             // Ensure expiration is after effective date
-            if (!expiration.isAfter(effective)) {
+            if (!(expiration > effective)) {
                 return ValidationResult.Invalid(
                     code = "INVALID_DATE_RANGE",
                     message = "Expiration date must be after effective date",
@@ -236,7 +237,7 @@ object ContractValidator {
 
         return try {
             val expiration = Instant.parse(contract.expirationDate)
-            Instant.now().isAfter(expiration)
+            Clock.System.now() > expiration
         } catch (e: Exception) {
             false // If date is invalid, don't consider expired
         }

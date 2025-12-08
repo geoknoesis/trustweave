@@ -1,7 +1,9 @@
 package com.trustweave.credential
 
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.models.VerifiablePresentation
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiablePresentation
+import com.trustweave.credential.model.SchemaFormat
+import kotlinx.datetime.Instant
 
 /**
  * Pluggable credential service interface.
@@ -31,7 +33,7 @@ interface CredentialService {
      *
      * @return List of supported schema validation formats
      */
-    val supportedSchemaFormats: List<SchemaFormat>
+    val supportedSchemaFormats: List<com.trustweave.credential.model.SchemaFormat>
 
     /**
      * Issue a verifiable credential.
@@ -195,7 +197,7 @@ sealed class CredentialVerificationResult {
      * @param warnings Optional warnings (e.g., expiring soon)
      */
     data class Valid(
-        val credential: com.trustweave.credential.models.VerifiableCredential,
+        val credential: com.trustweave.credential.model.vc.VerifiableCredential,
         val warnings: List<String> = emptyList()
     ) : CredentialVerificationResult()
 
@@ -211,8 +213,8 @@ sealed class CredentialVerificationResult {
          * @param errors Additional error messages
          */
         data class Expired(
-            val credential: com.trustweave.credential.models.VerifiableCredential,
-            val expiredAt: java.time.Instant,
+            val credential: com.trustweave.credential.model.vc.VerifiableCredential,
+            val expiredAt: Instant,
             val errors: List<String> = emptyList(),
             val warnings: List<String> = emptyList()
         ) : Invalid()
@@ -225,8 +227,8 @@ sealed class CredentialVerificationResult {
          * @param errors Additional error messages
          */
         data class Revoked(
-            val credential: com.trustweave.credential.models.VerifiableCredential,
-            val revokedAt: java.time.Instant? = null,
+            val credential: com.trustweave.credential.model.vc.VerifiableCredential,
+            val revokedAt: Instant? = null,
             val errors: List<String> = emptyList(),
             val warnings: List<String> = emptyList()
         ) : Invalid()
@@ -239,7 +241,7 @@ sealed class CredentialVerificationResult {
          * @param errors Additional error messages
          */
         data class InvalidProof(
-            val credential: com.trustweave.credential.models.VerifiableCredential,
+            val credential: com.trustweave.credential.model.vc.VerifiableCredential,
             val reason: String,
             val errors: List<String> = emptyList(),
             val warnings: List<String> = emptyList()
@@ -254,7 +256,7 @@ sealed class CredentialVerificationResult {
          * @param errors Additional error messages
          */
         data class InvalidIssuer(
-            val credential: com.trustweave.credential.models.VerifiableCredential,
+            val credential: com.trustweave.credential.model.vc.VerifiableCredential,
             val issuerDid: String,
             val reason: String,
             val errors: List<String> = emptyList(),
@@ -269,7 +271,7 @@ sealed class CredentialVerificationResult {
          * @param errors Additional error messages
          */
         data class UntrustedIssuer(
-            val credential: com.trustweave.credential.models.VerifiableCredential,
+            val credential: com.trustweave.credential.model.vc.VerifiableCredential,
             val issuerDid: String,
             val errors: List<String> = emptyList(),
             val warnings: List<String> = emptyList()
@@ -283,7 +285,7 @@ sealed class CredentialVerificationResult {
          * @param errors Schema validation errors
          */
         data class SchemaValidationFailed(
-            val credential: com.trustweave.credential.models.VerifiableCredential,
+            val credential: com.trustweave.credential.model.vc.VerifiableCredential,
             val schemaId: String?,
             val errors: List<String> = emptyList(),
             val warnings: List<String> = emptyList()
@@ -297,7 +299,7 @@ sealed class CredentialVerificationResult {
          * @param errors Additional error messages
          */
         data class InvalidBlockchainAnchor(
-            val credential: com.trustweave.credential.models.VerifiableCredential,
+            val credential: com.trustweave.credential.model.vc.VerifiableCredential,
             val reason: String,
             val errors: List<String> = emptyList(),
             val warnings: List<String> = emptyList()
@@ -312,7 +314,7 @@ sealed class CredentialVerificationResult {
          * @param errors Additional error messages
          */
         data class InvalidProofPurpose(
-            val credential: com.trustweave.credential.models.VerifiableCredential,
+            val credential: com.trustweave.credential.model.vc.VerifiableCredential,
             val requiredPurpose: String,
             val actualPurpose: String?,
             val errors: List<String> = emptyList(),
@@ -327,7 +329,7 @@ sealed class CredentialVerificationResult {
          * @param errors Additional error messages
          */
         data class InvalidDelegation(
-            val credential: com.trustweave.credential.models.VerifiableCredential,
+            val credential: com.trustweave.credential.model.vc.VerifiableCredential,
             val reason: String,
             val errors: List<String> = emptyList(),
             val warnings: List<String> = emptyList()
@@ -341,7 +343,7 @@ sealed class CredentialVerificationResult {
          * @param warnings Optional warnings
          */
         data class MultipleFailures(
-            val credential: com.trustweave.credential.models.VerifiableCredential,
+            val credential: com.trustweave.credential.model.vc.VerifiableCredential,
             val errors: List<String>,
             val warnings: List<String> = emptyList()
         ) : Invalid()

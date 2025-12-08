@@ -2,8 +2,10 @@ package com.trustweave.credential.didcomm
 
 import com.trustweave.credential.didcomm.crypto.DidCommCrypto
 import com.trustweave.credential.didcomm.crypto.DidCommCryptoAdapter
-import com.trustweave.did.DidDocument
-import com.trustweave.did.VerificationMethod
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.VerificationMethod
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
@@ -19,12 +21,14 @@ class CryptoImplementationTest {
     @Test
     fun testPlaceholderCryptoReturnsDummyData() = runBlocking {
         val kms = InMemoryKeyManagementService()
-        val resolveDid: suspend (String) -> DidDocument? = { did ->
+        val resolveDid: suspend (String) -> DidDocument? = { didStr ->
+            val did = Did(didStr)
+            val vmId = VerificationMethodId.parse("$didStr#key-1")
             DidDocument(
                 id = did,
                 verificationMethod = listOf(
                     VerificationMethod(
-                        id = "$did#key-1",
+                        id = vmId,
                         type = "Ed25519VerificationKey2020",
                         controller = did,
                         publicKeyJwk = mapOf(
@@ -34,7 +38,7 @@ class CryptoImplementationTest {
                         )
                     )
                 ),
-                keyAgreement = listOf("$did#key-1")
+                keyAgreement = listOf(vmId)
             )
         }
 
@@ -71,18 +75,20 @@ class CryptoImplementationTest {
     @Test
     fun testAdapterWithPlaceholderCrypto() = runBlocking {
         val kms = InMemoryKeyManagementService()
-        val resolveDid: suspend (String) -> DidDocument? = { did ->
+        val resolveDid: suspend (String) -> DidDocument? = { didStr ->
+            val did = Did(didStr)
+            val vmId = VerificationMethodId.parse("$didStr#key-1")
             DidDocument(
                 id = did,
                 verificationMethod = listOf(
                     VerificationMethod(
-                        id = "$did#key-1",
+                        id = vmId,
                         type = "Ed25519VerificationKey2020",
                         controller = did,
                         publicKeyJwk = mapOf("kty" to "OKP", "crv" to "Ed25519", "x" to "test")
                     )
                 ),
-                keyAgreement = listOf("$did#key-1")
+                keyAgreement = listOf(vmId)
             )
         }
 
@@ -110,18 +116,20 @@ class CryptoImplementationTest {
     @Test
     fun testAdapterWithProductionCryptoFailsGracefully() = runBlocking {
         val kms = InMemoryKeyManagementService()
-        val resolveDid: suspend (String) -> DidDocument? = { did ->
+        val resolveDid: suspend (String) -> DidDocument? = { didStr ->
+            val did = Did(didStr)
+            val vmId = VerificationMethodId.parse("$didStr#key-1")
             DidDocument(
                 id = did,
                 verificationMethod = listOf(
                     VerificationMethod(
-                        id = "$did#key-1",
+                        id = vmId,
                         type = "Ed25519VerificationKey2020",
                         controller = did,
                         publicKeyJwk = mapOf("kty" to "OKP", "crv" to "Ed25519", "x" to "test")
                     )
                 ),
-                keyAgreement = listOf("$did#key-1")
+                keyAgreement = listOf(vmId)
             )
         }
 

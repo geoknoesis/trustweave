@@ -1,13 +1,18 @@
 package com.trustweave.credential.issuer
 
 import com.trustweave.credential.CredentialIssuanceOptions
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.CredentialProof
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.identifiers.SchemaId
 import com.trustweave.credential.proof.ProofGenerator
 import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.credential.proof.ProofOptions
 import com.trustweave.credential.schema.SchemaRegistry
+import com.trustweave.did.identifiers.Did
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.Instant
 
 /**
  * Native credential issuer implementation.
@@ -62,8 +67,8 @@ class CredentialIssuer(
         validateCredentialStructure(credential)
 
         // 2. Verify issuer DID matches
-        if (credential.issuer != issuerDid) {
-            throw IllegalArgumentException("Credential issuer '${credential.issuer}' does not match provided issuerDid '$issuerDid'")
+        if (credential.issuer.id.value != issuerDid) {
+            throw IllegalArgumentException("Credential issuer '${credential.issuer.id.value}' does not match provided issuerDid '$issuerDid'")
         }
 
         // 3. Resolve issuer DID to verify it exists
@@ -89,8 +94,9 @@ class CredentialIssuer(
             )
         )
 
-        // 7. Add proof to credential
-        credential.copy(proof = proof)
+        // 7. Convert Proof to CredentialProof and add to credential
+        val credentialProof = convertProofToCredentialProof(proof)
+        credential.copy(proof = credentialProof)
 
         // 8. Optionally anchor to blockchain (handled by caller or separate service)
     }
@@ -99,17 +105,14 @@ class CredentialIssuer(
      * Validate credential structure.
      */
     private fun validateCredentialStructure(credential: VerifiableCredential) {
-        if (!credential.type.contains("VerifiableCredential")) {
+        if (!credential.type.any { it.value == "VerifiableCredential" }) {
             throw IllegalArgumentException("Credential type must include 'VerifiableCredential'")
         }
 
-        if (credential.issuer.isBlank()) {
+        if (credential.issuer.id.value.isBlank()) {
             throw IllegalArgumentException("Credential issuer is required")
         }
-
-        if (credential.issuanceDate.isBlank()) {
-            throw IllegalArgumentException("Credential issuanceDate is required")
-        }
+        // issuanceDate is Instant, not String, so no need to check isBlank
     }
 
     /**
@@ -126,11 +129,11 @@ class CredentialIssuer(
     /**
      * Validate credential against schema.
      */
-    private suspend fun validateSchema(credential: VerifiableCredential, schemaId: String) {
-        val result = SchemaRegistry.validateCredential(credential, schemaId)
+    private suspend fun validateSchema(credential: VerifiableCredential, schemaId: SchemaId) {
+        val result = com.trustweave.credential.schema.SchemaRegistries.default().validate(credential, schemaId)
         if (!result.valid) {
-            val errors = result.errors.joinToString(", ") { "${it.path}: ${it.message}" }
-            throw IllegalArgumentException("Credential validation failed against schema '$schemaId': $errors")
+            val errors = result.errors.joinToString(", ") { error -> "${error.path}: ${error.message}" }
+            throw IllegalArgumentException("Credential validation failed against schema '${schemaId.value}': $errors")
         }
     }
 
@@ -140,5 +143,31 @@ class CredentialIssuer(
     private fun getProofGenerator(proofType: String): ProofGenerator =
         proofRegistry.get(proofType)
             ?: throw IllegalArgumentException("No proof generator registered for type: $proofType")
+    
+    /**
+     * Convert Proof (from CredentialModels) to CredentialProof (from model.vc).
+     */
+    private fun convertProofToCredentialProof(proof: com.trustweave.credential.models.Proof): CredentialProof {
+        return when {
+            proof.jws != null -> {
+                // JWT proof
+                CredentialProof.JwtProof(jwt = proof.jws)
+            }
+            proof.proofValue != null -> {
+                // Linked Data Proof
+                CredentialProof.LinkedDataProof(
+                    type = proof.type.identifier,
+                    created = Instant.parse(proof.created),
+                    verificationMethod = proof.verificationMethod.value,
+                    proofPurpose = proof.proofPurpose,
+                    proofValue = proof.proofValue,
+                    additionalProperties = emptyMap()
+                )
+            }
+            else -> {
+                throw IllegalArgumentException("Proof must have either proofValue or jws")
+            }
+        }
+    }
 }
 

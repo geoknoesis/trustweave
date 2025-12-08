@@ -13,6 +13,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import kotlinx.datetime.Clock
 
 /**
  * Comprehensive integrity verification tests demonstrating the complete workflow:
@@ -469,7 +470,7 @@ class IntegrityVerificationTest {
                 put("title", "Tampered Title") // Changed!
                 put("description", "Original Description")
                 put("type", "Dataset")
-                put("created", java.time.Instant.now().toString())
+                put("created", Clock.System.now().toString())
             })
             put("digestMultibase", originalDigest) // Still has old digest
             put("mediaType", "application/json")

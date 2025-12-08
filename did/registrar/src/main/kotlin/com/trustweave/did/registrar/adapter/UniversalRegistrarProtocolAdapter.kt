@@ -1,6 +1,6 @@
 package com.trustweave.did.registrar.adapter
 
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.registrar.model.*
 
 /**

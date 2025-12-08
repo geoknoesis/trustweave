@@ -2,8 +2,11 @@ package com.trustweave.did.registrar.client
 
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.DidCreationOptions
-import com.trustweave.did.DidDocument
-import com.trustweave.did.VerificationMethod
+import com.trustweave.did.KeyAlgorithm
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.VerificationMethod
 import com.trustweave.did.registrar.DidRegistrar
 import com.trustweave.did.registrar.model.*
 import com.trustweave.did.registrar.storage.JobStorage
@@ -86,7 +89,15 @@ class KmsBasedRegistrar(
 
             // For Internal Secret Mode, generate keys using KMS
             val algorithm = extractAlgorithm(options)
-            val keyHandle = kms.generateKey(algorithm, extractKmsOptions(options))
+            val generateResult = kms.generateKey(algorithm, extractKmsOptions(options))
+            val keyHandle = when (generateResult) {
+                is com.trustweave.kms.results.GenerateKeyResult.Success -> generateResult.keyHandle
+                is com.trustweave.kms.results.GenerateKeyResult.Failure -> throw TrustWeaveException(
+                    code = "KEY_GENERATION_FAILED",
+                    message = "Failed to generate key: ${generateResult}",
+                    cause = null
+                )
+            }
 
             // Create DID Document (method-specific logic)
             val didDocument = createDidDocument(method, keyHandle, options)
@@ -105,7 +116,7 @@ class KmsBasedRegistrar(
                 jobId = jobId,
                 didState = DidState(
                     state = OperationState.FINISHED,
-                    did = didDocument.id,
+                    did = didDocument.id.value,
                     secret = secret,
                     didDocument = didDocument
                 )
@@ -245,8 +256,8 @@ class KmsBasedRegistrar(
         if (didMethod != null) {
             // Use the DID method's createDid if available
             val legacyOptions = DidCreationOptions(
-                algorithm = DidCreationOptions.KeyAlgorithm.fromName(keyHandle.algorithm)
-                    ?: DidCreationOptions.KeyAlgorithm.ED25519,
+                algorithm = KeyAlgorithm.fromName(keyHandle.algorithm)
+                    ?: KeyAlgorithm.ED25519,
                 additionalProperties = options.methodSpecificOptions.mapValues { it.value.toString() }
             )
             return didMethod.createDid(legacyOptions)
@@ -254,20 +265,22 @@ class KmsBasedRegistrar(
 
         // Fallback: Create a simple DID Document
         // For did:key, we can derive the DID from the key
-        val did = when (method) {
+        val didString = when (method) {
             "key" -> {
                 // For did:key, the DID is derived from the public key
                 // This is simplified - real implementation would use proper multicodec encoding
-                "did:key:${keyHandle.id}"
+                "did:key:${keyHandle.id.value}"
             }
             else -> {
                 // For other methods, generate a method-specific identifier
-                "did:$method:${keyHandle.id}"
+                "did:$method:${keyHandle.id.value}"
             }
         }
+        val did = Did(didString)
 
+        val verificationMethodId = VerificationMethodId.parse("$didString#${keyHandle.id.value}", did)
         val verificationMethod = VerificationMethod(
-            id = "$did#${keyHandle.id}",
+            id = verificationMethodId,
             type = keyHandle.algorithm,
             controller = did,
             publicKeyJwk = keyHandle.publicKeyJwk,
@@ -277,7 +290,7 @@ class KmsBasedRegistrar(
         return DidDocument(
             id = did,
             verificationMethod = listOf(verificationMethod),
-            authentication = listOf(verificationMethod.id)
+            authentication = listOf(verificationMethodId)
         )
     }
 

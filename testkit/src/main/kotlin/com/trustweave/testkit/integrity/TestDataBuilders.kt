@@ -3,6 +3,7 @@ package com.trustweave.testkit.integrity
 import com.trustweave.core.util.DigestUtils
 import com.trustweave.testkit.integrity.models.*
 import kotlinx.serialization.json.*
+import kotlinx.datetime.Clock
 
 /**
  * Test data builders for creating VC, Linkset, and artifact structures for integrity verification tests.
@@ -55,7 +56,7 @@ object TestDataBuilders {
             if (credentialStatus != null) {
                 put("credentialStatus", Json.encodeToJsonElement(credentialStatus))
             }
-            put("issued", issued ?: java.time.Instant.now().toString())
+            put("issued", issued ?: Clock.System.now().toString())
         }
     }
 
@@ -228,7 +229,7 @@ object TestDataBuilders {
             put("title", title)
             put("description", description)
             put("type", "Dataset")
-            put("created", java.time.Instant.now().toString())
+            put("created", Clock.System.now().toString())
         }
         val digest = DigestUtils.sha256DigestMultibase(metadata)
         val artifact = buildArtifact(id, "Metadata", metadata, digest)
@@ -242,7 +243,7 @@ object TestDataBuilders {
         val provenance = buildJsonObject {
             put("activity", activity)
             put("agent", agent)
-            put("timestamp", java.time.Instant.now().toString())
+            put("timestamp", Clock.System.now().toString())
         }
         val digest = DigestUtils.sha256DigestMultibase(provenance)
         val artifact = buildArtifact(id, "Provenance", provenance, digest)
@@ -260,7 +261,7 @@ object TestDataBuilders {
                     put(key, value.toString())
                 }
             })
-            put("timestamp", java.time.Instant.now().toString())
+            put("timestamp", Clock.System.now().toString())
         }
         val digest = DigestUtils.sha256DigestMultibase(qualityReport)
         val artifact = buildArtifact(id, "QualityReport", qualityReport, digest)

@@ -2,27 +2,30 @@ package com.trustweave.trust.dsl
 
 import com.trustweave.anchor.BlockchainAnchorClient
 import com.trustweave.anchor.BlockchainAnchorRegistry
-import com.trustweave.credential.CredentialServiceRegistry
+// TODO: CredentialServiceRegistry is from credential-core and needs migration
+// import com.trustweave.credential.CredentialServiceRegistry
 import com.trustweave.did.resolver.DidResolver
-import com.trustweave.credential.issuer.CredentialIssuer
-import com.trustweave.credential.proof.Ed25519ProofGenerator
-import com.trustweave.credential.proof.ProofGenerator
-import com.trustweave.credential.proof.ProofGeneratorRegistry
+// TODO: These are from credential-core and need migration to credential-api
+// import com.trustweave.credential.issuer.CredentialIssuer
+// import com.trustweave.credential.proof.Ed25519ProofGenerator
+// import com.trustweave.credential.proof.ProofGenerator
+// import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.did.DidCreationOptions
+import com.trustweave.did.KeyAlgorithm
 import com.trustweave.did.DidMethod
 import com.trustweave.did.registry.DidMethodRegistry
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.anchor.services.BlockchainAnchorClientFactory
 import com.trustweave.trust.services.TrustRegistryFactory
 import com.trustweave.revocation.services.StatusListRegistryFactory
-import com.trustweave.credential.SchemaFormat
+import com.trustweave.credential.model.SchemaFormat
 import com.trustweave.kms.services.KmsService
 import com.trustweave.kms.services.KmsFactory
 import com.trustweave.kms.KeyManagementService
 import com.trustweave.did.services.DidMethodFactory
 import com.trustweave.wallet.services.WalletFactory
-import com.trustweave.trust.types.ProofType
-import com.trustweave.credential.revocation.StatusListManager
+import com.trustweave.credential.model.ProofType
+import com.trustweave.credential.revocation.CredentialRevocationManager
 import com.trustweave.trust.TrustRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineDispatcher
@@ -35,8 +38,9 @@ import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
 data class TrustWeaveRegistries(
     val didRegistry: DidMethodRegistry = DidMethodRegistry(),
     val blockchainRegistry: BlockchainAnchorRegistry = BlockchainAnchorRegistry(),
-    val credentialRegistry: CredentialServiceRegistry = CredentialServiceRegistry.create(),
-    val proofRegistry: ProofGeneratorRegistry = ProofGeneratorRegistry()
+    // TODO: Replace with credential-api equivalent
+    val credentialRegistry: Any? = null, // CredentialServiceRegistry.create(),
+    val proofRegistry: Any? = null // ProofGeneratorRegistry()
 )
 
 /**
@@ -79,9 +83,9 @@ class TrustWeaveConfig private constructor(
     val kms: KeyManagementService,
     val registries: TrustWeaveRegistries,
     val credentialConfig: CredentialConfig,
-    val issuer: CredentialIssuer,
+    val issuer: Any?, // TODO: Replace CredentialIssuer with CredentialService from credential-api
     val didResolver: DidResolver? = null,
-    val statusListManager: StatusListManager? = null,
+    val revocationManager: CredentialRevocationManager? = null,
     val trustRegistry: TrustRegistry? = null,
     val walletFactory: WalletFactory? = null,
     val kmsService: KmsService? = null,
@@ -294,7 +298,16 @@ class TrustWeaveConfig private constructor(
                 // Custom KMS provided - create signer if not provided
                 val kmsRef = requireNotNull(kms) { "KMS cannot be null" }
                 val signer = kmsSigner ?: { data: ByteArray, keyId: String ->
-                    kmsRef.sign(com.trustweave.core.types.KeyId(keyId), data)
+                    when (val result = kmsRef.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
+                        is com.trustweave.kms.results.SignResult.Success -> result.signature
+                        is com.trustweave.kms.results.SignResult.Failure -> throw IllegalStateException(
+                            "Signing failed: ${when (result) {
+                                is com.trustweave.kms.results.SignResult.Failure.KeyNotFound -> result.reason ?: "Key not found"
+                                is com.trustweave.kms.results.SignResult.Failure.UnsupportedAlgorithm -> result.reason ?: "Unsupported algorithm"
+                                is com.trustweave.kms.results.SignResult.Failure.Error -> result.reason
+                            }}"
+                        )
+                    }
                 }
                 Pair(kmsRef, signer)
             } else {
@@ -307,7 +320,21 @@ class TrustWeaveConfig private constructor(
 
             // Use the resolved signer (auto-created from KMS if not provided)
             val finalSigner = resolvedSigner ?: { data: ByteArray, keyId: String ->
-                nonNullKms.sign(com.trustweave.core.types.KeyId(keyId), data)
+                when (val result = nonNullKms.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
+                    is com.trustweave.kms.results.SignResult.Success -> result.signature
+                    is com.trustweave.kms.results.SignResult.Failure -> {
+                        val reason = when (result) {
+                            is com.trustweave.kms.results.SignResult.Failure.KeyNotFound -> 
+                                "Key not found: ${result.keyId.value}"
+                            is com.trustweave.kms.results.SignResult.Failure.UnsupportedAlgorithm -> 
+                                result.reason ?: "Unsupported algorithm"
+                            is com.trustweave.kms.results.SignResult.Failure.Error -> 
+                                result.reason
+                            else -> "Unknown error"
+                        }
+                        throw IllegalStateException("Signing failed: $reason")
+                    }
+                }
             }
 
             // Resolve DID methods
@@ -322,12 +349,14 @@ class TrustWeaveConfig private constructor(
             }
 
             // Create proof generator
-            val proofGenerator = createProofGenerator(defaultProofType, nonNullKms, finalSigner)
-            registries.proofRegistry.register(proofGenerator)
+            // TODO: ProofGeneratorRegistry is from credential-core and needs migration to credential-api
+            // The credential-api uses proof engines instead of proof generators
+            // val proofGenerator = createProofGenerator(defaultProofType, nonNullKms, finalSigner)
+            // registries.proofRegistry.register(proofGenerator)
 
-            // Resolve status list manager if revocation is configured
-            val resolvedStatusListManager = revocationProvider?.let {
-                resolveStatusListManager(it)
+            // Resolve revocation manager if revocation is configured
+            val resolvedRevocationManager = revocationProvider?.let {
+                resolveRevocationManager(it)
             }
 
             // Resolve trust registry if configured
@@ -336,18 +365,13 @@ class TrustWeaveConfig private constructor(
             }
 
             val didResolver = DidResolver { did ->
-                runCatching { registries.didRegistry.resolve(did.value) }
-                    .getOrNull()
+                registries.didRegistry.resolve(did.value)
             }
 
-            val issuer = CredentialIssuer(
-                proofGenerator = proofGenerator,
-                resolveDid = { did ->
-                    val resolution = didResolver.resolve(com.trustweave.core.types.Did(did))
-                    resolution is DidResolutionResult.Success
-                },
-                proofRegistry = registries.proofRegistry
-            )
+            // Note: CredentialIssuer is from credential-core and needs migration to credential-api
+            // For now, we'll skip creating the issuer until the migration is complete
+            // val issuer = CredentialIssuer(...)
+            val issuer: Any? = null // TODO: Replace with credential-api equivalent
 
             // Resolve wallet factory (optional)
             val resolvedWalletFactory = walletFactory
@@ -358,7 +382,7 @@ class TrustWeaveConfig private constructor(
             val registriesSnapshot = TrustWeaveRegistries(
                 didRegistry = registries.didRegistry.snapshot(),
                 blockchainRegistry = registries.blockchainRegistry.snapshot(),
-                credentialRegistry = registries.credentialRegistry.snapshot()
+                credentialRegistry = registries.credentialRegistry
             )
 
             return TrustWeaveConfig(
@@ -372,7 +396,7 @@ class TrustWeaveConfig private constructor(
                 ),
                 issuer = issuer,
                 didResolver = didResolver,
-                statusListManager = resolvedStatusListManager,
+                revocationManager = resolvedRevocationManager,
                 trustRegistry = resolvedTrustRegistry,
                 walletFactory = resolvedWalletFactory,
                 kmsService = resolvedKmsService,
@@ -413,11 +437,10 @@ class TrustWeaveConfig private constructor(
             return factory.create(chainId, config.provider, config.options)
         }
 
-        private suspend fun resolveStatusListManager(providerName: String): StatusListManager {
-            val factory = statusListRegistryFactory ?: throw IllegalStateException(
-                "StatusListRegistry factory is required. Provide it via Builder.factories(statusListRegistryFactory = ...)"
-            )
-            return factory.create(providerName)
+        private suspend fun resolveRevocationManager(providerName: String): CredentialRevocationManager {
+            // For now, use default in-memory manager
+            // TODO: Add factory pattern for revocation managers if needed
+            return com.trustweave.credential.revocation.RevocationManagers.default()
         }
 
         private suspend fun resolveTrustRegistry(providerName: String): TrustRegistry {
@@ -433,23 +456,39 @@ class TrustWeaveConfig private constructor(
             proofType: ProofType,
             kms: KeyManagementService,
             signerFn: (suspend (ByteArray, String) -> ByteArray)?
-        ): ProofGenerator {
+        ): Any? {
             requireNotNull(kms) { "KMS cannot be null when creating proof generator" }
             return when (proofType) {
                 is ProofType.Ed25519Signature2020 -> {
                     // Use provided signer function if available, otherwise create a wrapper using KMS
                     val signHelper: suspend (ByteArray, String) -> ByteArray = signerFn ?: { data, keyId ->
-                        kms.sign(com.trustweave.core.types.KeyId(keyId), data)
+                        when (val result = kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
+                            is com.trustweave.kms.results.SignResult.Success -> result.signature
+                            is com.trustweave.kms.results.SignResult.Failure -> {
+                                val reason = when (result) {
+                                    is com.trustweave.kms.results.SignResult.Failure.KeyNotFound -> 
+                                        "Key not found: ${result.keyId.value}"
+                                    is com.trustweave.kms.results.SignResult.Failure.UnsupportedAlgorithm -> 
+                                        result.reason ?: "Unsupported algorithm"
+                                    is com.trustweave.kms.results.SignResult.Failure.Error -> 
+                                        result.reason
+                                    else -> "Unknown error"
+                                }
+                                throw IllegalStateException("Signing failed: $reason")
+                            }
+                        }
                     }
 
-                    Ed25519ProofGenerator(
-                        signer = signHelper,
-                        getPublicKeyId = { keyId -> keyId }
+                    // TODO: Ed25519ProofGenerator is from credential-core - needs migration to credential-api
+                    // The credential-api uses proof engines instead of proof generators
+                    throw UnsupportedOperationException(
+                        "Ed25519ProofGenerator is from credential-core and needs migration to credential-api. " +
+                        "Please use credential-api's proof engine system instead."
                     )
                 }
                 else -> throw IllegalArgumentException(
-                    "Unsupported proof type: ${proofType.value}. " +
-                    "Supported types: ${ProofType.all().joinToString { it.value }}. " +
+                    "Unsupported proof type: ${proofType.identifier}. " +
+                    "Supported types: Ed25519Signature2020, JsonWebSignature2020, BbsBlsSignature2020. " +
                     "Currently only Ed25519Signature2020 is supported for proof generation."
                 )
             }
@@ -462,7 +501,7 @@ class TrustWeaveConfig private constructor(
     class KeysBuilder {
         var provider: String? = null
         private var algorithmString: String? = null
-        private var algorithmEnum: com.trustweave.did.DidCreationOptions.KeyAlgorithm? = null
+        private var algorithmEnum: KeyAlgorithm? = null
         var kms: KeyManagementService? = null
         var signer: (suspend (ByteArray, String) -> ByteArray)? = null // Direct signer function
 
@@ -492,7 +531,7 @@ class TrustWeaveConfig private constructor(
          * 
          * This is the preferred method for compile-time type safety.
          */
-        fun algorithm(value: com.trustweave.did.DidCreationOptions.KeyAlgorithm) {
+        fun algorithm(value: KeyAlgorithm) {
             algorithmEnum = value
             algorithmString = null
         }
@@ -527,12 +566,12 @@ class TrustWeaveConfig private constructor(
      * DID method configuration.
      */
     data class DidMethodConfig(
-        val algorithm: DidCreationOptions.KeyAlgorithm? = null,
+        val algorithm: KeyAlgorithm? = null,
         val domain: String? = null,
         val additionalProperties: Map<String, Any?> = emptyMap()
     ) {
         fun toOptions(kms: KeyManagementService): DidCreationOptions {
-            val resolvedAlgorithm = algorithm ?: DidCreationOptions.KeyAlgorithm.ED25519
+            val resolvedAlgorithm = algorithm ?: KeyAlgorithm.ED25519
             val props = buildMap<String, Any?> {
                 putAll(additionalProperties)
                 put("kms", kms)
@@ -540,7 +579,7 @@ class TrustWeaveConfig private constructor(
             }
             return DidCreationOptions(
                 algorithm = resolvedAlgorithm,
-                purposes = listOf(DidCreationOptions.KeyPurpose.AUTHENTICATION),
+                purposes = listOf(com.trustweave.did.KeyPurpose.AUTHENTICATION),
                 additionalProperties = props
             )
         }
@@ -550,15 +589,15 @@ class TrustWeaveConfig private constructor(
      * DID method configuration builder.
      */
     class DidMethodConfigBuilder {
-        private var algorithm: DidCreationOptions.KeyAlgorithm? = null
+        private var algorithm: KeyAlgorithm? = null
         private var domain: String? = null
         private val options = mutableMapOf<String, Any?>()
 
         fun algorithm(name: String) {
-            algorithm = DidCreationOptions.KeyAlgorithm.fromName(name)
+            algorithm = KeyAlgorithm.fromName(name)
         }
 
-        fun algorithm(value: DidCreationOptions.KeyAlgorithm) {
+        fun algorithm(value: KeyAlgorithm) {
             algorithm = value
         }
 

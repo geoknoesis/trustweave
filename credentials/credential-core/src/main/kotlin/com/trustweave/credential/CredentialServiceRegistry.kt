@@ -1,7 +1,7 @@
 package com.trustweave.credential
 
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.models.VerifiablePresentation
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiablePresentation
 import java.util.concurrent.ConcurrentHashMap
 
 /**

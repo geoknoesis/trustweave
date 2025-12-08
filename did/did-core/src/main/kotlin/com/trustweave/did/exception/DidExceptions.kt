@@ -1,6 +1,7 @@
 package com.trustweave.did.exception
 
 import com.trustweave.core.exception.TrustWeaveException
+import com.trustweave.did.identifiers.Did
 
 /**
  * DID-related exception types.
@@ -15,13 +16,13 @@ sealed class DidException(
 ) : TrustWeaveException(code, message, context, cause) {
 
     data class DidNotFound(
-        val did: String,
+        val did: Did,
         val availableMethods: List<String> = emptyList()
     ) : DidException(
         code = "DID_NOT_FOUND",
-        message = "DID not found: $did",
+        message = "DID not found: ${did.value}",
         context = mapOf(
-            "did" to did,
+            "did" to did.value,
             "availableMethods" to availableMethods
         )
     )
@@ -51,14 +52,14 @@ sealed class DidException(
     )
 
     data class DidResolutionFailed(
-        val did: String,
+        val did: Did,
         val reason: String,
         override val cause: Throwable? = null
     ) : DidException(
         code = "DID_RESOLUTION_FAILED",
-        message = "DID resolution failed for '$did': $reason",
+        message = "DID resolution failed for '${did.value}': $reason",
         context = mapOf(
-            "did" to did,
+            "did" to did.value,
             "reason" to reason
         ),
         cause = cause
@@ -70,10 +71,20 @@ sealed class DidException(
  */
 fun Throwable.toDidException(): DidException = when (this) {
     is DidException -> this
-    is TrustWeaveException.NotFound -> DidException.DidNotFound(
-        did = this.resource ?: "unknown",
-        availableMethods = emptyList()
-    )
+    is TrustWeaveException.NotFound -> {
+        val didString = this.resource ?: "unknown"
+        try {
+            DidException.DidNotFound(
+                did = Did(didString),
+                availableMethods = emptyList()
+            )
+        } catch (e: IllegalArgumentException) {
+            DidException.InvalidDidFormat(
+                did = didString,
+                reason = message ?: "Unknown error: ${this::class.simpleName}"
+            )
+        }
+    }
     else -> DidException.InvalidDidFormat(
         did = "unknown",
         reason = message ?: "Unknown error: ${this::class.simpleName}"

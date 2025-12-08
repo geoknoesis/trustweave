@@ -1,12 +1,17 @@
 package com.trustweave.did
 
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.DidDocumentMetadata
+import com.trustweave.did.model.DidService
+import com.trustweave.did.model.VerificationMethod
+import com.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.*
-import java.time.Instant
 import com.trustweave.did.DidCreationOptions
 import com.trustweave.did.didCreationOptions
-import com.trustweave.did.resolver.DidResolutionResult
 
 /**
  * Comprehensive interface contract tests for DidMethod.
@@ -28,7 +33,7 @@ class DidMethodInterfaceContractTest {
         val document = method.createDid()
 
         assertNotNull(document)
-        assertTrue(document.id.startsWith("did:key:"))
+        assertTrue(document.id.value.startsWith("did:key:"))
     }
 
     @Test
@@ -60,7 +65,7 @@ class DidMethodInterfaceContractTest {
     @Test
     fun `test DidMethod resolveDid returns null document for non-existent DID`() = runBlocking {
         val method = createMockMethod("key")
-        val did = "did:key:nonexistent"
+        val did = Did("did:key:nonexistent")
 
         val result = method.resolveDid(did)
 
@@ -77,7 +82,7 @@ class DidMethodInterfaceContractTest {
         val updated = method.updateDid(did) { doc ->
             doc.copy(
                 service = doc.service + DidService(
-                    id = "$did#service-1",
+                    id = "${did.value}#service-1",
                     type = "LinkedDomains",
                     serviceEndpoint = "https://example.com"
                 )
@@ -103,7 +108,7 @@ class DidMethodInterfaceContractTest {
     fun `test DidMethod deactivateDid returns false for non-existent DID`() = runBlocking {
         val method = createMockMethod("key")
 
-        val deactivated = method.deactivateDid("did:key:nonexistent")
+        val deactivated = method.deactivateDid(Did("did:key:nonexistent"))
 
         assertFalse(deactivated)
     }
@@ -141,7 +146,7 @@ class DidMethodInterfaceContractTest {
         val updated = method.updateDid(did) { doc ->
             doc.copy(
                 verificationMethod = doc.verificationMethod + VerificationMethod(
-                    id = "$did#key-2",
+                    id = VerificationMethodId.parse("${did.value}#key-2"),
                     type = "Ed25519VerificationKey2020",
                     controller = did
                 )
@@ -158,31 +163,33 @@ class DidMethodInterfaceContractTest {
             private val deactivated = mutableSetOf<String>()
 
             override suspend fun createDid(options: DidCreationOptions): DidDocument {
-                val id = "did:$methodName:${java.util.UUID.randomUUID().toString().take(8)}"
+                val idString = "did:$methodName:${java.util.UUID.randomUUID().toString().take(8)}"
+                val id = Did(idString)
                 val doc = DidDocument(
                     id = id,
                     verificationMethod = listOf(
                         VerificationMethod(
-                            id = "$id#key-1",
+                            id = VerificationMethodId.parse("$idString#key-1"),
                             type = "Ed25519VerificationKey2020",
                             controller = id
                         )
                     )
                 )
-                documents[id] = doc
+                documents[idString] = doc
                 return doc
             }
 
-            override suspend fun resolveDid(did: String): DidResolutionResult {
-                if (deactivated.contains(did)) {
+            override suspend fun resolveDid(did: Did): DidResolutionResult {
+                val didString = did.value
+                if (deactivated.contains(didString)) {
                     return DidResolutionResult.Failure.NotFound(
-                        did = com.trustweave.core.types.Did(did),
+                        did = did,
                         reason = "deactivated",
                         resolutionMetadata = mapOf("error" to "deactivated")
                     )
                 }
 
-                val doc = documents[did]
+                val doc = documents[didString]
                 return if (doc != null) {
                     DidResolutionResult.Success(
                         document = doc,
@@ -191,7 +198,7 @@ class DidMethodInterfaceContractTest {
                     )
                 } else {
                     DidResolutionResult.Failure.NotFound(
-                        did = com.trustweave.core.types.Did(did),
+                        did = did,
                         reason = "notFound",
                         resolutionMetadata = mapOf("error" to "notFound")
                     )
@@ -199,19 +206,19 @@ class DidMethodInterfaceContractTest {
             }
 
             override suspend fun updateDid(
-                did: String,
+                did: Did,
                 updater: (DidDocument) -> DidDocument
             ): DidDocument {
-                val current = documents[did] ?: throw IllegalArgumentException("DID not found: $did")
+                val current = documents[did.value] ?: throw IllegalArgumentException("DID not found: ${did.value}")
                 val updated = updater(current)
-                documents[did] = updated
+                documents[did.value] = updated
                 return updated
             }
 
-            override suspend fun deactivateDid(did: String): Boolean {
-                return if (documents.containsKey(did)) {
-                    deactivated.add(did)
-                    documents.remove(did)
+            override suspend fun deactivateDid(did: Did): Boolean {
+                return if (documents.containsKey(did.value)) {
+                    deactivated.add(did.value)
+                    documents.remove(did.value)
                     true
                 } else {
                     false

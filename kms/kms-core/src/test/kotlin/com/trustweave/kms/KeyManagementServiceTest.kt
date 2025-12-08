@@ -1,12 +1,13 @@
 package com.trustweave.kms
 
-import com.trustweave.core.types.KeyId
+import com.trustweave.core.identifiers.KeyId
+import com.trustweave.kms.results.*
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 
 /**
- * Comprehensive tests for KeyManagementService models and KeyNotFoundException.
+ * Comprehensive tests for KeyManagementService models and Result-based operations.
  */
 class KeyManagementServiceTest {
 
@@ -37,21 +38,6 @@ class KeyManagementServiceTest {
     }
 
     @Test
-    fun `test KeyNotFoundException`() {
-        val exception = KeyNotFoundException(KeyId("key-123").value)
-
-        assertEquals("Key not found: key-123", exception.message)
-        assertNull(exception.cause)
-    }
-
-    @Test
-    fun `test KeyNotFoundException constructor`() {
-        val exception = KeyNotFoundException(KeyId("key-123").value)
-
-        assertEquals("Key not found: key-123", exception.message)
-    }
-
-    @Test
     fun `test KeyManagementService interface methods`() = runBlocking {
         val kms = object : KeyManagementService {
             private val keys = mutableMapOf<KeyId, KeyHandle>()
@@ -60,58 +46,84 @@ class KeyManagementServiceTest {
                 return setOf(Algorithm.Ed25519, Algorithm.Secp256k1, Algorithm.P256)
             }
 
-            override suspend fun generateKey(algorithm: Algorithm, options: Map<String, Any?>): KeyHandle {
+            override suspend fun generateKey(algorithm: Algorithm, options: Map<String, Any?>): GenerateKeyResult {
                 val keyId = KeyId("key-${keys.size + 1}")
                 val handle = KeyHandle(
                     id = keyId,
                     algorithm = algorithm.name
                 )
                 keys[handle.id] = handle
-                return handle
+                return GenerateKeyResult.Success(handle)
             }
 
-            override suspend fun getPublicKey(keyId: KeyId): KeyHandle {
-                return keys[keyId] ?: throw KeyNotFoundException(keyId.value)
+            override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult {
+                return keys[keyId]?.let { GetPublicKeyResult.Success(it) }
+                    ?: GetPublicKeyResult.Failure.KeyNotFound(keyId)
             }
 
-            override suspend fun sign(keyId: KeyId, data: ByteArray, algorithm: Algorithm?): ByteArray {
-                keys[keyId] ?: throw KeyNotFoundException(keyId.value)
-                return ByteArray(64) // Mock signature
+            override suspend fun sign(keyId: KeyId, data: ByteArray, algorithm: Algorithm?): SignResult {
+                return keys[keyId]?.let { SignResult.Success(ByteArray(64)) }
+                    ?: SignResult.Failure.KeyNotFound(keyId)
             }
 
-            override suspend fun deleteKey(keyId: KeyId): Boolean {
-                return keys.remove(keyId) != null
+            override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult {
+                return if (keys.remove(keyId) != null) {
+                    DeleteKeyResult.Deleted
+                } else {
+                    DeleteKeyResult.NotFound
+                }
             }
         }
 
-        val handle = kms.generateKey("Ed25519")
+        val result = kms.generateKey("Ed25519")
+        assertTrue(result is GenerateKeyResult.Success)
+        val handle = result.keyHandle
         assertEquals("key-1", handle.id.value)
 
-        val publicKey = kms.getPublicKey(handle.id)
-        assertEquals(handle, publicKey)
+        val publicKeyResult = kms.getPublicKey(handle.id)
+        assertTrue(publicKeyResult is GetPublicKeyResult.Success)
+        assertEquals(handle, publicKeyResult.keyHandle)
 
-        val signature = kms.sign(handle.id, "test".toByteArray())
-        assertEquals(64, signature.size)
+        val sign = kms.sign(handle.id, "test".toByteArray())
+        assertTrue(sign is SignResult.Success)
+        assertEquals(64, sign.signature.size)
 
-        assertTrue(kms.deleteKey(handle.id))
-        assertFalse(kms.deleteKey(handle.id))
+        val deleteResult = kms.deleteKey(handle.id)
+        assertTrue(deleteResult is DeleteKeyResult.Deleted)
+        
+        val deleteResult2 = kms.deleteKey(handle.id)
+        assertTrue(deleteResult2 is DeleteKeyResult.NotFound)
     }
 
     @Test
-    fun `test KeyManagementService getPublicKey throws KeyNotFoundException`() = runBlocking {
+    fun `test KeyManagementService getPublicKey returns KeyNotFound`() = runBlocking {
         val kms = object : KeyManagementService {
+            private val keys = mutableMapOf<KeyId, KeyHandle>()
+
             override suspend fun getSupportedAlgorithms(): Set<Algorithm> {
                 return setOf(Algorithm.Ed25519)
             }
 
-            override suspend fun generateKey(algorithm: Algorithm, options: Map<String, Any?>) = TODO()
-            override suspend fun getPublicKey(keyId: KeyId) = throw KeyNotFoundException(keyId.value)
-            override suspend fun sign(keyId: KeyId, data: ByteArray, algorithm: Algorithm?) = TODO()
-            override suspend fun deleteKey(keyId: KeyId) = TODO()
+            override suspend fun generateKey(algorithm: Algorithm, options: Map<String, Any?>): GenerateKeyResult {
+                val keyId = KeyId("key-${keys.size + 1}")
+                val handle = KeyHandle(id = keyId, algorithm = algorithm.name)
+                keys[keyId] = handle
+                return GenerateKeyResult.Success(handle)
+            }
+
+            override suspend fun getPublicKey(keyId: KeyId) = GetPublicKeyResult.Failure.KeyNotFound(keyId)
+
+            override suspend fun sign(keyId: KeyId, data: ByteArray, algorithm: Algorithm?): SignResult {
+                return SignResult.Failure.KeyNotFound(keyId)
+            }
+
+            override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult {
+                return DeleteKeyResult.NotFound
+            }
         }
 
-        assertFailsWith<KeyNotFoundException> {
-            kms.getPublicKey(KeyId("nonexistent"))
-        }
+        val result = kms.getPublicKey(KeyId("nonexistent"))
+        assertTrue(result is GetPublicKeyResult.Failure.KeyNotFound)
+        assertEquals(KeyId("nonexistent"), result.keyId)
     }
 }

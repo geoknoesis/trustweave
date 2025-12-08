@@ -4,15 +4,20 @@ import com.trustweave.credential.CredentialVerificationResult
 import com.trustweave.credential.PresentationOptions
 import com.trustweave.credential.PresentationVerificationOptions
 import com.trustweave.credential.PresentationVerificationResult
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.models.VerifiablePresentation
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiablePresentation
+import com.trustweave.credential.model.vc.CredentialProof
+import com.trustweave.credential.model.CredentialType
 import com.trustweave.credential.proof.ProofGenerator
 import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.credential.proof.ProofOptions
 import com.trustweave.credential.verifier.CredentialVerifier
+import com.trustweave.core.identifiers.Iri
+import com.trustweave.did.identifiers.Did
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
+import kotlinx.datetime.Instant
 import java.util.UUID
 
 /**
@@ -104,20 +109,26 @@ class PresentationService(
         require(holderDid.isNotBlank()) { "Holder DID is required" }
 
         // Build presentation without proof
+        val holderIri: Iri = try {
+            Did(holderDid) // Try as DID first
+        } catch (e: Exception) {
+            Iri(holderDid) // Fallback to IRI
+        }
+        
         val presentation = VerifiablePresentation(
-            id = UUID.randomUUID().toString(),
-            type = listOf("VerifiablePresentation"),
+            id = com.trustweave.credential.identifiers.CredentialId(UUID.randomUUID().toString()),
+            type = listOf(CredentialType.fromString("VerifiablePresentation")),
             verifiableCredential = credentials,
-            holder = holderDid,
+            holder = holderIri,
             proof = null,
             challenge = options.challenge,
             domain = options.domain
         )
 
         // Generate proof if proof type is specified
-        val proof = if (options.proofType.isNotBlank() && options.keyId != null) {
+        val proof: CredentialProof? = if (options.proofType.isNotBlank() && options.keyId != null) {
             val generator = proofGenerator ?: getProofGenerator(options.proofType)
-            generator.generateProof(
+            val generatedProof = generator.generateProof(
                 credential = credentials.first(), // Use first credential for proof generation context
                 keyId = options.keyId,
                 options = ProofOptions(
@@ -126,6 +137,7 @@ class PresentationService(
                     domain = options.domain
                 )
             )
+            convertProofToCredentialProof(generatedProof)
         } else {
             null
         }
@@ -155,8 +167,17 @@ class PresentationService(
         if (presentation.proof != null) {
             // TODO: Implement actual proof verification
             // For now, check proof structure
-            presentationProofValid = presentation.proof.type.isNotBlank() &&
-                                    presentation.proof.verificationMethod.isNotBlank()
+            presentationProofValid = when (val proof = presentation.proof) {
+                is com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof -> {
+                    proof.type.isNotBlank() && proof.verificationMethod.isNotBlank()
+                }
+                is com.trustweave.credential.model.vc.CredentialProof.JwtProof -> {
+                    proof.jwt.isNotBlank()
+                }
+                is com.trustweave.credential.model.vc.CredentialProof.SdJwtVcProof -> {
+                    proof.sdJwtVc.isNotBlank()
+                }
+            }
             if (!presentationProofValid) {
                 errors.add("Presentation proof is invalid")
             }
@@ -268,7 +289,7 @@ class PresentationService(
 
         // Serialize credential to JSON
         val credentialJson = json.encodeToJsonElement(
-            com.trustweave.credential.models.VerifiableCredential.serializer(),
+            com.trustweave.credential.model.vc.VerifiableCredential.serializer(),
             credential
         ).jsonObject
 
@@ -310,7 +331,7 @@ class PresentationService(
 
         // Parse back to VerifiableCredential
         return json.decodeFromJsonElement(
-            com.trustweave.credential.models.VerifiableCredential.serializer(),
+            com.trustweave.credential.model.vc.VerifiableCredential.serializer(),
             derivedJson
         )
     }
@@ -321,5 +342,31 @@ class PresentationService(
     private fun getProofGenerator(proofType: String): ProofGenerator =
         proofRegistry.get(proofType)
             ?: throw IllegalArgumentException("No proof generator registered for type: $proofType")
+    
+    /**
+     * Convert Proof (from CredentialModels) to CredentialProof (from model.vc).
+     */
+    private fun convertProofToCredentialProof(proof: com.trustweave.credential.models.Proof): CredentialProof {
+        return when {
+            proof.jws != null -> {
+                // JWT proof
+                CredentialProof.JwtProof(jwt = proof.jws)
+            }
+            proof.proofValue != null -> {
+                // Linked Data Proof
+                CredentialProof.LinkedDataProof(
+                    type = proof.type.identifier,
+                    created = Instant.parse(proof.created),
+                    verificationMethod = proof.verificationMethod.value,
+                    proofPurpose = proof.proofPurpose,
+                    proofValue = proof.proofValue,
+                    additionalProperties = emptyMap()
+                )
+            }
+            else -> {
+                throw IllegalArgumentException("Proof must have either proofValue or jws")
+            }
+        }
+    }
 }
 

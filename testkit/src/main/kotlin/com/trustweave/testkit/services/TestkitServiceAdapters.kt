@@ -14,7 +14,7 @@ import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.trust.InMemoryTrustRegistry
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.trustweave.credential.revocation.InMemoryStatusListManager
+import com.trustweave.credential.revocation.RevocationManagers
 import com.trustweave.anchor.BlockchainAnchorClient
 import com.trustweave.anchor.spi.BlockchainAnchorClientProvider
 import java.util.ServiceLoader
@@ -35,7 +35,12 @@ class TestkitKmsFactory : KmsFactory {
         val kms = InMemoryKeyManagementService()
         val kmsRef = kms
         val signerFn: suspend (ByteArray, String) -> ByteArray = { data, keyId ->
-            kmsRef.sign(com.trustweave.core.types.KeyId(keyId), data)
+            val keyIdObj = com.trustweave.core.identifiers.KeyId(keyId)
+            val result = kmsRef.sign(keyId = keyIdObj, data = data, algorithm = null)
+            when (result) {
+                is com.trustweave.kms.results.SignResult.Success -> result.signature
+                else -> throw RuntimeException("Failed to sign: $result")
+            }
         }
         return Pair(kms, signerFn)
     }
@@ -115,9 +120,9 @@ class TestkitDidMethodFactory : DidMethodFactory {
  * StatusListRegistry Factory implementation.
  */
 class TestkitStatusListRegistryFactory : StatusListRegistryFactory {
-    override suspend fun create(providerName: String): com.trustweave.credential.revocation.StatusListManager {
+    override suspend fun create(providerName: String): com.trustweave.credential.revocation.CredentialRevocationManager {
         if (providerName == "inMemory") {
-            return InMemoryStatusListManager()
+            return RevocationManagers.default()
         }
         throw IllegalStateException(
             "StatusListManager provider '$providerName' not found. " +

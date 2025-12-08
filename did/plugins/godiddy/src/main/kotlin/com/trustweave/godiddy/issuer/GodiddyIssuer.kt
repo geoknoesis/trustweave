@@ -50,9 +50,9 @@ class GodiddyIssuer(
             val response: GodiddyIssueCredentialResponse = client.post(path, request)
 
             if (response.credential == null) {
-                throw com.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed(
-                    reason = response.error ?: "unknown error",
-                    issuerDid = null
+                throw TrustWeaveException.Unknown(
+                    code = "CREDENTIAL_ISSUANCE_FAILED",
+                    message = response.error ?: "unknown error"
                 )
             }
 
@@ -60,9 +60,10 @@ class GodiddyIssuer(
         } catch (e: TrustWeaveException) {
             throw e
         } catch (e: Exception) {
-            throw com.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed(
-                reason = e.message ?: "Unknown error",
-                issuerDid = null
+            throw TrustWeaveException.Unknown(
+                code = "CREDENTIAL_ISSUANCE_FAILED",
+                message = e.message ?: "Unknown error",
+                cause = e
             )
         }
     }

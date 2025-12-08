@@ -5,7 +5,7 @@ import com.trustweave.trust.types.VerificationResult
 import com.trustweave.trust.types.*
 import com.trustweave.core.*
 import com.trustweave.core.util.DigestUtils
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.proof.ProofType
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import com.trustweave.anchor.DefaultBlockchainAnchorRegistry
@@ -15,7 +15,8 @@ import com.trustweave.trust.types.DidCreationResult
 import com.trustweave.trust.types.IssuanceResult
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 
 /**
  * National Education Credentials Algeria Scenario (AlgeroPass) - Complete Example
@@ -64,7 +65,7 @@ fun main() = runBlocking {
         keys {
             custom(kmsRef)
             signer { data, keyId ->
-                kmsRef.sign(com.trustweave.core.types.KeyId(keyId), data)
+                kmsRef.sign(com.trustweave.core.identifiers.KeyId(keyId), data)
             }
             algorithm("Ed25519")
         }
@@ -242,7 +243,7 @@ fun main() = runBlocking {
                     }
                 }
             }
-            issued(java.time.Instant.now())
+            issued(Clock.System.now())
         }
         signedBy(issuerDid = authorityDid.value, keyId = authorityKeyId)
     }.getOrFail()
@@ -376,7 +377,7 @@ fun main() = runBlocking {
                     }
                 }
             }
-            issued(java.time.Instant.now())
+            issued(Clock.System.now())
         }
         signedBy(issuerDid = authorityDid.value, keyId = authorityKeyId)
     }.getOrFail()
@@ -428,7 +429,7 @@ fun main() = runBlocking {
         put("institutionDid", institutionDid.value)
         put("credentialDigest", enrollmentDigest)
         put("credentialId", enrollmentCredential.id)
-        put("timestamp", Instant.now().toString())
+        put("timestamp", Clock.System.now().toString())
     }
 
     println("  Enrollment Record:")
@@ -457,7 +458,7 @@ fun main() = runBlocking {
         put("credentialId", achievementCredential.id)
         put("academicYear", "2024-2025")
         put("semester", "Fall 2024")
-        put("timestamp", Instant.now().toString())
+        put("timestamp", Clock.System.now().toString())
     }
 
     println("  Achievement Record:")

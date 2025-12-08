@@ -1,6 +1,6 @@
 package com.trustweave.did.resolver
 
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.exception.DidException
 
 /**
@@ -47,44 +47,6 @@ val DidResolutionResult.errorMessage: String?
         is DidResolutionResult.Failure.ResolutionError -> reason
     }
 
-/**
- * Requires that the resolution result contains a document.
- *
- * @throws DidException.DidNotFound if resolution failed
- * @return The resolved DID document
- */
-fun DidResolutionResult.requireDocument(): DidDocument {
-    return when (this) {
-        is DidResolutionResult.Success -> document
-        is DidResolutionResult.Failure.NotFound -> throw DidException.DidNotFound(
-            did = did.value,
-            availableMethods = emptyList()
-        )
-        is DidResolutionResult.Failure.InvalidFormat -> throw DidException.InvalidDidFormat(
-            did = did,
-            reason = reason
-        )
-        is DidResolutionResult.Failure.MethodNotRegistered -> throw DidException.DidMethodNotRegistered(
-            method = method,
-            availableMethods = availableMethods
-        )
-        is DidResolutionResult.Failure.ResolutionError -> throw DidException.DidResolutionFailed(
-            did = this.did.value,
-            reason = this.reason,
-            cause = this.cause
-        )
-    }
-}
-
-/**
- * Gets the document or returns null if not found.
- *
- * This is a convenience function that makes the nullable nature explicit.
- */
-fun DidResolutionResult.getDocumentOrNull(): DidDocument? = when (this) {
-    is DidResolutionResult.Success -> document
-    is DidResolutionResult.Failure -> null
-}
 
 /**
  * Checks if the resolution was successful (document is present).

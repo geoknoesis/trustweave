@@ -22,7 +22,8 @@ import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.test.assertFalse
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 
 /**
  * Template test demonstrating complete in-memory workflow.
@@ -51,7 +52,7 @@ class InMemoryTrustLayerIntegrationTest {
             )
             keys {
                 custom(kms)
-                signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
+                signer { data, keyId -> kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
             }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -104,7 +105,7 @@ class InMemoryTrustLayerIntegrationTest {
                     id(holderDid.value)
                     "test" to "value"
                 }
-                issued(Instant.now())
+                issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDid.value, keyId = keyId) // MUST match key in DID document
         }.getOrFail()
@@ -176,7 +177,7 @@ class InMemoryTrustLayerIntegrationTest {
             )
             keys {
                 custom(kms)
-                signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
+                signer { data, keyId -> kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
             }
             did { method(DidMethods.KEY) {} }
             revocation { provider("inMemory") }
@@ -214,7 +215,7 @@ class InMemoryTrustLayerIntegrationTest {
                     id(holderDid.value)
                     "test" to "value"
                 }
-                issued(Instant.now())
+                issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDid.value, keyId = keyId)
             withRevocation() // Enable revocation status list
@@ -265,7 +266,7 @@ class InMemoryTrustLayerIntegrationTest {
             )
             keys {
                 custom(kms)
-                signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
+                signer { data, keyId -> kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
             }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -302,7 +303,7 @@ class InMemoryTrustLayerIntegrationTest {
                     id(holderDid.value)
                     "test" to "value"
                 }
-                issued(Instant.now())
+                issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDid.value, keyId = keyId)
         }.getOrFail()
@@ -351,7 +352,7 @@ class InMemoryTrustLayerIntegrationTest {
             )
             keys {
                 custom(kms)
-                signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
+                signer { data, keyId -> kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
             }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -396,7 +397,7 @@ class InMemoryTrustLayerIntegrationTest {
                     id(holderDid.value)
                     "degree" to "Bachelor of Science"
                 }
-                issued(Instant.now())
+                issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
         }.getOrFail()
@@ -410,7 +411,7 @@ class InMemoryTrustLayerIntegrationTest {
                     id(holderDid.value)
                     "position" to "Software Engineer"
                 }
-                issued(Instant.now())
+                issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
         }.getOrFail()
@@ -474,7 +475,7 @@ class InMemoryTrustLayerIntegrationTest {
             )
             keys {
                 custom(kms)
-                signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
+                signer { data, keyId -> kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
             }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -528,7 +529,7 @@ class InMemoryTrustLayerIntegrationTest {
                     id(holderDid.value)
                     "test" to "value"
                 }
-                issued(Instant.now())
+                issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDid.value, keyId = keyId)
         }.getOrFail()
@@ -557,7 +558,7 @@ class InMemoryTrustLayerIntegrationTest {
             )
             keys {
                 custom(kms)
-                signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
+                signer { data, keyId -> kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
             }
             did { method(DidMethods.KEY) {} }
             anchor {
@@ -602,7 +603,7 @@ class InMemoryTrustLayerIntegrationTest {
                     id(holderDid.value)
                     "test" to "value"
                 }
-                issued(Instant.now())
+                issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDid.value, keyId = keyId)
             // Note: anchor() function not available in current DSL
@@ -641,7 +642,7 @@ class InMemoryTrustLayerIntegrationTest {
             )
             keys {
                 custom(kms)
-                signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
+                signer { data, keyId -> kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
             }
             did { method(DidMethods.KEY) {} }
             anchor {
@@ -691,9 +692,9 @@ class InMemoryTrustLayerIntegrationTest {
                         "primaryPartyDid" to issuerDid.value
                         "counterpartyDid" to counterpartyDid.value
                     }
-                    "effectiveDate" to Instant.now().toString()
+                    "effectiveDate" to Clock.System.now().toString()
                 }
-                issued(Instant.now())
+                issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDid.value, keyId = keyId)
             // Note: anchor() function not available in current DSL

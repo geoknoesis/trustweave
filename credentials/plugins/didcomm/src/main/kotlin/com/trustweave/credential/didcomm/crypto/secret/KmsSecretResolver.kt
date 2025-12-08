@@ -1,7 +1,9 @@
 package com.trustweave.credential.didcomm.crypto.secret
 
+import com.trustweave.core.identifiers.KeyId
 import com.trustweave.kms.KeyManagementService
 import com.trustweave.kms.KeyHandle
+import com.trustweave.kms.results.GetPublicKeyResult
 import org.didcommx.didcomm.secret.Secret
 import org.didcommx.didcomm.secret.SecretResolver
 import kotlinx.coroutines.runBlocking
@@ -25,7 +27,7 @@ import kotlinx.coroutines.runBlocking
  */
 class KmsSecretResolver(
     private val kms: KeyManagementService,
-    private val resolveDid: suspend (String) -> com.trustweave.did.DidDocument?,
+    private val resolveDid: suspend (String) -> com.trustweave.did.model.DidDocument?,
     private val localKeyStore: LocalKeyStore? = null // Optional local key store
 ) {
 
@@ -58,10 +60,15 @@ class KmsSecretResolver(
                 val (did, keyId) = parseSecretId(secretId)
 
                 // Get public key from KMS
-                val keyHandle = try {
-                    kms.getPublicKey(com.trustweave.core.types.KeyId(keyId))
+                val getKeyResult = try {
+                    kms.getPublicKey(KeyId(keyId))
                 } catch (e: Exception) {
                     return@runBlocking null
+                }
+
+                val keyHandle = when (getKeyResult) {
+                    is com.trustweave.kms.results.GetPublicKeyResult.Success -> getKeyResult.keyHandle
+                    is com.trustweave.kms.results.GetPublicKeyResult.Failure -> return@runBlocking null
                 }
 
                 val publicKeyJwk = keyHandle.publicKeyJwk

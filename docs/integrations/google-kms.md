@@ -21,11 +21,12 @@ Add the Google Cloud KMS module to your dependencies:
 
 ```kotlin
 dependencies {
+    // Only need to add the Google Cloud KMS plugin - core dependencies are included transitively
     implementation("com.trustweave.kms:google:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 }
 ```
+
+**Note:** The Google Cloud KMS plugin automatically includes `trustweave-kms` and `trustweave-common` as transitive dependencies, so you don't need to declare them explicitly.
 
 ## Configuration
 
@@ -35,15 +36,9 @@ The Google Cloud KMS provider can be configured via options map or environment v
 
 ```kotlin
 import com.trustweave.kms.*
-import com.trustweave.googlekms.*
-import java.util.ServiceLoader
 
-// Discover Google Cloud KMS provider
-val providers = ServiceLoader.load(KeyManagementServiceProvider::class.java)
-val googleProvider = providers.find { it.name == "google-cloud-kms" }
-
-// Create KMS with explicit configuration
-val kms = googleProvider?.create(mapOf(
+// Simple factory API - no ServiceLoader needed!
+val kms = KeyManagementServices.create("google-cloud-kms", mapOf(
     "projectId" to "my-project",
     "location" to "us-east1",
     "keyRing" to "my-key-ring"
@@ -173,16 +168,27 @@ if (kms?.supportsAlgorithm(Algorithm.Secp256k1) == true) {
 
 ```kotlin
 import com.trustweave.kms.*
+import com.trustweave.kms.KmsOptionKeys
+import com.trustweave.kms.results.*
 
 // Generate secp256k1 key
-val key = kms.generateKey(Algorithm.Secp256k1)
+val result = kms.generateKey(Algorithm.Secp256k1)
+when (result) {
+    is GenerateKeyResult.Success -> {
+        val keyHandle = result.keyHandle
+        println("Key created: ${keyHandle.id}")
+    }
+    is GenerateKeyResult.Failure -> {
+        println("Error: ${result.reason}")
+    }
+}
 
 // Generate key with custom ID and labels
-val keyWithLabels = kms.generateKey(
+val keyWithLabelsResult = kms.generateKey(
     algorithm = Algorithm.P256,
     options = mapOf(
-        "keyId" to "issuer-key-2025",
-        "labels" to mapOf(
+        KmsOptionKeys.KEY_ID to "issuer-key-2025",
+        KmsOptionKeys.LABELS to mapOf(
             "environment" to "production",
             "purpose" to "issuance"
         )
@@ -190,10 +196,10 @@ val keyWithLabels = kms.generateKey(
 )
 
 // Generate P-256 key for FIPS compliance
-val fipsKey = kms.generateKey(
+val fipsKeyResult = kms.generateKey(
     algorithm = Algorithm.P256,
     options = mapOf(
-        "keyRing" to "fips-keys" // Override default key ring
+        KmsOptionKeys.KEY_RING to "fips-keys" // Override default key ring
     )
 )
 ```
@@ -202,16 +208,25 @@ val fipsKey = kms.generateKey(
 
 ```kotlin
 // Sign with key resource name (KeyId value class)
-val signature = kms.sign(KeyId(keyId), data.toByteArray())
+val sign = kms.sign(KeyId(keyId), data.toByteArray())
+when (sign) {
+    is SignResult.Success -> {
+        val signature = sign.signature
+        // Use signature
+    }
+    is SignResult.Failure -> {
+        println("Error: ${sign.reason}")
+    }
+}
 
 // Sign with full resource name
-val signature = kms.sign(
+val sign = kms.sign(
     KeyId("projects/my-project/locations/us-east1/keyRings/my-key-ring/cryptoKeys/my-key"),
     data.toByteArray()
 )
 
 // Sign with algorithm override
-val signature = kms.sign(
+val sign = kms.sign(
     keyId = KeyId(keyId),
     data = data.toByteArray(),
     algorithm = Algorithm.Secp256k1
@@ -222,23 +237,35 @@ val signature = kms.sign(
 
 ```kotlin
 // Get public key by key ID (uses config defaults, KeyId value class)
-val publicKey = kms.getPublicKey(KeyId("my-key"))
+val publicKeyResult = kms.getPublicKey(KeyId("my-key"))
+when (publicKeyResult) {
+    is GetPublicKeyResult.Success -> {
+        val publicKey = publicKeyResult.keyHandle
+        // Access JWK format
+        val jwk = publicKey.publicKeyJwk
+        println("Public key JWK: $jwk")
+    }
+    is GetPublicKeyResult.Failure -> {
+        println("Error: ${publicKeyResult.reason}")
+    }
+}
 
 // Get public key by full resource name
-val publicKey = kms.getPublicKey(
+val publicKeyResult = kms.getPublicKey(
     KeyId("projects/my-project/locations/us-east1/keyRings/my-key-ring/cryptoKeys/my-key")
 )
-
-// Access JWK format
-val jwk = publicKey.publicKeyJwk
-println("Public key JWK: $jwk")
 ```
 
 ### Key Deletion
 
 ```kotlin
 // Destroy key version (makes key unusable)
-val deleted = kms.deleteKey(KeyId(keyId))
+val deleteResult = kms.deleteKey(KeyId(keyId))
+when (deleteResult) {
+    is DeleteKeyResult.Deleted -> println("Key deleted")
+    is DeleteKeyResult.NotFound -> println("Key not found (already deleted)")
+    is DeleteKeyResult.Failure.Error -> println("Error: ${deleteResult.reason}")
+}
 
 // Note: Google Cloud KMS schedules key version destruction
 // The key version enters a "DESTROYED" state and cannot be used
@@ -269,22 +296,29 @@ Google Cloud KMS uses key versions. When you create a key, a primary version is 
 The plugin maps Google Cloud exceptions to TrustWeave exceptions:
 
 ```kotlin
-try {
-    val key = kms.generateKey(Algorithm.Secp256k1)
-} catch (e: UnsupportedAlgorithmException) {
-    println("Algorithm not supported: ${e.message}")
-} catch (e: KeyNotFoundException) {
-    println("Key not found: ${e.message}")
-} catch (e: TrustWeaveException) {
-    when {
-        e.message?.contains("Permission denied") == true -> {
-            println("Check IAM permissions")
-        }
-        e.message?.contains("Key not found") == true -> {
-            println("Key does not exist")
-        }
-        else -> {
-            println("Error: ${e.message}")
+val result = kms.generateKey(Algorithm.Secp256k1)
+when (result) {
+    is GenerateKeyResult.Success -> {
+        val keyHandle = result.keyHandle
+        // Use key handle
+    }
+    is GenerateKeyResult.Failure.UnsupportedAlgorithm -> {
+        println("Algorithm not supported: ${result.algorithm.name}")
+    }
+    is GenerateKeyResult.Failure.InvalidOptions -> {
+        println("Invalid options: ${result.reason}")
+    }
+    is GenerateKeyResult.Failure.Error -> {
+        when {
+            result.reason.contains("Permission denied", ignoreCase = true) -> {
+                println("Check IAM permissions")
+            }
+            result.reason.contains("Key not found", ignoreCase = true) -> {
+                println("Key does not exist")
+            }
+            else -> {
+                println("Error: ${result.reason}")
+            }
         }
     }
 }

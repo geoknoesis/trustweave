@@ -5,7 +5,8 @@ plugins {
 
 group = "com.trustweave.credentials"
 dependencies {
-    implementation(project(":credentials:credential-core"))
+    implementation(project(":credentials:credential-api"))
+    implementation(project(":common"))  // Needed for Iri access
     // StatusListManagerFactory is in this module
 
     // Kotlin Coroutines
@@ -13,6 +14,7 @@ dependencies {
 
     // Kotlinx Serialization
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.datetime)
 
     // JDBC drivers
     implementation("org.postgresql:postgresql:42.7.1")

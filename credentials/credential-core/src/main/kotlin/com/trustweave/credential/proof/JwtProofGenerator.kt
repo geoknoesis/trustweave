@@ -1,10 +1,12 @@
 package com.trustweave.credential.proof
 
 import com.trustweave.credential.models.Proof
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.did.identifiers.VerificationMethodId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 
 /**
  * JWT proof generator implementation.
@@ -52,9 +54,9 @@ class JwtProofGenerator(
             ?: (getPublicKeyId(keyId)?.let { "did:key:$it#$keyId" } ?: "did:key:$keyId")
 
         Proof(
-            type = proofType,
-            created = Instant.now().toString(),
-            verificationMethod = verificationMethod,
+            type = ProofTypes.fromString(proofType),
+            created = Clock.System.now().toString(),
+            verificationMethod = VerificationMethodId.parse(verificationMethod),
             proofPurpose = options.proofPurpose,
             jws = "PLACEHOLDER_JWT_STRING", // TODO: Generate actual JWT
             challenge = options.challenge,

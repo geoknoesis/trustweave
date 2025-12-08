@@ -1,7 +1,7 @@
 package com.trustweave.credential.issuer
 
 import com.trustweave.credential.CredentialIssuanceOptions
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.proof.Ed25519ProofGenerator
 import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.credential.schema.JsonSchemaValidator
@@ -13,7 +13,9 @@ import kotlinx.serialization.json.*
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.seconds
 import java.util.UUID
 import kotlin.test.*
 
@@ -113,7 +115,7 @@ class CredentialIssuerAdditionalBranchesTest {
     @Test
     fun `test issue with credential having expirationDate`() = runBlocking {
         val credential = createTestCredential(
-            expirationDate = Instant.now().plusSeconds(86400).toString()
+            expirationDate = Clock.System.now().plus(86400.seconds).toString()
         )
 
         val result = issuer.issue(credential, issuerDid, "key-1")
@@ -125,7 +127,7 @@ class CredentialIssuerAdditionalBranchesTest {
     @Test
     fun `test issue with credential having credentialStatus`() = runBlocking {
         val credential = createTestCredential(
-            credentialStatus = com.trustweave.credential.models.CredentialStatus(
+            credentialStatus = com.trustweave.credential.model.vc.CredentialStatus(
                 id = "https://example.com/status/1",
                 type = "StatusList2021Entry",
                 statusListIndex = "1",
@@ -305,7 +307,7 @@ class CredentialIssuerAdditionalBranchesTest {
             put("name", "John Doe")
         },
         expirationDate: String? = null,
-        credentialStatus: com.trustweave.credential.models.CredentialStatus? = null,
+        credentialStatus: com.trustweave.credential.model.vc.CredentialStatus? = null,
         evidence: List<com.trustweave.credential.models.Evidence>? = null,
         termsOfUse: com.trustweave.credential.models.TermsOfUse? = null,
         refreshService: com.trustweave.credential.models.RefreshService? = null,
@@ -315,7 +317,7 @@ class CredentialIssuerAdditionalBranchesTest {
             id = id,
             type = types,
             issuer = issuerDid,
-            issuanceDate = Instant.now().toString(),
+            issuanceDate = Clock.System.now().toString(),
             expirationDate = expirationDate,
             credentialSubject = credentialSubject,
             credentialStatus = credentialStatus,

@@ -74,56 +74,83 @@ suspend fun checkKmsCapabilities(kms: KeyManagementService) {
 ```kotlin
 import com.trustweave.kms.*
 
-suspend fun issueSignerKey(kms: KeyManagementService): KeyId {
-    // Type-safe algorithm usage (recommended)
-    val handle = kms.generateKey(
+suspend fun issueSignerKey(kms: KeyManagementService): KeyId? {
+    // Type-safe algorithm usage with Result-based API (recommended)
+    val result = kms.generateKey(
         algorithm = Algorithm.Ed25519,
-        options = mapOf("label" to "issuer-root", "exportable" to false)
+        options = mapOf(
+            KmsOptionKeys.KEY_ID to "issuer-root",
+            KmsOptionKeys.DESCRIPTION to "Issuer root key"
+        )
     )
-    println("Generated key ${handle.id.value} (${handle.algorithm})")
-    return handle.id
+    
+    return when (result) {
+        is GenerateKeyResult.Success -> {
+            val handle = result.keyHandle
+            println("Generated key ${handle.id.value} (${handle.algorithm})")
+            handle.id
+        }
+        is GenerateKeyResult.Failure -> {
+            println("Failed to generate key: ${result.reason}")
+            null
+        }
+    }
 }
 
-// Or use string-based API (convenience)
-suspend fun issueSignerKeyString(kms: KeyManagementService): KeyId {
-    val handle = kms.generateKey(
-        algorithmName = "Ed25519",
-        options = mapOf("label" to "issuer-root", "exportable" to false)
-    )
-    return handle.id
+suspend fun signDigest(kms: KeyManagementService, keyId: KeyId, digest: ByteArray): ByteArray? {
+    val result = kms.sign(keyId, digest)
+    return when (result) {
+        is SignResult.Success -> result.signature
+        is SignResult.Failure -> {
+            println("Failed to sign: ${result.reason}")
+            null
+        }
+    }
 }
 
-suspend fun signDigest(kms: KeyManagementService, keyId: KeyId, digest: ByteArray): ByteArray =
-    kms.sign(keyId, digest)
-
-**Outcome:** Demonstrates algorithm discovery and creating keys via the KMS abstraction—no direct coupling to backing implementations.
+**Outcome:** Demonstrates algorithm discovery and creating keys via the KMS abstraction using the Result-based API for type-safe error handling—no direct coupling to backing implementations.
 ```
 
 ### Example: wallet-level key generation
 
 ```kotlin
-val keyHandle = wallet.withKeyManagement { keys ->
-    keys.generateKey("Ed25519") {
-        label = "holder-authentication"
-        exportable = true
+import com.trustweave.kms.*
+import com.trustweave.kms.results.*
+
+val keyResult = wallet.withKeyManagement { keys ->
+    keys.generateKey(Algorithm.Ed25519, mapOf(
+        KmsOptionKeys.KEY_ID to "holder-authentication",
+        KmsOptionKeys.DESCRIPTION to "Holder authentication key"
+    ))
+}
+
+when (keyResult) {
+    is GenerateKeyResult.Success -> {
+        val keyHandle = keyResult.keyHandle
+        println("Holder key created: ${keyHandle.id.value}")
+    }
+    is GenerateKeyResult.Failure -> {
+        println("Failed to create key: ${keyResult.reason}")
     }
 }
-println("Holder key created: ${keyHandle.id.value}")
 
-**Outcome:** Uses the wallet DSL to mint a holder key with custom metadata, returning the generated handle for later signing operations.
+**Outcome:** Uses the wallet DSL to mint a holder key with custom metadata using the Result-based API, returning the generated handle for later signing operations.
 ```
 
 ## Practical usage tips
 
-- **Production** – back keys with Hardware Security Modules (HSMs) or cloud Key Management Service (KMS) ([AWS KMS](../integrations/aws-kms.md), [Azure Key Vault](../integrations/azure-kms.md), [Google Cloud KMS](../integrations/google-kms.md), [HashiCorp Vault](../integrations/hashicorp-vault-kms.md), etc.) via custom providers.
+- **Production** – back keys with Hardware Security Modules (HSMs) or cloud Key Management Service (KMS) ([AWS KMS](../integrations/aws-kms.md), [Azure Key Vault](../integrations/azure-kms.md), [Google Cloud KMS](../integrations/google-kms.md), [HashiCorp Vault](../integrations/hashicorp-vault-kms.md), [IBM Key Protect](../integrations/ibm-key-protect-kms.md), etc.) via custom providers.
 - **Rotation** – maintain previous keys so verifiers can validate historic credentials; rotate key IDs in VC proofs.
 - **Access control** – enforce authorisation at the Key Management Service (KMS) boundary; TrustWeave assumes the provider handles policy.
-- **Testing** – rely on `InMemoryKeyManagementService` from `TrustWeave-testkit` for determinism.
+- **Testing** – rely on `InMemoryKeyManagementService` from the `inmemory` plugin for determinism.
+- **Error Handling** – always use the Result-based API (`generateKey`, `sign`, etc.) for type-safe error handling.
 
 ## See also
 
 - [Wallet API Reference – KeyManagement](../api-reference/wallet-api.md#keymanagement)
-- [KMS Integration Guides](../integrations/README.md#other-did--kms-integrations) – Implementation guides for AWS KMS, Azure Key Vault, Google Cloud KMS, HashiCorp Vault, and walt.id
+- [KMS Integration Guides](../integrations/README.md#key-management-systems-kms) – Implementation guides for AWS KMS, Azure Key Vault, Google Cloud KMS, HashiCorp Vault, IBM Key Protect, and InMemory KMS
+- [KMS Quick Start Guide](../kms/KMS_QUICK_START.md) – Quick start examples for all KMS plugins
+- [KMS Configuration Guide](../kms/KMS_PLUGINS_CONFIGURATION.md) – Complete configuration reference
 - [DIDs](dids.md) for how keys feed DID documents.
 - [Credential Service API](../api-reference/credential-service-api.md) to see where keys sign credentials.
 - [Advanced – Key Rotation](../advanced/key-rotation.md) *(to be added in a later step of this plan).*
@@ -153,18 +180,17 @@ interface KeyManagementService {
     suspend fun supportsAlgorithm(algorithm: Algorithm): Boolean
     suspend fun supportsAlgorithm(algorithmName: String): Boolean
 
-    // Key operations
-    suspend fun generateKey(algorithm: Algorithm, options: Map<String, Any?> = emptyMap()): KeyHandle
-    suspend fun generateKey(algorithmName: String, options: Map<String, Any?> = emptyMap()): KeyHandle
-    suspend fun getPublicKey(keyId: KeyId): KeyHandle
-    suspend fun sign(keyId: KeyId, data: ByteArray, algorithm: Algorithm? = null): ByteArray
-    suspend fun sign(keyId: KeyId, data: ByteArray, algorithmName: String?): ByteArray
-    suspend fun deleteKey(keyId: KeyId): Boolean
-    
-    // Algorithm validation helper (available to all implementations)
-    suspend fun validateSigningAlgorithm(keyId: KeyId, requestedAlgorithm: Algorithm?): Algorithm
+    // Key operations (Result-based API)
+    suspend fun generateKey(algorithm: Algorithm, options: Map<String, Any?> = emptyMap()): GenerateKeyResult
+    suspend fun generateKey(algorithmName: String, options: Map<String, Any?> = emptyMap()): GenerateKeyResult
+    suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult
+    suspend fun sign(keyId: KeyId, data: ByteArray, algorithm: Algorithm? = null): SignResult
+    suspend fun sign(keyId: KeyId, data: ByteArray, algorithmName: String?): SignResult
+    suspend fun deleteKey(keyId: KeyId): DeleteKeyResult
 }
 ```
+
+**All operations use Result-based API for type-safe error handling.** Results are sealed classes that ensure all error cases are handled at compile time.
 
 **All KMS implementations MUST advertise their supported algorithms** via `getSupportedAlgorithms()`.
 
@@ -172,41 +198,51 @@ interface KeyManagementService {
 
 TrustWeave provides built-in algorithm validation to ensure that the algorithm specified for signing operations is compatible with the key's actual algorithm. This prevents accidental misuse of keys with incompatible algorithms.
 
-**KeySpec** is a type-safe wrapper that provides algorithm validation:
+**Algorithm validation is built into the Result-based API:**
 
 ```kotlin
-import com.trustweave.kms.KeySpec
+import com.trustweave.kms.*
+import com.trustweave.kms.results.*
 
-// Get key specification
-val keyHandle = kms.getPublicKey(keyId)
-val keySpec = KeySpec.fromKeyHandle(keyHandle)
-
-// Validate algorithm compatibility
-val algorithm = Algorithm.Ed25519
-require(keySpec.supports(algorithm)) {
-    "Key does not support algorithm ${algorithm.name}"
+// Get key and validate algorithm
+val publicKeyResult = kms.getPublicKey(keyId)
+when (publicKeyResult) {
+    is GetPublicKeyResult.Success -> {
+        val keyHandle = publicKeyResult.keyHandle
+        val keyAlgorithm = Algorithm.parse(keyHandle.algorithm)
+        
+        // Check algorithm compatibility
+        if (keyAlgorithm != null && Algorithm.Ed25519.isCompatibleWith(keyAlgorithm)) {
+            // Algorithm is compatible
+            val sign = kms.sign(keyId, data, Algorithm.Ed25519)
+            // Handle sign result...
+        }
+    }
+    is GetPublicKeyResult.Failure -> {
+        // Handle error...
+    }
 }
 
-// Or use the helper method (recommended)
-val effectiveAlgorithm = kms.validateSigningAlgorithm(keyId, algorithm)
-// This throws UnsupportedAlgorithmException if incompatible
-```
-
-**Best Practice:** Use `validateSigningAlgorithm()` in your KMS implementations to ensure algorithm compatibility:
-
-```kotlin
-override suspend fun sign(
-    keyId: KeyId,
-    data: ByteArray,
-    algorithm: Algorithm?
-): ByteArray {
-    // Validate algorithm compatibility
-    val effectiveAlgorithm = validateSigningAlgorithm(keyId, algorithm)
-    
-    // Proceed with signing using effectiveAlgorithm
-    // ...
+// Or let the KMS handle validation automatically
+val sign = kms.sign(keyId, data, Algorithm.Ed25519)
+when (sign) {
+    is SignResult.Success -> {
+        // Signing succeeded
+    }
+    is SignResult.Failure.UnsupportedAlgorithm -> {
+        // Algorithm incompatible with key - handled automatically
+        println("Algorithm ${sign.requestedAlgorithm} not compatible with key algorithm ${sign.keyAlgorithm}")
+    }
+    is SignResult.Failure.KeyNotFound -> {
+        // Key doesn't exist
+    }
+    is SignResult.Failure.Error -> {
+        // Other error
+    }
 }
 ```
+
+**Best Practice:** The Result-based API automatically validates algorithm compatibility. Always handle all Result cases for type-safe error handling.
 
 ## Built-in Providers
 
@@ -244,20 +280,35 @@ val kms = AlgorithmDiscovery.createProviderFor(
 
 ## Options and Builders
 
-Typed option builders make integration ergonomic:
+Use `KmsOptionKeys` constants for type-safe option keys:
 
 ```kotlin
-val key = wallet.withKeyManagement { kms ->
-    kms.generateKey("Ed25519") {
-        label = "issuer-signing"
-        exportable = false
+import com.trustweave.kms.*
+import com.trustweave.kms.KmsOptionKeys
+import com.trustweave.kms.results.*
+
+val result = wallet.withKeyManagement { kms ->
+    kms.generateKey(Algorithm.Ed25519, mapOf(
+        KmsOptionKeys.KEY_ID to "issuer-signing",
+        KmsOptionKeys.DESCRIPTION to "Issuer signing key",
+        KmsOptionKeys.EXPORTABLE to false
+    ))
+}
+
+when (result) {
+    is GenerateKeyResult.Success -> {
+        val keyHandle = result.keyHandle
+        // Use key handle
+    }
+    is GenerateKeyResult.Failure -> {
+        // Handle error
     }
 }
 ```
 
-**Outcome:** Shows the typed builder API in action—making it easy to add provider-specific metadata while generating keys.
+**Outcome:** Shows the Result-based API with type-safe option keys—making it easy to add provider-specific metadata while generating keys with compile-time error checking.
 
-Most APIs accept either strongly typed options or `Map<String, Any?>` fallbacks for legacy integrations.
+All APIs use `Map<String, Any?>` for options, with `KmsOptionKeys` constants providing type safety.
 
 ## Signing in Credential Workflows
 
@@ -314,12 +365,30 @@ class VaultKms(private val options: Map<String, Any?>) : KeyManagementService {
     override suspend fun generateKey(
         algorithm: Algorithm,
         options: Map<String, Any?>
-    ): KeyHandle {
+    ): GenerateKeyResult {
         // Implementation using Vault API
+        // Return GenerateKeyResult.Success or GenerateKeyResult.Failure
         // ...
     }
 
-    // ... implement other methods
+    override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult {
+        // Return GetPublicKeyResult.Success or GetPublicKeyResult.Failure
+        // ...
+    }
+
+    override suspend fun sign(
+        keyId: KeyId,
+        data: ByteArray,
+        algorithm: Algorithm?
+    ): SignResult {
+        // Return SignResult.Success or SignResult.Failure
+        // ...
+    }
+
+    override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult {
+        // Return DeleteKeyResult.Deleted, DeleteKeyResult.NotFound, or DeleteKeyResult.Failure
+        // ...
+    }
 }
 ```
 

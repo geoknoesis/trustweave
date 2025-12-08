@@ -1,71 +1,14 @@
-package com.trustweave.did
+package com.trustweave.did.model
 
-import java.time.Instant
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 
 /**
- * Represents a Decentralized Identifier (DID).
- *
- * @param method The DID method (e.g., "web", "key", "ion")
- * @param id The method-specific identifier
+ * Note: Did class has been moved to com.trustweave.did.identifiers.Did
+ * This file now contains only DID document models.
  */
-data class Did(
-    val method: String,
-    val id: String
-) {
-    override fun toString(): String = "did:$method:$id"
-
-    companion object {
-        /**
-         * Parses a DID string into a Did object.
-         *
-         * @param didString The DID string (e.g., "did:web:example.com")
-         * @return A Did object
-         * @throws IllegalArgumentException if the string is not a valid DID
-         */
-        /**
-         * Parses a DID string or DID URL into a Did object.
-         *
-         * Handles:
-         * - DID: `did:method:id`
-         * - DID URL: `did:method:id/path#fragment` (fragment and path are ignored)
-         *
-         * @param didString The DID string (e.g., "did:web:example.com" or "did:web:example.com/path#fragment")
-         * @return A Did object
-         * @throws IllegalArgumentException if the string is not a valid DID
-         */
-        fun parse(didString: String): Did {
-            if (!didString.startsWith("did:")) {
-                throw com.trustweave.did.exception.DidException.InvalidDidFormat(
-                    did = didString,
-                    reason = "Invalid DID format: must start with 'did:'"
-                )
-            }
-
-            // Remove fragment if present (everything after #)
-            val withoutFragment = didString.split('#').first()
-
-            // Split by : to get method and id
-            val parts = withoutFragment.substring(4).split(":", limit = 2)
-            if (parts.size != 2) {
-                throw com.trustweave.did.exception.DidException.InvalidDidFormat(
-                    did = didString,
-                    reason = "Invalid DID format: expected 'did:method:id'"
-                )
-            }
-
-            // Extract method and id (id may contain path like /path/to/resource)
-            val method = parts[0]
-            val idWithPath = parts[1]
-
-            // For now, include path in id. Could be separated if needed:
-            // val idParts = idWithPath.split("/", limit = 2)
-            // val id = idParts[0]
-            // val path = idParts.getOrNull(1)
-
-            return Did(method = method, id = idWithPath)
-        }
-    }
-}
 
 /**
  * Represents a verification method in a DID Document.
@@ -73,17 +16,18 @@ data class Did(
  * Following W3C DID Core specification, verification methods can be embedded
  * in the `verificationMethod` array or referenced by ID in relationship arrays.
  *
- * @param id The verification method identifier (can be relative or absolute)
+ * @param id The verification method identifier (typed)
  * @param type The type of verification method (e.g., "Ed25519VerificationKey2020")
- * @param controller The DID that controls this verification method
+ * @param controller The DID that controls this verification method (typed)
  * @param publicKeyJwk Public key in JWK format (optional)
  * @param publicKeyMultibase Public key in multibase format (optional)
  */
+@Serializable
 data class VerificationMethod(
-    val id: String,
+    val id: VerificationMethodId,
     val type: String,
-    val controller: String,
-    val publicKeyJwk: Map<String, Any?>? = null,
+    val controller: Did,
+    val publicKeyJwk: Map<String, @Contextual Any?>? = null,
     val publicKeyMultibase: String? = null
 )
 
@@ -93,42 +37,44 @@ data class VerificationMethod(
  * Following W3C DID Core specification, services provide means of communication
  * or interaction with the DID subject.
  *
- * @param id The service identifier
+ * @param id The service identifier (can be relative or absolute URI)
  * @param type The service type (e.g., "LinkedDomains", "DIDCommMessaging")
  * @param serviceEndpoint The service endpoint (can be a URL, object, or array)
  */
+@Serializable
 data class DidService(
-    val id: String,
+    val id: String,  // Service IDs are often relative URIs, so keeping as String
     val type: String,
-    val serviceEndpoint: Any  // URL, object, or array
+    @Contextual val serviceEndpoint: Any  // URL, object, or array
 )
 
 /**
  * Represents a DID Document following W3C DID Core structure.
  *
- * @param id The DID identifier
+ * @param id The DID identifier (typed)
  * @param context JSON-LD context(s) for the document (defaults to W3C DID Core context)
- * @param alsoKnownAs Alternative identifiers for this DID
- * @param controller DIDs that control this DID
+ * @param alsoKnownAs Alternative identifiers for this DID (typed)
+ * @param controller DIDs that control this DID (typed)
  * @param verificationMethod List of verification methods
- * @param authentication List of verification method references for authentication
- * @param assertionMethod List of verification method references for assertions
- * @param keyAgreement List of verification method references for key agreement
- * @param capabilityInvocation List of verification method references for capability invocation
- * @param capabilityDelegation List of verification method references for capability delegation
+ * @param authentication List of verification method references for authentication (typed)
+ * @param assertionMethod List of verification method references for assertions (typed)
+ * @param keyAgreement List of verification method references for key agreement (typed)
+ * @param capabilityInvocation List of verification method references for capability invocation (typed)
+ * @param capabilityDelegation List of verification method references for capability delegation (typed)
  * @param service List of service endpoints
  */
+@Serializable
 data class DidDocument(
-    val id: String,
+    val id: Did,
     val context: List<String> = listOf("https://www.w3.org/ns/did/v1"),
-    val alsoKnownAs: List<String> = emptyList(),
-    val controller: List<String> = emptyList(),
+    val alsoKnownAs: List<Did> = emptyList(),
+    val controller: List<Did> = emptyList(),
     val verificationMethod: List<VerificationMethod> = emptyList(),
-    val authentication: List<String> = emptyList(),
-    val assertionMethod: List<String> = emptyList(),
-    val keyAgreement: List<String> = emptyList(),
-    val capabilityInvocation: List<String> = emptyList(),
-    val capabilityDelegation: List<String> = emptyList(),
+    val authentication: List<VerificationMethodId> = emptyList(),
+    val assertionMethod: List<VerificationMethodId> = emptyList(),
+    val keyAgreement: List<VerificationMethodId> = emptyList(),
+    val capabilityInvocation: List<VerificationMethodId> = emptyList(),
+    val capabilityDelegation: List<VerificationMethodId> = emptyList(),
     val service: List<DidService> = emptyList()
 )
 
@@ -139,15 +85,16 @@ data class DidDocument(
  * @param updated ISO 8601 timestamp when the DID document was last updated
  * @param versionId Version identifier for the DID document
  * @param nextUpdate ISO 8601 timestamp indicating when to check for updates
- * @param canonicalId Canonical form of the DID identifier
- * @param equivalentId List of equivalent DID identifiers
+ * @param canonicalId Canonical form of the DID identifier (typed)
+ * @param equivalentId List of equivalent DID identifiers (typed)
  */
+@Serializable
 data class DidDocumentMetadata(
-    val created: Instant? = null,
-    val updated: Instant? = null,
+    @Contextual val created: kotlinx.datetime.Instant? = null,
+    @Contextual val updated: kotlinx.datetime.Instant? = null,
     val versionId: String? = null,
-    val nextUpdate: Instant? = null,
-    val canonicalId: String? = null,
-    val equivalentId: List<String> = emptyList()
+    @Contextual val nextUpdate: kotlinx.datetime.Instant? = null,
+    val canonicalId: Did? = null,
+    val equivalentId: List<Did> = emptyList()
 )
 

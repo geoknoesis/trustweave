@@ -9,10 +9,12 @@ dependencies {
     // The circular dependency bug is fixed by renaming modules to avoid multiple :core suffixes
     implementation(project(":common"))
     implementation(project(":did:did-core"))
+    implementation(project(":credentials:credential-api"))
 
     // Kotlinx dependencies for serialization and coroutines
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.datetime)
 
     // Database support (optional, for storage implementations)
     // Uncomment when using database storage:

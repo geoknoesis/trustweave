@@ -1,5 +1,7 @@
 package com.trustweave.did
 
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.validation.DidValidator
 
@@ -29,29 +31,29 @@ interface DidMethod {
      * before processing. The DID must start with "did:{method}:" where {method}
      * matches this method's name. Use [DidValidator.validateFormat] for validation.
      *
-     * @param did The DID string to resolve (should be validated by implementation)
+     * @param did Type-safe DID identifier
      * @return A DidResolutionResult containing the document and metadata
      */
-    suspend fun resolveDid(did: String): DidResolutionResult
+    suspend fun resolveDid(did: Did): DidResolutionResult
 
     /**
      * Updates a DID Document.
      *
-     * @param did The DID to update
+     * @param did Type-safe DID identifier to update
      * @param updater Function that transforms the current document to the new document
      * @return The updated DID Document
      */
     suspend fun updateDid(
-        did: String,
+        did: Did,
         updater: (DidDocument) -> DidDocument
     ): DidDocument
 
     /**
      * Deactivates a DID.
      *
-     * @param did The DID to deactivate
+     * @param did Type-safe DID identifier to deactivate
      * @return true if the DID was successfully deactivated
      */
-    suspend fun deactivateDid(did: String): Boolean
+    suspend fun deactivateDid(did: Did): Boolean
 }
 

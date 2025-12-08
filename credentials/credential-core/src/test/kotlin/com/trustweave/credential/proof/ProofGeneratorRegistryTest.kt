@@ -1,7 +1,7 @@
 package com.trustweave.credential.proof
 
 import com.trustweave.credential.models.Proof
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.AfterEach
@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 import java.util.UUID
+import kotlinx.datetime.Clock
 
 /**
  * Comprehensive tests for ProofGeneratorRegistry API.
@@ -37,7 +38,7 @@ class ProofGeneratorRegistryTest {
             ): Proof {
                 return Proof(
                     type = proofType,
-                    created = java.time.Instant.now().toString(),
+                    created = Clock.System.now().toString(),
                     verificationMethod = "did:key:test#$keyId",
                     proofPurpose = options.proofPurpose,
                     jws = "jws-signature-${UUID.randomUUID()}"
@@ -168,7 +169,7 @@ class ProofGeneratorRegistryTest {
             put("id", "did:key:subject")
             put("name", "John Doe")
         },
-        issuanceDate: String = java.time.Instant.now().toString()
+        issuanceDate: String = Clock.System.now().toString()
     ): VerifiableCredential {
         return VerifiableCredential(
             id = id,

@@ -1,6 +1,6 @@
 package com.trustweave.trust.dsl
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.presentation.PresentationService
 import com.trustweave.credential.proof.Ed25519ProofGenerator
 import com.trustweave.credential.proof.ProofGeneratorRegistry
@@ -9,7 +9,8 @@ import com.trustweave.trust.dsl.credential.presentation
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 import java.util.UUID
 import kotlin.test.*
 
@@ -42,7 +43,7 @@ class PresentationDslTest {
                 id("did:key:holder")
                 "name" to "John Doe"
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val presentation = presentation(presentationService) {
@@ -65,7 +66,7 @@ class PresentationDslTest {
                 id("did:key:holder")
                 "name" to "John Doe"
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val credential2 = credential {
@@ -77,7 +78,7 @@ class PresentationDslTest {
                     "type" to "BachelorDegree"
                 }
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val presentation = presentation(presentationService) {
@@ -97,7 +98,7 @@ class PresentationDslTest {
             subject {
                 id("did:key:holder")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val presentation = presentation(presentationService) {
@@ -118,7 +119,7 @@ class PresentationDslTest {
             subject {
                 id("did:key:holder")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val presentation = presentation(presentationService) {
@@ -139,7 +140,7 @@ class PresentationDslTest {
             subject {
                 id("did:key:holder")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val presentation = presentation(presentationService) {
@@ -170,7 +171,7 @@ class PresentationDslTest {
             subject {
                 id("did:key:holder")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         assertFailsWith<IllegalStateException> {
@@ -192,7 +193,7 @@ class PresentationDslTest {
                 "email" to "john@example.com"
                 "ssn" to "123-45-6789"
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val presentation = presentation(presentationService) {

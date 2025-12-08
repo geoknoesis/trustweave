@@ -4,8 +4,8 @@ import com.trustweave.credential.didcomm.DidCommFactory
 import com.trustweave.credential.didcomm.DidCommService
 import com.trustweave.credential.didcomm.exchange.DidCommExchangeProtocol
 import com.trustweave.credential.exchange.CredentialExchangeProtocol
-import com.trustweave.credential.exchange.spi.CredentialExchangeProtocolProvider
-import com.trustweave.did.DidDocument
+import com.trustweave.credential.spi.exchange.CredentialExchangeProtocolProvider
+import com.trustweave.did.model.DidDocument
 import com.trustweave.kms.KeyManagementService
 
 /**

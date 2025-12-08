@@ -1,6 +1,6 @@
 package com.trustweave.trust.dsl.credential
 
-import com.trustweave.trust.types.CredentialType
+import com.trustweave.credential.model.CredentialType
 
 /**
  * Type-Safe Helpers.

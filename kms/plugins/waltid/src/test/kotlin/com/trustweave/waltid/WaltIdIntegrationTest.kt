@@ -48,9 +48,9 @@ class WaltIdIntegrationTest {
 
         val document = keyMethod!!.createDid()
         assertNotNull(document.id)
-        assertTrue(document.id.startsWith("did:key:"))
+        assertTrue(document.id.value.startsWith("did:key:"))
 
-        val resolutionResult = registry.resolve(document.id)
+        val resolutionResult = registry.resolve(document.id.value)
         assertTrue(resolutionResult is DidResolutionResult.Success)
         val successResult = resolutionResult as DidResolutionResult.Success
         assertEquals(document.id, successResult.document.id)

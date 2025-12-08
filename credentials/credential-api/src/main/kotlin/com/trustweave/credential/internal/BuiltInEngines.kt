@@ -1,9 +1,8 @@
 package com.trustweave.credential.internal
 
 import com.trustweave.credential.format.ProofSuiteId
-import com.trustweave.credential.proof.internal.engines.VcLdProofEngineProvider
-import com.trustweave.credential.proof.internal.engines.SdJwtProofEngineProvider
-import com.trustweave.credential.proof.internal.engines.AnonCredsProofEngineProvider
+import com.trustweave.credential.proof.internal.engines.VcLdProofEngine
+import com.trustweave.credential.proof.internal.engines.SdJwtProofEngine
 import com.trustweave.credential.spi.proof.ProofEngine
 
 /**
@@ -11,14 +10,25 @@ import com.trustweave.credential.spi.proof.ProofEngine
  * 
  * Directly instantiates all built-in proof engines. All proof formats are
  * built-in and always available - no ServiceLoader discovery needed.
+ * 
+ * @param didResolver Optional DID resolver for verification operations
  */
-internal fun createBuiltInEngines(): Map<ProofSuiteId, ProofEngine> {
+internal fun createBuiltInEngines(didResolver: com.trustweave.did.resolver.DidResolver? = null): Map<ProofSuiteId, ProofEngine> {
     val engines = mutableMapOf<ProofSuiteId, ProofEngine>()
     
-    // Directly create all built-in proof engines
-    VcLdProofEngineProvider().create()?.let { engines[it.format] = it }
-    SdJwtProofEngineProvider().create()?.let { engines[it.format] = it }
-    AnonCredsProofEngineProvider().create()?.let { engines[it.format] = it }
+    // Create config with DID resolver if provided
+    val config = if (didResolver != null) {
+        com.trustweave.credential.spi.proof.ProofEngineConfig(didResolver = didResolver)
+    } else {
+        com.trustweave.credential.spi.proof.ProofEngineConfig()
+    }
+    
+    // Directly create all built-in proof engines with config
+    val vcLdEngine = VcLdProofEngine(config)
+    val sdJwtEngine = SdJwtProofEngine(config)
+    
+    engines[vcLdEngine.format] = vcLdEngine
+    engines[sdJwtEngine.format] = sdJwtEngine
     
     return engines
 }

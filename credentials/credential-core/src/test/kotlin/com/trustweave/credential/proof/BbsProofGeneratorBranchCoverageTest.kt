@@ -1,10 +1,11 @@
 package com.trustweave.credential.proof
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import kotlinx.datetime.Clock
 
 /**
  * Branch coverage tests for BbsProofGenerator.
@@ -111,7 +112,7 @@ class BbsProofGeneratorBranchCoverageTest {
             put("name", "John Doe")
             put("email", "john@example.com")
         },
-        issuanceDate: String = java.time.Instant.now().toString()
+        issuanceDate: String = Clock.System.now().toString()
     ): VerifiableCredential {
         return VerifiableCredential(
             id = id,

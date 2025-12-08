@@ -2,8 +2,9 @@ package com.trustweave.godiddy.did
 
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.DidCreationOptions
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.DidMethod
+import com.trustweave.did.identifiers.Did
 import com.trustweave.did.registrar.DidRegistrar
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.resolver.UniversalResolver
@@ -44,12 +45,12 @@ class GodiddyDidMethod(
         )
     }
 
-    override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
-        resolver.resolveDid(did)
+    override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
+        resolver.resolveDid(did.value)
     }
 
     override suspend fun updateDid(
-        did: String,
+        did: Did,
         updater: (DidDocument) -> DidDocument
     ): DidDocument = withContext(Dispatchers.IO) {
         if (registrar == null) {
@@ -59,8 +60,9 @@ class GodiddyDidMethod(
             )
         }
 
+        val didString = did.value
         // First resolve the current document
-        val resolutionResult = resolver.resolveDid(did)
+        val resolutionResult = resolver.resolveDid(didString)
         val currentDocument = when (resolutionResult) {
             is DidResolutionResult.Success -> resolutionResult.document
             else -> throw com.trustweave.did.exception.DidException.DidNotFound(
@@ -76,22 +78,23 @@ class GodiddyDidMethod(
         val updateOptions = com.trustweave.did.registrar.model.UpdateDidOptions(
             methodSpecificOptions = emptyMap()
         )
-        val updateResponse = registrar.updateDid(did, updatedDocument, updateOptions)
+        val updateResponse = registrar.updateDid(didString, updatedDocument, updateOptions)
         // Extract document from response
         updateResponse.didState.didDocument ?: updatedDocument
     }
 
-    override suspend fun deactivateDid(did: String): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun deactivateDid(did: Did): Boolean = withContext(Dispatchers.IO) {
         if (registrar == null) {
             throw com.trustweave.did.exception.DidException.DidMethodNotRegistered(
                 method = method,
                 availableMethods = emptyList()
             )
         }
+        val didString = did.value
         val deactivateOptions = com.trustweave.did.registrar.model.DeactivateDidOptions(
             methodSpecificOptions = emptyMap()
         )
-        val response = registrar.deactivateDid(did, deactivateOptions)
+        val response = registrar.deactivateDid(didString, deactivateOptions)
         response.didState.state == com.trustweave.did.registrar.model.OperationState.FINISHED
     }
 }

@@ -21,11 +21,15 @@ data class GoogleKmsConfig(
     val keyRing: String? = null,
     val credentialsPath: String? = null,
     val credentialsJson: String? = null,
-    val endpoint: String? = null
+    val endpoint: String? = null,
+    val cacheTtlSeconds: Long? = 300 // Default 5 minutes
 ) {
     init {
         require(projectId.isNotBlank()) { "Google Cloud project ID must be specified" }
         require(location.isNotBlank()) { "Google Cloud location must be specified" }
+        require(cacheTtlSeconds == null || cacheTtlSeconds > 0) {
+            "Cache TTL must be positive, got: $cacheTtlSeconds"
+        }
     }
 
     companion object {
@@ -55,6 +59,7 @@ data class GoogleKmsConfig(
                 .location(System.getenv("GOOGLE_CLOUD_LOCATION") ?: "us-east1")
                 .keyRing(System.getenv("GOOGLE_CLOUD_KEY_RING"))
                 .credentialsPath(System.getenv("GOOGLE_APPLICATION_CREDENTIALS"))
+                .cacheTtlSeconds(System.getenv("GOOGLE_CLOUD_KMS_CACHE_TTL_SECONDS")?.toLongOrNull())
                 .build()
         }
 
@@ -78,6 +83,7 @@ data class GoogleKmsConfig(
                 .credentialsPath(options["credentialsPath"] as? String)
                 .credentialsJson(options["credentialsJson"] as? String)
                 .endpoint(options["endpoint"] as? String)
+                .cacheTtlSeconds((options["cacheTtlSeconds"] as? Number)?.toLong())
                 .build()
         }
     }
@@ -92,6 +98,7 @@ data class GoogleKmsConfig(
         private var credentialsPath: String? = null
         private var credentialsJson: String? = null
         private var endpoint: String? = null
+        private var cacheTtlSeconds: Long? = 300
 
         fun projectId(projectId: String): Builder {
             this.projectId = projectId
@@ -123,6 +130,11 @@ data class GoogleKmsConfig(
             return this
         }
 
+        fun cacheTtlSeconds(cacheTtlSeconds: Long?): Builder {
+            this.cacheTtlSeconds = cacheTtlSeconds
+            return this
+        }
+
         fun build(): GoogleKmsConfig {
             val projectId = this.projectId ?: throw IllegalArgumentException("Google Cloud project ID is required")
             val location = this.location ?: throw IllegalArgumentException("Google Cloud location is required")
@@ -132,7 +144,8 @@ data class GoogleKmsConfig(
                 keyRing = keyRing,
                 credentialsPath = credentialsPath,
                 credentialsJson = credentialsJson,
-                endpoint = endpoint
+                endpoint = endpoint,
+                cacheTtlSeconds = cacheTtlSeconds
             )
         }
     }

@@ -3,7 +3,7 @@ package com.trustweave.credential.didcomm
 import com.trustweave.credential.didcomm.models.DidCommMessage
 import com.trustweave.credential.didcomm.packing.DidCommPacker
 import com.trustweave.credential.didcomm.storage.DidCommMessageStorage
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

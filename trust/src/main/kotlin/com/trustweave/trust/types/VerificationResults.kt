@@ -1,9 +1,10 @@
 package com.trustweave.trust.types
 
-import com.trustweave.credential.CredentialVerificationResult
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.did.DidDocument
-import java.time.Instant
+import com.trustweave.credential.results.VerificationResult as CredentialVerificationResult
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.identifiers.Did
+import kotlinx.datetime.Instant
 
 /**
  * Sealed result types for credential verification.
@@ -162,11 +163,11 @@ sealed class VerificationResult {
                 }
                 is CredentialVerificationResult.Invalid.InvalidIssuer -> {
                     val issuerDid = try {
-                        Did(result.issuerDid)
+                        Did(result.issuerIri.value)
                     } catch (e: Exception) {
                         return Invalid.Other(
                             credential = credential,
-                            reason = "Invalid issuer DID format: ${result.issuerDid}",
+                            reason = "Invalid issuer IRI format: ${result.issuerIri.value}",
                             errors = result.errors
                         )
                     }
@@ -178,19 +179,11 @@ sealed class VerificationResult {
                     )
                 }
                 is CredentialVerificationResult.Invalid.UntrustedIssuer -> {
-                    val issuerDid = try {
-                        Did(result.issuerDid)
-                    } catch (e: Exception) {
-                        return Invalid.Other(
-                            credential = credential,
-                            reason = "Invalid issuer DID format: ${result.issuerDid}",
-                            errors = result.errors
-                        )
-                    }
+                    val issuerDid = result.issuerDid
                     Invalid.UntrustedIssuer(
                         credential = credential,
                         issuer = issuerDid,
-                        credentialType = credential.type.firstOrNull(),
+                        credentialType = credential.type.firstOrNull()?.value,
                         errors = result.errors
                     )
                 }
@@ -200,33 +193,29 @@ sealed class VerificationResult {
                         errors = result.errors
                     )
                 }
-                is CredentialVerificationResult.Invalid.InvalidBlockchainAnchor -> {
-                    Invalid.Other(
-                        credential = credential,
-                        reason = result.reason,
-                        errors = result.errors
-                    )
-                }
-                is CredentialVerificationResult.Invalid.InvalidProofPurpose -> {
-                    Invalid.Other(
-                        credential = credential,
-                        reason = "Invalid proof purpose: ${result.requiredPurpose}",
-                        errors = result.errors
-                    )
-                }
-                is CredentialVerificationResult.Invalid.InvalidDelegation -> {
-                    Invalid.Other(
-                        credential = credential,
-                        reason = result.reason,
-                        errors = result.errors
-                    )
-                }
+                // Note: InvalidBlockchainAnchor, InvalidProofPurpose, InvalidDelegation 
+                // are not in credential-api, so we map them to Other
+                // These may have been removed or consolidated into other error types
                 is CredentialVerificationResult.Invalid.MultipleFailures -> {
                     // Convert the errors to a list of Invalid types if needed
                     // For now, just create an Other with all errors
                     Invalid.Other(
                         credential = credential,
                         reason = result.errors.firstOrNull() ?: "Multiple verification failures",
+                        errors = result.errors
+                    )
+                }
+                is CredentialVerificationResult.Invalid.NotYetValid -> {
+                    Invalid.Other(
+                        credential = credential,
+                        reason = "Credential not yet valid. Valid from: ${result.validFrom}",
+                        errors = result.errors
+                    )
+                }
+                is CredentialVerificationResult.Invalid.UnsupportedFormat -> {
+                    Invalid.Other(
+                        credential = credential,
+                        reason = "Unsupported format: ${result.format.value}",
                         errors = result.errors
                     )
                 }

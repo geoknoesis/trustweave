@@ -2,10 +2,14 @@ package com.trustweave.jwkdid
 
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.VerificationMethod
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.base.AbstractDidMethod
 import com.trustweave.did.base.DidMethodUtils
 import com.trustweave.kms.KeyManagementService
+import com.trustweave.kms.results.GenerateKeyResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -44,7 +48,23 @@ class JwkDidMethod(
         try {
             // Generate key using KMS
             val algorithm = options.algorithm.algorithmName
-            val keyHandle = kms.generateKey(algorithm, options.additionalProperties)
+            val generateResult = kms.generateKey(algorithm, options.additionalProperties)
+            val keyHandle = when (generateResult) {
+                is GenerateKeyResult.Success -> generateResult.keyHandle
+                is GenerateKeyResult.Failure.UnsupportedAlgorithm -> throw TrustWeaveException.Unknown(
+                    code = "UNSUPPORTED_ALGORITHM",
+                    message = generateResult.reason ?: "Algorithm not supported"
+                )
+                is GenerateKeyResult.Failure.InvalidOptions -> throw TrustWeaveException.Unknown(
+                    code = "INVALID_OPTIONS",
+                    message = generateResult.reason
+                )
+                is GenerateKeyResult.Failure.Error -> throw TrustWeaveException.Unknown(
+                    code = "KEY_GENERATION_ERROR",
+                    message = generateResult.reason,
+                    cause = generateResult.cause
+                )
+            }
 
             // Get JWK from key handle
             val jwk = keyHandle.publicKeyJwk
@@ -100,9 +120,9 @@ class JwkDidMethod(
             val document = DidMethodUtils.buildDidDocument(
                 did = did,
                 verificationMethod = listOf(verificationMethod),
-                authentication = listOf(verificationMethod.id),
-                assertionMethod = if (options.purposes.contains(DidCreationOptions.KeyPurpose.ASSERTION)) {
-                    listOf(verificationMethod.id)
+                authentication = listOf(verificationMethod.id.value),
+                assertionMethod = if (options.purposes.contains(KeyPurpose.ASSERTION)) {
+                    listOf(verificationMethod.id.value)
                 } else null
             )
 
@@ -123,12 +143,13 @@ class JwkDidMethod(
         }
     }
 
-    override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
+    override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
 
+            val didString = did.value
             // Extract base64url-encoded JWK from DID
-            val base64urlEncoded = did.substringAfter("did:jwk:")
+            val base64urlEncoded = didString.substringAfter("did:jwk:")
 
             // Decode base64url to get JWK JSON string
             val jwkString = try {
@@ -191,7 +212,7 @@ class JwkDidMethod(
 
             // For did:jwk, we can derive the document from the JWK
             // Build a minimal DID document from the JWK
-            val verificationMethodId = "$did#0"
+            val verificationMethodId = "$didString#0"
             val verificationMethodType = when (jwk["kty"]) {
                 "OKP" -> when (jwk["crv"]) {
                     "Ed25519" -> "Ed25519VerificationKey2020"
@@ -203,34 +224,36 @@ class JwkDidMethod(
             }
 
             val verificationMethod = VerificationMethod(
-                id = verificationMethodId,
+                id = com.trustweave.did.identifiers.VerificationMethodId.parse(verificationMethodId, Did(didString)),
                 type = verificationMethodType,
-                controller = did,
+                controller = Did(didString),
                 publicKeyJwk = jwk as Map<String, Any?>
             )
 
             val document = DidMethodUtils.buildDidDocument(
-                did = did,
+                did = didString,
                 verificationMethod = listOf(verificationMethod),
                 authentication = listOf(verificationMethodId),
                 assertionMethod = listOf(verificationMethodId)
             )
 
             // Store for caching
-            storeDocument(document.id, document)
+            storeDocument(document.id.value, document)
 
             DidMethodUtils.createSuccessResolutionResult(document, method)
         } catch (e: TrustWeaveException) {
             DidMethodUtils.createErrorResolutionResult(
                 "invalidDid",
                 e.message,
-                method
+                method,
+                did.value
             )
         } catch (e: Exception) {
             DidMethodUtils.createErrorResolutionResult(
                 "invalidDid",
                 e.message,
-                method
+                method,
+                did.value
             )
         }
     }

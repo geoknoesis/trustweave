@@ -2,6 +2,7 @@ package com.trustweave.credential
 
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import kotlinx.datetime.Clock
 
 /**
  * Comprehensive tests for CredentialIssuanceOptions, CredentialVerificationOptions, PresentationOptions.
@@ -152,14 +153,14 @@ class CredentialOptionsTest {
 
     @Test
     fun `test CredentialVerificationResult`() {
-        val credential = com.trustweave.credential.models.VerifiableCredential(
+        val credential = com.trustweave.credential.model.vc.VerifiableCredential(
             id = "test-credential",
             type = listOf("VerifiableCredential"),
             issuer = "did:key:issuer",
             credentialSubject = kotlinx.serialization.json.buildJsonObject {
                 put("id", kotlinx.serialization.json.JsonPrimitive("did:key:subject"))
             },
-            issuanceDate = java.time.Instant.now().toString()
+            issuanceDate = Clock.System.now().toString()
         )
         val result = CredentialVerificationResult.Valid(
             credential = credential,
@@ -174,7 +175,7 @@ class CredentialOptionsTest {
         // Test invalid case
         val invalidResult = CredentialVerificationResult.Invalid.Expired(
             credential = credential,
-            expiredAt = java.time.Instant.now(),
+            expiredAt = Clock.System.now(),
             errors = listOf("Expired")
         )
         assertFalse(invalidResult.isValid)
@@ -184,14 +185,14 @@ class CredentialOptionsTest {
 
     @Test
     fun `test PresentationVerificationResult`() {
-        val credential = com.trustweave.credential.models.VerifiableCredential(
+        val credential = com.trustweave.credential.model.vc.VerifiableCredential(
             id = "test-credential",
             type = listOf("VerifiableCredential"),
             issuer = "did:key:issuer",
             credentialSubject = kotlinx.serialization.json.buildJsonObject {
                 put("id", kotlinx.serialization.json.JsonPrimitive("did:key:subject"))
             },
-            issuanceDate = java.time.Instant.now().toString()
+            issuanceDate = Clock.System.now().toString()
         )
         val credentialResult = CredentialVerificationResult.Valid(credential)
         val result = PresentationVerificationResult(

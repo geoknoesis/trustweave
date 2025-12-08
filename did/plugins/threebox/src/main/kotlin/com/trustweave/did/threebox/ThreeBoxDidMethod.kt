@@ -2,6 +2,8 @@ package com.trustweave.did.threebox
 
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.base.AbstractDidMethod
 import com.trustweave.kms.KeyManagementService
@@ -48,10 +50,10 @@ class ThreeBoxDidMethod(
         )
     }
 
-    override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
-        require(did.startsWith("did:3:")) {
-            "Invalid did:3 format: $did"
-        }
+    override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
+        validateDidFormat(did)
+        
+        val didString = did.value
 
         // TODO: Implement 3Box/Identity DID resolution
         // 1. Extract IPFS hash from DID

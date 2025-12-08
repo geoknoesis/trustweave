@@ -1,12 +1,17 @@
 package com.trustweave.did.base
 
-import com.trustweave.core.types.Did
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
 import com.trustweave.did.*
-import com.trustweave.did.VerificationMethod
-import com.trustweave.did.DidService
+import com.trustweave.did.KeyAlgorithm
+import com.trustweave.did.model.VerificationMethod
+import com.trustweave.did.model.DidService
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.DidDocumentMetadata
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.kms.KeyHandle
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 
 /**
  * Common utilities for DID method implementations.
@@ -76,7 +81,7 @@ object DidMethodUtils {
      * @param algorithm The KeyAlgorithm enum value
      * @return Verification method type
      */
-    fun algorithmToVerificationMethodType(algorithm: DidCreationOptions.KeyAlgorithm): String {
+    fun algorithmToVerificationMethodType(algorithm: KeyAlgorithm): String {
         return algorithmToVerificationMethodType(algorithm.algorithmName)
     }
 
@@ -95,13 +100,16 @@ object DidMethodUtils {
         algorithm: String,
         controller: String? = null
     ): VerificationMethod {
-        val verificationMethodId = "$did#${keyHandle.id}"
+        val didObj = Did(did)
+        val verificationMethodIdStr = "$did#${keyHandle.id.value}"
+        val verificationMethodId = VerificationMethodId.parse(verificationMethodIdStr, didObj)
         val verificationMethodType = algorithmToVerificationMethodType(algorithm)
+        val controllerDid = if (controller != null) Did(controller) else didObj
 
         return VerificationMethod(
             id = verificationMethodId,
             type = verificationMethodType,
-            controller = controller ?: did,
+            controller = controllerDid,
             publicKeyJwk = keyHandle.publicKeyJwk,
             publicKeyMultibase = keyHandle.publicKeyMultibase
         )
@@ -119,7 +127,7 @@ object DidMethodUtils {
     fun createVerificationMethod(
         did: String,
         keyHandle: KeyHandle,
-        algorithm: DidCreationOptions.KeyAlgorithm,
+        algorithm: KeyAlgorithm,
         controller: String? = null
     ): VerificationMethod {
         return createVerificationMethod(did, keyHandle, algorithm.algorithmName, controller)
@@ -146,15 +154,18 @@ object DidMethodUtils {
     ): DidDocument {
         require(verificationMethod.isNotEmpty()) { "DID document must have at least one verification method" }
 
+        val didObj = Did(did)
         val defaultAuth = listOf(verificationMethod.first().id)
-        val auth = authentication ?: defaultAuth
+        val auth = authentication?.map { VerificationMethodId.parse(it, didObj) } ?: defaultAuth
+        val assertion = assertionMethod?.map { VerificationMethodId.parse(it, didObj) } ?: emptyList()
+        val keyAgr = keyAgreement?.map { VerificationMethodId.parse(it, didObj) } ?: emptyList()
 
         return DidDocument(
-            id = did,
+            id = didObj,
             verificationMethod = verificationMethod,
             authentication = auth,
-            assertionMethod = assertionMethod ?: emptyList(),
-            keyAgreement = keyAgreement ?: emptyList(),
+            assertionMethod = assertion,
+            keyAgreement = keyAgr,
             service = service ?: emptyList()
         )
     }
@@ -174,7 +185,7 @@ object DidMethodUtils {
         created: Instant? = null,
         updated: Instant? = null
     ): DidResolutionResult {
-        val now = Instant.now()
+        val now = Clock.System.now()
         return DidResolutionResult.Success(
             document = document,
             documentMetadata = DidDocumentMetadata(

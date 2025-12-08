@@ -1,26 +1,38 @@
 package com.trustweave.kms.utimaco
 
-import com.trustweave.core.exception.TrustWeaveException
-import com.trustweave.core.types.KeyId
+import com.trustweave.core.identifiers.KeyId
 import com.trustweave.kms.Algorithm
-import com.trustweave.kms.KeyHandle
 import com.trustweave.kms.KeyManagementService
-import com.trustweave.kms.KeyNotFoundException
-import com.trustweave.kms.UnsupportedAlgorithmException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.trustweave.kms.results.DeleteKeyResult
+import com.trustweave.kms.results.GenerateKeyResult
+import com.trustweave.kms.results.GetPublicKeyResult
+import com.trustweave.kms.results.SignResult
 
 /**
  * Utimaco HSM implementation of KeyManagementService.
  *
- * Supports all Utimaco HSM-compatible algorithms.
+ * **⚠️ EXPERIMENTAL - NOT YET IMPLEMENTED ⚠️**
  *
- * **Note:** This is a placeholder implementation. Utimaco HSM integration
- * requires access to Utimaco SDK and HSM access.
+ * This plugin is a placeholder and will throw [UnsupportedOperationException] if used.
+ * Utimaco HSM integration requires access to Utimaco SDK and HSM access.
+ *
+ * **Status**: Implementation pending.
+ *
+ * **Supported Algorithms** (when implemented):
+ * - Ed25519, secp256k1, P-256, P-384, P-521
+ * - RSA-2048, RSA-3072, RSA-4096
  */
 class UtimacoKeyManagementService(
     private val config: UtimacoKmsConfig
 ) : KeyManagementService {
+
+    init {
+        throw UnsupportedOperationException(
+            "Utimaco KMS plugin is not yet implemented. " +
+            "This plugin requires Utimaco SDK and HSM access. " +
+            "See https://github.com/trustweave/trustweave/issues for implementation status."
+        )
+    }
 
     companion object {
         val SUPPORTED_ALGORITHMS = setOf(
@@ -40,40 +52,24 @@ class UtimacoKeyManagementService(
     override suspend fun generateKey(
         algorithm: Algorithm,
         options: Map<String, Any?>
-    ): KeyHandle = withContext(Dispatchers.IO) {
-        if (!supportsAlgorithm(algorithm)) {
-            throw UnsupportedAlgorithmException(
-                "Algorithm '${algorithm.name}' is not supported by Utimaco HSM. " +
-                "Supported: ${SUPPORTED_ALGORITHMS.joinToString(", ") { it.name }}"
-            )
-        }
-        // TODO: Implement Utimaco HSM API integration
-        throw TrustWeaveException.Unknown(
-            message = "Utimaco HSM integration not yet implemented"
-        )
+    ): GenerateKeyResult {
+        throw UnsupportedOperationException("Utimaco KMS plugin is not yet implemented")
     }
 
-    override suspend fun getPublicKey(keyId: KeyId): KeyHandle = withContext(Dispatchers.IO) {
-        // TODO: Implement Utimaco HSM API integration
-        throw TrustWeaveException.Unknown(
-            message = "Utimaco HSM integration not yet implemented"
-        )
+    override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult {
+        throw UnsupportedOperationException("Utimaco KMS plugin is not yet implemented")
     }
 
     override suspend fun sign(
         keyId: KeyId,
         data: ByteArray,
         algorithm: Algorithm?
-    ): ByteArray = withContext(Dispatchers.IO) {
-        // TODO: Implement Utimaco HSM API integration
-        throw TrustWeaveException.Unknown(
-            message = "Utimaco HSM integration not yet implemented"
-        )
+    ): SignResult {
+        throw UnsupportedOperationException("Utimaco KMS plugin is not yet implemented")
     }
 
-    override suspend fun deleteKey(keyId: KeyId): Boolean = withContext(Dispatchers.IO) {
-        // TODO: Implement Utimaco HSM API integration
-        false
+    override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult {
+        throw UnsupportedOperationException("Utimaco KMS plugin is not yet implemented")
     }
 }
 

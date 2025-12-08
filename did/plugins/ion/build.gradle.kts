@@ -6,7 +6,7 @@ plugins {
 group = "com.trustweave.did"
 dependencies {
     implementation(project(":common"))
-    implementation(project(":credentials:credential-core"))
+    implementation(project(":credentials:credential-api"))
     implementation(project(":did:did-core"))
     implementation(project(":did:plugins:base"))
     implementation(project(":anchors:anchor-core"))

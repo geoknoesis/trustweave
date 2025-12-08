@@ -1,15 +1,20 @@
 package com.trustweave.did
 
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.DidDocumentMetadata
+import com.trustweave.did.model.VerificationMethod
+import com.trustweave.did.resolver.DidResolutionResult
+import com.trustweave.did.registry.DidMethodRegistry
+import com.trustweave.did.registry.DefaultDidMethodRegistry
 import kotlinx.coroutines.runBlocking
 import com.trustweave.did.DidCreationOptions
 import com.trustweave.did.didCreationOptions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
-import java.time.Instant
-import com.trustweave.did.resolver.DidResolutionResult
-import com.trustweave.did.registry.DidMethodRegistry
-import com.trustweave.did.registry.DefaultDidMethodRegistry
+import kotlinx.datetime.Instant
 
 /**
  * Comprehensive edge case tests for DidMethod interface and DidRegistry.
@@ -30,7 +35,7 @@ class DidMethodEdgeCasesTest {
         val doc = method.createDid()
 
         assertNotNull(doc)
-        assertTrue(doc.id.startsWith("did:test:"))
+        assertTrue(doc.id.value.startsWith("did:test:"))
     }
 
     @Test
@@ -39,7 +44,7 @@ class DidMethodEdgeCasesTest {
 
         val doc = method.createDid(
             didCreationOptions {
-                algorithm = DidCreationOptions.KeyAlgorithm.ED25519
+                algorithm = KeyAlgorithm.ED25519
                 property("keyId", "key-123")
             }
         )
@@ -51,12 +56,12 @@ class DidMethodEdgeCasesTest {
     fun `test DidMethod resolveDid with valid DID`() = runBlocking {
         val method = createMockDidMethod("test")
 
-        val result = method.resolveDid("did:test:123")
+        val result = method.resolveDid(Did("did:test:123"))
 
         assertNotNull(result)
         assertTrue(result is DidResolutionResult.Success)
         assertNotNull(result.document)
-        assertEquals("did:test:123", result.document.id)
+        assertEquals("did:test:123", result.document.id.value)
     }
 
     @Test
@@ -65,20 +70,20 @@ class DidMethodEdgeCasesTest {
 
         // Should handle gracefully or throw
         try {
-            val result = method.resolveDid("invalid-did")
+            val result = method.resolveDid(Did("invalid-did"))
             assertNotNull(result)
         } catch (_: IllegalArgumentException) {
-            // expected path
+            // expected path - Did constructor validates format
         }
     }
 
     @Test
     fun `test DidMethod updateDid`() = runBlocking {
         val method = createMockDidMethod("test")
-        val originalDoc = DidDocument(id = "did:test:123")
+        val originalDoc = DidDocument(id = Did("did:test:123"))
 
-        val updated = method.updateDid("did:test:123") { doc ->
-            doc.copy(alsoKnownAs = listOf("did:web:example.com"))
+        val updated = method.updateDid(Did("did:test:123")) { doc ->
+            doc.copy(alsoKnownAs = listOf(Did("did:web:example.com")))
         }
 
         assertNotNull(updated)
@@ -88,16 +93,17 @@ class DidMethodEdgeCasesTest {
     @Test
     fun `test DidMethod updateDid with complex updater`() = runBlocking {
         val method = createMockDidMethod("test")
+        val did = Did("did:test:123")
         val vm = VerificationMethod(
-            id = "did:test:123#key-1",
+            id = VerificationMethodId.parse("did:test:123#key-1"),
             type = "Ed25519VerificationKey2020",
-            controller = "did:test:123"
+            controller = did
         )
 
-        val updated = method.updateDid("did:test:123") { doc ->
+        val updated = method.updateDid(Did("did:test:123")) { doc ->
             doc.copy(
                 verificationMethod = listOf(vm),
-                authentication = listOf("did:test:123#key-1")
+                authentication = listOf(VerificationMethodId.parse("did:test:123#key-1"))
             )
         }
 
@@ -109,7 +115,7 @@ class DidMethodEdgeCasesTest {
     fun `test DidMethod deactivateDid`() = runBlocking {
         val method = createMockDidMethod("test")
 
-        val result = method.deactivateDid("did:test:123")
+        val result = method.deactivateDid(Did("did:test:123"))
 
         assertTrue(result)
     }
@@ -120,7 +126,7 @@ class DidMethodEdgeCasesTest {
 
         // May return false or throw
         try {
-            val result = method.deactivateDid("did:test:nonexistent")
+            val result = method.deactivateDid(Did("did:test:nonexistent"))
             assertNotNull(result) // Boolean value
         } catch (e: Exception) {
             assertTrue(true) // Exception is acceptable
@@ -155,19 +161,19 @@ class DidMethodEdgeCasesTest {
         val method = object : DidMethod {
             override val method = "test"
 
-            override suspend fun createDid(options: DidCreationOptions) = DidDocument(id = "did:test:123")
+            override suspend fun createDid(options: DidCreationOptions) = DidDocument(id = Did("did:test:123"))
 
-            override suspend fun resolveDid(did: String) = DidResolutionResult.Success(
+            override suspend fun resolveDid(did: Did) = DidResolutionResult.Success(
                 document = DidDocument(id = did),
                 documentMetadata = DidDocumentMetadata(
-                    created = Instant.parse("2024-01-01T00:00:00Z"),
-                    updated = Instant.parse("2024-01-02T00:00:00Z")
+                    created = kotlinx.datetime.Instant.parse("2024-01-01T00:00:00Z"),
+                    updated = kotlinx.datetime.Instant.parse("2024-01-02T00:00:00Z")
                 ),
                 resolutionMetadata = mapOf("duration" to 100L, "cached" to false)
             )
 
-            override suspend fun updateDid(did: String, updater: (DidDocument) -> DidDocument) = DidDocument(id = did)
-            override suspend fun deactivateDid(did: String) = true
+            override suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument) = DidDocument(id = did)
+            override suspend fun deactivateDid(did: Did) = true
         }
 
         registry.register(method)
@@ -186,16 +192,16 @@ class DidMethodEdgeCasesTest {
         val method = object : DidMethod {
             override val method = "test"
 
-            override suspend fun createDid(options: DidCreationOptions) = DidDocument(id = "did:test:123")
+            override suspend fun createDid(options: DidCreationOptions) = DidDocument(id = Did("did:test:123"))
 
-            override suspend fun resolveDid(did: String) = DidResolutionResult.Failure.NotFound(
-                did = com.trustweave.core.types.Did(did),
+            override suspend fun resolveDid(did: Did) = DidResolutionResult.Failure.NotFound(
+                did = did,
                 reason = "notFound",
                 resolutionMetadata = mapOf("error" to "notFound")
             )
 
-            override suspend fun updateDid(did: String, updater: (DidDocument) -> DidDocument) = DidDocument(id = did)
-            override suspend fun deactivateDid(did: String) = true
+            override suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument) = DidDocument(id = did)
+            override suspend fun deactivateDid(did: Did) = true
         }
 
         registry.register(method)
@@ -249,19 +255,19 @@ class DidMethodEdgeCasesTest {
 
             override suspend fun createDid(options: DidCreationOptions): DidDocument {
                 val keyId = options.additionalProperties["keyId"] as? String ?: "123"
-                return DidDocument(id = "did:$methodName:$keyId")
+                return DidDocument(id = Did("did:$methodName:$keyId"))
             }
 
-            override suspend fun resolveDid(did: String) = DidResolutionResult.Success(
+            override suspend fun resolveDid(did: Did) = DidResolutionResult.Success(
                 document = DidDocument(id = did)
             )
 
-            override suspend fun updateDid(did: String, updater: (DidDocument) -> DidDocument): DidDocument {
+            override suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument): DidDocument {
                 val current = DidDocument(id = did)
                 return updater(current)
             }
 
-            override suspend fun deactivateDid(did: String) = did.startsWith("did:$methodName:")
+            override suspend fun deactivateDid(did: Did) = did.value.startsWith("did:$methodName:")
         }
     }
 }

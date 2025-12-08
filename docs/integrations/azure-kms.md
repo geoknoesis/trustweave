@@ -22,11 +22,12 @@ Add the Azure Key Vault module to your dependencies:
 
 ```kotlin
 dependencies {
+    // Only need to add the Azure KMS plugin - core dependencies are included transitively
     implementation("com.trustweave.kms:azure:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 }
 ```
+
+**Note:** The Azure KMS plugin automatically includes `trustweave-kms` and `trustweave-common` as transitive dependencies, so you don't need to declare them explicitly.
 
 ## Configuration
 
@@ -36,14 +37,9 @@ The Azure Key Vault provider can be configured via options map or environment va
 
 ```kotlin
 import com.trustweave.kms.*
-import java.util.ServiceLoader
 
-// Discover Azure provider
-val providers = ServiceLoader.load(KeyManagementServiceProvider::class.java)
-val azureProvider = providers.find { it.name == "azure" }
-
-// Create KMS with explicit configuration
-val kms = azureProvider?.create(mapOf(
+// Simple factory API - no ServiceLoader needed!
+val kms = KeyManagementServices.create("azure", mapOf(
     "vaultUrl" to "https://myvault.vault.azure.net"
 ))
 ```
@@ -169,28 +165,39 @@ if (kms?.supportsAlgorithm(Algorithm.P256) == true) {
 
 ```kotlin
 import com.trustweave.kms.*
+import com.trustweave.kms.KmsOptionKeys
+import com.trustweave.kms.results.*
 
 // Generate P-256 key
-val key = kms.generateKey(Algorithm.P256)
+val result = kms.generateKey(Algorithm.P256)
+when (result) {
+    is GenerateKeyResult.Success -> {
+        val keyHandle = result.keyHandle
+        println("Key created: ${keyHandle.id}")
+    }
+    is GenerateKeyResult.Failure -> {
+        println("Error: ${result.reason}")
+    }
+}
 
 // Generate key with custom name and tags
-val keyWithTags = kms.generateKey(
+val keyWithTagsResult = kms.generateKey(
     algorithm = Algorithm.P256,
     options = mapOf(
-        "keyName" to "issuer-key-2025",
-        "tags" to mapOf(
+        KmsOptionKeys.KEY_ID to "issuer-key-2025",
+        KmsOptionKeys.DESCRIPTION to "Issuer key for 2025",
+        KmsOptionKeys.TAGS to mapOf(
             "environment" to "production",
             "purpose" to "issuance"
-        ),
-        "enabled" to true
+        )
     )
 )
 
 // Generate P-256 key for FIPS compliance
-val fipsKey = kms.generateKey(
+val fipsKeyResult = kms.generateKey(
     algorithm = Algorithm.P256,
     options = mapOf(
-        "keyName" to "fips-compliant-key"
+        KmsOptionKeys.KEY_ID to "fips-compliant-key"
     )
 )
 ```
@@ -199,22 +206,31 @@ val fipsKey = kms.generateKey(
 
 ```kotlin
 // Sign with key name (KeyId value class)
-val signature = kms.sign(KeyId(keyId), data.toByteArray())
+val sign = kms.sign(KeyId(keyId), data.toByteArray())
+when (sign) {
+    is SignResult.Success -> {
+        val signature = sign.signature
+        // Use signature
+    }
+    is SignResult.Failure -> {
+        println("Error: ${sign.reason}")
+    }
+}
 
 // Sign with full key URL
-val signature = kms.sign(
+val sign = kms.sign(
     KeyId("https://myvault.vault.azure.net/keys/mykey"),
     data.toByteArray()
 )
 
 // Sign with key name and version
-val signature = kms.sign(
+val sign = kms.sign(
     KeyId("mykey/abc123def456"),
     data.toByteArray()
 )
 
 // Sign with algorithm override
-val signature = kms.sign(
+val sign = kms.sign(
     keyId = KeyId(keyId),
     data = data.toByteArray(),
     algorithm = Algorithm.P256
@@ -225,26 +241,38 @@ val signature = kms.sign(
 
 ```kotlin
 // Get public key by key name (KeyId value class)
-val publicKey = kms.getPublicKey(KeyId("mykey"))
+val publicKeyResult = kms.getPublicKey(KeyId("mykey"))
+when (publicKeyResult) {
+    is GetPublicKeyResult.Success -> {
+        val publicKey = publicKeyResult.keyHandle
+        // Access JWK format
+        val jwk = publicKey.publicKeyJwk
+        println("Public key JWK: $jwk")
+    }
+    is GetPublicKeyResult.Failure -> {
+        println("Error: ${publicKeyResult.reason}")
+    }
+}
 
 // Get public key by full URL
-val publicKey = kms.getPublicKey(
+val publicKeyResult = kms.getPublicKey(
     KeyId("https://myvault.vault.azure.net/keys/mykey")
 )
 
 // Get public key by name and version
-val publicKey = kms.getPublicKey(KeyId("mykey/abc123def456"))
-
-// Access JWK format
-val jwk = publicKey.publicKeyJwk
-println("Public key JWK: $jwk")
+val publicKeyResult = kms.getPublicKey(KeyId("mykey/abc123def456"))
 ```
 
 ### Key Deletion
 
 ```kotlin
 // Schedule key deletion (soft delete)
-val deleted = kms.deleteKey(KeyId(keyId))
+val deleteResult = kms.deleteKey(KeyId(keyId))
+when (deleteResult) {
+    is DeleteKeyResult.Deleted -> println("Key deleted")
+    is DeleteKeyResult.NotFound -> println("Key not found (already deleted)")
+    is DeleteKeyResult.Failure.Error -> println("Error: ${deleteResult.reason}")
+}
 
 // Note: Azure Key Vault uses soft delete by default
 // Keys are recoverable for a retention period (default 90 days)
@@ -275,22 +303,29 @@ Azure Key Vault uses key versions. When you create a key, a version is automatic
 The plugin maps Azure Key Vault exceptions to TrustWeave exceptions:
 
 ```kotlin
-try {
-    val key = kms.generateKey(Algorithm.P256)
-} catch (e: UnsupportedAlgorithmException) {
-    println("Algorithm not supported: ${e.message}")
-} catch (e: KeyNotFoundException) {
-    println("Key not found: ${e.message}")
-} catch (e: TrustWeaveException) {
-    when {
-        e.message?.contains("Access denied") == true -> {
-            println("Check Azure RBAC permissions")
-        }
-        e.message?.contains("Key not found") == true -> {
-            println("Key does not exist")
-        }
-        else -> {
-            println("Error: ${e.message}")
+val result = kms.generateKey(Algorithm.P256)
+when (result) {
+    is GenerateKeyResult.Success -> {
+        val keyHandle = result.keyHandle
+        // Use key handle
+    }
+    is GenerateKeyResult.Failure.UnsupportedAlgorithm -> {
+        println("Algorithm not supported: ${result.algorithm.name}")
+    }
+    is GenerateKeyResult.Failure.InvalidOptions -> {
+        println("Invalid options: ${result.reason}")
+    }
+    is GenerateKeyResult.Failure.Error -> {
+        when {
+            result.reason.contains("Access denied", ignoreCase = true) -> {
+                println("Check Azure RBAC permissions")
+            }
+            result.reason.contains("Key not found", ignoreCase = true) -> {
+                println("Key does not exist")
+            }
+            else -> {
+                println("Error: ${result.reason}")
+            }
         }
     }
 }
@@ -447,16 +482,25 @@ Create a new key version when rotating:
 ```kotlin
 // Step 1: Create new key version (Azure Key Vault doesn't support this directly via API)
 // Instead, create a new key with a new name
-val newKey = kms.generateKey(
+val newKeyResult = kms.generateKey(
     algorithm = Algorithm.P256,
     options = mapOf(
-        "keyName" to "issuer-key-v2",
-        "tags" to mapOf(
+        KmsOptionKeys.KEY_ID to "issuer-key-v2",
+        KmsOptionKeys.TAGS to mapOf(
             "version" to "2",
             "rotated" to "2025-01-15"
         )
     )
 )
+when (newKeyResult) {
+    is GenerateKeyResult.Success -> {
+        val newKeyHandle = newKeyResult.keyHandle
+        // Continue with rotation steps...
+    }
+    is GenerateKeyResult.Failure -> {
+        // Handle error
+    }
+}
 
 // Step 2: Update DID document (see key-rotation.md)
 // Step 3: Switch issuance to new key
@@ -470,15 +514,15 @@ Use different key names for each rotation:
 
 ```kotlin
 // Create initial key
-val key1 = kms.generateKey(
+val key1Result = kms.generateKey(
     algorithm = Algorithm.P256,
-    options = mapOf("keyName" to "issuer-key-v1")
+    options = mapOf(KmsOptionKeys.KEY_ID to "issuer-key-v1")
 )
 
 // Later, create rotated key
-val key2 = kms.generateKey(
+val key2Result = kms.generateKey(
     algorithm = Algorithm.P256,
-    options = mapOf("keyName" to "issuer-key-v2")
+    options = mapOf(KmsOptionKeys.KEY_ID to "issuer-key-v2")
 )
 
 // Update your application to use key2

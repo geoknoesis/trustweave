@@ -4,7 +4,7 @@ import com.trustweave.credential.CredentialVerificationOptions
 import com.trustweave.credential.CredentialVerificationResult
 import com.trustweave.did.resolver.DidResolver
 import com.trustweave.did.resolver.DidResolutionResult
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.schema.SchemaRegistry
 import com.trustweave.credential.proof.ProofValidator
 import com.trustweave.credential.verifier.SignatureVerifier
@@ -12,7 +12,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
 import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
 
@@ -86,9 +87,17 @@ class CredentialVerifier(
             } else {
                 try {
                     val proofValidator = ProofValidator(didResolver)
+                    val (proofPurpose, verificationMethod) = when (val proof = credential.proof) {
+                        is com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof -> {
+                            proof.proofPurpose to proof.verificationMethod
+                        }
+                        else -> {
+                            "assertionMethod" to "" // Default for non-LinkedDataProof
+                        }
+                    }
                     val purposeResult = proofValidator.validateProofPurpose(
-                        proofPurpose = credential.proof.proofPurpose,
-                        verificationMethod = credential.proof.verificationMethod,
+                        proofPurpose = proofPurpose,
+                        verificationMethod = verificationMethod,
                         issuerDid = credential.issuer
                     )
 
@@ -105,7 +114,16 @@ class CredentialVerifier(
 
         // 2. Verify proof signature
         if (credential.proof != null) {
-            println("[DEBUG CredentialVerifier] Verifying proof: type=${credential.proof.type}, verificationMethod=${credential.proof.verificationMethod}")
+            val proofType = when (val proof = credential.proof) {
+                is com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof -> proof.type
+                is com.trustweave.credential.model.vc.CredentialProof.JwtProof -> "JWT"
+                is com.trustweave.credential.model.vc.CredentialProof.SdJwtVcProof -> "SD-JWT-VC"
+            }
+            val verificationMethod = when (val proof = credential.proof) {
+                is com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof -> proof.verificationMethod
+                else -> ""
+            }
+            println("[DEBUG CredentialVerifier] Verifying proof: type=$proofType, verificationMethod=$verificationMethod")
             proofValid = verifyProof(credential, credential.proof, didResolver)
             if (!proofValid) {
                 errors.add("Proof signature verification failed")
@@ -142,8 +160,8 @@ class CredentialVerifier(
         if (options.checkExpiration) {
             credential.expirationDate?.let { expirationDate ->
                 try {
-                    val expiration = Instant.parse(expirationDate)
-                    notExpired = Instant.now().isBefore(expiration)
+                    val expiration = kotlinx.datetime.Instant.parse(expirationDate)
+                    notExpired = Clock.System.now() < expiration
                     if (!notExpired) {
                         errors.add("Credential has expired: $expirationDate")
                     }
@@ -271,7 +289,10 @@ class CredentialVerifier(
                     delegationValid = false
                 } else {
                     try {
-                        val verificationMethod = credential.proof.verificationMethod
+                        val verificationMethod = when (val proof = credential.proof) {
+                            is com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof -> proof.verificationMethod
+                            else -> ""
+                        }
                         val delegatorDid = if (verificationMethod.contains("#")) {
                             verificationMethod.substringBefore("#")
                         } else {
@@ -308,14 +329,14 @@ class CredentialVerifier(
             // Expired (highest priority single failure)
             !notExpired && options.checkExpiration -> {
                 val expiredAt = credential.expirationDate?.let { 
-                    try { Instant.parse(it) } catch (e: Exception) { null }
-                } ?: Instant.now()
+                    try { kotlinx.datetime.Instant.parse(it) } catch (e: Exception) { null }
+                } ?: Clock.System.now()
                 CredentialVerificationResult.Invalid.Expired(credential, expiredAt, errors, warnings)
             }
             
             // Revoked (high priority single failure)
             !notRevoked && options.checkRevocation -> {
-                CredentialVerificationResult.Invalid.Revoked(credential, Instant.now(), errors, warnings)
+                CredentialVerificationResult.Invalid.Revoked(credential, Clock.System.now(), errors, warnings)
             }
             
             // Invalid proof purpose

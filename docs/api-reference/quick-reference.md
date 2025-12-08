@@ -76,7 +76,7 @@ val did: Did = trustWeave.createDid {
 
 **Resolve DID:**
 ```kotlin
-import com.trustweave.trust.types.Did
+import com.trustweave.did.identifiers.Did
 
 val did = Did("did:key:example")
 val document = trustWeave.context.resolveDid(did)
@@ -84,15 +84,21 @@ val document = trustWeave.context.resolveDid(did)
 
 **Update DID:**
 ```kotlin
+import com.trustweave.did.identifiers.Did
+
+val did = Did("did:key:example")
 val updated = trustLayer.updateDid {
-    did("did:key:example")
+    did(did.value)  // DSL builder accepts string for convenience
     addService { ... }
 }
 ```
 
 **Deactivate DID:**
 ```kotlin
-val deactivated = trustLayer.deactivateDid("did:key:example")
+import com.trustweave.did.identifiers.Did
+
+val did = Did("did:key:example")
+val deactivated = trustLayer.deactivateDid(did)
 ```
 
 ### Credential Operations

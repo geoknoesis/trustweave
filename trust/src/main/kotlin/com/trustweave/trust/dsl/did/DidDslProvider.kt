@@ -1,11 +1,11 @@
 package com.trustweave.trust.dsl.did
 
 import com.trustweave.did.DidCreationOptions
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.DidMethod
 import com.trustweave.did.resolver.DidResolver
 import com.trustweave.did.verifier.DelegationChainResult
-import com.trustweave.trust.types.Did
+import com.trustweave.did.identifiers.Did
 
 /**
  * Provider interface for DID DSL operations.

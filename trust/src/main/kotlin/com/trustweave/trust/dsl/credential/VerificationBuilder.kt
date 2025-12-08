@@ -1,14 +1,15 @@
 package com.trustweave.trust.dsl.credential
 
-import com.trustweave.credential.CredentialVerificationOptions
-import com.trustweave.credential.CredentialVerificationResult
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.revocation.StatusListManager
-import com.trustweave.credential.verifier.CredentialVerifier
+import com.trustweave.credential.CredentialService
+import com.trustweave.credential.requests.VerificationOptions
+import com.trustweave.credential.results.VerificationResult as CredentialVerificationResult
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.identifiers.SchemaId
 import com.trustweave.trust.types.VerificationResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
+import java.time.Duration
 
 /**
  * Verification Builder DSL.
@@ -27,8 +28,7 @@ import kotlinx.coroutines.withContext
  * ```
  */
 class VerificationBuilder(
-    private val verifier: CredentialVerifier,
-    private val statusListManager: StatusListManager? = null,
+    private val credentialService: CredentialService,
     /**
      * Coroutine dispatcher for I/O-bound operations.
      * Defaults to [Dispatchers.IO] if not provided.
@@ -112,21 +112,16 @@ class VerificationBuilder(
             "Credential is required. Use credential(credential) to specify the credential to verify."
         )
 
-        val options = CredentialVerificationOptions(
+        val options = VerificationOptions(
             checkRevocation = checkRevocation,
             checkExpiration = checkExpiration,
+            checkNotBefore = true,
+            resolveIssuerDid = true,
             validateSchema = validateSchema,
-            schemaId = schemaId,
-            verifyBlockchainAnchor = false, // Anchoring should be handled by orchestration layer
-            chainId = null,
-            checkTrustRegistry = false, // Trust checking should be handled by orchestration layer
-            trustRegistry = null,
-            statusListManager = statusListManager,
-            verifyDelegation = false, // Delegation should be handled by orchestration layer
-            validateProofPurpose = validateProofPurpose
+            schemaId = schemaId?.let { SchemaId(it) }
         )
 
-        verifier.verify(cred, options)
+        credentialService.verify(cred, trustPolicy = null, options = options)
     }
 }
 
@@ -152,9 +147,10 @@ class VerificationBuilder(
 suspend fun CredentialDslProvider.verify(block: VerificationBuilder.() -> Unit): VerificationResult {
     val dispatcher = (this as? com.trustweave.trust.dsl.TrustWeaveContext)?.getConfig()?.ioDispatcher
         ?: Dispatchers.IO
+    val credentialService = getIssuer() as? CredentialService
+        ?: throw IllegalStateException("CredentialService is not available. Configure it in TrustWeave.build { ... }")
     val builder = VerificationBuilder(
-        verifier = getVerifier(),
-        statusListManager = getStatusListManager(),
+        credentialService = credentialService,
         ioDispatcher = dispatcher
     )
     builder.block()

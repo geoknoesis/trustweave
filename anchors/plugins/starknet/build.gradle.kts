@@ -7,7 +7,7 @@ group = "com.trustweave.chains"
 dependencies {
     implementation(project(":common"))
     implementation(project(":anchors:anchor-core"))
-    implementation(project(":credentials:credential-core"))
+    implementation(project(":credentials:credential-api"))
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
 

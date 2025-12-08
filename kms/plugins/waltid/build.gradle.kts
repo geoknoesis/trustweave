@@ -13,13 +13,20 @@ repositories {
 val WALTID_VERSION = "2025.1.0-PRE-RELEASE.5"
 
 dependencies {
-    implementation(project(":common"))
-    implementation(project(":credentials:credential-core"))
-    implementation(project(":did:did-core"))
-    implementation(project(":kms:kms-core"))
+    // API dependencies - exposed transitively to consumers
+    api(project(":common"))
+    api(project(":kms:kms-core"))
+    api(project(":did:did-core"))  // waltid also provides DID methods
+    
+    // Implementation dependencies - internal only
+    implementation(project(":credentials:credential-api"))
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.datetime)
     implementation("id.walt.did:waltid-did:$WALTID_VERSION")
+
+    // Logging
+    implementation("org.slf4j:slf4j-api:2.0.9")
     // Add other walt.id modules as needed:
     // implementation("id.walt.crypto:waltid-crypto:$WALTID_VERSION")
     // implementation("id.walt.credentials:waltid-verifiable-credentials:$WALTID_VERSION")

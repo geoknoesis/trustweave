@@ -1,6 +1,6 @@
 package com.trustweave.credential.schema
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.SchemaFormat
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
@@ -8,6 +8,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import kotlinx.datetime.Clock
 
 /**
  * Tests for SchemaValidator interface implementations.
@@ -192,7 +193,7 @@ class SchemaValidatorTest {
         val credential = VerifiableCredential(
             type = listOf("VerifiableCredential"),
             issuer = "did:key:issuer",
-            issuanceDate = java.time.Instant.now().toString(),
+            issuanceDate = Clock.System.now().toString(),
             credentialSubject = buildJsonObject {}
         )
         val schema = createTestSchema()
@@ -210,7 +211,7 @@ class SchemaValidatorTest {
             put("id", "did:key:subject")
             put("name", "John Doe")
         },
-        issuanceDate: String = java.time.Instant.now().toString(),
+        issuanceDate: String = Clock.System.now().toString(),
         schema: com.trustweave.credential.models.CredentialSchema? = null
     ): VerifiableCredential {
         return VerifiableCredential(

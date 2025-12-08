@@ -6,8 +6,9 @@ import com.trustweave.credential.didcomm.models.DidCommEnvelope
 import com.trustweave.credential.didcomm.models.DidCommProtectedHeaders
 import com.trustweave.credential.didcomm.models.DidCommRecipient
 import com.trustweave.credential.didcomm.models.DidCommRecipientHeader
-import com.trustweave.did.DidDocument
-import com.trustweave.did.VerificationMethod
+import com.trustweave.core.identifiers.KeyId
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.VerificationMethod
 import com.trustweave.kms.KeyManagementService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -74,14 +75,19 @@ class DidCommCrypto(
 
             // Get recipient's public key
             val recipientKey = recipientDoc.verificationMethod
-                .find { it.id == toKeyId || it.id == "$toDid#$toKeyId" }
+                .find { it.id.toString() == toKeyId || it.id.toString() == "$toDid#$toKeyId" }
                 ?: throw IllegalArgumentException("Recipient key not found: $toKeyId")
 
             val recipientPublicKeyJwk = recipientKey.publicKeyJwk
                 ?: throw IllegalArgumentException("Recipient key missing JWK")
 
             // Get sender's key handle
-            val senderKeyHandle = kms.getPublicKey(com.trustweave.core.types.KeyId(fromKeyId))
+            val senderKeyResult = kms.getPublicKey(KeyId(fromKeyId))
+            val senderKeyHandle = when (senderKeyResult) {
+                is com.trustweave.kms.results.GetPublicKeyResult.Success -> senderKeyResult.keyHandle
+                is com.trustweave.kms.results.GetPublicKeyResult.Failure.KeyNotFound -> throw IllegalArgumentException("Sender key not found: ${senderKeyResult.keyId.value}")
+                is com.trustweave.kms.results.GetPublicKeyResult.Failure.Error -> throw IllegalArgumentException("Failed to get sender key: ${senderKeyResult.reason}")
+            }
             val senderPublicKeyJwk = senderKeyHandle.publicKeyJwk
                 ?: throw IllegalArgumentException("Sender key missing JWK")
 
@@ -181,14 +187,19 @@ class DidCommCrypto(
                 ?: throw IllegalArgumentException("Missing sender key ID in protected headers")
 
             val senderKey = senderDoc.verificationMethod
-                .find { it.id == senderKeyId || it.id == "$senderDid#$senderKeyId" }
+                .find { it.id.toString() == senderKeyId || it.id.toString() == "$senderDid#$senderKeyId" }
                 ?: throw IllegalArgumentException("Sender key not found: $senderKeyId")
 
             val senderPublicKeyJwk = senderKey.publicKeyJwk
                 ?: throw IllegalArgumentException("Sender key missing JWK")
 
             // Get recipient's private key (from KMS)
-            val recipientKeyHandle = kms.getPublicKey(com.trustweave.core.types.KeyId(recipientKeyId))
+            val recipientKeyResult = kms.getPublicKey(com.trustweave.core.identifiers.KeyId(recipientKeyId))
+            val recipientKeyHandle = when (recipientKeyResult) {
+                is com.trustweave.kms.results.GetPublicKeyResult.Success -> recipientKeyResult.keyHandle
+                is com.trustweave.kms.results.GetPublicKeyResult.Failure.KeyNotFound -> throw IllegalArgumentException("Recipient key not found: ${recipientKeyResult.keyId.value}")
+                is com.trustweave.kms.results.GetPublicKeyResult.Failure.Error -> throw IllegalArgumentException("Failed to get recipient key: ${recipientKeyResult.reason}")
+            }
             val recipientPublicKeyJwk = recipientKeyHandle.publicKeyJwk
                 ?: throw IllegalArgumentException("Recipient key missing JWK")
 

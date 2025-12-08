@@ -1,6 +1,6 @@
 package com.trustweave.credential.schema
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.SchemaFormat
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*

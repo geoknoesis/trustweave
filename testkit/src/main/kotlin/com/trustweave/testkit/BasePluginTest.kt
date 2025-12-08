@@ -1,6 +1,6 @@
 package com.trustweave.testkit
 
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.DidMethod
 import com.trustweave.kms.KeyManagementService
 import com.trustweave.testkit.kms.InMemoryKeyManagementService

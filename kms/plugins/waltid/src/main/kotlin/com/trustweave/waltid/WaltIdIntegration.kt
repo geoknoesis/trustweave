@@ -23,12 +23,12 @@ object WaltIdIntegration {
         registry: DidMethodRegistry,
         options: DidCreationOptions = DidCreationOptions()
     ): WaltIdIntegrationResult {
-        // Discover KMS providers
-        val kmsProviders = ServiceLoader.load(KeyManagementServiceProvider::class.java)
-        val waltIdKmsProvider = kmsProviders.find { it.name == "waltid" }
-            ?: throw IllegalStateException("walt.id KMS provider not found. Ensure TrustWeave-waltid is on classpath.")
-
-        val kms = waltIdKmsProvider.create(options.additionalProperties)
+        // Create KMS using factory API
+        val kms = try {
+            com.trustweave.kms.KeyManagementServices.create("waltid", options.additionalProperties)
+        } catch (e: IllegalArgumentException) {
+            throw IllegalStateException("walt.id KMS provider not found. Ensure TrustWeave-waltid is on classpath.", e)
+        }
 
         // Discover DID method providers
         val didProviders = ServiceLoader.load(DidMethodProvider::class.java)

@@ -1,12 +1,18 @@
 package com.trustweave.credential.template
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant as KotlinInstant
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant as KotlinInstant
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Comprehensive tests for CredentialTemplateService API.
@@ -218,12 +224,12 @@ class CredentialTemplateServiceTest {
         val credential = service.issueFromTemplate("person-template", subject)
 
         assertNotNull(credential.expirationDate)
-        val expiration = java.time.Instant.parse(credential.expirationDate!!)
-        val now = java.time.Instant.now()
-        val expectedExpiration = now.plusSeconds(30L * 24 * 60 * 60)
+        val expiration = KotlinInstant.parse(credential.expirationDate!!)
+        val now = Clock.System.now()
+        val expectedExpiration = now.plus((30L * 24 * 60 * 60).seconds)
 
         // Allow 1 second tolerance
-        assertTrue(kotlin.math.abs(expiration.epochSecond - expectedExpiration.epochSecond) <= 1)
+        assertTrue(kotlin.math.abs(expiration.epochSeconds - expectedExpiration.epochSeconds) <= 1)
     }
 
     @Test

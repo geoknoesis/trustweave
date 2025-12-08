@@ -1,5 +1,7 @@
 package com.trustweave.awskms
 
+import com.trustweave.kms.KmsOptionKeys
+
 /**
  * Configuration for AWS KMS client.
  *
@@ -20,10 +22,18 @@ data class AwsKmsConfig(
     val accessKeyId: String? = null,
     val secretAccessKey: String? = null,
     val sessionToken: String? = null,
-    val endpointOverride: String? = null
+    val endpointOverride: String? = null,
+    val pendingWindowInDays: Int? = null,
+    val cacheTtlSeconds: Long? = 300 // Default 5 minutes
 ) {
     init {
         require(region.isNotBlank()) { "AWS region must be specified" }
+        require(pendingWindowInDays == null || pendingWindowInDays in 7..30) {
+            "Pending window must be between 7 and 30 days, got: $pendingWindowInDays"
+        }
+        require(cacheTtlSeconds == null || cacheTtlSeconds > 0) {
+            "Cache TTL must be positive, got: $cacheTtlSeconds"
+        }
     }
 
     companion object {
@@ -53,6 +63,8 @@ data class AwsKmsConfig(
                 .accessKeyId(System.getenv("AWS_ACCESS_KEY_ID"))
                 .secretAccessKey(System.getenv("AWS_SECRET_ACCESS_KEY"))
                 .sessionToken(System.getenv("AWS_SESSION_TOKEN"))
+                .pendingWindowInDays(System.getenv("AWS_KMS_PENDING_WINDOW_DAYS")?.toIntOrNull())
+                .cacheTtlSeconds(System.getenv("AWS_KMS_CACHE_TTL_SECONDS")?.toLongOrNull())
                 .build()
         }
 
@@ -64,15 +76,17 @@ data class AwsKmsConfig(
          * @throws IllegalArgumentException if region is not provided
          */
         fun fromMap(options: Map<String, Any?>): AwsKmsConfig {
-            val region = options["region"] as? String
+            val region = options[KmsOptionKeys.REGION] as? String
                 ?: throw IllegalArgumentException("AWS region must be specified in options")
 
             return Builder()
                 .region(region)
-                .accessKeyId(options["accessKeyId"] as? String)
-                .secretAccessKey(options["secretAccessKey"] as? String)
-                .sessionToken(options["sessionToken"] as? String)
-                .endpointOverride(options["endpointOverride"] as? String)
+                .accessKeyId(options[KmsOptionKeys.ACCESS_KEY_ID] as? String)
+                .secretAccessKey(options[KmsOptionKeys.SECRET_ACCESS_KEY] as? String)
+                .sessionToken(options[KmsOptionKeys.SESSION_TOKEN] as? String)
+                .endpointOverride(options[KmsOptionKeys.ENDPOINT_OVERRIDE] as? String)
+                .pendingWindowInDays(options[KmsOptionKeys.PENDING_WINDOW_IN_DAYS] as? Int)
+                .cacheTtlSeconds((options["cacheTtlSeconds"] as? Number)?.toLong())
                 .build()
         }
     }
@@ -86,6 +100,8 @@ data class AwsKmsConfig(
         private var secretAccessKey: String? = null
         private var sessionToken: String? = null
         private var endpointOverride: String? = null
+        private var pendingWindowInDays: Int? = null
+        private var cacheTtlSeconds: Long? = 300
 
         fun region(region: String): Builder {
             this.region = region
@@ -112,6 +128,16 @@ data class AwsKmsConfig(
             return this
         }
 
+        fun pendingWindowInDays(pendingWindowInDays: Int?): Builder {
+            this.pendingWindowInDays = pendingWindowInDays
+            return this
+        }
+
+        fun cacheTtlSeconds(cacheTtlSeconds: Long?): Builder {
+            this.cacheTtlSeconds = cacheTtlSeconds
+            return this
+        }
+
         fun build(): AwsKmsConfig {
             val region = this.region ?: throw IllegalArgumentException("AWS region is required")
             return AwsKmsConfig(
@@ -119,7 +145,9 @@ data class AwsKmsConfig(
                 accessKeyId = accessKeyId,
                 secretAccessKey = secretAccessKey,
                 sessionToken = sessionToken,
-                endpointOverride = endpointOverride
+                endpointOverride = endpointOverride,
+                pendingWindowInDays = pendingWindowInDays,
+                cacheTtlSeconds = cacheTtlSeconds
             )
         }
     }

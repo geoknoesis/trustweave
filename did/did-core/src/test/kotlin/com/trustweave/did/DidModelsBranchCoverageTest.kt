@@ -1,10 +1,16 @@
 package com.trustweave.did
 
-import org.junit.jupiter.api.Test
-import kotlin.test.*
-import java.time.Instant
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.DidDocumentMetadata
+import com.trustweave.did.model.DidService
+import com.trustweave.did.model.VerificationMethod
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.exception.DidException.InvalidDidFormat
+import org.junit.jupiter.api.Test
+import kotlin.test.*
+import kotlinx.datetime.Instant
 
 /**
  * Branch coverage tests for Did models.
@@ -13,57 +19,56 @@ class DidModelsBranchCoverageTest {
 
     @Test
     fun `test Did toString formats correctly`() {
-        val did = Did(method = "web", id = "example.com")
-        assertEquals("did:web:example.com", did.toString())
+        val did = Did("did:web:example.com")
+        assertEquals("did:web:example.com", did.value)
     }
 
     @Test
     fun `test Did parse with valid DID`() {
-        val did = Did.parse("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
-        assertEquals("key", did.method)
-        assertEquals("z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK", did.id)
+        val did = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
+        assertEquals("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK", did.value)
     }
 
     @Test
     fun `test Did parse throws when not starting with did prefix`() {
-        assertFailsWith<InvalidDidFormat> {
-            Did.parse("not-a-did")
+        assertFailsWith<IllegalArgumentException> {
+            Did("not-a-did")
         }
     }
 
     @Test
     fun `test Did parse throws when missing method`() {
-        assertFailsWith<InvalidDidFormat> {
-            Did.parse("did:")
+        assertFailsWith<IllegalArgumentException> {
+            Did("did:")
         }
     }
 
     @Test
     fun `test Did parse throws when missing id`() {
-        // Did.parse("did:key:") actually succeeds with empty id
-        val did = Did.parse("did:key:")
-        assertEquals("key", did.method)
-        assertEquals("", did.id)
+        // Did("did:key:") should fail validation with empty identifier
+        assertFailsWith<IllegalArgumentException> {
+            Did("did:key:")
+        }
     }
 
     @Test
     fun `test Did parse with complex id`() {
-        val did = Did.parse("did:web:example.com:path:to:resource")
-        assertEquals("web", did.method)
-        assertEquals("example.com:path:to:resource", did.id)
+        val did = Did("did:web:example.com:path:to:resource")
+        assertEquals("did:web:example.com:path:to:resource", did.value)
     }
 
     @Test
     fun `test VerificationMethod constructor with all fields`() {
+        val did = Did("did:key:123")
         val vm = VerificationMethod(
-            id = "did:key:123#key-1",
+            id = VerificationMethodId.parse("did:key:123#key-1"),
             type = "Ed25519VerificationKey2020",
-            controller = "did:key:123",
+            controller = did,
             publicKeyJwk = mapOf("kty" to "OKP", "crv" to "Ed25519"),
             publicKeyMultibase = "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
         )
 
-        assertEquals("did:key:123#key-1", vm.id)
+        assertEquals("did:key:123#key-1", vm.id.value)
         assertEquals("Ed25519VerificationKey2020", vm.type)
         assertNotNull(vm.publicKeyJwk)
         assertNotNull(vm.publicKeyMultibase)
@@ -71,10 +76,11 @@ class DidModelsBranchCoverageTest {
 
     @Test
     fun `test VerificationMethod constructor with minimal fields`() {
+        val did = Did("did:key:123")
         val vm = VerificationMethod(
-            id = "did:key:123#key-1",
+            id = VerificationMethodId.parse("did:key:123#key-1"),
             type = "Ed25519VerificationKey2020",
-            controller = "did:key:123"
+            controller = did
         )
 
         assertNull(vm.publicKeyJwk)
@@ -118,20 +124,22 @@ class DidModelsBranchCoverageTest {
 
     @Test
     fun `test DidDocument constructor with all fields`() {
+        val did = Did("did:key:123")
+        val vmId = VerificationMethodId.parse("did:key:123#key-1")
         val doc = DidDocument(
-            id = "did:key:123",
-            alsoKnownAs = listOf("did:web:example.com"),
-            controller = listOf("did:key:controller"),
+            id = did,
+            alsoKnownAs = listOf(Did("did:web:example.com")),
+            controller = listOf(Did("did:key:controller")),
             verificationMethod = listOf(
                 VerificationMethod(
-                    id = "did:key:123#key-1",
+                    id = vmId,
                     type = "Ed25519VerificationKey2020",
-                    controller = "did:key:123"
+                    controller = did
                 )
             ),
-            authentication = listOf("did:key:123#key-1"),
-            assertionMethod = listOf("did:key:123#key-1"),
-            keyAgreement = listOf("did:key:123#key-2"),
+            authentication = listOf(vmId),
+            assertionMethod = listOf(vmId),
+            keyAgreement = listOf(VerificationMethodId.parse("did:key:123#key-2")),
             service = listOf(
                 DidService(
                     id = "did:key:123#service-1",
@@ -141,7 +149,7 @@ class DidModelsBranchCoverageTest {
             )
         )
 
-        assertEquals("did:key:123", doc.id)
+        assertEquals("did:key:123", doc.id.value)
         assertEquals(1, doc.alsoKnownAs.size)
         assertEquals(1, doc.verificationMethod.size)
         assertEquals(1, doc.service.size)
@@ -149,9 +157,9 @@ class DidModelsBranchCoverageTest {
 
     @Test
     fun `test DidDocument constructor with minimal fields`() {
-        val doc = DidDocument(id = "did:key:123")
+        val doc = DidDocument(id = Did("did:key:123"))
 
-        assertEquals("did:key:123", doc.id)
+        assertEquals("did:key:123", doc.id.value)
         assertTrue(doc.alsoKnownAs.isEmpty())
         assertTrue(doc.verificationMethod.isEmpty())
         assertTrue(doc.service.isEmpty())
@@ -159,11 +167,11 @@ class DidModelsBranchCoverageTest {
 
     @Test
     fun `test DidResolutionResult constructor with document`() {
-        val doc = DidDocument(id = "did:key:123")
+        val doc = DidDocument(id = Did("did:key:123"))
         val result = DidResolutionResult.Success(
             document = doc,
             documentMetadata = DidDocumentMetadata(
-                created = Instant.parse("2024-01-01T00:00:00Z")
+                created = kotlinx.datetime.Instant.parse("2024-01-01T00:00:00Z")
             ),
             resolutionMetadata = mapOf("duration" to 100)
         )
@@ -176,7 +184,7 @@ class DidModelsBranchCoverageTest {
     @Test
     fun `test DidResolutionResult constructor without document`() {
         val result = DidResolutionResult.Failure.NotFound(
-            did = com.trustweave.core.types.Did("did:key:test"),
+            did = Did("did:key:test"),
             resolutionMetadata = mapOf("error" to "notFound")
         )
 
@@ -186,7 +194,7 @@ class DidModelsBranchCoverageTest {
 
     @Test
     fun `test DidResolutionResult constructor with defaults`() {
-        val doc = DidDocument(id = "did:key:123")
+        val doc = DidDocument(id = Did("did:key:123"))
         val result = DidResolutionResult.Success(document = doc)
 
         assertNotNull(result.document)

@@ -110,13 +110,23 @@ val anchorClient = PolygonBlockchainAnchorClient(config.chainId, config.toMap())
 val kms = InMemoryKeyManagementService()
 val method = EnsDidMethod(kms, anchorClient, config)
 
-// Resolve ENS domain to DID document
-val result = method.resolveDid("did:ens:example.eth")
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.resolver.DidResolutionResult
 
-result.document?.let { doc ->
-    println("Resolved: ${doc.id}")
-    println("Verification methods: ${doc.verificationMethod.size}")
-} ?: println("Not found")
+// Resolve ENS domain to DID document
+val did = Did("did:ens:example.eth")
+val result = method.resolveDid(did)
+
+when (result) {
+    is DidResolutionResult.Success -> {
+        println("Resolved: ${result.document.id}")
+        println("Verification methods: ${result.document.verificationMethod.size}")
+    }
+    is DidResolutionResult.Failure.NotFound -> {
+        println("DID not found: ${result.did.value}")
+    }
+    else -> println("Resolution failed")
+}
 ```
 
 ### How it Works
@@ -209,7 +219,10 @@ val TrustWeave = TrustWeave.create {
 }
 
 // Resolve did:ens
-val resolved = TrustWeave.resolveDid("did:ens:example.eth").getOrThrow()
+import com.trustweave.did.identifiers.Did
+
+val did = Did("did:ens:example.eth")
+val resolved = TrustWeave.resolveDid(did).getOrThrow()
 ```
 
 ## Error Handling

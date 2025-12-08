@@ -5,6 +5,7 @@ import com.trustweave.credential.didcomm.storage.DidCommMessageStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
+import kotlinx.datetime.Clock
 import java.io.ByteArrayOutputStream
 import java.util.UUID
 import java.util.zip.GZIPOutputStream
@@ -98,7 +99,7 @@ class S3MessageArchiver(
                 messageCount = 0,
                 archiveSize = 0,
                 storageLocation = "",
-                archivedAt = java.time.Instant.now().toString()
+                archivedAt = Clock.System.now().toString()
             )
         }
 

@@ -2,10 +2,14 @@ package com.trustweave.peerdid
 
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.DidService
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.base.AbstractDidMethod
 import com.trustweave.did.base.DidMethodUtils
 import com.trustweave.kms.KeyManagementService
+import com.trustweave.kms.results.GenerateKeyResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.security.MessageDigest
@@ -45,7 +49,23 @@ class PeerDidMethod(
         try {
             // Generate key using KMS
             val algorithm = options.algorithm.algorithmName
-            val keyHandle = kms.generateKey(algorithm, options.additionalProperties)
+            val generateResult = kms.generateKey(algorithm, options.additionalProperties)
+            val keyHandle = when (generateResult) {
+                is GenerateKeyResult.Success -> generateResult.keyHandle
+                is GenerateKeyResult.Failure.UnsupportedAlgorithm -> throw TrustWeaveException.Unknown(
+                    code = "UNSUPPORTED_ALGORITHM",
+                    message = generateResult.reason ?: "Algorithm not supported"
+                )
+                is GenerateKeyResult.Failure.InvalidOptions -> throw TrustWeaveException.Unknown(
+                    code = "INVALID_OPTIONS",
+                    message = generateResult.reason
+                )
+                is GenerateKeyResult.Failure.Error -> throw TrustWeaveException.Unknown(
+                    code = "KEY_GENERATION_ERROR",
+                    message = generateResult.reason,
+                    cause = generateResult.cause
+                )
+            }
 
             // Generate peer DID based on numalgo
             val did = when (config.numalgo) {
@@ -76,9 +96,9 @@ class PeerDidMethod(
             val document = DidMethodUtils.buildDidDocument(
                 did = did,
                 verificationMethod = listOf(verificationMethod),
-                authentication = listOf(verificationMethod.id),
-                assertionMethod = if (options.purposes.contains(DidCreationOptions.KeyPurpose.ASSERTION)) {
-                    listOf(verificationMethod.id)
+                authentication = listOf(verificationMethod.id.value),
+                assertionMethod = if (options.purposes.contains(KeyPurpose.ASSERTION)) {
+                    listOf(verificationMethod.id.value)
                 } else null,
                 service = service
             )
@@ -100,10 +120,11 @@ class PeerDidMethod(
         }
     }
 
-    override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
+    override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
 
+            val didString = did.value
             // For peer DIDs, documents are stored locally or embedded in DID
             // First try to get from local storage
             val stored = getStoredDocument(did)
@@ -117,7 +138,7 @@ class PeerDidMethod(
             }
 
             // Try to resolve from embedded document (for long-form peer DIDs)
-            val embedded = resolveEmbeddedDocument(did)
+            val embedded = resolveEmbeddedDocument(didString)
             if (embedded != null) {
                 storeDocument(embedded.id, embedded)
                 return@withContext DidMethodUtils.createSuccessResolutionResult(embedded, method)
@@ -127,36 +148,40 @@ class PeerDidMethod(
             DidMethodUtils.createErrorResolutionResult(
                 "notFound",
                 "DID document not found",
-                method
+                method,
+                didString
             )
         } catch (e: TrustWeaveException) {
             DidMethodUtils.createErrorResolutionResult(
                 "invalidDid",
                 e.message,
-                method
+                method,
+                did.value
             )
         } catch (e: Exception) {
             DidMethodUtils.createErrorResolutionResult(
                 "invalidDid",
                 e.message,
-                method
+                method,
+                did.value
             )
         }
     }
 
     override suspend fun updateDid(
-        did: String,
+        did: Did,
         updater: (DidDocument) -> DidDocument
     ): DidDocument = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
 
+            val didString = did.value
             // Resolve current document
             val currentResult = resolveDid(did)
             val currentDocument = when (currentResult) {
                 is DidResolutionResult.Success -> currentResult.document
                 else -> throw TrustWeaveException.NotFound(
-                    message = "DID document not found: $did"
+                    message = "DID document not found: $didString"
                 )
             }
 
@@ -164,7 +189,7 @@ class PeerDidMethod(
             val updatedDocument = updater(currentDocument)
 
             // Store updated document locally
-            storeDocument(updatedDocument.id, updatedDocument)
+            storeDocument(updatedDocument.id.value, updatedDocument)
 
             updatedDocument
         } catch (e: TrustWeaveException.NotFound) {
@@ -180,10 +205,11 @@ class PeerDidMethod(
         }
     }
 
-    override suspend fun deactivateDid(did: String): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun deactivateDid(did: Did): Boolean = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
 
+            val didString = did.value
             // Check if document exists
             val document = getStoredDocument(did)
             if (document == null) {
@@ -191,8 +217,8 @@ class PeerDidMethod(
             }
 
             // Remove from local storage
-            documents.remove(did)
-            documentMetadata.remove(did)
+            documents.remove(didString)
+            documentMetadata.remove(didString)
 
             true
         } catch (e: Exception) {

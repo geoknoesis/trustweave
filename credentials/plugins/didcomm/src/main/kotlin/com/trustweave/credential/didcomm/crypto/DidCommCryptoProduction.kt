@@ -2,7 +2,7 @@ package com.trustweave.credential.didcomm.crypto
 
 import com.trustweave.credential.didcomm.exception.DidCommException
 import com.trustweave.credential.didcomm.models.DidCommEnvelope
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
 import com.trustweave.kms.KeyManagementService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

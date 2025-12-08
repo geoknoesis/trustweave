@@ -1,11 +1,13 @@
 package com.trustweave.wallet.database
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.wallet.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
+import java.time.Instant as JavaInstant
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -116,7 +118,7 @@ class DatabaseWallet(
 
     // CredentialStorage implementation
     override suspend fun store(credential: VerifiableCredential): String = withContext(Dispatchers.IO) {
-        val id = credential.id ?: UUID.randomUUID().toString()
+        val id = credential.id?.value ?: UUID.randomUUID().toString()
         val credentialJson = json.encodeToString(VerifiableCredential.serializer(), credential)
 
         dataSource.connection.use { conn ->
@@ -150,8 +152,10 @@ class DatabaseWallet(
                         VALUES (?, ?, ?)
                     """)
                     metadataStmt.setString(1, id)
-                    metadataStmt.setTimestamp(2, java.sql.Timestamp.from(Instant.now()))
-                    metadataStmt.setTimestamp(3, java.sql.Timestamp.from(Instant.now()))
+                    val now = Clock.System.now()
+                    val javaInstant = JavaInstant.ofEpochSecond(now.epochSeconds)
+                    metadataStmt.setTimestamp(2, java.sql.Timestamp.from(javaInstant))
+                    metadataStmt.setTimestamp(3, java.sql.Timestamp.from(javaInstant))
                     metadataStmt.executeUpdate()
                 }
 
@@ -246,26 +250,18 @@ class DatabaseWallet(
      * Check if credential matches filter criteria.
      */
     private fun matchesFilter(credential: VerifiableCredential, filter: CredentialFilter): Boolean {
-        if (filter.issuer != null && credential.issuer != filter.issuer) return false
+        if (filter.issuer != null && credential.issuer.id.value != filter.issuer) return false
         if (filter.type != null) {
             val filterTypes = filter.type
-            if (filterTypes != null && !filterTypes.any { credential.type.contains(it) }) return false
+            if (filterTypes != null && !filterTypes.any { filterType -> credential.type.any { it.value == filterType } }) return false
         }
         if (filter.subjectId != null) {
-            val subjectId = try {
-                credential.credentialSubject.jsonObject["id"]?.jsonPrimitive?.content
-            } catch (e: Exception) {
-                null
-            }
+            val subjectId = credential.credentialSubject.id.value
             if (subjectId != filter.subjectId) return false
         }
         if (filter.expired != null) {
             val isExpired = credential.expirationDate?.let {
-                try {
-                    Instant.now().isAfter(Instant.parse(it))
-                } catch (e: Exception) {
-                    false
-                }
+                Clock.System.now() > it
             } ?: false
             if (isExpired != filter.expired) return false
         }

@@ -1,10 +1,12 @@
 package com.trustweave.credential.transform
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Comprehensive tests for CredentialTransformer API.
@@ -107,7 +109,7 @@ class CredentialTransformerTest {
         val credential = createTestCredential(
             proof = com.trustweave.credential.models.Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:issuer#key-1",
                 proofPurpose = "assertionMethod"
             )
@@ -120,7 +122,7 @@ class CredentialTransformerTest {
 
     @Test
     fun `test transform credential with expiration`() = runBlocking {
-        val expirationDate = java.time.Instant.now().plusSeconds(86400).toString()
+        val expirationDate = Clock.System.now().plus(86400.seconds).toString()
         val credential = createTestCredential(expirationDate = expirationDate)
 
         val jsonLd = transformer.toJsonLd(credential)
@@ -136,7 +138,7 @@ class CredentialTransformerTest {
             put("id", "did:key:subject")
             put("name", "John Doe")
         },
-        issuanceDate: String = java.time.Instant.now().toString(),
+        issuanceDate: String = Clock.System.now().toString(),
         expirationDate: String? = null,
         proof: com.trustweave.credential.models.Proof? = null
     ): VerifiableCredential {

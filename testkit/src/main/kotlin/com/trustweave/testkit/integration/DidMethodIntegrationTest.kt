@@ -2,7 +2,9 @@ package com.trustweave.testkit.integration
 
 import com.trustweave.did.DidCreationOptions
 import com.trustweave.did.DidMethod
-import com.trustweave.did.VerificationMethod
+import com.trustweave.did.model.VerificationMethod
+import com.trustweave.did.identifiers.VerificationMethodId
+import com.trustweave.did.KeyAlgorithm
 import com.trustweave.did.didCreationOptions
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.testkit.BaseIntegrationTest
@@ -59,12 +61,12 @@ abstract class DidMethodIntegrationTest : BaseIntegrationTest() {
 
         val document = method.createDid(
             didCreationOptions {
-                algorithm = DidCreationOptions.KeyAlgorithm.ED25519
+                algorithm = KeyAlgorithm.ED25519
             }
         )
 
         kotlin.test.assertNotNull(document)
-        kotlin.test.assertTrue(document.id.startsWith("did:${getMethodName()}:"))
+        kotlin.test.assertTrue(document.id.value.startsWith("did:${getMethodName()}:"))
 
         val resolution = method.resolveDid(document.id)
         val resolvedDocument = when (resolution) {
@@ -82,14 +84,14 @@ abstract class DidMethodIntegrationTest : BaseIntegrationTest() {
         val method = getDidMethod()
         val document = method.createDid(
             didCreationOptions {
-                algorithm = DidCreationOptions.KeyAlgorithm.ED25519
+                algorithm = KeyAlgorithm.ED25519
             }
         )
 
         val updated = method.updateDid(document.id) { doc ->
             doc.copy(
                 verificationMethod = doc.verificationMethod + VerificationMethod(
-                    id = "${doc.id}#key-2",
+                    id = VerificationMethodId.parse("${doc.id.value}#key-2"),
                     type = "Ed25519VerificationKey2020",
                     controller = doc.id,
                     publicKeyMultibase = "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
@@ -111,7 +113,7 @@ abstract class DidMethodIntegrationTest : BaseIntegrationTest() {
 
         val document = method.createDid(
             didCreationOptions {
-                algorithm = DidCreationOptions.KeyAlgorithm.ED25519
+                algorithm = KeyAlgorithm.ED25519
             }
         )
 
@@ -166,21 +168,21 @@ abstract class DidMethodIntegrationTest : BaseIntegrationTest() {
 
         val doc1 = method1.createDid(
             com.trustweave.did.didCreationOptions {
-                algorithm = com.trustweave.did.DidCreationOptions.KeyAlgorithm.ED25519
+                algorithm = KeyAlgorithm.ED25519
             }
         )
 
         val doc2 = method2.createDid(
             com.trustweave.did.didCreationOptions {
-                algorithm = com.trustweave.did.DidCreationOptions.KeyAlgorithm.ED25519
+                algorithm = KeyAlgorithm.ED25519
             }
         )
 
         kotlin.test.assertNotNull(doc1)
         kotlin.test.assertNotNull(doc2)
         kotlin.test.assertTrue(doc1.id != doc2.id)
-        kotlin.test.assertTrue(doc1.id.startsWith("did:${method1.method}:"))
-        kotlin.test.assertTrue(doc2.id.startsWith("did:${method2.method}:"))
+        kotlin.test.assertTrue(doc1.id.value.startsWith("did:${method1.method}:"))
+        kotlin.test.assertTrue(doc2.id.value.startsWith("did:${method2.method}:"))
     }
 
 }

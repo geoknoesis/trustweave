@@ -2,6 +2,7 @@ package com.trustweave.kms.spi
 
 import com.trustweave.kms.Algorithm
 import com.trustweave.kms.KeyManagementService
+import com.trustweave.kms.KmsCreationOptions
 
 /**
  * Service Provider Interface for KeyManagementService implementations.
@@ -104,5 +105,19 @@ interface KeyManagementServiceProvider {
      * @throws IllegalArgumentException if the provider cannot be created with the given options
      */
     fun create(options: Map<String, Any?> = emptyMap()): KeyManagementService
+
+    /**
+     * Creates a KeyManagementService instance using typed configuration.
+     *
+     * This method provides type-safe configuration. The default implementation
+     * converts [KmsCreationOptions] to a Map and calls [create].
+     *
+     * @param options Typed configuration options for the service
+     * @return A KeyManagementService instance
+     * @throws IllegalArgumentException if the provider cannot be created with the given options
+     */
+    fun create(options: KmsCreationOptions): KeyManagementService {
+        return create(options.toMap())
+    }
 }
 

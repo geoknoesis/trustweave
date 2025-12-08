@@ -2,7 +2,7 @@ package com.trustweave.wallet
 
 import com.trustweave.did.DidCreationOptions
 import com.trustweave.did.DidCreationOptionsBuilder
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.didCreationOptions
 
 /**
@@ -158,7 +158,7 @@ interface KeyManagement {
  *         subjectDid = "did:key:subject",
  *         credentialType = "PersonCredential",
  *         claims = mapOf("name" to "Alice", "email" to "alice@example.com"),
- *         options = CredentialIssuanceOptions(...)
+ *         options = proofOptions { ... }
  *     )
  * }
  * ```
@@ -177,7 +177,7 @@ interface CredentialIssuance {
         subjectDid: String,
         credentialType: String,
         claims: Map<String, Any>,
-        options: com.trustweave.credential.CredentialIssuanceOptions
-    ): com.trustweave.credential.models.VerifiableCredential
+        options: com.trustweave.credential.proof.ProofOptions? = null
+    ): com.trustweave.credential.model.vc.VerifiableCredential
 }
 

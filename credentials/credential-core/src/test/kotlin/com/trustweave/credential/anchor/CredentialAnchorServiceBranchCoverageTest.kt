@@ -1,11 +1,12 @@
 package com.trustweave.credential.anchor
 
 import com.trustweave.credential.models.Evidence
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import kotlinx.datetime.Clock
 
 /**
  * Comprehensive branch coverage tests for CredentialAnchorService.
@@ -32,7 +33,7 @@ class CredentialAnchorServiceBranchCoverageTest {
         val credential = createTestCredential(
             proof = com.trustweave.credential.models.Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:issuer#key-1",
                 proofPurpose = "assertionMethod",
                 proofValue = "test-proof"
@@ -168,7 +169,7 @@ class CredentialAnchorServiceBranchCoverageTest {
             put("id", "did:key:subject")
             put("name", "John Doe")
         },
-        issuanceDate: String = java.time.Instant.now().toString(),
+        issuanceDate: String = Clock.System.now().toString(),
         proof: com.trustweave.credential.models.Proof? = null,
         evidence: List<Evidence>? = null
     ): VerifiableCredential {

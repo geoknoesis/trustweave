@@ -4,9 +4,11 @@ import com.trustweave.credential.didcomm.models.DidCommMessage
 import com.trustweave.credential.didcomm.models.DidCommMessageTypes
 import com.trustweave.credential.didcomm.models.DidCommAttachment
 import com.trustweave.credential.didcomm.models.DidCommAttachmentData
-import com.trustweave.credential.models.VerifiablePresentation
+import com.trustweave.credential.didcomm.protocol.models.DidCommGoalCode
+import com.trustweave.credential.didcomm.protocol.util.toJsonObject
+import com.trustweave.credential.model.vc.VerifiablePresentation
 import kotlinx.serialization.json.*
-import java.time.Instant
+import kotlinx.datetime.Clock
 import java.util.*
 
 /**
@@ -29,7 +31,7 @@ object ProofProtocol {
         thid: String? = null
     ): DidCommMessage {
         val body = buildJsonObject {
-            put("goal_code", proofRequest.goalCode ?: "request-proof")
+            put("goal_code", proofRequest.goalCode ?: DidCommGoalCode.RequestProof.value)
             put("will_confirm", proofRequest.willConfirm)
             put("proof_request", buildJsonObject {
                 put("name", proofRequest.name)
@@ -77,7 +79,7 @@ object ProofProtocol {
             from = fromDid,
             to = listOf(toDid),
             body = body,
-            created = Instant.now().toString(),
+            created = Clock.System.now().toString(),
             thid = thid
         )
     }
@@ -87,22 +89,18 @@ object ProofProtocol {
      *
      * @param fromDid Prover DID
      * @param toDid Verifier DID
-     * @param presentation The verifiable presentation
+     * @param presentation The VerifiablePresentation to present
      * @param thid Thread ID (from the request)
      * @return Proof presentation message
      */
     fun createProofPresentation(
         fromDid: String,
         toDid: String,
-        presentation: VerifiablePresentation,
+        presentation: com.trustweave.credential.model.vc.VerifiablePresentation,
         thid: String
     ): DidCommMessage {
-        // Serialize presentation to JSON
-        val json = Json { prettyPrint = false; encodeDefaults = false }
-        val presentationJson = json.encodeToJsonElement(
-            VerifiablePresentation.serializer(),
-            presentation
-        )
+        // Serialize VerifiablePresentation to JSON for DIDComm attachment
+        val presentationJson = presentation.toJsonObject()
 
         val attachment = DidCommAttachment(
             id = UUID.randomUUID().toString(),
@@ -113,7 +111,7 @@ object ProofProtocol {
         )
 
         val body = buildJsonObject {
-            put("goal_code", "present-proof")
+            put("goal_code", DidCommGoalCode.PresentProof.value)
         }
 
         return DidCommMessage(
@@ -122,7 +120,7 @@ object ProofProtocol {
             from = fromDid,
             to = listOf(toDid),
             body = body,
-            created = Instant.now().toString(),
+            created = Clock.System.now().toString(),
             attachments = listOf(attachment),
             thid = thid
         )
@@ -142,7 +140,7 @@ object ProofProtocol {
         thid: String
     ): DidCommMessage {
         val body = buildJsonObject {
-            put("goal_code", "ack-proof")
+            put("goal_code", DidCommGoalCode.AckProof.value)
         }
 
         return DidCommMessage(
@@ -151,34 +149,11 @@ object ProofProtocol {
             from = fromDid,
             to = listOf(toDid),
             body = body,
-            created = Instant.now().toString(),
+            created = Clock.System.now().toString(),
             thid = thid
         )
     }
 
-    /**
-     * Extracts presentation from a proof presentation message.
-     *
-     * @param message The proof presentation message
-     * @return The verifiable presentation, or null if not found
-     */
-    fun extractPresentation(message: DidCommMessage): VerifiablePresentation? {
-        val attachment = message.attachments.firstOrNull()
-            ?: return null
-
-        val presentationJson = attachment.data.json
-            ?: return null
-
-        val json = Json { prettyPrint = false; ignoreUnknownKeys = true }
-        return try {
-            json.decodeFromJsonElement(
-                VerifiablePresentation.serializer(),
-                presentationJson
-            )
-        } catch (e: Exception) {
-            null
-        }
-    }
 }
 
 /**

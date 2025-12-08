@@ -1,13 +1,14 @@
 package com.trustweave.trust.dsl
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.SchemaFormat
 import com.trustweave.trust.dsl.credential.credential
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
-import java.time.Instant
-import java.time.temporal.ChronoUnit
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.days
 import kotlin.test.*
 
 /**
@@ -25,7 +26,7 @@ class CredentialBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
             // No types specified
         }
 
@@ -40,7 +41,7 @@ class CredentialBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         assertTrue(credential.type.contains("VerifiableCredential"))
@@ -55,7 +56,7 @@ class CredentialBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         assertEquals(2, credential.type.size)
@@ -71,7 +72,7 @@ class CredentialBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         assertTrue(credential.type.contains("VerifiableCredential"))
@@ -88,7 +89,7 @@ class CredentialBuilderBranchCoverageTest {
             credential {
                 type("PersonCredential")
                 issuer("did:key:issuer")
-                issued(Instant.now())
+                issued(Clock.System.now())
                 // Missing subject
             }
         }
@@ -102,7 +103,7 @@ class CredentialBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         assertNotNull(credential.credentialSubject)
@@ -119,7 +120,7 @@ class CredentialBuilderBranchCoverageTest {
                 "name" to "John Doe"
                 "email" to "john@example.com"
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         assertNotNull(credential.credentialSubject)
@@ -139,7 +140,7 @@ class CredentialBuilderBranchCoverageTest {
                     "name" to "Bachelor of Science"
                 }
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         assertNotNull(credential.credentialSubject)
@@ -189,7 +190,7 @@ class CredentialBuilderBranchCoverageTest {
                 subject {
                     id("did:key:subject")
                 }
-                issued(Instant.now())
+                issued(Clock.System.now())
                 // Missing issuer
             }
         }
@@ -203,7 +204,7 @@ class CredentialBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         assertEquals("did:key:issuer", credential.issuer)
@@ -219,7 +220,7 @@ class CredentialBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
             // No expiration
         }
 
@@ -228,14 +229,14 @@ class CredentialBuilderBranchCoverageTest {
 
     @Test
     fun `test branch expiration with Instant`() {
-        val expiration = Instant.now().plus(365, ChronoUnit.DAYS)
+        val expiration = Clock.System.now().plus(kotlin.time.Duration.parse("P365D"))
         val credential = credential {
             type("PersonCredential")
             issuer("did:key:issuer")
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
             expires(expiration)
         }
 
@@ -250,8 +251,8 @@ class CredentialBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
-            expires(365, ChronoUnit.DAYS)
+            issued(Clock.System.now())
+            expires(365.days)
         }
 
         assertNotNull(credential.expirationDate)
@@ -267,7 +268,7 @@ class CredentialBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
             // No ID
         }
 
@@ -283,7 +284,7 @@ class CredentialBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         assertEquals("https://example.edu/credentials/123", credential.id)
@@ -299,7 +300,7 @@ class CredentialBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
             // No schema
         }
 
@@ -314,7 +315,7 @@ class CredentialBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
             schema("https://example.com/schemas/person.json")
         }
 
@@ -332,7 +333,7 @@ class CredentialBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
             schema(
                 schemaId = "https://example.com/schemas/person.json",
                 type = "JsonSchemaValidator2020",
@@ -355,7 +356,7 @@ class CredentialBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
             // No status
         }
 
@@ -370,7 +371,7 @@ class CredentialBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
             status {
                 id("https://example.com/status/123")
                 type("StatusList2021Entry")
@@ -394,7 +395,7 @@ class CredentialBuilderBranchCoverageTest {
                 subject {
                     id("did:key:subject")
                 }
-                issued(Instant.now())
+                issued(Clock.System.now())
                 status {
                     // Missing ID
                     type("StatusList2021Entry")
@@ -413,7 +414,7 @@ class CredentialBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
             // No evidence
         }
 
@@ -428,7 +429,7 @@ class CredentialBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
             evidence {
                 id("https://example.com/evidence/1")
                 type("DocumentVerification")
@@ -448,7 +449,7 @@ class CredentialBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
             evidence {
                 id("https://example.com/evidence/1")
                 type("DocumentVerification")
@@ -471,7 +472,7 @@ class CredentialBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
             evidence {
                 id("https://example.com/evidence/1")
                 // No type - should default to "Evidence"
@@ -493,7 +494,7 @@ class CredentialBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
             // No terms of use
         }
 
@@ -508,7 +509,7 @@ class CredentialBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
             termsOfUse {
                 id("https://example.com/terms")
                 type("IssuerPolicy")
@@ -530,7 +531,7 @@ class CredentialBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
             termsOfUse {
                 id("https://example.com/terms")
                 // No terms block - should create empty object
@@ -551,7 +552,7 @@ class CredentialBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
             // No refresh service
         }
 
@@ -566,7 +567,7 @@ class CredentialBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
             refreshService(
                 id = "https://example.com/refresh",
                 type = "CredentialRefreshService2020",
@@ -590,7 +591,7 @@ class CredentialBuilderBranchCoverageTest {
                 id("did:key:subject")
                 "name" to "John Doe"
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val subjectObj = credential.credentialSubject.jsonObject
@@ -606,7 +607,7 @@ class CredentialBuilderBranchCoverageTest {
                 id("did:key:subject")
                 "age" to 30
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val subjectObj = credential.credentialSubject.jsonObject
@@ -622,7 +623,7 @@ class CredentialBuilderBranchCoverageTest {
                 id("did:key:subject")
                 "verified" to true
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         assertEquals(true, credential.credentialSubject.jsonObject["verified"]?.jsonPrimitive?.boolean)
@@ -637,7 +638,7 @@ class CredentialBuilderBranchCoverageTest {
                 id("did:key:subject")
                 "optionalField" to null
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         assertTrue(credential.credentialSubject.jsonObject["optionalField"]?.jsonPrimitive?.isString == false)
@@ -654,7 +655,7 @@ class CredentialBuilderBranchCoverageTest {
                     put("key", "value")
                 }
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         assertNotNull(credential.credentialSubject.jsonObject["custom"]?.jsonObject)
@@ -676,7 +677,7 @@ class CredentialBuilderBranchCoverageTest {
                     "gpa" to 3.8
                 }
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val degree = credential.credentialSubject.jsonObject["degree"]?.jsonObject
@@ -700,7 +701,7 @@ class CredentialBuilderBranchCoverageTest {
                     }
                 }
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val address = credential.credentialSubject.jsonObject["address"]?.jsonObject

@@ -5,8 +5,9 @@ import com.trustweave.kms.KeyManagementService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.didcommx.didcomm.secret.Secret
-import java.time.Instant
-import java.time.temporal.ChronoUnit
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.days
 import java.util.UUID
 
 /**
@@ -93,7 +94,7 @@ class KeyRotationManager(
         // For now, return default metadata
         return KeyMetadata(
             keyId = keyId,
-            createdAt = Instant.now().minus(100, ChronoUnit.DAYS),
+            createdAt = Clock.System.now().minus(100.days),
             lastUsedAt = null,
             usageCount = 0
         )

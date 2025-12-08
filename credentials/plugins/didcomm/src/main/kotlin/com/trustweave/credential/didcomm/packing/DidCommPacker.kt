@@ -3,12 +3,11 @@ package com.trustweave.credential.didcomm.packing
 import com.trustweave.credential.didcomm.crypto.DidCommCryptoInterface
 import com.trustweave.credential.didcomm.models.DidCommEnvelope
 import com.trustweave.credential.didcomm.models.DidCommMessage
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 import kotlinx.serialization.json.putJsonArray
-import java.time.Instant
 import java.util.*
 import java.util.Base64
 

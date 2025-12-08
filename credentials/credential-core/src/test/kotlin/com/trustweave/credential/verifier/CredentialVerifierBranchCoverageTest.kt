@@ -3,9 +3,9 @@ package com.trustweave.credential.verifier
 import com.trustweave.credential.CredentialVerificationOptions
 import com.trustweave.credential.CredentialVerificationResult
 import com.trustweave.credential.models.CredentialSchema
-import com.trustweave.credential.models.CredentialStatus
+import com.trustweave.credential.model.vc.CredentialStatus
 import com.trustweave.credential.models.Proof
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.schema.JsonSchemaValidator
 import com.trustweave.credential.schema.SchemaRegistry
 import com.trustweave.credential.schema.SchemaValidatorRegistry
@@ -26,6 +26,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Comprehensive branch coverage tests for CredentialVerifier.
@@ -35,7 +37,7 @@ class CredentialVerifierBranchCoverageTest {
 
     private lateinit var verifier: CredentialVerifier
     private lateinit var kms: InMemoryKeyManagementService
-    private var keyId: com.trustweave.core.types.KeyId? = null
+    private var keyId: com.trustweave.core.identifiers.KeyId? = null
     private lateinit var publicKeyJwk: Map<String, Any?>
     private lateinit var proofGenerator: Ed25519ProofGenerator
     private val issuerDid = "did:key:issuer123"
@@ -114,7 +116,7 @@ class CredentialVerifierBranchCoverageTest {
         val credential = createTestCredential(
             proof = Proof(
                 type = "",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:issuer123#key-1",
                 proofPurpose = "assertionMethod"
             )
@@ -131,7 +133,7 @@ class CredentialVerifierBranchCoverageTest {
         val credential = createTestCredential(
             proof = Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "",
                 proofPurpose = "assertionMethod"
             )
@@ -148,7 +150,7 @@ class CredentialVerifierBranchCoverageTest {
         val credential = createTestCredential(
             proof = Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:issuer123#key-1",
                 proofPurpose = "assertionMethod",
                 proofValue = null,
@@ -183,7 +185,7 @@ class CredentialVerifierBranchCoverageTest {
         val credentialWithJws = credential.copy(
             proof = Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:issuer123#key-1",
                 proofPurpose = "assertionMethod",
                 proofValue = null,
@@ -241,7 +243,7 @@ class CredentialVerifierBranchCoverageTest {
     @Test
     fun `test branch expiration check disabled`() = runBlocking {
         val expiredCredential = createTestCredential(
-            expirationDate = java.time.Instant.now().minusSeconds(86400).toString()
+            expirationDate = Clock.System.now().minus(86400.seconds).toString()
         )
 
         val result = verifier.verify(
@@ -255,7 +257,7 @@ class CredentialVerifierBranchCoverageTest {
     @Test
     fun `test branch expiration check enabled and credential expired`() = runBlocking {
         val expiredCredential = createTestCredential(
-            expirationDate = java.time.Instant.now().minusSeconds(86400).toString()
+            expirationDate = Clock.System.now().minus(86400.seconds).toString()
         )
 
         val result = verifier.verify(
@@ -271,7 +273,7 @@ class CredentialVerifierBranchCoverageTest {
     @Test
     fun `test branch expiration check enabled and credential not expired`() = runBlocking {
         val validCredential = createTestCredential(
-            expirationDate = java.time.Instant.now().plusSeconds(86400).toString()
+            expirationDate = Clock.System.now().plus(86400.seconds).toString()
         )
 
         val result = verifier.verify(
@@ -521,7 +523,7 @@ class CredentialVerifierBranchCoverageTest {
     @Test
     fun `test branch multiple failures`() = runBlocking {
         val credential = createTestCredentialWithoutProof(
-            expirationDate = java.time.Instant.now().minusSeconds(86400).toString(),
+            expirationDate = Clock.System.now().minus(86400.seconds).toString(),
             issuerDid = "did:key:wrong"
         )
 
@@ -545,7 +547,7 @@ class CredentialVerifierBranchCoverageTest {
             put("id", "did:key:subject")
             put("name", "John Doe")
         },
-        issuanceDate: String = java.time.Instant.now().toString(),
+        issuanceDate: String = Clock.System.now().toString(),
         expirationDate: String? = null,
         proof: Proof? = null, // null means auto-generate, use createTestCredentialWithoutProof() to skip proof
         schema: CredentialSchema? = null,
@@ -591,7 +593,7 @@ class CredentialVerifierBranchCoverageTest {
             put("id", "did:key:subject")
             put("name", "John Doe")
         },
-        issuanceDate: String = java.time.Instant.now().toString(),
+        issuanceDate: String = Clock.System.now().toString(),
         expirationDate: String? = null,
         schema: CredentialSchema? = null,
         credentialStatus: CredentialStatus? = null,

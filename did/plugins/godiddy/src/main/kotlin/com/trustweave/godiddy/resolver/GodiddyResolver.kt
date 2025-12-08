@@ -1,11 +1,12 @@
 package com.trustweave.godiddy.resolver
 
 import com.trustweave.core.exception.TrustWeaveException
-import com.trustweave.core.types.Did
-import com.trustweave.did.DidDocument
-import com.trustweave.did.DidDocumentMetadata
-import com.trustweave.did.VerificationMethod
-import com.trustweave.did.DidService
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.DidDocumentMetadata
+import com.trustweave.did.model.VerificationMethod
+import com.trustweave.did.model.DidService
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.resolver.UniversalResolver
 import com.trustweave.godiddy.GodiddyClient
@@ -15,7 +16,8 @@ import io.ktor.http.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 
 /**
  * GoDiddy implementation of Universal Resolver.
@@ -143,10 +145,11 @@ class GodiddyResolver(
             val publicKeyMultibase = vmObj["publicKeyMultibase"]?.jsonPrimitive?.content
 
             if (vmId != null && vmType != null) {
+                val didObj = Did(id)
                 VerificationMethod(
-                    id = vmId,
+                    id = VerificationMethodId.parse(vmId, didObj),
                     type = vmType,
-                    controller = controller,
+                    controller = Did(controller),
                     publicKeyJwk = publicKeyJwk,
                     publicKeyMultibase = publicKeyMultibase
                 )
@@ -195,15 +198,16 @@ class GodiddyResolver(
             } else null
         } ?: emptyList()
 
+        val didObj = Did(id)
         return DidDocument(
-            id = id,
+            id = didObj,
             context = context,
             verificationMethod = verificationMethod,
-            authentication = authentication,
-            assertionMethod = assertionMethod,
-            keyAgreement = keyAgreement,
-            capabilityInvocation = capabilityInvocation,
-            capabilityDelegation = capabilityDelegation,
+            authentication = authentication.map { VerificationMethodId.parse(it, didObj) },
+            assertionMethod = assertionMethod.map { VerificationMethodId.parse(it, didObj) },
+            keyAgreement = keyAgreement.map { VerificationMethodId.parse(it, didObj) },
+            capabilityInvocation = capabilityInvocation.map { VerificationMethodId.parse(it, didObj) },
+            capabilityDelegation = capabilityDelegation.map { VerificationMethodId.parse(it, didObj) },
             service = service
         )
     }
@@ -232,8 +236,8 @@ class GodiddyResolver(
             updated = updated,
             versionId = versionId,
             nextUpdate = nextUpdate,
-            canonicalId = canonicalId,
-            equivalentId = equivalentId
+            canonicalId = canonicalId?.let { Did(it) },
+            equivalentId = equivalentId.map { Did(it) }
         )
     }
 

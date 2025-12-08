@@ -3,8 +3,8 @@ package com.trustweave.examples.academic
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.trust.types.ProofType
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.ProofType
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.wallet.CredentialOrganization
 import com.trustweave.wallet.Wallet
 import com.trustweave.trust.dsl.wallet.query
@@ -20,8 +20,9 @@ import com.trustweave.did.DidMethod
 import com.trustweave.did.DidCreationOptions
 import com.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
-import java.time.Instant
-import java.time.temporal.ChronoUnit
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.days
 
 fun main() = runBlocking {
     println("=== Academic Credentials Scenario ===\n")
@@ -69,7 +70,7 @@ fun main() = runBlocking {
                 } else {
                     keyId
                 }
-                kmsRef.sign(com.trustweave.core.types.KeyId(actualKeyId), data)
+                kmsRef.sign(com.trustweave.core.identifiers.KeyId(actualKeyId), data)
             }
             algorithm("Ed25519")
         }
@@ -114,7 +115,7 @@ fun main() = runBlocking {
     // This will be used later for signing the credential
     val issuerKeyId = verificationMethod.id.substringAfter("#")
     try {
-        kmsRef.getPublicKey(com.trustweave.core.types.KeyId(issuerKeyId))
+        kmsRef.getPublicKey(com.trustweave.core.identifiers.KeyId(issuerKeyId))
         println("✓ Key verified in KMS: $issuerKeyId")
     } catch (e: com.trustweave.kms.exception.KmsException.KeyNotFound) {
         throw IllegalStateException(
@@ -162,8 +163,8 @@ fun main() = runBlocking {
                     "gpa" to "3.8"
                 }
             }
-            issued(Instant.now())
-            expires(365 * 10, ChronoUnit.DAYS) // Valid for 10 years
+            issued(Clock.System.now())
+            expires((365 * 10).days) // Valid for 10 years
         }
         signedBy(issuerDid = universityDid.value, keyId = issuerKeyId)
     }.getOrFail()
@@ -202,7 +203,7 @@ fun main() = runBlocking {
     // Step 8: Create presentation (for demonstration purposes)
     // Note: In a real scenario, this would be signed with the holder's key
     println("\nStep 8: Creating presentation for job application...")
-    val presentation = com.trustweave.credential.models.VerifiablePresentation(
+    val presentation = com.trustweave.credential.model.vc.VerifiablePresentation(
         id = "urn:example:presentation:${System.currentTimeMillis()}",
         type = listOf("VerifiablePresentation"),
         verifiableCredential = listOf(issuedCredential),
@@ -284,8 +285,8 @@ fun createDegreeCredential(
                 "gpa" to gpa
             }
         }
-        issued(Instant.now())
-        expires(365 * 10, ChronoUnit.DAYS) // Valid for 10 years
+        issued(Clock.System.now())
+        expires(365.days * 10) // Valid for 10 years
     }
 }
 

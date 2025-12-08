@@ -2,6 +2,8 @@ package com.trustweave.did.orb
 
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.base.AbstractDidMethod
 import com.trustweave.kms.KeyManagementService
@@ -39,10 +41,10 @@ class OrbDidMethod(
         )
     }
 
-    override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
-        require(did.startsWith("did:orb:")) {
-            "Invalid did:orb format: $did"
-        }
+    override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
+        validateDidFormat(did)
+        
+        val didString = did.value
 
         // TODO: Implement Orb DID resolution
         // 1. Extract anchor origin and suffix from DID

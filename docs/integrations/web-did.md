@@ -90,12 +90,22 @@ println("Created: ${document.id}") // did:web:example.com
 ### Resolving a did:web
 
 ```kotlin
-val result = method.resolveDid("did:web:example.com")
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.resolver.DidResolutionResult
 
-result.document?.let { doc ->
-    println("Resolved: ${doc.id}")
-    println("Verification methods: ${doc.verificationMethod.size}")
-} ?: println("Not found")
+val did = Did("did:web:example.com")
+val result = method.resolveDid(did)
+
+when (result) {
+    is DidResolutionResult.Success -> {
+        println("Resolved: ${result.document.id}")
+        println("Verification methods: ${result.document.verificationMethod.size}")
+    }
+    is DidResolutionResult.Failure.NotFound -> {
+        println("DID not found: ${result.did.value}")
+    }
+    else -> println("Resolution failed")
+}
 ```
 
 ### Creating did:web with Path
@@ -115,7 +125,10 @@ val document = method.createDid(options)
 ### Updating a did:web
 
 ```kotlin
-val document = method.updateDid("did:web:example.com") { currentDoc ->
+import com.trustweave.did.identifiers.Did
+
+val did = Did("did:web:example.com")
+val document = method.updateDid(did) { currentDoc ->
     currentDoc.copy(
         service = currentDoc.service + Service(
             id = "${currentDoc.id}#didcomm",
@@ -129,7 +142,10 @@ val document = method.updateDid("did:web:example.com") { currentDoc ->
 ### Deactivating a did:web
 
 ```kotlin
-val deactivated = method.deactivateDid("did:web:example.com")
+import com.trustweave.did.identifiers.Did
+
+val did = Did("did:web:example.com")
+val deactivated = method.deactivateDid(did)
 println("Deactivated: $deactivated")
 ```
 

@@ -31,7 +31,7 @@ class AnchorOptionsTest {
     @Test
     fun `test CredentialAnchorResult`() {
         val anchorRef = Any() // Placeholder AnchorRef
-        val credential = com.trustweave.credential.models.VerifiableCredential(
+        val credential = com.trustweave.credential.model.vc.VerifiableCredential(
             type = listOf("VerifiableCredential"),
             issuer = "did:key:issuer",
             credentialSubject = buildJsonObject { put("id", "did:key:subject") },

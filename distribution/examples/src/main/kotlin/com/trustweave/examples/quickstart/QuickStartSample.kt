@@ -4,7 +4,7 @@ import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.types.VerificationResult
 import com.trustweave.trust.types.*
 import com.trustweave.anchor.BlockchainAnchorRegistry
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.proof.ProofType
 import com.trustweave.core.util.DigestUtils
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
@@ -61,7 +61,7 @@ fun main(): Unit = runBlocking {
                 "name" to "Alice Example"
                 "role" to "Site Reliability Engineer"
             }
-            issued(java.time.Instant.now())
+            issued(kotlinx.datetime.Clock.System.now())
         }
         signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
     }.getOrFail()

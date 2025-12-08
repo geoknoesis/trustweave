@@ -1,7 +1,10 @@
 package com.trustweave.did.registration.impl
 
 import com.trustweave.core.exception.TrustWeaveException
-import com.trustweave.did.*
+import com.trustweave.did.DidCreationOptions
+import com.trustweave.did.DidMethod
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.registrar.DidRegistrar
 import com.trustweave.did.registrar.model.*
 import com.trustweave.did.registration.model.DidRegistrationSpec
@@ -168,7 +171,7 @@ class HttpDidMethod(
             )
     }
 
-    override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
+    override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
         val capabilities = registrationSpec.capabilities
         if (capabilities?.resolve != true) {
             throw com.trustweave.core.exception.TrustWeaveException.InvalidOperation(
@@ -178,13 +181,13 @@ class HttpDidMethod(
         }
 
         // Validate DID format
-        require(did.startsWith("did:${registrationSpec.name}:")) {
-            "Invalid DID format for method '${registrationSpec.name}': $did"
+        require(did.method == registrationSpec.name) {
+            "Invalid DID format for method '${registrationSpec.name}': ${did.value}"
         }
 
         // Delegate to HTTP resolver endpoint
         try {
-            resolver.resolveDid(did)
+            resolver.resolveDid(did.value)
         } catch (e: Exception) {
             throw com.trustweave.core.exception.TrustWeaveException.Unknown(
                 message = "Failed to resolve DID $did using HTTP endpoint: ${e.message ?: "Unknown error"}",
@@ -195,7 +198,7 @@ class HttpDidMethod(
     }
 
     override suspend fun updateDid(
-        did: String,
+        did: Did,
         updater: (DidDocument) -> DidDocument
     ): DidDocument = withContext(Dispatchers.IO) {
         val capabilities = registrationSpec.capabilities
@@ -214,7 +217,7 @@ class HttpDidMethod(
             )
 
         // First resolve the current document
-        val resolutionResult = resolver.resolveDid(did)
+        val resolutionResult = resolver.resolveDid(did.value)
         val currentDocument = when (resolutionResult) {
             is DidResolutionResult.Success -> resolutionResult.document
             else -> throw com.trustweave.did.exception.DidException.DidNotFound(
@@ -226,8 +229,8 @@ class HttpDidMethod(
         // Apply the updater function
         val updatedDocument = updater(currentDocument)
 
-        // Update via registrar
-        val response = registrarToUse.updateDid(did, updatedDocument)
+        // Update via registrar (registrar still uses String for backward compatibility)
+        val response = registrarToUse.updateDid(did.value, updatedDocument)
 
         // Handle long-running operations
         val finalResponse = if (response.isComplete()) {
@@ -247,12 +250,12 @@ class HttpDidMethod(
         // Extract updated DID Document from response
         finalResponse.didState.didDocument
             ?: throw com.trustweave.did.exception.DidException.InvalidDidFormat(
-                did = did,
+                did = did.value,
                 reason = "DID update completed but no DID Document returned. State: ${finalResponse.didState.state}"
             )
     }
 
-    override suspend fun deactivateDid(did: String): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun deactivateDid(did: Did): Boolean = withContext(Dispatchers.IO) {
         val capabilities = registrationSpec.capabilities
         if (capabilities?.deactivate != true) {
             throw com.trustweave.core.exception.TrustWeaveException.InvalidOperation(
@@ -268,8 +271,8 @@ class HttpDidMethod(
                 context = mapOf("method" to registrationSpec.name, "operation" to "deactivate")
             )
 
-        // Deactivate via registrar
-        val response = registrarToUse.deactivateDid(did)
+        // Deactivate via registrar (registrar still uses String for backward compatibility)
+        val response = registrarToUse.deactivateDid(did.value)
 
         // Handle long-running operations
         val finalResponse = if (response.isComplete()) {

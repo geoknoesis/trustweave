@@ -2,7 +2,7 @@ package com.trustweave.credential.issuer
 
 import com.trustweave.credential.CredentialIssuanceOptions
 import com.trustweave.credential.models.CredentialSchema
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.proof.Ed25519ProofGenerator
 import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.credential.schema.JsonSchemaValidator
@@ -16,6 +16,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 import java.util.UUID
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Exhaustive edge case tests for CredentialIssuer API robustness.
@@ -209,7 +211,7 @@ class CredentialIssuerEdgeCasesTest {
 
     @Test
     fun `test issue credential with expiration date in past`() = runBlocking {
-        val pastDate = java.time.Instant.now().minusSeconds(86400).toString()
+        val pastDate = Clock.System.now().minus(86400.seconds).toString()
         val credential = createTestCredential(expirationDate = pastDate)
 
         val issued = issuer.issue(credential, issuerDid, keyId)
@@ -220,7 +222,7 @@ class CredentialIssuerEdgeCasesTest {
 
     @Test
     fun `test issue credential with expiration date far in future`() = runBlocking {
-        val futureDate = java.time.Instant.now().plusSeconds(31536000L * 100).toString() // 100 years
+        val futureDate = Clock.System.now().plus((31536000L * 100).seconds).toString() // 100 years
         val credential = createTestCredential(expirationDate = futureDate)
 
         val issued = issuer.issue(credential, issuerDid, keyId)
@@ -458,7 +460,7 @@ class CredentialIssuerEdgeCasesTest {
             put("id", "did:key:subject")
             put("name", "John Doe")
         },
-        issuanceDate: String = java.time.Instant.now().toString(),
+        issuanceDate: String = Clock.System.now().toString(),
         expirationDate: String? = null,
         schema: CredentialSchema? = null
     ): VerifiableCredential {

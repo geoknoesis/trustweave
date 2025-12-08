@@ -3,10 +3,13 @@ package com.trustweave.soldid
 import com.trustweave.anchor.BlockchainAnchorClient
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.base.AbstractBlockchainDidMethod
 import com.trustweave.did.base.DidMethodUtils
 import com.trustweave.kms.KeyManagementService
+import com.trustweave.kms.results.GenerateKeyResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -84,7 +87,23 @@ class SolDidMethod(
                 throw IllegalArgumentException("did:sol requires Ed25519 algorithm")
             }
 
-            val keyHandle = kms.generateKey(algorithm, options.additionalProperties)
+            val generateResult = kms.generateKey(algorithm, options.additionalProperties)
+            val keyHandle = when (generateResult) {
+                is GenerateKeyResult.Success -> generateResult.keyHandle
+                is GenerateKeyResult.Failure.UnsupportedAlgorithm -> throw TrustWeaveException.Unknown(
+                    code = "UNSUPPORTED_ALGORITHM",
+                    message = generateResult.reason ?: "Algorithm not supported"
+                )
+                is GenerateKeyResult.Failure.InvalidOptions -> throw TrustWeaveException.Unknown(
+                    code = "INVALID_OPTIONS",
+                    message = generateResult.reason
+                )
+                is GenerateKeyResult.Failure.Error -> throw TrustWeaveException.Unknown(
+                    code = "KEY_GENERATION_ERROR",
+                    message = generateResult.reason,
+                    cause = generateResult.cause
+                )
+            }
 
             // Derive Solana address from public key
             val solanaAddress = deriveSolanaAddress(keyHandle)
@@ -107,9 +126,9 @@ class SolDidMethod(
             val document = DidMethodUtils.buildDidDocument(
                 did = did,
                 verificationMethod = listOf(verificationMethod),
-                authentication = listOf(verificationMethod.id),
-                assertionMethod = if (options.purposes.contains(DidCreationOptions.KeyPurpose.ASSERTION)) {
-                    listOf(verificationMethod.id)
+                authentication = listOf(verificationMethod.id.value),
+                assertionMethod = if (options.purposes.contains(KeyPurpose.ASSERTION)) {
+                    listOf(verificationMethod.id.value)
                 } else null
             )
 
@@ -137,12 +156,13 @@ class SolDidMethod(
         }
     }
 
-    override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
+    override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
 
+            val didString = did.value
             // Extract Solana address from DID
-            val solanaAddress = extractSolanaAddress(did)
+            val solanaAddress = extractSolanaAddress(didString)
 
             // Resolve from Solana program account
             val accountData = solanaClient.getAccountData(solanaAddress)
@@ -162,7 +182,8 @@ class SolDidMethod(
                 return@withContext DidMethodUtils.createErrorResolutionResult(
                     "notFound",
                     "DID document not found on Solana",
-                    method
+                    method,
+                    didString
                 )
             }
 
@@ -170,44 +191,47 @@ class SolDidMethod(
             val json = Json.parseToJsonElement(String(accountData))
             val document = jsonElementToDocument(json)
 
-            // Validate DID matches
-            if (document.id != did) {
+            // Validate DID matches - document.id is Did, so compare values
+            if (document.id.value != didString) {
                 // Rebuild with correct DID
                 val correctedDocument = document.copy(id = did)
-                storeDocument(correctedDocument.id, correctedDocument)
+                storeDocument(correctedDocument.id.value, correctedDocument)
                 return@withContext DidMethodUtils.createSuccessResolutionResult(correctedDocument, method)
             }
 
-            storeDocument(document.id, document)
+            storeDocument(document.id.value, document)
             DidMethodUtils.createSuccessResolutionResult(document, method)
         } catch (e: TrustWeaveException) {
             DidMethodUtils.createErrorResolutionResult(
                 "invalidDid",
                 e.message,
-                method
+                method,
+                did.value
             )
         } catch (e: Exception) {
             DidMethodUtils.createErrorResolutionResult(
                 "invalidDid",
                 e.message,
-                method
+                method,
+                did.value
             )
         }
     }
 
     override suspend fun updateDid(
-        did: String,
+        did: Did,
         updater: (DidDocument) -> DidDocument
     ): DidDocument = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
 
+            val didString = did.value
             // Resolve current document
             val currentResult = resolveDid(did)
             val currentDocument = when (currentResult) {
                 is DidResolutionResult.Success -> currentResult.document
                 else -> throw TrustWeaveException.NotFound(
-                    message = "DID document not found: $did"
+                    message = "DID document not found: $didString"
                 )
             }
 
@@ -216,7 +240,7 @@ class SolDidMethod(
             val updatedDocument = updater(doc)
 
             // Update on Solana
-            updateDocumentOnBlockchain(did, updatedDocument)
+            updateDocumentOnBlockchain(didString, updatedDocument)
 
             updatedDocument
         } catch (e: TrustWeaveException.NotFound) {
@@ -232,9 +256,11 @@ class SolDidMethod(
         }
     }
 
-    override suspend fun deactivateDid(did: String): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun deactivateDid(did: Did): Boolean = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
+
+            val didString = did.value
 
             // Resolve current document
             val currentResult = resolveDid(did)
@@ -254,7 +280,7 @@ class SolDidMethod(
             )
 
             // Deactivate on Solana
-            deactivateDocumentOnBlockchain(did, deactivatedDocument)
+            deactivateDocumentOnBlockchain(didString, deactivatedDocument)
 
             true
         } catch (e: TrustWeaveException.NotFound) {

@@ -2,10 +2,16 @@ package com.trustweave.iondid
 
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.VerificationMethod
+import com.trustweave.did.model.DidService
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.base.AbstractDidMethod
 import com.trustweave.did.base.DidMethodUtils
 import com.trustweave.kms.KeyManagementService
+import com.trustweave.kms.results.GenerateKeyResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -67,7 +73,23 @@ class IonDidMethod(
         try {
             // Generate keys using KMS
             val algorithm = options.algorithm.algorithmName
-            val keyHandle = kms.generateKey(algorithm, options.additionalProperties)
+            val generateResult = kms.generateKey(algorithm, options.additionalProperties)
+            val keyHandle = when (generateResult) {
+                is GenerateKeyResult.Success -> generateResult.keyHandle
+                is GenerateKeyResult.Failure.UnsupportedAlgorithm -> throw TrustWeaveException.Unknown(
+                    code = "UNSUPPORTED_ALGORITHM",
+                    message = generateResult.reason ?: "Algorithm not supported"
+                )
+                is GenerateKeyResult.Failure.InvalidOptions -> throw TrustWeaveException.Unknown(
+                    code = "INVALID_OPTIONS",
+                    message = generateResult.reason
+                )
+                is GenerateKeyResult.Failure.Error -> throw TrustWeaveException.Unknown(
+                    code = "KEY_GENERATION_ERROR",
+                    message = generateResult.reason,
+                    cause = generateResult.cause
+                )
+            }
 
             // Create Sidetree create operation
             val createOperation = sidetreeClient.createCreateOperation(
@@ -111,12 +133,13 @@ class IonDidMethod(
         }
     }
 
-    override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
+    override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
 
+            val didString = did.value
             // Resolve through ION node
-            val resolutionResult = sidetreeClient.resolveDid(did)
+            val resolutionResult = sidetreeClient.resolveDid(didString)
 
             val document = when (resolutionResult) {
                 is DidResolutionResult.Success -> resolutionResult.document
@@ -124,7 +147,8 @@ class IonDidMethod(
                     return@withContext DidMethodUtils.createErrorResolutionResult(
                         "notFound",
                         "DID not found in ION network",
-                        method
+                        method,
+                        didString
                     )
                 }
             }
@@ -133,37 +157,40 @@ class IonDidMethod(
             val convertedDocument = convertIonDocument(document)
 
             // Store locally for caching
-            storeDocument(convertedDocument.id, convertedDocument)
+            storeDocument(convertedDocument.id.value, convertedDocument)
 
             DidMethodUtils.createSuccessResolutionResult(convertedDocument, method)
         } catch (e: TrustWeaveException) {
             DidMethodUtils.createErrorResolutionResult(
                 "invalidDid",
                 e.message,
-                method
+                method,
+                did.value
             )
         } catch (e: Exception) {
             DidMethodUtils.createErrorResolutionResult(
                 "invalidDid",
                 e.message,
-                method
+                method,
+                did.value
             )
         }
     }
 
     override suspend fun updateDid(
-        did: String,
+        did: Did,
         updater: (DidDocument) -> DidDocument
     ): DidDocument = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
 
+            val didString = did.value
             // Resolve current document
             val currentResult = resolveDid(did)
             val currentDocument = when (currentResult) {
                 is DidResolutionResult.Success -> currentResult.document
                 else -> throw TrustWeaveException.NotFound(
-                    message = "DID document not found: $did"
+                    message = "DID document not found: $didString"
                 )
             }
 
@@ -172,7 +199,7 @@ class IonDidMethod(
 
             // Create Sidetree update operation
             val updateOperation = sidetreeClient.createUpdateOperation(
-                did = did,
+                did = didString,
                 previousOperationHash = (currentResult as? DidResolutionResult.Success)?.documentMetadata?.versionId ?: "",
                 updatedDocument = updatedDocument
             )
@@ -181,7 +208,7 @@ class IonDidMethod(
             sidetreeClient.submitOperation(updateOperation)
 
             // Store updated document
-            storeDocument(updatedDocument.id, updatedDocument)
+            storeDocument(updatedDocument.id.value, updatedDocument)
 
             updatedDocument
         } catch (e: TrustWeaveException.NotFound) {
@@ -197,10 +224,11 @@ class IonDidMethod(
         }
     }
 
-    override suspend fun deactivateDid(did: String): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun deactivateDid(did: Did): Boolean = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
 
+            val didString = did.value
             // Resolve current document to get operation hash
             val currentResult = resolveDid(did)
             val currentDocument = when (currentResult) {
@@ -210,16 +238,16 @@ class IonDidMethod(
 
             // Create Sidetree deactivate operation
             val deactivateOperation = sidetreeClient.createDeactivateOperation(
-                did = did,
-                previousOperationHash = currentResult.documentMetadata.versionId ?: ""
+                did = didString,
+                previousOperationHash = (currentResult as? DidResolutionResult.Success)?.documentMetadata?.versionId ?: ""
             )
 
             // Submit deactivate operation
             sidetreeClient.submitOperation(deactivateOperation)
 
             // Remove from local storage
-            documents.remove(did)
-            documentMetadata.remove(did)
+            documents.remove(didString)
+            documentMetadata.remove(didString)
 
             true
         } catch (e: TrustWeaveException.NotFound) {
@@ -239,8 +267,8 @@ class IonDidMethod(
     private fun buildIonDocument(
         did: String,
         keyHandle: com.trustweave.kms.KeyHandle,
-        algorithm: DidCreationOptions.KeyAlgorithm,
-        purposes: List<DidCreationOptions.KeyPurpose>
+        algorithm: KeyAlgorithm,
+        purposes: List<KeyPurpose>
     ): DidDocument {
         // Create verification method
         val verificationMethod = DidMethodUtils.createVerificationMethod(
@@ -252,9 +280,9 @@ class IonDidMethod(
         return DidMethodUtils.buildDidDocument(
             did = did,
             verificationMethod = listOf(verificationMethod),
-            authentication = listOf(verificationMethod.id),
-            assertionMethod = if (purposes.contains(DidCreationOptions.KeyPurpose.ASSERTION)) {
-                listOf(verificationMethod.id)
+            authentication = listOf(verificationMethod.id.value),
+            assertionMethod = if (purposes.contains(KeyPurpose.ASSERTION)) {
+                listOf(verificationMethod.id.value)
             } else null
         )
     }
@@ -266,23 +294,25 @@ class IonDidMethod(
         val did = ionDocJson["id"]?.jsonPrimitive?.content
             ?: throw IllegalArgumentException("Missing id in ION document")
 
+        val didObj = Did(did)
         val verificationMethods = ionDocJson["verificationMethod"]?.jsonArray?.mapNotNull { vm ->
             val vmObj = vm.jsonObject
+            val vmIdString = vmObj["id"]?.jsonPrimitive?.content ?: return@mapNotNull null
             VerificationMethod(
-                id = vmObj["id"]?.jsonPrimitive?.content ?: return@mapNotNull null,
+                id = VerificationMethodId.parse(vmIdString, didObj),
                 type = vmObj["type"]?.jsonPrimitive?.content ?: return@mapNotNull null,
-                controller = vmObj["controller"]?.jsonPrimitive?.content ?: did,
+                controller = Did(vmObj["controller"]?.jsonPrimitive?.content ?: did),
                 publicKeyJwk = vmObj["publicKeyJwk"]?.jsonObject?.let { jsonObjectToMap(it) },
                 publicKeyMultibase = vmObj["publicKeyMultibase"]?.jsonPrimitive?.content
             )
         } ?: emptyList()
 
         val authentication = ionDocJson["authentication"]?.jsonArray?.mapNotNull {
-            (it as? JsonPrimitive)?.content
+            (it as? JsonPrimitive)?.content?.let { idStr -> VerificationMethodId.parse(idStr, didObj) }
         } ?: emptyList()
 
         val assertionMethod = ionDocJson["assertionMethod"]?.jsonArray?.mapNotNull {
-            (it as? JsonPrimitive)?.content
+            (it as? JsonPrimitive)?.content?.let { idStr -> VerificationMethodId.parse(idStr, didObj) }
         } ?: emptyList()
 
         val service = ionDocJson["service"]?.jsonArray?.mapNotNull { s ->
@@ -300,7 +330,7 @@ class IonDidMethod(
         } ?: emptyList()
 
         return DidDocument(
-            id = did,
+            id = didObj,
             verificationMethod = verificationMethods,
             authentication = authentication,
             assertionMethod = assertionMethod,

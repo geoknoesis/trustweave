@@ -2,7 +2,8 @@ package com.trustweave.testkit.eo
 
 import com.trustweave.anchor.BlockchainAnchorClient
 import com.trustweave.anchor.BlockchainAnchorRegistry
-import com.trustweave.credential.CredentialServiceRegistry
+// TODO: CredentialServiceRegistry removed - credential-api uses CredentialService directly
+// import com.trustweave.credential.CredentialServiceRegistry
 import com.trustweave.did.DidMethod
 import com.trustweave.did.registry.DidMethodRegistry
 import com.trustweave.testkit.did.DidKeyMockMethod
@@ -34,7 +35,8 @@ abstract class BaseEoIntegrationTest {
 
     protected val didRegistry: DidMethodRegistry = DidMethodRegistry()
     protected val blockchainRegistry: BlockchainAnchorRegistry = BlockchainAnchorRegistry()
-    protected val credentialRegistry: CredentialServiceRegistry = CredentialServiceRegistry.create()
+    // TODO: CredentialServiceRegistry removed - credential-api uses CredentialService directly
+    // protected val credentialRegistry: CredentialServiceRegistry = CredentialServiceRegistry.create()
 
     /**
      * Creates a blockchain anchor client for the test.
@@ -76,7 +78,8 @@ abstract class BaseEoIntegrationTest {
     open fun cleanup() {
         didRegistry.clear()
         blockchainRegistry.clear()
-        credentialRegistry.clear()
+        // TODO: CredentialServiceRegistry removed - credential-api uses CredentialService directly
+        // credentialRegistry.clear()
     }
 
     /**
@@ -101,7 +104,7 @@ abstract class BaseEoIntegrationTest {
 
         // Create issuer DID
         val issuerDoc = didMethod.createDid()
-        val issuerDid = issuerDoc.id
+        val issuerDid = issuerDoc.id.value
 
         // Create anchor client
         val testChainId = chainId ?: getChainId()

@@ -1,9 +1,12 @@
 package com.trustweave.did.resolver
 
-import com.trustweave.did.DidDocument
-import com.trustweave.did.DidDocumentMetadata
-import com.trustweave.did.DidService
-import com.trustweave.did.VerificationMethod
+import com.trustweave.core.identifiers.KeyId
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.DidDocumentMetadata
+import com.trustweave.did.model.DidService
+import com.trustweave.did.model.VerificationMethod
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -12,7 +15,7 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.Duration
-import java.time.Instant
+import kotlinx.datetime.Instant
 
 /**
  * Default implementation of [UniversalResolver] using Java's built-in HTTP client.
@@ -97,7 +100,7 @@ class DefaultUniversalResolver(
                         )
                     } else {
                         DidResolutionResult.Failure.NotFound(
-                            did = com.trustweave.core.types.Did(did),
+                            did = Did(did),
                             reason = "DID document not found in response",
                             resolutionMetadata = resolutionMetadata.plus("provider" to protocolAdapter.providerName)
                         )
@@ -105,7 +108,7 @@ class DefaultUniversalResolver(
                 }
                 404 -> {
                     DidResolutionResult.Failure.NotFound(
-                        did = com.trustweave.core.types.Did(did),
+                        did = Did(did),
                         reason = "DID not found",
                         resolutionMetadata = mapOf(
                             "error" to "notFound",
@@ -197,6 +200,22 @@ class DefaultUniversalResolver(
             else -> listOf("https://www.w3.org/ns/did/v1")
         }
 
+        // Helper function to parse verification method ID
+        fun parseVmId(vmIdString: String): VerificationMethodId {
+            return try {
+                VerificationMethodId.parse(vmIdString, Did(id))
+            } catch (e: Exception) {
+                // Fallback: try to parse manually
+                val (didPart, keyPart) = if (vmIdString.contains("#")) {
+                    val parts = vmIdString.split("#", limit = 2)
+                    parts[0] to parts[1]
+                } else {
+                    id to vmIdString
+                }
+                VerificationMethodId(Did(didPart), KeyId(keyPart))
+            }
+        }
+
         // Extract verification methods
         val verificationMethod = json["verificationMethod"]?.jsonArray?.mapNotNull { vmJson ->
             val vmObj = vmJson.jsonObject
@@ -209,10 +228,11 @@ class DefaultUniversalResolver(
             val publicKeyMultibase = vmObj["publicKeyMultibase"]?.jsonPrimitive?.content
 
             if (vmId != null && vmType != null) {
+                val parsedVmId = parseVmId(vmId)
                 VerificationMethod(
-                    id = vmId,
+                    id = parsedVmId,
                     type = vmType,
-                    controller = controller,
+                    controller = Did(controller),
                     publicKeyJwk = publicKeyJwk,
                     publicKeyMultibase = publicKeyMultibase
                 )
@@ -220,28 +240,28 @@ class DefaultUniversalResolver(
         } ?: emptyList()
 
         // Extract authentication references
-        val authentication = json["authentication"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
-            ?: json["authentication"]?.jsonPrimitive?.content?.let { listOf(it) }
+        val authentication = json["authentication"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content?.let { parseVmId(it) } }
+            ?: json["authentication"]?.jsonPrimitive?.content?.let { listOf(parseVmId(it)) }
             ?: emptyList()
 
         // Extract assertion method references
-        val assertionMethod = json["assertionMethod"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
-            ?: json["assertionMethod"]?.jsonPrimitive?.content?.let { listOf(it) }
+        val assertionMethod = json["assertionMethod"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content?.let { parseVmId(it) } }
+            ?: json["assertionMethod"]?.jsonPrimitive?.content?.let { listOf(parseVmId(it)) }
             ?: emptyList()
 
         // Extract key agreement references
-        val keyAgreement = json["keyAgreement"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
-            ?: json["keyAgreement"]?.jsonPrimitive?.content?.let { listOf(it) }
+        val keyAgreement = json["keyAgreement"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content?.let { parseVmId(it) } }
+            ?: json["keyAgreement"]?.jsonPrimitive?.content?.let { listOf(parseVmId(it)) }
             ?: emptyList()
 
         // Extract capability invocation references
-        val capabilityInvocation = json["capabilityInvocation"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
-            ?: json["capabilityInvocation"]?.jsonPrimitive?.content?.let { listOf(it) }
+        val capabilityInvocation = json["capabilityInvocation"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content?.let { parseVmId(it) } }
+            ?: json["capabilityInvocation"]?.jsonPrimitive?.content?.let { listOf(parseVmId(it)) }
             ?: emptyList()
 
         // Extract capability delegation references
-        val capabilityDelegation = json["capabilityDelegation"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
-            ?: json["capabilityDelegation"]?.jsonPrimitive?.content?.let { listOf(it) }
+        val capabilityDelegation = json["capabilityDelegation"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content?.let { parseVmId(it) } }
+            ?: json["capabilityDelegation"]?.jsonPrimitive?.content?.let { listOf(parseVmId(it)) }
             ?: emptyList()
 
         // Extract services
@@ -262,7 +282,7 @@ class DefaultUniversalResolver(
         } ?: emptyList()
 
         return DidDocument(
-            id = id,
+            id = Did(id),
             context = context,
             verificationMethod = verificationMethod,
             authentication = authentication,
@@ -290,8 +310,8 @@ class DefaultUniversalResolver(
         val nextUpdate = metadataJson["nextUpdate"]?.jsonPrimitive?.content?.let {
             try { Instant.parse(it) } catch (e: Exception) { null }
         }
-        val canonicalId = metadataJson["canonicalId"]?.jsonPrimitive?.content
-        val equivalentId = metadataJson["equivalentId"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content } ?: emptyList()
+        val canonicalId = metadataJson["canonicalId"]?.jsonPrimitive?.content?.let { Did(it) }
+        val equivalentId = metadataJson["equivalentId"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content?.let { Did(it) } } ?: emptyList()
 
         return DidDocumentMetadata(
             created = created,

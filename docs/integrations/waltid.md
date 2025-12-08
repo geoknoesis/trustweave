@@ -21,12 +21,12 @@ Add the walt.id module to your dependencies:
 
 ```kotlin
 dependencies {
+    // Only need to add the walt.id plugin - core dependencies are included transitively
     implementation("com.trustweave.kms:waltid:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 }
 ```
+
+**Note:** The walt.id plugin automatically includes `trustweave-kms`, `trustweave-did`, and `trustweave-common` as transitive dependencies, so you don't need to declare them explicitly.
 
 ## Configuration
 
@@ -166,11 +166,10 @@ import com.trustweave.kms.*
 import com.trustweave.did.*
 import java.util.ServiceLoader
 
-// Discover KMS provider
-val kmsProviders = ServiceLoader.load(KeyManagementServiceProvider::class.java)
-val waltIdKmsProvider = kmsProviders.find { it.name == "waltid" }
+// Simple factory API for KMS - no ServiceLoader needed!
+val kms = KeyManagementServices.create("waltid")
 
-// Discover DID method providers
+// Discover DID method providers (still uses ServiceLoader for DID methods)
 val didProviders = ServiceLoader.load(DidMethodProvider::class.java)
 val waltIdDidProvider = didProviders.find {
     it.supportedMethods.contains("key") || it.supportedMethods.contains("web")

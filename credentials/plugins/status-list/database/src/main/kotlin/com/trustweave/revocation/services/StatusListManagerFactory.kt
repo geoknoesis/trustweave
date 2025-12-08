@@ -1,6 +1,6 @@
 package com.trustweave.revocation.services
 
-import com.trustweave.credential.revocation.StatusListManager
+import com.trustweave.credential.revocation.CredentialRevocationManager
 
 /**
  * Factory interface for creating StatusListRegistry instances.
@@ -16,6 +16,6 @@ interface StatusListRegistryFactory {
      * @return The status list registry instance
      * @throws IllegalStateException if the provider is not found or cannot be instantiated
      */
-    suspend fun create(providerName: String): StatusListManager
+    suspend fun create(providerName: String): CredentialRevocationManager
 }
 

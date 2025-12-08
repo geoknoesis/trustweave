@@ -3,7 +3,7 @@ package com.trustweave.examples.indy
 import com.trustweave.TrustWeave
 import com.trustweave.core.*
 import com.trustweave.credential.proof.ProofType
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.wallet.Wallet
 import com.trustweave.chain.indy.IndyBlockchainAnchorClient
 import com.trustweave.chain.indy.IndyIntegration
@@ -11,6 +11,7 @@ import com.trustweave.services.IssuanceConfig
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import kotlinx.serialization.Serializable
+import kotlinx.datetime.Clock
 
 /**
  * Complete Indy Integration Example.
@@ -354,7 +355,7 @@ fun main() = runBlocking {
         vcId = requireNotNull(credential.id),
         digest = "uABC123...",
         issuer = credential.issuer,
-        timestamp = java.time.Instant.now().toString(),
+        timestamp = Clock.System.now().toString(),
         chainId = chainId
     )
 

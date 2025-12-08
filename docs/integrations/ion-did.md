@@ -110,22 +110,36 @@ println("Created: ${document.id}") // Long-form DID initially
 ### Resolving a did:ion
 
 ```kotlin
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.resolver.DidResolutionResult
+
 // Resolve short-form DID (after anchoring)
-val result = method.resolveDid("did:ion:EiA2...")
+val did = Did("did:ion:EiA2...")
+val result = method.resolveDid(did)
 
 // Resolve long-form DID (for newly created DIDs)
-val longFormResult = method.resolveDid("did:ion:EiA2...:eyJ...")
+val longFormDid = Did("did:ion:EiA2...:eyJ...")
+val longFormResult = method.resolveDid(longFormDid)
 
-result.document?.let { doc ->
-    println("Resolved: ${doc.id}")
-    println("Verification methods: ${doc.verificationMethod.size}")
-} ?: println("Not found")
+when (result) {
+    is DidResolutionResult.Success -> {
+        println("Resolved: ${result.document.id}")
+        println("Verification methods: ${result.document.verificationMethod.size}")
+    }
+    is DidResolutionResult.Failure.NotFound -> {
+        println("DID not found: ${result.did.value}")
+    }
+    else -> println("Resolution failed")
+}
 ```
 
 ### Updating a did:ion
 
 ```kotlin
-val document = method.updateDid("did:ion:EiA2...") { currentDoc ->
+import com.trustweave.did.identifiers.Did
+
+val did = Did("did:ion:EiA2...")
+val document = method.updateDid(did) { currentDoc ->
     currentDoc.copy(
         service = currentDoc.service + Service(
             id = "${currentDoc.id}#didcomm",
@@ -139,7 +153,10 @@ val document = method.updateDid("did:ion:EiA2...") { currentDoc ->
 ### Deactivating a did:ion
 
 ```kotlin
-val deactivated = method.deactivateDid("did:ion:EiA2...")
+import com.trustweave.did.identifiers.Did
+
+val did = Did("did:ion:EiA2...")
+val deactivated = method.deactivateDid(did)
 println("Deactivated: $deactivated")
 ```
 

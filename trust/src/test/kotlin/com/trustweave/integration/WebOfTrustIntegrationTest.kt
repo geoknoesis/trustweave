@@ -6,7 +6,7 @@ import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.trust.types.VerificationResult
 import com.trustweave.trust.types.*
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.testkit.services.TestkitDidMethodFactory
@@ -18,7 +18,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 
 /**
  * End-to-end integration tests for web of trust features.
@@ -37,7 +38,7 @@ class WebOfTrustIntegrationTest {
             )
             keys {
                 custom(kmsRef)
-                signer { data, keyId -> kmsRef.sign(com.trustweave.core.types.KeyId(keyId), data) }
+                signer { data, keyId -> kmsRef.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
             }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -86,7 +87,7 @@ class WebOfTrustIntegrationTest {
                     id(holderDid.value)
                     "test" to "value"
                 }
-                issued(Instant.now())
+                issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDid.value, keyId = keyId)
         }.getOrFail()
@@ -151,7 +152,7 @@ class WebOfTrustIntegrationTest {
                     id(holderDid.value)
                     "test" to "value"
                 }
-                issued(Instant.now())
+                issued(Clock.System.now())
             }
             signedBy(issuerDid = delegateDid.value, keyId = "key-1")
         }.getOrFail()
@@ -246,7 +247,7 @@ class WebOfTrustIntegrationTest {
                     id(holderDid.value)
                     "test" to "value"
                 }
-                issued(Instant.now())
+                issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDid.value, keyId = "key-1")
         }.getOrFail()

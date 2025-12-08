@@ -7,7 +7,8 @@ import com.trustweave.trust.types.VerifierIdentity
 import com.trustweave.trust.types.IssuerIdentity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 
 /**
  * Trust Registry DSL.
@@ -99,7 +100,7 @@ class TrustBuilder(
 class TrustAnchorMetadataBuilder {
     private var credentialTypes: List<String>? = null
     private var description: String? = null
-    private var addedAt: Instant = Instant.now()
+    private var addedAt: Instant = Clock.System.now()
 
     /**
      * Set credential types this anchor is trusted for.

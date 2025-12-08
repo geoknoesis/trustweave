@@ -1,6 +1,6 @@
 package com.trustweave.trust.dsl
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.revocation.InMemoryStatusListManager
 import com.trustweave.credential.revocation.StatusListManager
 import com.trustweave.credential.revocation.StatusPurpose
@@ -40,7 +40,7 @@ class DidDslTest {
             )
             keys {
                 custom(kmsInstance)
-                signer { data, keyId -> kmsInstance.sign(com.trustweave.core.types.KeyId(keyId), data) }
+                signer { data, keyId -> kmsInstance.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
             }
             did {
                 method("key") {

@@ -3,8 +3,8 @@ package com.trustweave.credential.presentation
 import com.trustweave.credential.PresentationOptions
 import com.trustweave.credential.PresentationVerificationOptions
 import com.trustweave.credential.models.Proof
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.models.VerifiablePresentation
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiablePresentation
 import com.trustweave.credential.proof.Ed25519ProofGenerator
 import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.credential.proof.ProofGenerator
@@ -14,6 +14,7 @@ import kotlinx.serialization.json.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import kotlinx.datetime.Clock
 
 /**
  * Additional branch coverage tests for PresentationService.
@@ -135,7 +136,7 @@ class PresentationServiceAdditionalBranchCoverageTest {
             holder = "did:key:holder",
             proof = Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:holder#key-1",
                 proofPurpose = "authentication",
                 proofValue = "test-proof"
@@ -178,7 +179,7 @@ class PresentationServiceAdditionalBranchCoverageTest {
             holder = "did:key:holder",
             proof = Proof(
                 type = "",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "",
                 proofPurpose = "authentication"
             )
@@ -201,7 +202,7 @@ class PresentationServiceAdditionalBranchCoverageTest {
             holder = "did:key:holder",
             proof = Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:holder#key-1",
                 proofPurpose = "authentication",
                 proofValue = "test-proof"
@@ -231,7 +232,7 @@ class PresentationServiceAdditionalBranchCoverageTest {
             holder = "did:key:holder",
             proof = Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:holder#key-1",
                 proofPurpose = "authentication",
                 proofValue = "test-proof"
@@ -262,7 +263,7 @@ class PresentationServiceAdditionalBranchCoverageTest {
             holder = "did:key:holder",
             proof = Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:holder#key-1",
                 proofPurpose = "authentication",
                 proofValue = "test-proof"
@@ -292,7 +293,7 @@ class PresentationServiceAdditionalBranchCoverageTest {
             holder = "did:key:holder",
             proof = Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:holder#key-1",
                 proofPurpose = "authentication",
                 proofValue = "test-proof"
@@ -322,7 +323,7 @@ class PresentationServiceAdditionalBranchCoverageTest {
             holder = "did:key:holder",
             proof = Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:holder#key-1",
                 proofPurpose = "authentication",
                 proofValue = "test-proof"
@@ -354,7 +355,7 @@ class PresentationServiceAdditionalBranchCoverageTest {
             holder = "did:key:holder",
             proof = Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:holder#key-1",
                 proofPurpose = "authentication",
                 proofValue = "test-proof"
@@ -382,7 +383,7 @@ class PresentationServiceAdditionalBranchCoverageTest {
             holder = "did:key:holder",
             proof = Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:holder#key-1",
                 proofPurpose = "authentication",
                 proofValue = "test-proof"
@@ -423,7 +424,7 @@ class PresentationServiceAdditionalBranchCoverageTest {
             put("id", "did:key:subject")
             put("name", "John Doe")
         },
-        issuanceDate: String = java.time.Instant.now().toString()
+        issuanceDate: String = Clock.System.now().toString()
     ): VerifiableCredential {
         return VerifiableCredential(
             id = id,

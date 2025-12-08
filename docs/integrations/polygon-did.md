@@ -125,18 +125,31 @@ println("Created: ${document.id}") // did:polygon:mumbai:0x... or did:polygon:0x
 ### Resolving a did:polygon
 
 ```kotlin
-val result = method.resolveDid("did:polygon:0x1234...")
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.resolver.DidResolutionResult
 
-result.document?.let { doc ->
-    println("Resolved: ${doc.id}")
-    println("Verification methods: ${doc.verificationMethod.size}")
-} ?: println("Not found")
+val did = Did("did:polygon:0x1234...")
+val result = method.resolveDid(did)
+
+when (result) {
+    is DidResolutionResult.Success -> {
+        println("Resolved: ${result.document.id}")
+        println("Verification methods: ${result.document.verificationMethod.size}")
+    }
+    is DidResolutionResult.Failure.NotFound -> {
+        println("DID not found: ${result.did.value}")
+    }
+    else -> println("Resolution failed")
+}
 ```
 
 ### Updating a did:polygon
 
 ```kotlin
-val document = method.updateDid("did:polygon:0x1234...") { currentDoc ->
+import com.trustweave.did.identifiers.Did
+
+val did = Did("did:polygon:0x1234...")
+val document = method.updateDid(did) { currentDoc ->
     currentDoc.copy(
         service = currentDoc.service + Service(
             id = "${currentDoc.id}#didcomm",
@@ -150,7 +163,10 @@ val document = method.updateDid("did:polygon:0x1234...") { currentDoc ->
 ### Deactivating a did:polygon
 
 ```kotlin
-val deactivated = method.deactivateDid("did:polygon:0x1234...")
+import com.trustweave.did.identifiers.Did
+
+val did = Did("did:polygon:0x1234...")
+val deactivated = method.deactivateDid(did)
 println("Deactivated: $deactivated")
 ```
 

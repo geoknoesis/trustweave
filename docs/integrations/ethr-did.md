@@ -126,18 +126,31 @@ println("Created: ${document.id}") // did:ethr:sepolia:0x... or did:ethr:0x...
 ### Resolving a did:ethr
 
 ```kotlin
-val result = method.resolveDid("did:ethr:0x1234...")
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.resolver.DidResolutionResult
 
-result.document?.let { doc ->
-    println("Resolved: ${doc.id}")
-    println("Verification methods: ${doc.verificationMethod.size}")
-} ?: println("Not found")
+val did = Did("did:ethr:0x1234...")
+val result = method.resolveDid(did)
+
+when (result) {
+    is DidResolutionResult.Success -> {
+        println("Resolved: ${result.document.id}")
+        println("Verification methods: ${result.document.verificationMethod.size}")
+    }
+    is DidResolutionResult.Failure.NotFound -> {
+        println("DID not found: ${result.did.value}")
+    }
+    else -> println("Resolution failed")
+}
 ```
 
 ### Updating a did:ethr
 
 ```kotlin
-val document = method.updateDid("did:ethr:0x1234...") { currentDoc ->
+import com.trustweave.did.identifiers.Did
+
+val did = Did("did:ethr:0x1234...")
+val document = method.updateDid(did) { currentDoc ->
     currentDoc.copy(
         service = currentDoc.service + Service(
             id = "${currentDoc.id}#didcomm",
@@ -151,7 +164,10 @@ val document = method.updateDid("did:ethr:0x1234...") { currentDoc ->
 ### Deactivating a did:ethr
 
 ```kotlin
-val deactivated = method.deactivateDid("did:ethr:0x1234...")
+import com.trustweave.did.identifiers.Did
+
+val did = Did("did:ethr:0x1234...")
+val deactivated = method.deactivateDid(did)
 println("Deactivated: $deactivated")
 ```
 

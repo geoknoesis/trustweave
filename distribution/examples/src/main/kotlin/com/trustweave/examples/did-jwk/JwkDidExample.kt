@@ -2,7 +2,7 @@ package com.trustweave.examples.did_jwk
 
 import com.trustweave.trust.TrustWeave
 import com.trustweave.did.*
-import com.trustweave.did.DidCreationOptions.KeyAlgorithm
+import com.trustweave.did.KeyAlgorithm
 import com.trustweave.did.DidCreationOptions.KeyPurpose
 import com.trustweave.jwkdid.JwkDidMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService

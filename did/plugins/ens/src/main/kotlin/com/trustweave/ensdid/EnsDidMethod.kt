@@ -3,6 +3,8 @@ package com.trustweave.ensdid
 import com.trustweave.anchor.BlockchainAnchorClient
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.base.AbstractBlockchainDidMethod
 import com.trustweave.did.base.DidMethodUtils
@@ -76,18 +78,20 @@ class EnsDidMethod(
         )
     }
 
-    override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
+    override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
 
+            val didString = did.value
             // Extract ENS domain from did:ens
-            val ensDomain = extractEnsDomain(did)
+            val ensDomain = extractEnsDomain(didString)
 
             // Resolve ENS domain to Ethereum address
             val ethAddress = resolveEnsToAddress(ensDomain)
 
             // Resolve as did:ethr
-            val ethrDid = "did:ethr:$ethAddress"
+            val ethrDidString = "did:ethr:$ethAddress"
+            val ethrDid = Did(ethrDidString)
             val ethrResult = delegate.resolveDid(ethrDid)
 
             // Convert result to did:ens format
@@ -95,7 +99,7 @@ class EnsDidMethod(
                 is DidResolutionResult.Success -> {
                     val ethrDoc = ethrResult.document
                     val ensDocument = ethrDoc.copy(id = did)
-                    storeDocument(ensDocument.id, ensDocument)
+                    storeDocument(ensDocument.id.value, ensDocument)
 
                     DidMethodUtils.createSuccessResolutionResult(
                         ensDocument,
@@ -108,7 +112,8 @@ class EnsDidMethod(
                     DidMethodUtils.createErrorResolutionResult(
                         "notFound",
                         "ENS DID not found",
-                        method
+                        method,
+                        didString
                     )
                 }
             }
@@ -116,19 +121,21 @@ class EnsDidMethod(
             DidMethodUtils.createErrorResolutionResult(
                 "invalidDid",
                 e.message,
-                method
+                method,
+                did.value
             )
         } catch (e: Exception) {
             DidMethodUtils.createErrorResolutionResult(
                 "invalidDid",
                 e.message,
-                method
+                method,
+                did.value
             )
         }
     }
 
     override suspend fun updateDid(
-        did: String,
+        did: Did,
         updater: (DidDocument) -> DidDocument
     ): DidDocument = withContext(Dispatchers.IO) {
         throw TrustWeaveException.Unknown(
@@ -138,7 +145,7 @@ class EnsDidMethod(
         )
     }
 
-    override suspend fun deactivateDid(did: String): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun deactivateDid(did: Did): Boolean = withContext(Dispatchers.IO) {
         throw TrustWeaveException.Unknown(
             code = "NOT_SUPPORTED",
             message = "did:ens does not support DID deactivation. " +

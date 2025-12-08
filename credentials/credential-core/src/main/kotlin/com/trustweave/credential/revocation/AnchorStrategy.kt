@@ -1,7 +1,10 @@
 package com.trustweave.credential.revocation
 
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.days
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 
 /**
  * Strategy for determining when to anchor status lists to blockchain.
@@ -47,7 +50,7 @@ sealed interface AnchorStrategy {
  * @param maxUpdates Maximum number of updates before forcing an anchor
  */
 data class PeriodicAnchorStrategy(
-    val interval: Duration = Duration.ofHours(1),
+    val interval: Duration = 1.hours,
     val maxUpdates: Int = 100
 ) : AnchorStrategy {
 
@@ -68,7 +71,7 @@ data class PeriodicAnchorStrategy(
         }
 
         // Check if time interval threshold reached
-        val timeSinceAnchor = Duration.between(lastAnchorTime, Instant.now())
+        val timeSinceAnchor = lastAnchorTime.until(Clock.System.now())
         if (timeSinceAnchor >= interval) {
             return true
         }
@@ -94,7 +97,7 @@ data class PeriodicAnchorStrategy(
  * @param maxStaleness Maximum age before forcing an anchor (null = never force)
  */
 data class LazyAnchorStrategy(
-    val maxStaleness: Duration? = Duration.ofDays(1)
+    val maxStaleness: Duration? = 1.days
 ) : AnchorStrategy {
 
     override suspend fun shouldAnchor(
@@ -110,7 +113,7 @@ data class LazyAnchorStrategy(
 
         // If max staleness is set and exceeded, force anchor
         if (maxStaleness != null) {
-            val age = Duration.between(lastAnchorTime, Instant.now())
+            val age = lastAnchorTime.until(Clock.System.now())
             if (age >= maxStaleness) {
                 return true
             }
@@ -141,7 +144,7 @@ data class LazyAnchorStrategy(
  * @param forceAnchorOnVerify Whether to anchor when verification is requested (if stale)
  */
 data class HybridAnchorStrategy(
-    val periodicInterval: Duration = Duration.ofHours(1),
+    val periodicInterval: Duration = 1.hours,
     val maxUpdates: Int = 100,
     val forceAnchorOnVerify: Boolean = true
 ) : AnchorStrategy {
@@ -162,7 +165,7 @@ data class HybridAnchorStrategy(
             return true
         }
 
-        val timeSinceAnchor = Duration.between(lastAnchorTime, Instant.now())
+        val timeSinceAnchor = lastAnchorTime.until(Clock.System.now())
         if (timeSinceAnchor >= periodicInterval) {
             return true
         }
@@ -192,7 +195,7 @@ data class HybridAnchorStrategy(
         }
 
         // If there are updates since last anchor, force anchor
-        if (lastUpdateTime.isAfter(lastAnchorTime)) {
+        if (lastUpdateTime > lastAnchorTime) {
             return true
         }
 

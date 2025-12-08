@@ -1,11 +1,21 @@
 package com.trustweave.testkit.credential
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.wallet.CredentialFilter
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import kotlin.test.*
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.credential.identifiers.StatusListId
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.model.StatusPurpose
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.vc.CredentialStatus
+import com.trustweave.did.identifiers.Did
+import com.trustweave.core.identifiers.Iri
 
 class BasicWalletTest {
 
@@ -28,16 +38,16 @@ class BasicWalletTest {
         val id = wallet.store(credential)
 
         assertNotNull(id)
-        assertEquals(credential.id, id)
+        assertEquals(credential.id?.value, id)
     }
 
     @Test
     fun `test store credential without ID generates UUID`() = runBlocking {
         val credential = VerifiableCredential(
-            type = listOf("VerifiableCredential"),
-            issuer = "did:example:issuer",
-            issuanceDate = Instant.now().toString(),
-            credentialSubject = buildJsonObject { put("id", "did:example:subject") }
+            type = listOf(CredentialType.VerifiableCredential),
+            issuer = Issuer.fromDid(Did("did:example:issuer")),
+            issuanceDate = Clock.System.now(),
+            credentialSubject = CredentialSubject.fromIri(Iri("did:example:subject"), emptyMap())
         )
 
         val id = wallet.store(credential)
@@ -54,8 +64,8 @@ class BasicWalletTest {
         val retrieved = wallet.get(id)
 
         assertNotNull(retrieved)
-        assertEquals(credential.id, retrieved?.id)
-        assertEquals(credential.issuer, retrieved?.issuer)
+        assertEquals(credential.id?.value, retrieved?.id?.value)
+        assertEquals(credential.issuer.id.value, retrieved?.issuer?.id?.value)
     }
 
     @Test
@@ -75,8 +85,8 @@ class BasicWalletTest {
         val credentials = wallet.list(null)
 
         assertEquals(2, credentials.size)
-        assertTrue(credentials.any { it.id == "cred-1" })
-        assertTrue(credentials.any { it.id == "cred-2" })
+        assertTrue(credentials.any { it.id?.value == "cred-1" })
+        assertTrue(credentials.any { it.id?.value == "cred-2" })
     }
 
     @Test
@@ -89,7 +99,7 @@ class BasicWalletTest {
         val credentials = wallet.list(CredentialFilter(issuer = "did:example:issuer1"))
 
         assertEquals(1, credentials.size)
-        assertEquals("cred-1", credentials.first().id)
+        assertEquals("cred-1", credentials.first().id?.value)
     }
 
     @Test
@@ -102,7 +112,7 @@ class BasicWalletTest {
         val credentials = wallet.list(CredentialFilter(type = listOf("TypeA")))
 
         assertEquals(1, credentials.size)
-        assertEquals("cred-1", credentials.first().id)
+        assertEquals("cred-1", credentials.first().id?.value)
     }
 
     @Test
@@ -115,13 +125,13 @@ class BasicWalletTest {
         val credentials = wallet.list(CredentialFilter(subjectId = "did:example:subject1"))
 
         assertEquals(1, credentials.size)
-        assertEquals("cred-1", credentials.first().id)
+        assertEquals("cred-1", credentials.first().id?.value)
     }
 
     @Test
     fun `test list with expired filter`() = runBlocking {
-        val pastDate = Instant.now().minusSeconds(86400).toString()
-        val futureDate = Instant.now().plusSeconds(86400).toString()
+        val pastDate = Clock.System.now().minus(kotlin.time.Duration.parse("PT24H")).toString()
+        val futureDate = Clock.System.now().plus(kotlin.time.Duration.parse("PT24H")).toString()
         val cred1 = createTestCredential("cred-1", expirationDate = pastDate)
         val cred2 = createTestCredential("cred-2", expirationDate = futureDate)
         wallet.store(cred1)
@@ -131,9 +141,9 @@ class BasicWalletTest {
         val notExpired = wallet.list(CredentialFilter(expired = false))
 
         assertEquals(1, expired.size)
-        assertEquals("cred-1", expired.first().id)
+        assertEquals("cred-1", expired.first().id?.value)
         assertEquals(1, notExpired.size)
-        assertEquals("cred-2", notExpired.first().id)
+        assertEquals("cred-2", notExpired.first().id?.value)
     }
 
     @Test
@@ -147,9 +157,9 @@ class BasicWalletTest {
         val notRevoked = wallet.list(CredentialFilter(revoked = false))
 
         assertEquals(1, revoked.size)
-        assertEquals("cred-1", revoked.first().id)
+        assertEquals("cred-1", revoked.first().id?.value)
         assertEquals(1, notRevoked.size)
-        assertEquals("cred-2", notRevoked.first().id)
+        assertEquals("cred-2", notRevoked.first().id?.value)
     }
 
     @Test
@@ -182,12 +192,12 @@ class BasicWalletTest {
         }
 
         assertEquals(1, credentials.size)
-        assertEquals("cred-1", credentials.first().id)
+        assertEquals("cred-1", credentials.first().id?.value)
     }
 
     @Test
     fun `test query with multiple filters`() = runBlocking {
-        val futureDate = Instant.now().plusSeconds(86400).toString()
+        val futureDate = Clock.System.now().plus(kotlin.time.Duration.parse("PT24H")).toString()
         val cred1 = createTestCredential("cred-1", issuer = "did:example:issuer1", expirationDate = futureDate)
         val cred2 = createTestCredential("cred-2", issuer = "did:example:issuer1", expirationDate = futureDate)
         val cred3 = createTestCredential("cred-3", issuer = "did:example:issuer2", expirationDate = futureDate)
@@ -201,7 +211,7 @@ class BasicWalletTest {
         }
 
         assertEquals(2, credentials.size)
-        assertTrue(credentials.all { it.issuer == "did:example:issuer1" })
+        assertTrue(credentials.all { it.issuer.id.value == "did:example:issuer1" })
     }
 
     @Test
@@ -268,20 +278,21 @@ class BasicWalletTest {
         expirationDate: String? = null,
         revoked: Boolean = false
     ): VerifiableCredential {
+        val claims = buildJsonObject {
+            put("name", "Test Subject")
+        }.toMutableMap()
         return VerifiableCredential(
-            id = id,
-            type = types,
-            issuer = issuer,
-            issuanceDate = Instant.now().toString(),
-            expirationDate = expirationDate,
-            credentialSubject = buildJsonObject {
-                put("id", subjectId)
-                put("name", "Test Subject")
-            },
+            id = CredentialId(id),
+            type = types.map { CredentialType.Custom(it) },
+            issuer = Issuer.fromDid(Did(issuer)),
+            issuanceDate = Clock.System.now(),
+            expirationDate = expirationDate?.let { Instant.parse(it) },
+            credentialSubject = CredentialSubject.fromIri(Iri(subjectId), claims = claims),
             credentialStatus = if (revoked) {
-                com.trustweave.credential.models.CredentialStatus(
-                    id = "https://example.com/status/1",
+                CredentialStatus(
+                    id = StatusListId("https://example.com/status/1"),
                     type = "StatusList2021Entry",
+                    statusPurpose = StatusPurpose.REVOCATION,
                     statusListIndex = "1"
                 )
             } else null

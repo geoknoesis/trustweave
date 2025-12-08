@@ -1,11 +1,12 @@
 package com.trustweave.credential.proof
 
 import com.trustweave.credential.models.Proof
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 import kotlin.test.*
 
 /**
@@ -192,7 +193,7 @@ class Ed25519ProofGeneratorAdditionalBranchesTest {
             id = id,
             type = types,
             issuer = issuerDid ?: "did:key:issuer123",
-            issuanceDate = Instant.now().toString(),
+            issuanceDate = Clock.System.now().toString(),
             credentialSubject = credentialSubject,
             proof = null
         )
@@ -203,7 +204,7 @@ class Ed25519ProofGeneratorAdditionalBranchesTest {
             id = "credential-123",
             type = listOf("VerifiableCredential", "PersonCredential"),
             issuer = "did:key:issuer123",
-            issuanceDate = Instant.now().toString(),
+            issuanceDate = Clock.System.now().toString(),
             credentialSubject = buildJsonObject {
                 put("id", "did:key:subject123")
                 put("name", "John Doe")

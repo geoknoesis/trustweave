@@ -22,31 +22,52 @@ Add the AWS KMS module to your dependencies:
 
 ```kotlin
 dependencies {
+    // Only need to add the AWS KMS plugin - core dependencies are included transitively
     implementation("com.trustweave.kms:aws:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 }
 ```
+
+**Note:** The AWS KMS plugin automatically includes `trustweave-kms` and `trustweave-common` as transitive dependencies, so you don't need to declare them explicitly.
 
 ## Configuration
 
 ### Basic Configuration
 
-The AWS KMS provider can be configured via options map or environment variables:
+The AWS KMS provider supports both **typed configuration** (recommended) and **Map-based configuration** (for backward compatibility).
+
+#### Typed Configuration (Recommended)
+
+Use the type-safe builder for compile-time safety and IDE autocomplete:
 
 ```kotlin
 import com.trustweave.kms.*
-import java.util.ServiceLoader
+import com.trustweave.awskms.awsKmsOptions
 
-// Discover AWS provider
-val providers = ServiceLoader.load(KeyManagementServiceProvider::class.java)
-val awsProvider = providers.find { it.name == "aws" }
+// Simple and elegant - no ServiceLoader needed!
+val kms = KeyManagementServices.create("aws", awsKmsOptions {
+    region = "us-east-1"
+})
+```
 
-// Create KMS with explicit configuration
-val kms = awsProvider?.create(mapOf(
+#### Map-Based Configuration (Legacy)
+
+For backward compatibility, you can still use Map-based configuration:
+
+```kotlin
+import com.trustweave.kms.*
+
+// Simple factory API
+val kms = KeyManagementServices.create("aws", mapOf(
     "region" to "us-east-1"
 ))
 ```
+
+**Benefits of Typed Configuration:**
+- ✅ Compile-time type safety
+- ✅ IDE autocomplete for available options
+- ✅ Better documentation and discoverability
+- ✅ Validation at construction time
+- ✅ Easier refactoring
 
 ### Authentication
 
@@ -56,9 +77,23 @@ The plugin supports multiple authentication methods:
 
 When running on AWS infrastructure (EC2, ECS, Lambda), use IAM roles:
 
+**Typed Configuration:**
 ```kotlin
+import com.trustweave.kms.*
+import com.trustweave.awskms.awsKmsOptions
+
 // No credentials needed - uses IAM role automatically
-val kms = awsProvider?.create(mapOf(
+val kms = KeyManagementServices.create("aws", awsKmsOptions {
+    region = "us-east-1"
+})
+```
+
+**Map Configuration:**
+```kotlin
+import com.trustweave.kms.*
+
+// No credentials needed - uses IAM role automatically
+val kms = KeyManagementServices.create("aws", mapOf(
     "region" to "us-east-1"
 ))
 ```
@@ -67,8 +102,23 @@ val kms = awsProvider?.create(mapOf(
 
 For local development or non-AWS environments:
 
+**Typed Configuration:**
 ```kotlin
-val kms = awsProvider?.create(mapOf(
+import com.trustweave.kms.*
+import com.trustweave.awskms.awsKmsOptions
+
+val kms = KeyManagementServices.create("aws", awsKmsOptions {
+    region = "us-east-1"
+    accessKeyId = "AKIA..."
+    secretAccessKey = "..."
+})
+```
+
+**Map Configuration:**
+```kotlin
+import com.trustweave.kms.*
+
+val kms = KeyManagementServices.create("aws", mapOf(
     "region" to "us-east-1",
     "accessKeyId" to "AKIA...",
     "secretAccessKey" to "..."
@@ -95,11 +145,46 @@ val kms = AwsKeyManagementService(config ?: throw IllegalStateException("AWS con
 
 For local testing with LocalStack:
 
+**Typed Configuration:**
 ```kotlin
-val kms = awsProvider?.create(mapOf(
+import com.trustweave.kms.*
+import com.trustweave.awskms.awsKmsOptions
+
+val kms = KeyManagementServices.create("aws", awsKmsOptions {
+    region = "us-east-1"
+    endpointOverride = "http://localhost:4566"
+})
+```
+
+**Map Configuration:**
+```kotlin
+import com.trustweave.kms.*
+
+val kms = KeyManagementServices.create("aws", mapOf(
     "region" to "us-east-1",
     "endpointOverride" to "http://localhost:4566"
 ))
+```
+
+### Advanced Configuration Options
+
+The typed builder supports all AWS KMS configuration options:
+
+```kotlin
+import com.trustweave.kms.*
+import com.trustweave.awskms.awsKmsOptions
+
+val kms = KeyManagementServices.create("aws", awsKmsOptions {
+    region = "us-east-1"
+    accessKeyId = "AKIA..."           // Optional: for explicit credentials
+    secretAccessKey = "..."            // Optional: for explicit credentials
+    sessionToken = "..."              // Optional: for temporary credentials
+    endpointOverride = "http://..."  // Optional: for LocalStack or custom endpoints
+    pendingWindowInDays = 30          // Optional: key deletion pending window (7-30 days)
+    cacheTtlSeconds = 300             // Optional: public key cache TTL (default: 300)
+    enabled = true                    // Optional: enable/disable provider (default: true)
+    priority = 10                     // Optional: provider priority for chaining
+})
 ```
 
 ## Algorithm Support
@@ -133,7 +218,12 @@ AWS KMS uses FIPS 140-3 Level 3 validated HSMs (Certificate #4884, validated 11/
 ### Checking Algorithm Support
 
 ```kotlin
-val kms = awsProvider?.create(mapOf("region" to "us-east-1"))
+import com.trustweave.kms.*
+import com.trustweave.awskms.awsKmsOptions
+
+val kms = KeyManagementServices.create("aws", awsKmsOptions {
+    region = "us-east-1"
+})
 
 // Get all supported algorithms
 val supported = kms?.getSupportedAlgorithms()
@@ -151,25 +241,36 @@ if (kms?.supportsAlgorithm(Algorithm.Ed25519) == true) {
 
 ```kotlin
 import com.trustweave.kms.*
+import com.trustweave.kms.KmsOptionKeys
+import com.trustweave.kms.results.*
 
 // Generate Ed25519 key
-val key = kms.generateKey(Algorithm.Ed25519)
+val result = kms.generateKey(Algorithm.Ed25519)
+when (result) {
+    is GenerateKeyResult.Success -> {
+        val keyHandle = result.keyHandle
+        println("Key created: ${keyHandle.id}")
+    }
+    is GenerateKeyResult.Failure -> {
+        println("Error: ${result.reason}")
+    }
+}
 
 // Generate key with alias (for easier rotation)
-val keyWithAlias = kms.generateKey(
+val keyWithAliasResult = kms.generateKey(
     algorithm = Algorithm.Ed25519,
     options = mapOf(
-        "alias" to "alias/issuer-key",
-        "description" to "Issuer signing key",
-        "enableAutomaticRotation" to true
+        KmsOptionKeys.ALIAS to "alias/issuer-key",
+        KmsOptionKeys.DESCRIPTION to "Issuer signing key",
+        KmsOptionKeys.ENABLE_AUTOMATIC_ROTATION to true
     )
 )
 
 // Generate P-256 key for FIPS compliance
-val fipsKey = kms.generateKey(
+val fipsKeyResult = kms.generateKey(
     algorithm = Algorithm.P256,
     options = mapOf(
-        "description" to "FIPS-compliant issuer key"
+        KmsOptionKeys.DESCRIPTION to "FIPS-compliant issuer key"
     )
 )
 ```
@@ -178,24 +279,42 @@ val fipsKey = kms.generateKey(
 
 ```kotlin
 // Sign with key ID (KeyId value class)
-val signature = kms.sign(KeyId(keyId), data.toByteArray())
+val sign = kms.sign(KeyId(keyId), data.toByteArray())
+when (sign) {
+    is SignResult.Success -> {
+        val signature = sign.signature
+        // Use signature
+    }
+    is SignResult.Failure -> {
+        println("Error: ${sign.reason}")
+    }
+}
 
 // Sign with algorithm override
-val signature = kms.sign(
+val sign = kms.sign(
     keyId = KeyId(keyId),
     data = data.toByteArray(),
     algorithm = Algorithm.Ed25519
 )
 
 // Sign using alias
-val signature = kms.sign(KeyId("alias/issuer-key"), data.toByteArray())
+val sign = kms.sign(KeyId("alias/issuer-key"), data.toByteArray())
 ```
 
 ### Retrieving Public Keys
 
 ```kotlin
 // Get public key by key ID (KeyId value class)
-val publicKey = kms.getPublicKey(KeyId(keyId))
+val publicKeyResult = kms.getPublicKey(KeyId(keyId))
+when (publicKeyResult) {
+    is GetPublicKeyResult.Success -> {
+        val publicKey = publicKeyResult.keyHandle
+        // Use public key
+    }
+    is GetPublicKeyResult.Failure -> {
+        println("Error: ${publicKeyResult.reason}")
+    }
+}
 
 // Get public key by ARN
 val publicKey = kms.getPublicKey(KeyId("arn:aws:kms:us-east-1:123456789012:key/123"))
@@ -212,7 +331,12 @@ println("Public key JWK: $jwk")
 
 ```kotlin
 // Schedule key deletion (30-day pending window by default)
-val deleted = kms.deleteKey(KeyId(keyId))
+val deleteResult = kms.deleteKey(KeyId(keyId))
+when (deleteResult) {
+    is DeleteKeyResult.Deleted -> println("Key scheduled for deletion")
+    is DeleteKeyResult.NotFound -> println("Key not found (already deleted)")
+    is DeleteKeyResult.Failure.Error -> println("Error: ${deleteResult.reason}")
+}
 ```
 
 ## Key Rotation Strategies
@@ -225,12 +349,21 @@ AWS KMS can automatically rotate customer-managed keys annually:
 
 ```kotlin
 // Enable automatic rotation when creating key
-val key = kms.generateKey(
+val result = kms.generateKey(
     algorithm = Algorithm.Ed25519,
     options = mapOf(
-        "enableAutomaticRotation" to true
+        KmsOptionKeys.ENABLE_AUTOMATIC_ROTATION to true
     )
 )
+when (result) {
+    is GenerateKeyResult.Success -> {
+        val keyHandle = result.keyHandle
+        // Key created with automatic rotation enabled
+    }
+    is GenerateKeyResult.Failure -> {
+        // Handle error
+    }
+}
 
 // The same key ID/alias continues to work
 // AWS KMS uses newer key material internally
@@ -252,13 +385,22 @@ For more control, use TrustWeave's manual rotation pattern:
 
 ```kotlin
 // Step 1: Generate new key
-val newKey = kms.generateKey(
+val newKeyResult = kms.generateKey(
     algorithm = Algorithm.Ed25519,
     options = mapOf(
-        "alias" to "alias/issuer-key-v2",
-        "description" to "Issuer key rotated 2025-01-15"
+        KmsOptionKeys.ALIAS to "alias/issuer-key-v2",
+        KmsOptionKeys.DESCRIPTION to "Issuer key rotated 2025-01-15"
     )
 )
+when (newKeyResult) {
+    is GenerateKeyResult.Success -> {
+        val newKeyHandle = newKeyResult.keyHandle
+        // Continue with rotation steps...
+    }
+    is GenerateKeyResult.Failure -> {
+        // Handle error
+    }
+}
 
 // Step 2: Update DID document (see key-rotation.md)
 // Step 3: Switch issuance to new key
@@ -277,15 +419,15 @@ Key aliases make rotation easier:
 
 ```kotlin
 // Create key with alias
-val key1 = kms.generateKey(
+val key1Result = kms.generateKey(
     algorithm = Algorithm.Ed25519,
-    options = mapOf("alias" to "alias/issuer-key")
+    options = mapOf(KmsOptionKeys.ALIAS to "alias/issuer-key")
 )
 
 // Later, create new key and update alias
-val key2 = kms.generateKey(
+val key2Result = kms.generateKey(
     algorithm = Algorithm.Ed25519,
-    options = mapOf("alias" to "alias/issuer-key-temp")
+    options = mapOf(KmsOptionKeys.ALIAS to "alias/issuer-key-temp")
 )
 
 // Update alias to point to new key (requires AWS KMS extension)
@@ -299,20 +441,30 @@ val key2 = kms.generateKey(
 The plugin maps AWS exceptions to TrustWeave exceptions:
 
 ```kotlin
-try {
-    val key = kms.generateKey(Algorithm.Ed25519)
-} catch (e: UnsupportedAlgorithmException) {
-    println("Algorithm not supported: ${e.message}")
-} catch (e: TrustWeaveException) {
-    when {
-        e.message?.contains("Access denied") == true -> {
-            println("Check IAM permissions")
-        }
-        e.message?.contains("Key not found") == true -> {
-            println("Key does not exist")
-        }
-        else -> {
-            println("Error: ${e.message}")
+val result = kms.generateKey(Algorithm.Ed25519)
+when (result) {
+    is GenerateKeyResult.Success -> {
+        val keyHandle = result.keyHandle
+        // Use key handle
+    }
+    is GenerateKeyResult.Failure.UnsupportedAlgorithm -> {
+        println("Algorithm not supported: ${result.algorithm.name}")
+        println("Supported algorithms: ${result.supportedAlgorithms.joinToString { it.name }}")
+    }
+    is GenerateKeyResult.Failure.InvalidOptions -> {
+        println("Invalid options: ${result.reason}")
+    }
+    is GenerateKeyResult.Failure.Error -> {
+        when {
+            result.reason.contains("Access denied", ignoreCase = true) -> {
+                println("Check IAM permissions")
+            }
+            result.reason.contains("Key not found", ignoreCase = true) -> {
+                println("Key does not exist")
+            }
+            else -> {
+                println("Error: ${result.reason}")
+            }
         }
     }
 }
@@ -399,9 +551,24 @@ The module includes unit tests that can be run without AWS credentials:
 
 For integration testing, use LocalStack:
 
+**Typed Configuration:**
 ```kotlin
+import com.trustweave.kms.*
+import com.trustweave.awskms.awsKmsOptions
+
 // Configure for LocalStack
-val kms = awsProvider?.create(mapOf(
+val kms = KeyManagementServices.create("aws", awsKmsOptions {
+    region = "us-east-1"
+    endpointOverride = "http://localhost:4566"
+})
+```
+
+**Map Configuration:**
+```kotlin
+import com.trustweave.kms.*
+
+// Configure for LocalStack
+val kms = KeyManagementServices.create("aws", mapOf(
     "region" to "us-east-1",
     "endpointOverride" to "http://localhost:4566"
 ))

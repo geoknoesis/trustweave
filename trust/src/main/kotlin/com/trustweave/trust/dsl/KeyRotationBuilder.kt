@@ -1,9 +1,12 @@
 package com.trustweave.trust.dsl
 
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.DidMethod
 import com.trustweave.did.DidCreationOptions
-import com.trustweave.did.VerificationMethod
+import com.trustweave.did.KeyAlgorithm
+import com.trustweave.did.model.VerificationMethod
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
 import com.trustweave.trust.dsl.did.DidDslProvider
 import com.trustweave.kms.services.KmsService
 import com.trustweave.kms.KeyManagementService
@@ -42,7 +45,7 @@ class KeyRotationBuilder(
     private var did: String? = null
     private var method: String? = null
     private var algorithmString: String = "Ed25519"
-    private var algorithmEnum: DidCreationOptions.KeyAlgorithm? = null
+    private var algorithmEnum: KeyAlgorithm? = null
     private val oldKeyIds = mutableListOf<String>()
 
     /**
@@ -81,7 +84,7 @@ class KeyRotationBuilder(
      * 
      * This is the preferred method for compile-time type safety.
      */
-    fun algorithm(value: DidCreationOptions.KeyAlgorithm) {
+    fun algorithm(value: KeyAlgorithm) {
         this.algorithmEnum = value
         this.algorithmString = value.algorithmName
     }
@@ -129,7 +132,8 @@ class KeyRotationBuilder(
         val keyId = kmsService.getKeyId(newKeyHandle)
 
         // Update DID document using DidMethod directly
-        val updatedDoc = didMethod.updateDid(targetDid) { currentDoc ->
+        val targetDidObj = Did(targetDid)
+        val updatedDoc = didMethod.updateDid(targetDidObj) { currentDoc ->
             updateDocumentForKeyRotation(
                 currentDoc, targetDid, keyId, algorithm,
                 publicKeyJwk, oldKeyIds
@@ -150,21 +154,24 @@ class KeyRotationBuilder(
         publicKeyJwk: Map<String, Any?>?,
         oldKeyIds: List<String>
     ): DidDocument {
+        val targetDidObj = Did(targetDid)
+        
         // Filter out old keys
         val filteredVm = currentDoc.verificationMethod.filter { vm ->
-            !oldKeyIds.any { oldId -> vm.id.contains(oldId) }
+            !oldKeyIds.any { oldId -> vm.id.value.contains(oldId) }
         }
 
         val filteredAuth = currentDoc.authentication.filter { auth ->
-            !oldKeyIds.any { oldId -> auth.contains(oldId) }
+            !oldKeyIds.any { oldId -> auth.value.contains(oldId) }
         }
 
         val filteredAssertion = currentDoc.assertionMethod.filter { assertion ->
-            !oldKeyIds.any { oldId -> assertion.contains(oldId) }
+            !oldKeyIds.any { oldId -> assertion.value.contains(oldId) }
         }
 
         // Create new verification method
-        val newVmId = "$targetDid#$keyId"
+        val newVmIdString = "$targetDid#$keyId"
+        val newVmId = VerificationMethodId.parse(newVmIdString, targetDidObj)
         val vmType = when (algorithm.uppercase()) {
             "ED25519" -> "Ed25519VerificationKey2020"
             "SECP256K1" -> "EcdsaSecp256k1VerificationKey2019"
@@ -174,7 +181,7 @@ class KeyRotationBuilder(
         val newVm = VerificationMethod(
             id = newVmId,
             type = vmType,
-            controller = targetDid,
+            controller = targetDidObj,
             publicKeyJwk = publicKeyJwk,
             publicKeyMultibase = null
         )

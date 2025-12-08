@@ -1,6 +1,6 @@
 package com.trustweave.did.registrar.server.dto
 
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.registrar.model.UpdateDidOptions
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable

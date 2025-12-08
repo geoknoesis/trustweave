@@ -3,12 +3,13 @@ package com.trustweave.examples.delegation
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.trust.types.ProofType
+import com.trustweave.credential.model.ProofType
 import com.trustweave.trust.types.*
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 
 /**
  * Delegation Chain Example Scenario.
@@ -143,7 +144,7 @@ fun main() = runBlocking {
                     "department" to "Engineering"
                 }
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
         signedBy(issuerDid = hrManagerDid.value, keyId = "key-1")
     }.getOrFail()

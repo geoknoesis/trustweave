@@ -1,6 +1,6 @@
 package com.trustweave.trust.dsl
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.testkit.services.TestkitDidMethodFactory
 import com.trustweave.trust.TrustWeave
@@ -10,11 +10,12 @@ import com.trustweave.trust.dsl.trustWeave
 import com.trustweave.trust.dsl.credential.credential
 import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.trust.types.ProofType
+import com.trustweave.credential.model.ProofType
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 import kotlin.test.*
 
 /**
@@ -65,7 +66,7 @@ class VerificationBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val result = trustWeave.verify {
@@ -85,7 +86,7 @@ class VerificationBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val result = trustWeave.verify {
@@ -104,7 +105,7 @@ class VerificationBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val result = trustWeave.verify {
@@ -123,7 +124,7 @@ class VerificationBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val result = trustWeave.verify {
@@ -142,7 +143,7 @@ class VerificationBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val result = trustWeave.verify {
@@ -164,7 +165,7 @@ class VerificationBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val result = trustWeave.verify {
@@ -183,7 +184,7 @@ class VerificationBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val result = trustWeave.verify {
@@ -202,7 +203,7 @@ class VerificationBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val result = trustWeave.verify {
@@ -221,7 +222,7 @@ class VerificationBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val result = trustWeave.verify {
@@ -243,7 +244,7 @@ class VerificationBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val result = trustWeave.verify {
@@ -262,7 +263,7 @@ class VerificationBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val result = trustWeave.verify {
@@ -281,7 +282,7 @@ class VerificationBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val result = trustWeave.verify {
@@ -301,7 +302,7 @@ class VerificationBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val result = trustWeave.verify {
@@ -322,7 +323,7 @@ class VerificationBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val result = trustWeave.verify {
@@ -363,7 +364,7 @@ class VerificationBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         // Note: verifyAnchor() not available in VerificationBuilder
@@ -403,7 +404,7 @@ class VerificationBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         // Note: verifyAnchor() not available in VerificationBuilder
@@ -439,7 +440,7 @@ class VerificationBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         // Note: verifyAnchor() not available in VerificationBuilder
@@ -482,7 +483,7 @@ class VerificationBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         // Note: verifyAnchor() not available in VerificationBuilder
@@ -504,7 +505,7 @@ class VerificationBuilderBranchCoverageTest {
             subject {
                 id("did:key:subject")
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val result = trustWeave.verify {

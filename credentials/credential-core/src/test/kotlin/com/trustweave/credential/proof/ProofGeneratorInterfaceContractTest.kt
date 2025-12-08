@@ -1,11 +1,12 @@
 package com.trustweave.credential.proof
 
 import com.trustweave.credential.models.Proof
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import kotlinx.datetime.Clock
 
 /**
  * Comprehensive interface contract tests for ProofGenerator.
@@ -85,7 +86,7 @@ class ProofGeneratorInterfaceContractTest {
             type = listOf("VerifiableCredential"),
             issuer = "did:key:issuer",
             credentialSubject = buildJsonObject {},
-            issuanceDate = java.time.Instant.now().toString()
+            issuanceDate = Clock.System.now().toString()
         )
         val options = ProofOptions()
 
@@ -128,7 +129,7 @@ class ProofGeneratorInterfaceContractTest {
             ): Proof {
                 return Proof(
                     type = proofType,
-                    created = java.time.Instant.now().toString(),
+                    created = Clock.System.now().toString(),
                     verificationMethod = options.verificationMethod ?: "did:key:issuer#$keyId",
                     proofPurpose = options.proofPurpose,
                     proofValue = "test-proof-value",
@@ -147,7 +148,7 @@ class ProofGeneratorInterfaceContractTest {
             put("id", "did:key:subject")
             put("name", "John Doe")
         },
-        issuanceDate: String = java.time.Instant.now().toString()
+        issuanceDate: String = Clock.System.now().toString()
     ): VerifiableCredential {
         return VerifiableCredential(
             id = id,

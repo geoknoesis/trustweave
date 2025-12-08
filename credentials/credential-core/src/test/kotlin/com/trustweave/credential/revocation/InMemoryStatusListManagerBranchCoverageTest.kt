@@ -1,12 +1,13 @@
 package com.trustweave.credential.revocation
 
-import com.trustweave.credential.models.CredentialStatus
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.CredentialStatus
+import com.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import kotlinx.datetime.Clock
 
 /**
  * Comprehensive branch coverage tests for InMemoryStatusListManager.
@@ -212,7 +213,7 @@ class InMemoryStatusListManagerBranchCoverageTest {
             credentialSubject = buildJsonObject {
                 put("id", "did:key:subject")
             },
-            issuanceDate = java.time.Instant.now().toString(),
+            issuanceDate = Clock.System.now().toString(),
             credentialStatus = if (statusListId != null) {
                 CredentialStatus(
                     id = statusListId,

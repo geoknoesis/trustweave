@@ -1,14 +1,16 @@
 package com.trustweave.trust.dsl
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.wallet.Wallet
 import com.trustweave.trust.dsl.wallet.OrganizationResult
 import com.trustweave.trust.dsl.did.DidBuilder
-import com.trustweave.trust.types.Did
+import com.trustweave.did.identifiers.Did
 import com.trustweave.trust.types.VerificationResult
 import com.trustweave.trust.types.DidCreationResult
-import com.trustweave.trust.types.IssuanceResult
-import com.trustweave.did.DidDocument
+import com.trustweave.credential.results.IssuanceResult
+import com.trustweave.did.model.DidDocument
+import com.trustweave.trust.dsl.credential.registerSchema
+import com.trustweave.trust.dsl.credential.schema
 
 /**
  * Stored Credential type alias.
@@ -72,7 +74,8 @@ suspend fun TrustWeaveContext.createDidAndIssue(
                 is DidCreationResult.Failure.InvalidConfiguration -> didResult.reason
                 is DidCreationResult.Failure.Other -> didResult.reason
             }
-            return IssuanceResult.Failure.Other(
+            return IssuanceResult.Failure.InvalidRequest(
+                field = "issuer",
                 reason = "DID creation failed: $reason"
             )
         }
@@ -114,15 +117,16 @@ suspend fun TrustWeaveContext.createDidIssueAndStore(
         is IssuanceResult.Success -> issuanceResult.credential
         is IssuanceResult.Failure -> {
             val reason = when (issuanceResult) {
-                is IssuanceResult.Failure.IssuerResolutionFailed -> 
-                    "Issuer DID '${issuanceResult.issuerDid}' resolution failed: ${issuanceResult.reason}"
-                is IssuanceResult.Failure.KeyNotFound -> 
-                    "Key '${issuanceResult.keyId}' not found: ${issuanceResult.reason}"
-                is IssuanceResult.Failure.SigningFailed -> issuanceResult.reason
-                is IssuanceResult.Failure.ProofGenerationFailed -> issuanceResult.reason
-                is IssuanceResult.Failure.InvalidCredential -> issuanceResult.reason
-                is IssuanceResult.Failure.SchemaValidationFailed -> issuanceResult.reason
-                is IssuanceResult.Failure.Other -> issuanceResult.reason
+                is IssuanceResult.Failure.UnsupportedFormat -> 
+                    "Unsupported format '${issuanceResult.format.value}'. Supported: ${issuanceResult.supportedFormats.joinToString { it.value }}"
+                is IssuanceResult.Failure.AdapterNotReady -> 
+                    "Adapter not ready: ${issuanceResult.reason ?: "Unknown reason"}"
+                is IssuanceResult.Failure.InvalidRequest -> 
+                    "Invalid request: field '${issuanceResult.field}' - ${issuanceResult.reason}"
+                is IssuanceResult.Failure.AdapterError -> 
+                    "Adapter error: ${issuanceResult.reason}"
+                is IssuanceResult.Failure.MultipleFailures -> 
+                    "Multiple failures: ${issuanceResult.errors.joinToString("; ")}"
             }
             return Result.failure(IllegalStateException("Credential issuance failed: $reason"))
         }
@@ -167,15 +171,16 @@ suspend fun TrustWeaveContext.completeWorkflow(
         is IssuanceResult.Success -> issuanceResult.credential
         is IssuanceResult.Failure -> {
             val reason = when (issuanceResult) {
-                is IssuanceResult.Failure.IssuerResolutionFailed -> 
-                    "Issuer DID '${issuanceResult.issuerDid}' resolution failed: ${issuanceResult.reason}"
-                is IssuanceResult.Failure.KeyNotFound -> 
-                    "Key '${issuanceResult.keyId}' not found: ${issuanceResult.reason}"
-                is IssuanceResult.Failure.SigningFailed -> issuanceResult.reason
-                is IssuanceResult.Failure.ProofGenerationFailed -> issuanceResult.reason
-                is IssuanceResult.Failure.InvalidCredential -> issuanceResult.reason
-                is IssuanceResult.Failure.SchemaValidationFailed -> issuanceResult.reason
-                is IssuanceResult.Failure.Other -> issuanceResult.reason
+                is IssuanceResult.Failure.UnsupportedFormat -> 
+                    "Unsupported format '${issuanceResult.format.value}'. Supported: ${issuanceResult.supportedFormats.joinToString { it.value }}"
+                is IssuanceResult.Failure.AdapterNotReady -> 
+                    "Adapter not ready: ${issuanceResult.reason ?: "Unknown reason"}"
+                is IssuanceResult.Failure.InvalidRequest -> 
+                    "Invalid request: field '${issuanceResult.field}' - ${issuanceResult.reason}"
+                is IssuanceResult.Failure.AdapterError -> 
+                    "Adapter error: ${issuanceResult.reason}"
+                is IssuanceResult.Failure.MultipleFailures -> 
+                    "Multiple failures: ${issuanceResult.errors.joinToString("; ")}"
             }
             return Result.failure(IllegalStateException("Credential issuance failed: $reason"))
         }
@@ -217,11 +222,11 @@ suspend fun TrustWeaveConfig.createDid(block: DidBuilder.() -> Unit): DidCreatio
     return getDslContext().createDid(block)
 }
 
-suspend fun TrustWeaveConfig.updateDid(block: com.trustweave.trust.dsl.did.DidDocumentBuilder.() -> Unit): com.trustweave.did.DidDocument {
+suspend fun TrustWeaveConfig.updateDid(block: com.trustweave.trust.dsl.did.DidDocumentBuilder.() -> Unit): com.trustweave.did.model.DidDocument {
     return getDslContext().updateDid(block)
 }
 
-suspend fun TrustWeaveConfig.rotateKey(block: com.trustweave.trust.dsl.KeyRotationBuilder.() -> Unit): com.trustweave.did.DidDocument {
+suspend fun TrustWeaveConfig.rotateKey(block: com.trustweave.trust.dsl.KeyRotationBuilder.() -> Unit): com.trustweave.did.model.DidDocument {
     return getDslContext().rotateKey(block)
 }
 
@@ -234,11 +239,13 @@ suspend fun TrustWeaveConfig.issue(block: com.trustweave.trust.dsl.credential.Is
 }
 
 suspend fun TrustWeaveConfig.registerSchema(block: com.trustweave.trust.dsl.credential.SchemaBuilder.() -> Unit): com.trustweave.credential.schema.SchemaRegistrationResult {
-    return com.trustweave.trust.dsl.credential.registerSchema(block)
+    val context = getDslContext()
+    return with(context) { registerSchema(block) }
 }
 
 fun TrustWeaveConfig.schema(schemaId: String? = null, block: com.trustweave.trust.dsl.credential.SchemaBuilder.() -> Unit = {}): com.trustweave.trust.dsl.credential.SchemaBuilder {
-    return com.trustweave.trust.dsl.credential.schema(schemaId, block)
+    val context = getDslContext()
+    return with(context) { schema(schemaId, block) }
 }
 
 fun TrustWeaveConfig.revocation(block: com.trustweave.trust.dsl.credential.RevocationBuilder.() -> Unit): com.trustweave.trust.dsl.credential.RevocationBuilder {
@@ -246,7 +253,7 @@ fun TrustWeaveConfig.revocation(block: com.trustweave.trust.dsl.credential.Revoc
     // TrustWeaveContext implements CredentialDslProvider, so we can use it directly
     // Create RevocationBuilder directly to avoid recursion with extension function
     val provider = context as com.trustweave.trust.dsl.credential.CredentialDslProvider
-    return com.trustweave.trust.dsl.credential.RevocationBuilder(provider.getStatusListManager()).apply(block)
+    return com.trustweave.trust.dsl.credential.RevocationBuilder(provider.getRevocationManager()).apply(block)
 }
 
 suspend fun TrustWeaveConfig.revoke(block: com.trustweave.trust.dsl.credential.RevocationBuilder.() -> Unit): Boolean {
@@ -254,7 +261,7 @@ suspend fun TrustWeaveConfig.revoke(block: com.trustweave.trust.dsl.credential.R
     // TrustWeaveContext implements CredentialDslProvider, so we can use it directly
     // Create RevocationBuilder directly to avoid recursion with extension function
     val provider = context as com.trustweave.trust.dsl.credential.CredentialDslProvider
-    val builder = com.trustweave.trust.dsl.credential.RevocationBuilder(provider.getStatusListManager())
+    val builder = com.trustweave.trust.dsl.credential.RevocationBuilder(provider.getRevocationManager())
     builder.block()
     return builder.revoke()
 }

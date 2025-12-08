@@ -4,8 +4,8 @@ import com.trustweave.credential.CredentialVerificationOptions
 import com.trustweave.util.booleanDidResolver
 import com.trustweave.credential.PresentationOptions
 import com.trustweave.credential.models.Proof
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.models.VerifiablePresentation
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiablePresentation
 import com.trustweave.credential.proof.Ed25519ProofGenerator
 import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.credential.proof.ProofGenerator
@@ -15,7 +15,8 @@ import kotlinx.serialization.json.*
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 import java.util.UUID
 import kotlin.test.*
 
@@ -340,14 +341,14 @@ class PresentationServiceMoreBranchesTest {
             id = id,
             type = listOf("VerifiableCredential", "PersonCredential"),
             issuer = issuerDid,
-            issuanceDate = Instant.now().toString(),
+            issuanceDate = Clock.System.now().toString(),
             credentialSubject = buildJsonObject {
                 put("id", "did:key:subject123")
                 put("name", "John Doe")
             },
             proof = Proof(
                 type = "Ed25519Signature2020",
-                created = Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:issuer123#key-1",
                 proofPurpose = "assertionMethod"
             )
@@ -368,7 +369,7 @@ class PresentationServiceMoreBranchesTest {
             domain = domain,
             proof = Proof(
                 type = "Ed25519Signature2020",
-                created = Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:holder123#key-1",
                 proofPurpose = "authentication",
                 challenge = challenge,

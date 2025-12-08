@@ -1,6 +1,6 @@
 package com.trustweave.trust.dsl
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.revocation.InMemoryStatusListManager
 import com.trustweave.credential.revocation.StatusPurpose
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
@@ -37,7 +37,7 @@ class RevocationDslTest {
             )
             keys {
                 custom(kms)
-                signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
+                signer { data, keyId -> kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
             }
             did {
                 method("key") {
@@ -126,7 +126,7 @@ class RevocationDslTest {
                 put("id", "did:key:subject")
             },
             issuanceDate = "2024-01-01T00:00:00Z",
-            credentialStatus = com.trustweave.credential.models.CredentialStatus(
+            credentialStatus = com.trustweave.credential.model.vc.CredentialStatus(
                 id = "${statusList.id}#0",
                 type = "StatusList2021Entry",
                 statusListCredential = statusList.id

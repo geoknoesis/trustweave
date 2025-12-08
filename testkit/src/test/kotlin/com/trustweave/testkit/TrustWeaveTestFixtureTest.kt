@@ -79,7 +79,7 @@ class TrustWeaveTestFixtureTest {
         val didDoc = fixture.createIssuerDid()
 
         assertNotNull(didDoc)
-        assertTrue(didDoc.id.startsWith("did:key:"))
+        assertTrue(didDoc.id.value.startsWith("did:key:"))
     }
 
     @Test

@@ -3,7 +3,7 @@ package com.trustweave.examples.professional
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.trust.types.ProofType
+import com.trustweave.credential.model.ProofType
 import com.trustweave.trust.dsl.credential.CredentialTypes
 import com.trustweave.trust.types.CredentialType
 import com.trustweave.trust.dsl.credential.SchemaValidatorTypes
@@ -16,7 +16,7 @@ import com.trustweave.trust.dsl.wallet.QueryBuilder
 import com.trustweave.trust.dsl.registerSchema
 import com.trustweave.trust.dsl.credential.schema
 import com.trustweave.trust.dsl.storeIn
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.SchemaFormat
 import com.trustweave.credential.presentation.PresentationService
 import com.trustweave.credential.proof.Ed25519ProofGenerator
@@ -29,7 +29,8 @@ import com.trustweave.testkit.services.TestkitWalletFactory
 import com.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 
 fun main() = runBlocking {
     println("=== Professional Identity Wallet Scenario ===\n")
@@ -41,7 +42,7 @@ fun main() = runBlocking {
     val kmsRef = kms // Capture for closure
     val presentationService = PresentationService(
         proofGenerator = Ed25519ProofGenerator(
-            signer = { data, keyId -> kmsRef.sign(com.trustweave.core.types.KeyId(keyId), data) }
+            signer = { data, keyId -> kmsRef.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
         )
     )
 
@@ -54,7 +55,7 @@ fun main() = runBlocking {
             custom(kmsRef)
             // Provide signer function directly to avoid reflection issues
             signer { data, keyId ->
-                kmsRef.sign(com.trustweave.core.types.KeyId(keyId), data)
+                kmsRef.sign(com.trustweave.core.identifiers.KeyId(keyId), data)
             }
         }
 
@@ -170,7 +171,7 @@ fun main() = runBlocking {
                     "year" to "2018"
                 }
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
         signedBy(issuerDid = universityDid.value, keyId = universityKeyId)
     }.getOrFail()
@@ -191,7 +192,7 @@ fun main() = runBlocking {
                     "year" to "2020"
                 }
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
         signedBy(issuerDid = universityDid.value, keyId = universityKeyId)
     }.getOrFail()
@@ -335,7 +336,7 @@ fun main() = runBlocking {
     val jobApplicationPresentation = presentation(presentationService) {
         credentials(jobApplicationCredentials)
         holder(professionalDid.value)
-        challenge("job-application-${Instant.now().toEpochMilli()}")
+        challenge("job-application-${Clock.System.now().toEpochMilliseconds()}")
         proofType(ProofType.Ed25519Signature2020.value)
         keyId(professionalKey.id.value)
         selectiveDisclosure {
@@ -436,7 +437,7 @@ fun createEducationCredential(
                 "year" to year
             }
         }
-        issued(Instant.now())
+        issued(Clock.System.now())
         // Education credentials typically don't expire
     }
 }
@@ -470,7 +471,7 @@ fun createEmploymentCredential(
                 "achievements" to achievements
             }
         }
-        issued(Instant.now())
+        issued(Clock.System.now())
     }
 }
 

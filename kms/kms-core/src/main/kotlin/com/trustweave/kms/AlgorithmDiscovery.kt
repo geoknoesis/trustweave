@@ -20,13 +20,20 @@ import java.util.ServiceLoader
  */
 object AlgorithmDiscovery {
     /**
+     * Cached list of providers loaded via ServiceLoader.
+     * This prevents repeated ServiceLoader calls and ensures consistency.
+     */
+    private val cachedProviders: List<KeyManagementServiceProvider> by lazy {
+        ServiceLoader.load(KeyManagementServiceProvider::class.java).toList()
+    }
+
+    /**
      * Discovers all available KMS providers and their supported algorithms.
      *
      * @return Map of provider name to set of supported algorithms
      */
     fun discoverProviders(): Map<String, Set<Algorithm>> {
-        val providers = ServiceLoader.load(KeyManagementServiceProvider::class.java)
-        return providers.associate { it.name to it.supportedAlgorithms }
+        return cachedProviders.associate { it.name to it.supportedAlgorithms }
     }
 
     /**
@@ -36,8 +43,7 @@ object AlgorithmDiscovery {
      * @return List of provider names that support the algorithm
      */
     fun findProvidersFor(algorithm: Algorithm): List<String> {
-        val providers = ServiceLoader.load(KeyManagementServiceProvider::class.java)
-        return providers
+        return cachedProviders
             .filter { it.supportsAlgorithm(algorithm) }
             .map { it.name }
     }
@@ -66,8 +72,7 @@ object AlgorithmDiscovery {
     ): String? {
         // Check preferred provider first
         preferredProvider?.let { providerName ->
-            val providers = ServiceLoader.load(KeyManagementServiceProvider::class.java)
-            providers.find { it.name == providerName }?.let { provider ->
+            cachedProviders.find { it.name == providerName }?.let { provider ->
                 if (provider.supportsAlgorithm(algorithm)) {
                     return providerName
                 }
@@ -93,8 +98,7 @@ object AlgorithmDiscovery {
         options: Map<String, Any?> = emptyMap()
     ): KeyManagementService? {
         val providerName = findBestProviderFor(algorithm, preferredProvider) ?: return null
-        val providers = ServiceLoader.load(KeyManagementServiceProvider::class.java)
-        return providers.find { it.name == providerName }?.create(options)
+        return cachedProviders.find { it.name == providerName }?.create(options)
     }
 }
 

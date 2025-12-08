@@ -1,12 +1,13 @@
 package com.trustweave.credential.schema
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.SchemaFormat
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import kotlinx.datetime.Clock
 
 /**
  * Comprehensive branch coverage tests for SchemaValidatorRegistry.
@@ -263,7 +264,7 @@ class SchemaValidatorRegistryBranchCoverageTest {
                 put("id", "did:key:subject")
                 put("name", "John Doe")
             },
-            issuanceDate = java.time.Instant.now().toString()
+            issuanceDate = Clock.System.now().toString()
         )
     }
 

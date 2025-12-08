@@ -3,10 +3,13 @@ package com.trustweave.ethrdid
 import com.trustweave.anchor.BlockchainAnchorClient
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.base.AbstractBlockchainDidMethod
 import com.trustweave.did.base.DidMethodUtils
 import com.trustweave.kms.KeyManagementService
+import com.trustweave.kms.results.GenerateKeyResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.web3j.protocol.Web3j
@@ -115,7 +118,23 @@ class EthrDidMethod(
                 throw IllegalArgumentException("did:ethr requires secp256k1 or Ed25519 algorithm")
             }
 
-            val keyHandle = kms.generateKey(algorithm, options.additionalProperties)
+            val generateResult = kms.generateKey(algorithm, options.additionalProperties)
+            val keyHandle = when (generateResult) {
+                is GenerateKeyResult.Success -> generateResult.keyHandle
+                is GenerateKeyResult.Failure.UnsupportedAlgorithm -> throw TrustWeaveException.Unknown(
+                    code = "UNSUPPORTED_ALGORITHM",
+                    message = generateResult.reason ?: "Algorithm not supported"
+                )
+                is GenerateKeyResult.Failure.InvalidOptions -> throw TrustWeaveException.Unknown(
+                    code = "INVALID_OPTIONS",
+                    message = generateResult.reason
+                )
+                is GenerateKeyResult.Failure.Error -> throw TrustWeaveException.Unknown(
+                    code = "KEY_GENERATION_ERROR",
+                    message = generateResult.reason,
+                    cause = generateResult.cause
+                )
+            }
 
             // Derive Ethereum address from key
             // Note: In a full implementation, we'd derive the address from the public key
@@ -140,9 +159,9 @@ class EthrDidMethod(
             val document = DidMethodUtils.buildDidDocument(
                 did = did,
                 verificationMethod = listOf(verificationMethod),
-                authentication = listOf(verificationMethod.id),
-                assertionMethod = if (options.purposes.contains(DidCreationOptions.KeyPurpose.ASSERTION)) {
-                    listOf(verificationMethod.id)
+                authentication = listOf(verificationMethod.id.value),
+                assertionMethod = if (options.purposes.contains(KeyPurpose.ASSERTION)) {
+                    listOf(verificationMethod.id.value)
                 } else null
             )
 
@@ -169,13 +188,14 @@ class EthrDidMethod(
         }
     }
 
-    override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
+    override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
 
+            val didString = did.value
             // Try to resolve from blockchain
             try {
-                return@withContext resolveFromBlockchain(did, didToTxHash[did])
+                return@withContext resolveFromBlockchain(didString, didToTxHash[didString])
             } catch (e: TrustWeaveException.NotFound) {
                 // If not found on blockchain, try stored document
                 val stored = getStoredDocument(did)
@@ -192,7 +212,8 @@ class EthrDidMethod(
                 return@withContext DidMethodUtils.createErrorResolutionResult(
                     "notFound",
                     "DID document not found on blockchain",
-                    method
+                    method,
+                    didString
                 )
             }
         } catch (e: TrustWeaveException) {
@@ -201,24 +222,26 @@ class EthrDidMethod(
             DidMethodUtils.createErrorResolutionResult(
                 "invalidDid",
                 e.message,
-                method
+                method,
+                did.value
             )
         }
     }
 
     override suspend fun updateDid(
-        did: String,
+        did: Did,
         updater: (DidDocument) -> DidDocument
     ): DidDocument = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
 
+            val didString = did.value
             // Resolve current document
             val currentResult = resolveDid(did)
             val currentDocument = when (currentResult) {
                 is DidResolutionResult.Success -> currentResult.document
                 else -> throw TrustWeaveException.NotFound(
-                    message = "DID document not found: $did"
+                    message = "DID document not found: $didString"
                 )
             }
 
@@ -226,8 +249,8 @@ class EthrDidMethod(
             val updatedDocument = updater(currentDocument)
 
             // Anchor updated document to blockchain
-            val txHash = updateDocumentOnBlockchain(did, updatedDocument)
-            didToTxHash[did] = txHash
+            val txHash = updateDocumentOnBlockchain(didString, updatedDocument)
+            didToTxHash[didString] = txHash
 
             updatedDocument
         } catch (e: TrustWeaveException.NotFound) {
@@ -243,9 +266,11 @@ class EthrDidMethod(
         }
     }
 
-    override suspend fun deactivateDid(did: String): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun deactivateDid(did: Did): Boolean = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
+
+            val didString = did.value
 
             // Resolve current document
             val currentResult = resolveDid(did)
@@ -265,10 +290,10 @@ class EthrDidMethod(
             )
 
             // Anchor deactivated document
-            deactivateDocumentOnBlockchain(did, deactivatedDocument)
+            deactivateDocumentOnBlockchain(didString, deactivatedDocument)
 
             // Remove from cache
-            didToTxHash.remove(did)
+            didToTxHash.remove(didString)
 
             true
         } catch (e: TrustWeaveException.NotFound) {

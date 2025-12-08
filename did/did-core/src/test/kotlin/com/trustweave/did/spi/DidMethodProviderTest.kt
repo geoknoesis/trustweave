@@ -1,10 +1,11 @@
 package com.trustweave.did.spi
 
 import com.trustweave.did.DidCreationOptions
-import com.trustweave.did.DidDocument
 import com.trustweave.did.DidMethod
-import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.didCreationOptions
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.resolver.DidResolutionResult
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 
@@ -60,16 +61,16 @@ class DidMethodProviderTest {
                     override val method = methodName
 
                     override suspend fun createDid(options: DidCreationOptions) = DidDocument(
-                        id = "did:$methodName:123"
+                        id = Did("did:$methodName:123")
                     )
 
-                    override suspend fun resolveDid(did: String) = DidResolutionResult.Success(
+                    override suspend fun resolveDid(did: Did) = DidResolutionResult.Success(
                         document = DidDocument(id = did)
                     )
 
-                    override suspend fun updateDid(did: String, updater: (DidDocument) -> DidDocument) = DidDocument(id = did)
+                    override suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument) = DidDocument(id = did)
 
-                    override suspend fun deactivateDid(did: String) = true
+                    override suspend fun deactivateDid(did: Did) = true
                 }
             }
         }

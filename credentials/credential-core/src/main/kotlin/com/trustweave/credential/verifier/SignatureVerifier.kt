@@ -1,10 +1,10 @@
 package com.trustweave.credential.verifier
 
 import com.trustweave.credential.models.Proof
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.core.util.DigestUtils
-import com.trustweave.did.DidDocument
-import com.trustweave.did.VerificationMethod
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.VerificationMethod
 import com.trustweave.did.resolver.DidResolver
 import com.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.Dispatchers
@@ -156,7 +156,7 @@ class SignatureVerifier(
 
         // Check direct verification methods
         val directMethod = document.verificationMethod.find { vm ->
-            vm.id == verificationMethodId || vm.id.endsWith("#$methodId")
+            vm.id.value == verificationMethodId || vm.id.value.endsWith("#$methodId")
         }
         if (directMethod != null) {
             val jwk = directMethod.publicKeyJwk
@@ -169,21 +169,21 @@ class SignatureVerifier(
 
         // Check authentication references
         val authRef = document.authentication.find { ref ->
-            ref == verificationMethodId || ref.endsWith("#$methodId")
+            ref.value == verificationMethodId || ref.value.endsWith("#$methodId")
         }
         if (authRef != null) {
             return document.verificationMethod.find { vm ->
-                vm.id == authRef || vm.id.endsWith(authRef.substringAfter("#"))
+                vm.id.value == authRef.value || vm.id.value.endsWith(authRef.value.substringAfter("#"))
             }
         }
 
         // Check assertion method references
         val assertionRef = document.assertionMethod.find { ref ->
-            ref == verificationMethodId || ref.endsWith("#$methodId")
+            ref.value == verificationMethodId || ref.value.endsWith("#$methodId")
         }
         if (assertionRef != null) {
             return document.verificationMethod.find { vm ->
-                vm.id == assertionRef || vm.id.endsWith(assertionRef.substringAfter("#"))
+                vm.id.value == assertionRef.value || vm.id.value.endsWith(assertionRef.value.substringAfter("#"))
             }
         }
 

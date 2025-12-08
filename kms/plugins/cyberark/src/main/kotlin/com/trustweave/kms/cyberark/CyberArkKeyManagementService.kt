@@ -1,12 +1,17 @@
 package com.trustweave.kms.cyberark
 
 import com.trustweave.core.exception.TrustWeaveException
-import com.trustweave.core.types.KeyId
+import com.trustweave.core.identifiers.KeyId
 import com.trustweave.kms.Algorithm
 import com.trustweave.kms.KeyHandle
 import com.trustweave.kms.KeyManagementService
+import com.trustweave.kms.KmsOptionKeys
 import com.trustweave.kms.exception.KmsException
 import com.trustweave.kms.UnsupportedAlgorithmException
+import com.trustweave.kms.results.GenerateKeyResult
+import com.trustweave.kms.results.GetPublicKeyResult
+import com.trustweave.kms.results.SignResult
+import com.trustweave.kms.results.DeleteKeyResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -52,18 +57,18 @@ class CyberArkKeyManagementService(
     override suspend fun generateKey(
         algorithm: Algorithm,
         options: Map<String, Any?>
-    ): KeyHandle = withContext(Dispatchers.IO) {
+    ): GenerateKeyResult = withContext(Dispatchers.IO) {
         if (!supportsAlgorithm(algorithm)) {
-            throw UnsupportedAlgorithmException(
-                "Algorithm '${algorithm.name}' is not supported by CyberArk Conjur. " +
-                "Supported: ${SUPPORTED_ALGORITHMS.joinToString(", ") { it.name }}"
+            return@withContext GenerateKeyResult.Failure.UnsupportedAlgorithm(
+                algorithm = algorithm,
+                supportedAlgorithms = SUPPORTED_ALGORITHMS
             )
         }
 
         try {
             // Generate key pair locally (Conjur doesn't generate keys, it stores them)
             val keyPair = generateKeyPair(algorithm)
-            val keyId = options["name"] as? String ?: "TrustWeave-key-${java.util.UUID.randomUUID()}"
+            val keyId = options[KmsOptionKeys.NAME] as? String ?: "TrustWeave-key-${java.util.UUID.randomUUID()}"
             val secretPath = AlgorithmMapping.resolveKeyId(keyId, config.account)
 
             // Store private key in Conjur as a secret
@@ -82,9 +87,10 @@ class CyberArkKeyManagementService(
             val responseBody = response.body?.string()
 
             if (!response.isSuccessful) {
-                throw TrustWeaveException.Unknown(
-                    message = "CyberArk Conjur API error: ${response.code} - ${response.message ?: "Unknown error"}. " +
-                    "Response: $responseBody"
+                return@withContext GenerateKeyResult.Failure.Error(
+                    algorithm = algorithm,
+                    reason = "CyberArk Conjur API error: ${response.code} - ${response.message ?: "Unknown error"}. Response: $responseBody",
+                    cause = null
                 )
             }
 
@@ -102,16 +108,17 @@ class CyberArkKeyManagementService(
 
             httpClient.newCall(metadataRequest).execute().use { /* Store metadata */ }
 
-            KeyHandle(
-                id = KeyId(secretPath),
-                algorithm = algorithm.name,
-                publicKeyJwk = publicKeyJwk
+            GenerateKeyResult.Success(
+                KeyHandle(
+                    id = KeyId(secretPath),
+                    algorithm = algorithm.name,
+                    publicKeyJwk = publicKeyJwk
+                )
             )
-        } catch (e: TrustWeaveException) {
-            throw e
         } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                message = "Failed to generate key: ${e.message ?: "Unknown error"}",
+            GenerateKeyResult.Failure.Error(
+                algorithm = algorithm,
+                reason = "Failed to generate key: ${e.message ?: "Unknown error"}",
                 cause = e
             )
         }
@@ -162,7 +169,7 @@ class CyberArkKeyManagementService(
         return keyPairGenerator.generateKeyPair()
     }
 
-    override suspend fun getPublicKey(keyId: KeyId): KeyHandle = withContext(Dispatchers.IO) {
+    override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult = withContext(Dispatchers.IO) {
         try {
             val secretPath = AlgorithmMapping.resolveKeyId(keyId.value, config.account)
 
@@ -178,44 +185,50 @@ class CyberArkKeyManagementService(
 
             if (!metadataResponse.isSuccessful) {
                 if (metadataResponse.code == 404) {
-                    throw KmsException.KeyNotFound(keyId = keyId.value)
+                    return@withContext GetPublicKeyResult.Failure.KeyNotFound(keyId)
                 }
-                throw TrustWeaveException.Unknown(
-                    message = "CyberArk Conjur API error: ${metadataResponse.code} - ${metadataResponse.message ?: "Unknown error"}. " +
-                    "Response: $metadataBody"
+                return@withContext GetPublicKeyResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "CyberArk Conjur API error: ${metadataResponse.code} - ${metadataResponse.message ?: "Unknown error"}. Response: $metadataBody",
+                    cause = null
                 )
             }
 
             val metadataJson = kotlinx.serialization.json.Json.parseToJsonElement(metadataBody ?: "{}").jsonObject
             val algorithmStr = metadataJson["algorithm"]?.jsonPrimitive?.content
-                ?: throw TrustWeaveException.Unknown(
-                    message = "Algorithm not found in metadata"
+                ?: return@withContext GetPublicKeyResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Algorithm not found in metadata",
+                    cause = null
                 )
             val algorithm = AlgorithmMapping.fromConjurAlgorithm(algorithmStr)
-                ?: throw TrustWeaveException.Unknown(
-                    message = "Unknown algorithm: $algorithmStr"
+                ?: return@withContext GetPublicKeyResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Unknown algorithm: $algorithmStr",
+                    cause = null
                 )
 
             val publicKeyBase64 = metadataJson["publicKey"]?.jsonPrimitive?.content
-                ?: throw TrustWeaveException.Unknown(
-                    message = "Public key not found in metadata"
+                ?: return@withContext GetPublicKeyResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Public key not found in metadata",
+                    cause = null
                 )
             val publicKeyBytes = Base64.getDecoder().decode(publicKeyBase64)
 
             val publicKeyJwk = AlgorithmMapping.publicKeyToJwk(publicKeyBytes, algorithm)
 
-            KeyHandle(
-                id = KeyId(secretPath),
-                algorithm = algorithm.name,
-                publicKeyJwk = publicKeyJwk
+            GetPublicKeyResult.Success(
+                KeyHandle(
+                    id = KeyId(secretPath),
+                    algorithm = algorithm.name,
+                    publicKeyJwk = publicKeyJwk
+                )
             )
-        } catch (e: KmsException.KeyNotFound) {
-            throw e
-        } catch (e: TrustWeaveException) {
-            throw e
         } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                message = "Failed to get public key: ${e.message ?: "Unknown error"}",
+            GetPublicKeyResult.Failure.Error(
+                keyId = keyId,
+                reason = "Failed to get public key: ${e.message ?: "Unknown error"}",
                 cause = e
             )
         }
@@ -225,7 +238,7 @@ class CyberArkKeyManagementService(
         keyId: KeyId,
         data: ByteArray,
         algorithm: Algorithm?
-    ): ByteArray = withContext(Dispatchers.IO) {
+    ): SignResult = withContext(Dispatchers.IO) {
         try {
             val secretPath = AlgorithmMapping.resolveKeyId(keyId.value, config.account)
 
@@ -241,41 +254,57 @@ class CyberArkKeyManagementService(
 
             if (!privateKeyResponse.isSuccessful) {
                 if (privateKeyResponse.code == 404) {
-                    throw KmsException.KeyNotFound(keyId = keyId.value)
+                    return@withContext SignResult.Failure.KeyNotFound(keyId)
                 }
-                throw TrustWeaveException.Unknown(
-                    message = "Failed to get private key: ${privateKeyResponse.code} - ${privateKeyResponse.message ?: "Unknown error"}. " +
-                    "Response: $privateKeyBody"
+                return@withContext SignResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Failed to get private key: ${privateKeyResponse.code} - ${privateKeyResponse.message ?: "Unknown error"}. Response: $privateKeyBody",
+                    cause = null
                 )
             }
 
             // Parse private key
             val privateKeyJson = kotlinx.serialization.json.Json.parseToJsonElement(privateKeyBody ?: "{}").jsonObject
             val privateKeyBase64 = privateKeyJson["value"]?.jsonPrimitive?.content
-                ?: throw TrustWeaveException.Unknown(
-                    message = "Private key value not found"
+                ?: return@withContext SignResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Private key value not found",
+                    cause = null
                 )
             val privateKeyBytes = Base64.getDecoder().decode(privateKeyBase64)
 
             // Get algorithm from metadata if not provided
             val signingAlgorithm = algorithm ?: run {
-                val keyHandle = getPublicKey(keyId)
-                Algorithm.parse(keyHandle.algorithm)
-                    ?: throw TrustWeaveException.Unknown(
-                        message = "Cannot determine signing algorithm"
-                    )
+                val keyHandleResult = getPublicKey(keyId)
+                when (keyHandleResult) {
+                    is GetPublicKeyResult.Success -> {
+                        Algorithm.parse(keyHandleResult.keyHandle.algorithm)
+                            ?: return@withContext SignResult.Failure.Error(
+                                keyId = keyId,
+                                reason = "Cannot determine signing algorithm",
+                                cause = null
+                            )
+                    }
+                    is GetPublicKeyResult.Failure.KeyNotFound -> {
+                        return@withContext SignResult.Failure.KeyNotFound(keyId)
+                    }
+                    is GetPublicKeyResult.Failure.Error -> {
+                        return@withContext SignResult.Failure.Error(
+                            keyId = keyId,
+                            reason = "Failed to get key metadata: ${keyHandleResult.reason}",
+                            cause = keyHandleResult.cause
+                        )
+                    }
+                }
             }
 
             // Sign data locally using the private key
             val signature = signWithPrivateKey(privateKeyBytes, data, signingAlgorithm)
-            signature
-        } catch (e: KmsException.KeyNotFound) {
-            throw e
-        } catch (e: TrustWeaveException) {
-            throw e
+            SignResult.Success(signature)
         } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                message = "Failed to sign data: ${e.message ?: "Unknown error"}",
+            SignResult.Failure.Error(
+                keyId = keyId,
+                reason = "Failed to sign data: ${e.message ?: "Unknown error"}",
                 cause = e
             )
         }
@@ -316,7 +345,7 @@ class CyberArkKeyManagementService(
         return signature.sign()
     }
 
-    override suspend fun deleteKey(keyId: KeyId): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult = withContext(Dispatchers.IO) {
         try {
             val secretPath = AlgorithmMapping.resolveKeyId(keyId.value, config.account)
 
@@ -328,9 +357,24 @@ class CyberArkKeyManagementService(
                 .build()
 
             val response = httpClient.newCall(request).execute()
-            response.isSuccessful
+            
+            if (response.isSuccessful) {
+                DeleteKeyResult.Deleted
+            } else if (response.code == 404) {
+                DeleteKeyResult.NotFound
+            } else {
+                DeleteKeyResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "CyberArk Conjur API error: ${response.code} - ${response.message ?: "Unknown error"}",
+                    cause = null
+                )
+            }
         } catch (e: Exception) {
-            false
+            DeleteKeyResult.Failure.Error(
+                keyId = keyId,
+                reason = "Failed to delete key: ${e.message ?: "Unknown error"}",
+                cause = e
+            )
         }
     }
 

@@ -6,7 +6,7 @@ plugins {
 dependencies {
     implementation(kotlin("reflect"))
     implementation(project(":common"))         // Root-level common (exceptions, common utilities, JSON)
-    implementation(project(":credentials:credential-core"))  // Credential DSLs and services
+    implementation(project(":credentials:credential-api"))  // Credential DSLs and services
     implementation(project(":wallet:wallet-core"))      // Wallet interfaces and DSLs
     implementation(project(":anchors:anchor-core"))     // BlockchainAnchorClientFactory
     implementation(project(":did:did-core"))         // DID DSLs and services
@@ -19,10 +19,14 @@ dependencies {
 
     // Kotlinx Serialization
     implementation(libs.kotlinx.serialization.json)
+    
+    // Kotlinx DateTime
+    implementation(libs.kotlinx.datetime)
 
     testImplementation(project(":testkit"))
     testImplementation(project(":did:did-core"))
     testImplementation(project(":kms:kms-core"))
+    testImplementation(project(":credentials:credential-core"))  // For CredentialVerifier, CredentialVerificationOptions, etc.
     testImplementation(project(":credentials:plugins:status-list:database"))  // StatusListRegistryFactory for tests
 }
 

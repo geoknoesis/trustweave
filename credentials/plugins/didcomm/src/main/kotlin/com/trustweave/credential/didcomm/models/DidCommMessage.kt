@@ -1,6 +1,5 @@
 package com.trustweave.credential.didcomm.models
 
-import com.trustweave.credential.storage.ProtocolMessage
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -33,22 +32,16 @@ import kotlinx.serialization.json.putJsonArray
 data class DidCommMessage(
     val id: String,
     val type: String,
-    override val from: String? = null,
-    override val to: List<String> = emptyList(),
+    val from: String? = null,
+    val to: List<String> = emptyList(),
     val body: JsonObject = buildJsonObject { },
-    override val created: String? = null,
-    override val expiresTime: String? = null,
+    val created: String? = null,
+    val expiresTime: String? = null,
     val attachments: List<DidCommAttachment> = emptyList(),
     val thid: String? = null, // Thread ID for message threading
     val pthid: String? = null, // Parent thread ID
     val ack: List<String>? = null // Acknowledgment message IDs
-) : ProtocolMessage {
-
-    // ProtocolMessage interface implementation
-    override val messageId: String get() = id
-    override val messageType: String get() = type
-    override val threadId: String? get() = thid
-    override val parentThreadId: String? get() = pthid
+) {
     /**
      * Converts the message to a JSON object for serialization.
      */

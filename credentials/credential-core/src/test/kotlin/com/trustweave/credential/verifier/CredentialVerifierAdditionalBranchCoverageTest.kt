@@ -1,9 +1,9 @@
 package com.trustweave.credential.verifier
 
 import com.trustweave.credential.CredentialVerificationOptions
-import com.trustweave.credential.models.CredentialStatus
+import com.trustweave.credential.model.vc.CredentialStatus
 import com.trustweave.credential.models.Proof
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.did.resolver.DidResolver
 import com.trustweave.util.booleanDidResolver
 import kotlinx.coroutines.runBlocking
@@ -11,6 +11,8 @@ import kotlinx.serialization.json.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Additional branch coverage tests for CredentialVerifier.
@@ -25,7 +27,7 @@ class CredentialVerifierAdditionalBranchCoverageTest {
     @Test
     fun `test CredentialVerifier verify with checkExpiration false`() = runBlocking {
         val verifier = CredentialVerifier()
-        val pastDate = java.time.Instant.now().minusSeconds(86400).toString()
+        val pastDate = Clock.System.now().minus(86400.seconds).toString()
         val credential = createTestCredential(expirationDate = pastDate)
         val options = CredentialVerificationOptions(checkExpiration = false)
 
@@ -130,7 +132,7 @@ class CredentialVerifierAdditionalBranchCoverageTest {
     @Test
     fun `test CredentialVerifier verify with expired credential and checkExpiration true`() = runBlocking {
         val verifier = CredentialVerifier()
-        val pastDate = java.time.Instant.now().minusSeconds(86400).toString()
+        val pastDate = Clock.System.now().minus(86400.seconds).toString()
         val credential = createTestCredential(expirationDate = pastDate)
         val options = CredentialVerificationOptions(checkExpiration = true)
 
@@ -177,13 +179,13 @@ class CredentialVerifierAdditionalBranchCoverageTest {
             put("id", "did:key:subject")
             put("name", "John Doe")
         },
-        issuanceDate: String = java.time.Instant.now().toString(),
+        issuanceDate: String = Clock.System.now().toString(),
         expirationDate: String? = null,
         credentialStatus: CredentialStatus? = null,
         credentialSchema: com.trustweave.credential.models.CredentialSchema? = null,
         proof: Proof? = Proof(
             type = "Ed25519Signature2020",
-            created = java.time.Instant.now().toString(),
+            created = Clock.System.now().toString(),
             verificationMethod = "did:key:issuer#key-1",
             proofPurpose = "assertionMethod",
             proofValue = "test-proof"

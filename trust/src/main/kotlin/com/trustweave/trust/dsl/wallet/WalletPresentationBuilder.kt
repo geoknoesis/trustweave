@@ -1,9 +1,11 @@
 package com.trustweave.trust.dsl.wallet
 
 import com.trustweave.trust.dsl.credential.SelectiveDisclosureBuilder
-import com.trustweave.trust.dsl.credential.presentation
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.models.VerifiablePresentation
+import com.trustweave.trust.dsl.credential.PresentationBuilder
+import com.trustweave.trust.dsl.credential.CredentialDslProvider
+import com.trustweave.credential.CredentialService
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiablePresentation
 import com.trustweave.trust.dsl.wallet.QueryBuilder
 import com.trustweave.wallet.Wallet
 import kotlinx.coroutines.Dispatchers
@@ -37,13 +39,13 @@ import kotlinx.coroutines.withContext
  * ```
  */
 class WalletPresentationBuilder(
-    private val wallet: Wallet
+    private val wallet: Wallet,
+    private val credentialService: CredentialService
 ) {
     private val credentialIds = mutableListOf<String>()
     private var queryBuilder: QueryBuilder? = null
     private var holderDid: String? = null
-    private var proofType: String = "Ed25519Signature2020"
-    private var keyId: String? = null
+    private var verificationMethod: String? = null
     private var challenge: String? = null
     private var domain: String? = null
     private var selectiveDisclosure: Boolean = false
@@ -87,17 +89,10 @@ class WalletPresentationBuilder(
     }
 
     /**
-     * Set proof type.
+     * Set verification method for signing.
      */
-    fun proofType(type: String) {
-        this.proofType = type
-    }
-
-    /**
-     * Set key ID for signing.
-     */
-    fun keyId(keyId: String) {
-        this.keyId = keyId
+    fun verificationMethod(verificationMethod: String) {
+        this.verificationMethod = verificationMethod
     }
 
     /**
@@ -156,27 +151,32 @@ class WalletPresentationBuilder(
         }
 
         // Use existing presentation builder
-        presentation {
-            credentials(credentials)
-            holder(holder)
-            proofType(proofType)
-            keyId?.let { keyId(it) }
-            challenge?.let { challenge(it) }
-            domain?.let { domain(it) }
-            if (selectiveDisclosure) {
-                selectiveDisclosure {
-                    reveal(*disclosedFields.toTypedArray())
-                }
+        val presentationBuilder = PresentationBuilder(credentialService)
+        presentationBuilder.credentials(credentials)
+        presentationBuilder.holder(holder)
+        verificationMethod?.let { presentationBuilder.verificationMethod(it) }
+        challenge?.let { presentationBuilder.challenge(it) }
+        domain?.let { presentationBuilder.domain(it) }
+        if (selectiveDisclosure) {
+            presentationBuilder.selectiveDisclosure {
+                reveal(*disclosedFields.toTypedArray())
             }
         }
+        presentationBuilder.build()
     }
 }
 
 /**
  * Extension function to create a presentation from wallet credentials.
  */
-suspend fun Wallet.presentation(block: WalletPresentationBuilder.() -> Unit): VerifiablePresentation {
-    val builder = WalletPresentationBuilder(this)
+suspend fun CredentialDslProvider.presentationFromWallet(
+    wallet: Wallet,
+    block: WalletPresentationBuilder.() -> Unit
+): VerifiablePresentation {
+    val issuer = getIssuer()
+    val credentialService = issuer as? CredentialService
+        ?: throw IllegalStateException("CredentialService is not available. Configure it in TrustWeave.build { ... }")
+    val builder = WalletPresentationBuilder(wallet, credentialService)
     builder.block()
     return builder.build()
 }

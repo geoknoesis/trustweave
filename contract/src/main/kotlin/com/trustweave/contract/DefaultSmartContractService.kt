@@ -10,9 +10,17 @@ import kotlin.Result
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.core.util.ValidationResult
 import com.trustweave.credential.CredentialService as CredentialServiceInterface
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.requests.IssuanceRequest
+import com.trustweave.credential.format.ProofSuiteId
+import com.trustweave.core.identifiers.Iri
 import kotlinx.serialization.json.*
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -48,8 +56,9 @@ class DefaultSmartContractService(
         }
 
         val contractId = UUID.randomUUID().toString()
-        val contractNumber = "CONTRACT-${Instant.now().toEpochMilli()}"
-        val now = Instant.now().toString()
+        val now = Clock.System.now()
+        val contractNumber = "CONTRACT-${now.epochSeconds * 1000}"
+        val nowStr = now.toString()
 
         val contract = SmartContract(
             id = contractId,
@@ -61,8 +70,8 @@ class DefaultSmartContractService(
             terms = request.terms,
             effectiveDate = request.effectiveDate,
             expirationDate = request.expirationDate,
-            createdAt = now,
-            updatedAt = now,
+            createdAt = nowStr,
+            updatedAt = nowStr,
             credentialId = null,
             anchorRef = null,
             contractData = request.contractData
@@ -84,8 +93,7 @@ class DefaultSmartContractService(
         // Extract and capture engine hash if engine is registered
         val executionModelWithHash = contract.executionModel.withEngineHash(engines)
 
-        val credentialSubject = buildJsonObject {
-            put("id", contract.id)
+        val claims = buildJsonObject {
             put("contractNumber", contract.contractNumber)
             put("contractType", contract.contractType.toString())
             put("status", contract.status.name)
@@ -104,21 +112,32 @@ class DefaultSmartContractService(
             put("terms", json.encodeToJsonElement(ContractTerms.serializer(), contract.terms))
         }
 
-        val credential = VerifiableCredential(
-            id = "urn:uuid:${java.util.UUID.randomUUID()}",
-            type = listOf("VerifiableCredential", "SmartContractCredential"),
-            issuer = issuerDid,
-            credentialSubject = credentialSubject,
-            issuanceDate = java.time.Instant.now().toString()
+        val credentialSubject = CredentialSubject.fromIri(
+            iri = Iri(contract.id),
+            claims = claims
         )
 
-        credentialService.issueCredential(
-            credential = credential,
-            options = com.trustweave.credential.CredentialIssuanceOptions(
-                proofType = "Ed25519Signature2020",
-                keyId = issuerKeyId
-            )
+        val issuanceRequest = IssuanceRequest(
+            format = ProofSuiteId.VC_LD,
+            issuer = Issuer.from(Iri(issuerDid)),
+            issuerKeyId = issuerKeyId?.let { com.trustweave.did.identifiers.VerificationMethodId.parse(it, com.trustweave.did.identifiers.Did(issuerDid)) },
+            credentialSubject = credentialSubject,
+            type = listOf(
+                CredentialType.fromString("VerifiableCredential"),
+                CredentialType.fromString("SmartContractCredential")
+            ),
+            id = CredentialId("urn:uuid:${UUID.randomUUID()}"),
+            issuedAt = Clock.System.now()
         )
+
+        val issuanceResult = credentialService.issue(issuanceRequest)
+        when (issuanceResult) {
+            is com.trustweave.credential.results.IssuanceResult.Success -> issuanceResult.credential
+            is com.trustweave.credential.results.IssuanceResult.Failure -> throw TrustWeaveException(
+                code = "CREDENTIAL_ISSUANCE_FAILED",
+                message = "Failed to issue credential: ${issuanceResult}"
+            )
+        }
     }
 
     override suspend fun anchorContract(
@@ -131,7 +150,7 @@ class DefaultSmartContractService(
 
         val payload = buildJsonObject {
             put("contractId", contract.id)
-            put("credentialId", credential.id ?: throw IllegalStateException(
+            put("credentialId", credential.id?.value ?: throw IllegalStateException(
                 "Credential must have an ID after issuance"
             ))
             put("contractNumber", contract.contractNumber)
@@ -158,7 +177,7 @@ class DefaultSmartContractService(
         val anchorRef = anchorContract(contract, credential, chainId).getOrThrow()
 
         // Update contract with credential and anchor
-        val credentialId = credential.id ?: throw IllegalStateException(
+        val credentialId = credential.id?.value ?: throw IllegalStateException(
             "Credential must have an ID after issuance"
         )
 
@@ -167,7 +186,7 @@ class DefaultSmartContractService(
                 credentialId = credentialId,
                 anchorRef = AnchorRefData.fromAnchorRef(anchorRef),
                 status = ContractStatus.PENDING,
-                updatedAt = Instant.now().toString()
+                updatedAt = Clock.System.now().toString()
             )
         ).getOrThrow()
 
@@ -205,7 +224,7 @@ class DefaultSmartContractService(
         val updatedContract = updateContract(
             contract.copy(
                 status = ContractStatus.ACTIVE,
-                updatedAt = Instant.now().toString()
+                updatedAt = Clock.System.now().toString()
             )
         ).getOrThrow()
 
@@ -272,7 +291,7 @@ class DefaultSmartContractService(
             executionType = executionType,
             outcomes = outcomes,
             evidence = executionContext.triggerData?.let { listOf() }, // Would contain VC IDs in real implementation
-            timestamp = Instant.now().toString()
+            timestamp = Clock.System.now().toString()
         )
     }
 
@@ -340,7 +359,7 @@ class DefaultSmartContractService(
             contractId = contract.id,
             conditions = conditionResults,
             overallResult = overallResult,
-            timestamp = Instant.now().toString()
+            timestamp = Clock.System.now().toString()
         )
     }
 
@@ -368,7 +387,7 @@ class DefaultSmartContractService(
         val updatedContract = updateContract(
             contract.copy(
                 status = newStatus,
-                updatedAt = Instant.now().toString()
+                updatedAt = Clock.System.now().toString()
             )
         ).getOrThrow()
 

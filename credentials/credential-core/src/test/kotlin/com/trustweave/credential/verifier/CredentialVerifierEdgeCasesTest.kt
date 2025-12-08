@@ -3,9 +3,9 @@ package com.trustweave.credential.verifier
 import com.trustweave.credential.CredentialVerificationOptions
 import com.trustweave.credential.CredentialVerificationResult
 import com.trustweave.credential.models.CredentialSchema
-import com.trustweave.credential.models.CredentialStatus
+import com.trustweave.credential.model.vc.CredentialStatus
 import com.trustweave.credential.models.Proof
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.schema.JsonSchemaValidator
 import com.trustweave.credential.schema.SchemaRegistry
 import com.trustweave.credential.schema.SchemaValidatorRegistry
@@ -26,6 +26,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Exhaustive edge case tests for CredentialVerifier API robustness.
@@ -34,7 +36,7 @@ class CredentialVerifierEdgeCasesTest {
 
     private lateinit var verifier: CredentialVerifier
     private lateinit var kms: InMemoryKeyManagementService
-    private var keyId: com.trustweave.core.types.KeyId? = null
+    private var keyId: com.trustweave.core.identifiers.KeyId? = null
     private lateinit var publicKeyJwk: Map<String, Any?>
     private lateinit var proofGenerator: Ed25519ProofGenerator
     private val issuerDid = "did:key:issuer123"
@@ -141,7 +143,7 @@ class CredentialVerifierEdgeCasesTest {
                 put("id", "did:key:subject")
                 put("name", "John Doe")
             },
-            issuanceDate = java.time.Instant.now().toString(),
+            issuanceDate = Clock.System.now().toString(),
             proof = null
         )
 
@@ -157,7 +159,7 @@ class CredentialVerifierEdgeCasesTest {
         val credential = createTestCredential(
             proof = Proof(
                 type = "",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:issuer123#key-1",
                 proofPurpose = "assertionMethod"
             )
@@ -174,7 +176,7 @@ class CredentialVerifierEdgeCasesTest {
         val credential = createTestCredential(
             proof = Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "",
                 proofPurpose = "assertionMethod"
             )
@@ -229,7 +231,7 @@ class CredentialVerifierEdgeCasesTest {
 
     @Test
     fun `test verify credential expired exactly at current time`() = runBlocking {
-        val now = java.time.Instant.now()
+        val now = Clock.System.now()
         val credential = createTestCredential(expirationDate = now.toString())
 
         val result = verifier.verify(
@@ -243,7 +245,7 @@ class CredentialVerifierEdgeCasesTest {
 
     @Test
     fun `test verify credential expired one second ago`() = runBlocking {
-        val expirationDate = java.time.Instant.now().minusSeconds(1).toString()
+        val expirationDate = Clock.System.now().minus(1.seconds).toString()
         val credential = createTestCredential(expirationDate = expirationDate)
 
         val result = verifier.verify(
@@ -258,7 +260,7 @@ class CredentialVerifierEdgeCasesTest {
 
     @Test
     fun `test verify credential expires one second in future`() = runBlocking {
-        val expirationDate = java.time.Instant.now().plusSeconds(1).toString()
+        val expirationDate = Clock.System.now().plus(1.seconds).toString()
         val credential = createTestCredential(expirationDate = expirationDate)
 
         val result = verifier.verify(
@@ -271,7 +273,7 @@ class CredentialVerifierEdgeCasesTest {
 
     @Test
     fun `test verify credential with very long expiration date`() = runBlocking {
-        val expirationDate = java.time.Instant.now().plusSeconds(31536000L * 1000).toString()
+        val expirationDate = Clock.System.now().plus((31536000L * 1000).seconds).toString()
         val credential = createTestCredential(expirationDate = expirationDate)
 
         val result = verifier.verify(
@@ -306,7 +308,7 @@ class CredentialVerifierEdgeCasesTest {
         val credential = createTestCredential(
             proof = Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:issuer123#key-1",
                 proofPurpose = ""
             )
@@ -323,7 +325,7 @@ class CredentialVerifierEdgeCasesTest {
         val credential = createTestCredential(
             proof = Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:issuer123#key-1",
                 proofPurpose = "assertionMethod",
                 proofValue = "z123",
@@ -342,7 +344,7 @@ class CredentialVerifierEdgeCasesTest {
         val credential = createTestCredential(
             proof = Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:issuer123#key-1",
                 proofPurpose = "assertionMethod",
                 proofValue = null,
@@ -465,7 +467,7 @@ class CredentialVerifierEdgeCasesTest {
     @Test
     fun `test verify credential with all checks disabled`() = runBlocking {
         val expiredCredential = createTestCredential(
-            expirationDate = java.time.Instant.now().minusSeconds(86400).toString()
+            expirationDate = Clock.System.now().minus(86400.seconds).toString()
         )
 
         val result = verifier.verify(
@@ -508,7 +510,7 @@ class CredentialVerifierEdgeCasesTest {
     fun `test verify credential with multiple validation errors`() = runBlocking {
         val credential = createTestCredential(
             proof = null,
-            expirationDate = java.time.Instant.now().minusSeconds(86400).toString(),
+            expirationDate = Clock.System.now().minus(86400.seconds).toString(),
             issuerDid = "did:key:wrong"
         )
 
@@ -545,7 +547,7 @@ class CredentialVerifierEdgeCasesTest {
         val credential = createTestCredential(
             proof = Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:issuer123#key-1",
                 proofPurpose = "assertionMethod",
                 proofValue = "z!@#$%^&*()_+-=[]{}|;':\",./<>?"
@@ -563,7 +565,7 @@ class CredentialVerifierEdgeCasesTest {
         val credential = createTestCredential(
             proof = Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:issuer123#key-中文",
                 proofPurpose = "assertionMethod"
             )
@@ -584,7 +586,7 @@ class CredentialVerifierEdgeCasesTest {
             put("id", "did:key:subject")
             put("name", "John Doe")
         },
-        issuanceDate: String = java.time.Instant.now().toString(),
+        issuanceDate: String = Clock.System.now().toString(),
         expirationDate: String? = null,
         proof: Proof? = null, // null means auto-generate
         schema: CredentialSchema? = null,

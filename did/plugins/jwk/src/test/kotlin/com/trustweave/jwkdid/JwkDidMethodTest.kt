@@ -1,7 +1,7 @@
 package com.trustweave.jwkdid
 
 import com.trustweave.did.*
-import com.trustweave.did.DidCreationOptions.KeyAlgorithm
+import com.trustweave.did.KeyAlgorithm
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
@@ -36,7 +36,7 @@ class JwkDidMethodTest {
         )
 
         assertNotNull(document)
-        assertTrue(document.id.startsWith("did:jwk:"))
+        assertTrue(document.id.value.startsWith("did:jwk:"))
         assertEquals(1, document.verificationMethod.size)
         assertEquals(1, document.authentication.size)
     }
@@ -66,7 +66,7 @@ class JwkDidMethodTest {
         )
 
         // did:jwk should be base64url encoded (no padding)
-        val encoded = document.id.substringAfter("did:jwk:")
+        val encoded = document.id.value.substringAfter("did:jwk:")
         assertTrue(encoded.matches(Regex("^[A-Za-z0-9_-]+$")))
     }
 }

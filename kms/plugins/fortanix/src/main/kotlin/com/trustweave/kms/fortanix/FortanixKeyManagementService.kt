@@ -1,12 +1,17 @@
 package com.trustweave.kms.fortanix
 
 import com.trustweave.core.exception.TrustWeaveException
-import com.trustweave.core.types.KeyId
+import com.trustweave.core.identifiers.KeyId
 import com.trustweave.kms.Algorithm
 import com.trustweave.kms.KeyHandle
 import com.trustweave.kms.KeyManagementService
+import com.trustweave.kms.KmsOptionKeys
 import com.trustweave.kms.exception.KmsException
 import com.trustweave.kms.UnsupportedAlgorithmException
+import com.trustweave.kms.results.GenerateKeyResult
+import com.trustweave.kms.results.GetPublicKeyResult
+import com.trustweave.kms.results.SignResult
+import com.trustweave.kms.results.DeleteKeyResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -48,17 +53,17 @@ class FortanixKeyManagementService(
     override suspend fun generateKey(
         algorithm: Algorithm,
         options: Map<String, Any?>
-    ): KeyHandle = withContext(Dispatchers.IO) {
+    ): GenerateKeyResult = withContext(Dispatchers.IO) {
         if (!supportsAlgorithm(algorithm)) {
-            throw UnsupportedAlgorithmException(
-                "Algorithm '${algorithm.name}' is not supported by Fortanix DSM. " +
-                "Supported: ${SUPPORTED_ALGORITHMS.joinToString(", ") { it.name }}"
+            return@withContext GenerateKeyResult.Failure.UnsupportedAlgorithm(
+                algorithm = algorithm,
+                supportedAlgorithms = SUPPORTED_ALGORITHMS
             )
         }
 
         try {
             val keyType = AlgorithmMapping.toFortanixKeyType(algorithm)
-            val keyName = options["name"] as? String ?: "TrustWeave-key-${java.util.UUID.randomUUID()}"
+            val keyName = options[KmsOptionKeys.NAME] as? String ?: "TrustWeave-key-${java.util.UUID.randomUUID()}"
 
             // Fortanix DSM API: POST /crypto/v1/keys
             val requestBody = buildJsonObject {
@@ -66,7 +71,7 @@ class FortanixKeyManagementService(
                 put("obj_type", keyType)
                 AlgorithmMapping.toFortanixCurve(algorithm)?.let { put("curve", it) }
                 AlgorithmMapping.toFortanixKeySize(algorithm)?.let { put("key_size", it) }
-                (options["description"] as? String)?.let { put("description", it) }
+                (options[KmsOptionKeys.DESCRIPTION] as? String)?.let { put("description", it) }
             }
 
             val request = Request.Builder()
@@ -78,38 +83,59 @@ class FortanixKeyManagementService(
             val responseBody = response.body?.string()
 
             if (!response.isSuccessful) {
-                throw TrustWeaveException.Unknown(
-                    message = "Fortanix DSM API error: ${response.code} - ${response.message ?: "Unknown error"}. " +
-                    "Response: $responseBody"
+                return@withContext GenerateKeyResult.Failure.Error(
+                    algorithm = algorithm,
+                    reason = "Fortanix DSM API error: ${response.code} - ${response.message ?: "Unknown error"}. Response: $responseBody",
+                    cause = null
                 )
             }
 
             // Parse response to get key ID
             val jsonResponse = kotlinx.serialization.json.Json.parseToJsonElement(responseBody ?: "{}").jsonObject
             val keyId = jsonResponse["kid"]?.jsonPrimitive?.content
-                ?: throw TrustWeaveException.Unknown(
-                    message = "Key ID not found in response"
+                ?: return@withContext GenerateKeyResult.Failure.Error(
+                    algorithm = algorithm,
+                    reason = "Key ID not found in response",
+                    cause = null
                 )
 
             // Get public key
-            val publicKeyHandle = getPublicKey(KeyId(keyId))
-
-            KeyHandle(
-                id = KeyId(keyId),
-                algorithm = algorithm.name,
-                publicKeyJwk = publicKeyHandle.publicKeyJwk
-            )
-        } catch (e: TrustWeaveException) {
-            throw e
+            val publicKeyResult = getPublicKey(KeyId(keyId))
+            when (publicKeyResult) {
+                is GetPublicKeyResult.Success -> {
+                    GenerateKeyResult.Success(
+                        KeyHandle(
+                            id = KeyId(keyId),
+                            algorithm = algorithm.name,
+                            publicKeyJwk = publicKeyResult.keyHandle.publicKeyJwk
+                        )
+                    )
+                }
+                is GetPublicKeyResult.Failure.KeyNotFound -> {
+                    GenerateKeyResult.Failure.Error(
+                        algorithm = algorithm,
+                        reason = "Key created but public key not found: ${publicKeyResult.keyId.value}",
+                        cause = null
+                    )
+                }
+                is GetPublicKeyResult.Failure.Error -> {
+                    GenerateKeyResult.Failure.Error(
+                        algorithm = algorithm,
+                        reason = "Failed to get public key after creation: ${publicKeyResult.reason}",
+                        cause = publicKeyResult.cause
+                    )
+                }
+            }
         } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                message = "Failed to generate key: ${e.message ?: "Unknown error"}",
+            GenerateKeyResult.Failure.Error(
+                algorithm = algorithm,
+                reason = "Failed to generate key: ${e.message ?: "Unknown error"}",
                 cause = e
             )
         }
     }
 
-    override suspend fun getPublicKey(keyId: KeyId): KeyHandle = withContext(Dispatchers.IO) {
+    override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult = withContext(Dispatchers.IO) {
         try {
             val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId.value)
 
@@ -124,26 +150,31 @@ class FortanixKeyManagementService(
 
             if (!response.isSuccessful) {
                 if (response.code == 404) {
-                    throw KmsException.KeyNotFound(keyId = keyId.value)
+                    return@withContext GetPublicKeyResult.Failure.KeyNotFound(keyId)
                 }
-                throw TrustWeaveException.Unknown(
-                    message = "Fortanix DSM API error: ${response.code} - ${response.message ?: "Unknown error"}. " +
-                    "Response: $responseBody"
+                return@withContext GetPublicKeyResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Fortanix DSM API error: ${response.code} - ${response.message ?: "Unknown error"}. Response: $responseBody",
+                    cause = null
                 )
             }
 
             // Parse response to get key metadata
             val jsonResponse = kotlinx.serialization.json.Json.parseToJsonElement(responseBody ?: "{}").jsonObject
             val keyType = jsonResponse["obj_type"]?.jsonPrimitive?.content
-                ?: throw TrustWeaveException.Unknown(
-                    message = "Key type not found in response"
+                ?: return@withContext GetPublicKeyResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Key type not found in response",
+                    cause = null
                 )
             val curve = jsonResponse["curve"]?.jsonPrimitive?.content
             val keySize = jsonResponse["key_size"]?.jsonPrimitive?.intOrNull
 
             val algorithm = AlgorithmMapping.fromFortanixKeyType(keyType, curve, keySize)
-                ?: throw TrustWeaveException.Unknown(
-                    message = "Unknown key type: $keyType"
+                ?: return@withContext GetPublicKeyResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Unknown key type: $keyType",
+                    cause = null
                 )
 
             // Get public key material
@@ -157,33 +188,35 @@ class FortanixKeyManagementService(
             val exportBody = exportResponse.body?.string()
 
             if (!exportResponse.isSuccessful) {
-                throw TrustWeaveException.Unknown(
-                    message = "Failed to get public key: ${exportResponse.code} - ${exportResponse.message ?: "Unknown error"}. " +
-                    "Response: $exportBody"
+                return@withContext GetPublicKeyResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Failed to get public key: ${exportResponse.code} - ${exportResponse.message ?: "Unknown error"}. Response: $exportBody",
+                    cause = null
                 )
             }
 
             val exportJson = kotlinx.serialization.json.Json.parseToJsonElement(exportBody ?: "{}").jsonObject
             val publicKeyBase64 = exportJson["pub_key"]?.jsonPrimitive?.content
-                ?: throw TrustWeaveException.Unknown(
-                    message = "Public key not found in response"
+                ?: return@withContext GetPublicKeyResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Public key not found in response",
+                    cause = null
                 )
             val publicKeyBytes = Base64.getDecoder().decode(publicKeyBase64)
 
             val publicKeyJwk = AlgorithmMapping.publicKeyToJwk(publicKeyBytes, algorithm)
 
-            KeyHandle(
-                id = KeyId(resolvedKeyId),
-                algorithm = algorithm.name,
-                publicKeyJwk = publicKeyJwk
+            GetPublicKeyResult.Success(
+                KeyHandle(
+                    id = KeyId(resolvedKeyId),
+                    algorithm = algorithm.name,
+                    publicKeyJwk = publicKeyJwk
+                )
             )
-        } catch (e: KmsException.KeyNotFound) {
-            throw e
-        } catch (e: TrustWeaveException) {
-            throw e
         } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                message = "Failed to get public key: ${e.message ?: "Unknown error"}",
+            GetPublicKeyResult.Failure.Error(
+                keyId = keyId,
+                reason = "Failed to get public key: ${e.message ?: "Unknown error"}",
                 cause = e
             )
         }
@@ -193,17 +226,33 @@ class FortanixKeyManagementService(
         keyId: KeyId,
         data: ByteArray,
         algorithm: Algorithm?
-    ): ByteArray = withContext(Dispatchers.IO) {
+    ): SignResult = withContext(Dispatchers.IO) {
         try {
             val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId.value)
 
             // Determine signing algorithm
             val signingAlgorithm = algorithm ?: run {
-                val keyHandle = getPublicKey(keyId)
-                Algorithm.parse(keyHandle.algorithm)
-                    ?: throw TrustWeaveException.Unknown(
-                        message = "Cannot determine signing algorithm for key: ${keyId.value}"
-                    )
+                val keyHandleResult = getPublicKey(keyId)
+                when (keyHandleResult) {
+                    is GetPublicKeyResult.Success -> {
+                        Algorithm.parse(keyHandleResult.keyHandle.algorithm)
+                            ?: return@withContext SignResult.Failure.Error(
+                                keyId = keyId,
+                                reason = "Cannot determine signing algorithm for key: ${keyId.value}",
+                                cause = null
+                            )
+                    }
+                    is GetPublicKeyResult.Failure.KeyNotFound -> {
+                        return@withContext SignResult.Failure.KeyNotFound(keyId)
+                    }
+                    is GetPublicKeyResult.Failure.Error -> {
+                        return@withContext SignResult.Failure.Error(
+                            keyId = keyId,
+                            reason = "Failed to get key metadata: ${keyHandleResult.reason}",
+                            cause = keyHandleResult.cause
+                        )
+                    }
+                }
             }
 
             val fortanixSigningAlgorithm = AlgorithmMapping.toFortanixSigningAlgorithm(signingAlgorithm)
@@ -225,35 +274,35 @@ class FortanixKeyManagementService(
 
             if (!response.isSuccessful) {
                 if (response.code == 404) {
-                    throw KmsException.KeyNotFound(keyId = keyId.value)
+                    return@withContext SignResult.Failure.KeyNotFound(keyId)
                 }
-                throw TrustWeaveException.Unknown(
-                    message = "Fortanix DSM API error: ${response.code} - ${response.message ?: "Unknown error"}. " +
-                    "Response: $responseBody"
+                return@withContext SignResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Fortanix DSM API error: ${response.code} - ${response.message ?: "Unknown error"}. Response: $responseBody",
+                    cause = null
                 )
             }
 
             // Parse response to get signature
             val jsonResponse = kotlinx.serialization.json.Json.parseToJsonElement(responseBody ?: "{}").jsonObject
             val signatureBase64 = jsonResponse["signature"]?.jsonPrimitive?.content
-                ?: throw TrustWeaveException.Unknown(
-                    message = "Signature not found in response"
+                ?: return@withContext SignResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Signature not found in response",
+                    cause = null
                 )
 
-            Base64.getDecoder().decode(signatureBase64)
-        } catch (e: KmsException.KeyNotFound) {
-            throw e
-        } catch (e: TrustWeaveException) {
-            throw e
+            SignResult.Success(Base64.getDecoder().decode(signatureBase64))
         } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                message = "Failed to sign data: ${e.message ?: "Unknown error"}",
+            SignResult.Failure.Error(
+                keyId = keyId,
+                reason = "Failed to sign data: ${e.message ?: "Unknown error"}",
                 cause = e
             )
         }
     }
 
-    override suspend fun deleteKey(keyId: KeyId): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult = withContext(Dispatchers.IO) {
         try {
             val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId.value)
 
@@ -264,9 +313,24 @@ class FortanixKeyManagementService(
                 .build()
 
             val response = httpClient.newCall(request).execute()
-            response.isSuccessful
+            
+            if (response.isSuccessful) {
+                DeleteKeyResult.Deleted
+            } else if (response.code == 404) {
+                DeleteKeyResult.NotFound
+            } else {
+                DeleteKeyResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Fortanix DSM API error: ${response.code} - ${response.message ?: "Unknown error"}",
+                    cause = null
+                )
+            }
         } catch (e: Exception) {
-            false
+            DeleteKeyResult.Failure.Error(
+                keyId = keyId,
+                reason = "Failed to delete key: ${e.message ?: "Unknown error"}",
+                cause = e
+            )
         }
     }
 

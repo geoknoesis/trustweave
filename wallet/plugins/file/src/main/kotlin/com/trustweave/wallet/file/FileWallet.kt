@@ -1,6 +1,6 @@
 package com.trustweave.wallet.file
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.wallet.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -10,7 +10,8 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 import java.util.UUID
 import javax.crypto.Cipher
 import javax.crypto.spec.SecretKeySpec
@@ -69,7 +70,7 @@ class FileWallet(
 
     // CredentialStorage implementation
     override suspend fun store(credential: VerifiableCredential): String = withContext(Dispatchers.IO) {
-        val id = credential.id ?: UUID.randomUUID().toString()
+        val id = credential.id?.value ?: UUID.randomUUID().toString()
         val credentialJson = json.encodeToString(VerifiableCredential.serializer(), credential)
 
         val credentialFile = credentialsDir.resolve("$id.json")
@@ -85,17 +86,17 @@ class FileWallet(
         val metadataFile = metadataDir.resolve("$id.json")
         if (!Files.exists(metadataFile)) {
             val metadata = buildJsonObject {
-                put("credentialId", id)
-                put("createdAt", Instant.now().toString())
-                put("updatedAt", Instant.now().toString())
+                put("credentialId", id as String)
+                put("createdAt", Clock.System.now().toString())
+                put("updatedAt", Clock.System.now().toString())
                 put("notes", JsonNull)
-                putJsonArray("tags") { }
-                putJsonObject("metadata") { }
+                put("tags", buildJsonArray { })
+                put("metadata", buildJsonObject { })
             }
             Files.write(metadataFile, json.encodeToString(JsonObject.serializer(), metadata).toByteArray(Charsets.UTF_8), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
         }
 
-        id
+        id as String
     }
 
     override suspend fun get(credentialId: String): VerifiableCredential? = withContext(Dispatchers.IO) {
@@ -179,26 +180,18 @@ class FileWallet(
      * Check if credential matches filter criteria.
      */
     private fun matchesFilter(credential: VerifiableCredential, filter: CredentialFilter): Boolean {
-        if (filter.issuer != null && credential.issuer != filter.issuer) return false
+        if (filter.issuer != null && credential.issuer.id.value != filter.issuer) return false
         if (filter.type != null) {
             val filterTypes = filter.type
-            if (filterTypes != null && !filterTypes.any { credential.type.contains(it) }) return false
+            if (filterTypes != null && !filterTypes.any { type -> credential.type.any { ct -> ct.value == type } }) return false
         }
         if (filter.subjectId != null) {
-            val subjectId = try {
-                credential.credentialSubject.jsonObject["id"]?.jsonPrimitive?.content
-            } catch (e: Exception) {
-                null
-            }
+            val subjectId = credential.credentialSubject.id.value
             if (subjectId != filter.subjectId) return false
         }
         if (filter.expired != null) {
             val isExpired = credential.expirationDate?.let {
-                try {
-                    Instant.now().isAfter(Instant.parse(it))
-                } catch (e: Exception) {
-                    false
-                }
+                Clock.System.now() > it
             } ?: false
             if (isExpired != filter.expired) return false
         }
@@ -214,30 +207,20 @@ class FileWallet(
      */
     override suspend fun getStatistics(): WalletStatistics = withContext(Dispatchers.IO) {
         val allCredentials = list(null)
-        val now = Instant.now()
+        val now = Clock.System.now()
 
         WalletStatistics(
             totalCredentials = allCredentials.size,
             validCredentials = allCredentials.count { credential ->
                 credential.proof != null &&
                 (credential.expirationDate?.let { expirationDate ->
-                    try {
-                        val expiration = Instant.parse(expirationDate)
-                        now.isBefore(expiration)
-                    } catch (e: Exception) {
-                        false
-                    }
+                    now < expirationDate
                 } ?: true) &&
                 credential.credentialStatus == null
             },
             expiredCredentials = allCredentials.count { credential ->
                 credential.expirationDate?.let { expirationDate ->
-                    try {
-                        val expiration = Instant.parse(expirationDate)
-                        now.isAfter(expiration)
-                    } catch (e: Exception) {
-                        false
-                    }
+                    now > expirationDate
                 } ?: false
             },
             revokedCredentials = allCredentials.count { it.credentialStatus != null },

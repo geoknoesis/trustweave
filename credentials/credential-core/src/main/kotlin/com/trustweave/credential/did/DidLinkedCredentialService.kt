@@ -2,15 +2,21 @@ package com.trustweave.credential.did
 
 import com.trustweave.credential.CredentialIssuanceOptions
 import com.trustweave.credential.issuer.CredentialIssuer
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.did.identifiers.Did
 import com.trustweave.did.registry.DidMethodRegistry
 import com.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
+import kotlinx.datetime.Clock
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import kotlinx.datetime.Instant
 
 /**
  * DID-linked credential service.
@@ -71,8 +77,8 @@ open class DidLinkedCredentialService(
         resolveDid(subjectDid)
 
         // Build credentialSubject with DID as id
-        val credentialSubject = buildJsonObject {
-            put("id", subjectDid)
+        val subjectDidObj = Did(subjectDid)
+        val claimsJson = buildJsonObject {
             claims.forEach { (key, value) ->
                 when (value) {
                     is String -> put(key, value)
@@ -82,14 +88,16 @@ open class DidLinkedCredentialService(
                 }
             }
         }
+        val credentialSubject = CredentialSubject.fromDid(subjectDidObj, claims = claimsJson)
 
         // Create credential
+        val issuerDidObj = Did(issuerDid)
         val credential = VerifiableCredential(
             id = null,
-            type = listOf("VerifiableCredential", credentialType),
-            issuer = issuerDid,
+            type = listOf(CredentialType.fromString("VerifiableCredential"), CredentialType.fromString(credentialType)),
+            issuer = Issuer.fromDid(issuerDidObj),
             credentialSubject = credentialSubject,
-            issuanceDate = java.time.format.DateTimeFormatter.ISO_INSTANT.format(java.time.Instant.now()),
+            issuanceDate = Clock.System.now(),
             expirationDate = null,
             credentialStatus = null,
             credentialSchema = null,
@@ -117,18 +125,17 @@ open class DidLinkedCredentialService(
      * @return Resolved DID document, or null if subject is not a DID
      */
     suspend fun resolveCredentialSubject(credential: VerifiableCredential): String? = withContext(Dispatchers.IO) {
-        val subjectId = credential.credentialSubject.jsonObject["id"]?.jsonPrimitive?.content
-            ?: return@withContext null
+        val subjectId = credential.credentialSubject.id
 
         // Check if subject is a DID
-        if (!subjectId.startsWith("did:")) {
+        if (!subjectId.isDid) {
             return@withContext null
         }
 
         // Resolve DID
         try {
-            resolveDid(subjectId)
-            subjectId
+            resolveDid(subjectId.value)
+            subjectId.value
         } catch (e: Exception) {
             null
         }
@@ -142,7 +149,7 @@ open class DidLinkedCredentialService(
      */
     suspend fun verifyIssuerDid(credential: VerifiableCredential): Boolean = withContext(Dispatchers.IO) {
         try {
-            resolveDid(credential.issuer)
+            resolveDid(credential.issuer.id.value)
             true
         } catch (e: Exception) {
             false

@@ -3,7 +3,7 @@ package com.trustweave.godiddy
 import com.trustweave.anchor.DefaultBlockchainAnchorRegistry
 import com.trustweave.did.registry.DidMethodRegistry
 import com.trustweave.did.resolver.DidResolutionResult
-import com.trustweave.did.resolver.getDocumentOrNull
+import com.trustweave.did.model.DidDocumentMetadata
 import com.trustweave.core.util.DigestUtils
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import com.trustweave.testkit.integrity.IntegrityVerifier
@@ -61,8 +61,11 @@ class GodiddyEoIntegrationTest {
             val issuerDid = issuerDoc.id
             assertNotNull(issuerDid)
             // Continue with fallback method
-            val resolutionResult = result.registry.resolve(issuerDid)
-            val document = resolutionResult.getDocumentOrNull()
+            val resolutionResult = result.registry.resolve(issuerDid.value)
+            val document = when (resolutionResult) {
+                is DidResolutionResult.Success -> resolutionResult.document
+                else -> null
+            }
             assertNotNull(document, "DID should resolve")
             assertEquals(issuerDid, document.id)
             // Skip rest of test since GoDiddy services aren't available
@@ -93,13 +96,13 @@ class GodiddyEoIntegrationTest {
 
         // Step 2: Resolve the DID using GoDiddy Universal Resolver
         val resolutionResult = try {
-            result.registry.resolve(issuerDid)
+            result.registry.resolve(issuerDid.value)
         } catch (e: Exception) {
             println("Warning: DID resolution failed (expected if service unavailable): ${e.message}")
             // Continue with test using local DID document
             com.trustweave.did.resolver.DidResolutionResult.Success(
                 document = issuerDoc,
-                documentMetadata = com.trustweave.did.DidDocumentMetadata(),
+                documentMetadata = DidDocumentMetadata(),
                 resolutionMetadata = mapOf("provider" to "local")
             )
         }
@@ -128,7 +131,7 @@ class GodiddyEoIntegrationTest {
         val (provenanceArtifact, provenanceDigest) = TestDataBuilders.createProvenanceArtifact(
             "provenance-1",
             "EO Data Collection",
-            issuerDid
+            issuerDid.value
         )
 
         val (qualityArtifact, qualityDigest) = TestDataBuilders.createQualityReportArtifact(
@@ -206,7 +209,7 @@ class GodiddyEoIntegrationTest {
         val vc = buildJsonObject {
             put("id", "vc-eo-12345")
             put("type", buildJsonArray { add("VerifiableCredential") })
-            put("issuer", issuerDid)
+            put("issuer", JsonPrimitive(issuerDid.value))
             put("credentialSubject", subject)
             put("linksetDigest", linksetDigest) // Reference to Linkset digest
             put("issued", fixedTimestamp)
@@ -215,7 +218,7 @@ class GodiddyEoIntegrationTest {
         val vcWithDigest = buildJsonObject {
             put("id", "vc-eo-12345")
             put("type", buildJsonArray { add("VerifiableCredential") })
-            put("issuer", issuerDid)
+            put("issuer", JsonPrimitive(issuerDid.value))
             put("credentialSubject", subject)
             put("digestMultibase", vcDigest)
             put("linksetDigest", linksetDigest) // Reference to Linkset digest
@@ -274,7 +277,7 @@ class GodiddyEoIntegrationTest {
         val digestPayload = buildJsonObject {
             put("vcId", "vc-eo-12345")
             put("vcDigest", vcDigest)
-            put("issuer", issuerDid)
+            put("issuer", JsonPrimitive(issuerDid.value))
         }
 
         val anchorResult = anchorClient.writePayload(digestPayload)
@@ -383,7 +386,7 @@ class GodiddyEoIntegrationTest {
 
         // Resolve using GoDiddy Universal Resolver
         val resolutionResult = try {
-            result.resolver.resolveDid(issuerDid)
+            result.resolver.resolveDid(issuerDid.value)
         } catch (e: Exception) {
             println("Note: DID resolution failed (expected if service unavailable): ${e.message}")
             null
@@ -391,7 +394,12 @@ class GodiddyEoIntegrationTest {
 
         // Note: Resolution might fail if the DID was just created and not yet
         // registered in the Universal Resolver's backend. This is expected behavior.
-        val document = resolutionResult?.getDocumentOrNull()
+        val document = resolutionResult?.let { result ->
+            when (result) {
+                is DidResolutionResult.Success -> result.document
+                else -> null
+            }
+        }
         if (document != null) {
             assertEquals(issuerDid, document.id)
             println("Successfully resolved DID via GoDiddy: $issuerDid")

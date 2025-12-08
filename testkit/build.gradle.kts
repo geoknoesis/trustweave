@@ -6,7 +6,8 @@ plugins {
 group = "com.trustweave"
 dependencies {
     implementation(project(":common"))  // For exception classes
-    implementation(project(":credentials:credential-core"))
+    implementation(project(":credentials:credential-api"))
+    implementation(project(":credentials:credential-api"))  // For proof engine testing
     implementation(project(":credentials:plugins:status-list:database"))  // For StatusListManagerFactory
     implementation(project(":wallet:wallet-core"))  // Wallet interfaces
     implementation(project(":anchors:anchor-core"))
@@ -19,6 +20,9 @@ dependencies {
 
     // Kotlinx Serialization
     implementation(libs.kotlinx.serialization.json)
+    
+    // Kotlinx DateTime
+    implementation(libs.kotlinx.datetime)
 
     // JUnit for test base classes
     api(libs.junit.jupiter)

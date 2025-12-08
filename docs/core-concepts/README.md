@@ -18,6 +18,7 @@ Welcome to TrustWeave's core concepts! This section introduces the fundamental b
 
 ## What You'll Learn
 
+- **Identifiers and Types** - Type-safe identifiers and domain types for better code safety
 - **Decentralized Identifiers (DIDs)** - How to create and manage decentralized identities
 - **Verifiable Credentials (VCs)** - How to issue, store, and verify credentials
 - **Wallets** - How to manage credentials and identities
@@ -27,16 +28,17 @@ Welcome to TrustWeave's core concepts! This section introduces the fundamental b
 
 ## Table of Contents
 
-1. [Decentralized Identifiers (DIDs)](dids.md) - Understanding DIDs and DID Documents
-2. [Verifiable Credentials](verifiable-credentials.md) - Understanding VCs and their lifecycle
-3. [Wallets](wallets.md) - Understanding credential and identity wallets
-4. [Blockchain Anchoring](blockchain-anchoring.md) - Understanding data anchoring
-5. [Smart Contracts](smart-contracts.md) - Understanding executable agreements with verifiable credentials
-6. [Blockchain-Anchored Revocation](blockchain-anchored-revocation.md) - Understanding revocation with blockchain anchoring
-7. [Key Management](key-management.md) - Understanding key management systems
-8. [Algorithm Compatibility Table](algorithm-compatibility-table.md) - Algorithm support in DIDs, VCs, AWS KMS, and Azure Key Vault
-9. [JSON Canonicalization](json-canonicalization.md) - Understanding data integrity
-10. [Credential Exchange Protocols](credential-exchange-protocols.md) - Protocol abstraction layer for credential exchange (DIDComm, OIDC4VCI, CHAPI)
+1. [Identifiers and Types](identifiers-and-types.md) - Type-safe identifiers and domain types in TrustWeave
+2. [Decentralized Identifiers (DIDs)](dids.md) - Understanding DIDs and DID Documents
+3. [Verifiable Credentials](verifiable-credentials.md) - Understanding VCs and their lifecycle
+4. [Wallets](wallets.md) - Understanding credential and identity wallets
+5. [Blockchain Anchoring](blockchain-anchoring.md) - Understanding data anchoring
+6. [Smart Contracts](smart-contracts.md) - Understanding executable agreements with verifiable credentials
+7. [Blockchain-Anchored Revocation](blockchain-anchored-revocation.md) - Understanding revocation with blockchain anchoring
+8. [Key Management](key-management.md) - Understanding key management systems
+9. [Algorithm Compatibility Table](algorithm-compatibility-table.md) - Algorithm support in DIDs, VCs, AWS KMS, and Azure Key Vault
+10. [JSON Canonicalization](json-canonicalization.md) - Understanding data integrity
+11. [Credential Exchange Protocols](credential-exchange-protocols.md) - Protocol abstraction layer for credential exchange (DIDComm, OIDC4VCI, CHAPI)
 
 ## Quick Overview
 
@@ -107,8 +109,9 @@ See the [Algorithm Compatibility Table](algorithm-compatibility-table.md) for a 
 - [Getting Started](../getting-started/README.md) - Installation and quick start
 
 **Ready to learn concepts?**
-- Start with [Decentralized Identifiers (DIDs)](dids.md) to understand identity
-- Then learn about [Verifiable Credentials](verifiable-credentials.md) for credentials
+- Start with [Identifiers and Types](identifiers-and-types.md) to understand the type system
+- Then learn about [Decentralized Identifiers (DIDs)](dids.md) to understand identity
+- Learn about [Verifiable Credentials](verifiable-credentials.md) for credentials
 - Explore [Wallets](wallets.md) for credential management
 - Check out [Blockchain Anchoring](blockchain-anchoring.md) for data integrity
 

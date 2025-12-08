@@ -2,10 +2,16 @@ package com.trustweave.plcdid
 
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.VerificationMethod
+import com.trustweave.did.model.DidService
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.base.AbstractDidMethod
 import com.trustweave.did.base.DidMethodUtils
 import com.trustweave.kms.KeyManagementService
+import com.trustweave.kms.results.GenerateKeyResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -56,7 +62,23 @@ class PlcDidMethod(
         try {
             // Generate key using KMS
             val algorithm = options.algorithm.algorithmName
-            val keyHandle = kms.generateKey(algorithm, options.additionalProperties)
+            val generateResult = kms.generateKey(algorithm, options.additionalProperties)
+            val keyHandle = when (generateResult) {
+                is GenerateKeyResult.Success -> generateResult.keyHandle
+                is GenerateKeyResult.Failure.UnsupportedAlgorithm -> throw TrustWeaveException.Unknown(
+                    code = "UNSUPPORTED_ALGORITHM",
+                    message = generateResult.reason ?: "Algorithm not supported"
+                )
+                is GenerateKeyResult.Failure.InvalidOptions -> throw TrustWeaveException.Unknown(
+                    code = "INVALID_OPTIONS",
+                    message = generateResult.reason
+                )
+                is GenerateKeyResult.Failure.Error -> throw TrustWeaveException.Unknown(
+                    code = "KEY_GENERATION_ERROR",
+                    message = generateResult.reason,
+                    cause = generateResult.cause
+                )
+            }
 
             // Create DID identifier (PLC uses specific format)
             val did = generatePlcDid(keyHandle)
@@ -72,9 +94,9 @@ class PlcDidMethod(
             val document = DidMethodUtils.buildDidDocument(
                 did = did,
                 verificationMethod = listOf(verificationMethod),
-                authentication = listOf(verificationMethod.id),
-                assertionMethod = if (options.purposes.contains(DidCreationOptions.KeyPurpose.ASSERTION)) {
-                    listOf(verificationMethod.id)
+                authentication = listOf(verificationMethod.id.value),
+                assertionMethod = if (options.purposes.contains(KeyPurpose.ASSERTION)) {
+                    listOf(verificationMethod.id.value)
                 } else null
             )
 
@@ -105,12 +127,13 @@ class PlcDidMethod(
         }
     }
 
-    override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
+    override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
 
+            val didString = did.value
             // Resolve from PLC registry
-            val url = "${config.plcRegistryUrl}/did/$did"
+            val url = "${config.plcRegistryUrl}/did/$didString"
 
             val request = Request.Builder()
                 .url(url)
@@ -136,7 +159,8 @@ class PlcDidMethod(
                     return@withContext DidMethodUtils.createErrorResolutionResult(
                         "notFound",
                         "DID not found in PLC registry",
-                        method
+                        method,
+                        didString
                     )
                 }
 
@@ -156,44 +180,47 @@ class PlcDidMethod(
             val json = Json.parseToJsonElement(jsonString)
             val document = jsonElementToDocument(json)
 
-            // Validate DID matches
-            if (document.id != did) {
+            // Validate DID matches - document.id is Did, so compare values
+            if (document.id.value != didString) {
                 // Rebuild with correct DID
                 val correctedDocument = document.copy(id = did)
-                storeDocument(correctedDocument.id, correctedDocument)
+                storeDocument(correctedDocument.id.value, correctedDocument)
                 return@withContext DidMethodUtils.createSuccessResolutionResult(correctedDocument, method)
             }
 
-            storeDocument(document.id, document)
+            storeDocument(document.id.value, document)
             DidMethodUtils.createSuccessResolutionResult(document, method)
         } catch (e: TrustWeaveException) {
             DidMethodUtils.createErrorResolutionResult(
                 "invalidDid",
                 e.message,
-                method
+                method,
+                did.value
             )
         } catch (e: Exception) {
             DidMethodUtils.createErrorResolutionResult(
                 "invalidDid",
                 e.message,
-                method
+                method,
+                did.value
             )
         }
     }
 
     override suspend fun updateDid(
-        did: String,
+        did: Did,
         updater: (DidDocument) -> DidDocument
     ): DidDocument = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
 
+            val didString = did.value
             // Resolve current document
             val currentResult = resolveDid(did)
             val currentDocument = when (currentResult) {
                 is DidResolutionResult.Success -> currentResult.document
                 else -> throw TrustWeaveException.NotFound(
-                    message = "DID document not found: $did"
+                    message = "DID document not found: $didString"
                 )
             }
 
@@ -207,7 +234,7 @@ class PlcDidMethod(
             }
 
             // Store locally
-            storeDocument(updatedDocument.id, updatedDocument)
+            storeDocument(updatedDocument.id.value, updatedDocument)
 
             updatedDocument
         } catch (e: TrustWeaveException.NotFound) {
@@ -223,9 +250,11 @@ class PlcDidMethod(
         }
     }
 
-    override suspend fun deactivateDid(did: String): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun deactivateDid(did: Did): Boolean = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
+
+            val didString = did.value
 
             // Resolve current document
             val currentResult = resolveDid(did)
@@ -250,8 +279,8 @@ class PlcDidMethod(
             }
 
             // Remove from local storage
-            documents.remove(did)
-            documentMetadata.remove(did)
+            documents.remove(didString)
+            documentMetadata.remove(didString)
 
             true
         } catch (e: TrustWeaveException.NotFound) {
@@ -345,16 +374,16 @@ class PlcDidMethod(
     private fun documentToJsonElement(document: DidDocument): JsonElement {
         return buildJsonObject {
             put("@context", JsonArray(document.context.map { JsonPrimitive(it) }))
-            put("id", document.id)
+            put("id", JsonPrimitive(document.id.value))
 
             if (document.verificationMethod.isNotEmpty()) {
                 put("verificationMethod", JsonArray(document.verificationMethod.map { vmToJsonObject(it) }))
             }
             if (document.authentication.isNotEmpty()) {
-                put("authentication", JsonArray(document.authentication.map { JsonPrimitive(it) }))
+                put("authentication", JsonArray(document.authentication.map { JsonPrimitive(it.value) }))
             }
             if (document.assertionMethod.isNotEmpty()) {
-                put("assertionMethod", JsonArray(document.assertionMethod.map { JsonPrimitive(it) }))
+                put("assertionMethod", JsonArray(document.assertionMethod.map { JsonPrimitive(it.value) }))
             }
             if (document.service.isNotEmpty()) {
                 put("service", JsonArray(document.service.map { serviceToJsonObject(it) }))
@@ -367,8 +396,10 @@ class PlcDidMethod(
      */
     private fun jsonElementToDocument(json: JsonElement): DidDocument {
         val obj = json.jsonObject
+        val didString = obj["id"]?.jsonPrimitive?.content ?: throw IllegalArgumentException("Missing id")
+        val didObj = Did(didString)
         return DidDocument(
-            id = obj["id"]?.jsonPrimitive?.content ?: throw IllegalArgumentException("Missing id"),
+            id = didObj,
             context = obj["@context"]?.let {
                 when (it) {
                     is JsonPrimitive -> listOf(it.content)
@@ -376,18 +407,22 @@ class PlcDidMethod(
                     else -> listOf("https://www.w3.org/ns/did/v1")
                 }
             } ?: listOf("https://www.w3.org/ns/did/v1"),
-            verificationMethod = obj["verificationMethod"]?.jsonArray?.mapNotNull { jsonToVerificationMethod(it) } ?: emptyList(),
-            authentication = obj["authentication"]?.jsonArray?.mapNotNull { (it as? JsonPrimitive)?.content } ?: emptyList(),
-            assertionMethod = obj["assertionMethod"]?.jsonArray?.mapNotNull { (it as? JsonPrimitive)?.content } ?: emptyList(),
+            verificationMethod = obj["verificationMethod"]?.jsonArray?.mapNotNull { jsonToVerificationMethod(it, didObj) } ?: emptyList(),
+            authentication = obj["authentication"]?.jsonArray?.mapNotNull { 
+                (it as? JsonPrimitive)?.content?.let { idStr -> VerificationMethodId.parse(idStr, didObj) }
+            } ?: emptyList(),
+            assertionMethod = obj["assertionMethod"]?.jsonArray?.mapNotNull { 
+                (it as? JsonPrimitive)?.content?.let { idStr -> VerificationMethodId.parse(idStr, didObj) }
+            } ?: emptyList(),
             service = obj["service"]?.jsonArray?.mapNotNull { jsonToService(it) } ?: emptyList()
         )
     }
 
     private fun vmToJsonObject(vm: VerificationMethod): JsonObject {
         return buildJsonObject {
-            put("id", vm.id)
-            put("type", vm.type)
-            put("controller", vm.controller)
+            put("id", JsonPrimitive(vm.id.value))
+            put("type", JsonPrimitive(vm.type))
+            put("controller", JsonPrimitive(vm.controller.value))
             vm.publicKeyJwk?.let { jwk ->
                 put("publicKeyJwk", mapToJsonObject(jwk))
             }
@@ -405,12 +440,15 @@ class PlcDidMethod(
         }
     }
 
-    private fun jsonToVerificationMethod(json: JsonElement): VerificationMethod? {
+    private fun jsonToVerificationMethod(json: JsonElement, did: Did): VerificationMethod? {
         val obj = json.jsonObject
+        val idString = obj["id"]?.jsonPrimitive?.content ?: return null
+        val typeString = obj["type"]?.jsonPrimitive?.content ?: return null
+        val controllerString = obj["controller"]?.jsonPrimitive?.content ?: return null
         return VerificationMethod(
-            id = obj["id"]?.jsonPrimitive?.content ?: return null,
-            type = obj["type"]?.jsonPrimitive?.content ?: return null,
-            controller = obj["controller"]?.jsonPrimitive?.content ?: return null,
+            id = VerificationMethodId.parse(idString, did),
+            type = typeString,
+            controller = Did(controllerString),
             publicKeyJwk = obj["publicKeyJwk"]?.jsonObject?.let { jsonObjectToMap(it) },
             publicKeyMultibase = obj["publicKeyMultibase"]?.jsonPrimitive?.content
         )

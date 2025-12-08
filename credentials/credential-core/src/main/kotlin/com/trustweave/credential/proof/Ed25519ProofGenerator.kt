@@ -1,12 +1,14 @@
 package com.trustweave.credential.proof
 
 import com.trustweave.credential.models.Proof
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.core.util.DigestUtils
+import com.trustweave.did.identifiers.VerificationMethodId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 
 /**
  * Ed25519 proof generator implementation.
@@ -44,7 +46,7 @@ class Ed25519ProofGenerator(
         val verificationMethod = options.verificationMethod
             ?: (publicKeyId?.let { "did:key:$it#$keyId" } ?: "did:key:$keyId")
 
-        val created = Instant.now().toString()
+        val created = Clock.System.now().toString()
 
         // Build proof document (credential + proof metadata without proofValue)
         // This matches what the verifier expects per Ed25519Signature2020 spec
@@ -63,9 +65,9 @@ class Ed25519ProofGenerator(
 
         // Create proof
         Proof(
-            type = proofType,
+            type = ProofTypes.fromString(proofType),
             created = created,
-            verificationMethod = verificationMethod,
+            verificationMethod = VerificationMethodId.parse(verificationMethod),
             proofPurpose = options.proofPurpose,
             proofValue = proofValue,
             challenge = options.challenge,

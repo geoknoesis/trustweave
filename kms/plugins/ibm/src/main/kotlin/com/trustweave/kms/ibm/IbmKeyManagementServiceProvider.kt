@@ -11,9 +11,9 @@ import com.trustweave.kms.spi.KeyManagementServiceProvider
  *
  * **Example:**
  * ```kotlin
- * val providers = ServiceLoader.load(KeyManagementServiceProvider::class.java)
- * val ibmProvider = providers.find { it.name == "ibm" }
- * val kms = ibmProvider?.create(mapOf(
+ * import com.trustweave.kms.*
+ * 
+ * val kms = KeyManagementServices.create("ibm", mapOf(
  *     "apiKey" to "xxx",
  *     "instanceId" to "xxx",
  *     "region" to "us-south"

@@ -1,7 +1,7 @@
 package com.trustweave.did.registrar.client
 
 import com.trustweave.core.exception.TrustWeaveException
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.registrar.DidRegistrar
 import com.trustweave.did.registrar.adapter.UniversalRegistrarProtocolAdapter
 import com.trustweave.did.registrar.adapter.StandardUniversalRegistrarAdapter

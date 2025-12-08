@@ -1,7 +1,10 @@
 package com.trustweave.did.registrar.adapter
 
 import com.trustweave.core.exception.TrustWeaveException
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.DidService
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
 import com.trustweave.did.registrar.model.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -254,7 +257,7 @@ class StandardUniversalRegistrarAdapter : UniversalRegistrarProtocolAdapter {
         val secret = secretJson?.let { parseSecret(it) }
 
         val didDocumentJson = didStateJson["didDocument"]?.jsonObject
-        val didDocument = didDocumentJson?.let { parseDidDocumentFromJson(it) }
+        val didDocument: DidDocument? = didDocumentJson?.let { parseDidDocumentFromJson(it) }
 
         val actionJson = didStateJson["action"]?.jsonObject
         val action = actionJson?.let { parseAction(it) }
@@ -335,22 +338,20 @@ class StandardUniversalRegistrarAdapter : UniversalRegistrarProtocolAdapter {
     private fun putDidDocument(builder: JsonObjectBuilder, document: DidDocument) {
         if (document.context.isNotEmpty()) {
             if (document.context.size == 1) {
-                builder.put("@context", document.context[0])
+                builder.put("@context", JsonPrimitive(document.context[0]))
             } else {
-                builder.putJsonArray("@context") {
-                    document.context.forEach { add(it) }
-                }
+                builder.put("@context", JsonArray(document.context.map { JsonPrimitive(it) }))
             }
         }
-        builder.put("id", document.id)
+        builder.put("id", JsonPrimitive(document.id.toString()))
 
         if (document.verificationMethod.isNotEmpty()) {
             builder.putJsonArray("verificationMethod") {
                 document.verificationMethod.forEach { vm ->
                     add(buildJsonObject {
-                        put("id", vm.id)
-                        put("type", vm.type)
-                        put("controller", vm.controller)
+                        put("id", JsonPrimitive(vm.id.toString()))
+                        put("type", JsonPrimitive(vm.type))
+                        put("controller", JsonPrimitive(vm.controller.toString()))
                         vm.publicKeyJwk?.let { jwk ->
                             putJsonObject("publicKeyJwk") {
                                 jwk.forEach { entry ->
@@ -366,31 +367,31 @@ class StandardUniversalRegistrarAdapter : UniversalRegistrarProtocolAdapter {
 
         if (document.authentication.isNotEmpty()) {
             builder.putJsonArray("authentication") {
-                document.authentication.forEach { add(it) }
+                document.authentication.forEach { add(JsonPrimitive(it.toString())) }
             }
         }
 
         if (document.assertionMethod.isNotEmpty()) {
             builder.putJsonArray("assertionMethod") {
-                document.assertionMethod.forEach { add(it) }
+                document.assertionMethod.forEach { add(JsonPrimitive(it.toString())) }
             }
         }
 
         if (document.keyAgreement.isNotEmpty()) {
             builder.putJsonArray("keyAgreement") {
-                document.keyAgreement.forEach { add(it) }
+                document.keyAgreement.forEach { add(JsonPrimitive(it.toString())) }
             }
         }
 
         if (document.capabilityInvocation.isNotEmpty()) {
             builder.putJsonArray("capabilityInvocation") {
-                document.capabilityInvocation.forEach { add(it) }
+                document.capabilityInvocation.forEach { add(JsonPrimitive(it.toString())) }
             }
         }
 
         if (document.capabilityDelegation.isNotEmpty()) {
             builder.putJsonArray("capabilityDelegation") {
-                document.capabilityDelegation.forEach { add(it) }
+                document.capabilityDelegation.forEach { add(JsonPrimitive(it.toString())) }
             }
         }
 
@@ -398,8 +399,8 @@ class StandardUniversalRegistrarAdapter : UniversalRegistrarProtocolAdapter {
             builder.putJsonArray("service") {
                 document.service.forEach { s ->
                     add(buildJsonObject {
-                        put("id", s.id)
-                        put("type", s.type)
+                        put("id", JsonPrimitive(s.id.toString()))
+                        put("type", JsonPrimitive(s.type))
                         put("serviceEndpoint", convertToJsonElement(s.serviceEndpoint))
                     })
                 }
@@ -408,10 +409,11 @@ class StandardUniversalRegistrarAdapter : UniversalRegistrarProtocolAdapter {
     }
 
     private fun parseDidDocumentFromJson(json: JsonObject): DidDocument {
-        val id = json["id"]?.jsonPrimitive?.content ?: throw com.trustweave.did.exception.DidException.InvalidDidFormat(
-            did = "unknown",
+        val idString = json["id"]?.jsonPrimitive?.content ?: throw com.trustweave.did.exception.DidException.InvalidDidFormat(
+            did = "did:unknown:unknown",
             reason = "Missing DID id in document"
         )
+        val id = Did(idString)
 
         val context = when {
             json["@context"] != null -> {
@@ -426,16 +428,18 @@ class StandardUniversalRegistrarAdapter : UniversalRegistrarProtocolAdapter {
 
         val verificationMethod = json["verificationMethod"]?.jsonArray?.mapNotNull { vmJson ->
             val vmObj = vmJson.jsonObject
-            val vmId = vmObj["id"]?.jsonPrimitive?.content
+            val vmIdString = vmObj["id"]?.jsonPrimitive?.content
             val vmType = vmObj["type"]?.jsonPrimitive?.content
-            val controller = vmObj["controller"]?.jsonPrimitive?.content ?: id
+            val controllerString = vmObj["controller"]?.jsonPrimitive?.content ?: idString
+            val controller = Did(controllerString)
             val publicKeyJwk = vmObj["publicKeyJwk"]?.jsonObject?.let { jwk ->
                 jwk.entries.associate { it.key to convertFromJsonElement(it.value) }
             }
             val publicKeyMultibase = vmObj["publicKeyMultibase"]?.jsonPrimitive?.content
 
-            if (vmId != null && vmType != null) {
-                com.trustweave.did.VerificationMethod(
+            if (vmIdString != null && vmType != null) {
+                val vmId = VerificationMethodId.parse(vmIdString, id)
+                com.trustweave.did.model.VerificationMethod(
                     id = vmId,
                     type = vmType,
                     controller = controller,
@@ -445,25 +449,35 @@ class StandardUniversalRegistrarAdapter : UniversalRegistrarProtocolAdapter {
             } else null
         } ?: emptyList()
 
-        val authentication = json["authentication"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
-            ?: json["authentication"]?.jsonPrimitive?.content?.let { listOf(it) }
-            ?: emptyList()
+        val authentication = json["authentication"]?.jsonArray?.mapNotNull { 
+            it.jsonPrimitive?.content?.let { vmIdString -> VerificationMethodId.parse(vmIdString, id) }
+        } ?: json["authentication"]?.jsonPrimitive?.content?.let { 
+            listOf(VerificationMethodId.parse(it, id))
+        } ?: emptyList()
 
-        val assertionMethod = json["assertionMethod"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
-            ?: json["assertionMethod"]?.jsonPrimitive?.content?.let { listOf(it) }
-            ?: emptyList()
+        val assertionMethod = json["assertionMethod"]?.jsonArray?.mapNotNull { 
+            it.jsonPrimitive?.content?.let { vmIdString -> VerificationMethodId.parse(vmIdString, id) }
+        } ?: json["assertionMethod"]?.jsonPrimitive?.content?.let { 
+            listOf(VerificationMethodId.parse(it, id))
+        } ?: emptyList()
 
-        val keyAgreement = json["keyAgreement"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
-            ?: json["keyAgreement"]?.jsonPrimitive?.content?.let { listOf(it) }
-            ?: emptyList()
+        val keyAgreement = json["keyAgreement"]?.jsonArray?.mapNotNull { 
+            it.jsonPrimitive?.content?.let { vmIdString -> VerificationMethodId.parse(vmIdString, id) }
+        } ?: json["keyAgreement"]?.jsonPrimitive?.content?.let { 
+            listOf(VerificationMethodId.parse(it, id))
+        } ?: emptyList()
 
-        val capabilityInvocation = json["capabilityInvocation"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
-            ?: json["capabilityInvocation"]?.jsonPrimitive?.content?.let { listOf(it) }
-            ?: emptyList()
+        val capabilityInvocation = json["capabilityInvocation"]?.jsonArray?.mapNotNull { 
+            it.jsonPrimitive?.content?.let { vmIdString -> VerificationMethodId.parse(vmIdString, id) }
+        } ?: json["capabilityInvocation"]?.jsonPrimitive?.content?.let { 
+            listOf(VerificationMethodId.parse(it, id))
+        } ?: emptyList()
 
-        val capabilityDelegation = json["capabilityDelegation"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
-            ?: json["capabilityDelegation"]?.jsonPrimitive?.content?.let { listOf(it) }
-            ?: emptyList()
+        val capabilityDelegation = json["capabilityDelegation"]?.jsonArray?.mapNotNull { 
+            it.jsonPrimitive?.content?.let { vmIdString -> VerificationMethodId.parse(vmIdString, id) }
+        } ?: json["capabilityDelegation"]?.jsonPrimitive?.content?.let { 
+            listOf(VerificationMethodId.parse(it, id))
+        } ?: emptyList()
 
         val service = json["service"]?.jsonArray?.mapNotNull { sJson ->
             val sObj = sJson.jsonObject
@@ -473,7 +487,7 @@ class StandardUniversalRegistrarAdapter : UniversalRegistrarProtocolAdapter {
 
             if (sId != null && sType != null && sEndpoint != null) {
                 val endpoint = convertFromJsonElement(sEndpoint) ?: return@mapNotNull null
-                com.trustweave.did.DidService(
+                DidService(
                     id = sId,
                     type = sType,
                     serviceEndpoint = endpoint

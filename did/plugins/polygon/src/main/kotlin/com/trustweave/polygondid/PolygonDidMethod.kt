@@ -2,6 +2,8 @@ package com.trustweave.polygondid
 
 import com.trustweave.anchor.BlockchainAnchorClient
 import com.trustweave.did.*
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.base.AbstractBlockchainDidMethod
 import com.trustweave.did.base.DidMethodUtils
@@ -91,7 +93,8 @@ class PolygonDidMethod(
             val ethrDocument = delegate.createDid(options)
 
             // Convert did:ethr to did:polygon
-            val polygonDid = ethrDocument.id.replace("did:ethr:", "did:polygon:")
+            val polygonDidString = ethrDocument.id.value.replace("did:ethr:", "did:polygon:")
+            val polygonDid = Did(polygonDidString)
 
             // Rebuild document with polygon DID
             val polygonDocument = ethrDocument.copy(id = polygonDid)
@@ -109,13 +112,15 @@ class PolygonDidMethod(
         }
     }
 
-    override suspend fun resolveDid(did: String): DidResolutionResult =
+    override suspend fun resolveDid(did: Did): DidResolutionResult =
         withContext(Dispatchers.IO) {
             try {
                 validateDidFormat(did)
 
+                val didString = did.value
                 // Convert did:polygon to did:ethr for resolution
-                val ethrDid = did.replace("did:polygon:", "did:ethr:")
+                val ethrDidString = didString.replace("did:polygon:", "did:ethr:")
+                val ethrDid = Did(ethrDidString)
 
                 // Resolve using delegate
                 val ethrResult = delegate.resolveDid(ethrDid)
@@ -125,10 +130,10 @@ class PolygonDidMethod(
                     is DidResolutionResult.Success -> {
                         val ethrDoc = ethrResult.document
                         val polygonDocument = ethrDoc.copy(
-                            id = ethrDoc.id.replace("did:ethr:", "did:polygon:")
+                            id = did
                         )
 
-                        storeDocument(polygonDocument.id, polygonDocument)
+                        storeDocument(polygonDocument.id.value, polygonDocument)
 
                         DidMethodUtils.createSuccessResolutionResult(
                             polygonDocument,
@@ -139,14 +144,14 @@ class PolygonDidMethod(
                     }
                     is DidResolutionResult.Failure.NotFound -> {
                         DidResolutionResult.Failure.NotFound(
-                            did = com.trustweave.core.types.Did(did),
+                            did = did,
                             reason = ethrResult.reason,
                             resolutionMetadata = ethrResult.resolutionMetadata + mapOf("method" to method)
                         )
                     }
                     is DidResolutionResult.Failure.InvalidFormat -> {
                         DidResolutionResult.Failure.InvalidFormat(
-                            did = did,
+                            did = didString,
                             reason = ethrResult.reason,
                             resolutionMetadata = ethrResult.resolutionMetadata + mapOf("method" to method)
                         )
@@ -160,7 +165,7 @@ class PolygonDidMethod(
                     }
                     is DidResolutionResult.Failure.ResolutionError -> {
                         DidResolutionResult.Failure.ResolutionError(
-                            did = com.trustweave.core.types.Did(did),
+                            did = did,
                             reason = ethrResult.reason,
                             cause = ethrResult.cause,
                             resolutionMetadata = ethrResult.resolutionMetadata + mapOf("method" to method)
@@ -171,20 +176,23 @@ class PolygonDidMethod(
                 DidMethodUtils.createErrorResolutionResult(
                     "invalidDid",
                     e.message,
-                    method
+                    method,
+                    did.value
                 )
             }
         }
 
     override suspend fun updateDid(
-        did: String,
+        did: Did,
         updater: (DidDocument) -> DidDocument
     ): DidDocument = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
 
+            val didString = did.value
             // Convert did:polygon to did:ethr for update
-            val ethrDid = did.replace("did:polygon:", "did:ethr:")
+            val ethrDidString = didString.replace("did:polygon:", "did:ethr:")
+            val ethrDid = Did(ethrDidString)
 
             // Update using delegate
             val ethrUpdated = delegate.updateDid(ethrDid) { ethrDoc ->
@@ -195,7 +203,7 @@ class PolygonDidMethod(
 
             // Convert back to polygon format
             val polygonUpdated = ethrUpdated.copy(id = did)
-            storeDocument(polygonUpdated.id, polygonUpdated)
+            storeDocument(polygonUpdated.id.value, polygonUpdated)
 
             polygonUpdated
         } catch (e: Exception) {
@@ -207,18 +215,20 @@ class PolygonDidMethod(
         }
     }
 
-    override suspend fun deactivateDid(did: String): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun deactivateDid(did: Did): Boolean = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
 
+            val didString = did.value
             // Convert did:polygon to did:ethr for deactivation
-            val ethrDid = did.replace("did:polygon:", "did:ethr:")
+            val ethrDidString = didString.replace("did:polygon:", "did:ethr:")
+            val ethrDid = Did(ethrDidString)
 
             val deactivated = delegate.deactivateDid(ethrDid)
 
             if (deactivated) {
-                documents.remove(did)
-                documentMetadata.remove(did)
+                documents.remove(didString)
+                documentMetadata.remove(didString)
             }
 
             deactivated

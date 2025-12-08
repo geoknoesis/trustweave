@@ -1,6 +1,6 @@
 package com.trustweave.credential.didcomm
 
-import com.trustweave.core.types.KeyId
+import com.trustweave.core.identifiers.KeyId
 import com.trustweave.credential.didcomm.crypto.DidCommCrypto
 import com.trustweave.credential.didcomm.crypto.DidCommCryptoAdapter
 import com.trustweave.credential.didcomm.crypto.DidCommCryptoProduction
@@ -8,7 +8,8 @@ import com.trustweave.credential.didcomm.crypto.secret.*
 import com.trustweave.credential.didcomm.packing.DidCommPacker
 import com.trustweave.credential.didcomm.storage.DidCommMessageStorage
 import com.trustweave.credential.didcomm.storage.InMemoryDidCommMessageStorage
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
+import com.trustweave.kms.results.SignResult
 import com.trustweave.kms.KeyManagementService
 import org.didcommx.didcomm.secret.SecretResolver
 
@@ -37,7 +38,10 @@ object DidCommFactory {
             DidCommCryptoAdapter(kms, resolveDid, useProduction = false, secretResolver = null)
         }
         val signer: suspend (ByteArray, String) -> ByteArray = { data, keyId ->
-            kms.sign(KeyId(keyId), data)
+            when (val result = kms.sign(KeyId(keyId), data)) {
+                is SignResult.Success -> result.signature
+                is SignResult.Failure -> throw IllegalStateException("Failed to sign: ${result}")
+            }
         }
         val packer = DidCommPacker(crypto, resolveDid, signer)
         return InMemoryDidCommService(packer, resolveDid)
@@ -62,7 +66,10 @@ object DidCommFactory {
             DidCommCryptoAdapter(kms, resolveDid, useProduction = false, secretResolver = null)
         }
         val signer: suspend (ByteArray, String) -> ByteArray = { data, keyId ->
-            kms.sign(KeyId(keyId), data)
+            when (val result = kms.sign(KeyId(keyId), data)) {
+                is SignResult.Success -> result.signature
+                is SignResult.Failure -> throw IllegalStateException("Failed to sign: ${result}")
+            }
         }
         return DidCommPacker(crypto, resolveDid, signer)
     }
@@ -139,7 +146,10 @@ object DidCommFactory {
         }
 
         val signer: suspend (ByteArray, String) -> ByteArray = { data, keyId ->
-            kms.sign(KeyId(keyId), data)
+            when (val result = kms.sign(KeyId(keyId), data)) {
+                is SignResult.Success -> result.signature
+                is SignResult.Failure -> throw IllegalStateException("Failed to sign: ${result}")
+            }
         }
         val packer = DidCommPacker(crypto, resolveDid, signer)
         return InMemoryDidCommService(packer, resolveDid, InMemoryDidCommMessageStorage())

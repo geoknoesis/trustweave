@@ -1,7 +1,8 @@
 package com.trustweave.anchor.algorand
 
 import com.trustweave.anchor.BlockchainAnchorRegistry
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.identifiers.Did
 import com.trustweave.core.util.DigestUtils
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.integrity.IntegrityVerifier
@@ -67,7 +68,7 @@ class AlgorandEoIntegrationTest {
         val (provenanceArtifact, provenanceDigest) = TestDataBuilders.createProvenanceArtifact(
             "provenance-1",
             "EO Data Collection",
-            issuerDid
+            issuerDid.value
         )
 
         val (qualityArtifact, qualityDigest) = TestDataBuilders.createQualityReportArtifact(
@@ -145,7 +146,7 @@ class AlgorandEoIntegrationTest {
         val vc = buildJsonObject {
             put("id", "vc-eo-12345")
             put("type", buildJsonArray { add("VerifiableCredential") })
-            put("issuer", issuerDid)
+            put("issuer", issuerDid.value)
             put("credentialSubject", subject)
             put("linksetDigest", linksetDigest) // Reference to Linkset digest
             put("issued", fixedTimestamp)
@@ -154,7 +155,7 @@ class AlgorandEoIntegrationTest {
         val vcWithDigest = buildJsonObject {
             put("id", "vc-eo-12345")
             put("type", buildJsonArray { add("VerifiableCredential") })
-            put("issuer", issuerDid)
+            put("issuer", issuerDid.value)
             put("credentialSubject", subject)
             put("digestMultibase", vcDigest)
             put("linksetDigest", linksetDigest) // Reference to Linkset digest
@@ -178,7 +179,7 @@ class AlgorandEoIntegrationTest {
         val digestPayload = buildJsonObject {
             put("vcId", "vc-eo-12345")
             put("vcDigest", vcDigest)
-            put("issuer", issuerDid)
+            put("issuer", issuerDid.value)
         }
 
         println("Anchoring VC digest to Algorand testnet...")

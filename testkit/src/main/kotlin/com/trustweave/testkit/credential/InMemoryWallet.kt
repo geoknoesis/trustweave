@@ -1,8 +1,8 @@
 package com.trustweave.testkit.credential
 
-import com.trustweave.credential.PresentationOptions
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.models.VerifiablePresentation
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiablePresentation
+import com.trustweave.credential.model.CredentialType
 import com.trustweave.wallet.CredentialCollection
 import com.trustweave.wallet.CredentialFilter
 import com.trustweave.wallet.CredentialLifecycle
@@ -12,11 +12,12 @@ import com.trustweave.wallet.CredentialPresentation
 import com.trustweave.wallet.CredentialQueryBuilder
 import com.trustweave.wallet.DidManagement
 import com.trustweave.wallet.Wallet
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.DidCreationOptions
-import com.trustweave.did.DidDocument
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -46,7 +47,7 @@ import java.util.concurrent.ConcurrentHashMap
  * val presentation = wallet.createPresentation(
  *     credentialIds = listOf(id),
  *     holderDid = wallet.holderDid,
- *     options = PresentationOptions(holderDid = wallet.holderDid)
+ *     // options parameter removed - use holderDid directly
  * )
  * ```
  */
@@ -73,13 +74,13 @@ class InMemoryWallet(
 
     // Storage implementation
     override suspend fun store(credential: VerifiableCredential): String {
-        val id = credential.id ?: UUID.randomUUID().toString()
+        val id = credential.id?.value ?: UUID.randomUUID().toString()
         credentials[id] = credential
         if (!credentialMetadata.containsKey(id)) {
             credentialMetadata[id] = CredentialMetadata(
                 credentialId = id,
-                createdAt = Instant.now(),
-                updatedAt = Instant.now()
+                createdAt = Clock.System.now(),
+                updatedAt = Clock.System.now()
             )
         }
         return id
@@ -96,20 +97,15 @@ class InMemoryWallet(
         } else {
             val filterType = filter.type // Store in local variable to avoid smart cast issue
             allCredentials.filter { credential ->
-                (filter.issuer == null || credential.issuer == filter.issuer) &&
-                (filterType == null || filterType.any { credential.type.contains(it) }) &&
+                (filter.issuer == null || credential.issuer.id.value == filter.issuer) &&
+                (filterType == null || filterType.any { typeStr -> credential.type.any { ct -> ct.value == typeStr } }) &&
                 (filter.subjectId == null || {
-                    credential.credentialSubject.jsonObject["id"]?.jsonPrimitive?.content == filter.subjectId
+                    credential.credentialSubject.id?.value == filter.subjectId
                 }()) &&
                 (filter.expired == null || {
                     credential.expirationDate?.let { expirationDate ->
-                        try {
-                            val expiration = Instant.parse(expirationDate)
-                            val isExpired = Instant.now().isAfter(expiration)
-                            isExpired == filter.expired
-                        } catch (e: Exception) {
-                            false
-                        }
+                        val isExpired = Clock.System.now() > expirationDate
+                        isExpired == filter.expired
                     } ?: (filter.expired == false)
                 }()) &&
                 (filter.revoked == null || {
@@ -148,7 +144,7 @@ class InMemoryWallet(
             id = id,
             name = name,
             description = description,
-            createdAt = Instant.now(),
+            createdAt = Clock.System.now(),
             credentialCount = 0
         )
         collectionCredentials[id] = mutableSetOf()
@@ -237,7 +233,7 @@ class InMemoryWallet(
         updateMetadata(credentialId) { existing ->
             existing.copy(
                 metadata = existing.metadata + metadata,
-                updatedAt = Instant.now()
+                updatedAt = Clock.System.now()
             )
         }
         return true
@@ -251,7 +247,7 @@ class InMemoryWallet(
         if (!credentials.containsKey(credentialId) && !archivedCredentials.containsKey(credentialId)) {
             return false
         }
-        updateMetadata(credentialId) { it.copy(notes = notes, updatedAt = Instant.now()) }
+        updateMetadata(credentialId) { it.copy(notes = notes, updatedAt = Clock.System.now()) }
         return true
     }
 
@@ -282,7 +278,7 @@ class InMemoryWallet(
     override suspend fun createPresentation(
         credentialIds: List<String>,
         holderDid: String,
-        options: PresentationOptions
+        options: com.trustweave.credential.proof.ProofOptions
     ): VerifiablePresentation {
         val credentialsToInclude = credentialIds.mapNotNull { id ->
             credentials[id] ?: archivedCredentials[id]
@@ -293,10 +289,10 @@ class InMemoryWallet(
         }
 
         return VerifiablePresentation(
-            id = UUID.randomUUID().toString(),
-            type = listOf("VerifiablePresentation"),
+            id = null, // Will be generated if needed
+            type = listOf(CredentialType.Custom("VerifiablePresentation")),
             verifiableCredential = credentialsToInclude,
-            holder = holderDid,
+            holder = com.trustweave.core.identifiers.Iri(holderDid),
             proof = null, // Proof generation would be handled by PresentationService
             challenge = options.challenge,
             domain = options.domain
@@ -307,7 +303,7 @@ class InMemoryWallet(
         credentialIds: List<String>,
         disclosedFields: List<String>,
         holderDid: String,
-        options: PresentationOptions
+        options: com.trustweave.credential.proof.ProofOptions
     ): VerifiablePresentation {
         // Simplified implementation - real selective disclosure would filter fields
         return createPresentation(credentialIds, holderDid, options)
@@ -348,8 +344,8 @@ class InMemoryWallet(
         // Simplified - return null for now, real implementation would resolve DID
         return if (managedDids.contains(did)) {
             // Return a minimal mock DID document
-            com.trustweave.did.DidDocument(
-                id = did,
+            DidDocument(
+                id = com.trustweave.did.identifiers.Did(did),
                 verificationMethod = emptyList(),
                 authentication = emptyList(),
                 assertionMethod = emptyList()
@@ -363,8 +359,8 @@ class InMemoryWallet(
     private fun updateMetadata(credentialId: String, updater: (CredentialMetadata) -> CredentialMetadata) {
         val existing = credentialMetadata[credentialId] ?: CredentialMetadata(
             credentialId = credentialId,
-            createdAt = Instant.now(),
-            updatedAt = Instant.now()
+            createdAt = Clock.System.now(),
+            updatedAt = Clock.System.now()
         )
         credentialMetadata[credentialId] = updater(existing)
     }

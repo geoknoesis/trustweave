@@ -1,7 +1,11 @@
 package com.trustweave.godiddy.registrar
 
 import com.trustweave.core.exception.TrustWeaveException
-import com.trustweave.did.DidDocument
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.VerificationMethod
+import com.trustweave.did.model.DidService
 import com.trustweave.did.registrar.DidRegistrar
 import com.trustweave.did.registrar.model.*
 import com.trustweave.godiddy.GodiddyClient
@@ -304,15 +308,15 @@ class GodiddyRegistrar(
                 }
             }
 
-            put("id", document.id)
+            put("id", JsonPrimitive(document.id.value))
 
             if (document.verificationMethod.isNotEmpty()) {
                 put("verificationMethod", buildJsonArray {
                     document.verificationMethod.forEach { vm ->
                         add(buildJsonObject {
-                            put("id", vm.id)
-                            put("type", vm.type)
-                            put("controller", vm.controller)
+                            put("id", JsonPrimitive(vm.id.value))
+                            put("type", JsonPrimitive(vm.type))
+                            put("controller", JsonPrimitive(vm.controller.value))
                             vm.publicKeyJwk?.let { put("publicKeyJwk", JsonObject(it.mapValues { convertToJsonElement(it.value) })) }
                             vm.publicKeyMultibase?.let { put("publicKeyMultibase", it) }
                         })
@@ -321,27 +325,27 @@ class GodiddyRegistrar(
             }
             if (document.authentication.isNotEmpty()) {
                 put("authentication", buildJsonArray {
-                    document.authentication.forEach { add(it) }
+                    document.authentication.forEach { add(JsonPrimitive(it.value)) }
                 })
             }
             if (document.assertionMethod.isNotEmpty()) {
                 put("assertionMethod", buildJsonArray {
-                    document.assertionMethod.forEach { add(it) }
+                    document.assertionMethod.forEach { add(JsonPrimitive(it.value)) }
                 })
             }
             if (document.keyAgreement.isNotEmpty()) {
                 put("keyAgreement", buildJsonArray {
-                    document.keyAgreement.forEach { add(it) }
+                    document.keyAgreement.forEach { add(JsonPrimitive(it.value)) }
                 })
             }
             if (document.capabilityInvocation.isNotEmpty()) {
                 put("capabilityInvocation", buildJsonArray {
-                    document.capabilityInvocation.forEach { add(it) }
+                    document.capabilityInvocation.forEach { add(JsonPrimitive(it.value)) }
                 })
             }
             if (document.capabilityDelegation.isNotEmpty()) {
                 put("capabilityDelegation", buildJsonArray {
-                    document.capabilityDelegation.forEach { add(it) }
+                    document.capabilityDelegation.forEach { add(JsonPrimitive(it.value)) }
                 })
             }
             if (document.service.isNotEmpty()) {
@@ -387,10 +391,11 @@ class GodiddyRegistrar(
             val publicKeyMultibase = vmObj["publicKeyMultibase"]?.jsonPrimitive?.content
 
             if (vmId != null && vmType != null) {
-                com.trustweave.did.VerificationMethod(
-                    id = vmId,
+                val didObj = Did(id)
+                VerificationMethod(
+                    id = VerificationMethodId.parse(vmId, didObj),
                     type = vmType,
-                    controller = controller,
+                    controller = Did(controller),
                     publicKeyJwk = publicKeyJwk,
                     publicKeyMultibase = publicKeyMultibase
                 )
@@ -425,7 +430,7 @@ class GodiddyRegistrar(
 
             if (sId != null && sType != null && sEndpoint != null) {
                 val endpoint = convertJsonElement(sEndpoint) ?: return@mapNotNull null
-                com.trustweave.did.DidService(
+                DidService(
                     id = sId,
                     type = sType,
                     serviceEndpoint = endpoint
@@ -433,15 +438,16 @@ class GodiddyRegistrar(
             } else null
         } ?: emptyList()
 
+        val didObj = Did(id)
         return DidDocument(
-            id = id,
+            id = didObj,
             context = context,
             verificationMethod = verificationMethod,
-            authentication = authentication,
-            assertionMethod = assertionMethod,
-            keyAgreement = keyAgreement,
-            capabilityInvocation = capabilityInvocation,
-            capabilityDelegation = capabilityDelegation,
+            authentication = authentication.map { VerificationMethodId.parse(it, didObj) },
+            assertionMethod = assertionMethod.map { VerificationMethodId.parse(it, didObj) },
+            keyAgreement = keyAgreement.map { VerificationMethodId.parse(it, didObj) },
+            capabilityInvocation = capabilityInvocation.map { VerificationMethodId.parse(it, didObj) },
+            capabilityDelegation = capabilityDelegation.map { VerificationMethodId.parse(it, didObj) },
             service = service
         )
     }

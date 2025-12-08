@@ -2,7 +2,7 @@ package com.trustweave.contract
 
 import com.trustweave.anchor.AnchorRef
 import com.trustweave.contract.models.*
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import kotlin.Result
 import kotlinx.serialization.json.JsonElement
 

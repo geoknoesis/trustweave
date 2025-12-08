@@ -205,7 +205,10 @@ val did = try {
 Resolve a DID to get its document:
 
 ```kotlin
-val result = trustWeave.resolveDid("did:key:z6Mk...")
+import com.trustweave.did.identifiers.Did
+
+val did = Did("did:key:z6Mk...")
+val result = trustWeave.resolveDid(did)
 
 when (result) {
     is DidResolutionResult.Success -> {
@@ -213,7 +216,7 @@ when (result) {
         println("Verification methods: ${result.document.verificationMethod.size}")
     }
     is DidResolutionResult.Failure.NotFound -> {
-        println("DID not found: ${result.did}")
+        println("DID not found: ${result.did.value}")
     }
     is DidResolutionResult.Failure.InvalidFormat -> {
         println("Invalid DID format: ${result.reason}")
@@ -232,8 +235,11 @@ when (result) {
 Update a DID document to add services or verification methods:
 
 ```kotlin
+import com.trustweave.did.identifiers.Did
+
+val did = Did("did:key:example")
 val updated = trustWeave.updateDid {
-    did("did:key:example")
+    did(did.value)  // DSL builder accepts string for convenience
     addService {
         id("${did.value}#service-1")
         type("LinkedDomains")
@@ -247,10 +253,17 @@ val updated = trustWeave.updateDid {
 Deactivate a DID when it's no longer needed:
 
 ```kotlin
+import com.trustweave.did.identifiers.Did
+
 // Note: Deactivation depends on the DID method implementation
 // For did:key, deactivation is typically not supported as it's stateless
 // For other methods like did:web or did:ion, use the method-specific deactivation API
-// This is typically handled through updateDid with a deactivated flag
+
+val did = Did("did:key:example")
+val deactivated = trustWeave.deactivateDid(did)
+if (deactivated) {
+    println("DID deactivated successfully")
+}
 ```
 
 ## DID Methods

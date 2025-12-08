@@ -1,7 +1,9 @@
 package com.trustweave.trust.types
 
 import com.trustweave.trust.TrustAnchorMetadata
-import java.time.Instant
+import com.trustweave.did.identifiers.Did
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 
 /**
  * Trust anchor in a trust path.
@@ -52,7 +54,7 @@ sealed class TrustPath {
         val to: IssuerIdentity,
         val anchors: List<TrustAnchor>,
         val verified: Boolean = true,
-        val verifiedAt: Instant = Instant.now(),
+        val verifiedAt: Instant = Clock.System.now(),
         val trustScore: Double = 1.0
     ) : TrustPath() {
         init {
@@ -63,7 +65,7 @@ sealed class TrustPath {
          * Get the full path including endpoints.
          */
         val fullPath: List<Did>
-            get() = listOf(from.did) + anchors.map { anchor -> anchor.did } + listOf(to.did)
+            get() = listOf(from) + anchors.map { anchor -> anchor.did } + listOf(to)
 
         /**
          * Get the path length (number of hops).

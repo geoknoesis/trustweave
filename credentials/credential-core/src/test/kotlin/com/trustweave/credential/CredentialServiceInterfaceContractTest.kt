@@ -1,12 +1,14 @@
 package com.trustweave.credential
 
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.models.VerifiablePresentation
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiablePresentation
 import com.trustweave.credential.SchemaFormat
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant as KotlinInstant
 
 /**
  * Comprehensive interface contract tests for CredentialService.
@@ -57,7 +59,7 @@ class CredentialServiceInterfaceContractTest {
         val credential = createTestCredential(
             proof = com.trustweave.credential.models.Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:issuer#key-1",
                 proofPurpose = "assertionMethod",
                 proofValue = "test-proof"
@@ -101,7 +103,7 @@ class CredentialServiceInterfaceContractTest {
             holder = "did:key:holder",
             proof = com.trustweave.credential.models.Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:holder#key-1",
                 proofPurpose = "authentication",
                 proofValue = "test-proof"
@@ -142,7 +144,7 @@ class CredentialServiceInterfaceContractTest {
         val credential = createTestCredential(
             proof = com.trustweave.credential.models.Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:issuer#key-1",
                 proofPurpose = "assertionMethod",
                 proofValue = "test-proof"
@@ -173,7 +175,7 @@ class CredentialServiceInterfaceContractTest {
                 return credential.copy(
                     proof = com.trustweave.credential.models.Proof(
                         type = options.proofType,
-                        created = java.time.Instant.now().toString(),
+                        created = Clock.System.now().toString(),
                         verificationMethod = options.keyId ?: "did:key:issuer#key-1",
                         proofPurpose = "assertionMethod",
                         proofValue = "test-proof",
@@ -190,7 +192,7 @@ class CredentialServiceInterfaceContractTest {
                 val proofValid = credential.proof != null
                 val notExpired = credential.expirationDate?.let {
                     try {
-                        java.time.Instant.parse(it).isAfter(java.time.Instant.now())
+                        KotlinInstant.parse(it) > Clock.System.now()
                     } catch (e: Exception) {
                         true
                     }
@@ -203,14 +205,14 @@ class CredentialServiceInterfaceContractTest {
                     )
                     !notExpired -> {
                         val expiredAt = credential.expirationDate?.let {
-                            try { java.time.Instant.parse(it) } catch (e: Exception) { null }
-                        } ?: java.time.Instant.now()
+                            try { KotlinInstant.parse(it) } catch (e: Exception) { null }
+                        } ?: Clock.System.now()
                         CredentialVerificationResult.Invalid.Expired(
                             credential, expiredAt, listOf("Credential has expired")
                         )
                     }
                     !notRevoked -> CredentialVerificationResult.Invalid.Revoked(
-                        credential, java.time.Instant.now(), listOf("Credential is revoked")
+                        credential, Clock.System.now(), listOf("Credential is revoked")
                     )
                     else -> CredentialVerificationResult.Valid(credential)
                 }
@@ -255,7 +257,7 @@ class CredentialServiceInterfaceContractTest {
             put("id", "did:key:subject")
             put("name", "John Doe")
         },
-        issuanceDate: String = java.time.Instant.now().toString(),
+        issuanceDate: String = Clock.System.now().toString(),
         proof: com.trustweave.credential.models.Proof? = null
     ): VerifiableCredential {
         return VerifiableCredential(

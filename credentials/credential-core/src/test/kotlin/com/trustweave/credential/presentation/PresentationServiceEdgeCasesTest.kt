@@ -3,8 +3,8 @@ package com.trustweave.credential.presentation
 import com.trustweave.credential.PresentationOptions
 import com.trustweave.credential.PresentationVerificationOptions
 import com.trustweave.credential.models.Proof
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.models.VerifiablePresentation
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiablePresentation
 import com.trustweave.credential.proof.Ed25519ProofGenerator
 import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.credential.proof.ProofGenerator
@@ -17,6 +17,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 import java.util.UUID
+import kotlinx.datetime.Clock
 
 /**
  * Exhaustive edge case tests for PresentationService API robustness.
@@ -265,7 +266,7 @@ class PresentationServiceEdgeCasesTest {
             holder = holderDid,
             proof = Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:holder123#key-1",
                 proofPurpose = "assertionMethod"
             )
@@ -290,7 +291,7 @@ class PresentationServiceEdgeCasesTest {
             holder = holderDid,
             proof = Proof(
                 type = "Ed25519Signature2020",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:holder123#key-1",
                 proofPurpose = "assertionMethod"
             )
@@ -554,10 +555,10 @@ class PresentationServiceEdgeCasesTest {
             put("id", "did:key:subject")
             put("name", "John Doe")
         },
-        issuanceDate: String = java.time.Instant.now().toString(),
+        issuanceDate: String = Clock.System.now().toString(),
         proof: Proof? = Proof(
             type = "Ed25519Signature2020",
-            created = java.time.Instant.now().toString(),
+            created = Clock.System.now().toString(),
             verificationMethod = "did:key:issuer#key-1",
             proofPurpose = "assertionMethod"
         )

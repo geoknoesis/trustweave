@@ -1,11 +1,12 @@
 package com.trustweave.credential.revocation
 
-import com.trustweave.credential.models.CredentialStatus
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.CredentialStatus
+import com.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import kotlinx.datetime.Clock
 
 /**
  * Comprehensive interface contract tests for StatusListManager.
@@ -211,7 +212,7 @@ class StatusListManagerInterfaceContractTest {
                         statusPurpose = purpose.name.lowercase(),
                         encodedList = encodedList
                     ),
-                    issuanceDate = java.time.Instant.now().toString()
+                    issuanceDate = Clock.System.now().toString()
                 )
                 statusLists[id] = statusList
                 revokedIndices[id] = mutableSetOf()
@@ -298,7 +299,7 @@ class StatusListManagerInterfaceContractTest {
                     revokedCount = revoked,
                     suspendedCount = suspended,
                     availableIndices = totalCapacity - used,
-                    lastUpdated = java.time.Instant.now()
+                    lastUpdated = Clock.System.now()
                 )
             }
 
@@ -395,7 +396,7 @@ class StatusListManagerInterfaceContractTest {
             put("id", "did:key:subject")
             put("name", "John Doe")
         },
-        issuanceDate: String = java.time.Instant.now().toString(),
+        issuanceDate: String = Clock.System.now().toString(),
         credentialStatus: CredentialStatus? = null
     ): VerifiableCredential {
         return VerifiableCredential(

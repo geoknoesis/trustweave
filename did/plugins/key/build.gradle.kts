@@ -6,12 +6,13 @@ plugins {
 group = "com.trustweave.did"
 dependencies {
     implementation(project(":common"))
-    implementation(project(":credentials:credential-core"))
+    implementation(project(":credentials:credential-api"))
     implementation(project(":did:did-core"))
     implementation(project(":did:plugins:base"))
     implementation(project(":kms:kms-core"))
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.datetime)
     testImplementation(project(":testkit"))
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
     testImplementation(kotlin("test"))

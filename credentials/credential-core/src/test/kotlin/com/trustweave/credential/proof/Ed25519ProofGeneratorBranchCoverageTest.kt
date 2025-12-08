@@ -1,11 +1,13 @@
 package com.trustweave.credential.proof
 
 import com.trustweave.credential.models.Proof
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Branch coverage tests for Ed25519ProofGenerator focusing on edge cases.
@@ -102,8 +104,8 @@ class Ed25519ProofGeneratorBranchCoverageTest {
 
         val credential = createTestCredential(
             id = "https://example.com/credentials/1",
-            expirationDate = java.time.Instant.now().plusSeconds(86400).toString(),
-            credentialStatus = com.trustweave.credential.models.CredentialStatus(
+            expirationDate = Clock.System.now().plus(86400.seconds).toString(),
+            credentialStatus = com.trustweave.credential.model.vc.CredentialStatus(
                 id = "status-list-1",
                 type = "StatusList2021Entry",
                 statusPurpose = "revocation",
@@ -132,7 +134,7 @@ class Ed25519ProofGeneratorBranchCoverageTest {
             type = listOf("VerifiableCredential"),
             issuer = "did:key:issuer",
             credentialSubject = buildJsonObject {},
-            issuanceDate = java.time.Instant.now().toString()
+            issuanceDate = Clock.System.now().toString()
         )
         val options = ProofOptions(proofPurpose = "assertionMethod")
 
@@ -149,9 +151,9 @@ class Ed25519ProofGeneratorBranchCoverageTest {
             put("id", "did:key:subject")
             put("name", "John Doe")
         },
-        issuanceDate: String = java.time.Instant.now().toString(),
+        issuanceDate: String = Clock.System.now().toString(),
         expirationDate: String? = null,
-        credentialStatus: com.trustweave.credential.models.CredentialStatus? = null,
+        credentialStatus: com.trustweave.credential.model.vc.CredentialStatus? = null,
         credentialSchema: com.trustweave.credential.models.CredentialSchema? = null
     ): VerifiableCredential {
         return VerifiableCredential(

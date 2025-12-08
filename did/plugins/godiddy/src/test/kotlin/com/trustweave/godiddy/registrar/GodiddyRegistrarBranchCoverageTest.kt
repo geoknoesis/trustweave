@@ -2,10 +2,11 @@ package com.trustweave.godiddy.registrar
 
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.DidCreationOptions
-import com.trustweave.did.DidDocument
-import com.trustweave.did.DidService
-import com.trustweave.did.VerificationMethod
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.DidService
+import com.trustweave.did.model.VerificationMethod
 import com.trustweave.did.didCreationOptions
+import com.trustweave.did.identifiers.Did
 import com.trustweave.did.registrar.model.CreateDidOptions
 import com.trustweave.did.registrar.model.KeyManagementMode
 import com.trustweave.godiddy.GodiddyClient
@@ -97,7 +98,7 @@ class GodiddyRegistrarBranchCoverageTest {
         val client = GodiddyClient(config)
         val registrar = GodiddyRegistrar(client)
 
-        val document = DidDocument(id = "did:key:123")
+        val document = DidDocument(id = Did("did:key:123"))
 
         // This will fail in real scenario, but we test the branch
         try {
@@ -117,7 +118,7 @@ class GodiddyRegistrarBranchCoverageTest {
         val client = GodiddyClient(config)
         val registrar = GodiddyRegistrar(client)
 
-        val document = DidDocument(id = "did:key:123")
+        val document = DidDocument(id = Did("did:key:123"))
 
         // This will fail in real scenario, but we test the branch
         try {
@@ -186,17 +187,18 @@ class GodiddyRegistrarBranchCoverageTest {
         val client = GodiddyClient(config)
         val registrar = GodiddyRegistrar(client)
 
+        val did = Did("did:key:123")
         val document = DidDocument(
-            id = "did:key:123",
+            id = did,
             verificationMethod = listOf(
                 VerificationMethod(
-                    id = "did:key:123#key-1",
+                    id = com.trustweave.did.identifiers.VerificationMethodId.parse("did:key:123#key-1"),
                     type = "Ed25519VerificationKey2020",
-                    controller = "did:key:123"
+                    controller = did
                 )
             ),
-            authentication = listOf("did:key:123#key-1"),
-            assertionMethod = listOf("did:key:123#key-1"),
+            authentication = listOf(com.trustweave.did.identifiers.VerificationMethodId.parse("did:key:123#key-1")),
+            assertionMethod = listOf(com.trustweave.did.identifiers.VerificationMethodId.parse("did:key:123#key-1")),
             service = listOf(
                 DidService(
                     id = "did:key:123#service-1",

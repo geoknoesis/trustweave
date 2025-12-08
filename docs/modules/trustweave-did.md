@@ -75,14 +75,15 @@ graph TB
 
 ```kotlin
 import com.trustweave.did.*
+import com.trustweave.did.identifiers.Did
 
 interface DidMethod {
     val method: String  // e.g., "key", "web", "ion"
 
     suspend fun createDid(options: DidCreationOptions): DidDocument
-    suspend fun resolveDid(did: String): DidResolutionResult
-    suspend fun updateDid(did: String, updater: (DidDocument) -> DidDocument): DidDocument
-    suspend fun deactivateDid(did: String): Boolean
+    suspend fun resolveDid(did: Did): DidResolutionResult
+    suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument): DidDocument
+    suspend fun deactivateDid(did: Did): Boolean
 }
 ```
 
@@ -108,8 +109,11 @@ val didDoc = method?.createDid(options)
 ### DidResolver
 
 ```kotlin
+import com.trustweave.did.identifiers.Did
+
 val resolver = RegistryBasedResolver(registry)
-val result = resolver.resolve("did:key:z6Mk...")
+val did = Did("did:key:z6Mk...")
+val result = resolver.resolve(did)
 ```
 
 **What this does:** Provides a unified interface for resolving DIDs across different methods.

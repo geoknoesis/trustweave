@@ -45,7 +45,7 @@ class TrustWeaveIntegrationTest {
         // Step 2: Create a verifiable credential digest
         val vcPayload = buildJsonObject {
             put("vcId", "vc-12345")
-            put("issuer", didDocument.id)
+            put("issuer", didDocument.id.value)
             put("credentialSubject", buildJsonObject {
                 put("id", "subject-123")
             })

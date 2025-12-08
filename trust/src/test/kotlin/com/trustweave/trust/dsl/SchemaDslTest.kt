@@ -1,6 +1,6 @@
 package com.trustweave.trust.dsl
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.schema.SchemaRegistry
 import com.trustweave.credential.SchemaFormat
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
@@ -34,7 +34,7 @@ class SchemaDslTest {
             )
             keys {
                 custom(kms)
-                signer { data, keyId -> kms.sign(com.trustweave.core.types.KeyId(keyId), data) }
+                signer { data, keyId -> kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
             }
             did {
                 method("key") {

@@ -62,12 +62,20 @@ abstract class KmsIntegrationTest : BaseIntegrationTest() {
         val kms = getKms()
         val algorithm = getSupportedAlgorithms().first()
 
-        val keyHandle = kms.generateKey(algorithm)
+        val generateResult = kms.generateKey(algorithm)
+        val keyHandle = when (generateResult) {
+            is com.trustweave.kms.results.GenerateKeyResult.Success -> generateResult.keyHandle
+            else -> throw IllegalArgumentException("Failed to generate key: $generateResult")
+        }
         kotlin.test.assertNotNull(keyHandle)
         kotlin.test.assertNotNull(keyHandle.id)
 
         val message = "test message".toByteArray()
-        val signature = kms.sign(keyHandle.id, message)
+        val signResult = kms.sign(keyHandle.id, message)
+        val signature = when (signResult) {
+            is com.trustweave.kms.results.SignResult.Success -> signResult.signature
+            else -> throw IllegalArgumentException("Failed to sign: $signResult")
+        }
         kotlin.test.assertNotNull(signature)
         kotlin.test.assertTrue(signature.isNotEmpty())
     }
@@ -79,8 +87,16 @@ abstract class KmsIntegrationTest : BaseIntegrationTest() {
         val kms = getKms()
         val algorithm = getSupportedAlgorithms().first()
 
-        val keyHandle = kms.generateKey(algorithm)
-        val retrieved = kms.getPublicKey(keyHandle.id)
+        val generateResult = kms.generateKey(algorithm)
+        val keyHandle = when (generateResult) {
+            is com.trustweave.kms.results.GenerateKeyResult.Success -> generateResult.keyHandle
+            else -> throw IllegalArgumentException("Failed to generate key: $generateResult")
+        }
+        val publicKeyResult = kms.getPublicKey(keyHandle.id)
+        val retrieved = when (publicKeyResult) {
+            is com.trustweave.kms.results.GetPublicKeyResult.Success -> publicKeyResult.keyHandle
+            else -> throw IllegalArgumentException("Failed to get public key: $publicKeyResult")
+        }
 
         kotlin.test.assertNotNull(retrieved)
         kotlin.test.assertEquals(keyHandle.id, retrieved.id)
@@ -94,14 +110,23 @@ abstract class KmsIntegrationTest : BaseIntegrationTest() {
         val kms = getKms()
         val algorithm = getSupportedAlgorithms().first()
 
-        val keyHandle = kms.generateKey(algorithm)
-        val deleted = kms.deleteKey(keyHandle.id)
+        val generateResult = kms.generateKey(algorithm)
+        val keyHandle = when (generateResult) {
+            is com.trustweave.kms.results.GenerateKeyResult.Success -> generateResult.keyHandle
+            else -> throw IllegalArgumentException("Failed to generate key: $generateResult")
+        }
+        val deleteResult = kms.deleteKey(keyHandle.id)
+        val deleted = when (deleteResult) {
+            is com.trustweave.kms.results.DeleteKeyResult.Deleted -> true
+            is com.trustweave.kms.results.DeleteKeyResult.NotFound -> false
+            else -> false
+        }
 
         kotlin.test.assertTrue(deleted)
 
         // Attempting to retrieve deleted key should fail
         try {
-            kms.getPublicKey(keyHandle.id)
+            val getResult = kms.getPublicKey(keyHandle.id)
             // Some KMS implementations may not throw, so this is optional
         } catch (e: Exception) {
             // Expected behavior
@@ -115,8 +140,12 @@ abstract class KmsIntegrationTest : BaseIntegrationTest() {
         val kms = getKms()
         val algorithms = getSupportedAlgorithms()
 
-        val keyHandles = algorithms.map { algorithm ->
-            kms.generateKey(algorithm)
+        val keyHandles = algorithms.mapNotNull { algorithm ->
+            val result = kms.generateKey(algorithm)
+            when (result) {
+                is com.trustweave.kms.results.GenerateKeyResult.Success -> result.keyHandle
+                else -> null
+            }
         }
 
         assertTrue(keyHandles.size == algorithms.size)
@@ -133,8 +162,16 @@ abstract class KmsIntegrationTest : BaseIntegrationTest() {
         val message = "test message".toByteArray()
 
         getSupportedAlgorithms().forEach { algorithm ->
-            val keyHandle = kms.generateKey(algorithm)
-            val signature = kms.sign(keyHandle.id, message)
+            val generateResult = kms.generateKey(algorithm)
+            val keyHandle = when (generateResult) {
+                is com.trustweave.kms.results.GenerateKeyResult.Success -> generateResult.keyHandle
+                else -> throw IllegalArgumentException("Failed to generate key: $generateResult")
+            }
+            val signResult = kms.sign(keyHandle.id, message)
+            val signature = when (signResult) {
+                is com.trustweave.kms.results.SignResult.Success -> signResult.signature
+                else -> throw IllegalArgumentException("Failed to sign: $signResult")
+            }
 
             kotlin.test.assertNotNull(signature)
             kotlin.test.assertTrue(signature.isNotEmpty())

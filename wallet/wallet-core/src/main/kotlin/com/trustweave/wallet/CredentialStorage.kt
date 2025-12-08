@@ -1,8 +1,6 @@
 package com.trustweave.wallet
 
-import com.trustweave.credential.models.VerifiableCredential
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import com.trustweave.credential.model.vc.VerifiableCredential
 
 /**
  * Core credential storage interface.
@@ -131,14 +129,14 @@ class CredentialQueryBuilder {
      * Filter by issuer DID.
      */
     fun byIssuer(issuerDid: String) {
-        filters.add { it.issuer == issuerDid }
+        filters.add { it.issuer.id.value == issuerDid }
     }
 
     /**
      * Filter by credential type.
      */
     fun byType(type: String) {
-        filters.add { it.type.contains(type) }
+        filters.add { it.type.any { ct -> ct.value == type } }
     }
 
     /**
@@ -146,7 +144,7 @@ class CredentialQueryBuilder {
      */
     fun byTypes(vararg types: String) {
         val typeSet = types.toSet()
-        filters.add { credential -> credential.type.any { it in typeSet } }
+        filters.add { credential -> credential.type.any { ct -> ct.value in typeSet } }
     }
 
     /**
@@ -154,7 +152,7 @@ class CredentialQueryBuilder {
      */
     fun bySubject(subjectId: String) {
         filters.add { credential ->
-            credential.credentialSubject.jsonObject["id"]?.jsonPrimitive?.content == subjectId
+            credential.credentialSubject.id.value == subjectId
         }
     }
 
@@ -164,12 +162,7 @@ class CredentialQueryBuilder {
     fun notExpired() {
         filters.add { credential ->
             credential.expirationDate?.let { expirationDate ->
-                try {
-                    val expiration = java.time.Instant.parse(expirationDate)
-                    java.time.Instant.now().isBefore(expiration)
-                } catch (e: Exception) {
-                    true // If can't parse, assume not expired
-                }
+                kotlinx.datetime.Clock.System.now() < expirationDate
             } ?: true // No expiration date means not expired
         }
     }
@@ -180,12 +173,7 @@ class CredentialQueryBuilder {
     fun expired() {
         filters.add { credential ->
             credential.expirationDate?.let { expirationDate ->
-                try {
-                    val expiration = java.time.Instant.parse(expirationDate)
-                    java.time.Instant.now().isAfter(expiration)
-                } catch (e: Exception) {
-                    false
-                }
+                kotlinx.datetime.Clock.System.now() > expirationDate
             } ?: false
         }
     }
@@ -215,12 +203,7 @@ class CredentialQueryBuilder {
         filters.add { credential ->
             credential.proof != null &&
             (credential.expirationDate?.let { expirationDate ->
-                try {
-                    val expiration = java.time.Instant.parse(expirationDate)
-                    java.time.Instant.now().isBefore(expiration)
-                } catch (e: Exception) {
-                    false
-                }
+                kotlinx.datetime.Clock.System.now() < expirationDate
             } ?: true) &&
             credential.credentialStatus == null // TODO: Check actual revocation
         }

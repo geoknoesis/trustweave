@@ -1,9 +1,11 @@
 package com.trustweave.trust.dsl.credential
 
-import com.trustweave.credential.issuer.CredentialIssuer
-import com.trustweave.credential.verifier.CredentialVerifier
-import com.trustweave.credential.revocation.StatusListManager
-import com.trustweave.trust.types.ProofType
+// TODO: CredentialIssuer and CredentialVerifier are from credential-core - needs migration
+// import com.trustweave.credential.issuer.CredentialIssuer
+// import com.trustweave.credential.verifier.CredentialVerifier
+import com.trustweave.credential.revocation.CredentialRevocationManager
+import com.trustweave.credential.model.ProofType
+import com.trustweave.credential.schema.SchemaRegistry
 
 /**
  * Credential DSL Provider Interface.
@@ -16,19 +18,27 @@ import com.trustweave.trust.types.ProofType
 interface CredentialDslProvider {
     /**
      * Get the credential issuer.
+     * TODO: Replace CredentialIssuer with CredentialService from credential-api
      */
-    fun getIssuer(): CredentialIssuer
+    fun getIssuer(): Any?
 
     /**
      * Get the credential verifier.
+     * TODO: Replace CredentialVerifier with CredentialService from credential-api
      */
-    fun getVerifier(): CredentialVerifier
+    fun getVerifier(): Any?
 
     /**
-     * Get the status list manager for revocation checking.
+     * Get the revocation manager for revocation checking.
      * Returns null if not configured.
      */
-    fun getStatusListManager(): StatusListManager?
+    fun getRevocationManager(): CredentialRevocationManager?
+
+    /**
+     * Get the schema registry for schema operations.
+     * Returns null if not configured.
+     */
+    fun getSchemaRegistry(): SchemaRegistry?
 
     /**
      * Get the default proof type.

@@ -5,7 +5,7 @@ import com.trustweave.trust.types.VerificationResult
 import com.trustweave.trust.types.*
 import com.trustweave.core.*
 import com.trustweave.credential.proof.ProofType
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.did.exception.DidException
 import com.trustweave.credential.exception.CredentialException
 import com.trustweave.wallet.exception.WalletException
@@ -161,7 +161,7 @@ fun main() = runBlocking {
                 "gpa" to "3.8"
                 "honors" to true
             }
-            issued(java.time.Instant.now())
+            issued(kotlinx.datetime.Clock.System.now())
         }
         signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
     }
@@ -361,7 +361,7 @@ fun main() = runBlocking {
                         "organization" to "Example Professional Body"
                         "issueDate" to "2024-0$i-01"
                     }
-                    issued(java.time.Instant.now())
+                    issued(kotlinx.datetime.Clock.System.now())
                 }
                 signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
             }
@@ -399,7 +399,7 @@ fun main() = runBlocking {
         vcId = requireNotNull(credential.id),
         digest = "uABC123...",
         issuer = credential.issuer,
-        timestamp = java.time.Instant.now().toString(),
+        timestamp = kotlinx.datetime.Clock.System.now().toString(),
         chainId = chainId
     )
 

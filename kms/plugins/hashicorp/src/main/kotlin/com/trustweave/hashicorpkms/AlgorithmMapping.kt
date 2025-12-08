@@ -1,6 +1,13 @@
 package com.trustweave.hashicorpkms
 
 import com.trustweave.kms.Algorithm
+import com.trustweave.kms.JwkKeys
+import com.trustweave.kms.JwkKeyTypes
+import java.math.BigInteger
+import java.security.KeyFactory
+import java.security.interfaces.ECPublicKey
+import java.security.interfaces.RSAPublicKey
+import java.security.spec.X509EncodedKeySpec
 import java.util.Base64
 
 /**
@@ -123,37 +130,92 @@ object AlgorithmMapping {
                     }
 
                     return mapOf(
-                        "kty" to "OKP",
-                        "crv" to "Ed25519",
-                        "x" to Base64.getUrlEncoder().withoutPadding().encodeToString(rawKey)
+                        JwkKeys.KTY to JwkKeyTypes.OKP,
+                        JwkKeys.CRV to Algorithm.Ed25519.curveName,
+                        JwkKeys.X to Base64.getUrlEncoder().withoutPadding().encodeToString(rawKey)
                     )
                 }
                 is Algorithm.Secp256k1, is Algorithm.P256, is Algorithm.P384, is Algorithm.P521 -> {
-                    // EC keys - would need proper PEM parsing
-                    // For now, return a placeholder that indicates the key type
-                    val curveName = when (algorithm) {
-                        is Algorithm.Secp256k1 -> "secp256k1"
-                        is Algorithm.P256 -> "P-256"
-                        is Algorithm.P384 -> "P-384"
-                        is Algorithm.P521 -> "P-521"
-                        else -> "unknown"
+                    // Parse EC key from PEM format
+                    val base64Key = publicKeyPem
+                        .replace("-----BEGIN PUBLIC KEY-----", "")
+                        .replace("-----END PUBLIC KEY-----", "")
+                        .replace("-----BEGIN EC PUBLIC KEY-----", "")
+                        .replace("-----END EC PUBLIC KEY-----", "")
+                        .replace("\n", "")
+                        .replace(" ", "")
+
+                    val keyBytes = Base64.getDecoder().decode(base64Key)
+                    
+                    // Parse DER-encoded EC public key
+                    val keyFactory = KeyFactory.getInstance("EC")
+                    val publicKey = keyFactory.generatePublic(X509EncodedKeySpec(keyBytes)) as ECPublicKey
+                    val point = publicKey.w
+                    
+                    val curveName = algorithm.curveName
+                        ?: throw IllegalArgumentException("Unsupported EC algorithm: ${algorithm.name}")
+
+                    val coordinateLength = when (algorithm) {
+                        is Algorithm.Secp256k1, is Algorithm.P256 -> 32
+                        is Algorithm.P384 -> 48
+                        is Algorithm.P521 -> 66
+                        else -> 32
                     }
 
-                    // In production, parse PEM properly using BouncyCastle or similar
+                    // Convert BigInteger to unsigned byte array
+                    fun toUnsignedByteArray(bigInt: java.math.BigInteger, length: Int): ByteArray {
+                        val bytes = bigInt.toByteArray()
+                        val result = ByteArray(length)
+                        val offset = length - bytes.size
+                        if (offset >= 0) {
+                            System.arraycopy(bytes, 0, result, offset, bytes.size)
+                        } else {
+                            System.arraycopy(bytes, bytes.size - length, result, 0, length)
+                        }
+                        return result
+                    }
+
+                    val x = toUnsignedByteArray(point.affineX, coordinateLength)
+                    val y = toUnsignedByteArray(point.affineY, coordinateLength)
+
                     return mapOf(
-                        "kty" to "EC",
-                        "crv" to curveName,
-                        "x" to "", // Would be extracted from PEM
-                        "y" to ""  // Would be extracted from PEM
+                        JwkKeys.KTY to JwkKeyTypes.EC,
+                        JwkKeys.CRV to curveName,
+                        JwkKeys.X to Base64.getUrlEncoder().withoutPadding().encodeToString(x),
+                        JwkKeys.Y to Base64.getUrlEncoder().withoutPadding().encodeToString(y)
                     )
                 }
                 is Algorithm.RSA -> {
-                    // RSA keys - would need proper PEM parsing
-                    // In production, parse PEM properly
+                    // Parse RSA key from PEM format
+                    val base64Key = publicKeyPem
+                        .replace("-----BEGIN PUBLIC KEY-----", "")
+                        .replace("-----END PUBLIC KEY-----", "")
+                        .replace("-----BEGIN RSA PUBLIC KEY-----", "")
+                        .replace("-----END RSA PUBLIC KEY-----", "")
+                        .replace("\n", "")
+                        .replace(" ", "")
+
+                    val keyBytes = Base64.getDecoder().decode(base64Key)
+                    
+                    // Parse DER-encoded RSA public key
+                    val keyFactory = KeyFactory.getInstance("RSA")
+                    val publicKey = keyFactory.generatePublic(X509EncodedKeySpec(keyBytes)) as RSAPublicKey
+                    val modulus = publicKey.modulus
+                    val exponent = publicKey.publicExponent
+
+                    // Convert BigInteger to unsigned byte array
+                    fun toUnsignedByteArray(bigInt: java.math.BigInteger): ByteArray {
+                        val signed = bigInt.toByteArray()
+                        if (signed.isNotEmpty() && signed[0] == 0.toByte()) {
+                            return signed.sliceArray(1 until signed.size)
+                        }
+                        return signed
+                    }
+
                     return mapOf(
-                        "kty" to "RSA",
-                        "n" to "", // Would be extracted from PEM
-                        "e" to ""  // Would be extracted from PEM
+                        JwkKeys.KTY to JwkKeyTypes.RSA,
+                        JwkKeys.N to Base64.getUrlEncoder().withoutPadding().encodeToString(toUnsignedByteArray(modulus)),
+                        JwkKeys.E to Base64.getUrlEncoder().withoutPadding().encodeToString(toUnsignedByteArray(exponent))
                     )
                 }
                 else -> throw IllegalArgumentException("Unsupported algorithm for JWK conversion: ${algorithm.name}")

@@ -6,7 +6,7 @@ plugins {
 group = "com.trustweave.integrations"
 dependencies {
     implementation(project(":common"))
-    implementation(project(":credentials:credential-core"))
+    implementation(project(":credentials:credential-api"))
 
 
     // HTTP client for Venafi API

@@ -12,6 +12,7 @@ dependencies {
     // but explicitly added here for compilation
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.datetime)
 
     // Test dependencies
     testImplementation(project(":testkit"))

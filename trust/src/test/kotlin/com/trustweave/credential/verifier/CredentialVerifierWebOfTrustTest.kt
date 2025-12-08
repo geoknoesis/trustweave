@@ -2,12 +2,12 @@ package com.trustweave.credential.verifier
 
 import com.trustweave.credential.CredentialVerificationOptions
 import com.trustweave.credential.CredentialVerificationResult
-import com.trustweave.credential.models.Proof
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.CredentialProof
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.proof.Ed25519ProofGenerator
 import com.trustweave.credential.proof.ProofOptions
-import com.trustweave.did.DidDocument
-import com.trustweave.did.VerificationMethod
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.VerificationMethod
 import com.trustweave.did.resolver.DidResolver
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.util.resultDidResolver
@@ -22,7 +22,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 
 /**
  * Comprehensive tests for CredentialVerifier with trust registry, delegation, and proof purpose validation.
@@ -30,7 +31,7 @@ import java.time.Instant
 class CredentialVerifierWebOfTrustTest {
 
     private lateinit var kms: InMemoryKeyManagementService
-    private var keyId: com.trustweave.core.types.KeyId? = null
+    private var keyId: com.trustweave.core.identifiers.KeyId? = null
     private lateinit var publicKeyJwk: Map<String, Any?>
     private lateinit var proofGenerator: Ed25519ProofGenerator
 
@@ -43,14 +44,24 @@ class CredentialVerifierWebOfTrustTest {
     private suspend fun setup() {
         // Create a real KMS and generate a real Ed25519 key
         kms = InMemoryKeyManagementService()
-        val keyHandle = kms.generateKey(Algorithm.Ed25519, mapOf("keyId" to "key-1"))
+        val generateResult = kms.generateKey(Algorithm.Ed25519, mapOf("keyId" to "key-1"))
+        val keyHandle = when (generateResult) {
+            is com.trustweave.kms.results.GenerateKeyResult.Success -> generateResult.keyHandle
+            else -> throw IllegalStateException("Failed to generate key")
+        }
         keyId = keyHandle.id
         publicKeyJwk = keyHandle.publicKeyJwk ?: emptyMap()
 
         // Create proof generator that uses the KMS to sign
         val keyIdValue = keyId!!
         proofGenerator = Ed25519ProofGenerator(
-            signer = { data, _ -> kms.sign(keyIdValue, data) },
+            signer = { data, _ -> 
+                val signResult = kms.sign(keyIdValue, data)
+                when (signResult) {
+                    is com.trustweave.kms.results.SignResult.Success -> signResult.signature
+                    else -> throw IllegalStateException("Failed to sign data")
+                }
+            },
             getPublicKeyId = { keyIdValue.value }
         )
     }
@@ -69,7 +80,7 @@ class CredentialVerifierWebOfTrustTest {
             type = listOf("VerifiableCredential", "TestCredential"),
             issuer = issuerDid,
             credentialSubject = credentialSubject,
-            issuanceDate = Instant.now().toString(),
+            issuanceDate = Clock.System.now().toString(),
             proof = null
         )
 
@@ -212,7 +223,7 @@ class CredentialVerifierWebOfTrustTest {
             type = listOf("VerifiableCredential", "TestCredential"),
             issuer = delegateDid,
             credentialSubject = buildJsonObject { put("id", "did:key:holder") },
-            issuanceDate = Instant.now().toString(),
+            issuanceDate = Clock.System.now().toString(),
             proof = null
         )
 
@@ -252,13 +263,14 @@ class CredentialVerifierWebOfTrustTest {
             type = listOf("VerifiableCredential", "TestCredential"),
             issuer = delegateDid,
             credentialSubject = buildJsonObject { put("id", "did:key:holder") },
-            issuanceDate = Instant.now().toString(),
-            proof = Proof(
+            issuanceDate = Clock.System.now().toString(),
+            proof = CredentialProof.LinkedDataProof(
                 type = "Ed25519Signature2020",
-                created = Instant.now().toString(),
+                created = Clock.System.now(),
                 verificationMethod = "$delegatorDid#key-1",
                 proofPurpose = "capabilityDelegation",
-                proofValue = "zMockSignatureValueForTesting" // Mock proofValue to pass structure validation
+                proofValue = "zMockSignatureValueForTesting", // Mock proofValue to pass structure validation
+                additionalProperties = emptyMap()
             )
         )
 
@@ -322,13 +334,14 @@ class CredentialVerifierWebOfTrustTest {
             type = listOf("VerifiableCredential", "TestCredential"),
             issuer = issuerDid,
             credentialSubject = buildJsonObject { put("id", "did:key:holder") },
-            issuanceDate = Instant.now().toString(),
-            proof = Proof(
+            issuanceDate = Clock.System.now().toString(),
+            proof = CredentialProof.LinkedDataProof(
                 type = "Ed25519Signature2020",
-                created = Instant.now().toString(),
+                created = Clock.System.now(),
                 verificationMethod = "$issuerDid#key-1",
                 proofPurpose = "assertionMethod",
-                proofValue = "zMockSignatureValueForTesting" // Mock proofValue to pass structure validation
+                proofValue = "zMockSignatureValueForTesting", // Mock proofValue to pass structure validation
+                additionalProperties = emptyMap()
             )
         )
 
@@ -485,13 +498,14 @@ class CredentialVerifierWebOfTrustTest {
             type = listOf("VerifiableCredential", "TestCredential"),
             issuer = delegateDid,
             credentialSubject = buildJsonObject { put("id", "did:key:holder") },
-            issuanceDate = Instant.now().toString(),
-            proof = Proof(
+            issuanceDate = Clock.System.now().toString(),
+            proof = CredentialProof.LinkedDataProof(
                 type = "Ed25519Signature2020",
-                created = Instant.now().toString(),
+                created = Clock.System.now(),
                 verificationMethod = "$delegateDid#key-1",
                 proofPurpose = "capabilityDelegation",
-                proofValue = "zMockSignatureValueForTesting" // Mock proofValue to pass structure validation
+                proofValue = "zMockSignatureValueForTesting", // Mock proofValue to pass structure validation
+                additionalProperties = emptyMap()
             )
         )
 

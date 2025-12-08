@@ -1,11 +1,13 @@
 package com.trustweave.credential.oidc4vci
 
-import com.trustweave.core.types.KeyId
+import com.trustweave.core.identifiers.KeyId
+import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.credential.exchange.exception.ExchangeException
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.oidc4vci.exception.Oidc4VciException
 import com.trustweave.credential.oidc4vci.models.*
 import com.trustweave.kms.KeyManagementService
+import com.trustweave.kms.results.SignResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -37,7 +39,7 @@ import java.util.Base64
  *
  * val offer = service.createCredentialOffer(
  *     issuerDid = "did:key:issuer",
- *     credentialTypes = listOf("VerifiableCredential", "PersonCredential"),
+ *     credentialTypes = listOf("PersonCredential"),
  *     credentialIssuer = "https://issuer.example.com"
  * )
  * ```
@@ -119,7 +121,7 @@ class Oidc4VciService(
         authorizationCode: String? = null
     ): Oidc4VciCredentialRequest = withContext(Dispatchers.IO) {
         val offer = offers[offerId]
-            ?: throw ExchangeException.OfferNotFound(offerId = offerId)
+            ?: throw TrustWeaveException.NotFound(resource = "OIDC4VCI offer: $offerId")
 
         // Fetch credential issuer metadata if not cached
         if (metadata == null) {
@@ -170,7 +172,7 @@ class Oidc4VciService(
      *
      * @param issuerDid Issuer DID
      * @param holderDid Holder DID
-     * @param credential The verifiable credential to issue
+     * @param credential The credential envelope to issue
      * @param requestId Credential request ID
      * @return Issue result
      */
@@ -215,6 +217,8 @@ class Oidc4VciService(
 
         val issueId = UUID.randomUUID().toString()
 
+        // The credential from the response is the one issued by the issuer
+        // In production, parse credentialResponse and convert to CredentialEnvelope
         Oidc4VciIssueResult(
             issueId = issueId,
             credential = credential,
@@ -325,7 +329,13 @@ class Oidc4VciService(
 
         // Sign JWT (in production, use KMS to sign)
         val signingInput = "$headerBase64.$payloadBase64".toByteArray(Charsets.UTF_8)
-        val signature = kms.sign(KeyId(keyId), signingInput)
+        val signResult = kms.sign(KeyId(keyId), signingInput)
+        val signature = when (signResult) {
+            is SignResult.Success -> signResult.signature
+            is SignResult.Failure.KeyNotFound -> throw IllegalStateException("KMS signing failed: Key not found: ${signResult.keyId}")
+            is SignResult.Failure.UnsupportedAlgorithm -> throw IllegalStateException("KMS signing failed: Unsupported algorithm: ${signResult.reason ?: "Algorithm ${signResult.requestedAlgorithm} not compatible with ${signResult.keyAlgorithm}"}")
+            is SignResult.Failure.Error -> throw IllegalStateException("KMS signing failed: ${signResult.reason}")
+        }
         val signatureBase64 = Base64.getUrlEncoder().withoutPadding()
             .encodeToString(signature)
 

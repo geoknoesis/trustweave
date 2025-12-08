@@ -2,7 +2,7 @@ package com.trustweave.credential.did
 
 import com.trustweave.credential.CredentialIssuanceOptions
 import com.trustweave.credential.issuer.CredentialIssuer
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.proof.Ed25519ProofGenerator
 import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.did.DidCreationOptions
@@ -16,6 +16,7 @@ import kotlinx.serialization.json.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import kotlinx.datetime.Clock
 
 /**
  * Comprehensive branch coverage tests for DidLinkedCredentialService.
@@ -160,7 +161,7 @@ class DidLinkedCredentialServiceBranchCoverageTest {
                 put("id", "did:key:subject")
                 put("name", "John Doe")
             },
-            issuanceDate = java.time.Instant.now().toString()
+            issuanceDate = Clock.System.now().toString()
         )
 
         val subjectDid = service.resolveCredentialSubject(credential)
@@ -180,7 +181,7 @@ class DidLinkedCredentialServiceBranchCoverageTest {
                 put("id", "not-a-did")
                 put("name", "John Doe")
             },
-            issuanceDate = java.time.Instant.now().toString()
+            issuanceDate = Clock.System.now().toString()
         )
 
         val subjectDid = service.resolveCredentialSubject(credential)
@@ -199,7 +200,7 @@ class DidLinkedCredentialServiceBranchCoverageTest {
             credentialSubject = buildJsonObject {
                 put("name", "John Doe")
             },
-            issuanceDate = java.time.Instant.now().toString()
+            issuanceDate = Clock.System.now().toString()
         )
 
         val subjectDid = service.resolveCredentialSubject(credential)
@@ -218,7 +219,7 @@ class DidLinkedCredentialServiceBranchCoverageTest {
             credentialSubject = buildJsonObject {
                 put("id", "did:key:subject")
             },
-            issuanceDate = java.time.Instant.now().toString()
+            issuanceDate = Clock.System.now().toString()
         )
 
         val valid = service.verifyIssuerDid(credential)
@@ -237,7 +238,7 @@ class DidLinkedCredentialServiceBranchCoverageTest {
             credentialSubject = buildJsonObject {
                 put("id", "did:key:subject")
             },
-            issuanceDate = java.time.Instant.now().toString()
+            issuanceDate = Clock.System.now().toString()
         )
 
         val valid = service.verifyIssuerDid(credential)

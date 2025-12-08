@@ -3,7 +3,7 @@ package com.trustweave.credential.chapi.exchange.spi
 import com.trustweave.credential.chapi.ChapiService
 import com.trustweave.credential.chapi.exchange.ChapiExchangeProtocol
 import com.trustweave.credential.exchange.CredentialExchangeProtocol
-import com.trustweave.credential.exchange.spi.CredentialExchangeProtocolProvider
+import com.trustweave.credential.spi.exchange.CredentialExchangeProtocolProvider
 
 /**
  * SPI Provider for CHAPI exchange protocol.

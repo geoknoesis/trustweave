@@ -4,8 +4,12 @@ import com.trustweave.credential.didcomm.models.DidCommMessage
 import com.trustweave.credential.didcomm.models.DidCommMessageTypes
 import com.trustweave.credential.didcomm.protocol.BasicMessageProtocol
 import com.trustweave.credential.didcomm.protocol.CredentialProtocol
-import com.trustweave.did.DidDocument
-import com.trustweave.did.VerificationMethod
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.VerificationMethod
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
+import com.trustweave.credential.exchange.model.CredentialPreview
+import com.trustweave.credential.exchange.model.CredentialAttribute
 import com.trustweave.kms.Algorithm
 import com.trustweave.kms.KeyHandle
 import com.trustweave.kms.KeyManagementService
@@ -34,13 +38,13 @@ class DidCommServiceTest {
 
     @Test
     fun testCredentialOfferCreation() = runBlocking {
-        val preview = com.trustweave.credential.exchange.CredentialPreview(
+        val preview = CredentialPreview(
             attributes = listOf(
-                com.trustweave.credential.exchange.CredentialAttribute(
+                CredentialAttribute(
                     name = "name",
                     value = "Alice"
                 ),
-                com.trustweave.credential.exchange.CredentialAttribute(
+                CredentialAttribute(
                     name = "email",
                     value = "alice@example.com"
                 )
@@ -62,13 +66,15 @@ class DidCommServiceTest {
     @Test
     fun testMessageStorage() = runBlocking {
         val kms = InMemoryKeyManagementService()
-        val resolveDid: suspend (String) -> DidDocument? = { did ->
+        val resolveDid: suspend (String) -> DidDocument? = { didStr ->
+            val did = Did(didStr)
+            val vmId = VerificationMethodId.parse("$didStr#key-1")
             // Mock DID resolution
             DidDocument(
                 id = did,
                 verificationMethod = listOf(
                     VerificationMethod(
-                        id = "$did#key-1",
+                        id = vmId,
                         type = "Ed25519VerificationKey2020",
                         controller = did,
                         publicKeyJwk = mapOf(
@@ -78,7 +84,7 @@ class DidCommServiceTest {
                         )
                     )
                 ),
-                keyAgreement = listOf("$did#key-1")
+                keyAgreement = listOf(vmId)
             )
         }
 
@@ -102,12 +108,14 @@ class DidCommServiceTest {
     @Test
     fun testMessageThreading() = runBlocking {
         val kms = InMemoryKeyManagementService()
-        val resolveDid: suspend (String) -> DidDocument? = { did ->
+        val resolveDid: suspend (String) -> DidDocument? = { didStr ->
+            val did = Did(didStr)
+            val vmId = VerificationMethodId.parse("$didStr#key-1")
             DidDocument(
                 id = did,
                 verificationMethod = listOf(
                     VerificationMethod(
-                        id = "$did#key-1",
+                        id = vmId,
                         type = "Ed25519VerificationKey2020",
                         controller = did,
                         publicKeyJwk = mapOf(
@@ -117,7 +125,7 @@ class DidCommServiceTest {
                         )
                     )
                 ),
-                keyAgreement = listOf("$did#key-1")
+                keyAgreement = listOf(vmId)
             )
         }
 

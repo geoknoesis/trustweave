@@ -3,8 +3,12 @@ package com.trustweave.did.base
 // NotFoundException replaced with TrustWeaveException.NotFound
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
-import com.trustweave.did.VerificationMethod
-import com.trustweave.did.DidService
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.DidDocumentMetadata
+import com.trustweave.did.model.VerificationMethod
+import com.trustweave.did.model.DidService
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.kms.KeyManagementService
 import kotlinx.coroutines.Dispatchers
@@ -15,7 +19,8 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 import java.net.URL
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 
 /**
  * Abstract base class for HTTP-based DID method implementations (e.g., did:web).
@@ -109,11 +114,12 @@ abstract class AbstractWebDidMethod(
      * @throws NotFoundException if document not found
      * @throws TrustWeaveException if resolution fails
      */
-    protected suspend fun resolveFromHttp(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
+    protected suspend fun resolveFromHttp(didString: String): DidResolutionResult = withContext(Dispatchers.IO) {
+        val did = Did(didString)
         validateDidFormat(did)
 
         try {
-            val url = getDocumentUrl(did)
+            val url = getDocumentUrl(didString)
             validateHttps(url)
 
             val request = Request.Builder()
@@ -147,15 +153,15 @@ abstract class AbstractWebDidMethod(
             val document = jsonElementToDocument(json)
 
             // Validate that document ID matches DID
-            if (document.id != did) {
+            if (document.id.value != didString) {
                 throw com.trustweave.did.exception.DidException.InvalidDidFormat(
-                    did = document.id,
-                    reason = "Document ID mismatch: expected $did, got ${document.id}"
+                    did = document.id.value,
+                    reason = "Document ID mismatch: expected $didString, got ${document.id.value}"
                 )
             }
 
             // Store locally for caching
-            storeDocument(document.id, document)
+            storeDocument(document.id.value, document)
 
             com.trustweave.did.base.DidMethodUtils.createSuccessResolutionResult(document, method)
         } catch (e: TrustWeaveException.NotFound) {
@@ -174,16 +180,16 @@ abstract class AbstractWebDidMethod(
                 )
             }
 
-            val url = getDocumentUrl(did)
+            val url = getDocumentUrl(didString)
             throw com.trustweave.core.exception.TrustWeaveException.Unknown(
                 message = "Failed to resolve DID from HTTP endpoint: ${e.message ?: "Unknown error"}",
-                context = mapOf("did" to did, "method" to method, "url" to url),
+                context = mapOf("did" to didString, "method" to method, "url" to url),
                 cause = e
             )
         } catch (e: Exception) {
             throw com.trustweave.core.exception.TrustWeaveException.Unknown(
                 message = "Failed to resolve DID document: ${e.message ?: "Unknown error"}",
-                context = mapOf("did" to did, "method" to method),
+                context = mapOf("did" to didString, "method" to method),
                 cause = e
             )
         }
@@ -196,12 +202,13 @@ abstract class AbstractWebDidMethod(
      * @param document The updated document
      * @return true if successful
      */
-    protected suspend fun updateDocumentOnHttp(did: String, document: DidDocument): Boolean =
+    protected suspend fun updateDocumentOnHttp(didString: String, document: DidDocument): Boolean =
         withContext(Dispatchers.IO) {
+            val did = Did(didString)
             validateDidFormat(did)
 
             try {
-                val url = getDocumentUrl(did)
+                val url = getDocumentUrl(didString)
                 validateHttps(url)
 
                 // Publish updated document
@@ -209,8 +216,8 @@ abstract class AbstractWebDidMethod(
 
                 if (success) {
                     // Update local storage
-                    val now = Instant.now()
-                    documentMetadata[did] = (documentMetadata[did] ?: DidDocumentMetadata(created = now))
+                    val now = Clock.System.now()
+                    documentMetadata[didString] = (documentMetadata[didString] ?: DidDocumentMetadata(created = now))
                         .copy(updated = now)
                 }
 
@@ -218,7 +225,7 @@ abstract class AbstractWebDidMethod(
             } catch (e: Exception) {
                 throw com.trustweave.core.exception.TrustWeaveException.Unknown(
                     message = "Failed to update DID document on HTTP endpoint: ${e.message ?: "Unknown error"}",
-                    context = mapOf("did" to did, "method" to method),
+                    context = mapOf("did" to didString, "method" to method),
                     cause = e
                 )
             }
@@ -232,13 +239,14 @@ abstract class AbstractWebDidMethod(
      * @return true if successful
      */
     protected suspend fun deactivateDocumentOnHttp(
-        did: String,
+        didString: String,
         deactivatedDocument: DidDocument
     ): Boolean = withContext(Dispatchers.IO) {
+        val did = Did(didString)
         validateDidFormat(did)
 
         try {
-            val url = getDocumentUrl(did)
+            val url = getDocumentUrl(didString)
             validateHttps(url)
 
             // Publish deactivated document
@@ -246,15 +254,15 @@ abstract class AbstractWebDidMethod(
 
             if (success) {
                 // Remove from local storage
-                documents.remove(did)
-                documentMetadata.remove(did)
+                documents.remove(didString)
+                documentMetadata.remove(didString)
             }
 
             success
         } catch (e: Exception) {
             throw com.trustweave.core.exception.TrustWeaveException.Unknown(
                 message = "Failed to deactivate DID document on HTTP endpoint: ${e.message ?: "Unknown error"}",
-                context = mapOf("did" to did, "method" to method),
+                context = mapOf("did" to didString, "method" to method),
                 cause = e
             )
         }
@@ -269,31 +277,31 @@ abstract class AbstractWebDidMethod(
     protected fun documentToJsonElement(document: DidDocument): JsonElement {
         return buildJsonObject {
             put("@context", JsonArray(document.context.map { JsonPrimitive(it) }))
-            put("id", document.id)
+            put("id", JsonPrimitive(document.id.value))
 
             if (document.alsoKnownAs.isNotEmpty()) {
-                put("alsoKnownAs", JsonArray(document.alsoKnownAs.map { JsonPrimitive(it) }))
+                put("alsoKnownAs", JsonArray(document.alsoKnownAs.map { JsonPrimitive(it.value) }))
             }
             if (document.controller.isNotEmpty()) {
-                put("controller", JsonArray(document.controller.map { JsonPrimitive(it) }))
+                put("controller", JsonArray(document.controller.map { JsonPrimitive(it.value) }))
             }
             if (document.verificationMethod.isNotEmpty()) {
                 put("verificationMethod", JsonArray(document.verificationMethod.map { vmToJsonObject(it) }))
             }
             if (document.authentication.isNotEmpty()) {
-                put("authentication", JsonArray(document.authentication.map { JsonPrimitive(it) }))
+                put("authentication", JsonArray(document.authentication.map { JsonPrimitive(it.toString()) }))
             }
             if (document.assertionMethod.isNotEmpty()) {
-                put("assertionMethod", JsonArray(document.assertionMethod.map { JsonPrimitive(it) }))
+                put("assertionMethod", JsonArray(document.assertionMethod.map { JsonPrimitive(it.toString()) }))
             }
             if (document.keyAgreement.isNotEmpty()) {
-                put("keyAgreement", JsonArray(document.keyAgreement.map { JsonPrimitive(it) }))
+                put("keyAgreement", JsonArray(document.keyAgreement.map { JsonPrimitive(it.toString()) }))
             }
             if (document.capabilityInvocation.isNotEmpty()) {
-                put("capabilityInvocation", JsonArray(document.capabilityInvocation.map { JsonPrimitive(it) }))
+                put("capabilityInvocation", JsonArray(document.capabilityInvocation.map { JsonPrimitive(it.toString()) }))
             }
             if (document.capabilityDelegation.isNotEmpty()) {
-                put("capabilityDelegation", JsonArray(document.capabilityDelegation.map { JsonPrimitive(it) }))
+                put("capabilityDelegation", JsonArray(document.capabilityDelegation.map { JsonPrimitive(it.toString()) }))
             }
             if (document.service.isNotEmpty()) {
                 put("service", JsonArray(document.service.map { serviceToJsonObject(it) }))
@@ -309,8 +317,10 @@ abstract class AbstractWebDidMethod(
      */
     protected fun jsonElementToDocument(json: JsonElement): DidDocument {
         val obj = json.jsonObject
+        val idString = obj["id"]?.jsonPrimitive?.content ?: throw IllegalArgumentException("Missing id")
+        val id = Did(idString)
         return DidDocument(
-            id = obj["id"]?.jsonPrimitive?.content ?: throw IllegalArgumentException("Missing id"),
+            id = id,
             context = obj["@context"]?.let {
                 when (it) {
                     is JsonPrimitive -> listOf(it.content)
@@ -318,29 +328,29 @@ abstract class AbstractWebDidMethod(
                     else -> listOf("https://www.w3.org/ns/did/v1")
                 }
             } ?: listOf("https://www.w3.org/ns/did/v1"),
-            alsoKnownAs = obj["alsoKnownAs"]?.jsonArray?.mapNotNull { (it as? JsonPrimitive)?.content } ?: emptyList(),
+            alsoKnownAs = obj["alsoKnownAs"]?.jsonArray?.mapNotNull { (it as? JsonPrimitive)?.content?.let { didStr -> Did(didStr) } } ?: emptyList(),
             controller = obj["controller"]?.let {
                 when (it) {
-                    is JsonPrimitive -> listOf(it.content)
-                    is JsonArray -> it.mapNotNull { (it as? JsonPrimitive)?.content }
+                    is JsonPrimitive -> listOf(Did(it.content))
+                    is JsonArray -> it.mapNotNull { (it as? JsonPrimitive)?.content?.let { didStr -> Did(didStr) } }
                     else -> emptyList()
                 }
             } ?: emptyList(),
-            verificationMethod = obj["verificationMethod"]?.jsonArray?.mapNotNull { jsonToVerificationMethod(it) } ?: emptyList(),
-            authentication = obj["authentication"]?.jsonArray?.mapNotNull { (it as? JsonPrimitive)?.content } ?: emptyList(),
-            assertionMethod = obj["assertionMethod"]?.jsonArray?.mapNotNull { (it as? JsonPrimitive)?.content } ?: emptyList(),
-            keyAgreement = obj["keyAgreement"]?.jsonArray?.mapNotNull { (it as? JsonPrimitive)?.content } ?: emptyList(),
-            capabilityInvocation = obj["capabilityInvocation"]?.jsonArray?.mapNotNull { (it as? JsonPrimitive)?.content } ?: emptyList(),
-            capabilityDelegation = obj["capabilityDelegation"]?.jsonArray?.mapNotNull { (it as? JsonPrimitive)?.content } ?: emptyList(),
+            verificationMethod = obj["verificationMethod"]?.jsonArray?.mapNotNull { jsonToVerificationMethod(it, id) } ?: emptyList(),
+            authentication = obj["authentication"]?.jsonArray?.mapNotNull { (it as? JsonPrimitive)?.content?.let { vmIdStr -> VerificationMethodId.parse(vmIdStr, id) } } ?: emptyList(),
+            assertionMethod = obj["assertionMethod"]?.jsonArray?.mapNotNull { (it as? JsonPrimitive)?.content?.let { vmIdStr -> VerificationMethodId.parse(vmIdStr, id) } } ?: emptyList(),
+            keyAgreement = obj["keyAgreement"]?.jsonArray?.mapNotNull { (it as? JsonPrimitive)?.content?.let { vmIdStr -> VerificationMethodId.parse(vmIdStr, id) } } ?: emptyList(),
+            capabilityInvocation = obj["capabilityInvocation"]?.jsonArray?.mapNotNull { (it as? JsonPrimitive)?.content?.let { vmIdStr -> VerificationMethodId.parse(vmIdStr, id) } } ?: emptyList(),
+            capabilityDelegation = obj["capabilityDelegation"]?.jsonArray?.mapNotNull { (it as? JsonPrimitive)?.content?.let { vmIdStr -> VerificationMethodId.parse(vmIdStr, id) } } ?: emptyList(),
             service = obj["service"]?.jsonArray?.mapNotNull { jsonToService(it) } ?: emptyList()
         )
     }
 
     private fun vmToJsonObject(vm: VerificationMethod): JsonObject {
         return buildJsonObject {
-            put("id", vm.id)
-            put("type", vm.type)
-            put("controller", vm.controller)
+            put("id", JsonPrimitive(vm.id.toString()))
+            put("type", JsonPrimitive(vm.type))
+            put("controller", JsonPrimitive(vm.controller.value))
             vm.publicKeyJwk?.let { jwk ->
                 put("publicKeyJwk", mapToJsonObject(jwk))
             }
@@ -361,12 +371,17 @@ abstract class AbstractWebDidMethod(
         }
     }
 
-    private fun jsonToVerificationMethod(json: JsonElement): VerificationMethod? {
+    private fun jsonToVerificationMethod(json: JsonElement, baseDid: Did): VerificationMethod? {
         val obj = json.jsonObject
+        val idString = obj["id"]?.jsonPrimitive?.content ?: return null
+        val type = obj["type"]?.jsonPrimitive?.content ?: return null
+        val controllerString = obj["controller"]?.jsonPrimitive?.content ?: return null
+        val id = VerificationMethodId.parse(idString, baseDid)
+        val controller = Did(controllerString)
         return VerificationMethod(
-            id = obj["id"]?.jsonPrimitive?.content ?: return null,
-            type = obj["type"]?.jsonPrimitive?.content ?: return null,
-            controller = obj["controller"]?.jsonPrimitive?.content ?: return null,
+            id = id,
+            type = type,
+            controller = controller,
             publicKeyJwk = obj["publicKeyJwk"]?.jsonObject?.let { jsonObjectToMap(it) },
             publicKeyMultibase = obj["publicKeyMultibase"]?.jsonPrimitive?.content
         )

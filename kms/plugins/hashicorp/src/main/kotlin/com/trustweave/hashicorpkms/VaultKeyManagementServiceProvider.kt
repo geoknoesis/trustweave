@@ -11,9 +11,9 @@ import com.trustweave.kms.spi.KeyManagementServiceProvider
  *
  * **Example:**
  * ```kotlin
- * val providers = ServiceLoader.load(KeyManagementServiceProvider::class.java)
- * val vaultProvider = providers.find { it.name == "vault" }
- * val kms = vaultProvider?.create(mapOf(
+ * import com.trustweave.kms.*
+ * 
+ * val kms = KeyManagementServices.create("vault", mapOf(
  *     "address" to "http://localhost:8200",
  *     "token" to "hvs.xxx"
  * ))

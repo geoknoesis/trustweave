@@ -1,7 +1,7 @@
 package com.trustweave.credential.proof
 
 import com.trustweave.credential.models.Proof
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import kotlin.test.*
@@ -91,7 +91,7 @@ class Ed25519ProofGeneratorTest {
                 put("id", "did:example:subject")
                 put("degree", "Bachelor")
             },
-            credentialStatus = com.trustweave.credential.models.CredentialStatus(
+            credentialStatus = com.trustweave.credential.model.vc.CredentialStatus(
                 id = "https://example.com/status/1",
                 type = "StatusList2021Entry",
                 statusListIndex = "1",
@@ -273,7 +273,7 @@ class Ed25519ProofGeneratorTest {
                 put("id", "did:example:subject")
                 put("name", "Full Test")
             },
-            credentialStatus = com.trustweave.credential.models.CredentialStatus(
+            credentialStatus = com.trustweave.credential.model.vc.CredentialStatus(
                 id = "https://example.com/status/1",
                 type = "StatusList2021Entry",
                 statusListIndex = "1"

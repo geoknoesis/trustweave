@@ -6,8 +6,8 @@ import com.trustweave.credential.PresentationOptions
 import com.trustweave.credential.PresentationVerificationOptions
 import com.trustweave.util.booleanDidResolver
 import com.trustweave.credential.models.Proof
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.models.VerifiablePresentation
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiablePresentation
 import com.trustweave.credential.proof.Ed25519ProofGenerator
 import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.credential.proof.ProofGenerator
@@ -18,6 +18,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import kotlinx.datetime.Clock
 import java.util.UUID
 
 /**
@@ -338,10 +339,10 @@ class PresentationServiceTest {
             put("id", "did:key:subject")
             put("name", "John Doe")
         },
-        issuanceDate: String = java.time.Instant.now().toString(),
+        issuanceDate: String = Clock.System.now().toString(),
         proof: Proof? = Proof(
             type = "Ed25519Signature2020",
-            created = java.time.Instant.now().toString(),
+            created = Clock.System.now().toString(),
             verificationMethod = "did:key:issuer#key-1",
             proofPurpose = "assertionMethod"
         )

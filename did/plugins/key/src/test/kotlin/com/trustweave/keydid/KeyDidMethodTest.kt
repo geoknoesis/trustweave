@@ -1,7 +1,7 @@
 package com.trustweave.keydid
 
 import com.trustweave.did.*
-import com.trustweave.did.DidCreationOptions.KeyAlgorithm
+import com.trustweave.did.KeyAlgorithm
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
@@ -36,7 +36,7 @@ class KeyDidMethodTest {
         )
 
         assertNotNull(document)
-        assertTrue(document.id.startsWith("did:key:z"))
+        assertTrue(document.id.value.startsWith("did:key:z"))
         assertEquals(1, document.verificationMethod.size)
         assertEquals(1, document.authentication.size)
     }
@@ -66,7 +66,7 @@ class KeyDidMethodTest {
         )
 
         // did:key should start with z (base58btc multibase prefix)
-        assertTrue(document.id.matches(Regex("^did:key:z[a-zA-Z0-9]+$")))
+        assertTrue(document.id.value.matches(Regex("^did:key:z[a-zA-Z0-9]+$")))
     }
 }
 

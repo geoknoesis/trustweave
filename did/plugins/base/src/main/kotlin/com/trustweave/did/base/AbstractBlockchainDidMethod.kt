@@ -4,8 +4,12 @@ import com.trustweave.anchor.BlockchainAnchorClient
 // NotFoundException replaced with TrustWeaveException.NotFound
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
-import com.trustweave.did.VerificationMethod
-import com.trustweave.did.DidService
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
+import com.trustweave.did.model.VerificationMethod
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.DidDocumentMetadata
+import com.trustweave.did.model.DidService
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.kms.KeyManagementService
 import kotlinx.coroutines.Dispatchers
@@ -111,7 +115,7 @@ abstract class AbstractBlockchainDidMethod(
             val result = anchorClient.writePayload(payload, "application/json")
 
             // Store locally for fallback
-            storeDocument(document.id, document)
+            storeDocument(document.id.value, document)
 
             // Return transaction hash
             result.ref.txHash
@@ -135,31 +139,31 @@ abstract class AbstractBlockchainDidMethod(
     protected fun documentToJsonElement(document: DidDocument): JsonElement {
         return buildJsonObject {
             put("@context", JsonArray(document.context.map { JsonPrimitive(it) }))
-            put("id", document.id)
+            put("id", JsonPrimitive(document.id.toString()))
 
             if (document.alsoKnownAs.isNotEmpty()) {
-                put("alsoKnownAs", JsonArray(document.alsoKnownAs.map { JsonPrimitive(it) }))
+                put("alsoKnownAs", JsonArray(document.alsoKnownAs.map { JsonPrimitive(it.toString()) }))
             }
             if (document.controller.isNotEmpty()) {
-                put("controller", JsonArray(document.controller.map { JsonPrimitive(it) }))
+                put("controller", JsonArray(document.controller.map { JsonPrimitive(it.toString()) }))
             }
             if (document.verificationMethod.isNotEmpty()) {
                 put("verificationMethod", JsonArray(document.verificationMethod.map { vmToJsonObject(it) }))
             }
             if (document.authentication.isNotEmpty()) {
-                put("authentication", JsonArray(document.authentication.map { JsonPrimitive(it) }))
+                put("authentication", JsonArray(document.authentication.map { JsonPrimitive(it.toString()) }))
             }
             if (document.assertionMethod.isNotEmpty()) {
-                put("assertionMethod", JsonArray(document.assertionMethod.map { JsonPrimitive(it) }))
+                put("assertionMethod", JsonArray(document.assertionMethod.map { JsonPrimitive(it.toString()) }))
             }
             if (document.keyAgreement.isNotEmpty()) {
-                put("keyAgreement", JsonArray(document.keyAgreement.map { JsonPrimitive(it) }))
+                put("keyAgreement", JsonArray(document.keyAgreement.map { JsonPrimitive(it.toString()) }))
             }
             if (document.capabilityInvocation.isNotEmpty()) {
-                put("capabilityInvocation", JsonArray(document.capabilityInvocation.map { JsonPrimitive(it) }))
+                put("capabilityInvocation", JsonArray(document.capabilityInvocation.map { JsonPrimitive(it.toString()) }))
             }
             if (document.capabilityDelegation.isNotEmpty()) {
-                put("capabilityDelegation", JsonArray(document.capabilityDelegation.map { JsonPrimitive(it) }))
+                put("capabilityDelegation", JsonArray(document.capabilityDelegation.map { JsonPrimitive(it.toString()) }))
             }
             if (document.service.isNotEmpty()) {
                 put("service", JsonArray(document.service.map { serviceToJsonObject(it) }))
@@ -172,9 +176,9 @@ abstract class AbstractBlockchainDidMethod(
      */
     private fun vmToJsonObject(vm: VerificationMethod): JsonObject {
         return buildJsonObject {
-            put("id", vm.id)
-            put("type", vm.type)
-            put("controller", vm.controller)
+            put("id", JsonPrimitive(vm.id.toString()))
+            put("type", JsonPrimitive(vm.type))
+            put("controller", JsonPrimitive(vm.controller.toString()))
             vm.publicKeyJwk?.let { jwk ->
                 put("publicKeyJwk", mapToJsonObject(jwk))
             }
@@ -189,8 +193,8 @@ abstract class AbstractBlockchainDidMethod(
      */
     private fun serviceToJsonObject(service: DidService): JsonObject {
         return buildJsonObject {
-            put("id", service.id)
-            put("type", service.type)
+            put("id", JsonPrimitive(service.id))
+            put("type", JsonPrimitive(service.type))
             put("serviceEndpoint", when (val endpoint = service.serviceEndpoint) {
                 is String -> JsonPrimitive(endpoint)
                 else -> Json.parseToJsonElement(endpoint.toString())
@@ -232,8 +236,10 @@ abstract class AbstractBlockchainDidMethod(
      */
     protected fun jsonElementToDocument(json: JsonElement): DidDocument {
         val obj = json.jsonObject
+        val idString = obj["id"]?.jsonPrimitive?.content ?: throw IllegalArgumentException("Missing id")
+        val id = Did(idString)
         return DidDocument(
-            id = obj["id"]?.jsonPrimitive?.content ?: throw IllegalArgumentException("Missing id"),
+            id = id,
             context = obj["@context"]?.let {
                 when (it) {
                     is JsonPrimitive -> listOf(it.content)
@@ -241,30 +247,35 @@ abstract class AbstractBlockchainDidMethod(
                     else -> listOf("https://www.w3.org/ns/did/v1")
                 }
             } ?: listOf("https://www.w3.org/ns/did/v1"),
-            alsoKnownAs = obj["alsoKnownAs"]?.jsonArray?.mapNotNull { (it as? JsonPrimitive)?.content } ?: emptyList(),
+            alsoKnownAs = obj["alsoKnownAs"]?.jsonArray?.mapNotNull { (it as? JsonPrimitive)?.content?.let { didStr -> Did(didStr) } } ?: emptyList(),
             controller = obj["controller"]?.let {
                 when (it) {
-                    is JsonPrimitive -> listOf(it.content)
-                    is JsonArray -> it.mapNotNull { (it as? JsonPrimitive)?.content }
+                    is JsonPrimitive -> listOf(Did(it.content))
+                    is JsonArray -> it.mapNotNull { (it as? JsonPrimitive)?.content?.let { didStr -> Did(didStr) } }
                     else -> emptyList()
                 }
             } ?: emptyList(),
-            verificationMethod = obj["verificationMethod"]?.jsonArray?.mapNotNull { jsonToVerificationMethod(it) } ?: emptyList(),
-            authentication = obj["authentication"]?.jsonArray?.mapNotNull { (it as? JsonPrimitive)?.content } ?: emptyList(),
-            assertionMethod = obj["assertionMethod"]?.jsonArray?.mapNotNull { (it as? JsonPrimitive)?.content } ?: emptyList(),
-            keyAgreement = obj["keyAgreement"]?.jsonArray?.mapNotNull { (it as? JsonPrimitive)?.content } ?: emptyList(),
-            capabilityInvocation = obj["capabilityInvocation"]?.jsonArray?.mapNotNull { (it as? JsonPrimitive)?.content } ?: emptyList(),
-            capabilityDelegation = obj["capabilityDelegation"]?.jsonArray?.mapNotNull { (it as? JsonPrimitive)?.content } ?: emptyList(),
+            verificationMethod = obj["verificationMethod"]?.jsonArray?.mapNotNull { jsonToVerificationMethod(it, id) } ?: emptyList(),
+            authentication = obj["authentication"]?.jsonArray?.mapNotNull { (it as? JsonPrimitive)?.content?.let { vmIdStr -> VerificationMethodId.parse(vmIdStr, id) } } ?: emptyList(),
+            assertionMethod = obj["assertionMethod"]?.jsonArray?.mapNotNull { (it as? JsonPrimitive)?.content?.let { vmIdStr -> VerificationMethodId.parse(vmIdStr, id) } } ?: emptyList(),
+            keyAgreement = obj["keyAgreement"]?.jsonArray?.mapNotNull { (it as? JsonPrimitive)?.content?.let { vmIdStr -> VerificationMethodId.parse(vmIdStr, id) } } ?: emptyList(),
+            capabilityInvocation = obj["capabilityInvocation"]?.jsonArray?.mapNotNull { (it as? JsonPrimitive)?.content?.let { vmIdStr -> VerificationMethodId.parse(vmIdStr, id) } } ?: emptyList(),
+            capabilityDelegation = obj["capabilityDelegation"]?.jsonArray?.mapNotNull { (it as? JsonPrimitive)?.content?.let { vmIdStr -> VerificationMethodId.parse(vmIdStr, id) } } ?: emptyList(),
             service = obj["service"]?.jsonArray?.mapNotNull { jsonToService(it) } ?: emptyList()
         )
     }
 
-    private fun jsonToVerificationMethod(json: JsonElement): VerificationMethod? {
+    private fun jsonToVerificationMethod(json: JsonElement, baseDid: Did): VerificationMethod? {
         val obj = json.jsonObject
+        val idString = obj["id"]?.jsonPrimitive?.content ?: return null
+        val type = obj["type"]?.jsonPrimitive?.content ?: return null
+        val controllerString = obj["controller"]?.jsonPrimitive?.content ?: return null
+        val id = VerificationMethodId.parse(idString, baseDid)
+        val controller = Did(controllerString)
         return VerificationMethod(
-            id = obj["id"]?.jsonPrimitive?.content ?: return null,
-            type = obj["type"]?.jsonPrimitive?.content ?: return null,
-            controller = obj["controller"]?.jsonPrimitive?.content ?: return null,
+            id = id,
+            type = type,
+            controller = controller,
             publicKeyJwk = obj["publicKeyJwk"]?.jsonObject?.let { jsonObjectToMap(it) },
             publicKeyMultibase = obj["publicKeyMultibase"]?.jsonPrimitive?.content
         )
@@ -305,7 +316,7 @@ abstract class AbstractBlockchainDidMethod(
      */
     protected suspend fun resolveFromBlockchain(did: String, txHash: String? = null): DidResolutionResult =
         withContext(Dispatchers.IO) {
-            validateDidFormat(did)
+            validateDidFormat(Did(did))
 
             try {
                 val anchorClient = getBlockchainAnchorClient()
@@ -318,11 +329,12 @@ abstract class AbstractBlockchainDidMethod(
                     // Try fallback to stored document
                     val stored = getStoredDocument(did)
                     if (stored != null) {
+                        val metadata = getDocumentMetadata(did)
                         return@withContext com.trustweave.did.base.DidMethodUtils.createSuccessResolutionResult(
                             stored,
                             method,
-                            getDocumentMetadata(did)?.created,
-                            getDocumentMetadata(did)?.updated
+                            metadata?.created,
+                            metadata?.updated
                         )
                     }
 
@@ -343,7 +355,7 @@ abstract class AbstractBlockchainDidMethod(
                 val document = jsonElementToDocument(result.payload)
 
                 // Store locally for caching
-                storeDocument(document.id, document)
+                storeDocument(document.id.value, document)
 
                 com.trustweave.did.base.DidMethodUtils.createSuccessResolutionResult(document, method)
             } catch (e: TrustWeaveException.NotFound) {
@@ -354,11 +366,12 @@ abstract class AbstractBlockchainDidMethod(
                 // Try fallback to stored document
                 val stored = getStoredDocument(did)
                 if (stored != null) {
+                    val metadata = getDocumentMetadata(did)
                     return@withContext DidMethodUtils.createSuccessResolutionResult(
                         stored,
                         method,
-                        getDocumentMetadata(did)?.created,
-                        getDocumentMetadata(did)?.updated
+                        metadata?.created,
+                        metadata?.updated
                     )
                 }
 
@@ -394,13 +407,13 @@ abstract class AbstractBlockchainDidMethod(
      * @return Transaction hash
      */
     protected suspend fun updateDocumentOnBlockchain(did: String, document: DidDocument): String {
-        validateDidFormat(did)
+        validateDidFormat(Did(did))
 
         // Anchor updated document
         val txHash = anchorDocument(document)
 
         // Update local storage
-        val now = java.time.Instant.now()
+        val now = kotlinx.datetime.Clock.System.now()
         documentMetadata[did] = (documentMetadata[did] ?: DidDocumentMetadata(created = now))
             .copy(updated = now)
 
@@ -418,7 +431,7 @@ abstract class AbstractBlockchainDidMethod(
         did: String,
         deactivatedDocument: DidDocument
     ): Boolean {
-        validateDidFormat(did)
+        validateDidFormat(Did(did))
 
         try {
             // Anchor deactivated document

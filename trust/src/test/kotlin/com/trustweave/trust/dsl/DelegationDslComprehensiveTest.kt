@@ -1,6 +1,6 @@
 package com.trustweave.trust.dsl
 
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking

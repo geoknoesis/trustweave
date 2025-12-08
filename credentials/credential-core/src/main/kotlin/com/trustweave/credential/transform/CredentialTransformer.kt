@@ -1,9 +1,11 @@
 package com.trustweave.credential.transform
 
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.*
+import kotlinx.datetime.Instant as KotlinInstant
+import java.time.Instant as JavaInstant
 
 /**
  * Credential transformer interface.
@@ -53,16 +55,16 @@ class CredentialTransformer {
 
             // Set issued at
             val issuedAt = credential.issuanceDate.let {
-                java.time.Instant.parse(it).epochSecond
+                KotlinInstant.parse(it).epochSeconds
             }
             val setIssuedAtMethod = builderClass.getMethod("issueTime", java.util.Date::class.java)
-            setIssuedAtMethod.invoke(builder, java.util.Date.from(java.time.Instant.ofEpochSecond(issuedAt)))
+            setIssuedAtMethod.invoke(builder, java.util.Date.from(JavaInstant.ofEpochSecond(issuedAt)))
 
             // Set expiration if present
             credential.expirationDate?.let { expirationDate ->
-                val expiration = java.time.Instant.parse(expirationDate).epochSecond
+                val expiration = KotlinInstant.parse(expirationDate).epochSeconds
                 val setExpirationMethod = builderClass.getMethod("expirationTime", java.util.Date::class.java)
-                setExpirationMethod.invoke(builder, java.util.Date.from(java.time.Instant.ofEpochSecond(expiration)))
+                setExpirationMethod.invoke(builder, java.util.Date.from(JavaInstant.ofEpochSecond(expiration)))
             }
 
             // Set jti (credential ID)

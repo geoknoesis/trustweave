@@ -1,5 +1,8 @@
 package com.trustweave.did
 
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
+import com.trustweave.did.model.DidDocument
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -13,7 +16,7 @@ class DidDocumentExtendedTest {
     @Test
     fun `test DID Document with context field`() {
         val doc = DidDocument(
-            id = "did:key:test",
+            id = Did("did:key:test"),
             context = listOf("https://www.w3.org/ns/did/v1", "https://example.com/context/v1")
         )
 
@@ -24,7 +27,7 @@ class DidDocumentExtendedTest {
 
     @Test
     fun `test DID Document with default context`() {
-        val doc = DidDocument(id = "did:key:test")
+        val doc = DidDocument(id = Did("did:key:test"))
 
         assertEquals(1, doc.context.size)
         assertEquals("https://www.w3.org/ns/did/v1", doc.context[0])
@@ -33,37 +36,43 @@ class DidDocumentExtendedTest {
     @Test
     fun `test DID Document with capability invocation`() {
         val doc = DidDocument(
-            id = "did:key:test",
-            capabilityInvocation = listOf("did:key:test#key-1", "did:key:test#key-2")
+            id = Did("did:key:test"),
+            capabilityInvocation = listOf(
+                VerificationMethodId.parse("did:key:test#key-1"),
+                VerificationMethodId.parse("did:key:test#key-2")
+            )
         )
 
         assertEquals(2, doc.capabilityInvocation.size)
-        assertTrue(doc.capabilityInvocation.contains("did:key:test#key-1"))
-        assertTrue(doc.capabilityInvocation.contains("did:key:test#key-2"))
+        assertTrue(doc.capabilityInvocation.any { it.value == "did:key:test#key-1" })
+        assertTrue(doc.capabilityInvocation.any { it.value == "did:key:test#key-2" })
     }
 
     @Test
     fun `test DID Document with capability delegation`() {
         val doc = DidDocument(
-            id = "did:key:test",
-            capabilityDelegation = listOf("did:key:test#key-1", "did:key:delegate#key-1")
+            id = Did("did:key:test"),
+            capabilityDelegation = listOf(
+                VerificationMethodId.parse("did:key:test#key-1"),
+                VerificationMethodId.parse("did:key:delegate#key-1")
+            )
         )
 
         assertEquals(2, doc.capabilityDelegation.size)
-        assertTrue(doc.capabilityDelegation.contains("did:key:test#key-1"))
-        assertTrue(doc.capabilityDelegation.contains("did:key:delegate#key-1"))
+        assertTrue(doc.capabilityDelegation.any { it.value == "did:key:test#key-1" })
+        assertTrue(doc.capabilityDelegation.any { it.value == "did:key:delegate#key-1" })
     }
 
     @Test
     fun `test DID Document with all new fields`() {
         val doc = DidDocument(
-            id = "did:key:test",
+            id = Did("did:key:test"),
             context = listOf("https://www.w3.org/ns/did/v1"),
-            capabilityInvocation = listOf("did:key:test#key-1"),
-            capabilityDelegation = listOf("did:key:test#key-2"),
-            authentication = listOf("did:key:test#key-1"),
-            assertionMethod = listOf("did:key:test#key-1"),
-            keyAgreement = listOf("did:key:test#key-3")
+            capabilityInvocation = listOf(VerificationMethodId.parse("did:key:test#key-1")),
+            capabilityDelegation = listOf(VerificationMethodId.parse("did:key:test#key-2")),
+            authentication = listOf(VerificationMethodId.parse("did:key:test#key-1")),
+            assertionMethod = listOf(VerificationMethodId.parse("did:key:test#key-1")),
+            keyAgreement = listOf(VerificationMethodId.parse("did:key:test#key-3"))
         )
 
         assertNotNull(doc.context)
@@ -77,8 +86,8 @@ class DidDocumentExtendedTest {
     fun `test DID Document backward compatibility`() {
         // Test that existing code still works with default values
         val doc = DidDocument(
-            id = "did:key:test",
-            authentication = listOf("did:key:test#key-1")
+            id = Did("did:key:test"),
+            authentication = listOf(VerificationMethodId.parse("did:key:test#key-1"))
         )
 
         // New fields should have defaults

@@ -42,13 +42,14 @@ A DID method is an implementation of the `DidMethod` interface that supports a s
 
 ```kotlin
 import com.trustweave.did.*
+import com.trustweave.did.identifiers.Did
 
 interface DidMethod {
     val method: String
     suspend fun createDid(options: DidCreationOptions): DidDocument
-    suspend fun resolveDid(did: String): DidResolutionResult
-    suspend fun updateDid(did: String, updater: (DidDocument) -> DidDocument): DidDocument
-    suspend fun deactivateDid(did: String): Boolean
+    suspend fun resolveDid(did: Did): DidResolutionResult
+    suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument): DidDocument
+    suspend fun deactivateDid(did: Did): Boolean
 }
 ```
 
@@ -226,8 +227,8 @@ fun main() = runBlocking {
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
-    val didString = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
-    val resolution = trustWeave.resolveDid(didString)
+    val did = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
+    val resolution = trustWeave.resolveDid(did)
     
     when (resolution) {
         is DidResolutionResult.Success -> {
@@ -266,8 +267,8 @@ fun main() = runBlocking {
     val registry = DidMethodRegistry()
     // ... register methods ...
 
-    val did = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
-    val resolutionResult = registry.resolve(did)
+    val didString = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
+    val resolutionResult = registry.resolve(didString)  // Registry convenience method accepts String
 
     resolutionResult.fold(
         onSuccess = { result ->
@@ -304,15 +305,15 @@ fun main() = runBlocking {
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
-    val didString = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
+    val did = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
 
     // Update DID document
     try {
         val updatedDoc = trustWeave.updateDid {
-            did(didString)
+            did(did.value)  // DSL builder accepts string for convenience
             // Add a new service endpoint
             service {
-                id("${didString}#service-1")
+                id("${did.value}#service-1")
                 type("LinkedDomains")
                 endpoint("https://example.com/service")
             }
@@ -349,15 +350,16 @@ fun main() = runBlocking {
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
-    val didString = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
+    val did = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
 
-    // Deactivate DID (via updateDid with deactivated flag)
+    // Deactivate DID using type-safe API
     try {
-        val updatedDoc = trustWeave.updateDid {
-            did(didString)
-            deactivated(true)
+        val deactivated = trustWeave.deactivateDid(did)
+        if (deactivated) {
+            println("DID deactivated successfully: ${did.value}")
+        } else {
+            println("DID deactivation failed or not supported")
         }
-        println("DID deactivated successfully: ${updatedDoc.id}")
     } catch (error: Exception) {
         println("Deactivation error: ${error.message}")
     }

@@ -1,11 +1,13 @@
 package com.trustweave.credential.proof
 
 import com.trustweave.credential.models.Proof
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.did.identifiers.VerificationMethodId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 
 /**
  * BBS+ proof generator implementation.
@@ -70,9 +72,9 @@ class BbsProofGenerator(
         val proofValue = encodeMultibase(signature)
 
         Proof(
-            type = proofType,
-            created = Instant.now().toString(),
-            verificationMethod = verificationMethod,
+            type = ProofTypes.fromString(proofType),
+            created = Clock.System.now().toString(),
+            verificationMethod = VerificationMethodId.parse(verificationMethod),
             proofPurpose = options.proofPurpose,
             proofValue = proofValue,
             challenge = options.challenge,
@@ -97,7 +99,7 @@ class BbsProofGenerator(
                 ignoreUnknownKeys = true
             }
             val credentialJson = json.encodeToJsonElement(
-                com.trustweave.credential.models.VerifiableCredential.serializer(),
+                com.trustweave.credential.model.vc.VerifiableCredential.serializer(),
                 credential
             )
             val credentialMap = jsonElementToMap(credentialJson.jsonObject)
@@ -120,7 +122,7 @@ class BbsProofGenerator(
                 ignoreUnknownKeys = true
             }
             return json.encodeToString(
-                com.trustweave.credential.models.VerifiableCredential.serializer(),
+                com.trustweave.credential.model.vc.VerifiableCredential.serializer(),
                 credential
             )
         } catch (e: Exception) {
@@ -131,7 +133,7 @@ class BbsProofGenerator(
                 ignoreUnknownKeys = true
             }
             return json.encodeToString(
-                com.trustweave.credential.models.VerifiableCredential.serializer(),
+                com.trustweave.credential.model.vc.VerifiableCredential.serializer(),
                 credential
             )
         }
@@ -259,7 +261,7 @@ class BbsProofGenerator(
 
         // Serialize credential to JSON
         val credentialJson = json.encodeToJsonElement(
-            com.trustweave.credential.models.VerifiableCredential.serializer(),
+            com.trustweave.credential.model.vc.VerifiableCredential.serializer(),
             credential
         ).jsonObject
 
@@ -299,7 +301,7 @@ class BbsProofGenerator(
 
         // Parse back to VerifiableCredential
         return json.decodeFromJsonElement(
-            com.trustweave.credential.models.VerifiableCredential.serializer(),
+            com.trustweave.credential.model.vc.VerifiableCredential.serializer(),
             derivedJson
         )
     }

@@ -6,7 +6,9 @@ plugins {
 group = "com.trustweave.credentials"
 
 dependencies {
-    implementation(project(":credentials:credential-core"))
+    // Credential API and exchange API
+    implementation(project(":credentials:credential-api"))
+    
     implementation(project(":did:did-core"))
     implementation(project(":kms:kms-core"))
     implementation(project(":common"))

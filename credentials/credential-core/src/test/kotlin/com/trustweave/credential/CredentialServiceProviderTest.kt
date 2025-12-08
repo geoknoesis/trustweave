@@ -1,11 +1,12 @@
 package com.trustweave.credential
 
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.models.VerifiablePresentation
+import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiablePresentation
 import com.trustweave.credential.SchemaFormat
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import kotlin.test.*
+import kotlinx.datetime.Clock
 
 /**
  * Tests for CredentialServiceProvider interface and CredentialService interface edge cases.
@@ -120,7 +121,7 @@ class CredentialServiceProviderTest {
                 return credential.copy(
                     proof = com.trustweave.credential.models.Proof(
                         type = options.proofType,
-                        created = java.time.Instant.now().toString(),
+                        created = Clock.System.now().toString(),
                         verificationMethod = "did:key:issuer#key-1",
                         proofPurpose = "assertionMethod"
                     )
@@ -169,7 +170,7 @@ class CredentialServiceProviderTest {
         return VerifiableCredential(
             type = listOf("VerifiableCredential"),
             issuer = "did:key:issuer",
-            issuanceDate = java.time.Instant.now().toString(),
+            issuanceDate = Clock.System.now().toString(),
             credentialSubject = buildJsonObject {
                 put("id", "did:key:subject")
             }

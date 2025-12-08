@@ -1,13 +1,17 @@
 package com.trustweave.did
 
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.model.DidDocumentMetadata
+import com.trustweave.did.resolver.DidResolutionResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import java.time.Instant
-import com.trustweave.did.resolver.DidResolutionResult
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 
 /**
  * Comprehensive tests for DidDocumentMetadata with Instant fields.
@@ -16,30 +20,30 @@ class DidDocumentMetadataComprehensiveTest {
 
     @Test
     fun `test DidDocumentMetadata with all fields populated`() {
-        val now = Instant.now()
-        val later = now.plusSeconds(3600)
-        val future = now.plusSeconds(86400)
+        val now = Clock.System.now()
+        val later = now.plus(kotlin.time.Duration.parse("PT1H"))
+        val future = now.plus(kotlin.time.Duration.parse("P1D"))
 
         val metadata = DidDocumentMetadata(
             created = now,
             updated = later,
             versionId = "v1.0.0",
             nextUpdate = future,
-            canonicalId = "did:key:canonical",
-            equivalentId = listOf("did:key:equivalent1", "did:key:equivalent2")
+            canonicalId = Did("did:key:canonical"),
+            equivalentId = listOf(Did("did:key:equivalent1"), Did("did:key:equivalent2"))
         )
 
         assertEquals(now, metadata.created)
         assertEquals(later, metadata.updated)
         assertEquals("v1.0.0", metadata.versionId)
         assertEquals(future, metadata.nextUpdate)
-        assertEquals("did:key:canonical", metadata.canonicalId)
+        assertEquals("did:key:canonical", metadata.canonicalId?.value)
         assertEquals(2, metadata.equivalentId.size)
     }
 
     @Test
     fun `test DidDocumentMetadata with partial fields`() {
-        val now = Instant.now()
+        val now = Clock.System.now()
 
         val metadata = DidDocumentMetadata(
             created = now,
@@ -71,21 +75,21 @@ class DidDocumentMetadataComprehensiveTest {
     fun `test DidDocumentMetadata with equivalent IDs`() {
         val metadata = DidDocumentMetadata(
             equivalentId = listOf(
-                "did:key:equiv1",
-                "did:key:equiv2",
-                "did:key:equiv3"
+                Did("did:key:equiv1"),
+                Did("did:key:equiv2"),
+                Did("did:key:equiv3")
             )
         )
 
         assertEquals(3, metadata.equivalentId.size)
-        assertTrue(metadata.equivalentId.contains("did:key:equiv1"))
-        assertTrue(metadata.equivalentId.contains("did:key:equiv2"))
-        assertTrue(metadata.equivalentId.contains("did:key:equiv3"))
+        assertTrue(metadata.equivalentId.any { it.value == "did:key:equiv1" })
+        assertTrue(metadata.equivalentId.any { it.value == "did:key:equiv2" })
+        assertTrue(metadata.equivalentId.any { it.value == "did:key:equiv3" })
     }
 
     @Test
     fun `test DidDocumentMetadata equality`() {
-        val now = Instant.now()
+        val now = Clock.System.now()
 
         val metadata1 = DidDocumentMetadata(
             created = now,
@@ -102,7 +106,7 @@ class DidDocumentMetadataComprehensiveTest {
 
     @Test
     fun `test DidDocumentMetadata inequality`() {
-        val now = Instant.now()
+        val now = Clock.System.now()
 
         val metadata1 = DidDocumentMetadata(
             created = now,
@@ -119,10 +123,10 @@ class DidDocumentMetadataComprehensiveTest {
 
     @Test
     fun `test DidResolutionResult with DidDocumentMetadata`() {
-        val doc = DidDocument(id = "did:key:test")
+        val doc = DidDocument(id = Did("did:key:test"))
         val metadata = DidDocumentMetadata(
-            created = Instant.now(),
-            updated = Instant.now(),
+            created = Clock.System.now(),
+            updated = Clock.System.now(),
             versionId = "v1"
         )
 
@@ -141,7 +145,7 @@ class DidDocumentMetadataComprehensiveTest {
     @Test
     fun `test DidResolutionResult with null document`() {
         val result = DidResolutionResult.Failure.NotFound(
-            did = com.trustweave.core.types.Did("did:key:test"),
+            did = Did("did:key:test"),
             reason = "notFound",
             resolutionMetadata = mapOf("error" to "notFound")
         )

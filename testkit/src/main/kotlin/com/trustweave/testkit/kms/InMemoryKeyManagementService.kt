@@ -1,8 +1,8 @@
 package com.trustweave.testkit.kms
 
-import com.trustweave.core.types.KeyId
+import com.trustweave.core.identifiers.KeyId
 import com.trustweave.kms.*
-import com.trustweave.kms.exception.KmsException
+import com.trustweave.kms.results.*
 import java.security.*
 import java.security.spec.*
 import java.util.*
@@ -29,102 +29,174 @@ class InMemoryKeyManagementService : KeyManagementService {
     override suspend fun generateKey(
         algorithm: Algorithm,
         options: Map<String, Any?>
-    ): KeyHandle {
+    ): GenerateKeyResult {
         if (!supportsAlgorithm(algorithm)) {
-            throw UnsupportedAlgorithmException(
-                "Algorithm '${algorithm.name}' is not supported. " +
-                "Supported: ${SUPPORTED_ALGORITHMS.joinToString(", ") { it.name }}"
+            return GenerateKeyResult.Failure.UnsupportedAlgorithm(
+                algorithm = algorithm,
+                supportedAlgorithms = SUPPORTED_ALGORITHMS
             )
         }
 
-        val keyPair = when (algorithm) {
-            is Algorithm.Ed25519 -> generateEd25519KeyPair()
-            is Algorithm.Secp256k1 -> generateSecp256k1KeyPair()
-            else -> throw UnsupportedAlgorithmException("Algorithm ${algorithm.name} not implemented")
-        }
-
-        val keyIdString = options["keyId"] as? String ?: "key_${UUID.randomUUID()}"
-        val keyId = KeyId(keyIdString)
-
-        keys[keyId] = keyPair
-
-        val publicKeyJwk = when (algorithm) {
-            is Algorithm.Ed25519 -> {
-                // Extract raw 32 bytes from DER-encoded public key
-                // Ed25519 public key in DER format: 30 2A 30 05 06 03 2B 65 70 03 21 00 [32 bytes]
-                // The raw key is at bytes 12-44 (12 byte header + 32 byte key)
-                val encoded = keyPair.public.encoded
-                val rawKey = if (encoded.size >= 44 && encoded[0] == 0x30.toByte()) {
-                    // Standard DER format: extract bytes 12-44 (32 bytes)
-                    encoded.sliceArray(12 until 44)
-                } else if (encoded.size >= 32) {
-                    // Fallback: extract last 32 bytes
-                    encoded.sliceArray((encoded.size - 32) until encoded.size)
-                } else {
-                    throw IllegalStateException("Invalid Ed25519 public key encoding: expected at least 32 bytes, got ${encoded.size}")
-                }
-
-                require(rawKey.size == 32) {
-                    "Expected 32-byte Ed25519 public key, but got ${rawKey.size} bytes from encoded key of size ${encoded.size}"
-                }
-
-                mapOf(
-                    "kty" to "OKP",
-                    "crv" to "Ed25519",
-                    "x" to Base64.getUrlEncoder().withoutPadding().encodeToString(rawKey)
+        return try {
+            val keyPair = when (algorithm) {
+                is Algorithm.Ed25519 -> generateEd25519KeyPair()
+                is Algorithm.Secp256k1 -> generateSecp256k1KeyPair()
+                else -> return GenerateKeyResult.Failure.UnsupportedAlgorithm(
+                    algorithm = algorithm,
+                    supportedAlgorithms = SUPPORTED_ALGORITHMS
                 )
             }
-            is Algorithm.Secp256k1 -> mapOf(
-                "kty" to "EC",
-                "crv" to "secp256k1",
-                "x" to Base64.getUrlEncoder().withoutPadding().encodeToString(keyPair.public.encoded.take(32).toByteArray()),
-                "y" to Base64.getUrlEncoder().withoutPadding().encodeToString(keyPair.public.encoded.drop(32).take(32).toByteArray())
+
+            val keyIdString = options["keyId"] as? String ?: "key_${UUID.randomUUID()}"
+            val keyId = KeyId(keyIdString)
+
+            keys[keyId] = keyPair
+
+            val publicKeyJwk = when (algorithm) {
+                is Algorithm.Ed25519 -> {
+                    // Extract raw 32 bytes from DER-encoded public key
+                    // Ed25519 public key in DER format: 30 2A 30 05 06 03 2B 65 70 03 21 00 [32 bytes]
+                    // The raw key is at bytes 12-44 (12 byte header + 32 byte key)
+                    val encoded = keyPair.public.encoded
+                    val rawKey = if (encoded.size >= 44 && encoded[0] == 0x30.toByte()) {
+                        // Standard DER format: extract bytes 12-44 (32 bytes)
+                        encoded.sliceArray(12 until 44)
+                    } else if (encoded.size >= 32) {
+                        // Fallback: extract last 32 bytes
+                        encoded.sliceArray((encoded.size - 32) until encoded.size)
+                    } else {
+                        return GenerateKeyResult.Failure.Error(
+                            algorithm = algorithm,
+                            reason = "Invalid Ed25519 public key encoding: expected at least 32 bytes, got ${encoded.size}"
+                        )
+                    }
+
+                    if (rawKey.size != 32) {
+                        return GenerateKeyResult.Failure.Error(
+                            algorithm = algorithm,
+                            reason = "Expected 32-byte Ed25519 public key, but got ${rawKey.size} bytes from encoded key of size ${encoded.size}"
+                        )
+                    }
+
+                    mapOf(
+                        "kty" to "OKP",
+                        "crv" to "Ed25519",
+                        "x" to Base64.getUrlEncoder().withoutPadding().encodeToString(rawKey)
+                    )
+                }
+                is Algorithm.Secp256k1 -> mapOf(
+                    "kty" to "EC",
+                    "crv" to "secp256k1",
+                    "x" to Base64.getUrlEncoder().withoutPadding().encodeToString(keyPair.public.encoded.take(32).toByteArray()),
+                    "y" to Base64.getUrlEncoder().withoutPadding().encodeToString(keyPair.public.encoded.drop(32).take(32).toByteArray())
+                )
+                else -> emptyMap()
+            }
+
+            val handle = KeyHandle(
+                id = keyId,
+                algorithm = algorithm.name,
+                publicKeyJwk = publicKeyJwk
             )
-            else -> emptyMap()
+
+            keyMetadata[keyId] = handle
+            GenerateKeyResult.Success(handle)
+        } catch (e: Exception) {
+            GenerateKeyResult.Failure.Error(
+                algorithm = algorithm,
+                reason = "Failed to generate key: ${e.message ?: "Unknown error"}",
+                cause = e
+            )
         }
-
-        val handle = KeyHandle(
-            id = keyId,
-            algorithm = algorithm.name,
-            publicKeyJwk = publicKeyJwk
-        )
-
-        keyMetadata[keyId] = handle
-        return handle
     }
 
-    override suspend fun getPublicKey(keyId: KeyId): KeyHandle {
-        return keyMetadata[keyId]
-            ?: throw KmsException.KeyNotFound(keyId = keyId.value)
+    override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult {
+        val handle = keyMetadata[keyId]
+        return if (handle != null) {
+            GetPublicKeyResult.Success(handle)
+        } else {
+            GetPublicKeyResult.Failure.KeyNotFound(keyId = keyId)
+        }
     }
 
     override suspend fun sign(
         keyId: KeyId,
         data: ByteArray,
         algorithm: Algorithm?
-    ): ByteArray {
+    ): SignResult {
         val keyPair = keys[keyId]
-            ?: throw KmsException.KeyNotFound(keyId = keyId.value)
+            ?: return SignResult.Failure.KeyNotFound(keyId = keyId)
 
-        // Validate algorithm compatibility using KeySpec
-        val effectiveAlgorithm = validateSigningAlgorithm(keyId, algorithm)
+        val keyHandle = keyMetadata[keyId]
+            ?: return SignResult.Failure.KeyNotFound(keyId = keyId)
 
-        val signAlgorithm = when (effectiveAlgorithm) {
-            is Algorithm.Ed25519 -> "Ed25519"
-            is Algorithm.Secp256k1 -> "SHA256withECDSA"
-            else -> throw IllegalArgumentException("Unknown algorithm: ${effectiveAlgorithm.name}")
+        // Determine the key's algorithm
+        val keyAlgorithm = Algorithm.parse(keyHandle.algorithm)
+            ?: return SignResult.Failure.Error(
+                keyId = keyId,
+                reason = "Cannot determine key algorithm from handle: ${keyHandle.algorithm}"
+            )
+
+        // Use provided algorithm or key's algorithm
+        val effectiveAlgorithm = algorithm ?: keyAlgorithm
+
+        // Validate algorithm compatibility
+        if (algorithm != null && !isAlgorithmCompatible(algorithm, keyAlgorithm)) {
+            return SignResult.Failure.UnsupportedAlgorithm(
+                keyId = keyId,
+                requestedAlgorithm = algorithm,
+                keyAlgorithm = keyAlgorithm,
+                reason = "Algorithm '${algorithm.name}' is not compatible with key algorithm '${keyAlgorithm.name}'"
+            )
         }
 
-        val signature = Signature.getInstance(signAlgorithm).apply {
-            initSign(keyPair.private)
-            update(data)
+        return try {
+            val signAlgorithm = when (effectiveAlgorithm) {
+                is Algorithm.Ed25519 -> "Ed25519"
+                is Algorithm.Secp256k1 -> "SHA256withECDSA"
+                else -> return SignResult.Failure.UnsupportedAlgorithm(
+                    keyId = keyId,
+                    requestedAlgorithm = effectiveAlgorithm,
+                    keyAlgorithm = keyAlgorithm,
+                    reason = "Unknown algorithm: ${effectiveAlgorithm.name}"
+                )
+            }
+
+            val signature = Signature.getInstance(signAlgorithm).apply {
+                initSign(keyPair.private)
+                update(data)
+            }
+            SignResult.Success(signature.sign())
+        } catch (e: Exception) {
+            SignResult.Failure.Error(
+                keyId = keyId,
+                reason = "Failed to sign data: ${e.message ?: "Unknown error"}",
+                cause = e
+            )
         }
-        return signature.sign()
     }
 
-    override suspend fun deleteKey(keyId: KeyId): Boolean {
-        keys.remove(keyId)
-        return keyMetadata.remove(keyId) != null
+    override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult {
+        val existed = keys.remove(keyId) != null || keyMetadata.remove(keyId) != null
+        return if (existed) {
+            DeleteKeyResult.Deleted
+        } else {
+            DeleteKeyResult.NotFound
+        }
+    }
+
+    /**
+     * Checks if two algorithms are compatible for signing.
+     */
+    private fun isAlgorithmCompatible(requested: Algorithm, key: Algorithm): Boolean {
+        // Same algorithm is always compatible
+        if (requested == key) return true
+        
+        // For RSA, any RSA variant can sign with any other RSA variant (same key type)
+        if (requested is Algorithm.RSA && key is Algorithm.RSA) return true
+        
+        // For ECC, algorithms must match exactly
+        return false
     }
 
     /**
@@ -169,6 +241,85 @@ class InMemoryKeyManagementService : KeyManagementService {
         } catch (e: Exception) {
             throw UnsupportedOperationException("secp256k1 not available: ${e.message}")
         }
+    }
+}
+
+/**
+ * Extension methods for backward compatibility with old exception-based API.
+ * These are provided for test convenience but new code should use the Result-based API.
+ */
+suspend fun InMemoryKeyManagementService.generateKey(
+    algorithm: Algorithm,
+    options: Map<String, Any?>
+): KeyHandle {
+    return when (val result = generateKey(algorithm, options)) {
+        is GenerateKeyResult.Success -> result.keyHandle
+        is GenerateKeyResult.Failure.UnsupportedAlgorithm -> throw UnsupportedAlgorithmException(
+            result.reason ?: "Algorithm '${result.algorithm.name}' is not supported. " +
+                "Supported: ${result.supportedAlgorithms.joinToString(", ") { it.name }}"
+        )
+        is GenerateKeyResult.Failure.InvalidOptions -> throw IllegalArgumentException(result.reason)
+        is GenerateKeyResult.Failure.Error -> throw RuntimeException(result.reason, result.cause)
+    }
+}
+
+suspend fun InMemoryKeyManagementService.generateKey(
+    algorithmName: String,
+    options: Map<String, Any?>
+): KeyHandle {
+    val algorithm = Algorithm.parse(algorithmName) ?: throw IllegalArgumentException("Unknown algorithm: $algorithmName")
+    return when (val result = generateKey(algorithm, options)) {
+        is GenerateKeyResult.Success -> result.keyHandle
+        is GenerateKeyResult.Failure.UnsupportedAlgorithm -> throw UnsupportedAlgorithmException(
+            result.reason ?: "Algorithm '${result.algorithm.name}' is not supported. " +
+                "Supported: ${result.supportedAlgorithms.joinToString(", ") { it.name }}"
+        )
+        is GenerateKeyResult.Failure.InvalidOptions -> throw IllegalArgumentException(result.reason)
+        is GenerateKeyResult.Failure.Error -> throw RuntimeException(result.reason, result.cause)
+    }
+}
+
+suspend fun InMemoryKeyManagementService.getPublicKey(keyId: KeyId): KeyHandle {
+    return when (val result = getPublicKey(keyId)) {
+        is GetPublicKeyResult.Success -> result.keyHandle
+        is GetPublicKeyResult.Failure.KeyNotFound -> throw com.trustweave.kms.exception.KmsException.KeyNotFound(
+            keyId = keyId.value
+        )
+        is GetPublicKeyResult.Failure.Error -> throw RuntimeException(result.reason, result.cause)
+    }
+}
+
+suspend fun InMemoryKeyManagementService.signLegacy(
+    keyId: KeyId,
+    data: ByteArray,
+    algorithm: Algorithm? = null
+): ByteArray {
+    return when (val result = sign(keyId, data, algorithm)) {
+        is SignResult.Success -> result.signature
+        is SignResult.Failure.KeyNotFound -> throw com.trustweave.kms.exception.KmsException.KeyNotFound(
+            keyId = keyId.value
+        )
+        is SignResult.Failure.UnsupportedAlgorithm -> throw UnsupportedAlgorithmException(
+            result.reason ?: "Algorithm '${result.requestedAlgorithm?.name ?: "null"}' is not compatible with key algorithm '${result.keyAlgorithm.name}'"
+        )
+        is SignResult.Failure.Error -> throw RuntimeException(result.reason, result.cause)
+    }
+}
+
+suspend fun InMemoryKeyManagementService.signLegacy(
+    keyId: KeyId,
+    data: ByteArray,
+    algorithmName: String?
+): ByteArray {
+    val algorithm = algorithmName?.let { Algorithm.parse(it) }
+    return signLegacy(keyId, data, algorithm)
+}
+
+suspend fun InMemoryKeyManagementService.deleteKey(keyId: KeyId): Boolean {
+    return when (val result = deleteKey(keyId)) {
+        is DeleteKeyResult.Deleted -> true
+        is DeleteKeyResult.NotFound -> false
+        is DeleteKeyResult.Failure.Error -> throw RuntimeException(result.reason, result.cause)
     }
 }
 

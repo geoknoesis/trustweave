@@ -1,7 +1,7 @@
 package com.trustweave.credential.oidc4vci.exchange.spi
 
 import com.trustweave.credential.exchange.CredentialExchangeProtocol
-import com.trustweave.credential.exchange.spi.CredentialExchangeProtocolProvider
+import com.trustweave.credential.spi.exchange.CredentialExchangeProtocolProvider
 import com.trustweave.credential.oidc4vci.Oidc4VciService
 import com.trustweave.credential.oidc4vci.exchange.Oidc4VciExchangeProtocol
 import com.trustweave.kms.KeyManagementService

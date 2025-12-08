@@ -41,7 +41,7 @@ class MultiPluginScenario(
         val documents = methods.map { method ->
             method.createDid(
                 com.trustweave.did.didCreationOptions {
-                    algorithm = com.trustweave.did.DidCreationOptions.KeyAlgorithm.ED25519
+                    algorithm = com.trustweave.did.KeyAlgorithm.ED25519
                 }
             )
         }
@@ -54,7 +54,7 @@ class MultiPluginScenario(
 
         // Verify all can be resolved
         documents.forEach { doc ->
-            val method = methods.find { it.method == doc.id.substringAfter("did:").substringBefore(":") }
+            val method = methods.find { it.method == doc.id.value.substringAfter("did:").substringBefore(":") }
             if (method != null) {
                 val resolution = method.resolveDid(doc.id)
                 val document = when (resolution) {
@@ -71,12 +71,20 @@ class MultiPluginScenario(
      */
     suspend fun testMultipleKmsProviders(providers: List<KeyManagementService>) {
         providers.forEach { kms ->
-            val keyHandle = kms.generateKey(com.trustweave.kms.Algorithm.Ed25519)
+            val generateResult = kms.generateKey(com.trustweave.kms.Algorithm.Ed25519)
+            val keyHandle = when (generateResult) {
+                is com.trustweave.kms.results.GenerateKeyResult.Success -> generateResult.keyHandle
+                else -> throw IllegalArgumentException("Failed to generate key: $generateResult")
+            }
             kotlin.test.assertNotNull(keyHandle)
             kotlin.test.assertNotNull(keyHandle.id)
 
             val message = "test".toByteArray()
-            val signature = kms.sign(keyHandle.id, message)
+            val signResult = kms.sign(keyHandle.id, message)
+            val signature = when (signResult) {
+                is com.trustweave.kms.results.SignResult.Success -> signResult.signature
+                else -> throw IllegalArgumentException("Failed to sign: $signResult")
+            }
             kotlin.test.assertNotNull(signature)
             kotlin.test.assertTrue(signature.isNotEmpty())
         }
@@ -96,7 +104,7 @@ class MultiPluginScenario(
 
             val document = method.createDid(
                 com.trustweave.did.didCreationOptions {
-                    algorithm = com.trustweave.did.DidCreationOptions.KeyAlgorithm.ED25519
+                    algorithm = com.trustweave.did.KeyAlgorithm.ED25519
                 }
             )
 

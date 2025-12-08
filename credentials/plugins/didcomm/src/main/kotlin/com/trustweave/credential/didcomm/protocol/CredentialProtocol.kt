@@ -4,9 +4,11 @@ import com.trustweave.credential.didcomm.models.DidCommMessage
 import com.trustweave.credential.didcomm.models.DidCommMessageTypes
 import com.trustweave.credential.didcomm.models.DidCommAttachment
 import com.trustweave.credential.didcomm.models.DidCommAttachmentData
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.didcomm.protocol.models.DidCommGoalCode
+import com.trustweave.credential.didcomm.protocol.util.toJsonObject
+import com.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.serialization.json.*
-import java.time.Instant
+import kotlinx.datetime.Clock
 import java.util.*
 
 /**
@@ -30,12 +32,14 @@ object CredentialProtocol {
     fun createCredentialOffer(
         fromDid: String,
         toDid: String,
-        credentialPreview: com.trustweave.credential.exchange.CredentialPreview,
+        credentialPreview: com.trustweave.credential.exchange.model.CredentialPreview,
         thid: String? = null
     ): DidCommMessage {
+        val goalCode = credentialPreview.options.metadata["goalCode"]?.jsonPrimitive?.content
+        val replacementId = credentialPreview.options.metadata["replacementId"]?.jsonPrimitive?.content
         val body = buildJsonObject {
-            put("goal_code", credentialPreview.goalCode ?: "issue-vc")
-            put("replacement_id", credentialPreview.replacementId)
+            put("goal_code", goalCode ?: DidCommGoalCode.IssueVc.value)
+            put("replacement_id", replacementId)
             put("credential_preview", buildJsonObject {
                 put("@type", "https://didcomm.org/issue-credential/3.0/credential-preview")
                 put("attributes", JsonArray(
@@ -56,7 +60,7 @@ object CredentialProtocol {
             from = fromDid,
             to = listOf(toDid),
             body = body,
-            created = Instant.now().toString(),
+            created = Clock.System.now().toString(),
             thid = thid
         )
     }
@@ -75,7 +79,7 @@ object CredentialProtocol {
         thid: String
     ): DidCommMessage {
         val body = buildJsonObject {
-            put("goal_code", "request-credential")
+            put("goal_code", DidCommGoalCode.RequestCredential.value)
         }
 
         return DidCommMessage(
@@ -84,7 +88,7 @@ object CredentialProtocol {
             from = fromDid,
             to = listOf(toDid),
             body = body,
-            created = Instant.now().toString(),
+            created = Clock.System.now().toString(),
             thid = thid
         )
     }
@@ -94,22 +98,18 @@ object CredentialProtocol {
      *
      * @param fromDid Issuer DID
      * @param toDid Holder DID
-     * @param credential The verifiable credential to issue
+     * @param credential The VerifiableCredential to issue
      * @param thid Thread ID (from the request)
      * @return Credential issue message
      */
     fun createCredentialIssue(
         fromDid: String,
         toDid: String,
-        credential: VerifiableCredential,
+        credential: com.trustweave.credential.model.vc.VerifiableCredential,
         thid: String
     ): DidCommMessage {
-        // Serialize credential to JSON
-        val json = Json { prettyPrint = false; encodeDefaults = false }
-        val credentialJson = json.encodeToJsonElement(
-            VerifiableCredential.serializer(),
-            credential
-        )
+        // Serialize VerifiableCredential to JSON for DIDComm attachment
+        val credentialJson = credential.toJsonObject()
 
         val attachment = DidCommAttachment(
             id = UUID.randomUUID().toString(),
@@ -120,7 +120,7 @@ object CredentialProtocol {
         )
 
         val body = buildJsonObject {
-            put("goal_code", "issue-credential")
+            put("goal_code", DidCommGoalCode.IssueVc.value) // "issue-credential" in DIDComm
         }
 
         return DidCommMessage(
@@ -129,7 +129,7 @@ object CredentialProtocol {
             from = fromDid,
             to = listOf(toDid),
             body = body,
-            created = Instant.now().toString(),
+            created = Clock.System.now().toString(),
             attachments = listOf(attachment),
             thid = thid
         )
@@ -149,7 +149,7 @@ object CredentialProtocol {
         thid: String
     ): DidCommMessage {
         val body = buildJsonObject {
-            put("goal_code", "ack-credential")
+            put("goal_code", DidCommGoalCode.AckCredential.value)
         }
 
         return DidCommMessage(
@@ -158,33 +158,9 @@ object CredentialProtocol {
             from = fromDid,
             to = listOf(toDid),
             body = body,
-            created = Instant.now().toString(),
+            created = Clock.System.now().toString(),
             thid = thid
         )
-    }
-
-    /**
-     * Extracts credential from a credential issue message.
-     *
-     * @param message The credential issue message
-     * @return The verifiable credential, or null if not found
-     */
-    fun extractCredential(message: DidCommMessage): VerifiableCredential? {
-        val attachment = message.attachments.firstOrNull()
-            ?: return null
-
-        val credentialJson = attachment.data.json
-            ?: return null
-
-        val json = Json { prettyPrint = false; ignoreUnknownKeys = true }
-        return try {
-            json.decodeFromJsonElement(
-                VerifiableCredential.serializer(),
-                credentialJson
-            )
-        } catch (e: Exception) {
-            null
-        }
     }
 }
 

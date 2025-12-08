@@ -1,5 +1,7 @@
 package com.trustweave.did
 
+import com.trustweave.did.KeyAlgorithm
+import com.trustweave.did.KeyPurpose
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 
@@ -12,33 +14,33 @@ class DidCreationOptionsTest {
     fun `test default options`() {
         val options = DidCreationOptions()
 
-        assertEquals(DidCreationOptions.KeyAlgorithm.ED25519, options.algorithm)
+        assertEquals(KeyAlgorithm.ED25519, options.algorithm)
         assertEquals(1, options.purposes.size)
-        assertTrue(options.purposes.contains(DidCreationOptions.KeyPurpose.AUTHENTICATION))
+        assertTrue(options.purposes.contains(KeyPurpose.AUTHENTICATION))
         assertTrue(options.additionalProperties.isEmpty())
     }
 
     @Test
     fun `test options with custom algorithm`() {
         val options = DidCreationOptions(
-            algorithm = DidCreationOptions.KeyAlgorithm.SECP256K1
+            algorithm = KeyAlgorithm.SECP256K1
         )
 
-        assertEquals(DidCreationOptions.KeyAlgorithm.SECP256K1, options.algorithm)
+        assertEquals(KeyAlgorithm.SECP256K1, options.algorithm)
     }
 
     @Test
     fun `test options with custom purposes`() {
         val options = DidCreationOptions(
             purposes = listOf(
-                DidCreationOptions.KeyPurpose.AUTHENTICATION,
-                DidCreationOptions.KeyPurpose.KEY_AGREEMENT
+                KeyPurpose.AUTHENTICATION,
+                KeyPurpose.KEY_AGREEMENT
             )
         )
 
         assertEquals(2, options.purposes.size)
-        assertTrue(options.purposes.contains(DidCreationOptions.KeyPurpose.AUTHENTICATION))
-        assertTrue(options.purposes.contains(DidCreationOptions.KeyPurpose.KEY_AGREEMENT))
+        assertTrue(options.purposes.contains(KeyPurpose.AUTHENTICATION))
+        assertTrue(options.purposes.contains(KeyPurpose.KEY_AGREEMENT))
     }
 
     @Test
@@ -58,8 +60,8 @@ class DidCreationOptionsTest {
     @Test
     fun `test toMap conversion`() {
         val options = DidCreationOptions(
-            algorithm = DidCreationOptions.KeyAlgorithm.ED25519,
-            purposes = listOf(DidCreationOptions.KeyPurpose.AUTHENTICATION),
+            algorithm = KeyAlgorithm.ED25519,
+            purposes = listOf(KeyPurpose.AUTHENTICATION),
             additionalProperties = mapOf("custom" to "value")
         )
 
@@ -80,10 +82,10 @@ class DidCreationOptionsTest {
 
         val options = DidCreationOptions.fromMap(map)
 
-        assertEquals(DidCreationOptions.KeyAlgorithm.SECP256K1, options.algorithm)
+        assertEquals(KeyAlgorithm.SECP256K1, options.algorithm)
         assertEquals(2, options.purposes.size)
-        assertTrue(options.purposes.contains(DidCreationOptions.KeyPurpose.AUTHENTICATION))
-        assertTrue(options.purposes.contains(DidCreationOptions.KeyPurpose.ASSERTION))
+        assertTrue(options.purposes.contains(KeyPurpose.AUTHENTICATION))
+        assertTrue(options.purposes.contains(KeyPurpose.ASSERTION))
         assertEquals("value", options.additionalProperties["custom"])
     }
 
@@ -95,44 +97,44 @@ class DidCreationOptionsTest {
 
         val options = DidCreationOptions.fromMap(map)
 
-        assertEquals(DidCreationOptions.KeyAlgorithm.ED25519, options.algorithm)
+        assertEquals(KeyAlgorithm.ED25519, options.algorithm)
     }
 
     @Test
     fun `test builder`() {
         val options = didCreationOptions {
-            algorithm = DidCreationOptions.KeyAlgorithm.SECP256K1
-            purpose(DidCreationOptions.KeyPurpose.AUTHENTICATION)
-            purpose(DidCreationOptions.KeyPurpose.ASSERTION)
+            algorithm = KeyAlgorithm.SECP256K1
+            purpose(KeyPurpose.AUTHENTICATION)
+            purpose(KeyPurpose.ASSERTION)
             property("custom", "value")
         }
 
-        assertEquals(DidCreationOptions.KeyAlgorithm.SECP256K1, options.algorithm)
+        assertEquals(KeyAlgorithm.SECP256K1, options.algorithm)
         assertEquals(2, options.purposes.size)
-        assertTrue(options.purposes.contains(DidCreationOptions.KeyPurpose.AUTHENTICATION))
-        assertTrue(options.purposes.contains(DidCreationOptions.KeyPurpose.ASSERTION))
+        assertTrue(options.purposes.contains(KeyPurpose.AUTHENTICATION))
+        assertTrue(options.purposes.contains(KeyPurpose.ASSERTION))
         assertEquals("value", options.additionalProperties["custom"])
     }
 
     @Test
     fun `test KeyAlgorithm fromName`() {
-        assertEquals(DidCreationOptions.KeyAlgorithm.ED25519,
-            DidCreationOptions.KeyAlgorithm.fromName("Ed25519"))
-        assertEquals(DidCreationOptions.KeyAlgorithm.ED25519,
-            DidCreationOptions.KeyAlgorithm.fromName("ed25519"))
-        assertEquals(DidCreationOptions.KeyAlgorithm.SECP256K1,
-            DidCreationOptions.KeyAlgorithm.fromName("SECP256K1"))
-        assertNull(DidCreationOptions.KeyAlgorithm.fromName("invalid"))
+        assertEquals(KeyAlgorithm.ED25519,
+            KeyAlgorithm.fromName("Ed25519"))
+        assertEquals(KeyAlgorithm.ED25519,
+            KeyAlgorithm.fromName("ed25519"))
+        assertEquals(KeyAlgorithm.SECP256K1,
+            KeyAlgorithm.fromName("SECP256K1"))
+        assertNull(KeyAlgorithm.fromName("invalid"))
     }
 
     @Test
     fun `test KeyPurpose fromName`() {
-        assertEquals(DidCreationOptions.KeyPurpose.AUTHENTICATION,
-            DidCreationOptions.KeyPurpose.fromName("authentication"))
-        assertEquals(DidCreationOptions.KeyPurpose.AUTHENTICATION,
-            DidCreationOptions.KeyPurpose.fromName("AUTHENTICATION"))
-        assertEquals(DidCreationOptions.KeyPurpose.ASSERTION,
-            DidCreationOptions.KeyPurpose.fromName("assertionMethod"))
-        assertNull(DidCreationOptions.KeyPurpose.fromName("invalid"))
+        assertEquals(KeyPurpose.AUTHENTICATION,
+            KeyPurpose.fromName("authentication"))
+        assertEquals(KeyPurpose.AUTHENTICATION,
+            KeyPurpose.fromName("AUTHENTICATION"))
+        assertEquals(KeyPurpose.ASSERTION,
+            KeyPurpose.fromName("assertionMethod"))
+        assertNull(KeyPurpose.fromName("invalid"))
     }
 }

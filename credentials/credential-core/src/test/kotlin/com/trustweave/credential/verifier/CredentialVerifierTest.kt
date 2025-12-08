@@ -3,9 +3,9 @@ package com.trustweave.credential.verifier
 import com.trustweave.credential.CredentialVerificationOptions
 import com.trustweave.credential.CredentialVerificationResult
 import com.trustweave.credential.models.CredentialSchema
-import com.trustweave.credential.models.CredentialStatus
+import com.trustweave.credential.model.vc.CredentialStatus
 import com.trustweave.credential.models.Proof
-import com.trustweave.credential.models.VerifiableCredential
+import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.schema.JsonSchemaValidator
 import com.trustweave.credential.schema.SchemaRegistry
 import com.trustweave.credential.schema.SchemaValidatorRegistry
@@ -26,6 +26,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Comprehensive tests for CredentialVerifier API.
@@ -34,7 +36,7 @@ class CredentialVerifierTest {
 
     private lateinit var verifier: CredentialVerifier
     private lateinit var kms: InMemoryKeyManagementService
-    private var keyId: com.trustweave.core.types.KeyId? = null
+    private var keyId: com.trustweave.core.identifiers.KeyId? = null
     private lateinit var publicKeyJwk: Map<String, Any?>
     private val issuerDid = "did:key:issuer123"
     private lateinit var proofGenerator: Ed25519ProofGenerator
@@ -129,7 +131,7 @@ class CredentialVerifierTest {
         val credential = createTestCredential(
             proof = Proof(
                 type = "",
-                created = java.time.Instant.now().toString(),
+                created = Clock.System.now().toString(),
                 verificationMethod = "did:key:issuer123#key-1",
                 proofPurpose = "assertionMethod"
             )
@@ -158,7 +160,7 @@ class CredentialVerifierTest {
 
     @Test
     fun `test verify expired credential`() = runBlocking {
-        val expirationDate = java.time.Instant.now().minusSeconds(86400).toString()
+        val expirationDate = Clock.System.now().minus(86400.seconds).toString()
         val credential = createTestCredential(expirationDate = expirationDate)
 
         val result = verifier.verify(
@@ -173,7 +175,7 @@ class CredentialVerifierTest {
 
     @Test
     fun `test verify credential skips expiration check when disabled`() = runBlocking {
-        val expirationDate = java.time.Instant.now().minusSeconds(86400).toString()
+        val expirationDate = Clock.System.now().minus(86400.seconds).toString()
         val credential = createTestCredential(expirationDate = expirationDate)
 
         val result = verifier.verify(
@@ -318,7 +320,7 @@ class CredentialVerifierTest {
 
     @Test
     fun `test verify credential with multiple errors`() = runBlocking {
-        val expirationDate = java.time.Instant.now().minusSeconds(86400).toString()
+        val expirationDate = Clock.System.now().minus(86400.seconds).toString()
         val credential = createTestCredentialWithoutProof(
             expirationDate = expirationDate
         )
@@ -342,7 +344,7 @@ class CredentialVerifierTest {
             put("id", "did:key:subject")
             put("name", "John Doe")
         },
-        issuanceDate: String = java.time.Instant.now().toString(),
+        issuanceDate: String = Clock.System.now().toString(),
         expirationDate: String? = null,
         proof: Proof? = null, // null means auto-generate, use createTestCredentialWithoutProof() to skip proof
         schema: CredentialSchema? = null,
@@ -388,7 +390,7 @@ class CredentialVerifierTest {
             put("id", "did:key:subject")
             put("name", "John Doe")
         },
-        issuanceDate: String = java.time.Instant.now().toString(),
+        issuanceDate: String = Clock.System.now().toString(),
         expirationDate: String? = null,
         schema: CredentialSchema? = null,
         credentialStatus: CredentialStatus? = null,

@@ -1,14 +1,19 @@
 package com.trustweave.azurekms
 
 import com.trustweave.core.exception.TrustWeaveException
-import com.trustweave.core.types.KeyId
+import com.trustweave.core.identifiers.KeyId
 import com.trustweave.kms.Algorithm
 import com.trustweave.kms.KeyHandle
 import com.trustweave.kms.KeyManagementService
-import com.trustweave.kms.exception.KmsException
-import com.trustweave.kms.UnsupportedAlgorithmException
+import com.trustweave.kms.results.DeleteKeyResult
+import com.trustweave.kms.results.GenerateKeyResult
+import com.trustweave.kms.results.GetPublicKeyResult
+import com.trustweave.kms.results.SignResult
+import com.trustweave.kms.KmsOptionKeys
+import com.trustweave.kms.util.KmsInputValidator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.slf4j.LoggerFactory
 import com.azure.security.keyvault.keys.KeyClient
 import com.azure.security.keyvault.keys.models.CreateKeyOptions
 import com.azure.security.keyvault.keys.models.KeyType
@@ -61,23 +66,38 @@ class AzureKeyManagementService(
         )
     }
 
+    private val logger = LoggerFactory.getLogger(AzureKeyManagementService::class.java)
+
     override suspend fun getSupportedAlgorithms(): Set<Algorithm> = SUPPORTED_ALGORITHMS
 
     override suspend fun generateKey(
         algorithm: Algorithm,
         options: Map<String, Any?>
-    ): KeyHandle = withContext(Dispatchers.IO) {
+    ): GenerateKeyResult = withContext(Dispatchers.IO) {
         if (!supportsAlgorithm(algorithm)) {
-            throw UnsupportedAlgorithmException(
-                "Algorithm '${algorithm.name}' is not supported by Azure Key Vault. " +
-                "Supported: ${SUPPORTED_ALGORITHMS.joinToString(", ") { it.name }}"
+            return@withContext GenerateKeyResult.Failure.UnsupportedAlgorithm(
+                algorithm = algorithm,
+                supportedAlgorithms = SUPPORTED_ALGORITHMS
             )
+        }
+
+        // Validate key name if provided
+        (options[KmsOptionKeys.KEY_NAME] as? String)?.let { keyName ->
+            val validationError = KmsInputValidator.validateKeyId(keyName)
+            if (validationError != null) {
+                logger.warn("Invalid key name provided: keyName={}, error={}", keyName, validationError)
+                return@withContext GenerateKeyResult.Failure.InvalidOptions(
+                    algorithm = algorithm,
+                    reason = "Invalid key name: $validationError",
+                    invalidOptions = options
+                )
+            }
         }
 
         try {
             val (keyType, curveName) = AlgorithmMapping.toAzureKeyType(algorithm)
 
-            val keyName = (options["keyName"] as? String) ?: "TrustWeave-key-${UUID.randomUUID()}"
+            val keyName = (options[KmsOptionKeys.KEY_NAME] as? String) ?: "TrustWeave-key-${UUID.randomUUID()}"
 
             // Create key options - Azure SDK CreateKeyOptions
             // Note: The Azure SDK CreateKeyOptions API may vary by version
@@ -137,22 +157,46 @@ class AzureKeyManagementService(
 
             val publicKeyJwk = AlgorithmMapping.publicKeyToJwk(publicKeyBytes, algorithm)
 
-            KeyHandle(
-                id = KeyId(keyId ?: keyName), // Use key ID (includes version) or fallback to name
-                algorithm = algorithm.name,
-                publicKeyJwk = publicKeyJwk
+            GenerateKeyResult.Success(
+                KeyHandle(
+                    id = KeyId(keyId ?: keyName), // Use key ID (includes version) or fallback to name
+                    algorithm = algorithm.name,
+                    publicKeyJwk = publicKeyJwk
+                )
             )
         } catch (e: HttpResponseException) {
-            throw mapAzureException(e, "Failed to generate key")
+            logger.error("Failed to generate key in Azure Key Vault", mapOf(
+                "algorithm" to algorithm.name,
+                "statusCode" to (e.response?.statusCode ?: "unknown"),
+                "vaultUrl" to config.vaultUrl
+            ), e)
+            
+            when (e.response?.statusCode) {
+                400, 403 -> GenerateKeyResult.Failure.InvalidOptions(
+                    algorithm = algorithm,
+                    reason = "Failed to generate key: ${e.message ?: "Unknown error"}",
+                    invalidOptions = options
+                )
+                else -> GenerateKeyResult.Failure.Error(
+                    algorithm = algorithm,
+                    reason = "Failed to generate key: ${e.message ?: "Unknown error"}",
+                    cause = e
+                )
+            }
         } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                message = "Failed to generate key: ${e.message ?: "Unknown error"}",
+            logger.error("Unexpected error during key generation in Azure Key Vault", mapOf(
+                "algorithm" to algorithm.name,
+                "vaultUrl" to config.vaultUrl
+            ), e)
+            GenerateKeyResult.Failure.Error(
+                algorithm = algorithm,
+                reason = "Failed to generate key: ${e.message ?: "Unknown error"}",
                 cause = e
             )
         }
     }
 
-    override suspend fun getPublicKey(keyId: KeyId): KeyHandle = withContext(Dispatchers.IO) {
+    override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult = withContext(Dispatchers.IO) {
         try {
             val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId.value)
             val keyVaultKey = keyClient.getKey(resolvedKeyId)
@@ -169,26 +213,55 @@ class AzureKeyManagementService(
             }
 
             val algorithm = AlgorithmMapping.parseAlgorithmFromKeyType(keyType, curveName, keySize)
-                ?: throw TrustWeaveException.Unknown(
-                    message = "Unknown key type: $keyType"
+                ?: return@withContext GetPublicKeyResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Unknown key type: $keyType"
                 )
 
             val publicKeyBytes = extractPublicKeyBytesFromKeyVaultKey(keyVaultKey, algorithm)
 
             val publicKeyJwk = AlgorithmMapping.publicKeyToJwk(publicKeyBytes, algorithm)
 
-            KeyHandle(
-                id = KeyId(keyVaultKey.id ?: resolvedKeyId),
-                algorithm = algorithm.name,
-                publicKeyJwk = publicKeyJwk
+            GetPublicKeyResult.Success(
+                KeyHandle(
+                    id = KeyId(keyVaultKey.id ?: resolvedKeyId),
+                    algorithm = algorithm.name,
+                    publicKeyJwk = publicKeyJwk
+                )
             )
         } catch (e: ResourceNotFoundException) {
-            throw KmsException.KeyNotFound(keyId = keyId.value)
+            logger.debug("Key not found in Azure Key Vault: ${keyId.value}", mapOf(
+                "keyId" to keyId.value,
+                "vaultUrl" to config.vaultUrl
+            ))
+            GetPublicKeyResult.Failure.KeyNotFound(keyId = keyId)
         } catch (e: HttpResponseException) {
-            throw mapAzureException(e, "Failed to get public key")
+            if (e.response?.statusCode == 404) {
+                logger.debug("Key not found in Azure Key Vault: ${keyId.value}", mapOf(
+                    "keyId" to keyId.value,
+                    "vaultUrl" to config.vaultUrl
+                ))
+                GetPublicKeyResult.Failure.KeyNotFound(keyId = keyId)
+            } else {
+                logger.error("Failed to get public key from Azure Key Vault", mapOf(
+                    "keyId" to keyId.value,
+                    "statusCode" to (e.response?.statusCode ?: "unknown"),
+                    "vaultUrl" to config.vaultUrl
+                ), e)
+                GetPublicKeyResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Failed to get public key: ${e.message ?: "Unknown error"}",
+                    cause = e
+                )
+            }
         } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                message = "Failed to get public key: ${e.message ?: "Unknown error"}",
+            logger.error("Unexpected error getting public key from Azure Key Vault", mapOf(
+                "keyId" to keyId.value,
+                "vaultUrl" to config.vaultUrl
+            ), e)
+            GetPublicKeyResult.Failure.Error(
+                keyId = keyId,
+                reason = "Failed to get public key: ${e.message ?: "Unknown error"}",
                 cause = e
             )
         }
@@ -198,27 +271,48 @@ class AzureKeyManagementService(
         keyId: KeyId,
         data: ByteArray,
         algorithm: Algorithm?
-    ): ByteArray = withContext(Dispatchers.IO) {
+    ): SignResult = withContext(Dispatchers.IO) {
+        // Validate input data
+        val dataValidationError = KmsInputValidator.validateSignData(data)
+        if (dataValidationError != null) {
+            logger.warn("Invalid data for signing: keyId={}, error={}", keyId.value, dataValidationError)
+            return@withContext SignResult.Failure.Error(
+                keyId = keyId,
+                reason = dataValidationError
+            )
+        }
+
         try {
             val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId.value)
 
             // Get key metadata to determine algorithm if not provided
-            val signingAlgorithm = algorithm ?: run {
-                val keyVaultKey = keyClient.getKey(resolvedKeyId)
-                val keyType = keyVaultKey.keyType
-                val curveName = keyVaultKey.key?.curveName
-                val keySize = when (keyType) {
-                    KeyType.RSA -> {
-                        val jwk = keyVaultKey.key
-                        jwk?.n?.size?.let { it * 8 } // Convert bytes to bits
-                    }
-                    else -> null
+            val keyVaultKey = keyClient.getKey(resolvedKeyId)
+            val keyType = keyVaultKey.keyType
+            val curveName = keyVaultKey.key?.curveName
+            val keySize = when (keyType) {
+                KeyType.RSA -> {
+                    val jwk = keyVaultKey.key
+                    jwk?.n?.size?.let { it * 8 } // Convert bytes to bits
                 }
+                else -> null
+            }
 
-                AlgorithmMapping.parseAlgorithmFromKeyType(keyType, curveName, keySize)
-                    ?: throw TrustWeaveException.Unknown(
-                        message = "Cannot determine signing algorithm for key: ${keyId.value}"
-                    )
+            val keyAlgorithm = AlgorithmMapping.parseAlgorithmFromKeyType(keyType, curveName, keySize)
+                ?: return@withContext SignResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Cannot determine key algorithm for key: ${keyId.value}"
+                )
+
+            val signingAlgorithm = algorithm ?: keyAlgorithm
+
+            // Check if algorithm is compatible with key
+            if (algorithm != null && !isAlgorithmCompatible(algorithm, keyAlgorithm)) {
+                return@withContext SignResult.Failure.UnsupportedAlgorithm(
+                    keyId = keyId,
+                    requestedAlgorithm = algorithm,
+                    keyAlgorithm = keyAlgorithm,
+                    reason = "Algorithm '${algorithm.name}' is not compatible with key algorithm '${keyAlgorithm.name}'"
+                )
             }
 
             val azureSignatureAlgorithm = AlgorithmMapping.toAzureSignatureAlgorithm(signingAlgorithm)
@@ -240,20 +334,46 @@ class AzureKeyManagementService(
                 .buildClient()
 
             val signResult = cryptographyClient.sign(azureSignatureAlgorithm, data)
-            signResult.signature
+            SignResult.Success(signResult.signature)
         } catch (e: ResourceNotFoundException) {
-            throw KmsException.KeyNotFound(keyId = keyId.value)
+            logger.debug("Key not found for signing in Azure Key Vault: ${keyId.value}", mapOf(
+                "keyId" to keyId.value,
+                "vaultUrl" to config.vaultUrl
+            ))
+            SignResult.Failure.KeyNotFound(keyId = keyId)
         } catch (e: HttpResponseException) {
-            throw mapAzureException(e, "Failed to sign data")
+            if (e.response?.statusCode == 404) {
+                logger.debug("Key not found for signing in Azure Key Vault: ${keyId.value}", mapOf(
+                    "keyId" to keyId.value,
+                    "vaultUrl" to config.vaultUrl
+                ))
+                SignResult.Failure.KeyNotFound(keyId = keyId)
+            } else {
+                logger.error("Failed to sign data in Azure Key Vault", mapOf(
+                    "keyId" to keyId.value,
+                    "statusCode" to (e.response?.statusCode ?: "unknown"),
+                    "vaultUrl" to config.vaultUrl
+                ), e)
+                SignResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Failed to sign data: ${e.message ?: "Unknown error"}",
+                    cause = e
+                )
+            }
         } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                message = "Failed to sign data: ${e.message ?: "Unknown error"}",
+            logger.error("Unexpected error during signing in Azure Key Vault", mapOf(
+                "keyId" to keyId.value,
+                "vaultUrl" to config.vaultUrl
+            ), e)
+            SignResult.Failure.Error(
+                keyId = keyId,
+                reason = "Failed to sign data: ${e.message ?: "Unknown error"}",
                 cause = e
             )
         }
     }
 
-    override suspend fun deleteKey(keyId: KeyId): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult = withContext(Dispatchers.IO) {
         try {
             val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId.value)
 
@@ -264,40 +384,57 @@ class AzureKeyManagementService(
 
             // Optionally purge the key (hard delete) if requested
             // For now, we'll just soft delete
-            true
+            DeleteKeyResult.Deleted
         } catch (e: ResourceNotFoundException) {
-            false // Key doesn't exist
+            logger.debug("Key not found for deletion in Azure Key Vault (idempotent): ${keyId.value}", mapOf(
+                "keyId" to keyId.value,
+                "vaultUrl" to config.vaultUrl
+            ))
+            DeleteKeyResult.NotFound // Key doesn't exist (idempotent success)
         } catch (e: HttpResponseException) {
-            throw mapAzureException(e, "Failed to delete key")
+            if (e.response?.statusCode == 404) {
+                logger.debug("Key not found for deletion in Azure Key Vault (idempotent): ${keyId.value}", mapOf(
+                    "keyId" to keyId.value,
+                    "vaultUrl" to config.vaultUrl
+                ))
+                DeleteKeyResult.NotFound
+            } else {
+                logger.error("Failed to delete key in Azure Key Vault", mapOf(
+                    "keyId" to keyId.value,
+                    "statusCode" to (e.response?.statusCode ?: "unknown"),
+                    "vaultUrl" to config.vaultUrl
+                ), e)
+                DeleteKeyResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Failed to delete key: ${e.message ?: "Unknown error"}",
+                    cause = e
+                )
+            }
         } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                message = "Failed to delete key: ${e.message ?: "Unknown error"}",
+            logger.error("Unexpected error during key deletion in Azure Key Vault", mapOf(
+                "keyId" to keyId.value,
+                "vaultUrl" to config.vaultUrl
+            ), e)
+            DeleteKeyResult.Failure.Error(
+                keyId = keyId,
+                reason = "Failed to delete key: ${e.message ?: "Unknown error"}",
                 cause = e
             )
         }
     }
 
     /**
-     * Maps Azure Key Vault exceptions to TrustWeave exceptions.
+     * Checks if two algorithms are compatible for signing.
      */
-    private fun mapAzureException(e: HttpResponseException, operation: String): Exception {
-        return when (e.response?.statusCode) {
-            404 -> {
-                // Extract keyId from message if possible, otherwise use generic message
-                val errorMessage = e.message ?: "Key not found"
-                KmsException.KeyNotFound(
-                    keyId = errorMessage
-                )
-            }
-            403 -> TrustWeaveException.Unknown(
-                message = "Access denied to Azure Key Vault. Check permissions: ${e.message ?: "Unknown error"}",
-                cause = e
-            )
-            else -> TrustWeaveException.Unknown(
-                message = "$operation: ${e.message ?: "Unknown error"}",
-                cause = e
-            )
-        }
+    private fun isAlgorithmCompatible(requested: Algorithm, key: Algorithm): Boolean {
+        // Same algorithm is always compatible
+        if (requested == key) return true
+        
+        // For RSA, any RSA variant can sign with any other RSA variant (same key type)
+        if (requested is Algorithm.RSA && key is Algorithm.RSA) return true
+        
+        // For ECC, algorithms must match exactly
+        return false
     }
 
     /**

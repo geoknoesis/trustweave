@@ -5,9 +5,12 @@ plugins {
 
 group = "com.trustweave.kms"
 dependencies {
-    implementation(project(":common"))
-    implementation(project(":credentials:credential-core"))
-    implementation(project(":kms:kms-core"))
+    // API dependencies - exposed transitively to consumers
+    api(project(":common"))
+    api(project(":kms:kms-core"))
+    
+    // Implementation dependencies - internal only
+    implementation(project(":credentials:credential-api"))
     implementation(libs.kotlinx.coroutines.core)
 
     // HTTP client for Fortanix DSM API
@@ -16,6 +19,9 @@ dependencies {
     // JSON serialization
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+
+    // Logging
+    implementation("org.slf4j:slf4j-api:2.0.9")
 
     // Test dependencies
     testImplementation(project(":testkit"))

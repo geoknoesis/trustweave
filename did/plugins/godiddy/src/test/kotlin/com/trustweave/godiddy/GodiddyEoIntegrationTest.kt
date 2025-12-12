@@ -131,7 +131,7 @@ class GodiddyEoIntegrationTest {
         val (provenanceArtifact, provenanceDigest) = TestDataBuilders.createProvenanceArtifact(
             "provenance-1",
             "EO Data Collection",
-            issuerDid.value
+            issuerDid
         )
 
         val (qualityArtifact, qualityDigest) = TestDataBuilders.createQualityReportArtifact(

@@ -3,6 +3,11 @@ package com.trustweave.credential
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 import kotlinx.datetime.Clock
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.did.identifiers.Did
 
 /**
  * Comprehensive tests for CredentialIssuanceOptions, CredentialVerificationOptions, PresentationOptions.
@@ -154,13 +159,14 @@ class CredentialOptionsTest {
     @Test
     fun `test CredentialVerificationResult`() {
         val credential = com.trustweave.credential.model.vc.VerifiableCredential(
-            id = "test-credential",
-            type = listOf("VerifiableCredential"),
-            issuer = "did:key:issuer",
-            credentialSubject = kotlinx.serialization.json.buildJsonObject {
-                put("id", kotlinx.serialization.json.JsonPrimitive("did:key:subject"))
-            },
-            issuanceDate = Clock.System.now().toString()
+            id = CredentialId("test-credential"),
+            type = listOf(CredentialType.VerifiableCredential),
+            issuer = Issuer.fromDid(Did("did:key:issuer")),
+            credentialSubject = CredentialSubject.fromDid(
+                Did("did:key:subject"),
+                claims = emptyMap()
+            ),
+            issuanceDate = Clock.System.now()
         )
         val result = CredentialVerificationResult.Valid(
             credential = credential,
@@ -186,13 +192,14 @@ class CredentialOptionsTest {
     @Test
     fun `test PresentationVerificationResult`() {
         val credential = com.trustweave.credential.model.vc.VerifiableCredential(
-            id = "test-credential",
-            type = listOf("VerifiableCredential"),
-            issuer = "did:key:issuer",
-            credentialSubject = kotlinx.serialization.json.buildJsonObject {
-                put("id", kotlinx.serialization.json.JsonPrimitive("did:key:subject"))
-            },
-            issuanceDate = Clock.System.now().toString()
+            id = CredentialId("test-credential"),
+            type = listOf(CredentialType.VerifiableCredential),
+            issuer = Issuer.fromDid(Did("did:key:issuer")),
+            credentialSubject = CredentialSubject.fromDid(
+                Did("did:key:subject"),
+                claims = emptyMap()
+            ),
+            issuanceDate = Clock.System.now()
         )
         val credentialResult = CredentialVerificationResult.Valid(credential)
         val result = PresentationVerificationResult(

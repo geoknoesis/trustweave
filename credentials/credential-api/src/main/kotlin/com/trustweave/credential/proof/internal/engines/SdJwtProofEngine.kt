@@ -326,13 +326,13 @@ internal class SdJwtProofEngine(
     }
     
     private fun getSigner(keyId: String): JWSSigner? {
-        // Get KMS from config
-        val kms = getKms() ?: return null
+        // Get signer function if available (preferred), otherwise get KMS and create signer
+        val signerFunction = getSignerFunction() ?: run {
+            val kms = getKms() ?: return null
+            createKmsSigner(kms)
+        }
         
-        // Get signer function if available, otherwise use KMS directly
-        val signerFunction = getSignerFunction() ?: createKmsSigner(kms)
-        
-        // Create JWSSigner adapter that uses KMS
+        // Create JWSSigner adapter that uses signer function
         return KmsJwsSigner(keyId, signerFunction)
     }
     

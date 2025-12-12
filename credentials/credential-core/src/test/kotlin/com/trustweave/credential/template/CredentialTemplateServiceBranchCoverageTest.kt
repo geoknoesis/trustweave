@@ -1,185 +1,189 @@
 package com.trustweave.credential.template
 
 import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.identifiers.SchemaId
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.format.ProofSuiteId
+import com.trustweave.did.identifiers.Did
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
+import java.time.Duration
 
 /**
- * Comprehensive branch coverage tests for CredentialTemplateService.
+ * Comprehensive branch coverage tests for TemplateService.
  * Tests all methods, branches, and edge cases.
  */
 class CredentialTemplateServiceBranchCoverageTest {
 
-    private lateinit var service: CredentialTemplateService
+    private lateinit var service: TemplateService
 
     @BeforeEach
-    fun setup() {
-        service = CredentialTemplateService()
+    fun setup() = runBlocking {
+        service = TemplateServices.default()
+        service.clear()
     }
 
     @Test
-    fun `test CredentialTemplateService createTemplate stores template`() = runBlocking {
+    fun `test TemplateService createTemplate stores template`() = runBlocking {
         val template = createTestTemplate()
 
-        val created = service.createTemplate(template)
+        service.createTemplate(template)
 
-        assertEquals(template, created)
-        assertEquals(template, service.getTemplate(template.id))
+        val retrieved = service.getTemplate(template.id)
+        assertNotNull(retrieved)
+        assertEquals(template.id, retrieved?.id)
     }
 
     @Test
-    fun `test CredentialTemplateService getTemplate returns null for non-existent`() {
+    fun `test TemplateService getTemplate returns null for non-existent`() = runBlocking {
         assertNull(service.getTemplate("non-existent"))
     }
 
     @Test
-    fun `test CredentialTemplateService issueFromTemplate with all required fields`() = runBlocking {
+    fun `test TemplateService createIssuanceRequest with all required fields`() = runBlocking {
         val template = createTestTemplate(requiredFields = listOf("name", "email"))
         service.createTemplate(template)
 
-        val subject = buildJsonObject {
-            put("name", "John Doe")
-            put("email", "john@example.com")
-        }
-
-        val credential = service.issueFromTemplate(
-            template.id,
-            subject,
-            mapOf("issuer" to "did:key:issuer")
+        val claims = mapOf(
+            "name" to JsonPrimitive("John Doe"),
+            "email" to JsonPrimitive("john@example.com")
         )
 
-        assertNotNull(credential)
-        assertEquals("did:key:issuer", credential.issuer)
-        assertEquals(template.type, credential.type)
+        val request = service.createIssuanceRequest(
+            templateId = template.id,
+            format = ProofSuiteId.VC_LD,
+            issuer = Issuer.fromDid(Did("did:key:issuer")),
+            credentialSubject = CredentialSubject.fromDid(Did("did:key:subject"), claims = claims)
+        )
+
+        assertNotNull(request)
+        assertEquals(Issuer.fromDid(Did("did:key:issuer")), request.issuer)
+        assertEquals(template.type, request.type)
     }
 
     @Test
-    fun `test CredentialTemplateService issueFromTemplate throws when template not found`() = runBlocking {
-        val subject = buildJsonObject {
-            put("name", "John Doe")
-        }
-
+    fun `test TemplateService createIssuanceRequest throws when template not found`() = runBlocking {
         assertFailsWith<IllegalArgumentException> {
-            service.issueFromTemplate("non-existent", subject)
+            service.createIssuanceRequest(
+                templateId = "non-existent",
+                format = ProofSuiteId.VC_LD,
+                issuer = Issuer.fromDid(Did("did:key:issuer")),
+                credentialSubject = CredentialSubject.fromDid(Did("did:key:subject"), claims = mapOf("name" to JsonPrimitive("John Doe")))
+            )
         }
     }
 
     @Test
-    fun `test CredentialTemplateService issueFromTemplate throws when required field missing`() = runBlocking {
+    fun `test TemplateService createIssuanceRequest throws when required field missing`() = runBlocking {
         val template = createTestTemplate(requiredFields = listOf("name", "email"))
         service.createTemplate(template)
 
-        val subject = buildJsonObject {
-            put("name", "John Doe")
-            // Missing email
-        }
-
         assertFailsWith<IllegalArgumentException> {
-            service.issueFromTemplate(template.id, subject, mapOf("issuer" to "did:key:issuer"))
+            service.createIssuanceRequest(
+                templateId = template.id,
+                format = ProofSuiteId.VC_LD,
+                issuer = Issuer.fromDid(Did("did:key:issuer")),
+                credentialSubject = CredentialSubject.fromDid(Did("did:key:subject"), claims = mapOf("name" to JsonPrimitive("John Doe")))
+                // Missing email
+            )
         }
     }
 
     @Test
-    fun `test CredentialTemplateService issueFromTemplate uses default issuer`() = runBlocking {
+    fun `test TemplateService createIssuanceRequest with custom issuer`() = runBlocking {
         val template = createTestTemplate(defaultIssuer = "did:key:default-issuer")
         service.createTemplate(template)
 
-        val subject = buildJsonObject {
-            put("name", "John Doe")
-        }
-
-        val credential = service.issueFromTemplate(template.id, subject)
-
-        assertEquals("did:key:default-issuer", credential.issuer)
-    }
-
-    @Test
-    fun `test CredentialTemplateService issueFromTemplate uses options issuer over default`() = runBlocking {
-        val template = createTestTemplate(defaultIssuer = "did:key:default-issuer")
-        service.createTemplate(template)
-
-        val subject = buildJsonObject {
-            put("name", "John Doe")
-        }
-
-        val credential = service.issueFromTemplate(
-            template.id,
-            subject,
-            mapOf("issuer" to "did:key:custom-issuer")
+        val request = service.createIssuanceRequest(
+            templateId = template.id,
+            format = ProofSuiteId.VC_LD,
+            issuer = Issuer.fromDid(Did("did:key:custom-issuer")),
+            credentialSubject = CredentialSubject.fromDid(Did("did:key:subject"), claims = mapOf("name" to JsonPrimitive("John Doe")))
         )
 
-        assertEquals("did:key:custom-issuer", credential.issuer)
+        assertEquals(Issuer.fromDid(Did("did:key:custom-issuer")), request.issuer)
     }
 
     @Test
-    fun `test CredentialTemplateService issueFromTemplate throws when no issuer`() = runBlocking {
+    fun `test TemplateService createIssuanceRequest uses provided issuer`() = runBlocking {
+        val template = createTestTemplate(defaultIssuer = "did:key:default-issuer")
+        service.createTemplate(template)
+
+        val request = service.createIssuanceRequest(
+            templateId = template.id,
+            format = ProofSuiteId.VC_LD,
+            issuer = Issuer.fromDid(Did("did:key:custom-issuer")),
+            credentialSubject = CredentialSubject.fromDid(Did("did:key:subject"), claims = mapOf("name" to JsonPrimitive("John Doe")))
+        )
+
+        assertEquals(Issuer.fromDid(Did("did:key:custom-issuer")), request.issuer)
+    }
+
+    @Test
+    fun `test TemplateService createIssuanceRequest works without default issuer`() = runBlocking {
         val template = createTestTemplate(defaultIssuer = null)
         service.createTemplate(template)
 
-        val subject = buildJsonObject {
-            put("name", "John Doe")
-        }
-
-        assertFailsWith<IllegalArgumentException> {
-            service.issueFromTemplate(template.id, subject)
-        }
-    }
-
-    @Test
-    fun `test CredentialTemplateService issueFromTemplate calculates expiration date`() = runBlocking {
-        val template = createTestTemplate(defaultValidityDays = 365)
-        service.createTemplate(template)
-
-        val subject = buildJsonObject {
-            put("name", "John Doe")
-        }
-
-        val credential = service.issueFromTemplate(
-            template.id,
-            subject,
-            mapOf("issuer" to "did:key:issuer")
+        val request = service.createIssuanceRequest(
+            templateId = template.id,
+            format = ProofSuiteId.VC_LD,
+            issuer = Issuer.fromDid(Did("did:key:custom-issuer")),
+            credentialSubject = CredentialSubject.fromDid(Did("did:key:subject"), claims = mapOf("name" to JsonPrimitive("John Doe")))
         )
 
-        assertNotNull(credential.expirationDate)
+        assertNotNull(request)
     }
 
     @Test
-    fun `test CredentialTemplateService issueFromTemplate with custom ID`() = runBlocking {
+    fun `test TemplateService createIssuanceRequest calculates expiration date`() = runBlocking {
+        val template = createTestTemplate(defaultValidity = Duration.ofDays(365))
+        service.createTemplate(template)
+
+        val request = service.createIssuanceRequest(
+            templateId = template.id,
+            format = ProofSuiteId.VC_LD,
+            issuer = Issuer.fromDid(Did("did:key:issuer")),
+            credentialSubject = CredentialSubject.fromDid(Did("did:key:subject"), claims = mapOf("name" to JsonPrimitive("John Doe")))
+        )
+
+        assertNotNull(request.validUntil)
+    }
+
+    @Test
+    fun `test TemplateService createIssuanceRequest with custom issuedAt`() = runBlocking {
         val template = createTestTemplate()
         service.createTemplate(template)
 
-        val subject = buildJsonObject {
-            put("name", "John Doe")
-        }
-
-        val credential = service.issueFromTemplate(
-            template.id,
-            subject,
-            mapOf("issuer" to "did:key:issuer", "id" to "custom-credential-id")
+        val customIssuedAt = kotlinx.datetime.Clock.System.now().minus(kotlin.time.Duration.parse("PT1D"))
+        val request = service.createIssuanceRequest(
+            templateId = template.id,
+            format = ProofSuiteId.VC_LD,
+            issuer = Issuer.fromDid(Did("did:key:issuer")),
+            credentialSubject = CredentialSubject.fromDid(Did("did:key:subject"), claims = mapOf("name" to JsonPrimitive("John Doe"))),
+            issuedAt = customIssuedAt
         )
 
-        assertEquals("custom-credential-id", credential.id)
+        assertEquals(customIssuedAt, request.issuedAt)
     }
 
     @Test
-    fun `test CredentialTemplateService issueFromTemplate without expiration`() = runBlocking {
-        val template = createTestTemplate(defaultValidityDays = null)
+    fun `test TemplateService createIssuanceRequest without expiration`() = runBlocking {
+        val template = createTestTemplate(defaultValidity = null)
         service.createTemplate(template)
 
-        val subject = buildJsonObject {
-            put("name", "John Doe")
-        }
-
-        val credential = service.issueFromTemplate(
-            template.id,
-            subject,
-            mapOf("issuer" to "did:key:issuer")
+        val request = service.createIssuanceRequest(
+            templateId = template.id,
+            format = ProofSuiteId.VC_LD,
+            issuer = Issuer.fromDid(Did("did:key:issuer")),
+            credentialSubject = CredentialSubject.fromDid(Did("did:key:subject"), claims = mapOf("name" to JsonPrimitive("John Doe")))
         )
 
-        assertNull(credential.expirationDate)
+        assertNull(request.validUntil)
     }
 
     @Test
@@ -206,7 +210,7 @@ class CredentialTemplateServiceBranchCoverageTest {
     }
 
     @Test
-    fun `test CredentialTemplateService deleteTemplate returns false`() {
+    fun `test TemplateService deleteTemplate returns false`() = runBlocking {
         val deleted = service.deleteTemplate("non-existent")
 
         assertFalse(deleted)
@@ -225,26 +229,27 @@ class CredentialTemplateServiceBranchCoverageTest {
     }
 
     @Test
-    fun `test CredentialTemplateService issueFromTemplate with optional fields`() = runBlocking {
+    fun `test TemplateService createIssuanceRequest with optional fields`() = runBlocking {
         val template = createTestTemplate(
             requiredFields = listOf("name"),
             optionalFields = listOf("email", "phone")
         )
         service.createTemplate(template)
 
-        val subject = buildJsonObject {
-            put("name", "John Doe")
-            put("email", "john@example.com")
-            put("phone", "123-456-7890")
-        }
-
-        val credential = service.issueFromTemplate(
-            template.id,
-            subject,
-            mapOf("issuer" to "did:key:issuer")
+        val claims = mapOf(
+            "name" to JsonPrimitive("John Doe"),
+            "email" to JsonPrimitive("john@example.com"),
+            "phone" to JsonPrimitive("123-456-7890")
         )
 
-        assertNotNull(credential)
+        val request = service.createIssuanceRequest(
+            templateId = template.id,
+            format = ProofSuiteId.VC_LD,
+            issuer = Issuer.fromDid(Did("did:key:issuer")),
+            credentialSubject = CredentialSubject.fromDid(Did("did:key:subject"), claims = claims)
+        )
+
+        assertNotNull(request)
     }
 
     private fun createTestTemplate(
@@ -253,17 +258,17 @@ class CredentialTemplateServiceBranchCoverageTest {
         schemaId: String = "schema-1",
         type: List<String> = listOf("VerifiableCredential", "PersonCredential"),
         defaultIssuer: String? = null,
-        defaultValidityDays: Int? = null,
+        defaultValidity: Duration? = null,
         requiredFields: List<String> = emptyList(),
         optionalFields: List<String> = emptyList()
     ): CredentialTemplate {
         return CredentialTemplate(
             id = id,
             name = name,
-            schemaId = schemaId,
-            type = type,
+            schemaId = SchemaId(schemaId),
+            type = type.map { CredentialType.fromString(it) },
             defaultIssuer = defaultIssuer,
-            defaultValidityDays = defaultValidityDays,
+            defaultValidity = defaultValidity,
             requiredFields = requiredFields,
             optionalFields = optionalFields
         )

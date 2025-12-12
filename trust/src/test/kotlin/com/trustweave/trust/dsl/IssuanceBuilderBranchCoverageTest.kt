@@ -1,14 +1,16 @@
 package com.trustweave.trust.dsl
 
 import com.trustweave.credential.model.vc.VerifiableCredential
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.resolver.DidResolver
 import com.trustweave.kms.KeyHandle
+import com.trustweave.kms.results.SignResult
+import com.trustweave.kms.results.GenerateKeyResult
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.testkit.services.TestkitDidMethodFactory
 import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.TrustWeaveConfig
-import com.trustweave.trust.dsl.trustWeave
+import com.trustweave.trust.dsl.createTestCredentialService
 import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.trust.dsl.credential.credential
@@ -19,6 +21,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
+import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.*
 
 /**
@@ -27,7 +30,7 @@ import kotlin.test.*
  */
 class IssuanceBuilderBranchCoverageTest {
 
-    private lateinit var trustWeave: TrustWeaveConfig
+    private lateinit var trustWeave: TrustWeave
     private lateinit var kms: InMemoryKeyManagementService
 
     @BeforeEach
@@ -38,7 +41,31 @@ class IssuanceBuilderBranchCoverageTest {
         // Capture KMS reference for closure
         val kmsRef = kms
 
-        trustWeave = trustWeave {
+        // Create DID resolver that uses the DID registry from TrustWeave
+        val tempTrustWeave = TrustWeave.build {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory()
+            )
+            keys {
+                custom(kmsRef)
+                signer { data, keyId ->
+                    when (val result = kmsRef.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
+                        is SignResult.Success -> result.signature
+                        else -> throw IllegalStateException("Signing failed: $result")
+                    }
+                }
+            }
+            did {
+                method("key") {}
+            }
+        }
+        
+        val didResolver = DidResolver { did ->
+            tempTrustWeave.getDslContext().getConfig().registries.didRegistry.resolve(did.value)
+        }
+        
+        val credentialService = createTestCredentialService(kms = kmsRef, didResolver = didResolver)
+        trustWeave = TrustWeave.build {
             factories(
                 didMethodFactory = TestkitDidMethodFactory()
             )
@@ -46,7 +73,10 @@ class IssuanceBuilderBranchCoverageTest {
                 custom(kmsRef)
                 // Provide signer function directly to avoid reflection
                 signer { data, keyId ->
-                    kmsRef.sign(com.trustweave.core.identifiers.KeyId(keyId), data)
+                    when (val result = kmsRef.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
+                        is SignResult.Success -> result.signature
+                        else -> throw IllegalStateException("Signing failed: $result")
+                    }
                 }
             }
             did {
@@ -56,6 +86,8 @@ class IssuanceBuilderBranchCoverageTest {
                 defaultProofType(ProofType.Ed25519Signature2020)
                 autoAnchor(false)
             }
+            // Set CredentialService as issuer for issuance builder
+            issuer(credentialService)
         }
     }
 
@@ -73,7 +105,10 @@ class IssuanceBuilderBranchCoverageTest {
 
     @Test
     fun `test branch credential from inline builder`() = runBlocking {
-        val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
+        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
+            is GenerateKeyResult.Success -> result.keyHandle
+            else -> throw IllegalStateException("Failed to generate key: $result")
+        }
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
 
@@ -94,7 +129,10 @@ class IssuanceBuilderBranchCoverageTest {
 
     @Test
     fun `test branch credential from pre-built`() = runBlocking {
-        val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
+        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
+            is GenerateKeyResult.Success -> result.keyHandle
+            else -> throw IllegalStateException("Failed to generate key: $result")
+        }
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
 
@@ -136,7 +174,10 @@ class IssuanceBuilderBranchCoverageTest {
 
     @Test
     fun `test branch issuer DID provided`() = runBlocking {
-        val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
+        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
+            is GenerateKeyResult.Success -> result.keyHandle
+            else -> throw IllegalStateException("Failed to generate key: $result")
+        }
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
 
@@ -181,7 +222,10 @@ class IssuanceBuilderBranchCoverageTest {
 
     @Test
     fun `test branch proof type from default config`() = runBlocking {
-        val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
+        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
+            is GenerateKeyResult.Success -> result.keyHandle
+            else -> throw IllegalStateException("Failed to generate key: $result")
+        }
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
 
@@ -199,12 +243,17 @@ class IssuanceBuilderBranchCoverageTest {
         }.getOrFail()
 
         assertNotNull(issuedCredential.proof)
-        assertEquals("Ed25519Signature2020", issuedCredential.proof?.type)
+        assertTrue(issuedCredential.proof is com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof)
+        val linkedDataProof = issuedCredential.proof as com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
+        assertEquals("Ed25519Signature2020", linkedDataProof.type)
     }
 
     @Test
     fun `test branch proof type from custom value`() = runBlocking {
-        val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
+        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
+            is GenerateKeyResult.Success -> result.keyHandle
+            else -> throw IllegalStateException("Failed to generate key: $result")
+        }
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
 
@@ -218,18 +267,23 @@ class IssuanceBuilderBranchCoverageTest {
                 issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
-            withProof(ProofType.Ed25519Signature2020) // Use supported proof type
+            withProof(com.trustweave.credential.format.ProofSuiteId.VC_LD) // Use supported proof suite
         }.getOrFail()
 
         assertNotNull(issuedCredential.proof)
-        assertEquals("Ed25519Signature2020", issuedCredential.proof?.type)
+        assertTrue(issuedCredential.proof is com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof)
+        val linkedDataProof = issuedCredential.proof as com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
+        assertEquals("Ed25519Signature2020", linkedDataProof.type)
     }
 
     // ========== Challenge and Domain Branches ==========
 
     @Test
     fun `test branch challenge provided`() = runBlocking {
-        val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
+        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
+            is GenerateKeyResult.Success -> result.keyHandle
+            else -> throw IllegalStateException("Failed to generate key: $result")
+        }
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
 
@@ -247,12 +301,17 @@ class IssuanceBuilderBranchCoverageTest {
         }.getOrFail()
 
         assertNotNull(issuedCredential.proof)
-        assertEquals("challenge-123", issuedCredential.proof?.challenge)
+        assertTrue(issuedCredential.proof is com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof)
+        val linkedDataProof = issuedCredential.proof as com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
+        assertEquals("challenge-123", linkedDataProof.additionalProperties["challenge"]?.jsonPrimitive?.content)
     }
 
     @Test
     fun `test branch domain provided`() = runBlocking {
-        val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
+        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
+            is GenerateKeyResult.Success -> result.keyHandle
+            else -> throw IllegalStateException("Failed to generate key: $result")
+        }
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
 
@@ -270,12 +329,17 @@ class IssuanceBuilderBranchCoverageTest {
         }.getOrFail()
 
         assertNotNull(issuedCredential.proof)
-        assertEquals("example.com", issuedCredential.proof?.domain)
+        assertTrue(issuedCredential.proof is com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof)
+        val linkedDataProof = issuedCredential.proof as com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
+        assertEquals("example.com", linkedDataProof.additionalProperties["domain"]?.jsonPrimitive?.content)
     }
 
     @Test
     fun `test branch challenge and domain both provided`() = runBlocking {
-        val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
+        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
+            is GenerateKeyResult.Success -> result.keyHandle
+            else -> throw IllegalStateException("Failed to generate key: $result")
+        }
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
 
@@ -294,15 +358,20 @@ class IssuanceBuilderBranchCoverageTest {
         }.getOrFail()
 
         assertNotNull(issuedCredential.proof)
-        assertEquals("challenge-123", issuedCredential.proof?.challenge)
-        assertEquals("example.com", issuedCredential.proof?.domain)
+        assertTrue(issuedCredential.proof is com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof)
+        val linkedDataProof = issuedCredential.proof as com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
+        assertEquals("challenge-123", linkedDataProof.additionalProperties["challenge"]?.jsonPrimitive?.content)
+        assertEquals("example.com", linkedDataProof.additionalProperties["domain"]?.jsonPrimitive?.content)
     }
 
     // ========== Auto-Anchor Branches ==========
 
     @Test
     fun `test branch auto-anchor disabled in config`() = runBlocking {
-        val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
+        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
+            is GenerateKeyResult.Success -> result.keyHandle
+            else -> throw IllegalStateException("Failed to generate key: $result")
+        }
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
 
@@ -348,7 +417,10 @@ class IssuanceBuilderBranchCoverageTest {
             }
         }
 
-        val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
+        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
+            is GenerateKeyResult.Success -> result.keyHandle
+            else -> throw IllegalStateException("Failed to generate key: $result")
+        }
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
 
@@ -389,7 +461,10 @@ class IssuanceBuilderBranchCoverageTest {
             }
         }
 
-        val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
+        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
+            is GenerateKeyResult.Success -> result.keyHandle
+            else -> throw IllegalStateException("Failed to generate key: $result")
+        }
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
 
@@ -429,7 +504,10 @@ class IssuanceBuilderBranchCoverageTest {
             }
         }
 
-        val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
+        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
+            is GenerateKeyResult.Success -> result.keyHandle
+            else -> throw IllegalStateException("Failed to generate key: $result")
+        }
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
 
@@ -470,7 +548,10 @@ class IssuanceBuilderBranchCoverageTest {
             }
         }
 
-        val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
+        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
+            is GenerateKeyResult.Success -> result.keyHandle
+            else -> throw IllegalStateException("Failed to generate key: $result")
+        }
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
 
@@ -516,7 +597,10 @@ class IssuanceBuilderBranchCoverageTest {
             }
         }
 
-        val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
+        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
+            is GenerateKeyResult.Success -> result.keyHandle
+            else -> throw IllegalStateException("Failed to generate key: $result")
+        }
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
 

@@ -2,6 +2,7 @@ package com.trustweave.trust.dsl.wallet
 
 import com.trustweave.wallet.Wallet
 import com.trustweave.wallet.services.WalletCreationOptionsBuilder
+import com.trustweave.did.identifiers.Did
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -49,6 +50,13 @@ class WalletBuilder(
             "Holder DID must start with 'did:'. Got: $did" 
         }
         this.holderDid = did
+    }
+    
+    /**
+     * Set wallet holder DID.
+     */
+    fun holder(did: com.trustweave.did.identifiers.Did) {
+        this.holderDid = did.value
     }
 
     /**

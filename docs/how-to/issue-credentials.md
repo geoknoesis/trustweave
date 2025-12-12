@@ -45,7 +45,7 @@ fun main() = runBlocking {
 
     // Create issuer DID
     import com.trustweave.trust.types.DidCreationResult
-    import com.trustweave.trust.types.IssuanceResult
+    import com.trustweave.credential.results.IssuanceResult
     
     val didResult = trustWeave.createDid {
         method("key")
@@ -142,14 +142,25 @@ val issuerKeyId = verificationMethod.id.substringAfter("#")
 
 ### Step 2: Build Credential Subject
 
-Create the credential subject with claims:
+Create the credential subject with claims using the DSL:
 
 ```kotlin
-val subject = buildJsonObject {
-    put("id", "did:key:holder")
-    put("name", "Alice")
-    put("email", "alice@example.com")
-    put("role", "Engineer")
+// Note: When using the DSL, you build the subject directly in the credential block
+// This example shows the DSL syntax (preferred):
+subject {
+    id("did:key:holder")
+    "name" to "Alice"
+    "email" to "alice@example.com"
+    "role" to "Engineer"
+}
+
+// For nested objects, use:
+subject {
+    id("did:key:holder")
+    "address" {
+        "street" to "123 Main St"
+        "city" to "New York"
+    }
 }
 ```
 

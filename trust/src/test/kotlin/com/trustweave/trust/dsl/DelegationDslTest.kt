@@ -1,7 +1,9 @@
 package com.trustweave.trust.dsl
 
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.resolver.DidResolutionResult
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -23,12 +25,12 @@ class DelegationDslTest {
             when (did) {
                 delegatorDid -> DidResolutionResult.Success(
                     document = DidDocument(
-                        id = delegatorDid,
-                        capabilityDelegation = listOf("$delegateDid#key-1")
+                        id = Did(delegatorDid),
+                        capabilityDelegation = listOf(VerificationMethodId.parse("$delegateDid#key-1", Did(delegatorDid)))
                     )
                 )
                 delegateDid -> DidResolutionResult.Success(
-                    document = DidDocument(id = delegateDid)
+                    document = DidDocument(id = Did(delegateDid))
                 )
                 else -> null
             }
@@ -56,12 +58,12 @@ class DelegationDslTest {
             when (did) {
                 delegatorDid -> DidResolutionResult.Success(
                     document = DidDocument(
-                        id = delegatorDid,
-                        capabilityDelegation = listOf("$delegateDid#key-1")
+                        id = Did(delegatorDid),
+                        capabilityDelegation = listOf(VerificationMethodId.parse("$delegateDid#key-1", Did(delegatorDid)))
                     )
                 )
                 delegateDid -> DidResolutionResult.Success(
-                    document = DidDocument(id = delegateDid)
+                    document = DidDocument(id = Did(delegateDid))
                 )
                 else -> null
             }

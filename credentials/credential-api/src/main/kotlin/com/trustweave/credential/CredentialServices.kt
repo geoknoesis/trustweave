@@ -45,3 +45,51 @@ fun credentialService(
     )
 }
 
+/**
+ * Creates a credential service with all built-in proof formats and a custom signer.
+ * 
+ * This overload allows providing a signer function that will be used by proof engines
+ * for signing operations. The signer function takes the data to sign and the key ID.
+ * 
+ * **Example Usage:**
+ * ```kotlin
+ * val signer: suspend (ByteArray, String) -> ByteArray = { data, keyId ->
+ *     kms.sign(KeyId(keyId), data).signature
+ * }
+ * val service = credentialService(
+ *     didResolver = didResolver,
+ *     signer = signer
+ * )
+ * ```
+ * 
+ * @param didResolver Required DID resolver for issuer/subject resolution
+ * @param signer Signer function for proof generation
+ * @param schemaRegistry Optional schema registry for credential validation
+ * @param revocationManager Optional revocation manager for credential revocation checking
+ * @return CredentialService instance with all built-in proof formats and signer configured
+ */
+fun credentialService(
+    didResolver: DidResolver,
+    signer: suspend (ByteArray, String) -> ByteArray,
+    schemaRegistry: SchemaRegistry? = null,
+    revocationManager: CredentialRevocationManager? = null
+): CredentialService {
+    // Create proof engines with signer configured
+    val config = com.trustweave.credential.spi.proof.ProofEngineConfig(
+        didResolver = didResolver,
+        properties = mapOf("signer" to signer)
+    )
+    val vcLdEngine = com.trustweave.credential.proof.internal.engines.VcLdProofEngine(config)
+    val sdJwtEngine = com.trustweave.credential.proof.internal.engines.SdJwtProofEngine(config)
+    val engines = mapOf(
+        com.trustweave.credential.format.ProofSuiteId.VC_LD to vcLdEngine,
+        com.trustweave.credential.format.ProofSuiteId.SD_JWT_VC to sdJwtEngine
+    )
+    return DefaultCredentialService(
+        engines = engines,
+        didResolver = didResolver,
+        schemaRegistry = schemaRegistry,
+        revocationManager = revocationManager
+    )
+}
+

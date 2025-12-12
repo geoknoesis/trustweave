@@ -23,7 +23,15 @@ open class ExchangeException(
         val availableProtocols: List<String> = emptyList()
     ) : ExchangeException(
         code = "PROTOCOL_NOT_REGISTERED",
-        message = "Protocol '$protocolName' is not registered. Available protocols: ${availableProtocols.joinToString()}"
+        message = if (availableProtocols.isEmpty()) {
+            "Protocol '$protocolName' is not registered. No protocols available."
+        } else {
+            "Protocol '$protocolName' is not registered. Available protocols: ${availableProtocols.joinToString()}"
+        },
+        context = mapOf(
+            "protocolName" to protocolName,
+            "availableProtocols" to availableProtocols
+        )
     )
 
     /**
@@ -47,7 +55,11 @@ open class ExchangeException(
     ) : ExchangeException(
         code = "MISSING_REQUIRED_OPTION",
         message = protocolName?.let { "Missing required option '$optionName' for protocol '$it'" }
-            ?: "Missing required option '$optionName'"
+            ?: "Missing required option '$optionName'",
+        context = buildMap {
+            put("optionName", optionName)
+            protocolName?.let { put("protocolName", it) }
+        }
     )
 
     /**
@@ -74,7 +86,11 @@ open class ExchangeException(
     ) : ExchangeException(
         code = "OFFER_NOT_FOUND",
         message = protocolName?.let { "Offer '$offerId' not found for protocol '$it'" }
-            ?: "Offer '$offerId' not found"
+            ?: "Offer '$offerId' not found",
+        context = buildMap {
+            put("offerId", offerId)
+            protocolName?.let { put("protocolName", it) }
+        }
     )
 
     /**
@@ -124,9 +140,14 @@ open class ExchangeException(
         code = "EXCHANGE_UNKNOWN_ERROR",
         message = errorType?.let { "Unknown exchange error ($it): $reason" }
             ?: "Unknown exchange error: $reason",
+        context = buildMap {
+            put("reason", reason)
+            errorType?.let { put("errorType", it) }
+        },
         cause = cause
     )
 }
+
 
 
 

@@ -51,7 +51,10 @@ class DidDocumentDslTest {
             algorithm("Ed25519")
         }.getOrFail()
 
-        val keyHandle = kms.generateKey("Ed25519")
+        val keyHandle = when (val result = kms.generateKey("Ed25519")) {
+            is com.trustweave.kms.results.GenerateKeyResult.Success -> result.keyHandle
+            else -> throw IllegalStateException("Failed to generate key: $result")
+        }
 
         val updatedDoc = trustWeave.updateDid {
             did(did.value)
@@ -177,8 +180,14 @@ class DidDocumentDslTest {
             algorithm("Ed25519")
         }.getOrFail()
 
-        val keyHandle1 = kms.generateKey("Ed25519")
-        val keyHandle2 = kms.generateKey("Ed25519")
+        val keyHandle1 = when (val result = kms.generateKey("Ed25519")) {
+            is com.trustweave.kms.results.GenerateKeyResult.Success -> result.keyHandle
+            else -> throw IllegalStateException("Failed to generate key: $result")
+        }
+        val keyHandle2 = when (val result = kms.generateKey("Ed25519")) {
+            is com.trustweave.kms.results.GenerateKeyResult.Success -> result.keyHandle
+            else -> throw IllegalStateException("Failed to generate key: $result")
+        }
 
         val updatedDoc = trustWeave.updateDid {
             did(did.value)

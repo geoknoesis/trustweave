@@ -113,14 +113,14 @@ class ProofValidator(
             }
             "capabilityInvocation" -> {
                 document.capabilityInvocation.any { ref ->
-                    ref == normalizedVmRef || ref == verificationMethod ||
-                    ref == "#${verificationMethod.substringAfterLast("#")}"
+                    ref.value == normalizedVmRef || ref.value == verificationMethod ||
+                    ref.value == "#${verificationMethod.substringAfterLast("#")}"
                 }
             }
             "capabilityDelegation" -> {
                 document.capabilityDelegation.any { ref ->
-                    ref == normalizedVmRef || ref == verificationMethod ||
-                    ref == "#${verificationMethod.substringAfterLast("#")}"
+                    ref.value == normalizedVmRef || ref.value == verificationMethod ||
+                    ref.value == "#${verificationMethod.substringAfterLast("#")}"
                 }
             }
             else -> {

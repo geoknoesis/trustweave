@@ -7,6 +7,7 @@ import com.trustweave.trust.dsl.trustWeave
 import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.trust.dsl.credential.credential
+import com.trustweave.kms.results.SignResult
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -34,7 +35,10 @@ class VerificationDslTest {
                 custom(kmsRef)
                 // Provide signer function directly to avoid reflection
                 signer { data, keyId ->
-                    kmsRef.sign(com.trustweave.core.identifiers.KeyId(keyId), data)
+                    when (val result = kmsRef.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
+                        is SignResult.Success -> result.signature
+                        else -> throw IllegalStateException("Signing failed: $result")
+                    }
                 }
             }
 
@@ -83,7 +87,6 @@ class VerificationDslTest {
         }
 
         assertNotNull(result)
-        // Note: checkRevocation is a boolean in CredentialVerificationOptions, not in result
         // The result contains the verification outcome
     }
 

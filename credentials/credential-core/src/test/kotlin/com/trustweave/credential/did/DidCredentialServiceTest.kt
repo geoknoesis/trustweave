@@ -2,17 +2,23 @@ package com.trustweave.credential.did
 
 import com.trustweave.credential.CredentialIssuanceOptions
 import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.CredentialType
 import com.trustweave.credential.issuer.CredentialIssuer
 import com.trustweave.credential.proof.Ed25519ProofGenerator
 import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.did.DidCreationOptions
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.identifiers.Did
+import com.trustweave.core.identifiers.Iri
 import com.trustweave.did.DidMethod
 import com.trustweave.did.registry.DidMethodRegistry
 import com.trustweave.did.registry.DefaultDidMethodRegistry
 import com.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
+import kotlinx.datetime.Instant
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
@@ -53,22 +59,22 @@ class DidLinkedCredentialServiceTest {
                 override val method: String = "key"
 
                 override suspend fun createDid(options: DidCreationOptions): DidDocument {
-                    val id = options.additionalProperties["id"] as? String ?: "did:key:${UUID.randomUUID()}"
-                    return DidDocument(id = id)
+                    val idString = options.additionalProperties["id"] as? String ?: "did:key:${UUID.randomUUID()}"
+                    return DidDocument(id = Did(idString))
                 }
 
-                override suspend fun resolveDid(did: String): DidResolutionResult {
+                override suspend fun resolveDid(did: Did): DidResolutionResult {
                     return DidResolutionResult.Success(
                         document = DidDocument(id = did)
                     )
                 }
 
                 override suspend fun updateDid(
-                    did: String,
+                    did: Did,
                     updater: (DidDocument) -> DidDocument
                 ): DidDocument = updater(DidDocument(id = did))
 
-                override suspend fun deactivateDid(did: String): Boolean = true
+                override suspend fun deactivateDid(did: Did): Boolean = true
             })
         }
 
@@ -93,14 +99,14 @@ class DidLinkedCredentialServiceTest {
         )
 
         assertNotNull(credential)
-        assertEquals("did:key:issuer", credential.issuer)
-        assertTrue(credential.type.contains("PersonCredential"))
+        assertEquals("did:key:issuer", credential.issuer.id.value)
+        assertTrue(credential.type.any { it.value == "PersonCredential" })
         assertNotNull(credential.proof)
 
-        val subject = credential.credentialSubject.jsonObject
-        assertEquals("did:key:subject", subject["id"]?.jsonPrimitive?.content)
-        assertEquals("John Doe", subject["name"]?.jsonPrimitive?.content)
-        assertEquals("john@example.com", subject["email"]?.jsonPrimitive?.content)
+        val subject = credential.credentialSubject
+        assertEquals("did:key:subject", subject.id.value)
+        assertEquals("John Doe", subject.claims["name"]?.jsonPrimitive?.content)
+        assertEquals("john@example.com", subject.claims["email"]?.jsonPrimitive?.content)
     }
 
     @Test
@@ -124,13 +130,13 @@ class DidLinkedCredentialServiceTest {
     @Test
     fun `test resolveCredentialSubject with DID`() = runBlocking {
         val credential = VerifiableCredential(
-            type = listOf("VerifiableCredential"),
-            issuer = "did:key:issuer",
-            credentialSubject = buildJsonObject {
-                put("id", "did:key:subject")
-                put("name", "John Doe")
-            },
-            issuanceDate = "2024-01-01T00:00:00Z"
+            type = listOf(CredentialType.VerifiableCredential),
+            issuer = Issuer.fromDid(Did("did:key:issuer")),
+            credentialSubject = CredentialSubject.fromDid(
+                Did("did:key:subject"),
+                claims = mapOf("name" to JsonPrimitive("John Doe"))
+            ),
+            issuanceDate = Instant.parse("2024-01-01T00:00:00Z")
         )
 
         val subjectDid = didCredentialService.resolveCredentialSubject(credential)
@@ -141,13 +147,13 @@ class DidLinkedCredentialServiceTest {
     @Test
     fun `test resolveCredentialSubject without DID in subject`() = runBlocking {
         val credential = VerifiableCredential(
-            type = listOf("VerifiableCredential"),
-            issuer = "did:key:issuer",
-            credentialSubject = buildJsonObject {
-                put("name", "John Doe")
-                // No "id" field
-            },
-            issuanceDate = "2024-01-01T00:00:00Z"
+            type = listOf(CredentialType.VerifiableCredential),
+            issuer = Issuer.fromDid(Did("did:key:issuer")),
+            credentialSubject = CredentialSubject.fromIri(
+                Iri("urn:no-id"),
+                claims = mapOf("name" to JsonPrimitive("John Doe"))
+            ),
+            issuanceDate = Instant.parse("2024-01-01T00:00:00Z")
         )
 
         val subjectDid = didCredentialService.resolveCredentialSubject(credential)
@@ -158,13 +164,13 @@ class DidLinkedCredentialServiceTest {
     @Test
     fun `test resolveCredentialSubject with non-DID subject`() = runBlocking {
         val credential = VerifiableCredential(
-            type = listOf("VerifiableCredential"),
-            issuer = "did:key:issuer",
-            credentialSubject = buildJsonObject {
-                put("id", "https://example.com/subject")
-                put("name", "John Doe")
-            },
-            issuanceDate = "2024-01-01T00:00:00Z"
+            type = listOf(CredentialType.VerifiableCredential),
+            issuer = Issuer.fromDid(Did("did:key:issuer")),
+            credentialSubject = CredentialSubject.fromIri(
+                Iri("https://example.com/subject"),
+                claims = mapOf("name" to JsonPrimitive("John Doe"))
+            ),
+            issuanceDate = Instant.parse("2024-01-01T00:00:00Z")
         )
 
         val subjectDid = didCredentialService.resolveCredentialSubject(credential)
@@ -175,10 +181,13 @@ class DidLinkedCredentialServiceTest {
     @Test
     fun `test verifyIssuerDid with valid DID`() = runBlocking {
         val credential = VerifiableCredential(
-            type = listOf("VerifiableCredential"),
-            issuer = "did:key:issuer",
-            credentialSubject = buildJsonObject { put("id", "did:key:subject") },
-            issuanceDate = "2024-01-01T00:00:00Z"
+            type = listOf(CredentialType.VerifiableCredential),
+            issuer = Issuer.fromDid(Did("did:key:issuer")),
+            credentialSubject = CredentialSubject.fromDid(
+                Did("did:key:subject"),
+                claims = emptyMap()
+            ),
+            issuanceDate = Instant.parse("2024-01-01T00:00:00Z")
         )
 
         val isValid = didCredentialService.verifyIssuerDid(credential)
@@ -204,8 +213,8 @@ class DidLinkedCredentialServiceTest {
         )
 
         assertNotNull(credential)
-        val subject = credential.credentialSubject.jsonObject
-        assertEquals("value", subject["string"]?.jsonPrimitive?.content)
+        val subject = credential.credentialSubject
+        assertEquals("value", subject.claims["string"]?.jsonPrimitive?.content)
     }
 }
 

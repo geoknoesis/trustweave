@@ -13,6 +13,11 @@ import com.trustweave.testkit.services.TestkitDidMethodFactory
 import com.trustweave.testkit.services.TestkitTrustRegistryFactory
 import com.trustweave.testkit.services.TestkitKmsFactory
 import com.trustweave.testkit.getOrFail
+import com.trustweave.kms.results.SignResult
+import com.trustweave.did.resolver.DidResolver
+import com.trustweave.credential.credentialService
+import com.trustweave.trust.dsl.TrustWeaveRegistries
+import com.trustweave.anchor.BlockchainAnchorRegistry
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -26,23 +31,65 @@ import kotlinx.datetime.Clock
  */
 class WebOfTrustIntegrationTest {
 
-    @Test
-    fun `test complete trust registry workflow`() = runBlocking {
-        val kms = InMemoryKeyManagementService()
-        val kmsRef = kms
-
-        val trustLayer = TrustWeave.build {
+    // Helper function to create TrustWeave with CredentialService
+    private suspend fun createTrustWeaveWithCredentialService(
+        kms: InMemoryKeyManagementService
+    ): TrustWeave {
+        val signer: suspend (ByteArray, String) -> ByteArray = { data, keyId ->
+            when (val result = kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
+                is SignResult.Success -> result.signature
+                else -> throw IllegalStateException("Signing failed: $result")
+            }
+        }
+        
+        // Create a shared DidMethodRegistry to ensure DIDs are stored in the same registry
+        // that the resolver uses. This ensures DIDs created via createDid are resolvable.
+        val sharedDidRegistry = com.trustweave.did.registry.DidMethodRegistry()
+        
+        // Create resolver that uses the shared registry
+        val didResolver = DidResolver { did: com.trustweave.did.identifiers.Did ->
+            sharedDidRegistry.resolve(did.value) as com.trustweave.did.resolver.DidResolutionResult
+        }
+        
+        val credentialService = com.trustweave.credential.credentialService(
+            didResolver = didResolver,
+            signer = signer
+        )
+        
+        val finalTrustWeave = TrustWeave.build(
+            registries = TrustWeaveRegistries(
+                didRegistry = sharedDidRegistry,
+                blockchainRegistry = BlockchainAnchorRegistry(),
+                credentialRegistry = null,
+                proofRegistry = null
+            )
+        ) {
             factories(
-                didMethodFactory = TestkitDidMethodFactory(),
+                didMethodFactory = TestkitDidMethodFactory(didRegistry = sharedDidRegistry),
                 trustRegistryFactory = TestkitTrustRegistryFactory()
             )
             keys {
-                custom(kmsRef)
-                signer { data, keyId -> kmsRef.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
+                custom(kms)
+                signer { data, keyId ->
+                    when (val result = kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
+                        is SignResult.Success -> result.signature
+                        else -> throw IllegalStateException("Signing failed: $result")
+                    }
+                }
             }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
+            issuer(credentialService)
         }
+        
+        return finalTrustWeave
+    }
+
+    @Test
+    fun `test complete trust registry workflow`() = runBlocking {
+        val kms = InMemoryKeyManagementService()
+        
+        val trustLayer = createTrustWeaveWithCredentialService(kms)
 
         val issuerDid = trustLayer.createDid {
             method(DidMethods.KEY)
@@ -74,7 +121,7 @@ class WebOfTrustIntegrationTest {
             ?: throw IllegalStateException("No verification method found in issuer DID document")
 
         // Extract key ID from verification method ID (e.g., "did:key:xxx#key-1" -> "key-1")
-        val keyId = verificationMethod.id.substringAfter("#")
+        val keyId = verificationMethod.id.value.substringAfter("#")
 
         // Issue credential using the key ID from the DID document
         // The IssuanceDsl will construct verificationMethodId as "$issuerDid#$keyId" which matches the DID document
@@ -199,8 +246,8 @@ class WebOfTrustIntegrationTest {
             registry?.addTrustRelationship(anchor2.value, anchor3.value)
 
             val path = findTrustPath(
-                com.trustweave.trust.types.VerifierIdentity(com.trustweave.trust.types.Did(anchor1.value)),
-                com.trustweave.trust.types.IssuerIdentity.from(anchor3.value, "key-1")
+                com.trustweave.did.identifiers.Did(anchor1.value),
+                com.trustweave.did.identifiers.Did(anchor3.value)
             )
             assertTrue(path is com.trustweave.trust.types.TrustPath.Verified)
             val verified = path as com.trustweave.trust.types.TrustPath.Verified

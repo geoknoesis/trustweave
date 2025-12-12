@@ -7,6 +7,9 @@ import java.security.*
 import java.security.spec.*
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import org.bouncycastle.jce.ECNamedCurveTable
+import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec
 
 /**
  * In-memory implementation of KeyManagementService for testing.
@@ -162,11 +165,25 @@ class InMemoryKeyManagementService : KeyManagementService {
                 )
             }
 
-            val signature = Signature.getInstance(signAlgorithm).apply {
-                initSign(keyPair.private)
-                update(data)
+            // For secp256k1, use BouncyCastle provider (keys are generated with BouncyCastle)
+            val signature = if (effectiveAlgorithm is Algorithm.Secp256k1) {
+                // Ensure BouncyCastle provider is available
+                if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+                    Security.addProvider(BouncyCastleProvider())
+                }
+                // Use BouncyCastle provider for secp256k1 signing
+                // The key was generated with BouncyCastle, so we must use BouncyCastle for signing
+                val signer = Signature.getInstance(signAlgorithm, BouncyCastleProvider.PROVIDER_NAME)
+                signer.initSign(keyPair.private)
+                signer.update(data)
+                signer.sign()
+            } else {
+                Signature.getInstance(signAlgorithm).apply {
+                    initSign(keyPair.private)
+                    update(data)
+                }.sign()
             }
-            SignResult.Success(signature.sign())
+            SignResult.Success(signature)
         } catch (e: Exception) {
             SignResult.Failure.Error(
                 keyId = keyId,
@@ -177,7 +194,9 @@ class InMemoryKeyManagementService : KeyManagementService {
     }
 
     override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult {
-        val existed = keys.remove(keyId) != null || keyMetadata.remove(keyId) != null
+        val keyExisted = keys.remove(keyId) != null
+        val metadataExisted = keyMetadata.remove(keyId) != null
+        val existed = keyExisted || metadataExisted
         return if (existed) {
             DeleteKeyResult.Deleted
         } else {
@@ -233,13 +252,29 @@ class InMemoryKeyManagementService : KeyManagementService {
     }
 
     private fun generateSecp256k1KeyPair(): KeyPair {
+        // Try standard JVM first
         try {
             val keyPairGenerator = KeyPairGenerator.getInstance("EC")
             val ecGenParameterSpec = ECGenParameterSpec("secp256k1")
             keyPairGenerator.initialize(ecGenParameterSpec)
             return keyPairGenerator.generateKeyPair()
+        } catch (e: InvalidAlgorithmParameterException) {
+            // secp256k1 not supported by default JVM, try BouncyCastle
+            try {
+                // Ensure BouncyCastle provider is available
+                if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+                    Security.addProvider(BouncyCastleProvider())
+                }
+                
+                val parameterSpec = ECNamedCurveTable.getParameterSpec("secp256k1")
+                val keyPairGenerator = KeyPairGenerator.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME)
+                keyPairGenerator.initialize(parameterSpec)
+                return keyPairGenerator.generateKeyPair()
+            } catch (e2: Exception) {
+                throw UnsupportedOperationException("secp256k1 not available: ${e2.message}", e2)
+            }
         } catch (e: Exception) {
-            throw UnsupportedOperationException("secp256k1 not available: ${e.message}")
+            throw UnsupportedOperationException("secp256k1 not available: ${e.message}", e)
         }
     }
 }
@@ -263,20 +298,16 @@ suspend fun InMemoryKeyManagementService.generateKey(
     }
 }
 
+// Extension function that returns GenerateKeyResult (for tests that check result types)
 suspend fun InMemoryKeyManagementService.generateKey(
     algorithmName: String,
     options: Map<String, Any?>
-): KeyHandle {
-    val algorithm = Algorithm.parse(algorithmName) ?: throw IllegalArgumentException("Unknown algorithm: $algorithmName")
-    return when (val result = generateKey(algorithm, options)) {
-        is GenerateKeyResult.Success -> result.keyHandle
-        is GenerateKeyResult.Failure.UnsupportedAlgorithm -> throw UnsupportedAlgorithmException(
-            result.reason ?: "Algorithm '${result.algorithm.name}' is not supported. " +
-                "Supported: ${result.supportedAlgorithms.joinToString(", ") { it.name }}"
-        )
-        is GenerateKeyResult.Failure.InvalidOptions -> throw IllegalArgumentException(result.reason)
-        is GenerateKeyResult.Failure.Error -> throw RuntimeException(result.reason, result.cause)
-    }
+): GenerateKeyResult {
+    val algorithm = Algorithm.parse(algorithmName) ?: return GenerateKeyResult.Failure.Error(
+        algorithm = Algorithm.Ed25519, // Dummy algorithm for error case
+        reason = "Unknown algorithm: $algorithmName"
+    )
+    return generateKey(algorithm, options)
 }
 
 suspend fun InMemoryKeyManagementService.getPublicKey(keyId: KeyId): KeyHandle {
@@ -313,6 +344,16 @@ suspend fun InMemoryKeyManagementService.signLegacy(
 ): ByteArray {
     val algorithm = algorithmName?.let { Algorithm.parse(it) }
     return signLegacy(keyId, data, algorithm)
+}
+
+// Extension function for sign that accepts string algorithm name
+suspend fun InMemoryKeyManagementService.sign(
+    keyId: KeyId,
+    data: ByteArray,
+    algorithmName: String?
+): SignResult {
+    val algorithm = algorithmName?.let { Algorithm.parse(it) }
+    return sign(keyId, data, algorithm)
 }
 
 suspend fun InMemoryKeyManagementService.deleteKey(keyId: KeyId): Boolean {

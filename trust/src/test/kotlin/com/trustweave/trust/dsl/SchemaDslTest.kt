@@ -2,7 +2,8 @@ package com.trustweave.trust.dsl
 
 import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.schema.SchemaRegistry
-import com.trustweave.credential.SchemaFormat
+import com.trustweave.credential.model.SchemaFormat
+import com.trustweave.kms.results.SignResult
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.testkit.services.TestkitDidMethodFactory
 import com.trustweave.trust.dsl.TrustWeaveConfig
@@ -34,7 +35,12 @@ class SchemaDslTest {
             )
             keys {
                 custom(kms)
-                signer { data, keyId -> kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
+                signer { data, keyId ->
+                    when (val result = kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
+                        is SignResult.Success -> result.signature
+                        else -> throw IllegalStateException("Signing failed: $result")
+                    }
+                }
             }
             did {
                 method("key") {
@@ -47,8 +53,7 @@ class SchemaDslTest {
             }
         }
 
-        // Clear schema registry before each test
-        SchemaRegistry.clear()
+        // Schema registry is managed by TrustWeave instance
     }
 
     @Test
@@ -57,7 +62,6 @@ class SchemaDslTest {
 
         val result = trustWeave.registerSchema {
             id(schemaId)
-            type(SchemaValidatorTypes.JSON_SCHEMA)
             jsonSchema {
                 put("\$schema", "http://json-schema.org/draft-07/schema#")
                 put("type", "object")
@@ -70,8 +74,8 @@ class SchemaDslTest {
         }
 
         assertTrue(result.success)
-        assertEquals(schemaId, result.schemaId)
-        assertTrue(SchemaRegistry.isRegistered(schemaId))
+        assertNotNull(result.schemaId)
+        assertEquals(schemaId, result.schemaId?.value)
     }
 
     @Test
@@ -80,7 +84,6 @@ class SchemaDslTest {
 
         val result = trustWeave.registerSchema {
             id(schemaId)
-            type(SchemaValidatorTypes.SHACL)
             shacl {
                 put("@context", "https://www.w3.org/ns/shacl#")
                 put("sh:targetClass", "PersonCredential")
@@ -88,14 +91,14 @@ class SchemaDslTest {
         }
 
         assertTrue(result.success)
-        assertEquals(schemaId, result.schemaId)
+        assertNotNull(result.schemaId)
+        assertEquals(schemaId, result.schemaId?.value)
     }
 
     @Test
     fun `test register schema without id throws exception`() = runBlocking {
         assertFailsWith<IllegalStateException> {
             trustWeave.registerSchema {
-                type(SchemaValidatorTypes.JSON_SCHEMA)
                 jsonSchema {
                     put("type", "object")
                 }
@@ -108,7 +111,6 @@ class SchemaDslTest {
         assertFailsWith<IllegalStateException> {
             trustWeave.registerSchema {
                 id("https://example.com/schemas/test")
-                type(SchemaValidatorTypes.JSON_SCHEMA)
             }
         }
     }
@@ -120,7 +122,6 @@ class SchemaDslTest {
         // Register schema
         trustWeave.registerSchema {
             id(schemaId)
-            type(SchemaValidatorTypes.JSON_SCHEMA)
             jsonSchema {
                 put("\$schema", "http://json-schema.org/draft-07/schema#")
                 put("type", "object")
@@ -134,13 +135,13 @@ class SchemaDslTest {
 
         // Create credential matching schema
         val credential = VerifiableCredential(
-            type = listOf("VerifiableCredential", "PersonCredential"),
-            issuer = "did:key:issuer",
-            credentialSubject = buildJsonObject {
-                put("id", "did:key:subject")
-                put("name", "Alice")
-            },
-            issuanceDate = "2024-01-01T00:00:00Z"
+            type = listOf(com.trustweave.credential.model.CredentialType.VerifiableCredential, com.trustweave.credential.model.CredentialType.Custom("PersonCredential")),
+            issuer = com.trustweave.credential.model.vc.Issuer.fromDid(com.trustweave.did.identifiers.Did("did:key:issuer")),
+            credentialSubject = com.trustweave.credential.model.vc.CredentialSubject.fromDid(
+                com.trustweave.did.identifiers.Did("did:key:subject"),
+                claims = mapOf("name" to kotlinx.serialization.json.JsonPrimitive("Alice"))
+            ),
+            issuanceDate = kotlinx.datetime.Instant.parse("2024-01-01T00:00:00Z")
         )
 
         // Note: Actual validation requires a registered validator
@@ -156,7 +157,7 @@ class SchemaDslTest {
         builder.put("key2", 123)
         builder.put("key3", true)
         builder.put("nested") {
-            put("nestedKey", "nestedValue")
+            "nestedKey" to "nestedValue"
         }
 
         val jsonObject = builder.build()
@@ -192,7 +193,6 @@ class SchemaDslTest {
 
         val result = trustWeave.registerSchema {
             id(schemaId)
-            type(SchemaValidatorTypes.JSON_SCHEMA)
             definition(definition)
         }
 
@@ -202,12 +202,13 @@ class SchemaDslTest {
     @Test
     fun `test validate credential against unregistered schema throws exception`() = runBlocking {
         val credential = VerifiableCredential(
-            type = listOf("VerifiableCredential"),
-            issuer = "did:key:issuer",
-            credentialSubject = buildJsonObject {
-                put("id", "did:key:subject")
-            },
-            issuanceDate = "2024-01-01T00:00:00Z"
+            type = listOf(com.trustweave.credential.model.CredentialType.VerifiableCredential),
+            issuer = com.trustweave.credential.model.vc.Issuer.fromDid(com.trustweave.did.identifiers.Did("did:key:issuer")),
+            credentialSubject = com.trustweave.credential.model.vc.CredentialSubject.fromDid(
+                com.trustweave.did.identifiers.Did("did:key:subject"),
+                claims = emptyMap()
+            ),
+            issuanceDate = kotlinx.datetime.Instant.parse("2024-01-01T00:00:00Z")
         )
 
         assertFailsWith<IllegalArgumentException> {

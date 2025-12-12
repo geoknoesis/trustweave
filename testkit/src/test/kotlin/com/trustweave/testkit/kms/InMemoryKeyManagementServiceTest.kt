@@ -2,7 +2,6 @@ package com.trustweave.testkit.kms
 
 import com.trustweave.core.identifiers.KeyId
 import com.trustweave.kms.Algorithm
-import com.trustweave.kms.KeyNotFoundException
 import com.trustweave.kms.UnsupportedAlgorithmException
 import kotlinx.coroutines.runBlocking
 import kotlin.test.*
@@ -49,7 +48,7 @@ class InMemoryKeyManagementServiceTest {
             }
 
             assertNotNull(handle)
-            assertEquals("SECP256K1", handle.algorithm)
+            assertEquals("secp256k1", handle.algorithm)
             val jwk = handle.publicKeyJwk
             assertNotNull(jwk)
             assertEquals("EC", jwk["kty"])
@@ -196,7 +195,8 @@ class InMemoryKeyManagementServiceTest {
             }
             val data = "test data".toByteArray()
 
-            val signResult = kms.sign(KeyId("ecdsa-key"), data, "SHA256withECDSA")
+            // Sign with the key's algorithm (secp256k1) - pass Algorithm? explicitly to avoid ambiguity
+            val signResult = kms.sign(KeyId("ecdsa-key"), data, null as Algorithm?)
             val signature = when (signResult) {
                 is com.trustweave.kms.results.SignResult.Success -> signResult.signature
                 else -> throw IllegalStateException("Failed to sign: $signResult")
@@ -227,13 +227,10 @@ class InMemoryKeyManagementServiceTest {
         }
 
         val deleteResult = kms.deleteKey(KeyId("key-to-delete"))
-        val deleted = when (deleteResult) {
-            is com.trustweave.kms.results.DeleteKeyResult.Deleted -> true
-            is com.trustweave.kms.results.DeleteKeyResult.NotFound -> false
-            is com.trustweave.kms.results.DeleteKeyResult.Failure -> throw IllegalStateException("Failed to delete key: $deleteResult")
-        }
-
-        assertTrue(deleted)
+        assertTrue(
+            deleteResult is com.trustweave.kms.results.DeleteKeyResult.Deleted,
+            "Expected Deleted, got: $deleteResult"
+        )
         val getResult = kms.getPublicKey(KeyId("key-to-delete"))
         assertTrue(getResult is com.trustweave.kms.results.GetPublicKeyResult.Failure.KeyNotFound)
     }
@@ -297,7 +294,7 @@ class InMemoryKeyManagementServiceTest {
             }
 
             assertEquals("Ed25519", retrieved1.algorithm)
-            assertEquals("SECP256K1", retrieved2.algorithm)
+            assertEquals("secp256k1", retrieved2.algorithm)
             assertNotEquals(key1.id, key2.id)
         } catch (e: UnsupportedOperationException) {
             // Skip test if algorithms are not available in this JVM

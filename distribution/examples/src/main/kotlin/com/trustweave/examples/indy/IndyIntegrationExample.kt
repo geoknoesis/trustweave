@@ -4,10 +4,9 @@ import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.types.VerificationResult
 import com.trustweave.trust.types.*
 import com.trustweave.core.*
-import com.trustweave.credential.proof.ProofType
+import com.trustweave.credential.model.ProofType
 import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.did.exception.DidException
-import com.trustweave.credential.exception.CredentialException
 import com.trustweave.wallet.exception.WalletException
 import com.trustweave.anchor.exceptions.BlockchainException
 import com.trustweave.core.exception.TrustWeaveException
@@ -15,7 +14,7 @@ import com.trustweave.anchor.indy.IndyBlockchainAnchorClient
 import com.trustweave.anchor.indy.IndyIntegration
 import com.trustweave.testkit.getOrFail
 import com.trustweave.trust.types.DidCreationResult
-import com.trustweave.trust.types.IssuanceResult
+import com.trustweave.credential.results.IssuanceResult
 import com.trustweave.trust.types.WalletCreationResult
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
@@ -88,7 +87,19 @@ fun main() = runBlocking {
             println("  Available methods: ${issuerDidResult.availableMethods.joinToString(", ")}")
             return@runBlocking
         }
-        else -> {
+        is DidCreationResult.Failure.KeyGenerationFailed -> {
+            println("✗ Failed to create issuer DID: ${issuerDidResult.reason}")
+            return@runBlocking
+        }
+        is DidCreationResult.Failure.DocumentCreationFailed -> {
+            println("✗ Failed to create issuer DID: ${issuerDidResult.reason}")
+            return@runBlocking
+        }
+        is DidCreationResult.Failure.InvalidConfiguration -> {
+            println("✗ Failed to create issuer DID: ${issuerDidResult.reason}")
+            return@runBlocking
+        }
+        is DidCreationResult.Failure.Other -> {
             println("✗ Failed to create issuer DID: ${issuerDidResult.reason}")
             return@runBlocking
         }
@@ -103,7 +114,19 @@ fun main() = runBlocking {
             println("  Available methods: ${holderDidResult.availableMethods.joinToString(", ")}")
             return@runBlocking
         }
-        else -> {
+        is DidCreationResult.Failure.KeyGenerationFailed -> {
+            println("✗ Failed to create holder DID: ${holderDidResult.reason}")
+            return@runBlocking
+        }
+        is DidCreationResult.Failure.DocumentCreationFailed -> {
+            println("✗ Failed to create holder DID: ${holderDidResult.reason}")
+            return@runBlocking
+        }
+        is DidCreationResult.Failure.InvalidConfiguration -> {
+            println("✗ Failed to create holder DID: ${holderDidResult.reason}")
+            return@runBlocking
+        }
+        is DidCreationResult.Failure.Other -> {
             println("✗ Failed to create holder DID: ${holderDidResult.reason}")
             return@runBlocking
         }
@@ -121,7 +144,7 @@ fun main() = runBlocking {
             }
         }
         println("  ✓ Issuer DID resolved successfully")
-        val keyId = issuerDidDoc.verificationMethod.first().id.substringAfter("#")
+        val keyId = issuerDidDoc.verificationMethod.first().id.value.substringAfter("#")
         println("✓ Issuer Key ID: $keyId")
         keyId
     } catch (e: Throwable) {
@@ -167,29 +190,59 @@ fun main() = runBlocking {
     }
     val credential = when (credentialResult) {
         is IssuanceResult.Success -> credentialResult.credential
-        else -> {
-            println("✗ Failed to issue credential: ${credentialResult.reason}")
+        is IssuanceResult.Failure -> {
+            println("✗ Failed to issue credential: ${credentialResult.allErrors.joinToString("; ")}")
             return@runBlocking
         }
     }
     println("✓ Credential issued successfully")
-    println("  - Credential ID: ${credential.id}")
+    println("  - Credential ID: ${credential.id?.value}")
     println("  - Issuer: ${credential.issuer}")
-    println("  - Types: ${credential.type.joinToString(", ")}")
+    println("  - Types: ${credential.type.map { it.value }.joinToString(", ")}")
     println("  - Has proof: ${credential.proof != null}")
     println()
 
     // Step 4: Verify the credential
     println("Step 4: Verifying credential...")
-    val verification = try {
-        trustweave.verifyCredential(credential)
-    } catch (error: CredentialException.CredentialInvalid) {
-        println("✗ Credential validation failed: ${error.reason}")
-        println("  Field: ${error.field}")
-        return@runBlocking
-    } catch (error: Throwable) {
-        println("✗ Verification failed: ${error.message}")
-        return@runBlocking
+    val verification = trustweave.verify {
+        credential(credential)
+    }
+    when (verification) {
+        is VerificationResult.Valid -> {
+            println("✓ Credential verified successfully")
+        }
+        is VerificationResult.Invalid.Expired -> {
+            println("✗ Credential expired: ${verification.errors.joinToString("; ")}")
+            return@runBlocking
+        }
+        is VerificationResult.Invalid.Revoked -> {
+            println("✗ Credential revoked: ${verification.errors.joinToString("; ")}")
+            return@runBlocking
+        }
+        is VerificationResult.Invalid.UntrustedIssuer -> {
+            println("✗ Untrusted issuer: ${verification.errors.joinToString("; ")}")
+            return@runBlocking
+        }
+        is VerificationResult.Invalid.InvalidProof -> {
+            println("✗ Proof invalid: ${verification.errors.joinToString("; ")}")
+            return@runBlocking
+        }
+        is VerificationResult.Invalid.IssuerResolutionFailed -> {
+            println("✗ Issuer resolution failed: ${verification.errors.joinToString("; ")}")
+            return@runBlocking
+        }
+        is VerificationResult.Invalid.SchemaValidationFailed -> {
+            println("✗ Schema validation failed: ${verification.errors.joinToString("; ")}")
+            return@runBlocking
+        }
+        is VerificationResult.Invalid.MultipleFailures -> {
+            println("✗ Multiple validation failures: ${verification.errors.joinToString("; ")}")
+            return@runBlocking
+        }
+        is VerificationResult.Invalid.Other -> {
+            println("✗ Credential validation failed: ${verification.errors.joinToString("; ")}")
+            return@runBlocking
+        }
     }
 
     if (verification.valid) {
@@ -245,7 +298,7 @@ fun main() = runBlocking {
     println("  - Credential ID: $credentialId")
 
     // Retrieve credential from wallet
-    val storedCredential = wallet.get(credentialId)
+    val storedCredential = wallet.get(credentialId.value)
     if (storedCredential != null) {
         println("✓ Credential retrieved from wallet")
         println("  - Retrieved ID: ${storedCredential.id}")
@@ -265,6 +318,7 @@ fun main() = runBlocking {
     val json = Json {
         ignoreUnknownKeys = true
         encodeDefaults = true
+        classDiscriminator = "@type" // Use @type instead of type to avoid conflict with LinkedDataProof.type
     }
     val credentialJson = json.encodeToJsonElement(VerifiableCredential.serializer(), credential)
 
@@ -367,8 +421,8 @@ fun main() = runBlocking {
             }
             val additionalCredential = when (additionalCredentialResult) {
                 is IssuanceResult.Success -> additionalCredentialResult.credential
-                else -> {
-                    println("✗ Failed to issue additional credential $i: ${additionalCredentialResult.reason}")
+                is IssuanceResult.Failure -> {
+                    println("✗ Failed to issue additional credential $i: ${additionalCredentialResult.allErrors.joinToString("; ")}")
                     continue
                 }
             }
@@ -396,9 +450,9 @@ fun main() = runBlocking {
     )
 
     val digest = CredentialDigest(
-        vcId = requireNotNull(credential.id),
+        vcId = requireNotNull(credential.id?.value),
         digest = "uABC123...",
-        issuer = credential.issuer,
+        issuer = credential.issuer.id.value,
         timestamp = kotlinx.datetime.Clock.System.now().toString(),
         chainId = chainId
     )

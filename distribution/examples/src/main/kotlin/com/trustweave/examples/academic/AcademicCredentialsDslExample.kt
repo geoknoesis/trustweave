@@ -1,6 +1,6 @@
 package com.trustweave.examples.academic
 
-import com.trustweave.credential.SchemaFormat
+import com.trustweave.credential.model.SchemaFormat
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.dsl.credential.DidMethods
@@ -8,8 +8,9 @@ import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.trust.dsl.storeIn
 import com.trustweave.trust.dsl.wallet.QueryBuilder
 import com.trustweave.trust.dsl.wallet.organize
-import com.trustweave.trust.dsl.wallet.presentation
+import com.trustweave.trust.dsl.credential.credential
 import com.trustweave.trust.types.*
+import com.trustweave.core.identifiers.Iri
 import com.trustweave.wallet.CredentialOrganization
 import com.trustweave.wallet.Wallet
 import com.trustweave.testkit.getOrFail
@@ -18,6 +19,8 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
 import kotlin.time.Duration.Companion.days
 import com.trustweave.credential.model.ProofType
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Academic Credentials Example using DSL.
@@ -101,7 +104,11 @@ fun main() = runBlocking {
     println("\nStep 4: University issues degree credential using DSL...")
     val kms = trustWeave.configuration.kmsService as? InMemoryKeyManagementService
         ?: InMemoryKeyManagementService()
-    val issuerKey = kms.generateKey("Ed25519")
+    val issuerKeyResult = kms.generateKey(com.trustweave.kms.Algorithm.Ed25519)
+    val issuerKey = when (issuerKeyResult) {
+        is com.trustweave.kms.results.GenerateKeyResult.Success -> issuerKeyResult.keyHandle
+        else -> throw IllegalStateException("Failed to generate key")
+    }
 
     val issuedCredential = trustWeave.issue {
         credential {
@@ -126,11 +133,17 @@ fun main() = runBlocking {
     }.getOrFail()
 
     println("Credential issued:")
-    println("  - Type: ${issuedCredential.type}")
+    println("  - Type: ${issuedCredential.type.map { it.value }}")
     println("  - Issuer: ${issuedCredential.issuer}")
     println("  - Has proof: ${issuedCredential.proof != null}")
     if (issuedCredential.proof != null) {
-        println("  - Proof type: ${issuedCredential.proof?.type}")
+        val proofType = when (val proof = issuedCredential.proof) {
+            is com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof -> proof.type
+            is com.trustweave.credential.model.vc.CredentialProof.JwtProof -> "JWT"
+            is com.trustweave.credential.model.vc.CredentialProof.SdJwtVcProof -> "SD-JWT"
+            null -> null
+        }
+        println("  - Proof type: $proofType")
     }
     if (issuedCredential.credentialStatus != null) {
         println("  - Revocation status: ${issuedCredential.credentialStatus?.id}")
@@ -146,8 +159,8 @@ fun main() = runBlocking {
     if (studentWallet is CredentialOrganization) {
         val result = studentWallet.organize {
             collection("Education Credentials", "Academic degrees and certificates") {
-                add(stored.id ?: throw IllegalStateException("Credential must have ID"))
-                tag(stored.id ?: throw IllegalStateException("Credential must have ID"), "degree", "bachelor", "computer-science", "verified")
+                add(stored.id?.value ?: throw IllegalStateException("Credential must have ID"))
+                tag(stored.id?.value ?: throw IllegalStateException("Credential must have ID"), "degree", "bachelor", "computer-science", "verified")
             }
         }
         println("Created ${result.collectionsCreated} collection(s)")
@@ -164,14 +177,19 @@ fun main() = runBlocking {
     }
     println("Found ${degrees.size} valid degree credentials")
 
-    // Step 8: Create presentation using wallet presentation DSL
-    println("\nStep 8: Creating presentation using wallet presentation DSL...")
-    val presentation = studentWallet.presentation {
-        fromWallet(stored.id ?: throw IllegalStateException("Credential must have ID"))
-        holder(studentDid.value)
-        challenge("job-application-12345")
-        proofType(ProofType.Ed25519Signature2020.value)
-    }
+    // Step 8: Create presentation using presentation DSL
+    println("\nStep 8: Creating presentation using presentation DSL...")
+    val retrievedCredential = studentWallet.get(stored.id?.value ?: throw IllegalStateException("Credential must have ID"))
+        ?: throw IllegalStateException("Credential not found in wallet")
+    // Note: Presentation creation requires a PresentationService which is typically configured in TrustWeave
+    // For this example, we'll create a simple presentation without proof
+    val presentation = com.trustweave.credential.model.vc.VerifiablePresentation(
+        id = com.trustweave.credential.identifiers.CredentialId("urn:example:presentation:${System.currentTimeMillis()}"),
+        type = listOf(com.trustweave.credential.model.CredentialType.fromString("VerifiablePresentation")),
+        verifiableCredential = listOf(retrievedCredential),
+        holder = com.trustweave.core.identifiers.Iri(studentDid.value),
+        challenge = "job-application-12345"
+    )
 
     println("Presentation created:")
     println("  - Holder: ${presentation.holder}")

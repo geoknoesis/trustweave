@@ -14,6 +14,7 @@ import com.trustweave.credential.identifiers.CredentialId
 import com.trustweave.credential.identifiers.SchemaId
 import com.trustweave.credential.identifiers.StatusListId
 import com.trustweave.core.identifiers.Iri
+import com.trustweave.did.identifiers.Did
 import kotlinx.serialization.json.*
 import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
@@ -112,6 +113,15 @@ class CredentialBuilder {
             "Issuer DID must start with 'did:'. Got: $did" 
         }
         this.issuer = did
+    }
+    
+    /**
+     * Set credential issuer DID.
+     * 
+     * @param did The issuer DID
+     */
+    fun issuer(did: Did) {
+        this.issuer = did.value
     }
 
     /**
@@ -351,6 +361,23 @@ class SubjectBuilder {
     }
 
     /**
+     * Add a nested object using 'to' syntax.
+     * 
+     * **Example:**
+     * ```kotlin
+     * "degree" to {
+     *     "type" to "BachelorDegree"
+     *     "name" to "Bachelor of Science"
+     * }
+     * ```
+     */
+    infix fun String.to(block: JsonObjectBuilder.() -> Unit) {
+        val builder = JsonObjectBuilder()
+        builder.block()
+        properties[this] = builder.build()
+    }
+
+    /**
      * Build the credential subject JSON.
      */
     fun build(): JsonObject {
@@ -386,17 +413,53 @@ class JsonObjectBuilder {
             is Number -> JsonPrimitive(value)
             is Boolean -> JsonPrimitive(value)
             is JsonElement -> value
-            is List<*> -> JsonArray(value.map {
-                when (it) {
-                    is String -> JsonPrimitive(it)
-                    is Number -> JsonPrimitive(it)
-                    is Boolean -> JsonPrimitive(it)
-                    else -> JsonPrimitive(it.toString())
-                }
-            })
+            is List<*> -> {
+                // Handle arrays - check if items are objects built via DSL
+                JsonArray(value.map {
+                    when (it) {
+                        is String -> JsonPrimitive(it)
+                        is Number -> JsonPrimitive(it)
+                        is Boolean -> JsonPrimitive(it)
+                        is JsonObject -> it
+                        is Map<*, *> -> {
+                            // Convert Map to JsonObject
+                            buildJsonObject {
+                                (it as Map<String, Any?>).forEach { (key, v) ->
+                                    put(key, when (v) {
+                                        is String -> JsonPrimitive(v)
+                                        is Number -> JsonPrimitive(v)
+                                        is Boolean -> JsonPrimitive(v)
+                                        is JsonElement -> v
+                                        else -> JsonPrimitive(v.toString())
+                                    })
+                                }
+                            }
+                        }
+                        else -> JsonPrimitive(it.toString())
+                    }
+                })
+            }
             null -> JsonNull
             else -> JsonPrimitive(value.toString())
         }
+    }
+    
+    /**
+     * Set an array property with a list of object builders.
+     * This allows creating arrays of objects using DSL syntax.
+     * 
+     * **Example:**
+     * ```kotlin
+     * "grades" to listOf(
+     *     { "courseCode" to "CS101"; "grade" to "A" },
+     *     { "courseCode" to "MATH101"; "grade" to "B" }
+     * )
+     * ```
+     */
+    infix fun String.to(blocks: List<JsonObjectBuilder.() -> Unit>) {
+        properties[this] = JsonArray(blocks.map { block ->
+            JsonObjectBuilder().apply(block).build()
+        })
     }
 
     /**

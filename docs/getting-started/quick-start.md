@@ -69,6 +69,7 @@ fun main() = runBlocking {
         }
 
         // Step 2: Compute a digest (demonstrates canonicalization)
+        // Note: For digest computation, we still use buildJsonObject as it's outside the DSL
         val credentialSubject = buildJsonObject {
             put("id", "did:key:holder-placeholder")
             put("name", "Alice Example")
@@ -88,8 +89,20 @@ fun main() = runBlocking {
                 println("Issuer DID: ${didResult.did.value}")
                 didResult.did
             }
-            else -> {
-                println("Failed to create DID: ${didResult.reason}")
+            is DidCreationResult.Failure -> {
+                val errorMsg = when (didResult) {
+                    is DidCreationResult.Failure.MethodNotRegistered -> 
+                        "Method '${didResult.method}' not registered. Available: ${didResult.availableMethods.joinToString()}"
+                    is DidCreationResult.Failure.KeyGenerationFailed -> 
+                        "Key generation failed: ${didResult.reason}"
+                    is DidCreationResult.Failure.DocumentCreationFailed -> 
+                        "Document creation failed: ${didResult.reason}"
+                    is DidCreationResult.Failure.InvalidConfiguration -> 
+                        "Invalid configuration: ${didResult.reason}"
+                    is DidCreationResult.Failure.Other -> 
+                        "Error: ${didResult.reason}"
+                }
+                println("Failed to create DID: $errorMsg")
                 return@runBlocking
             }
         }
@@ -125,8 +138,8 @@ fun main() = runBlocking {
                 println("Issued credential id: ${issuanceResult.credential.id}")
                 issuanceResult.credential
             }
-            else -> {
-                println("Failed to issue credential: ${issuanceResult.reason}")
+            is IssuanceResult.Failure -> {
+                println("Failed to issue credential: ${issuanceResult.allErrors.joinToString("; ")}")
                 return@runBlocking
             }
         }
@@ -328,15 +341,15 @@ The sections below explain each step in detail.
 
 ## Step 1: Add a single dependency
 
-**Why:** `trustweave-all` bundles every public module (core APIs, DID support, KMS, anchoring, DSLs) so you can get going with one line.
+**Why:** `distribution-all` bundles every public module (core APIs, DID support, KMS, anchoring, DSLs) so you can get going with one line.
 **How it works:** It's a convenience metapackage that re-exports the same artifacts you would otherwise add one-by-one.
 **How simple:** Drop one dependency and you're done.
 
-> **Note:** For production deployments, consider using individual modules instead of `trustweave-all` to minimize bundle size. See [Installation Guide](installation.md) for details.
+> **Note:** For production deployments, consider using individual modules instead of `distribution-all` to minimize bundle size. See [Installation Guide](installation.md) for details.
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
     testImplementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
 }
 ```

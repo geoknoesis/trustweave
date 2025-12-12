@@ -211,7 +211,13 @@ abstract class KeyManagementServicePerformanceTest {
         }
         
         // Cached retrievals should be faster (or at least not slower)
-        assertTrue(avgCachedTime <= firstTime * 1.5, "Cached retrievals should not be significantly slower")
+        // Handle edge case where firstTime is 0 (very fast operations like in-memory KMS)
+        if (firstTime == 0L) {
+            // If first retrieval was 0ms, just verify cached retrievals are also fast (< 10ms)
+            assertTrue(avgCachedTime < 10, "Cached retrievals should be fast (< 10ms) for very fast operations")
+        } else {
+            assertTrue(avgCachedTime <= firstTime * 1.5, "Cached retrievals should not be significantly slower")
+        }
     }
 }
 

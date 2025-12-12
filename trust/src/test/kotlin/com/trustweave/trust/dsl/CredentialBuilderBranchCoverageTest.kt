@@ -1,7 +1,8 @@
 package com.trustweave.trust.dsl
 
 import com.trustweave.credential.model.vc.VerifiableCredential
-import com.trustweave.credential.SchemaFormat
+import com.trustweave.credential.model.SchemaFormat
+import com.trustweave.credential.model.CredentialType
 import com.trustweave.trust.dsl.credential.credential
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
@@ -30,7 +31,7 @@ class CredentialBuilderBranchCoverageTest {
             // No types specified
         }
 
-        assertTrue(credential.type.contains("VerifiableCredential"))
+        assertTrue(credential.type.contains(CredentialType.VerifiableCredential))
     }
 
     @Test
@@ -44,8 +45,8 @@ class CredentialBuilderBranchCoverageTest {
             issued(Clock.System.now())
         }
 
-        assertTrue(credential.type.contains("VerifiableCredential"))
-        assertTrue(credential.type.contains("DegreeCredential"))
+        assertTrue(credential.type.contains(CredentialType.VerifiableCredential))
+        assertTrue(credential.type.any { it.value == "DegreeCredential" })
     }
 
     @Test
@@ -60,8 +61,8 @@ class CredentialBuilderBranchCoverageTest {
         }
 
         assertEquals(2, credential.type.size)
-        assertTrue(credential.type.contains("VerifiableCredential"))
-        assertTrue(credential.type.contains("DegreeCredential"))
+        assertTrue(credential.type.contains(CredentialType.VerifiableCredential))
+        assertTrue(credential.type.any { it.value == "DegreeCredential" })
     }
 
     @Test
@@ -75,10 +76,10 @@ class CredentialBuilderBranchCoverageTest {
             issued(Clock.System.now())
         }
 
-        assertTrue(credential.type.contains("VerifiableCredential"))
-        assertTrue(credential.type.contains("DegreeCredential"))
-        assertTrue(credential.type.contains("BachelorDegreeCredential"))
-        assertTrue(credential.type.contains("EducationCredential"))
+        assertTrue(credential.type.contains(CredentialType.VerifiableCredential))
+        assertTrue(credential.type.any { it.value == "DegreeCredential" })
+        assertTrue(credential.type.any { it.value == "BachelorDegreeCredential" })
+        assertTrue(credential.type.any { it.value == "EducationCredential" })
     }
 
     // ========== Subject Required Branches ==========
@@ -107,7 +108,7 @@ class CredentialBuilderBranchCoverageTest {
         }
 
         assertNotNull(credential.credentialSubject)
-        assertEquals("did:key:subject", credential.credentialSubject.jsonObject["id"]?.jsonPrimitive?.content)
+        assertEquals("did:key:subject", credential.credentialSubject.id.value)
     }
 
     @Test
@@ -124,8 +125,8 @@ class CredentialBuilderBranchCoverageTest {
         }
 
         assertNotNull(credential.credentialSubject)
-        assertEquals("John Doe", credential.credentialSubject.jsonObject["name"]?.jsonPrimitive?.content)
-        assertEquals("john@example.com", credential.credentialSubject.jsonObject["email"]?.jsonPrimitive?.content)
+        assertEquals("John Doe", credential.credentialSubject.claims["name"]?.jsonPrimitive?.content)
+        assertEquals("john@example.com", credential.credentialSubject.claims["email"]?.jsonPrimitive?.content)
     }
 
     @Test
@@ -144,7 +145,7 @@ class CredentialBuilderBranchCoverageTest {
         }
 
         assertNotNull(credential.credentialSubject)
-        val degree = credential.credentialSubject.jsonObject["degree"]?.jsonObject
+        val degree = credential.credentialSubject.claims["degree"]?.jsonObject
         assertNotNull(degree)
         assertEquals("BachelorDegree", degree!!["type"]?.jsonPrimitive?.content)
     }
@@ -167,7 +168,7 @@ class CredentialBuilderBranchCoverageTest {
 
     @Test
     fun `test branch issuance date provided`() {
-        val now = Instant.now()
+        val now = Clock.System.now()
         val credential = credential {
             type("PersonCredential")
             issuer("did:key:issuer")
@@ -177,7 +178,7 @@ class CredentialBuilderBranchCoverageTest {
             issued(now)
         }
 
-        assertEquals(now.toString(), credential.issuanceDate)
+        assertEquals(now, credential.issuanceDate)
     }
 
     // ========== Issuer Required Branches ==========
@@ -207,7 +208,7 @@ class CredentialBuilderBranchCoverageTest {
             issued(Clock.System.now())
         }
 
-        assertEquals("did:key:issuer", credential.issuer)
+        assertEquals("did:key:issuer", credential.issuer.id.value)
     }
 
     // ========== Expiration Branches ==========
@@ -240,7 +241,7 @@ class CredentialBuilderBranchCoverageTest {
             expires(expiration)
         }
 
-        assertEquals(expiration.toString(), credential.expirationDate)
+        assertEquals(expiration, credential.expirationDate)
     }
 
     @Test
@@ -287,7 +288,7 @@ class CredentialBuilderBranchCoverageTest {
             issued(Clock.System.now())
         }
 
-        assertEquals("https://example.edu/credentials/123", credential.id)
+        assertEquals("https://example.edu/credentials/123", credential.id?.value)
     }
 
     // ========== Schema Branches ==========
@@ -320,7 +321,7 @@ class CredentialBuilderBranchCoverageTest {
         }
 
         assertNotNull(credential.credentialSchema)
-        assertEquals("https://example.com/schemas/person.json", credential.credentialSchema?.id)
+        assertEquals("https://example.com/schemas/person.json", credential.credentialSchema?.id?.value)
         assertEquals("JsonSchemaValidator2018", credential.credentialSchema?.type)
         // Format is not directly accessible, but we can verify it's set
     }
@@ -382,7 +383,7 @@ class CredentialBuilderBranchCoverageTest {
         }
 
         assertNotNull(credential.credentialStatus)
-        assertEquals("https://example.com/status/123", credential.credentialStatus?.id)
+        assertEquals("https://example.com/status/123", credential.credentialStatus?.id?.value)
         assertEquals("StatusList2021Entry", credential.credentialStatus?.type)
     }
 
@@ -520,7 +521,7 @@ class CredentialBuilderBranchCoverageTest {
         }
 
         assertNotNull(credential.termsOfUse)
-        assertEquals("https://example.com/terms", credential.termsOfUse?.id)
+        assertEquals("https://example.com/terms", credential.termsOfUse?.firstOrNull()?.id)
     }
 
     @Test
@@ -539,7 +540,7 @@ class CredentialBuilderBranchCoverageTest {
         }
 
         assertNotNull(credential.termsOfUse)
-        assertNotNull(credential.termsOfUse?.termsOfUse)
+        assertNotNull(credential.termsOfUse?.firstOrNull()?.id)
     }
 
     // ========== Refresh Service Branches ==========
@@ -576,7 +577,7 @@ class CredentialBuilderBranchCoverageTest {
         }
 
         assertNotNull(credential.refreshService)
-        assertEquals("https://example.com/refresh", credential.refreshService?.id)
+        assertEquals("https://example.com/refresh", credential.refreshService?.id?.value)
         assertEquals("CredentialRefreshService2020", credential.refreshService?.type)
     }
 
@@ -594,7 +595,10 @@ class CredentialBuilderBranchCoverageTest {
             issued(Clock.System.now())
         }
 
-        val subjectObj = credential.credentialSubject.jsonObject
+        val subjectObj = buildJsonObject {
+            put("id", credential.credentialSubject.id.value)
+            credential.credentialSubject.claims.forEach { (key, value) -> put(key, value) }
+        }
         assertEquals("John Doe", subjectObj["name"]?.jsonPrimitive?.content)
     }
 
@@ -610,7 +614,10 @@ class CredentialBuilderBranchCoverageTest {
             issued(Clock.System.now())
         }
 
-        val subjectObj = credential.credentialSubject.jsonObject
+        val subjectObj = buildJsonObject {
+            put("id", credential.credentialSubject.id.value)
+            credential.credentialSubject.claims.forEach { (key, value) -> put(key, value) }
+        }
         assertEquals(30, subjectObj["age"]?.jsonPrimitive?.int)
     }
 
@@ -626,7 +633,7 @@ class CredentialBuilderBranchCoverageTest {
             issued(Clock.System.now())
         }
 
-        assertEquals(true, credential.credentialSubject.jsonObject["verified"]?.jsonPrimitive?.boolean)
+        assertEquals(true, credential.credentialSubject.claims["verified"]?.jsonPrimitive?.boolean)
     }
 
     @Test
@@ -641,7 +648,9 @@ class CredentialBuilderBranchCoverageTest {
             issued(Clock.System.now())
         }
 
-        assertTrue(credential.credentialSubject.jsonObject["optionalField"]?.jsonPrimitive?.isString == false)
+        // Null values are stored as JsonNull
+        val optionalField = credential.credentialSubject.claims["optionalField"]
+        assertTrue(optionalField is kotlinx.serialization.json.JsonNull || optionalField == null)
     }
 
     @Test
@@ -651,14 +660,14 @@ class CredentialBuilderBranchCoverageTest {
             issuer("did:key:issuer")
             subject {
                 id("did:key:subject")
-                "custom" to buildJsonObject {
-                    put("key", "value")
+                "custom" to {
+                    "key" to "value"
                 }
             }
             issued(Clock.System.now())
         }
 
-        assertNotNull(credential.credentialSubject.jsonObject["custom"]?.jsonObject)
+        assertNotNull(credential.credentialSubject.claims["custom"]?.jsonObject)
     }
 
     // ========== Nested Object Builder Branches ==========
@@ -680,7 +689,7 @@ class CredentialBuilderBranchCoverageTest {
             issued(Clock.System.now())
         }
 
-        val degree = credential.credentialSubject.jsonObject["degree"]?.jsonObject
+        val degree = credential.credentialSubject.claims["degree"]?.jsonObject
         assertNotNull(degree)
         assertEquals("BachelorDegree", degree!!["type"]?.jsonPrimitive?.content)
         assertEquals("Bachelor of Science", degree["name"]?.jsonPrimitive?.content)
@@ -704,7 +713,7 @@ class CredentialBuilderBranchCoverageTest {
             issued(Clock.System.now())
         }
 
-        val address = credential.credentialSubject.jsonObject["address"]?.jsonObject
+        val address = credential.credentialSubject.claims["address"]?.jsonObject
         assertNotNull(address)
         val street = address!!["street"]?.jsonObject
         assertNotNull(street)

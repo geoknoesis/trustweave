@@ -22,11 +22,14 @@ dependencies {
     
     // Kotlinx DateTime
     implementation(libs.kotlinx.datetime)
+    
+    // SLF4J for logging (compileOnly - plugins provide implementation)
+    compileOnly("org.slf4j:slf4j-api:2.0.9")
 
     testImplementation(project(":testkit"))
     testImplementation(project(":did:did-core"))
     testImplementation(project(":kms:kms-core"))
-    testImplementation(project(":credentials:credential-core"))  // For CredentialVerifier, CredentialVerificationOptions, etc.
+    testImplementation(project(":credentials:credential-api"))
     testImplementation(project(":credentials:plugins:status-list:database"))  // StatusListRegistryFactory for tests
 }
 

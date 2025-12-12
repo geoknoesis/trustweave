@@ -57,25 +57,50 @@ class IndyIntegrationScenarioTest {
         kms = InMemoryKeyManagementService()
         val kmsRef = kms
 
-        trustweave = TrustWeave.build {
+        // Create signer function
+        val signer: suspend (ByteArray, String) -> ByteArray = { data, keyId ->
+            when (val result = kmsRef.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
+                is com.trustweave.kms.results.SignResult.Success -> result.signature
+                else -> throw IllegalStateException("Signing failed: $result")
+            }
+        }
+        
+        // Create shared DID registry for consistent DID resolution
+        val sharedDidRegistry = com.trustweave.did.registry.DidMethodRegistry()
+        
+        // Create DID resolver
+        val didResolver = com.trustweave.did.resolver.DidResolver { did: com.trustweave.did.identifiers.Did ->
+            sharedDidRegistry.resolve(did.value) as com.trustweave.did.resolver.DidResolutionResult
+        }
+        
+        // Create CredentialService
+        val credentialService = com.trustweave.credential.credentialService(
+            didResolver = didResolver,
+            signer = signer
+        )
+
+        trustweave = TrustWeave.build(
+            registries = com.trustweave.trust.dsl.TrustWeaveRegistries(
+                didRegistry = sharedDidRegistry,
+                blockchainRegistry = com.trustweave.anchor.BlockchainAnchorRegistry(),
+                credentialRegistry = null,
+                proofRegistry = null
+            )
+        ) {
             factories(
-                didMethodFactory = TestkitDidMethodFactory(),
+                didMethodFactory = TestkitDidMethodFactory(didRegistry = sharedDidRegistry),
                 walletFactory = TestkitWalletFactory()
             )
             keys {
                 custom(kmsRef)
-                signer { data, keyId ->
-                    when (val result = kmsRef.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
-                        is com.trustweave.kms.results.SignResult.Success -> result.signature
-                        else -> throw IllegalStateException("Signing failed: $result")
-                    }
-                }
+                signer(signer)
             }
             did {
                 method("key") {
                     algorithm("Ed25519")
                 }
             }
+            issuer(credentialService)
             // Note: Chain is registered manually below, not via DSL
         }.also {
             it.configuration.registries.blockchainRegistry.register(chainId, indyClient)
@@ -157,6 +182,7 @@ class IndyIntegrationScenarioTest {
         val json = Json {
             ignoreUnknownKeys = true
             encodeDefaults = true
+            classDiscriminator = "@type" // Use @type instead of type to avoid conflict with LinkedDataProof.type
         }
         val credentialJson = json.encodeToJsonElement(VerifiableCredential.serializer(), credential)
         val anchor = trustweave.blockchains.anchor(
@@ -179,7 +205,7 @@ class IndyIntegrationScenarioTest {
             ref = anchor.ref,
             serializer = JsonElement.serializer()
         )
-        val readCredential = Json.decodeFromJsonElement(VerifiableCredential.serializer(), readJson)
+        val readCredential = json.decodeFromJsonElement(VerifiableCredential.serializer(), readJson)
         println("  ✓ Read Credential ID: ${readCredential.id}")
         println("  ✓ Read Credential Issuer: ${readCredential.issuer}")
         assertEquals(credential.id, readCredential.id, "Read credential ID should match")
@@ -340,8 +366,13 @@ class IndyIntegrationScenarioTest {
 
         // Anchor all credentials
         println("\nAnchoring all credentials...")
+        val json = Json {
+            ignoreUnknownKeys = true
+            encodeDefaults = true
+            classDiscriminator = "@type" // Use @type instead of type to avoid conflict with LinkedDataProof.type
+        }
         val anchors = credentials.map { credential ->
-            val credentialJson = Json.encodeToJsonElement(VerifiableCredential.serializer(), credential)
+            val credentialJson = json.encodeToJsonElement(VerifiableCredential.serializer(), credential)
             val anchor = trustweave.blockchains.anchor(
                 data = credentialJson,
                 serializer = JsonElement.serializer(),

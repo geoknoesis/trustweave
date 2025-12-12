@@ -9,8 +9,8 @@ import kotlin.test.*
 class ProofOptionsTest {
 
     @Test
-    fun `test ProofOptions with all fields`() {
-        val options = ProofOptions(
+    fun `test ProofGeneratorOptions with all fields`() {
+        val options = ProofGeneratorOptions(
             proofPurpose = "assertionMethod",
             challenge = "challenge-123",
             domain = "example.com",
@@ -24,8 +24,8 @@ class ProofOptionsTest {
     }
 
     @Test
-    fun `test ProofOptions with defaults`() {
-        val options = ProofOptions()
+    fun `test ProofGeneratorOptions with defaults`() {
+        val options = ProofGeneratorOptions()
 
         assertEquals("assertionMethod", options.proofPurpose)
         assertNull(options.challenge)
@@ -35,7 +35,7 @@ class ProofOptionsTest {
 
     @Test
     fun `test ProofOptions with authentication purpose`() {
-        val options = ProofOptions(
+        val options = ProofGeneratorOptions(
             proofPurpose = "authentication",
             challenge = "challenge-123",
             domain = "example.com"

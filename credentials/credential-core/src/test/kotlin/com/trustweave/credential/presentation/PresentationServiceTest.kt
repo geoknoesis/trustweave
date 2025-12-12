@@ -5,9 +5,16 @@ import com.trustweave.did.resolver.DidResolver
 import com.trustweave.credential.PresentationOptions
 import com.trustweave.credential.PresentationVerificationOptions
 import com.trustweave.util.booleanDidResolver
-import com.trustweave.credential.models.Proof
+import com.trustweave.credential.model.vc.CredentialProof
 import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.model.vc.VerifiablePresentation
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.did.identifiers.Did
+import kotlinx.datetime.Instant
+import kotlinx.serialization.json.JsonPrimitive
 import com.trustweave.credential.proof.Ed25519ProofGenerator
 import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.credential.proof.ProofGenerator
@@ -81,7 +88,7 @@ class PresentationServiceTest {
         val presentation = service.createPresentation(credentials, holderDid, options)
 
         assertNotNull(presentation)
-        assertEquals(holderDid, presentation.holder)
+        assertEquals(holderDid, presentation.holder.value)
         assertEquals(1, presentation.verifiableCredential.size)
         assertNotNull(presentation.proof)
     }
@@ -145,8 +152,10 @@ class PresentationServiceTest {
 
         assertEquals("challenge-123", presentation.challenge)
         assertEquals("example.com", presentation.domain)
-        assertEquals("challenge-123", presentation.proof?.challenge)
-        assertEquals("example.com", presentation.proof?.domain)
+        val linkedDataProof = presentation.proof as? com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
+        assertNotNull(linkedDataProof)
+        assertEquals("challenge-123", linkedDataProof.additionalProperties["challenge"]?.jsonPrimitive?.content)
+        assertEquals("example.com", linkedDataProof.additionalProperties["domain"]?.jsonPrimitive?.content)
     }
 
     @Test
@@ -191,10 +200,10 @@ class PresentationServiceTest {
     @Test
     fun `test verify presentation fails when no proof`() = runBlocking {
         val presentation = VerifiablePresentation(
-            id = "vp-1",
-            type = listOf("VerifiablePresentation"),
+            id = CredentialId("vp-1"),
+            type = listOf(CredentialType.fromString("VerifiablePresentation")),
             verifiableCredential = listOf(createTestCredential()),
-            holder = holderDid,
+            holder = Did(holderDid),
             proof = null
         )
 
@@ -309,7 +318,9 @@ class PresentationServiceTest {
         val presentation = serviceWithoutGenerator.createPresentation(credentials, holderDid, options)
 
         assertNotNull(presentation.proof)
-        assertEquals("Ed25519Signature2020", presentation.proof.type)
+        val linkedDataProof = presentation.proof as? com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
+        assertNotNull(linkedDataProof)
+        assertEquals("Ed25519Signature2020", linkedDataProof.type)
     }
 
     @Test
@@ -333,24 +344,26 @@ class PresentationServiceTest {
 
     private fun createTestCredential(
         id: String? = "https://example.com/credentials/1",
-        types: List<String> = listOf("VerifiableCredential", "PersonCredential"),
+        types: List<CredentialType> = listOf(CredentialType.VerifiableCredential, CredentialType.Custom("PersonCredential")),
         issuerDid: String = "did:key:issuer",
-        subject: JsonObject = buildJsonObject {
-            put("id", "did:key:subject")
-            put("name", "John Doe")
-        },
-        issuanceDate: String = Clock.System.now().toString(),
-        proof: Proof? = Proof(
+        subject: CredentialSubject = CredentialSubject.fromDid(
+            Did("did:key:subject"),
+            claims = mapOf("name" to JsonPrimitive("John Doe"))
+        ),
+        issuanceDate: Instant = Clock.System.now(),
+        proof: CredentialProof? = CredentialProof.LinkedDataProof(
             type = "Ed25519Signature2020",
-            created = Clock.System.now().toString(),
+            created = Clock.System.now(),
             verificationMethod = "did:key:issuer#key-1",
-            proofPurpose = "assertionMethod"
+            proofPurpose = "assertionMethod",
+            proofValue = "test-proof",
+            additionalProperties = emptyMap()
         )
     ): VerifiableCredential {
         return VerifiableCredential(
-            id = id,
+            id = id?.let { CredentialId(it) },
             type = types,
-            issuer = issuerDid,
+            issuer = Issuer.fromDid(Did(issuerDid)),
             credentialSubject = subject,
             issuanceDate = issuanceDate,
             proof = proof

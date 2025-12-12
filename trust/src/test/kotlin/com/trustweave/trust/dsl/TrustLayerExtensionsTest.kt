@@ -10,7 +10,8 @@ import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.trust.dsl.wallet.organize
 import com.trustweave.testkit.getOrFail
-import com.trustweave.trust.types.IssuanceResult
+import com.trustweave.credential.results.IssuanceResult
+import com.trustweave.kms.results.SignResult
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
@@ -36,13 +37,19 @@ class TrustLayerExtensionsTest {
             holderDid = "did:key:holder"
         )
 
-        trustWeave = trustWeave {
+        // Create temporary TrustWeaveConfig to get DID registry for resolver
+        val tempTrustWeaveConfig = trustWeave {
             factories(
                 didMethodFactory = TestkitDidMethodFactory()
             )
             keys {
                 custom(kms)
-                signer { data, keyId -> kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
+                signer { data, keyId ->
+                    when (val result = kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
+                        is SignResult.Success -> result.signature
+                        else -> throw IllegalStateException("Signing failed: $result")
+                    }
+                }
             }
             did {
                 method("key") {
@@ -50,6 +57,53 @@ class TrustLayerExtensionsTest {
                 }
             }
         }
+        
+        val didResolver = com.trustweave.did.resolver.DidResolver { did ->
+            tempTrustWeaveConfig.getDslContext().getConfig().registries.didRegistry.resolve(did.value)
+        }
+        
+        val signer: suspend (ByteArray, String) -> ByteArray = { data, keyId ->
+            when (val result = kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
+                is SignResult.Success -> result.signature
+                else -> throw IllegalStateException("Signing failed: $result")
+            }
+        }
+        
+        // Create CredentialService with resolver that will use the final TrustWeaveConfig's registry
+        // We'll use a mutable reference that gets updated after trustWeave is built
+        var trustWeaveConfigRef: TrustWeaveConfig? = null
+        val finalDidResolver = com.trustweave.did.resolver.DidResolver { did ->
+            (trustWeaveConfigRef ?: tempTrustWeaveConfig).getDslContext().getConfig().registries.didRegistry.resolve(did.value)
+        }
+        
+        val finalCredentialService = com.trustweave.credential.credentialService(
+            didResolver = finalDidResolver,
+            signer = signer
+        )
+
+        trustWeave = trustWeave {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory()
+            )
+            keys {
+                custom(kms)
+                signer { data, keyId ->
+                    when (val result = kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
+                        is SignResult.Success -> result.signature
+                        else -> throw IllegalStateException("Signing failed: $result")
+                    }
+                }
+            }
+            did {
+                method("key") {
+                    algorithm("Ed25519")
+                }
+            }
+            issuer(finalCredentialService)
+        }
+        
+        // Update the DID resolver to use the final TrustWeaveConfig's registry
+        trustWeaveConfigRef = trustWeave
     }
 
     @Test
@@ -67,7 +121,7 @@ class TrustLayerExtensionsTest {
                 is com.trustweave.did.resolver.DidResolutionResult.Success -> didResolution.document
                 else -> throw IllegalStateException("Failed to resolve DID")
             }
-            val keyId = didDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+            val keyId = didDoc.verificationMethod.firstOrNull()?.id?.value?.substringAfter("#")
                 ?: throw IllegalStateException("No verification method in DID")
             
             trustWeave.issue {
@@ -84,7 +138,7 @@ class TrustLayerExtensionsTest {
         }.getOrFail()
 
         assertNotNull(credential)
-        assertTrue(credential.issuer.startsWith("did:key:"))
+        assertTrue(credential.issuer.id.value.startsWith("did:key:"))
     }
 
     @Test
@@ -102,7 +156,7 @@ class TrustLayerExtensionsTest {
                     is com.trustweave.did.resolver.DidResolutionResult.Success -> didResolution.document
                     else -> throw IllegalStateException("Failed to resolve DID")
                 }
-                val keyId = didDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+                val keyId = didDoc.verificationMethod.firstOrNull()?.id?.value?.substringAfter("#")
                     ?: throw IllegalStateException("No verification method in DID")
                 
                 trustWeave.issue {
@@ -118,7 +172,7 @@ class TrustLayerExtensionsTest {
                 }
             },
             wallet = wallet
-        ).getOrThrow()
+        ).getOrElse { throw IllegalStateException("Failed to create DID, issue credential, and store: $it") }
 
         assertNotNull(stored)
         // StoredCredential is just VerifiableCredential, wallet storage is separate
@@ -143,7 +197,7 @@ class TrustLayerExtensionsTest {
                     is com.trustweave.did.resolver.DidResolutionResult.Success -> didResolution.document
                     else -> throw IllegalStateException("Failed to resolve DID")
                 }
-                val keyId = didDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+                val keyId = didDoc.verificationMethod.firstOrNull()?.id?.value?.substringAfter("#")
                     ?: throw IllegalStateException("No verification method in DID")
                 
                 trustWeave.issue {
@@ -161,13 +215,13 @@ class TrustLayerExtensionsTest {
             wallet = wallet,
             organizeBlock = { stored ->
                 // Get credential ID from stored credential
-                val credentialId = stored.id ?: wallet.store(stored)
+                val credentialId: String = stored.id?.value ?: wallet.store(stored)
                 // Use wallet.organize extension function
                 wallet.organize {
                     tag(credentialId, "test")
                 }
             }
-        ).getOrThrow()
+        ).getOrElse { throw IllegalStateException("Failed to complete workflow: $it") }
 
         assertNotNull(result)
         assertTrue(result.did.value.startsWith("did:key:"))
@@ -191,7 +245,7 @@ class TrustLayerExtensionsTest {
                     is com.trustweave.did.resolver.DidResolutionResult.Success -> didResolution.document
                     else -> throw IllegalStateException("Failed to resolve DID")
                 }
-                val keyId = didDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+                val keyId = didDoc.verificationMethod.firstOrNull()?.id?.value?.substringAfter("#")
                     ?: throw IllegalStateException("No verification method in DID")
                 
                 trustWeave.issue {
@@ -207,7 +261,7 @@ class TrustLayerExtensionsTest {
                 }
             },
             wallet = wallet
-        ).getOrThrow()
+        ).getOrElse { throw IllegalStateException("Failed: $it") }
 
         assertNotNull(result)
         assertNull(result.organizationResult)
@@ -229,7 +283,7 @@ class TrustLayerExtensionsTest {
                 is com.trustweave.did.resolver.DidResolutionResult.Success -> didResolution.document
                 else -> throw IllegalStateException("Failed to resolve DID")
             }
-            val keyId = didDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+            val keyId = didDoc.verificationMethod.firstOrNull()?.id?.value?.substringAfter("#")
                 ?: throw IllegalStateException("No verification method in DID")
             
             context.issue {
@@ -246,7 +300,7 @@ class TrustLayerExtensionsTest {
         }.getOrFail()
 
         assertNotNull(credential)
-        assertTrue(credential.issuer.startsWith("did:key:"))
+        assertTrue(credential.issuer.id.value.startsWith("did:key:"))
     }
 
     @Test
@@ -265,7 +319,7 @@ class TrustLayerExtensionsTest {
                     is com.trustweave.did.resolver.DidResolutionResult.Success -> didResolution.document
                     else -> throw IllegalStateException("Failed to resolve DID")
                 }
-                val keyId = didDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+                val keyId = didDoc.verificationMethod.firstOrNull()?.id?.value?.substringAfter("#")
                     ?: throw IllegalStateException("No verification method in DID")
                 
                 context.issue {
@@ -281,7 +335,7 @@ class TrustLayerExtensionsTest {
                 }
             },
             wallet = wallet
-        ).getOrThrow()
+        ).getOrElse { throw IllegalStateException("Failed to create DID, issue credential, and store: $it") }
 
         assertNotNull(stored)
         // StoredCredential is just VerifiableCredential, wallet storage is separate

@@ -1,7 +1,9 @@
 package com.trustweave.credential.proof
 
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.resolver.DidResolutionResult
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -20,14 +22,16 @@ class ProofPurposeValidationComprehensiveTest {
 
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
             if (did == issuerDid) {
+                val didObj = Did(issuerDid)
+                val vmId = VerificationMethodId.parse(verificationMethod, didObj)
                 DidResolutionResult.Success(
                     document = DidDocument(
-                        id = issuerDid,
-                        assertionMethod = listOf(verificationMethod),
-                        authentication = listOf(verificationMethod),
-                        keyAgreement = listOf(verificationMethod),
-                        capabilityInvocation = listOf(verificationMethod),
-                        capabilityDelegation = listOf(verificationMethod)
+                        id = didObj,
+                        assertionMethod = listOf(vmId),
+                        authentication = listOf(vmId),
+                        keyAgreement = listOf(vmId),
+                        capabilityInvocation = listOf(vmId),
+                        capabilityDelegation = listOf(vmId)
                     )
                 )
             } else null
@@ -60,13 +64,14 @@ class ProofPurposeValidationComprehensiveTest {
 
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
             if (did == issuerDid) {
+                val didObj = Did(issuerDid)
                 DidResolutionResult.Success(
                     document = DidDocument(
-                        id = issuerDid,
+                        id = didObj,
                         assertionMethod = listOf(
-                            "$issuerDid#key-1",
-                            "$issuerDid#key-2",
-                            "$issuerDid#key-3"
+                            VerificationMethodId.parse("$issuerDid#key-1", didObj),
+                            VerificationMethodId.parse("$issuerDid#key-2", didObj),
+                            VerificationMethodId.parse("$issuerDid#key-3", didObj)
                         )
                     )
                 )
@@ -92,10 +97,14 @@ class ProofPurposeValidationComprehensiveTest {
 
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
             if (did == issuerDid) {
+                val didObj = Did(issuerDid)
                 DidResolutionResult.Success(
                     document = DidDocument(
-                        id = issuerDid,
-                        assertionMethod = listOf("#key-1", "$issuerDid#key-1")
+                        id = didObj,
+                        assertionMethod = listOf(
+                            VerificationMethodId.parse("#key-1", didObj),
+                            VerificationMethodId.parse("$issuerDid#key-1", didObj)
+                        )
                     )
                 )
             } else null
@@ -126,12 +135,13 @@ class ProofPurposeValidationComprehensiveTest {
 
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
             if (did == issuerDid) {
+                val didObj = Did(issuerDid)
                 DidResolutionResult.Success(
                     document = DidDocument(
-                        id = issuerDid,
-                        assertionMethod = listOf("$issuerDid#key-1"),
+                        id = didObj,
+                        assertionMethod = listOf(VerificationMethodId.parse("$issuerDid#key-1", didObj)),
                         // key-2 is not in assertionMethod
-                        authentication = listOf("$issuerDid#key-2")
+                        authentication = listOf(VerificationMethodId.parse("$issuerDid#key-2", didObj))
                     )
                 )
             } else null

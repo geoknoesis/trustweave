@@ -1,6 +1,8 @@
 package com.trustweave.trust.dsl
 
 import com.trustweave.did.model.DidDocument
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
@@ -24,12 +26,12 @@ class DelegationDslComprehensiveTest {
             when (did) {
                 delegatorDid -> DidResolutionResult.Success(
                     document = DidDocument(
-                        id = delegatorDid,
-                        capabilityDelegation = listOf("$delegateDid#key-1")
+                        id = Did(delegatorDid),
+                        capabilityDelegation = listOf(VerificationMethodId.parse("$delegateDid#key-1", Did(delegatorDid)))
                     )
                 )
                 delegateDid -> DidResolutionResult.Success(
-                    document = DidDocument(id = delegateDid)
+                    document = DidDocument(id = Did(delegateDid))
                 )
                 else -> null
             }
@@ -53,28 +55,32 @@ class DelegationDslComprehensiveTest {
     fun `test delegation DSL with multi-hop chain`() = runBlocking {
         val chain = listOf("did:key:ceo", "did:key:director", "did:key:manager", "did:key:assistant")
 
+        val ceoDid = Did("did:key:ceo")
+        val directorDid = Did("did:key:director")
+        val managerDid = Did("did:key:manager")
+        val assistantDid = Did("did:key:assistant")
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
             when (did) {
                 "did:key:ceo" -> DidResolutionResult.Success(
                     document = DidDocument(
-                        id = "did:key:ceo",
-                        capabilityDelegation = listOf("did:key:director#key-1")
+                        id = ceoDid,
+                        capabilityDelegation = listOf(VerificationMethodId.parse("did:key:director#key-1", directorDid))
                     )
                 )
                 "did:key:director" -> DidResolutionResult.Success(
                     document = DidDocument(
-                        id = "did:key:director",
-                        capabilityDelegation = listOf("did:key:manager#key-1")
+                        id = directorDid,
+                        capabilityDelegation = listOf(VerificationMethodId.parse("did:key:manager#key-1", managerDid))
                     )
                 )
                 "did:key:manager" -> DidResolutionResult.Success(
                     document = DidDocument(
-                        id = "did:key:manager",
-                        capabilityDelegation = listOf("did:key:assistant#key-1")
+                        id = managerDid,
+                        capabilityDelegation = listOf(VerificationMethodId.parse("did:key:assistant#key-1", assistantDid))
                     )
                 )
                 "did:key:assistant" -> DidResolutionResult.Success(
-                    document = DidDocument(id = "did:key:assistant")
+                    document = DidDocument(id = assistantDid)
                 )
                 else -> null
             }
@@ -112,17 +118,19 @@ class DelegationDslComprehensiveTest {
     fun `test delegation with capability parameter`() = runBlocking {
         val delegatorDid = "did:key:delegator"
         val delegateDid = "did:key:delegate"
+        val delegatorDidObj3 = Did(delegatorDid)
+        val delegateDidObj3 = Did(delegateDid)
 
-        val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
-            when (did) {
+        val resolveDid: suspend (String) -> DidResolutionResult? = { didStr ->
+            when (didStr) {
                 delegatorDid -> DidResolutionResult.Success(
                     document = DidDocument(
-                        id = delegatorDid,
-                        capabilityDelegation = listOf("$delegateDid#key-1")
+                        id = delegatorDidObj3,
+                        capabilityDelegation = listOf(VerificationMethodId.parse("$delegateDid#key-1", delegateDidObj3))
                     )
                 )
                 delegateDid -> DidResolutionResult.Success(
-                    document = DidDocument(id = delegateDid)
+                    document = DidDocument(id = delegateDidObj3)
                 )
                 else -> null
             }

@@ -7,12 +7,13 @@ import com.trustweave.credential.model.CredentialType
 import com.trustweave.credential.identifiers.SchemaId
 import com.trustweave.credential.proof.ProofGenerator
 import com.trustweave.credential.proof.ProofGeneratorRegistry
-import com.trustweave.credential.proof.ProofOptions
+import com.trustweave.credential.proof.ProofGeneratorOptions
 import com.trustweave.credential.schema.SchemaRegistry
 import com.trustweave.did.identifiers.Did
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
+import kotlinx.serialization.json.*
 
 /**
  * Native credential issuer implementation.
@@ -86,7 +87,7 @@ class CredentialIssuer(
         val proof = generator.generateProof(
             credential = credential,
             keyId = keyId,
-            options = ProofOptions(
+            options = ProofGeneratorOptions(
                 proofPurpose = "assertionMethod",
                 challenge = options.challenge,
                 domain = options.domain,
@@ -155,13 +156,17 @@ class CredentialIssuer(
             }
             proof.proofValue != null -> {
                 // Linked Data Proof
+                val additionalProperties = buildMap<String, kotlinx.serialization.json.JsonElement> {
+                    proof.challenge?.let { put("challenge", kotlinx.serialization.json.JsonPrimitive(it)) }
+                    proof.domain?.let { put("domain", kotlinx.serialization.json.JsonPrimitive(it)) }
+                }
                 CredentialProof.LinkedDataProof(
                     type = proof.type.identifier,
                     created = Instant.parse(proof.created),
                     verificationMethod = proof.verificationMethod.value,
                     proofPurpose = proof.proofPurpose,
                     proofValue = proof.proofValue,
-                    additionalProperties = emptyMap()
+                    additionalProperties = additionalProperties
                 )
             }
             else -> {

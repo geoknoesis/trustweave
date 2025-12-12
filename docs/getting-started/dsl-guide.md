@@ -12,9 +12,10 @@ The TrustWeave DSL (Domain-Specific Language) provides a fluent, type-safe API f
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:trustweave-core:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-trust:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
+    // Or use individual modules:
+    // implementation("com.trustweave:trust:1.0.0-SNAPSHOT")
+    // implementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -35,52 +36,56 @@ The trust layer configuration is the foundation of the DSL. It centralizes the s
 ### Basic Configuration
 
 ```kotlin
+import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.dsl.*
+import kotlinx.coroutines.runBlocking
 
-val trustLayer = trustLayer {
-    keys {
-        provider("inMemory")  // or "waltid", "hardware", etc.
-        algorithm("Ed25519")
-    }
-
-    did {
-        method("key") {
+fun main() = runBlocking {
+    val trustWeave = TrustWeave.build {
+        keys {
+            provider("inMemory")  // or "waltid", "hardware", etc.
             algorithm("Ed25519")
         }
-    }
 
-    anchor {
-        chain("algorand:testnet") {
-            inMemory()  // For testing
+        did {
+            method("key") {
+                algorithm("Ed25519")
+            }
         }
-    }
 
-    credentials {
-        defaultProofType(ProofType.Ed25519Signature2020)
-        autoAnchor(false)
-    }
+        anchor {
+            chain("algorand:testnet") {
+                inMemory()  // For testing
+            }
+        }
 
-    trust {
-        provider("inMemory")  // Trust registry provider
+        credentials {
+            defaultProofType(ProofType.Ed25519Signature2020)
+            autoAnchor(false)
+        }
+
+        trust {
+            provider("inMemory")  // Trust registry provider
+        }
     }
 }
 ```
-**Outcome:** Produces a fully configured `trustLayer` with in-memory KMS, DID method, anchoring, and trust registry—ideal for local experiments or tests.
+**Outcome:** Produces a fully configured `TrustWeave` instance with in-memory KMS, DID method, anchoring, and trust registry—ideal for local experiments or tests.
 
 ### Multiple Trust Layers
 
 You can create multiple trust layer configurations for different environments:
 
 ```kotlin
-// Production trust layer
-val productionLayer = trustLayer("production") {
+// Production TrustWeave instance
+val productionTrustWeave = TrustWeave.build {
     keys { provider("hardware") }
     did { method("web") { domain("company.com") } }
     anchor { chain("algorand:mainnet") { provider("algorand") } }
 }
 
-// Test trust layer
-val testLayer = trustLayer("test") {
+// Test TrustWeave instance
+val testTrustWeave = TrustWeave.build {
     keys { provider("inMemory") }
     did { method("key") }
     anchor { chain("algorand:testnet") { inMemory() } }
@@ -94,6 +99,10 @@ val testLayer = trustLayer("test") {
 Create verifiable credentials using a fluent builder:
 
 ```kotlin
+import com.trustweave.trust.dsl.credential.credential
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.years
+
 val credential = credential {
     id("https://example.edu/credentials/123")
     type("DegreeCredential", "BachelorDegreeCredential")
@@ -106,8 +115,8 @@ val credential = credential {
             "university" to "Example University"
         }
     }
-    issued(Instant.now())
-    expires(Instant.now().plus(10, ChronoUnit.YEARS))
+    issued(Clock.System.now())
+    expires(10.years)  // Use Duration extension, e.g., 10.years
     schema("https://example.edu/schemas/degree.json")
 }
 ```
@@ -117,49 +126,55 @@ val credential = credential {
 ### Credential Builder Methods
 
 - `id(String)`: Set credential ID
-- `type(String...)`: Add credential types (first is primary type)
-- `issuer(String)`: Set issuer DID
-- `subject { }`: Build credential subject (nested JSON objects)
-- `issued(Instant)`: Set issuance date
-- `expires(Instant)` or `expires(Long, ChronoUnit)`: Set expiration
+- `type(String...)` or `type(CredentialType...)`: Add credential types (first is primary type)
+- `issuer(String)` or `issuer(Did)`: Set issuer DID
+- `subject { }`: Build credential subject (nested JSON objects using DSL)
+- `issued(Instant)`: Set issuance date (use `Clock.System.now()`)
+- `expires(Duration)`: Set expiration (use Duration extensions like `10.years`, `30.days`)
 - `schema(String)`: Set credential schema
-- `status(String)`: Set revocation status
-- `evidence(JsonObject)`: Add evidence
-- `termsOfUse(JsonObject)`: Add terms of use
-- `refreshService(JsonObject)`: Add refresh service
+- `status { }`: Configure credential status (revocation status list)
+- `evidence(Evidence)`: Add evidence
+- `termsOfUse(TermsOfUse)`: Add terms of use
+- `refreshService(RefreshService)`: Add refresh service
 
 ## Issuance DSL
 
 Issue credentials with automatic proof generation:
 
 ```kotlin
-import com.trustweave.trust.types.IssuerIdentity
-import com.trustweave.trust.types.ProofType
+import com.trustweave.trust.TrustWeave
+import com.trustweave.credential.format.ProofSuiteId
+import com.trustweave.credential.results.IssuanceResult
+import kotlinx.datetime.Clock
+import kotlinx.coroutines.runBlocking
 
-import com.trustweave.trust.types.IssuanceResult
-
-val issuanceResult = trustLayer.issue {
-    credential {
-        type("DegreeCredential")
-        issuer("did:key:university")
-        subject {
-            id("did:key:student")
-            "degree" {
-                "type" to "BachelorDegree"
+fun main() = runBlocking {
+    val trustWeave = TrustWeave.build { /* ... configuration ... */ }
+    
+    val issuanceResult = trustWeave.issue {
+        credential {
+            type("DegreeCredential")
+            issuer("did:key:university")
+            subject {
+                id("did:key:student")
+                "degree" {
+                    "type" to "BachelorDegree"
+                }
             }
+            issued(Clock.System.now())
         }
-        issued(Instant.now())
+        signedBy(issuerDid = "did:key:university", keyId = "key-1")
+        withProof(ProofSuiteId.VC_LD)  // Use ProofSuiteId, not ProofType
+        challenge("challenge-123")
+        domain("example.com")
+        // Note: anchor() is not available in IssuanceBuilder
+        // Use trustWeave.blockchains.anchor() separately if needed
     }
-    signedBy(IssuerIdentity.from("did:key:university", "key-1"))
-    withProof(ProofType.Ed25519Signature2020)
-    challenge("challenge-123")
-    domain("example.com")
-    anchor()  // Automatically anchor if autoAnchor is enabled
-}
 
-val issuedCredential = when (issuanceResult) {
-    is IssuanceResult.Success -> issuanceResult.credential
-    else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
+    val issuedCredential = when (issuanceResult) {
+        is IssuanceResult.Success -> issuanceResult.credential
+        else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
+    }
 }
 ```
 
@@ -169,40 +184,50 @@ val issuedCredential = when (issuanceResult) {
 
 - `credential { }`: Build credential inline using CredentialBuilder DSL
 - `credential(VerifiableCredential)`: Use a pre-built credential
-- `signedBy(IssuerIdentity)`: Specify issuer identity with type-safe DID and key ID (required)
-- `withProof(ProofType)`: Set proof type (defaults to trust layer default)
+- `signedBy(issuerDid: String, keyId: String)`: Specify issuer DID and key ID (required)
+- `signedBy(issuerDid: Did, keyId: String)`: Specify issuer DID (Did object) and key ID
+- `signedBy(issuer: IssuerIdentity)`: Specify issuer identity object
+- `withProof(ProofSuiteId)`: Set proof suite (e.g., `ProofSuiteId.VC_LD`, `ProofSuiteId.VC_JWT`)
 - `challenge(String)`: Set proof challenge for verification
 - `domain(String)`: Set proof domain for verification
 - `withRevocation()`: Enable automatic revocation support (creates status list if needed)
 
 **Example:**
 ```kotlin
-import com.trustweave.trust.types.IssuerIdentity
-import com.trustweave.trust.types.ProofType
+import com.trustweave.trust.TrustWeave
+import com.trustweave.credential.format.ProofSuiteId
+import com.trustweave.credential.results.IssuanceResult
+import kotlinx.datetime.Clock
+import kotlinx.coroutines.runBlocking
 
-val issuanceResult = trustWeave.issue {
-    credential {
-        type("DegreeCredential")
-        issuer("did:key:university")
-        subject {
-            id("did:key:student")
-            "degree" {
-                "type" to "BachelorDegree"
-                "name" to "Bachelor of Science"
+fun main() = runBlocking {
+    val trustWeave = TrustWeave.build { /* ... configuration ... */ }
+    
+    val issuanceResult = trustWeave.issue {
+        credential {
+            type("DegreeCredential")
+            issuer("did:key:university")
+            subject {
+                id("did:key:student")
+                "degree" {
+                    "type" to "BachelorDegree"
+                    "name" to "Bachelor of Science"
+                }
             }
+            issued(Clock.System.now())
+            // Note: withRevocation() is called in the issue block, not credential block
         }
-        issued(Instant.now())
+        signedBy(issuerDid = "did:key:university", keyId = "key-1")
+        withProof(ProofSuiteId.VC_LD)  // Use ProofSuiteId, not ProofType
+        challenge("challenge-123")
+        domain("example.com")
         withRevocation() // Auto-creates status list if needed
     }
-    signedBy(IssuerIdentity.from("did:key:university", "key-1"))
-    withProof(ProofType.Ed25519Signature2020)
-    challenge("challenge-123")
-    domain("example.com")
-}
 
-val issuedCredential = when (issuanceResult) {
-    is IssuanceResult.Success -> issuanceResult.credential
-    else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
+    val issuedCredential = when (issuanceResult) {
+        is IssuanceResult.Success -> issuanceResult.credential
+        else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
+    }
 }
 ```
 

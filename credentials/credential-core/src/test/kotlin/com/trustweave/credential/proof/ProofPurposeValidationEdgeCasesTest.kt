@@ -1,7 +1,9 @@
 package com.trustweave.credential.proof
 
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.resolver.DidResolutionResult
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -19,10 +21,11 @@ class ProofPurposeValidationEdgeCasesTest {
         val issuerDid = "did:key:issuer"
 
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
+            val didObj = Did(issuerDid)
             DidResolutionResult.Success(
                 document = DidDocument(
-                    id = issuerDid,
-                    assertionMethod = listOf("$issuerDid#key-1")
+                    id = didObj,
+                    assertionMethod = listOf(VerificationMethodId.parse("$issuerDid#key-1", didObj))
                 )
             )
         }
@@ -42,10 +45,11 @@ class ProofPurposeValidationEdgeCasesTest {
         val issuerDid = "did:key:issuer"
 
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
+            val didObj = Did(issuerDid)
             DidResolutionResult.Success(
                 document = DidDocument(
-                    id = issuerDid,
-                    assertionMethod = listOf("$issuerDid#key-1")
+                    id = didObj,
+                    assertionMethod = listOf(VerificationMethodId.parse("$issuerDid#key-1", didObj))
                 )
             )
         }
@@ -67,13 +71,14 @@ class ProofPurposeValidationEdgeCasesTest {
         val verificationMethod = "$issuerDid#key-1"
 
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
+            val didObj = Did(issuerDid)
             DidResolutionResult.Success(
                 document = DidDocument(
-                    id = issuerDid,
+                    id = didObj,
                     assertionMethod = listOf(
-                        verificationMethod,
-                        "#key-1", // Relative reference
-                        "$issuerDid#key-1" // Full reference
+                        VerificationMethodId.parse(verificationMethod, didObj),
+                        VerificationMethodId.parse("#key-1", didObj),
+                        VerificationMethodId.parse("$issuerDid#key-1", didObj)
                     )
                 )
             )
@@ -95,10 +100,11 @@ class ProofPurposeValidationEdgeCasesTest {
         val verificationMethod = "$issuerDid#key-1"
 
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
+            val didObj = Did(issuerDid)
             DidResolutionResult.Success(
                 document = DidDocument(
-                    id = issuerDid,
-                    keyAgreement = listOf(verificationMethod)
+                    id = didObj,
+                    keyAgreement = listOf(VerificationMethodId.parse(verificationMethod, didObj))
                 )
             )
         }
@@ -133,8 +139,9 @@ class ProofPurposeValidationEdgeCasesTest {
         val issuerDid = "did:key:issuer"
 
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
+            val didObj = Did(issuerDid)
             DidResolutionResult.Success(
-                document = DidDocument(id = issuerDid)
+                document = DidDocument(id = didObj)
             )
         }
 
@@ -168,12 +175,13 @@ class ProofPurposeValidationEdgeCasesTest {
         val issuerDid = "did:key:issuer"
 
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
+            val didObj = Did(issuerDid)
             DidResolutionResult.Success(
                 document = DidDocument(
-                    id = issuerDid,
+                    id = didObj,
                     assertionMethod = listOf(
-                        "$issuerDid#key-1",
-                        "#key-1"
+                        VerificationMethodId.parse("$issuerDid#key-1", didObj),
+                        VerificationMethodId.parse("#key-1", didObj)
                     )
                 )
             )

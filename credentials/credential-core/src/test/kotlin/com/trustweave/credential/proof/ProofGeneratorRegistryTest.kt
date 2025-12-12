@@ -2,6 +2,15 @@ package com.trustweave.credential.proof
 
 import com.trustweave.credential.models.Proof
 import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.model.ProofType
+import com.trustweave.credential.model.ProofTypes
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
+import kotlinx.datetime.Instant
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.AfterEach
@@ -34,12 +43,12 @@ class ProofGeneratorRegistryTest {
             override suspend fun generateProof(
                 credential: VerifiableCredential,
                 keyId: String,
-                options: ProofOptions
+                options: ProofGeneratorOptions
             ): Proof {
                 return Proof(
-                    type = proofType,
+                    type = ProofTypes.fromString(proofType),
                     created = Clock.System.now().toString(),
-                    verificationMethod = "did:key:test#$keyId",
+                    verificationMethod = VerificationMethodId.parse("did:key:test#$keyId", Did("did:key:test")),
                     proofPurpose = options.proofPurpose,
                     jws = "jws-signature-${UUID.randomUUID()}"
                 )
@@ -131,11 +140,11 @@ class ProofGeneratorRegistryTest {
         val proof = generator1.generateProof(
             credential = credential,
             keyId = "key-1",
-            options = ProofOptions(proofPurpose = "assertionMethod")
+            options = ProofGeneratorOptions(proofPurpose = "assertionMethod")
         )
 
         assertNotNull(proof)
-        assertEquals("Ed25519Signature2020", proof.type)
+        assertEquals("Ed25519Signature2020", proof.type.identifier)
         assertNotNull(proof.proofValue)
     }
 
@@ -147,7 +156,7 @@ class ProofGeneratorRegistryTest {
         val proof = generator1.generateProof(
             credential = credential,
             keyId = "key-1",
-            options = ProofOptions(
+            options = ProofGeneratorOptions(
                 proofPurpose = "authentication",
                 challenge = "challenge-123",
                 domain = "example.com",
@@ -158,23 +167,23 @@ class ProofGeneratorRegistryTest {
         assertEquals("authentication", proof.proofPurpose)
         assertEquals("challenge-123", proof.challenge)
         assertEquals("example.com", proof.domain)
-        assertEquals("did:key:custom#key-1", proof.verificationMethod)
+        assertEquals("did:key:custom#key-1", proof.verificationMethod.value)
     }
 
     private fun createTestCredential(
         id: String? = "https://example.com/credentials/1",
-        types: List<String> = listOf("VerifiableCredential", "PersonCredential"),
+        types: List<CredentialType> = listOf(CredentialType.VerifiableCredential, CredentialType.Custom("PersonCredential")),
         issuerDid: String = "did:key:issuer",
-        subject: JsonObject = buildJsonObject {
-            put("id", "did:key:subject")
-            put("name", "John Doe")
-        },
-        issuanceDate: String = Clock.System.now().toString()
+        subject: CredentialSubject = CredentialSubject.fromDid(
+            Did("did:key:subject"),
+            claims = mapOf("name" to JsonPrimitive("John Doe"))
+        ),
+        issuanceDate: Instant = Clock.System.now()
     ): VerifiableCredential {
         return VerifiableCredential(
-            id = id,
+            id = id?.let { CredentialId(it) },
             type = types,
-            issuer = issuerDid,
+            issuer = Issuer.fromDid(Did(issuerDid)),
             credentialSubject = subject,
             issuanceDate = issuanceDate
         )

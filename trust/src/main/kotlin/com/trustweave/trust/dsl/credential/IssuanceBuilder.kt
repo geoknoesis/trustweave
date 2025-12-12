@@ -11,6 +11,7 @@ import com.trustweave.credential.revocation.CredentialRevocationManager
 import com.trustweave.credential.identifiers.StatusListId
 import com.trustweave.credential.proof.ProofOptions
 import com.trustweave.credential.proof.ProofPurpose
+import com.trustweave.credential.proof.proofOptionsForIssuance
 import com.trustweave.trust.dsl.credential.CredentialBuilder
 import com.trustweave.trust.types.IssuerIdentity
 import com.trustweave.did.identifiers.Did
@@ -112,6 +113,15 @@ class IssuanceBuilder(
         this.issuerDid = Did(issuerDid)
         this.issuerKeyId = keyId
     }
+    
+    /**
+     * Set issuer DID and key ID for signing.
+     */
+    fun signedBy(issuerDid: com.trustweave.did.identifiers.Did, keyId: String) {
+        require(keyId.isNotBlank()) { "Key ID cannot be blank" }
+        this.issuerDid = issuerDid
+        this.issuerKeyId = keyId
+    }
 
     /**
      * Set proof suite.
@@ -194,7 +204,7 @@ class IssuanceBuilder(
 
                 // Add credential status to credential
                 val credentialStatus = CredentialStatus(
-                    id = StatusListId("${statusListId.value}#0"),
+                    id = StatusListId("urn:statuslist:${statusListId.value}#0"),
                     type = "StatusList2021Entry",
                     statusPurpose = StatusPurpose.REVOCATION,
                     statusListIndex = "0",
@@ -231,12 +241,16 @@ class IssuanceBuilder(
             credentialStatus = credentialToIssue.credentialStatus,
             credentialSchema = cred.credentialSchema,
             evidence = cred.evidence,
-            proofOptions = ProofOptions(
-                purpose = ProofPurpose.AssertionMethod,
-                challenge = challenge,
-                domain = domain,
-                verificationMethod = verificationMethodId
-            )
+            proofOptions = if (challenge == null && domain == null) {
+                proofOptionsForIssuance(verificationMethod = verificationMethodId)
+            } else {
+                ProofOptions(
+                    purpose = ProofPurpose.AssertionMethod,
+                    challenge = challenge,
+                    domain = domain,
+                    verificationMethod = verificationMethodId
+                )
+            }
         )
 
         // Issue credential using CredentialService

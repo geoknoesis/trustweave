@@ -1,9 +1,10 @@
 package com.trustweave.examples.professional
 
-import com.trustweave.credential.PresentationOptions
+import com.trustweave.credential.proof.ProofOptions
 import com.trustweave.testkit.credential.InMemoryWallet
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.did.identifiers.Did
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.*
@@ -48,17 +49,18 @@ class ProfessionalIdentityExampleTest {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
-        val professionalDid = didMethod.createDid()
+        val professionalDidDoc = didMethod.createDid()
+        val professionalDid = professionalDidDoc.id
 
         val wallet = InMemoryWallet(
-            walletDid = professionalDid.id,
-            holderDid = professionalDid.id
+            walletDidObj = professionalDid,
+            holderDidObj = professionalDid
         )
 
         // Store education credentials
         val bachelorDegree = createEducationCredential(
-            issuerDid = "did:key:university",
-            holderDid = professionalDid.id,
+            issuerDid = Did("did:key:university"),
+            holderDid = professionalDid,
             degreeType = "Bachelor",
             field = "Computer Science",
             institution = "Tech University",
@@ -67,8 +69,8 @@ class ProfessionalIdentityExampleTest {
         val bachelorId = wallet.store(bachelorDegree)
 
         val masterDegree = createEducationCredential(
-            issuerDid = "did:key:university",
-            holderDid = professionalDid.id,
+            issuerDid = Did("did:key:university"),
+            holderDid = professionalDid,
             degreeType = "Master",
             field = "Software Engineering",
             institution = "Tech University",
@@ -78,8 +80,8 @@ class ProfessionalIdentityExampleTest {
 
         // Store employment credential
         val job1 = createEmploymentCredential(
-            issuerDid = "did:key:company1",
-            holderDid = professionalDid.id,
+            issuerDid = Did("did:key:company1"),
+            holderDid = professionalDid,
             company = "Tech Corp",
             role = "Software Engineer",
             startDate = "2020-06-01",
@@ -90,8 +92,8 @@ class ProfessionalIdentityExampleTest {
 
         // Store certification
         val awsCert = createCertificationCredential(
-            issuerDid = "did:key:aws",
-            holderDid = professionalDid.id,
+            issuerDid = Did("did:key:aws"),
+            holderDid = professionalDid,
             certificationName = "AWS Certified Solutions Architect",
             issuer = "Amazon Web Services",
             issueDate = "2021-03-15",
@@ -113,17 +115,18 @@ class ProfessionalIdentityExampleTest {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
-        val professionalDid = didMethod.createDid()
+        val professionalDidDoc = didMethod.createDid()
+        val professionalDid = professionalDidDoc.id
 
         val wallet = InMemoryWallet(
-            walletDid = professionalDid.id,
-            holderDid = professionalDid.id
+            walletDidObj = professionalDid,
+            holderDidObj = professionalDid
         )
 
         // Store credentials
         val bachelorDegree = createEducationCredential(
-            issuerDid = "did:key:university",
-            holderDid = professionalDid.id,
+            issuerDid = Did("did:key:university"),
+            holderDid = professionalDid,
             degreeType = "Bachelor",
             field = "Computer Science",
             institution = "Tech University",
@@ -132,8 +135,8 @@ class ProfessionalIdentityExampleTest {
         val bachelorId = wallet.store(bachelorDegree)
 
         val job1 = createEmploymentCredential(
-            issuerDid = "did:key:company1",
-            holderDid = professionalDid.id,
+            issuerDid = Did("did:key:company1"),
+            holderDid = professionalDid,
             company = "Tech Corp",
             role = "Software Engineer",
             startDate = "2020-06-01",
@@ -170,17 +173,18 @@ class ProfessionalIdentityExampleTest {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
-        val professionalDid = didMethod.createDid()
+        val professionalDidDoc = didMethod.createDid()
+        val professionalDid = professionalDidDoc.id
 
         val wallet = InMemoryWallet(
-            walletDid = professionalDid.id,
-            holderDid = professionalDid.id
+            walletDidObj = professionalDid,
+            holderDidObj = professionalDid
         )
 
         // Store credential
         val bachelorDegree = createEducationCredential(
-            issuerDid = "did:key:university",
-            holderDid = professionalDid.id,
+            issuerDid = Did("did:key:university"),
+            holderDid = professionalDid,
             degreeType = "Bachelor",
             field = "Computer Science",
             institution = "Tech University",
@@ -208,17 +212,18 @@ class ProfessionalIdentityExampleTest {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
-        val professionalDid = didMethod.createDid()
+        val professionalDidDoc = didMethod.createDid()
+        val professionalDid = professionalDidDoc.id
 
         val wallet = InMemoryWallet(
-            walletDid = professionalDid.id,
-            holderDid = professionalDid.id
+            walletDidObj = professionalDid,
+            holderDidObj = professionalDid
         )
 
         // Store multiple credential types
         val bachelorDegree = createEducationCredential(
-            issuerDid = "did:key:university",
-            holderDid = professionalDid.id,
+            issuerDid = Did("did:key:university"),
+            holderDid = professionalDid,
             degreeType = "Bachelor",
             field = "Computer Science",
             institution = "Tech University",
@@ -227,8 +232,8 @@ class ProfessionalIdentityExampleTest {
         wallet.store(bachelorDegree)
 
         val awsCert = createCertificationCredential(
-            issuerDid = "did:key:aws",
-            holderDid = professionalDid.id,
+            issuerDid = Did("did:key:aws"),
+            holderDid = professionalDid,
             certificationName = "AWS Certified",
             issuer = "AWS",
             issueDate = "2021-03-15",
@@ -242,7 +247,7 @@ class ProfessionalIdentityExampleTest {
             byType("CertificationCredential")
         }
         assertEquals(1, certifications.size)
-        assertTrue(certifications.first().type.contains("CertificationCredential"))
+        assertTrue(certifications.first().type.any { it.value == "CertificationCredential" })
     }
 
     @Test
@@ -250,17 +255,18 @@ class ProfessionalIdentityExampleTest {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
-        val professionalDid = didMethod.createDid()
+        val professionalDidDoc = didMethod.createDid()
+        val professionalDid = professionalDidDoc.id
 
         val wallet = InMemoryWallet(
-            walletDid = professionalDid.id,
-            holderDid = professionalDid.id
+            walletDidObj = professionalDid,
+            holderDidObj = professionalDid
         )
 
         // Store credentials
         val masterDegree = createEducationCredential(
-            issuerDid = "did:key:university",
-            holderDid = professionalDid.id,
+            issuerDid = Did("did:key:university"),
+            holderDid = professionalDid,
             degreeType = "Master",
             field = "Software Engineering",
             institution = "Tech University",
@@ -269,8 +275,8 @@ class ProfessionalIdentityExampleTest {
         val masterId = wallet.store(masterDegree)
 
         val job1 = createEmploymentCredential(
-            issuerDid = "did:key:company1",
-            holderDid = professionalDid.id,
+            issuerDid = Did("did:key:company1"),
+            holderDid = professionalDid,
             company = "Tech Corp",
             role = "Software Engineer",
             startDate = "2020-06-01",
@@ -288,16 +294,14 @@ class ProfessionalIdentityExampleTest {
                 "employment.company",
                 "employment.role"
             ),
-            holderDid = professionalDid.id,
-            options = PresentationOptions(
-                holderDid = professionalDid.id,
-                proofType = "Ed25519Signature2020",
+            holderDid = professionalDid.value,
+            options = com.trustweave.credential.proof.ProofOptions(
                 challenge = "job-application-12345"
             )
         )
 
         assertNotNull(presentation)
-        assertEquals(professionalDid.id, presentation.holder)
+        assertEquals(professionalDid.value, presentation.holder.value)
         assertEquals(2, presentation.verifiableCredential.size)
         assertEquals("job-application-12345", presentation.challenge)
     }
@@ -307,17 +311,18 @@ class ProfessionalIdentityExampleTest {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
-        val professionalDid = didMethod.createDid()
+        val professionalDidDoc = didMethod.createDid()
+        val professionalDid = professionalDidDoc.id
 
         val wallet = InMemoryWallet(
-            walletDid = professionalDid.id,
-            holderDid = professionalDid.id
+            walletDidObj = professionalDid,
+            holderDidObj = professionalDid
         )
 
         // Store credentials
         val masterDegree = createEducationCredential(
-            issuerDid = "did:key:university",
-            holderDid = professionalDid.id,
+            issuerDid = Did("did:key:university"),
+            holderDid = professionalDid,
             degreeType = "Master",
             field = "Software Engineering",
             institution = "Tech University",
@@ -326,8 +331,8 @@ class ProfessionalIdentityExampleTest {
         val masterId = wallet.store(masterDegree)
 
         val awsCert = createCertificationCredential(
-            issuerDid = "did:key:aws",
-            holderDid = professionalDid.id,
+            issuerDid = Did("did:key:aws"),
+            holderDid = professionalDid,
             certificationName = "AWS Certified",
             issuer = "AWS",
             issueDate = "2021-03-15",
@@ -339,15 +344,12 @@ class ProfessionalIdentityExampleTest {
         // Create full presentation
         val presentation = wallet.createPresentation(
             credentialIds = listOf(masterId, awsCertId),
-            holderDid = professionalDid.id,
-            options = PresentationOptions(
-                holderDid = professionalDid.id,
-                proofType = "Ed25519Signature2020"
-            )
+            holderDid = professionalDid.value,
+            options = com.trustweave.credential.proof.ProofOptions()
         )
 
         assertNotNull(presentation)
-        assertEquals(professionalDid.id, presentation.holder)
+        assertEquals(professionalDid.value, presentation.holder.value)
         assertEquals(2, presentation.verifiableCredential.size)
     }
 
@@ -356,17 +358,18 @@ class ProfessionalIdentityExampleTest {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
-        val professionalDid = didMethod.createDid()
+        val professionalDidDoc = didMethod.createDid()
+        val professionalDid = professionalDidDoc.id
 
         val wallet = InMemoryWallet(
-            walletDid = professionalDid.id,
-            holderDid = professionalDid.id
+            walletDidObj = professionalDid,
+            holderDidObj = professionalDid
         )
 
         // Store expired certification
         val expiredCert = createCertificationCredential(
-            issuerDid = "did:key:aws",
-            holderDid = professionalDid.id,
+            issuerDid = Did("did:key:aws"),
+            holderDid = professionalDid,
             certificationName = "Expired Cert",
             issuer = "Test Issuer",
             issueDate = "2020-01-01T00:00:00Z",
@@ -377,8 +380,8 @@ class ProfessionalIdentityExampleTest {
 
         // Store active certification
         val activeCert = createCertificationCredential(
-            issuerDid = "did:key:aws",
-            holderDid = professionalDid.id,
+            issuerDid = Did("did:key:aws"),
+            holderDid = professionalDid,
             certificationName = "Active Cert",
             issuer = "Test Issuer",
             issueDate = "2023-01-01T00:00:00Z",
@@ -393,6 +396,6 @@ class ProfessionalIdentityExampleTest {
             notExpired()
         }
         assertEquals(1, activeCerts.size)
-        assertTrue(activeCerts.first().id?.contains("ACTIVE-1") == true)
+        assertTrue(activeCerts.first().id?.value?.contains("ACTIVE-1") == true)
     }
 }

@@ -1,7 +1,9 @@
 package com.trustweave.credential.revocation
 
 import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.CredentialSubject
 import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.credential.identifiers.StatusListId
 import com.trustweave.credential.revocation.CredentialRevocationManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -55,13 +57,47 @@ class BlockchainRevocationRegistry(
     private val pendingAnchors = ConcurrentHashMap<String, PendingAnchor>()
 
     // Track last anchor time per status list
-    private val lastAnchorTimes = ConcurrentHashMap<String, Instant>()
+    private val lastAnchorTimes = ConcurrentHashMap<StatusListId, Instant>()
 
     // JSON serializer for status lists
     private val json = Json {
         prettyPrint = false
         encodeDefaults = false
         ignoreUnknownKeys = true
+    }
+
+    /**
+     * Build a StatusListCredential from StatusListMetadata.
+     * This creates a minimal VerifiableCredential for anchoring purposes.
+     */
+    private fun buildStatusListCredential(metadata: StatusListMetadata): StatusListCredential {
+        val claims = buildJsonObject {
+            put("type", "StatusList2021")
+            put("statusPurpose", metadata.purpose.name.lowercase())
+            put("encodedList", "")  // Placeholder - actual encoded list would come from statusListManager
+        }
+        
+        val claimsMap = claims.toMap()
+        val credentialSubject = com.trustweave.credential.model.vc.CredentialSubject.fromIri(
+            metadata.id.value,
+            claims = claimsMap
+        )
+        
+        return VerifiableCredential(
+            id = com.trustweave.credential.identifiers.CredentialId(metadata.id.value),
+            type = listOf(com.trustweave.credential.model.CredentialType.fromString("VerifiableCredential"), 
+                         com.trustweave.credential.model.CredentialType.fromString("StatusList2021Credential")),
+            issuer = com.trustweave.credential.model.vc.Issuer.from(metadata.issuerDid),
+            credentialSubject = credentialSubject,
+            issuanceDate = metadata.createdAt,
+            expirationDate = null,
+            credentialStatus = null,
+            credentialSchema = null,
+            evidence = null,
+            proof = null,
+            termsOfUse = null,
+            refreshService = null
+        )
     }
 
     /**
@@ -118,12 +154,19 @@ class BlockchainRevocationRegistry(
             val ref = refField?.get(anchorResult)
             val txHashField = ref?.javaClass?.getDeclaredField("txHash")
             txHashField?.isAccessible = true
-            val statusListId = statusList.id?.value ?: "unknown"
-            val txHash = txHashField?.get(ref) as? String ?: statusListId
+            val statusListIdStr = statusList.id?.value ?: "unknown"
+            val txHash = txHashField?.get(ref) as? String ?: statusListIdStr
 
-            // Update tracking
-            lastAnchorTimes[statusListId] = Clock.System.now()
-            pendingAnchors.remove(statusListId)
+            // Update tracking - convert statusList.id to StatusListId if available
+            statusList.id?.let { id ->
+                try {
+                    val statusListId = StatusListId(id.value)
+                    lastAnchorTimes[statusListId] = Clock.System.now()
+                    pendingAnchors.remove(statusListIdStr)
+                } catch (e: Exception) {
+                    // If conversion fails, skip tracking
+                }
+            }
 
             txHash
         } catch (e: Exception) {
@@ -173,8 +216,8 @@ class BlockchainRevocationRegistry(
             }
         }
 
-        // Get status list from manager
-        val statusList = statusListManager.getStatusList(statusListId)
+        // Get status list metadata from manager (for tracking, not for anchoring)
+        val statusListMetadata = statusListManager.getStatusList(statusListId)
             ?: return@withContext statusListManager.checkRevocationStatus(credential)
 
         // Try to get anchor reference from credential evidence or status
@@ -255,7 +298,7 @@ class BlockchainRevocationRegistry(
 
     override suspend fun revokeCredential(
         credentialId: String,
-        statusListId: String
+        statusListId: StatusListId
     ): Boolean = withContext(Dispatchers.IO) {
         // Update off-chain immediately
         val result = statusListManager.revokeCredential(credentialId, statusListId)
@@ -271,7 +314,7 @@ class BlockchainRevocationRegistry(
 
     override suspend fun suspendCredential(
         credentialId: String,
-        statusListId: String
+        statusListId: StatusListId
     ): Boolean = withContext(Dispatchers.IO) {
         // Update off-chain immediately
         val result = statusListManager.suspendCredential(credentialId, statusListId)
@@ -287,7 +330,7 @@ class BlockchainRevocationRegistry(
 
     override suspend fun revokeCredentials(
         credentialIds: List<String>,
-        statusListId: String
+        statusListId: StatusListId
     ): Map<String, Boolean> = withContext(Dispatchers.IO) {
         // Update off-chain immediately
         val result = statusListManager.revokeCredentials(credentialIds, statusListId)
@@ -310,19 +353,20 @@ class BlockchainRevocationRegistry(
         statusListManager.updateStatusListBatch(statusListId, updates)
 
         // Track update and check if anchoring is needed
-        trackUpdate(statusListId.value, updateCount = updates.size)
-        checkAndAnchorIfNeeded(statusListId.value)
+        trackUpdate(statusListId, updateCount = updates.size)
+        checkAndAnchorIfNeeded(statusListId)
     }
 
     /**
      * Track an update to a status list.
      */
-    private fun trackUpdate(statusListId: String, updateCount: Int = 1) {
+    private fun trackUpdate(statusListId: StatusListId, updateCount: Int = 1) {
         val now = Clock.System.now()
-        val pending = pendingAnchors.compute(statusListId) { _, existing ->
+        val statusListIdStr = statusListId.value
+        val pending = pendingAnchors.compute(statusListIdStr) { _, existing ->
             if (existing == null) {
                 PendingAnchor(
-                    statusListId = statusListId,
+                    statusListId = statusListIdStr,
                     lastUpdate = now,
                     updateCount = updateCount,
                     lastAnchorTime = lastAnchorTimes[statusListId]
@@ -339,20 +383,23 @@ class BlockchainRevocationRegistry(
     /**
      * Check if anchoring is needed and anchor if so.
      */
-    private suspend fun checkAndAnchorIfNeeded(statusListId: String) {
-        val pending = pendingAnchors[statusListId] ?: return
+    private suspend fun checkAndAnchorIfNeeded(statusListId: StatusListId) {
+        val statusListIdStr = statusListId.value
+        val pending = pendingAnchors[statusListIdStr] ?: return
         val lastAnchorTime = lastAnchorTimes[statusListId]
 
         if (anchorStrategy.shouldAnchor(
-                statusListId = statusListId,
+                statusListId = statusListIdStr,
                 lastAnchorTime = lastAnchorTime,
                 updateCount = pending.updateCount,
                 lastUpdateTime = pending.lastUpdate
             )) {
-            val statusList = statusListManager.getStatusList(statusListId)
-            if (statusList != null) {
+            val statusListMetadata = statusListManager.getStatusList(statusListId)
+            if (statusListMetadata != null) {
                 val targetChainId = chainId ?: return
-                anchorRevocationList(statusList, targetChainId)
+                // Build a minimal StatusListCredential from metadata for anchoring
+                val statusListCredential = buildStatusListCredential(statusListMetadata)
+                anchorRevocationList(statusListCredential, targetChainId)
             }
         }
     }
@@ -360,7 +407,7 @@ class BlockchainRevocationRegistry(
     /**
      * Get the last anchor time for a status list.
      */
-    fun getLastAnchorTime(statusListId: String): Instant? {
+    fun getLastAnchorTime(statusListId: StatusListId): Instant? {
         return lastAnchorTimes[statusListId]
     }
 

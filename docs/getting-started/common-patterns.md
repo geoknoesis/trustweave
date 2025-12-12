@@ -68,19 +68,16 @@ fun main() = runBlocking {
     val credential = try {
         trustWeave.issue {
             credential {
+                type("VerifiableCredential", "DegreeCredential")
                 issuer(issuerDid)
                 subject {
                     id("did:key:holder-123")
-                put("name", "Alice")
-                put("degree", "Bachelor of Science")
-            },
-            config = IssuanceConfig(
-                proofType = ProofType.Ed25519Signature2020,
-                keyId = issuerKeyId,
-                issuerDid = issuerDid
-            ),
-            types = listOf("VerifiableCredential", "DegreeCredential")
-        )
+                    "name" to "Alice"
+                    "degree" to "Bachelor of Science"
+                }
+            }
+            signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+        }
     } catch (error: TrustWeaveError) {
         when (error) {
             is TrustWeaveError.CredentialInvalid -> {
@@ -255,7 +252,7 @@ fun main() = runBlocking {
 
     // Batch credential creation
     import com.trustweave.trust.types.DidCreationResult
-    import com.trustweave.trust.types.IssuanceResult
+    import com.trustweave.credential.results.IssuanceResult
     
     val credentials = (1..10).mapAsync { index ->
         runCatching {

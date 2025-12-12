@@ -1,11 +1,19 @@
 package com.trustweave.credential.anchor
 
 import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.CredentialProof
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.model.Evidence
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.did.identifiers.Did
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 
 /**
  * Comprehensive tests for CredentialAnchorService API.
@@ -18,11 +26,13 @@ class CredentialAnchorServiceTest {
     @Test
     fun `test anchor credential with proof`() = runBlocking {
         val credential = createTestCredential(
-            proof = com.trustweave.credential.models.Proof(
+            proof = CredentialProof.LinkedDataProof(
                 type = "Ed25519Signature2020",
-                created = Clock.System.now().toString(),
+                created = Clock.System.now(),
                 verificationMethod = "did:key:issuer#key-1",
-                proofPurpose = "assertionMethod"
+                proofPurpose = "assertionMethod",
+                proofValue = "test-proof",
+                additionalProperties = emptyMap()
             )
         )
 
@@ -56,8 +66,8 @@ class CredentialAnchorServiceTest {
     fun `test verify anchored credential with evidence`() = runBlocking {
         val credential = createTestCredential(
             evidence = listOf(
-                com.trustweave.credential.models.Evidence(
-                    id = "evidence-1",
+                Evidence(
+                    id = CredentialId("evidence-1"),
                     type = listOf("BlockchainAnchorEvidence"),
                     evidenceDocument = buildJsonObject {
                         put("chainId", "algorand:testnet")
@@ -85,8 +95,8 @@ class CredentialAnchorServiceTest {
     fun `test verify anchored credential with wrong chain ID`() = runBlocking {
         val credential = createTestCredential(
             evidence = listOf(
-                com.trustweave.credential.models.Evidence(
-                    id = "evidence-1",
+                Evidence(
+                    id = CredentialId("evidence-1"),
                     type = listOf("BlockchainAnchorEvidence"),
                     evidenceDocument = buildJsonObject {
                         put("chainId", "algorand:testnet")
@@ -104,8 +114,8 @@ class CredentialAnchorServiceTest {
     fun `test get anchor reference with evidence`() = runBlocking {
         val credential = createTestCredential(
             evidence = listOf(
-                com.trustweave.credential.models.Evidence(
-                    id = "evidence-1",
+                Evidence(
+                    id = CredentialId("evidence-1"),
                     type = listOf("BlockchainAnchorEvidence"),
                     evidenceDocument = buildJsonObject {
                         put("chainId", "algorand:testnet")
@@ -133,20 +143,20 @@ class CredentialAnchorServiceTest {
 
     private fun createTestCredential(
         id: String? = "https://example.com/credentials/1",
-        types: List<String> = listOf("VerifiableCredential", "PersonCredential"),
+        types: List<CredentialType> = listOf(CredentialType.VerifiableCredential, CredentialType.Custom("PersonCredential")),
         issuerDid: String = "did:key:issuer",
-        subject: JsonObject = buildJsonObject {
-            put("id", "did:key:subject")
-            put("name", "John Doe")
-        },
-        issuanceDate: String = Clock.System.now().toString(),
-        proof: com.trustweave.credential.models.Proof? = null,
-        evidence: List<com.trustweave.credential.models.Evidence>? = null
+        subject: CredentialSubject = CredentialSubject.fromDid(
+            Did("did:key:subject"),
+            claims = mapOf("name" to JsonPrimitive("John Doe"))
+        ),
+        issuanceDate: Instant = Clock.System.now(),
+        proof: CredentialProof? = null,
+        evidence: List<Evidence>? = null
     ): VerifiableCredential {
         return VerifiableCredential(
-            id = id,
+            id = id?.let { CredentialId(it) },
             type = types,
-            issuer = issuerDid,
+            issuer = Issuer.fromDid(Did(issuerDid)),
             credentialSubject = subject,
             issuanceDate = issuanceDate,
             proof = proof,

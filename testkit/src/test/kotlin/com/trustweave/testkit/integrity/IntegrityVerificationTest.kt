@@ -102,7 +102,7 @@ class IntegrityVerificationTest {
         val vc = buildJsonObject {
             put("id", "vc-12345")
             put("type", buildJsonArray { add("VerifiableCredential") })
-            put("issuer", issuerDid)
+            put("issuer", JsonPrimitive(issuerDid.value))
             put("credentialSubject", subject)
             put("linksetDigest", linksetDigest) // Reference to Linkset digest
             put("issued", fixedTimestamp)
@@ -111,7 +111,7 @@ class IntegrityVerificationTest {
         val vcWithDigest = buildJsonObject {
             put("id", "vc-12345")
             put("type", buildJsonArray { add("VerifiableCredential") })
-            put("issuer", issuerDid)
+            put("issuer", JsonPrimitive(issuerDid.value))
             put("credentialSubject", subject)
             put("digestMultibase", vcDigest)
             put("linksetDigest", linksetDigest) // Reference to Linkset digest
@@ -122,7 +122,7 @@ class IntegrityVerificationTest {
         val digestPayload = buildJsonObject {
             put("vcId", "vc-12345")
             put("vcDigest", vcDigest)
-            put("issuer", issuerDid)
+            put("issuer", JsonPrimitive(issuerDid.value))
         }
 
         val anchorResult = anchorClient.writePayload(digestPayload)
@@ -194,7 +194,7 @@ class IntegrityVerificationTest {
         // Anchor the digest
         val digestPayload = buildJsonObject {
             put("vcDigest", vcDigest)
-            put("issuer", issuerDid)
+            put("issuer", JsonPrimitive(issuerDid.value))
         }
         val anchorResult = anchorClient.writePayload(digestPayload)
 
@@ -252,7 +252,7 @@ class IntegrityVerificationTest {
         )
 
         val didDocument = buildJsonObject {
-            put("id", issuerDid)
+            put("id", JsonPrimitive(issuerDid.value))
             put("service", buildJsonArray {
                 add(Json.encodeToJsonElement(anchorService))
             })
@@ -303,7 +303,7 @@ class IntegrityVerificationTest {
         // Anchor the digest
         val digestPayload = buildJsonObject {
             put("vcDigest", vcDigest)
-            put("issuer", issuerDid)
+            put("issuer", JsonPrimitive(issuerDid.value))
         }
         val anchorResult = anchorClient.writePayload(digestPayload)
 
@@ -367,7 +367,7 @@ class IntegrityVerificationTest {
 
         val digestPayload = buildJsonObject {
             put("vcDigest", vcDigest)
-            put("issuer", issuerDid)
+            put("issuer", JsonPrimitive(issuerDid.value))
         }
         val anchorResult = anchorClient.writePayload(digestPayload)
 
@@ -377,7 +377,7 @@ class IntegrityVerificationTest {
             chainId = chainId,
             txHash = anchorResult.ref.txHash,
             timestamp = System.currentTimeMillis() / 1000,
-            issuer = issuerDid
+            issuer = issuerDid.value
         )
 
         // Discover anchor from registry
@@ -418,7 +418,7 @@ class IntegrityVerificationTest {
             manifestId = "manifest-1",
             chainId = chainId,
             anchoredDigests = listOf(digest1, digest2, digest3),
-            issuer = issuerDid
+            issuer = issuerDid.value
         )
 
         // Discover anchor from manifest

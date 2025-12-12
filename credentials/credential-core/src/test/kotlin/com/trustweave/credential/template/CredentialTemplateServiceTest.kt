@@ -1,6 +1,12 @@
 package com.trustweave.credential.template
 
 import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.identifiers.SchemaId
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.format.ProofSuiteId
+import com.trustweave.did.identifiers.Did
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.AfterEach
@@ -8,26 +14,25 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant as KotlinInstant
-import kotlin.time.Duration.Companion.seconds
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant as KotlinInstant
-import kotlin.time.Duration.Companion.seconds
+import kotlinx.datetime.Instant
+import kotlin.time.Duration.Companion.days
+import java.time.Duration
 
 /**
- * Comprehensive tests for CredentialTemplateService API.
+ * Comprehensive tests for TemplateService API.
  */
 class CredentialTemplateServiceTest {
 
-    private val service = CredentialTemplateService()
+    private lateinit var service: TemplateService
 
     @BeforeEach
-    fun setup() {
+    fun setup() = runBlocking {
+        service = TemplateServices.default()
         service.clear()
     }
 
     @AfterEach
-    fun cleanup() {
+    fun cleanup() = runBlocking {
         service.clear()
     }
 
@@ -36,17 +41,19 @@ class CredentialTemplateServiceTest {
         val template = CredentialTemplate(
             id = "person-template",
             name = "Person Credential Template",
-            schemaId = "https://example.com/schemas/person",
-            type = listOf("VerifiableCredential", "PersonCredential"),
+            schemaId = SchemaId("https://example.com/schemas/person"),
+            type = listOf(CredentialType.fromString("VerifiableCredential"), CredentialType.fromString("PersonCredential")),
             defaultIssuer = "did:key:issuer",
-            defaultValidityDays = 365,
+            defaultValidity = Duration.ofDays(365),
             requiredFields = listOf("name", "email")
         )
 
-        val created = service.createTemplate(template)
+        service.createTemplate(template)
 
-        assertEquals(template.id, created.id)
-        assertEquals(template.name, created.name)
+        val created = service.getTemplate("person-template")
+        assertNotNull(created)
+        assertEquals(template.id, created?.id)
+        assertEquals(template.name, created?.name)
     }
 
     @Test
@@ -54,8 +61,8 @@ class CredentialTemplateServiceTest {
         val template = CredentialTemplate(
             id = "person-template",
             name = "Person Credential Template",
-            schemaId = "https://example.com/schemas/person",
-            type = listOf("VerifiableCredential", "PersonCredential")
+            schemaId = SchemaId("https://example.com/schemas/person"),
+            type = listOf(CredentialType.fromString("VerifiableCredential"), CredentialType.fromString("PersonCredential"))
         )
 
         service.createTemplate(template)
@@ -72,164 +79,165 @@ class CredentialTemplateServiceTest {
     }
 
     @Test
-    fun `test issue from template`() = runBlocking {
+    fun `test create issuance request from template`() = runBlocking {
         val template = CredentialTemplate(
             id = "person-template",
             name = "Person Credential Template",
-            schemaId = "https://example.com/schemas/person",
-            type = listOf("VerifiableCredential", "PersonCredential"),
+            schemaId = SchemaId("https://example.com/schemas/person"),
+            type = listOf(CredentialType.fromString("VerifiableCredential"), CredentialType.fromString("PersonCredential")),
             defaultIssuer = "did:key:issuer",
-            defaultValidityDays = 365,
+            defaultValidity = Duration.ofDays(365),
             requiredFields = listOf("name", "email")
         )
 
         service.createTemplate(template)
 
-        val subject = buildJsonObject {
-            put("id", "did:key:subject")
-            put("name", "John Doe")
-            put("email", "john@example.com")
-        }
+        val subjectClaims = mapOf(
+            "name" to JsonPrimitive("John Doe"),
+            "email" to JsonPrimitive("john@example.com")
+        )
 
-        val credential = service.issueFromTemplate("person-template", subject)
+        val request = service.createIssuanceRequest(
+            templateId = "person-template",
+            format = ProofSuiteId.VC_LD,
+            issuer = Issuer.fromDid(Did("did:key:issuer")),
+            credentialSubject = CredentialSubject.fromDid(Did("did:key:subject"), claims = subjectClaims)
+        )
 
-        assertNotNull(credential)
-        assertEquals("did:key:issuer", credential.issuer)
-        assertEquals(template.type, credential.type)
-        assertNotNull(credential.expirationDate)
-        assertEquals(subject, credential.credentialSubject)
+        assertNotNull(request)
+        assertEquals(template.type, request.type)
+        assertNotNull(request.validUntil)
     }
 
     @Test
-    fun `test issue from template fails when template not found`() = runBlocking {
-        val subject = buildJsonObject {
-            put("name", "John Doe")
-        }
-
+    fun `test create issuance request fails when template not found`() = runBlocking {
         assertFailsWith<IllegalArgumentException> {
-            service.issueFromTemplate("nonexistent", subject)
+            service.createIssuanceRequest(
+                templateId = "nonexistent",
+                format = ProofSuiteId.VC_LD,
+                issuer = Issuer.fromDid(Did("did:key:issuer")),
+                credentialSubject = CredentialSubject.fromDid(Did("did:key:subject"), claims = mapOf("name" to JsonPrimitive("John Doe")))
+            )
         }
     }
 
     @Test
-    fun `test issue from template fails when required field missing`() = runBlocking {
+    fun `test create issuance request fails when required field missing`() = runBlocking {
         val template = CredentialTemplate(
             id = "person-template",
             name = "Person Credential Template",
-            schemaId = "https://example.com/schemas/person",
-            type = listOf("VerifiableCredential", "PersonCredential"),
+            schemaId = SchemaId("https://example.com/schemas/person"),
+            type = listOf(CredentialType.fromString("VerifiableCredential"), CredentialType.fromString("PersonCredential")),
             requiredFields = listOf("name", "email")
         )
 
         service.createTemplate(template)
 
-        val subject = buildJsonObject {
-            put("name", "John Doe")
-            // Missing "email" field
-        }
-
         assertFailsWith<IllegalArgumentException> {
-            service.issueFromTemplate("person-template", subject)
+            service.createIssuanceRequest(
+                templateId = "person-template",
+                format = ProofSuiteId.VC_LD,
+                issuer = Issuer.fromDid(Did("did:key:issuer")),
+                credentialSubject = CredentialSubject.fromDid(Did("did:key:subject"), claims = mapOf("name" to JsonPrimitive("John Doe")))
+                // Missing "email" field
+            )
         }
     }
 
     @Test
-    fun `test issue from template with custom issuer`() = runBlocking {
+    fun `test create issuance request with custom issuer`() = runBlocking {
         val template = CredentialTemplate(
             id = "person-template",
             name = "Person Credential Template",
-            schemaId = "https://example.com/schemas/person",
-            type = listOf("VerifiableCredential", "PersonCredential"),
+            schemaId = SchemaId("https://example.com/schemas/person"),
+            type = listOf(CredentialType.fromString("VerifiableCredential"), CredentialType.fromString("PersonCredential")),
             defaultIssuer = "did:key:default-issuer"
         )
 
         service.createTemplate(template)
 
-        val subject = buildJsonObject {
-            put("name", "John Doe")
-        }
-
-        val credential = service.issueFromTemplate(
+        val request = service.createIssuanceRequest(
             templateId = "person-template",
-            subject = subject,
-            options = mapOf("issuer" to "did:key:custom-issuer")
+            format = ProofSuiteId.VC_LD,
+            issuer = Issuer.fromDid(Did("did:key:custom-issuer")),
+            credentialSubject = CredentialSubject.fromDid(Did("did:key:subject"), claims = mapOf("name" to JsonPrimitive("John Doe")))
         )
 
-        assertEquals("did:key:custom-issuer", credential.issuer)
+        assertEquals(Issuer.fromDid(Did("did:key:custom-issuer")), request.issuer)
     }
 
     @Test
-    fun `test issue from template fails when no issuer provided`() = runBlocking {
+    fun `test create issuance request works without default issuer`() = runBlocking {
         val template = CredentialTemplate(
             id = "person-template",
             name = "Person Credential Template",
-            schemaId = "https://example.com/schemas/person",
-            type = listOf("VerifiableCredential", "PersonCredential")
+            schemaId = SchemaId("https://example.com/schemas/person"),
+            type = listOf(CredentialType.fromString("VerifiableCredential"), CredentialType.fromString("PersonCredential"))
             // No defaultIssuer
         )
 
         service.createTemplate(template)
 
-        val subject = buildJsonObject {
-            put("name", "John Doe")
-        }
+        val request = service.createIssuanceRequest(
+            templateId = "person-template",
+            format = ProofSuiteId.VC_LD,
+            issuer = Issuer.fromDid(Did("did:key:custom-issuer")),
+            credentialSubject = CredentialSubject.fromDid(Did("did:key:subject"), claims = mapOf("name" to JsonPrimitive("John Doe")))
+        )
 
-        assertFailsWith<IllegalArgumentException> {
-            service.issueFromTemplate("person-template", subject)
-        }
+        assertNotNull(request)
     }
 
     @Test
-    fun `test issue from template with custom ID`() = runBlocking {
+    fun `test create issuance request with custom issuedAt`() = runBlocking {
         val template = CredentialTemplate(
             id = "person-template",
             name = "Person Credential Template",
-            schemaId = "https://example.com/schemas/person",
-            type = listOf("VerifiableCredential", "PersonCredential"),
+            schemaId = SchemaId("https://example.com/schemas/person"),
+            type = listOf(CredentialType.fromString("VerifiableCredential"), CredentialType.fromString("PersonCredential")),
             defaultIssuer = "did:key:issuer"
         )
 
         service.createTemplate(template)
 
-        val subject = buildJsonObject {
-            put("name", "John Doe")
-        }
-
-        val credential = service.issueFromTemplate(
+        val customIssuedAt = Clock.System.now().minus(1.days)
+        val request = service.createIssuanceRequest(
             templateId = "person-template",
-            subject = subject,
-            options = mapOf("id" to "https://example.com/credentials/custom-123")
+            format = ProofSuiteId.VC_LD,
+            issuer = Issuer.fromDid(Did("did:key:issuer")),
+            credentialSubject = CredentialSubject.fromDid(Did("did:key:subject"), claims = mapOf("name" to JsonPrimitive("John Doe"))),
+            issuedAt = customIssuedAt
         )
 
-        assertEquals("https://example.com/credentials/custom-123", credential.id)
+        assertEquals(customIssuedAt, request.issuedAt)
     }
 
     @Test
-    fun `test issue from template calculates expiration date`() = runBlocking {
+    fun `test create issuance request calculates expiration date from template`() = runBlocking {
         val template = CredentialTemplate(
             id = "person-template",
             name = "Person Credential Template",
-            schemaId = "https://example.com/schemas/person",
-            type = listOf("VerifiableCredential", "PersonCredential"),
+            schemaId = SchemaId("https://example.com/schemas/person"),
+            type = listOf(CredentialType.fromString("VerifiableCredential"), CredentialType.fromString("PersonCredential")),
             defaultIssuer = "did:key:issuer",
-            defaultValidityDays = 30
+            defaultValidity = Duration.ofDays(30)
         )
 
         service.createTemplate(template)
 
-        val subject = buildJsonObject {
-            put("name", "John Doe")
-        }
-
-        val credential = service.issueFromTemplate("person-template", subject)
-
-        assertNotNull(credential.expirationDate)
-        val expiration = KotlinInstant.parse(credential.expirationDate!!)
         val now = Clock.System.now()
-        val expectedExpiration = now.plus((30L * 24 * 60 * 60).seconds)
+        val request = service.createIssuanceRequest(
+            templateId = "person-template",
+            format = ProofSuiteId.VC_LD,
+            issuer = Issuer.fromDid(Did("did:key:issuer")),
+            credentialSubject = CredentialSubject.fromDid(Did("did:key:subject"), claims = mapOf("name" to JsonPrimitive("John Doe"))),
+            issuedAt = now
+        )
 
+        assertNotNull(request.validUntil)
+        val expectedExpiration = now.plus(30.days)
         // Allow 1 second tolerance
-        assertTrue(kotlin.math.abs(expiration.epochSeconds - expectedExpiration.epochSeconds) <= 1)
+        assertTrue(kotlin.math.abs((request.validUntil!!.epochSeconds - expectedExpiration.epochSeconds)) <= 1)
     }
 
     @Test
@@ -237,14 +245,14 @@ class CredentialTemplateServiceTest {
         val template1 = CredentialTemplate(
             id = "template-1",
             name = "Template 1",
-            schemaId = "schema-1",
-            type = listOf("VerifiableCredential")
+            schemaId = SchemaId("schema-1"),
+            type = listOf(CredentialType.fromString("VerifiableCredential"))
         )
         val template2 = CredentialTemplate(
             id = "template-2",
             name = "Template 2",
-            schemaId = "schema-2",
-            type = listOf("VerifiableCredential")
+            schemaId = SchemaId("schema-2"),
+            type = listOf(CredentialType.fromString("VerifiableCredential"))
         )
 
         service.createTemplate(template1)
@@ -262,8 +270,8 @@ class CredentialTemplateServiceTest {
         val template = CredentialTemplate(
             id = "person-template",
             name = "Person Credential Template",
-            schemaId = "https://example.com/schemas/person",
-            type = listOf("VerifiableCredential", "PersonCredential")
+            schemaId = SchemaId("https://example.com/schemas/person"),
+            type = listOf(CredentialType.fromString("VerifiableCredential"), CredentialType.fromString("PersonCredential"))
         )
 
         service.createTemplate(template)
@@ -285,14 +293,14 @@ class CredentialTemplateServiceTest {
         val template1 = CredentialTemplate(
             id = "template-1",
             name = "Template 1",
-            schemaId = "schema-1",
-            type = listOf("VerifiableCredential")
+            schemaId = SchemaId("schema-1"),
+            type = listOf(CredentialType.fromString("VerifiableCredential"))
         )
         val template2 = CredentialTemplate(
             id = "template-2",
             name = "Template 2",
-            schemaId = "schema-2",
-            type = listOf("VerifiableCredential")
+            schemaId = SchemaId("schema-2"),
+            type = listOf(CredentialType.fromString("VerifiableCredential"))
         )
 
         service.createTemplate(template1)
@@ -305,12 +313,12 @@ class CredentialTemplateServiceTest {
     }
 
     @Test
-    fun `test issue from template with optional fields`() = runBlocking {
+    fun `test create issuance request with optional fields`() = runBlocking {
         val template = CredentialTemplate(
             id = "person-template",
             name = "Person Credential Template",
-            schemaId = "https://example.com/schemas/person",
-            type = listOf("VerifiableCredential", "PersonCredential"),
+            schemaId = SchemaId("https://example.com/schemas/person"),
+            type = listOf(CredentialType.fromString("VerifiableCredential"), CredentialType.fromString("PersonCredential")),
             defaultIssuer = "did:key:issuer",
             requiredFields = listOf("name"),
             optionalFields = listOf("email", "phone")
@@ -318,16 +326,21 @@ class CredentialTemplateServiceTest {
 
         service.createTemplate(template)
 
-        val subject = buildJsonObject {
-            put("name", "John Doe")
-            put("email", "john@example.com")
+        val claims = mapOf(
+            "name" to JsonPrimitive("John Doe"),
+            "email" to JsonPrimitive("john@example.com")
             // phone is optional, not included
-        }
+        )
 
-        val credential = service.issueFromTemplate("person-template", subject)
+        val request = service.createIssuanceRequest(
+            templateId = "person-template",
+            format = ProofSuiteId.VC_LD,
+            issuer = Issuer.fromDid(Did("did:key:issuer")),
+            credentialSubject = CredentialSubject.fromDid(Did("did:key:subject"), claims = claims)
+        )
 
-        assertNotNull(credential)
-        assertEquals("John Doe", credential.credentialSubject.jsonObject["name"]?.jsonPrimitive?.content)
+        assertNotNull(request)
+        assertEquals("John Doe", request.credentialSubject.claims["name"]?.jsonPrimitive?.content)
     }
 }
 

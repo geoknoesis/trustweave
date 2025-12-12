@@ -34,10 +34,12 @@ class DefaultDidMethodRegistry : DidMethodRegistry {
     override suspend fun resolve(did: String): DidResolutionResult {
         val parsed = Did(did)
         val method = get(parsed.method)
-            ?: throw DidException.DidMethodNotRegistered(
+        if (method == null) {
+            throw DidException.DidMethodNotRegistered(
                 method = parsed.method,
                 availableMethods = getAllMethodNames()
             )
+        }
         return method.resolveDid(parsed)
     }
 

@@ -2,6 +2,7 @@ package com.trustweave.testkit.integrity
 
 import com.trustweave.core.util.DigestUtils
 import com.trustweave.testkit.integrity.models.*
+import com.trustweave.did.identifiers.Did
 import kotlinx.serialization.json.*
 import kotlinx.datetime.Clock
 
@@ -29,7 +30,7 @@ object TestDataBuilders {
      * Builds a Verifiable Credential JSON object.
      */
     fun buildVc(
-        issuerDid: String,
+        issuerDid: Did,
         subject: JsonElement,
         digestMultibase: String,
         evidence: List<BlockchainAnchorEvidence>? = null,
@@ -44,7 +45,7 @@ object TestDataBuilders {
             put("type", buildJsonArray {
                 add("VerifiableCredential")
             })
-            put("issuer", issuerDid)
+            put("issuer", JsonPrimitive(issuerDid.value))
             put("credentialSubject", subject)
             // Only add digestMultibase if it's not empty
             if (digestMultibase.isNotEmpty()) {
@@ -239,10 +240,10 @@ object TestDataBuilders {
     /**
      * Creates sample provenance artifact (PROV style).
      */
-    fun createProvenanceArtifact(id: String, activity: String, agent: String): Pair<JsonObject, String> {
+    fun createProvenanceArtifact(id: String, activity: String, agent: Did): Pair<JsonObject, String> {
         val provenance = buildJsonObject {
             put("activity", activity)
-            put("agent", agent)
+            put("agent", JsonPrimitive(agent.value))
             put("timestamp", Clock.System.now().toString())
         }
         val digest = DigestUtils.sha256DigestMultibase(provenance)

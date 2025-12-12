@@ -1,20 +1,23 @@
 package com.trustweave.trust.dsl
 
 import com.trustweave.credential.model.vc.VerifiableCredential
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.resolver.DidResolver
 import com.trustweave.kms.KeyHandle
+import com.trustweave.kms.results.SignResult
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.testkit.services.TestkitDidMethodFactory
 import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.createTestCredentialService
 import com.trustweave.trust.dsl.credential.credential
 import com.trustweave.credential.model.ProofType
 import com.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
+import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.*
 
 /**
@@ -33,6 +36,31 @@ class IssuanceDslTest {
         // Capture KMS reference for closure
         val kmsRef = kms
 
+        // Create DID resolver that uses the DID registry from TrustWeave
+        // We'll create a temporary TrustWeave to get the DID registry, then rebuild with CredentialService
+        val tempTrustWeave = TrustWeave.build {
+            factories(
+                didMethodFactory = TestkitDidMethodFactory()
+            )
+            keys {
+                custom(kmsRef)
+                signer { data, keyId ->
+                    when (val result = kmsRef.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
+                        is SignResult.Success -> result.signature
+                        else -> throw IllegalStateException("Signing failed: $result")
+                    }
+                }
+            }
+            did {
+                method("key") {}
+            }
+        }
+        
+        val didResolver = DidResolver { did ->
+            tempTrustWeave.getDslContext().getConfig().registries.didRegistry.resolve(did.value)
+        }
+        
+        val credentialService = createTestCredentialService(kms = kmsRef, didResolver = didResolver)
         trustWeave = TrustWeave.build {
             factories(
                 didMethodFactory = TestkitDidMethodFactory()
@@ -41,7 +69,10 @@ class IssuanceDslTest {
                 custom(kmsRef)
                 // Provide signer function directly to avoid reflection
                 signer { data, keyId ->
-                    kmsRef.sign(com.trustweave.core.identifiers.KeyId(keyId), data)
+                    when (val result = kmsRef.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
+                        is SignResult.Success -> result.signature
+                        else -> throw IllegalStateException("Signing failed: $result")
+                    }
                 }
             }
 
@@ -54,12 +85,17 @@ class IssuanceDslTest {
             credentials {
                 defaultProofType(ProofType.Ed25519Signature2020)
             }
+            // Set CredentialService as issuer for issuance builder
+            issuer(credentialService)
         }
     }
 
     @Test
     fun `test issuance with inline credential builder`() = runBlocking {
-        val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
+        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
+            is com.trustweave.kms.results.GenerateKeyResult.Success -> result.keyHandle
+            else -> throw IllegalStateException("Failed to generate key: $result")
+        }
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
         val issuerDidId = issuerDidDoc.id
@@ -78,15 +114,20 @@ class IssuanceDslTest {
         }.getOrFail()
 
         assertNotNull(issuedCredential)
-        assertTrue(issuedCredential.type.contains("PersonCredential"))
-        assertEquals(issuerDidId, issuedCredential.issuer)
+        assertTrue(issuedCredential.type.any { it.value == "PersonCredential" })
+        assertEquals(issuerDidId.value, issuedCredential.issuer.id.value)
         assertNotNull(issuedCredential.proof)
-        assertEquals("Ed25519Signature2020", issuedCredential.proof?.type)
+        assertTrue(issuedCredential.proof is com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof)
+        val linkedDataProof = issuedCredential.proof as com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
+        assertEquals("Ed25519Signature2020", linkedDataProof.type)
     }
 
     @Test
     fun `test issuance with pre-built credential`() = runBlocking {
-        val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
+        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
+            is com.trustweave.kms.results.GenerateKeyResult.Success -> result.keyHandle
+            else -> throw IllegalStateException("Failed to generate key: $result")
+        }
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
         val issuerDidId = issuerDidDoc.id
@@ -98,7 +139,7 @@ class IssuanceDslTest {
                 id("did:key:subject")
                 "name" to "John Doe"
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
 
         val issuedCredential = trustWeave.issue {
@@ -112,7 +153,10 @@ class IssuanceDslTest {
 
     @Test
     fun `test issuance with custom proof type`() = runBlocking {
-        val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
+        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
+            is com.trustweave.kms.results.GenerateKeyResult.Success -> result.keyHandle
+            else -> throw IllegalStateException("Failed to generate key: $result")
+        }
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
         val issuerDidId = issuerDidDoc.id
@@ -127,16 +171,21 @@ class IssuanceDslTest {
                 issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDidId, keyId = issuerKey.id.value)
-            withProof(ProofType.Ed25519Signature2020)
+            withProof(com.trustweave.credential.format.ProofSuiteId.VC_LD)
         }.getOrFail()
 
         assertNotNull(issuedCredential.proof)
-        assertEquals("Ed25519Signature2020", issuedCredential.proof?.type)
+        assertTrue(issuedCredential.proof is com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof)
+        val linkedDataProof = issuedCredential.proof as com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
+        assertEquals("Ed25519Signature2020", linkedDataProof.type)
     }
 
     @Test
     fun `test issuance with challenge and domain`() = runBlocking {
-        val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
+        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
+            is com.trustweave.kms.results.GenerateKeyResult.Success -> result.keyHandle
+            else -> throw IllegalStateException("Failed to generate key: $result")
+        }
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
         val issuerDidId = issuerDidDoc.id
@@ -156,13 +205,18 @@ class IssuanceDslTest {
         }.getOrFail()
 
         assertNotNull(issuedCredential.proof)
-        assertEquals("challenge-123", issuedCredential.proof?.challenge)
-        assertEquals("example.com", issuedCredential.proof?.domain)
+        assertTrue(issuedCredential.proof is com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof)
+        val linkedDataProof = issuedCredential.proof as com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
+        assertEquals("challenge-123", linkedDataProof.additionalProperties["challenge"]?.jsonPrimitive?.content)
+        assertEquals("example.com", linkedDataProof.additionalProperties["domain"]?.jsonPrimitive?.content)
     }
 
     @Test
     fun `test issuance requires credential`() = runBlocking {
-        val issuerKey: KeyHandle = kms.generateKey("Ed25519", emptyMap())
+        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
+            is com.trustweave.kms.results.GenerateKeyResult.Success -> result.keyHandle
+            else -> throw IllegalStateException("Failed to generate key: $result")
+        }
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
         val issuerDidId = issuerDidDoc.id

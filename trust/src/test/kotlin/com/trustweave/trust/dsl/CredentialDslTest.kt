@@ -28,11 +28,11 @@ class CredentialDslTest {
         }
 
         assertNotNull(credential)
-        assertTrue(credential.type.contains("VerifiableCredential"))
-        assertTrue(credential.type.contains("PersonCredential"))
-        assertEquals("did:key:issuer", credential.issuer)
-        assertEquals("did:key:subject", credential.credentialSubject.jsonObject["id"]?.jsonPrimitive?.content)
-        assertEquals("John Doe", credential.credentialSubject.jsonObject["name"]?.jsonPrimitive?.content)
+        assertTrue(credential.type.contains(com.trustweave.credential.model.CredentialType.VerifiableCredential))
+        assertTrue(credential.type.any { it.value == "PersonCredential" })
+        assertEquals("did:key:issuer", credential.issuer.id.value)
+        assertEquals("did:key:subject", credential.credentialSubject.id.value)
+        assertEquals("John Doe", credential.credentialSubject.claims["name"]?.jsonPrimitive?.content)
     }
 
     @Test
@@ -58,16 +58,16 @@ class CredentialDslTest {
         }
 
         assertNotNull(credential)
-        assertEquals("https://example.edu/credentials/123", credential.id)
-        assertTrue(credential.type.contains("VerifiableCredential"))
-        assertTrue(credential.type.contains("DegreeCredential"))
-        assertTrue(credential.type.contains("BachelorDegreeCredential"))
-        assertEquals("did:key:university", credential.issuer)
+        assertEquals("https://example.edu/credentials/123", credential.id?.value)
+        assertTrue(credential.type.contains(com.trustweave.credential.model.CredentialType.VerifiableCredential))
+        assertTrue(credential.type.any { it.value == "DegreeCredential" })
+        assertTrue(credential.type.any { it.value == "BachelorDegreeCredential" })
+        assertEquals("did:key:university", credential.issuer.id.value)
         assertNotNull(credential.expirationDate)
         assertNotNull(credential.credentialSchema)
-        assertEquals("https://example.edu/schemas/degree.json", credential.credentialSchema?.id)
+        assertEquals("https://example.edu/schemas/degree.json", credential.credentialSchema?.id?.value)
 
-        val degree = credential.credentialSubject.jsonObject["degree"]?.jsonObject
+        val degree = credential.credentialSubject.claims["degree"]?.jsonObject
         assertNotNull(degree)
         assertEquals("BachelorDegree", degree["type"]?.jsonPrimitive?.content)
         assertEquals("Bachelor of Science", degree["name"]?.jsonPrimitive?.content)
@@ -106,9 +106,9 @@ class CredentialDslTest {
         }
 
         assertNotNull(credential.credentialStatus)
-        assertEquals("https://example.com/status/1", credential.credentialStatus?.id)
+        assertEquals("https://example.com/status/1", credential.credentialStatus?.id?.value)
         assertEquals("StatusList2021Entry", credential.credentialStatus?.type)
-        assertEquals("revocation", credential.credentialStatus?.statusPurpose)
+        assertEquals(com.trustweave.credential.model.StatusPurpose.REVOCATION, credential.credentialStatus?.statusPurpose)
     }
 
     @Test
@@ -134,7 +134,7 @@ class CredentialDslTest {
 
         assertNotNull(credential.evidence)
         assertEquals(1, credential.evidence?.size)
-        assertEquals("evidence-1", credential.evidence?.first()?.id)
+        assertEquals("evidence-1", credential.evidence?.first()?.id?.value)
         assertTrue(credential.evidence?.first()?.type?.contains("DocumentVerification") == true)
     }
 
@@ -189,8 +189,8 @@ class CredentialDslTest {
             issued(Clock.System.now())
         }
 
-        assertTrue(credential.type.contains("VerifiableCredential"))
-        assertTrue(credential.type.contains("PersonCredential"))
+        assertTrue(credential.type.contains(com.trustweave.credential.model.CredentialType.VerifiableCredential))
+        assertTrue(credential.type.any { it.value == "PersonCredential" })
     }
 
     @Test
@@ -213,12 +213,12 @@ class CredentialDslTest {
             issued(Clock.System.now())
         }
 
-        val personalInfo = credential.credentialSubject.jsonObject["personalInfo"]?.jsonObject
+        val personalInfo = credential.credentialSubject.claims["personalInfo"]?.jsonObject
         assertNotNull(personalInfo)
         assertEquals("John", personalInfo["firstName"]?.jsonPrimitive?.content)
         assertEquals("Doe", personalInfo["lastName"]?.jsonPrimitive?.content)
 
-        val address = credential.credentialSubject.jsonObject["address"]?.jsonObject
+        val address = credential.credentialSubject.claims["address"]?.jsonObject
         assertNotNull(address)
         assertEquals("123 Main St", address["street"]?.jsonPrimitive?.content)
     }

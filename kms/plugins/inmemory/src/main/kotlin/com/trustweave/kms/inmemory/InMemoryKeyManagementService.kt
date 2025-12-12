@@ -21,6 +21,8 @@ import java.security.interfaces.RSAPublicKey
 import java.security.spec.*
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import org.bouncycastle.jce.ECNamedCurveTable
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 
 /**
  * Native TrustWeave in-memory Key Management Service.
@@ -97,19 +99,30 @@ class InMemoryKeyManagementService(
     private val keyMetadata: MutableMap<KeyId, Algorithm> = ConcurrentHashMap()
 ) : KeyManagementService {
 
+    init {
+        // Ensure BouncyCastle provider is registered for secp256k1 and Ed25519 support
+        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+            Security.addProvider(BouncyCastleProvider())
+        }
+    }
+
     companion object {
         /**
          * Algorithms supported by InMemoryKeyManagementService.
          * 
          * Note: Ed25519 requires Java 15+ or a crypto provider like BouncyCastle.
          * All EC algorithms (secp256k1, P-256, P-384, P-521) are supported via Java's standard EC provider.
+         * RSA algorithms are supported via Java's standard RSA provider.
          */
         val SUPPORTED_ALGORITHMS = setOf(
             Algorithm.Ed25519,
             Algorithm.Secp256k1,
             Algorithm.P256,
             Algorithm.P384,
-            Algorithm.P521
+            Algorithm.P521,
+            Algorithm.RSA.RSA_2048,
+            Algorithm.RSA.RSA_3072,
+            Algorithm.RSA.RSA_4096
         )
         
         /**
@@ -140,8 +153,21 @@ class InMemoryKeyManagementService(
 
         try {
             // Validate and generate key ID
-            val keyIdString = (options[KmsOptionKeys.KEY_ID] as? String)?.takeIf { it.isNotBlank() }
-                ?: "trustweave-key-${System.currentTimeMillis()}-${UUID.randomUUID().toString().take(8)}"
+            val providedKeyId = options[KmsOptionKeys.KEY_ID] as? String
+            val keyIdString = if (providedKeyId != null) {
+                // If key ID is provided, validate it
+                if (providedKeyId.isBlank()) {
+                    return@withContext GenerateKeyResult.Failure.InvalidOptions(
+                        algorithm = algorithm,
+                        reason = "Key ID must be non-blank",
+                        invalidOptions = options
+                    )
+                }
+                providedKeyId
+            } else {
+                // Generate a new key ID if not provided
+                "trustweave-key-${System.currentTimeMillis()}-${UUID.randomUUID().toString().take(8)}"
+            }
             
             // Validate key ID format
             if (keyIdString.length > MAX_KEY_ID_LENGTH) {
@@ -390,10 +416,28 @@ class InMemoryKeyManagementService(
             }
             is Algorithm.Secp256k1 -> {
                 // secp256k1 requires a named curve specification
-                val generator = KeyPairGenerator.getInstance("EC")
-                val ecSpec = ECGenParameterSpec("secp256k1")
-                generator.initialize(ecSpec)
-                generator
+                // Try standard JVM provider first, fall back to BouncyCastle if needed
+                try {
+                    val generator = KeyPairGenerator.getInstance("EC")
+                    val ecSpec = ECGenParameterSpec("secp256k1")
+                    generator.initialize(ecSpec)
+                    generator
+                } catch (e: InvalidAlgorithmParameterException) {
+                    // Fall back to BouncyCastle provider for secp256k1
+                    try {
+                        val bcGenerator = KeyPairGenerator.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME)
+                        val bcSpec = ECNamedCurveTable.getParameterSpec("secp256k1")
+                            ?: throw InvalidAlgorithmParameterException("secp256k1 curve not found in BouncyCastle")
+                        bcGenerator.initialize(bcSpec)
+                        bcGenerator
+                    } catch (e2: Exception) {
+                        throw InvalidAlgorithmParameterException(
+                            "secp256k1 curve is not supported. " +
+                            "BouncyCastle provider failed: ${e2.message}",
+                            e2
+                        )
+                    }
+                }
             }
             is Algorithm.P256 -> {
                 val generator = KeyPairGenerator.getInstance("EC")
@@ -530,13 +574,46 @@ class InMemoryKeyManagementService(
                 signer.update(data)
                 signer.sign()
             }
-            is Algorithm.Secp256k1, is Algorithm.P256, is Algorithm.P384, is Algorithm.P521 -> {
+            is Algorithm.Secp256k1 -> {
+                // secp256k1: Try BouncyCastle first (most reliable), fall back to standard provider
+                val hashAlgorithm = "SHA256withECDSA"
+                try {
+                    val signer = Signature.getInstance(hashAlgorithm, BouncyCastleProvider.PROVIDER_NAME)
+                    signer.initSign(privateKey)
+                    signer.update(data)
+                    signer.sign()
+                } catch (e: Exception) {
+                    // Fall back to standard provider if BouncyCastle fails
+                    try {
+                        val signer = Signature.getInstance(hashAlgorithm)
+                        signer.initSign(privateKey)
+                        signer.update(data)
+                        signer.sign()
+                    } catch (e2: Exception) {
+                        throw SignatureException("Failed to sign secp256k1 with $hashAlgorithm: ${e2.message}", e2)
+                    }
+                }
+            }
+            is Algorithm.P256, is Algorithm.P384, is Algorithm.P521 -> {
                 // Use ECDSA with SHA-256/384/512 based on curve
                 val hashAlgorithm = when (algorithm) {
-                    is Algorithm.Secp256k1, is Algorithm.P256 -> "SHA256withECDSA"
+                    is Algorithm.P256 -> "SHA256withECDSA"
                     is Algorithm.P384 -> "SHA384withECDSA"
                     is Algorithm.P521 -> "SHA512withECDSA"
                     else -> "SHA256withECDSA"
+                }
+                val signer = Signature.getInstance(hashAlgorithm)
+                signer.initSign(privateKey)
+                signer.update(data)
+                signer.sign()
+            }
+            is Algorithm.RSA -> {
+                // Use RSA with SHA-256/384/512 based on key size
+                val hashAlgorithm = when (algorithm.keySize) {
+                    2048 -> "SHA256withRSA"
+                    3072 -> "SHA384withRSA"
+                    4096 -> "SHA512withRSA"
+                    else -> "SHA256withRSA"
                 }
                 val signer = Signature.getInstance(hashAlgorithm)
                 signer.initSign(privateKey)

@@ -5,6 +5,8 @@ import com.trustweave.credential.CredentialVerificationResult
 import com.trustweave.did.resolver.DidResolver
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.CredentialProof
+import com.trustweave.credential.model.ProofTypes
 import com.trustweave.credential.schema.SchemaRegistry
 import com.trustweave.credential.proof.ProofValidator
 import com.trustweave.credential.verifier.SignatureVerifier
@@ -98,7 +100,7 @@ class CredentialVerifier(
                     val purposeResult = proofValidator.validateProofPurpose(
                         proofPurpose = proofPurpose,
                         verificationMethod = verificationMethod,
-                        issuerDid = credential.issuer
+                        issuerDid = credential.issuer.id.value
                     )
 
                     proofPurposeValid = purposeResult.valid
@@ -118,13 +120,20 @@ class CredentialVerifier(
                 is com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof -> proof.type
                 is com.trustweave.credential.model.vc.CredentialProof.JwtProof -> "JWT"
                 is com.trustweave.credential.model.vc.CredentialProof.SdJwtVcProof -> "SD-JWT-VC"
+                null -> ""
             }
             val verificationMethod = when (val proof = credential.proof) {
                 is com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof -> proof.verificationMethod
                 else -> ""
             }
             println("[DEBUG CredentialVerifier] Verifying proof: type=$proofType, verificationMethod=$verificationMethod")
-            proofValid = verifyProof(credential, credential.proof, didResolver)
+            // Convert CredentialProof to Proof for verification
+            val proof = convertCredentialProofToProof(credential.proof)
+            proofValid = if (proof != null) {
+                verifyProof(credential, proof, didResolver)
+            } else {
+                false
+            }
             if (!proofValid) {
                 errors.add("Proof signature verification failed")
                 println("[DEBUG CredentialVerifier] Proof signature verification FAILED")
@@ -141,8 +150,8 @@ class CredentialVerifier(
             true
         } else {
             try {
-                println("[DEBUG CredentialVerifier] Resolving issuer DID: ${credential.issuer}")
-                val resolution = didResolver.resolve(com.trustweave.core.types.Did(credential.issuer))
+                println("[DEBUG CredentialVerifier] Resolving issuer DID: ${credential.issuer.id.value}")
+                val resolution = didResolver.resolve(com.trustweave.did.identifiers.Did(credential.issuer.id.value))
                 issuerValid = resolution is DidResolutionResult.Success
                 println("[DEBUG CredentialVerifier] Issuer DID resolution result: document=${issuerValid}")
                 if (!issuerValid) {
@@ -159,14 +168,9 @@ class CredentialVerifier(
         // 3. Check expiration
         if (options.checkExpiration) {
             credential.expirationDate?.let { expirationDate ->
-                try {
-                    val expiration = kotlinx.datetime.Instant.parse(expirationDate)
-                    notExpired = Clock.System.now() < expiration
-                    if (!notExpired) {
-                        errors.add("Credential has expired: $expirationDate")
-                    }
-                } catch (e: Exception) {
-                    warnings.add("Invalid expiration date format: $expirationDate")
+                notExpired = Clock.System.now() < expirationDate
+                if (!notExpired) {
+                    errors.add("Credential has expired: $expirationDate")
                 }
             }
         }
@@ -216,11 +220,12 @@ class CredentialVerifier(
         }
 
         // 5. Validate schema if provided
-        if (options.validateSchema && credential.credentialSchema != null) {
+        val credentialSchema = credential.credentialSchema
+        if (options.validateSchema && credentialSchema != null) {
             try {
-                val schemaResult = SchemaRegistry.validateCredential(
+                val schemaResult = com.trustweave.credential.schema.SchemaRegistries.default().validate(
                     credential,
-                    credential.credentialSchema.id
+                    credentialSchema.id
                 )
                 schemaValid = schemaResult.valid
                 if (!schemaValid) {
@@ -252,7 +257,7 @@ class CredentialVerifier(
                 )
 
                 // Extract credential type from credential.type
-                val credentialType = credential.type.firstOrNull { it != "VerifiableCredential" }
+                val credentialType = credential.type.firstOrNull { it.value != "VerifiableCredential" }?.value
 
                 // Call isTrustedIssuer using reflection with coroutines
                 val isTrusted = suspendCoroutineUninterceptedOrReturn<Boolean> { cont ->
@@ -282,7 +287,10 @@ class CredentialVerifier(
 
         // 8. Verify delegation if proof purpose is capabilityDelegation or capabilityInvocation
         if (options.verifyDelegation && credential.proof != null) {
-            val proofPurpose = credential.proof.proofPurpose
+            val proofPurpose = when (val proof = credential.proof) {
+                is com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof -> proof.proofPurpose
+                else -> "assertionMethod"
+            }
             if (proofPurpose == "capabilityDelegation" || proofPurpose == "capabilityInvocation") {
                 if (didResolver == null) {
                     warnings.add("Delegation verification requested but no DID resolver available")
@@ -296,14 +304,14 @@ class CredentialVerifier(
                         val delegatorDid = if (verificationMethod.contains("#")) {
                             verificationMethod.substringBefore("#")
                         } else {
-                            credential.issuer
+                            credential.issuer.id.value
                         }
 
                         // Use DID document delegation verifier
                         val verifier = com.trustweave.did.verifier.DidDocumentDelegationVerifier(didResolver)
                         val delegationResult = verifier.verify(
-                            delegatorDid = delegatorDid,
-                            delegateDid = credential.issuer
+                            delegatorDid = com.trustweave.did.identifiers.Did(delegatorDid),
+                            delegateDid = com.trustweave.did.identifiers.Did(credential.issuer.id.value)
                         )
 
                         delegationValid = delegationResult.valid
@@ -328,9 +336,7 @@ class CredentialVerifier(
             
             // Expired (highest priority single failure)
             !notExpired && options.checkExpiration -> {
-                val expiredAt = credential.expirationDate?.let { 
-                    try { kotlinx.datetime.Instant.parse(it) } catch (e: Exception) { null }
-                } ?: Clock.System.now()
+                val expiredAt = credential.expirationDate ?: Clock.System.now()
                 CredentialVerificationResult.Invalid.Expired(credential, expiredAt, errors, warnings)
             }
             
@@ -341,8 +347,11 @@ class CredentialVerifier(
             
             // Invalid proof purpose
             !proofPurposeValid && options.validateProofPurpose -> {
-                val actualPurpose = credential.proof?.proofPurpose
-                val requiredPurpose = credential.proof?.proofPurpose ?: "assertionMethod"
+                val actualPurpose = when (val proof = credential.proof) {
+                    is com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof -> proof.proofPurpose
+                    else -> "assertionMethod"
+                }
+                val requiredPurpose = actualPurpose
                 CredentialVerificationResult.Invalid.InvalidProofPurpose(
                     credential, requiredPurpose, actualPurpose, errors, warnings
                 )
@@ -357,20 +366,20 @@ class CredentialVerifier(
             
             // Untrusted issuer
             !trustRegistryValid && options.checkTrustRegistry -> {
-                CredentialVerificationResult.Invalid.UntrustedIssuer(credential, credential.issuer, errors, warnings)
+                CredentialVerificationResult.Invalid.UntrustedIssuer(credential, credential.issuer.id.value, errors, warnings)
             }
             
             // Invalid issuer (resolution failed)
             !issuerValid -> {
                 val reason = errors.firstOrNull { it.contains("issuer", ignoreCase = true) }
                     ?: "Failed to resolve issuer DID"
-                CredentialVerificationResult.Invalid.InvalidIssuer(credential, credential.issuer, reason, errors, warnings)
+                CredentialVerificationResult.Invalid.InvalidIssuer(credential, credential.issuer.id.value, reason, errors, warnings)
             }
             
             // Schema validation failed
             !schemaValid && options.validateSchema -> {
                 CredentialVerificationResult.Invalid.SchemaValidationFailed(
-                    credential, credential.credentialSchema?.id, errors, warnings
+                    credential, credential.credentialSchema?.id?.value, errors, warnings
                 )
             }
             
@@ -404,12 +413,13 @@ class CredentialVerifier(
         credential: VerifiableCredential,
         chainId: String?
     ): Boolean {
-        if (credential.evidence == null || credential.evidence.isEmpty()) {
+        val evidenceList = credential.evidence
+        if (evidenceList == null || evidenceList.isEmpty()) {
             return true // No evidence to verify
         }
 
         // Find blockchain anchor evidence
-        val anchorEvidence = credential.evidence.find { evidence ->
+        val anchorEvidence = credential.evidence?.find { evidence ->
             evidence.type.contains("BlockchainAnchorEvidence")
         } ?: return true // No blockchain anchor evidence found
 
@@ -444,11 +454,11 @@ class CredentialVerifier(
         didResolver: DidResolver?
     ): Boolean {
         // Basic structure validation
-        if (proof.type.isBlank()) {
+        if (proof.type.identifier.isBlank()) {
             return false
         }
 
-        if (proof.verificationMethod.isBlank()) {
+        if (proof.verificationMethod.value.isBlank()) {
             return false
         }
 
@@ -468,6 +478,45 @@ class CredentialVerifier(
 
     private fun buildDidResolver(options: CredentialVerificationOptions): DidResolver? {
         return defaultDidResolver
+    }
+
+    /**
+     * Convert CredentialProof (from model.vc) to Proof (from models).
+     */
+    private fun convertCredentialProofToProof(credentialProof: CredentialProof?): com.trustweave.credential.models.Proof? {
+        if (credentialProof == null) return null
+        
+        return when (credentialProof) {
+            is CredentialProof.LinkedDataProof -> {
+                com.trustweave.credential.models.Proof(
+                    type = com.trustweave.credential.model.ProofTypes.fromString(credentialProof.type),
+                    created = credentialProof.created.toString(),
+                    verificationMethod = com.trustweave.did.identifiers.VerificationMethodId.parse(credentialProof.verificationMethod),
+                    proofPurpose = credentialProof.proofPurpose,
+                    proofValue = credentialProof.proofValue,
+                    challenge = credentialProof.additionalProperties["challenge"]?.jsonPrimitive?.content,
+                    domain = credentialProof.additionalProperties["domain"]?.jsonPrimitive?.content
+                )
+            }
+            is CredentialProof.JwtProof -> {
+                com.trustweave.credential.models.Proof(
+                    type = com.trustweave.credential.model.ProofTypes.fromString("JsonWebSignature2020"),
+                    created = Clock.System.now().toString(),
+                    verificationMethod = com.trustweave.did.identifiers.VerificationMethodId.parse("did:key:unknown#key"),
+                    proofPurpose = "assertionMethod",
+                    jws = credentialProof.jwt
+                )
+            }
+            is CredentialProof.SdJwtVcProof -> {
+                com.trustweave.credential.models.Proof(
+                    type = com.trustweave.credential.model.ProofTypes.fromString("SD-JWT-VC"),
+                    created = Clock.System.now().toString(),
+                    verificationMethod = com.trustweave.did.identifiers.VerificationMethodId.parse("did:key:unknown#key"),
+                    proofPurpose = "assertionMethod",
+                    jws = credentialProof.sdJwtVc
+                )
+            }
+        }
     }
 }
 

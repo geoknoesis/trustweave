@@ -2,6 +2,11 @@ package com.trustweave.credential.proof
 
 import com.trustweave.credential.models.Proof
 import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.did.identifiers.Did
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
@@ -29,7 +34,7 @@ class Ed25519ProofGeneratorAdditionalBranchesTest {
         )
 
         val credential = createTestCredential()
-        val options = com.trustweave.credential.proof.ProofOptions(
+        val options = com.trustweave.credential.proof.ProofGeneratorOptions(
             proofPurpose = "assertionMethod",
             challenge = null
         )
@@ -46,7 +51,7 @@ class Ed25519ProofGeneratorAdditionalBranchesTest {
         )
 
         val credential = createTestCredential()
-        val options = com.trustweave.credential.proof.ProofOptions(
+        val options = com.trustweave.credential.proof.ProofGeneratorOptions(
             proofPurpose = "assertionMethod",
             domain = null
         )
@@ -64,14 +69,17 @@ class Ed25519ProofGeneratorAdditionalBranchesTest {
         )
 
         val credential = createTestCredential()
-        val options = com.trustweave.credential.proof.ProofOptions(
+        val options = com.trustweave.credential.proof.ProofGeneratorOptions(
             proofPurpose = "assertionMethod",
             verificationMethod = null
         )
 
         val proof = generator.generateProof(credential, "key-1", options)
 
-        assertEquals("did:key:key-1", proof.verificationMethod)
+        // Note: generateProof returns Proof from credential-models, not CredentialProof
+        // The verificationMethod is a VerificationMethodId, access via .value
+        assertNotNull(proof)
+        assertEquals("did:key:key-1#key-1", proof.verificationMethod.value)
     }
 
     @Test
@@ -81,7 +89,7 @@ class Ed25519ProofGeneratorAdditionalBranchesTest {
         )
 
         val credential = createTestCredential()
-        val options = com.trustweave.credential.proof.ProofOptions(
+        val options = com.trustweave.credential.proof.ProofGeneratorOptions(
             proofPurpose = "assertionMethod",
             verificationMethod = ""
         )
@@ -102,7 +110,7 @@ class Ed25519ProofGeneratorAdditionalBranchesTest {
 
         val credential = createTestCredential(id = null)
 
-        val proof = generator.generateProof(credential, "key-1", com.trustweave.credential.proof.ProofOptions(proofPurpose = "assertionMethod"))
+        val proof = generator.generateProof(credential, "key-1", com.trustweave.credential.proof.ProofGeneratorOptions(proofPurpose = "assertionMethod"))
 
         assertNotNull(proof)
     }
@@ -116,7 +124,7 @@ class Ed25519ProofGeneratorAdditionalBranchesTest {
         val credential = createTestCredential(issuerDid = null)
 
         assertFailsWith<IllegalArgumentException> {
-            generator.generateProof(credential, "key-1", com.trustweave.credential.proof.ProofOptions(proofPurpose = "assertionMethod"))
+            generator.generateProof(credential, "key-1", com.trustweave.credential.proof.ProofGeneratorOptions(proofPurpose = "assertionMethod"))
         }
     }
 
@@ -128,7 +136,7 @@ class Ed25519ProofGeneratorAdditionalBranchesTest {
 
         val credential = createTestCredential(types = emptyList())
 
-        val proof = generator.generateProof(credential, "key-1", com.trustweave.credential.proof.ProofOptions(proofPurpose = "assertionMethod"))
+        val proof = generator.generateProof(credential, "key-1", com.trustweave.credential.proof.ProofGeneratorOptions(proofPurpose = "assertionMethod"))
 
         assertNotNull(proof)
     }
@@ -141,9 +149,9 @@ class Ed25519ProofGeneratorAdditionalBranchesTest {
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
 
-        val credential = createTestCredential(credentialSubject = buildJsonObject { })
+        val credential = createTestCredential(credentialSubject = CredentialSubject.fromDid(Did("did:key:subject")))
 
-        val proof = generator.generateProof(credential, "key-1", com.trustweave.credential.proof.ProofOptions(proofPurpose = "assertionMethod"))
+        val proof = generator.generateProof(credential, "key-1", com.trustweave.credential.proof.ProofGeneratorOptions(proofPurpose = "assertionMethod"))
 
         assertNotNull(proof)
     }
@@ -158,7 +166,7 @@ class Ed25519ProofGeneratorAdditionalBranchesTest {
 
         val credential = createTestCredential()
 
-        val proof = generator.generateProof(credential, "key-1", com.trustweave.credential.proof.ProofOptions(proofPurpose = "assertionMethod"))
+        val proof = generator.generateProof(credential, "key-1", com.trustweave.credential.proof.ProofGeneratorOptions(proofPurpose = "assertionMethod"))
 
         assertNotNull(proof)
         assertNotNull(proof.proofValue)
@@ -173,7 +181,7 @@ class Ed25519ProofGeneratorAdditionalBranchesTest {
         val credential = createTestCredential()
 
         assertFailsWith<RuntimeException> {
-            generator.generateProof(credential, "key-1", com.trustweave.credential.proof.ProofOptions(proofPurpose = "assertionMethod"))
+            generator.generateProof(credential, "key-1", com.trustweave.credential.proof.ProofGeneratorOptions(proofPurpose = "assertionMethod"))
         }
     }
 
@@ -182,18 +190,20 @@ class Ed25519ProofGeneratorAdditionalBranchesTest {
     private fun createTestCredential(
         id: String? = "credential-123",
         issuerDid: String? = "did:key:issuer123",
-        types: List<String> = listOf("VerifiableCredential", "PersonCredential"),
-        credentialSubject: JsonObject = buildJsonObject {
-            put("id", "did:key:subject123")
-            put("name", "John Doe")
-            put("email", "john@example.com")
-        }
+        types: List<CredentialType> = listOf(CredentialType.VerifiableCredential, CredentialType.Custom("PersonCredential")),
+        credentialSubject: CredentialSubject = CredentialSubject.fromDid(
+            Did("did:key:subject123"),
+            claims = mapOf(
+                "name" to JsonPrimitive("John Doe"),
+                "email" to JsonPrimitive("john@example.com")
+            )
+        )
     ): VerifiableCredential {
         return VerifiableCredential(
-            id = id,
+            id = id?.let { CredentialId(it) },
             type = types,
-            issuer = issuerDid ?: "did:key:issuer123",
-            issuanceDate = Clock.System.now().toString(),
+            issuer = Issuer.fromDid(Did(issuerDid ?: "did:key:issuer123")),
+            issuanceDate = Clock.System.now(),
             credentialSubject = credentialSubject,
             proof = null
         )
@@ -201,19 +211,21 @@ class Ed25519ProofGeneratorAdditionalBranchesTest {
 
     private fun createTestCredentialWithNestedSubject(): VerifiableCredential {
         return VerifiableCredential(
-            id = "credential-123",
-            type = listOf("VerifiableCredential", "PersonCredential"),
-            issuer = "did:key:issuer123",
-            issuanceDate = Clock.System.now().toString(),
-            credentialSubject = buildJsonObject {
-                put("id", "did:key:subject123")
-                put("name", "John Doe")
-                put("address", buildJsonObject {
-                    put("street", "123 Main St")
-                    put("city", "New York")
-                    put("country", "USA")
-                })
-            },
+            id = CredentialId("credential-123"),
+            type = listOf(CredentialType.VerifiableCredential, CredentialType.Custom("PersonCredential")),
+            issuer = Issuer.fromDid(Did("did:key:issuer123")),
+            issuanceDate = Clock.System.now(),
+            credentialSubject = CredentialSubject.fromDid(
+                Did("did:key:subject123"),
+                claims = mapOf(
+                    "name" to JsonPrimitive("John Doe"),
+                    "address" to buildJsonObject {
+                        put("street", "123 Main St")
+                        put("city", "New York")
+                        put("country", "USA")
+                    }
+                )
+            ),
             proof = null
         )
     }

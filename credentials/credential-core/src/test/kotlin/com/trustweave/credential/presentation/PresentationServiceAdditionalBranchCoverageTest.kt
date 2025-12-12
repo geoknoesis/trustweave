@@ -2,19 +2,26 @@ package com.trustweave.credential.presentation
 
 import com.trustweave.credential.PresentationOptions
 import com.trustweave.credential.PresentationVerificationOptions
-import com.trustweave.credential.models.Proof
 import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.model.vc.VerifiablePresentation
+import com.trustweave.credential.model.vc.CredentialProof
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.identifiers.CredentialId
 import com.trustweave.credential.proof.Ed25519ProofGenerator
 import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.credential.proof.ProofGenerator
 import com.trustweave.credential.verifier.CredentialVerifier
+import com.trustweave.did.identifiers.Did
+import com.trustweave.core.identifiers.Iri
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 
 /**
  * Additional branch coverage tests for PresentationService.
@@ -130,13 +137,13 @@ class PresentationServiceAdditionalBranchCoverageTest {
 
         val credential = createTestCredential()
         val presentation = VerifiablePresentation(
-            id = "presentation-1",
-            type = listOf("VerifiablePresentation"),
+            id = CredentialId("presentation-1"),
+            type = listOf(CredentialType.fromString("VerifiablePresentation")),
             verifiableCredential = listOf(credential),
-            holder = "did:key:holder",
-            proof = Proof(
+            holder = Iri("did:key:holder"),
+            proof = CredentialProof.LinkedDataProof(
                 type = "Ed25519Signature2020",
-                created = Clock.System.now().toString(),
+                created = Clock.System.now(),
                 verificationMethod = "did:key:holder#key-1",
                 proofPurpose = "authentication",
                 proofValue = "test-proof"
@@ -154,10 +161,10 @@ class PresentationServiceAdditionalBranchCoverageTest {
 
         val credential = createTestCredential()
         val presentation = VerifiablePresentation(
-            id = "presentation-1",
-            type = listOf("VerifiablePresentation"),
+            id = CredentialId("presentation-1"),
+            type = listOf(CredentialType.fromString("VerifiablePresentation")),
             verifiableCredential = listOf(credential),
-            holder = "did:key:holder",
+            holder = Iri("did:key:holder"),
             proof = null
         )
 
@@ -173,15 +180,16 @@ class PresentationServiceAdditionalBranchCoverageTest {
 
         val credential = createTestCredential()
         val presentation = VerifiablePresentation(
-            id = "presentation-1",
-            type = listOf("VerifiablePresentation"),
+            id = CredentialId("presentation-1"),
+            type = listOf(CredentialType.fromString("VerifiablePresentation")),
             verifiableCredential = listOf(credential),
-            holder = "did:key:holder",
-            proof = Proof(
+            holder = Iri("did:key:holder"),
+            proof = CredentialProof.LinkedDataProof(
                 type = "",
-                created = Clock.System.now().toString(),
+                created = Clock.System.now(),
                 verificationMethod = "",
-                proofPurpose = "authentication"
+                proofPurpose = "authentication",
+                proofValue = ""
             )
         )
 
@@ -196,13 +204,13 @@ class PresentationServiceAdditionalBranchCoverageTest {
 
         val credential = createTestCredential()
         val presentation = VerifiablePresentation(
-            id = "presentation-1",
-            type = listOf("VerifiablePresentation"),
+            id = CredentialId("presentation-1"),
+            type = listOf(CredentialType.fromString("VerifiablePresentation")),
             verifiableCredential = listOf(credential),
-            holder = "did:key:holder",
-            proof = Proof(
+            holder = Iri("did:key:holder"),
+            proof = CredentialProof.LinkedDataProof(
                 type = "Ed25519Signature2020",
-                created = Clock.System.now().toString(),
+                created = Clock.System.now(),
                 verificationMethod = "did:key:holder#key-1",
                 proofPurpose = "authentication",
                 proofValue = "test-proof"
@@ -226,13 +234,13 @@ class PresentationServiceAdditionalBranchCoverageTest {
 
         val credential = createTestCredential()
         val presentation = VerifiablePresentation(
-            id = "presentation-1",
-            type = listOf("VerifiablePresentation"),
+            id = CredentialId("presentation-1"),
+            type = listOf(CredentialType.fromString("VerifiablePresentation")),
             verifiableCredential = listOf(credential),
-            holder = "did:key:holder",
-            proof = Proof(
+            holder = Iri("did:key:holder"),
+            proof = CredentialProof.LinkedDataProof(
                 type = "Ed25519Signature2020",
-                created = Clock.System.now().toString(),
+                created = Clock.System.now(),
                 verificationMethod = "did:key:holder#key-1",
                 proofPurpose = "authentication",
                 proofValue = "test-proof"
@@ -257,13 +265,13 @@ class PresentationServiceAdditionalBranchCoverageTest {
 
         val credential = createTestCredential()
         val presentation = VerifiablePresentation(
-            id = "presentation-1",
-            type = listOf("VerifiablePresentation"),
+            id = CredentialId("presentation-1"),
+            type = listOf(CredentialType.fromString("VerifiablePresentation")),
             verifiableCredential = listOf(credential),
-            holder = "did:key:holder",
-            proof = Proof(
+            holder = Iri("did:key:holder"),
+            proof = CredentialProof.LinkedDataProof(
                 type = "Ed25519Signature2020",
-                created = Clock.System.now().toString(),
+                created = Clock.System.now(),
                 verificationMethod = "did:key:holder#key-1",
                 proofPurpose = "authentication",
                 proofValue = "test-proof"
@@ -287,13 +295,13 @@ class PresentationServiceAdditionalBranchCoverageTest {
 
         val credential = createTestCredential()
         val presentation = VerifiablePresentation(
-            id = "presentation-1",
-            type = listOf("VerifiablePresentation"),
+            id = CredentialId("presentation-1"),
+            type = listOf(CredentialType.fromString("VerifiablePresentation")),
             verifiableCredential = listOf(credential),
-            holder = "did:key:holder",
-            proof = Proof(
+            holder = Iri("did:key:holder"),
+            proof = CredentialProof.LinkedDataProof(
                 type = "Ed25519Signature2020",
-                created = Clock.System.now().toString(),
+                created = Clock.System.now(),
                 verificationMethod = "did:key:holder#key-1",
                 proofPurpose = "authentication",
                 proofValue = "test-proof"
@@ -317,13 +325,13 @@ class PresentationServiceAdditionalBranchCoverageTest {
 
         val credential = createTestCredential()
         val presentation = VerifiablePresentation(
-            id = "presentation-1",
-            type = listOf("VerifiablePresentation"),
+            id = CredentialId("presentation-1"),
+            type = listOf(CredentialType.fromString("VerifiablePresentation")),
             verifiableCredential = listOf(credential),
-            holder = "did:key:holder",
-            proof = Proof(
+            holder = Iri("did:key:holder"),
+            proof = CredentialProof.LinkedDataProof(
                 type = "Ed25519Signature2020",
-                created = Clock.System.now().toString(),
+                created = Clock.System.now(),
                 verificationMethod = "did:key:holder#key-1",
                 proofPurpose = "authentication",
                 proofValue = "test-proof"
@@ -349,13 +357,13 @@ class PresentationServiceAdditionalBranchCoverageTest {
 
         val credential = createTestCredential()
         val presentation = VerifiablePresentation(
-            id = "presentation-1",
-            type = listOf("VerifiablePresentation"),
+            id = CredentialId("presentation-1"),
+            type = listOf(CredentialType.fromString("VerifiablePresentation")),
             verifiableCredential = listOf(credential),
-            holder = "did:key:holder",
-            proof = Proof(
+            holder = Iri("did:key:holder"),
+            proof = CredentialProof.LinkedDataProof(
                 type = "Ed25519Signature2020",
-                created = Clock.System.now().toString(),
+                created = Clock.System.now(),
                 verificationMethod = "did:key:holder#key-1",
                 proofPurpose = "authentication",
                 proofValue = "test-proof"
@@ -377,13 +385,13 @@ class PresentationServiceAdditionalBranchCoverageTest {
 
         val credential = createTestCredential()
         val presentation = VerifiablePresentation(
-            id = "presentation-1",
-            type = listOf("VerifiablePresentation"),
+            id = CredentialId("presentation-1"),
+            type = listOf(CredentialType.fromString("VerifiablePresentation")),
             verifiableCredential = listOf(credential),
-            holder = "did:key:holder",
-            proof = Proof(
+            holder = Iri("did:key:holder"),
+            proof = CredentialProof.LinkedDataProof(
                 type = "Ed25519Signature2020",
-                created = Clock.System.now().toString(),
+                created = Clock.System.now(),
                 verificationMethod = "did:key:holder#key-1",
                 proofPurpose = "authentication",
                 proofValue = "test-proof"
@@ -424,13 +432,20 @@ class PresentationServiceAdditionalBranchCoverageTest {
             put("id", "did:key:subject")
             put("name", "John Doe")
         },
-        issuanceDate: String = Clock.System.now().toString()
+        issuanceDate: Instant = Clock.System.now()
     ): VerifiableCredential {
+        val subjectClaims = subject.entries.associate { entry ->
+            entry.key to entry.value
+        }.filterKeys { it != "id" }
+        
         return VerifiableCredential(
-            id = id,
-            type = types,
-            issuer = issuerDid,
-            credentialSubject = subject,
+            id = id?.let { CredentialId(it) },
+            type = types.map { CredentialType.fromString(it) },
+            issuer = Issuer.fromDid(Did(issuerDid)),
+            credentialSubject = CredentialSubject.fromDid(
+                Did(subject["id"]?.jsonPrimitive?.content ?: "did:key:subject"),
+                claims = subjectClaims
+            ),
             issuanceDate = issuanceDate
         )
     }

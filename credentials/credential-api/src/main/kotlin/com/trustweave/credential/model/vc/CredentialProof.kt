@@ -13,7 +13,7 @@ import kotlinx.datetime.Instant
  * - JWT (VC-JWT) - JWT compact serialization
  * - SD-JWT-VC - Selective Disclosure JWT VC
  */
-@Serializable
+@Serializable(with = CredentialProofSerializer::class)
 sealed class CredentialProof {
     /**
      * VC-LD (Linked Data Proofs) - JSON-LD proof structure.

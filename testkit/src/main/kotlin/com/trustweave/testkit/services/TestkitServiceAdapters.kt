@@ -77,13 +77,28 @@ class TestkitKmsFactory : KmsFactory {
 /**
  * DID Method Factory implementation for testkit.
  * Handles both testkit implementations and SPI-based providers.
+ * 
+ * Supports sharing a single DidMethod instance across multiple builds
+ * to ensure DIDs created in one TrustWeave instance are resolvable in another.
  */
-class TestkitDidMethodFactory : DidMethodFactory {
+class TestkitDidMethodFactory(
+    private val didRegistry: com.trustweave.did.registry.DidMethodRegistry? = null
+) : DidMethodFactory {
     override suspend fun create(
         methodName: String,
         config: DidCreationOptions,
         kms: KeyManagementService
     ): DidMethod? {
+        // If a shared registry is provided, try to get existing method from it
+        if (didRegistry != null && methodName == "key") {
+            val existingMethod = didRegistry.get(methodName)
+            if (existingMethod != null) {
+                // DEBUG: Verify we're reusing the existing method instance
+                return existingMethod
+            } else {
+            }
+        }
+        
         // Try SPI discovery first
         try {
             val providers = ServiceLoader.load(DidMethodProvider::class.java)
@@ -99,6 +114,10 @@ class TestkitDidMethodFactory : DidMethodFactory {
 
                     val method = provider.create(methodName, creationOptions)
                     if (method != null) {
+                        // Register in shared registry if provided
+                        if (didRegistry != null) {
+                            didRegistry.register(method)
+                        }
                         return method
                     }
                 }
@@ -109,7 +128,13 @@ class TestkitDidMethodFactory : DidMethodFactory {
 
         // Fallback to testkit for "key" method
         if (methodName == "key") {
-            return DidKeyMockMethod(kms)
+            val method = DidKeyMockMethod(kms)
+            // Register in shared registry if provided
+            if (didRegistry != null) {
+                didRegistry.register(method)
+            } else {
+            }
+            return method
         }
 
         return null // Method not found

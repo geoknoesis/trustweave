@@ -10,7 +10,7 @@ import com.trustweave.credential.model.vc.CredentialProof
 import com.trustweave.credential.model.CredentialType
 import com.trustweave.credential.proof.ProofGenerator
 import com.trustweave.credential.proof.ProofGeneratorRegistry
-import com.trustweave.credential.proof.ProofOptions
+import com.trustweave.credential.proof.ProofGeneratorOptions
 import com.trustweave.credential.verifier.CredentialVerifier
 import com.trustweave.core.identifiers.Iri
 import com.trustweave.did.identifiers.Did
@@ -131,7 +131,7 @@ class PresentationService(
             val generatedProof = generator.generateProof(
                 credential = credentials.first(), // Use first credential for proof generation context
                 keyId = options.keyId,
-                options = ProofOptions(
+                options = ProofGeneratorOptions(
                     proofPurpose = "authentication",
                     challenge = options.challenge,
                     domain = options.domain
@@ -177,6 +177,7 @@ class PresentationService(
                 is com.trustweave.credential.model.vc.CredentialProof.SdJwtVcProof -> {
                     proof.sdJwtVc.isNotBlank()
                 }
+                null -> false
             }
             if (!presentationProofValid) {
                 errors.add("Presentation proof is invalid")
@@ -285,6 +286,8 @@ class PresentationService(
             prettyPrint = false
             encodeDefaults = false
             ignoreUnknownKeys = true
+            classDiscriminator = "@type" // Use @type instead of type to avoid conflict with LinkedDataProof.type
+            useArrayPolymorphism = false
         }
 
         // Serialize credential to JSON
@@ -354,13 +357,17 @@ class PresentationService(
             }
             proof.proofValue != null -> {
                 // Linked Data Proof
+                val additionalProperties = buildMap<String, JsonElement> {
+                    proof.challenge?.let { put("challenge", JsonPrimitive(it)) }
+                    proof.domain?.let { put("domain", JsonPrimitive(it)) }
+                }
                 CredentialProof.LinkedDataProof(
                     type = proof.type.identifier,
                     created = Instant.parse(proof.created),
                     verificationMethod = proof.verificationMethod.value,
                     proofPurpose = proof.proofPurpose,
                     proofValue = proof.proofValue,
-                    additionalProperties = emptyMap()
+                    additionalProperties = additionalProperties
                 )
             }
             else -> {

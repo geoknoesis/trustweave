@@ -6,13 +6,15 @@ import com.trustweave.trust.types.*
 import com.trustweave.core.*
 import com.trustweave.core.util.DigestUtils
 import com.trustweave.credential.model.vc.VerifiableCredential
-import com.trustweave.credential.proof.ProofType
+import com.trustweave.credential.model.vc.CredentialProof
+import com.trustweave.credential.model.vc.arrayOfObjects
+import com.trustweave.credential.model.ProofType
+import com.trustweave.credential.results.IssuanceResult
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import com.trustweave.anchor.DefaultBlockchainAnchorRegistry
 import com.trustweave.testkit.services.TestkitDidMethodFactory
 import com.trustweave.testkit.getOrFail
 import com.trustweave.trust.types.DidCreationResult
-import com.trustweave.trust.types.IssuanceResult
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import kotlinx.datetime.Instant
@@ -58,15 +60,42 @@ fun main() = runBlocking {
     val kms = com.trustweave.testkit.kms.InMemoryKeyManagementService()
     val kmsRef = kms
     
-    val trustweave = TrustWeave.build {
+    // Create signer function
+    val signer: suspend (ByteArray, String) -> ByteArray = { data, keyId ->
+        when (val result = kmsRef.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
+            is com.trustweave.kms.results.SignResult.Success -> result.signature
+            else -> throw IllegalStateException("Signing failed: $result")
+        }
+    }
+    
+    // Create shared DID registry for consistent DID resolution
+    val sharedDidRegistry = com.trustweave.did.registry.DidMethodRegistry()
+    
+    // Create DID resolver
+    val didResolver = com.trustweave.did.resolver.DidResolver { did: com.trustweave.did.identifiers.Did ->
+        sharedDidRegistry.resolve(did.value) as com.trustweave.did.resolver.DidResolutionResult
+    }
+    
+    // Create CredentialService
+    val credentialService = com.trustweave.credential.credentialService(
+        didResolver = didResolver,
+        signer = signer
+    )
+    
+    val trustweave = TrustWeave.build(
+        registries = com.trustweave.trust.dsl.TrustWeaveRegistries(
+            didRegistry = sharedDidRegistry,
+            blockchainRegistry = com.trustweave.anchor.BlockchainAnchorRegistry(),
+            credentialRegistry = null,
+            proofRegistry = null
+        )
+    ) {
         factories(
-            didMethodFactory = TestkitDidMethodFactory()
+            didMethodFactory = TestkitDidMethodFactory(didRegistry = sharedDidRegistry)
         )
         keys {
             custom(kmsRef)
-            signer { data, keyId ->
-                kmsRef.sign(com.trustweave.core.identifiers.KeyId(keyId), data)
-            }
+            signer(signer)
             algorithm("Ed25519")
         }
         did {
@@ -74,6 +103,7 @@ fun main() = runBlocking {
                 algorithm("Ed25519")
             }
         }
+        issuer(credentialService)
         // Note: Chain is registered manually below, not via DSL
     }.also {
         it.configuration.registries.blockchainRegistry.register(chainId, anchorClient)
@@ -94,9 +124,16 @@ fun main() = runBlocking {
     val authorityDidResult = trustweave.createDid()
     val authorityDid = when (authorityDidResult) {
         is DidCreationResult.Success -> authorityDidResult.did
-        else -> {
+        is DidCreationResult.Failure -> {
+            val reason = when (authorityDidResult) {
+                is DidCreationResult.Failure.MethodNotRegistered -> "Method not registered: ${authorityDidResult.method}"
+                is DidCreationResult.Failure.KeyGenerationFailed -> authorityDidResult.reason
+                is DidCreationResult.Failure.DocumentCreationFailed -> authorityDidResult.reason
+                is DidCreationResult.Failure.InvalidConfiguration -> authorityDidResult.reason
+                is DidCreationResult.Failure.Other -> authorityDidResult.reason
+            }
             println("\n📥 RESPONSE: DID Creation Failed")
-            println("  ✗ Error: ${authorityDidResult.reason}")
+            println("  ✗ Error: $reason")
             return@runBlocking
         }
     }
@@ -122,7 +159,7 @@ fun main() = runBlocking {
     println("  ✓ DID: ${authorityDid.value}")
     println("  ✓ Verification Methods: ${authorityDidDoc.verificationMethod.size}")
     println("  ✓ Role: National Education Authority (Ministry of Higher Education)")
-    val authorityKeyId = authorityDidDoc.verificationMethod.first().id.substringAfter("#")
+    val authorityKeyId = authorityDidDoc.verificationMethod.first().id.value.substringAfter("#")
     println("  ✓ Authority Key ID: $authorityKeyId")
     println()
 
@@ -136,9 +173,16 @@ fun main() = runBlocking {
     val institutionDidResult = trustweave.createDid()
     val institutionDid = when (institutionDidResult) {
         is DidCreationResult.Success -> institutionDidResult.did
-        else -> {
+        is DidCreationResult.Failure -> {
+            val reason = when (institutionDidResult) {
+                is DidCreationResult.Failure.MethodNotRegistered -> "Method not registered: ${institutionDidResult.method}"
+                is DidCreationResult.Failure.KeyGenerationFailed -> institutionDidResult.reason
+                is DidCreationResult.Failure.DocumentCreationFailed -> institutionDidResult.reason
+                is DidCreationResult.Failure.InvalidConfiguration -> institutionDidResult.reason
+                is DidCreationResult.Failure.Other -> institutionDidResult.reason
+            }
             println("\n📥 RESPONSE: DID Creation Failed")
-            println("  ✗ Error: ${institutionDidResult.reason}")
+            println("  ✗ Error: $reason")
             return@runBlocking
         }
     }
@@ -165,7 +209,7 @@ fun main() = runBlocking {
     println("  ✓ Verification Methods: ${institutionDidDoc.verificationMethod.size}")
     println("  ✓ Institution: University of Algiers")
     println("  ✓ Institution Code: UA-001")
-    val institutionKeyId = institutionDidDoc.verificationMethod.first().id.substringAfter("#")
+    val institutionKeyId = institutionDidDoc.verificationMethod.first().id.value.substringAfter("#")
     println("  ✓ Institution Key ID: $institutionKeyId")
     println()
 
@@ -201,46 +245,29 @@ fun main() = runBlocking {
     println("    - Program: Computer Science (Bachelor)")
     println("    - Academic Year: 2024-2025")
 
-    val enrollmentSubject = buildJsonObject {
-        put("id", studentDid.value)
-        put("algeroPass", buildJsonObject {
-            put("credentialType", "enrollment")
-            put("studentId", "STU-2024-001234")
-            put("nationalId", "1234567890123")
-            put("institution", buildJsonObject {
-                put("institutionDid", institutionDid.value)
-                put("institutionName", "University of Algiers")
-                put("institutionCode", "UA-001")
-            })
-            put("program", buildJsonObject {
-                put("programName", "Computer Science")
-                put("programCode", "CS-BS")
-                put("degreeLevel", "Bachelor")
-            })
-            put("enrollmentDate", "2024-09-01")
-            put("status", "active")
-            put("academicYear", "2024-2025")
-        })
-    }
-
-    println("  Credential Subject:")
-    val subjectJson = Json { prettyPrint = true; ignoreUnknownKeys = true }
-    println(subjectJson.encodeToString(JsonObject.serializer(), enrollmentSubject))
-
     val enrollmentCredential = trustweave.issue {
         credential {
             type("AlgeroPassCredential", "EnrollmentCredential", "EducationCredential")
             issuer(authorityDid.value)
             subject {
-                val subjectId = enrollmentSubject["id"]?.jsonPrimitive?.content
-                if (subjectId != null) {
-                    id(subjectId)
-                }
-                enrollmentSubject.forEach { (key, value) ->
-                    if (key != "id") {
-                        // JsonElement values (JsonObject, JsonArray, JsonPrimitive) are supported directly
-                        key to value
+                id(studentDid.value)
+                "algeroPass" {
+                    "credentialType" to "enrollment"
+                    "studentId" to "STU-2024-001234"
+                    "nationalId" to "1234567890123"
+                    "institution" {
+                        "institutionDid" to institutionDid.value
+                        "institutionName" to "University of Algiers"
+                        "institutionCode" to "UA-001"
                     }
+                    "program" {
+                        "programName" to "Computer Science"
+                        "programCode" to "CS-BS"
+                        "degreeLevel" to "Bachelor"
+                    }
+                    "enrollmentDate" to "2024-09-01"
+                    "status" to "active"
+                    "academicYear" to "2024-2025"
                 }
             }
             issued(Clock.System.now())
@@ -255,7 +282,7 @@ fun main() = runBlocking {
     println("  ✓ Issuance Date: ${enrollmentCredential.issuanceDate}")
     println("  ✓ Has Proof: ${enrollmentCredential.proof != null}")
     val proof = enrollmentCredential.proof
-    if (proof != null) {
+    if (proof is CredentialProof.LinkedDataProof) {
         println("  ✓ Proof Type: ${proof.type}")
         println("  ✓ Proof Purpose: ${proof.proofPurpose}")
     }
@@ -264,7 +291,11 @@ fun main() = runBlocking {
     println("  ✓ Program: Computer Science (Bachelor)")
     println("  ✓ Status: active")
     println("\n  Full Credential Document:")
-    val credentialJson = Json { prettyPrint = true; ignoreUnknownKeys = true }
+    val credentialJson = Json { 
+        prettyPrint = true
+        ignoreUnknownKeys = true
+        classDiscriminator = "@type" // Use @type instead of type to avoid conflict with LinkedDataProof.type
+    }
     println(credentialJson.encodeToString(VerifiableCredential.serializer(), enrollmentCredential))
     println()
 
@@ -318,63 +349,47 @@ fun main() = runBlocking {
     println("    - Academic Year: 2024-2025")
     println("    - Semester: Fall 2024")
 
-    val achievementSubject = buildJsonObject {
-        put("id", studentDid.value)
-        put("algeroPass", buildJsonObject {
-            put("credentialType", "achievement")
-            put("studentId", "STU-2024-001234")
-            put("institution", buildJsonObject {
-                put("institutionDid", institutionDid.value)
-                put("institutionName", "University of Algiers")
-                put("institutionCode", "UA-001")
-            })
-            put("academicYear", "2024-2025")
-            put("semester", "Fall 2024")
-            put("grades", buildJsonArray {
-                add(buildJsonObject {
-                    put("courseCode", "CS101")
-                    put("courseName", "Introduction to Computer Science")
-                    put("credits", 3)
-                    put("grade", "A")
-                    put("gpa", 4.0)
-                })
-                add(buildJsonObject {
-                    put("courseCode", "MATH101")
-                    put("courseName", "Calculus I")
-                    put("credits", 4)
-                    put("grade", "B+")
-                    put("gpa", 3.5)
-                })
-                add(buildJsonObject {
-                    put("courseCode", "ENG101")
-                    put("courseName", "English Composition")
-                    put("credits", 3)
-                    put("grade", "A-")
-                    put("gpa", 3.7)
-                })
-            })
-            put("totalCredits", 10)
-            put("gpa", 3.73)
-        })
-    }
-
-    println("  Credential Subject:")
-    println(subjectJson.encodeToString(JsonObject.serializer(), achievementSubject))
-
     val achievementCredential = trustweave.issue {
         credential {
             type("AlgeroPassCredential", "AchievementCredential", "EducationCredential")
             issuer(authorityDid.value)
             subject {
-                val subjectId = achievementSubject["id"] as? String
-                if (subjectId != null) {
-                    id(subjectId)
-                }
-                achievementSubject.forEach { (key, value) ->
-                    if (key != "id") {
-                        // JsonElement values (JsonObject, JsonArray, JsonPrimitive) are supported directly
-                        key to value
+                id(studentDid.value)
+                "algeroPass" {
+                    "credentialType" to "achievement"
+                    "studentId" to "STU-2024-001234"
+                    "institution" {
+                        "institutionDid" to institutionDid.value
+                        "institutionName" to "University of Algiers"
+                        "institutionCode" to "UA-001"
                     }
+                    "academicYear" to "2024-2025"
+                    "semester" to "Fall 2024"
+                    "grades" to arrayOfObjects(
+                        {
+                            "courseCode" to "CS101"
+                            "courseName" to "Introduction to Computer Science"
+                            "credits" to 3
+                            "grade" to "A"
+                            "gpa" to 4.0
+                        },
+                        {
+                            "courseCode" to "MATH101"
+                            "courseName" to "Calculus I"
+                            "credits" to 4
+                            "grade" to "B+"
+                            "gpa" to 3.5
+                        },
+                        {
+                            "courseCode" to "ENG101"
+                            "courseName" to "English Composition"
+                            "credits" to 3
+                            "grade" to "A-"
+                            "gpa" to 3.7
+                        }
+                    )
+                    "totalCredits" to 10
+                    "gpa" to 3.73
                 }
             }
             issued(Clock.System.now())
@@ -394,7 +409,11 @@ fun main() = runBlocking {
     println("  ✓ GPA: 3.73")
     println("  ✓ Number of Courses: 3")
     println("\n  Full Credential Document:")
-    val achievementCredentialJsonFormatter = Json { prettyPrint = true; ignoreUnknownKeys = true }
+    val achievementCredentialJsonFormatter = Json { 
+        prettyPrint = true
+        ignoreUnknownKeys = true
+        classDiscriminator = "@type" // Use @type instead of type to avoid conflict with LinkedDataProof.type
+    }
     println(achievementCredentialJsonFormatter.encodeToString(VerifiableCredential.serializer(), achievementCredential))
     println()
 
@@ -412,6 +431,7 @@ fun main() = runBlocking {
     val anchorJson = Json {
         ignoreUnknownKeys = true
         encodeDefaults = true
+        classDiscriminator = "@type" // Use @type instead of type to avoid conflict with LinkedDataProof.type
     }
 
     val enrollmentCredentialJson = anchorJson.encodeToJsonElement(VerifiableCredential.serializer(), enrollmentCredential)
@@ -428,7 +448,7 @@ fun main() = runBlocking {
         put("credentialType", "enrollment")
         put("institutionDid", institutionDid.value)
         put("credentialDigest", enrollmentDigest)
-        put("credentialId", enrollmentCredential.id)
+        put("credentialId", enrollmentCredential.id?.value ?: "")
         put("timestamp", Clock.System.now().toString())
     }
 
@@ -455,7 +475,7 @@ fun main() = runBlocking {
         put("credentialType", "achievement")
         put("institutionDid", institutionDid.value)
         put("credentialDigest", achievementDigest)
-        put("credentialId", achievementCredential.id)
+        put("credentialId", achievementCredential.id?.value ?: "")
         put("academicYear", "2024-2025")
         put("semester", "Fall 2024")
         put("timestamp", Clock.System.now().toString())

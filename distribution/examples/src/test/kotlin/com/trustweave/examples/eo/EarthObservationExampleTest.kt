@@ -60,7 +60,7 @@ class EarthObservationExampleTest {
         val issuerDid = issuerDoc.id
 
         assertNotNull(issuerDid)
-        assertTrue(issuerDid.startsWith("did:key:"))
+        assertTrue(issuerDid.value.startsWith("did:key:"))
         assertTrue(issuerDoc.verificationMethod.isNotEmpty())
     }
 
@@ -335,7 +335,7 @@ class EarthObservationExampleTest {
         val digestPayload = buildJsonObject {
             put("vcDigest", vcDigest)
             put("digestMultibase", vcDigest) // Also include as digestMultibase for verifier
-            put("issuer", issuerDid)
+            put("issuer", JsonPrimitive(issuerDid.value))
         }
         val anchorResult = anchorClient.writePayload(
             payload = digestPayload,

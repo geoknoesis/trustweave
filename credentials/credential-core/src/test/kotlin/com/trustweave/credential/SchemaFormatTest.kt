@@ -1,5 +1,6 @@
 package com.trustweave.credential
 
+import com.trustweave.credential.model.SchemaFormat
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 

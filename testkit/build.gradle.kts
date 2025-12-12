@@ -23,6 +23,9 @@ dependencies {
     
     // Kotlinx DateTime
     implementation(libs.kotlinx.datetime)
+    
+    // BouncyCastle for secp256k1 support
+    implementation(libs.bouncycastle.prov)
 
     // JUnit for test base classes
     api(libs.junit.jupiter)

@@ -12,6 +12,8 @@ dependencies {
     // Implementation dependencies - internal only
     implementation(libs.kotlinx.coroutines.core)
     implementation("org.slf4j:slf4j-api:2.0.9")
+    // BouncyCastle for secp256k1 and Ed25519 support on older JVMs
+    implementation(libs.bouncycastle.prov)
 
     // Test dependencies
     testImplementation(project(":testkit"))

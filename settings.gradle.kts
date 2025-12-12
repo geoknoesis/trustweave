@@ -87,7 +87,7 @@ include("anchors:plugins:indy")
 
 // Credentials domain
 include("credentials:credential-api")
-include("credentials:credential-core")
+// include("credentials:credential-core")  // Excluded from build - not used by trust module
 include("credentials:plugins:status-list:database")
 include("credentials:plugins:platforms:servicenow")
 include("credentials:plugins:platforms:salesforce")

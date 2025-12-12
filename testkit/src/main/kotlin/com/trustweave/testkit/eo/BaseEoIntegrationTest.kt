@@ -104,7 +104,7 @@ abstract class BaseEoIntegrationTest {
 
         // Create issuer DID
         val issuerDoc = didMethod.createDid()
-        val issuerDid = issuerDoc.id.value
+        val issuerDid = issuerDoc.id
 
         // Create anchor client
         val testChainId = chainId ?: getChainId()

@@ -2,6 +2,8 @@ package com.trustweave.credential.proof
 
 import com.trustweave.credential.models.Proof
 import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.ProofType
+import com.trustweave.credential.model.ProofTypes
 import com.trustweave.did.identifiers.VerificationMethodId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -40,7 +42,7 @@ class JwtProofGenerator(
     override suspend fun generateProof(
         credential: VerifiableCredential,
         keyId: String,
-        options: ProofOptions
+        options: ProofGeneratorOptions
     ): Proof = withContext(Dispatchers.IO) {
         // TODO: Implement JWT proof generation
         // 1. Build JWT header (alg, typ, kid)
@@ -51,7 +53,7 @@ class JwtProofGenerator(
 
         // Placeholder: return basic proof structure
         val verificationMethod = options.verificationMethod
-            ?: (getPublicKeyId(keyId)?.let { "did:key:$it#$keyId" } ?: "did:key:$keyId")
+            ?: (getPublicKeyId(keyId)?.let { "did:key:$it#$keyId" } ?: "did:key:$keyId#$keyId")
 
         Proof(
             type = ProofTypes.fromString(proofType),
@@ -75,7 +77,7 @@ class JwtProofGenerator(
     suspend fun generateJwt(
         credential: VerifiableCredential,
         keyId: String,
-        options: ProofOptions
+        options: ProofGeneratorOptions
     ): String = withContext(Dispatchers.IO) {
         // TODO: Implement JWT generation
         // Returns compact JWT string: header.payload.signature

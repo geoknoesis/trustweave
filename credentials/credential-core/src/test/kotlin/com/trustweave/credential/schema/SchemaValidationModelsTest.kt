@@ -1,7 +1,7 @@
 package com.trustweave.credential.schema
 
 import com.trustweave.credential.model.vc.VerifiableCredential
-import com.trustweave.credential.SchemaFormat
+import com.trustweave.credential.model.SchemaFormat
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
@@ -76,13 +76,14 @@ class SchemaValidationModelsTest {
 
     @Test
     fun `test SchemaRegistrationResult success`() {
+        val schemaId = com.trustweave.credential.identifiers.SchemaId("https://example.com/schemas/person")
         val result = SchemaRegistrationResult(
             success = true,
-            schemaId = "https://example.com/schemas/person"
+            schemaId = schemaId
         )
 
         assertTrue(result.success)
-        assertEquals("https://example.com/schemas/person", result.schemaId)
+        assertEquals(schemaId, result.schemaId)
         assertNull(result.error)
     }
 

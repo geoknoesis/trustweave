@@ -3,8 +3,6 @@ package com.trustweave.examples
 import com.trustweave.anchor.BlockchainAnchorClient
 import com.trustweave.anchor.BlockchainAnchorRegistry
 import com.trustweave.anchor.DefaultBlockchainAnchorRegistry
-import com.trustweave.credential.proof.ProofGenerator
-import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.did.DidMethod
 import com.trustweave.did.registry.DefaultDidMethodRegistry
 import com.trustweave.did.registry.DidMethodRegistry
@@ -30,7 +28,7 @@ fun createTestBlockchainRegistry(vararg clients: Pair<String, BlockchainAnchorCl
 
 fun BlockchainAnchorRegistry.hasChain(chainId: String): Boolean = get(chainId) != null
 
-fun createTestProofRegistry(vararg generators: ProofGenerator): ProofGeneratorRegistry =
-    com.trustweave.credential.proof.ProofGeneratorRegistry().also { registry ->
-        generators.forEach { registry.register(it) }
-    }
+// ProofGeneratorRegistry has been removed - proof engines are now managed by CredentialService
+// This function is kept for backward compatibility but returns null
+@Deprecated("ProofGeneratorRegistry has been removed. Use CredentialService instead.")
+fun createTestProofRegistry(vararg generators: Any?): Any? = null

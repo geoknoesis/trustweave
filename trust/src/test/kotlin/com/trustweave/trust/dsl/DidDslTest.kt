@@ -1,12 +1,12 @@
 package com.trustweave.trust.dsl
 
 import com.trustweave.credential.model.vc.VerifiableCredential
-import com.trustweave.credential.revocation.InMemoryStatusListManager
-import com.trustweave.credential.revocation.StatusListManager
-import com.trustweave.credential.revocation.StatusPurpose
+import com.trustweave.credential.revocation.CredentialRevocationManager
+import com.trustweave.credential.model.StatusPurpose
 import com.trustweave.wallet.CredentialOrganization
 import com.trustweave.testkit.credential.InMemoryWallet
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
+import com.trustweave.kms.results.SignResult
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.testkit.services.TestkitDidMethodFactory
@@ -40,7 +40,12 @@ class DidDslTest {
             )
             keys {
                 custom(kmsInstance)
-                signer { data, keyId -> kmsInstance.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
+                signer { data, keyId ->
+                    when (val result = kmsInstance.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
+                        is SignResult.Success -> result.signature
+                        else -> throw IllegalStateException("Signing failed: $result")
+                    }
+                }
             }
             did {
                 method("key") {

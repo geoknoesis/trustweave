@@ -2,6 +2,8 @@ package com.trustweave.credential.proof
 
 import com.trustweave.credential.models.Proof
 import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.ProofType
+import com.trustweave.credential.model.ProofTypes
 import com.trustweave.core.util.DigestUtils
 import com.trustweave.did.identifiers.VerificationMethodId
 import kotlinx.coroutines.Dispatchers
@@ -9,6 +11,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
+import org.slf4j.LoggerFactory
 
 /**
  * Ed25519 proof generator implementation.
@@ -34,34 +37,36 @@ class Ed25519ProofGenerator(
     private val signer: suspend (ByteArray, String) -> ByteArray,
     private val getPublicKeyId: suspend (String) -> String? = { null }
 ) : ProofGenerator {
+    
+    private val logger = LoggerFactory.getLogger(Ed25519ProofGenerator::class.java)
     override val proofType = "Ed25519Signature2020"
 
     override suspend fun generateProof(
         credential: VerifiableCredential,
         keyId: String,
-        options: ProofOptions
+        options: ProofGeneratorOptions
     ): Proof = withContext(Dispatchers.IO) {
         // Build verification method URL first (needed for proof document)
         val publicKeyId = getPublicKeyId(keyId)
         val verificationMethod = options.verificationMethod
-            ?: (publicKeyId?.let { "did:key:$it#$keyId" } ?: "did:key:$keyId")
+            ?: (publicKeyId?.let { "did:key:$it#$keyId" } ?: "did:key:$keyId#$keyId")
 
         val created = Clock.System.now().toString()
 
         // Build proof document (credential + proof metadata without proofValue)
         // This matches what the verifier expects per Ed25519Signature2020 spec
         val proofDocument = buildProofDocument(credential, proofType, created, verificationMethod, options)
-        println("[DEBUG Ed25519ProofGenerator] Proof document (first 200 chars): ${proofDocument.take(200)}")
+        logger.debug("Building Ed25519 proof: proofDocumentPrefix={}", proofDocument.take(200))
 
         // Sign the proof document
         val documentBytes = proofDocument.toByteArray(Charsets.UTF_8)
-        println("[DEBUG Ed25519ProofGenerator] Document bytes length: ${documentBytes.size}")
+        logger.debug("Signing proof document: documentLength={}", documentBytes.size)
         val signature = signer(documentBytes, keyId)
-        println("[DEBUG Ed25519ProofGenerator] Signature bytes length: ${signature.size}")
+        logger.debug("Generated signature: signatureLength={}", signature.size)
 
         // Encode signature as multibase
         val proofValue = encodeMultibase(signature)
-        println("[DEBUG Ed25519ProofGenerator] Proof value (first 50 chars): ${proofValue.take(50)}")
+        logger.debug("Encoded proof value: proofValuePrefix={}", proofValue.take(50))
 
         // Create proof
         Proof(
@@ -85,7 +90,7 @@ class Ed25519ProofGenerator(
         proofType: String,
         created: String,
         verificationMethod: String,
-        options: ProofOptions
+        options: ProofGeneratorOptions
     ): String {
         val json = Json {
             prettyPrint = false

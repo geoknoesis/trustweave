@@ -9,10 +9,10 @@ This tutorial provides a comprehensive guide to issuing verifiable credentials w
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    // Or use individual modules:
+    // implementation("com.trustweave:trust:1.0.0-SNAPSHOT")
+    // implementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -100,8 +100,9 @@ fun main() = runBlocking {
     }
 
     // Create issuer DID (returns sealed result)
-    import com.trustweave.trust.types.DidCreationResult
-    import com.trustweave.trust.types.IssuanceResult
+import com.trustweave.trust.types.DidCreationResult
+import com.trustweave.credential.results.IssuanceResult
+import com.trustweave.trust.types.VerificationResult
     
     val didResult = trustWeave.createDid {
         method(DidMethods.KEY)
@@ -111,7 +112,19 @@ fun main() = runBlocking {
     val issuerDid = when (didResult) {
         is DidCreationResult.Success -> didResult.did
         else -> {
-            println("Failed to create DID: ${didResult.reason}")
+            val errorMsg = when (didResult) {
+                is DidCreationResult.Failure.MethodNotRegistered -> 
+                    "Method '${didResult.method}' not registered. Available: ${didResult.availableMethods.joinToString()}"
+                is DidCreationResult.Failure.KeyGenerationFailed -> 
+                    "Key generation failed: ${didResult.reason}"
+                is DidCreationResult.Failure.DocumentCreationFailed -> 
+                    "Document creation failed: ${didResult.reason}"
+                is DidCreationResult.Failure.InvalidConfiguration -> 
+                    "Invalid configuration: ${didResult.reason}"
+                is DidCreationResult.Failure.Other -> 
+                    "Error: ${didResult.reason}"
+            }
+            println("Failed to create DID: $errorMsg")
             return@runBlocking
         }
     }
@@ -150,7 +163,7 @@ fun main() = runBlocking {
             issuanceResult.credential
         }
         else -> {
-            println("Issuance failed: ${issuanceResult.reason}")
+            println("Issuance failed: ${issuanceResult.allErrors.joinToString("; ")}")
             return@runBlocking
         }
     }
@@ -187,7 +200,19 @@ fun main() = runBlocking {
     val issuerDid = when (didResult) {
         is DidCreationResult.Success -> didResult.did
         else -> {
-            println("Failed to create DID: ${didResult.reason}")
+            val errorMsg = when (didResult) {
+                is DidCreationResult.Failure.MethodNotRegistered -> 
+                    "Method '${didResult.method}' not registered. Available: ${didResult.availableMethods.joinToString()}"
+                is DidCreationResult.Failure.KeyGenerationFailed -> 
+                    "Key generation failed: ${didResult.reason}"
+                is DidCreationResult.Failure.DocumentCreationFailed -> 
+                    "Document creation failed: ${didResult.reason}"
+                is DidCreationResult.Failure.InvalidConfiguration -> 
+                    "Invalid configuration: ${didResult.reason}"
+                is DidCreationResult.Failure.Other -> 
+                    "Error: ${didResult.reason}"
+            }
+            println("Failed to create DID: $errorMsg")
             return@runBlocking
         }
     }
@@ -200,12 +225,20 @@ fun main() = runBlocking {
     val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    // Create credential subject
-    val credentialSubject = buildJsonObject {
-        "id" to "did:key:subject"
+    // Create credential subject using DSL (preferred)
+    // Note: When using the DSL, you build the subject directly in the credential block
+    subject {
+        id("did:key:subject")
         "type" to "Person"
         "name" to "Alice"
     }
+    
+    // For standalone subject creation (outside DSL), use buildJsonObject:
+    // val credentialSubject = buildJsonObject {
+    //     put("id", "did:key:subject")
+    //     put("type", "Person")
+    //     put("name", "Alice")
+    // }
 
     // Issue credential with custom expiration
     val issuanceResult = trustWeave.issue {
@@ -233,7 +266,7 @@ fun main() = runBlocking {
             issuanceResult.credential
         }
         else -> {
-            println("Error: ${issuanceResult.reason}")
+            println("Error: ${issuanceResult.allErrors.joinToString("; ")}")
             return@runBlocking
         }
     }
@@ -361,7 +394,19 @@ fun main() = runBlocking {
     val issuerDid = when (didResult) {
         is DidCreationResult.Success -> didResult.did
         else -> {
-            println("Failed to create DID: ${didResult.reason}")
+            val errorMsg = when (didResult) {
+                is DidCreationResult.Failure.MethodNotRegistered -> 
+                    "Method '${didResult.method}' not registered. Available: ${didResult.availableMethods.joinToString()}"
+                is DidCreationResult.Failure.KeyGenerationFailed -> 
+                    "Key generation failed: ${didResult.reason}"
+                is DidCreationResult.Failure.DocumentCreationFailed -> 
+                    "Document creation failed: ${didResult.reason}"
+                is DidCreationResult.Failure.InvalidConfiguration -> 
+                    "Invalid configuration: ${didResult.reason}"
+                is DidCreationResult.Failure.Other -> 
+                    "Error: ${didResult.reason}"
+            }
+            println("Failed to create DID: $errorMsg")
             return@runBlocking
         }
     }
@@ -392,7 +437,7 @@ fun main() = runBlocking {
             issuanceResult.credential
         }
         else -> {
-            println("Error: ${issuanceResult.reason}")
+            println("Error: ${issuanceResult.allErrors.joinToString("; ")}")
             return@runBlocking
         }
     }
@@ -403,7 +448,19 @@ fun main() = runBlocking {
     }
     when (verificationResult) {
         is VerificationResult.Valid -> println("Valid: true")
-        is VerificationResult.Invalid -> println("Valid: false - ${verificationResult.reason}")
+        is VerificationResult.Invalid -> {
+            val errorMsg = when (verificationResult) {
+                is VerificationResult.Invalid.Expired -> "Expired at ${verificationResult.expiredAt}"
+                is VerificationResult.Invalid.Revoked -> "Revoked"
+                is VerificationResult.Invalid.InvalidProof -> "Invalid proof: ${verificationResult.reason}"
+                is VerificationResult.Invalid.IssuerResolutionFailed -> "Issuer resolution failed: ${verificationResult.reason}"
+                is VerificationResult.Invalid.UntrustedIssuer -> "Untrusted issuer: ${verificationResult.issuer.value}"
+                is VerificationResult.Invalid.SchemaValidationFailed -> "Schema validation failed: ${verificationResult.errors.joinToString()}"
+                is VerificationResult.Invalid.MultipleFailures -> "Multiple failures: ${verificationResult.errors.joinToString()}"
+                is VerificationResult.Invalid.Other -> "Error: ${verificationResult.reason}"
+            }
+            println("Valid: false - $errorMsg")
+        }
     }
 
     // Note: Revocation is typically handled through credential status lists
@@ -442,7 +499,19 @@ fun main() = runBlocking {
     val issuerDid = when (didResult) {
         is DidCreationResult.Success -> didResult.did
         else -> {
-            println("Failed to create DID: ${didResult.reason}")
+            val errorMsg = when (didResult) {
+                is DidCreationResult.Failure.MethodNotRegistered -> 
+                    "Method '${didResult.method}' not registered. Available: ${didResult.availableMethods.joinToString()}"
+                is DidCreationResult.Failure.KeyGenerationFailed -> 
+                    "Key generation failed: ${didResult.reason}"
+                is DidCreationResult.Failure.DocumentCreationFailed -> 
+                    "Document creation failed: ${didResult.reason}"
+                is DidCreationResult.Failure.InvalidConfiguration -> 
+                    "Invalid configuration: ${didResult.reason}"
+                is DidCreationResult.Failure.Other -> 
+                    "Error: ${didResult.reason}"
+            }
+            println("Failed to create DID: $errorMsg")
             return@runBlocking
         }
     }
@@ -455,16 +524,28 @@ fun main() = runBlocking {
     val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    // Create multiple credential subjects
+    // Issue credentials in batch using DSL
     val subjects = listOf(
-        buildJsonObject { "id" to "did:key:alice"; "name" to "Alice" },
-        buildJsonObject { "id" to "did:key:bob"; "name" to "Bob" },
-        buildJsonObject { "id" to "did:key:charlie"; "name" to "Charlie" }
+        mapOf("id" to "did:key:alice", "name" to "Alice"),
+        mapOf("id" to "did:key:bob", "name" to "Bob"),
+        mapOf("id" to "did:key:charlie", "name" to "Charlie")
     )
 
     // Issue credentials in batch
-    val credentials = subjects.mapNotNull { subject ->
+    val credentials = subjects.mapNotNull { subjectData ->
         val issuanceResult = trustWeave.issue {
+            credential {
+                type("VerifiableCredential", "PersonCredential")
+                issuer(issuerDid)
+                subject {
+                    id(subjectData["id"] as String)
+                    subjectData.forEach { (key, value) ->
+                        if (key != "id") {
+                            key to value
+                        }
+                    }
+                }
+            }
             credential {
                 type(CredentialTypes.PERSON)
                 issuer(issuerDid.value)
@@ -575,7 +656,7 @@ import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.trust.types.DidCreationResult
-import com.trustweave.trust.types.IssuanceResult
+import com.trustweave.credential.results.IssuanceResult
 import com.trustweave.credential.*
 import com.trustweave.testkit.services.*
 
@@ -604,7 +685,19 @@ fun main() = runBlocking {
             return@runBlocking
         }
         else -> {
-            println("Failed to create DID: ${didResult.reason}")
+            val errorMsg = when (didResult) {
+                is DidCreationResult.Failure.MethodNotRegistered -> 
+                    "Method '${didResult.method}' not registered. Available: ${didResult.availableMethods.joinToString()}"
+                is DidCreationResult.Failure.KeyGenerationFailed -> 
+                    "Key generation failed: ${didResult.reason}"
+                is DidCreationResult.Failure.DocumentCreationFailed -> 
+                    "Document creation failed: ${didResult.reason}"
+                is DidCreationResult.Failure.InvalidConfiguration -> 
+                    "Invalid configuration: ${didResult.reason}"
+                is DidCreationResult.Failure.Other -> 
+                    "Error: ${didResult.reason}"
+            }
+            println("Failed to create DID: $errorMsg")
             return@runBlocking
         }
     }
@@ -633,22 +726,25 @@ fun main() = runBlocking {
         is IssuanceResult.Success -> {
             println("Issued: ${issuanceResult.credential.id}")
         }
-        is IssuanceResult.Failure.IssuerResolutionFailed -> {
-            println("Issuer DID resolution failed: ${issuanceResult.issuerDid}")
-            println("Reason: ${issuanceResult.reason}")
+        is IssuanceResult.Failure.UnsupportedFormat -> {
+            println("Unsupported format: ${issuanceResult.format.value}")
+            println("Supported formats: ${issuanceResult.supportedFormats.joinToString { it.value }}")
         }
-        is IssuanceResult.Failure.KeyNotFound -> {
-            println("Key not found: ${issuanceResult.keyId}")
-            println("Reason: ${issuanceResult.reason}")
+        is IssuanceResult.Failure.AdapterNotReady -> {
+            println("Adapter not ready: ${issuanceResult.reason ?: "Unknown reason"}")
         }
-        is IssuanceResult.Failure.InvalidCredential -> {
-            println("Invalid credential: ${issuanceResult.reason}")
-            if (issuanceResult.errors.isNotEmpty()) {
-                println("Errors: ${issuanceResult.errors.joinToString()}")
-            }
+        is IssuanceResult.Failure.InvalidRequest -> {
+            println("Invalid request: field '${issuanceResult.field}' - ${issuanceResult.reason}")
+        }
+        is IssuanceResult.Failure.AdapterError -> {
+            println("Adapter error: ${issuanceResult.reason}")
+            issuanceResult.cause?.printStackTrace()
+        }
+        is IssuanceResult.Failure.MultipleFailures -> {
+            println("Multiple failures: ${issuanceResult.errors.joinToString("; ")}")
         }
         else -> {
-            println("Error: ${issuanceResult.reason}")
+            println("Error: ${issuanceResult.allErrors.joinToString("; ")}")
         }
     }
 }

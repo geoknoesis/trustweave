@@ -23,5 +23,5 @@ dependencies {
 
     testImplementation(project(":testkit"))
     testImplementation(project(":kms:kms-core"))
-    testImplementation(project(":trust"))
+    // testImplementation(project(":trust"))  // Removed to break circular dependency - trust doesn't use credential-core
 }

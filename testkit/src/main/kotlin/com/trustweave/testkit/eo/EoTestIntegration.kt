@@ -4,6 +4,7 @@ import com.trustweave.anchor.AnchorResult
 import com.trustweave.anchor.BlockchainAnchorClient
 import com.trustweave.anchor.BlockchainAnchorRegistry
 import com.trustweave.core.util.DigestUtils
+import com.trustweave.did.identifiers.Did
 import com.trustweave.testkit.integrity.IntegrityVerifier
 import com.trustweave.testkit.integrity.IntegrityVerificationResult
 import com.trustweave.testkit.integrity.TestDataBuilders
@@ -42,7 +43,7 @@ object EoTestIntegration {
      * @return An EoTestScenario ready to execute
      */
     suspend fun createScenario(
-        issuerDid: String,
+        issuerDid: Did,
         anchorClient: BlockchainAnchorClient,
         chainId: String,
         datasetId: String = "eo-dataset-test",
@@ -102,7 +103,7 @@ object EoTestIntegration {
         val vc = buildJsonObject {
             put("id", "vc-eo-$datasetId")
             put("type", buildJsonArray { add("VerifiableCredential") })
-            put("issuer", issuerDid)
+            put("issuer", JsonPrimitive(issuerDid.value))
             put("credentialSubject", subject)
             put("linksetDigest", linksetDigest) // Reference to Linkset digest
             put("issued", fixedTimestamp)
@@ -111,7 +112,7 @@ object EoTestIntegration {
         val vcWithDigest = buildJsonObject {
             put("id", "vc-eo-$datasetId")
             put("type", buildJsonArray { add("VerifiableCredential") })
-            put("issuer", issuerDid)
+            put("issuer", JsonPrimitive(issuerDid.value))
             put("credentialSubject", subject)
             put("digestMultibase", vcDigest)
             put("linksetDigest", linksetDigest) // Reference to Linkset digest
@@ -122,7 +123,7 @@ object EoTestIntegration {
         val digestPayload = buildJsonObject {
             put("vcId", "vc-eo-$datasetId")
             put("vcDigest", vcDigest)
-            put("issuer", issuerDid)
+            put("issuer", JsonPrimitive(issuerDid.value))
         }
 
         return EoTestScenario(
@@ -186,7 +187,7 @@ object EoTestIntegration {
      * @return EoTestResult containing anchor result and verification result
      */
     suspend fun runCompleteScenario(
-        issuerDid: String,
+        issuerDid: Did,
         anchorClient: BlockchainAnchorClient,
         chainId: String,
         datasetId: String = "eo-dataset-test",
@@ -210,7 +211,7 @@ object EoTestIntegration {
  * Represents a complete EO test scenario with all components.
  */
 data class EoTestScenario(
-    val issuerDid: String,
+    val issuerDid: Did,
     val chainId: String,
     val anchorClient: BlockchainAnchorClient,
     val artifacts: Map<String, JsonObject>,

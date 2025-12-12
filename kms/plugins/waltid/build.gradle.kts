@@ -22,8 +22,16 @@ dependencies {
     implementation(project(":credentials:credential-api"))
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
-    implementation(libs.kotlinx.datetime)
-    implementation("id.walt.did:waltid-did:$WALTID_VERSION")
+    // Force kotlinx.datetime version to ensure Clock.System is available
+    implementation(libs.kotlinx.datetime) {
+        version {
+            strictly(libs.versions.kotlinx.datetime.get())
+        }
+    }
+    implementation("id.walt.did:waltid-did:$WALTID_VERSION") {
+        // Exclude kotlinx.datetime from waltid if it brings an incompatible version
+        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-datetime")
+    }
 
     // Logging
     implementation("org.slf4j:slf4j-api:2.0.9")
@@ -33,5 +41,6 @@ dependencies {
 
     // Test dependencies
     testImplementation(project(":testkit"))
+    testImplementation(libs.kotlinx.datetime) // Ensure datetime is available in tests
 }
 

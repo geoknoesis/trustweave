@@ -31,6 +31,8 @@ class CredentialTransformer {
         prettyPrint = false
         encodeDefaults = false
         ignoreUnknownKeys = true
+        classDiscriminator = "@type" // Use @type instead of type to avoid conflict with LinkedDataProof.type
+        useArrayPolymorphism = false
     }
 
     /**
@@ -51,18 +53,16 @@ class CredentialTransformer {
 
             // Set issuer
             val setIssuerMethod = builderClass.getMethod("issuer", String::class.java)
-            setIssuerMethod.invoke(builder, credential.issuer)
+            setIssuerMethod.invoke(builder, credential.issuer.id.value)
 
             // Set issued at
-            val issuedAt = credential.issuanceDate.let {
-                KotlinInstant.parse(it).epochSeconds
-            }
+            val issuedAt = credential.issuanceDate.epochSeconds
             val setIssuedAtMethod = builderClass.getMethod("issueTime", java.util.Date::class.java)
             setIssuedAtMethod.invoke(builder, java.util.Date.from(JavaInstant.ofEpochSecond(issuedAt)))
 
             // Set expiration if present
             credential.expirationDate?.let { expirationDate ->
-                val expiration = KotlinInstant.parse(expirationDate).epochSeconds
+                val expiration = expirationDate.epochSeconds
                 val setExpirationMethod = builderClass.getMethod("expirationTime", java.util.Date::class.java)
                 setExpirationMethod.invoke(builder, java.util.Date.from(JavaInstant.ofEpochSecond(expiration)))
             }

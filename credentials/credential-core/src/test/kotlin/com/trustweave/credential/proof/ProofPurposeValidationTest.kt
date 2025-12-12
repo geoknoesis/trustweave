@@ -1,6 +1,8 @@
 package com.trustweave.credential.proof
 
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
 import com.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
@@ -20,10 +22,11 @@ class ProofPurposeValidationTest {
         val verificationMethod = "$issuerDid#key-1"
 
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
+            val didObj = Did(issuerDid)
             DidResolutionResult.Success(
                 document = DidDocument(
-                    id = issuerDid,
-                    assertionMethod = listOf(verificationMethod)
+                    id = didObj,
+                    assertionMethod = listOf(VerificationMethodId.parse(verificationMethod, didObj))
                 )
             )
         }
@@ -45,10 +48,11 @@ class ProofPurposeValidationTest {
         val verificationMethod = "$issuerDid#key-1"
 
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
+            val didObj = Did(issuerDid)
             DidResolutionResult.Success(
                 document = DidDocument(
-                    id = issuerDid,
-                    authentication = listOf(verificationMethod)
+                    id = didObj,
+                    authentication = listOf(VerificationMethodId.parse(verificationMethod, didObj))
                 )
             )
         }
@@ -69,10 +73,11 @@ class ProofPurposeValidationTest {
         val verificationMethod = "$issuerDid#key-1"
 
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
+            val didObj = Did(issuerDid)
             DidResolutionResult.Success(
                 document = DidDocument(
-                    id = issuerDid,
-                    capabilityInvocation = listOf(verificationMethod)
+                    id = didObj,
+                    capabilityInvocation = listOf(VerificationMethodId.parse(verificationMethod, didObj))
                 )
             )
         }
@@ -93,10 +98,11 @@ class ProofPurposeValidationTest {
         val verificationMethod = "$issuerDid#key-1"
 
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
+            val didObj = Did(issuerDid)
             DidResolutionResult.Success(
                 document = DidDocument(
-                    id = issuerDid,
-                    capabilityDelegation = listOf(verificationMethod)
+                    id = didObj,
+                    capabilityDelegation = listOf(VerificationMethodId.parse(verificationMethod, didObj))
                 )
             )
         }
@@ -119,10 +125,8 @@ class ProofPurposeValidationTest {
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
             DidResolutionResult.Success(
                 document = DidDocument(
-                    id = issuerDid,
-                    assertionMethod = listOf(verificationMethod),
-                    // capabilityInvocation is empty
-                    capabilityInvocation = emptyList()
+                    id = Did(issuerDid),
+                    verificationMethod = emptyList()
                 )
             )
         }
@@ -158,10 +162,11 @@ class ProofPurposeValidationTest {
         val issuerDid = "did:key:issuer"
 
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
+            val didObj = Did(issuerDid)
             DidResolutionResult.Success(
                 document = DidDocument(
-                    id = issuerDid,
-                    assertionMethod = listOf("#key-1") // Relative reference
+                    id = didObj,
+                    assertionMethod = listOf(VerificationMethodId.parse("$issuerDid#key-1", didObj))
                 )
             )
         }
@@ -182,7 +187,7 @@ class ProofPurposeValidationTest {
 
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
             DidResolutionResult.Success(
-                document = DidDocument(id = issuerDid)
+                document = DidDocument(id = Did(issuerDid), verificationMethod = emptyList())
             )
         }
 

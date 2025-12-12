@@ -14,6 +14,10 @@ import kotlinx.datetime.Instant
  *
  * Implementations are typically registered with a `CredentialServiceRegistry`
  * that is carried inside `TrustWeaveContext`.
+ *
+ * NOTE: This interface conflicts with com.trustweave.credential.CredentialService from credential-api.
+ * Both are in the same package. Ensure credential-api is on the classpath before credential-core
+ * to use the new API. This interface is legacy and will be migrated in the future.
  */
 interface CredentialService {
     /**

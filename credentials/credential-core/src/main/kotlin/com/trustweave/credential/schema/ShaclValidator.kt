@@ -2,6 +2,7 @@ package com.trustweave.credential.schema
 
 import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.model.SchemaFormat
+import com.trustweave.credential.model.Claims
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -14,6 +15,8 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 /**
  * SHACL (Shapes Constraint Language) validator implementation.
@@ -54,7 +57,7 @@ class ShaclValidator : SchemaValidator {
         val errors = mutableListOf<SchemaValidationError>()
 
         // Validate credential structure
-        if (!credential.type.contains("VerifiableCredential")) {
+        if (!credential.type.any { it.value == "VerifiableCredential" }) {
             errors.add(SchemaValidationError(
                 path = "/type",
                 message = "Credential must include 'VerifiableCredential' in type array",
@@ -62,7 +65,7 @@ class ShaclValidator : SchemaValidator {
             ))
         }
 
-        if (credential.issuer.isBlank()) {
+        if (credential.issuer.id.value.isBlank()) {
             errors.add(SchemaValidationError(
                 path = "/issuer",
                 message = "Credential issuer is required",
@@ -80,8 +83,8 @@ class ShaclValidator : SchemaValidator {
         )
     }
 
-    override suspend fun validateCredentialSubject(
-        subject: kotlinx.serialization.json.JsonElement,
+    override suspend fun validateClaims(
+        claims: Claims,
         schema: JsonObject
     ): SchemaValidationResult {
         val errors = mutableListOf<SchemaValidationError>()
@@ -97,30 +100,35 @@ class ShaclValidator : SchemaValidator {
             }
         } ?: emptyList()
 
-        if (subject is kotlinx.serialization.json.JsonObject) {
-            // Validate each property constraint
-            for (propertyShape in properties) {
-                val path = propertyShape["sh:path"]?.jsonPrimitive?.content
-                if (path != null) {
-                    val propertyErrors = validatePropertyConstraint(subject, path, propertyShape)
-                    errors.addAll(propertyErrors)
-                }
+        // Convert Claims (Map<String, JsonElement>) to JsonObject for validation
+        val claimsObject = buildJsonObject {
+            for (entry in claims) {
+                put(entry.key, entry.value)
             }
+        }
 
-            // Check required properties (sh:minCount > 0)
-            for (propertyShape in properties) {
-                val path = propertyShape["sh:path"]?.jsonPrimitive?.content
-                val minCount = propertyShape["sh:minCount"]?.jsonPrimitive?.intOrNull ?: 0
+        // Validate each property constraint
+        for (propertyShape in properties) {
+            val path = propertyShape["sh:path"]?.jsonPrimitive?.content
+            if (path != null) {
+                val propertyErrors = validatePropertyConstraint(claimsObject, path, propertyShape)
+                errors.addAll(propertyErrors)
+            }
+        }
 
-                if (path != null && minCount > 0) {
-                    val fieldName = path.substringAfterLast("/").substringAfterLast(":")
-                    if (!subject.containsKey(fieldName)) {
-                        errors.add(SchemaValidationError(
-                            path = "/credentialSubject/$fieldName",
-                            message = "Required property '$fieldName' is missing (minCount: $minCount)",
-                            code = "missing_required_property"
-                        ))
-                    }
+        // Check required properties (sh:minCount > 0)
+        for (propertyShape in properties) {
+            val path = propertyShape["sh:path"]?.jsonPrimitive?.content
+            val minCount = propertyShape["sh:minCount"]?.jsonPrimitive?.intOrNull ?: 0
+
+            if (path != null && minCount > 0) {
+                val fieldName = path.substringAfterLast("/").substringAfterLast(":")
+                if (!claimsObject.containsKey(fieldName)) {
+                    errors.add(SchemaValidationError(
+                        path = "/claims/$fieldName",
+                        message = "Required property '$fieldName' is missing (minCount: $minCount)",
+                        code = "missing_required_property"
+                    ))
                 }
             }
         }
@@ -143,8 +151,8 @@ class ShaclValidator : SchemaValidator {
         // Check target class if specified
         val targetClass = schema["sh:targetClass"]?.jsonPrimitive?.content
         if (targetClass != null) {
-            val credentialType = credential.type.find { it != "VerifiableCredential" }
-            if (credentialType != targetClass) {
+            val credentialType = credential.type.find { it.value != "VerifiableCredential" }
+            if (credentialType?.value != targetClass) {
                 errors.add(SchemaValidationError(
                     path = "/type",
                     message = "Credential type '$credentialType' does not match SHACL target class '$targetClass'",

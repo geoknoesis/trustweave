@@ -2,8 +2,18 @@ package com.trustweave.credential.verifier
 
 import com.trustweave.credential.CredentialVerificationOptions
 import com.trustweave.credential.model.vc.CredentialStatus
-import com.trustweave.credential.models.Proof
 import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.CredentialSchema
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.vc.CredentialProof
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.credential.identifiers.StatusListId
+import com.trustweave.credential.identifiers.SchemaId
+import com.trustweave.credential.schema.SchemaRegistries
+import com.trustweave.credential.model.SchemaFormat
+import com.trustweave.did.identifiers.Did
 import com.trustweave.did.resolver.DidResolver
 import com.trustweave.util.booleanDidResolver
 import kotlinx.coroutines.runBlocking
@@ -12,6 +22,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -20,14 +31,15 @@ import kotlin.time.Duration.Companion.seconds
 class CredentialVerifierAdditionalBranchCoverageTest {
 
     @BeforeEach
-    fun setup() {
-        com.trustweave.credential.schema.SchemaRegistry.clear()
+    fun setup() = runBlocking {
+        SchemaRegistries.default().clear()
+        SchemaRegistries.defaultValidatorRegistry().clear()
     }
 
     @Test
     fun `test CredentialVerifier verify with checkExpiration false`() = runBlocking {
         val verifier = CredentialVerifier()
-        val pastDate = Clock.System.now().minus(86400.seconds).toString()
+        val pastDate = Clock.System.now().minus(86400.seconds)
         val credential = createTestCredential(expirationDate = pastDate)
         val options = CredentialVerificationOptions(checkExpiration = false)
 
@@ -41,7 +53,7 @@ class CredentialVerifierAdditionalBranchCoverageTest {
         val verifier = CredentialVerifier()
         val credential = createTestCredential(
             credentialStatus = CredentialStatus(
-                id = "status-list-1",
+                id = StatusListId("status-list-1"),
                 type = "StatusList2021Entry"
             )
         )
@@ -56,8 +68,8 @@ class CredentialVerifierAdditionalBranchCoverageTest {
     fun `test CredentialVerifier verify with validateSchema false`() = runBlocking {
         val verifier = CredentialVerifier()
         val credential = createTestCredential(
-            credentialSchema = com.trustweave.credential.models.CredentialSchema(
-                id = "schema-1",
+            credentialSchema = CredentialSchema(
+                id = SchemaId("schema-1"),
                 type = "JsonSchemaValidator2018"
             )
         )
@@ -70,19 +82,18 @@ class CredentialVerifierAdditionalBranchCoverageTest {
 
     @Test
     fun `test CredentialVerifier verify with validateSchema true and schema registered`() = runBlocking {
-        val schema = com.trustweave.credential.models.CredentialSchema(
-            id = "schema-1",
+        val schemaId = SchemaId("schema-1")
+        val schema = CredentialSchema(
+            id = schemaId,
             type = "JsonSchemaValidator2018"
         )
         val schemaDef = buildJsonObject {
             put("\$schema", "http://json-schema.org/draft-07/schema#")
             put("type", "object")
         }
-        com.trustweave.credential.schema.SchemaRegistry.registerSchema(schema, schemaDef)
-        com.trustweave.credential.schema.SchemaValidatorRegistry.clear()
-        com.trustweave.credential.schema.SchemaValidatorRegistry.register(
-            com.trustweave.credential.schema.JsonSchemaValidator()
-        )
+        SchemaRegistries.default().registerSchema(schemaId, SchemaFormat.JSON_SCHEMA, schemaDef)
+        SchemaRegistries.defaultValidatorRegistry().clear()
+        // Validator is already registered by default
 
         val verifier = CredentialVerifier()
         val credential = createTestCredential(credentialSchema = schema)
@@ -132,7 +143,7 @@ class CredentialVerifierAdditionalBranchCoverageTest {
     @Test
     fun `test CredentialVerifier verify with expired credential and checkExpiration true`() = runBlocking {
         val verifier = CredentialVerifier()
-        val pastDate = Clock.System.now().minus(86400.seconds).toString()
+        val pastDate = Clock.System.now().minus(86400.seconds)
         val credential = createTestCredential(expirationDate = pastDate)
         val options = CredentialVerificationOptions(checkExpiration = true)
 
@@ -147,7 +158,7 @@ class CredentialVerifierAdditionalBranchCoverageTest {
         val verifier = CredentialVerifier()
         val credential = createTestCredential(
             credentialStatus = CredentialStatus(
-                id = "status-list-1",
+                id = StatusListId("status-list-1"),
                 type = "StatusList2021Entry"
             )
         )
@@ -161,40 +172,45 @@ class CredentialVerifierAdditionalBranchCoverageTest {
     }
 
     @Test
-    fun `test CredentialVerifier verify with invalid expiration date format`() = runBlocking {
+    fun `test CredentialVerifier verify with expired credential`() = runBlocking {
         val verifier = CredentialVerifier()
-        val credential = createTestCredential(expirationDate = "invalid-date")
+        // With Instant type, we can't have invalid format, so test with expired credential instead
+        val pastDate = Clock.System.now().minus(86400.seconds)
+        val credential = createTestCredential(expirationDate = pastDate)
         val options = CredentialVerificationOptions(checkExpiration = true)
 
         val result = verifier.verify(credential, options)
 
-        assertTrue(result.allWarnings.any { it.contains("expiration date") || it.contains("format") })
+        // Should detect expired credential
+        assertFalse(result.isValid)
+        assertTrue(result.allErrors.any { it.contains("expired") || it.contains("expiration") })
     }
 
     private fun createTestCredential(
         id: String? = null,
-        types: List<String> = listOf("VerifiableCredential", "PersonCredential"),
+        types: List<CredentialType> = listOf(CredentialType.VerifiableCredential, CredentialType.Custom("PersonCredential")),
         issuerDid: String = "did:key:issuer",
-        subject: JsonObject = buildJsonObject {
-            put("id", "did:key:subject")
-            put("name", "John Doe")
-        },
-        issuanceDate: String = Clock.System.now().toString(),
-        expirationDate: String? = null,
+        subject: CredentialSubject = CredentialSubject.fromDid(
+            Did("did:key:subject"),
+            claims = mapOf("name" to JsonPrimitive("John Doe"))
+        ),
+        issuanceDate: Instant = Clock.System.now(),
+        expirationDate: Instant? = null,
         credentialStatus: CredentialStatus? = null,
-        credentialSchema: com.trustweave.credential.models.CredentialSchema? = null,
-        proof: Proof? = Proof(
+        credentialSchema: CredentialSchema? = null,
+        proof: CredentialProof? = CredentialProof.LinkedDataProof(
             type = "Ed25519Signature2020",
-            created = Clock.System.now().toString(),
+            created = Clock.System.now(),
             verificationMethod = "did:key:issuer#key-1",
             proofPurpose = "assertionMethod",
-            proofValue = "test-proof"
+            proofValue = "test-proof",
+            additionalProperties = emptyMap()
         )
     ): VerifiableCredential {
         return VerifiableCredential(
-            id = id,
+            id = id?.let { CredentialId(it) },
             type = types,
-            issuer = issuerDid,
+            issuer = Issuer.fromDid(Did(issuerDid)),
             credentialSubject = subject,
             issuanceDate = issuanceDate,
             expirationDate = expirationDate,

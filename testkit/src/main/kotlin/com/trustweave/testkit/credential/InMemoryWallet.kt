@@ -14,6 +14,7 @@ import com.trustweave.wallet.DidManagement
 import com.trustweave.wallet.Wallet
 import com.trustweave.did.model.DidDocument
 import com.trustweave.did.DidCreationOptions
+import com.trustweave.did.identifiers.Did
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.datetime.Instant
@@ -53,13 +54,18 @@ import java.util.concurrent.ConcurrentHashMap
  */
 class InMemoryWallet(
     override val walletId: String = UUID.randomUUID().toString(),
-    override val walletDid: String = "did:key:test-wallet-$walletId",
-    override val holderDid: String = "did:key:test-holder-$walletId"
+    walletDid: String? = null,
+    holderDid: String? = null,
+    walletDidObj: Did? = null,
+    holderDidObj: Did? = null
 ) : Wallet,
     CredentialOrganization,
     CredentialLifecycle,
     CredentialPresentation,
     DidManagement {
+
+    override val walletDid: String = walletDidObj?.value ?: walletDid ?: "did:key:test-wallet-$walletId"
+    override val holderDid: String = holderDidObj?.value ?: holderDid ?: "did:key:test-holder-$walletId"
 
     // Storage
     private val credentials = ConcurrentHashMap<String, VerifiableCredential>()
@@ -313,8 +319,8 @@ class InMemoryWallet(
     private val managedDids = mutableSetOf<String>()
 
     init {
-        managedDids.add(walletDid)
-        managedDids.add(holderDid)
+        managedDids.add(this@InMemoryWallet.walletDid)
+        managedDids.add(this@InMemoryWallet.holderDid)
     }
 
     override suspend fun createDid(method: String, options: DidCreationOptions): String {

@@ -2,6 +2,14 @@ package com.trustweave.credential.proof
 
 import com.trustweave.credential.models.Proof
 import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.credential.model.vc.CredentialSchema
+import com.trustweave.credential.identifiers.SchemaId
+import com.trustweave.did.identifiers.Did
+import kotlinx.datetime.Instant
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
@@ -22,14 +30,14 @@ class Ed25519ProofGeneratorBranchCoverageTest {
         )
 
         val credential = createTestCredential()
-        val options = ProofOptions(
+        val options = ProofGeneratorOptions(
             proofPurpose = "assertionMethod",
             verificationMethod = "did:key:custom#key-1"
         )
 
         val proof = generator.generateProof(credential, "key-1", options)
 
-        assertEquals("did:key:custom#key-1", proof.verificationMethod)
+        assertEquals("did:key:custom#key-1", proof.verificationMethod.value)
     }
 
     @Test
@@ -40,11 +48,11 @@ class Ed25519ProofGeneratorBranchCoverageTest {
         )
 
         val credential = createTestCredential()
-        val options = ProofOptions(proofPurpose = "assertionMethod")
+        val options = ProofGeneratorOptions(proofPurpose = "assertionMethod")
 
         val proof = generator.generateProof(credential, "key-1", options)
 
-        assertEquals("did:key:public-key-id#key-1", proof.verificationMethod)
+        assertEquals("did:key:public-key-id#key-1", proof.verificationMethod.value)
     }
 
     @Test
@@ -55,11 +63,11 @@ class Ed25519ProofGeneratorBranchCoverageTest {
         )
 
         val credential = createTestCredential()
-        val options = ProofOptions(proofPurpose = "assertionMethod")
+        val options = ProofGeneratorOptions(proofPurpose = "assertionMethod")
 
         val proof = generator.generateProof(credential, "key-1", options)
 
-        assertEquals("did:key:key-1", proof.verificationMethod)
+        assertEquals("did:key:key-1#key-1", proof.verificationMethod.value)
     }
 
     @Test
@@ -69,7 +77,7 @@ class Ed25519ProofGeneratorBranchCoverageTest {
         )
 
         val credential = createTestCredential()
-        val options = ProofOptions(
+        val options = ProofGeneratorOptions(
             proofPurpose = "assertionMethod",
             challenge = "challenge-123"
         )
@@ -86,7 +94,7 @@ class Ed25519ProofGeneratorBranchCoverageTest {
         )
 
         val credential = createTestCredential()
-        val options = ProofOptions(
+        val options = ProofGeneratorOptions(
             proofPurpose = "assertionMethod",
             domain = "example.com"
         )
@@ -102,26 +110,28 @@ class Ed25519ProofGeneratorBranchCoverageTest {
             signer = { _, _ -> byteArrayOf(1, 2, 3) }
         )
 
+        val statusListId = com.trustweave.credential.identifiers.StatusListId("status-list-1")
+        val schemaId = com.trustweave.credential.identifiers.SchemaId("schema-1")
         val credential = createTestCredential(
             id = "https://example.com/credentials/1",
-            expirationDate = Clock.System.now().plus(86400.seconds).toString(),
+            expirationDate = Clock.System.now().plus(86400.seconds),
             credentialStatus = com.trustweave.credential.model.vc.CredentialStatus(
-                id = "status-list-1",
+                id = statusListId,
                 type = "StatusList2021Entry",
-                statusPurpose = "revocation",
+                statusPurpose = com.trustweave.credential.model.StatusPurpose.REVOCATION,
                 statusListIndex = "0"
             ),
-            credentialSchema = com.trustweave.credential.models.CredentialSchema(
-                id = "schema-1",
+            credentialSchema = com.trustweave.credential.model.vc.CredentialSchema(
+                id = schemaId,
                 type = "JsonSchemaValidator2018"
             )
         )
-        val options = ProofOptions(proofPurpose = "assertionMethod")
+        val options = ProofGeneratorOptions(proofPurpose = "assertionMethod")
 
         val proof = generator.generateProof(credential, "key-1", options)
 
         assertNotNull(proof)
-        assertEquals("Ed25519Signature2020", proof.type)
+        assertEquals("Ed25519Signature2020", proof.type.identifier)
     }
 
     @Test
@@ -131,12 +141,12 @@ class Ed25519ProofGeneratorBranchCoverageTest {
         )
 
         val credential = VerifiableCredential(
-            type = listOf("VerifiableCredential"),
-            issuer = "did:key:issuer",
-            credentialSubject = buildJsonObject {},
-            issuanceDate = Clock.System.now().toString()
+            type = listOf(com.trustweave.credential.model.CredentialType.VerifiableCredential),
+            issuer = com.trustweave.credential.model.vc.Issuer.fromDid(com.trustweave.did.identifiers.Did("did:key:issuer")),
+            credentialSubject = com.trustweave.credential.model.vc.CredentialSubject.fromDid(com.trustweave.did.identifiers.Did("did:key:subject")),
+            issuanceDate = Clock.System.now()
         )
-        val options = ProofOptions(proofPurpose = "assertionMethod")
+        val options = ProofGeneratorOptions(proofPurpose = "assertionMethod")
 
         val proof = generator.generateProof(credential, "key-1", options)
 
@@ -145,21 +155,21 @@ class Ed25519ProofGeneratorBranchCoverageTest {
 
     private fun createTestCredential(
         id: String? = null,
-        types: List<String> = listOf("VerifiableCredential", "PersonCredential"),
+        types: List<CredentialType> = listOf(CredentialType.VerifiableCredential, CredentialType.Custom("PersonCredential")),
         issuerDid: String = "did:key:issuer",
-        subject: JsonObject = buildJsonObject {
-            put("id", "did:key:subject")
-            put("name", "John Doe")
-        },
-        issuanceDate: String = Clock.System.now().toString(),
-        expirationDate: String? = null,
+        subject: CredentialSubject = CredentialSubject.fromDid(
+            Did("did:key:subject"),
+            claims = mapOf("name" to JsonPrimitive("John Doe"))
+        ),
+        issuanceDate: Instant = Clock.System.now(),
+        expirationDate: Instant? = null,
         credentialStatus: com.trustweave.credential.model.vc.CredentialStatus? = null,
-        credentialSchema: com.trustweave.credential.models.CredentialSchema? = null
+        credentialSchema: CredentialSchema? = null
     ): VerifiableCredential {
         return VerifiableCredential(
-            id = id,
+            id = id?.let { CredentialId(it) },
             type = types,
-            issuer = issuerDid,
+            issuer = Issuer.fromDid(Did(issuerDid)),
             credentialSubject = subject,
             issuanceDate = issuanceDate,
             expirationDate = expirationDate,

@@ -95,6 +95,8 @@ import com.trustweave.credential.models.VerifiableCredential
 
 // Kotlinx imports
 import kotlinx.coroutines.runBlocking
+// Note: buildJsonObject is only needed for standalone JSON creation outside DSL
+// Within DSL blocks (subject {}, credential {}, etc.), use DSL syntax instead
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 ```
@@ -105,6 +107,32 @@ import kotlinx.serialization.json.put
 2. Kotlinx imports
 3. Standard library imports
 4. Third-party imports
+
+### DSL vs buildJsonObject
+
+**Within DSL blocks**, use the DSL syntax:
+```kotlin
+subject {
+    id("did:key:holder")
+    "name" to "Alice"
+    "address" {
+        "street" to "123 Main St"
+        "city" to "New York"
+    }
+    "grades" to arrayOfObjects(
+        { "course" to "CS101"; "grade" to "A" },
+        { "course" to "MATH101"; "grade" to "B" }
+    )
+}
+```
+
+**Outside DSL blocks** (for standalone JSON creation), use `buildJsonObject`:
+```kotlin
+val jsonPayload = buildJsonObject {
+    put("id", "did:key:holder")
+    put("name", "Alice")
+}
+```
 
 ## Code Comments
 
@@ -145,7 +173,8 @@ val did = TrustWeave.createDid().getOrThrow()
 // Good: Descriptive names
 val issuerDid = "did:key:issuer"
 val issuerKeyId = "did:key:issuer#key-1"
-val credentialSubject = buildJsonObject { ... }
+// Note: For DSL usage, build subject directly in credential block
+// For standalone JSON, use: val credentialSubject = buildJsonObject { ... }
 
 // Bad: Abbreviations
 val iDid = "did:key:issuer"

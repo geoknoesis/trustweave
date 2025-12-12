@@ -63,14 +63,24 @@ abstract class PluginEdgeCaseTestTemplate {
     @Test
     fun `test empty key ID`() = runBlocking {
         val kms = createKms()
-        val emptyKeyId = KeyId("")
-        
-        val getResult = kms.getPublicKey(emptyKeyId)
-        assertTrue(
-            getResult is GetPublicKeyResult.Failure.KeyNotFound || 
-            getResult is GetPublicKeyResult.Failure.Error,
-            "Empty key ID should result in failure"
-        )
+        // KeyId constructor validates and throws IllegalArgumentException for blank strings
+        // This test verifies that validation happens at the KeyId level
+        try {
+            val emptyKeyId = KeyId("")
+            // If we get here (unlikely), test that KMS handles it
+            val getResult = kms.getPublicKey(emptyKeyId)
+            assertTrue(
+                getResult is GetPublicKeyResult.Failure.KeyNotFound || 
+                getResult is GetPublicKeyResult.Failure.Error,
+                "Empty key ID should result in failure"
+            )
+        } catch (e: IllegalArgumentException) {
+            // Expected: KeyId validation prevents blank strings
+            assertTrue(
+                e.message?.contains("blank") == true || e.message?.contains("Key ID") == true,
+                "Should throw exception for blank key ID, got: ${e.message}"
+            )
+        }
     }
 
     /**
@@ -217,9 +227,10 @@ abstract class PluginEdgeCaseTestTemplate {
         // Try to sign with different algorithm
         val sign = kms.sign(keyId, "test".toByteArray(), algorithm2)
         
-        // Should either succeed (if algorithms are compatible) or return clear error
+        // Should either succeed (if algorithms are compatible), return UnsupportedAlgorithm, or return clear error
         assertTrue(
             sign is SignResult.Success || 
+            sign is SignResult.Failure.UnsupportedAlgorithm ||
             sign is SignResult.Failure.Error,
             "Signing with different algorithm should either succeed or return clear error"
         )

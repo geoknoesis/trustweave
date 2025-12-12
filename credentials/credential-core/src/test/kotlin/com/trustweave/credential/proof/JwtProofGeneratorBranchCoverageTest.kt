@@ -1,6 +1,12 @@
 package com.trustweave.credential.proof
 
 import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.did.identifiers.Did
+import kotlinx.datetime.Instant
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
@@ -20,15 +26,15 @@ class JwtProofGeneratorBranchCoverageTest {
         )
 
         val credential = createTestCredential()
-        val options = ProofOptions(
+        val options = ProofGeneratorOptions(
             proofPurpose = "assertionMethod",
             verificationMethod = "did:key:custom#key-1"
         )
 
         val proof = generator.generateProof(credential, "key-1", options)
 
-        assertEquals("did:key:custom#key-1", proof.verificationMethod)
-        assertEquals("JsonWebSignature2020", proof.type)
+        assertEquals("did:key:custom#key-1", proof.verificationMethod.value)
+        assertEquals("JsonWebSignature2020", proof.type.identifier)
         assertNotNull(proof.jws)
     }
 
@@ -40,11 +46,11 @@ class JwtProofGeneratorBranchCoverageTest {
         )
 
         val credential = createTestCredential()
-        val options = ProofOptions(proofPurpose = "assertionMethod")
+        val options = ProofGeneratorOptions(proofPurpose = "assertionMethod")
 
         val proof = generator.generateProof(credential, "key-1", options)
 
-        assertEquals("did:key:public-key-id#key-1", proof.verificationMethod)
+        assertEquals("did:key:public-key-id#key-1", proof.verificationMethod.value)
     }
 
     @Test
@@ -55,11 +61,11 @@ class JwtProofGeneratorBranchCoverageTest {
         )
 
         val credential = createTestCredential()
-        val options = ProofOptions(proofPurpose = "assertionMethod")
+        val options = ProofGeneratorOptions(proofPurpose = "assertionMethod")
 
         val proof = generator.generateProof(credential, "key-1", options)
 
-        assertEquals("did:key:key-1", proof.verificationMethod)
+        assertEquals("did:key:key-1#key-1", proof.verificationMethod.value)
     }
 
     @Test
@@ -69,7 +75,7 @@ class JwtProofGeneratorBranchCoverageTest {
         )
 
         val credential = createTestCredential()
-        val options = ProofOptions(proofPurpose = "assertionMethod")
+        val options = ProofGeneratorOptions(proofPurpose = "assertionMethod")
 
         val jwt = generator.generateJwt(credential, "key-1", options)
 
@@ -86,7 +92,7 @@ class JwtProofGeneratorBranchCoverageTest {
         )
 
         val credential = createTestCredential()
-        val options = ProofOptions(proofPurpose = "assertionMethod")
+        val options = ProofGeneratorOptions(proofPurpose = "assertionMethod")
 
         // Current implementation always sets jws, so this won't throw
         val jwt = generator.generateJwt(credential, "key-1", options)
@@ -100,7 +106,7 @@ class JwtProofGeneratorBranchCoverageTest {
         )
 
         val credential = createTestCredential()
-        val options = ProofOptions(
+        val options = ProofGeneratorOptions(
             proofPurpose = "assertionMethod",
             challenge = "challenge-123"
         )
@@ -117,7 +123,7 @@ class JwtProofGeneratorBranchCoverageTest {
         )
 
         val credential = createTestCredential()
-        val options = ProofOptions(
+        val options = ProofGeneratorOptions(
             proofPurpose = "assertionMethod",
             domain = "example.com"
         )
@@ -129,18 +135,18 @@ class JwtProofGeneratorBranchCoverageTest {
 
     private fun createTestCredential(
         id: String? = null,
-        types: List<String> = listOf("VerifiableCredential", "PersonCredential"),
+        types: List<CredentialType> = listOf(CredentialType.VerifiableCredential, CredentialType.Custom("PersonCredential")),
         issuerDid: String = "did:key:issuer",
-        subject: JsonObject = buildJsonObject {
-            put("id", "did:key:subject")
-            put("name", "John Doe")
-        },
-        issuanceDate: String = Clock.System.now().toString()
+        subject: CredentialSubject = CredentialSubject.fromDid(
+            Did("did:key:subject"),
+            claims = mapOf("name" to JsonPrimitive("John Doe"))
+        ),
+        issuanceDate: Instant = Clock.System.now()
     ): VerifiableCredential {
         return VerifiableCredential(
-            id = id,
+            id = id?.let { CredentialId(it) },
             type = types,
-            issuer = issuerDid,
+            issuer = Issuer.fromDid(Did(issuerDid)),
             credentialSubject = subject,
             issuanceDate = issuanceDate
         )

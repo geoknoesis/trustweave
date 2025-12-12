@@ -5,7 +5,7 @@ import com.trustweave.trust.types.VerificationResult
 import com.trustweave.trust.types.*
 import com.trustweave.anchor.BlockchainAnchorRegistry
 import com.trustweave.credential.model.vc.VerifiableCredential
-import com.trustweave.credential.proof.ProofType
+import com.trustweave.credential.model.ProofType
 import com.trustweave.core.util.DigestUtils
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import com.trustweave.testkit.getOrFail
@@ -32,12 +32,13 @@ fun main(): Unit = runBlocking {
         }
     }
 
-    val credentialSubject = buildJsonObject {
+    // Note: Digest computation requires JsonObject, so we create it separately for that purpose
+    val credentialSubjectForDigest = buildJsonObject {
         put("id", "did:key:holder-placeholder")
         put("name", "Alice Example")
         put("role", "Site Reliability Engineer")
     }
-    val digest = DigestUtils.sha256DigestMultibase(credentialSubject)
+    val digest = DigestUtils.sha256DigestMultibase(credentialSubjectForDigest)
     println("Canonical credential-subject digest: $digest")
 
     val issuerDid = trustweave.createDid().getOrFail()
@@ -48,7 +49,7 @@ fun main(): Unit = runBlocking {
         is com.trustweave.did.resolver.DidResolutionResult.Success -> issuerDidResolution.document
         else -> throw IllegalStateException("Failed to resolve issuer DID")
     }
-    val issuerKeyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val issuerKeyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.value?.substringAfter("#")
         ?: error("No verification method generated for ${issuerDid.value}")
     println("Issuer DID: ${issuerDid.value} (keyId=$issuerKeyId)")
 
@@ -88,7 +89,12 @@ fun main(): Unit = runBlocking {
     }
 
     runCatching {
-        val payload = Json.encodeToJsonElement(VerifiableCredential.serializer(), credential)
+        val json = Json {
+            ignoreUnknownKeys = true
+            encodeDefaults = false
+            classDiscriminator = "@type" // Use @type instead of type to avoid conflict with LinkedDataProof.type
+        }
+        val payload = json.encodeToJsonElement(VerifiableCredential.serializer(), credential)
         val anchorResult = anchorClient.writePayload(payload)
         println("Anchored credential on ${anchorResult.ref.chainId}: ${anchorResult.ref.txHash}")
     }.onFailure { error ->

@@ -124,8 +124,8 @@ class TrustDslTest {
             registry?.addTrustRelationship(anchor1, anchor2)
 
             val path = findTrustPath(
-                com.trustweave.trust.types.VerifierIdentity(com.trustweave.trust.types.Did(anchor1)),
-                com.trustweave.trust.types.IssuerIdentity.from(anchor2, "key-1")
+                com.trustweave.did.identifiers.Did(anchor1),
+                com.trustweave.did.identifiers.Did(anchor2)
             )
             assertTrue(path is com.trustweave.trust.types.TrustPath.Verified)
         }

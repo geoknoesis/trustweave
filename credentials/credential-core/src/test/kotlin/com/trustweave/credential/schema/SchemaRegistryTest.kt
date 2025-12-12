@@ -1,10 +1,14 @@
 package com.trustweave.credential.schema
 
-import com.trustweave.credential.models.CredentialSchema
+import com.trustweave.credential.model.vc.CredentialSchema
 import com.trustweave.credential.model.vc.VerifiableCredential
-import com.trustweave.credential.schema.JsonSchemaValidator
-import com.trustweave.credential.schema.SchemaValidatorRegistry
-import com.trustweave.credential.SchemaFormat
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.model.SchemaFormat
+import com.trustweave.credential.identifiers.SchemaId
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.did.identifiers.Did
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.AfterEach
@@ -12,72 +16,65 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 
 /**
  * Comprehensive tests for SchemaRegistry API.
  */
 class SchemaRegistryTest {
 
+    private lateinit var schemaRegistry: SchemaRegistry
+    private lateinit var validatorRegistry: SchemaValidatorRegistry
+
     @BeforeEach
-    fun setup() {
-        SchemaRegistry.clear()
-        SchemaValidatorRegistry.clear()
-        // Register JSON Schema validator
-        SchemaValidatorRegistry.register(JsonSchemaValidator())
+    fun setup() = runBlocking {
+        validatorRegistry = SchemaRegistries.defaultValidatorRegistry()
+        validatorRegistry.clear()
+        schemaRegistry = SchemaRegistries.default()
+        schemaRegistry.clear()
     }
 
     @AfterEach
-    fun cleanup() {
-        SchemaRegistry.clear()
-        SchemaValidatorRegistry.clear()
+    fun cleanup() = runBlocking {
+        schemaRegistry.clear()
+        validatorRegistry.clear()
     }
 
     @Test
     fun `test register schema successfully`() = runBlocking {
-        val schema = CredentialSchema(
-            id = "https://example.com/schemas/person",
-            type = "JsonSchemaValidator2018",
-            schemaFormat = SchemaFormat.JSON_SCHEMA
-        )
+        val schemaId = SchemaId("https://example.com/schemas/person")
         val definition = buildJsonObject {
             put("\$schema", "http://json-schema.org/draft-07/schema#")
             put("type", "object")
         }
 
-        val result = SchemaRegistry.registerSchema(schema, definition)
+        val result = schemaRegistry.registerSchema(schemaId, SchemaFormat.JSON_SCHEMA, definition)
 
         assertTrue(result.success)
-        assertEquals("https://example.com/schemas/person", result.schemaId)
+        assertEquals(schemaId, result.schemaId)
     }
 
     @Test
     fun `test get registered schema`() = runBlocking {
-        val schema = CredentialSchema(
-            id = "https://example.com/schemas/person",
-            type = "JsonSchemaValidator2018",
-            schemaFormat = SchemaFormat.JSON_SCHEMA
-        )
+        val schemaId = SchemaId("https://example.com/schemas/person")
         val definition = buildJsonObject {
             put("\$schema", "http://json-schema.org/draft-07/schema#")
             put("type", "object")
         }
 
-        SchemaRegistry.registerSchema(schema, definition)
+        schemaRegistry.registerSchema(schemaId, SchemaFormat.JSON_SCHEMA, definition)
 
-        val retrieved = SchemaRegistry.getSchema("https://example.com/schemas/person")
+        val retrievedDefinition = schemaRegistry.getSchemaDefinition(schemaId)
+        val retrievedFormat = schemaRegistry.getSchemaFormat(schemaId)
 
-        assertNotNull(retrieved)
-        assertEquals(schema.id, retrieved?.id)
-        assertEquals(schema.type, retrieved?.type)
+        assertNotNull(retrievedDefinition)
+        assertNotNull(retrievedFormat)
+        assertEquals(SchemaFormat.JSON_SCHEMA, retrievedFormat)
     }
 
     @Test
     fun `test get schema definition`() = runBlocking {
-        val schema = CredentialSchema(
-            id = "https://example.com/schemas/person",
-            type = "JsonSchemaValidator2018",
-            schemaFormat = SchemaFormat.JSON_SCHEMA
-        )
+        val schemaId = SchemaId("https://example.com/schemas/person")
         val definition = buildJsonObject {
             put("\$schema", "http://json-schema.org/draft-07/schema#")
             put("type", "object")
@@ -86,9 +83,9 @@ class SchemaRegistryTest {
             })
         }
 
-        SchemaRegistry.registerSchema(schema, definition)
+        schemaRegistry.registerSchema(schemaId, SchemaFormat.JSON_SCHEMA, definition)
 
-        val retrieved = SchemaRegistry.getSchemaDefinition("https://example.com/schemas/person")
+        val retrieved = schemaRegistry.getSchemaDefinition(schemaId)
 
         assertNotNull(retrieved)
         assertEquals(definition["type"]?.jsonPrimitive?.content, retrieved?.get("type")?.jsonPrimitive?.content)
@@ -96,115 +93,86 @@ class SchemaRegistryTest {
 
     @Test
     fun `test get non-existent schema returns null`() = runBlocking {
-        val schema = SchemaRegistry.getSchema("https://example.com/schemas/nonexistent")
+        val schemaId = SchemaId("https://example.com/schemas/nonexistent")
+        val definition = schemaRegistry.getSchemaDefinition(schemaId)
 
-        assertNull(schema)
+        assertNull(definition)
     }
 
     @Test
     fun `test is registered returns true for registered schema`() = runBlocking {
-        val schema = CredentialSchema(
-            id = "https://example.com/schemas/person",
-            type = "JsonSchemaValidator2018",
-            schemaFormat = SchemaFormat.JSON_SCHEMA
-        )
+        val schemaId = SchemaId("https://example.com/schemas/person")
         val definition = buildJsonObject {
             put("\$schema", "http://json-schema.org/draft-07/schema#")
             put("type", "object")
         }
 
-        SchemaRegistry.registerSchema(schema, definition)
+        schemaRegistry.registerSchema(schemaId, SchemaFormat.JSON_SCHEMA, definition)
 
-        assertTrue(SchemaRegistry.isRegistered("https://example.com/schemas/person"))
-        assertFalse(SchemaRegistry.isRegistered("https://example.com/schemas/nonexistent"))
+        assertTrue(schemaRegistry.isRegistered(schemaId))
+        assertFalse(schemaRegistry.isRegistered(SchemaId("https://example.com/schemas/nonexistent")))
     }
 
     @Test
     fun `test getAllSchemaIds returns all registered schemas`() = runBlocking {
-        val schema1 = CredentialSchema(
-            id = "https://example.com/schemas/person",
-            type = "JsonSchemaValidator2018",
-            schemaFormat = SchemaFormat.JSON_SCHEMA
-        )
-        val schema2 = CredentialSchema(
-            id = "https://example.com/schemas/degree",
-            type = "JsonSchemaValidator2018",
-            schemaFormat = SchemaFormat.JSON_SCHEMA
-        )
+        val schemaId1 = SchemaId("https://example.com/schemas/person")
+        val schemaId2 = SchemaId("https://example.com/schemas/degree")
         val definition = buildJsonObject {
             put("\$schema", "http://json-schema.org/draft-07/schema#")
             put("type", "object")
         }
 
-        SchemaRegistry.registerSchema(schema1, definition)
-        SchemaRegistry.registerSchema(schema2, definition)
+        schemaRegistry.registerSchema(schemaId1, SchemaFormat.JSON_SCHEMA, definition)
+        schemaRegistry.registerSchema(schemaId2, SchemaFormat.JSON_SCHEMA, definition)
 
-        val ids = SchemaRegistry.getAllSchemaIds()
+        val ids = schemaRegistry.getAllSchemaIds()
 
         assertEquals(2, ids.size)
-        assertTrue(ids.contains("https://example.com/schemas/person"))
-        assertTrue(ids.contains("https://example.com/schemas/degree"))
+        assertTrue(ids.contains(schemaId1))
+        assertTrue(ids.contains(schemaId2))
     }
 
     @Test
     fun `test unregister schema`() = runBlocking {
-        val schema = CredentialSchema(
-            id = "https://example.com/schemas/person",
-            type = "JsonSchemaValidator2018",
-            schemaFormat = SchemaFormat.JSON_SCHEMA
-        )
+        val schemaId = SchemaId("https://example.com/schemas/person")
         val definition = buildJsonObject {
             put("\$schema", "http://json-schema.org/draft-07/schema#")
             put("type", "object")
         }
 
-        SchemaRegistry.registerSchema(schema, definition)
-        assertTrue(SchemaRegistry.isRegistered("https://example.com/schemas/person"))
+        schemaRegistry.registerSchema(schemaId, SchemaFormat.JSON_SCHEMA, definition)
+        assertTrue(schemaRegistry.isRegistered(schemaId))
 
-        SchemaRegistry.unregister("https://example.com/schemas/person")
+        schemaRegistry.unregister(schemaId)
 
-        assertFalse(SchemaRegistry.isRegistered("https://example.com/schemas/person"))
-        assertNull(SchemaRegistry.getSchema("https://example.com/schemas/person"))
-        assertNull(SchemaRegistry.getSchemaDefinition("https://example.com/schemas/person"))
+        assertFalse(schemaRegistry.isRegistered(schemaId))
+        assertNull(schemaRegistry.getSchemaDefinition(schemaId))
     }
 
     @Test
     fun `test clear all schemas`() = runBlocking {
-        val schema1 = CredentialSchema(
-            id = "https://example.com/schemas/person",
-            type = "JsonSchemaValidator2018",
-            schemaFormat = SchemaFormat.JSON_SCHEMA
-        )
-        val schema2 = CredentialSchema(
-            id = "https://example.com/schemas/degree",
-            type = "JsonSchemaValidator2018",
-            schemaFormat = SchemaFormat.JSON_SCHEMA
-        )
+        val schemaId1 = SchemaId("https://example.com/schemas/person")
+        val schemaId2 = SchemaId("https://example.com/schemas/degree")
         val definition = buildJsonObject {
             put("\$schema", "http://json-schema.org/draft-07/schema#")
             put("type", "object")
         }
 
-        SchemaRegistry.registerSchema(schema1, definition)
-        SchemaRegistry.registerSchema(schema2, definition)
+        schemaRegistry.registerSchema(schemaId1, SchemaFormat.JSON_SCHEMA, definition)
+        schemaRegistry.registerSchema(schemaId2, SchemaFormat.JSON_SCHEMA, definition)
 
-        assertEquals(2, SchemaRegistry.getAllSchemaIds().size)
+        assertEquals(2, schemaRegistry.getAllSchemaIds().size)
 
-        SchemaRegistry.clear()
+        schemaRegistry.clear()
 
-        assertEquals(0, SchemaRegistry.getAllSchemaIds().size)
-        assertFalse(SchemaRegistry.isRegistered("https://example.com/schemas/person"))
-        assertFalse(SchemaRegistry.isRegistered("https://example.com/schemas/degree"))
+        assertEquals(0, schemaRegistry.getAllSchemaIds().size)
+        assertFalse(schemaRegistry.isRegistered(schemaId1))
+        assertFalse(schemaRegistry.isRegistered(schemaId2))
     }
 
     @Test
     fun `test validate credential against schema`() = runBlocking {
-        val schemaId = "https://example.com/schemas/person"
-        val schema = CredentialSchema(
-            id = schemaId,
-            type = "JsonSchemaValidator2018",
-            schemaFormat = SchemaFormat.JSON_SCHEMA
-        )
+        val schemaId = SchemaId("https://example.com/schemas/person")
         val schemaDefinition = buildJsonObject {
             put("\$schema", "http://json-schema.org/draft-07/schema#")
             put("type", "object")
@@ -212,75 +180,67 @@ class SchemaRegistryTest {
                 put("name", buildJsonObject { put("type", "string") })
             })
         }
-        SchemaRegistry.registerSchema(schema, schemaDefinition)
+        schemaRegistry.registerSchema(schemaId, SchemaFormat.JSON_SCHEMA, schemaDefinition)
 
+        val subjectId = "did:key:subject"
+        val subjectClaims = buildJsonObject {
+            put("name", "John Doe")
+        }
         val credential = VerifiableCredential(
-            id = "https://example.com/credentials/1",
-            type = listOf("VerifiableCredential", "PersonCredential"),
-            issuer = "did:key:issuer",
-            credentialSubject = buildJsonObject {
-                put("id", "did:key:subject")
-                put("name", "John Doe")
-            },
-            issuanceDate = Clock.System.now().toString()
+            id = CredentialId("https://example.com/credentials/1"),
+            type = listOf(CredentialType.VerifiableCredential, CredentialType.Custom("PersonCredential")),
+            issuer = Issuer.fromDid(Did("did:key:issuer")),
+            credentialSubject = CredentialSubject.fromDid(Did(subjectId), claims = subjectClaims),
+            issuanceDate = Clock.System.now()
         )
 
-        val result = SchemaRegistry.validateCredential(credential, schemaId)
+        val result = schemaRegistry.validate(credential, schemaId)
 
         assertNotNull(result)
     }
 
     @Test
     fun `test validate credential fails when schema not found`() = runBlocking {
+        val subjectId = "did:key:subject"
         val credential = VerifiableCredential(
-            id = "https://example.com/credentials/1",
-            type = listOf("VerifiableCredential", "PersonCredential"),
-            issuer = "did:key:issuer",
-            credentialSubject = buildJsonObject {
-                put("id", "did:key:subject")
-            },
-            issuanceDate = Clock.System.now().toString()
+            id = CredentialId("https://example.com/credentials/1"),
+            type = listOf(CredentialType.VerifiableCredential, CredentialType.Custom("PersonCredential")),
+            issuer = Issuer.fromDid(Did("did:key:issuer")),
+            credentialSubject = CredentialSubject.fromDid(Did(subjectId)),
+            issuanceDate = Clock.System.now()
         )
 
         assertFailsWith<IllegalArgumentException> {
-            SchemaRegistry.validateCredential(credential, "https://example.com/schemas/nonexistent")
+            schemaRegistry.validate(credential, SchemaId("https://example.com/schemas/nonexistent"))
         }
     }
 
     @Test
     fun `test register schema with SHACL format`() = runBlocking {
-        val schema = CredentialSchema(
-            id = "https://example.com/schemas/person",
-            type = "ShaclValidator2020",
-            schemaFormat = SchemaFormat.SHACL
-        )
+        val schemaId = SchemaId("https://example.com/schemas/person")
         val definition = buildJsonObject {
             put("@context", "https://www.w3.org/ns/shacl#")
             put("@type", "NodeShape")
         }
 
-        val result = SchemaRegistry.registerSchema(schema, definition)
+        val result = schemaRegistry.registerSchema(schemaId, SchemaFormat.SHACL, definition)
 
         assertTrue(result.success)
-        val retrieved = SchemaRegistry.getSchema("https://example.com/schemas/person")
-        assertEquals(SchemaFormat.SHACL, retrieved?.schemaFormat)
+        val retrievedFormat = schemaRegistry.getSchemaFormat(schemaId)
+        assertEquals(SchemaFormat.SHACL, retrievedFormat)
     }
 
     @Test
     fun `test register schema handles errors gracefully`() = runBlocking {
         // This test verifies that registration errors are handled
         // The actual implementation catches exceptions and returns a result
-        val schema = CredentialSchema(
-            id = "https://example.com/schemas/person",
-            type = "JsonSchemaValidator2018",
-            schemaFormat = SchemaFormat.JSON_SCHEMA
-        )
+        val schemaId = SchemaId("https://example.com/schemas/person")
         val definition = buildJsonObject {
             put("\$schema", "http://json-schema.org/draft-07/schema#")
             put("type", "object")
         }
 
-        val result = SchemaRegistry.registerSchema(schema, definition)
+        val result = schemaRegistry.registerSchema(schemaId, SchemaFormat.JSON_SCHEMA, definition)
 
         // Should succeed under normal circumstances
         assertTrue(result.success)

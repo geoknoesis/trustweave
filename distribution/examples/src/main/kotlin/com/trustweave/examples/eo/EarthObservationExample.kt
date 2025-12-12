@@ -16,7 +16,7 @@ import com.trustweave.anchor.exceptions.BlockchainException
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.testkit.getOrFail
 import com.trustweave.trust.types.DidCreationResult
-import com.trustweave.trust.types.IssuanceResult
+import com.trustweave.credential.results.IssuanceResult
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import kotlinx.datetime.Instant
@@ -73,7 +73,12 @@ fun main() = runBlocking {
         keys {
             custom(kmsRef)
             signer { data, keyId ->
-                kmsRef.sign(com.trustweave.core.identifiers.KeyId(keyId), data)
+                when (val signResult = kmsRef.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
+                    is com.trustweave.kms.results.SignResult.Success -> signResult.signature
+                    is com.trustweave.kms.results.SignResult.Failure.KeyNotFound -> throw IllegalStateException("Signing failed: Key not found: ${signResult.keyId}")
+                    is com.trustweave.kms.results.SignResult.Failure.UnsupportedAlgorithm -> throw IllegalStateException("Signing failed: Unsupported algorithm")
+                    is com.trustweave.kms.results.SignResult.Failure.Error -> throw IllegalStateException("Signing failed: ${signResult.reason}")
+                }
             }
             algorithm("Ed25519")
         }
@@ -109,9 +114,24 @@ fun main() = runBlocking {
             println("  ✗ Available methods: ${issuerDidResult.availableMethods.joinToString(", ")}")
             return@runBlocking
         }
-        is DidCreationResult.Failure.KeyGenerationFailed,
-        is DidCreationResult.Failure.DocumentCreationFailed,
-        is DidCreationResult.Failure.InvalidConfiguration,
+        is DidCreationResult.Failure.KeyGenerationFailed -> {
+            println("\n📥 RESPONSE: DID Creation Failed")
+            println("  ✗ Error: ${issuerDidResult.reason}")
+            println("  ✗ Error Type: ${issuerDidResult::class.simpleName}")
+            return@runBlocking
+        }
+        is DidCreationResult.Failure.DocumentCreationFailed -> {
+            println("\n📥 RESPONSE: DID Creation Failed")
+            println("  ✗ Error: ${issuerDidResult.reason}")
+            println("  ✗ Error Type: ${issuerDidResult::class.simpleName}")
+            return@runBlocking
+        }
+        is DidCreationResult.Failure.InvalidConfiguration -> {
+            println("\n📥 RESPONSE: DID Creation Failed")
+            println("  ✗ Error: ${issuerDidResult.reason}")
+            println("  ✗ Error Type: ${issuerDidResult::class.simpleName}")
+            return@runBlocking
+        }
         is DidCreationResult.Failure.Other -> {
             println("\n📥 RESPONSE: DID Creation Failed")
             println("  ✗ Error: ${issuerDidResult.reason}")
@@ -153,11 +173,11 @@ fun main() = runBlocking {
     println("    - Services: ${issuerDidDoc.service.size}")
     println("\n  Verification Methods:")
     issuerDidDoc.verificationMethod.forEachIndexed { index, vm ->
-        println("    ${index + 1}. ID: ${vm.id}")
+        println("    ${index + 1}. ID: ${vm.id.value}")
         println("       Type: ${vm.type}")
-        println("       Controller: ${vm.controller}")
+        println("       Controller: ${vm.controller?.value}")
     }
-    val issuerKeyId = issuerDidDoc.verificationMethod.first().id.substringAfter("#")
+    val issuerKeyId = issuerDidDoc.verificationMethod.first().id.value.substringAfter("#")
     println("\n  ✓ Selected Issuer Key ID: $issuerKeyId")
     println()
 
@@ -208,7 +228,7 @@ fun main() = runBlocking {
     val (provenanceArtifact, provenanceDigest) = TestDataBuilders.createProvenanceArtifact(
         id = "provenance-1",
         activity = "EO Data Collection",
-        agent = issuerDid.value  // Links back to the DID we created in Step 2
+        agent = issuerDid  // Links back to the DID we created in Step 2
     )
 
     println("\n📥 RESPONSE: Provenance Artifact Created")
@@ -352,47 +372,29 @@ fun main() = runBlocking {
     // - These are linked together via the Linkset
 
     // The "subject" is what the credential is about - our EO dataset
-    // We include the Linkset digest in the credential subject
-    // Note: Subject ID must be an IRI (URI/URL/DID/URN) per W3C VC spec
-    val credentialSubject = buildJsonObject {
-        put("id", "https://example.com/datasets/eo-dataset-sentinel2-l2a-xyz")
-        put("type", "EarthObservationDataset")
-        put("title", "Sentinel-2 L2A Dataset - Central Europe")
-        put("description", "Atmospherically corrected Sentinel-2 Level 2A product")
-        put("spatialCoverage", buildJsonObject {
-            put("type", "BoundingBox")
-            put("coordinates", buildJsonArray {
-                add(buildJsonArray { add(10.0); add(45.0) }) // Southwest corner (lon, lat)
-                add(buildJsonArray { add(11.0); add(46.0) }) // Northeast corner (lon, lat)
-            })
-        })
-        put("temporalCoverage", buildJsonObject {
-            put("start", "2024-01-15T10:00:00Z")
-            put("end", "2024-01-15T10:20:00Z")
-        })
-        put("linksetDigest", linksetDigest)  // Reference to the Linkset digest
-        put("datasetProvider", issuerDid.value)  // Reference to the data provider
-    }
-    println("  Credential Subject:")
-    val subjectJson = Json { prettyPrint = true; ignoreUnknownKeys = true }
-    println(subjectJson.encodeToString(JsonObject.serializer(), credentialSubject))
-
     // Issue the credential using TrustWeave facade
     val credentialResult = trustweave.issue {
         credential {
             type("EarthObservationCredential")
             issuer(issuerDid.value)
             subject {
-                val subjectId = credentialSubject["id"]?.jsonPrimitive?.content
-                if (subjectId != null) {
-                    id(subjectId)
+                id("https://example.com/datasets/eo-dataset-sentinel2-l2a-xyz")
+                "type" to "EarthObservationDataset"
+                "title" to "Sentinel-2 L2A Dataset - Central Europe"
+                "description" to "Atmospherically corrected Sentinel-2 Level 2A product"
+                "spatialCoverage" {
+                    "type" to "BoundingBox"
+                    "coordinates" to listOf(
+                        listOf(10.0, 45.0), // Southwest corner (lon, lat)
+                        listOf(11.0, 46.0)  // Northeast corner (lon, lat)
+                    )
                 }
-                credentialSubject.forEach { (key, value) ->
-                    if (key != "id") {
-                        // JsonElement values (JsonObject, JsonArray, JsonPrimitive) are supported directly
-                        key to value
-                    }
+                "temporalCoverage" {
+                    "start" to "2024-01-15T10:00:00Z"
+                    "end" to "2024-01-15T10:20:00Z"
                 }
+                "linksetDigest" to linksetDigest  // Reference to the Linkset digest
+                "datasetProvider" to issuerDid.value  // Reference to the data provider
             }
             issued(Clock.System.now())
         }
@@ -400,27 +402,42 @@ fun main() = runBlocking {
     }
     val credential = when (credentialResult) {
         is IssuanceResult.Success -> credentialResult.credential
-        else -> {
+        is IssuanceResult.Failure -> {
             println("\n📥 RESPONSE: Credential Issuance Failed")
-            println("  ✗ Error: ${credentialResult.reason}")
+            println("  ✗ Errors: ${credentialResult.allErrors.joinToString("; ")}")
             return@runBlocking
         }
     }
 
     println("\n📥 RESPONSE: Credential Issued Successfully")
-    println("  ✓ Credential ID: ${credential.id}")
+    println("  ✓ Credential ID: ${credential.id?.value}")
     println("  ✓ Issuer: ${credential.issuer}")
-    println("  ✓ Types: ${credential.type.joinToString(", ")}")
+    println("  ✓ Types: ${credential.type.map { it.value }.joinToString(", ")}")
     println("  ✓ Issuance Date: ${credential.issuanceDate}")
     println("  ✓ Has Proof: ${credential.proof != null}")
     val proof = credential.proof
     if (proof != null) {
-        println("  ✓ Proof Type: ${proof.type}")
-        println("  ✓ Proof Purpose: ${proof.proofPurpose}")
+        val proofType = when (proof) {
+            is com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof -> proof.type
+            is com.trustweave.credential.model.vc.CredentialProof.JwtProof -> "JWT"
+            is com.trustweave.credential.model.vc.CredentialProof.SdJwtVcProof -> "SD-JWT"
+        }
+        println("  ✓ Proof Type: $proofType")
+        val proofPurpose = when (proof) {
+            is com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof -> proof.proofPurpose
+            else -> null
+        }
+        if (proofPurpose != null) {
+            println("  ✓ Proof Purpose: $proofPurpose")
+        }
     }
     println("  ✓ Linkset Digest Reference: $linksetDigest")
     println("\n  Full Credential Document:")
-    val credentialJsonFormatter = Json { prettyPrint = true; ignoreUnknownKeys = true }
+    val credentialJsonFormatter = Json { 
+        prettyPrint = true
+        ignoreUnknownKeys = true
+        classDiscriminator = "@type" // Use @type instead of type to avoid conflict with LinkedDataProof.type
+    }
     println(credentialJsonFormatter.encodeToString(VerifiableCredential.serializer(), credential))
 
     println()
@@ -478,6 +495,7 @@ fun main() = runBlocking {
     val anchorJson = Json {
         ignoreUnknownKeys = true
         encodeDefaults = true
+        classDiscriminator = "@type" // Use @type instead of type to avoid conflict with LinkedDataProof.type
     }
     val credentialJson = anchorJson.encodeToJsonElement(VerifiableCredential.serializer(), credential)
 
@@ -504,7 +522,7 @@ fun main() = runBlocking {
     // Compute VC digest for anchoring
     // In production, you might want to anchor just the digest to save space
     val vcDigestPayload = buildJsonObject {
-        put("vcId", credential.id)
+        put("vcId", credential.id?.value ?: "")
         put("vcDigest", vcDigest)
         put("digestMultibase", vcDigest) // Also include as digestMultibase for verifier
         put("issuer", issuerDid.value)

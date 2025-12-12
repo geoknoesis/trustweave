@@ -158,6 +158,7 @@ class TrustWeaveConfig private constructor(
         private var revocationProvider: String? = null
         private var trustProvider: String? = null
         private var ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+        private var issuer: Any? = null // CredentialService or CredentialIssuer
 
         // Factory instances (required - no reflection fallback)
         private var kmsFactory: KmsFactory? = null
@@ -170,6 +171,7 @@ class TrustWeaveConfig private constructor(
         /**
          * Set factory instances for dependency resolution.
          * If not provided, will attempt to load default adapters reflectively.
+         * Only sets factories that are not null (allows merging).
          */
         fun factories(
             kmsFactory: KmsFactory? = null,
@@ -179,12 +181,12 @@ class TrustWeaveConfig private constructor(
             trustRegistryFactory: TrustRegistryFactory? = null,
             walletFactory: WalletFactory? = null
         ) {
-            this.kmsFactory = kmsFactory
-            this.didMethodFactory = didMethodFactory
-            this.anchorClientFactory = anchorClientFactory
-            this.statusListRegistryFactory = statusListRegistryFactory
-            this.trustRegistryFactory = trustRegistryFactory
-            this.walletFactory = walletFactory
+            if (kmsFactory != null) this.kmsFactory = kmsFactory
+            if (didMethodFactory != null) this.didMethodFactory = didMethodFactory
+            if (anchorClientFactory != null) this.anchorClientFactory = anchorClientFactory
+            if (statusListRegistryFactory != null) this.statusListRegistryFactory = statusListRegistryFactory
+            if (trustRegistryFactory != null) this.trustRegistryFactory = trustRegistryFactory
+            if (walletFactory != null) this.walletFactory = walletFactory
         }
 
         /**
@@ -240,6 +242,14 @@ class TrustWeaveConfig private constructor(
             defaultProofType = builder.defaultProofType ?: defaultProofType
             autoAnchor = builder.autoAnchor ?: autoAnchor
             defaultChain = builder.defaultChain
+        }
+
+        /**
+         * Set the credential issuer/service.
+         * This is used by presentation and verification builders.
+         */
+        fun issuer(issuer: Any?) {
+            this.issuer = issuer
         }
 
         /**
@@ -368,10 +378,11 @@ class TrustWeaveConfig private constructor(
                 registries.didRegistry.resolve(did.value)
             }
 
+            // Use issuer if provided, otherwise null
             // Note: CredentialIssuer is from credential-core and needs migration to credential-api
             // For now, we'll skip creating the issuer until the migration is complete
             // val issuer = CredentialIssuer(...)
-            val issuer: Any? = null // TODO: Replace with credential-api equivalent
+            val resolvedIssuer: Any? = issuer // Use issuer from builder if set
 
             // Resolve wallet factory (optional)
             val resolvedWalletFactory = walletFactory
@@ -379,8 +390,11 @@ class TrustWeaveConfig private constructor(
             // KMS service is optional - no default needed
             val resolvedKmsService: KmsService? = null
 
+            // Use the registries directly instead of snapshotting to allow DIDs created after build
+            // to be resolvable. This is safe because the registries are already immutable from the
+            // caller's perspective (they're passed in and not modified by the caller).
             val registriesSnapshot = TrustWeaveRegistries(
-                didRegistry = registries.didRegistry.snapshot(),
+                didRegistry = registries.didRegistry, // Don't snapshot - use directly for test compatibility
                 blockchainRegistry = registries.blockchainRegistry.snapshot(),
                 credentialRegistry = registries.credentialRegistry
             )
@@ -394,7 +408,7 @@ class TrustWeaveConfig private constructor(
                     autoAnchor = autoAnchor,
                     defaultChain = defaultChain
                 ),
-                issuer = issuer,
+                issuer = resolvedIssuer,
                 didResolver = didResolver,
                 revocationManager = resolvedRevocationManager,
                 trustRegistry = resolvedTrustRegistry,

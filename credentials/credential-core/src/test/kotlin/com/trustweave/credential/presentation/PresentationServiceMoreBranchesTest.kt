@@ -3,9 +3,14 @@ package com.trustweave.credential.presentation
 import com.trustweave.credential.CredentialVerificationOptions
 import com.trustweave.util.booleanDidResolver
 import com.trustweave.credential.PresentationOptions
-import com.trustweave.credential.models.Proof
+import com.trustweave.credential.model.vc.CredentialProof
 import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.model.vc.VerifiablePresentation
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.did.identifiers.Did
 import com.trustweave.credential.proof.Ed25519ProofGenerator
 import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.credential.proof.ProofGenerator
@@ -121,7 +126,9 @@ class PresentationServiceMoreBranchesTest {
 
         // Challenge is set on presentation and proof
         assertEquals("challenge-123", presentation.challenge)
-        assertEquals("challenge-123", presentation.proof?.challenge)
+        val linkedDataProof = presentation.proof as? com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
+        assertNotNull(linkedDataProof)
+        assertEquals("challenge-123", linkedDataProof.additionalProperties["challenge"]?.jsonPrimitive?.content)
     }
 
     @Test
@@ -138,7 +145,9 @@ class PresentationServiceMoreBranchesTest {
 
         // Domain is set on presentation and proof
         assertEquals("example.com", presentation.domain)
-        assertEquals("example.com", presentation.proof?.domain)
+        val linkedDataProof = presentation.proof as? com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
+        assertNotNull(linkedDataProof)
+        assertEquals("example.com", linkedDataProof.additionalProperties["domain"]?.jsonPrimitive?.content)
     }
 
     @Test
@@ -338,19 +347,21 @@ class PresentationServiceMoreBranchesTest {
         issuerDid: String = this.issuerDid
     ): VerifiableCredential {
         return VerifiableCredential(
-            id = id,
-            type = listOf("VerifiableCredential", "PersonCredential"),
-            issuer = issuerDid,
-            issuanceDate = Clock.System.now().toString(),
-            credentialSubject = buildJsonObject {
-                put("id", "did:key:subject123")
-                put("name", "John Doe")
-            },
-            proof = Proof(
+            id = CredentialId(id),
+            type = listOf(CredentialType.VerifiableCredential, CredentialType.Custom("PersonCredential")),
+            issuer = Issuer.fromDid(Did(issuerDid)),
+            issuanceDate = Clock.System.now(),
+            credentialSubject = CredentialSubject.fromDid(
+                Did("did:key:subject123"),
+                claims = mapOf("name" to JsonPrimitive("John Doe"))
+            ),
+            proof = CredentialProof.LinkedDataProof(
                 type = "Ed25519Signature2020",
-                created = Clock.System.now().toString(),
+                created = Clock.System.now(),
                 verificationMethod = "did:key:issuer123#key-1",
-                proofPurpose = "assertionMethod"
+                proofPurpose = "assertionMethod",
+                proofValue = "test-proof",
+                additionalProperties = emptyMap()
             )
         )
     }
@@ -361,19 +372,22 @@ class PresentationServiceMoreBranchesTest {
         domain: String? = null
     ): VerifiablePresentation {
         return VerifiablePresentation(
-            id = "presentation-123",
-            type = listOf("VerifiablePresentation"),
-            holder = holderDid,
+            id = CredentialId("presentation-123"),
+            type = listOf(CredentialType.fromString("VerifiablePresentation")),
+            holder = Did(holderDid),
             verifiableCredential = credentials,
             challenge = challenge,
             domain = domain,
-            proof = Proof(
+            proof = CredentialProof.LinkedDataProof(
                 type = "Ed25519Signature2020",
-                created = Clock.System.now().toString(),
+                created = Clock.System.now(),
                 verificationMethod = "did:key:holder123#key-1",
                 proofPurpose = "authentication",
-                challenge = challenge,
-                domain = domain
+                proofValue = "test-proof",
+                additionalProperties = buildMap {
+                    challenge?.let { put("challenge", JsonPrimitive(it)) }
+                    domain?.let { put("domain", JsonPrimitive(it)) }
+                }
             )
         )
     }

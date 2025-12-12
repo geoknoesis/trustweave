@@ -31,6 +31,7 @@ import com.trustweave.trust.types.WalletCreationResult
 import com.trustweave.trust.dsl.KeyRotationBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.slf4j.LoggerFactory
 
 /**
  * TrustWeave Context.
@@ -52,11 +53,15 @@ import kotlinx.coroutines.withContext
 class TrustWeaveContext(
     private val config: TrustWeaveConfig
 ) : DidDslProvider, WalletDslProvider, CredentialDslProvider {
+    
+    private val logger = LoggerFactory.getLogger(TrustWeaveContext::class.java)
     /**
      * Get a DID method by name.
      */
     override fun getDidMethod(name: String): DidMethod? {
-        return config.registries.didRegistry.get(name) as? DidMethod
+        val method = config.registries.didRegistry.get(name) as? DidMethod
+        logger.debug("Getting DID method: name={}, found={}", name, method != null)
+        return method
     }
 
     /**

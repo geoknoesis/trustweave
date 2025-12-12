@@ -1,10 +1,27 @@
 package com.trustweave.credential.proof
 
-import com.trustweave.credential.models.Proof
+import com.trustweave.credential.model.vc.CredentialProof
 import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.vc.CredentialStatus
+import com.trustweave.credential.model.vc.CredentialSchema
+import com.trustweave.credential.model.vc.TermsOfUse
+import com.trustweave.credential.model.vc.RefreshService
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.model.StatusPurpose
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.credential.identifiers.StatusListId
+import com.trustweave.credential.identifiers.SchemaId
+import com.trustweave.credential.model.Evidence
+import com.trustweave.credential.identifiers.IssuerId
+import com.trustweave.core.identifiers.Iri
+import com.trustweave.did.identifiers.Did
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import kotlin.test.*
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 
 class Ed25519ProofGeneratorTest {
 
@@ -29,7 +46,7 @@ class Ed25519ProofGeneratorTest {
     fun `test generate proof successfully`() = runBlocking {
         val credential = createTestCredential()
         val keyId = "key-1"
-        val options = ProofOptions(
+        val options = ProofGeneratorOptions(
             proofPurpose = "assertionMethod",
             challenge = "challenge-123",
             domain = "example.com"
@@ -38,12 +55,12 @@ class Ed25519ProofGeneratorTest {
         val proof = generator.generateProof(credential, keyId, options)
 
         assertNotNull(proof)
-        assertEquals("Ed25519Signature2020", proof.type)
+        assertEquals("Ed25519Signature2020", proof.type.identifier)
         assertEquals("assertionMethod", proof.proofPurpose)
         assertEquals("challenge-123", proof.challenge)
         assertEquals("example.com", proof.domain)
         assertNotNull(proof.verificationMethod)
-        assertTrue(proof.verificationMethod!!.contains("public-key-$keyId") || proof.verificationMethod!!.contains(keyId))
+        assertTrue(proof.verificationMethod.value.contains("public-key-$keyId") || proof.verificationMethod.value.contains(keyId))
         assertNotNull(proof.proofValue)
         assertTrue(proof.proofValue!!.startsWith("z")) // Multibase prefix
         assertNotNull(proof.created)
@@ -53,7 +70,7 @@ class Ed25519ProofGeneratorTest {
     fun `test generate proof without challenge and domain`() = runBlocking {
         val credential = createTestCredential()
         val keyId = "key-2"
-        val options = ProofOptions(proofPurpose = "assertionMethod")
+        val options = ProofGeneratorOptions(proofPurpose = "assertionMethod")
 
         val proof = generator.generateProof(credential, keyId, options)
 
@@ -68,7 +85,7 @@ class Ed25519ProofGeneratorTest {
         val credential = createTestCredential()
         val keyId = "key-3"
         val customVerificationMethod = "did:example:issuer#key-3"
-        val options = ProofOptions(
+        val options = ProofGeneratorOptions(
             proofPurpose = "assertionMethod",
             verificationMethod = customVerificationMethod
         )
@@ -76,52 +93,53 @@ class Ed25519ProofGeneratorTest {
         val proof = generator.generateProof(credential, keyId, options)
 
         assertNotNull(proof)
-        assertEquals(customVerificationMethod, proof.verificationMethod)
+        assertEquals(customVerificationMethod, proof.verificationMethod.value)
     }
 
     @Test
     fun `test generate proof with credential containing all fields`() = runBlocking {
+        val subjectDid = Did("did:example:subject")
         val credential = VerifiableCredential(
-            id = "credential-123",
-            type = listOf("VerifiableCredential", "DegreeCredential"),
-            issuer = "did:example:issuer",
-            issuanceDate = "2024-01-01T00:00:00Z",
-            expirationDate = "2025-01-01T00:00:00Z",
-            credentialSubject = buildJsonObject {
-                put("id", "did:example:subject")
-                put("degree", "Bachelor")
-            },
-            credentialStatus = com.trustweave.credential.model.vc.CredentialStatus(
-                id = "https://example.com/status/1",
-                type = "StatusList2021Entry",
-                statusListIndex = "1",
-                statusPurpose = "revocation"
+            id = CredentialId("credential-123"),
+            type = listOf(CredentialType.VerifiableCredential, CredentialType.Custom("DegreeCredential")),
+            issuer = Issuer.fromDid(Did("did:example:issuer")),
+            issuanceDate = Instant.parse("2024-01-01T00:00:00Z"),
+            expirationDate = Instant.parse("2025-01-01T00:00:00Z"),
+            credentialSubject = CredentialSubject.fromDid(
+                subjectDid,
+                claims = mapOf("degree" to JsonPrimitive("Bachelor"))
             ),
-            credentialSchema = com.trustweave.credential.models.CredentialSchema(
-                id = "https://example.com/schema",
+            credentialStatus = CredentialStatus(
+                id = StatusListId("https://example.com/status/1"),
+                type = "StatusList2021Entry",
+                statusListIndex = "1"
+            ),
+            credentialSchema = CredentialSchema(
+                id = SchemaId("https://example.com/schema"),
                 type = "JsonSchemaValidator2018"
             ),
             evidence = listOf(
-                com.trustweave.credential.models.Evidence(
-                    id = "evidence-1",
+                Evidence(
+                    id = CredentialId("evidence-1"),
                     type = listOf("Evidence"),
-                    verifier = "did:example:verifier",
+                    verifier = IssuerId("did:example:verifier"),
                     evidenceDate = "2024-01-01T00:00:00Z"
                 )
             ),
-            termsOfUse = com.trustweave.credential.models.TermsOfUse(
-                id = "terms-1",
-                type = "TermsOfUse",
-                termsOfUse = buildJsonObject { put("text", "Terms") }
+            termsOfUse = listOf(
+                TermsOfUse(
+                    id = "terms-1",
+                    type = "TermsOfUse",
+                    additionalProperties = mapOf("text" to JsonPrimitive("Terms"))
+                )
             ),
-            refreshService = com.trustweave.credential.models.RefreshService(
-                id = "refresh-1",
-                type = "CredentialRefreshService",
-                serviceEndpoint = "https://example.com/refresh"
+            refreshService = RefreshService(
+                id = Iri("https://example.com/refresh"),
+                type = "CredentialRefreshService"
             )
         )
 
-        val options = ProofOptions(proofPurpose = "assertionMethod")
+        val options = ProofGeneratorOptions(proofPurpose = "assertionMethod")
         val proof = generator.generateProof(credential, "key-4", options)
 
         assertNotNull(proof)
@@ -130,16 +148,15 @@ class Ed25519ProofGeneratorTest {
 
     @Test
     fun `test generate proof with minimal credential`() = runBlocking {
+        val subjectDid = Did("did:example:subject")
         val credential = VerifiableCredential(
-            type = listOf("VerifiableCredential"),
-            issuer = "did:example:issuer",
-            issuanceDate = "2024-01-01T00:00:00Z",
-            credentialSubject = buildJsonObject {
-                put("id", "did:example:subject")
-            }
+            type = listOf(CredentialType.VerifiableCredential),
+            issuer = Issuer.fromDid(Did("did:example:issuer")),
+            issuanceDate = Instant.parse("2024-01-01T00:00:00Z"),
+            credentialSubject = CredentialSubject.fromDid(subjectDid)
         )
 
-        val options = ProofOptions(proofPurpose = "assertionMethod")
+        val options = ProofGeneratorOptions(proofPurpose = "assertionMethod")
         val proof = generator.generateProof(credential, "key-5", options)
 
         assertNotNull(proof)
@@ -154,13 +171,13 @@ class Ed25519ProofGeneratorTest {
         )
 
         val credential = createTestCredential()
-        val options = ProofOptions(proofPurpose = "assertionMethod")
+        val options = ProofGeneratorOptions(proofPurpose = "assertionMethod")
         val proof = generatorWithoutResolver.generateProof(credential, "key-6", options)
 
         assertNotNull(proof)
         assertNotNull(proof.verificationMethod)
         // Should fallback to did:key:keyId format
-        assertTrue(proof.verificationMethod!!.contains("key-6"))
+        assertTrue(proof.verificationMethod.value.contains("key-6"))
     }
 
     @Test
@@ -172,7 +189,7 @@ class Ed25519ProofGeneratorTest {
     fun `test generate proof signs credential document`() = runBlocking {
         val credential = createTestCredential()
         val keyId = "key-7"
-        val options = ProofOptions(proofPurpose = "assertionMethod")
+        val options = ProofGeneratorOptions(proofPurpose = "assertionMethod")
 
         val proof = generator.generateProof(credential, keyId, options)
 
@@ -187,7 +204,7 @@ class Ed25519ProofGeneratorTest {
         val purposes = listOf("assertionMethod", "authentication", "keyAgreement")
 
         purposes.forEach { purpose ->
-            val options = ProofOptions(proofPurpose = purpose)
+            val options = ProofGeneratorOptions(proofPurpose = purpose)
             val proof = generator.generateProof(credential, "key-8", options)
             assertEquals(purpose, proof.proofPurpose)
         }
@@ -195,14 +212,15 @@ class Ed25519ProofGeneratorTest {
 
     @Test
     fun `test generate proof with empty credential subject`() = runBlocking {
+        val subjectDid = Did("did:example:subject")
         val credential = VerifiableCredential(
-            type = listOf("VerifiableCredential"),
-            issuer = "did:example:issuer",
-            issuanceDate = "2024-01-01T00:00:00Z",
-            credentialSubject = buildJsonObject {}
+            type = listOf(CredentialType.VerifiableCredential),
+            issuer = Issuer.fromDid(Did("did:example:issuer")),
+            issuanceDate = Instant.parse("2024-01-01T00:00:00Z"),
+            credentialSubject = CredentialSubject.fromDid(subjectDid, claims = emptyMap())
         )
 
-        val options = ProofOptions(proofPurpose = "assertionMethod")
+        val options = ProofGeneratorOptions(proofPurpose = "assertionMethod")
         val proof = generator.generateProof(credential, "key-empty", options)
 
         assertNotNull(proof)
@@ -217,40 +235,47 @@ class Ed25519ProofGeneratorTest {
         )
 
         val credential = createTestCredential()
-        val options = ProofOptions(proofPurpose = "assertionMethod")
+        val options = ProofGeneratorOptions(proofPurpose = "assertionMethod")
         val proof = generatorWithoutResolver.generateProof(credential, "key-fallback", options)
 
         assertNotNull(proof)
         assertNotNull(proof.verificationMethod)
         // Should fallback to did:key:keyId format
-        assertTrue(proof.verificationMethod!!.contains("key-fallback") || proof.verificationMethod!!.contains("did:key"))
+        assertTrue(proof.verificationMethod.value.contains("key-fallback") || proof.verificationMethod.value.contains("did:key"))
     }
 
     @Test
     fun `test generate proof canonicalizes JSON correctly`() = runBlocking {
+        val subjectDid = Did("did:example:subject")
         val credential1 = VerifiableCredential(
-            id = "cred-1",
-            type = listOf("VerifiableCredential", "A", "B"),
-            issuer = "did:example:issuer",
-            issuanceDate = "2024-01-01T00:00:00Z",
-            credentialSubject = buildJsonObject {
-                put("z", "last")
-                put("a", "first")
-            }
+            id = CredentialId("cred-1"),
+            type = listOf(CredentialType.VerifiableCredential, CredentialType.Custom("A"), CredentialType.Custom("B")),
+            issuer = Issuer.fromDid(Did("did:example:issuer")),
+            issuanceDate = Instant.parse("2024-01-01T00:00:00Z"),
+            credentialSubject = CredentialSubject.fromDid(
+                subjectDid,
+                claims = mapOf(
+                    "z" to JsonPrimitive("last"),
+                    "a" to JsonPrimitive("first")
+                )
+            )
         )
 
         val credential2 = VerifiableCredential(
-            id = "cred-1",
-            type = listOf("VerifiableCredential", "B", "A"),
-            issuer = "did:example:issuer",
-            issuanceDate = "2024-01-01T00:00:00Z",
-            credentialSubject = buildJsonObject {
-                put("a", "first")
-                put("z", "last")
-            }
+            id = CredentialId("cred-1"),
+            type = listOf(CredentialType.VerifiableCredential, CredentialType.Custom("B"), CredentialType.Custom("A")),
+            issuer = Issuer.fromDid(Did("did:example:issuer")),
+            issuanceDate = Instant.parse("2024-01-01T00:00:00Z"),
+            credentialSubject = CredentialSubject.fromDid(
+                subjectDid,
+                claims = mapOf(
+                    "a" to JsonPrimitive("first"),
+                    "z" to JsonPrimitive("last")
+                )
+            )
         )
 
-        val options = ProofOptions(proofPurpose = "assertionMethod")
+        val options = ProofGeneratorOptions(proofPurpose = "assertionMethod")
         val proof1 = generator.generateProof(credential1, "key-1", options)
         val proof2 = generator.generateProof(credential2, "key-1", options)
 
@@ -263,46 +288,48 @@ class Ed25519ProofGeneratorTest {
 
     @Test
     fun `test generate proof with all optional fields populated`() = runBlocking {
+        val subjectDid = Did("did:example:subject")
         val credential = VerifiableCredential(
-            id = "credential-full",
-            type = listOf("VerifiableCredential", "FullCredential"),
-            issuer = "did:example:issuer",
-            issuanceDate = "2024-01-01T00:00:00Z",
-            expirationDate = "2025-01-01T00:00:00Z",
-            credentialSubject = buildJsonObject {
-                put("id", "did:example:subject")
-                put("name", "Full Test")
-            },
-            credentialStatus = com.trustweave.credential.model.vc.CredentialStatus(
-                id = "https://example.com/status/1",
+            id = CredentialId("credential-full"),
+            type = listOf(CredentialType.VerifiableCredential, CredentialType.Custom("FullCredential")),
+            issuer = Issuer.fromDid(Did("did:example:issuer")),
+            issuanceDate = Instant.parse("2024-01-01T00:00:00Z"),
+            expirationDate = Instant.parse("2025-01-01T00:00:00Z"),
+            credentialSubject = CredentialSubject.fromDid(
+                subjectDid,
+                claims = mapOf("name" to JsonPrimitive("Full Test"))
+            ),
+            credentialStatus = CredentialStatus(
+                id = StatusListId("https://example.com/status/1"),
                 type = "StatusList2021Entry",
                 statusListIndex = "1"
             ),
-            credentialSchema = com.trustweave.credential.models.CredentialSchema(
-                id = "https://example.com/schema",
+            credentialSchema = CredentialSchema(
+                id = SchemaId("https://example.com/schema"),
                 type = "JsonSchemaValidator2018"
             ),
             evidence = listOf(
-                com.trustweave.credential.models.Evidence(
-                    id = "evidence-1",
+                Evidence(
+                    id = CredentialId("evidence-1"),
                     type = listOf("Evidence"),
-                    verifier = "did:example:verifier",
+                    verifier = IssuerId("did:example:verifier"),
                     evidenceDate = "2024-01-01T00:00:00Z"
                 )
             ),
-            termsOfUse = com.trustweave.credential.models.TermsOfUse(
-                id = "terms-1",
-                type = "TermsOfUse",
-                termsOfUse = buildJsonObject { put("text", "Terms") }
+            termsOfUse = listOf(
+                TermsOfUse(
+                    id = "terms-1",
+                    type = "TermsOfUse",
+                    additionalProperties = mapOf("text" to JsonPrimitive("Terms"))
+                )
             ),
-            refreshService = com.trustweave.credential.models.RefreshService(
-                id = "refresh-1",
-                type = "CredentialRefreshService",
-                serviceEndpoint = "https://example.com/refresh"
+            refreshService = RefreshService(
+                id = Iri("https://example.com/refresh"),
+                type = "CredentialRefreshService"
             )
         )
 
-        val options = ProofOptions(
+        val options = ProofGeneratorOptions(
             proofPurpose = "assertionMethod",
             challenge = "challenge-full",
             domain = "example.com",
@@ -312,7 +339,7 @@ class Ed25519ProofGeneratorTest {
         val proof = generator.generateProof(credential, "key-full", options)
 
         assertNotNull(proof)
-        assertEquals("did:example:issuer#key-full", proof.verificationMethod)
+        assertEquals("did:example:issuer#key-full", proof.verificationMethod.value)
         assertNotNull(proof.proofValue)
         assertTrue(proof.proofValue!!.startsWith("z"))
     }
@@ -324,25 +351,28 @@ class Ed25519ProofGeneratorTest {
 
     @Test
     fun `test generate proof with complex nested credential subject`() = runBlocking {
+        val subjectDid = Did("did:example:subject")
         val credential = VerifiableCredential(
-            type = listOf("VerifiableCredential"),
-            issuer = "did:example:issuer",
-            issuanceDate = "2024-01-01T00:00:00Z",
-            credentialSubject = buildJsonObject {
-                put("id", "did:example:subject")
-                put("nested", buildJsonObject {
-                    put("level1", buildJsonObject {
-                        put("level2", "value")
-                    })
-                })
-                put("array", buildJsonArray {
-                    add("item1")
-                    add("item2")
-                })
-            }
+            type = listOf(CredentialType.VerifiableCredential),
+            issuer = Issuer.fromDid(Did("did:example:issuer")),
+            issuanceDate = Instant.parse("2024-01-01T00:00:00Z"),
+            credentialSubject = CredentialSubject.fromDid(
+                subjectDid,
+                claims = mapOf(
+                    "nested" to buildJsonObject {
+                        put("level1", buildJsonObject {
+                            put("level2", "value")
+                        })
+                    },
+                    "array" to buildJsonArray {
+                        add("item1")
+                        add("item2")
+                    }
+                )
+            )
         )
 
-        val options = ProofOptions(proofPurpose = "assertionMethod")
+        val options = ProofGeneratorOptions(proofPurpose = "assertionMethod")
         val proof = generator.generateProof(credential, "key-nested", options)
 
         assertNotNull(proof)
@@ -350,15 +380,16 @@ class Ed25519ProofGeneratorTest {
     }
 
     private fun createTestCredential(): VerifiableCredential {
+        val subjectDid = Did("did:example:subject")
         return VerifiableCredential(
-            id = "credential-${System.currentTimeMillis()}",
-            type = listOf("VerifiableCredential", "TestCredential"),
-            issuer = "did:example:issuer",
-            issuanceDate = "2024-01-01T00:00:00Z",
-            credentialSubject = buildJsonObject {
-                put("id", "did:example:subject")
-                put("name", "Test Subject")
-            }
+            id = CredentialId("credential-${System.currentTimeMillis()}"),
+            type = listOf(CredentialType.VerifiableCredential, CredentialType.Custom("TestCredential")),
+            issuer = Issuer.fromDid(Did("did:example:issuer")),
+            issuanceDate = Instant.parse("2024-01-01T00:00:00Z"),
+            credentialSubject = CredentialSubject.fromDid(
+                subjectDid,
+                claims = mapOf("name" to JsonPrimitive("Test Subject"))
+            )
         )
     }
 }

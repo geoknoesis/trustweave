@@ -3,6 +3,7 @@ package com.trustweave.credential.revocation
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
 
@@ -71,7 +72,7 @@ data class PeriodicAnchorStrategy(
         }
 
         // Check if time interval threshold reached
-        val timeSinceAnchor = lastAnchorTime.until(Clock.System.now())
+        val timeSinceAnchor = (Clock.System.now().epochSeconds - lastAnchorTime.epochSeconds).seconds
         if (timeSinceAnchor >= interval) {
             return true
         }
@@ -113,7 +114,7 @@ data class LazyAnchorStrategy(
 
         // If max staleness is set and exceeded, force anchor
         if (maxStaleness != null) {
-            val age = lastAnchorTime.until(Clock.System.now())
+            val age = (Clock.System.now().epochSeconds - lastAnchorTime.epochSeconds).seconds
             if (age >= maxStaleness) {
                 return true
             }
@@ -165,7 +166,7 @@ data class HybridAnchorStrategy(
             return true
         }
 
-        val timeSinceAnchor = lastAnchorTime.until(Clock.System.now())
+        val timeSinceAnchor = (Clock.System.now().epochSeconds - lastAnchorTime.epochSeconds).seconds
         if (timeSinceAnchor >= periodicInterval) {
             return true
         }

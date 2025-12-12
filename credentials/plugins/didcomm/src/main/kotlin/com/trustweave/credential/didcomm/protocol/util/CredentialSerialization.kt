@@ -19,7 +19,12 @@ import kotlinx.serialization.json.*
  * Uses kotlinx.serialization to serialize the VC model directly.
  */
 fun VerifiableCredential.toJsonObject(): JsonObject {
-    val json = Json { prettyPrint = false; encodeDefaults = false }
+    val json = Json { 
+        prettyPrint = false
+        encodeDefaults = false
+        classDiscriminator = "@type" // Use @type instead of type to avoid conflict with LinkedDataProof.type
+        useArrayPolymorphism = false
+    }
     return json.encodeToJsonElement(VerifiableCredential.serializer(), this) as JsonObject
 }
 
@@ -29,7 +34,12 @@ fun VerifiableCredential.toJsonObject(): JsonObject {
  * Uses kotlinx.serialization to serialize the VP model directly.
  */
 fun VerifiablePresentation.toJsonObject(): JsonObject {
-    val json = Json { prettyPrint = false; encodeDefaults = false }
+    val json = Json { 
+        prettyPrint = false
+        encodeDefaults = false
+        classDiscriminator = "@type" // Use @type instead of type to avoid conflict
+        useArrayPolymorphism = false
+    }
     return json.encodeToJsonElement(VerifiablePresentation.serializer(), this) as JsonObject
 }
 

@@ -1,7 +1,8 @@
 package com.trustweave.trust.dsl
 
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
 import com.trustweave.kms.KeyHandle
+import com.trustweave.kms.results.SignResult
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.testkit.services.TestkitDidMethodFactory
@@ -42,7 +43,12 @@ class TrustLayerConfigBranchCoverageTest {
             keys {
                 provider("waltid") // This should be ignored
                 custom(customKms)
-                signer { data, keyId -> customKms.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
+                signer { data, keyId ->
+                    when (val result = customKms.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
+                        is SignResult.Success -> result.signature
+                        else -> throw IllegalStateException("Signing failed: $result")
+                    }
+                }
             }
             did {
                 method("key") {}
@@ -151,7 +157,12 @@ class TrustLayerConfigBranchCoverageTest {
             )
             keys {
                 custom(kms)
-                signer { data, keyId -> kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
+                signer { data, keyId ->
+                    when (val result = kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
+                        is SignResult.Success -> result.signature
+                        else -> throw IllegalStateException("Signing failed: $result")
+                    }
+                }
             }
             did {
                 method("key") {
@@ -173,7 +184,12 @@ class TrustLayerConfigBranchCoverageTest {
                 )
                 keys {
                     custom(kms)
-                    signer { data, keyId -> kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
+                    signer { data, keyId ->
+                    when (val result = kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
+                        is SignResult.Success -> result.signature
+                        else -> throw IllegalStateException("Signing failed: $result")
+                    }
+                }
                 }
                 did {
                     method("waltid") {
@@ -202,7 +218,12 @@ class TrustLayerConfigBranchCoverageTest {
                 )
                 keys {
                     custom(kms)
-                    signer { data, keyId -> kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
+                    signer { data, keyId ->
+                    when (val result = kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
+                        is SignResult.Success -> result.signature
+                        else -> throw IllegalStateException("Signing failed: $result")
+                    }
+                }
                 }
                 did {
                     method("godiddy") {
@@ -231,7 +252,12 @@ class TrustLayerConfigBranchCoverageTest {
                 )
                 keys {
                     custom(kms)
-                    signer { data, keyId -> kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
+                    signer { data, keyId ->
+                    when (val result = kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
+                        is SignResult.Success -> result.signature
+                        else -> throw IllegalStateException("Signing failed: $result")
+                    }
+                }
                 }
                 did {
                     method("nonexistent") {}
@@ -249,7 +275,12 @@ class TrustLayerConfigBranchCoverageTest {
             )
             keys {
                 custom(kms)
-                signer { data, keyId -> kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
+                signer { data, keyId ->
+                    when (val result = kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
+                        is SignResult.Success -> result.signature
+                        else -> throw IllegalStateException("Signing failed: $result")
+                    }
+                }
             }
             did {
                 method("key") {}

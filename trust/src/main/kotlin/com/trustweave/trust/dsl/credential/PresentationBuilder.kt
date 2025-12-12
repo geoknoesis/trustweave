@@ -6,6 +6,7 @@ import com.trustweave.credential.model.vc.VerifiablePresentation
 import com.trustweave.credential.requests.PresentationRequest
 import com.trustweave.credential.proof.ProofOptions
 import com.trustweave.credential.proof.ProofPurpose
+import com.trustweave.credential.proof.proofOptionsForPresentation
 import com.trustweave.did.identifiers.Did
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -111,15 +112,24 @@ class PresentationBuilder(
             )
         }
 
+        val challengeValue = challenge
         val request = PresentationRequest(
             disclosedClaims = if (disclosedClaims.isNotEmpty()) disclosedClaims else null,
             predicates = emptyList(),
-            proofOptions = ProofOptions(
-                purpose = ProofPurpose.Authentication,
-                challenge = challenge,
-                domain = domain,
-                verificationMethod = verificationMethod
-            )
+            proofOptions = if (challengeValue != null) {
+                proofOptionsForPresentation(
+                    challenge = challengeValue,
+                    domain = domain,
+                    verificationMethod = verificationMethod
+                )
+            } else {
+                ProofOptions(
+                    purpose = ProofPurpose.Authentication,
+                    challenge = null,
+                    domain = domain,
+                    verificationMethod = verificationMethod
+                )
+            }
         )
 
         credentialService.createPresentation(

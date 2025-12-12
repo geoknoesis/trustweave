@@ -93,8 +93,8 @@ class TrustRegistryTest {
         registry.addTrustAnchor("did:key:anchor2", TrustAnchorMetadata())
 
         val path = registry.findTrustPath(
-            com.trustweave.trust.types.VerifierIdentity(com.trustweave.trust.types.Did("did:key:anchor1")),
-            com.trustweave.trust.types.IssuerIdentity.from("did:key:anchor1", "key-1")
+            com.trustweave.did.identifiers.Did("did:key:anchor1"),
+            com.trustweave.did.identifiers.Did("did:key:anchor1")
         )
 
         assertTrue(path is com.trustweave.trust.types.TrustPath.Verified)
@@ -114,8 +114,8 @@ class TrustRegistryTest {
         registry.addTrustRelationship("did:key:anchor1", "did:key:anchor2")
 
         val path = registry.findTrustPath(
-            com.trustweave.trust.types.VerifierIdentity(com.trustweave.trust.types.Did("did:key:anchor1")),
-            com.trustweave.trust.types.IssuerIdentity.from("did:key:anchor2", "key-1")
+            com.trustweave.did.identifiers.Did("did:key:anchor1"),
+            com.trustweave.did.identifiers.Did("did:key:anchor2")
         )
 
         assertTrue(path is com.trustweave.trust.types.TrustPath.Verified)
@@ -132,8 +132,8 @@ class TrustRegistryTest {
         // anchor2 not added, so no path
 
         val path = registry.findTrustPath(
-            com.trustweave.trust.types.VerifierIdentity(com.trustweave.trust.types.Did("did:key:anchor1")),
-            com.trustweave.trust.types.IssuerIdentity.from("did:key:anchor2", "key-1")
+            com.trustweave.did.identifiers.Did("did:key:anchor1"),
+            com.trustweave.did.identifiers.Did("did:key:anchor2")
         )
 
         assertTrue(path is com.trustweave.trust.types.TrustPath.NotFound)
@@ -181,8 +181,8 @@ class TrustRegistryTest {
         registry.addTrustRelationship("did:key:anchor1", "did:key:anchor2")
 
         val path = registry.findTrustPath(
-            com.trustweave.trust.types.VerifierIdentity(com.trustweave.trust.types.Did("did:key:anchor1")),
-            com.trustweave.trust.types.IssuerIdentity.from("did:key:anchor2", "key-1")
+            com.trustweave.did.identifiers.Did("did:key:anchor1"),
+            com.trustweave.did.identifiers.Did("did:key:anchor2")
         )
 
         assertTrue(path is com.trustweave.trust.types.TrustPath.Verified)

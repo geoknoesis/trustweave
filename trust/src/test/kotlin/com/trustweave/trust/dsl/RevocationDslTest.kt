@@ -1,8 +1,17 @@
 package com.trustweave.trust.dsl
 
 import com.trustweave.credential.model.vc.VerifiableCredential
-import com.trustweave.credential.revocation.InMemoryStatusListManager
-import com.trustweave.credential.revocation.StatusPurpose
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.vc.CredentialStatus
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.credential.identifiers.StatusListId
+import com.trustweave.credential.revocation.CredentialRevocationManager
+import com.trustweave.credential.model.StatusPurpose
+import com.trustweave.did.identifiers.Did
+import com.trustweave.kms.results.SignResult
+import kotlinx.datetime.Instant
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.testkit.services.TestkitDidMethodFactory
 import com.trustweave.testkit.services.TestkitStatusListRegistryFactory
@@ -23,12 +32,10 @@ import kotlin.test.*
 class RevocationDslTest {
 
     private lateinit var trustWeave: TrustWeaveConfig
-    private lateinit var statusListManager: InMemoryStatusListManager
 
     @BeforeEach
     fun setup() = runBlocking {
         val kms = InMemoryKeyManagementService()
-        statusListManager = InMemoryStatusListManager()
 
         trustWeave = trustWeave {
             factories(
@@ -37,7 +44,12 @@ class RevocationDslTest {
             )
             keys {
                 custom(kms)
-                signer { data, keyId -> kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data) }
+                signer { data, keyId ->
+                    when (val result = kms.sign(com.trustweave.core.identifiers.KeyId(keyId), data)) {
+                        is SignResult.Success -> result.signature
+                        else -> throw IllegalStateException("Signing failed: $result")
+                    }
+                }
             }
             did {
                 method("key") {
@@ -63,8 +75,13 @@ class RevocationDslTest {
         }.createStatusList()
 
         assertNotNull(statusList)
-        assertEquals(issuerDid, statusList.issuer)
-        assertEquals("revocation", statusList.credentialSubject.statusPurpose)
+        // Verify we can retrieve the status list metadata
+        val metadata = trustWeave.revocation {
+            statusList(statusList.value)
+        }.getStatusList()
+        assertNotNull(metadata)
+        assertEquals(issuerDid, metadata?.issuerDid)
+        assertEquals(StatusPurpose.REVOCATION, metadata?.purpose)
     }
 
     @Test
@@ -88,7 +105,7 @@ class RevocationDslTest {
 
         val revoked = trustWeave.revoke {
             credential(credentialId)
-            statusList(statusList.id)
+            statusList(statusList.value)
         }
 
         assertTrue(revoked)
@@ -115,26 +132,27 @@ class RevocationDslTest {
 
         trustWeave.revoke {
             credential(credentialId)
-            statusList(statusList.id)
+            statusList(statusList.value)
         }
 
         val credential = VerifiableCredential(
-            id = credentialId,
-            type = listOf("VerifiableCredential"),
-            issuer = issuerDid,
-            credentialSubject = buildJsonObject {
-                put("id", "did:key:subject")
-            },
-            issuanceDate = "2024-01-01T00:00:00Z",
-            credentialStatus = com.trustweave.credential.model.vc.CredentialStatus(
-                id = "${statusList.id}#0",
+            id = CredentialId(credentialId),
+            type = listOf(CredentialType.VerifiableCredential),
+            issuer = Issuer.fromDid(Did(issuerDid)),
+            credentialSubject = CredentialSubject.fromDid(
+                Did("did:key:subject"),
+                claims = emptyMap()
+            ),
+            issuanceDate = Instant.parse("2024-01-01T00:00:00Z"),
+            credentialStatus = CredentialStatus(
+                id = StatusListId("urn:statuslist:${statusList.value}#0"),
                 type = "StatusList2021Entry",
-                statusListCredential = statusList.id
+                statusListCredential = statusList
             )
         )
 
         val status = trustWeave.revocation {
-            statusList(statusList.id)
+            statusList(statusList.value)
         }.check(credential)
 
         assertTrue(status.revoked)
@@ -152,7 +170,7 @@ class RevocationDslTest {
 
         val suspended = trustWeave.revocation {
             credential(credentialId)
-            statusList(statusList.id)
+            statusList(statusList.value)
         }.suspend()
 
         assertTrue(suspended)
@@ -168,11 +186,11 @@ class RevocationDslTest {
         }.createStatusList()
 
         val retrievedList = trustWeave.revocation {
-            statusList(createdList.id)
+            statusList(createdList.value)
         }.getStatusList()
 
         assertNotNull(retrievedList)
-        assertEquals(createdList.id, retrievedList?.id)
+        assertEquals(createdList, retrievedList?.id)
     }
 
     @Test
@@ -186,7 +204,12 @@ class RevocationDslTest {
         }.createStatusList()
 
         assertNotNull(statusList)
-        assertEquals(issuerDid, statusList.issuer)
+        // Verify we can retrieve the status list metadata
+        val metadata = trustWeave.revocation {
+            statusList(statusList.value)
+        }.getStatusList()
+        assertNotNull(metadata)
+        assertEquals(issuerDid, metadata?.issuerDid)
     }
 
     @Test

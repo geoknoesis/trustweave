@@ -2,7 +2,13 @@ package com.trustweave.credential
 
 import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.model.vc.VerifiablePresentation
-import com.trustweave.credential.SchemaFormat
+import com.trustweave.credential.model.vc.CredentialProof
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.model.SchemaFormat
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.did.identifiers.Did
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import kotlin.test.*
@@ -95,9 +101,9 @@ class CredentialServiceProviderTest {
     fun `test CredentialService verifyPresentation`() = runBlocking {
         val service = createMockService()
         val presentation = VerifiablePresentation(
-            type = listOf("VerifiablePresentation"),
+            type = listOf(CredentialType.fromString("VerifiablePresentation")),
             verifiableCredential = listOf(createTestCredential()),
-            holder = "did:key:holder"
+            holder = Did("did:key:holder")
         )
 
         val result = service.verifyPresentation(
@@ -119,11 +125,13 @@ class CredentialServiceProviderTest {
                 options: CredentialIssuanceOptions
             ): VerifiableCredential {
                 return credential.copy(
-                    proof = com.trustweave.credential.models.Proof(
+                    proof = CredentialProof.LinkedDataProof(
                         type = options.proofType,
-                        created = Clock.System.now().toString(),
+                        created = Clock.System.now(),
                         verificationMethod = "did:key:issuer#key-1",
-                        proofPurpose = "assertionMethod"
+                        proofPurpose = "assertionMethod",
+                        proofValue = "test-proof",
+                        additionalProperties = emptyMap()
                     )
                 )
             }
@@ -148,9 +156,9 @@ class CredentialServiceProviderTest {
                 options: PresentationOptions
             ): VerifiablePresentation {
                 return VerifiablePresentation(
-                    type = listOf("VerifiablePresentation"),
+                    type = listOf(CredentialType.fromString("VerifiablePresentation")),
                     verifiableCredential = credentials,
-                    holder = options.holderDid
+                    holder = Did(options.holderDid ?: "did:key:holder")
                 )
             }
 
@@ -168,12 +176,13 @@ class CredentialServiceProviderTest {
 
     private fun createTestCredential(): VerifiableCredential {
         return VerifiableCredential(
-            type = listOf("VerifiableCredential"),
-            issuer = "did:key:issuer",
-            issuanceDate = Clock.System.now().toString(),
-            credentialSubject = buildJsonObject {
-                put("id", "did:key:subject")
-            }
+            type = listOf(CredentialType.VerifiableCredential),
+            issuer = Issuer.fromDid(Did("did:key:issuer")),
+            issuanceDate = Clock.System.now(),
+            credentialSubject = CredentialSubject.fromDid(
+                Did("did:key:subject"),
+                claims = emptyMap()
+            )
         )
     }
 }

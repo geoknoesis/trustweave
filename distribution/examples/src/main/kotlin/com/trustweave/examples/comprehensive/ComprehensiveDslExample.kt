@@ -1,26 +1,28 @@
 package com.trustweave.examples.comprehensive
 
 import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.*
 import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.trust.dsl.credential.CredentialTypes
 import com.trustweave.trust.dsl.credential.SchemaValidatorTypes
 import com.trustweave.trust.dsl.credential.ServiceTypes
-import com.trustweave.trust.dsl.credential.registerSchema
+import com.trustweave.trust.dsl.credential.JsonObjectBuilder
 import com.trustweave.credential.model.ProofType
 import com.trustweave.credential.model.vc.VerifiableCredential
-import com.trustweave.credential.SchemaFormat
+import com.trustweave.credential.model.SchemaFormat
 import com.trustweave.wallet.CredentialOrganization
 import com.trustweave.wallet.Wallet
 import com.trustweave.trust.dsl.storeIn
 import com.trustweave.trust.dsl.wallet.organize
 import com.trustweave.trust.dsl.wallet.query
 import com.trustweave.trust.dsl.wallet.QueryBuilder
-import com.trustweave.trust.dsl.wallet.presentation
 import com.trustweave.trust.types.*
 import com.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.put
 import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
 
@@ -95,9 +97,8 @@ fun main() = runBlocking {
     println("Step 3: Registering schemas...")
 
     // Register JSON Schema
-        registerSchema {
+    trustWeave.configuration.registerSchema {
         id("https://example.com/schemas/degree")
-        type(SchemaValidatorTypes.JSON_SCHEMA)
         jsonSchema {
             put("\$schema", "http://json-schema.org/draft-07/schema#")
             put("type", "object")
@@ -116,9 +117,8 @@ fun main() = runBlocking {
     println("✓ JSON Schema registered")
 
     // Register SHACL Schema
-        registerSchema {
+    trustWeave.configuration.registerSchema {
         id("https://example.com/schemas/degree-shacl")
-        type(SchemaValidatorTypes.SHACL)
         shacl {
             put("@context", "https://www.w3.org/ns/shacl#")
             put("sh:targetClass", "DegreeCredential")
@@ -184,14 +184,14 @@ fun main() = runBlocking {
     if (wallet is CredentialOrganization) {
         val orgResult = wallet.organize {
             collection("Education", "Academic credentials") {
-                add(stored.id ?: throw IllegalStateException("Credential must have ID"))
-                tag(stored.id ?: throw IllegalStateException("Credential must have ID"), "education", "degree", "bachelor", "verified")
+                add(stored.id?.value ?: throw IllegalStateException("Credential must have ID"))
+                tag(stored.id?.value ?: throw IllegalStateException("Credential must have ID"), "education", "degree", "bachelor", "verified")
             }
-            metadata(stored.id ?: throw IllegalStateException("Credential must have ID")) {
+            metadata(stored.id?.value ?: throw IllegalStateException("Credential must have ID")) {
                 "source" to "university.edu"
                 "verified" to true
             }
-            notes(stored.id ?: throw IllegalStateException("Credential must have ID"), "Bachelor's degree in Computer Science")
+            notes(stored.id?.value ?: throw IllegalStateException("Credential must have ID"), "Bachelor's degree in Computer Science")
         }
         println("✓ Organized: ${orgResult.collectionsCreated} collection(s) created")
         println("  Errors: ${orgResult.errors.size}\n")
@@ -212,16 +212,16 @@ fun main() = runBlocking {
     // STEP 9: Create Presentation
     // ============================================
     println("Step 9: Creating presentation...")
-    val presentation = wallet.presentation {
-        fromWallet(stored.id ?: throw IllegalStateException("Credential must have ID"))
-        holder(holderDid.value)
-        challenge("presentation-challenge-123")
-        domain("example.com")
-        proofType(ProofType.Ed25519Signature2020.value)
-        selectiveDisclosure {
-            reveal("degree.field", "degree.institution")
-        }
-    }
+    val retrievedCredential = wallet.get(stored.id?.value ?: throw IllegalStateException("Credential must have ID"))
+        ?: throw IllegalStateException("Credential not found in wallet")
+    val presentation = com.trustweave.credential.model.vc.VerifiablePresentation(
+        id = com.trustweave.credential.identifiers.CredentialId("urn:example:presentation:${System.currentTimeMillis()}"),
+        type = listOf(com.trustweave.credential.model.CredentialType.fromString("VerifiablePresentation")),
+        verifiableCredential = listOf(retrievedCredential),
+        holder = com.trustweave.core.identifiers.Iri(holderDid.value),
+        challenge = "presentation-challenge-123",
+        domain = "example.com"
+    )
     println("✓ Presentation created with ${presentation.verifiableCredential.size} credential(s)\n")
 
     // ============================================

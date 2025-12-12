@@ -3,11 +3,16 @@ package com.trustweave.credential.did
 import com.trustweave.credential.CredentialIssuanceOptions
 import com.trustweave.credential.issuer.CredentialIssuer
 import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.CredentialType
 import com.trustweave.credential.proof.Ed25519ProofGenerator
 import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.did.DidCreationOptions
-import com.trustweave.did.DidDocument
+import com.trustweave.did.model.DidDocument
 import com.trustweave.did.DidMethod
+import com.trustweave.did.identifiers.Did
+import com.trustweave.core.identifiers.Iri
 import com.trustweave.did.registry.DidMethodRegistry
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.registry.DefaultDidMethodRegistry
@@ -17,6 +22,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 
 /**
  * Comprehensive branch coverage tests for DidLinkedCredentialService.
@@ -56,8 +62,8 @@ class DidLinkedCredentialServiceBranchCoverageTest {
         )
 
         assertNotNull(credential)
-        assertEquals("PersonCredential", credential.type.last())
-        assertEquals("did:key:subject", credential.credentialSubject.jsonObject["id"]?.jsonPrimitive?.content)
+        assertEquals("PersonCredential", credential.type.last().value)
+        assertEquals("did:key:subject", credential.credentialSubject.id.value)
     }
 
     @Test
@@ -155,13 +161,13 @@ class DidLinkedCredentialServiceBranchCoverageTest {
         val service = DidLinkedCredentialService(didRegistry = createDidRegistry(), credentialIssuer = issuer)
 
         val credential = VerifiableCredential(
-            type = listOf("VerifiableCredential"),
-            issuer = "did:key:issuer",
-            credentialSubject = buildJsonObject {
-                put("id", "did:key:subject")
-                put("name", "John Doe")
-            },
-            issuanceDate = Clock.System.now().toString()
+            type = listOf(CredentialType.VerifiableCredential),
+            issuer = Issuer.fromDid(Did("did:key:issuer")),
+            credentialSubject = CredentialSubject.fromDid(
+                Did("did:key:subject"),
+                claims = mapOf("name" to JsonPrimitive("John Doe"))
+            ),
+            issuanceDate = Clock.System.now()
         )
 
         val subjectDid = service.resolveCredentialSubject(credential)
@@ -175,13 +181,13 @@ class DidLinkedCredentialServiceBranchCoverageTest {
         val service = DidLinkedCredentialService(didRegistry = createDidRegistry(), credentialIssuer = issuer)
 
         val credential = VerifiableCredential(
-            type = listOf("VerifiableCredential"),
-            issuer = "did:key:issuer",
-            credentialSubject = buildJsonObject {
-                put("id", "not-a-did")
-                put("name", "John Doe")
-            },
-            issuanceDate = Clock.System.now().toString()
+            type = listOf(CredentialType.VerifiableCredential),
+            issuer = Issuer.fromDid(Did("did:key:issuer")),
+            credentialSubject = CredentialSubject.fromIri(
+                Iri("not-a-did"),
+                claims = mapOf("name" to JsonPrimitive("John Doe"))
+            ),
+            issuanceDate = Clock.System.now()
         )
 
         val subjectDid = service.resolveCredentialSubject(credential)
@@ -195,12 +201,13 @@ class DidLinkedCredentialServiceBranchCoverageTest {
         val service = DidLinkedCredentialService(didRegistry = createDidRegistry(), credentialIssuer = issuer)
 
         val credential = VerifiableCredential(
-            type = listOf("VerifiableCredential"),
-            issuer = "did:key:issuer",
-            credentialSubject = buildJsonObject {
-                put("name", "John Doe")
-            },
-            issuanceDate = Clock.System.now().toString()
+            type = listOf(CredentialType.VerifiableCredential),
+            issuer = Issuer.fromDid(Did("did:key:issuer")),
+            credentialSubject = CredentialSubject.fromIri(
+                Iri("urn:no-id"),
+                claims = mapOf("name" to JsonPrimitive("John Doe"))
+            ),
+            issuanceDate = Clock.System.now()
         )
 
         val subjectDid = service.resolveCredentialSubject(credential)
@@ -214,12 +221,13 @@ class DidLinkedCredentialServiceBranchCoverageTest {
         val service = DidLinkedCredentialService(didRegistry = createDidRegistry(), credentialIssuer = issuer)
 
         val credential = VerifiableCredential(
-            type = listOf("VerifiableCredential"),
-            issuer = "did:key:issuer",
-            credentialSubject = buildJsonObject {
-                put("id", "did:key:subject")
-            },
-            issuanceDate = Clock.System.now().toString()
+            type = listOf(CredentialType.VerifiableCredential),
+            issuer = Issuer.fromDid(Did("did:key:issuer")),
+            credentialSubject = CredentialSubject.fromDid(
+                Did("did:key:subject"),
+                claims = emptyMap()
+            ),
+            issuanceDate = Clock.System.now()
         )
 
         val valid = service.verifyIssuerDid(credential)
@@ -233,12 +241,13 @@ class DidLinkedCredentialServiceBranchCoverageTest {
         val service = DidLinkedCredentialService(didRegistry = createDidRegistry(), credentialIssuer = issuer)
 
         val credential = VerifiableCredential(
-            type = listOf("VerifiableCredential"),
-            issuer = "invalid-did",
-            credentialSubject = buildJsonObject {
-                put("id", "did:key:subject")
-            },
-            issuanceDate = Clock.System.now().toString()
+            type = listOf(CredentialType.VerifiableCredential),
+            issuer = Issuer.from(Iri("invalid-did")),
+            credentialSubject = CredentialSubject.fromDid(
+                Did("did:key:subject"),
+                claims = emptyMap()
+            ),
+            issuanceDate = Clock.System.now()
         )
 
         val valid = service.verifyIssuerDid(credential)
@@ -253,21 +262,21 @@ private fun createDidRegistry(): DidMethodRegistry {
         override val method: String = "key"
 
         override suspend fun createDid(options: DidCreationOptions): DidDocument {
-            val id = options.additionalProperties["id"] as? String
+            val idString = options.additionalProperties["id"] as? String
                 ?: "did:key:${java.util.UUID.randomUUID()}"
-            return DidDocument(id = id)
+            return DidDocument(id = Did(idString))
         }
 
-        override suspend fun resolveDid(did: String): DidResolutionResult = DidResolutionResult.Success(
+        override suspend fun resolveDid(did: Did): DidResolutionResult = DidResolutionResult.Success(
             document = DidDocument(id = did)
         )
 
         override suspend fun updateDid(
-            did: String,
+            did: Did,
             updater: (DidDocument) -> DidDocument
         ): DidDocument = updater(DidDocument(id = did))
 
-        override suspend fun deactivateDid(did: String): Boolean = true
+        override suspend fun deactivateDid(did: Did): Boolean = true
     })
     return registry
 }

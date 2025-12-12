@@ -28,6 +28,9 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
 import java.util.*
 import java.util.Base64
+import java.security.KeyFactory
+import java.security.PublicKey
+import org.slf4j.LoggerFactory
 
 /**
  * VC-LD (Verifiable Credentials Linked Data) proof engine.
@@ -38,6 +41,8 @@ import java.util.Base64
 internal class VcLdProofEngine(
     private val config: ProofEngineConfig = ProofEngineConfig()
 ) : ProofEngine {
+    
+    private val logger = LoggerFactory.getLogger(VcLdProofEngine::class.java)
     
     override val format = ProofSuiteId.VC_LD
     override val formatName = "Verifiable Credentials (Linked Data)"
@@ -66,20 +71,34 @@ internal class VcLdProofEngine(
         val keyId = ProofEngineUtils.extractKeyId(request.issuerKeyId?.value)
             ?: throw IllegalArgumentException("issuerKeyId is required for signing")
         
+        logger.debug("Issuing VC-LD credential: issuerKeyId={}, extracted keyId={}", request.issuerKeyId?.value, keyId)
+        
         // Build VC document for canonicalization
         val vcDocument = buildVcDocument(request)
         
         // Canonicalize document (without proof)
         val canonicalDocument = canonicalizeDocument(vcDocument)
+        logger.debug("Canonicalized document for signing: length={}", canonicalDocument.length)
         
         // Generate signature using KMS
         val signature = signDocument(canonicalDocument, keyId)
+        logger.debug("Generated signature for VC-LD credential: prefix={}", signature.take(20))
         
-        // Get verification method
-        val verificationMethod = getVerificationMethod(
-            issuerIri.value,
-            request.issuerKeyId?.value
-        ) ?: throw IllegalArgumentException("Could not determine verification method")
+        // Get verification method ID
+        // request.issuerKeyId?.value might already be a full verification method ID (did:key:...#key-1)
+        // or just a fragment (key-1). getVerificationMethod handles both cases.
+        val verificationMethodIdString = request.issuerKeyId?.value
+            ?: throw IllegalArgumentException("issuerKeyId is required")
+        
+        // Use the verification method ID directly if it's already a full ID, otherwise construct it
+        val verificationMethod = if (verificationMethodIdString.contains("#") && verificationMethodIdString.startsWith("did:")) {
+            // Already a full verification method ID - use it directly
+            verificationMethodIdString
+        } else {
+            // Just a fragment - construct full ID
+            getVerificationMethod(issuerIri.value, verificationMethodIdString)
+                ?: throw IllegalArgumentException("Could not determine verification method")
+        }
         
         // Create Linked Data Proof
         val proofPurpose = request.proofOptions?.purpose?.standardValue ?: "assertionMethod"
@@ -150,9 +169,12 @@ internal class VcLdProofEngine(
             // Build VC document without proof for canonicalization
             val vcDocument = buildVcDocumentWithoutProof(credential)
             val canonical = canonicalizeDocument(vcDocument)
+            logger.debug("Verifying VC-LD credential: canonicalLength={}, verificationMethod={}, publicKeyJwkPresent={}", 
+                canonical.length, proof.verificationMethod, verificationMethod.publicKeyJwk != null)
             
             // Verify signature
             val isValid = verifySignature(canonical, proof.proofValue, verificationMethod, proof.type)
+            logger.debug("VC-LD signature verification result: isValid={}", isValid)
             
             if (!isValid) {
                 return VerificationResult.Invalid.InvalidProof(
@@ -181,6 +203,7 @@ internal class VcLdProofEngine(
             )
             
         } catch (e: Exception) {
+            logger.error("Failed to verify VC-LD proof: credentialId={}, error={}", credential.id?.value ?: "unknown", e.message, e)
             return VerificationResult.Invalid.InvalidProof(
                 credential = credential,
                 reason = "Failed to verify VC-LD proof: ${e.message}",
@@ -414,17 +437,19 @@ internal class VcLdProofEngine(
     }
     
     private suspend fun signDocument(canonical: String, keyId: String): String {
-        // Get KMS from config
-        val kms = getKms() ?: throw IllegalStateException(
-            "KMS not configured. Provide KMS via ProofEngineConfig.properties[\"kms\"]"
-        )
-        
-        // Get signer function if available, otherwise use KMS directly
-        val signer = getSignerFunction() ?: createKmsSigner(kms)
+        logger.debug("Signing document: keyId={}, canonicalLength={}", keyId, canonical.length)
+        // Get signer function if available (preferred), otherwise get KMS and create signer
+        val signer = getSignerFunction() ?: run {
+            val kms = getKms() ?: throw IllegalStateException(
+                "KMS not configured. Provide KMS via ProofEngineConfig.properties[\"kms\"] or signer via properties[\"signer\"]"
+            )
+            createKmsSigner(kms)
+        }
         
         // Sign canonical document
         val canonicalBytes = canonical.toByteArray(Charsets.UTF_8)
         val signatureBytes = signer(canonicalBytes, keyId)
+        logger.debug("Signed document: keyId={}, signatureLength={}", keyId, signatureBytes.size)
         
         // Return base64url-encoded signature
         return Base64.getUrlEncoder().withoutPadding().encodeToString(signatureBytes)
@@ -445,32 +470,47 @@ internal class VcLdProofEngine(
         verificationMethod: com.trustweave.did.model.VerificationMethod,
         proofType: String
     ): Boolean {
+        logger.debug("Verifying signature: proofType={}, proofValueLength={}", proofType, proofValue.length)
         if (proofValue.isBlank()) {
+            logger.warn("Proof value is blank")
             return false
         }
         
         // Only support Ed25519Signature2020 for now
         if (proofType != "Ed25519Signature2020") {
+            logger.warn("Unsupported proof type: {}", proofType)
             return false
         }
         
         try {
             // Extract public key from verification method
-            val publicKey = ProofEngineUtils.extractPublicKey(verificationMethod) ?: return false
+            // Use the utility function which tries multiple methods
+            val publicKey = ProofEngineUtils.extractPublicKey(verificationMethod)
+            
+            if (publicKey == null) {
+                logger.warn("Failed to extract public key from verification method: verificationMethodId={}", verificationMethod.id.value)
+                return false
+            }
+            logger.debug("Extracted public key: algorithm={}, encodedLength={}", publicKey.algorithm, publicKey.encoded.size)
             
             // Decode signature (base64url)
             val signatureBytes = try {
                 Base64.getUrlDecoder().decode(proofValue)
             } catch (e: Exception) {
+                logger.error("Failed to decode signature: error={}", e.message, e)
                 return false
             }
             
             // Get canonical document bytes
             val documentBytes = canonical.toByteArray(Charsets.UTF_8)
+            logger.debug("Verifying signature: signatureLength={}, documentLength={}", signatureBytes.size, documentBytes.size)
             
             // Verify Ed25519 signature
-            return verifyEd25519Signature(documentBytes, signatureBytes, publicKey)
+            val result = verifyEd25519Signature(documentBytes, signatureBytes, publicKey)
+            logger.debug("Ed25519 signature verification result: isValid={}", result)
+            return result
         } catch (e: Exception) {
+            logger.error("Exception during signature verification: error={}", e.message, e)
             return false
         }
     }

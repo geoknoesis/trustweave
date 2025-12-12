@@ -6,7 +6,7 @@ import com.trustweave.trust.dsl.credential.KeyAlgorithms
 import com.trustweave.credential.model.ProofType
 import com.trustweave.trust.types.VerificationResult
 import com.trustweave.trust.dsl.credential.CredentialTypes
-import com.trustweave.trust.types.CredentialType
+import com.trustweave.credential.model.CredentialType
 import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.wallet.CredentialOrganization
 import com.trustweave.testkit.did.DidKeyMockMethod
@@ -15,6 +15,8 @@ import com.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Web of Trust Example Scenario.
@@ -149,7 +151,7 @@ fun main() = runBlocking {
     val degreeCredential = trustWeave.issue {
         credential {
             id("https://university.edu/credentials/degree-${studentDid.value.substringAfterLast(":")}")
-            type(CredentialTypes.EDUCATION, CredentialType.Degree)
+            type(CredentialTypes.EDUCATION, CredentialType.Custom("DegreeCredential"))
             issuer(universityDid.value)
             subject {
                 id(studentDid.value)
@@ -219,7 +221,8 @@ fun main() = runBlocking {
 
     // Check trust registry separately
     trustWeave.trust {
-        val isTrusted = isTrusted(degreeCredential.issuer, degreeCredential.type.firstOrNull { it != "VerifiableCredential" })
+        val credentialTypeStr = degreeCredential.type.firstOrNull { it.value != "VerifiableCredential" }?.value
+        val isTrusted = isTrusted(degreeCredential.issuer.id.value, credentialTypeStr)
         println("  Trust Registry Valid: $isTrusted")
     }
 
@@ -253,8 +256,8 @@ fun main() = runBlocking {
 
     // Check trust registry and delegation separately
     trustWeave.trust {
-        val credentialTypeStr = employmentCredential.type.firstOrNull { it != CredentialType.VerifiableCredential }?.value
-        val isTrusted = isTrusted(employmentCredential.issuer.value, credentialTypeStr)
+        val credentialTypeStr = employmentCredential.type.firstOrNull { it.value != "VerifiableCredential" }?.value
+        val isTrusted = isTrusted(employmentCredential.issuer.id.value, credentialTypeStr)
         println("  Trust Registry Valid: $isTrusted")
     }
 
@@ -269,8 +272,8 @@ fun main() = runBlocking {
     println("Step 7: Finding trust paths...")
     trustWeave.trust {
         val trustPath = findTrustPath(
-            com.trustweave.trust.types.VerifierIdentity(verifierDid),
-            com.trustweave.trust.types.IssuerIdentity(universityDid)
+            verifierDid as com.trustweave.trust.types.VerifierIdentity,
+            universityDid as com.trustweave.trust.types.IssuerIdentity
         )
         when (trustPath) {
             is com.trustweave.trust.types.TrustPath.Verified -> {
@@ -285,8 +288,8 @@ fun main() = runBlocking {
         }
 
         val trustPath2 = findTrustPath(
-            com.trustweave.trust.types.VerifierIdentity(verifierDid),
-            com.trustweave.trust.types.IssuerIdentity(companyDid)
+            verifierDid as com.trustweave.trust.types.VerifierIdentity,
+            companyDid as com.trustweave.trust.types.IssuerIdentity
         )
         when (trustPath2) {
             is com.trustweave.trust.types.TrustPath.Verified -> {

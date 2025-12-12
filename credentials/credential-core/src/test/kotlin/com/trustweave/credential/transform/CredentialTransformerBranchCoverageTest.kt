@@ -1,11 +1,21 @@
 package com.trustweave.credential.transform
 
 import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.CredentialProof
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.vc.CredentialStatus
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.credential.identifiers.StatusListId
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -34,7 +44,8 @@ class CredentialTransformerBranchCoverageTest {
         val restored = transformer.fromJwt(jwt)
 
         assertNotNull(restored)
-        assertEquals(credential.issuer, restored.issuer)
+        // Compare issuer by value (ID) rather than object equality
+        assertEquals(credential.issuer.id.value, restored.issuer.id.value)
     }
 
     @Test
@@ -58,7 +69,8 @@ class CredentialTransformerBranchCoverageTest {
         val restored = transformer.fromJsonLd(jsonLd)
 
         assertNotNull(restored)
-        assertEquals(credential.issuer, restored.issuer)
+        // Compare issuer by value (ID) rather than object equality
+        assertEquals(credential.issuer.id.value, restored.issuer.id.value)
     }
 
     @Test
@@ -81,19 +93,21 @@ class CredentialTransformerBranchCoverageTest {
         val restored = transformer.fromCbor(cbor)
 
         assertNotNull(restored)
-        assertEquals(credential.issuer, restored.issuer)
+        // Compare issuer by value (ID) rather than object equality
+        assertEquals(credential.issuer.id.value, restored.issuer.id.value)
     }
 
     @Test
     fun `test CredentialTransformer toJwt with proof`() = runBlocking {
         val transformer = CredentialTransformer()
         val credential = createTestCredential(
-            proof = com.trustweave.credential.models.Proof(
+            proof = CredentialProof.LinkedDataProof(
                 type = "Ed25519Signature2020",
-                created = Clock.System.now().toString(),
+                created = Clock.System.now(),
                 verificationMethod = "did:key:issuer#key-1",
                 proofPurpose = "assertionMethod",
-                proofValue = "test-proof"
+                proofValue = "test-proof",
+                additionalProperties = emptyMap()
             )
         )
 
@@ -106,17 +120,18 @@ class CredentialTransformerBranchCoverageTest {
     fun `test CredentialTransformer toJsonLd with all fields`() = runBlocking {
         val transformer = CredentialTransformer()
         val credential = createTestCredential(
-            expirationDate = Clock.System.now().plus(86400.seconds).toString(),
-            credentialStatus = com.trustweave.credential.model.vc.CredentialStatus(
-                id = "status-list-1",
+            expirationDate = Clock.System.now().plus(86400.seconds),
+            credentialStatus = CredentialStatus(
+                id = StatusListId("status-list-1"),
                 type = "StatusList2021Entry"
             ),
-            proof = com.trustweave.credential.models.Proof(
+            proof = CredentialProof.LinkedDataProof(
                 type = "Ed25519Signature2020",
-                created = Clock.System.now().toString(),
+                created = Clock.System.now(),
                 verificationMethod = "did:key:issuer#key-1",
                 proofPurpose = "assertionMethod",
-                proofValue = "test-proof"
+                proofValue = "test-proof",
+                additionalProperties = emptyMap()
             )
         )
 
@@ -133,8 +148,10 @@ class CredentialTransformerBranchCoverageTest {
         val jwt = transformer.toJwt(original)
         val restored = transformer.fromJwt(jwt)
 
-        assertEquals(original.issuer, restored.issuer)
-        assertEquals(original.type, restored.type)
+        // Compare issuer by value (ID) rather than object equality
+        assertEquals(original.issuer.id.value, restored.issuer.id.value)
+        // Compare types by their string values since serialization may change object instances
+        assertEquals(original.type.map { it.value }, restored.type.map { it.value })
     }
 
     @Test
@@ -145,8 +162,10 @@ class CredentialTransformerBranchCoverageTest {
         val jsonLd = transformer.toJsonLd(original)
         val restored = transformer.fromJsonLd(jsonLd)
 
-        assertEquals(original.issuer, restored.issuer)
-        assertEquals(original.type, restored.type)
+        // Compare issuer by value (ID) rather than object equality
+        assertEquals(original.issuer.id.value, restored.issuer.id.value)
+        // Compare types by their string values since serialization may change object instances
+        assertEquals(original.type.map { it.value }, restored.type.map { it.value })
     }
 
     @Test
@@ -157,27 +176,29 @@ class CredentialTransformerBranchCoverageTest {
         val cbor = transformer.toCbor(original)
         val restored = transformer.fromCbor(cbor)
 
-        assertEquals(original.issuer, restored.issuer)
-        assertEquals(original.type, restored.type)
+        // Compare issuer by value (ID) rather than object equality
+        assertEquals(original.issuer.id.value, restored.issuer.id.value)
+        // Compare types by their string values since serialization may change object instances
+        assertEquals(original.type.map { it.value }, restored.type.map { it.value })
     }
 
     private fun createTestCredential(
         id: String? = null,
-        types: List<String> = listOf("VerifiableCredential", "PersonCredential"),
+        types: List<CredentialType> = listOf(CredentialType.VerifiableCredential, CredentialType.Custom("PersonCredential")),
         issuerDid: String = "did:key:issuer",
-        subject: JsonObject = buildJsonObject {
-            put("id", "did:key:subject")
-            put("name", "John Doe")
-        },
-        issuanceDate: String = Clock.System.now().toString(),
-        expirationDate: String? = null,
-        credentialStatus: com.trustweave.credential.model.vc.CredentialStatus? = null,
-        proof: com.trustweave.credential.models.Proof? = null
+        subject: CredentialSubject = CredentialSubject.fromDid(
+            Did("did:key:subject"),
+            claims = mapOf("name" to JsonPrimitive("John Doe"))
+        ),
+        issuanceDate: Instant = Clock.System.now(),
+        expirationDate: Instant? = null,
+        credentialStatus: CredentialStatus? = null,
+        proof: CredentialProof? = null
     ): VerifiableCredential {
         return VerifiableCredential(
-            id = id,
+            id = id?.let { CredentialId(it) },
             type = types,
-            issuer = issuerDid,
+            issuer = Issuer.fromDid(Did(issuerDid)),
             credentialSubject = subject,
             issuanceDate = issuanceDate,
             expirationDate = expirationDate,

@@ -12,6 +12,7 @@ import com.trustweave.trust.dsl.wallet.QueryBuilder
 import com.trustweave.trust.dsl.wallet.organize
 import com.trustweave.trust.dsl.credential.credential
 import com.trustweave.trust.types.*
+import com.trustweave.core.identifiers.Iri
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.testkit.services.TestkitDidMethodFactory
 import com.trustweave.testkit.did.DidKeyMockMethod
@@ -23,6 +24,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
 import kotlin.time.Duration.Companion.days
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 fun main() = runBlocking {
     println("=== Academic Credentials Scenario ===\n")
@@ -70,7 +73,12 @@ fun main() = runBlocking {
                 } else {
                     keyId
                 }
-                kmsRef.sign(com.trustweave.core.identifiers.KeyId(actualKeyId), data)
+                when (val signResult = kmsRef.sign(com.trustweave.core.identifiers.KeyId(actualKeyId), data)) {
+                    is com.trustweave.kms.results.SignResult.Success -> signResult.signature
+                    is com.trustweave.kms.results.SignResult.Failure.KeyNotFound -> throw IllegalStateException("Signing failed: Key not found: ${signResult.keyId}")
+                    is com.trustweave.kms.results.SignResult.Failure.UnsupportedAlgorithm -> throw IllegalStateException("Signing failed: Unsupported algorithm")
+                    is com.trustweave.kms.results.SignResult.Failure.Error -> throw IllegalStateException("Signing failed: ${signResult.reason}")
+                }
             }
             algorithm("Ed25519")
         }
@@ -113,7 +121,7 @@ fun main() = runBlocking {
         ?: throw IllegalStateException("No verification method found in university DID document")
     // Extract key ID from verification method ID (e.g., "did:key:xxx#key-1" -> "key-1")
     // This will be used later for signing the credential
-    val issuerKeyId = verificationMethod.id.substringAfter("#")
+    val issuerKeyId = verificationMethod.id.value.substringAfter("#")
     try {
         kmsRef.getPublicKey(com.trustweave.core.identifiers.KeyId(issuerKeyId))
         println("✓ Key verified in KMS: $issuerKeyId")
@@ -204,10 +212,10 @@ fun main() = runBlocking {
     // Note: In a real scenario, this would be signed with the holder's key
     println("\nStep 8: Creating presentation for job application...")
     val presentation = com.trustweave.credential.model.vc.VerifiablePresentation(
-        id = "urn:example:presentation:${System.currentTimeMillis()}",
-        type = listOf("VerifiablePresentation"),
+        id = com.trustweave.credential.identifiers.CredentialId("urn:example:presentation:${System.currentTimeMillis()}"),
+        type = listOf(com.trustweave.credential.model.CredentialType.fromString("VerifiablePresentation")),
         verifiableCredential = listOf(issuedCredential),
-        holder = studentDid.value,
+        holder = com.trustweave.core.identifiers.Iri(studentDid.value),
         challenge = "job-application-12345"
     )
 
@@ -275,16 +283,16 @@ fun createDegreeCredential(
         id("https://example.edu/credentials/degree-${studentDid.substringAfterLast(":")}")
         type("VerifiableCredential", "DegreeCredential")
         issuer(issuerDid)
-        subject {
-            id(studentDid)
-            "degree" {
-                "type" to "BachelorDegree"
-                "name" to degreeName
-                "university" to universityName
-                "graduationDate" to graduationDate
-                "gpa" to gpa
+            subject {
+                id(studentDid)
+                "degree" {
+                    "type" to "BachelorDegree"
+                    "name" to degreeName
+                    "university" to universityName
+                    "graduationDate" to graduationDate
+                    "gpa" to gpa
+                }
             }
-        }
         issued(Clock.System.now())
         expires(365.days * 10) // Valid for 10 years
     }

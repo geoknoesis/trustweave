@@ -3,7 +3,7 @@ package com.trustweave.examples.did_key
 import com.trustweave.trust.TrustWeave
 import com.trustweave.did.*
 import com.trustweave.did.KeyAlgorithm
-import com.trustweave.did.DidCreationOptions.KeyPurpose
+import com.trustweave.did.KeyPurpose
 import com.trustweave.keydid.KeyDidMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.testkit.getOrFail

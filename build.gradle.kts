@@ -21,6 +21,14 @@ subprojects {
     // Each subproject's build output will be in build/<project-path>/ (e.g., build/did/core/)
     buildDir = file("${rootProject.buildDir}/${project.path.replace(":", "/")}")
 
+    // Force consistent Kotlin stdlib version across all modules to avoid binary compatibility issues
+    configurations.all {
+        resolutionStrategy {
+            force("org.jetbrains.kotlin:kotlin-stdlib:2.2.21")
+            force("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.2.21")
+        }
+    }
+
     // Automatically set artifact name based on project path to avoid conflicts
     // Converts project path (e.g., ":did:did-core") to artifact name (e.g., "did-did-core")
     // This prevents conflicts when multiple modules have the same final segment

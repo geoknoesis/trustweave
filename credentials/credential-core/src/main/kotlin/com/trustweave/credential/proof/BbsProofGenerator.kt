@@ -2,6 +2,8 @@ package com.trustweave.credential.proof
 
 import com.trustweave.credential.models.Proof
 import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.ProofType
+import com.trustweave.credential.model.ProofTypes
 import com.trustweave.did.identifiers.VerificationMethodId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -49,10 +51,10 @@ class BbsProofGenerator(
     override suspend fun generateProof(
         credential: VerifiableCredential,
         keyId: String,
-        options: ProofOptions
+        options: ProofGeneratorOptions
     ): Proof = withContext(Dispatchers.IO) {
         val verificationMethod = options.verificationMethod
-            ?: (getPublicKeyId(keyId)?.let { "did:key:$it#$keyId" } ?: "did:key:$keyId")
+            ?: (getPublicKeyId(keyId)?.let { "did:key:$it#$keyId" } ?: "did:key:$keyId#$keyId")
 
         // Canonicalize credential using JSON-LD
         val canonicalCredential = canonicalizeCredential(credential)
@@ -237,7 +239,7 @@ class BbsProofGenerator(
         // Generate BBS+ proof for the derived credential
         // In a full BBS+ implementation, this would generate a zero-knowledge proof
         // that proves knowledge of the undisclosed fields without revealing them
-        val proof = generateProof(derivedCredential, keyId, ProofOptions(proofPurpose = "assertionMethod"))
+        val proof = generateProof(derivedCredential, keyId, ProofGeneratorOptions(proofPurpose = "assertionMethod"))
 
         // Add selective disclosure metadata to proof
         // In a full implementation, this would include disclosure indices
@@ -257,6 +259,8 @@ class BbsProofGenerator(
             prettyPrint = false
             encodeDefaults = false
             ignoreUnknownKeys = true
+            classDiscriminator = "@type" // Use @type instead of type to avoid conflict with LinkedDataProof.type
+            useArrayPolymorphism = false
         }
 
         // Serialize credential to JSON

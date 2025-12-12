@@ -1,6 +1,6 @@
 package com.trustweave.testkit.proof
 
-import com.trustweave.credential.model.ProofSuiteId
+import com.trustweave.credential.format.ProofSuiteId
 import com.trustweave.testkit.TrustWeaveTestFixture
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
@@ -61,7 +61,7 @@ class ProofEngineTestHelpersExample {
         
         // Create an expired credential for testing expiration scenarios
         val expiredCredential = helpers.createExpiredCredential(
-            format = CredentialFormats.VC_LD
+            format = ProofSuiteId.VC_LD
         )
         
         assertNotNull(expiredCredential)
@@ -75,7 +75,7 @@ class ProofEngineTestHelpersExample {
         
         // Create a credential without proof for testing missing proof scenarios
         val credential = helpers.createCredentialWithoutProof(
-            format = CredentialFormats.VC_LD
+            format = ProofSuiteId.VC_LD
         )
         
         assertNotNull(credential)

@@ -2,9 +2,16 @@ package com.trustweave.credential.presentation
 
 import com.trustweave.credential.PresentationOptions
 import com.trustweave.credential.PresentationVerificationOptions
-import com.trustweave.credential.models.Proof
+import com.trustweave.credential.model.vc.CredentialProof
 import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.model.vc.VerifiablePresentation
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.core.identifiers.Iri
+import com.trustweave.did.identifiers.Did
+import kotlinx.datetime.Instant
 import com.trustweave.credential.proof.Ed25519ProofGenerator
 import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.credential.proof.ProofGenerator
@@ -188,7 +195,9 @@ class PresentationServiceEdgeCasesTest {
         val presentation = service.createPresentation(credentials, holderDid, options)
 
         assertEquals(longChallenge, presentation.challenge)
-        assertEquals(longChallenge, presentation.proof?.challenge)
+        val linkedDataProof = presentation.proof as? CredentialProof.LinkedDataProof
+        assertNotNull(linkedDataProof)
+        assertEquals(longChallenge, linkedDataProof.additionalProperties["challenge"]?.jsonPrimitive?.content)
     }
 
     @Test
@@ -205,7 +214,9 @@ class PresentationServiceEdgeCasesTest {
         val presentation = service.createPresentation(credentials, holderDid, options)
 
         assertEquals(longDomain, presentation.domain)
-        assertEquals(longDomain, presentation.proof?.domain)
+        val linkedDataProof = presentation.proof as? CredentialProof.LinkedDataProof
+        assertNotNull(linkedDataProof)
+        assertEquals(longDomain, linkedDataProof.additionalProperties["domain"]?.jsonPrimitive?.content)
     }
 
     // ========== Invalid Format Tests ==========
@@ -243,10 +254,10 @@ class PresentationServiceEdgeCasesTest {
     @Test
     fun `test verify presentation with null proof`() = runBlocking {
         val presentation = VerifiablePresentation(
-            id = "vp-1",
-            type = listOf("VerifiablePresentation"),
+            id = CredentialId("vp-1"),
+            type = listOf(CredentialType.fromString("VerifiablePresentation")),
             verifiableCredential = listOf(createTestCredential()),
-            holder = holderDid,
+            holder = Iri(holderDid),
             proof = null
         )
 
@@ -260,15 +271,16 @@ class PresentationServiceEdgeCasesTest {
     @Test
     fun `test verify presentation with empty type list`() = runBlocking {
         val presentation = VerifiablePresentation(
-            id = "vp-1",
+            id = CredentialId("vp-1"),
             type = emptyList(),
             verifiableCredential = listOf(createTestCredential()),
-            holder = holderDid,
-            proof = Proof(
+            holder = Iri(holderDid),
+            proof = CredentialProof.LinkedDataProof(
                 type = "Ed25519Signature2020",
-                created = Clock.System.now().toString(),
+                created = Clock.System.now(),
                 verificationMethod = "did:key:holder123#key-1",
-                proofPurpose = "assertionMethod"
+                proofPurpose = "assertionMethod",
+                proofValue = "test-proof"
             )
         )
 
@@ -285,15 +297,16 @@ class PresentationServiceEdgeCasesTest {
     @Test
     fun `test verify presentation with empty credentials list`() = runBlocking {
         val presentation = VerifiablePresentation(
-            id = "vp-1",
-            type = listOf("VerifiablePresentation"),
+            id = CredentialId("vp-1"),
+            type = listOf(CredentialType.fromString("VerifiablePresentation")),
             verifiableCredential = emptyList(),
-            holder = holderDid,
-            proof = Proof(
+            holder = Iri(holderDid),
+            proof = CredentialProof.LinkedDataProof(
                 type = "Ed25519Signature2020",
-                created = Clock.System.now().toString(),
+                created = Clock.System.now(),
                 verificationMethod = "did:key:holder123#key-1",
-                proofPurpose = "assertionMethod"
+                proofPurpose = "assertionMethod",
+                proofValue = "test-proof"
             )
         )
 
@@ -549,24 +562,26 @@ class PresentationServiceEdgeCasesTest {
 
     private fun createTestCredential(
         id: String? = "https://example.com/credentials/1",
-        types: List<String> = listOf("VerifiableCredential", "PersonCredential"),
+        types: List<CredentialType> = listOf(CredentialType.VerifiableCredential, CredentialType.Custom("PersonCredential")),
         issuerDid: String = "did:key:issuer",
-        subject: JsonObject = buildJsonObject {
-            put("id", "did:key:subject")
-            put("name", "John Doe")
-        },
-        issuanceDate: String = Clock.System.now().toString(),
-        proof: Proof? = Proof(
+        subject: CredentialSubject = CredentialSubject.fromDid(
+            Did("did:key:subject"),
+            claims = mapOf("name" to JsonPrimitive("John Doe"))
+        ),
+        issuanceDate: Instant = Clock.System.now(),
+        proof: CredentialProof? = CredentialProof.LinkedDataProof(
             type = "Ed25519Signature2020",
-            created = Clock.System.now().toString(),
+            created = Clock.System.now(),
             verificationMethod = "did:key:issuer#key-1",
-            proofPurpose = "assertionMethod"
+            proofPurpose = "assertionMethod",
+            proofValue = "test-proof",
+            additionalProperties = emptyMap()
         )
     ): VerifiableCredential {
         return VerifiableCredential(
-            id = id,
+            id = id?.let { CredentialId(it) },
             type = types,
-            issuer = issuerDid,
+            issuer = Issuer.fromDid(Did(issuerDid)),
             credentialSubject = subject,
             issuanceDate = issuanceDate,
             proof = proof

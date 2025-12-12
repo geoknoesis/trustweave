@@ -37,14 +37,17 @@ interface ProofGenerator {
     suspend fun generateProof(
         credential: VerifiableCredential,
         keyId: String,
-        options: ProofOptions
+        options: ProofGeneratorOptions
     ): Proof
 }
 
 /**
- * Proof generation options.
+ * Proof generation options for proof generators.
+ * 
+ * Note: This is separate from the ProofOptions in credential-api to avoid classpath conflicts.
+ * This class is used by the ProofGenerator interface and implementations.
  */
-data class ProofOptions(
+data class ProofGeneratorOptions(
     val proofPurpose: String = "assertionMethod",
     val challenge: String? = null,
     val domain: String? = null,

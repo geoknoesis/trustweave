@@ -25,7 +25,7 @@ Complete API reference for TrustWeave's TrustWeave API.
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -140,18 +140,35 @@ The TrustWeave provides DSL-based operations:
 
 **Example:**
 ```kotlin
-val trustLayer = TrustLayer.build { ... }
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.types.DidCreationResult
+import com.trustweave.credential.results.IssuanceResult
+import kotlinx.coroutines.runBlocking
 
-// Create DID
-val did = trustWeave.createDid {
-    method("key")
-    algorithm("Ed25519")
-}
+fun main() = runBlocking {
+    val trustWeave = TrustWeave.build { ... }
 
-// Issue credential
-val credential = trustWeave.issue {
-    credential { ... }
-    signedBy(issuerDid = did, keyId = "$did#key-1")
+    // Create DID
+    val didResult = trustWeave.createDid {
+        method("key")
+        algorithm("Ed25519")
+    }
+    
+    val issuerDid = when (didResult) {
+        is DidCreationResult.Success -> didResult.did
+        else -> throw IllegalStateException("Failed to create DID")
+    }
+
+    // Issue credential
+    val issuanceResult = trustWeave.issue {
+        credential { ... }
+        signedBy(issuerDid = issuerDid.value, keyId = "key-1")
+    }
+    
+    val credential = when (issuanceResult) {
+        is IssuanceResult.Success -> issuanceResult.credential
+        else -> throw IllegalStateException("Failed to issue credential")
+    }
 }
 
 // Create wallet

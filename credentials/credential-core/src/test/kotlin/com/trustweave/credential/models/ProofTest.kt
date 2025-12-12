@@ -1,6 +1,8 @@
 package com.trustweave.credential.models
 
+import com.trustweave.credential.model.vc.CredentialProof
 import kotlinx.serialization.json.*
+import kotlinx.datetime.Instant
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 
@@ -11,65 +13,63 @@ class ProofTest {
 
     @Test
     fun `test create proof with proofValue`() {
-        val proof = Proof(
+        val proof = CredentialProof.LinkedDataProof(
             type = "Ed25519Signature2020",
-            created = "2024-01-01T00:00:00Z",
+            created = Instant.parse("2024-01-01T00:00:00Z"),
             verificationMethod = "did:key:issuer#key-1",
             proofPurpose = "assertionMethod",
-            proofValue = "zSignatureValue"
+            proofValue = "zSignatureValue",
+            additionalProperties = emptyMap()
         )
 
         assertEquals("Ed25519Signature2020", proof.type)
         assertEquals("did:key:issuer#key-1", proof.verificationMethod)
         assertEquals("assertionMethod", proof.proofPurpose)
         assertEquals("zSignatureValue", proof.proofValue)
-        assertNull(proof.jws)
     }
 
     @Test
     fun `test create proof with JWS`() {
-        val proof = Proof(
-            type = "JsonWebSignature2020",
-            created = "2024-01-01T00:00:00Z",
-            verificationMethod = "did:key:issuer#key-1",
-            proofPurpose = "assertionMethod",
-            jws = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+        val proof = CredentialProof.JwtProof(
+            jwt = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
         )
 
-        assertEquals("JsonWebSignature2020", proof.type)
-        assertNotNull(proof.jws)
-        assertNull(proof.proofValue)
+        assertTrue(proof is CredentialProof.JwtProof)
+        assertNotNull(proof.jwt)
     }
 
     @Test
     fun `test proof with challenge and domain`() {
-        val proof = Proof(
+        val proof = CredentialProof.LinkedDataProof(
             type = "Ed25519Signature2020",
-            created = "2024-01-01T00:00:00Z",
+            created = Instant.parse("2024-01-01T00:00:00Z"),
             verificationMethod = "did:key:issuer#key-1",
             proofPurpose = "authentication",
-            challenge = "challenge-123",
-            domain = "example.com"
+            proofValue = "test-proof",
+            additionalProperties = mapOf(
+                "challenge" to JsonPrimitive("challenge-123"),
+                "domain" to JsonPrimitive("example.com")
+            )
         )
 
         assertEquals("authentication", proof.proofPurpose)
-        assertEquals("challenge-123", proof.challenge)
-        assertEquals("example.com", proof.domain)
+        assertEquals("challenge-123", proof.additionalProperties["challenge"]?.jsonPrimitive?.content)
+        assertEquals("example.com", proof.additionalProperties["domain"]?.jsonPrimitive?.content)
     }
 
     @Test
     fun `test proof with minimal fields`() {
-        val proof = Proof(
+        val proof = CredentialProof.LinkedDataProof(
             type = "Ed25519Signature2020",
-            created = "2024-01-01T00:00:00Z",
+            created = Instant.parse("2024-01-01T00:00:00Z"),
             verificationMethod = "did:key:issuer#key-1",
-            proofPurpose = "assertionMethod"
+            proofPurpose = "assertionMethod",
+            proofValue = "test-proof",
+            additionalProperties = emptyMap()
         )
 
-        assertNull(proof.proofValue)
-        assertNull(proof.jws)
-        assertNull(proof.challenge)
-        assertNull(proof.domain)
+        assertNotNull(proof.proofValue)
+        assertTrue(proof.additionalProperties.isEmpty())
     }
 }
 

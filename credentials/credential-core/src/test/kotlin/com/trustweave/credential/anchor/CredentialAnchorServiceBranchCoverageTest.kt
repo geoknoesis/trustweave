@@ -1,12 +1,19 @@
 package com.trustweave.credential.anchor
 
-import com.trustweave.credential.models.Evidence
+import com.trustweave.credential.model.Evidence
 import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.CredentialProof
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.did.identifiers.Did
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 
 /**
  * Comprehensive branch coverage tests for CredentialAnchorService.
@@ -31,12 +38,13 @@ class CredentialAnchorServiceBranchCoverageTest {
     fun `test CredentialAnchorService anchorCredential with includeProof false`() = runBlocking {
         val service = CredentialAnchorService(anchorClient = Any())
         val credential = createTestCredential(
-            proof = com.trustweave.credential.models.Proof(
+            proof = CredentialProof.LinkedDataProof(
                 type = "Ed25519Signature2020",
-                created = Clock.System.now().toString(),
+                created = Clock.System.now(),
                 verificationMethod = "did:key:issuer#key-1",
                 proofPurpose = "assertionMethod",
-                proofValue = "test-proof"
+                proofValue = "test-proof",
+                additionalProperties = emptyMap()
             )
         )
         val options = AnchorOptions(includeProof = false)
@@ -62,7 +70,7 @@ class CredentialAnchorServiceBranchCoverageTest {
         val credential = createTestCredential(
             evidence = listOf(
                 Evidence(
-                    id = "evidence-1",
+                    id = CredentialId("evidence-1"),
                     type = listOf("BlockchainAnchorEvidence"),
                     evidenceDocument = buildJsonObject {
                         put("chainId", "algorand:testnet")
@@ -93,7 +101,7 @@ class CredentialAnchorServiceBranchCoverageTest {
         val credential = createTestCredential(
             evidence = listOf(
                 Evidence(
-                    id = "evidence-1",
+                    id = CredentialId("evidence-1"),
                     type = listOf("BlockchainAnchorEvidence"),
                     evidenceDocument = buildJsonObject {
                         put("chainId", "algorand:mainnet")
@@ -114,7 +122,7 @@ class CredentialAnchorServiceBranchCoverageTest {
         val credential = createTestCredential(
             evidence = listOf(
                 Evidence(
-                    id = "evidence-1",
+                    id = CredentialId("evidence-1"),
                     type = listOf("BlockchainAnchorEvidence"),
                     evidenceDocument = buildJsonObject {
                         put("chainId", "algorand:testnet")
@@ -146,7 +154,7 @@ class CredentialAnchorServiceBranchCoverageTest {
         val credential = createTestCredential(
             evidence = listOf(
                 Evidence(
-                    id = "evidence-1",
+                    id = CredentialId("evidence-1"),
                     type = listOf("BlockchainAnchorEvidence"),
                     evidenceDocument = buildJsonObject {
                         put("chainId", "algorand:mainnet")
@@ -163,20 +171,20 @@ class CredentialAnchorServiceBranchCoverageTest {
 
     private fun createTestCredential(
         id: String? = null,
-        types: List<String> = listOf("VerifiableCredential", "PersonCredential"),
+        types: List<CredentialType> = listOf(CredentialType.VerifiableCredential, CredentialType.Custom("PersonCredential")),
         issuerDid: String = "did:key:issuer",
-        subject: JsonObject = buildJsonObject {
-            put("id", "did:key:subject")
-            put("name", "John Doe")
-        },
-        issuanceDate: String = Clock.System.now().toString(),
-        proof: com.trustweave.credential.models.Proof? = null,
+        subject: CredentialSubject = CredentialSubject.fromDid(
+            Did("did:key:subject"),
+            claims = mapOf("name" to JsonPrimitive("John Doe"))
+        ),
+        issuanceDate: Instant = Clock.System.now(),
+        proof: CredentialProof? = null,
         evidence: List<Evidence>? = null
     ): VerifiableCredential {
         return VerifiableCredential(
-            id = id,
+            id = id?.let { CredentialId(it) },
             type = types,
-            issuer = issuerDid,
+            issuer = Issuer.fromDid(Did(issuerDid)),
             credentialSubject = subject,
             issuanceDate = issuanceDate,
             proof = proof,

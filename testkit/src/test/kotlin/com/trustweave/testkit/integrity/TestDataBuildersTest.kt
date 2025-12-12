@@ -1,5 +1,6 @@
 package com.trustweave.testkit.integrity
 
+import com.trustweave.did.identifiers.Did
 import com.trustweave.testkit.integrity.models.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
@@ -20,7 +21,7 @@ class TestDataBuildersTest {
         val credentialStatus = TestDataBuilders.buildCredentialStatus("https://example.com/status/1")
 
         val vc = TestDataBuilders.buildVc(
-            issuerDid = "did:key:issuer",
+            issuerDid = Did("did:key:issuer"),
             subject = subject,
             digestMultibase = "digest-123",
             evidence = evidence,
@@ -40,7 +41,7 @@ class TestDataBuildersTest {
         val subject = buildJsonObject { put("id", "did:key:subject") }
 
         val vc = TestDataBuilders.buildVc(
-            issuerDid = "did:key:issuer",
+            issuerDid = Did("did:key:issuer"),
             subject = subject,
             digestMultibase = "digest-123"
         )
@@ -56,7 +57,7 @@ class TestDataBuildersTest {
         val subject = buildJsonObject { put("id", "did:key:subject") }
 
         val vc = TestDataBuilders.buildVc(
-            issuerDid = "did:key:issuer",
+            issuerDid = Did("did:key:issuer"),
             subject = subject,
             digestMultibase = ""
         )
@@ -231,7 +232,7 @@ class TestDataBuildersTest {
         val (artifact, digest) = TestDataBuilders.createProvenanceArtifact(
             id = "provenance-1",
             activity = "Data Collection",
-            agent = "did:key:agent"
+            agent = Did("did:key:agent")
         )
 
         assertEquals("provenance-1", artifact["id"]?.jsonPrimitive?.content)

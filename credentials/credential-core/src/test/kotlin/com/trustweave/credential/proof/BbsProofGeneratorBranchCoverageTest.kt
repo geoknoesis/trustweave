@@ -1,6 +1,12 @@
 package com.trustweave.credential.proof
 
 import com.trustweave.credential.model.vc.VerifiableCredential
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.did.identifiers.Did
+import kotlinx.datetime.Instant
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
@@ -20,15 +26,15 @@ class BbsProofGeneratorBranchCoverageTest {
         )
 
         val credential = createTestCredential()
-        val options = ProofOptions(
+        val options = ProofGeneratorOptions(
             proofPurpose = "assertionMethod",
             verificationMethod = "did:key:custom#key-1"
         )
 
         val proof = generator.generateProof(credential, "key-1", options)
 
-        assertEquals("did:key:custom#key-1", proof.verificationMethod)
-        assertEquals("BbsBlsSignature2020", proof.type)
+        assertEquals("did:key:custom#key-1", proof.verificationMethod.value)
+        assertEquals("BbsBlsSignature2020", proof.type.identifier)
     }
 
     @Test
@@ -39,11 +45,11 @@ class BbsProofGeneratorBranchCoverageTest {
         )
 
         val credential = createTestCredential()
-        val options = ProofOptions(proofPurpose = "assertionMethod")
+        val options = ProofGeneratorOptions(proofPurpose = "assertionMethod")
 
         val proof = generator.generateProof(credential, "key-1", options)
 
-        assertEquals("did:key:public-key-id#key-1", proof.verificationMethod)
+        assertEquals("did:key:public-key-id#key-1", proof.verificationMethod.value)
     }
 
     @Test
@@ -54,11 +60,11 @@ class BbsProofGeneratorBranchCoverageTest {
         )
 
         val credential = createTestCredential()
-        val options = ProofOptions(proofPurpose = "assertionMethod")
+        val options = ProofGeneratorOptions(proofPurpose = "assertionMethod")
 
         val proof = generator.generateProof(credential, "key-1", options)
 
-        assertEquals("did:key:key-1", proof.verificationMethod)
+        assertEquals("did:key:key-1#key-1", proof.verificationMethod.value)
     }
 
     @Test
@@ -73,7 +79,8 @@ class BbsProofGeneratorBranchCoverageTest {
         val proof = generator.createSelectiveDisclosureProof(credential, disclosedFields, "key-1")
 
         assertNotNull(proof)
-        assertEquals("BbsBlsSignature2020", proof.type)
+        // createSelectiveDisclosureProof returns Proof from credential-models, not CredentialProof
+        assertEquals("BbsBlsSignature2020", proof.type.identifier)
     }
 
     @Test
@@ -105,19 +112,21 @@ class BbsProofGeneratorBranchCoverageTest {
 
     private fun createTestCredential(
         id: String? = null,
-        types: List<String> = listOf("VerifiableCredential", "PersonCredential"),
+        types: List<CredentialType> = listOf(CredentialType.VerifiableCredential, CredentialType.Custom("PersonCredential")),
         issuerDid: String = "did:key:issuer",
-        subject: JsonObject = buildJsonObject {
-            put("id", "did:key:subject")
-            put("name", "John Doe")
-            put("email", "john@example.com")
-        },
-        issuanceDate: String = Clock.System.now().toString()
+        subject: CredentialSubject = CredentialSubject.fromDid(
+            Did("did:key:subject"),
+            claims = mapOf(
+                "name" to JsonPrimitive("John Doe"),
+                "email" to JsonPrimitive("john@example.com")
+            )
+        ),
+        issuanceDate: Instant = Clock.System.now()
     ): VerifiableCredential {
         return VerifiableCredential(
-            id = id,
+            id = id?.let { CredentialId(it) },
             type = types,
-            issuer = issuerDid,
+            issuer = Issuer.fromDid(Did(issuerDid)),
             credentialSubject = subject,
             issuanceDate = issuanceDate
         )

@@ -23,8 +23,12 @@ import kotlinx.datetime.Instant
  *         description("Trusted university")
  *     }
  *     
- *     // Find trust path: "verifierDid trustsPath issuerDid"
- *     val path = verifierDid trustsPath issuerDid
+ *     // Find trust path: "resolve(verifierDid trustsPath issuerDid)"
+ *     val path = resolve(verifierDid trustsPath issuerDid)
+ *     when (path) {
+ *         is TrustPath.Verified -> println("Path found: ${path.length} hops")
+ *         is TrustPath.NotFound -> println("No path found")
+ *     }
  * }
  * ```
  */
@@ -152,12 +156,12 @@ suspend fun TrustBuilder.findTrustPath(from: Did, to: Did): TrustPath {
 /**
  * Infix operator to find trust path: `fromDid trustsPath toDid`.
  * 
- * Automatically resolves within TrustBuilder context for seamless usage.
+ * Creates a TrustPathFinder that can be resolved within TrustBuilder context.
  * 
  * **Example:**
  * ```kotlin
  * trustWeave.trust {
- *     val path = verifierDid trustsPath issuerDid
+ *     val path = resolve(verifierDid trustsPath issuerDid)
  *     when (path) {
  *         is TrustPath.Verified -> println("Path found: ${path.length} hops")
  *         is TrustPath.NotFound -> println("No path found")
@@ -166,15 +170,10 @@ suspend fun TrustBuilder.findTrustPath(from: Did, to: Did): TrustPath {
  * ```
  * 
  * @param target The target DID to find a trust path to
- * @return TrustPath.Verified if path exists, TrustPath.NotFound otherwise
+ * @return TrustPathFinder that can be resolved using `resolve()` in TrustBuilder context
  */
-suspend infix fun TrustBuilder.trustsPath(target: Did): TrustPath {
-    // Get the 'from' DID from the receiver context
-    // This requires the caller to be in TrustBuilder scope
-    throw IllegalStateException(
-        "trustsPath must be called with explicit 'from' DID. " +
-        "Use: findTrustPath(fromDid, targetDid) or resolve(fromDid trustsPath targetDid)"
-    )
+infix fun Did.trustsPath(target: Did): TrustPathFinder {
+    return TrustPathFinder(this, target)
 }
 
 /**
@@ -204,8 +203,19 @@ class TrustPathFinder(
 /**
  * Extension to resolve trust path automatically within TrustBuilder context.
  * 
- * This allows the natural syntax: `val path = (fromDid trustsPath toDid).resolve()`
+ * This allows the natural syntax: `val path = resolve(fromDid trustsPath toDid)`
  * when called within a TrustBuilder receiver scope.
+ * 
+ * **Example:**
+ * ```kotlin
+ * trustWeave.trust {
+ *     val path = resolve(verifierDid trustsPath issuerDid)
+ *     when (path) {
+ *         is TrustPath.Verified -> println("Path found: ${path.length} hops")
+ *         is TrustPath.NotFound -> println("No path found")
+ *     }
+ * }
+ * ```
  */
 suspend fun TrustBuilder.resolve(pathFinder: TrustPathFinder): TrustPath {
     return pathFinder.resolve(this)

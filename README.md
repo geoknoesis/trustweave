@@ -7,34 +7,51 @@ A **neutral, reusable trust and identity core** library for Kotlin, designed to 
 ## Quick Start (30 Seconds) ⚡
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.did.didCreationOptions
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.types.*
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 
 fun main() = runBlocking {
-    val TrustWeave = trustweave.create()
-
-    val didDocument = trustweave.createDid(
-        method = "key",
-        options = didCreationOptions {
-            algorithm = com.trustweave.did.DidCreationOptions.KeyAlgorithm.ED25519
+    // Build and configure TrustWeave
+    val trustWeave = TrustWeave.build {
+        keys {
+            provider("inMemory")
+            algorithm("Ed25519")
         }
-    ).getOrThrow()
+        did {
+            method("key") {
+                algorithm("Ed25519")
+            }
+        }
+    }
 
-    val credential = trustweave.issueCredential(
-        issuerDid = didDocument.id,
-        issuerKeyId = didDocument.id,
-        credentialSubject = buildJsonObject {
-            put("id", "did:key:subject")
-            put("name", "Alice")
-        },
-        types = listOf("PersonCredential")
-    ).getOrThrow()
+    // Create a DID
+    val issuerDid = trustWeave.createDid {
+        method("key")
+    }.getOrThrowDid()
 
-    val verification = trustweave.verifyCredential(credential).getOrThrow()
-    println("Credential valid: ${verification.valid}")
+    // Issue a credential
+    val credential = trustWeave.issue {
+        credential {
+            type("PersonCredential")
+            issuer(issuerDid)
+            subject {
+                id("did:key:subject")
+                "name" to "Alice"
+            }
+        }
+        signedBy(issuerDid = issuerDid, keyId = "key-1")
+    }.getOrThrow()
+
+    // Verify the credential
+    val verification = trustWeave.verify {
+        credential(credential)
+    }
+    
+    when (verification) {
+        is VerificationResult.Valid -> println("Credential valid: ✓")
+        is VerificationResult.Invalid -> println("Credential invalid: ${verification.errors.joinToString()}")
+    }
 }
 ```
 
@@ -42,8 +59,9 @@ fun main() = runBlocking {
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:TrustWeave-testkit:1.0.0-SNAPSHOT")  // For testing
+    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    // For testing, use testkit module
+    testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
 }
 ```
 

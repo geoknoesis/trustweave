@@ -211,10 +211,9 @@ class CredentialBuilder {
      * 
      * @param schemaId Must be a valid URI (e.g., "https://example.com/schemas/degree.json")
      * @param type Schema validator type (default: "JsonSchemaValidator2018")
-     * @param format Schema format (default: JSON_SCHEMA)
      * @throws IllegalArgumentException if schemaId is blank or not a valid URI
      */
-    fun schema(schemaId: String, type: String = "JsonSchemaValidator2018", @Suppress("UNUSED_PARAMETER") format: SchemaFormat = SchemaFormat.JSON_SCHEMA) {
+    fun schema(schemaId: String, type: String = "JsonSchemaValidator2018") {
         require(schemaId.isNotBlank()) { "Schema ID cannot be blank" }
         require(schemaId.matches(Regex("^[a-zA-Z][a-zA-Z0-9+.-]*:.*"))) { 
             "Schema ID must be a valid URI. Got: $schemaId" 

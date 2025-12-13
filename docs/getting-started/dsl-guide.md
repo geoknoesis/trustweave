@@ -275,10 +275,11 @@ when (result) {
 
 - `credential(VerifiableCredential)`: Set credential to verify (required)
 - `checkRevocation()`: Enable revocation checking
-- `skipRevocationCheck()`: Disable revocation checking
+- `skipRevocation()`: Disable revocation checking
 - `checkExpiration()`: Enable expiration checking
-- `skipExpirationCheck()`: Disable expiration checking
+- `skipExpiration()`: Disable expiration checking
 - `validateSchema(String)`: Enable schema validation
+- `skipSchema()`: Disable schema validation
 - `validateProofPurpose()`: Enable proof purpose validation
 
 ## Wallet DSL
@@ -321,6 +322,88 @@ trustWeave.trust {
 
     val isTrusted = isTrusted("did:key:university", "EducationCredential")
     val path = getTrustPath("did:key:verifier", "did:key:issuer")
+}
+```
+
+## Common Patterns
+
+Here are some common patterns you'll use frequently:
+
+### Pattern 1: Quick Credential Issuance
+
+```kotlin
+val result = trustWeave.issue {
+    credential {
+        type("TestCredential")
+        issuer(issuerDid)
+        subject {
+            id(subjectDid)
+            "name" to "Alice"
+        }
+    }
+    signedBy(issuerDid, "key-1")
+}
+```
+
+### Pattern 2: Credential with Expiration
+
+```kotlin
+val result = trustWeave.issue {
+    credential {
+        type("DegreeCredential")
+        issuer(universityDid)
+        subject {
+            id(studentDid)
+            "degree" to "Bachelor of Science"
+        }
+        issued(Clock.System.now())
+        expiresIn(365.days)  // Expires in 1 year
+    }
+    signedBy(universityDid, "key-1")
+}
+```
+
+### Pattern 3: Verification with Trust
+
+```kotlin
+val result = trustWeave.verify {
+    credential(credential)
+    requireTrust(trustRegistry)
+}
+```
+
+### Pattern 4: Quick Verification (Skip Checks)
+
+```kotlin
+val result = trustWeave.verify {
+    credential(credential)
+    skipRevocation()   // Skip revocation check
+    skipExpiration()   // Skip expiration check
+}
+```
+
+### Pattern 5: DID Creation with Configuration
+
+```kotlin
+val result = trustWeave.createDid(method = "key") {
+    algorithm("Ed25519")
+}
+```
+
+### Pattern 6: Batch Issuance
+
+```kotlin
+trustWeave.issueBatch {
+    requests = listOf(
+        { credential { type("Cred1"); issuer(did1); subject { id(did1) } }; signedBy(did1, "key-1") },
+        { credential { type("Cred2"); issuer(did2); subject { id(did2) } }; signedBy(did2, "key-2") }
+    )
+    maxConcurrency = 5
+}.collect { result ->
+    when (result) {
+        is IssuanceResult.Success -> println("Issued: ${result.credential.id}")
+        is IssuanceResult.Failure -> println("Failed: ${result.allErrors}")
+    }
 }
 ```
 

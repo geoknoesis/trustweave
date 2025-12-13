@@ -167,10 +167,34 @@ class CredentialBuilder {
 
     /**
      * Set expiration date as duration from now.
+     * 
+     * **Example:**
+     * ```kotlin
+     * credential {
+     *     expires(365.days)  // Expires in 1 year
+     * }
+     * ```
      */
     fun expires(duration: kotlin.time.Duration) {
         val now = Clock.System.now()
         this.expirationDate = now.plus(duration)
+    }
+
+    /**
+     * Set expiration date as duration from now (convenience alias).
+     * 
+     * This is an alias for `expires(duration)` for better readability.
+     * 
+     * **Example:**
+     * ```kotlin
+     * credential {
+     *     issued(Clock.System.now())
+     *     expiresIn(365.days)  // More readable: "expires in 1 year"
+     * }
+     * ```
+     */
+    fun expiresIn(duration: kotlin.time.Duration) {
+        expires(duration)
     }
 
     /**
@@ -190,7 +214,7 @@ class CredentialBuilder {
      * @param format Schema format (default: JSON_SCHEMA)
      * @throws IllegalArgumentException if schemaId is blank or not a valid URI
      */
-    fun schema(schemaId: String, type: String = "JsonSchemaValidator2018", format: SchemaFormat = SchemaFormat.JSON_SCHEMA) {
+    fun schema(schemaId: String, type: String = "JsonSchemaValidator2018", @Suppress("UNUSED_PARAMETER") format: SchemaFormat = SchemaFormat.JSON_SCHEMA) {
         require(schemaId.isNotBlank()) { "Schema ID cannot be blank" }
         require(schemaId.matches(Regex("^[a-zA-Z][a-zA-Z0-9+.-]*:.*"))) { 
             "Schema ID must be a valid URI. Got: $schemaId" 
@@ -249,10 +273,8 @@ class CredentialBuilder {
         }
 
 
-        val issuanceDateInstant = issuanceDate
-            ?: throw IllegalStateException(
-                "Issuance date is required. Use issued(Instant) to set the issuance date."
-            )
+        // Auto-set issuance date if not provided (safe default)
+        val issuanceDateInstant = issuanceDate ?: Clock.System.now()
 
         val subjectCredential = subjectBuilder?.build()
             ?: throw IllegalStateException(
@@ -325,8 +347,12 @@ class SubjectBuilder {
                 is Map<*, *> -> {
                     // Nested object
                     key {
-                        (value as Map<String, Any>).forEach { (nestedKey, nestedValue) ->
+                        @Suppress("UNCHECKED_CAST")
+                        (value as? Map<String, Any>)?.forEach { (nestedKey, nestedValue) ->
                             nestedKey to nestedValue
+                        } ?: run {
+                            // Fallback: convert to string if not a String-keyed map
+                            "value" to value.toString()
                         }
                     }
                 }
@@ -424,7 +450,8 @@ class JsonObjectBuilder {
                         is Map<*, *> -> {
                             // Convert Map to JsonObject
                             buildJsonObject {
-                                (it as Map<String, Any?>).forEach { (key, v) ->
+                                @Suppress("UNCHECKED_CAST")
+                                (it as? Map<String, Any?>)?.forEach { (key, v) ->
                                     put(key, when (v) {
                                         is String -> JsonPrimitive(v)
                                         is Number -> JsonPrimitive(v)

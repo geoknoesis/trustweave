@@ -310,26 +310,31 @@ fun main() = runBlocking {
     println("    - Expiration check")
     println("    - Revocation status check")
 
-    val enrollmentVerification = trustweave.verifyCredential(enrollmentCredential)
+    val enrollmentVerification = trustweave.verify {
+        credential(enrollmentCredential)
+    }
 
     println("\n📥 RESPONSE: Enrollment Credential Verification Result")
-    if (enrollmentVerification.valid) {
-        println("  ✓ Overall Status: VALID")
-        println("  ✓ Proof Valid: ${enrollmentVerification.proofValid}")
-        println("  ✓ Issuer Valid: ${enrollmentVerification.issuerValid}")
-        println("  ✓ Not Expired: ${enrollmentVerification.notExpired}")
-        println("  ✓ Not Revoked: ${enrollmentVerification.notRevoked}")
-        if (enrollmentVerification.allWarnings.isNotEmpty()) {
-            println("  ⚠ Warnings:")
-            enrollmentVerification.allWarnings.forEach { warning ->
-                println("    - $warning")
+    when (enrollmentVerification) {
+        is com.trustweave.trust.types.VerificationResult.Valid -> {
+            println("  ✓ Overall Status: VALID")
+            println("  ✓ Proof Valid: ${enrollmentVerification.proofValid}")
+            println("  ✓ Issuer Valid: ${enrollmentVerification.issuerValid}")
+            println("  ✓ Not Expired: ${enrollmentVerification.notExpired}")
+            println("  ✓ Not Revoked: ${enrollmentVerification.notRevoked}")
+            if (enrollmentVerification.allWarnings.isNotEmpty()) {
+                println("  ⚠ Warnings:")
+                enrollmentVerification.allWarnings.forEach { warning ->
+                    println("    - $warning")
+                }
             }
         }
-    } else {
-        println("  ✗ Overall Status: INVALID")
-        println("  ✗ Errors:")
-        enrollmentVerification.allErrors.forEach { error ->
-            println("    - $error")
+        is com.trustweave.trust.types.VerificationResult.Invalid -> {
+            println("  ✗ Overall Status: INVALID")
+            println("  ✗ Errors:")
+            enrollmentVerification.allErrors.forEach { error ->
+                println("    - $error")
+            }
         }
     }
     println()

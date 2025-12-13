@@ -97,7 +97,7 @@ Carbon markets need:
 ## Prerequisites
 
 - Java 21+
-- Kotlin 2.2.0+
+- Kotlin 2.2.21+
 - Gradle 8.5+
 - Basic understanding of Kotlin and coroutines
 - Understanding of carbon markets and MRV concepts
@@ -110,7 +110,7 @@ dependencies {
     implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
 
     // Test kit for in-memory implementations
-    testImplementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
+    testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
 
     // Optional: Algorand adapter for real blockchain anchoring
     implementation("com.trustweave.chains:algorand:1.0.0-SNAPSHOT")

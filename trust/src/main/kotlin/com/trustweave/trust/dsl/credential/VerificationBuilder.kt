@@ -5,7 +5,10 @@ import com.trustweave.credential.requests.VerificationOptions
 import com.trustweave.credential.results.VerificationResult as CredentialVerificationResult
 import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.identifiers.SchemaId
+import com.trustweave.credential.trust.TrustPolicy as CredentialTrustPolicy
 import com.trustweave.trust.types.VerificationResult
+import com.trustweave.trust.TrustRegistry
+import com.trustweave.trust.TrustPolicy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -42,6 +45,7 @@ class VerificationBuilder(
     private var validateSchema: Boolean = false
     private var schemaId: String? = null
     private var validateProofPurpose: Boolean = false
+    private var trustPolicy: CredentialTrustPolicy? = null
 
     /**
      * Set the credential to verify.
@@ -59,8 +63,16 @@ class VerificationBuilder(
 
     /**
      * Disable revocation checking.
+     * 
+     * **Example:**
+     * ```kotlin
+     * trustWeave.verify {
+     *     credential(credential)
+     *     skipRevocation()  // Skip revocation check
+     * }
+     * ```
      */
-    fun skipRevocationCheck() {
+    fun skipRevocation() {
         this.checkRevocation = false
     }
 
@@ -73,8 +85,16 @@ class VerificationBuilder(
 
     /**
      * Disable expiration checking.
+     * 
+     * **Example:**
+     * ```kotlin
+     * trustWeave.verify {
+     *     credential(credential)
+     *     skipExpiration()  // Skip expiration check
+     * }
+     * ```
      */
-    fun skipExpirationCheck() {
+    fun skipExpiration() {
         this.checkExpiration = false
     }
 
@@ -88,8 +108,16 @@ class VerificationBuilder(
 
     /**
      * Disable schema validation.
+     * 
+     * **Example:**
+     * ```kotlin
+     * trustWeave.verify {
+     *     credential(credential)
+     *     skipSchema()  // Skip schema validation
+     * }
+     * ```
      */
-    fun skipSchemaValidation() {
+    fun skipSchema() {
         this.validateSchema = false
         this.schemaId = null
     }
@@ -99,6 +127,67 @@ class VerificationBuilder(
      */
     fun validateProofPurpose() {
         this.validateProofPurpose = true
+    }
+
+    /**
+     * Require issuer to be a trusted anchor in the trust registry.
+     * 
+     * **Example:**
+     * ```kotlin
+     * trustWeave.verify {
+     *     credential(credential)
+     *     requireTrust(trustRegistry)
+     * }
+     * ```
+     * 
+     * @param registry The trust registry to check against
+     */
+    fun requireTrust(registry: TrustRegistry) {
+        this.trustPolicy = TrustPolicyAdapter.fromRegistry(registry)
+    }
+
+    /**
+     * Require a trust path from verifier to issuer.
+     * 
+     * **Example:**
+     * ```kotlin
+     * trustWeave.verify {
+     *     credential(credential)
+     *     requireTrustPath(trustRegistry, maxLength = 3)
+     * }
+     * ```
+     * 
+     * @param registry The trust registry to check against
+     * @param maxPathLength Maximum length of trust path (default: 3)
+     */
+    fun requireTrustPath(registry: TrustRegistry, maxPathLength: Int = 3) {
+        this.trustPolicy = TrustPolicyAdapter.fromRegistryWithPath(registry, maxPathLength)
+    }
+
+    /**
+     * Use a custom trust policy.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val policy = TrustPolicy.allowlist(trustedIssuers)
+     * trustWeave.verify {
+     *     credential(credential)
+     *     withTrustPolicy(policy)
+     * }
+     * ```
+     * 
+     * @param policy The trust policy to use
+     */
+    fun withTrustPolicy(policy: CredentialTrustPolicy) {
+        this.trustPolicy = policy
+    }
+
+    /**
+     * Allow untrusted issuers (no trust checking).
+     * This is the default behavior.
+     */
+    fun allowUntrusted() {
+        this.trustPolicy = null
     }
 
     /**
@@ -121,7 +210,7 @@ class VerificationBuilder(
             schemaId = schemaId?.let { SchemaId(it) }
         )
 
-        credentialService.verify(cred, trustPolicy = null, options = options)
+        credentialService.verify(cred, trustPolicy = trustPolicy, options = options)
     }
 }
 

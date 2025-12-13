@@ -282,7 +282,7 @@ fun main() = runBlocking {
 ## Prerequisites
 
 - Java 21+
-- Kotlin 2.2.0+
+- Kotlin 2.2.21+
 - TrustWeave dependency (see [Installation](../getting-started/installation.md))
 
 ## Related Documentation

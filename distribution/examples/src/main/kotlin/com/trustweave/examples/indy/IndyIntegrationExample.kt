@@ -382,21 +382,21 @@ fun main() = runBlocking {
 
     // Step 8: Verify the read credential
     println("Step 8: Verifying read credential...")
-    val readVerification = try {
-        trustweave.verifyCredential(readCredential)
-    } catch (error: Throwable) {
-        println("✗ Verification failed: ${error.message}")
-        return@runBlocking
+    val readVerification = trustweave.verify {
+        credential(readCredential)
     }
 
-    if (readVerification.valid) {
-        println("✓ Read credential verified successfully")
-        println("  - Valid: ${readVerification.valid}")
-        println("  - Proof valid: ${readVerification.proofValid}")
-        println("  - Issuer valid: ${readVerification.issuerValid}")
-    } else {
-        println("✗ Read credential verification failed")
-        println("  - Errors: ${readVerification.allErrors.joinToString(", ")}")
+    when (readVerification) {
+        is com.trustweave.trust.types.VerificationResult.Valid -> {
+            println("✓ Read credential verified successfully")
+            println("  - Valid: true")
+            println("  - Proof valid: ${readVerification.proofValid}")
+            println("  - Issuer valid: ${readVerification.issuerValid}")
+        }
+        is com.trustweave.trust.types.VerificationResult.Invalid -> {
+            println("✗ Read credential verification failed")
+            println("  - Errors: ${readVerification.allErrors.joinToString(", ")}")
+        }
     }
     println()
 

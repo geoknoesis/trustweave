@@ -60,11 +60,10 @@ fun createTestCredentialService(
 }
 
 /**
- * Legacy mock implementation (deprecated - use createTestCredentialService with KMS instead).
- * @deprecated Use createTestCredentialService(kms, didResolver) for real credential signing
+ * Legacy mock implementation - removed.
+ * Use createTestCredentialService(kms, didResolver) for real credential signing instead.
  */
-@Deprecated("Use createTestCredentialService(kms, didResolver) for real credential signing")
-fun createMockCredentialService(): CredentialService {
+private fun createMockCredentialService(): CredentialService {
     return object : CredentialService {
         override suspend fun issue(request: IssuanceRequest): IssuanceResult {
             return IssuanceResult.Success(

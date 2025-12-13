@@ -453,31 +453,30 @@ fun main() = runBlocking {
     println("    - Expiration check")
     println("    - Revocation status check")
 
-    val verification = trustweave.verifyCredential(credential)
+    val verification = trustweave.verify {
+        credential(credential)
+    }
 
     println("\n📥 RESPONSE: Credential Verification Result")
-    if (verification.valid) {
-        println("  ✓ Overall Status: VALID")
-        println("  ✓ Proof Valid: ${verification.proofValid}")
-        println("  ✓ Issuer Valid: ${verification.issuerValid}")
-        println("  ✓ Not Expired: ${verification.notExpired}")
-        println("  ✓ Not Revoked: ${verification.notRevoked}")
-        if (verification.allWarnings.isNotEmpty()) {
-            println("  ⚠ Warnings:")
-            verification.allWarnings.forEach { warning ->
-                println("    - $warning")
+    when (verification) {
+        is com.trustweave.trust.types.VerificationResult.Valid -> {
+            println("  ✓ Overall Status: VALID")
+            println("  ✓ Proof Valid: ${verification.proofValid}")
+            println("  ✓ Issuer Valid: ${verification.issuerValid}")
+            println("  ✓ Not Expired: ${verification.notExpired}")
+            println("  ✓ Not Revoked: ${verification.notRevoked}")
+            if (verification.allWarnings.isNotEmpty()) {
+                println("  ⚠ Warnings:")
+                verification.allWarnings.forEach { warning ->
+                    println("    - $warning")
+                }
             }
         }
-    } else {
-        println("  ✗ Overall Status: INVALID")
-        println("  ✗ Errors:")
-        verification.allErrors.forEach { error ->
-            println("    - $error")
-        }
-        if (verification.allWarnings.isNotEmpty()) {
-            println("  ⚠ Warnings:")
-            verification.allWarnings.forEach { warning ->
-                println("    - $warning")
+        is com.trustweave.trust.types.VerificationResult.Invalid -> {
+            println("  ✗ Overall Status: INVALID")
+            println("  ✗ Errors:")
+            verification.allErrors.forEach { error ->
+                println("    - $error")
             }
         }
     }

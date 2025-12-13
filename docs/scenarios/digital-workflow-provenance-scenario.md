@@ -148,7 +148,7 @@ flowchart TD
 ## Prerequisites
 
 - Java 21+
-- Kotlin 2.2.0+
+- Kotlin 2.2.21+
 - Gradle 8.5+
 - Basic understanding of Kotlin and coroutines
 - Familiarity with PROV-O concepts (helpful but not required)
@@ -160,14 +160,11 @@ Add TrustWeave dependencies to your `build.gradle.kts`. These modules provide DI
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("com.trustweave:trustweave-core:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-json:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
+    // TrustWeave distribution (includes all modules)
+    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Test kit for in-memory implementations
-    implementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
+    testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")

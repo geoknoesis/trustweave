@@ -68,17 +68,19 @@ fun main(): Unit = runBlocking {
     }.getOrFail()
     println("Issued credential id: ${credential.id}")
 
-    val verification = trustweave.verifyCredential(credential)
-    if (verification.valid) {
-        println(
-            "Verification succeeded (proof=${verification.proofValid}, issuer=${verification.issuerValid}, " +
-                "revocation=${verification.notRevoked})"
-        )
-        if (verification.allWarnings.isNotEmpty()) {
-            println("Warnings: ${verification.allWarnings}")
+    val verification = trustweave.verify {
+        credential(credential)
+    }
+    when (verification) {
+        is VerificationResult.Valid -> {
+            println("Verification succeeded")
+            if (verification.warnings.isNotEmpty()) {
+                println("Warnings: ${verification.warnings}")
+            }
         }
-    } else {
-        println("Verification returned errors: ${verification.allErrors}")
+        is VerificationResult.Invalid -> {
+            println("Verification failed: ${verification.errors.joinToString()}")
+        }
     }
 
     val anchorRegistry = BlockchainAnchorRegistry().apply {

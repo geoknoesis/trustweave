@@ -92,6 +92,73 @@ class TrustBuilder(
     suspend fun getTrustedIssuers(credentialType: String? = null): List<String> {
         return registry.getTrustedIssuers(credentialType)
     }
+
+    /**
+     * Add trust anchor using infix syntax.
+     * 
+     * **Example:**
+     * ```kotlin
+     * trustWeave.trust {
+     *     addAnchor(universityDid trusts "EducationCredential" because {
+     *         description("Trusted university")
+     *     })
+     * }
+     * ```
+     */
+    suspend fun addAnchor(config: com.trustweave.trust.dsl.TrustAnchorConfig): Boolean {
+        // This will be called with the result of "did trusts type because { }"
+        // We need to extract the DID from the config
+        throw IllegalStateException(
+            "addAnchor with TrustAnchorConfig requires DID. " +
+            "Use: addAnchor(did, did trusts type because { ... })"
+        )
+    }
+
+    /**
+     * Add trust anchor using infix syntax with explicit DID.
+     * 
+     * **Example:**
+     * ```kotlin
+     * trustWeave.trust {
+     *     addAnchor(universityDid, universityDid trusts "EducationCredential" because {
+     *         description("Trusted university")
+     *     })
+     * }
+     * ```
+     */
+    suspend fun addAnchor(did: com.trustweave.did.identifiers.Did, config: com.trustweave.trust.dsl.TrustAnchorConfig): Boolean {
+        return addAnchor(did.value) {
+            config.metadataBuilder.credentialTypes?.let { types ->
+                credentialTypes(types)
+            }
+            config.metadataBuilder.description?.let { desc ->
+                description(desc)
+            }
+            config.metadataBuilder.addedAt?.let { instant ->
+                addedAt(instant)
+            }
+        }
+    }
+
+    /**
+     * Resolve trust path using infix syntax.
+     * 
+     * This is the recommended way to use the `trustsPath` infix operator.
+     * 
+     * **Example:**
+     * ```kotlin
+     * trustWeave.trust {
+     *     val path = resolve(verifierDid trustsPath issuerDid)
+     *     when (path) {
+     *         is TrustPath.Verified -> println("Path found: ${path.length} hops")
+     *         is TrustPath.NotFound -> println("No path found")
+     *     }
+     * }
+     * ```
+     */
+    suspend fun resolve(pathFinder: com.trustweave.trust.dsl.TrustPathFinder): TrustPath {
+        return pathFinder.resolve(this)
+    }
 }
 
 /**

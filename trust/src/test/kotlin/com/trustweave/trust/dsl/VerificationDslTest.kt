@@ -103,7 +103,7 @@ class VerificationDslTest {
 
         val result = trustWeave.verify {
             credential(credential)
-            skipRevocationCheck()
+            skipRevocation()
         }
 
         assertNotNull(result)
@@ -143,7 +143,7 @@ class VerificationDslTest {
 
         val result = trustWeave.verify {
             credential(credential)
-            skipExpirationCheck()
+            skipExpiration()
         }
 
         assertNotNull(result)

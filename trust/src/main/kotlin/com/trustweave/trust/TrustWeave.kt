@@ -201,110 +201,7 @@ class TrustWeave private constructor(
         }
     }
 
-    /**
-     * Issue a verifiable credential using simple parameters (non-DSL overload).
-     *
-     * Simple overload for common case - issues a credential with minimal configuration.
-     * For complex cases, use the DSL-based `issue { }` method.
-     *
-     * **Example:**
-     * ```kotlin
-     * when (val result = trustWeave.issueCredential(
-     *     issuer = "did:key:university",
-     *     keyId = "key-1",
-     *     subject = mapOf("id" to "did:key:student", "degree" to "Bachelor"),
-     *     credentialType = "DegreeCredential"
-     * )) {
-     *     is IssuanceResult.Success -> println("Issued: ${result.credential.id}")
-     *     is IssuanceResult.Failure -> println("Failed: ${result.reason}")
-     * }
-     * ```
-     *
-     * @param issuer The issuer DID
-     * @param keyId The key ID for signing (can be fragment like "key-1" or full like "did:key:...#key-1")
-     * @param subject The credential subject as a map of properties
-     * @param credentialType The credential type (default: "VerifiableCredential")
-     * @param credentialId Optional credential ID (auto-generated if not provided)
-     * @param timeout Maximum time to wait for issuance (default: 30 seconds)
-     * @return Sealed result type with success or detailed failure information
-     */
-    suspend fun issueCredential(
-        issuer: String,
-        keyId: String,
-        subject: Map<String, Any>,
-        credentialType: String = "VerifiableCredential",
-        credentialId: String? = null,
-        timeout: Duration = 30.seconds
-    ): IssuanceResult {
-        return withTimeout(timeout) {
-            context.issue {
-                credential {
-                    if (credentialId != null) {
-                        id(credentialId)
-                    }
-                    type(credentialType)
-                    issuer(issuer)
-                    // Convert subject map to JSON structure
-                    val subjectId = subject["id"] as? String
-                    this.subject {
-                        if (subjectId != null) {
-                            id(subjectId)
-                            // Add other properties (excluding id) using infix 'to' operator
-                            subject.filterKeys { it != "id" }.forEach { (key, value) ->
-                                when (value) {
-                                    is String -> key to value
-                                    is Number -> key to value
-                                    is Boolean -> key to value
-                                    else -> key to value.toString()
-                                }
-                            }
-                        } else {
-                            // Add all properties including id if present
-                            subject.forEach { (key, value) ->
-                                when (value) {
-                                    is String -> key to value
-                                    is Number -> key to value
-                                    is Boolean -> key to value
-                                    else -> key to value.toString()
-                                }
-                            }
-                        }
-                    }
-                    issued(Clock.System.now())
-                }
-                signedBy(issuerDid = issuer, keyId = keyId)
-            }
-        }
-    }
 
-    /**
-     * Verify a verifiable credential using the configured TrustWeave instance.
-     *
-     * Simple overload for common case - verifies credential with default settings.
-     *
-     * **Example:**
-     * ```kotlin
-     * when (val result = trustWeave.verifyCredential(credential)) {
-     *     is VerificationResult.Valid -> println("Valid!")
-     *     is VerificationResult.Invalid.Expired -> println("Expired")
-     *     // ... compiler ensures all cases handled
-     * }
-     * ```
-     *
-     * @param credential The verifiable credential to verify
-     * @param timeout Maximum time to wait for verification (default: 10 seconds)
-     * @return Sealed result type with success or detailed failure information
-     */
-    suspend fun verifyCredential(
-        credential: VerifiableCredential,
-        timeout: Duration = 10.seconds
-    ): VerificationResult {
-        return withTimeout(timeout) {
-            context.verify {
-                this.credential(credential)
-            }
-        }
-    }
 
     /**
      * Verify a verifiable credential using the configured TrustWeave instance.
@@ -344,6 +241,7 @@ class TrustWeave private constructor(
      *
      * **Example:**
      * ```kotlin
+     * // With configuration block
      * when (val result = trustWeave.createDid(method = "key") {
      *     algorithm("Ed25519")
      * }) {
@@ -360,28 +258,25 @@ class TrustWeave private constructor(
      *     }
      *     // ... compiler ensures all cases handled
      * }
+     * 
+     * // With defaults (uses "key" method with default algorithm)
+     * val result = trustWeave.createDid()
      * ```
      *
      * @param method DID method to use (default: "key")
      * @param timeout Maximum time to wait for DID creation (default: 10 seconds)
-     * @param configure Optional DSL block for configuring the DID
+     * @param block Optional DSL block for configuring the DID (default: empty block)
      * @return Sealed result type with success or detailed failure information
      */
     suspend fun createDid(
         method: String = "key",
         timeout: Duration = 10.seconds,
-        configure: (DidBuilder.() -> Unit)? = null
+        block: DidBuilder.() -> Unit = {}
     ): DidCreationResult {
         return withTimeout(timeout) {
-            if (configure != null) {
-                context.createDid {
-                    this.method(method)
-                    configure()
-                }
-            } else {
-                context.createDid {
-                    this.method(method)
-                }
+            context.createDid {
+                this.method(method)
+                block()
             }
         }
     }

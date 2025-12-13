@@ -129,7 +129,7 @@ class VerificationBuilderBranchCoverageTest {
 
         val result = trustWeave.verify {
             credential(credential)
-            skipRevocationCheck()
+            skipRevocation()
         }
 
         assertNotNull(result)
@@ -149,7 +149,7 @@ class VerificationBuilderBranchCoverageTest {
         val result = trustWeave.verify {
             credential(credential)
             checkRevocation()
-            skipRevocationCheck() // Last call wins
+            skipRevocation() // Last call wins
         }
 
         assertNotNull(result)
@@ -208,7 +208,7 @@ class VerificationBuilderBranchCoverageTest {
 
         val result = trustWeave.verify {
             credential(credential)
-            skipExpirationCheck()
+            skipExpiration()
         }
 
         assertNotNull(result)
@@ -228,7 +228,7 @@ class VerificationBuilderBranchCoverageTest {
         val result = trustWeave.verify {
             credential(credential)
             checkExpiration()
-            skipExpirationCheck() // Last call wins
+            skipExpiration() // Last call wins
         }
 
         assertNotNull(result)
@@ -288,7 +288,7 @@ class VerificationBuilderBranchCoverageTest {
         val result = trustWeave.verify {
             credential(credential)
             validateSchema("https://example.com/schemas/person.json")
-            skipSchemaValidation()
+            skipSchema()
         }
 
         assertNotNull(result)
@@ -510,9 +510,9 @@ class VerificationBuilderBranchCoverageTest {
 
         val result = trustWeave.verify {
             credential(credential)
-            skipRevocationCheck()
-            skipExpirationCheck()
-            skipSchemaValidation()
+            skipRevocation()
+            skipExpiration()
+            skipSchema()
             // Anchor verification already disabled by default
         }
 

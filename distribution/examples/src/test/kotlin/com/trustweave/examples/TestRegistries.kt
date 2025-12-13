@@ -28,7 +28,3 @@ fun createTestBlockchainRegistry(vararg clients: Pair<String, BlockchainAnchorCl
 
 fun BlockchainAnchorRegistry.hasChain(chainId: String): Boolean = get(chainId) != null
 
-// ProofGeneratorRegistry has been removed - proof engines are now managed by CredentialService
-// This function is kept for backward compatibility but returns null
-@Deprecated("ProofGeneratorRegistry has been removed. Use CredentialService instead.")
-fun createTestProofRegistry(vararg generators: Any?): Any? = null

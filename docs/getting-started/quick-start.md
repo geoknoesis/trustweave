@@ -18,7 +18,7 @@ keywords:
 Get started with TrustWeave in 5 minutes! This guide will walk you through creating your first TrustWeave application.
 
 > **Version:** 1.0.0-SNAPSHOT
-> **Kotlin:** 2.2.0+ | **Java:** 21+
+> **Kotlin:** 2.2.21+ | **Java:** 21+
 > See [Installation](installation.md) for setup details.
 
 ## Complete Runnable Example

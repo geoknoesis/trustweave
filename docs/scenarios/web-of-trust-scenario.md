@@ -8,9 +8,11 @@ This document provides a complete walkthrough of using TrustWeave's web of trust
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:trustweave-core:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-trust:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
+    // TrustWeave distribution (includes all modules)
+    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+
+    // Test kit for in-memory implementations
+    testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
 }
 ```
 

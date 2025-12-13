@@ -18,7 +18,7 @@ keywords:
 Complete API reference for TrustWeave's TrustWeave API.
 
 > **Version:** 1.0.0-SNAPSHOT
-> **Kotlin:** 2.2.0+ | **Java:** 21+
+> **Kotlin:** 2.2.21+ | **Java:** 21+
 > See [CHANGELOG.md](../../CHANGELOG.md) for version history and migration guides.
 >
 > **Note:** This API reference documents the `TrustWeave` API, which is the primary interface for trust and identity operations in TrustWeave. The TrustWeave provides a DSL-based API for creating DIDs, issuing credentials, managing wallets, and more.

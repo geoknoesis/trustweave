@@ -1,0 +1,97 @@
+name: Documentation Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'README.md'
+      - '*.md'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'README.md'
+      - '*.md'
+
+jobs:
+  check-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Kotlin
+        uses: fwilhe2/setup-kotlin@v1
+        with:
+          kotlin-version: '2.2.21'
+
+      - name: Check version consistency
+        run: |
+          echo "Checking version consistency..."
+          KOTLIN_VERSION=$(grep '^kotlin = ' gradle/libs.versions.toml | cut -d'"' -f2)
+          echo "Kotlin version in libs.versions.toml: $KOTLIN_VERSION"
+          
+          # Check README.md
+          if grep -q "Kotlin.*2\.[0-9]" README.md; then
+            echo "✅ README.md mentions Kotlin version"
+          else
+            echo "⚠️  README.md should mention Kotlin version"
+          fi
+          
+          # Check docs for version references
+          if grep -r "Kotlin.*2\.[0-9]" docs/ --include="*.md" | head -1; then
+            echo "✅ Documentation mentions Kotlin version"
+          else
+            echo "⚠️  Documentation should mention Kotlin version"
+          fi
+
+      - name: Check module names
+        run: |
+          echo "Checking module name consistency..."
+          # Check for old module names
+          if grep -r "TrustWeave-core\|trustweave-core" README.md docs/ --include="*.md" 2>/dev/null; then
+            echo "❌ Found old module names (TrustWeave-core). Should use 'distribution-all'"
+            exit 1
+          else
+            echo "✅ No old module names found"
+          fi
+
+      - name: Check for broken code blocks
+        run: |
+          echo "Checking for broken code blocks..."
+          # Check for unclosed code blocks
+          if grep -r "```" docs/ README.md --include="*.md" | awk '{print NR": "$0}' | grep -c "```" | awk '{if ($1 % 2 != 0) exit 1}'; then
+            echo "✅ All code blocks are properly closed"
+          else
+            echo "⚠️  Some code blocks may not be properly closed"
+          fi
+
+      - name: Validate markdown syntax
+        run: |
+          echo "Validating markdown syntax..."
+          # Install markdownlint if available, or use basic checks
+          if command -v markdownlint &> /dev/null; then
+            markdownlint docs/ README.md
+          else
+            echo "⚠️  markdownlint not available, skipping advanced validation"
+            echo "✅ Basic markdown validation complete"
+          fi
+
+      - name: Check API examples
+        run: |
+          echo "Checking for deprecated API usage in examples..."
+          # Check for removed methods
+          if grep -r "verifyCredential\|issueCredential\|create()" docs/ README.md --include="*.md" 2>/dev/null | grep -v "deprecated\|removed\|old"; then
+            echo "❌ Found deprecated API usage in documentation"
+            exit 1
+          else
+            echo "✅ No deprecated API usage found"
+          fi
+

@@ -1,6 +1,8 @@
 plugins {
     kotlin("jvm")
     // Note: trustweave.shared plugin removed - configuration now centralized in root build.gradle.kts
+    // JMH plugin - uncomment when ready to run benchmarks
+    // id("me.champeau.jmh") version "0.7.2"
 }
 
 dependencies {
@@ -31,6 +33,11 @@ dependencies {
     testImplementation(project(":kms:kms-core"))
     testImplementation(project(":credentials:credential-api"))
     testImplementation(project(":credentials:plugins:status-list:database"))  // StatusListRegistryFactory for tests
+    
+    // JMH for performance benchmarks (uncomment when JMH plugin is added)
+    // jmhImplementation(project(":testkit"))
+    // jmhImplementation(project(":credentials:credential-api"))
+    // jmhImplementation(libs.kotlinx.coroutines.core)
 }
 
 

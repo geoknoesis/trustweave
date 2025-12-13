@@ -27,24 +27,31 @@ fun IssuanceResult.getOrThrow(): VerifiableCredential {
     return when (this) {
         is IssuanceResult.Success -> credential
         is IssuanceResult.Failure.UnsupportedFormat -> {
+            val suggestion = if (supportedFormats.isNotEmpty()) {
+                " Use one of the supported formats: ${supportedFormats.joinToString(", ") { it.value }}"
+            } else {
+                " No credential formats are available. Configure credential format support in TrustWeave.build { credentials { ... } }"
+            }
             throw IllegalStateException(
-                "Unsupported credential format '${format.value}'. " +
-                "Supported formats: ${supportedFormats.joinToString { it.value }}"
+                "Unsupported credential format '${format.value}'.$suggestion"
             )
         }
         is IssuanceResult.Failure.AdapterNotReady -> {
             throw IllegalStateException(
-                "Credential service adapter not ready: ${reason ?: "Unknown reason"}"
+                "Credential service adapter not ready: ${reason ?: "Unknown reason"}. " +
+                "Ensure the credential service is properly initialized and configured."
             )
         }
         is IssuanceResult.Failure.InvalidRequest -> {
             throw IllegalStateException(
-                "Invalid issuance request: field '${field}' - ${reason}"
+                "Invalid issuance request: field '${field}' - ${reason}. " +
+                "Check that all required fields are provided and valid."
             )
         }
         is IssuanceResult.Failure.AdapterError -> {
             throw IllegalStateException(
-                "Credential service error: ${reason}"
+                "Credential service error: ${reason}. " +
+                "This may indicate an issue with the credential service configuration or implementation."
             )
         }
         is IssuanceResult.Failure.MultipleFailures -> {
@@ -87,21 +94,27 @@ fun VerificationResult.getOrThrow(): VerifiableCredential {
             )
         }
         is VerificationResult.Invalid.IssuerResolutionFailed -> {
+            val suggestion = " Ensure the issuer DID is valid and the DID method is properly configured. " +
+                "If using a custom DID method, ensure it's registered in TrustWeave.build { did { method(\"...\") } }"
             throw IllegalStateException(
                 "Failed to resolve issuer DID ${issuer.value}: ${reason}. " +
-                "Errors: ${errors.joinToString("; ")}"
+                "Errors: ${errors.joinToString("; ")}.$suggestion"
             )
         }
         is VerificationResult.Invalid.UntrustedIssuer -> {
+            val suggestion = " To trust this issuer, add it to the trust registry: " +
+                "trustWeave.trust { addAnchor(\"${issuer.value}\") { credentialTypes(\"${credentialType ?: "*"}\") } }"
             throw IllegalStateException(
                 "Issuer ${issuer.value} is not trusted${credentialType?.let { " for credential type '$it'" } ?: ""}. " +
-                "Errors: ${errors.joinToString("; ")}"
+                "Errors: ${errors.joinToString("; ")}. $suggestion"
             )
         }
         is VerificationResult.Invalid.SchemaValidationFailed -> {
+            val suggestion = " Ensure the credential schema is valid and matches the credential structure. " +
+                "You can skip schema validation using: verify { credential(cred); skipSchema() }"
             throw IllegalStateException(
                 "Schema validation failed: ${reason}. " +
-                "Errors: ${errors.joinToString("; ")}"
+                "Errors: ${errors.joinToString("; ")}.$suggestion"
             )
         }
         is VerificationResult.Invalid.MultipleFailures -> {
@@ -132,20 +145,35 @@ fun DidCreationResult.getOrThrow(): Pair<Did, DidDocument> {
     return when (this) {
         is DidCreationResult.Success -> did to document
         is DidCreationResult.Failure.MethodNotRegistered -> {
+            val suggestion = if (availableMethods.isNotEmpty()) {
+                " To fix this, register the DID method in TrustWeave.build { did { method(\"$method\") { ... } } } " +
+                "or use one of the available methods: ${availableMethods.joinToString(", ")}"
+            } else {
+                " No DID methods are registered. Configure at least one DID method in TrustWeave.build { did { method(\"key\") { ... } } }"
+            }
             throw IllegalStateException(
-                "DID method '${method}' is not registered. " +
-                "Available methods: ${availableMethods.joinToString()}"
+                "DID method '${method}' is not registered.$suggestion"
             )
         }
         is DidCreationResult.Failure.KeyGenerationFailed -> {
-            throw IllegalStateException("Key generation failed: ${reason}")
+            throw IllegalStateException(
+                "Key generation failed: ${reason}. " +
+                "This may indicate a KMS configuration issue. " +
+                "Ensure KMS is properly configured in TrustWeave.build { keys { provider(\"...\") } }"
+            )
         }
         is DidCreationResult.Failure.DocumentCreationFailed -> {
-            throw IllegalStateException("DID document creation failed: ${reason}")
+            throw IllegalStateException(
+                "DID document creation failed: ${reason}. " +
+                "This may indicate an issue with the DID method implementation or configuration."
+            )
         }
         is DidCreationResult.Failure.InvalidConfiguration -> {
-            val detailsStr = if (details.isEmpty()) "" else " Details: ${details}"
-            throw IllegalStateException("Invalid DID configuration: ${reason}.${detailsStr}")
+            val detailsStr = if (details.isEmpty()) "" else " Details: ${details.joinToString("; ")}"
+            val suggestion = " Check your DID method configuration in TrustWeave.build { did { method(\"...\") { ... } } }"
+            throw IllegalStateException(
+                "Invalid DID configuration: ${reason}.${detailsStr}${suggestion}"
+            )
         }
         is DidCreationResult.Failure.Other -> {
             throw IllegalStateException("DID creation failed: ${reason}", cause)
@@ -197,12 +225,14 @@ fun WalletCreationResult.getOrThrow(): Wallet {
         }
         is WalletCreationResult.Failure.FactoryNotConfigured -> {
             throw IllegalStateException(
-                "Wallet factory not configured: ${reason}"
+                "Wallet factory not configured: ${reason}. " +
+                "Configure a wallet factory in TrustWeave.build { wallet { factory(...) } }"
             )
         }
         is WalletCreationResult.Failure.StorageFailed -> {
             throw IllegalStateException(
-                "Wallet storage failed: ${reason}", cause
+                "Wallet storage failed: ${reason}. " +
+                "This may indicate an issue with the wallet storage backend or configuration.", cause
             )
         }
         is WalletCreationResult.Failure.Other -> {

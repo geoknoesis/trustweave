@@ -72,7 +72,14 @@ open class TrustWeaveException(
         val availablePlugins: List<String> = emptyList()
     ) : TrustWeaveException(
         code = "NO_PROVIDERS_FOUND",
-        message = "No providers found for plugin IDs: ${pluginIds.joinToString(", ")}",
+        message = buildString {
+            append("No providers found for plugin IDs: ${pluginIds.joinToString(", ")}")
+            if (availablePlugins.isNotEmpty()) {
+                append(". Available plugins: ${availablePlugins.joinToString(", ")}")
+            } else {
+                append(". No plugins are registered. Register plugins in TrustWeave.build { ... }")
+            }
+        },
         context = mapOf(
             "pluginIds" to pluginIds,
             "availablePlugins" to availablePlugins
@@ -99,7 +106,13 @@ open class TrustWeaveException(
         val lastException: Throwable? = null
     ) : TrustWeaveException(
         code = "ALL_PROVIDERS_FAILED",
-        message = "All providers in chain failed. Attempted: ${attemptedProviders.joinToString(", ")}",
+        message = buildString {
+            append("All providers in chain failed. Attempted: ${attemptedProviders.joinToString(", ")}")
+            if (providerErrors.isNotEmpty()) {
+                append(". Errors: ${providerErrors.entries.joinToString("; ") { "${it.key}: ${it.value}" }}")
+            }
+            append(" Check provider configurations and ensure all required dependencies are available.")
+        },
         context = mapOf(
             "attemptedProviders" to attemptedProviders,
             "providerErrors" to providerErrors

@@ -150,6 +150,7 @@ fun main() = runBlocking {
         )
         keys { provider("inMemory"); algorithm("Ed25519") }
         did { method("key") { algorithm("Ed25519") } }
+        credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
     }
     println("\n✅ TrustWeave initialized")
 
@@ -248,36 +249,43 @@ fun main() = runBlocking {
     val verifierKeyId = verifierDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val complianceCredential = TrustWeave.issueCredential(
-        issuerDid = verifierDid.value,
-        issuerKeyId = verifierKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", "eudr-compliance-2024-001")
-            put("complianceType", "EUDR")
-            put("farm", buildJsonObject {
-                put("id", farmDid.value)
-                put("name", "Sustainable Coffee Farm")
-                put("location", buildJsonObject {
-                    put("latitude", -3.4653)
-                    put("longitude", -62.2159)
-                    put("country", "Brazil")
-                })
-            })
-            put("eoEvidence", eoDeforestationProof)
-            put("eoEvidenceDigest", eoProofDigest)
-            put("complianceStatus", "compliant")
-            put("verificationDate", Instant.now().toString())
-            put("validUntil", Instant.now().plus(365, java.time.temporal.ChronoUnit.DAYS).toString())
-            put("verifier", verifierDid.value)
-        },
-        types = listOf("VerifiableCredential", "EUDRComplianceCredential")
-    ).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to issue compliance credential: ${error.message}")
+    val complianceCredentialResult = trustWeave.issue {
+        credential {
+            id("eudr-compliance-2024-001")
+            type("VerifiableCredential", "EUDRComplianceCredential")
+            issuer(verifierDid.value)
+            subject {
+                id("eudr-compliance-2024-001")
+                "complianceType" to "EUDR"
+                "farm" {
+                    "id" to farmDid.value
+                    "name" to "Sustainable Coffee Farm"
+                    "location" {
+                        "latitude" to -3.4653
+                        "longitude" to -62.2159
+                        "country" to "Brazil"
+                    }
+                }
+                "eoEvidence" to eoDeforestationProof
+                "eoEvidenceDigest" to eoProofDigest
+                "complianceStatus" to "compliant"
+                "verificationDate" to Instant.now().toString()
+                "validUntil" to Instant.now().plus(365, java.time.temporal.ChronoUnit.DAYS).toString()
+                "verifier" to verifierDid.value
+            }
+            issued(Instant.now())
+            expires(365, java.time.temporal.ChronoUnit.DAYS)
+        }
+        signedBy(issuerDid = verifierDid.value, keyId = verifierKeyId)
+    }
+    
+    val complianceCredential = when (complianceCredentialResult) {
+        is IssuanceResult.Success -> complianceCredentialResult.credential
+        else -> {
+            println("❌ Failed to issue compliance credential: ${complianceCredentialResult.allErrors.joinToString()}")
             return@runBlocking
         }
-    )
+    }
 
     println("✅ Compliance Credential issued: ${complianceCredential.id}")
     println("   Status: compliant")
@@ -292,64 +300,74 @@ fun main() = runBlocking {
     val exporterKeyId = exporterDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val dppCredential = TrustWeave.issueCredential(
-        issuerDid = exporterDid.value,
-        issuerKeyId = exporterKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", "dpp-coffee-shipment-2024-001")
-            put("productType", "Coffee")
-            put("commodity", "Coffee Beans")
-            put("quantity", 10000.0)  // kg
-            put("unit", "kg")
-            put("farm", farmDid.value)
-            put("complianceCredentialId", complianceCredential.id)
-            put("eoEvidenceDigest", eoProofDigest)
-            put("harvestDate", "2024-06-15")
-            put("exportDate", Instant.now().toString())
-            put("exporter", exporterDid.value)
-            put("destination", "EU")
-        },
-        types = listOf("VerifiableCredential", "DigitalProductPassport", "EUDRProductCredential")
-    ).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to issue DPP: ${error.message}")
+    val dppCredentialResult = trustWeave.issue {
+        credential {
+            id("dpp-coffee-shipment-2024-001")
+            type("VerifiableCredential", "DigitalProductPassport", "EUDRProductCredential")
+            issuer(exporterDid.value)
+            subject {
+                id("dpp-coffee-shipment-2024-001")
+                "productType" to "Coffee"
+                "commodity" to "Coffee Beans"
+                "quantity" to 10000.0  // kg
+                "unit" to "kg"
+                "farm" to farmDid.value
+                "complianceCredentialId" to complianceCredential.id
+                "eoEvidenceDigest" to eoProofDigest
+                "harvestDate" to "2024-06-15"
+                "exportDate" to Instant.now().toString()
+                "exporter" to exporterDid.value
+                "destination" to "EU"
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = exporterDid.value, keyId = exporterKeyId)
+    }
+    
+    val dppCredential = when (dppCredentialResult) {
+        is IssuanceResult.Success -> dppCredentialResult.credential
+        else -> {
+            println("❌ Failed to issue DPP: ${dppCredentialResult.allErrors.joinToString()}")
             return@runBlocking
         }
-    )
+    }
 
     println("✅ Digital Product Passport issued: ${dppCredential.id}")
     println("   Product: Coffee Beans")
     println("   Quantity: 10,000 kg")
 
     // Step 7: Importer verifies compliance before import
-    val dppVerification = TrustWeave.verifyCredential(dppCredential).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ DPP verification failed: ${error.message}")
+    import com.trustweave.trust.types.VerificationResult
+    
+    val dppVerification = trustWeave.verify {
+        credential(dppCredential)
+    }
+
+    when (dppVerification) {
+        is VerificationResult.Invalid -> {
+            println("❌ DPP verification failed: ${dppVerification.allErrors.joinToString()}")
             return@runBlocking
         }
-    )
-
-    if (!dppVerification.valid) {
-        println("❌ DPP verification failed: ${dppVerification.errors}")
-        return@runBlocking
+        is VerificationResult.Valid -> {
+            // Continue processing
+        }
     }
 
     println("✅ DPP verified")
 
     // Step 8: Verify compliance credential
-    val complianceVerification = TrustWeave.verifyCredential(complianceCredential).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Compliance verification failed: ${error.message}")
+    val complianceVerification = trustWeave.verify {
+        credential(complianceCredential)
+    }
+
+    when (complianceVerification) {
+        is VerificationResult.Invalid -> {
+            println("❌ Compliance verification failed: ${complianceVerification.allErrors.joinToString()}")
             return@runBlocking
         }
-    )
-
-    if (!complianceVerification.valid) {
-        println("❌ Compliance verification failed: ${complianceVerification.errors}")
-        return@runBlocking
+        is VerificationResult.Valid -> {
+            // Continue processing
+        }
     }
 
     println("✅ Compliance verified")
@@ -469,12 +487,21 @@ Enable automated verification:
 
 ```kotlin
 suspend fun automatedEUDRVerification(
+    trustWeave: TrustWeave,
     dppCredential: VerifiableCredential
 ): ComplianceResult {
     // Verify DPP credential
-    val dppVerification = TrustWeave.verifyCredential(dppCredential).getOrThrow()
-    if (!dppVerification.valid) {
-        return ComplianceResult.NonCompliant("DPP verification failed")
+    val dppVerification = trustWeave.verify {
+        credential(dppCredential)
+    }
+    
+    when (dppVerification) {
+        is VerificationResult.Invalid -> {
+            return ComplianceResult.NonCompliant("DPP verification failed: ${dppVerification.allErrors.joinToString()}")
+        }
+        is VerificationResult.Valid -> {
+            // Continue
+        }
     }
 
     // Extract compliance credential ID
@@ -482,16 +509,29 @@ suspend fun automatedEUDRVerification(
 
     // Verify compliance credential
     val complianceCredential = fetchCredential(complianceCredentialId)
-    val complianceVerification = TrustWeave.verifyCredential(complianceCredential).getOrThrow()
-    if (!complianceVerification.valid) {
-        return ComplianceResult.NonCompliant("Compliance verification failed")
+    val complianceVerification = trustWeave.verify {
+        credential(complianceCredential)
+    }
+    
+    when (complianceVerification) {
+        is VerificationResult.Invalid -> {
+            return ComplianceResult.NonCompliant("Compliance verification failed: ${complianceVerification.allErrors.joinToString()}")
+        }
+        is VerificationResult.Valid -> {
+            // Continue
+        }
     }
 
     // Verify EO evidence
     val eoEvidence = extractEOEvidence(complianceCredential)
     val eoVerification = verifyEOEvidence(eoEvidence)
-    if (!eoVerification.valid) {
-        return ComplianceResult.NonCompliant("EO evidence verification failed")
+    when (eoVerification) {
+        is VerificationResult.Invalid -> {
+            return ComplianceResult.NonCompliant("EO evidence verification failed: ${eoVerification.allErrors.joinToString()}")
+        }
+        is VerificationResult.Valid -> {
+            // Continue
+        }
     }
 
     // Check against Climate TRACE

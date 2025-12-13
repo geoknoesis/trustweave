@@ -151,6 +151,7 @@ fun main() = runBlocking {
         )
         keys { provider("inMemory"); algorithm("Ed25519") }
         did { method("key") { algorithm("Ed25519") } }
+        credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
     }
     println("\n✅ TrustWeave initialized")
 
@@ -235,27 +236,33 @@ fun main() = runBlocking {
     val verifierKeyId = verifierDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val verificationCredential = TrustWeave.issueCredential(
-        issuerDid = verifierDid.value,
-        issuerKeyId = verifierKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", "verification-forest-2024")
-            put("verificationType", "CarbonSequestration")
-            put("eoEvidence", eoEvidence)
-            put("eoEvidenceDigest", eoEvidenceDigest)
-            put("verifiedAmount", 5000.0)  // tons CO2
-            put("verificationDate", Instant.now().toString())
-            put("verifier", verifierDid.id)
-            put("status", "verified")
-        },
-        types = listOf("VerifiableCredential", "CarbonVerificationCredential")
-    ).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to issue verification credential: ${error.message}")
+    val verificationCredentialResult = trustWeave.issue {
+        credential {
+            id("verification-forest-2024")
+            type("VerifiableCredential", "CarbonVerificationCredential")
+            issuer(verifierDid.value)
+            subject {
+                id("verification-forest-2024")
+                "verificationType" to "CarbonSequestration"
+                "eoEvidence" to eoEvidence
+                "eoEvidenceDigest" to eoEvidenceDigest
+                "verifiedAmount" to 5000.0  // tons CO2
+                "verificationDate" to Instant.now().toString()
+                "verifier" to verifierDid.value
+                "status" to "verified"
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = verifierDid.value, keyId = verifierKeyId)
+    }
+    
+    val verificationCredential = when (verificationCredentialResult) {
+        is IssuanceResult.Success -> verificationCredentialResult.credential
+        else -> {
+            println("❌ Failed to issue verification credential: ${verificationCredentialResult.allErrors.joinToString()}")
             return@runBlocking
         }
-    )
+    }
 
     println("✅ Verification Credential issued: ${verificationCredential.id}")
 
@@ -268,33 +275,39 @@ fun main() = runBlocking {
     val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val carbonCredit = TrustWeave.issueCredential(
-        issuerDid = issuerDid.value,
-        issuerKeyId = issuerKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", "carbon-credit-CC-2024-001")
-            put("creditType", "ForestCarbonSequestration")
-            put("amount", 5000.0)  // tons CO2
-            put("unit", "tCO2e")
-            put("verificationCredentialId", verificationCredential.id)
-            put("eoEvidenceDigest", eoEvidenceDigest)
-            put("issuanceDate", Instant.now().toString())
-            put("vintage", "2024")
-            put("status", "issued")  // issued → sold → retired
-            put("projectId", "PROJ-12345")
-            put("location", buildJsonObject {
-                put("latitude", 45.5017)
-                put("longitude", -73.5673)
-            })
-        },
-        types = listOf("VerifiableCredential", "CarbonCreditCredential")
-    ).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to issue carbon credit: ${error.message}")
+    val carbonCreditResult = trustWeave.issue {
+        credential {
+            id("carbon-credit-CC-2024-001")
+            type("VerifiableCredential", "CarbonCreditCredential")
+            issuer(issuerDid.value)
+            subject {
+                id("carbon-credit-CC-2024-001")
+                "creditType" to "ForestCarbonSequestration"
+                "amount" to 5000.0  // tons CO2
+                "unit" to "tCO2e"
+                "verificationCredentialId" to verificationCredential.id
+                "eoEvidenceDigest" to eoEvidenceDigest
+                "issuanceDate" to Instant.now().toString()
+                "vintage" to "2024"
+                "status" to "issued"  // issued → sold → retired
+                "projectId" to "PROJ-12345"
+                "location" {
+                    "latitude" to 45.5017
+                    "longitude" to -73.5673
+                }
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+    }
+    
+    val carbonCredit = when (carbonCreditResult) {
+        is IssuanceResult.Success -> carbonCreditResult.credential
+        else -> {
+            println("❌ Failed to issue carbon credit: ${carbonCreditResult.allErrors.joinToString()}")
             return@runBlocking
         }
-    )
+    }
 
     println("✅ Carbon Credit issued: ${carbonCredit.id}")
     println("   Amount: 5000 tCO2e")
@@ -319,32 +332,38 @@ fun main() = runBlocking {
     // Step 7: Track credit sale (update status)
     if (anchorResult != null) {
         // Create sale credential
-        val saleCredential = TrustWeave.issueCredential(
-            issuerDid = issuerDid.value,
-            issuerKeyId = issuerKeyId,
-            credentialSubject = buildJsonObject {
-                put("id", "sale-CC-2024-001")
-                put("creditId", carbonCredit.id)
-                put("buyer", buyerDid.value)
-                put("saleDate", Instant.now().toString())
-                put("price", 50.0)  // $50 per ton
-                put("totalAmount", 250000.0)  // $250,000
-                put("currency", "USD")
-                put("previousStatus", "issued")
-                put("newStatus", "sold")
-                put("anchorRef", buildJsonObject {
-                    put("chainId", anchorResult.ref.chainId)
-                    put("txHash", anchorResult.ref.txHash)
-                })
-            },
-            types = listOf("VerifiableCredential", "CarbonCreditSaleCredential")
-        ).fold(
-            onSuccess = { it },
-            onFailure = { error ->
-                println("❌ Failed to issue sale credential: ${error.message}")
+        val saleCredentialResult = trustWeave.issue {
+            credential {
+                id("sale-CC-2024-001")
+                type("VerifiableCredential", "CarbonCreditSaleCredential")
+                issuer(issuerDid.value)
+                subject {
+                    id("sale-CC-2024-001")
+                    "creditId" to carbonCredit.id
+                    "buyer" to buyerDid.value
+                    "saleDate" to Instant.now().toString()
+                    "price" to 50.0  // $50 per ton
+                    "totalAmount" to 250000.0  // $250,000
+                    "currency" to "USD"
+                    "previousStatus" to "issued"
+                    "newStatus" to "sold"
+                    "anchorRef" {
+                        "chainId" to anchorResult.ref.chainId
+                        "txHash" to anchorResult.ref.txHash
+                    }
+                }
+                issued(Instant.now())
+            }
+            signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+        }
+        
+        val saleCredential = when (saleCredentialResult) {
+            is IssuanceResult.Success -> saleCredentialResult.credential
+            else -> {
+                println("❌ Failed to issue sale credential: ${saleCredentialResult.allErrors.joinToString()}")
                 return@runBlocking
             }
-        )
+        }
 
         println("✅ Sale Credential issued: ${saleCredential.id}")
         println("   Buyer: ${buyerDid.id}")
@@ -367,29 +386,35 @@ fun main() = runBlocking {
         val buyerKeyId = buyerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
             ?: throw IllegalStateException("No verification method found")
 
-        val retirementCredential = TrustWeave.issueCredential(
-            issuerDid = buyerDid.value,
-            issuerKeyId = buyerKeyId,
-            credentialSubject = buildJsonObject {
-                put("id", "retirement-CC-2024-001")
-                put("creditId", carbonCredit.id)
-                put("retirementDate", Instant.now().toString())
-                put("retirementReason", "CarbonOffset")
-                put("previousStatus", "sold")
-                put("newStatus", "retired")
-                put("anchorRef", buildJsonObject {
-                    put("chainId", anchorResult.ref.chainId)
-                    put("txHash", anchorResult.ref.txHash)
-                })
-            },
-            types = listOf("VerifiableCredential", "CarbonCreditRetirementCredential")
-        ).fold(
-            onSuccess = { it },
-            onFailure = { error ->
-                println("❌ Failed to issue retirement credential: ${error.message}")
+        val retirementCredentialResult = trustWeave.issue {
+            credential {
+                id("retirement-CC-2024-001")
+                type("VerifiableCredential", "CarbonCreditRetirementCredential")
+                issuer(buyerDid.value)
+                subject {
+                    id("retirement-CC-2024-001")
+                    "creditId" to carbonCredit.id
+                    "retirementDate" to Instant.now().toString()
+                    "retirementReason" to "CarbonOffset"
+                    "previousStatus" to "sold"
+                    "newStatus" to "retired"
+                    "anchorRef" {
+                        "chainId" to anchorResult.ref.chainId
+                        "txHash" to anchorResult.ref.txHash
+                    }
+                }
+                issued(Instant.now())
+            }
+            signedBy(issuerDid = buyerDid.value, keyId = buyerKeyId)
+        }
+        
+        val retirementCredential = when (retirementCredentialResult) {
+            is IssuanceResult.Success -> retirementCredentialResult.credential
+            else -> {
+                println("❌ Failed to issue retirement credential: ${retirementCredentialResult.allErrors.joinToString()}")
                 return@runBlocking
             }
-        )
+        }
 
         println("✅ Retirement Credential issued: ${retirementCredential.id}")
         println("   Status: retired")

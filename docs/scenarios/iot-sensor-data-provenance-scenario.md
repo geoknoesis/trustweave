@@ -164,8 +164,7 @@ import com.trustweave.credential.wallet.Wallet
 import com.trustweave.json.DigestUtils
 import com.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import com.trustweave.credential.format.ProofSuiteId
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Base64
@@ -176,7 +175,11 @@ fun main() = runBlocking {
     println("=".repeat(70))
 
     // Step 1: Create TrustWeave instance
-    val TrustWeave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+        credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
+    }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for sensor manufacturer, sensors, and data consumer
@@ -237,66 +240,84 @@ fun main() = runBlocking {
     println("✅ Data Consumer DID: ${dataConsumerDid.value}")
 
     // Step 3: Issue sensor attestation credential for temperature sensor
-    val temperatureSensorAttestation = TrustWeave.issueCredential(
-        issuerDid = manufacturerDid.value,
-        issuerKeyId = manufacturerKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", temperatureSensorDid.value)
-            put("sensor", buildJsonObject {
-                put("sensorType", "Temperature")
-                put("model", "TempSense-Pro-2024")
-                put("serialNumber", "TS-2024-001234")
-                put("manufacturer", manufacturerDid.value)
-                put("calibration", buildJsonObject {
-                    put("calibrated", true)
-                    put("calibrationDate", Instant.now().minus(30, ChronoUnit.DAYS).toString())
-                    put("calibrationExpiry", Instant.now().plus(330, ChronoUnit.DAYS).toString())
-                    put("calibrationStandard", "NIST")
-                    put("accuracy", "±0.1°C")
-                    put("range", "-40°C to +85°C")
-                })
-                put("capabilities", buildJsonObject {
-                    put("measurementInterval", "1 second")
-                    put("resolution", "0.01°C")
-                    put("dataFormat", "JSON")
-                })
-            })
-        },
-        types = listOf("VerifiableCredential", "SensorAttestationCredential", "IoTDeviceCredential"),
-        expirationDate = null // Sensor attestation doesn't expire
-    ).getOrThrow()
+    import com.trustweave.trust.types.IssuanceResult
+    
+    val temperatureSensorAttestationResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "SensorAttestationCredential", "IoTDeviceCredential")
+            issuer(manufacturerDid.value)
+            subject {
+                id(temperatureSensorDid.value)
+                "sensor" {
+                    "sensorType" to "Temperature"
+                    "model" to "TempSense-Pro-2024"
+                    "serialNumber" to "TS-2024-001234"
+                    "manufacturer" to manufacturerDid.value
+                    "calibration" {
+                        "calibrated" to true
+                        "calibrationDate" to Instant.now().minus(30, ChronoUnit.DAYS).toString()
+                        "calibrationExpiry" to Instant.now().plus(330, ChronoUnit.DAYS).toString()
+                        "calibrationStandard" to "NIST"
+                        "accuracy" to "±0.1°C"
+                        "range" to "-40°C to +85°C"
+                    }
+                    "capabilities" {
+                        "measurementInterval" to "1 second"
+                        "resolution" to "0.01°C"
+                        "dataFormat" to "JSON"
+                    }
+                }
+            }
+            issued(Instant.now())
+            // Sensor attestation doesn't expire - no expires() call
+        }
+        signedBy(issuerDid = manufacturerDid.value, keyId = manufacturerKeyId)
+    }
+    
+    val temperatureSensorAttestation = when (temperatureSensorAttestationResult) {
+        is IssuanceResult.Success -> temperatureSensorAttestationResult.credential
+        else -> throw IllegalStateException("Failed to issue temperature sensor attestation")
+    }
 
     println("\n✅ Temperature sensor attestation credential issued: ${temperatureSensorAttestation.id}")
 
     // Step 4: Issue sensor attestation credential for humidity sensor
-    val humiditySensorAttestation = TrustWeave.issueCredential(
-        issuerDid = manufacturerDid.value,
-        issuerKeyId = manufacturerKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", humiditySensorDid.value)
-            put("sensor", buildJsonObject {
-                put("sensorType", "Humidity")
-                put("model", "HumidSense-Pro-2024")
-                put("serialNumber", "HS-2024-005678")
-                put("manufacturer", manufacturerDid.value)
-                put("calibration", buildJsonObject {
-                    put("calibrated", true)
-                    put("calibrationDate", Instant.now().minus(60, ChronoUnit.DAYS).toString())
-                    put("calibrationExpiry", Instant.now().plus(300, ChronoUnit.DAYS).toString())
-                    put("calibrationStandard", "NIST")
-                    put("accuracy", "±2% RH")
-                    put("range", "0% to 100% RH")
-                })
-                put("capabilities", buildJsonObject {
-                    put("measurementInterval", "1 second")
-                    put("resolution", "0.1% RH")
-                    put("dataFormat", "JSON")
-                })
-            })
-        },
-        types = listOf("VerifiableCredential", "SensorAttestationCredential", "IoTDeviceCredential"),
-        expirationDate = null
-    ).getOrThrow()
+    val humiditySensorAttestationResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "SensorAttestationCredential", "IoTDeviceCredential")
+            issuer(manufacturerDid.value)
+            subject {
+                id(humiditySensorDid.value)
+                "sensor" {
+                    "sensorType" to "Humidity"
+                    "model" to "HumidSense-Pro-2024"
+                    "serialNumber" to "HS-2024-005678"
+                    "manufacturer" to manufacturerDid.value
+                    "calibration" {
+                        "calibrated" to true
+                        "calibrationDate" to Instant.now().minus(60, ChronoUnit.DAYS).toString()
+                        "calibrationExpiry" to Instant.now().plus(300, ChronoUnit.DAYS).toString()
+                        "calibrationStandard" to "NIST"
+                        "accuracy" to "±2% RH"
+                        "range" to "0% to 100% RH"
+                    }
+                    "capabilities" {
+                        "measurementInterval" to "1 second"
+                        "resolution" to "0.1% RH"
+                        "dataFormat" to "JSON"
+                    }
+                }
+            }
+            issued(Instant.now())
+            // Sensor attestation doesn't expire - no expires() call
+        }
+        signedBy(issuerDid = manufacturerDid.value, keyId = manufacturerKeyId)
+    }
+    
+    val humiditySensorAttestation = when (humiditySensorAttestationResult) {
+        is IssuanceResult.Success -> humiditySensorAttestationResult.credential
+        else -> throw IllegalStateException("Failed to issue humidity sensor attestation")
+    }
 
     println("✅ Humidity sensor attestation credential issued: ${humiditySensorAttestation.id}")
 
@@ -349,53 +370,69 @@ fun main() = runBlocking {
     // Note: In production, sensors would sign these with their own keys
     // For this example, we'll use the manufacturer's key to simulate sensor signing
 
-    val temperatureDataAttestation = TrustWeave.issueCredential(
-        issuerDid = temperatureSensorDid.value,
-        issuerKeyId = temperatureSensorKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", "data:temperature:${Instant.now().toEpochMilli()}")
-            put("sensorData", buildJsonObject {
-                put("sensorId", temperatureSensorDid.value)
-                put("dataDigest", temperatureDataDigest)
-                put("dataType", "Temperature")
-                put("timestamp", Instant.now().toString())
-                put("calibrationStatus", "Valid")
-                put("sensorHealth", "Good")
-                put("dataQuality", buildJsonObject {
-                    put("signalStrength", "Strong")
-                    put("noiseLevel", "Low")
-                    put("confidence", 0.98)
-                })
-            })
-        },
-        types = listOf("VerifiableCredential", "SensorDataAttestationCredential", "DataProvenanceCredential"),
-        expirationDate = null // Data attestation doesn't expire
-    ).getOrThrow()
+    val temperatureDataAttestationResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "SensorDataAttestationCredential", "DataProvenanceCredential")
+            issuer(temperatureSensorDid.value)
+            subject {
+                id("data:temperature:${Instant.now().toEpochMilli()}")
+                "sensorData" {
+                    "sensorId" to temperatureSensorDid.value
+                    "dataDigest" to temperatureDataDigest
+                    "dataType" to "Temperature"
+                    "timestamp" to Instant.now().toString()
+                    "calibrationStatus" to "Valid"
+                    "sensorHealth" to "Good"
+                    "dataQuality" {
+                        "signalStrength" to "Strong"
+                        "noiseLevel" to "Low"
+                        "confidence" to 0.98
+                    }
+                }
+            }
+            issued(Instant.now())
+            // Data attestation doesn't expire - no expires() call
+        }
+        signedBy(issuerDid = temperatureSensorDid.value, keyId = temperatureSensorKeyId)
+    }
+    
+    val temperatureDataAttestation = when (temperatureDataAttestationResult) {
+        is IssuanceResult.Success -> temperatureDataAttestationResult.credential
+        else -> throw IllegalStateException("Failed to issue temperature data attestation")
+    }
 
     println("\n✅ Temperature data attestation credential issued: ${temperatureDataAttestation.id}")
 
-    val humidityDataAttestation = TrustWeave.issueCredential(
-        issuerDid = humiditySensorDid.value,
-        issuerKeyId = humiditySensorKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", "data:humidity:${Instant.now().toEpochMilli()}")
-            put("sensorData", buildJsonObject {
-                put("sensorId", humiditySensorDid.value)
-                put("dataDigest", humidityDataDigest)
-                put("dataType", "Humidity")
-                put("timestamp", Instant.now().toString())
-                put("calibrationStatus", "Valid")
-                put("sensorHealth", "Good")
-                put("dataQuality", buildJsonObject {
-                    put("signalStrength", "Strong")
-                    put("noiseLevel", "Low")
-                    put("confidence", 0.95)
-                })
-            })
-        },
-        types = listOf("VerifiableCredential", "SensorDataAttestationCredential", "DataProvenanceCredential"),
-        expirationDate = null
-    ).getOrThrow()
+    val humidityDataAttestationResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "SensorDataAttestationCredential", "DataProvenanceCredential")
+            issuer(humiditySensorDid.value)
+            subject {
+                id("data:humidity:${Instant.now().toEpochMilli()}")
+                "sensorData" {
+                    "sensorId" to humiditySensorDid.value
+                    "dataDigest" to humidityDataDigest
+                    "dataType" to "Humidity"
+                    "timestamp" to Instant.now().toString()
+                    "calibrationStatus" to "Valid"
+                    "sensorHealth" to "Good"
+                    "dataQuality" {
+                        "signalStrength" to "Strong"
+                        "noiseLevel" to "Low"
+                        "confidence" to 0.95
+                    }
+                }
+            }
+            issued(Instant.now())
+            // Data attestation doesn't expire - no expires() call
+        }
+        signedBy(issuerDid = humiditySensorDid.value, keyId = humiditySensorKeyId)
+    }
+    
+    val humidityDataAttestation = when (humidityDataAttestationResult) {
+        is IssuanceResult.Success -> humidityDataAttestationResult.credential
+        else -> throw IllegalStateException("Failed to issue humidity data attestation")
+    }
 
     println("✅ Humidity data attestation credential issued: ${humidityDataAttestation.id}")
 
@@ -439,9 +476,14 @@ fun main() = runBlocking {
     // Step 9: Data consumer verification - Sensor attestation
     println("\n🔍 Data Consumer Verification - Sensor Attestation:")
 
-    val tempSensorVerification = TrustWeave.verifyCredential(temperatureSensorAttestation).getOrThrow()
+    import com.trustweave.trust.types.VerificationResult
+    
+    val tempSensorVerification = trustWeave.verify {
+        credential(temperatureSensorAttestation)
+    }
 
-    if (tempSensorVerification.valid) {
+    when (tempSensorVerification) {
+        is VerificationResult.Valid -> {
         val credentialSubject = temperatureSensorAttestation.credentialSubject
         val sensor = credentialSubject.jsonObject["sensor"]?.jsonObject
         val sensorType = sensor?.get("sensorType")?.jsonPrimitive?.content
@@ -469,9 +511,12 @@ fun main() = runBlocking {
     // Step 10: Data consumer verification - Data integrity
     println("\n🔍 Data Consumer Verification - Data Integrity:")
 
-    val tempDataVerification = TrustWeave.verifyCredential(temperatureDataAttestation).getOrThrow()
+    val tempDataVerification = trustWeave.verify {
+        credential(temperatureDataAttestation)
+    }
 
-    if (tempDataVerification.valid) {
+    when (tempDataVerification) {
+        is VerificationResult.Valid -> {
         val credentialSubject = temperatureDataAttestation.credentialSubject
         val sensorData = credentialSubject.jsonObject["sensorData"]?.jsonObject
         val dataDigest = sensorData?.get("dataDigest")?.jsonPrimitive?.content
@@ -505,7 +550,7 @@ fun main() = runBlocking {
     // Step 11: Complete data provenance verification workflow
     println("\n🔍 Complete Data Provenance Verification Workflow:")
 
-    val sensorAttestationValid = TrustWeave.verifyCredential(temperatureSensorAttestation).getOrThrow().valid
+    val sensorAttestationValid = trustWeave.verify { credential(temperatureSensorAttestation) } is VerificationResult.Valid
     val dataAttestationValid = TrustWeave.verifyCredential(temperatureDataAttestation).getOrThrow().valid
 
     if (sensorAttestationValid && dataAttestationValid) {

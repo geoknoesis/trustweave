@@ -161,8 +161,7 @@ import com.trustweave.credential.PresentationOptions
 import com.trustweave.credential.wallet.Wallet
 import com.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import com.trustweave.credential.format.ProofSuiteId
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -172,7 +171,11 @@ fun main() = runBlocking {
     println("=".repeat(70))
 
     // Step 1: Create TrustWeave instance
-    val TrustWeave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+        credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
+    }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for training providers, professionals, and employers
@@ -240,114 +243,140 @@ fun main() = runBlocking {
     println("✅ Employer DID: ${employerDid.value}")
 
     // Step 3: Issue CISSP certification credential
-    val cisspCredential = TrustWeave.issueCredential(
-        issuerDid = isc2Did.value,
-        issuerKeyId = isc2KeyId,
-        credentialSubject = buildJsonObject {
-            put("id", professionalDid.value)
-            put("certification", buildJsonObject {
-                put("certificationName", "CISSP")
-                put("certificationFullName", "Certified Information Systems Security Professional")
-                put("certificationBody", "(ISC)²")
-                put("certificationNumber", "CISSP-123456")
-                put("issueDate", Instant.now().minus(365, ChronoUnit.DAYS).toString())
-                put("expirationDate", Instant.now().plus(2, ChronoUnit.YEARS).toString())
-                put("validUntil", Instant.now().plus(2, ChronoUnit.YEARS).toString())
-                put("status", "Active")
-                put("domains", listOf(
-                    "Security and Risk Management",
-                    "Asset Security",
-                    "Security Architecture and Engineering",
-                    "Communication and Network Security",
-                    "Identity and Access Management",
-                    "Security Assessment and Testing",
-                    "Security Operations",
-                    "Software Development Security"
-                ))
-                put("continuingEducation", buildJsonObject {
-                    put("required", true)
-                    put("creditsRequired", 40)
-                    put("creditsEarned", 15)
-                    put("renewalPeriod", "3 years")
-                })
-            })
-        },
-        types = listOf("VerifiableCredential", "CertificationCredential", "SecurityCertification"),
-        expirationDate = Instant.now().plus(2, ChronoUnit.YEARS).toString()
-    ).getOrThrow()
+    import com.trustweave.trust.types.IssuanceResult
+    
+    val cisspCredentialResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "CertificationCredential", "SecurityCertification")
+            issuer(isc2Did.value)
+            subject {
+                id(professionalDid.value)
+                "certification" {
+                    "certificationName" to "CISSP"
+                    "certificationFullName" to "Certified Information Systems Security Professional"
+                    "certificationBody" to "(ISC)²"
+                    "certificationNumber" to "CISSP-123456"
+                    "issueDate" to Instant.now().minus(365, ChronoUnit.DAYS).toString()
+                    "expirationDate" to Instant.now().plus(2, ChronoUnit.YEARS).toString()
+                    "validUntil" to Instant.now().plus(2, ChronoUnit.YEARS).toString()
+                    "status" to "Active"
+                    "domains" to listOf(
+                        "Security and Risk Management",
+                        "Asset Security",
+                        "Security Architecture and Engineering",
+                        "Communication and Network Security",
+                        "Identity and Access Management",
+                        "Security Assessment and Testing",
+                        "Security Operations",
+                        "Software Development Security"
+                    )
+                    "continuingEducation" {
+                        "required" to true
+                        "creditsRequired" to 40
+                        "creditsEarned" to 15
+                        "renewalPeriod" to "3 years"
+                    }
+                }
+            }
+            issued(Instant.now().minus(365, ChronoUnit.DAYS))
+            expires(Instant.now().plus(2, ChronoUnit.YEARS))
+        }
+        signedBy(issuerDid = isc2Did.value, keyId = isc2KeyId)
+    }
+    
+    val cisspCredential = when (cisspCredentialResult) {
+        is IssuanceResult.Success -> cisspCredentialResult.credential
+        else -> throw IllegalStateException("Failed to issue CISSP credential")
+    }
 
     println("\n✅ CISSP certification credential issued: ${cisspCredential.id}")
 
     // Step 4: Issue CEH certification credential
-    val cehCredential = TrustWeave.issueCredential(
-        issuerDid = ecCouncilDid.value,
-        issuerKeyId = ecCouncilKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", professionalDid.value)
-            put("certification", buildJsonObject {
-                put("certificationName", "CEH")
-                put("certificationFullName", "Certified Ethical Hacker")
-                put("certificationBody", "EC-Council")
-                put("certificationNumber", "CEH-789012")
-                put("issueDate", Instant.now().minus(180, ChronoUnit.DAYS).toString())
-                put("expirationDate", Instant.now().plus(3, ChronoUnit.YEARS).toString())
-                put("validUntil", Instant.now().plus(3, ChronoUnit.YEARS).toString())
-                put("status", "Active")
-                put("domains", listOf(
-                    "Introduction to Ethical Hacking",
-                    "Footprinting and Reconnaissance",
-                    "Scanning Networks",
-                    "Enumeration",
-                    "Vulnerability Analysis",
-                    "System Hacking",
-                    "Malware Threats",
-                    "Sniffing",
-                    "Social Engineering",
-                    "Denial of Service",
-                    "Session Hijacking",
-                    "Evading IDS, Firewalls, and Honeypots",
-                    "Hacking Web Servers",
-                    "Hacking Web Applications",
-                    "SQL Injection",
-                    "Hacking Wireless Networks",
-                    "Hacking Mobile Platforms",
-                    "IoT Hacking",
-                    "Cloud Computing",
-                    "Cryptography"
-                ))
-            })
-        },
-        types = listOf("VerifiableCredential", "CertificationCredential", "SecurityCertification"),
-        expirationDate = Instant.now().plus(3, ChronoUnit.YEARS).toString()
-    ).getOrThrow()
+    val cehCredentialResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "CertificationCredential", "SecurityCertification")
+            issuer(ecCouncilDid.value)
+            subject {
+                id(professionalDid.value)
+                "certification" {
+                    "certificationName" to "CEH"
+                    "certificationFullName" to "Certified Ethical Hacker"
+                    "certificationBody" to "EC-Council"
+                    "certificationNumber" to "CEH-789012"
+                    "issueDate" to Instant.now().minus(180, ChronoUnit.DAYS).toString()
+                    "expirationDate" to Instant.now().plus(3, ChronoUnit.YEARS).toString()
+                    "validUntil" to Instant.now().plus(3, ChronoUnit.YEARS).toString()
+                    "status" to "Active"
+                    "domains" to listOf(
+                        "Introduction to Ethical Hacking",
+                        "Footprinting and Reconnaissance",
+                        "Scanning Networks",
+                        "Enumeration",
+                        "Vulnerability Analysis",
+                        "System Hacking",
+                        "Malware Threats",
+                        "Sniffing",
+                        "Social Engineering",
+                        "Denial of Service",
+                        "Session Hijacking",
+                        "Evading IDS, Firewalls, and Honeypots",
+                        "Hacking Web Servers",
+                        "Hacking Web Applications",
+                        "SQL Injection",
+                        "Hacking Wireless Networks",
+                        "Hacking Mobile Platforms",
+                        "IoT Hacking",
+                        "Cloud Computing",
+                        "Cryptography"
+                    )
+                }
+            }
+            issued(Instant.now().minus(180, ChronoUnit.DAYS))
+            expires(Instant.now().plus(3, ChronoUnit.YEARS))
+        }
+        signedBy(issuerDid = ecCouncilDid.value, keyId = ecCouncilKeyId)
+    }
+    
+    val cehCredential = when (cehCredentialResult) {
+        is IssuanceResult.Success -> cehCredentialResult.credential
+        else -> throw IllegalStateException("Failed to issue CEH credential")
+    }
 
     println("✅ CEH certification credential issued: ${cehCredential.id}")
 
     // Step 5: Issue Security+ training credential
-    val securityPlusTrainingCredential = TrustWeave.issueCredential(
-        issuerDid = comptiaDid.value,
-        issuerKeyId = comptiaKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", professionalDid.value)
-            put("training", buildJsonObject {
-                put("trainingName", "Security+ Training")
-                put("trainingProvider", "CompTIA")
-                put("completionDate", Instant.now().minus(30, ChronoUnit.DAYS).toString())
-                put("hours", 40)
-                put("status", "Completed")
-                put("domains", listOf(
-                    "Threats, Attacks, and Vulnerabilities",
-                    "Technologies and Tools",
-                    "Architecture and Design",
-                    "Identity and Access Management",
-                    "Risk Management",
-                    "Cryptography and PKI"
-                ))
-            })
-        },
-        types = listOf("VerifiableCredential", "TrainingCredential", "SecurityTraining"),
-        expirationDate = null // Training credentials don't expire
-    ).getOrThrow()
+    val securityPlusTrainingCredentialResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "TrainingCredential", "SecurityTraining")
+            issuer(comptiaDid.value)
+            subject {
+                id(professionalDid.value)
+                "training" {
+                    "trainingName" to "Security+ Training"
+                    "trainingProvider" to "CompTIA"
+                    "completionDate" to Instant.now().minus(30, ChronoUnit.DAYS).toString()
+                    "hours" to 40
+                    "status" to "Completed"
+                    "domains" to listOf(
+                        "Threats, Attacks, and Vulnerabilities",
+                        "Technologies and Tools",
+                        "Architecture and Design",
+                        "Identity and Access Management",
+                        "Risk Management",
+                        "Cryptography and PKI"
+                    )
+                }
+            }
+            issued(Instant.now().minus(30, ChronoUnit.DAYS))
+            // Training credentials don't expire - no expires() call
+        }
+        signedBy(issuerDid = comptiaDid.value, keyId = comptiaKeyId)
+    }
+    
+    val securityPlusTrainingCredential = when (securityPlusTrainingCredentialResult) {
+        is IssuanceResult.Success -> securityPlusTrainingCredentialResult.credential
+        else -> throw IllegalStateException("Failed to issue Security+ training credential")
+    }
 
     println("✅ Security+ training credential issued: ${securityPlusTrainingCredential.id}")
 
@@ -388,9 +417,14 @@ fun main() = runBlocking {
     // Step 8: Employer verification - CISSP required
     println("\n🏢 Employer Verification - CISSP Required:")
 
-    val cisspVerification = TrustWeave.verifyCredential(cisspCredential).getOrThrow()
+    import com.trustweave.trust.types.VerificationResult
+    
+    val cisspVerification = trustWeave.verify {
+        credential(cisspCredential)
+    }
 
-    if (cisspVerification.valid) {
+    when (cisspVerification) {
+        is VerificationResult.Valid -> {
         val credentialSubject = cisspCredential.credentialSubject
         val certification = credentialSubject.jsonObject["certification"]?.jsonObject
         val certificationName = certification?.get("certificationName")?.jsonPrimitive?.content
@@ -418,8 +452,8 @@ fun main() = runBlocking {
     // Step 9: Employer verification - Multiple certifications
     println("\n🏢 Employer Verification - Multiple Certifications Required:")
 
-    val cisspValid = TrustWeave.verifyCredential(cisspCredential).getOrThrow().valid
-    val cehValid = TrustWeave.verifyCredential(cehCredential).getOrThrow().valid
+    val cisspValid = trustWeave.verify { credential(cisspCredential) } is VerificationResult.Valid
+    val cehValid = trustWeave.verify { credential(cehCredential) } is VerificationResult.Valid
 
     if (cisspValid && cehValid) {
         println("✅ CISSP Certification: VALID")
@@ -436,27 +470,39 @@ fun main() = runBlocking {
     println("\n🏢 Expired Certification Check:")
 
     // Create an expired certification
-    val expiredCertCredential = TrustWeave.issueCredential(
-        issuerDid = isc2Did.value,
-        issuerKeyId = isc2KeyId,
-        credentialSubject = buildJsonObject {
-            put("id", professionalDid.value)
-            put("certification", buildJsonObject {
-                put("certificationName", "CISSP")
-                put("status", "Expired")
-                put("expirationDate", Instant.now().minus(30, ChronoUnit.DAYS).toString())
-            })
-        },
-        types = listOf("VerifiableCredential", "CertificationCredential", "SecurityCertification"),
-        expirationDate = Instant.now().minus(30, ChronoUnit.DAYS).toString() // Already expired
-    ).getOrThrow()
+    val expiredCertCredentialResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "CertificationCredential", "SecurityCertification")
+            issuer(isc2Did.value)
+            subject {
+                id(professionalDid.value)
+                "certification" {
+                    "certificationName" to "CISSP"
+                    "status" to "Expired"
+                    "expirationDate" to Instant.now().minus(30, ChronoUnit.DAYS).toString()
+                }
+            }
+            issued(Instant.now().minus(365, ChronoUnit.DAYS))
+            expires(Instant.now().minus(30, ChronoUnit.DAYS)) // Already expired
+        }
+        signedBy(issuerDid = isc2Did.value, keyId = isc2KeyId)
+    }
+    
+    val expiredCertCredential = when (expiredCertCredentialResult) {
+        is IssuanceResult.Success -> expiredCertCredentialResult.credential
+        else -> throw IllegalStateException("Failed to issue expired cert credential")
+    }
 
-    val expiredVerification = TrustWeave.verifyCredential(
-        expiredCertCredential,
-        options = CredentialVerificationOptions(checkExpiration = true)
-    ).getOrThrow()
+    val expiredVerification = trustWeave.verify {
+        credential(expiredCertCredential)
+        checkExpiration()
+    }
 
-    if (!expiredVerification.valid) {
+    when (expiredVerification) {
+        is VerificationResult.Valid -> {
+            // Should not happen for expired credential
+        }
+        is VerificationResult.Invalid -> {
         println("❌ Expired Certification: INVALID")
         println("   Certification expired: YES")
         println("   Status: Expired")

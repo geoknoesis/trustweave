@@ -164,8 +164,7 @@ import com.trustweave.credential.PresentationOptions
 import com.trustweave.credential.wallet.Wallet
 import com.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import com.trustweave.credential.format.ProofSuiteId
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -236,27 +235,37 @@ fun main() = runBlocking {
     println("✅ Repair Shop DID: ${repairShopDid.value}")
 
     // Step 3: Policyholder files claim - Insurance company issues claim credential
-    val claimCredential = TrustWeave.issueCredential(
-        issuerDid = insuranceCompanyDid.value,
-        issuerKeyId = insuranceCompanyKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", policyholderDid.value)
-            put("claim", buildJsonObject {
-                put("claimNumber", "CLM-2024-001234")
-                put("claimType", "Auto Damage")
-                put("incidentDate", "2024-10-15")
-                put("incidentLocation", "123 Main St, City, State")
-                put("incidentDescription", "Vehicle collision with another vehicle")
-                put("policyNumber", "POL-2024-567890")
-                put("claimStatus", "Filed")
-                put("filingDate", Instant.now().toString())
-                put("estimatedDamage", "5000.00")
-                put("currency", "USD")
-            })
-        },
-        types = listOf("VerifiableCredential", "InsuranceClaimCredential", "ClaimCredential"),
-        expirationDate = Instant.now().plus(1, ChronoUnit.YEARS).toString()
-    ).getOrThrow()
+    import com.trustweave.trust.types.IssuanceResult
+    
+    val claimCredentialResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "InsuranceClaimCredential", "ClaimCredential")
+            issuer(insuranceCompanyDid.value)
+            subject {
+                id(policyholderDid.value)
+                "claim" {
+                    "claimNumber" to "CLM-2024-001234"
+                    "claimType" to "Auto Damage"
+                    "incidentDate" to "2024-10-15"
+                    "incidentLocation" to "123 Main St, City, State"
+                    "incidentDescription" to "Vehicle collision with another vehicle"
+                    "policyNumber" to "POL-2024-567890"
+                    "claimStatus" to "Filed"
+                    "filingDate" to Instant.now().toString()
+                    "estimatedDamage" to "5000.00"
+                    "currency" to "USD"
+                }
+            }
+            issued(Instant.now())
+            expires(1, ChronoUnit.YEARS)
+        }
+        signedBy(issuerDid = insuranceCompanyDid.value, keyId = insuranceCompanyKeyId)
+    }
+    
+    val claimCredential = when (claimCredentialResult) {
+        is IssuanceResult.Success -> claimCredentialResult.credential
+        else -> throw IllegalStateException("Failed to issue claim credential")
+    }
 
     println("\n✅ Claim credential issued: ${claimCredential.id}")
     println("   Claim Number: CLM-2024-001234")
@@ -264,29 +273,37 @@ fun main() = runBlocking {
     println("   Status: Filed")
 
     // Step 4: Damage assessor issues assessment credential
-    val assessmentCredential = TrustWeave.issueCredential(
-        issuerDid = assessorDid.value,
-        issuerKeyId = assessorKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", policyholderDid.value)
-            put("assessment", buildJsonObject {
-                put("claimNumber", "CLM-2024-001234")
-                put("assessmentDate", Instant.now().toString())
-                put("assessorName", "John Smith")
-                put("assessorLicense", "ASS-12345")
-                put("damageType", "Vehicle Collision")
-                put("damageDescription", "Front bumper damage, headlight replacement needed")
-                put("estimatedRepairCost", "4800.00")
-                put("currency", "USD")
-                put("repairRequired", true)
-                put("totalLoss", false)
-                put("photosTaken", true)
-                put("assessmentStatus", "Completed")
-            })
-        },
-        types = listOf("VerifiableCredential", "DamageAssessmentCredential", "AssessmentCredential"),
-        expirationDate = Instant.now().plus(6, ChronoUnit.MONTHS).toString()
-    ).getOrThrow()
+    val assessmentCredentialResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "DamageAssessmentCredential", "AssessmentCredential")
+            issuer(assessorDid.value)
+            subject {
+                id(policyholderDid.value)
+                "assessment" {
+                    "claimNumber" to "CLM-2024-001234"
+                    "assessmentDate" to Instant.now().toString()
+                    "assessorName" to "John Smith"
+                    "assessorLicense" to "ASS-12345"
+                    "damageType" to "Vehicle Collision"
+                    "damageDescription" to "Front bumper damage, headlight replacement needed"
+                    "estimatedRepairCost" to "4800.00"
+                    "currency" to "USD"
+                    "repairRequired" to true
+                    "totalLoss" to false
+                    "photosTaken" to true
+                    "assessmentStatus" to "Completed"
+                }
+            }
+            issued(Instant.now())
+            expires(6, ChronoUnit.MONTHS)
+        }
+        signedBy(issuerDid = assessorDid.value, keyId = assessorKeyId)
+    }
+    
+    val assessmentCredential = when (assessmentCredentialResult) {
+        is IssuanceResult.Success -> assessmentCredentialResult.credential
+        else -> throw IllegalStateException("Failed to issue assessment credential")
+    }
 
     println("✅ Damage assessment credential issued: ${assessmentCredential.id}")
     println("   Estimated Repair Cost: $4,800.00")
@@ -428,25 +445,33 @@ fun main() = runBlocking {
     val allCredentialsValid = listOf(claimVerification, assessmentVerification, repairVerification).all { it.valid }
 
     if (allCredentialsValid && claimNumbersMatch && costVariance <= 10.0) {
-        val paymentCredential = TrustWeave.issueCredential(
-            issuerDid = insuranceCompanyDid.value,
-            issuerKeyId = insuranceCompanyKeyId,
-            credentialSubject = buildJsonObject {
-                put("id", policyholderDid.value)
-                put("payment", buildJsonObject {
-                    put("claimNumber", "CLM-2024-001234")
-                    put("paymentAmount", "4262.50")
-                    put("currency", "USD")
-                    put("paymentDate", Instant.now().toString())
-                    put("paymentMethod", "Direct Deposit")
-                    put("paymentStatus", "Processed")
-                    put("deductible", "500.00")
-                    put("netPayment", "3762.50")
-                })
-            },
-            types = listOf("VerifiableCredential", "PaymentCredential", "InsurancePaymentCredential"),
-            expirationDate = Instant.now().plus(7, ChronoUnit.YEARS).toString()
-        ).getOrThrow()
+        val paymentCredentialResult = trustWeave.issue {
+            credential {
+                type("VerifiableCredential", "PaymentCredential", "InsurancePaymentCredential")
+                issuer(insuranceCompanyDid.value)
+                subject {
+                    id(policyholderDid.value)
+                    "payment" {
+                        "claimNumber" to "CLM-2024-001234"
+                        "paymentAmount" to "4262.50"
+                        "currency" to "USD"
+                        "paymentDate" to Instant.now().toString()
+                        "paymentMethod" to "Direct Deposit"
+                        "paymentStatus" to "Processed"
+                        "deductible" to "500.00"
+                        "netPayment" to "3762.50"
+                    }
+                }
+                issued(Instant.now())
+                expires(7, ChronoUnit.YEARS)
+            }
+            signedBy(issuerDid = insuranceCompanyDid.value, keyId = insuranceCompanyKeyId)
+        }
+        
+        val paymentCredential = when (paymentCredentialResult) {
+            is IssuanceResult.Success -> paymentCredentialResult.credential
+            else -> throw IllegalStateException("Failed to issue payment credential")
+        }
 
         val paymentCredentialId = policyholderWallet.store(paymentCredential)
         policyholderWallet.withOrganization { org ->

@@ -237,9 +237,10 @@ fun main() = runBlocking {
                     "batchNumber" to "BATCH-2021-001"
                 }
             }
-            expirationDate(Instant.now().plus(2, ChronoUnit.YEARS).toString())
+            issued(Instant.now())
+            expires(2, ChronoUnit.YEARS)
         }
-        by(issuerDid = healthcareProviderDid.value, keyId = healthcareProviderKeyId)
+        signedBy(issuerDid = healthcareProviderDid.value, keyId = healthcareProviderKeyId)
     }
     
     val vaccination1Credential = when (vaccination1IssuanceResult) {
@@ -271,9 +272,10 @@ fun main() = runBlocking {
                     "fullyVaccinated" to true
                 }
             }
-            expirationDate(Instant.now().plus(2, ChronoUnit.YEARS).toString())
+            issued(Instant.now())
+            expires(2, ChronoUnit.YEARS)
         }
-        by(issuerDid = healthcareProviderDid.value, keyId = healthcareProviderKeyId)
+        signedBy(issuerDid = healthcareProviderDid.value, keyId = healthcareProviderKeyId)
     }
     
     val vaccination2Credential = when (vaccination2IssuanceResult) {

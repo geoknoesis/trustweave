@@ -306,9 +306,10 @@ fun main() = runBlocking {
                     }
                 }
             }
-            expirationDate(Instant.now().plus(5, ChronoUnit.YEARS).toString())
+            issued(Instant.now())
+            expires(5, ChronoUnit.YEARS)
         }
-        by(issuerDid = identityProviderDid.value, keyId = identityProviderKeyId)
+        signedBy(issuerDid = identityProviderDid.value, keyId = identityProviderKeyId)
     }
     
     val ageCredential = when (ageIssuanceResult) {

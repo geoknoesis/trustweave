@@ -161,8 +161,6 @@ import com.trustweave.credential.PresentationOptions
 import com.trustweave.credential.wallet.Wallet
 import com.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -224,32 +222,42 @@ fun main() = runBlocking {
     println("✅ System DID: ${systemDid.value}")
 
     // Step 3: Issue short-lived authentication credential (15 minutes)
-    val authCredential = TrustWeave.issueCredential(
-        issuerDid = authAuthorityDid.value,
-        issuerKeyId = authAuthorityKeyId,
-        credentialSubject = buildJsonObject {
-            "id" to userDid.value
-            "authentication" {
-                "authenticated" to true
-                "authenticationMethod" to "Multi-Factor"
-                "authenticationDate" to Instant.now().toString()
-                "deviceId" to deviceDid.value
-                "deviceAttested" to true
-                "deviceTrustLevel" to "High"
-                "context" {
-                    "location" to "Office Building A"
-                    "ipAddress" to "10.0.1.100"
-                    "network" to "Corporate LAN"
-                    "timeOfDay" to Instant.now().toString()
+    import com.trustweave.trust.types.IssuanceResult
+import com.trustweave.trust.types.VerificationResult
+    
+    val authCredentialResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "AuthenticationCredential", "ZeroTrustCredential")
+            issuer(authAuthorityDid.value)
+            subject {
+                id(userDid.value)
+                "authentication" {
+                    "authenticated" to true
+                    "authenticationMethod" to "Multi-Factor"
+                    "authenticationDate" to Instant.now().toString()
+                    "deviceId" to deviceDid.value
+                    "deviceAttested" to true
+                    "deviceTrustLevel" to "High"
+                    "context" {
+                        "location" to "Office Building A"
+                        "ipAddress" to "10.0.1.100"
+                        "network" to "Corporate LAN"
+                        "timeOfDay" to Instant.now().toString()
+                    }
+                    "riskScore" to 0.1 // Low risk
+                    "behavioralAnalysis" to "Normal"
                 }
-                put("riskScore", 0.1) // Low risk
-                put("behavioralAnalysis", "Normal")
-                put("sessionId", null) // No traditional session
-            })
-        },
-        types = listOf("VerifiableCredential", "AuthenticationCredential", "ZeroTrustCredential"),
-        expirationDate = Instant.now().plus(15, ChronoUnit.MINUTES).toString() // Short-lived
-    ).getOrThrow()
+            }
+            issued(Instant.now())
+            expires(15, ChronoUnit.MINUTES) // Short-lived
+        }
+        signedBy(issuerDid = authAuthorityDid.value, keyId = authAuthorityKeyId)
+    }
+    
+    val authCredential = when (authCredentialResult) {
+        is IssuanceResult.Success -> authCredentialResult.credential
+        else -> throw IllegalStateException("Failed to issue authentication credential")
+    }
 
     println("\n✅ Short-lived authentication credential issued: ${authCredential.id}")
     println("   Validity: 15 minutes")
@@ -282,9 +290,14 @@ fun main() = runBlocking {
     // Step 6: Initial authentication verification
     println("\n🔐 Initial Authentication Verification:")
 
-    val initialVerification = TrustWeave.verifyCredential(authCredential).getOrThrow()
+    import com.trustweave.trust.types.VerificationResult
+    
+    val initialVerification = trustWeave.verify {
+        credential(authCredential)
+    }
 
-    if (initialVerification.valid) {
+    when (initialVerification) {
+        is VerificationResult.Valid -> {
         val credentialSubject = authCredential.credentialSubject
         val authentication = credentialSubject.jsonObject["authentication"]?.jsonObject
         val authenticated = authentication?.get("authenticated")?.jsonPrimitive?.content?.toBoolean() ?: false
@@ -293,6 +306,12 @@ fun main() = runBlocking {
 
         println("✅ Authentication Credential: VALID")
         println("   Authenticated: $authenticated")
+        val credentialSubject = authCredential.credentialSubject
+        val authentication = credentialSubject.claims["authentication"]?.jsonObject
+        val authenticated = authentication?.get("authenticated")?.jsonPrimitive?.content?.toBoolean() ?: false
+        val deviceAttested = authentication?.get("deviceAttested")?.jsonPrimitive?.content?.toBoolean() ?: false
+        val riskScore = authentication?.get("riskScore")?.jsonPrimitive?.content?.toDouble() ?: 1.0
+        
         println("   Device Attested: $deviceAttested")
         println("   Risk Score: $riskScore")
 
@@ -305,79 +324,110 @@ fun main() = runBlocking {
             println("❌ Authentication requirements NOT MET")
             println("❌ Access DENIED")
         }
-    } else {
-        println("❌ Authentication Credential: INVALID")
-        println("❌ Access DENIED")
+        }
+        is VerificationResult.Invalid -> {
+            println("❌ Authentication Credential: INVALID")
+            println("❌ Access DENIED")
+        }
     }
 
     // Step 7: Continuous re-authentication (after 5 minutes)
     println("\n🔐 Continuous Re-Authentication (5 minutes later):")
 
     // Simulate time passing - in production, this would be a real-time check
-    val reAuthCredential = TrustWeave.issueCredential(
-        issuerDid = authAuthorityDid.value,
-        issuerKeyId = authAuthorityKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", userDid.value)
-            put("authentication", buildJsonObject {
-                put("authenticated", true)
-                put("authenticationMethod", "Continuous")
-                put("authenticationDate", Instant.now().toString())
-                put("deviceId", deviceDid.value)
-                put("deviceAttested", true)
-                put("deviceTrustLevel", "High")
-                put("context", buildJsonObject {
-                    put("location", "Office Building A")
-                    put("ipAddress", "10.0.1.100")
-                    put("network", "Corporate LAN")
-                    put("timeOfDay", Instant.now().toString())
-                })
-                put("riskScore", 0.15) // Slightly higher but still low
-                put("behavioralAnalysis", "Normal")
-                put("previousAuthTime", Instant.now().minus(5, ChronoUnit.MINUTES).toString())
-            })
-        },
-        types = listOf("VerifiableCredential", "AuthenticationCredential", "ZeroTrustCredential"),
-        expirationDate = Instant.now().plus(15, ChronoUnit.MINUTES).toString()
-    ).getOrThrow()
+    val reAuthCredentialResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "AuthenticationCredential", "ZeroTrustCredential")
+            issuer(authAuthorityDid.value)
+            subject {
+                id(userDid.value)
+                "authentication" {
+                    "authenticated" to true
+                    "authenticationMethod" to "Continuous"
+                    "authenticationDate" to Instant.now().toString()
+                    "deviceId" to deviceDid.value
+                    "deviceAttested" to true
+                    "deviceTrustLevel" to "High"
+                    "context" {
+                        "location" to "Office Building A"
+                        "ipAddress" to "10.0.1.100"
+                        "network" to "Corporate LAN"
+                        "timeOfDay" to Instant.now().toString()
+                    }
+                    "riskScore" to 0.15 // Slightly higher but still low
+                    "behavioralAnalysis" to "Normal"
+                    "previousAuthTime" to Instant.now().minus(5, ChronoUnit.MINUTES).toString()
+                }
+            }
+            issued(Instant.now())
+            expires(15, ChronoUnit.MINUTES)
+        }
+        signedBy(issuerDid = authAuthorityDid.value, keyId = authAuthorityKeyId)
+    }
+    
+    val reAuthCredential = when (reAuthCredentialResult) {
+        is IssuanceResult.Success -> reAuthCredentialResult.credential
+        else -> throw IllegalStateException("Failed to issue re-authentication credential")
+    }
 
-    val reAuthVerification = TrustWeave.verifyCredential(reAuthCredential).getOrThrow()
+    val reAuthVerification = trustWeave.verify {
+        credential(reAuthCredential)
+    }
 
     if (reAuthVerification.valid) {
         println("✅ Re-Authentication Credential: VALID")
         println("   Continuous verification: PASSED")
-        println("   Device still trusted: YES")
-        println("   Risk score acceptable: YES")
+        val reAuthSubject = reAuthCredential.credentialSubject
+        val reAuthAuth = reAuthSubject.claims["authentication"]?.jsonObject
+        val reAuthDeviceAttested = reAuthAuth?.get("deviceAttested")?.jsonPrimitive?.content?.toBoolean() ?: false
+        val reAuthRiskScore = reAuthAuth?.get("riskScore")?.jsonPrimitive?.content?.toDouble() ?: 1.0
+        
+        println("   Device still trusted: ${if (reAuthDeviceAttested) "YES" else "NO"}")
+        println("   Risk score acceptable: ${if (reAuthRiskScore < 0.5) "YES" else "NO"}")
         println("✅ Access CONTINUED")
-    } else {
-        println("❌ Re-Authentication Credential: INVALID")
-        println("❌ Access REVOKED")
+        }
+        is VerificationResult.Invalid -> {
+            println("❌ Re-Authentication Credential: INVALID")
+            println("❌ Access REVOKED")
+        }
     }
 
     // Step 8: Expired credential verification
     println("\n🔐 Expired Credential Verification:")
 
     // Create an expired credential
-    val expiredCredential = TrustWeave.issueCredential(
-        issuerDid = authAuthorityDid.value,
-        issuerKeyId = authAuthorityKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", userDid.value)
-            put("authentication", buildJsonObject {
-                put("authenticated", true)
-                put("authenticationDate", Instant.now().minus(20, ChronoUnit.MINUTES).toString())
-            })
-        },
-        types = listOf("VerifiableCredential", "AuthenticationCredential", "ZeroTrustCredential"),
-        expirationDate = Instant.now().minus(5, ChronoUnit.MINUTES).toString() // Already expired
-    ).getOrThrow()
+    val expiredCredentialResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "AuthenticationCredential", "ZeroTrustCredential")
+            issuer(authAuthorityDid.value)
+            subject {
+                id(userDid.value)
+                "authentication" {
+                    "authenticated" to true
+                    "authenticationDate" to Instant.now().minus(20, ChronoUnit.MINUTES).toString()
+                }
+            }
+            issued(Instant.now().minus(20, ChronoUnit.MINUTES))
+            expires(Instant.now().minus(5, ChronoUnit.MINUTES)) // Already expired
+        }
+        signedBy(issuerDid = authAuthorityDid.value, keyId = authAuthorityKeyId)
+    }
+    
+    val expiredCredential = when (expiredCredentialResult) {
+        is IssuanceResult.Success -> expiredCredentialResult.credential
+        else -> throw IllegalStateException("Failed to issue expired credential")
+    }
 
-    val expiredVerification = TrustWeave.verifyCredential(
-        expiredCredential,
-        options = CredentialVerificationOptions(checkExpiration = true)
-    ).getOrThrow()
+    val expiredVerification = trustWeave.verify {
+        credential(expiredCredential)
+        checkExpiration()
+    }
 
-    if (!expiredVerification.valid) {
+    when (expiredVerification) {
+        is VerificationResult.Valid -> {
+            // Should not happen for expired credential
+        }
+        is VerificationResult.Invalid -> {
         println("❌ Expired Credential: INVALID")
         println("   Credential expired: YES")
         println("   Access DENIED")
@@ -387,32 +437,43 @@ fun main() = runBlocking {
     // Step 9: High-risk scenario verification
     println("\n🔐 High-Risk Scenario Verification:")
 
-    val highRiskCredential = TrustWeave.issueCredential(
-        issuerDid = authAuthorityDid.value,
-        issuerKeyId = authAuthorityKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", userDid.value)
-            put("authentication", buildJsonObject {
-                put("authenticated", true)
-                put("authenticationDate", Instant.now().toString())
-                put("deviceId", deviceDid.value)
-                put("deviceAttested", false) // Device not attested
-                put("context", buildJsonObject {
-                    put("location", "Unknown")
-                    put("ipAddress", "192.168.1.1")
-                    put("network", "Public WiFi")
-                })
-                put("riskScore", 0.85) // High risk
-                put("behavioralAnalysis", "Anomalous")
-            })
-        },
-        types = listOf("VerifiableCredential", "AuthenticationCredential", "ZeroTrustCredential"),
-        expirationDate = Instant.now().plus(15, ChronoUnit.MINUTES).toString()
-    ).getOrThrow()
+    val highRiskCredentialResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "AuthenticationCredential", "ZeroTrustCredential")
+            issuer(authAuthorityDid.value)
+            subject {
+                id(userDid.value)
+                "authentication" {
+                    "authenticated" to true
+                    "authenticationDate" to Instant.now().toString()
+                    "deviceId" to deviceDid.value
+                    "deviceAttested" to false // Device not attested
+                    "context" {
+                        "location" to "Unknown"
+                        "ipAddress" to "192.168.1.1"
+                        "network" to "Public WiFi"
+                    }
+                    "riskScore" to 0.85 // High risk
+                    "behavioralAnalysis" to "Anomalous"
+                }
+            }
+            issued(Instant.now())
+            expires(15, ChronoUnit.MINUTES)
+        }
+        signedBy(issuerDid = authAuthorityDid.value, keyId = authAuthorityKeyId)
+    }
+    
+    val highRiskCredential = when (highRiskCredentialResult) {
+        is IssuanceResult.Success -> highRiskCredentialResult.credential
+        else -> throw IllegalStateException("Failed to issue high-risk credential")
+    }
 
-    val highRiskVerification = TrustWeave.verifyCredential(highRiskCredential).getOrThrow()
+    val highRiskVerification = trustWeave.verify {
+        credential(highRiskCredential)
+    }
 
-    if (highRiskVerification.valid) {
+    when (highRiskVerification) {
+        is VerificationResult.Valid -> {
         val credentialSubject = highRiskCredential.credentialSubject
         val authentication = credentialSubject.jsonObject["authentication"]?.jsonObject
         val deviceAttested = authentication?.get("deviceAttested")?.jsonPrimitive?.content?.toBoolean() ?: false

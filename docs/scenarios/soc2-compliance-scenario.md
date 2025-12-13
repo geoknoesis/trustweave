@@ -181,6 +181,7 @@ fun main() = runBlocking {
         )
         keys { provider("inMemory"); algorithm("Ed25519") }
         did { method("key") { algorithm("Ed25519") } }
+        credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
     }
     println("\n✅ TrustWeave initialized")
 
@@ -245,58 +246,72 @@ fun main() = runBlocking {
         ?: throw IllegalStateException("No verification method found")
 
     // Admin access credential
-    val adminAccessCredential = TrustWeave.issueCredential(
-        issuerDid = organizationDid.value,
-        issuerKeyId = orgKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", adminDid.value)
-            put("role", "Administrator")
-            put("permissions", buildJsonArray {
-                add("credential:issue")
-                add("credential:revoke")
-                add("did:create")
-                add("key:rotate")
-                add("audit:read")
-                add("audit:export")
-            })
-            put("issuedDate", Instant.now().toString())
-            put("expirationDate", Instant.now().plus(365, ChronoUnit.DAYS).toString())
-            put("status", "active")
-        },
-        types = listOf("VerifiableCredential", "AccessControlCredential", "SOC2AccessCredential")
-    ).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to issue admin access credential: ${error.message}")
+    import com.trustweave.trust.types.IssuanceResult
+    
+    val adminAccessCredentialResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "AccessControlCredential", "SOC2AccessCredential")
+            issuer(organizationDid.value)
+            subject {
+                id(adminDid.value)
+                "role" to "Administrator"
+                "permissions" to listOf(
+                    "credential:issue",
+                    "credential:revoke",
+                    "did:create",
+                    "key:rotate",
+                    "audit:read",
+                    "audit:export"
+                )
+                "issuedDate" to Instant.now().toString()
+                "expirationDate" to Instant.now().plus(365, ChronoUnit.DAYS).toString()
+                "status" to "active"
+            }
+            issued(Instant.now())
+            expires(365, ChronoUnit.DAYS)
+        }
+        signedBy(issuerDid = organizationDid.value, keyId = orgKeyId)
+    }
+    
+    val adminAccessCredential = when (adminAccessCredentialResult) {
+        is IssuanceResult.Success -> adminAccessCredentialResult.credential
+        else -> {
+            println("❌ Failed to issue admin access credential: ${adminAccessCredentialResult.allErrors.joinToString()}")
             return@runBlocking
         }
-    )
+    }
 
     println("✅ Admin Access Credential issued: ${adminAccessCredential.id}")
 
     // Employee access credential
-    val employeeAccessCredential = TrustWeave.issueCredential(
-        issuerDid = organizationDid.value,
-        issuerKeyId = orgKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", employeeDid.value)
-            put("role", "User")
-            put("permissions", buildJsonArray {
-                add("credential:verify")
-                add("credential:query")
-            })
-            put("issuedDate", Instant.now().toString())
-            put("expirationDate", Instant.now().plus(365, ChronoUnit.DAYS).toString())
-            put("status", "active")
-        },
-        types = listOf("VerifiableCredential", "AccessControlCredential", "SOC2AccessCredential")
-    ).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to issue employee access credential: ${error.message}")
+    val employeeAccessCredentialResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "AccessControlCredential", "SOC2AccessCredential")
+            issuer(organizationDid.value)
+            subject {
+                id(employeeDid.value)
+                "role" to "User"
+                "permissions" to listOf(
+                    "credential:verify",
+                    "credential:query"
+                )
+                "issuedDate" to Instant.now().toString()
+                "expirationDate" to Instant.now().plus(365, ChronoUnit.DAYS).toString()
+                "status" to "active"
+            }
+            issued(Instant.now())
+            expires(365, ChronoUnit.DAYS)
+        }
+        signedBy(issuerDid = organizationDid.value, keyId = orgKeyId)
+    }
+    
+    val employeeAccessCredential = when (employeeAccessCredentialResult) {
+        is IssuanceResult.Success -> employeeAccessCredentialResult.credential
+        else -> {
+            println("❌ Failed to issue employee access credential: ${employeeAccessCredentialResult.allErrors.joinToString()}")
             return@runBlocking
         }
-    )
+    }
 
     println("✅ Employee Access Credential issued: ${employeeAccessCredential.id}")
 
@@ -384,27 +399,33 @@ fun main() = runBlocking {
         ?: throw IllegalStateException("No verification method found")
 
     // Issue key rotation credential
-    val keyRotationCredential = TrustWeave.issueCredential(
-        issuerDid = organizationDid.value,
-        issuerKeyId = orgKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", "key-rotation-${Instant.now().toEpochMilli()}")
-            put("type", "KeyRotation")
-            put("oldKeyId", oldAdminKeyId)
-            put("newKeyId", newAdminKeyId)
-            put("rotationDate", Instant.now().toString())
-            put("reason", "Scheduled rotation")
-            put("rotationPolicy", "90-day rotation")
-            put("oldKeyDeactivationDate", Instant.now().plus(90, ChronoUnit.DAYS).toString())
-        },
-        types = listOf("VerifiableCredential", "KeyRotationCredential", "SOC2KeyManagementCredential")
-    ).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to issue key rotation credential: ${error.message}")
+    val keyRotationCredentialResult = trustWeave.issue {
+        credential {
+            id("key-rotation-${Instant.now().toEpochMilli()}")
+            type("VerifiableCredential", "KeyRotationCredential", "SOC2KeyManagementCredential")
+            issuer(organizationDid.value)
+            subject {
+                id("key-rotation-${Instant.now().toEpochMilli()}")
+                "type" to "KeyRotation"
+                "oldKeyId" to oldAdminKeyId
+                "newKeyId" to newAdminKeyId
+                "rotationDate" to Instant.now().toString()
+                "reason" to "Scheduled rotation"
+                "rotationPolicy" to "90-day rotation"
+                "oldKeyDeactivationDate" to Instant.now().plus(90, ChronoUnit.DAYS).toString()
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = organizationDid.value, keyId = orgKeyId)
+    }
+    
+    val keyRotationCredential = when (keyRotationCredentialResult) {
+        is IssuanceResult.Success -> keyRotationCredentialResult.credential
+        else -> {
+            println("❌ Failed to issue key rotation credential: ${keyRotationCredentialResult.allErrors.joinToString()}")
             return@runBlocking
         }
-    )
+    }
 
     println("✅ Key rotation credential issued: ${keyRotationCredential.id}")
 
@@ -425,55 +446,67 @@ fun main() = runBlocking {
     )
 
     // Step 7: Change management credential (CC7.4)
-    val changeManagementCredential = TrustWeave.issueCredential(
-        issuerDid = organizationDid.value,
-        issuerKeyId = orgKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", "change-${Instant.now().toEpochMilli()}")
-            put("type", "SystemChange")
-            put("changeType", "Configuration")
-            put("description", "Updated KMS configuration")
-            put("changeDate", Instant.now().toString())
-            put("approvedBy", adminDid.value)
-            put("changeId", "CHG-2024-001")
-            put("impact", "Low")
-            put("status", "Completed")
-            put("rollbackPlan", "Revert to previous configuration")
-        },
-        types = listOf("VerifiableCredential", "ChangeManagementCredential", "SOC2ChangeCredential")
-    ).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to issue change management credential: ${error.message}")
+    val changeManagementCredentialResult = trustWeave.issue {
+        credential {
+            id("change-${Instant.now().toEpochMilli()}")
+            type("VerifiableCredential", "ChangeManagementCredential", "SOC2ChangeCredential")
+            issuer(organizationDid.value)
+            subject {
+                id("change-${Instant.now().toEpochMilli()}")
+                "type" to "SystemChange"
+                "changeType" to "Configuration"
+                "description" to "Updated KMS configuration"
+                "changeDate" to Instant.now().toString()
+                "approvedBy" to adminDid.value
+                "changeId" to "CHG-2024-001"
+                "impact" to "Low"
+                "status" to "Completed"
+                "rollbackPlan" to "Revert to previous configuration"
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = organizationDid.value, keyId = orgKeyId)
+    }
+    
+    val changeManagementCredential = when (changeManagementCredentialResult) {
+        is IssuanceResult.Success -> changeManagementCredentialResult.credential
+        else -> {
+            println("❌ Failed to issue change management credential: ${changeManagementCredentialResult.allErrors.joinToString()}")
             return@runBlocking
         }
-    )
+    }
 
     println("✅ Change management credential issued: ${changeManagementCredential.id}")
 
     // Step 8: Incident response credential
-    val incidentCredential = TrustWeave.issueCredential(
-        issuerDid = organizationDid.value,
-        issuerKeyId = orgKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", "incident-${Instant.now().toEpochMilli()}")
-            put("type", "SecurityIncident")
-            put("severity", "Low")
-            put("description", "Failed authentication attempt")
-            put("incidentDate", Instant.now().toString())
-            put("detectedBy", "Monitoring System")
-            put("response", "Access denied and logged")
-            put("status", "Resolved")
-            put("resolutionDate", Instant.now().plus(5, ChronoUnit.MINUTES).toString())
-        },
-        types = listOf("VerifiableCredential", "IncidentResponseCredential", "SOC2IncidentCredential")
-    ).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Failed to issue incident credential: ${error.message}")
+    val incidentCredentialResult = trustWeave.issue {
+        credential {
+            id("incident-${Instant.now().toEpochMilli()}")
+            type("VerifiableCredential", "IncidentResponseCredential", "SOC2IncidentCredential")
+            issuer(organizationDid.value)
+            subject {
+                id("incident-${Instant.now().toEpochMilli()}")
+                "type" to "SecurityIncident"
+                "severity" to "Low"
+                "description" to "Failed authentication attempt"
+                "incidentDate" to Instant.now().toString()
+                "detectedBy" to "Monitoring System"
+                "response" to "Access denied and logged"
+                "status" to "Resolved"
+                "resolutionDate" to Instant.now().plus(5, ChronoUnit.MINUTES).toString()
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = organizationDid.value, keyId = orgKeyId)
+    }
+    
+    val incidentCredential = when (incidentCredentialResult) {
+        is IssuanceResult.Success -> incidentCredentialResult.credential
+        else -> {
+            println("❌ Failed to issue incident credential: ${incidentCredentialResult.allErrors.joinToString()}")
             return@runBlocking
         }
-    )
+    }
 
     println("✅ Incident response credential issued: ${incidentCredential.id}")
 
@@ -689,18 +722,27 @@ suspend fun rotateKeyWithHistory(
         ?: throw IllegalStateException("No verification method found")
 
     // Issue rotation credential
-    val rotationCredential = TrustWeave.issueCredential(
-        issuerDid = issuerDid,
-        issuerKeyId = oldKeyId, // Use old key to sign rotation
-        credentialSubject = buildJsonObject {
-            put("id", "rotation-${Instant.now().toEpochMilli()}")
-            put("type", "KeyRotation")
-            put("oldKeyId", oldKeyId)
-            put("newKeyId", newKeyId)
-            put("rotationDate", Instant.now().toString())
-        },
-        types = listOf("VerifiableCredential", "KeyRotationCredential")
-    ).getOrThrow()
+    val rotationCredentialResult = trustWeave.issue {
+        credential {
+            id("rotation-${Instant.now().toEpochMilli()}")
+            type("VerifiableCredential", "KeyRotationCredential")
+            issuer(issuerDid)
+            subject {
+                id("rotation-${Instant.now().toEpochMilli()}")
+                "type" to "KeyRotation"
+                "oldKeyId" to oldKeyId
+                "newKeyId" to newKeyId
+                "rotationDate" to Instant.now().toString()
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = issuerDid, keyId = oldKeyId) // Use old key to sign rotation
+    }
+    
+    val rotationCredential = when (rotationCredentialResult) {
+        is IssuanceResult.Success -> rotationCredentialResult.credential
+        else -> throw IllegalStateException("Failed to issue rotation credential: ${rotationCredentialResult.allErrors.joinToString()}")
+    }
 
     // Anchor rotation to blockchain
     trustWeave.blockchains.anchor(

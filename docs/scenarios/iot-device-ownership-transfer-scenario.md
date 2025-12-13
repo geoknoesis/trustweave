@@ -163,8 +163,7 @@ import com.trustweave.credential.PresentationOptions
 import com.trustweave.credential.wallet.Wallet
 import com.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import com.trustweave.credential.format.ProofSuiteId
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -174,7 +173,11 @@ fun main() = runBlocking {
     println("=".repeat(70))
 
     // Step 1: Create TrustWeave instance
-    val TrustWeave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+        credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
+    }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for manufacturer, current owner, and new owner
@@ -235,62 +238,84 @@ fun main() = runBlocking {
     println("✅ Device DID: ${deviceDid.value}")
 
     // Step 3: Issue initial device ownership credential to current owner
-    val currentOwnershipCredential = TrustWeave.issueCredential(
-        issuerDid = manufacturerDid.value,
-        issuerKeyId = manufacturerKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", deviceDid.value)
-            put("deviceOwnership", buildJsonObject {
-                put("deviceId", deviceDid.value)
-                put("ownerDid", currentOwnerDid.value)
-                put("ownershipDate", Instant.now().minus(365, ChronoUnit.DAYS).toString())
-                put("ownershipType", "Primary")
-                put("transferable", true)
-                put("manufacturer", manufacturerDid.value)
-                put("deviceModel", "SmartHomeHub-2024")
-                put("serialNumber", "SHH-2024-001234")
-            })
-        },
-        types = listOf("VerifiableCredential", "DeviceOwnershipCredential", "IoTDeviceCredential"),
-        expirationDate = null // Ownership doesn't expire
-    ).getOrThrow()
+    val currentOwnershipCredentialResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "DeviceOwnershipCredential", "IoTDeviceCredential")
+            issuer(manufacturerDid.value)
+            subject {
+                id(deviceDid.value)
+                "deviceOwnership" {
+                    "deviceId" to deviceDid.value
+                    "ownerDid" to currentOwnerDid.value
+                    "ownershipDate" to Instant.now().minus(365, ChronoUnit.DAYS).toString()
+                    "ownershipType" to "Primary"
+                    "transferable" to true
+                    "manufacturer" to manufacturerDid.value
+                    "deviceModel" to "SmartHomeHub-2024"
+                    "serialNumber" to "SHH-2024-001234"
+                }
+            }
+            issued(Instant.now())
+            // Ownership doesn't expire - no expires() call
+        }
+        signedBy(issuerDid = manufacturerDid.value, keyId = manufacturerKeyId)
+    }
+    
+    val currentOwnershipCredential = when (currentOwnershipCredentialResult) {
+        is IssuanceResult.Success -> currentOwnershipCredentialResult.credential
+        else -> throw IllegalStateException("Failed to issue current ownership credential")
+    }
 
     println("\n✅ Current ownership credential issued: ${currentOwnershipCredential.id}")
     println("   Owner: ${currentOwnerDid.take(20)}...")
     println("   Ownership Date: ${Instant.now().minus(365, ChronoUnit.DAYS)}")
 
     // Step 4: Create ownership transfer request credential
-    val transferRequestCredential = TrustWeave.issueCredential(
-        issuerDid = currentOwnerDid.value,
-        issuerKeyId = currentOwnerKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", "transfer-request:${deviceDid.value}:${Instant.now().toEpochMilli()}")
-            put("ownershipTransfer", buildJsonObject {
-                put("deviceId", deviceDid.value)
-                put("currentOwnerDid", currentOwnerDid.value)
-                put("newOwnerDid", newOwnerDid.value)
-                put("transferDate", Instant.now().toString())
-                put("transferReason", "Sale")
-                put("authorized", true)
-                put("transferConditions", buildJsonObject {
-                    put("deviceResetRequired", true)
-                    put("dataWipeRequired", true)
-                    put("warrantyTransfer", true)
-                })
-            })
-        },
-        types = listOf("VerifiableCredential", "OwnershipTransferRequestCredential", "TransferCredential"),
-        expirationDate = Instant.now().plus(7, ChronoUnit.DAYS).toString() // Transfer request expires
-    ).getOrThrow()
+    val transferRequestCredentialResult = trustWeave.issue {
+        credential {
+            id("transfer-request:${deviceDid.value}:${Instant.now().toEpochMilli()}")
+            type("VerifiableCredential", "OwnershipTransferRequestCredential", "TransferCredential")
+            issuer(currentOwnerDid.value)
+            subject {
+                id("transfer-request:${deviceDid.value}:${Instant.now().toEpochMilli()}")
+                "ownershipTransfer" {
+                    "deviceId" to deviceDid.value
+                    "currentOwnerDid" to currentOwnerDid.value
+                    "newOwnerDid" to newOwnerDid.value
+                    "transferDate" to Instant.now().toString()
+                    "transferReason" to "Sale"
+                    "authorized" to true
+                    "transferConditions" {
+                        "deviceResetRequired" to true
+                        "dataWipeRequired" to true
+                        "warrantyTransfer" to true
+                    }
+                }
+            }
+            issued(Instant.now())
+            expires(7, ChronoUnit.DAYS) // Transfer request expires
+        }
+        signedBy(issuerDid = currentOwnerDid.value, keyId = currentOwnerKeyId)
+    }
+    
+    val transferRequestCredential = when (transferRequestCredentialResult) {
+        is IssuanceResult.Success -> transferRequestCredentialResult.credential
+        else -> throw IllegalStateException("Failed to issue transfer request credential")
+    }
 
     println("✅ Ownership transfer request credential issued: ${transferRequestCredential.id}")
 
     // Step 5: Verify transfer request
     println("\n🔍 Transfer Request Verification:")
 
-    val transferRequestVerification = TrustWeave.verifyCredential(transferRequestCredential).getOrThrow()
+    import com.trustweave.trust.types.VerificationResult
+    
+    val transferRequestVerification = trustWeave.verify {
+        credential(transferRequestCredential)
+    }
 
-    if (transferRequestVerification.valid) {
+    when (transferRequestVerification) {
+        is VerificationResult.Valid -> {
         val credentialSubject = transferRequestCredential.credentialSubject
         val transfer = credentialSubject.jsonObject["ownershipTransfer"]?.jsonObject
         val authorized = transfer?.get("authorized")?.jsonPrimitive?.content?.toBoolean() ?: false
@@ -309,38 +334,48 @@ fun main() = runBlocking {
             println("❌ Transfer request not verified")
             println("❌ Transfer not authorized")
         }
-    } else {
-        println("❌ Transfer Request Credential: INVALID")
-        println("❌ Transfer request not verified")
+        }
+        is VerificationResult.Invalid -> {
+            println("❌ Transfer Request Credential: INVALID")
+            println("❌ Transfer request not verified")
+        }
     }
 
     // Step 6: Issue new ownership credential to new owner
-    val newOwnershipCredential = TrustWeave.issueCredential(
-        issuerDid = manufacturerDid.value,
-        issuerKeyId = manufacturerKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", deviceDid.value)
-            put("deviceOwnership", buildJsonObject {
-                put("deviceId", deviceDid.value)
-                put("ownerDid", newOwnerDid.value)
-                put("ownershipDate", Instant.now().toString())
-                put("ownershipType", "Primary")
-                put("transferable", true)
-                put("previousOwnerDid", currentOwnerDid.value)
-                put("transferDate", Instant.now().toString())
-                put("transferReference", transferRequestCredential.id)
-                put("manufacturer", manufacturerDid.value)
-                put("deviceModel", "SmartHomeHub-2024")
-                put("serialNumber", "SHH-2024-001234")
-                put("ownershipHistory", buildJsonObject {
-                    put("transferCount", 1)
-                    put("previousOwners", listOf(currentOwnerDid.value))
-                })
-            })
-        },
-        types = listOf("VerifiableCredential", "DeviceOwnershipCredential", "IoTDeviceCredential"),
-        expirationDate = null
-    ).getOrThrow()
+    val newOwnershipCredentialResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "DeviceOwnershipCredential", "IoTDeviceCredential")
+            issuer(manufacturerDid.value)
+            subject {
+                id(deviceDid.value)
+                "deviceOwnership" {
+                    "deviceId" to deviceDid.value
+                    "ownerDid" to newOwnerDid.value
+                    "ownershipDate" to Instant.now().toString()
+                    "ownershipType" to "Primary"
+                    "transferable" to true
+                    "previousOwnerDid" to currentOwnerDid.value
+                    "transferDate" to Instant.now().toString()
+                    "transferReference" to transferRequestCredential.id
+                    "manufacturer" to manufacturerDid.value
+                    "deviceModel" to "SmartHomeHub-2024"
+                    "serialNumber" to "SHH-2024-001234"
+                    "ownershipHistory" {
+                        "transferCount" to 1
+                        "previousOwners" to listOf(currentOwnerDid.value)
+                    }
+                }
+            }
+            issued(Instant.now())
+            // Ownership doesn't expire - no expires() call
+        }
+        signedBy(issuerDid = manufacturerDid.value, keyId = manufacturerKeyId)
+    }
+    
+    val newOwnershipCredential = when (newOwnershipCredentialResult) {
+        is IssuanceResult.Success -> newOwnershipCredentialResult.credential
+        else -> throw IllegalStateException("Failed to issue new ownership credential")
+    }
 
     println("\n✅ New ownership credential issued: ${newOwnershipCredential.id}")
     println("   New Owner: ${newOwnerDid.take(20)}...")

@@ -163,8 +163,7 @@ import com.trustweave.credential.wallet.Wallet
 import com.trustweave.json.DigestUtils
 import com.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import com.trustweave.credential.format.ProofSuiteId
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Base64
@@ -175,7 +174,11 @@ fun main() = runBlocking {
     println("=".repeat(70))
 
     // Step 1: Create TrustWeave instance
-    val TrustWeave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+        credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
+    }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for identity provider, individual, and service providers
@@ -268,90 +271,114 @@ fun main() = runBlocking {
     println("   Note: Templates are privacy-preserving (not raw biometrics)")
 
     // Step 4: Issue fingerprint biometric credential
-    val fingerprintCredential = TrustWeave.issueCredential(
-        issuerDid = identityProviderDid.value,
-        issuerKeyId = identityProviderKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", individualDid.value)
-            put("biometric", buildJsonObject {
-                put("type", "fingerprint")
-                put("biometricType", "Fingerprint")
-                put("algorithm", "ISO/IEC 19794-2")
-                put("templateDigest", fingerprintDigest)
-                put("templateFormat", "ISO19794-2")
-                put("quality", "high")
-                put("minutiaeCount", 25)
-                put("fingers", listOf("rightIndex", "rightThumb"))
-                put("captureDate", Instant.now().toString())
-                put("livenessVerified", true)
-                put("deviceInfo", buildJsonObject {
-                    put("manufacturer", "SecureBiometric Inc")
-                    put("model", "SB-2024")
-                    put("certification", "FIDO2 Certified")
-                })
-            })
-        },
-        types = listOf("VerifiableCredential", "BiometricCredential", "FingerprintCredential"),
-        expirationDate = Instant.now().plus(10, ChronoUnit.YEARS).toString()
-    ).getOrThrow()
+    val fingerprintCredentialResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "BiometricCredential", "FingerprintCredential")
+            issuer(identityProviderDid.value)
+            subject {
+                id(individualDid.value)
+                "biometric" {
+                    "type" to "fingerprint"
+                    "biometricType" to "Fingerprint"
+                    "algorithm" to "ISO/IEC 19794-2"
+                    "templateDigest" to fingerprintDigest
+                    "templateFormat" to "ISO19794-2"
+                    "quality" to "high"
+                    "minutiaeCount" to 25
+                    "fingers" to listOf("rightIndex", "rightThumb")
+                    "captureDate" to Instant.now().toString()
+                    "livenessVerified" to true
+                    "deviceInfo" {
+                        "manufacturer" to "SecureBiometric Inc"
+                        "model" to "SB-2024"
+                        "certification" to "FIDO2 Certified"
+                    }
+                }
+            }
+            issued(Instant.now())
+            expires(10, ChronoUnit.YEARS)
+        }
+        signedBy(issuerDid = identityProviderDid.value, keyId = identityProviderKeyId)
+    }
+    
+    val fingerprintCredential = when (fingerprintCredentialResult) {
+        is IssuanceResult.Success -> fingerprintCredentialResult.credential
+        else -> throw IllegalStateException("Failed to issue fingerprint credential")
+    }
 
     println("\n✅ Fingerprint biometric credential issued: ${fingerprintCredential.id}")
 
     // Step 5: Issue face biometric credential
-    val faceCredential = TrustWeave.issueCredential(
-        issuerDid = identityProviderDid.value,
-        issuerKeyId = identityProviderKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", individualDid.value)
-            put("biometric", buildJsonObject {
-                put("type", "face")
-                put("biometricType", "Face")
-                put("algorithm", "ISO/IEC 19794-5")
-                put("templateDigest", faceDigest)
-                put("templateFormat", "ISO19794-5")
-                put("quality", "high")
-                put("livenessDetected", true)
-                put("livenessMethod", "3D depth analysis")
-                put("captureDate", Instant.now().toString())
-                put("deviceInfo", buildJsonObject {
-                    put("manufacturer", "SecureBiometric Inc")
-                    put("model", "FaceCam-2024")
-                    put("certification", "ISO/IEC 30107-3 Level 2")
-                })
-            })
-        },
-        types = listOf("VerifiableCredential", "BiometricCredential", "FaceCredential"),
-        expirationDate = Instant.now().plus(10, ChronoUnit.YEARS).toString()
-    ).getOrThrow()
+    val faceCredentialResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "BiometricCredential", "FaceCredential")
+            issuer(identityProviderDid.value)
+            subject {
+                id(individualDid.value)
+                "biometric" {
+                    "type" to "face"
+                    "biometricType" to "Face"
+                    "algorithm" to "ISO/IEC 19794-5"
+                    "templateDigest" to faceDigest
+                    "templateFormat" to "ISO19794-5"
+                    "quality" to "high"
+                    "livenessDetected" to true
+                    "livenessMethod" to "3D depth analysis"
+                    "captureDate" to Instant.now().toString()
+                    "deviceInfo" {
+                        "manufacturer" to "SecureBiometric Inc"
+                        "model" to "FaceCam-2024"
+                        "certification" to "ISO/IEC 30107-3 Level 2"
+                    }
+                }
+            }
+            issued(Instant.now())
+            expires(10, ChronoUnit.YEARS)
+        }
+        signedBy(issuerDid = identityProviderDid.value, keyId = identityProviderKeyId)
+    }
+    
+    val faceCredential = when (faceCredentialResult) {
+        is IssuanceResult.Success -> faceCredentialResult.credential
+        else -> throw IllegalStateException("Failed to issue face credential")
+    }
 
     println("✅ Face biometric credential issued: ${faceCredential.id}")
 
     // Step 6: Issue voice biometric credential
-    val voiceCredential = TrustWeave.issueCredential(
-        issuerDid = identityProviderDid.value,
-        issuerKeyId = identityProviderKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", individualDid.value)
-            put("biometric", buildJsonObject {
-                put("type", "voice")
-                put("biometricType", "Voice")
-                put("algorithm", "ISO/IEC 19794-14")
-                put("templateDigest", voiceDigest)
-                put("templateFormat", "ISO19794-14")
-                put("quality", "high")
-                put("phrase", "My voice is my password")
-                put("language", "en-US")
-                put("captureDate", Instant.now().toString())
-                put("deviceInfo", buildJsonObject {
-                    put("manufacturer", "SecureBiometric Inc")
-                    put("model", "VoiceRec-2024")
-                    put("sampleRate", "16kHz")
-                })
-            })
-        },
-        types = listOf("VerifiableCredential", "BiometricCredential", "VoiceCredential"),
-        expirationDate = Instant.now().plus(10, ChronoUnit.YEARS).toString()
-    ).getOrThrow()
+    val voiceCredentialResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "BiometricCredential", "VoiceCredential")
+            issuer(identityProviderDid.value)
+            subject {
+                id(individualDid.value)
+                "biometric" {
+                    "type" to "voice"
+                    "biometricType" to "Voice"
+                    "algorithm" to "ISO/IEC 19794-14"
+                    "templateDigest" to voiceDigest
+                    "templateFormat" to "ISO19794-14"
+                    "quality" to "high"
+                    "phrase" to "My voice is my password"
+                    "language" to "en-US"
+                    "captureDate" to Instant.now().toString()
+                    "deviceInfo" {
+                        "manufacturer" to "SecureBiometric Inc"
+                        "model" to "VoiceRec-2024"
+                        "sampleRate" to "16kHz"
+                    }
+                }
+            }
+            issued(Instant.now())
+            expires(10, ChronoUnit.YEARS)
+        }
+        signedBy(issuerDid = identityProviderDid.value, keyId = identityProviderKeyId)
+    }
+    
+    val voiceCredential = when (voiceCredentialResult) {
+        is IssuanceResult.Success -> voiceCredentialResult.credential
+        else -> throw IllegalStateException("Failed to issue voice credential")
+    }
 
     println("✅ Voice biometric credential issued: ${voiceCredential.id}")
 

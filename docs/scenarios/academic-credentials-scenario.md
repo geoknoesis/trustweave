@@ -160,9 +160,8 @@ import com.trustweave.TrustWeave
 import com.trustweave.core.*
 import com.trustweave.credential.PresentationOptions
 import com.trustweave.credential.wallet.Wallet
+import com.trustweave.credential.format.ProofSuiteId
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -172,7 +171,11 @@ fun main() = runBlocking {
     println("=".repeat(70))
 
     // Step 1: Create TrustWeave instance
-    val TrustWeave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+        credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
+    }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for university (issuer) and student (holder)
@@ -229,9 +232,10 @@ fun main() = runBlocking {
                     "honors" to "Summa Cum Laude"
                 }
             }
-            expirationDate(Instant.now().plus(10, ChronoUnit.YEARS).toString())
+            issued(Instant.now())
+            expires(10, ChronoUnit.YEARS)
         }
-        by(issuerDid = universityDid.value, keyId = universityKeyId)
+        signedBy(issuerDid = universityDid.value, keyId = universityKeyId)
     }
     
     val credential = when (issuanceResult) {
@@ -375,7 +379,11 @@ This section breaks down the complete example above into individual steps with e
 Create a TrustWeave instance that provides access to all functionality:
 
 ```kotlin
-val TrustWeave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+        credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
+    }
 ```
 
 **What this does:** Initializes TrustWeave with default configuration, including in-memory KMS, DID methods, and wallet factories. For production, configure with specific providers.
@@ -436,9 +444,10 @@ val issuanceResult = trustWeave.issue {
                 "honors" to "Summa Cum Laude"
             }
         }
-        expirationDate(Instant.now().plus(10, ChronoUnit.YEARS).toString())
+        issued(Instant.now())
+        expires(10, ChronoUnit.YEARS)
     }
-    by(issuerDid = universityDid.value, keyId = universityKeyId)
+    signedBy(issuerDid = universityDid.value, keyId = universityKeyId)
 }
 
 val credential = when (issuanceResult) {

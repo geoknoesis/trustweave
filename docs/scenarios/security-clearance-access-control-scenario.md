@@ -161,8 +161,7 @@ import com.trustweave.credential.PresentationOptions
 import com.trustweave.credential.wallet.Wallet
 import com.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import com.trustweave.credential.format.ProofSuiteId
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -172,7 +171,11 @@ fun main() = runBlocking {
     println("=".repeat(70))
 
     // Step 1: Create TrustWeave instance
-    val TrustWeave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+        credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
+    }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for security authority, personnel, and classified systems
@@ -231,29 +234,39 @@ fun main() = runBlocking {
     println("✅ Confidential System DID: ${confidentialSystemDid.value}")
 
     // Step 3: Issue Top Secret clearance for Personnel 1
-    val topSecretClearance = TrustWeave.issueCredential(
-        issuerDid = securityAuthorityDid.value,
-        issuerKeyId = securityAuthorityKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", personnel1Did.value)
-            put("securityClearance", buildJsonObject {
-                put("clearanceLevel", "Top Secret")
-                put("clearanceType", "TS/SCI") // Top Secret/Sensitive Compartmented Information
-                put("clearanceGranted", true)
-                put("grantDate", Instant.now().toString())
-                put("investigationType", "SSBI") // Single Scope Background Investigation
-                put("investigationDate", Instant.now().minus(365, ChronoUnit.DAYS).toString())
-                put("polygraphRequired", true)
-                put("polygraphDate", Instant.now().minus(180, ChronoUnit.DAYS).toString())
-                put("authority", "Department of Defense")
-                put("clearanceNumber", "TS-2024-001234")
-                put("compartments", listOf("HCS", "TK", "SI")) // Compartments
-                put("needToKnow", true)
-            })
-        },
-        types = listOf("VerifiableCredential", "SecurityClearanceCredential", "TopSecretClearance"),
-        expirationDate = Instant.now().plus(5, ChronoUnit.YEARS).toString()
-    ).getOrThrow()
+    import com.trustweave.trust.types.IssuanceResult
+    
+    val topSecretClearanceResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "SecurityClearanceCredential", "TopSecretClearance")
+            issuer(securityAuthorityDid.value)
+            subject {
+                id(personnel1Did.value)
+                "securityClearance" {
+                    "clearanceLevel" to "Top Secret"
+                    "clearanceType" to "TS/SCI" // Top Secret/Sensitive Compartmented Information
+                    "clearanceGranted" to true
+                    "grantDate" to Instant.now().toString()
+                    "investigationType" to "SSBI" // Single Scope Background Investigation
+                    "investigationDate" to Instant.now().minus(365, ChronoUnit.DAYS).toString()
+                    "polygraphRequired" to true
+                    "polygraphDate" to Instant.now().minus(180, ChronoUnit.DAYS).toString()
+                    "authority" to "Department of Defense"
+                    "clearanceNumber" to "TS-2024-001234"
+                    "compartments" to listOf("HCS", "TK", "SI") // Compartments
+                    "needToKnow" to true
+                }
+            }
+            issued(Instant.now())
+            expires(5, ChronoUnit.YEARS)
+        }
+        signedBy(issuerDid = securityAuthorityDid.value, keyId = securityAuthorityKeyId)
+    }
+    
+    val topSecretClearance = when (topSecretClearanceResult) {
+        is IssuanceResult.Success -> topSecretClearanceResult.credential
+        else -> throw IllegalStateException("Failed to issue top secret clearance")
+    }
 
     println("\n✅ Top Secret clearance credential issued: ${topSecretClearance.id}")
     println("   Clearance Level: Top Secret/SCI")
@@ -261,28 +274,36 @@ fun main() = runBlocking {
     println("   Note: Full identity NOT included for privacy")
 
     // Step 4: Issue Secret clearance for Personnel 2
-    val secretClearance = TrustWeave.issueCredential(
-        issuerDid = securityAuthorityDid.value,
-        issuerKeyId = securityAuthorityKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", personnel2Did.value)
-            put("securityClearance", buildJsonObject {
-                put("clearanceLevel", "Secret")
-                put("clearanceType", "Secret")
-                put("clearanceGranted", true)
-                put("grantDate", Instant.now().toString())
-                put("investigationType", "NACLC") // National Agency Check with Law and Credit
-                put("investigationDate", Instant.now().minus(180, ChronoUnit.DAYS).toString())
-                put("polygraphRequired", false)
-                put("authority", "Department of Defense")
-                put("clearanceNumber", "S-2024-005678")
-                put("compartments", emptyList<String>())
-                put("needToKnow", true)
-            })
-        },
-        types = listOf("VerifiableCredential", "SecurityClearanceCredential", "SecretClearance"),
-        expirationDate = Instant.now().plus(5, ChronoUnit.YEARS).toString()
-    ).getOrThrow()
+    val secretClearanceResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "SecurityClearanceCredential", "SecretClearance")
+            issuer(securityAuthorityDid.value)
+            subject {
+                id(personnel2Did.value)
+                "securityClearance" {
+                    "clearanceLevel" to "Secret"
+                    "clearanceType" to "Secret"
+                    "clearanceGranted" to true
+                    "grantDate" to Instant.now().toString()
+                    "investigationType" to "NACLC" // National Agency Check with Law and Credit
+                    "investigationDate" to Instant.now().minus(180, ChronoUnit.DAYS).toString()
+                    "polygraphRequired" to false
+                    "authority" to "Department of Defense"
+                    "clearanceNumber" to "S-2024-005678"
+                    "compartments" to emptyList<String>()
+                    "needToKnow" to true
+                }
+            }
+            issued(Instant.now())
+            expires(5, ChronoUnit.YEARS)
+        }
+        signedBy(issuerDid = securityAuthorityDid.value, keyId = securityAuthorityKeyId)
+    }
+    
+    val secretClearance = when (secretClearanceResult) {
+        is IssuanceResult.Success -> secretClearanceResult.credential
+        else -> throw IllegalStateException("Failed to issue secret clearance")
+    }
 
     println("✅ Secret clearance credential issued: ${secretClearance.id}")
     println("   Clearance Level: Secret")

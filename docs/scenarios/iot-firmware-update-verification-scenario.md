@@ -164,8 +164,7 @@ import com.trustweave.credential.wallet.Wallet
 import com.trustweave.json.DigestUtils
 import com.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import com.trustweave.credential.format.ProofSuiteId
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Base64
@@ -176,7 +175,11 @@ fun main() = runBlocking {
     println("=".repeat(70))
 
     // Step 1: Create TrustWeave instance
-    val TrustWeave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+        credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
+    }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for manufacturer, update server, and IoT device
@@ -240,69 +243,89 @@ fun main() = runBlocking {
     println("   Firmware Digest: ${firmwareDigest.take(20)}...")
 
     // Step 4: Issue firmware attestation credential
-    val firmwareAttestation = TrustWeave.issueCredential(
-        issuerDid = manufacturerDid.value,
-        issuerKeyId = manufacturerKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", "firmware:device-model-2024:$firmwareVersion")
-            put("firmware", buildJsonObject {
-                put("firmwareId", "fw-device-model-2024-$firmwareVersion")
-                put("version", firmwareVersion)
-                put("manufacturer", manufacturerDid.value)
-                put("deviceModel", "DeviceModel-2024")
-                put("firmwareDigest", firmwareDigest)
-                put("firmwareSize", firmwareSize)
-                put("buildDate", Instant.now().toString())
-                put("releaseNotes", "Security patches and bug fixes")
-                put("updateType", "Security")
-                put("compatibility", buildJsonObject {
-                    put("minHardwareVersion", "1.0")
-                    put("maxHardwareVersion", "2.0")
-                    put("requiredBootloader", "1.5")
-                })
-                put("checksum", buildJsonObject {
-                    put("algorithm", "SHA-256")
-                    put("digest", firmwareDigest)
-                })
-            })
-        },
-        types = listOf("VerifiableCredential", "FirmwareAttestationCredential", "SoftwareCredential"),
-        expirationDate = null // Firmware attestation doesn't expire
-    ).getOrThrow()
+    import com.trustweave.trust.types.IssuanceResult
+    
+    val firmwareAttestationResult = trustWeave.issue {
+        credential {
+            id("firmware:device-model-2024:$firmwareVersion")
+            type("VerifiableCredential", "FirmwareAttestationCredential", "SoftwareCredential")
+            issuer(manufacturerDid.value)
+            subject {
+                id("firmware:device-model-2024:$firmwareVersion")
+                "firmware" {
+                    "firmwareId" to "fw-device-model-2024-$firmwareVersion"
+                    "version" to firmwareVersion
+                    "manufacturer" to manufacturerDid.value
+                    "deviceModel" to "DeviceModel-2024"
+                    "firmwareDigest" to firmwareDigest
+                    "firmwareSize" to firmwareSize
+                    "buildDate" to Instant.now().toString()
+                    "releaseNotes" to "Security patches and bug fixes"
+                    "updateType" to "Security"
+                    "compatibility" {
+                        "minHardwareVersion" to "1.0"
+                        "maxHardwareVersion" to "2.0"
+                        "requiredBootloader" to "1.5"
+                    }
+                    "checksum" {
+                        "algorithm" to "SHA-256"
+                        "digest" to firmwareDigest
+                    }
+                }
+            }
+            issued(Instant.now())
+            // Firmware attestation doesn't expire - no expires() call
+        }
+        signedBy(issuerDid = manufacturerDid.value, keyId = manufacturerKeyId)
+    }
+    
+    val firmwareAttestation = when (firmwareAttestationResult) {
+        is IssuanceResult.Success -> firmwareAttestationResult.credential
+        else -> throw IllegalStateException("Failed to issue firmware attestation")
+    }
 
     println("\n✅ Firmware attestation credential issued: ${firmwareAttestation.id}")
 
     // Step 5: Issue firmware update authorization credential
-    val updateAuthorization = TrustWeave.issueCredential(
-        issuerDid = updateServerDid.value,
-        issuerKeyId = updateServerKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", "update-auth:device-model-2024:$firmwareVersion")
-            put("updateAuthorization", buildJsonObject {
-                put("firmwareId", "fw-device-model-2024-$firmwareVersion")
-                put("authorized", true)
-                put("authorizationDate", Instant.now().toString())
-                put("updatePolicy", buildJsonObject {
-                    put("updateType", "Mandatory") // Optional, Recommended, Mandatory
-                    put("rollbackAllowed", true)
-                    put("requiresUserConsent", false)
-                    put("updateWindow", buildJsonObject {
-                        put("startTime", "00:00:00")
-                        put("endTime", "23:59:59")
-                        put("timezone", "UTC")
-                    })
-                })
-                put("targetDevices", buildJsonObject {
-                    put("deviceModel", "DeviceModel-2024")
-                    put("currentVersions", listOf("2.0.0", "2.0.1"))
-                    put("excludedDevices", emptyList<String>())
-                })
-                put("updateServer", updateServerDid.value)
-            })
-        },
-        types = listOf("VerifiableCredential", "FirmwareUpdateAuthorizationCredential", "UpdateCredential"),
-        expirationDate = Instant.now().plus(30, ChronoUnit.DAYS).toString() // Authorization expires
-    ).getOrThrow()
+    val updateAuthorizationResult = trustWeave.issue {
+        credential {
+            id("update-auth:device-model-2024:$firmwareVersion")
+            type("VerifiableCredential", "FirmwareUpdateAuthorizationCredential", "UpdateCredential")
+            issuer(updateServerDid.value)
+            subject {
+                id("update-auth:device-model-2024:$firmwareVersion")
+                "updateAuthorization" {
+                    "firmwareId" to "fw-device-model-2024-$firmwareVersion"
+                    "authorized" to true
+                    "authorizationDate" to Instant.now().toString()
+                    "updatePolicy" {
+                        "updateType" to "Mandatory" // Optional, Recommended, Mandatory
+                        "rollbackAllowed" to true
+                        "requiresUserConsent" to false
+                        "updateWindow" {
+                            "startTime" to "00:00:00"
+                            "endTime" to "23:59:59"
+                            "timezone" to "UTC"
+                        }
+                    }
+                    "targetDevices" {
+                        "deviceModel" to "DeviceModel-2024"
+                        "currentVersions" to listOf("2.0.0", "2.0.1")
+                        "excludedDevices" to emptyList<String>()
+                    }
+                    "updateServer" to updateServerDid.value
+                }
+            }
+            issued(Instant.now())
+            expires(30, ChronoUnit.DAYS) // Authorization expires
+        }
+        signedBy(issuerDid = updateServerDid.value, keyId = updateServerKeyId)
+    }
+    
+    val updateAuthorization = when (updateAuthorizationResult) {
+        is IssuanceResult.Success -> updateAuthorizationResult.credential
+        else -> throw IllegalStateException("Failed to issue update authorization")
+    }
 
     println("✅ Firmware update authorization credential issued: ${updateAuthorization.id}")
 
@@ -341,9 +364,14 @@ fun main() = runBlocking {
     // Step 8: Device verification - Firmware attestation
     println("\n🔍 Device Verification - Firmware Attestation:")
 
-    val firmwareVerification = TrustWeave.verifyCredential(firmwareAttestation).getOrThrow()
+    import com.trustweave.trust.types.VerificationResult
+    
+    val firmwareVerification = trustWeave.verify {
+        credential(firmwareAttestation)
+    }
 
-    if (firmwareVerification.valid) {
+    when (firmwareVerification) {
+        is VerificationResult.Valid -> {
         val credentialSubject = firmwareAttestation.credentialSubject
         val firmware = credentialSubject.jsonObject["firmware"]?.jsonObject
         val version = firmware?.get("version")?.jsonPrimitive?.content
@@ -364,17 +392,22 @@ fun main() = runBlocking {
             println("❌ Firmware authenticity NOT VERIFIED")
             println("❌ Firmware may have been tampered with")
         }
-    } else {
-        println("❌ Firmware Attestation Credential: INVALID")
-        println("❌ Firmware authenticity NOT VERIFIED")
+        }
+        is VerificationResult.Invalid -> {
+            println("❌ Firmware Attestation Credential: INVALID")
+            println("❌ Firmware authenticity NOT VERIFIED")
+        }
     }
 
     // Step 9: Device verification - Update authorization
     println("\n🔍 Device Verification - Update Authorization:")
 
-    val authorizationVerification = TrustWeave.verifyCredential(updateAuthorization).getOrThrow()
+    val authorizationVerification = trustWeave.verify {
+        credential(updateAuthorization)
+    }
 
-    if (authorizationVerification.valid) {
+    when (authorizationVerification) {
+        is VerificationResult.Valid -> {
         val credentialSubject = updateAuthorization.credentialSubject
         val updateAuth = credentialSubject.jsonObject["updateAuthorization"]?.jsonObject
         val authorized = updateAuth?.get("authorized")?.jsonPrimitive?.content?.toBoolean() ?: false
@@ -402,8 +435,8 @@ fun main() = runBlocking {
     // Step 10: Complete firmware update verification workflow
     println("\n🔍 Complete Firmware Update Verification Workflow:")
 
-    val firmwareValid = TrustWeave.verifyCredential(firmwareAttestation).getOrThrow().valid
-    val authorizationValid = TrustWeave.verifyCredential(updateAuthorization).getOrThrow().valid
+    val firmwareValid = trustWeave.verify { credential(firmwareAttestation) } is VerificationResult.Valid
+    val authorizationValid = trustWeave.verify { credential(updateAuthorization) } is VerificationResult.Valid
 
     if (firmwareValid && authorizationValid) {
         // Verify firmware digest matches

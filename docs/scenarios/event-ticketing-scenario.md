@@ -162,8 +162,7 @@ import com.trustweave.credential.PresentationOptions
 import com.trustweave.credential.wallet.Wallet
 import com.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import com.trustweave.credential.format.ProofSuiteId
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -173,7 +172,11 @@ fun main() = runBlocking {
     println("=".repeat(70))
 
     // Step 1: Create TrustWeave instance
-    val TrustWeave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+        credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
+    }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for event organizer, attendee, and venue
@@ -218,30 +221,40 @@ fun main() = runBlocking {
     println("✅ Venue DID: ${venueDid.value}")
 
     // Step 3: Issue event ticket credential
-    val ticketCredential = TrustWeave.issueCredential(
-        issuerDid = organizerDid.value,
-        issuerKeyId = organizerKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", attendeeDid.value)
-            put("ticket", buildJsonObject {
-                put("eventName", "Tech Conference 2024")
-                put("eventDate", "2024-06-15")
-                put("eventTime", "09:00")
-                put("venue", "Convention Center")
-                put("seatNumber", "A-42")
-                put("section", "VIP")
-                put("ticketType", "VIP Pass")
-                put("price", "250.00")
-                put("currency", "USD")
-                put("ticketNumber", "TC2024-001234")
-                put("transferable", true)
-                put("maxTransfers", 1)
-                put("transferCount", 0)
-            })
-        },
-        types = listOf("VerifiableCredential", "EventTicketCredential", "TicketCredential"),
-        expirationDate = "2024-06-15T23:59:59Z"
-    ).getOrThrow()
+    import com.trustweave.trust.types.IssuanceResult
+    
+    val ticketCredentialResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "EventTicketCredential", "TicketCredential")
+            issuer(organizerDid.value)
+            subject {
+                id(attendeeDid.value)
+                "ticket" {
+                    "eventName" to "Tech Conference 2024"
+                    "eventDate" to "2024-06-15"
+                    "eventTime" to "09:00"
+                    "venue" to "Convention Center"
+                    "seatNumber" to "A-42"
+                    "section" to "VIP"
+                    "ticketType" to "VIP Pass"
+                    "price" to "250.00"
+                    "currency" to "USD"
+                    "ticketNumber" to "TC2024-001234"
+                    "transferable" to true
+                    "maxTransfers" to 1
+                    "transferCount" to 0
+                }
+            }
+            issued(Instant.now())
+            expires(Instant.parse("2024-06-15T23:59:59Z"))
+        }
+        signedBy(issuerDid = organizerDid.value, keyId = organizerKeyId)
+    }
+    
+    val ticketCredential = when (ticketCredentialResult) {
+        is IssuanceResult.Success -> ticketCredentialResult.credential
+        else -> throw IllegalStateException("Failed to issue ticket credential")
+    }
 
     println("\n✅ Event ticket credential issued: ${ticketCredential.id}")
     println("   Event: Tech Conference 2024")
@@ -274,9 +287,14 @@ fun main() = runBlocking {
     // Step 6: Verify ticket before venue entry
     println("\n🎫 Pre-Entry Ticket Verification:")
 
-    val ticketVerification = TrustWeave.verifyCredential(ticketCredential).getOrThrow()
+    import com.trustweave.trust.types.VerificationResult
+    
+    val ticketVerification = trustWeave.verify {
+        credential(ticketCredential)
+    }
 
-    if (ticketVerification.valid) {
+    when (ticketVerification) {
+        is VerificationResult.Valid -> {
         println("✅ Ticket Credential: VALID")
         println("   Proof valid: ${ticketVerification.proofValid}")
         println("   Issuer valid: ${ticketVerification.issuerValid}")
@@ -299,10 +317,12 @@ fun main() = runBlocking {
             println("   Event Date: $eventDate")
             println("✅ Entry APPROVED")
         }
-    } else {
-        println("❌ Ticket Credential: INVALID")
-        println("   Errors: ${ticketVerification.errors}")
-        println("❌ Entry DENIED")
+        }
+        is VerificationResult.Invalid -> {
+            println("❌ Ticket Credential: INVALID")
+            println("   Errors: ${ticketVerification.allErrors.joinToString()}")
+            println("❌ Entry DENIED")
+        }
     }
 
     // Step 7: Ticket transfer to new attendee
@@ -322,32 +342,40 @@ fun main() = runBlocking {
 
         // Issue new ticket credential to new attendee (in real system, this would be signed by original holder)
         // For this example, we'll issue a transfer credential from the organizer
-        val transferredTicketCredential = TrustWeave.issueCredential(
-            issuerDid = organizerDid.value,
-            issuerKeyId = organizerKeyId,
-            credentialSubject = buildJsonObject {
-                put("id", newAttendeeDid.value)
-                put("ticket", buildJsonObject {
-                    put("eventName", "Tech Conference 2024")
-                    put("eventDate", "2024-06-15")
-                    put("eventTime", "09:00")
-                    put("venue", "Convention Center")
-                    put("seatNumber", "A-42")
-                    put("section", "VIP")
-                    put("ticketType", "VIP Pass")
-                    put("price", "250.00")
-                    put("currency", "USD")
-                    put("ticketNumber", "TC2024-001234")
-                    put("transferable", false) // Transfer disabled after first transfer
-                    put("maxTransfers", 1)
-                    put("transferCount", 1)
-                    put("transferredFrom", attendeeDid.value)
-                    put("transferDate", Instant.now().toString())
-                })
-            },
-            types = listOf("VerifiableCredential", "EventTicketCredential", "TicketCredential", "TransferredTicketCredential"),
-            expirationDate = "2024-06-15T23:59:59Z"
-        ).getOrThrow()
+        val transferredTicketCredentialResult = trustWeave.issue {
+            credential {
+                type("VerifiableCredential", "EventTicketCredential", "TicketCredential", "TransferredTicketCredential")
+                issuer(organizerDid.value)
+                subject {
+                    id(newAttendeeDid.value)
+                    "ticket" {
+                        "eventName" to "Tech Conference 2024"
+                        "eventDate" to "2024-06-15"
+                        "eventTime" to "09:00"
+                        "venue" to "Convention Center"
+                        "seatNumber" to "A-42"
+                        "section" to "VIP"
+                        "ticketType" to "VIP Pass"
+                        "price" to "250.00"
+                        "currency" to "USD"
+                        "ticketNumber" to "TC2024-001234"
+                        "transferable" to false // Transfer disabled after first transfer
+                        "maxTransfers" to 1
+                        "transferCount" to 1
+                        "transferredFrom" to attendeeDid.value
+                        "transferDate" to Instant.now().toString()
+                    }
+                }
+                issued(Instant.now())
+                expires(Instant.parse("2024-06-15T23:59:59Z"))
+            }
+            signedBy(issuerDid = organizerDid.value, keyId = organizerKeyId)
+        }
+        
+        val transferredTicketCredential = when (transferredTicketCredentialResult) {
+            is IssuanceResult.Success -> transferredTicketCredentialResult.credential
+            else -> throw IllegalStateException("Failed to issue transferred ticket credential")
+        }
 
         println("✅ Ticket transferred to new attendee")
         println("   New holder: $newAttendeeDid")
@@ -378,9 +406,12 @@ fun main() = runBlocking {
         // Step 8: Verify transferred ticket at venue
         println("\n🎫 Transferred Ticket Verification at Venue:")
 
-        val transferredTicketVerification = TrustWeave.verifyCredential(transferredTicketCredential).getOrThrow()
+        val transferredTicketVerification = trustWeave.verify {
+            credential(transferredTicketCredential)
+        }
 
-        if (transferredTicketVerification.valid) {
+        when (transferredTicketVerification) {
+            is VerificationResult.Valid -> {
             println("✅ Transferred Ticket Credential: VALID")
 
             // Check transfer chain
@@ -392,9 +423,11 @@ fun main() = runBlocking {
             println("   Current holder: ${newAttendeeDid.value}")
             println("   Transfer count: $transferCount")
             println("✅ Transfer verified - Entry APPROVED")
-        } else {
-            println("❌ Transferred Ticket Credential: INVALID")
-            println("❌ Entry DENIED")
+            }
+            is VerificationResult.Invalid -> {
+                println("❌ Transferred Ticket Credential: INVALID")
+                println("❌ Entry DENIED")
+            }
         }
     } else {
         println("❌ Ticket is not transferable or transfer limit reached")

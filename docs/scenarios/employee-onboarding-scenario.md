@@ -164,10 +164,8 @@ import com.trustweave.TrustWeave
 import com.trustweave.core.*
 import com.trustweave.credential.PresentationOptions
 import com.trustweave.credential.wallet.Wallet
-import com.trustweave.spi.services.WalletCreationOptionsBuilder
+import com.trustweave.credential.format.ProofSuiteId
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -177,7 +175,11 @@ fun main() = runBlocking {
     println("=".repeat(70))
 
     // Step 1: Create TrustWeave instance
-    val TrustWeave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+        credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
+    }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for all parties
@@ -259,68 +261,94 @@ fun main() = runBlocking {
     println("✅ Employer DID: ${employerDid.value}")
 
     // Step 3: Issue education credential
-    val educationCredential = TrustWeave.issueCredential(
-        issuerDid = universityDid.value,
-        issuerKeyId = universityKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", candidateDid.value)
-            put("degree", buildJsonObject {
-                put("type", "MasterDegree")
-                put("name", "Master of Business Administration")
-                put("university", "Business School University")
-                put("graduationDate", "2020-06-15")
-                put("gpa", "3.9")
-            })
-        },
-        types = listOf("VerifiableCredential", "EducationCredential", "DegreeCredential"),
-        expirationDate = Instant.now().plus(50, ChronoUnit.YEARS).toString()
-    ).getOrThrow()
+    import com.trustweave.trust.types.IssuanceResult
+    
+    val educationCredentialResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "EducationCredential", "DegreeCredential")
+            issuer(universityDid.value)
+            subject {
+                id(candidateDid.value)
+                "degree" {
+                    "type" to "MasterDegree"
+                    "name" to "Master of Business Administration"
+                    "university" to "Business School University"
+                    "graduationDate" to "2020-06-15"
+                    "gpa" to "3.9"
+                }
+            }
+            issued(Instant.now())
+            expires(50, ChronoUnit.YEARS)
+        }
+        signedBy(issuerDid = universityDid.value, keyId = universityKeyId)
+    }
+    
+    val educationCredential = when (educationCredentialResult) {
+        is IssuanceResult.Success -> educationCredentialResult.credential
+        else -> throw IllegalStateException("Failed to issue education credential")
+    }
 
     println("\n✅ Education credential issued: ${educationCredential.id}")
 
     // Step 4: Issue work history credential
-    val workHistoryCredential = TrustWeave.issueCredential(
-        issuerDid = previousEmployerDid.value,
-        issuerKeyId = previousEmployerKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", candidateDid.value)
-            put("employment", buildJsonObject {
-                put("company", "Tech Corp Inc")
-                put("position", "Senior Software Engineer")
-                put("startDate", "2020-07-01")
-                put("endDate", "2023-12-31")
-                put("responsibilities", listOf(
-                    "Led development of microservices architecture",
-                    "Mentored junior developers",
-                    "Improved system performance by 40%"
-                ))
-                put("performanceRating", "Exceeds Expectations")
-            })
-        },
-        types = listOf("VerifiableCredential", "EmploymentCredential", "WorkHistoryCredential"),
-        expirationDate = Instant.now().plus(10, ChronoUnit.YEARS).toString()
-    ).getOrThrow()
+    val workHistoryCredentialResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "EmploymentCredential", "WorkHistoryCredential")
+            issuer(previousEmployerDid.value)
+            subject {
+                id(candidateDid.value)
+                "employment" {
+                    "company" to "Tech Corp Inc"
+                    "position" to "Senior Software Engineer"
+                    "startDate" to "2020-07-01"
+                    "endDate" to "2023-12-31"
+                    "responsibilities" to listOf(
+                        "Led development of microservices architecture",
+                        "Mentored junior developers",
+                        "Improved system performance by 40%"
+                    )
+                    "performanceRating" to "Exceeds Expectations"
+                }
+            }
+            issued(Instant.now())
+            expires(10, ChronoUnit.YEARS)
+        }
+        signedBy(issuerDid = previousEmployerDid.value, keyId = previousEmployerKeyId)
+    }
+    
+    val workHistoryCredential = when (workHistoryCredentialResult) {
+        is IssuanceResult.Success -> workHistoryCredentialResult.credential
+        else -> throw IllegalStateException("Failed to issue work history credential")
+    }
 
     println("✅ Work history credential issued: ${workHistoryCredential.id}")
 
     // Step 5: Issue certification credential
-    val certificationCredential = TrustWeave.issueCredential(
-        issuerDid = certificationBodyDid.value,
-        issuerKeyId = certificationBodyKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", candidateDid.value)
-            put("certification", buildJsonObject {
-                put("name", "AWS Certified Solutions Architect")
-                put("issuingOrganization", "Amazon Web Services")
-                put("issueDate", "2021-03-15")
-                put("expirationDate", "2024-03-15")
-                put("certificationNumber", "AWS-SA-12345")
-                put("level", "Professional")
-            })
-        },
-        types = listOf("VerifiableCredential", "CertificationCredential", "ProfessionalCertificationCredential"),
-        expirationDate = "2024-03-15T00:00:00Z"
-    ).getOrThrow()
+    val certificationCredentialResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "CertificationCredential", "ProfessionalCertificationCredential")
+            issuer(certificationBodyDid.value)
+            subject {
+                id(candidateDid.value)
+                "certification" {
+                    "name" to "AWS Certified Solutions Architect"
+                    "issuingOrganization" to "Amazon Web Services"
+                    "issueDate" to "2021-03-15"
+                    "expirationDate" to "2024-03-15"
+                    "certificationNumber" to "AWS-SA-12345"
+                    "level" to "Professional"
+                }
+            }
+            issued(Instant.parse("2021-03-15T00:00:00Z"))
+            expires(Instant.parse("2024-03-15T00:00:00Z"))
+        }
+        signedBy(issuerDid = certificationBodyDid.value, keyId = certificationBodyKeyId)
+    }
+    
+    val certificationCredential = when (certificationCredentialResult) {
+        is IssuanceResult.Success -> certificationCredentialResult.credential
+        else -> throw IllegalStateException("Failed to issue certification credential")
+    }
 
     println("✅ Certification credential issued: ${certificationCredential.id}")
 
@@ -362,29 +390,37 @@ fun main() = runBlocking {
     }
 
     // Step 8: Background check provider verifies credentials and issues verification credential
-    val backgroundCheckCredential = TrustWeave.issueCredential(
-        issuerDid = backgroundCheckProviderDid.value,
-        issuerKeyId = backgroundCheckProviderKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", candidateDid.value)
-            put("backgroundCheck", buildJsonObject {
-                put("checkType", "Comprehensive")
-                put("checkDate", Instant.now().toString())
-                put("status", "Passed")
-                put("verifiedCredentials", listOf(
-                    "Education: Verified",
-                    "Employment: Verified",
-                    "Certification: Verified",
-                    "Criminal Record: Clear",
-                    "Credit Check: Passed"
-                ))
-                put("checkProvider", "Trusted Background Checks Inc")
-                put("reportId", "BC-2024-001234")
-            })
-        },
-        types = listOf("VerifiableCredential", "BackgroundCheckCredential", "VerificationCredential"),
-        expirationDate = Instant.now().plus(1, ChronoUnit.YEARS).toString()
-    ).getOrThrow()
+    val backgroundCheckCredentialResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "BackgroundCheckCredential", "VerificationCredential")
+            issuer(backgroundCheckProviderDid.value)
+            subject {
+                id(candidateDid.value)
+                "backgroundCheck" {
+                    "checkType" to "Comprehensive"
+                    "checkDate" to Instant.now().toString()
+                    "status" to "Passed"
+                    "verifiedCredentials" to listOf(
+                        "Education: Verified",
+                        "Employment: Verified",
+                        "Certification: Verified",
+                        "Criminal Record: Clear",
+                        "Credit Check: Passed"
+                    )
+                    "checkProvider" to "Trusted Background Checks Inc"
+                    "reportId" to "BC-2024-001234"
+                }
+            }
+            issued(Instant.now())
+            expires(1, ChronoUnit.YEARS)
+        }
+        signedBy(issuerDid = backgroundCheckProviderDid.value, keyId = backgroundCheckProviderKeyId)
+    }
+    
+    val backgroundCheckCredential = when (backgroundCheckCredentialResult) {
+        is IssuanceResult.Success -> backgroundCheckCredentialResult.credential
+        else -> throw IllegalStateException("Failed to issue background check credential")
+    }
 
     val backgroundCheckCredentialId = candidateWallet.store(backgroundCheckCredential)
     candidateWallet.withOrganization { org ->
@@ -419,17 +455,27 @@ fun main() = runBlocking {
     // Step 10: Employer verifies all credentials
     println("\n📋 Employer Verification Process:")
 
-    val educationVerification = TrustWeave.verifyCredential(educationCredential).getOrThrow()
-    println("Education Credential: ${if (educationVerification.valid) "✅ VALID" else "❌ INVALID"}")
+    import com.trustweave.trust.types.VerificationResult
+    
+    val educationVerification = trustWeave.verify {
+        credential(educationCredential)
+    }
+    println("Education Credential: ${when (educationVerification) { is VerificationResult.Valid -> "✅ VALID"; else -> "❌ INVALID" }}")
 
-    val workHistoryVerification = TrustWeave.verifyCredential(workHistoryCredential).getOrThrow()
-    println("Work History Credential: ${if (workHistoryVerification.valid) "✅ VALID" else "❌ INVALID"}")
+    val workHistoryVerification = trustWeave.verify {
+        credential(workHistoryCredential)
+    }
+    println("Work History Credential: ${when (workHistoryVerification) { is VerificationResult.Valid -> "✅ VALID"; else -> "❌ INVALID" }}")
 
-    val certificationVerification = TrustWeave.verifyCredential(certificationCredential).getOrThrow()
-    println("Certification Credential: ${if (certificationVerification.valid) "✅ VALID" else "❌ INVALID"}")
+    val certificationVerification = trustWeave.verify {
+        credential(certificationCredential)
+    }
+    println("Certification Credential: ${when (certificationVerification) { is VerificationResult.Valid -> "✅ VALID"; else -> "❌ INVALID" }}")
 
-    val backgroundCheckVerification = TrustWeave.verifyCredential(backgroundCheckCredential).getOrThrow()
-    println("Background Check Credential: ${if (backgroundCheckVerification.valid) "✅ VALID" else "❌ INVALID"}")
+    val backgroundCheckVerification = trustWeave.verify {
+        credential(backgroundCheckCredential)
+    }
+    println("Background Check Credential: ${when (backgroundCheckVerification) { is VerificationResult.Valid -> "✅ VALID"; else -> "❌ INVALID" }}")
 
     // Step 11: Display wallet statistics
     val stats = candidateWallet.getStatistics()
@@ -445,7 +491,7 @@ fun main() = runBlocking {
         workHistoryVerification,
         certificationVerification,
         backgroundCheckVerification
-    ).all { it.valid }
+    ).all { it is VerificationResult.Valid }
 
     if (allValid) {
         println("\n" + "=".repeat(70))

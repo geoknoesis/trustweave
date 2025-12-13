@@ -173,6 +173,13 @@ fun main() = runBlocking {
     val didMethod = DidKeyMockMethod(journalistKms)
     val didRegistry = DidMethodRegistry().apply { register(didMethod) }
 
+    // Initialize TrustWeave
+    val trustWeave = TrustWeave.build {
+        keyManagementService(journalistKms)
+        didMethodRegistry(didRegistry)
+        credentialService { CredentialService() }
+    }
+
     println("Services initialized")
 }
 ```
@@ -281,23 +288,31 @@ import java.time.Instant
 
     // Authorship credential proves journalist created the article
     // This is critical for attribution and accountability
-    val authorshipCredential = VerifiableCredential(
-        id = "https://news.example.com/articles/${articleDid.id.substringAfterLast(":")}/authorship",
-        type = listOf("VerifiableCredential", "AuthorshipCredential", "NewsCredential"),
-        issuer = organizationDid.id, // Organization verifies journalist's authorship
-        credentialSubject = buildJsonObject {
-            put("id", journalistDid.id)
-            put("authorship", buildJsonObject {
-                put("articleDid", articleDid.id)
-                put("contentHash", contentHash)
-                put("role", "author")
-                put("contribution", "primary-author")
-                put("timestamp", Instant.now().toString())
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = null
-    )
+    val orgKeyId = publisherKms.generateKey("Ed25519").id
+    val authorshipResult = trustWeave.issue {
+        credential {
+            id("https://news.example.com/articles/${articleDid.id.substringAfterLast(":")}/authorship")
+            type("VerifiableCredential", "AuthorshipCredential", "NewsCredential")
+            issuer(organizationDid.id) // Organization verifies journalist's authorship
+            subject {
+                id(journalistDid.id)
+                "authorship" {
+                    "articleDid" to articleDid.id
+                    "contentHash" to contentHash
+                    "role" to "author"
+                    "contribution" to "primary-author"
+                    "timestamp" to Instant.now().toString()
+                }
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = organizationDid.id, keyId = orgKeyId)
+    }
+    
+    val authorshipCredential = when (authorshipResult) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> authorshipResult.credential
+        else -> throw IllegalStateException("Failed to create authorship credential: ${authorshipResult.allErrors.joinToString()}")
+    }
 
     println("Authorship credential created:")
     println("  - Article: ${articleDid.id}")
@@ -392,33 +407,33 @@ import com.trustweave.credential.CredentialIssuanceOptions
 
     // Create modification credential
     // This tracks what was changed and by whom
-    val modificationCredential = VerifiableCredential(
-        type = listOf("VerifiableCredential", "ModificationCredential", "NewsCredential"),
-        issuer = organizationDid.id,
-        credentialSubject = buildJsonObject {
-            put("modification", buildJsonObject {
-                put("articleDid", articleDid.id)
-                put("previousHash", contentHash)
-                put("newHash", modifiedHash)
-                put("editorDid", editorDid.id)
-                put("changes", buildJsonObject {
-                    put("accuracyUpdated", "95% → 98%")
-                    put("quoteExtended", "true")
-                    put("institutionAdded", "Medical Research Institute")
-                })
-                put("timestamp", Instant.now().toString())
-            })
-        },
-        issuanceDate = Instant.now().toString()
-    )
-
-    // Issue modification credential
-    val issuedModificationCredential = orgIssuer.issue(
-        credential = modificationCredential,
-        issuerDid = organizationDid.id,
-        keyId = orgKey.id,
-        options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
-    )
+    val modificationResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "ModificationCredential", "NewsCredential")
+            issuer(organizationDid.id)
+            subject {
+                "modification" {
+                    "articleDid" to articleDid.id
+                    "previousHash" to contentHash
+                    "newHash" to modifiedHash
+                    "editorDid" to editorDid.id
+                    "changes" {
+                        "accuracyUpdated" to "95% → 98%"
+                        "quoteExtended" to "true"
+                        "institutionAdded" to "Medical Research Institute"
+                    }
+                    "timestamp" to Instant.now().toString()
+                }
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = organizationDid.id, keyId = orgKeyId)
+    }
+    
+    val issuedModificationCredential = when (modificationResult) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> modificationResult.credential
+        else -> throw IllegalStateException("Failed to create modification credential: ${modificationResult.allErrors.joinToString()}")
+    }
 
     println("Modification credential created:")
     println("  - Editor: ${editorDid.id}")
@@ -442,29 +457,29 @@ import com.trustweave.credential.CredentialIssuanceOptions
     println("\nStep 7: Creating publication credential...")
 
     // Publication credential records when article was published
-    val publicationCredential = VerifiableCredential(
-        type = listOf("VerifiableCredential", "PublicationCredential", "NewsCredential"),
-        issuer = organizationDid.id,
-        credentialSubject = buildJsonObject {
-            put("publication", buildJsonObject {
-                put("articleDid", articleDid.id)
-                put("contentHash", modifiedHash) // Use latest hash
-                put("publisherDid", organizationDid.id)
-                put("publicationDate", Instant.now().toString())
-                put("platform", "https://news.example.com")
-                put("url", "https://news.example.com/articles/ai-healthcare-breakthrough")
-            })
-        },
-        issuanceDate = Instant.now().toString()
-    )
-
-    // Issue publication credential
-    val issuedPublicationCredential = orgIssuer.issue(
-        credential = publicationCredential,
-        issuerDid = organizationDid.id,
-        keyId = orgKey.id,
-        options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
-    )
+    val publicationResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "PublicationCredential", "NewsCredential")
+            issuer(organizationDid.id)
+            subject {
+                "publication" {
+                    "articleDid" to articleDid.id
+                    "contentHash" to modifiedHash // Use latest hash
+                    "publisherDid" to organizationDid.id
+                    "publicationDate" to Instant.now().toString()
+                    "platform" to "https://news.example.com"
+                    "url" to "https://news.example.com/articles/ai-healthcare-breakthrough"
+                }
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = organizationDid.id, keyId = orgKeyId)
+    }
+    
+    val issuedPublicationCredential = when (publicationResult) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> publicationResult.credential
+        else -> throw IllegalStateException("Failed to create publication credential: ${publicationResult.allErrors.joinToString()}")
+    }
 
     println("Publication credential created:")
     println("  - Publisher: ${organizationDid.id}")
@@ -492,54 +507,43 @@ import com.trustweave.credential.CredentialIssuanceOptions
     val factCheckerDid = didMethod.createDid()
 
     // Fact-check credential verifies article claims
-    val factCheckCredential = VerifiableCredential(
-        type = listOf("VerifiableCredential", "FactCheckCredential", "NewsCredential"),
-        issuer = factCheckerDid.id, // Independent fact-checker
-        credentialSubject = buildJsonObject {
-            put("factCheck", buildJsonObject {
-                put("articleDid", articleDid.id)
-                put("claims", buildJsonObject {
-                    put("claim1", buildJsonObject {
-                        put("text", "AI system diagnoses with 98% accuracy")
-                        put("status", "verified")
-                        put("source", "Medical Research Institute Study")
-                        put("verificationDate", Instant.now().toString())
-                    })
-                    put("claim2", buildJsonObject {
-                        put("text", "Dr. Smith is lead researcher")
-                        put("status", "verified")
-                        put("source", "Institution Website")
-                    })
-                })
-                put("overallRating", "verified")
-                put("factCheckerDid", factCheckerDid.id)
-            })
-        },
-        issuanceDate = Instant.now().toString()
-    )
-
-    // Issue fact-check credential
-    val factCheckerKey = journalistKms.generateKey("Ed25519")
-    val factCheckerProofGenerator = Ed25519ProofGenerator(
-        signer = { data, keyId -> journalistKms.sign(keyId, data) },
-        getPublicKeyId = { keyId -> factCheckerKey.id }
-    )
-    val factCheckerProofRegistry = ProofGeneratorRegistry().apply {
-        register(factCheckerProofGenerator)
+    val factCheckerKeyId = journalistKms.generateKey("Ed25519").id
+    val factCheckResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "FactCheckCredential", "NewsCredential")
+            issuer(factCheckerDid.id) // Independent fact-checker
+            subject {
+                "factCheck" {
+                    "articleDid" to articleDid.id
+                    "claims" {
+                        "claim1" {
+                            "text" to "AI system diagnoses with 98% accuracy"
+                            "status" to "verified"
+                            "source" to "Medical Research Institute Study"
+                            "verificationDate" to Instant.now().toString()
+                        }
+                        "claim2" {
+                            "text" to "Dr. Smith is lead researcher"
+                            "status" to "verified"
+                            "source" to "Institution Website"
+                        }
+                    }
+                    "overallRating" to "verified"
+                    "factCheckerDid" to factCheckerDid.id
+                }
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = factCheckerDid.id, keyId = factCheckerKeyId)
+    }
+    
+    val factCheckCredential = when (factCheckResult) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> factCheckResult.credential
+        else -> throw IllegalStateException("Failed to create fact-check credential: ${factCheckResult.allErrors.joinToString()}")
     }
 
-    val factCheckerIssuer = CredentialIssuer(
-        proofGenerator = factCheckerProofGenerator,
-        resolveDid = { did -> didRegistry.resolve(did) != null },
-        proofRegistry = factCheckerProofRegistry
-    )
-
-    val issuedFactCheckCredential = factCheckerIssuer.issue(
-        credential = factCheckCredential,
-        issuerDid = factCheckerDid.id,
-        keyId = factCheckerKey.id,
-        options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
-    )
+    // Fact-check credential is already issued via trustWeave.issue { } DSL above
+    val issuedFactCheckCredential = factCheckCredential
 
     println("Fact-check credential created:")
     println("  - Fact-checker: ${factCheckerDid.id}")
@@ -673,28 +677,37 @@ data class ContentProvenanceRecord(
     println("  - Enables long-term verification")
 }
 
-fun createJournalistCredential(
+suspend fun createJournalistCredential(
+    trustWeave: TrustWeave,
     journalistDid: String,
     organizationDid: String,
+    issuerKeyId: String,
     name: String,
     title: String,
     beat: String
 ): VerifiableCredential {
-    return VerifiableCredential(
-        type = listOf("VerifiableCredential", "JournalistCredential"),
-        issuer = organizationDid,
-        credentialSubject = buildJsonObject {
-            put("id", journalistDid)
-            put("journalist", buildJsonObject {
-                put("name", name)
-                put("title", title)
-                put("beat", beat)
-                put("organizationDid", organizationDid)
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = null
-    )
+    val result = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "JournalistCredential")
+            issuer(organizationDid)
+            subject {
+                id(journalistDid)
+                "journalist" {
+                    "name" to name
+                    "title" to title
+                    "beat" to beat
+                    "organizationDid" to organizationDid
+                }
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = organizationDid, keyId = issuerKeyId)
+    }
+    
+    return when (result) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        else -> throw IllegalStateException("Failed to create journalist credential: ${result.allErrors.joinToString()}")
+    }
 }
 ```
 
@@ -705,28 +718,38 @@ fun createJournalistCredential(
 Track articles with multiple authors:
 
 ```kotlin
-fun createMultiAuthorCredential(
+suspend fun createMultiAuthorCredential(
+    trustWeave: TrustWeave,
     articleDid: String,
     authors: List<String>,
-    organizationDid: String
+    organizationDid: String,
+    issuerKeyId: String
 ): VerifiableCredential {
-    return VerifiableCredential(
-        type = listOf("VerifiableCredential", "AuthorshipCredential"),
-        issuer = organizationDid,
-        credentialSubject = buildJsonObject {
-            put("authorship", buildJsonObject {
-                put("articleDid", articleDid)
-                put("authors", authors.mapIndexed { index, authorDid ->
-                    buildJsonObject {
-                        put("authorDid", authorDid)
-                        put("role", if (index == 0) "primary-author" else "co-author")
-                        put("contribution", "equal")
-                    }
-                })
-            })
-        },
-        issuanceDate = Instant.now().toString()
-    )
+    val result = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "AuthorshipCredential")
+            issuer(organizationDid)
+            subject {
+                "authorship" {
+                    "articleDid" to articleDid
+                    "authors" to arrayOfObjects(*authors.mapIndexed { index, authorDid ->
+                        {
+                            "authorDid" to authorDid
+                            "role" to (if (index == 0) "primary-author" else "co-author")
+                            "contribution" to "equal"
+                        }
+                    }.toTypedArray())
+                }
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = organizationDid, keyId = issuerKeyId)
+    }
+    
+    return when (result) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        else -> throw IllegalStateException("Failed to create multi-author credential: ${result.allErrors.joinToString()}")
+    }
 }
 ```
 
@@ -735,27 +758,37 @@ fun createMultiAuthorCredential(
 Track multiple versions of content:
 
 ```kotlin
-fun createVersionCredential(
+suspend fun createVersionCredential(
+    trustWeave: TrustWeave,
     articleDid: String,
     version: Int,
     previousVersionHash: String,
     currentVersionHash: String,
-    editorDid: String
+    editorDid: String,
+    issuerKeyId: String
 ): VerifiableCredential {
-    return VerifiableCredential(
-        type = listOf("VerifiableCredential", "VersionCredential"),
-        issuer = editorDid,
-        credentialSubject = buildJsonObject {
-            put("version", buildJsonObject {
-                put("articleDid", articleDid)
-                put("versionNumber", version)
-                put("previousHash", previousVersionHash)
-                put("currentHash", currentVersionHash)
-                put("editorDid", editorDid)
-            })
-        },
-        issuanceDate = Instant.now().toString()
-    )
+    val result = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "VersionCredential")
+            issuer(editorDid)
+            subject {
+                "version" {
+                    "articleDid" to articleDid
+                    "versionNumber" to version
+                    "previousHash" to previousVersionHash
+                    "currentHash" to currentVersionHash
+                    "editorDid" to editorDid
+                }
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = editorDid, keyId = issuerKeyId)
+    }
+    
+    return when (result) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        else -> throw IllegalStateException("Failed to create version credential: ${result.allErrors.joinToString()}")
+    }
 }
 ```
 

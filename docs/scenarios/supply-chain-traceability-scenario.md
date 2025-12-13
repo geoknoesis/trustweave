@@ -195,22 +195,19 @@ dependencies {
 Here's a complete example demonstrating supply chain traceability:
 
 ```kotlin
+import com.trustweave.TrustWeave
+import com.trustweave.core.TestkitKmsFactory
+import com.trustweave.core.TestkitDidMethodFactory
+import com.trustweave.trust.types.DidCreationResult
+import com.trustweave.credential.results.IssuanceResult
+import com.trustweave.credential.model.vc.ProofSuiteId
 import com.trustweave.credential.models.VerifiableCredential
 import com.trustweave.credential.models.VerifiablePresentation
-import com.trustweave.credential.CredentialIssuanceOptions
-import com.trustweave.credential.CredentialVerificationOptions
 import com.trustweave.credential.PresentationOptions
-import com.trustweave.credential.issuer.CredentialIssuer
-import com.trustweave.credential.verifier.CredentialVerifier
-import com.trustweave.credential.proof.Ed25519ProofGenerator
-import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.testkit.credential.InMemoryWallet
-import com.trustweave.testkit.did.DidKeyMockMethod
-import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import com.trustweave.anchor.BlockchainAnchorRegistry
 import com.trustweave.anchor.anchorTyped
-import com.trustweave.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
@@ -232,14 +229,17 @@ data class SupplyChainEvent(
 fun main() = runBlocking {
     println("=== Supply Chain & Traceability Scenario ===\n")
 
-    // Step 1: Setup services
-    println("Step 1: Setting up services...")
-    val manufacturerKms = InMemoryKeyManagementService()
-    val distributorKms = InMemoryKeyManagementService()
-    val retailerKms = InMemoryKeyManagementService()
-
-    val didMethod = DidKeyMockMethod(manufacturerKms)
-    val didRegistry = DidMethodRegistry().apply { register(didMethod) }
+    // Step 1: Setup TrustWeave
+    println("Step 1: Setting up TrustWeave...")
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+        credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
+    }
 
     // Setup blockchain for anchoring
     val anchorClient = InMemoryBlockchainAnchorClient("eip155:1", emptyMap())
@@ -249,14 +249,41 @@ fun main() = runBlocking {
 
     // Step 2: Create supply chain participant DIDs
     println("\nStep 2: Creating supply chain participant DIDs...")
-    val manufacturerDid = didMethod.createDid()
-    println("Manufacturer DID: ${manufacturerDid.id}")
+    val manufacturerDidResult = trustWeave.createDid { method("key") }
+    val manufacturerDid = when (manufacturerDidResult) {
+        is DidCreationResult.Success -> {
+            println("Manufacturer DID: ${manufacturerDidResult.did.value}")
+            manufacturerDidResult.did
+        }
+        else -> {
+            println("Failed to create manufacturer DID: ${manufacturerDidResult.reason}")
+            return@runBlocking
+        }
+    }
 
-    val distributorDid = didMethod.createDid()
-    println("Distributor DID: ${distributorDid.id}")
+    val distributorDidResult = trustWeave.createDid { method("key") }
+    val distributorDid = when (distributorDidResult) {
+        is DidCreationResult.Success -> {
+            println("Distributor DID: ${distributorDidResult.did.value}")
+            distributorDidResult.did
+        }
+        else -> {
+            println("Failed to create distributor DID: ${distributorDidResult.reason}")
+            return@runBlocking
+        }
+    }
 
-    val retailerDid = didMethod.createDid()
-    println("Retailer DID: ${retailerDid.id}")
+    val retailerDidResult = trustWeave.createDid { method("key") }
+    val retailerDid = when (retailerDidResult) {
+        is DidCreationResult.Success -> {
+            println("Retailer DID: ${retailerDidResult.did.value}")
+            retailerDidResult.did
+        }
+        else -> {
+            println("Failed to create retailer DID: ${retailerDidResult.reason}")
+            return@runBlocking
+        }
+    }
 
     // Step 3: Create product
     println("\nStep 3: Creating product...")
@@ -315,7 +342,7 @@ val didResolver = CredentialDidResolver { did ->
     val originDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(
             com.trustweave.credential.models.VerifiableCredential.serializer(),
-            issuedOriginCredential
+            originCredential
         )
     )
 
@@ -489,122 +516,130 @@ val didResolver = CredentialDidResolver { did ->
     println("\n=== Scenario Complete ===")
 }
 
-fun createOriginCredential(
+suspend fun createOriginCredential(
+    trustWeave: TrustWeave,
     productId: String,
     productName: String,
     batchNumber: String,
     manufacturerDid: String,
+    issuerKeyId: String,
     originLocation: String,
     productionDate: String,
     certifications: List<String>
 ): VerifiableCredential {
-    return VerifiableCredential(
-        id = "https://manufacturer.example.com/products/$productId/origin",
-        type = listOf("VerifiableCredential", "OriginCredential", "SupplyChainCredential"),
-        issuer = manufacturerDid,
-        credentialSubject = buildJsonObject {
-            put("productId", productId)
-            put("productName", productName)
-            put("batchNumber", batchNumber)
-            put("origin", buildJsonObject {
-                put("location", originLocation)
-                put("productionDate", productionDate)
-                put("certifications", certifications)
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = null,
-        credentialSchema = com.trustweave.credential.models.CredentialSchema(
-            id = "https://example.com/schemas/origin-credential.json",
-            type = "JsonSchemaValidator2018",
-            schemaFormat = com.trustweave.spi.SchemaFormat.JSON_SCHEMA
-        )
-    )
+    val result = trustWeave.issue {
+        credential {
+            id("https://manufacturer.example.com/products/$productId/origin")
+            type("VerifiableCredential", "OriginCredential", "SupplyChainCredential")
+            issuer(manufacturerDid)
+            subject {
+                "productId" to productId
+                "productName" to productName
+                "batchNumber" to batchNumber
+                "origin" {
+                    "location" to originLocation
+                    "productionDate" to productionDate
+                    "certifications" to certifications
+                }
+            }
+            issued(Instant.now())
+            schema("https://example.com/schemas/origin-credential.json")
+        }
+        signedBy(issuerDid = manufacturerDid, keyId = issuerKeyId)
+    }
+    
+    return when (result) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        else -> throw IllegalStateException("Failed to create origin credential: ${result.allErrors.joinToString()}")
+    }
 }
 
-fun createTransferCredential(
+suspend fun createTransferCredential(
+    trustWeave: TrustWeave,
     productId: String,
     fromDid: String,
     toDid: String,
+    issuerKeyId: String,
     transferDate: String,
     transferLocation: String,
     previousCredentialDigest: String
 ): VerifiableCredential {
-    return VerifiableCredential(
-        id = "https://distributor.example.com/transfers/$productId-${Instant.now().toEpochMilli()}",
-        type = listOf("VerifiableCredential", "TransferCredential", "SupplyChainCredential"),
-        issuer = toDid,
-        credentialSubject = buildJsonObject {
-            put("productId", productId)
-            put("transfer", buildJsonObject {
-                put("fromDid", fromDid)
-                put("toDid", toDid)
-                put("transferDate", transferDate)
-                put("transferLocation", transferLocation)
-                put("previousCredentialDigest", previousCredentialDigest)
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = null,
-        credentialSchema = com.trustweave.credential.models.CredentialSchema(
-            id = "https://example.com/schemas/transfer-credential.json",
-            type = "JsonSchemaValidator2018",
-            schemaFormat = com.trustweave.spi.SchemaFormat.JSON_SCHEMA
-        )
-    )
+    val result = trustWeave.issue {
+        credential {
+            id("https://distributor.example.com/transfers/$productId-${Instant.now().toEpochMilli()}")
+            type("VerifiableCredential", "TransferCredential", "SupplyChainCredential")
+            issuer(toDid)
+            subject {
+                "productId" to productId
+                "transfer" {
+                    "fromDid" to fromDid
+                    "toDid" to toDid
+                    "transferDate" to transferDate
+                    "transferLocation" to transferLocation
+                    "previousCredentialDigest" to previousCredentialDigest
+                }
+            }
+            issued(Instant.now())
+            schema("https://example.com/schemas/transfer-credential.json")
+        }
+        signedBy(issuerDid = toDid, keyId = issuerKeyId)
+    }
+    
+    return when (result) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        else -> throw IllegalStateException("Failed to create transfer credential: ${result.allErrors.joinToString()}")
+    }
 }
 
-fun createSaleCredential(
+suspend fun createSaleCredential(
+    trustWeave: TrustWeave,
     productId: String,
     fromDid: String,
     toDid: String,
+    issuerKeyId: String,
     saleDate: String,
     saleLocation: String,
     previousCredentialDigest: String
 ): VerifiableCredential {
-    return VerifiableCredential(
-        id = "https://retailer.example.com/sales/$productId-${Instant.now().toEpochMilli()}",
-        type = listOf("VerifiableCredential", "SaleCredential", "SupplyChainCredential"),
-        issuer = toDid,
-        credentialSubject = buildJsonObject {
-            put("productId", productId)
-            put("sale", buildJsonObject {
-                put("fromDid", fromDid)
-                put("toDid", toDid)
-                put("saleDate", saleDate)
-                put("saleLocation", saleLocation)
-                put("previousCredentialDigest", previousCredentialDigest)
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = null,
-        credentialSchema = com.trustweave.credential.models.CredentialSchema(
-            id = "https://example.com/schemas/sale-credential.json",
-            type = "JsonSchemaValidator2018",
-            schemaFormat = com.trustweave.spi.SchemaFormat.JSON_SCHEMA
-        )
-    )
+    val result = trustWeave.issue {
+        credential {
+            id("https://retailer.example.com/sales/$productId-${Instant.now().toEpochMilli()}")
+            type("VerifiableCredential", "SaleCredential", "SupplyChainCredential")
+            issuer(toDid)
+            subject {
+                "productId" to productId
+                "sale" {
+                    "fromDid" to fromDid
+                    "toDid" to toDid
+                    "saleDate" to saleDate
+                    "saleLocation" to saleLocation
+                    "previousCredentialDigest" to previousCredentialDigest
+                }
+            }
+            issued(Instant.now())
+            schema("https://example.com/schemas/sale-credential.json")
+        }
+        signedBy(issuerDid = toDid, keyId = issuerKeyId)
+    }
+    
+    return when (result) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        else -> throw IllegalStateException("Failed to create sale credential: ${result.allErrors.joinToString()}")
+    }
 }
 
-fun verifyProvenanceChain(credentials: List<VerifiableCredential>): Boolean {
+suspend fun verifyProvenanceChain(
+    trustWeave: TrustWeave,
+    credentials: List<VerifiableCredential>
+): Boolean {
     if (credentials.isEmpty()) return false
 
     // Verify each credential
-    val verifier = CredentialVerifier(
-        didResolver = CredentialDidResolver { did ->
-            didRegistry.resolve(did).toCredentialDidResolution()
-        }
-    )
-
     credentials.forEach { credential ->
-        val verification = verifier.verify(
-            credential = credential,
-            options = CredentialVerificationOptions(
-                checkRevocation = true,
-                checkExpiration = false
-            )
-        )
-        if (!verification.valid) return false
+        val verification = trustWeave.verify {
+            credential(credential)
+        }
+        if (verification !is com.trustweave.credential.results.VerificationResult.Valid) return false
     }
 
     // Verify chain continuity (each credential references previous)
@@ -808,27 +843,37 @@ fun traceProductHistory(
 Track product through processing stages:
 
 ```kotlin
-fun createProcessingCredential(
+suspend fun createProcessingCredential(
+    trustWeave: TrustWeave,
     productId: String,
     processorDid: String,
+    issuerKeyId: String,
     processingType: String,
     processingDate: String,
     previousCredentialDigest: String
 ): VerifiableCredential {
-    return VerifiableCredential(
-        type = listOf("VerifiableCredential", "ProcessingCredential", "SupplyChainCredential"),
-        issuer = processorDid,
-        credentialSubject = buildJsonObject {
-            put("productId", productId)
-            put("processing", buildJsonObject {
-                put("processingType", processingType)
-                put("processingDate", processingDate)
-                put("processorDid", processorDid)
-                put("previousCredentialDigest", previousCredentialDigest)
-            })
-        },
-        issuanceDate = Instant.now().toString()
-    )
+    val result = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "ProcessingCredential", "SupplyChainCredential")
+            issuer(processorDid)
+            subject {
+                "productId" to productId
+                "processing" {
+                    "processingType" to processingType
+                    "processingDate" to processingDate
+                    "processorDid" to processorDid
+                    "previousCredentialDigest" to previousCredentialDigest
+                }
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = processorDid, keyId = issuerKeyId)
+    }
+    
+    return when (result) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        else -> throw IllegalStateException("Failed to create processing credential: ${result.allErrors.joinToString()}")
+    }
 }
 ```
 
@@ -837,28 +882,38 @@ fun createProcessingCredential(
 Add quality certifications at each stage:
 
 ```kotlin
-fun addQualityCertification(
+suspend fun addQualityCertification(
+    trustWeave: TrustWeave,
     productId: String,
     certifierDid: String,
+    issuerKeyId: String,
     certificationType: String,
     testResults: Map<String, String>
 ): VerifiableCredential {
-    return VerifiableCredential(
-        type = listOf("VerifiableCredential", "QualityCertificationCredential"),
-        issuer = certifierDid,
-        credentialSubject = buildJsonObject {
-            put("productId", productId)
-            put("certification", buildJsonObject {
-                put("certificationType", certificationType)
-                put("testResults", buildJsonObject {
-                    testResults.forEach { (key, value) ->
-                        put(key, value)
+    val result = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "QualityCertificationCredential")
+            issuer(certifierDid)
+            subject {
+                "productId" to productId
+                "certification" {
+                    "certificationType" to certificationType
+                    "testResults" {
+                        testResults.forEach { (key, value) ->
+                            key to value
+                        }
                     }
-                })
-            })
-        },
-        issuanceDate = Instant.now().toString()
-    )
+                }
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = certifierDid, keyId = issuerKeyId)
+    }
+    
+    return when (result) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        else -> throw IllegalStateException("Failed to create quality certification: ${result.allErrors.joinToString()}")
+    }
 }
 ```
 
@@ -867,23 +922,34 @@ fun addQualityCertification(
 Enable efficient product recalls:
 
 ```kotlin
-fun recallProducts(
+suspend fun recallProducts(
+    trustWeave: TrustWeave,
     batchNumber: String,
     recallReason: String,
-    affectedProducts: List<String>
+    affectedProducts: List<String>,
+    regulatoryAuthorityDid: String,
+    issuerKeyId: String
 ): List<VerifiableCredential> {
     return affectedProducts.map { productId ->
-        VerifiableCredential(
-            type = listOf("VerifiableCredential", "RecallCredential"),
-            issuer = "did:example:regulatory-authority",
-            credentialSubject = buildJsonObject {
-                put("productId", productId)
-                put("batchNumber", batchNumber)
-                put("recallReason", recallReason)
-                put("recallDate", Instant.now().toString())
-            },
-            issuanceDate = Instant.now().toString()
-        )
+        val result = trustWeave.issue {
+            credential {
+                type("VerifiableCredential", "RecallCredential")
+                issuer(regulatoryAuthorityDid)
+                subject {
+                    "productId" to productId
+                    "batchNumber" to batchNumber
+                    "recallReason" to recallReason
+                    "recallDate" to Instant.now().toString()
+                }
+                issued(Instant.now())
+            }
+            signedBy(issuerDid = regulatoryAuthorityDid, keyId = issuerKeyId)
+        }
+        
+        when (result) {
+            is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+            else -> throw IllegalStateException("Failed to create recall credential: ${result.allErrors.joinToString()}")
+        }
     }
 }
 
@@ -970,22 +1036,33 @@ fun createPharmaceuticalTracking(
     lotNumber: String,
     expirationDate: String
 ): List<VerifiableCredential> {
-    // Manufacturer origin
-    val originCredential = VerifiableCredential(
-        type = listOf("VerifiableCredential", "PharmaceuticalOriginCredential"),
-        issuer = manufacturerDid,
-        credentialSubject = buildJsonObject {
-            put("productId", productId)
-            put("pharmaceutical", buildJsonObject {
-                put("drugName", "Medication XYZ")
-                put("lotNumber", lotNumber)
-                put("manufacturingDate", Instant.now().toString())
-                put("expirationDate", expirationDate)
-                put("manufacturerDid", manufacturerDid)
-            })
-        },
-        issuanceDate = Instant.now().toString()
-    )
+    // Note: This example function would need TrustWeave instance passed in
+    // For illustration, showing the DSL pattern:
+    // val originCredentialResult = trustWeave.issue {
+    //     credential {
+    //         type("VerifiableCredential", "PharmaceuticalOriginCredential")
+    //         issuer(manufacturerDid)
+    //         subject {
+    //             "productId" to productId
+    //             "pharmaceutical" {
+    //                 "drugName" to "Medication XYZ"
+    //                 "lotNumber" to lotNumber
+    //                 "manufacturingDate" to Instant.now().toString()
+    //                 "expirationDate" to expirationDate
+    //                 "manufacturerDid" to manufacturerDid
+    //             }
+    //         }
+    //         issued(Instant.now())
+    //     }
+    //     signedBy(issuerDid = manufacturerDid, keyId = issuerKeyId)
+    // }
+    // val originCredential = when (originCredentialResult) {
+    //     is IssuanceResult.Success -> originCredentialResult.credential
+    //     else -> throw IllegalStateException("Failed to create origin credential")
+    // }
+    
+    // For now, keeping placeholder - would need to be refactored to use DSL
+    throw NotImplementedError("This example needs TrustWeave instance to use DSL")
 
     // Distribution
     val distributionCredential = createTransferCredential(

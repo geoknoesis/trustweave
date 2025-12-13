@@ -512,141 +512,165 @@ fun main() = runBlocking {
 
 **Result:** The program prints each milestone—DID creation, issuance, wallet storage, verification, anchoring—ending with a success message. Use that console output as your baseline when customising the scenario.
 
-fun createPrescriptionCredential(
+suspend fun createPrescriptionCredential(
+    trustWeave: TrustWeave,
     patientDid: String,
     providerDid: String,
+    issuerKeyId: String,
     medication: String,
     dosage: String,
     frequency: String,
     duration: String,
     prescribingDoctor: String
 ): VerifiableCredential {
-    return VerifiableCredential(
-        id = "https://hospital.example.com/prescriptions/${patientDid.substringAfterLast(":")}-${Instant.now().toEpochMilli()}",
-        type = listOf("VerifiableCredential", "PrescriptionCredential", "MedicalCredential"),
-        issuer = providerDid,
-        credentialSubject = buildJsonObject {
-            put("id", patientDid)
-            put("prescription", buildJsonObject {
-                put("medication", medication)
-                put("dosage", dosage)
-                put("frequency", frequency)
-                put("duration", duration)
-                put("prescribingDoctor", prescribingDoctor)
-                put("prescriptionDate", Instant.now().toString())
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = Instant.now().plus(30, ChronoUnit.DAYS).toString(),
-        credentialSchema = com.trustweave.credential.models.CredentialSchema(
-            id = "https://example.com/schemas/prescription.json",
-            type = "JsonSchemaValidator2018",
-            schemaFormat = com.trustweave.spi.SchemaFormat.JSON_SCHEMA
-        )
-    )
+    val result = trustWeave.issue {
+        credential {
+            id("https://hospital.example.com/prescriptions/${patientDid.substringAfterLast(":")}-${Instant.now().toEpochMilli()}")
+            type("VerifiableCredential", "PrescriptionCredential", "MedicalCredential")
+            issuer(providerDid)
+            subject {
+                id(patientDid)
+                "prescription" {
+                    "medication" to medication
+                    "dosage" to dosage
+                    "frequency" to frequency
+                    "duration" to duration
+                    "prescribingDoctor" to prescribingDoctor
+                    "prescriptionDate" to Instant.now().toString()
+                }
+            }
+            issued(Instant.now())
+            expires(30, ChronoUnit.DAYS)
+            schema("https://example.com/schemas/prescription.json")
+        }
+        signedBy(issuerDid = providerDid, keyId = issuerKeyId)
+    }
+    
+    return when (result) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        else -> throw IllegalStateException("Failed to create prescription credential: ${result.allErrors.joinToString()}")
+    }
 }
 
-fun createLabResultsCredential(
+suspend fun createLabResultsCredential(
+    trustWeave: TrustWeave,
     patientDid: String,
     providerDid: String,
+    issuerKeyId: String,
     testName: String,
     results: Map<String, String>,
     referenceRanges: Map<String, String>,
     labDate: String
 ): VerifiableCredential {
-    return VerifiableCredential(
-        id = "https://hospital.example.com/lab-results/${patientDid.substringAfterLast(":")}-${Instant.now().toEpochMilli()}",
-        type = listOf("VerifiableCredential", "LabResultsCredential", "MedicalCredential"),
-        issuer = providerDid,
-        credentialSubject = buildJsonObject {
-            put("id", patientDid)
-            put("labResults", buildJsonObject {
-                put("testName", testName)
-                put("labDate", labDate)
-                put("results", buildJsonObject {
-                    results.forEach { (key, value) ->
-                        put(key, value)
+    val result = trustWeave.issue {
+        credential {
+            id("https://hospital.example.com/lab-results/${patientDid.substringAfterLast(":")}-${Instant.now().toEpochMilli()}")
+            type("VerifiableCredential", "LabResultsCredential", "MedicalCredential")
+            issuer(providerDid)
+            subject {
+                id(patientDid)
+                "labResults" {
+                    "testName" to testName
+                    "labDate" to labDate
+                    "results" {
+                        results.forEach { (key, value) ->
+                            key to value
+                        }
                     }
-                })
-                put("referenceRanges", buildJsonObject {
-                    referenceRanges.forEach { (key, value) ->
-                        put(key, value)
+                    "referenceRanges" {
+                        referenceRanges.forEach { (key, value) ->
+                            key to value
+                        }
                     }
-                })
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = null, // Lab results don't expire
-        credentialSchema = com.trustweave.credential.models.CredentialSchema(
-            id = "https://example.com/schemas/lab-results.json",
-            type = "JsonSchemaValidator2018",
-            schemaFormat = com.trustweave.spi.SchemaFormat.JSON_SCHEMA
-        )
-    )
+                }
+            }
+            issued(Instant.now())
+            // Lab results don't expire - no expires() call
+            schema("https://example.com/schemas/lab-results.json")
+        }
+        signedBy(issuerDid = providerDid, keyId = issuerKeyId)
+    }
+    
+    return when (result) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        else -> throw IllegalStateException("Failed to create lab results credential: ${result.allErrors.joinToString()}")
+    }
 }
 
-fun createVaccinationCredential(
+suspend fun createVaccinationCredential(
+    trustWeave: TrustWeave,
     patientDid: String,
     providerDid: String,
+    issuerKeyId: String,
     vaccineType: String,
     manufacturer: String,
     lotNumber: String,
     administrationDate: String,
     administeringProvider: String
 ): VerifiableCredential {
-    return VerifiableCredential(
-        id = "https://hospital.example.com/vaccinations/${patientDid.substringAfterLast(":")}-${Instant.now().toEpochMilli()}",
-        type = listOf("VerifiableCredential", "VaccinationCredential", "MedicalCredential"),
-        issuer = providerDid,
-        credentialSubject = buildJsonObject {
-            put("id", patientDid)
-            put("vaccination", buildJsonObject {
-                put("vaccineType", vaccineType)
-                put("manufacturer", manufacturer)
-                put("lotNumber", lotNumber)
-                put("administrationDate", administrationDate)
-                put("administeringProvider", administeringProvider)
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = null, // Vaccination records don't expire
-        credentialSchema = com.trustweave.credential.models.CredentialSchema(
-            id = "https://example.com/schemas/vaccination.json",
-            type = "JsonSchemaValidator2018",
-            schemaFormat = com.trustweave.spi.SchemaFormat.JSON_SCHEMA
-        )
-    )
+    val result = trustWeave.issue {
+        credential {
+            id("https://hospital.example.com/vaccinations/${patientDid.substringAfterLast(":")}-${Instant.now().toEpochMilli()}")
+            type("VerifiableCredential", "VaccinationCredential", "MedicalCredential")
+            issuer(providerDid)
+            subject {
+                id(patientDid)
+                "vaccination" {
+                    "vaccineType" to vaccineType
+                    "manufacturer" to manufacturer
+                    "lotNumber" to lotNumber
+                    "administrationDate" to administrationDate
+                    "administeringProvider" to administeringProvider
+                }
+            }
+            issued(Instant.now())
+            // Vaccination records don't expire - no expires() call
+            schema("https://example.com/schemas/vaccination.json")
+        }
+        signedBy(issuerDid = providerDid, keyId = issuerKeyId)
+    }
+    
+    return when (result) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        else -> throw IllegalStateException("Failed to create vaccination credential: ${result.allErrors.joinToString()}")
+    }
 }
 
-fun createConsentCredential(
+suspend fun createConsentCredential(
+    trustWeave: TrustWeave,
     patientDid: String,
     providerDid: String,
+    issuerKeyId: String,
     authorizedDataTypes: List<String>,
     purpose: String,
     expirationDate: String
 ): VerifiableCredential {
-    return VerifiableCredential(
-        id = "https://patient.example.com/consents/${patientDid.substringAfterLast(":")}-${Instant.now().toEpochMilli()}",
-        type = listOf("VerifiableCredential", "ConsentCredential", "MedicalCredential"),
-        issuer = patientDid, // Patient issues their own consent
-        credentialSubject = buildJsonObject {
-            put("id", patientDid)
-            put("consent", buildJsonObject {
-                put("providerDid", providerDid)
-                put("authorizedDataTypes", authorizedDataTypes)
-                put("purpose", purpose)
-                put("consentDate", Instant.now().toString())
-                put("expirationDate", expirationDate)
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = expirationDate,
-        credentialSchema = com.trustweave.credential.models.CredentialSchema(
-            id = "https://example.com/schemas/consent.json",
-            type = "JsonSchemaValidator2018",
-            schemaFormat = com.trustweave.spi.SchemaFormat.JSON_SCHEMA
-        )
-    )
+    val result = trustWeave.issue {
+        credential {
+            id("https://patient.example.com/consents/${patientDid.substringAfterLast(":")}-${Instant.now().toEpochMilli()}")
+            type("VerifiableCredential", "ConsentCredential", "MedicalCredential")
+            issuer(patientDid) // Patient issues their own consent
+            subject {
+                id(patientDid)
+                "consent" {
+                    "providerDid" to providerDid
+                    "authorizedDataTypes" to authorizedDataTypes
+                    "purpose" to purpose
+                    "consentDate" to Instant.now().toString()
+                    "expirationDate" to expirationDate
+                }
+            }
+            issued(Instant.now())
+            expires(Instant.parse(expirationDate))
+            schema("https://example.com/schemas/consent.json")
+        }
+        signedBy(issuerDid = patientDid, keyId = issuerKeyId)
+    }
+    
+    return when (result) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        else -> throw IllegalStateException("Failed to create consent credential: ${result.allErrors.joinToString()}")
+    }
 }
 ```
 
@@ -911,25 +935,35 @@ fun shareMedicalDataWithProvider(
 Enable emergency access to critical medical information:
 
 ```kotlin
-fun createEmergencyAccessCredential(
+suspend fun createEmergencyAccessCredential(
+    trustWeave: TrustWeave,
     patientDid: String,
-    emergencyProviderDid: String
+    emergencyProviderDid: String,
+    issuerKeyId: String
 ): VerifiableCredential {
-    return VerifiableCredential(
-        type = listOf("VerifiableCredential", "EmergencyAccessCredential"),
-        issuer = patientDid,
-        credentialSubject = buildJsonObject {
-            put("id", patientDid)
-            put("emergencyAccess", buildJsonObject {
-                put("providerDid", emergencyProviderDid)
-                put("allowedDataTypes", listOf("allergies", "medications", "conditions"))
-                put("purpose", "emergency-care")
-                put("expirationDate", Instant.now().plus(24, ChronoUnit.HOURS).toString())
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = Instant.now().plus(24, ChronoUnit.HOURS).toString()
-    )
+    val result = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "EmergencyAccessCredential")
+            issuer(patientDid)
+            subject {
+                id(patientDid)
+                "emergencyAccess" {
+                    "providerDid" to emergencyProviderDid
+                    "allowedDataTypes" to listOf("allergies", "medications", "conditions")
+                    "purpose" to "emergency-care"
+                    "expirationDate" to Instant.now().plus(24, ChronoUnit.HOURS).toString()
+                }
+            }
+            issued(Instant.now())
+            expires(24, ChronoUnit.HOURS)
+        }
+        signedBy(issuerDid = patientDid, keyId = issuerKeyId)
+    }
+    
+    return when (result) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        else -> throw IllegalStateException("Failed to create emergency access credential: ${result.allErrors.joinToString()}")
+    }
 }
 ```
 
@@ -938,25 +972,35 @@ fun createEmergencyAccessCredential(
 Track medication adherence:
 
 ```kotlin
-fun createAdherenceCredential(
+suspend fun createAdherenceCredential(
+    trustWeave: TrustWeave,
     patientDid: String,
     prescriptionId: String,
+    issuerKeyId: String,
     adherenceData: Map<String, Boolean>
 ): VerifiableCredential {
-    return VerifiableCredential(
-        type = listOf("VerifiableCredential", "MedicationAdherenceCredential"),
-        issuer = patientDid,
-        credentialSubject = buildJsonObject {
-            put("id", patientDid)
-            put("prescriptionId", prescriptionId)
-            put("adherence", buildJsonObject {
-                adherenceData.forEach { (date, taken) ->
-                    put(date, taken)
+    val result = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "MedicationAdherenceCredential")
+            issuer(patientDid)
+            subject {
+                id(patientDid)
+                "prescriptionId" to prescriptionId
+                "adherence" {
+                    adherenceData.forEach { (date, taken) ->
+                        date to taken
+                    }
                 }
-            })
-        },
-        issuanceDate = Instant.now().toString()
-    )
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = patientDid, keyId = issuerKeyId)
+    }
+    
+    return when (result) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        else -> throw IllegalStateException("Failed to create adherence credential: ${result.allErrors.joinToString()}")
+    }
 }
 ```
 

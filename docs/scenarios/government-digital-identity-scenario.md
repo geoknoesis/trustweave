@@ -210,6 +210,8 @@ import com.trustweave.credential.verifier.CredentialVerifier
 import com.trustweave.credential.proof.Ed25519ProofGenerator
 import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.testkit.credential.InMemoryWallet
+import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.anchor.BlockchainAnchorRegistry
 import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
@@ -236,51 +238,111 @@ data class IdentityDocument(
 fun main() = runBlocking {
     println("=== Government & Digital Identity Scenario ===\n")
 
-    // Step 1: Setup services
-    println("Step 1: Setting up services...")
-    val dmvKms = InMemoryKeyManagementService() // Department of Motor Vehicles
-    val passportOfficeKms = InMemoryKeyManagementService()
-    val taxAuthorityKms = InMemoryKeyManagementService()
-    val citizenKms = InMemoryKeyManagementService()
-
-    val didMethod = DidKeyMockMethod(dmvKms)
-    val didRegistry = DidMethodRegistry().apply { register(didMethod) }
-
-    // Setup blockchain for anchoring
-    val anchorClient = InMemoryBlockchainAnchorClient("eip155:1", emptyMap())
-    val blockchainRegistry = BlockchainAnchorRegistry().apply {
-        register("eip155:1", anchorClient)
+    // Step 1: Setup TrustWeave
+    println("Step 1: Setting up TrustWeave...")
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+        credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
     }
 
     // Step 2: Create government agency DIDs
     println("\nStep 2: Creating government agency DIDs...")
-    val dmvDid = didMethod.createDid()
-    println("DMV DID: ${dmvDid.id}")
+    import com.trustweave.trust.types.DidCreationResult
+    
+    val dmvDidResult = trustWeave.createDid { method("key") }
+    val dmvDid = when (dmvDidResult) {
+        is DidCreationResult.Success -> {
+            println("DMV DID: ${dmvDidResult.did.value}")
+            dmvDidResult.did
+        }
+        else -> {
+            println("Failed to create DMV DID: ${dmvDidResult.reason}")
+            return@runBlocking
+        }
+    }
 
-    val passportOfficeDid = didMethod.createDid()
-    println("Passport Office DID: ${passportOfficeDid.id}")
+    val passportOfficeDidResult = trustWeave.createDid { method("key") }
+    val passportOfficeDid = when (passportOfficeDidResult) {
+        is DidCreationResult.Success -> {
+            println("Passport Office DID: ${passportOfficeDidResult.did.value}")
+            passportOfficeDidResult.did
+        }
+        else -> {
+            println("Failed to create Passport Office DID: ${passportOfficeDidResult.reason}")
+            return@runBlocking
+        }
+    }
 
-    val taxAuthorityDid = didMethod.createDid()
-    println("Tax Authority DID: ${taxAuthorityDid.id}")
+    val taxAuthorityDidResult = trustWeave.createDid { method("key") }
+    val taxAuthorityDid = when (taxAuthorityDidResult) {
+        is DidCreationResult.Success -> {
+            println("Tax Authority DID: ${taxAuthorityDidResult.did.value}")
+            taxAuthorityDidResult.did
+        }
+        else -> {
+            println("Failed to create Tax Authority DID: ${taxAuthorityDidResult.reason}")
+            return@runBlocking
+        }
+    }
 
     // Step 3: Create citizen DID
     println("\nStep 3: Creating citizen DID...")
-    val citizenDid = didMethod.createDid()
-    println("Citizen DID: ${citizenDid.id}")
+    val citizenDidResult = trustWeave.createDid { method("key") }
+    val citizenDid = when (citizenDidResult) {
+        is DidCreationResult.Success -> {
+            println("Citizen DID: ${citizenDidResult.did.value}")
+            citizenDidResult.did
+        }
+        else -> {
+            println("Failed to create citizen DID: ${citizenDidResult.reason}")
+            return@runBlocking
+        }
+    }
 
     // Step 4: Create citizen identity wallet
     println("\nStep 4: Creating citizen identity wallet...")
-    val citizenWallet = InMemoryWallet(
-        walletDid = citizenDid.id,
-        holderDid = citizenDid.id
-    )
-    println("Citizen wallet created: ${citizenWallet.walletId}")
+    val walletResult = trustWeave.wallet {
+        holderDid(citizenDid.value)
+    }
+    val citizenWallet = when (walletResult) {
+        is com.trustweave.trust.types.WalletCreationResult.Success -> {
+            println("Citizen wallet created: ${walletResult.wallet.walletId}")
+            walletResult.wallet
+        }
+        else -> {
+            println("Failed to create citizen wallet: ${walletResult.reason}")
+            return@runBlocking
+        }
+    }
 
-    // Step 5: Issue driver's license credential
-    println("\nStep 5: Issuing driver's license credential...")
+    // Step 5: Get key IDs for signing
+    val dmvDoc = trustWeave.resolveDid(dmvDid).getOrNull()?.document
+        ?: throw IllegalStateException("Failed to resolve DMV DID")
+    val dmvKeyId = dmvDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found for DMV")
+    
+    val passportOfficeDoc = trustWeave.resolveDid(passportOfficeDid).getOrNull()?.document
+        ?: throw IllegalStateException("Failed to resolve Passport Office DID")
+    val passportOfficeKeyId = passportOfficeDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found for Passport Office")
+    
+    val taxAuthorityDoc = trustWeave.resolveDid(taxAuthorityDid).getOrNull()?.document
+        ?: throw IllegalStateException("Failed to resolve Tax Authority DID")
+    val taxAuthorityKeyId = taxAuthorityDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        ?: throw IllegalStateException("No verification method found for Tax Authority")
+
+    // Step 6: Issue driver's license credential
+    println("\nStep 6: Issuing driver's license credential...")
     val driversLicenseCredential = createDriversLicenseCredential(
-        citizenDid = citizenDid.id,
-        issuerDid = dmvDid.id,
+        trustWeave = trustWeave,
+        citizenDid = citizenDid.value,
+        issuerDid = dmvDid.value,
+        issuerKeyId = dmvKeyId,
         licenseNumber = "DL123456789",
         fullName = "John Doe",
         dateOfBirth = "1985-06-15",
@@ -289,110 +351,54 @@ fun main() = runBlocking {
         expirationDate = "2028-06-15"
     )
 
-    val dmvKey = dmvKms.generateKey("Ed25519")
-    val dmvProofGenerator = Ed25519ProofGenerator(
-        signer = { data, keyId -> dmvKms.sign(keyId, data) },
-        getPublicKeyId = { keyId -> dmvKey.id }
-    )
-    val dmvProofRegistry = ProofGeneratorRegistry().apply { register(dmvProofGenerator) }
-
-    val dmvIssuer = CredentialIssuer(
-        proofGenerator = dmvProofGenerator,
-        resolveDid = { did -> didRegistry.resolve(did) != null },
-        proofRegistry = dmvProofRegistry
-    )
-
-    val issuedDriversLicense = dmvIssuer.issue(
-        credential = driversLicenseCredential,
-        issuerDid = dmvDid.id,
-        keyId = dmvKey.id,
-        options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
-    )
-
     println("Driver's license credential issued:")
     println("  - License Number: DL123456789")
     println("  - Name: John Doe")
     println("  - Expiration: 2028-06-15")
 
-    // Step 6: Issue passport credential
-    println("\nStep 6: Issuing passport credential...")
+    // Step 7: Issue passport credential
+    println("\nStep 7: Issuing passport credential...")
     val passportCredential = createPassportCredential(
-        citizenDid = citizenDid.id,
-        issuerDid = passportOfficeDid.id,
+        trustWeave = trustWeave,
+        citizenDid = citizenDid.value,
+        issuerDid = passportOfficeDid.value,
+        issuerKeyId = passportOfficeKeyId,
         passportNumber = "P987654321",
         fullName = "John Doe",
         dateOfBirth = "1985-06-15",
         nationality = "US",
         placeOfBirth = "New York, USA",
-        issueDate = "2023-01-01",
-        expirationDate = "2033-01-01"
-    )
-
-    val passportKey = passportOfficeKms.generateKey("Ed25519")
-    val passportProofGenerator = Ed25519ProofGenerator(
-        signer = { data, keyId -> passportOfficeKms.sign(keyId, data) },
-        getPublicKeyId = { keyId -> passportKey.id }
-    )
-    val passportProofRegistry = ProofGeneratorRegistry().apply { register(passportProofGenerator) }
-
-    val passportIssuer = CredentialIssuer(
-        proofGenerator = passportProofGenerator,
-        resolveDid = { did -> didRegistry.resolve(did) != null },
-        proofRegistry = passportProofRegistry
-    )
-
-    val issuedPassport = passportIssuer.issue(
-        credential = passportCredential,
-        issuerDid = passportOfficeDid.id,
-        keyId = passportKey.id,
-        options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
+        issueDate = "2023-01-01T00:00:00Z",
+        expirationDate = "2033-01-01T00:00:00Z"
     )
 
     println("Passport credential issued")
 
-    // Step 7: Issue tax credential
-    println("\nStep 7: Issuing tax credential...")
+    // Step 8: Issue tax credential
+    println("\nStep 8: Issuing tax credential...")
     val taxCredential = createTaxCredential(
-        citizenDid = citizenDid.id,
-        issuerDid = taxAuthorityDid.id,
+        trustWeave = trustWeave,
+        citizenDid = citizenDid.value,
+        issuerDid = taxAuthorityDid.value,
+        issuerKeyId = taxAuthorityKeyId,
         taxId = "123-45-6789",
         fullName = "John Doe",
         filingStatus = "Single",
         authorizationLevel = "Full"
     )
 
-    val taxKey = taxAuthorityKms.generateKey("Ed25519")
-    val taxProofGenerator = Ed25519ProofGenerator(
-        signer = { data, keyId -> taxAuthorityKms.sign(keyId, data) },
-        getPublicKeyId = { keyId -> taxKey.id }
-    )
-    val taxProofRegistry = ProofGeneratorRegistry().apply { register(taxProofGenerator) }
-
-    val taxIssuer = CredentialIssuer(
-        proofGenerator = taxProofGenerator,
-        resolveDid = { did -> didRegistry.resolve(did) != null },
-        proofRegistry = taxProofRegistry
-    )
-
-    val issuedTaxCredential = taxIssuer.issue(
-        credential = taxCredential,
-        issuerDid = taxAuthorityDid.id,
-        keyId = taxKey.id,
-        options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
-    )
-
     println("Tax credential issued")
 
-    // Step 8: Store credentials in citizen wallet
-    println("\nStep 8: Storing credentials in citizen wallet...")
-    val driversLicenseId = citizenWallet.store(issuedDriversLicense)
-    val passportId = citizenWallet.store(issuedPassport)
-    val taxCredentialId = citizenWallet.store(issuedTaxCredential)
+    // Step 9: Store credentials in citizen wallet
+    println("\nStep 9: Storing credentials in citizen wallet...")
+    val driversLicenseId = citizenWallet.store(driversLicenseCredential)
+    val passportId = citizenWallet.store(passportCredential)
+    val taxCredentialId = citizenWallet.store(taxCredential)
 
     println("Stored ${citizenWallet.list().size} government credentials")
 
-    // Step 9: Organize credentials
-    println("\nStep 9: Organizing credentials...")
+    // Step 10: Organize credentials
+    println("\nStep 10: Organizing credentials...")
     val identityCollection = citizenWallet.createCollection(
         name = "Government Identity",
         description = "Government-issued identity credentials"
@@ -408,38 +414,33 @@ fun main() = runBlocking {
 
     println("Created identity collection")
 
-    // Step 10: Verify credentials
-    println("\nStep 10: Verifying government credentials...")
-    val verifier = CredentialVerifier(
-        didResolver = CredentialDidResolver { did ->
-            didRegistry.resolve(did).toCredentialDidResolution()
-        }
-    )
-
-    val licenseVerification = verifier.verify(
-        credential = issuedDriversLicense,
-        options = CredentialVerificationOptions(
-            checkRevocation = true,
-            checkExpiration = true,
-            validateSchema = true
-        )
-    )
-
-    if (licenseVerification.valid) {
-        println("✅ Driver's license credential is valid!")
-        println("  - Proof valid: ${licenseVerification.proofValid}")
-        println("  - Issuer valid: ${licenseVerification.issuerValid}")
-        println("  - Not expired: ${licenseVerification.notExpired}")
+    // Step 11: Verify credentials
+    println("\nStep 11: Verifying government credentials...")
+    val licenseVerification = trustWeave.verify {
+        credential(driversLicenseCredential)
     }
 
-    // Step 11: Create service access presentation
-    println("\nStep 11: Creating service access presentation...")
+    when (licenseVerification) {
+        is com.trustweave.credential.results.VerificationResult.Valid -> {
+            println("✅ Driver's license credential is valid!")
+            println("  - Proof valid: true")
+            println("  - Issuer valid: true")
+            println("  - Not expired: true")
+        }
+        is com.trustweave.credential.results.VerificationResult.Invalid -> {
+            println("❌ Driver's license credential is invalid!")
+            println("  - Errors: ${licenseVerification.allErrors.joinToString()}")
+        }
+    }
+
+    // Step 12: Create service access presentation
+    println("\nStep 12: Creating service access presentation...")
     // Citizen needs to access government service, presents driver's license
     val servicePresentation = citizenWallet.createPresentation(
         credentialIds = listOf(driversLicenseId),
-        holderDid = citizenDid.id,
+        holderDid = citizenDid.value,
         options = PresentationOptions(
-            holderDid = citizenDid.id,
+            holderDid = citizenDid.value,
             proofType = "Ed25519Signature2020",
             challenge = "government-service-${Instant.now().toEpochMilli()}"
         )
@@ -452,15 +453,15 @@ fun main() = runBlocking {
     val licenseDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(
             com.trustweave.credential.models.VerifiableCredential.serializer(),
-            issuedDriversLicense
+            driversLicenseCredential
         )
     )
 
     val identityDoc = IdentityDocument(
         documentType = "drivers-license",
         documentNumber = "DL123456789",
-        citizenDid = citizenDid.id,
-        issuerDid = dmvDid.id,
+        citizenDid = citizenDid.value,
+        issuerDid = dmvDid.value,
         credentialDigest = licenseDigest
     )
 
@@ -477,7 +478,8 @@ fun main() = runBlocking {
     // Step 13: Cross-border verification
     println("\nStep 13: Cross-border identity verification...")
     val canVerifyCrossBorder = verifyCrossBorderIdentity(
-        passportCredential = issuedPassport,
+        trustWeave = trustWeave,
+        passportCredential = passportCredential,
         verifyingCountryDid = "did:example:border-control"
     )
 
@@ -486,9 +488,11 @@ fun main() = runBlocking {
     println("\n=== Scenario Complete ===")
 }
 
-fun createDriversLicenseCredential(
+suspend fun createDriversLicenseCredential(
+    trustWeave: TrustWeave,
     citizenDid: String,
     issuerDid: String,
+    issuerKeyId: String,
     licenseNumber: String,
     fullName: String,
     dateOfBirth: String,
@@ -496,35 +500,41 @@ fun createDriversLicenseCredential(
     vehicleClasses: List<String>,
     expirationDate: String
 ): VerifiableCredential {
-    return VerifiableCredential(
-        id = "https://dmv.example.com/licenses/$licenseNumber",
-        type = listOf("VerifiableCredential", "DriversLicenseCredential", "GovernmentCredential"),
-        issuer = issuerDid,
-        credentialSubject = buildJsonObject {
-            put("id", citizenDid)
-            put("driversLicense", buildJsonObject {
-                put("licenseNumber", licenseNumber)
-                put("fullName", fullName)
-                put("dateOfBirth", dateOfBirth)
-                put("address", address)
-                put("vehicleClasses", vehicleClasses)
-                put("issueDate", Instant.now().toString())
-                put("expirationDate", expirationDate)
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = expirationDate,
-        credentialSchema = com.trustweave.credential.models.CredentialSchema(
-            id = "https://example.com/schemas/drivers-license.json",
-            type = "JsonSchemaValidator2018",
-            schemaFormat = com.trustweave.spi.SchemaFormat.JSON_SCHEMA
-        )
-    )
+    val result = trustWeave.issue {
+        credential {
+            id("https://dmv.example.com/licenses/$licenseNumber")
+            type("VerifiableCredential", "DriversLicenseCredential", "GovernmentCredential")
+            issuer(issuerDid)
+            subject {
+                id(citizenDid)
+                "driversLicense" {
+                    "licenseNumber" to licenseNumber
+                    "fullName" to fullName
+                    "dateOfBirth" to dateOfBirth
+                    "address" to address
+                    "vehicleClasses" to vehicleClasses
+                    "issueDate" to Instant.now().toString()
+                    "expirationDate" to expirationDate
+                }
+            }
+            issued(Instant.now())
+            expires(Instant.parse(expirationDate))
+            schema("https://example.com/schemas/drivers-license.json")
+        }
+        signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+    }
+    
+    return when (result) {
+        is IssuanceResult.Success -> result.credential
+        else -> throw IllegalStateException("Failed to create drivers license credential: ${result.allErrors.joinToString()}")
+    }
 }
 
-fun createPassportCredential(
+suspend fun createPassportCredential(
+    trustWeave: TrustWeave,
     citizenDid: String,
     issuerDid: String,
+    issuerKeyId: String,
     passportNumber: String,
     fullName: String,
     dateOfBirth: String,
@@ -533,84 +543,85 @@ fun createPassportCredential(
     issueDate: String,
     expirationDate: String
 ): VerifiableCredential {
-    return VerifiableCredential(
-        id = "https://passport.example.com/passports/$passportNumber",
-        type = listOf("VerifiableCredential", "PassportCredential", "GovernmentCredential"),
-        issuer = issuerDid,
-        credentialSubject = buildJsonObject {
-            put("id", citizenDid)
-            put("passport", buildJsonObject {
-                put("passportNumber", passportNumber)
-                put("fullName", fullName)
-                put("dateOfBirth", dateOfBirth)
-                put("nationality", nationality)
-                put("placeOfBirth", placeOfBirth)
-                put("issueDate", issueDate)
-                put("expirationDate", expirationDate)
-            })
-        },
-        issuanceDate = issueDate,
-        expirationDate = expirationDate,
-        credentialSchema = com.trustweave.credential.models.CredentialSchema(
-            id = "https://example.com/schemas/passport.json",
-            type = "JsonSchemaValidator2018",
-            schemaFormat = com.trustweave.spi.SchemaFormat.JSON_SCHEMA
-        )
-    )
+    val result = trustWeave.issue {
+        credential {
+            id("https://passport.example.com/passports/$passportNumber")
+            type("VerifiableCredential", "PassportCredential", "GovernmentCredential")
+            issuer(issuerDid)
+            subject {
+                id(citizenDid)
+                "passport" {
+                    "passportNumber" to passportNumber
+                    "fullName" to fullName
+                    "dateOfBirth" to dateOfBirth
+                    "nationality" to nationality
+                    "placeOfBirth" to placeOfBirth
+                    "issueDate" to issueDate
+                    "expirationDate" to expirationDate
+                }
+            }
+            issued(Instant.parse(issueDate))
+            expires(Instant.parse(expirationDate))
+            schema("https://example.com/schemas/passport.json")
+        }
+        signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+    }
+    
+    return when (result) {
+        is IssuanceResult.Success -> result.credential
+        else -> throw IllegalStateException("Failed to create passport credential: ${result.allErrors.joinToString()}")
+    }
 }
 
-fun createTaxCredential(
+suspend fun createTaxCredential(
+    trustWeave: TrustWeave,
     citizenDid: String,
     issuerDid: String,
+    issuerKeyId: String,
     taxId: String,
     fullName: String,
     filingStatus: String,
     authorizationLevel: String
 ): VerifiableCredential {
-    return VerifiableCredential(
-        id = "https://tax.example.com/credentials/$taxId",
-        type = listOf("VerifiableCredential", "TaxCredential", "GovernmentCredential"),
-        issuer = issuerDid,
-        credentialSubject = buildJsonObject {
-            put("id", citizenDid)
-            put("taxCredential", buildJsonObject {
-                put("taxId", taxId)
-                put("fullName", fullName)
-                put("filingStatus", filingStatus)
-                put("authorizationLevel", authorizationLevel)
-                put("issueDate", Instant.now().toString())
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = null, // Tax credentials typically don't expire
-        credentialSchema = com.trustweave.credential.models.CredentialSchema(
-            id = "https://example.com/schemas/tax-credential.json",
-            type = "JsonSchemaValidator2018",
-            schemaFormat = com.trustweave.spi.SchemaFormat.JSON_SCHEMA
-        )
-    )
+    val result = trustWeave.issue {
+        credential {
+            id("https://tax.example.com/credentials/$taxId")
+            type("VerifiableCredential", "TaxCredential", "GovernmentCredential")
+            issuer(issuerDid)
+            subject {
+                id(citizenDid)
+                "taxCredential" {
+                    "taxId" to taxId
+                    "fullName" to fullName
+                    "filingStatus" to filingStatus
+                    "authorizationLevel" to authorizationLevel
+                    "issueDate" to Instant.now().toString()
+                }
+            }
+            issued(Instant.now())
+            // Tax credentials typically don't expire - no expires() call
+            schema("https://example.com/schemas/tax-credential.json")
+        }
+        signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+    }
+    
+    return when (result) {
+        is IssuanceResult.Success -> result.credential
+        else -> throw IllegalStateException("Failed to create tax credential: ${result.allErrors.joinToString()}")
+    }
 }
 
-fun verifyCrossBorderIdentity(
+suspend fun verifyCrossBorderIdentity(
+    trustWeave: TrustWeave,
     passportCredential: VerifiableCredential,
     verifyingCountryDid: String
 ): Boolean {
     // Verify passport credential is valid
-    val verifier = CredentialVerifier(
-        didResolver = CredentialDidResolver { did ->
-            didRegistry.resolve(did).toCredentialDidResolution()
-        }
-    )
+    val verification = trustWeave.verify {
+        credential(passportCredential)
+    }
 
-    val verification = verifier.verify(
-        credential = passportCredential,
-        options = CredentialVerificationOptions(
-            checkRevocation = true,
-            checkExpiration = true
-        )
-    )
-
-    if (!verification.valid) return false
+    if (verification !is com.trustweave.credential.results.VerificationResult.Valid) return false
 
     // Check if passport is from recognized issuing country
     val issuerDid = passportCredential.issuer

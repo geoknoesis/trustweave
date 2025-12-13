@@ -234,6 +234,13 @@ fun main() = runBlocking {
     val didMethod = DidKeyMockMethod(authorityKms)
     val didRegistry = DidMethodRegistry().apply { register(didMethod) }
 
+    // Initialize TrustWeave
+    val trustWeave = TrustWeave.build {
+        keyManagementService(authorityKms)
+        didMethodRegistry(didRegistry)
+        credentialService { CredentialService() }
+    }
+
     println("Services initialized")
 }
 ```
@@ -312,34 +319,42 @@ import java.time.Instant
     // Create AlgeroPass enrollment credential
     // This is the national-level credential proving student enrollment
     // It references the institution but is issued by national authority
-    val enrollmentCredential = VerifiableCredential(
-        id = "https://algeropass.dz/credentials/${studentDid.id.substringAfterLast(":")}/enrollment",
-        type = listOf("VerifiableCredential", "AlgeroPassCredential", "EnrollmentCredential", "EducationCredential"),
-        issuer = authorityDid.id, // National authority issues credential
-        credentialSubject = buildJsonObject {
-            put("id", studentDid.id)
-            put("algeroPass", buildJsonObject {
-                put("credentialType", "enrollment")
-                put("studentId", "STU-2024-001234")
-                put("nationalId", "1234567890123") // Algerian national ID
-                put("institution", buildJsonObject {
-                    put("institutionDid", institutionDid.id)
-                    put("institutionName", "University of Algiers")
-                    put("institutionCode", "UA-001")
-                })
-                put("program", buildJsonObject {
-                    put("programName", "Computer Science")
-                    put("programCode", "CS-BS")
-                    put("degreeLevel", "Bachelor")
-                })
-                put("enrollmentDate", "2024-09-01")
-                put("status", "active")
-                put("academicYear", "2024-2025")
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = null
-    )
+    val authorityKeyId = authorityKms.generateKey("Ed25519").id
+    val enrollmentResult = trustWeave.issue {
+        credential {
+            id("https://algeropass.dz/credentials/${studentDid.id.substringAfterLast(":")}/enrollment")
+            type("VerifiableCredential", "AlgeroPassCredential", "EnrollmentCredential", "EducationCredential")
+            issuer(authorityDid.id) // National authority issues credential
+            subject {
+                id(studentDid.id)
+                "algeroPass" {
+                    "credentialType" to "enrollment"
+                    "studentId" to "STU-2024-001234"
+                    "nationalId" to "1234567890123" // Algerian national ID
+                    "institution" {
+                        "institutionDid" to institutionDid.id
+                        "institutionName" to "University of Algiers"
+                        "institutionCode" to "UA-001"
+                    }
+                    "program" {
+                        "programName" to "Computer Science"
+                        "programCode" to "CS-BS"
+                        "degreeLevel" to "Bachelor"
+                    }
+                    "enrollmentDate" to "2024-09-01"
+                    "status" to "active"
+                    "academicYear" to "2024-2025"
+                }
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = authorityDid.id, keyId = authorityKeyId)
+    }
+    
+    val enrollmentCredential = when (enrollmentResult) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> enrollmentResult.credential
+        else -> throw IllegalStateException("Failed to create enrollment credential: ${enrollmentResult.allErrors.joinToString()}")
+    }
 
     println("AlgeroPass enrollment credential created:")
     println("  - Student ID: STU-2024-001234")
@@ -361,45 +376,11 @@ import java.time.Instant
 - **Verification**: Anyone can verify credential authenticity
 
 ```kotlin
-import com.trustweave.credential.issuer.CredentialIssuer
-import com.trustweave.credential.proof.Ed25519ProofGenerator
-import com.trustweave.credential.CredentialIssuanceOptions
-
-    // Step 4: Issue enrollment credential with proof
-    println("\nStep 4: Issuing AlgeroPass enrollment credential...")
-
-    // Generate authority's signing key
-    // This key will be used to sign all national credentials
-    // In production, use hardware security module (HSM)
-    val authorityKey = authorityKms.generateKey("Ed25519")
-
-    // Create proof generator for authority
-    val authorityProofGenerator = Ed25519ProofGenerator(
-        signer = { data, keyId -> authorityKms.sign(keyId, data) },
-        getPublicKeyId = { keyId -> authorityKey.id }
-    )
-
-    val didResolver = CredentialDidResolver { did ->
-        didRegistry.resolve(did).toCredentialDidResolution()
-    }
-
-    // Create credential issuer
-    val authorityIssuer = CredentialIssuer(
-        proofGenerator = authorityProofGenerator,
-        resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }
-    )
-
-    // Issue enrollment credential
-    // This proves the student is enrolled at national level
-    val issuedEnrollmentCredential = authorityIssuer.issue(
-        credential = enrollmentCredential,
-        issuerDid = authorityDid.id,
-        keyId = authorityKey.id,
-        options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
-    )
+    // Step 4: Credential is already issued via trustWeave.issue { } DSL above
+    // The credential (enrollmentCredential) already contains proof from DSL issuance
 
     println("AlgeroPass enrollment credential issued:")
-    println("  - Proof: ${issuedEnrollmentCredential.proof != null}")
+    println("  - Proof: ${enrollmentCredential.proof != null}")
     println("  - Issuer: ${authorityDid.id}")
 ```
 
@@ -421,65 +402,54 @@ import com.trustweave.credential.CredentialIssuanceOptions
 
     // Academic achievement credential records student performance
     // This is issued by the institution but recognized nationally
-    val achievementCredential = VerifiableCredential(
-        type = listOf("VerifiableCredential", "AlgeroPassCredential", "AchievementCredential", "EducationCredential"),
-        issuer = institutionDid.id, // Institution issues achievement credential
-        credentialSubject = buildJsonObject {
-            put("id", studentDid.id)
-            put("algeroPass", buildJsonObject {
-                put("credentialType", "achievement")
-                put("studentId", "STU-2024-001234")
-                put("institution", buildJsonObject {
-                    put("institutionDid", institutionDid.id)
-                    put("institutionName", "University of Algiers")
-                })
-                put("academicYear", "2024-2025")
-                put("semester", "Fall")
-                put("achievements", buildJsonObject {
-                    put("courses", listOf(
-                        buildJsonObject {
-                            put("courseCode", "CS101")
-                            put("courseName", "Introduction to Computer Science")
-                            put("credits", "3")
-                            put("grade", "A")
-                            put("gpa", "4.0")
-                        },
-                        buildJsonObject {
-                            put("courseCode", "MATH101")
-                            put("courseName", "Calculus I")
-                            put("credits", "4")
-                            put("grade", "B+")
-                            put("gpa", "3.5")
-                        }
-                    ))
-                    put("semesterGPA", "3.75")
-                    put("cumulativeGPA", "3.75")
-                })
-                put("timestamp", Instant.now().toString())
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = null
-    )
-
-    // Issue achievement credential
-    val institutionKey = institutionKms.generateKey("Ed25519")
-    val institutionProofGenerator = Ed25519ProofGenerator(
-        signer = { data, keyId -> institutionKms.sign(keyId, data) },
-        getPublicKeyId = { keyId -> institutionKey.id }
-    )
-
-    val institutionIssuer = CredentialIssuer(
-        proofGenerator = institutionProofGenerator,
-        resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }
-    )
-
-    val issuedAchievementCredential = institutionIssuer.issue(
-        credential = achievementCredential,
-        issuerDid = institutionDid.id,
-        keyId = institutionKey.id,
-        options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
-    )
+    val institutionKeyId = institutionKms.generateKey("Ed25519").id
+    val achievementResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "AlgeroPassCredential", "AchievementCredential", "EducationCredential")
+            issuer(institutionDid.id) // Institution issues achievement credential
+            subject {
+                id(studentDid.id)
+                "algeroPass" {
+                    "credentialType" to "achievement"
+                    "studentId" to "STU-2024-001234"
+                    "institution" {
+                        "institutionDid" to institutionDid.id
+                        "institutionName" to "University of Algiers"
+                    }
+                    "academicYear" to "2024-2025"
+                    "semester" to "Fall"
+                    "achievements" {
+                        "courses" to arrayOfObjects(
+                            {
+                                "courseCode" to "CS101"
+                                "courseName" to "Introduction to Computer Science"
+                                "credits" to "3"
+                                "grade" to "A"
+                                "gpa" to "4.0"
+                            },
+                            {
+                                "courseCode" to "MATH101"
+                                "courseName" to "Calculus I"
+                                "credits" to "4"
+                                "grade" to "B+"
+                                "gpa" to "3.5"
+                            }
+                        )
+                        "semesterGPA" to "3.75"
+                        "cumulativeGPA" to "3.75"
+                    }
+                    "timestamp" to Instant.now().toString()
+                }
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = institutionDid.id, keyId = institutionKeyId)
+    }
+    
+    val issuedAchievementCredential = when (achievementResult) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> achievementResult.credential
+        else -> throw IllegalStateException("Failed to create achievement credential: ${achievementResult.allErrors.joinToString()}")
+    }
 
     println("Academic achievement credential created:")
     println("  - Semester GPA: 3.75")
@@ -617,39 +587,38 @@ import com.trustweave.credential.CredentialVerificationOptions
 
     // Transfer credential enables student to transfer
     // This is issued by the national authority and references both institutions
-    val transferCredential = VerifiableCredential(
-        type = listOf("VerifiableCredential", "AlgeroPassCredential", "TransferCredential", "EducationCredential"),
-        issuer = authorityDid.id, // National authority issues transfer credential
-        credentialSubject = buildJsonObject {
-            put("id", studentDid.id)
-            put("algeroPass", buildJsonObject {
-                put("credentialType", "transfer")
-                put("studentId", "STU-2024-001234")
-                put("sourceInstitution", buildJsonObject {
-                    put("institutionDid", institutionDid.id)
-                    put("institutionName", "University of Algiers")
-                })
-                put("targetInstitution", buildJsonObject {
-                    put("institutionDid", targetInstitutionDid.id)
-                    put("institutionName", "University of Oran")
-                })
-                put("transferDate", Instant.now().toString())
-                put("academicYear", "2024-2025")
-                put("creditsTransferred", "7") // Credits eligible for transfer
-                put("status", "approved")
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = null
-    )
-
-    // Issue transfer credential
-    val issuedTransferCredential = authorityIssuer.issue(
-        credential = transferCredential,
-        issuerDid = authorityDid.id,
-        keyId = authorityKey.id,
-        options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
-    )
+    val transferResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "AlgeroPassCredential", "TransferCredential", "EducationCredential")
+            issuer(authorityDid.id) // National authority issues transfer credential
+            subject {
+                id(studentDid.id)
+                "algeroPass" {
+                    "credentialType" to "transfer"
+                    "studentId" to "STU-2024-001234"
+                    "sourceInstitution" {
+                        "institutionDid" to institutionDid.id
+                        "institutionName" to "University of Algiers"
+                    }
+                    "targetInstitution" {
+                        "institutionDid" to targetInstitutionDid.id
+                        "institutionName" to "University of Oran"
+                    }
+                    "transferDate" to Instant.now().toString()
+                    "academicYear" to "2024-2025"
+                    "creditsTransferred" to "7" // Credits eligible for transfer
+                    "status" to "approved"
+                }
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = authorityDid.id, keyId = authorityKeyId)
+    }
+    
+    val issuedTransferCredential = when (transferResult) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> transferResult.credential
+        else -> throw IllegalStateException("Failed to create transfer credential: ${transferResult.allErrors.joinToString()}")
+    }
 
     // Store in wallet
     val transferCredentialId = studentWallet.store(issuedTransferCredential)
@@ -730,28 +699,37 @@ data class AlgeroPassRecord(
     println("  - Enables long-term verification")
 }
 
-fun createInstitutionRegistrationCredential(
+suspend fun createInstitutionRegistrationCredential(
+    trustWeave: TrustWeave,
     institutionDid: String,
     authorityDid: String,
+    issuerKeyId: String,
     institutionName: String,
     institutionCode: String,
     recognitionDate: String
 ): VerifiableCredential {
-    return VerifiableCredential(
-        type = listOf("VerifiableCredential", "InstitutionRegistrationCredential"),
-        issuer = authorityDid,
-        credentialSubject = buildJsonObject {
-            put("id", institutionDid)
-            put("institution", buildJsonObject {
-                put("institutionName", institutionName)
-                put("institutionCode", institutionCode)
-                put("recognitionDate", recognitionDate)
-                put("authorityDid", authorityDid)
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = null
-    )
+    val result = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "InstitutionRegistrationCredential")
+            issuer(authorityDid)
+            subject {
+                id(institutionDid)
+                "institution" {
+                    "institutionName" to institutionName
+                    "institutionCode" to institutionCode
+                    "recognitionDate" to recognitionDate
+                    "authorityDid" to authorityDid
+                }
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = authorityDid, keyId = issuerKeyId)
+    }
+    
+    return when (result) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        else -> throw IllegalStateException("Failed to create institution registration credential: ${result.allErrors.joinToString()}")
+    }
 }
 ```
 

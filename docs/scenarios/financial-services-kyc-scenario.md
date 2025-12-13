@@ -496,41 +496,47 @@ fun performKYCVerification(
     )
 }
 
-fun createKYCCredential(
+suspend fun createKYCCredential(
+    trustWeave: TrustWeave,
     customerDid: String,
     issuerDid: String,
+    issuerKeyId: String,
     identityData: Map<String, String>,
     verificationLevel: String,
     amlStatus: String,
     riskRating: String
 ): VerifiableCredential {
-    return VerifiableCredential(
-        id = "https://kyc-provider.example.com/kyc/${customerDid.substringAfterLast(":")}-${Instant.now().toEpochMilli()}",
-        type = listOf("VerifiableCredential", "KYCCredential", "IdentityCredential"),
-        issuer = issuerDid,
-        credentialSubject = buildJsonObject {
-            put("id", customerDid)
-            put("identity", buildJsonObject {
-                identityData.forEach { (key, value) ->
-                    put(key, value)
+    val result = trustWeave.issue {
+        credential {
+            id("https://kyc-provider.example.com/kyc/${customerDid.substringAfterLast(":")}-${Instant.now().toEpochMilli()}")
+            type("VerifiableCredential", "KYCCredential", "IdentityCredential")
+            issuer(issuerDid)
+            subject {
+                id(customerDid)
+                "identity" {
+                    identityData.forEach { (key, value) ->
+                        key to value
+                    }
                 }
-            })
-            put("kyc", buildJsonObject {
-                put("verificationLevel", verificationLevel)
-                put("verificationDate", Instant.now().toString())
-                put("amlStatus", amlStatus)
-                put("riskRating", riskRating)
-                put("kycProviderDid", issuerDid)
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = Instant.now().plus(1, ChronoUnit.YEARS).toString(),
-        credentialSchema = com.trustweave.credential.models.CredentialSchema(
-            id = "https://example.com/schemas/kyc-credential.json",
-            type = "JsonSchemaValidator2018",
-            schemaFormat = com.trustweave.spi.SchemaFormat.JSON_SCHEMA
-        )
-    )
+                "kyc" {
+                    "verificationLevel" to verificationLevel
+                    "verificationDate" to Instant.now().toString()
+                    "amlStatus" to amlStatus
+                    "riskRating" to riskRating
+                    "kycProviderDid" to issuerDid
+                }
+            }
+            issued(Instant.now())
+            expires(1, ChronoUnit.YEARS)
+            schema("https://example.com/schemas/kyc-credential.json")
+        }
+        signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+    }
+    
+    return when (result) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        else -> throw IllegalStateException("Failed to create KYC credential: ${result.allErrors.joinToString()}")
+    }
 }
 
 fun checkComplianceRequirements(
@@ -761,33 +767,43 @@ fun checkComplianceRequirements(
 Add source of funds and occupation verification:
 
 ```kotlin
-fun createEnhancedKYCCredential(
+suspend fun createEnhancedKYCCredential(
+    trustWeave: TrustWeave,
     customerDid: String,
     issuerDid: String,
+    issuerKeyId: String,
     identityData: Map<String, String>,
     sourceOfFunds: String,
     occupation: String,
     incomeRange: String
 ): VerifiableCredential {
-    return VerifiableCredential(
-        type = listOf("VerifiableCredential", "EnhancedKYCCredential"),
-        issuer = issuerDid,
-        credentialSubject = buildJsonObject {
-            put("id", customerDid)
-            put("identity", buildJsonObject {
-                identityData.forEach { (key, value) ->
-                    put(key, value)
+    val result = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "EnhancedKYCCredential")
+            issuer(issuerDid)
+            subject {
+                id(customerDid)
+                "identity" {
+                    identityData.forEach { (key, value) ->
+                        key to value
+                    }
                 }
-            })
-            put("enhancedKYC", buildJsonObject {
-                put("sourceOfFunds", sourceOfFunds)
-                put("occupation", occupation)
-                put("incomeRange", incomeRange)
-                put("verificationLevel", "Enhanced")
-            })
-        },
-        issuanceDate = Instant.now().toString()
-    )
+                "enhancedKYC" {
+                    "sourceOfFunds" to sourceOfFunds
+                    "occupation" to occupation
+                    "incomeRange" to incomeRange
+                    "verificationLevel" to "Enhanced"
+                }
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+    }
+    
+    return when (result) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        else -> throw IllegalStateException("Failed to create enhanced KYC credential: ${result.allErrors.joinToString()}")
+    }
 }
 ```
 
@@ -796,25 +812,35 @@ fun createEnhancedKYCCredential(
 Monitor customer for changes:
 
 ```kotlin
-fun createMonitoringCredential(
+suspend fun createMonitoringCredential(
+    trustWeave: TrustWeave,
     customerDid: String,
     monitoringProviderDid: String,
+    issuerKeyId: String,
     monitoringStatus: String,
     lastCheckDate: String
 ): VerifiableCredential {
-    return VerifiableCredential(
-        type = listOf("VerifiableCredential", "MonitoringCredential"),
-        issuer = monitoringProviderDid,
-        credentialSubject = buildJsonObject {
-            put("id", customerDid)
-            put("monitoring", buildJsonObject {
-                put("status", monitoringStatus)
-                put("lastCheckDate", lastCheckDate)
-                put("nextCheckDate", Instant.now().plus(30, ChronoUnit.DAYS).toString())
-            })
-        },
-        issuanceDate = Instant.now().toString()
-    )
+    val result = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "MonitoringCredential")
+            issuer(monitoringProviderDid)
+            subject {
+                id(customerDid)
+                "monitoring" {
+                    "status" to monitoringStatus
+                    "lastCheckDate" to lastCheckDate
+                    "nextCheckDate" to Instant.now().plus(30, ChronoUnit.DAYS).toString()
+                }
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = monitoringProviderDid, keyId = issuerKeyId)
+    }
+    
+    return when (result) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        else -> throw IllegalStateException("Failed to create monitoring credential: ${result.allErrors.joinToString()}")
+    }
 }
 ```
 

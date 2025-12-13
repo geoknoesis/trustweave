@@ -664,12 +664,14 @@ val revokedCredential = credential.copy(
 Credentials can have expiration dates:
 
 ```kotlin
-val credential = VerifiableCredential(
-    // ...
-    expirationDate = Instant.now()
-        .plus(10, ChronoUnit.YEARS)
-        .toString()
-)
+// Note: Use trustWeave.issue { } DSL instead:
+// val result = trustWeave.issue {
+//     credential {
+//         // ...
+//         expires(10, ChronoUnit.YEARS)
+//     }
+//     signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+// }
 ```
 
 ### Schema Validation
@@ -677,14 +679,14 @@ val credential = VerifiableCredential(
 Use schemas to ensure credential structure:
 
 ```kotlin
-val credential = VerifiableCredential(
-    // ...
-    credentialSchema = CredentialSchema(
-        id = "https://example.edu/schemas/degree.json",
-        type = "JsonSchemaValidator2018",
-        schemaFormat = SchemaFormat.JSON_SCHEMA
-    )
-)
+// Note: Use trustWeave.issue { } DSL instead:
+// val result = trustWeave.issue {
+//     credential {
+//         // ...
+//         schema("https://example.edu/schemas/degree.json")
+//     }
+//     signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+// }
 ```
 
 ## Benefits

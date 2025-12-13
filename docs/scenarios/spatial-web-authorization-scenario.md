@@ -275,6 +275,13 @@ fun main() = runBlocking {
     val didMethod = DidKeyMockMethod(domainAuthorityKms)
     val didRegistry = DidMethodRegistry().apply { register(didMethod) }
 
+    // Initialize TrustWeave
+    val trustWeave = TrustWeave.build {
+        keyManagementService(domainAuthorityKms)
+        didMethodRegistry(didRegistry)
+        credentialService { CredentialService() }
+    }
+
     // Setup blockchain for anchoring
     val anchorClient = InMemoryBlockchainAnchorClient("eip155:1", emptyMap())
     val blockchainRegistry = BlockchainAnchorRegistry().apply {
@@ -331,59 +338,41 @@ fun main() = runBlocking {
 
     // Step 5: Create authorization credential
     println("\nStep 5: Creating activity authorization credential...")
-    val authorizationCredential = VerifiableCredential(
-        id = "https://example.com/authorizations/${droneAgentDid.id.substringAfterLast(":")}-${Instant.now().toEpochMilli()}",
-        type = listOf("VerifiableCredential", "ActivityAuthorizationCredential", "SpatialWebCredential"),
-        issuer = domainAuthorityDid.id,
-        credentialSubject = buildJsonObject {
-            put("id", droneAgentDid.id)
-            put("authorization", buildJsonObject {
-                put("agentDid", droneAgentDid.id)
-                put("activityDid", dataCollectionActivityDid.id)
-                put("activityType", "data-collection")
-                put("domainDid", airspaceDomain.domainDid)
-                put("domainId", airspaceDomain.domainId)
-                put("constraints", buildJsonObject {
-                    put("maxAltitude", "400") // feet
-                    put("maxDuration", "PT2H") // 2 hours
-                    put("timeWindow", "2024-01-01T08:00:00Z/2024-01-01T18:00:00Z")
-                    put("allowedResources", "sensor-data-collection")
-                })
-                put("associatedThings", listOf(sensorThingDid.id))
-                put("spatialFeatures", listOf(monitoringZoneDid.id))
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = Instant.now().plus(30, ChronoUnit.DAYS).toString(),
-        credentialSchema = com.trustweave.credential.models.CredentialSchema(
-            id = "https://example.com/schemas/activity-authorization.json",
-            type = "JsonSchemaValidator2018",
-            schemaFormat = com.trustweave.spi.SchemaFormat.JSON_SCHEMA
-        )
-    )
-
-    // Step 6: Issue credential with proof
-    println("\nStep 6: Issuing authorization credential...")
-    val authorityKey = domainAuthorityKms.generateKey("Ed25519")
-    val proofGenerator = Ed25519ProofGenerator(
-        signer = { data, keyId -> domainAuthorityKms.sign(keyId, data) },
-        getPublicKeyId = { keyId -> authorityKey.id }
-    )
-
-    val proofRegistry = ProofGeneratorRegistry().apply { register(proofGenerator) }
-
-    val credentialIssuer = CredentialIssuer(
-        proofGenerator = proofGenerator,
-        resolveDid = { did -> didRegistry.resolve(did) != null },
-        proofRegistry = proofRegistry
-    )
-
-    val issuedCredential = credentialIssuer.issue(
-        credential = authorizationCredential,
-        issuerDid = domainAuthorityDid.id,
-        keyId = authorityKey.id,
-        options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
-    )
+    val authorityKeyId = domainAuthorityKms.generateKey("Ed25519").id
+    val authorizationResult = trustWeave.issue {
+        credential {
+            id("https://example.com/authorizations/${droneAgentDid.id.substringAfterLast(":")}-${Instant.now().toEpochMilli()}")
+            type("VerifiableCredential", "ActivityAuthorizationCredential", "SpatialWebCredential")
+            issuer(domainAuthorityDid.id)
+            subject {
+                id(droneAgentDid.id)
+                "authorization" {
+                    "agentDid" to droneAgentDid.id
+                    "activityDid" to dataCollectionActivityDid.id
+                    "activityType" to "data-collection"
+                    "domainDid" to airspaceDomain.domainDid
+                    "domainId" to airspaceDomain.domainId
+                    "constraints" {
+                        "maxAltitude" to "400" // feet
+                        "maxDuration" to "PT2H" // 2 hours
+                        "timeWindow" to "2024-01-01T08:00:00Z/2024-01-01T18:00:00Z"
+                        "allowedResources" to "sensor-data-collection"
+                    }
+                    "associatedThings" to listOf(sensorThingDid.id)
+                    "spatialFeatures" to listOf(monitoringZoneDid.id)
+                }
+            }
+            issued(Instant.now())
+            expires(30, ChronoUnit.DAYS)
+            schema("https://example.com/schemas/activity-authorization.json")
+        }
+        signedBy(issuerDid = domainAuthorityDid.id, keyId = authorityKeyId)
+    }
+    
+    val issuedCredential = when (authorizationResult) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> authorizationResult.credential
+        else -> throw IllegalStateException("Failed to create authorization credential: ${authorizationResult.allErrors.joinToString()}")
+    }
 
     println("Authorization credential issued:")
     println("  - Agent: ${droneAgentDid.id}")
@@ -861,25 +850,35 @@ fun checkConstraints(
 Model relationships between entities:
 
 ```kotlin
-fun createEntityRelationshipCredential(
+suspend fun createEntityRelationshipCredential(
+    trustWeave: TrustWeave,
     sourceEntityDid: String,
     targetEntityDid: String,
     relationshipType: String,
-    issuerDid: String
+    issuerDid: String,
+    issuerKeyId: String
 ): VerifiableCredential {
-    return VerifiableCredential(
-        type = listOf("VerifiableCredential", "EntityRelationshipCredential"),
-        issuer = issuerDid,
-        credentialSubject = buildJsonObject {
-            put("sourceEntityDid", sourceEntityDid)
-            put("targetEntityDid", targetEntityDid)
-            put("relationshipType", relationshipType)
-            put("properties", buildJsonObject {
-                // Relationship-specific properties
-            })
-        },
-        issuanceDate = Instant.now().toString()
-    )
+    val result = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "EntityRelationshipCredential")
+            issuer(issuerDid)
+            subject {
+                "sourceEntityDid" to sourceEntityDid
+                "targetEntityDid" to targetEntityDid
+                "relationshipType" to relationshipType
+                "properties" {
+                    // Relationship-specific properties
+                }
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+    }
+    
+    return when (result) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        else -> throw IllegalStateException("Failed to create entity relationship credential: ${result.allErrors.joinToString()}")
+    }
 }
 
 // Example: Associate agent with thing

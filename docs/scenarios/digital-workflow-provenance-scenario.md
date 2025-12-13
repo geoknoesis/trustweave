@@ -211,6 +211,13 @@ fun main() = runBlocking {
     val didMethod = DidKeyMockMethod(processorKms)
     val didRegistry = DidMethodRegistry().apply { register(didMethod) }
 
+    // Initialize TrustWeave
+    val trustWeave = TrustWeave.build {
+        keyManagementService(processorKms)
+        didMethodRegistry(didRegistry)
+        credentialService { CredentialService() }
+    }
+
     println("Services initialized")
 }
 ```
@@ -239,8 +246,11 @@ fun main() = runBlocking {
 
     // Create entity credential for source
     // This credential describes the original entity
+    val sourceKeyId = processorKms.generateKey("Ed25519").id
     val sourceEntityCredential = createEntityCredential(
+        trustWeave = trustWeave,
         entityDid = sourceEntityDid.id,
+        issuerKeyId = sourceKeyId,
         entityType = "Image",
         entityHash = "sha256:original-image-hash",
         metadata = mapOf(
@@ -298,40 +308,43 @@ fun main() = runBlocking {
 - **Agent Reference**: Who/what performed it
 
 ```kotlin
-import com.trustweave.credential.models.VerifiableCredential
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
-import java.time.Instant
-
     // Step 4: Create activity credential
     println("\nStep 4: Creating activity credential...")
 
     // Activity credential describes the processing step
     // This follows PROV-O "Activity" concept
     // Records what transformation was applied and how
-    val resizeActivityCredential = VerifiableCredential(
-        id = "https://processor.example.com/activities/${resizeActivityDid.id.substringAfterLast(":")}",
-        type = listOf("VerifiableCredential", "ActivityCredential", "ProvenanceCredential"),
-        issuer = processingAgentDid.id, // Agent issues credential about activity they performed
-        credentialSubject = buildJsonObject {
-            put("id", resizeActivityDid.id)
-            put("activity", buildJsonObject {
-                put("activityType", "resize-image")
-                put("description", "Resize image to target dimensions")
-                put("parameters", buildJsonObject {
-                    put("targetWidth", "800")
-                    put("targetHeight", "600")
-                    put("algorithm", "lanczos")
-                    put("maintainAspectRatio", "true")
-                })
-                put("startTime", Instant.now().toString())
-                put("endTime", Instant.now().plusSeconds(5).toString())
-                put("agentDid", processingAgentDid.id)
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = null
-    )
+    val agentKeyId = processorKms.generateKey("Ed25519").id
+    val resizeActivityResult = trustWeave.issue {
+        credential {
+            id("https://processor.example.com/activities/${resizeActivityDid.id.substringAfterLast(":")}")
+            type("VerifiableCredential", "ActivityCredential", "ProvenanceCredential")
+            issuer(processingAgentDid.id) // Agent issues credential about activity they performed
+            subject {
+                id(resizeActivityDid.id)
+                "activity" {
+                    "activityType" to "resize-image"
+                    "description" to "Resize image to target dimensions"
+                    "parameters" {
+                        "targetWidth" to "800"
+                        "targetHeight" to "600"
+                        "algorithm" to "lanczos"
+                        "maintainAspectRatio" to "true"
+                    }
+                    "startTime" to Instant.now().toString()
+                    "endTime" to Instant.now().plusSeconds(5).toString()
+                    "agentDid" to processingAgentDid.id
+                }
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = processingAgentDid.id, keyId = agentKeyId)
+    }
+    
+    val resizeActivityCredential = when (resizeActivityResult) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> resizeActivityResult.credential
+        else -> throw IllegalStateException("Failed to create activity credential: ${resizeActivityResult.allErrors.joinToString()}")
+    }
 
     println("Activity credential created:")
     println("  - Type: resize-image")
@@ -369,45 +382,52 @@ import java.time.Instant
     // - sourceEntity was "used" by activity
     // - activity "generated" derivedEntity
     // This creates verifiable provenance chain
-    val provenanceChainCredential = VerifiableCredential(
-        id = "https://processor.example.com/provenance/${sourceEntityDid.id.substringAfterLast(":")}-to-${derivedEntityDid.id.substringAfterLast(":")}",
-        type = listOf("VerifiableCredential", "ProvenanceChainCredential", "ProvenanceCredential"),
-        issuer = processingAgentDid.id,
-        credentialSubject = buildJsonObject {
-            put("provenance", buildJsonObject {
-                // PROV-O: Entity that was used
-                put("usedEntity", buildJsonObject {
-                    put("entityDid", sourceEntityDid.id)
-                    put("entityHash", "sha256:original-image-hash")
-                    put("role", "input")
-                })
+    val provenanceChainResult = trustWeave.issue {
+        credential {
+            id("https://processor.example.com/provenance/${sourceEntityDid.id.substringAfterLast(":")}-to-${derivedEntityDid.id.substringAfterLast(":")}")
+            type("VerifiableCredential", "ProvenanceChainCredential", "ProvenanceCredential")
+            issuer(processingAgentDid.id)
+            subject {
+                "provenance" {
+                    // PROV-O: Entity that was used
+                    "usedEntity" {
+                        "entityDid" to sourceEntityDid.id
+                        "entityHash" to "sha256:original-image-hash"
+                        "role" to "input"
+                    }
 
-                // PROV-O: Activity that used the entity
-                put("activity", buildJsonObject {
-                    put("activityDid", resizeActivityDid.id)
-                    put("activityType", "resize-image")
-                })
+                    // PROV-O: Activity that used the entity
+                    "activity" {
+                        "activityDid" to resizeActivityDid.id
+                        "activityType" to "resize-image"
+                    }
 
-                // PROV-O: Entity that was generated
-                put("generatedEntity", buildJsonObject {
-                    put("entityDid", derivedEntityDid.id)
-                    put("entityHash", "sha256:resized-image-hash")
-                    put("role", "output")
-                })
+                    // PROV-O: Entity that was generated
+                    "generatedEntity" {
+                        "entityDid" to derivedEntityDid.id
+                        "entityHash" to "sha256:resized-image-hash"
+                        "role" to "output"
+                    }
 
-                // PROV-O: Agent that performed activity
-                put("agent", buildJsonObject {
-                    put("agentDid", processingAgentDid.id)
-                    put("agentType", "image-processing-service")
-                })
+                    // PROV-O: Agent that performed activity
+                    "agent" {
+                        "agentDid" to processingAgentDid.id
+                        "agentType" to "image-processing-service"
+                    }
 
-                // Timestamp of transformation
-                put("timestamp", Instant.now().toString())
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = null
-    )
+                    // Timestamp of transformation
+                    "timestamp" to Instant.now().toString()
+                }
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = processingAgentDid.id, keyId = agentKeyId)
+    }
+    
+    val provenanceChainCredential = when (provenanceChainResult) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> provenanceChainResult.credential
+        else -> throw IllegalStateException("Failed to create provenance chain credential: ${provenanceChainResult.allErrors.joinToString()}")
+    }
 
     println("Provenance chain credential created:")
     println("  - Used: ${sourceEntityDid.id}")
@@ -428,57 +448,13 @@ import java.time.Instant
 - **Verification**: Anyone can verify credentials came from agent
 
 ```kotlin
-import com.trustweave.credential.issuer.CredentialIssuer
-import com.trustweave.credential.proof.Ed25519ProofGenerator
-import com.trustweave.credential.proof.ProofGeneratorRegistry
-import com.trustweave.credential.CredentialIssuanceOptions
-
-    // Step 7: Issue credentials with proof
-    println("\nStep 7: Issuing provenance credentials...")
-
-    // Generate agent's signing key
-    // This key will be used to sign all provenance credentials
-    // In production, use hardware security module (HSM)
-    val agentKey = processorKms.generateKey("Ed25519")
-
-    // Create proof generator for agent
-    // Ed25519 provides strong security with good performance
-    val agentProofGenerator = Ed25519ProofGenerator(
-        signer = { data, keyId -> processorKms.sign(keyId, data) },
-        getPublicKeyId = { keyId -> agentKey.id }
-    )
-    val agentProofRegistry = ProofGeneratorRegistry().apply {
-        register(agentProofGenerator)
-    }
-
-    // Create credential issuer
-    val agentIssuer = CredentialIssuer(
-        proofGenerator = agentProofGenerator,
-        resolveDid = { did -> didRegistry.resolve(did) != null },
-        proofRegistry = agentProofRegistry
-    )
-
-    // Issue activity credential
-    // This proves the activity was performed by the agent
-    val issuedActivityCredential = agentIssuer.issue(
-        credential = resizeActivityCredential,
-        issuerDid = processingAgentDid.id,
-        keyId = agentKey.id,
-        options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
-    )
-
-    // Issue provenance chain credential
-    // This proves the provenance relationships are authentic
-    val issuedProvenanceChain = agentIssuer.issue(
-        credential = provenanceChainCredential,
-        issuerDid = processingAgentDid.id,
-        keyId = agentKey.id,
-        options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
-    )
+    // Step 7: Credentials are already issued via trustWeave.issue { } DSL above
+    // The credentials (resizeActivityCredential and provenanceChainCredential) 
+    // already contain proofs from the DSL issuance
 
     println("Provenance credentials issued:")
-    println("  - Activity credential: ${issuedActivityCredential.proof != null}")
-    println("  - Provenance chain: ${issuedProvenanceChain.proof != null}")
+    println("  - Activity credential: ${resizeActivityCredential.proof != null}")
+    println("  - Provenance chain: ${provenanceChainCredential.proof != null}")
 ```
 
 ## Step 8: Build Multi-Step Provenance Chain
@@ -506,72 +482,77 @@ import com.trustweave.credential.CredentialIssuanceOptions
     val filteredEntityDid = didMethod.createDid()
 
     // Create filter activity credential
-    val filterActivityCredential = VerifiableCredential(
-        type = listOf("VerifiableCredential", "ActivityCredential", "ProvenanceCredential"),
-        issuer = processingAgentDid.id,
-        credentialSubject = buildJsonObject {
-            put("id", filterActivityDid.id)
-            put("activity", buildJsonObject {
-                put("activityType", "apply-filter")
-                put("parameters", buildJsonObject {
-                    put("filterType", "sharpen")
-                    put("intensity", "0.5")
-                })
-                put("agentDid", processingAgentDid.id)
-            })
-        },
-        issuanceDate = Instant.now().toString()
-    )
+    val filterActivityResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "ActivityCredential", "ProvenanceCredential")
+            issuer(processingAgentDid.id)
+            subject {
+                id(filterActivityDid.id)
+                "activity" {
+                    "activityType" to "apply-filter"
+                    "parameters" {
+                        "filterType" to "sharpen"
+                        "intensity" to "0.5"
+                    }
+                    "agentDid" to processingAgentDid.id
+                }
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = processingAgentDid.id, keyId = agentKeyId)
+    }
+    
+    val filterActivityCredential = when (filterActivityResult) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> filterActivityResult.credential
+        else -> throw IllegalStateException("Failed to create filter activity credential: ${filterActivityResult.allErrors.joinToString()}")
+    }
 
     // Create provenance chain credential linking resized to filtered
     // This extends the provenance chain: original → resized → filtered
-    val filterProvenanceChain = VerifiableCredential(
-        type = listOf("VerifiableCredential", "ProvenanceChainCredential"),
-        issuer = processingAgentDid.id,
-        credentialSubject = buildJsonObject {
-            put("provenance", buildJsonObject {
-                // Previous entity (resized image)
-                put("usedEntity", buildJsonObject {
-                    put("entityDid", derivedEntityDid.id)
-                    put("entityHash", "sha256:resized-image-hash")
-                })
+    val filterProvenanceChainResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "ProvenanceChainCredential")
+            issuer(processingAgentDid.id)
+            subject {
+                "provenance" {
+                    // Previous entity (resized image)
+                    "usedEntity" {
+                        "entityDid" to derivedEntityDid.id
+                        "entityHash" to "sha256:resized-image-hash"
+                    }
 
-                // Current activity (apply filter)
-                put("activity", buildJsonObject {
-                    put("activityDid", filterActivityDid.id)
-                    put("activityType", "apply-filter")
-                })
+                    // Current activity (apply filter)
+                    "activity" {
+                        "activityDid" to filterActivityDid.id
+                        "activityType" to "apply-filter"
+                    }
 
-                // Generated entity (filtered image)
-                put("generatedEntity", buildJsonObject {
-                    put("entityDid", filteredEntityDid.id)
-                    put("entityHash", "sha256:filtered-image-hash")
-                })
+                    // Generated entity (filtered image)
+                    "generatedEntity" {
+                        "entityDid" to filteredEntityDid.id
+                        "entityHash" to "sha256:filtered-image-hash"
+                    }
 
-                put("agent", buildJsonObject {
-                    put("agentDid", processingAgentDid.id)
-                })
+                    "agent" {
+                        "agentDid" to processingAgentDid.id
+                    }
 
-                put("timestamp", Instant.now().toString())
-            })
-        },
-        issuanceDate = Instant.now().toString()
-    )
+                    "timestamp" to Instant.now().toString()
+                }
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = processingAgentDid.id, keyId = agentKeyId)
+    }
+    
+    val filterProvenanceChain = when (filterProvenanceChainResult) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> filterProvenanceChainResult.credential
+        else -> throw IllegalStateException("Failed to create filter provenance chain: ${filterProvenanceChainResult.allErrors.joinToString()}")
+    }
 
-    // Issue credentials
-    val issuedFilterActivity = agentIssuer.issue(
-        credential = filterActivityCredential,
-        issuerDid = processingAgentDid.id,
-        keyId = agentKey.id,
-        options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
-    )
-
-    val issuedFilterChain = agentIssuer.issue(
-        credential = filterProvenanceChain,
-        issuerDid = processingAgentDid.id,
-        keyId = agentKey.id,
-        options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
-    )
+    // Credentials are already issued via trustWeave.issue { } DSL above
+    val issuedFilterActivity = filterActivityCredential
+    val issuedFilterChain = filterProvenanceChain
 
     println("Multi-step provenance chain created:")
     println("  - Step 1: Original → Resized")
@@ -714,28 +695,37 @@ data class LineageStep(
     val previousEntityDid: String
 )
 
-fun createEntityCredential(
+suspend fun createEntityCredential(
+    trustWeave: TrustWeave,
     entityDid: String,
+    issuerKeyId: String,
     entityType: String,
     entityHash: String,
     metadata: Map<String, String>
 ): VerifiableCredential {
-    return VerifiableCredential(
-        type = listOf("VerifiableCredential", "EntityCredential", "ProvenanceCredential"),
-        issuer = entityDid, // Entity issues its own credential
-        credentialSubject = buildJsonObject {
-            put("id", entityDid)
-            put("entity", buildJsonObject {
-                put("entityType", entityType)
-                put("entityHash", entityHash)
-                metadata.forEach { (key, value) ->
-                    put(key, value)
+    val result = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "EntityCredential", "ProvenanceCredential")
+            issuer(entityDid) // Entity issues its own credential
+            subject {
+                id(entityDid)
+                "entity" {
+                    "entityType" to entityType
+                    "entityHash" to entityHash
+                    metadata.forEach { (key, value) ->
+                        key to value
+                    }
                 }
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = null
-    )
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = entityDid, keyId = issuerKeyId)
+    }
+    
+    return when (result) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        else -> throw IllegalStateException("Failed to create entity credential: ${result.allErrors.joinToString()}")
+    }
 }
 ```
 
@@ -1023,9 +1013,11 @@ data class ProcessingStep(
 **Implementation**:
 
 ```kotlin
-fun createDataScienceProvenance(
+suspend fun createDataScienceProvenance(
+    trustWeave: TrustWeave,
     rawDataDid: String,
-    transformations: List<DataTransformation>
+    transformations: List<DataTransformation>,
+    issuerKeyId: String
 ): List<VerifiableCredential> {
     var currentDataDid = rawDataDid
     val provenanceChains = mutableListOf<VerifiableCredential>()
@@ -1033,29 +1025,37 @@ fun createDataScienceProvenance(
     transformations.forEach { transformation ->
         val outputDataDid = transformation.outputDataDid
 
-        val chainCredential = VerifiableCredential(
-            type = listOf("VerifiableCredential", "ProvenanceChainCredential"),
-            issuer = transformation.analystDid,
-            credentialSubject = buildJsonObject {
-                put("provenance", buildJsonObject {
-                    put("usedEntity", buildJsonObject {
-                        put("entityDid", currentDataDid)
-                    })
-                    put("activity", buildJsonObject {
-                        put("activityDid", transformation.transformationDid)
-                        put("activityType", transformation.type)
-                        put("parameters", transformation.parameters)
-                    })
-                    put("generatedEntity", buildJsonObject {
-                        put("entityDid", outputDataDid)
-                    })
-                    put("agent", buildJsonObject {
-                        put("agentDid", transformation.analystDid)
-                    })
-                })
-            },
-            issuanceDate = Instant.now().toString()
-        )
+        val chainResult = trustWeave.issue {
+            credential {
+                type("VerifiableCredential", "ProvenanceChainCredential")
+                issuer(transformation.analystDid)
+                subject {
+                    "provenance" {
+                        "usedEntity" {
+                            "entityDid" to currentDataDid
+                        }
+                        "activity" {
+                            "activityDid" to transformation.transformationDid
+                            "activityType" to transformation.type
+                            "parameters" to transformation.parameters.toString() // Simplified - would need proper JSON conversion
+                        }
+                        "generatedEntity" {
+                            "entityDid" to outputDataDid
+                        }
+                        "agent" {
+                            "agentDid" to transformation.analystDid
+                        }
+                    }
+                }
+                issued(Instant.now())
+            }
+            signedBy(issuerDid = transformation.analystDid, keyId = issuerKeyId)
+        }
+
+        val chainCredential = when (chainResult) {
+            is com.trustweave.credential.results.IssuanceResult.Success -> chainResult.credential
+            else -> throw IllegalStateException("Failed to create provenance chain: ${chainResult.allErrors.joinToString()}")
+        }
 
         provenanceChains.add(chainCredential)
         currentDataDid = outputDataDid

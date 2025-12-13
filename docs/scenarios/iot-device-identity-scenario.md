@@ -230,6 +230,13 @@ fun main() = runBlocking {
     val didMethod = DidKeyMockMethod(manufacturerKms)
     val didRegistry = DidMethodRegistry().apply { register(didMethod) }
 
+    // Initialize TrustWeave
+    val trustWeave = TrustWeave.build {
+        keyManagementService(manufacturerKms)
+        didMethodRegistry(didRegistry)
+        credentialService { CredentialService() }
+    }
+
     println("Services initialized")
 }
 ```
@@ -286,42 +293,38 @@ fun main() = runBlocking {
 - **Security Features**: Security capabilities of the device
 
 ```kotlin
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.CredentialIssuanceOptions
-import com.trustweave.credential.issuer.CredentialIssuer
-import com.trustweave.credential.proof.Ed25519ProofGenerator
-import com.trustweave.credential.proof.ProofGeneratorRegistry
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
-import java.time.Instant
-
     // Step 5: Create device attestation credential
     println("\nStep 5: Creating device attestation credential...")
 
     // Device attestation proves device is authentic and from manufacturer
     // This credential will be used to verify device authenticity throughout its lifecycle
-    val deviceAttestation = VerifiableCredential(
-        id = "https://manufacturer.example.com/devices/${deviceDid.id.substringAfterLast(":")}/attestation",
-        type = listOf("VerifiableCredential", "DeviceAttestationCredential", "IoTCredential"),
-        issuer = manufacturerDid.id,
-        credentialSubject = buildJsonObject {
-            put("id", deviceDid.id)
-            put("device", buildJsonObject {
-                put("model", "SmartSensor Pro")
-                put("serialNumber", "SSP-2024-001234")
-                put("manufacturingDate", "2024-01-15")
-                put("manufacturerDid", manufacturerDid.id)
-                put("firmwareVersion", "2.1.0")
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = null, // Device attestation doesn't expire
-        credentialSchema = com.trustweave.credential.models.CredentialSchema(
-            id = "https://example.com/schemas/device-attestation.json",
-            type = "JsonSchemaValidator2018",
-            schemaFormat = com.trustweave.spi.SchemaFormat.JSON_SCHEMA
-        )
-    )
+    val manufacturerKeyId = manufacturerKms.generateKey("Ed25519").id
+    val deviceAttestationResult = trustWeave.issue {
+        credential {
+            id("https://manufacturer.example.com/devices/${deviceDid.id.substringAfterLast(":")}/attestation")
+            type("VerifiableCredential", "DeviceAttestationCredential", "IoTCredential")
+            issuer(manufacturerDid.id)
+            subject {
+                id(deviceDid.id)
+                "device" {
+                    "model" to "SmartSensor Pro"
+                    "serialNumber" to "SSP-2024-001234"
+                    "manufacturingDate" to "2024-01-15"
+                    "manufacturerDid" to manufacturerDid.id
+                    "firmwareVersion" to "2.1.0"
+                }
+            }
+            issued(Instant.now())
+            // Device attestation doesn't expire - no expires() call
+            schema("https://example.com/schemas/device-attestation.json")
+        }
+        signedBy(issuerDid = manufacturerDid.id, keyId = manufacturerKeyId)
+    }
+    
+    val deviceAttestation = when (deviceAttestationResult) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> deviceAttestationResult.credential
+        else -> throw IllegalStateException("Failed to create device attestation: ${deviceAttestationResult.allErrors.joinToString()}")
+    }
 
     println("Device attestation credential created:")
     println("  - Model: SmartSensor Pro")
@@ -409,60 +412,59 @@ import java.time.Instant
     // Capability credential describes what the device can do
     // This enables other systems to understand device capabilities
     // Without this, systems would need to query device directly
-    val capabilityCredential = VerifiableCredential(
-        id = "https://manufacturer.example.com/devices/${deviceDid.id.substringAfterLast(":")}/capabilities",
-        type = listOf("VerifiableCredential", "DeviceCapabilityCredential", "IoTCredential"),
-        issuer = manufacturerDid.id,
-        credentialSubject = buildJsonObject {
-            put("id", deviceDid.id)
-            put("capabilities", buildJsonObject {
-                // Sensors: What the device can sense
-                put("sensors", listOf(
-                    "temperature",
-                    "humidity",
-                    "motion",
-                    "light"
-                ))
+    val capabilityResult = trustWeave.issue {
+        credential {
+            id("https://manufacturer.example.com/devices/${deviceDid.id.substringAfterLast(":")}/capabilities")
+            type("VerifiableCredential", "DeviceCapabilityCredential", "IoTCredential")
+            issuer(manufacturerDid.id)
+            subject {
+                id(deviceDid.id)
+                "capabilities" {
+                    // Sensors: What the device can sense
+                    "sensors" to listOf(
+                        "temperature",
+                        "humidity",
+                        "motion",
+                        "light"
+                    )
 
-                // Actuators: What the device can control
-                put("actuators", listOf(
-                    "led",
-                    "buzzer"
-                ))
+                    // Actuators: What the device can control
+                    "actuators" to listOf(
+                        "led",
+                        "buzzer"
+                    )
 
-                // Communication protocols the device supports
-                put("communication", listOf(
-                    "WiFi",
-                    "Bluetooth",
-                    "Zigbee"
-                ))
+                    // Communication protocols the device supports
+                    "communication" to listOf(
+                        "WiFi",
+                        "Bluetooth",
+                        "Zigbee"
+                    )
 
-                // Processing capabilities
-                put("processing", buildJsonObject {
-                    put("cpu", "ARM Cortex-M4")
-                    put("ram", "256KB")
-                    put("storage", "1MB")
-                })
+                    // Processing capabilities
+                    "processing" {
+                        "cpu" to "ARM Cortex-M4"
+                        "ram" to "256KB"
+                        "storage" to "1MB"
+                    }
 
-                // Security features
-                put("security", listOf(
-                    "secure-boot",
-                    "encryption",
-                    "tls-support"
-                ))
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = null
-    )
-
-    // Issue capability credential
-    val issuedCapability = manufacturerIssuer.issue(
-        credential = capabilityCredential,
-        issuerDid = manufacturerDid.id,
-        keyId = manufacturerKey.id,
-        options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
-    )
+                    // Security features
+                    "security" to listOf(
+                        "secure-boot",
+                        "encryption",
+                        "tls-support"
+                    )
+                }
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = manufacturerDid.id, keyId = manufacturerKeyId)
+    }
+    
+    val issuedCapability = when (capabilityResult) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> capabilityResult.credential
+        else -> throw IllegalStateException("Failed to create capability credential: ${capabilityResult.allErrors.joinToString()}")
+    }
 
     println("Device capability credential issued:")
     println("  - Sensors: temperature, humidity, motion, light")
@@ -488,58 +490,46 @@ import java.time.Instant
     // Network authorization grants device permission to join network
     // This is issued by network gateway, not manufacturer
     // Gateway verifies device attestation before issuing authorization
-    val networkAuthorization = VerifiableCredential(
-        id = "https://gateway.example.com/authorizations/${deviceDid.id.substringAfterLast(":")}",
-        type = listOf("VerifiableCredential", "NetworkAuthorizationCredential", "IoTCredential"),
-        issuer = gatewayDid.id,
-        credentialSubject = buildJsonObject {
-            put("id", deviceDid.id)
-            put("networkAuthorization", buildJsonObject {
-                put("networkId", "smart-home-network-001")
-                put("networkName", "Smart Home Network")
-                put("authorizedResources", listOf(
-                    "sensor-data",
-                    "device-control",
-                    "local-communication"
-                ))
-                put("timeRestrictions", buildJsonObject {
-                    put("allowedHours", "00:00-23:59") // 24/7 access
-                    put("timezone", "UTC")
-                })
-                put("authorizationDate", Instant.now().toString())
-            })
-        },
-        issuanceDate = Instant.now().toString(),
-        expirationDate = Instant.now().plus(365, java.time.temporal.ChronoUnit.DAYS).toString()
-    )
-
-    // Issue network authorization
-    val gatewayKey = gatewayKms.generateKey("Ed25519")
-    val gatewayProofGenerator = Ed25519ProofGenerator(
-        signer = { data, keyId -> gatewayKms.sign(keyId, data) },
-        getPublicKeyId = { keyId -> gatewayKey.id }
-    )
-    val gatewayProofRegistry = ProofGeneratorRegistry().apply {
-        register(gatewayProofGenerator)
+    val gatewayKeyId = gatewayKms.generateKey("Ed25519").id
+    val networkAuthorizationResult = trustWeave.issue {
+        credential {
+            id("https://gateway.example.com/authorizations/${deviceDid.id.substringAfterLast(":")}")
+            type("VerifiableCredential", "NetworkAuthorizationCredential", "IoTCredential")
+            issuer(gatewayDid.id)
+            subject {
+                id(deviceDid.id)
+                "networkAuthorization" {
+                    "networkId" to "smart-home-network-001"
+                    "networkName" to "Smart Home Network"
+                    "authorizedResources" to listOf(
+                        "sensor-data",
+                        "device-control",
+                        "local-communication"
+                    )
+                    "timeRestrictions" {
+                        "allowedHours" to "00:00-23:59" // 24/7 access
+                        "timezone" to "UTC"
+                    }
+                    "authorizationDate" to Instant.now().toString()
+                }
+            }
+            issued(Instant.now())
+            expires(365, java.time.temporal.ChronoUnit.DAYS)
+        }
+        signedBy(issuerDid = gatewayDid.id, keyId = gatewayKeyId)
+    }
+    
+    val networkAuthorization = when (networkAuthorizationResult) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> networkAuthorizationResult.credential
+        else -> throw IllegalStateException("Failed to create network authorization: ${networkAuthorizationResult.allErrors.joinToString()}")
     }
 
-    val gatewayIssuer = CredentialIssuer(
-        proofGenerator = gatewayProofGenerator,
-        resolveDid = { did -> didRegistry.resolve(did) != null },
-        proofRegistry = gatewayProofRegistry
-    )
-
-    val issuedNetworkAuth = gatewayIssuer.issue(
-        credential = networkAuthorization,
-        issuerDid = gatewayDid.id,
-        keyId = gatewayKey.id,
-        options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
-    )
+    // Network authorization is already issued via trustWeave.issue { } DSL above
+    // The credential (networkAuthorization) already contains proof from DSL issuance
 
     println("Network authorization credential issued:")
     println("  - Network: Smart Home Network")
     println("  - Authorized resources: sensor-data, device-control")
-```
 
 ## Step 8: Verify Device Before Network Access
 
@@ -634,25 +624,29 @@ import com.trustweave.credential.CredentialVerificationOptions
     // Device 1 wants to communicate with Device 2
     // First, Device 1 verifies Device 2's attestation
     // In a real scenario, Device 2 would present its attestation credential
-    val device2Attestation = VerifiableCredential(
-        type = listOf("VerifiableCredential", "DeviceAttestationCredential"),
-        issuer = manufacturerDid.id,
-        credentialSubject = buildJsonObject {
-            put("id", device2Did.id)
-            put("device", buildJsonObject {
-                put("model", "SmartActuator Pro")
-                put("serialNumber", "SAP-2024-005678")
-            })
-        },
-        issuanceDate = Instant.now().toString()
-    )
+    val device2AttestationResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "DeviceAttestationCredential")
+            issuer(manufacturerDid.id)
+            subject {
+                id(device2Did.id)
+                "device" {
+                    "model" to "SmartActuator Pro"
+                    "serialNumber" to "SAP-2024-005678"
+                }
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = manufacturerDid.id, keyId = manufacturerKeyId)
+    }
+    
+    val device2Attestation = when (device2AttestationResult) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> device2AttestationResult.credential
+        else -> throw IllegalStateException("Failed to create device 2 attestation: ${device2AttestationResult.allErrors.joinToString()}")
+    }
 
-    val issuedDevice2Attestation = manufacturerIssuer.issue(
-        credential = device2Attestation,
-        issuerDid = manufacturerDid.id,
-        keyId = manufacturerKey.id,
-        options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
-    )
+    // Device 2 attestation is already issued via trustWeave.issue { } DSL above
+    val issuedDevice2Attestation = device2Attestation
 
     // Verify Device 2's attestation
     val device2Verification = verifier.verify(
@@ -968,27 +962,37 @@ data class DeviceIdentityRecord(
 Verify device booted securely:
 
 ```kotlin
-fun createSecureBootCredential(
+suspend fun createSecureBootCredential(
+    trustWeave: TrustWeave,
     deviceDid: String,
     bootMeasurement: String,
-    issuerDid: String
+    issuerDid: String,
+    issuerKeyId: String
 ): VerifiableCredential {
     // Secure boot credential proves device booted with trusted firmware
     // bootMeasurement is cryptographic hash of boot process
     // This prevents compromised firmware from running
-    return VerifiableCredential(
-        type = listOf("VerifiableCredential", "SecureBootCredential"),
-        issuer = issuerDid,
-        credentialSubject = buildJsonObject {
-            put("id", deviceDid)
-            put("secureBoot", buildJsonObject {
-                put("bootMeasurement", bootMeasurement)
-                put("bootDate", Instant.now().toString())
-                put("firmwareHash", "sha256:abc123...")
-            })
-        },
-        issuanceDate = Instant.now().toString()
-    )
+    val result = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "SecureBootCredential")
+            issuer(issuerDid)
+            subject {
+                id(deviceDid)
+                "secureBoot" {
+                    "bootMeasurement" to bootMeasurement
+                    "bootDate" to Instant.now().toString()
+                    "firmwareHash" to "sha256:abc123..."
+                }
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+    }
+    
+    return when (result) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        else -> throw IllegalStateException("Failed to create secure boot credential: ${result.allErrors.joinToString()}")
+    }
 }
 ```
 
@@ -997,26 +1001,36 @@ fun createSecureBootCredential(
 Track device through lifecycle:
 
 ```kotlin
-fun createLifecycleCredential(
+suspend fun createLifecycleCredential(
+    trustWeave: TrustWeave,
     deviceDid: String,
     lifecycleStage: String,
-    issuerDid: String
+    issuerDid: String,
+    issuerKeyId: String
 ): VerifiableCredential {
     // Lifecycle credential tracks device status
     // Stages: manufactured, deployed, active, maintenance, decommissioned
-    return VerifiableCredential(
-        type = listOf("VerifiableCredential", "DeviceLifecycleCredential"),
-        issuer = issuerDid,
-        credentialSubject = buildJsonObject {
-            put("id", deviceDid)
-            put("lifecycle", buildJsonObject {
-                put("stage", lifecycleStage)
-                put("transitionDate", Instant.now().toString())
-                put("previousStage", "manufactured")
-            })
-        },
-        issuanceDate = Instant.now().toString()
-    )
+    val result = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "DeviceLifecycleCredential")
+            issuer(issuerDid)
+            subject {
+                id(deviceDid)
+                "lifecycle" {
+                    "stage" to lifecycleStage
+                    "transitionDate" to Instant.now().toString()
+                    "previousStage" to "manufactured"
+                }
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+    }
+    
+    return when (result) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        else -> throw IllegalStateException("Failed to create lifecycle credential: ${result.allErrors.joinToString()}")
+    }
 }
 ```
 
@@ -1025,28 +1039,38 @@ fun createLifecycleCredential(
 Track firmware updates:
 
 ```kotlin
-fun createUpdateCredential(
+suspend fun createUpdateCredential(
+    trustWeave: TrustWeave,
     deviceDid: String,
     firmwareVersion: String,
     updateHash: String,
-    issuerDid: String
+    issuerDid: String,
+    issuerKeyId: String
 ): VerifiableCredential {
     // Update credential proves firmware update was legitimate
     // Prevents malicious firmware updates
-    return VerifiableCredential(
-        type = listOf("VerifiableCredential", "DeviceUpdateCredential"),
-        issuer = issuerDid,
-        credentialSubject = buildJsonObject {
-            put("id", deviceDid)
-            put("update", buildJsonObject {
-                put("firmwareVersion", firmwareVersion)
-                put("updateHash", updateHash)
-                put("updateDate", Instant.now().toString())
-                put("signedBy", issuerDid)
-            })
-        },
-        issuanceDate = Instant.now().toString()
-    )
+    val result = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "DeviceUpdateCredential")
+            issuer(issuerDid)
+            subject {
+                id(deviceDid)
+                "update" {
+                    "firmwareVersion" to firmwareVersion
+                    "updateHash" to updateHash
+                    "updateDate" to Instant.now().toString()
+                    "signedBy" to issuerDid
+                }
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+    }
+    
+    return when (result) {
+        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        else -> throw IllegalStateException("Failed to create update credential: ${result.allErrors.joinToString()}")
+    }
 }
 ```
 

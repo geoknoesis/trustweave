@@ -51,3 +51,6 @@ Gemfile.lock
 build/nodejs/
 build/npm/
 
+# Internal documentation (development notes, reviews, implementation details)
+docs/internal/
+

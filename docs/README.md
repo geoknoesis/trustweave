@@ -102,7 +102,7 @@ fun main() = runBlocking {
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
 }
 ```
 

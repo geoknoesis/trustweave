@@ -1,5 +1,7 @@
 ---
 title: Data Catalog & DCAT Scenario
+parent: Use Case Scenarios
+nav_order: 33
 ---
 
 # Data Catalog & DCAT Scenario

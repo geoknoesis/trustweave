@@ -19,7 +19,7 @@ Add TrustWeave to your Kotlin project using Gradle or Maven.
 
 Before installing TrustWeave, ensure you have:
 
-- **Kotlin 2.2.0+** (included via Gradle plugin, no manual installation needed)
+- **Kotlin 2.2.21+** (included via Gradle plugin, no manual installation needed)
 - **Java 21+** (required for compilation and runtime)
 - **Gradle 8.5+** (automatically downloaded via Gradle Wrapper, no manual installation needed)
 - **Basic Kotlin knowledge** (coroutines, data classes, sealed classes)
@@ -37,11 +37,16 @@ Before installing TrustWeave, ensure you have:
 After installation, verify your setup by running a simple test:
 
 ```kotlin
-import com.trustweave.trust.TrustLayer
+import com.trustweave.trust.TrustWeave
+import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val trustLayer = TrustLayer.build {
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
         keys {
             provider("inMemory")
             algorithm("Ed25519")
@@ -52,11 +57,8 @@ fun main() = runBlocking {
             }
         }
     }
-    val did = trustLayer.createDid {
-        method("key")
-        algorithm("Ed25519")
-    }
-    println("✅ TrustWeave is working! Created DID: $did")
+    val (did, document) = trustWeave.createDid().getOrThrow()
+    println("✅ TrustWeave is working! Created DID: ${did.value}")
 }
 ```
 
@@ -68,29 +70,21 @@ Add TrustWeave dependencies to your `build.gradle.kts`. This brings in the core 
 
 ```kotlin
 dependencies {
-    // Core modules (required)
-    implementation("com.trustweave:trustweave-core:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-json:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-
+    // Recommended: Use distribution-all for getting started
+    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    
     // Test kit (for testing)
-    testImplementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
+    testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
 
     // Optional: Integration modules (using hierarchical group IDs)
     implementation("com.trustweave.kms:waltid:1.0.0-SNAPSHOT")
     implementation("com.trustweave.did:godiddy:1.0.0-SNAPSHOT")
     implementation("com.trustweave.chains:algorand:1.0.0-SNAPSHOT")
     implementation("com.trustweave.chains:polygon:1.0.0-SNAPSHOT")
-
-    // Kotlinx Serialization (required)
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-
-    // Coroutines (required)
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
 ```
+
+> **Note:** `distribution-all` includes all core modules, DID support, KMS abstractions, anchoring, and DSLs. For production, you may want to use individual modules to minimize bundle size. See [Module Architecture](../modules/core-modules.md) for details.
 
 **Result:** Gradle resolves the full TrustWeave BOM plus kotlinx libraries so you can compile the sample code in this guide.
 
@@ -100,15 +94,11 @@ Add TrustWeave dependencies to your `build.gradle`. Use this variant if your pro
 
 ```groovy
 dependencies {
-    // Core modules (required)
-    implementation 'com.trustweave:trustweave-core:1.0.0-SNAPSHOT'
-    implementation 'com.trustweave:trustweave-json:1.0.0-SNAPSHOT'
-    implementation 'com.trustweave:trustweave-kms:1.0.0-SNAPSHOT'
-    implementation 'com.trustweave:trustweave-did:1.0.0-SNAPSHOT'
-    implementation 'com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT'
-
+    // Recommended: Use distribution-all for getting started
+    implementation 'com.trustweave:distribution-all:1.0.0-SNAPSHOT'
+    
     // Test kit (for testing)
-    testImplementation 'com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT'
+    testImplementation 'com.trustweave:testkit:1.0.0-SNAPSHOT'
 
     // Optional: Integration modules (using hierarchical group IDs)
     implementation 'com.trustweave.kms:waltid:1.0.0-SNAPSHOT'
@@ -126,37 +116,17 @@ Add TrustWeave dependencies to your `pom.xml`. The snippet lists the minimum set
 
 ```xml
 <dependencies>
-    <!-- Core modules (required) -->
+    <!-- Recommended: Use distribution-all for getting started -->
     <dependency>
         <groupId>com.trustweave</groupId>
-        <artifactId>trustweave-core</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-        <groupId>com.trustweave</groupId>
-        <artifactId>trustweave-json</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-        <groupId>com.trustweave</groupId>
-        <artifactId>trustweave-kms</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-        <groupId>com.trustweave</groupId>
-        <artifactId>trustweave-did</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-        <groupId>com.trustweave</groupId>
-        <artifactId>trustweave-anchor</artifactId>
+        <artifactId>distribution-all</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </dependency>
 
     <!-- Test kit (for testing) -->
     <dependency>
         <groupId>com.trustweave</groupId>
-        <artifactId>trustweave-testkit</artifactId>
+        <artifactId>testkit</artifactId>
         <version>1.0.0-SNAPSHOT</version>
         <scope>test</scope>
     </dependency>
@@ -165,21 +135,26 @@ Add TrustWeave dependencies to your `pom.xml`. The snippet lists the minimum set
 
 **Result:** Maven downloads the artifacts during the next `mvn compile`. If you rely on integrations, add the matching `<dependency>` entries just like the Gradle example.
 
-## Minimal Setup
+## Production Setup (Individual Modules)
 
-For a minimal demo you can stick to a subset of modules. This keeps the footprint small when you only need DID creation, credential issuance, and anchoring.
+For production deployments, you may want to use individual modules instead of `distribution-all` to minimize bundle size and reduce dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:trustweave-core:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-json:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    testImplementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
+    // Core modules (required)
+    implementation("com.trustweave:trust:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:credentials:credential-api:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:did:did-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:kms:kms-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:anchors:anchor-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:common:1.0.0-SNAPSHOT")
+
+    // Test kit (for testing)
+    testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
 }
 ```
 
-**Result:** You get the same APIs as `TrustWeave-all` but can opt into additional modules later.
+**Result:** You get the same APIs with a smaller bundle size. See [Module Architecture](../modules/core-modules.md) for details on available modules.
 
 ## Repository Configuration
 
@@ -200,7 +175,7 @@ repositories {
 ## Version Information
 
 - **Current Version**: 1.0.0-SNAPSHOT
-- **Kotlin Version**: 2.2.0+
+- **Kotlin Version**: 2.2.21+
 - **Java Version**: 21+
 - **Gradle Version**: 8.5+
 

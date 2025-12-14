@@ -18,7 +18,7 @@ Verifiable Presentations allow credential holders to share credentials selective
 
 ## Prerequisites
 
-- **Kotlin**: 2.2.0 or higher
+- **Kotlin**: 2.2.21+ or higher
 - **Java**: 21 or higher
 - **TrustWeave SDK**: Latest version
 - **Dependencies**: TrustWeave-core and TrustWeave-testkit
@@ -67,6 +67,53 @@ val presentation = wallet.presentation {
 // 3. Present to verifier
 verifier.verifyPresentation(presentation)
 ```
+
+## Presentation Flow
+
+Creating and verifying presentations involves multiple parties:
+
+```mermaid
+sequenceDiagram
+    participant Holder
+    participant Wallet
+    participant Issuer
+    participant Verifier
+    
+    Note over Holder,Verifier: Phase 1: Credential Storage
+    Issuer->>Holder: Issue Credential
+    Holder->>Wallet: Store Credential
+    Wallet-->>Holder: Credential Stored
+    
+    Note over Holder,Verifier: Phase 2: Presentation Request
+    Verifier->>Holder: Request Presentation<br/>(challenge, domain)
+    Holder->>Holder: Select Credentials
+    
+    Note over Holder,Verifier: Phase 3: Create Presentation
+    Holder->>Wallet: Create Presentation<br/>(selective disclosure)
+    Wallet->>Wallet: Filter Claims<br/>(if selective disclosure)
+    Wallet->>Wallet: Sign Presentation<br/>(holder proof)
+    Wallet-->>Holder: Verifiable Presentation
+    
+    Note over Holder,Verifier: Phase 4: Verify Presentation
+    Holder->>Verifier: Send Presentation
+    Verifier->>Verifier: Verify Holder Proof
+    Verifier->>Issuer: Resolve Issuer DID<br/>(for each credential)
+    Issuer-->>Verifier: Issuer DID Document
+    Verifier->>Verifier: Verify Credential Proofs
+    Verifier->>Verifier: Check Challenge/Domain
+    Verifier-->>Holder: Verification Result
+    
+    style Holder fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style Wallet fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style Issuer fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    style Verifier fill:#9c27b0,stroke:#6a1b9a,stroke-width:2px,color:#fff
+```
+
+**Key Phases:**
+1. **Storage**: Holder stores credentials issued by issuer in wallet
+2. **Request**: Verifier requests presentation with challenge and domain
+3. **Creation**: Wallet creates presentation with selective disclosure (optional)
+4. **Verification**: Verifier verifies holder proof, credential proofs, and challenge
 
 ---
 

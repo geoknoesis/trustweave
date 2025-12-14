@@ -17,7 +17,7 @@ Verifiable Credentials enable trust without intermediaries. They're tamper-proof
 
 ## Prerequisites
 
-- **Kotlin**: 2.2.0 or higher
+- **Kotlin**: 2.2.21+ or higher
 - **Java**: 21 or higher
 - **TrustWeave SDK**: Latest version
 - **Dependencies**: TrustWeave-core and TrustWeave-testkit (for in-memory KMS)
@@ -390,51 +390,26 @@ fun main() = runBlocking {
 ## Visual Flow Diagram
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    Credential Issuance Flow                 │
-└─────────────────────────────────────────────────────────────┘
-
-┌──────────────┐
-│   Step 1     │  Configure TrustWeave
-│  Configure   │  • KMS Provider (inMemory/AWS/CyberArk)
-└──────┬───────┘  • DID Method (key/web/ion)
-       │          • Proof Type (Ed25519Signature2020)
-       ▼
-┌──────────────┐
-│   Step 2     │  Create Issuer Identity
-│ Create DID   │  • Generate key pair
-└──────┬───────┘  • Create DID document
-       │          • Store keys in KMS
-       ▼
-┌──────────────┐
-│   Step 3     │  Get Signing Key
-│ Extract Key  │  • Resolve DID document
-└──────┬───────┘  • Get verification method
-       │          • Reference private key in KMS
-       ▼
-┌──────────────┐
-│   Step 4     │  Build Credential
-│ Build VC     │  • Define subject & claims
-└──────┬───────┘  • Set types & metadata
-       │          • Specify issuer & validity
-       ▼
-┌──────────────┐
-│   Step 5     │  Issue Credential
-│ Sign & Issue │  • Canonicalize JSON (JCS)
-└──────┬───────┘  • Compute digest
-       │          • Sign with private key
-       │          • Attach proof
-       ▼
-┌──────────────┐
-│   Step 6      │  Verify Credential
-│  Verify VC   │  • Resolve issuer DID
-└──────┬───────┘  • Get public key
-       │          • Verify signature
-       │          • Check expiration
-       ▼
-    ✅ Valid
-    or
-    ❌ Invalid
+```mermaid
+flowchart TD
+    A[Step 1: Configure TrustWeave<br/>• KMS Provider<br/>• DID Method<br/>• Proof Type] --> B[Step 2: Create Issuer Identity<br/>• Generate key pair<br/>• Create DID document<br/>• Store keys in KMS]
+    B --> C[Step 3: Get Signing Key<br/>• Resolve DID document<br/>• Get verification method<br/>• Reference private key]
+    C --> D[Step 4: Build Credential<br/>• Define subject & claims<br/>• Set types & metadata<br/>• Specify issuer & validity]
+    D --> E[Step 5: Sign & Issue<br/>• Canonicalize JSON (JCS)<br/>• Compute digest<br/>• Sign with private key<br/>• Attach proof]
+    E --> F[Step 6: Verify Credential<br/>• Resolve issuer DID<br/>• Get public key<br/>• Verify signature<br/>• Check expiration]
+    F --> G{Valid?}
+    G -->|Yes| H[✅ Valid]
+    G -->|No| I[❌ Invalid]
+    
+    style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
+    style B fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+    style C fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
+    style D fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
+    style E fill:#c2185b,stroke:#880e4f,stroke-width:2px,color:#fff
+    style F fill:#00796b,stroke:#004d40,stroke-width:2px,color:#fff
+    style H fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style I fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+```
 ```
 
 ---

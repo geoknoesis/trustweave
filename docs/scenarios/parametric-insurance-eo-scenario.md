@@ -1,5 +1,7 @@
 ---
 title: Parametric Insurance with Earth Observation Data
+parent: Use Case Scenarios
+nav_order: 26
 ---
 
 # Parametric Insurance with Earth Observation Data
@@ -107,7 +109,7 @@ Parametric insurance needs:
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Test kit for in-memory implementations
     testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")

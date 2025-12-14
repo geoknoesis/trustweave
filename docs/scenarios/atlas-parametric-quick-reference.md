@@ -1,5 +1,7 @@
 ---
 title: "Atlas Parametric MGA: Quick Reference"
+parent: Use Case Scenarios
+nav_order: 37
 ---
 
 # Atlas Parametric MGA: Quick Reference

@@ -18,6 +18,30 @@ This example shows how to:
 5. Anchor the digest to a blockchain
 6. Read it back and verify
 
+### Application Flow
+
+```mermaid
+flowchart TD
+    A[Start Application] --> B[Setup Services<br/>KMS, DID Method, Anchor Client]
+    B --> C[Create Issuer DID<br/>Generate Key Pair]
+    C --> D[Create VC Payload<br/>Build JSON Structure]
+    D --> E[Compute Digest<br/>SHA-256 Hash]
+    E --> F[Anchor to Blockchain<br/>Store Digest]
+    F --> G[Read Back from Blockchain<br/>Retrieve Stored Data]
+    G --> H[Verify Integrity<br/>Compare Digests]
+    H --> I[Success]
+    
+    style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
+    style B fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+    style C fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
+    style D fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
+    style E fill:#c2185b,stroke:#880e4f,stroke-width:2px,color:#fff
+    style F fill:#00796b,stroke:#004d40,stroke-width:2px,color:#fff
+    style G fill:#0288d1,stroke:#01579b,stroke-width:2px,color:#fff
+    style H fill:#fbc02d,stroke:#f57f17,stroke-width:2px,color:#000
+    style I fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+```
+
 The block below wires together in-memory services so you can run the whole workflow locally without external infrastructure.
 
 ```kotlin
@@ -100,7 +124,26 @@ fun main() = runBlocking {
 }
 ```
 
-**Result:** Running the program prints the issuer DID, the anchored transaction metadata, and a final “Verification successful!” message, proving that the digest retrieved from the registry matches the original payload.
+**Result:** Running the program prints the issuer DID, the anchored transaction metadata, and a final "Verification successful!" message, proving that the digest retrieved from the registry matches the original payload.
+
+### Expected Output
+
+When you run the example, you should see output similar to:
+
+```
+Created issuer DID: did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK
+Computed VC digest: u5v3q...
+Anchored at: tx_inmemory_abc123...
+Chain: algorand:mainnet
+Timestamp: 2024-01-15T10:30:00Z
+Verification successful!
+```
+
+This confirms:
+- ✅ DID was successfully created
+- ✅ Digest was computed correctly
+- ✅ Data was anchored to the blockchain
+- ✅ Retrieval and verification succeeded
 
 ## Running the Example
 

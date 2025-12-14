@@ -43,7 +43,7 @@ Create a new Kotlin project and add dependencies:
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
 }
 ```
 

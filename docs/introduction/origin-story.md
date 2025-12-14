@@ -92,7 +92,7 @@ We built it with a simple idea: **Your application code should describe *what* y
 Want to issue a credential? You write:
 
 ```kotlin
-val credential = trustLayer.issue {
+val credential = trustWeave.issue {
     credential {
         issuer(issuerDid)
         subject { 
@@ -125,13 +125,13 @@ You can now **play** with different technologies:
 
 ```kotlin
 // Try Ethereum
-val trustLayer = TrustLayer.build {
+val trustWeave = TrustWeave.build {
     blockchains { "ethereum:mainnet" to ethereumClient }
     did { method("ethr") }
 }
 
 // Switch to Algorand? Just change the config
-val trustLayer = TrustLayer.build {
+val trustWeave = TrustWeave.build {
     blockchains { "algorand:mainnet" to algorandClient }
     did { method("algo") }
 }

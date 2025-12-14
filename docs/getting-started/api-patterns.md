@@ -8,18 +8,23 @@ parent: Getting Started
 
 This guide explains the correct API patterns to use with TrustWeave and clarifies common misconceptions.
 
-## Primary API: TrustLayer
+## Primary API: TrustWeave
 
-**TrustLayer is the main entry point** for all TrustWeave operations. Always use `TrustLayer` for your application code.
+**TrustWeave is the main entry point** for all TrustWeave operations. Always use `TrustWeave` for your application code.
 
-### Creating a TrustLayer Instance
+### Creating a TrustWeave Instance
 
 ```kotlin
-import com.trustweave.trust.TrustLayer
+import com.trustweave.trust.TrustWeave
+import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val trustLayer = TrustLayer.build {
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
         keys {
             provider("inMemory")
             algorithm("Ed25519")
@@ -31,8 +36,8 @@ fun main() = runBlocking {
         }
     }
 
-    // Use trustLayer for all operations
-    val did = trustLayer.createDid { method("key") }
+    // Use trustWeave for all operations
+    val didResult = trustWeave.createDid { method("key") }
 }
 ```
 
@@ -46,10 +51,10 @@ import com.trustweave.trust.types.DidCreationResult
 import com.trustweave.trust.types.DidUpdateResult
 import com.trustweave.trust.types.KeyRotationResult
 
-val trustLayer = TrustLayer.build { ... }
+val trustWeave = TrustWeave.build { ... }
 
 // Create DID (returns sealed result)
-val didResult = trustLayer.createDid {
+val didResult = trustWeave.createDid {
     method("key")
     algorithm("Ed25519")
 }
@@ -62,7 +67,7 @@ val did = when (didResult) {
 }
 
 // Update DID (returns sealed result)
-val updateResult = trustLayer.updateDid {
+val updateResult = trustWeave.updateDid {
     did("did:key:example")
     addService { ... }
 }
@@ -75,7 +80,7 @@ val updated = when (updateResult) {
 }
 
 // Rotate key (returns sealed result)
-val rotationResult = trustLayer.rotateKey {
+val rotationResult = trustWeave.rotateKey {
     did("did:key:example")
     oldKeyId("did:key:example#key-1")
     newKeyId("did:key:example#key-2")
@@ -102,10 +107,10 @@ val resolution = trustWeave.resolveDid(did)
 ```kotlin
 import com.trustweave.trust.types.IssuanceResult
 
-val trustLayer = TrustLayer.build { ... }
+val trustWeave = TrustWeave.build { ... }
 
 // Issue credential (returns sealed result)
-val issuanceResult = trustLayer.issue {
+val issuanceResult = trustWeave.issue {
     credential {
         type(CredentialType.VerifiableCredential, CredentialType.Person)
         issuer(issuerDid)
@@ -125,7 +130,7 @@ val credential = when (issuanceResult) {
 }
 
 // Verify credential (returns VerificationResult, not sealed)
-val verification = trustLayer.verify {
+val verification = trustWeave.verify {
     credential(credential)
     checkExpiration(true)
     checkRevocation(true)
@@ -146,10 +151,10 @@ val verification = trustWeave.verify { credential(credential) }
 ```kotlin
 import com.trustweave.trust.types.WalletCreationResult
 
-val trustLayer = TrustLayer.build { ... }
+val trustWeave = TrustWeave.build { ... }
 
 // Create wallet (returns sealed result)
-val walletResult = trustLayer.wallet {
+val walletResult = trustWeave.wallet {
     holder(holderDid)
     enableOrganization()
     enablePresentation()
@@ -172,12 +177,12 @@ val allCredentials = wallet.list()
 
 ✅ **Correct:**
 ```kotlin
-val trustLayer = TrustLayer.build {
+val trustWeave = TrustLayer.build {
     trust { provider("inMemory") }
 }
 
 // Using DSL
-trustLayer.trust {
+trustWeave.trust {
     addAnchor("did:key:university") {
         credentialTypes("EducationCredential")
         description("Trusted university")
@@ -187,23 +192,23 @@ trustLayer.trust {
 }
 
 // Using direct methods
-trustLayer.addTrustAnchor("did:key:university") {
+trustWeave.addTrustAnchor("did:key:university") {
     credentialTypes("EducationCredential")
 }
-val isTrusted = trustLayer.isTrustedIssuer("did:key:university", "EducationCredential")
+val isTrusted = trustWeave.isTrustedIssuer("did:key:university", "EducationCredential")
 ```
 
 ## Error Handling Patterns
 
-### Exception-Based (TrustLayer Methods)
+### Exception-Based (TrustWeave Methods)
 
-All `TrustLayer` methods throw `TrustWeaveError` exceptions. Always use try-catch:
+All `TrustWeave` methods throw exceptions. Always use try-catch for error handling:
 
 ```kotlin
 import com.trustweave.core.TrustWeaveError
 
 try {
-    val didResult = trustLayer.createDid { method("key") }
+    val didResult = trustWeave.createDid { method("key") }
     val did = when (didResult) {
         is DidCreationResult.Success -> didResult.did
         is DidCreationResult.Failure.MethodNotRegistered -> {
@@ -217,7 +222,7 @@ try {
         }
     }
     
-    val issuanceResult = trustLayer.issue { ... }
+    val issuanceResult = trustWeave.issue { ... }
     val credential = when (issuanceResult) {
         is IssuanceResult.Success -> issuanceResult.credential
         else -> {
@@ -225,6 +230,8 @@ try {
             return@runBlocking
         }
     }
+} catch (error: TrustWeaveException) {
+    when (error) {
         is TrustWeaveError.CredentialInvalid -> {
             println("Credential invalid: ${error.reason}")
         }
@@ -271,21 +278,21 @@ val did = TrustWeave.dids.create()
 
 **Correct:**
 ```kotlin
-val trustLayer = TrustLayer.build { ... }
-val did = trustLayer.createDid { method("key") }
+val trustWeave = TrustWeave.build { ... }
+val did = trustWeave.createDid { method("key") }
 ```
 
 ### ❌ Mistake 2: Ignoring Errors
 
 **Wrong:**
 ```kotlin
-val did = trustLayer.createDid { method("key") }
+val did = trustWeave.createDid { method("key") }
 // This returns DidCreationResult, not Did - need to unwrap!
 ```
 
 **Correct:**
 ```kotlin
-val didResult = trustLayer.createDid { method("key") }
+val didResult = trustWeave.createDid { method("key") }
 val did = when (didResult) {
     is DidCreationResult.Success -> didResult.did
     else -> {
@@ -300,16 +307,16 @@ val did = when (didResult) {
 
 **Wrong:**
 ```kotlin
-val trustLayer = TrustLayer.build {
+val trustWeave = TrustLayer.build {
     // Missing KMS configuration!
 }
-val did = trustLayer.createDid { method("key") }
+val did = trustWeave.createDid { method("key") }
 // Fails: No KMS provider configured
 ```
 
 **Correct:**
 ```kotlin
-val trustLayer = TrustLayer.build {
+val trustWeave = TrustLayer.build {
     keys {
         provider("inMemory")
         algorithm("Ed25519")
@@ -324,7 +331,7 @@ val trustLayer = TrustLayer.build {
 
 **Wrong:**
 ```kotlin
-val credential = trustLayer.issue {
+val credential = trustWeave.issue {
     credential { ... }
     signedBy(issuerDid = issuerDid, keyId = "key-1")  // Missing DID prefix!
 }
@@ -333,7 +340,7 @@ val credential = trustLayer.issue {
 **Correct:**
 ```kotlin
 val issuerKeyId = "$issuerDid#key-1"
-val credential = trustLayer.issue {
+val credential = trustWeave.issue {
     credential { ... }
     signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
 }
@@ -352,13 +359,13 @@ val credential = trustweave.credentials.issue(...)
 
 ### New Pattern
 ```kotlin
-val trustLayer = TrustLayer.build {
+val trustWeave = TrustLayer.build {
     keys { provider("inMemory"); algorithm("Ed25519") }
     did { method("key") { algorithm("Ed25519") } }
 }
 
-val did = trustLayer.createDid { method("key") }
-val credential = trustLayer.issue {
+val did = trustWeave.createDid { method("key") }
+val credential = trustWeave.issue {
     credential { ... }
     signedBy(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
 }
@@ -371,7 +378,7 @@ val credential = trustLayer.issue {
 Don't rely on defaults in production. Explicitly configure all components:
 
 ```kotlin
-val trustLayer = TrustLayer.build {
+val trustWeave = TrustLayer.build {
     keys {
         provider("awsKms")  // Production KMS
         algorithm("Ed25519")
@@ -391,11 +398,11 @@ val trustLayer = TrustLayer.build {
 
 ### 2. Handle Errors Explicitly
 
-Always wrap `TrustLayer` operations in try-catch:
+Always wrap `TrustWeave` operations in try-catch:
 
 ```kotlin
 try {
-    val result = trustLayer.operation { ... }
+    val result = trustWeave.operation { ... }
     // Process result
 } catch (error: TrustWeaveError) {
     // Log and handle error
@@ -410,7 +417,7 @@ Leverage the DSL for type safety:
 
 ```kotlin
 // ✅ Good: Type-safe, IDE autocomplete
-val credential = trustLayer.issue {
+val credential = trustWeave.issue {
     credential {
         type(CredentialType.VerifiableCredential, CredentialType.Person)
         issuer(issuerDid)
@@ -423,17 +430,17 @@ val credential = trustLayer.issue {
 }
 ```
 
-### 4. Reuse TrustLayer Instance
+### 4. Reuse TrustWeave Instance
 
-Create one `TrustLayer` instance and reuse it:
+Create one `TrustWeave` instance and reuse it:
 
 ```kotlin
 // ✅ Good: Create once, reuse
-val trustLayer = TrustLayer.build { ... }
+val trustWeave = TrustWeave.build { ... }
 
-fun createUserDid() = trustLayer.createDid { method("key") }
-fun issueCredential(...) = trustLayer.issue { ... }
-fun verifyCredential(...) = trustLayer.verify { ... }
+fun createUserDid() = trustWeave.createDid { method("key") }
+fun issueCredential(...) = trustWeave.issue { ... }
+fun verifyCredential(...) = trustWeave.verify { ... }
 ```
 
 ## Related Documentation

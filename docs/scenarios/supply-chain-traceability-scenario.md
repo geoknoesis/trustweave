@@ -1,5 +1,7 @@
 ---
 title: Supply Chain & Traceability Scenario
+parent: Use Case Scenarios
+nav_order: 10
 ---
 
 # Supply Chain & Traceability Scenario

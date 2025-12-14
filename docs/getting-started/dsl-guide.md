@@ -12,7 +12,7 @@ The TrustWeave DSL (Domain-Specific Language) provides a fluent, type-safe API f
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
     // Or use individual modules:
     // implementation("com.trustweave:trust:1.0.0-SNAPSHOT")
     // implementation("com.trustweave:testkit:1.0.0-SNAPSHOT")

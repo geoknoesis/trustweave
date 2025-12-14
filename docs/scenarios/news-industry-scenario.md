@@ -1,5 +1,7 @@
 ---
 title: News Industry & Content Provenance Scenario
+parent: Use Case Scenarios
+nav_order: 34
 ---
 
 # News Industry & Content Provenance Scenario

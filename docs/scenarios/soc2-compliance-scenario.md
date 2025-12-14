@@ -1,5 +1,7 @@
 ---
 title: SOC2 Compliance with TrustWeave
+parent: Use Case Scenarios
+nav_order: 24
 ---
 
 # SOC2 Compliance with TrustWeave
@@ -137,7 +139,7 @@ flowchart TD
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Test kit for in-memory implementations
     testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")

@@ -293,7 +293,7 @@ val did = trustWeave.createDid {
 }.getOrFail() // Throws AssertionError on failure
 
 // With custom method
-val webDidResult = trustLayer.createDid {
+val webDidResult = trustWeave.createDid {
     method("web")
     domain("example.com")
 }
@@ -318,7 +318,7 @@ Resolves a DID to its document.
 suspend fun resolve(did: String): DidResolutionResult
 ```
 
-**Access via:** `trustLayer.getDslContext().resolveDid(did)` or use DID resolver directly
+**Access via:** `trustWeave.getDslContext().resolveDid(did)` or use DID resolver directly
 
 **Parameters:**
 
@@ -372,7 +372,7 @@ data class DidResolutionMetadata(
 import com.trustweave.did.identifiers.Did
 
 // Simple usage - access resolver via DSL context
-val context = trustLayer.getDslContext()
+val context = trustWeave.getDslContext()
 val resolver = context.getDidResolver()
 val did = Did("did:key:z6Mk...")
 val result = resolver?.resolve(did)
@@ -396,7 +396,7 @@ Updates a DID document by applying a transformation function.
 suspend fun updateDid(block: DidUpdateBuilder.() -> Unit): DidUpdateResult
 ```
 
-**Access via:** `trustLayer.updateDid { }`
+**Access via:** `trustWeave.updateDid { }`
 
 **Parameters:**
 - **`did`** (String, required): The DID to update (via DSL builder)
@@ -416,7 +416,7 @@ suspend fun updateDid(block: DidUpdateBuilder.() -> Unit): DidUpdateResult
 import com.trustweave.did.identifiers.Did
 
 val did = Did("did:key:example")
-val updateResult = trustLayer.updateDid {
+val updateResult = trustWeave.updateDid {
     did(did.value)  // DSL builder accepts string for convenience
     addService {
         id("${did.value}#service-1")
@@ -452,7 +452,7 @@ Deactivates a DID, marking it as no longer active.
 suspend fun deactivateDid(did: Did): Boolean
 ```
 
-**Access via:** `trustLayer.getDslContext().deactivateDid(did)` or use DID method directly
+**Access via:** `trustWeave.getDslContext().deactivateDid(did)` or use DID method directly
 
 **Parameters:**
 - **`did`** (Did, required): Type-safe DID identifier to deactivate
@@ -469,7 +469,7 @@ suspend fun deactivateDid(did: Did): Boolean
 import com.trustweave.did.identifiers.Did
 
 // Access via DSL context
-val context = trustLayer.getDslContext()
+val context = trustWeave.getDslContext()
 val did = Did("did:key:example")
 val deactivated = context.deactivateDid(did)
 if (deactivated) {
@@ -485,13 +485,13 @@ Gets a list of available DID method names.
 fun availableMethods(): List<String>
 ```
 
-**Access via:** `trustLayer.configuration.didMethods.keys` or access registry directly
+**Access via:** `trustWeave.configuration.didMethods.keys` or access registry directly
 
 **Returns:** `List<String>` - List of registered DID method names
 
 **Example:**
 ```kotlin
-val methods = trustLayer.configuration.didMethods.keys
+val methods = trustWeave.configuration.didMethods.keys
 println("Available methods: $methods") // ["key", "web", "ion"]
 ```
 
@@ -665,7 +665,7 @@ Verifies a verifiable credential by checking proof, issuer DID resolution, expir
 suspend fun verify(block: VerificationBuilder.() -> Unit): CredentialVerificationResult
 ```
 
-**Access via:** `trustLayer.verify { }`
+**Access via:** `trustWeave.verify { }`
 
 **Parameters:**
 
@@ -712,7 +712,7 @@ The DSL builder provides a fluent API for configuring verification:
 **Example:**
 ```kotlin
 // Simple usage
-val result = trustLayer.verify {
+val result = trustWeave.verify {
     credential(credential)
 }
 if (result.valid) {
@@ -722,7 +722,7 @@ if (result.valid) {
 }
 
 // With custom verification configuration
-val result = trustLayer.verify {
+val result = trustWeave.verify {
     credential(credential)
     checkExpiration(true)
     checkRevocation(true)
@@ -1082,7 +1082,7 @@ See [Blockchain-Anchored Revocation](../core-concepts/blockchain-anchored-revoca
 
 ### Trust Operations
 
-Trust operations allow you to manage trust anchors and verify issuer trust relationships. The trust registry must be configured during `TrustLayer.build { }`.
+Trust operations allow you to manage trust anchors and verify issuer trust relationships. The trust registry must be configured during `TrustWeave.build { }`.
 
 #### trust (DSL Style)
 
@@ -1092,7 +1092,7 @@ Performs trust operations using the trust DSL. Provides a fluent API for managin
 suspend fun trust(block: suspend TrustBuilder.() -> Unit)
 ```
 
-**Access via:** `trustLayer.trust { }`
+**Access via:** `trustWeave.trust { }`
 
 **Parameters:**
 
@@ -1112,12 +1112,12 @@ The DSL builder provides a fluent API for trust operations:
 
 **Example:**
 ```kotlin
-val trustLayer = TrustLayer.build {
+val trustWeave = TrustWeave.build {
     trust { provider("inMemory") }
 }
 
 // Using DSL
-trustLayer.trust {
+trustWeave.trust {
     addAnchor("did:key:university") {
         credentialTypes("EducationCredential")
         description("Trusted university")
@@ -1142,7 +1142,7 @@ suspend fun addTrustAnchor(
 ): Boolean
 ```
 
-**Access via:** `trustLayer.addTrustAnchor(anchorDid) { }`
+**Access via:** `trustWeave.addTrustAnchor(anchorDid) { }`
 
 **Parameters:**
 - **`anchorDid`** (String, required): The DID of the trust anchor
@@ -1155,7 +1155,7 @@ suspend fun addTrustAnchor(
 
 **Example:**
 ```kotlin
-val added = trustLayer.addTrustAnchor("did:key:university") {
+val added = trustWeave.addTrustAnchor("did:key:university") {
     credentialTypes("EducationCredential", "TranscriptCredential")
     description("Trusted university")
 }
@@ -1178,7 +1178,7 @@ Removes a trust anchor from the registry.
 suspend fun removeTrustAnchor(anchorDid: String): Boolean
 ```
 
-**Access via:** `trustLayer.removeTrustAnchor(anchorDid)`
+**Access via:** `trustWeave.removeTrustAnchor(anchorDid)`
 
 **Parameters:**
 - **`anchorDid`** (String, required): The DID of the trust anchor to remove
@@ -1187,7 +1187,7 @@ suspend fun removeTrustAnchor(anchorDid: String): Boolean
 
 **Example:**
 ```kotlin
-val removed = trustLayer.removeTrustAnchor("did:key:university")
+val removed = trustWeave.removeTrustAnchor("did:key:university")
 if (removed) {
     println("Trust anchor removed")
 }
@@ -1207,7 +1207,7 @@ suspend fun isTrustedIssuer(
 ): Boolean
 ```
 
-**Access via:** `trustLayer.isTrustedIssuer(issuerDid, credentialType)`
+**Access via:** `trustWeave.isTrustedIssuer(issuerDid, credentialType)`
 
 **Parameters:**
 - **`issuerDid`** (String, required): The DID of the issuer to check
@@ -1217,7 +1217,7 @@ suspend fun isTrustedIssuer(
 
 **Example:**
 ```kotlin
-val isTrusted = trustLayer.isTrustedIssuer(
+val isTrusted = trustWeave.isTrustedIssuer(
     issuerDid = "did:key:university",
     credentialType = "EducationCredential"
 )
@@ -1238,7 +1238,7 @@ Finds a trust path between two DIDs.
 suspend fun getTrustPath(fromDid: String, toDid: String): TrustPathResult?
 ```
 
-**Access via:** `trustLayer.getTrustPath(fromDid, toDid)`
+**Access via:** `trustWeave.getTrustPath(fromDid, toDid)`
 
 **Parameters:**
 - **`fromDid`** (String, required): The starting DID (typically the verifier)
@@ -1248,7 +1248,7 @@ suspend fun getTrustPath(fromDid: String, toDid: String): TrustPathResult?
 
 **Example:**
 ```kotlin
-val path = trustLayer.getTrustPath(
+val path = trustWeave.getTrustPath(
     fromDid = "did:key:verifier",
     toDid = "did:key:issuer"
 )
@@ -1271,7 +1271,7 @@ Gets all trusted issuers for a specific credential type.
 suspend fun getTrustedIssuers(credentialType: String? = null): List<String>
 ```
 
-**Access via:** `trustLayer.getTrustedIssuers(credentialType)`
+**Access via:** `trustWeave.getTrustedIssuers(credentialType)`
 
 **Parameters:**
 - **`credentialType`** (String?, optional): The credential type (null means all types)
@@ -1280,7 +1280,7 @@ suspend fun getTrustedIssuers(credentialType: String? = null): List<String>
 
 **Example:**
 ```kotlin
-val trustedIssuers = trustLayer.getTrustedIssuers("EducationCredential")
+val trustedIssuers = trustWeave.getTrustedIssuers("EducationCredential")
 println("Trusted issuers: $trustedIssuers")
 ```
 
@@ -1297,7 +1297,7 @@ Creates a wallet for storing credentials using the DSL. Wallets provide secure s
 suspend fun wallet(block: WalletBuilder.() -> Unit): Wallet
 ```
 
-**Access via:** `trustLayer.wallet { }`
+**Access via:** `trustWeave.wallet { }`
 
 **Parameters:**
 
@@ -1359,19 +1359,19 @@ val allCredentials = wallet.list()
 - `TrustWeaveError.InvalidDidFormat` - Invalid holder DID format
 - `TrustWeaveError.ValidationFailed` - Invalid wallet options or configuration
 
-### Advanced TrustLayer Methods
+### Advanced TrustWeave Methods
 
 #### getDslContext
 
-Gets the DSL context for advanced operations. Use this only when you need to access lower-level services or perform operations not exposed by the TrustLayer facade.
+Gets the DSL context for advanced operations. Use this only when you need to access lower-level services or perform operations not exposed by the TrustWeave facade.
 
 ```kotlin
-fun getDslContext(): TrustLayerContext
+fun getDslContext(): TrustWeaveContext
 ```
 
-**Access via:** `trustLayer.getDslContext()`
+**Access via:** `trustWeave.getDslContext()`
 
-**Returns:** `TrustLayerContext` - The DSL context providing access to underlying services
+**Returns:** `TrustWeaveContext` - The DSL context providing access to underlying services
 
 **When to use:**
 - Accessing lower-level DID resolver directly
@@ -1380,24 +1380,24 @@ fun getDslContext(): TrustLayerContext
 
 **Example:**
 ```kotlin
-val context = trustLayer.getDslContext()
+val context = trustWeave.getDslContext()
 val resolver = context.getDidResolver()
 val result = resolver?.resolve("did:key:example")
 ```
 
-**Note:** Most operations should be done through `TrustLayer` methods. Only use this for advanced use cases.
+**Note:** Most operations should be done through `TrustWeave` methods. Only use this for advanced use cases.
 
 #### configuration
 
 Gets the underlying configuration object. Provides access to lower-level configuration details if needed.
 
 ```kotlin
-val configuration: TrustLayerConfig
+val configuration: TrustWeaveConfig
 ```
 
-**Access via:** `trustLayer.configuration`
+**Access via:** `trustWeave.configuration`
 
-**Returns:** `TrustLayerConfig` - The configuration object
+**Returns:** `TrustWeaveConfig` - The configuration object
 
 **When to use:**
 - Inspecting registered DID methods
@@ -1406,45 +1406,53 @@ val configuration: TrustLayerConfig
 
 **Example:**
 ```kotlin
-val config = trustLayer.configuration
+val config = trustWeave.configuration
 val didMethods = config.didMethods.keys
 println("Registered DID methods: $didMethods")
 ```
 
-**Note:** Most operations should be done through `TrustLayer` methods. Only use this for inspection or advanced use cases.
+**Note:** Most operations should be done through `TrustWeave` methods. Only use this for inspection or advanced use cases.
 
 #### from (Companion Method)
 
-Creates a TrustLayer from an existing TrustLayerConfig. Useful when you already have a configuration object and want to create the facade wrapper.
+Creates a TrustWeave from an existing TrustWeaveConfig. Useful when you already have a configuration object and want to create the facade wrapper.
 
 ```kotlin
-fun from(config: TrustLayerConfig): TrustLayer
+fun from(config: TrustWeaveConfig): TrustWeave
 ```
 
-**Access via:** `TrustLayer.from(config)`
+**Access via:** `TrustWeave.from(config)`
 
 **Parameters:**
-- **`config`** (TrustLayerConfig, required): The existing configuration object
+- **`config`** (TrustWeaveConfig, required): The existing configuration object
 
-**Returns:** `TrustLayer` - A TrustLayer instance wrapping the provided config
+**Returns:** `TrustWeave` - A TrustWeave instance wrapping the provided config
 
 **When to use:**
 - Reusing a configuration object
-- Creating multiple TrustLayer instances from the same config
+- Creating multiple TrustWeave instances from the same config
 - Advanced configuration scenarios
 
 **Example:**
 ```kotlin
-// Create config once
-val config = trustLayer("my-instance") {
+// Create config once (using suspend function)
+import com.trustweave.trust.dsl.trustWeave
+
+val config = trustWeave("my-instance") {
+    factories(
+        kmsFactory = TestkitKmsFactory(),
+        didMethodFactory = TestkitDidMethodFactory()
+    )
     keys { provider("inMemory"); algorithm("Ed25519") }
     did { method("key") { algorithm("Ed25519") } }
 }
 
-// Create multiple TrustLayer instances from the same config
-val trustLayer1 = TrustLayer.from(config)
-val trustLayer2 = TrustLayer.from(config)
+// Create multiple TrustWeave instances from the same config
+val trustWeave1 = TrustWeave.from(config)
+val trustWeave2 = TrustWeave.from(config)
 ```
+
+**Note:** In most cases, you should use `TrustWeave.build { }` instead of creating a config first. This method is primarily for advanced scenarios where you need to reuse a configuration object.
 
 **Note:** The configuration is shared between instances. Changes to one may affect others.
 
@@ -1791,9 +1799,9 @@ All operations can return errors of type `TrustWeaveError`. See [Error Handling]
 
 ## Error Handling
 
-### Exception-Based Error Handling (TrustLayer Methods)
+### Exception-Based Error Handling (TrustWeave Methods)
 
-**All `TrustLayer` methods throw exceptions on failure.** This includes:
+**All `TrustWeave` methods throw exceptions on failure.** This includes:
 - `createDid()`, `updateDid()`, `delegate()`, `rotateKey()`
 - `issue()`, `verify()`
 - `wallet()`
@@ -1860,7 +1868,7 @@ result.fold(
 ```
 
 **When to use which pattern:**
-- **Exception-based (TrustLayer)**: Use for all `TrustLayer` facade methods. Wrap in try-catch for production code.
+- **Exception-based (TrustWeave)**: Use for all `TrustWeave` facade methods. Wrap in try-catch for production code.
 - **Result-based**: Use when working with lower-level service APIs that explicitly return `Result<T>`.
 
 **Best Practice:** Always handle errors explicitly. Never ignore exceptions or Result failures in production code.
@@ -1869,12 +1877,12 @@ result.fold(
 
 ### Registering DID Methods
 
-DID methods are registered during `TrustLayer` creation using the DSL:
+DID methods are registered during `TrustWeave` creation using the DSL:
 
 ```kotlin
 import com.trustweave.trust.TrustWeave
 
-val trustLayer = TrustLayer.build {
+val trustWeave = TrustWeave.build {
     keys {
         provider("inMemory")
         algorithm("Ed25519")
@@ -1895,10 +1903,10 @@ val trustLayer = TrustLayer.build {
 
 ### Registering Blockchain Anchors
 
-Blockchain anchor clients are registered during `TrustLayer` creation:
+Blockchain anchor clients are registered during `TrustWeave` creation:
 
 ```kotlin
-val trustLayer = TrustLayer.build {
+val trustWeave = TrustWeave.build {
     keys { ... }
     did { ... }
     anchor {
@@ -1915,10 +1923,10 @@ val trustLayer = TrustLayer.build {
 
 ### Registering Trust Registry
 
-Trust registry is configured during `TrustLayer` creation:
+Trust registry is configured during `TrustWeave` creation:
 
 ```kotlin
-val trustLayer = TrustLayer.build {
+val trustWeave = TrustWeave.build {
     keys { ... }
     did { ... }
     trust {
@@ -1928,7 +1936,7 @@ val trustLayer = TrustLayer.build {
 }
 ```
 
-**Note:** For advanced configuration with custom services, proof generators, or credential services, you may need to configure the underlying `TrustLayerConfig` directly. See [Advanced Configuration](../advanced/README.md) for details.
+**Note:** For advanced configuration with custom services, proof generators, or credential services, you may need to configure the underlying `TrustWeaveConfig` directly. See [Advanced Configuration](../advanced/README.md) for details.
 
 ## Related Documentation
 

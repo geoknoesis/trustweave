@@ -33,6 +33,50 @@ After completing this guide, you will have:
 - ✅ Understood when to use each protocol
 - ✅ Implemented protocol switching at runtime
 
+## Credential Exchange Flow
+
+Credential exchange involves multiple parties working together:
+
+```mermaid
+sequenceDiagram
+    participant Issuer
+    participant Holder
+    participant Verifier
+    participant Protocol as Exchange Protocol<br/>(DIDComm/OIDC4VCI/CHAPI)
+    
+    Note over Issuer,Verifier: Phase 1: Credential Offer
+    Issuer->>Protocol: Create Credential Offer
+    Protocol->>Holder: Send Offer
+    Holder->>Holder: Review Credential Offer
+    
+    Note over Issuer,Verifier: Phase 2: Credential Request
+    Holder->>Protocol: Request Credential
+    Protocol->>Issuer: Forward Request
+    Issuer->>Issuer: Validate Request
+    
+    Note over Issuer,Verifier: Phase 3: Credential Issuance
+    Issuer->>Protocol: Issue Credential
+    Protocol->>Holder: Deliver Credential
+    Holder->>Holder: Store in Wallet
+    
+    Note over Issuer,Verifier: Phase 4: Presentation
+    Verifier->>Holder: Request Presentation
+    Holder->>Protocol: Create Presentation
+    Protocol->>Verifier: Send Presentation
+    Verifier->>Verifier: Verify Presentation
+    
+    style Issuer fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style Holder fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style Verifier fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    style Protocol fill:#9c27b0,stroke:#6a1b9a,stroke-width:2px,color:#fff
+```
+
+**Key Phases:**
+1. **Offer**: Issuer creates and sends credential offer to holder
+2. **Request**: Holder requests the credential from issuer
+3. **Issuance**: Issuer issues credential to holder
+4. **Presentation**: Holder creates presentation and shares with verifier
+
 ## Quick Example
 
 Here's a complete example showing unified API for all protocols:

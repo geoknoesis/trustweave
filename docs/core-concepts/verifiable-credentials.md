@@ -30,6 +30,42 @@ dependencies {
 - Wallets store VCs, anchor clients notarise them, and verification routines replay the proofs.
 - Typed builders and canonicalisation keep the credential lifecycle consistent across DID methods and signature suites.
 
+## Credential Lifecycle
+
+A verifiable credential goes through a complete lifecycle from creation to revocation:
+
+```mermaid
+flowchart LR
+    A[Issuance<br/>Issuer creates VC<br/>Signs with private key] --> B[Storage<br/>Holder stores in wallet<br/>Organizes with metadata]
+    B --> C[Presentation<br/>Holder creates VP<br/>Selectively discloses claims]
+    C --> D[Verification<br/>Verifier checks proof<br/>Validates issuer & claims]
+    D --> E{Status Check}
+    E -->|Valid| F[Accept Credential<br/>Use in application]
+    E -->|Invalid/Expired| G[Reject Credential<br/>Handle error]
+    E -->|Revoked| H[Reject Credential<br/>Credential revoked]
+    F --> I[Use in Application]
+    A -.->|Optional| J[Revocation<br/>Issuer revokes VC<br/>Adds to status list]
+    J --> H
+    
+    style A fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style B fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style C fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    style D fill:#9c27b0,stroke:#6a1b9a,stroke-width:2px,color:#fff
+    style E fill:#ffc107,stroke:#f57c00,stroke-width:2px,color:#000
+    style F fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style G fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+    style H fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+    style I fill:#00bcd4,stroke:#00838f,stroke-width:2px,color:#fff
+    style J fill:#795548,stroke:#5d4037,stroke-width:2px,color:#fff
+```
+
+**Key Stages:**
+1. **Issuance**: Issuer creates and signs the credential with their private key
+2. **Storage**: Holder stores the credential in their wallet for future use
+3. **Presentation**: Holder creates a verifiable presentation (optionally with selective disclosure)
+4. **Verification**: Verifier checks the proof, validates issuer DID, and checks status
+5. **Revocation** (optional): Issuer can revoke credentials, which are checked during verification
+
 ## How TrustWeave issues and verifies VCs
 
 | Component | Purpose |
@@ -97,7 +133,61 @@ suspend fun verifyBadge(trustWeave: TrustWeave, credential: VerifiableCredential
 
 **Outcome:** Surfaces verification success or failure reasons, letting you guard business logic with `result.valid` and log granular errors.
 
-Verification resolves the issuer DID document, checks the signature suites, and applies optional policies (expiration, schema, revocation when present).
+### Verification Pipeline
+
+The verification process involves multiple steps that TrustWeave executes automatically:
+
+```mermaid
+flowchart TD
+    A[Start Verification<br/>trustWeave.verify { }] --> B[Parse Credential<br/>Validate JSON Structure]
+    B --> C{Structure Valid?}
+    C -->|No| Z[Invalid: Malformed Structure]
+    C -->|Yes| D[Resolve Issuer DID<br/>Fetch DID Document]
+    D --> E{DID Resolution<br/>Success?}
+    E -->|No| Z1[Invalid: DID Not Found]
+    E -->|Yes| F[Extract Public Key<br/>From Verification Method]
+    F --> G[Canonicalize Credential<br/>Apply JCS]
+    G --> H[Compute Digest<br/>SHA-256 Hash]
+    H --> I[Verify Signature<br/>Check Proof]
+    I --> J{Signature Valid?}
+    J -->|No| Z2[Invalid: Invalid Signature]
+    J -->|Yes| K[Check Expiration<br/>Validate issued/expiration Dates]
+    K --> L{Not Expired?}
+    L -->|No| Z3[Invalid: Credential Expired]
+    L -->|Yes| M[Check Revocation<br/>Query Status List]
+    M --> N{Not Revoked?}
+    N -->|No| Z4[Invalid: Credential Revoked]
+    N -->|Yes| O[Validate Schema<br/>If Schema Specified]
+    O --> P{Schema Valid?}
+    P -->|No| Z5[Invalid: Schema Validation Failed]
+    P -->|Yes| Q[Check Trust Policy<br/>If Trust Required]
+    Q --> R{Trusted Issuer?}
+    R -->|No| Z6[Invalid: Issuer Not Trusted]
+    R -->|Yes| S[Valid: Verification Success]
+    
+    style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
+    style S fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style Z fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+    style Z1 fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+    style Z2 fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+    style Z3 fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+    style Z4 fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+    style Z5 fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+    style Z6 fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+```
+
+**Verification Steps:**
+1. **Parse & Validate**: Ensures credential has correct structure
+2. **Resolve Issuer DID**: Fetches DID document from resolver
+3. **Extract Public Key**: Gets verification method from DID document
+4. **Canonicalize**: Applies JCS to get deterministic JSON
+5. **Verify Signature**: Checks cryptographic proof
+6. **Check Expiration**: Validates credential hasn't expired
+7. **Check Revocation**: Queries status list if present
+8. **Validate Schema**: Verifies claims against schema (if specified)
+9. **Check Trust**: Validates issuer against trust registry (if enabled)
+
+All steps must pass for verification to succeed. Any failure returns detailed error information in the `VerificationResult`.
 
 ## Practical usage tips
 

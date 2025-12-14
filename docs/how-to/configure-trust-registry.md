@@ -18,7 +18,7 @@ Trust registries enable verifiers to determine which issuers they trust without 
 
 ## Prerequisites
 
-- **Kotlin**: 2.2.0 or higher
+- **Kotlin**: 2.2.21+ or higher
 - **Java**: 21 or higher
 - **TrustWeave SDK**: Latest version
 - **Dependencies**: TrustWeave-core with trust registry support

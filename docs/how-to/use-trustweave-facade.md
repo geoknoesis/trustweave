@@ -28,7 +28,7 @@ After completing this guide, you will have:
 
 - ✅ Created a TrustWeave instance with one line
 - ✅ Issued your first credential with minimal code
-- ✅ Understood when to use the facade vs. TrustLayer
+- ✅ Understood when to use the facade vs. full configuration
 - ✅ Learned how to customize facade defaults
 
 ## Quick Example
@@ -204,7 +204,7 @@ when (result) {
 
 ---
 
-## Comparison: Facade vs. TrustLayer
+## Comparison: Facade vs. Full Configuration
 
 ### Using TrustWeave (Simple)
 
@@ -462,7 +462,7 @@ try {
 
 ---
 
-## When to Use Facade vs. TrustLayer
+## When to Use Facade vs. Full Configuration
 
 ### Use Simple Configuration When:
 
@@ -487,7 +487,7 @@ try {
 
 Now that you've learned the facade API, you can:
 
-1. **[Configure TrustLayer](configure-trustlayer.md)** - Learn full configuration options
+1. **[Configure TrustWeave](configure-trustlayer.md)** - Learn full configuration options
 2. **[Issue Credentials](issue-credentials.md)** - Deep dive into credential issuance
 3. **[Verify Credentials](verify-credentials.md)** - Learn verification options
 4. **[Manage Wallets](manage-wallets.md)** - Store and organize credentials
@@ -497,6 +497,6 @@ Now that you've learned the facade API, you can:
 ## Related Documentation
 
 - **[Quick Start](../getting-started/quick-start.md)** - Complete getting started guide
-- **[TrustLayer Configuration](configure-trustlayer.md)** - Full configuration guide
+- **[TrustWeave Configuration](configure-trustlayer.md)** - Full configuration guide
 - **[API Reference](../api-reference/core-api.md)** - Complete API documentation
 

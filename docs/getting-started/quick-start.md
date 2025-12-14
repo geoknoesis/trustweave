@@ -21,6 +21,94 @@ Get started with TrustWeave in 5 minutes! This guide will walk you through creat
 > **Kotlin:** 2.2.21+ | **Java:** 21+
 > See [Installation](installation.md) for setup details.
 
+## Hello Trustweave (30 Seconds) ⚡
+
+Here's the absolute minimum to get your first credential working. Copy, paste, run:
+
+```kotlin
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.types.*
+import com.trustweave.testkit.services.*
+import kotlinx.coroutines.runBlocking
+
+fun main() = runBlocking {
+    // Build TrustWeave with test defaults
+    val trustWeave = TrustWeave.build {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+    }
+
+    // Create issuer DID
+    val (issuerDid, issuerDoc) = trustWeave.createDid().getOrThrow()
+    val keyId = issuerDoc.verificationMethod.firstOrNull()?.id?.value?.substringAfter("#") ?: "key-1"
+    println("✅ Created DID: ${issuerDid.value}")
+
+    // Issue credential
+    val credential = trustWeave.issue {
+        credential {
+            type("HelloCredential")
+            issuer(issuerDid.value)
+            subject {
+                id("did:key:holder")
+                "message" to "Hello Trustweave!"
+            }
+        }
+        signedBy(issuerDid = issuerDid.value, keyId = keyId)
+    }.getOrThrow()
+
+    // Verify credential
+    val result = trustWeave.verify { credential(credential) }
+    when (result) {
+        is VerificationResult.Valid -> println("✅ Credential verified!")
+        else -> println("❌ Verification failed")
+    }
+}
+```
+
+**Expected Output:**
+```
+✅ Created DID: did:key:z6Mk...
+✅ Credential verified!
+```
+
+**What just happened?**
+1. ✅ Created a decentralized identity (DID) for the issuer
+2. ✅ Issued a verifiable credential with a simple claim
+3. ✅ Verified the credential cryptographically
+
+This demonstrates TrustWeave's core value: **cryptographically verifiable credentials** that can't be forged. The credential contains a proof that can be independently verified without contacting the issuer.
+
+### Onboarding Flow
+
+Here's what happens under the hood:
+
+```mermaid
+flowchart TD
+    A[Start] --> B[Build TrustWeave]
+    B --> C[Create DID]
+    C --> D[Extract Key ID]
+    D --> E[Issue Credential]
+    E --> F[Sign with Key]
+    F --> G[Verify Credential]
+    G --> H[Success]
+    
+    B --> B1[Configure KMS]
+    B --> B2[Configure DID Method]
+    
+    E --> E1[Build Credential]
+    E --> E2[Generate Proof]
+    
+    G --> G1[Check Proof]
+    G --> G2[Verify Issuer DID]
+    G --> G3[Validate Structure]
+```
+
+> **Next Steps:** Continue reading for a complete example with proper error handling, or jump to [Installation](installation.md) to set up your project.
+
 ## Complete Runnable Example
 
 Here's a complete, copy-paste ready example that demonstrates the full TrustWeave workflow with proper error handling. This example uses try-catch blocks for error handling, which is the recommended pattern for all TrustWeave operations.
@@ -350,13 +438,13 @@ The sections below explain each step in detail.
 ```kotlin
 dependencies {
     implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
-    testImplementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
+    testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
 }
 ```
 
 **What this does**
 - Pulls in every public TrustWeave module (core APIs, DID support, KMS, anchoring, DSLs) with a single coordinate so you never chase transitive dependencies.
-- Adds `trustweave-testkit` for the in-memory DID/KMS/wallet implementations used in the tutorials and automated tests.
+- Adds `testkit` for the in-memory DID/KMS/wallet implementations used in the tutorials and automated tests.
 
 **Design significance**
 TrustWeave promotes a “batteries included” experience for newcomers. The monolithic artifact keeps onboarding simple; when you graduate to production you can swap in individual modules without changing API usage.

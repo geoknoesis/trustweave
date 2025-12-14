@@ -1,5 +1,7 @@
 ---
 title: Parametric Insurance MGA Implementation Guide with TrustWeave
+parent: Use Case Scenarios
+nav_order: 36
 ---
 
 # Parametric Insurance MGA Implementation Guide with TrustWeave

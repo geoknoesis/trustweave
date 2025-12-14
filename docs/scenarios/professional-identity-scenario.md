@@ -1,5 +1,7 @@
 ---
 title: Professional Identity Wallet Scenario
+parent: Use Case Scenarios
+nav_order: 12
 ---
 
 # Professional Identity Wallet Scenario

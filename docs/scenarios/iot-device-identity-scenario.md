@@ -1,5 +1,7 @@
 ---
 title: IoT & Device Identity Scenario
+parent: Use Case Scenarios
+nav_order: 9
 ---
 
 # IoT & Device Identity Scenario

@@ -1,5 +1,7 @@
 ---
 title: "Atlas Parametric MGA: Architecture Overview with TrustWeave"
+parent: Use Case Scenarios
+nav_order: 38
 ---
 
 # Atlas Parametric MGA: Architecture Overview with TrustWeave

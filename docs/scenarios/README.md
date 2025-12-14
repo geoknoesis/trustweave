@@ -1,6 +1,8 @@
 ---
 title: Use Case Scenarios
 nav_order: 40
+parent: null
+nav_exclude: false
 keywords:
   - scenarios
   - use cases

@@ -1,5 +1,7 @@
 ---
 title: Spatial Web Authorization Scenario
+parent: Use Case Scenarios
+nav_order: 30
 ---
 
 # Spatial Web Authorization Scenario

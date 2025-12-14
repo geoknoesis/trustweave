@@ -1,5 +1,7 @@
 ---
 title: National Education Credentials Scenario (AlgeroPass)
+parent: Use Case Scenarios
+nav_order: 13
 ---
 
 # National Education Credentials Scenario (AlgeroPass)

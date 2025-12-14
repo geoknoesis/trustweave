@@ -1,5 +1,7 @@
 ---
 title: Financial Services & KYC/AML Scenario
+parent: Use Case Scenarios
+nav_order: 4
 ---
 
 # Financial Services & KYC/AML Scenario

@@ -1,5 +1,7 @@
 ---
 title: Proof of Location Scenario
+parent: Use Case Scenarios
+nav_order: 31
 ---
 
 # Proof of Location Scenario

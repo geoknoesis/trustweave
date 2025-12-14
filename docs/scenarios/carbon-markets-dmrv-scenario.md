@@ -1,5 +1,7 @@
 ---
 title: Carbon Markets & Digital MRV (dMRV) with Earth Observation
+parent: Use Case Scenarios
+nav_order: 29
 ---
 
 # Carbon Markets & Digital MRV (dMRV) with Earth Observation
@@ -107,7 +109,7 @@ Carbon markets need:
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Test kit for in-memory implementations
     testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")

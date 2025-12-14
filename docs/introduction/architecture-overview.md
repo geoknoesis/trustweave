@@ -50,12 +50,12 @@ val document = didMethod.createDid(options)
 - Advanced use cases
 - When you need to compose services manually
 
-### 3. DSL Layer (`trustLayer { }`) - Declarative Configuration
+### 3. DSL Layer (`TrustWeave.build { }`) - Declarative Configuration
 
 Use the DSL for declarative, readable configuration:
 
 ```kotlin
-val trustLayer = trustLayer {
+val trustWeave = trustWeave {
     keys { provider("inMemory") }
     did { method("key") }
     blockchains {
@@ -133,7 +133,7 @@ val didRegistry = DidMethodRegistry().apply {
 The **Trust Layer** is TrustWeave's configuration DSL that lets you declaratively configure all services:
 
 ```kotlin
-val trustLayer = trustLayer {
+val trustWeave = trustWeave {
     keys {
         provider("inMemory")  // KMS configuration
     }

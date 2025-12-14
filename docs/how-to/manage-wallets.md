@@ -173,7 +173,7 @@ wallet.withOrganization { org ->
 Create a simple wallet for credential storage:
 
 ```kotlin
-val walletResult = trustLayer.wallet {
+val walletResult = trustWeave.wallet {
     holder("did:key:holder")
 }
 

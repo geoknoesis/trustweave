@@ -1,5 +1,7 @@
 ---
 title: Software Supply Chain Security Scenario
+parent: Use Case Scenarios
+nav_order: 17
 ---
 
 # Software Supply Chain Security Scenario
@@ -140,7 +142,7 @@ Add TrustWeave dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")

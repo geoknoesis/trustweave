@@ -1,5 +1,7 @@
 ---
 title: "Smart Contract: Parametric Insurance Scenario"
+parent: Use Case Scenarios
+nav_order: 35
 ---
 
 # Smart Contract: Parametric Insurance Scenario

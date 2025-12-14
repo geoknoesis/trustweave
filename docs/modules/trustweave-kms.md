@@ -96,7 +96,7 @@ val signature = key?.let { kms.sign(it.id, data.toByteArray()) }
 
 TrustWeave provides several KMS implementations:
 
-- **In-Memory** (`com.trustweave:trustweave-testkit`) – For testing and development. See [TestKit Documentation](trustweave-testkit.md).
+- **In-Memory** (`com.trustweave:testkit`) – For testing and development. See [TestKit Documentation](trustweave-testkit.md).
 - **AWS KMS** (`com.trustweave.kms:aws`) – AWS Key Management Service integration. See [AWS KMS Integration Guide](../integrations/aws-kms.md).
 - **Azure Key Vault** (`com.trustweave.kms:azure`) – Azure Key Vault integration. See [Azure KMS Integration Guide](../integrations/azure-kms.md).
 - **Google Cloud KMS** (`com.trustweave.kms:google`) – Google Cloud KMS integration. See [Google KMS Integration Guide](../integrations/google-kms.md).

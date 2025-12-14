@@ -74,7 +74,7 @@ Add TrustWeave to your project:
 dependencies {
     // All-in-one dependency (recommended)
     implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:TrustWeave-testkit:1.0.0-SNAPSHOT")  // For testing
+    implementation("com.trustweave:testkit:1.0.0-SNAPSHOT")  // For testing
 }
 ```
 

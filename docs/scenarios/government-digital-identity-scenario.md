@@ -1,5 +1,7 @@
 ---
 title: Government & Digital Identity Scenario
+parent: Use Case Scenarios
+nav_order: 5
 ---
 
 # Government & Digital Identity Scenario

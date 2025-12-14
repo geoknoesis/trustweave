@@ -1,5 +1,7 @@
 ---
 title: Web of Trust Scenario
+parent: Use Case Scenarios
+nav_order: 18
 ---
 
 # Web of Trust Scenario

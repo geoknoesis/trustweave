@@ -11,7 +11,7 @@ This tutorial provides a comprehensive guide to using TrustWeave's Wallet API. Y
 dependencies {
     implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-trust:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
 }
 ```
 

@@ -12,7 +12,7 @@ dependencies {
     implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
 }
 ```
 

@@ -1,5 +1,7 @@
 ---
 title: Parametric Insurance for Travel Disruptions
+parent: Use Case Scenarios
+nav_order: 25
 ---
 
 # Parametric Insurance for Travel Disruptions
@@ -108,7 +110,7 @@ Travel parametric insurance needs:
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Test kit for in-memory implementations
     testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")

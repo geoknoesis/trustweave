@@ -1,5 +1,7 @@
 ---
 title: Field Data Collection Scenario
+parent: Use Case Scenarios
+nav_order: 27
 ---
 
 # Field Data Collection Scenario

@@ -1,5 +1,7 @@
 ---
 title: Earth Observation Scenario
+parent: Use Case Scenarios
+nav_order: 28
 ---
 
 # Earth Observation Scenario

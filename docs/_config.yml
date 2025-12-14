@@ -257,6 +257,204 @@ defaults:
     values:
       nav_exclude: false
   - scope:
+      path: "how-to/configure-trust-policies.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "scenarios/README.md"
+    values:
+      nav_exclude: false
+  - scope:
+      path: "scenarios/academic-credentials-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 1
+  - scope:
+      path: "scenarios/employee-onboarding-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 2
+  - scope:
+      path: "scenarios/healthcare-medical-records-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 3
+  - scope:
+      path: "scenarios/financial-services-kyc-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 4
+  - scope:
+      path: "scenarios/government-digital-identity-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 5
+  - scope:
+      path: "scenarios/age-verification-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 6
+  - scope:
+      path: "scenarios/vaccination-health-passport-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 7
+  - scope:
+      path: "scenarios/zero-trust-authentication-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 8
+  - scope:
+      path: "scenarios/iot-device-identity-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 9
+  - scope:
+      path: "scenarios/supply-chain-traceability-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 10
+  - scope:
+      path: "scenarios/event-ticketing-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 11
+  - scope:
+      path: "scenarios/professional-identity-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 12
+  - scope:
+      path: "scenarios/national-education-credentials-algeria-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 13
+  - scope:
+      path: "scenarios/biometric-verification-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 14
+  - scope:
+      path: "scenarios/insurance-claims-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 15
+  - scope:
+      path: "scenarios/security-clearance-access-control-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 16
+  - scope:
+      path: "scenarios/software-supply-chain-security-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 17
+  - scope:
+      path: "scenarios/web-of-trust-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 18
+  - scope:
+      path: "scenarios/iot-sensor-data-provenance-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 19
+  - scope:
+      path: "scenarios/iot-firmware-update-verification-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 20
+  - scope:
+      path: "scenarios/iot-device-ownership-transfer-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 21
+  - scope:
+      path: "scenarios/security-training-certification-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 22
+  - scope:
+      path: "scenarios/supply-chain-eudr-compliance-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 23
+  - scope:
+      path: "scenarios/soc2-compliance-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 24
+  - scope:
+      path: "scenarios/parametric-insurance-travel-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 25
+  - scope:
+      path: "scenarios/parametric-insurance-eo-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 26
+  - scope:
+      path: "scenarios/field-data-collection-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 27
+  - scope:
+      path: "scenarios/earth-observation-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 28
+  - scope:
+      path: "scenarios/carbon-markets-dmrv-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 29
+  - scope:
+      path: "scenarios/spatial-web-authorization-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 30
+  - scope:
+      path: "scenarios/proof-of-location-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 31
+  - scope:
+      path: "scenarios/digital-workflow-provenance-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 32
+  - scope:
+      path: "scenarios/data-catalog-dcat-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 33
+  - scope:
+      path: "scenarios/news-industry-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 34
+  - scope:
+      path: "scenarios/smart-contract-parametric-insurance-scenario.md"
+    values:
+      nav_exclude: false
+      nav_order: 35
+  - scope:
+      path: "scenarios/parametric-insurance-mga-implementation-guide.md"
+    values:
+      nav_exclude: false
+      nav_order: 36
+  - scope:
+      path: "scenarios/atlas-parametric-quick-reference.md"
+    values:
+      nav_exclude: false
+      nav_order: 37
+  - scope:
+      path: "scenarios/atlas-parametric-architecture-overview.md"
+    values:
+      nav_exclude: false
+      nav_order: 38
+  - scope:
       path: "concepts/README.md"
     values:
       nav_exclude: false
@@ -302,6 +500,9 @@ exclude:
   - .internal
   - DOCUMENTATION_REVIEW.md
   - IMPLEMENTATION_SUMMARY.md
+  - NAVIGATION_GUIDE.md
+  - JEKYLL_IMPLEMENTATION_REVIEW.md
+  - TERMINOLOGY_AUDIT.md
 
 # Just the Docs Theme Configuration
 just_the_docs:

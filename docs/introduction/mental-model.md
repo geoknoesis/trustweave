@@ -23,37 +23,48 @@ TrustWeave is built on a **layered architecture** with clear separation between:
 - **Service Layer** - Domain-specific services (DID, Credential, Wallet, etc.)
 - **Plugin Layer** - Pluggable implementations (DID methods, KMS, blockchains)
 
-```
-┌─────────────────────────────────────────┐
-│         Application Code                │
-└──────────────┬──────────────────────────┘
-               │
-┌──────────────▼──────────────────────────┐
-│         TrustWeave (Facade)             │
-│  - createDid(), issue(), verify(), etc. │
-└──────────────┬──────────────────────────┘
-               │
-┌──────────────▼──────────────────────────┐
-│      TrustWeaveContext (Orchestrator)   │
-│  - Coordinates services                 │
-│  - Manages DSL builders                 │
-└──────────────┬──────────────────────────┘
-               │
-       ┌───────┴───────┐
-       │               │
-┌──────▼──────┐ ┌──────▼──────┐
-│ DID Service │ │ Credential  │
-│             │ │ Service     │
-└──────┬──────┘ └──────┬──────┘
-       │               │
-       └───────┬───────┘
-               │
-┌──────────────▼──────────────────────────┐
-│         Plugin Layer                    │
-│  - DID Methods (key, web, ion, etc.)    │
-│  - KMS Providers (inMemory, AWS, etc.)  │
-│  - Blockchain Clients (Algorand, etc.)  │
-└─────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph Application["Application Code"]
+        AppCode[Your Application<br/>Business Logic]
+    end
+    
+    subgraph Facade["TrustWeave (Facade)"]
+        FacadeAPI[createDid()<br/>issue()<br/>verify()<br/>trust {}]
+    end
+    
+    subgraph Orchestrator["TrustWeaveContext (Orchestrator)"]
+        Context[Coordinates Services<br/>Manages DSL Builders]
+    end
+    
+    subgraph Services["Services (Domain Logic)"]
+        DIDService[DID Service]
+        CredService[Credential Service]
+        WalletService[Wallet Service]
+        TrustRegistry[Trust Registry]
+    end
+    
+    subgraph Plugins["Plugin Layer (Implementations)"]
+        DIDMethods[DID Methods<br/>key, web, ion, etc.]
+        KMSProviders[KMS Providers<br/>inMemory, AWS, etc.]
+        BlockchainClients[Blockchain Clients<br/>Algorand, etc.]
+    end
+    
+    AppCode --> FacadeAPI
+    FacadeAPI --> Context
+    Context --> DIDService
+    Context --> CredService
+    Context --> WalletService
+    Context --> TrustRegistry
+    DIDService --> DIDMethods
+    CredService --> KMSProviders
+    CredService --> BlockchainClients
+    
+    style Application fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    style Facade fill:#c8e6c9,stroke:#388e3c,stroke-width:2px
+    style Orchestrator fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    style Services fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    style Plugins fill:#e0f2f1,stroke:#00796b,stroke-width:2px
 ```
 
 ## Core Components
@@ -118,47 +129,84 @@ Plugins are **registered** during configuration and **selected** via provider na
 
 ### Credential Issuance Flow
 
-```
-1. Application calls: trustWeave.issue { ... }
-   │
-2. TrustWeave delegates to TrustWeaveContext
-   │
-3. TrustWeaveContext orchestrates:
-   │
-   ├─► DID Service: Resolve issuer DID
-   │   └─► DID Method Plugin: Fetch DID document
-   │
-   ├─► KMS Provider: Get signing key
-   │   └─► KMS Plugin: Retrieve key material
-   │
-   └─► Credential Service: Build credential + proof
-       └─► Proof Generator: Create cryptographic proof
-   │
-4. Return VerifiableCredential to application
+```mermaid
+flowchart TD
+    A[Application calls<br/>trustWeave.issue { ... }] --> B[TrustWeave<br/>Delegates to Context]
+    B --> C[TrustWeaveContext<br/>Orchestrates]
+    C --> D[DID Service<br/>Resolve Issuer DID]
+    C --> E[KMS Provider<br/>Get Signing Key]
+    C --> F[Credential Service<br/>Build Credential + Proof]
+    
+    D --> D1[DID Method Plugin<br/>Fetch DID Document]
+    E --> E1[KMS Plugin<br/>Retrieve Key Material]
+    F --> F1[Proof Generator<br/>Create Cryptographic Proof]
+    
+    D1 --> G[Return VerifiableCredential<br/>to Application]
+    E1 --> G
+    F1 --> G
+    
+    style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
+    style B fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+    style C fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+    style G fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
 ```
 
 ### Credential Verification Flow
 
+```mermaid
+flowchart TD
+    A[Application calls<br/>trustWeave.verify { credential(...) }] --> B[TrustWeaveContext<br/>Orchestrates Verification]
+    B --> C[Credential Service<br/>Validate Structure]
+    B --> D[DID Service<br/>Resolve Issuer DID]
+    B --> E[Proof Verifier<br/>Verify Signature]
+    B --> F[Revocation Service<br/>Check Revocation Status]
+    B --> G[Trust Registry<br/>Check Issuer Trust]
+    
+    D --> D1[DID Method Plugin<br/>Fetch DID Document]
+    E --> E1[KMS Provider<br/>Get Public Key]
+    F --> F1[Status List Manager<br/>Query Status List]
+    G --> G1{Issuer Trusted?}
+    
+    G1 -->|Yes| H[Return VerificationResult.Valid]
+    G1 -->|No| I[Return VerificationResult.Invalid.UntrustedIssuer]
+    C --> H
+    E1 --> H
+    F1 --> H
+    
+    style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
+    style B fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+    style H fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style I fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
 ```
-1. Application calls: trustWeave.verify { credential(...) }
-   │
-2. TrustWeaveContext orchestrates:
-   │
-   ├─► Credential Service: Validate structure
-   │
-   ├─► DID Service: Resolve issuer DID
-   │   └─► DID Method Plugin: Fetch DID document
-   │
-   ├─► Proof Verifier: Verify signature
-   │   └─► KMS Provider: Get public key
-   │
-   ├─► Revocation Service: Check revocation status
-   │   └─► Status List Manager: Query status list
-   │
-   └─► Trust Registry: Check issuer trust (if enabled)
-   │
-3. Return CredentialVerificationResult
+
+### Trust Flow
+
+Trust evaluation happens during verification when trust checking is enabled:
+
+```mermaid
+flowchart LR
+    A[Verifier<br/>Requests Verification] --> B{Trust Check<br/>Enabled?}
+    B -->|No| C[Skip Trust Check<br/>Verify Proof Only]
+    B -->|Yes| D[Query Trust Registry<br/>Check Issuer DID]
+    D --> E{Direct Trust<br/>Anchor?}
+    E -->|Yes| F[✅ Trusted<br/>Verification Continues]
+    E -->|No| G[Search Trust Path<br/>Find Trust Chain]
+    G --> H{Trust Path<br/>Found?}
+    H -->|Yes, Path Length ≤ Max| F
+    H -->|No or Path Too Long| I[❌ Untrusted<br/>Verification Fails]
+    C --> J[✅ Valid if Proof Valid]
+    F --> J
+    
+    style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
+    style F fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style I fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+    style J fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
 ```
+
+**Trust Evaluation:**
+1. **Direct Trust**: Issuer is a direct trust anchor → Trusted
+2. **Trust Path**: Issuer is reachable through trust relationships → Trusted (if path length ≤ max)
+3. **No Trust**: Issuer not in registry or no path found → Untrusted
 
 ## Configuration Model
 
@@ -205,7 +253,7 @@ TrustWeave.build {
 
 TrustWeave uses **two error handling patterns**:
 
-### 1. Exception-Based (TrustLayer Methods)
+### 1. Exception-Based (TrustWeave Methods)
 
 All `TrustWeave` methods throw exceptions:
 

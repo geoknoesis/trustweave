@@ -1,5 +1,7 @@
 ---
 title: Healthcare & Medical Records Scenario
+parent: Use Case Scenarios
+nav_order: 3
 ---
 
 # Healthcare & Medical Records Scenario

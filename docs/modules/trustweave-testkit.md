@@ -8,7 +8,7 @@ The `trustweave-testkit` module provides in-memory test implementations and util
 
 ```kotlin
 dependencies {
-    testImplementation("com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT")
+    testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
 }
 ```
 

@@ -1,5 +1,7 @@
 ---
 title: Digital Workflow & Provenance Scenario
+parent: Use Case Scenarios
+nav_order: 32
 ---
 
 # Digital Workflow & Provenance Scenario

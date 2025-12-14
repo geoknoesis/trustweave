@@ -1,5 +1,7 @@
 ---
 title: Academic Credentials Scenario
+parent: Use Case Scenarios
+nav_order: 1
 ---
 
 # Academic Credentials Scenario

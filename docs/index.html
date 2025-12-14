@@ -527,6 +527,12 @@ layout: null
                     required
                     aria-label="Email address"
                 >
+                <input
+                    type="text"
+                    id="projectInput"
+                    placeholder="What project are you working on? (optional)"
+                    aria-label="Project"
+                >
                 <button type="submit" class="btn btn-primary">Join Waitlist</button>
             </form>
             <div class="success-message" id="successMessage">
@@ -541,47 +547,53 @@ layout: null
         // Waitlist form handling
         const waitlistForm = document.getElementById('waitlistForm');
         const emailInput = document.getElementById('emailInput');
+        const projectInput = document.getElementById('projectInput');
         const successMessage = document.getElementById('successMessage');
 
         waitlistForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const email = emailInput.value.trim();
+            const project = projectInput.value.trim();
 
             if (!email) {
                 return;
             }
 
-            // Here you would typically send the email to your backend API
-            // For now, we'll just show a success message
-            // Example API call:
-            /*
+            // Send email via Formspree
             try {
-                const response = await fetch('/api/waitlist', {
+                const formData = {
+                    email: email
+                };
+                
+                // Only include project if provided
+                if (project) {
+                    formData.project = project;
+                }
+
+                const response = await fetch('https://formspree.io/f/xgvgqpyo', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ email: email })
+                    body: JSON.stringify(formData)
                 });
 
                 if (response.ok) {
                     successMessage.classList.add('show');
                     emailInput.value = '';
+                    projectInput.value = '';
+                    // Scroll to success message
+                    successMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 } else {
+                    const errorData = await response.json();
+                    console.error('Formspree error:', errorData);
                     alert('Something went wrong. Please try again.');
                 }
             } catch (error) {
+                console.error('Network error:', error);
                 alert('Network error. Please try again.');
             }
-            */
-
-            // Demo: Show success message
-            successMessage.classList.add('show');
-            emailInput.value = '';
-
-            // Scroll to success message
-            successMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         });
 
         // Smooth scrolling for anchor links

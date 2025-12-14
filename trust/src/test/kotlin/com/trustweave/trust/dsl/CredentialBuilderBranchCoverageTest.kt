@@ -153,17 +153,24 @@ class CredentialBuilderBranchCoverageTest {
     // ========== Issuance Date Required Branches ==========
 
     @Test
-    fun `test branch issuance date required error`() {
-        assertFailsWith<IllegalStateException> {
-            credential {
-                type("PersonCredential")
-                issuer("did:key:issuer")
-                subject {
-                    id("did:key:subject")
-                }
-                // Missing issued()
+    fun `test branch issuance date defaults to now`() {
+        // Issuance date is optional and defaults to Clock.System.now()
+        val before = Clock.System.now()
+        val credential = credential {
+            type("PersonCredential")
+            issuer("did:key:issuer")
+            subject {
+                id("did:key:subject")
             }
+            // Missing issued() - should default to now
         }
+        val after = Clock.System.now()
+        
+        // Verify issuance date was set to a time between before and after
+        assertTrue(
+            credential.issuanceDate >= before && credential.issuanceDate <= after,
+            "Issuance date should be set to a time between before and after"
+        )
     }
 
     @Test
@@ -337,8 +344,7 @@ class CredentialBuilderBranchCoverageTest {
             issued(Clock.System.now())
             schema(
                 schemaId = "https://example.com/schemas/person.json",
-                type = "JsonSchemaValidator2020",
-                format = SchemaFormat.JSON_SCHEMA // Use available format
+                type = "JsonSchemaValidator2020"
             )
         }
 

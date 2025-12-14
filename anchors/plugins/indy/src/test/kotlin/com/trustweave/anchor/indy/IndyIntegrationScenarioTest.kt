@@ -80,12 +80,10 @@ class IndyIntegrationScenarioTest {
         )
 
         trustweave = TrustWeave.build(
-            registries = com.trustweave.trust.dsl.TrustWeaveRegistries(
-                didRegistry = sharedDidRegistry,
-                blockchainRegistry = com.trustweave.anchor.BlockchainAnchorRegistry(),
-                credentialRegistry = null,
-                proofRegistry = null
-            )
+        registries = com.trustweave.trust.dsl.TrustWeaveRegistries(
+            didRegistry = sharedDidRegistry,
+            blockchainRegistry = com.trustweave.anchor.BlockchainAnchorRegistry()
+        )
         ) {
             factories(
                 didMethodFactory = TestkitDidMethodFactory(didRegistry = sharedDidRegistry),
@@ -155,7 +153,7 @@ class IndyIntegrationScenarioTest {
 
         // Step 4: Verify the credential
         println("\nStep 3: Verifying credential...")
-        val verification = trustweave.verifyCredential(credential)
+        val verification = trustweave.verify { credential(credential) }
         val isValid = verification is com.trustweave.trust.types.VerificationResult.Valid
         println("  ✓ Verification Valid: $isValid")
         assertTrue(isValid, "Credential should be valid")
@@ -213,7 +211,7 @@ class IndyIntegrationScenarioTest {
 
         // Step 9: Verify the read credential
         println("\nStep 7: Verifying read credential...")
-        val readVerification = trustweave.verifyCredential(readCredential)
+        val readVerification = trustweave.verify { credential(readCredential) }
         val readIsValid = readVerification is com.trustweave.trust.types.VerificationResult.Valid
         println("  ✓ Read Verification Valid: $readIsValid")
         assertTrue(readIsValid, "Read credential should be valid")
@@ -358,7 +356,7 @@ class IndyIntegrationScenarioTest {
         // Verify all credentials
         println("\nVerifying all credentials...")
         credentials.forEachIndexed { index, credential ->
-            val verification = trustweave.verifyCredential(credential)
+            val verification = trustweave.verify { credential(credential) }
             val isValid = verification is com.trustweave.trust.types.VerificationResult.Valid
             assertTrue(isValid, "Credential ${index + 1} should be valid")
             println("  ✓ Credential ${index + 1} verified")

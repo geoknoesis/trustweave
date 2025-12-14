@@ -1,8 +1,6 @@
 package com.trustweave.trust.dsl.credential
 
-// TODO: CredentialIssuer and CredentialVerifier are from credential-core - needs migration
-// import com.trustweave.credential.issuer.CredentialIssuer
-// import com.trustweave.credential.verifier.CredentialVerifier
+// CredentialService from credential-api is used for all credential operations
 import com.trustweave.credential.revocation.CredentialRevocationManager
 import com.trustweave.credential.model.ProofType
 import com.trustweave.credential.schema.SchemaRegistry
@@ -18,13 +16,13 @@ import com.trustweave.credential.schema.SchemaRegistry
 interface CredentialDslProvider {
     /**
      * Get the credential issuer.
-     * TODO: Replace CredentialIssuer with CredentialService from credential-api
+     * Uses CredentialService from credential-api for issuance
      */
     fun getIssuer(): Any?
 
     /**
      * Get the credential verifier.
-     * TODO: Replace CredentialVerifier with CredentialService from credential-api
+     * Uses CredentialService from credential-api for verification
      */
     fun getVerifier(): Any?
 

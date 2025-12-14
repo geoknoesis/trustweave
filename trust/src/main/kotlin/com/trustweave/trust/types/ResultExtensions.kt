@@ -113,7 +113,7 @@ fun VerificationResult.getOrThrow(): VerifiableCredential {
             val suggestion = " Ensure the credential schema is valid and matches the credential structure. " +
                 "You can skip schema validation using: verify { credential(cred); skipSchema() }"
             throw IllegalStateException(
-                "Schema validation failed: ${reason}. " +
+                "Schema validation failed. " +
                 "Errors: ${errors.joinToString("; ")}.$suggestion"
             )
         }
@@ -169,7 +169,11 @@ fun DidCreationResult.getOrThrow(): Pair<Did, DidDocument> {
             )
         }
         is DidCreationResult.Failure.InvalidConfiguration -> {
-            val detailsStr = if (details.isEmpty()) "" else " Details: ${details.joinToString("; ")}"
+            val detailsStr = if (details.isEmpty()) {
+                ""
+            } else {
+                " Details: ${details.entries.joinToString("; ") { "${it.key}=${it.value}" }}"
+            }
             val suggestion = " Check your DID method configuration in TrustWeave.build { did { method(\"...\") { ... } } }"
             throw IllegalStateException(
                 "Invalid DID configuration: ${reason}.${detailsStr}${suggestion}"

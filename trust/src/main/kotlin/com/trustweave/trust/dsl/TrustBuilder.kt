@@ -165,9 +165,9 @@ class TrustBuilder(
  * Trust anchor metadata builder.
  */
 class TrustAnchorMetadataBuilder {
-    private var credentialTypes: List<String>? = null
-    private var description: String? = null
-    private var addedAt: Instant = Clock.System.now()
+    internal var credentialTypes: List<String>? = null
+    internal var description: String? = null
+    internal var addedAt: Instant = Clock.System.now()
 
     /**
      * Set credential types this anchor is trusted for.

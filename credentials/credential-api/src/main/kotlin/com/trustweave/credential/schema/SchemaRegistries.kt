@@ -4,6 +4,7 @@ import com.trustweave.credential.model.SchemaFormat
 import com.trustweave.credential.schema.internal.DefaultSchemaValidatorRegistry
 import com.trustweave.credential.schema.internal.DefaultSchemaRegistry
 import com.trustweave.credential.schema.internal.JsonSchemaValidator
+import com.trustweave.credential.schema.internal.ShaclValidator
 
 /**
  * Registry factory object for schema management.
@@ -20,6 +21,7 @@ object SchemaRegistries {
         val registry = DefaultSchemaValidatorRegistry()
         // Register default validators
         registry.register(JsonSchemaValidator())
+        registry.register(ShaclValidator())
         return registry
     }
     

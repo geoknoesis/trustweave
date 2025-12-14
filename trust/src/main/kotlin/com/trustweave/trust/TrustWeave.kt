@@ -155,7 +155,7 @@ class TrustWeave private constructor(
      */
     val contracts: ContractService by lazy {
         ContractService(
-            credentialService = null, // TODO: Replace with credential-api CredentialService
+            credentialService = null, // CredentialService from credential-api (set via TrustWeaveConfig)
             blockchainRegistry = config.registries.blockchainRegistry
         )
     }

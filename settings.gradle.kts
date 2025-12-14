@@ -87,8 +87,9 @@ include("anchors:plugins:indy")
 
 // Credentials domain
 include("credentials:credential-api")
-// include("credentials:credential-core")  // Excluded from build - not used by trust module
+// credentials:credential-core removed - all functionality migrated to credential-api and plugins
 include("credentials:plugins:status-list:database")
+include("credentials:plugins:anchor")
 include("credentials:plugins:platforms:servicenow")
 include("credentials:plugins:platforms:salesforce")
 include("credentials:plugins:platforms:entra")

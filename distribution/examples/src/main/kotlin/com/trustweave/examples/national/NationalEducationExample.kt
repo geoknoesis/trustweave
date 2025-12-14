@@ -85,9 +85,7 @@ fun main() = runBlocking {
     val trustweave = TrustWeave.build(
         registries = com.trustweave.trust.dsl.TrustWeaveRegistries(
             didRegistry = sharedDidRegistry,
-            blockchainRegistry = com.trustweave.anchor.BlockchainAnchorRegistry(),
-            credentialRegistry = null,
-            proofRegistry = null
+            blockchainRegistry = com.trustweave.anchor.BlockchainAnchorRegistry()
         )
     ) {
         factories(

@@ -153,8 +153,25 @@ class CredentialBuilder {
 
     /**
      * Set issuance date.
+     * 
+     * If not provided, defaults to `Clock.System.now()` when building the credential.
+     * 
+     * **Example:**
+     * ```kotlin
+     * credential {
+     *     issued(Clock.System.now())  // Explicit issuance date
+     *     // Or omit for automatic: issued()
+     * }
+     * ```
+     * 
+     * @param date The issuance date (defaults to current time if not specified)
      */
     fun issued(date: Instant) {
+        // Allow issuance date up to 1 minute in the future for clock skew tolerance
+        val maxFutureDate = Clock.System.now().plus(1.minutes)
+        require(date <= maxFutureDate) {
+            "Issuance date cannot be more than 1 minute in the future. Got: $date"
+        }
         this.issuanceDate = date
     }
 

@@ -225,22 +225,65 @@ internal class VcLdProofEngine(
             throw IllegalArgumentException("At least one credential is required for presentation")
         }
         
-        // For VC-LD, selective disclosure can be done by including only certain claims
-        // This implementation includes all credentials in the presentation
-        // Full selective disclosure would filter claims based on presentation request
+        // Handle selective disclosure if disclosedClaims is specified
+        val credentialsToInclude = if (request.disclosedClaims != null && request.disclosedClaims.isNotEmpty()) {
+            // Apply selective disclosure - filter claims based on disclosedClaims
+            credentials.map { credential ->
+                createSelectiveDisclosureCredential(credential, request.disclosedClaims)
+            }
+        } else {
+            // Include all credentials as-is
+            credentials
+        }
         
         // Get holder from first credential's subject
-        val holder = credentials.first().credentialSubject.id
+        val holder = credentialsToInclude.first().credentialSubject.id
         
         // Create VerifiablePresentation
         // Note: VC-LD presentations may need a proof on the presentation itself
         return VerifiablePresentation(
             type = listOf(CredentialType.Custom("VerifiablePresentation")),
             holder = holder,
-            verifiableCredential = credentials,
+            verifiableCredential = credentialsToInclude,
             proof = null, // Presentation-level proof would be added here if required by the protocol
             challenge = request.proofOptions?.challenge,
             domain = request.proofOptions?.domain
+        )
+    }
+    
+    /**
+     * Create a credential with only disclosed claims for selective disclosure.
+     * 
+     * This is a basic implementation that filters claims. For true zero-knowledge
+     * selective disclosure, BBS+ proofs would be required.
+     */
+    private fun createSelectiveDisclosureCredential(
+        credential: VerifiableCredential,
+        disclosedClaims: Set<String>
+    ): VerifiableCredential {
+        // If all claims should be disclosed, return as-is
+        if (disclosedClaims.isEmpty()) {
+            return credential
+        }
+        
+        // Filter credentialSubject claims based on disclosedClaims
+        val subject = credential.credentialSubject
+        val filteredClaims = if (subject.claims.isNotEmpty()) {
+            // Filter claims - support both "claimName" and "credentialSubject.claimName" formats
+            subject.claims.filterKeys { claimName ->
+                disclosedClaims.contains(claimName) || 
+                disclosedClaims.contains("credentialSubject.$claimName")
+            }
+        } else {
+            subject.claims
+        }
+        
+        // Create new credential with filtered claims
+        // Note: This creates a derived credential without proof - for production use,
+        // this would need to be re-signed or use zero-knowledge proofs
+        return credential.copy(
+            credentialSubject = subject.copy(claims = filteredClaims),
+            proof = null // Derived credential needs new proof for selective disclosure
         )
     }
     

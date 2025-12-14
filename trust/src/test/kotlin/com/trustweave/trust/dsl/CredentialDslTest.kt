@@ -165,17 +165,24 @@ class CredentialDslTest {
     }
 
     @Test
-    fun `test credential builder requires issuance date`() {
-        assertFailsWith<IllegalStateException> {
-            credential {
-                type("Credential")
-                issuer("did:key:issuer")
-                subject {
-                    id("did:key:subject")
-                }
-                // Missing issued date
+    fun `test credential builder defaults issuance date to now`() {
+        // Issuance date is optional and defaults to Clock.System.now()
+        val before = Clock.System.now()
+        val credential = credential {
+            type("Credential")
+            issuer("did:key:issuer")
+            subject {
+                id("did:key:subject")
             }
+            // Missing issued date - should default to now
         }
+        val after = Clock.System.now()
+        
+        // Verify issuance date was set to a time between before and after
+        assertTrue(
+            credential.issuanceDate >= before && credential.issuanceDate <= after,
+            "Issuance date should be set to a time between before and after"
+        )
     }
 
     @Test

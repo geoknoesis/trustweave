@@ -49,6 +49,17 @@ class VerificationBuilder(
 
     /**
      * Set the credential to verify.
+     * 
+     * **Example:**
+     * ```kotlin
+     * trustWeave.verify {
+     *     credential(credential)  // Set credential to verify
+     *     checkRevocation()
+     *     checkExpiration()
+     * }
+     * ```
+     * 
+     * @param credential The verifiable credential to verify
      */
     fun credential(credential: VerifiableCredential) {
         this.credential = credential
@@ -56,6 +67,16 @@ class VerificationBuilder(
 
     /**
      * Enable revocation checking.
+     * 
+     * This is enabled by default. Only needed to explicitly enable after disabling.
+     * 
+     * **Example:**
+     * ```kotlin
+     * trustWeave.verify {
+     *     credential(credential)
+     *     checkRevocation()  // Explicitly enable (default)
+     * }
+     * ```
      */
     fun checkRevocation() {
         this.checkRevocation = true
@@ -78,6 +99,16 @@ class VerificationBuilder(
 
     /**
      * Enable expiration checking.
+     * 
+     * This is enabled by default. Only needed to explicitly enable after disabling.
+     * 
+     * **Example:**
+     * ```kotlin
+     * trustWeave.verify {
+     *     credential(credential)
+     *     checkExpiration()  // Explicitly enable (default)
+     * }
+     * ```
      */
     fun checkExpiration() {
         this.checkExpiration = true
@@ -100,6 +131,18 @@ class VerificationBuilder(
 
     /**
      * Enable schema validation.
+     * 
+     * Validates the credential against a JSON Schema or SHACL shape.
+     * 
+     * **Example:**
+     * ```kotlin
+     * trustWeave.verify {
+     *     credential(credential)
+     *     validateSchema("https://example.com/schemas/degree.json")
+     * }
+     * ```
+     * 
+     * @param schemaId The schema IRI to validate against
      */
     fun validateSchema(schemaId: String) {
         this.validateSchema = true

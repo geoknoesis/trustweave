@@ -59,9 +59,7 @@ class WebOfTrustIntegrationTest {
         val finalTrustWeave = TrustWeave.build(
             registries = TrustWeaveRegistries(
                 didRegistry = sharedDidRegistry,
-                blockchainRegistry = BlockchainAnchorRegistry(),
-                credentialRegistry = null,
-                proofRegistry = null
+                blockchainRegistry = BlockchainAnchorRegistry()
             )
         ) {
             factories(

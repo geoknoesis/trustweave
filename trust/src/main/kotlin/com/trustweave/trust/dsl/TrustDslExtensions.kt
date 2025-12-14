@@ -147,9 +147,10 @@ suspend fun TrustBuilder.addAnchor(did: Did, config: TrustAnchorConfig): Boolean
  * Extension function to find trust path within TrustBuilder context.
  */
 suspend fun TrustBuilder.findTrustPath(from: Did, to: Did): TrustPath {
+    // VerifierIdentity and IssuerIdentity are type aliases for Did, so we can pass directly
     return findTrustPath(
-        from = VerifierIdentity(from),
-        to = IssuerIdentity(to)  // IssuerIdentity is a typealias for Did
+        from = from as VerifierIdentity,
+        to = to as IssuerIdentity
     )
 }
 
@@ -196,7 +197,11 @@ class TrustPathFinder(
      * ```
      */
     suspend fun resolve(builder: TrustBuilder): TrustPath {
-        return builder.findTrustPath(from, to)
+        // VerifierIdentity and IssuerIdentity are type aliases for Did, so we can pass directly
+        return builder.findTrustPath(
+            from = from as VerifierIdentity,
+            to = to as IssuerIdentity
+        )
     }
 }
 

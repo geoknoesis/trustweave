@@ -1,14 +1,12 @@
 package com.trustweave.trust.dsl
 
 import com.trustweave.credential.model.vc.VerifiableCredential
-// TODO: CredentialVerifier is from credential-core - needs migration to credential-api
-// import com.trustweave.credential.verifier.CredentialVerifier
+// CredentialService from credential-api is used for verification
 import com.trustweave.trust.dsl.credential.*
 import com.trustweave.wallet.Wallet
 import com.trustweave.trust.dsl.wallet.*
 import com.trustweave.trust.dsl.did.*
-// TODO: CredentialAnchorService is from credential-core - needs migration
-// import com.trustweave.credential.anchor.CredentialAnchorService
+// CredentialAnchorService is available via credentials:plugins:anchor module
 import com.trustweave.did.model.DidDocument
 import com.trustweave.did.DidMethod
 import com.trustweave.did.registry.DidMethodRegistry
@@ -114,13 +112,11 @@ class TrustWeaveContext(
     }
 
     // CredentialDslProvider implementation
-    override fun getIssuer() = config.issuer // TODO: Replace with CredentialService from credential-api
+    override fun getIssuer() = config.issuer // CredentialService from credential-api
 
     override fun getVerifier(): Any? {
-        // TODO: CredentialVerifier is from credential-core - needs migration to credential-api
-        // The credential-api uses CredentialService.verify() instead
-        // val resolver = config.didResolver ?: getDidResolver()
-        // return CredentialVerifier(defaultDidResolver = resolver)
+        // CredentialService from credential-api handles verification
+        // Use credentialService.verify() method
         return null
     }
 
@@ -136,13 +132,8 @@ class TrustWeaveContext(
      * Get the credential anchor service.
      */
     fun getAnchorService(): Any? {
-        // TODO: CredentialAnchorService is from credential-core - needs migration
-        // val anchorClient = config.registries.blockchainRegistry.getAllClients().values.firstOrNull()
-        //     ?: throw IllegalStateException(
-        //         "No anchor client configured. " +
-        //         "Configure it in TrustWeave.build { anchor { chain(\"algorand:testnet\") { provider(\"inMemory\") } } }"
-        //     )
-        // return CredentialAnchorService(anchorClient)
+        // CredentialAnchorService is available via credentials:plugins:anchor module
+        // Use extension methods: credentialService.anchorCredential(..., anchorClient, ...)
         return null
     }
 

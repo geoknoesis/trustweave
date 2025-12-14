@@ -2,14 +2,7 @@ package com.trustweave.trust.dsl
 
 import com.trustweave.anchor.BlockchainAnchorClient
 import com.trustweave.anchor.BlockchainAnchorRegistry
-// TODO: CredentialServiceRegistry is from credential-core and needs migration
-// import com.trustweave.credential.CredentialServiceRegistry
 import com.trustweave.did.resolver.DidResolver
-// TODO: These are from credential-core and need migration to credential-api
-// import com.trustweave.credential.issuer.CredentialIssuer
-// import com.trustweave.credential.proof.Ed25519ProofGenerator
-// import com.trustweave.credential.proof.ProofGenerator
-// import com.trustweave.credential.proof.ProofGeneratorRegistry
 import com.trustweave.did.DidCreationOptions
 import com.trustweave.did.KeyAlgorithm
 import com.trustweave.did.DidMethod
@@ -37,10 +30,9 @@ import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
 
 data class TrustWeaveRegistries(
     val didRegistry: DidMethodRegistry = DidMethodRegistry(),
-    val blockchainRegistry: BlockchainAnchorRegistry = BlockchainAnchorRegistry(),
-    // TODO: Replace with credential-api equivalent
-    val credentialRegistry: Any? = null, // CredentialServiceRegistry.create(),
-    val proofRegistry: Any? = null // ProofGeneratorRegistry()
+    val blockchainRegistry: BlockchainAnchorRegistry = BlockchainAnchorRegistry()
+    // CredentialService is provided via TrustWeaveConfig.issuer
+    // Proof engines are managed by CredentialService internally
 )
 
 /**
@@ -83,7 +75,7 @@ class TrustWeaveConfig private constructor(
     val kms: KeyManagementService,
     val registries: TrustWeaveRegistries,
     val credentialConfig: CredentialConfig,
-    val issuer: Any?, // TODO: Replace CredentialIssuer with CredentialService from credential-api
+    val issuer: Any?, // CredentialService from credential-api
     val didResolver: DidResolver? = null,
     val revocationManager: CredentialRevocationManager? = null,
     val trustRegistry: TrustRegistry? = null,
@@ -158,7 +150,7 @@ class TrustWeaveConfig private constructor(
         private var revocationProvider: String? = null
         private var trustProvider: String? = null
         private var ioDispatcher: CoroutineDispatcher = Dispatchers.IO
-        private var issuer: Any? = null // CredentialService or CredentialIssuer
+        private var issuer: Any? = null // CredentialService from credential-api
 
         // Factory instances (required - no reflection fallback)
         private var kmsFactory: KmsFactory? = null
@@ -359,7 +351,7 @@ class TrustWeaveConfig private constructor(
             }
 
             // Create proof generator
-            // TODO: ProofGeneratorRegistry is from credential-core and needs migration to credential-api
+            // Proof engines are managed by CredentialService internally
             // The credential-api uses proof engines instead of proof generators
             // val proofGenerator = createProofGenerator(defaultProofType, nonNullKms, finalSigner)
             // registries.proofRegistry.register(proofGenerator)
@@ -379,9 +371,7 @@ class TrustWeaveConfig private constructor(
             }
 
             // Use issuer if provided, otherwise null
-            // Note: CredentialIssuer is from credential-core and needs migration to credential-api
-            // For now, we'll skip creating the issuer until the migration is complete
-            // val issuer = CredentialIssuer(...)
+            // CredentialService is created via credentialService() factory function
             val resolvedIssuer: Any? = issuer // Use issuer from builder if set
 
             // Resolve wallet factory (optional)
@@ -395,8 +385,7 @@ class TrustWeaveConfig private constructor(
             // caller's perspective (they're passed in and not modified by the caller).
             val registriesSnapshot = TrustWeaveRegistries(
                 didRegistry = registries.didRegistry, // Don't snapshot - use directly for test compatibility
-                blockchainRegistry = registries.blockchainRegistry.snapshot(),
-                credentialRegistry = registries.credentialRegistry
+                blockchainRegistry = registries.blockchainRegistry.snapshot()
             )
 
             return TrustWeaveConfig(
@@ -493,10 +482,10 @@ class TrustWeaveConfig private constructor(
                         }
                     }
 
-                    // TODO: Ed25519ProofGenerator is from credential-core - needs migration to credential-api
+                    // Proof engines are managed by CredentialService
                     // The credential-api uses proof engines instead of proof generators
                     throw UnsupportedOperationException(
-                        "Ed25519ProofGenerator is from credential-core and needs migration to credential-api. " +
+                        "Proof engines are managed by CredentialService. " +
                         "Please use credential-api's proof engine system instead."
                     )
                 }

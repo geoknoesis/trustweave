@@ -158,86 +158,60 @@ Here's the full Earth Observation data integrity workflow using the TrustWeave f
 ```kotlin
 package com.example.earth.observation
 
-import com.trustweave.TrustWeave
-import com.trustweave.anchor.BlockchainAnchorRegistry
-import com.trustweave.core.*
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.json.DigestUtils
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.trustWeave
+import com.trustweave.trust.types.*
+import com.trustweave.core.util.DigestUtils
+import com.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.encodeToJsonElement
-import kotlinx.serialization.json.put
-import java.time.Instant
+import kotlinx.serialization.json.*
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 
 fun main() = runBlocking {
     println("=".repeat(70))
     println("Earth Observation Data Integrity Scenario - Complete End-to-End Example")
     println("=".repeat(70))
 
-    // Step 1: Create TrustWeave instance with blockchain anchoring
-    val TrustWeave = TrustWeave.create {
-        blockchains {
-            "inmemory:anchor" to InMemoryBlockchainAnchorClient("inmemory:anchor")
-        }
+    // Step 1: Initialize TrustWeave with in-memory providers for testing
+    val tw = trustWeave {
+        keys { provider("inMemory"); algorithm("Ed25519") }
+        did { method("key") { algorithm("Ed25519") } }
+        anchor { chain("inmemory:testnet") { provider("inMemory") } }
     }
     println("\n✅ TrustWeave initialized with blockchain anchoring")
 
-    // Step 2: Create DID for data provider
-    import com.trustweave.trust.types.DidCreationResult
-    import com.trustweave.trust.types.IssuanceResult
-    
-    val providerDidResult = trustWeave.createDid { method("key") }
-    val providerDid = when (providerDidResult) {
-        is DidCreationResult.Success -> providerDidResult.did
-        else -> throw IllegalStateException("Failed to create provider DID: ${providerDidResult.reason}")
-    }
-    
-    val providerResolution = trustWeave.resolveDid(providerDid)
-    val providerDoc = when (providerResolution) {
-        is DidResolutionResult.Success -> providerResolution.document
-        else -> throw IllegalStateException("Failed to resolve provider DID")
-    }
-    val providerKeyId = providerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
-        ?: throw IllegalStateException("No verification method found")
-
+    // Step 2: Create DID for data provider (using getOrThrow for concise error handling)
+    val (providerDid, providerDoc) = tw.createDid { method("key") }.getOrThrow()
+    val providerKeyId = providerDoc.verificationMethod.first().id.substringAfter("#")
     println("✅ Data Provider DID: ${providerDid.value}")
 
-    // Step 3: Create EO dataset artifacts with digests
-    // Metadata artifact
-    val metadata = buildJsonObject {
+    // Step 3: Create EO dataset artifacts and compute digests inline
+    val metadataDigest = DigestUtils.sha256DigestMultibase(buildJsonObject {
         put("id", "metadata-1")
         put("title", "Sentinel-2 L2A Dataset")
         put("description", "Atmospherically corrected Sentinel-2 Level 2A product")
         put("spatialCoverage", buildJsonObject {
             put("type", "Polygon")
-            put("coordinates", listOf(
-                listOf(listOf(-122.5, 37.8), listOf(-122.3, 37.8),
-                       listOf(-122.3, 37.9), listOf(-122.5, 37.9), listOf(-122.5, 37.8))
-            ))
+            put("coordinates", "[-122.5,37.8],[-122.3,37.8],[-122.3,37.9],[-122.5,37.9],[-122.5,37.8]")
         })
         put("temporalCoverage", buildJsonObject {
             put("startDate", "2023-06-15T00:00:00Z")
             put("endDate", "2023-06-15T23:59:59Z")
         })
-    }
-    val metadataDigest = DigestUtils.sha256DigestMultibase(metadata)
+    })
     println("✅ Metadata artifact created: $metadataDigest")
 
-    // Provenance artifact
-    val provenance = buildJsonObject {
+    val provenanceDigest = DigestUtils.sha256DigestMultibase(buildJsonObject {
         put("id", "provenance-1")
         put("activity", "EO Data Collection")
-        put("agent", providerDid)
-        put("startedAtTime", Instant.now().toString())
-        put("endedAtTime", Instant.now().toString())
-    }
-    val provenanceDigest = DigestUtils.sha256DigestMultibase(provenance)
+        put("agent", providerDid.value)
+        put("startedAtTime", Clock.System.now().toString())
+        put("endedAtTime", Clock.System.now().toString())
+    })
     println("✅ Provenance artifact created: $provenanceDigest")
 
-    // Quality report artifact
-    val qualityReport = buildJsonObject {
+    val qualityDigest = DigestUtils.sha256DigestMultibase(buildJsonObject {
         put("id", "quality-1")
         put("qualityScore", 0.95)
         put("metrics", buildJsonObject {
@@ -245,39 +219,31 @@ fun main() = runBlocking {
             put("accuracy", 0.92)
             put("temporalConsistency", 0.96)
         })
-    }
-    val qualityDigest = DigestUtils.sha256DigestMultibase(qualityReport)
+    })
     println("✅ Quality report artifact created: $qualityDigest")
 
-    // Step 4: Create Linkset connecting all artifacts
-    val linkset = buildJsonObject {
+    // Step 4: Create Linkset connecting all artifacts (digest computed inline)
+    val linksetDigest = DigestUtils.sha256DigestMultibase(buildJsonObject {
         put("id", "linkset-1")
         put("links", buildJsonObject {
             put("metadata", buildJsonObject {
-                put("href", "metadata-1")
-                put("digestMultibase", metadataDigest)
-                put("type", "Metadata")
+                put("href", "metadata-1"); put("digestMultibase", metadataDigest); put("type", "Metadata")
             })
             put("provenance", buildJsonObject {
-                put("href", "provenance-1")
-                put("digestMultibase", provenanceDigest)
-                put("type", "Provenance")
+                put("href", "provenance-1"); put("digestMultibase", provenanceDigest); put("type", "Provenance")
             })
             put("quality", buildJsonObject {
-                put("href", "quality-1")
-                put("digestMultibase", qualityDigest)
-                put("type", "QualityReport")
+                put("href", "quality-1"); put("digestMultibase", qualityDigest); put("type", "QualityReport")
             })
         })
-    }
-    val linksetDigest = DigestUtils.sha256DigestMultibase(linkset)
+    })
     println("✅ Linkset created: $linksetDigest")
 
-    // Step 5: Issue Verifiable Credential referencing the Linkset
-    val issuanceResult = trustWeave.issue {
+    // Step 5: Issue and anchor credential in one fluent chain
+    val credential = tw.issue {
         credential {
             type("EarthObservationCredential", "DataIntegrityCredential")
-            issuer(providerDid.value)
+            issuer(providerDid)
             subject {
                 id("urn:eo:dataset:eo-dataset-1")
                 "dataset" {
@@ -288,59 +254,36 @@ fun main() = runBlocking {
                     "qualityDigest" to qualityDigest
                 }
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
-        signedBy(issuerDid = providerDid.value, keyId = providerKeyId)
-    }
-    
-    val credential = when (issuanceResult) {
-        is IssuanceResult.Success -> issuanceResult.credential
-        else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
-    }
+        signedBy(providerDid, providerKeyId)
+    }.getOrThrow()
 
     println("✅ Verifiable Credential issued: ${credential.id}")
     println("   Linkset digest: $linksetDigest")
 
-    // Step 6: Anchor credential to blockchain
-    val anchorRegistry = BlockchainAnchorRegistry().apply {
-        register("inmemory:anchor", InMemoryBlockchainAnchorClient("inmemory:anchor"))
-    }
-    val anchorClient = requireNotNull(anchorRegistry.get("inmemory:anchor")) {
-        "inmemory anchor client not registered"
-    }
-
-    val anchorResult = runCatching {
-        val payload = Json.encodeToJsonElement(VerifiableCredential.serializer(), credential)
-        anchorClient.writePayload(payload)
-    }.getOrElse { error ->
-        error("Anchoring failed: ${error.message}")
-    }
+    // Step 6: Anchor credential to blockchain using the DSL
+    val anchorRef = tw.blockchains.anchor(
+        data = credential,
+        serializer = VerifiableCredential.serializer(),
+        chainId = "inmemory:testnet"
+    ).getOrThrow().ref
 
     println("✅ Credential anchored to blockchain")
-    println("   Chain ID: ${anchorResult.ref.chainId}")
-    println("   Transaction Hash: ${anchorResult.ref.txHash}")
+    println("   Chain ID: ${anchorRef.chainId}")
+    println("   Transaction Hash: ${anchorRef.txHash}")
 
-    // Step 7: Verify the credential
-    val verification = trustWeave.verify {
-        credential(credential)
-    }
+    // Step 7: Verify the credential (throws on failure)
+    tw.verify { credential(credential) }.getOrThrow()
+    println("\n✅ Credential Verification SUCCESS")
 
-    when (verification) {
-        is VerificationResult.Valid -> {
-            println("\n✅ Credential Verification SUCCESS")
-        }
-        is VerificationResult.Invalid -> {
-        println("\n❌ Credential Verification FAILED")
-        println("   Errors: ${verification.errors}")
-    }
-
-    // Step 8: Verify integrity chain
+    // Step 8: Display integrity chain summary
     println("\n🔗 Integrity Chain Verification:")
     println("   Metadata digest: $metadataDigest")
     println("   Provenance digest: $provenanceDigest")
     println("   Quality digest: $qualityDigest")
     println("   Linkset digest: $linksetDigest")
-    println("   Credential anchored: ${anchorResult.ref.txHash}")
+    println("   Credential anchored: ${anchorRef.txHash}")
     println("   ✅ Complete integrity chain verified!")
 
     println("\n" + "=".repeat(70))
@@ -363,13 +306,10 @@ Earth Observation Data Integrity Scenario - Complete End-to-End Example
 ✅ Verifiable Credential issued: urn:uuid:...
    Linkset digest: u5v...
 ✅ Credential anchored to blockchain
-   Chain ID: inmemory:anchor
+   Chain ID: inmemory:testnet
    Transaction Hash: tx_...
 
 ✅ Credential Verification SUCCESS
-   Proof valid: true
-   Issuer valid: true
-   Not revoked: true
 
 🔗 Integrity Chain Verification:
    Metadata digest: u5v...
@@ -391,13 +331,13 @@ Earth Observation Data Integrity Scenario - Complete End-to-End Example
 
 **What this demonstrates:**
 - ✅ Complete data provider → integrity chain → blockchain workflow
-- ✅ DID creation for data providers
-- ✅ Artifact creation with cryptographic digests
+- ✅ DID creation using fluent `getOrThrow()` extensions
+- ✅ Inline artifact creation with cryptographic digests
 - ✅ Linkset creation for artifact linking
-- ✅ Verifiable Credential issuance
-- ✅ Blockchain anchoring for tamper evidence
-- ✅ Complete integrity chain verification
-- ✅ Error handling with Result types
+- ✅ Verifiable Credential issuance using the DSL
+- ✅ Blockchain anchoring via `blockchains.anchor()` API
+- ✅ Verification with `getOrThrow()` for concise error handling
+- ✅ Zero intermediate variables where possible
 
 ## Step 3: Step-by-Step Breakdown
 

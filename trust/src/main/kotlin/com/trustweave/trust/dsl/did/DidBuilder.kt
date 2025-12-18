@@ -94,7 +94,7 @@ class DidBuilder(
                 reason = "DID method is required. Use method(\"key\") or configure a default in did { method(\"key\") { ... } }"
             )
 
-        val didMethod = provider.getDidMethod(methodName) as? DidMethod
+        val didMethod = provider.getDidMethod(methodName)
             ?: run {
                 // Try to get available methods from registry if provider is TrustWeaveContext
                 val availableMethods = try {

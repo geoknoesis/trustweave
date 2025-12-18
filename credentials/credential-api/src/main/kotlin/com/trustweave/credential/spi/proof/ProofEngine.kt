@@ -7,6 +7,7 @@ import com.trustweave.credential.requests.IssuanceRequest
 import com.trustweave.credential.requests.PresentationRequest
 import com.trustweave.credential.requests.VerificationOptions
 import com.trustweave.credential.results.VerificationResult
+import com.trustweave.did.resolver.DidResolver
 
 /**
  * Proof engine for W3C Verifiable Credential proof suites.
@@ -130,14 +131,14 @@ data class ProofEngineCapabilities(
  */
 data class ProofEngineConfig(
     val properties: Map<String, Any> = emptyMap(),
-    val didResolver: com.trustweave.did.resolver.DidResolver? = null
+    val didResolver: DidResolver? = null
 ) {
     /**
      * Get DID resolver from config (checks both direct property and properties map).
      */
     @JvmName("getDidResolverFromConfig")
-    fun getDidResolver(): com.trustweave.did.resolver.DidResolver? {
-        return didResolver ?: (properties["didResolver"] as? com.trustweave.did.resolver.DidResolver)
+    fun getDidResolver(): DidResolver? {
+        return didResolver ?: (properties["didResolver"] as? DidResolver)
     }
 }
 

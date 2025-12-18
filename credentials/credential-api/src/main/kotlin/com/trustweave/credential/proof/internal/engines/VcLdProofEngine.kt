@@ -20,6 +20,7 @@ import com.trustweave.core.identifiers.KeyId
 import com.trustweave.did.identifiers.Did
 import com.trustweave.kms.KeyManagementService
 import com.trustweave.kms.results.SignResult
+import com.trustweave.did.model.VerificationMethod
 import com.github.jsonldjava.core.JsonLdOptions
 import com.github.jsonldjava.core.JsonLdProcessor
 import kotlinx.coroutines.runBlocking
@@ -510,7 +511,7 @@ internal class VcLdProofEngine(
     private fun verifySignature(
         canonical: String,
         proofValue: String,
-        verificationMethod: com.trustweave.did.model.VerificationMethod,
+        verificationMethod: VerificationMethod,
         proofType: String
     ): Boolean {
         logger.debug("Verifying signature: proofType={}, proofValueLength={}", proofType, proofValue.length)
@@ -615,7 +616,7 @@ internal class VcLdProofEngine(
     private suspend fun getVerificationMethodFromDid(
         issuerIri: Iri,
         verificationMethodId: String
-    ): com.trustweave.did.model.VerificationMethod? {
+    ): VerificationMethod? {
         if (!issuerIri.isDid) {
             return null
         }

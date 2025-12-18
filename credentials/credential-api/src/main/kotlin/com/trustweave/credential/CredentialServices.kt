@@ -4,6 +4,10 @@ import com.trustweave.credential.internal.DefaultCredentialService
 import com.trustweave.credential.internal.createBuiltInEngines
 import com.trustweave.credential.revocation.CredentialRevocationManager
 import com.trustweave.credential.schema.SchemaRegistry
+import com.trustweave.credential.format.ProofSuiteId
+import com.trustweave.credential.proof.internal.engines.SdJwtProofEngine
+import com.trustweave.credential.proof.internal.engines.VcLdProofEngine
+import com.trustweave.credential.spi.proof.ProofEngineConfig
 import com.trustweave.did.resolver.DidResolver
 
 /**
@@ -75,15 +79,15 @@ fun credentialService(
     revocationManager: CredentialRevocationManager? = null
 ): CredentialService {
     // Create proof engines with signer configured
-    val config = com.trustweave.credential.spi.proof.ProofEngineConfig(
+    val config = ProofEngineConfig(
         didResolver = didResolver,
         properties = mapOf("signer" to signer)
     )
-    val vcLdEngine = com.trustweave.credential.proof.internal.engines.VcLdProofEngine(config)
-    val sdJwtEngine = com.trustweave.credential.proof.internal.engines.SdJwtProofEngine(config)
+    val vcLdEngine = VcLdProofEngine(config)
+    val sdJwtEngine = SdJwtProofEngine(config)
     val engines = mapOf(
-        com.trustweave.credential.format.ProofSuiteId.VC_LD to vcLdEngine,
-        com.trustweave.credential.format.ProofSuiteId.SD_JWT_VC to sdJwtEngine
+        ProofSuiteId.VC_LD to vcLdEngine,
+        ProofSuiteId.SD_JWT_VC to sdJwtEngine
     )
     return DefaultCredentialService(
         engines = engines,

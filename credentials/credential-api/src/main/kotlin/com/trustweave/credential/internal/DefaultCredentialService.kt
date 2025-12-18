@@ -18,7 +18,11 @@ import com.trustweave.credential.schema.SchemaRegistry
 import com.trustweave.credential.trust.TrustPolicy
 // ProofEngineUtils is imported for DID resolution
 import com.trustweave.credential.proof.internal.engines.ProofEngineUtils
+import com.trustweave.core.identifiers.Iri
 import com.trustweave.core.serialization.SerializationModule
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.vc.Issuer
 import com.trustweave.did.identifiers.Did
 import com.trustweave.did.resolver.DidResolver
 import com.github.jsonldjava.core.JsonLdOptions
@@ -40,8 +44,8 @@ internal class DefaultCredentialService(
 ) : CredentialService {
     
     // Json instance configured with Instant serialization for ISO 8601 formatting
-    private val json = kotlinx.serialization.json.Json {
-        serializersModule = com.trustweave.core.serialization.SerializationModule.default
+    private val json = Json {
+        serializersModule = SerializationModule.default
     }
     
     override suspend fun issue(request: IssuanceRequest): IssuanceResult {
@@ -334,11 +338,11 @@ internal class DefaultCredentialService(
             // Create a minimal error credential for the InvalidProof result
             // We can't throw here because we need to return a VerificationResult
             val errorCredential = VerifiableCredential(
-                type = listOf(com.trustweave.credential.model.CredentialType.fromString("VerifiableCredential")),
-                issuer = com.trustweave.credential.model.vc.Issuer.IriIssuer(com.trustweave.core.identifiers.Iri("did:error:empty-presentation")),
+                type = listOf(CredentialType.fromString("VerifiableCredential")),
+                issuer = Issuer.IriIssuer(Iri("did:error:empty-presentation")),
                 issuanceDate = Clock.System.now(),
-                credentialSubject = com.trustweave.credential.model.vc.CredentialSubject(
-                    id = com.trustweave.core.identifiers.Iri("did:error:empty-presentation"),
+                credentialSubject = CredentialSubject(
+                    id = Iri("did:error:empty-presentation"),
                     claims = emptyMap()
                 )
             )

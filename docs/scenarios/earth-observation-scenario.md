@@ -186,61 +186,50 @@ fun main() = runBlocking {
     val providerKeyId = providerDoc.verificationMethod.first().id.substringAfter("#")
     println("✅ Data Provider DID: ${providerDid.value}")
 
-    // Step 3: Create EO dataset artifacts and compute digests inline
-    val metadataDigest = DigestUtils.sha256DigestMultibase(buildJsonObject {
-        put("id", "metadata-1")
-        put("title", "Sentinel-2 L2A Dataset")
-        put("description", "Atmospherically corrected Sentinel-2 Level 2A product")
-        put("spatialCoverage", buildJsonObject {
-            put("type", "Polygon")
-            put("coordinates", "[-122.5,37.8],[-122.3,37.8],[-122.3,37.9],[-122.5,37.9],[-122.5,37.8]")
-        })
-        put("temporalCoverage", buildJsonObject {
-            put("startDate", "2023-06-15T00:00:00Z")
-            put("endDate", "2023-06-15T23:59:59Z")
-        })
-    })
-    println("✅ Metadata artifact created: $metadataDigest")
-
-    val provenanceDigest = DigestUtils.sha256DigestMultibase(buildJsonObject {
-        put("id", "provenance-1")
-        put("activity", "EO Data Collection")
-        put("agent", providerDid.value)
-        put("startedAtTime", Clock.System.now().toString())
-        put("endedAtTime", Clock.System.now().toString())
-    })
-    println("✅ Provenance artifact created: $provenanceDigest")
-
-    val qualityDigest = DigestUtils.sha256DigestMultibase(buildJsonObject {
-        put("id", "quality-1")
-        put("qualityScore", 0.95)
-        put("metrics", buildJsonObject {
-            put("completeness", 0.98)
-            put("accuracy", 0.92)
-            put("temporalConsistency", 0.96)
-        })
-    })
-    println("✅ Quality report artifact created: $qualityDigest")
-
-    // Step 4: Create Linkset connecting all artifacts (digest computed inline)
-    val linksetDigest = DigestUtils.sha256DigestMultibase(buildJsonObject {
-        put("id", "linkset-1")
-        put("links", buildJsonObject {
-            put("metadata", buildJsonObject {
-                put("href", "metadata-1"); put("digestMultibase", metadataDigest); put("type", "Metadata")
-            })
-            put("provenance", buildJsonObject {
-                put("href", "provenance-1"); put("digestMultibase", provenanceDigest); put("type", "Provenance")
-            })
-            put("quality", buildJsonObject {
-                put("href", "quality-1"); put("digestMultibase", qualityDigest); put("type", "QualityReport")
-            })
-        })
-    })
-    println("✅ Linkset created: $linksetDigest")
-
-    // Step 5: Issue and anchor credential in one fluent chain
+    // Step 3-5: Create artifacts, compute digests, and issue credential inline
     val credential = tw.issue {
+        // Compute artifact digests inline using run blocks
+        val metadataDigest = DigestUtils.sha256DigestMultibase(buildJsonObject {
+            put("id", "metadata-1")
+            put("title", "Sentinel-2 L2A Dataset")
+            put("description", "Atmospherically corrected Sentinel-2 Level 2A product")
+            put("spatialCoverage", buildJsonObject {
+                put("type", "Polygon")
+                put("coordinates", "[-122.5,37.8],[-122.3,37.8],[-122.3,37.9],[-122.5,37.9],[-122.5,37.8]")
+            })
+            put("temporalCoverage", buildJsonObject {
+                put("startDate", "2023-06-15T00:00:00Z")
+                put("endDate", "2023-06-15T23:59:59Z")
+            })
+        })
+        
+        val provenanceDigest = DigestUtils.sha256DigestMultibase(buildJsonObject {
+            put("id", "provenance-1")
+            put("activity", "EO Data Collection")
+            put("agent", providerDid.value)
+            put("startedAtTime", Clock.System.now().toString())
+            put("endedAtTime", Clock.System.now().toString())
+        })
+        
+        val qualityDigest = DigestUtils.sha256DigestMultibase(buildJsonObject {
+            put("id", "quality-1")
+            put("qualityScore", 0.95)
+            put("metrics", buildJsonObject {
+                put("completeness", 0.98)
+                put("accuracy", 0.92)
+                put("temporalConsistency", 0.96)
+            })
+        })
+        
+        val linksetDigest = DigestUtils.sha256DigestMultibase(buildJsonObject {
+            put("id", "linkset-1")
+            put("links", buildJsonObject {
+                put("metadata", buildJsonObject { put("href", "metadata-1"); put("digestMultibase", metadataDigest); put("type", "Metadata") })
+                put("provenance", buildJsonObject { put("href", "provenance-1"); put("digestMultibase", provenanceDigest); put("type", "Provenance") })
+                put("quality", buildJsonObject { put("href", "quality-1"); put("digestMultibase", qualityDigest); put("type", "QualityReport") })
+            })
+        })
+
         credential {
             type("EarthObservationCredential", "DataIntegrityCredential")
             issuer(providerDid)
@@ -259,8 +248,7 @@ fun main() = runBlocking {
         signedBy(providerDid, providerKeyId)
     }.getOrThrow()
 
-    println("✅ Verifiable Credential issued: ${credential.id}")
-    println("   Linkset digest: $linksetDigest")
+    println("✅ Artifacts created and credential issued: ${credential.id}")
 
     // Step 6: Anchor credential to blockchain using the DSL
     val anchorRef = tw.blockchains.anchor(
@@ -277,12 +265,13 @@ fun main() = runBlocking {
     tw.verify { credential(credential) }.getOrThrow()
     println("\n✅ Credential Verification SUCCESS")
 
-    // Step 8: Display integrity chain summary
-    println("\n🔗 Integrity Chain Verification:")
-    println("   Metadata digest: $metadataDigest")
-    println("   Provenance digest: $provenanceDigest")
-    println("   Quality digest: $qualityDigest")
-    println("   Linkset digest: $linksetDigest")
+    // Step 8: Display integrity chain from credential's embedded digests
+    val dataset = credential.credentialSubject.claims["dataset"]?.jsonObject
+    println("\n🔗 Integrity Chain Verification (from credential):")
+    println("   Metadata digest: ${dataset?.get("metadataDigest")}")
+    println("   Provenance digest: ${dataset?.get("provenanceDigest")}")
+    println("   Quality digest: ${dataset?.get("qualityDigest")}")
+    println("   Linkset digest: ${dataset?.get("linksetDigest")}")
     println("   Credential anchored: ${anchorRef.txHash}")
     println("   ✅ Complete integrity chain verified!")
 
@@ -299,23 +288,18 @@ Earth Observation Data Integrity Scenario - Complete End-to-End Example
 
 ✅ TrustWeave initialized with blockchain anchoring
 ✅ Data Provider DID: did:key:z6Mk...
-✅ Metadata artifact created: u5v...
-✅ Provenance artifact created: u5v...
-✅ Quality report artifact created: u5v...
-✅ Linkset created: u5v...
-✅ Verifiable Credential issued: urn:uuid:...
-   Linkset digest: u5v...
+✅ Artifacts created and credential issued: urn:uuid:...
 ✅ Credential anchored to blockchain
    Chain ID: inmemory:testnet
    Transaction Hash: tx_...
 
 ✅ Credential Verification SUCCESS
 
-🔗 Integrity Chain Verification:
-   Metadata digest: u5v...
-   Provenance digest: u5v...
-   Quality digest: u5v...
-   Linkset digest: u5v...
+🔗 Integrity Chain Verification (from credential):
+   Metadata digest: "u5v..."
+   Provenance digest: "u5v..."
+   Quality digest: "u5v..."
+   Linkset digest: "u5v..."
    Credential anchored: tx_...
    ✅ Complete integrity chain verified!
 
@@ -332,12 +316,12 @@ Earth Observation Data Integrity Scenario - Complete End-to-End Example
 **What this demonstrates:**
 - ✅ Complete data provider → integrity chain → blockchain workflow
 - ✅ DID creation using fluent `getOrThrow()` extensions
-- ✅ Inline artifact creation with cryptographic digests
-- ✅ Linkset creation for artifact linking
-- ✅ Verifiable Credential issuance using the DSL
+- ✅ **All artifact digests computed inline within credential issuance**
+- ✅ Linkset creation linking all artifacts together
+- ✅ Single `issue { }` block handles everything
 - ✅ Blockchain anchoring via `blockchains.anchor()` API
 - ✅ Verification with `getOrThrow()` for concise error handling
-- ✅ Zero intermediate variables where possible
+- ✅ Digests extracted from credential for display
 
 ## Step 3: Step-by-Step Breakdown
 

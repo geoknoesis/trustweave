@@ -276,9 +276,9 @@ class TrustWeaveContext(
      * 
      * This operation uses the configured dispatcher for I/O-bound work.
      */
-    suspend fun revoke(block: com.trustweave.trust.dsl.credential.RevocationBuilder.() -> Unit): Boolean {
+    suspend fun revoke(block: RevocationBuilder.() -> Unit): Boolean {
         val revocationManager = getRevocationManager()
-        val builder = com.trustweave.trust.dsl.credential.RevocationBuilder(revocationManager)
+        val builder = RevocationBuilder(revocationManager)
         builder.block()
         return withContext(config.ioDispatcher) {
             builder.revoke()

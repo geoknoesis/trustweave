@@ -55,7 +55,7 @@ class WalletBuilder(
     /**
      * Set wallet holder DID.
      */
-    fun holder(did: com.trustweave.did.identifiers.Did) {
+    fun holder(did: Did) {
         this.holderDid = did.value
     }
 

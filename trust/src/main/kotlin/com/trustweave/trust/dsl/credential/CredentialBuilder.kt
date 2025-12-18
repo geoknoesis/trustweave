@@ -7,6 +7,7 @@ import com.trustweave.credential.model.vc.RefreshService
 import com.trustweave.credential.model.vc.TermsOfUse
 import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.vc.Issuer
 import com.trustweave.credential.model.SchemaFormat
 import com.trustweave.credential.model.CredentialType
 import com.trustweave.credential.model.StatusPurpose
@@ -14,6 +15,7 @@ import com.trustweave.credential.identifiers.CredentialId
 import com.trustweave.credential.identifiers.SchemaId
 import com.trustweave.credential.identifiers.StatusListId
 import com.trustweave.core.identifiers.Iri
+import com.trustweave.credential.model.vc.SubjectBuilder as VcSubjectBuilder
 import com.trustweave.did.identifiers.Did
 import kotlinx.serialization.json.*
 import kotlinx.datetime.Instant
@@ -58,7 +60,7 @@ class CredentialBuilder {
     private var id: String? = null
     private val types = mutableListOf<String>()
     private var issuer: String? = null
-    private var subjectBuilder: com.trustweave.credential.model.vc.SubjectBuilder? = null
+    private var subjectBuilder: VcSubjectBuilder? = null
     private var issuanceDate: Instant? = null
     private var expirationDate: Instant? = null
     private var credentialStatus: CredentialStatus? = null
@@ -127,8 +129,8 @@ class CredentialBuilder {
     /**
      * Configure credential subject.
      */
-    fun subject(block: com.trustweave.credential.model.vc.SubjectBuilder.() -> Unit) {
-        val builder = com.trustweave.credential.model.vc.SubjectBuilder()
+    fun subject(block: VcSubjectBuilder.() -> Unit) {
+        val builder = VcSubjectBuilder()
         builder.block()
         subjectBuilder = builder
     }
@@ -136,8 +138,8 @@ class CredentialBuilder {
     /**
      * Configure credential subject with DID.
      */
-    fun subject(did: com.trustweave.did.identifiers.Did, block: com.trustweave.credential.model.vc.SubjectBuilder.() -> Unit = {}) {
-        val builder = com.trustweave.credential.model.vc.SubjectBuilder(did)
+    fun subject(did: Did, block: VcSubjectBuilder.() -> Unit = {}) {
+        val builder = VcSubjectBuilder(did)
         builder.block()
         subjectBuilder = builder
     }
@@ -145,8 +147,8 @@ class CredentialBuilder {
     /**
      * Configure credential subject with IRI string.
      */
-    fun subject(iri: String, block: com.trustweave.credential.model.vc.SubjectBuilder.() -> Unit = {}) {
-        val builder = com.trustweave.credential.model.vc.SubjectBuilder(Iri(iri))
+    fun subject(iri: String, block: VcSubjectBuilder.() -> Unit = {}) {
+        val builder = VcSubjectBuilder(Iri(iri))
         builder.block()
         subjectBuilder = builder
     }
@@ -299,8 +301,8 @@ class CredentialBuilder {
 
         return VerifiableCredential(
             id = id?.let { CredentialId(it) },
-            type = allTypes.map { com.trustweave.credential.model.CredentialType.fromString(it) },
-            issuer = issuer?.let { com.trustweave.credential.model.vc.Issuer.from(it) } 
+            type = allTypes.map { CredentialType.fromString(it) },
+            issuer = issuer?.let { Issuer.from(it) } 
                 ?: throw IllegalStateException(
                     "Issuer is required. Use issuer(did) to specify the credential issuer DID."
                 ),

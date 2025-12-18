@@ -25,8 +25,17 @@ import com.trustweave.trust.types.VerifierIdentity
 import com.trustweave.trust.types.HolderIdentity
 import com.trustweave.trust.types.WalletCreationResult
 import com.trustweave.trust.types.TrustPath
-import kotlinx.datetime.Clock
+import com.trustweave.anchor.services.BlockchainAnchorClientFactory
+import com.trustweave.did.services.DidMethodFactory
+import com.trustweave.kms.services.KmsFactory
+import com.trustweave.revocation.services.StatusListRegistryFactory
+import com.trustweave.trust.dsl.credential.RevocationBuilder
+import com.trustweave.trust.services.TrustRegistryFactory
+import com.trustweave.wallet.services.WalletFactory
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withTimeout
+import kotlinx.datetime.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -497,7 +506,7 @@ class TrustWeave private constructor(
      */
     suspend fun revoke(
         timeout: Duration = 10.seconds,
-        block: com.trustweave.trust.dsl.credential.RevocationBuilder.() -> Unit
+        block: RevocationBuilder.() -> Unit
     ): Boolean {
         return withTimeout(timeout) {
             context.revoke(block)
@@ -541,13 +550,13 @@ class TrustWeave private constructor(
          * @return A configured TrustWeave instance with in-memory providers
          */
         suspend fun inMemory(
-            dispatcher: kotlinx.coroutines.CoroutineDispatcher = kotlinx.coroutines.Dispatchers.IO,
-            kmsFactory: com.trustweave.kms.services.KmsFactory,
-            didMethodFactory: com.trustweave.did.services.DidMethodFactory,
-            anchorClientFactory: com.trustweave.anchor.services.BlockchainAnchorClientFactory? = null,
-            statusListRegistryFactory: com.trustweave.revocation.services.StatusListRegistryFactory? = null,
-            trustRegistryFactory: com.trustweave.trust.services.TrustRegistryFactory? = null,
-            walletFactory: com.trustweave.wallet.services.WalletFactory? = null
+            dispatcher: CoroutineDispatcher = Dispatchers.IO,
+            kmsFactory: KmsFactory,
+            didMethodFactory: DidMethodFactory,
+            anchorClientFactory: BlockchainAnchorClientFactory? = null,
+            statusListRegistryFactory: StatusListRegistryFactory? = null,
+            trustRegistryFactory: TrustRegistryFactory? = null,
+            walletFactory: WalletFactory? = null
         ): TrustWeave {
             return build {
                 dispatcher(dispatcher)

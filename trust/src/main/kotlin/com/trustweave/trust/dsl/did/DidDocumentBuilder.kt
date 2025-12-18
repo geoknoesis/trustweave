@@ -5,6 +5,7 @@ import com.trustweave.did.DidMethod
 import com.trustweave.did.model.DidService
 import com.trustweave.did.model.VerificationMethod
 import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -179,7 +180,7 @@ class DidDocumentBuilder(
         // Create new verification method objects
         val newVmObjects = newVerificationMethods.map { vmData ->
             VerificationMethod(
-                id = com.trustweave.did.identifiers.VerificationMethodId.parse(vmData.id, targetDid),
+                id = VerificationMethodId.parse(vmData.id, targetDid),
                 type = vmData.type,
                 controller = Did(vmData.controller),
                 publicKeyJwk = vmData.publicKeyJwk,

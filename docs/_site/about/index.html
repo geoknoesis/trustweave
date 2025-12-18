@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About TrustWeave - Explained Simply</title>
+    <meta name="description" content="Learn what TrustWeave is in simple terms. A helper robot that checks if things are real and who people say they are.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary: #7c3aed;
+            --accent: #10b981;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --bg: #ffffff;
+            --bg-light: #f9fafb;
+            --border: #e5e7eb;
+            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
+            padding: 1rem 0;
+            pointer-events: auto;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .logo img {
+            height: 80px;
+            width: auto;
+            transition: opacity 0.3s;
+        }
+
+        .logo:hover img {
+            opacity: 0.8;
+        }
+
+        .logo:hover {
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            transition: color 0.3s;
+            padding: 0.5rem 1rem;
+            pointer-events: auto;
+            position: relative;
+            z-index: 1001;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .github-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 0.5rem;
+            transition: all 0.3s;
+            padding: 0.5rem;
+        }
+
+        .github-icon:hover {
+            background: var(--bg-light);
+            transform: translateY(-2px);
+        }
+
+        .github-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* Hero Section */
+        .hero {
+            margin-top: 80px;
+            padding: 6rem 2rem;
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            text-align: center;
+        }
+
+        .hero-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-light);
+            margin-bottom: 2.5rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Section Styles */
+        .section {
+            padding: 6rem 2rem;
+        }
+
+        .section-alt {
+            background: var(--bg-light);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--text);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .footer-text {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.875rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.25rem;
+            }
+
+            .nav-links {
+                gap: 0.5rem;
+                font-size: 0.9rem;
+            }
+
+            .nav-links a {
+                padding: 0.25rem 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <a href="/trustweave/" class="logo">
+                <img src="http://0.0.0.0:4000/trustweave/assets/images/trustweave-logo.jpg" alt="TrustWeave Logo">
+            </a>
+            <div class="nav-links">
+                <a href="/trustweave/">Home</a>
+                <a href="/trustweave/#features">Features</a>
+                <a href="/trustweave/use-scenarios/">Use Scenarios</a>
+                <a href="/trustweave/partnership/">Partners</a>
+                <a href="/trustweave/about/" style="color: var(--primary);">About</a>
+                <a href="https://github.com/geoknoesis/TrustWeave" target="_blank" class="github-icon" title="GitHub">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <h1>TrustWeave Explained Simply</h1>
+            <p>Sometimes the best way to understand something is to explain it like you're talking to a 5-year-old</p>
+        </div>
+    </section>
+
+    <!-- Simple Explanation Section -->
+    <section class="section">
+        <div class="container">
+            <div style="max-width: 900px; margin: 0 auto; text-align: center;">
+                <div style="background: white; border-radius: 1.5rem; padding: 3rem; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); text-align: left; max-width: 800px; margin: 0 auto;">
+                    <div style="font-size: 3rem; text-align: center; margin-bottom: 1.5rem;">🤖</div>
+
+                    <p style="font-size: 1.25rem; color: var(--text); margin-bottom: 2rem; line-height: 1.8; text-align: center; font-weight: 600;">
+                        <strong>TrustWeave is like a helper robot that checks if things are real and who people say they are.</strong>
+                    </p>
+
+                    <div style="margin-top: 2.5rem;">
+                        <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--primary); display: flex; align-items: center; gap: 0.75rem;">
+                            <span style="font-size: 1.75rem;">✨</span>
+                            What it does:
+                        </h3>
+
+                        <div style="display: grid; gap: 1.5rem;">
+                            <div style="display: flex; gap: 1rem; align-items: start;">
+                                <div style="font-size: 1.5rem; flex-shrink: 0;">📜</div>
+                                <div>
+                                    <strong style="color: var(--text); font-size: 1.125rem;">Makes digital report cards and ID cards</strong>
+                                    <p style="color: var(--text-light); margin-top: 0.5rem; line-height: 1.6;">
+                                        Like a report card that proves you finished school, or an ID that proves who you are. These are special digital cards that are hard to fake!
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 1rem; align-items: start;">
+                                <div style="font-size: 1.5rem; flex-shrink: 0;">🔍</div>
+                                <div>
+                                    <strong style="color: var(--text); font-size: 1.125rem;">Checks if things are real</strong>
+                                    <p style="color: var(--text-light); margin-top: 0.5rem; line-height: 1.6;">
+                                        Like a robot that looks at a card and says "Yes, this is real!" or "No, this is fake!"
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 1rem; align-items: start;">
+                                <div style="font-size: 1.5rem; flex-shrink: 0;">🧩</div>
+                                <div>
+                                    <strong style="color: var(--text); font-size: 1.125rem;">Works with different toys</strong>
+                                    <p style="color: var(--text-light); margin-top: 0.5rem; line-height: 1.6;">
+                                        Like a toy that can use different batteries. It doesn't care which system you use - it works with many!
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 1rem; align-items: start;">
+                                <div style="font-size: 1.5rem; flex-shrink: 0;">📝</div>
+                                <div>
+                                    <strong style="color: var(--text); font-size: 1.125rem;">Writes things in a special notebook that can't be erased</strong>
+                                    <p style="color: var(--text-light); margin-top: 0.5rem; line-height: 1.6;">
+                                        Like writing in a magic notebook that saves what you wrote forever. This helps prove something happened and can't be changed later!
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 3rem; padding-top: 2rem; border-top: 2px solid var(--border);">
+                        <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--primary); display: flex; align-items: center; gap: 0.75rem;">
+                            <span style="font-size: 1.75rem;">💡</span>
+                            Why it's useful:
+                        </h3>
+                        <ul style="list-style: none; padding: 0; display: grid; gap: 1rem;">
+                            <li style="display: flex; align-items: start; gap: 0.75rem; color: var(--text-light); line-height: 1.6;">
+                                <span style="color: var(--accent); font-weight: bold; font-size: 1.25rem; flex-shrink: 0;">✓</span>
+                                <span><strong style="color: var(--text);">Proves you are you</strong> without needing one big boss to check everything</span>
+                            </li>
+                            <li style="display: flex; align-items: start; gap: 0.75rem; color: var(--text-light); line-height: 1.6;">
+                                <span style="color: var(--accent); font-weight: bold; font-size: 1.25rem; flex-shrink: 0;">✓</span>
+                                <span><strong style="color: var(--text);">Keeps your information safe</strong> so only you control it</span>
+                            </li>
+                            <li style="display: flex; align-items: start; gap: 0.75rem; color: var(--text-light); line-height: 1.6;">
+                                <span style="color: var(--accent); font-weight: bold; font-size: 1.25rem; flex-shrink: 0;">✓</span>
+                                <span><strong style="color: var(--text);">Works everywhere</strong> like a universal helper that fits different places</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div style="margin-top: 2.5rem; padding: 1.5rem; background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%); border-radius: 1rem; text-align: center;">
+                        <p style="font-size: 1.125rem; color: var(--text); font-style: italic; margin: 0; line-height: 1.6;">
+                            <strong>In simple words:</strong> TrustWeave is a helper that makes sure people and things are real, and it works with lots of different systems - like a universal helper robot! 🤖✨
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="/trustweave/">Home</a>
+                <a href="/trustweave/partnership/">Partners</a>
+                <a href="/trustweave/about/">About</a>
+                <a href="https://github.com/geoknoesis/TrustWeave" target="_blank">GitHub</a>
+                <a href="/trustweave/getting-started/README/">Documentation</a>
+                <a href="https://github.com/geoknoesis/TrustWeave/blob/main/LICENSE" target="_blank">License</a>
+                <a href="https://www.geoknoesis.com" target="_blank">Geoknoesis LLC</a>
+            </div>
+            <p class="footer-text">Made with ❤️ by Geoknoesis LLC</p>
+        </div>
+    </footer>
+</body>
+</html>
+

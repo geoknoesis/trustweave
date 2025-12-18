@@ -9,8 +9,9 @@ import com.trustweave.trust.types.VerificationResult
 import com.trustweave.trust.types.DidCreationResult
 import com.trustweave.credential.results.IssuanceResult
 import com.trustweave.did.model.DidDocument
-import com.trustweave.trust.dsl.credential.registerSchema
-import com.trustweave.trust.dsl.credential.schema
+import com.trustweave.credential.schema.SchemaRegistrationResult
+import com.trustweave.trust.dsl.credential.*
+import com.trustweave.trust.dsl.did.DidDocumentBuilder
 
 /**
  * Stored Credential type alias.
@@ -222,46 +223,46 @@ suspend fun TrustWeaveConfig.createDid(block: DidBuilder.() -> Unit): DidCreatio
     return getDslContext().createDid(block)
 }
 
-suspend fun TrustWeaveConfig.updateDid(block: com.trustweave.trust.dsl.did.DidDocumentBuilder.() -> Unit): com.trustweave.did.model.DidDocument {
+suspend fun TrustWeaveConfig.updateDid(block: DidDocumentBuilder.() -> Unit): DidDocument {
     return getDslContext().updateDid(block)
 }
 
-suspend fun TrustWeaveConfig.rotateKey(block: com.trustweave.trust.dsl.KeyRotationBuilder.() -> Unit): com.trustweave.did.model.DidDocument {
+suspend fun TrustWeaveConfig.rotateKey(block: KeyRotationBuilder.() -> Unit): DidDocument {
     return getDslContext().rotateKey(block)
 }
 
-suspend fun TrustWeaveConfig.verify(block: com.trustweave.trust.dsl.credential.VerificationBuilder.() -> Unit): com.trustweave.trust.types.VerificationResult {
+suspend fun TrustWeaveConfig.verify(block: VerificationBuilder.() -> Unit): VerificationResult {
     return getDslContext().verify(block)
 }
 
-suspend fun TrustWeaveConfig.issue(block: com.trustweave.trust.dsl.credential.IssuanceBuilder.() -> Unit): IssuanceResult {
+suspend fun TrustWeaveConfig.issue(block: IssuanceBuilder.() -> Unit): IssuanceResult {
     return getDslContext().issue(block)
 }
 
-suspend fun TrustWeaveConfig.registerSchema(block: com.trustweave.trust.dsl.credential.SchemaBuilder.() -> Unit): com.trustweave.credential.schema.SchemaRegistrationResult {
+suspend fun TrustWeaveConfig.registerSchema(block: SchemaBuilder.() -> Unit): SchemaRegistrationResult {
     val context = getDslContext()
     return with(context) { registerSchema(block) }
 }
 
-fun TrustWeaveConfig.schema(schemaId: String? = null, block: com.trustweave.trust.dsl.credential.SchemaBuilder.() -> Unit = {}): com.trustweave.trust.dsl.credential.SchemaBuilder {
+fun TrustWeaveConfig.schema(schemaId: String? = null, block: SchemaBuilder.() -> Unit = {}): SchemaBuilder {
     val context = getDslContext()
     return with(context) { schema(schemaId, block) }
 }
 
-fun TrustWeaveConfig.revocation(block: com.trustweave.trust.dsl.credential.RevocationBuilder.() -> Unit): com.trustweave.trust.dsl.credential.RevocationBuilder {
+fun TrustWeaveConfig.revocation(block: RevocationBuilder.() -> Unit): RevocationBuilder {
     val context = getDslContext()
     // TrustWeaveContext implements CredentialDslProvider, so we can use it directly
     // Create RevocationBuilder directly to avoid recursion with extension function
-    val provider = context as com.trustweave.trust.dsl.credential.CredentialDslProvider
-    return com.trustweave.trust.dsl.credential.RevocationBuilder(provider.getRevocationManager()).apply(block)
+    val provider = context as CredentialDslProvider
+    return RevocationBuilder(provider.getRevocationManager()).apply(block)
 }
 
-suspend fun TrustWeaveConfig.revoke(block: com.trustweave.trust.dsl.credential.RevocationBuilder.() -> Unit): Boolean {
+suspend fun TrustWeaveConfig.revoke(block: RevocationBuilder.() -> Unit): Boolean {
     val context = getDslContext()
     // TrustWeaveContext implements CredentialDslProvider, so we can use it directly
     // Create RevocationBuilder directly to avoid recursion with extension function
-    val provider = context as com.trustweave.trust.dsl.credential.CredentialDslProvider
-    val builder = com.trustweave.trust.dsl.credential.RevocationBuilder(provider.getRevocationManager())
+    val provider = context as CredentialDslProvider
+    val builder = RevocationBuilder(provider.getRevocationManager())
     builder.block()
     return builder.revoke()
 }

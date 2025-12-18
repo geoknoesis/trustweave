@@ -1,0 +1,1830 @@
+
+
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-default.css">
+
+  <link rel="stylesheet" href="/trustweave/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
+
+  <style id="jtd-nav-activation">
+  
+    .site-nav ul li a {
+      background-image: none;
+    }
+
+  </style>
+
+  
+
+  
+    <script src="/trustweave/assets/js/vendor/lunr.min.js"></script>
+  
+
+  <script src="/trustweave/assets/js/just-the-docs.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+
+
+
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Parametric Insurance with Earth Observation Data | TrustWeave Developer Documentation</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Parametric Insurance with Earth Observation Data" />
+<meta name="author" content="GeoKnoesis" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<meta property="og:description" content="Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin" />
+<link rel="canonical" href="http://0.0.0.0:4000/trustweave/scenarios/parametric-insurance-eo-scenario/" />
+<meta property="og:url" content="http://0.0.0.0:4000/trustweave/scenarios/parametric-insurance-eo-scenario/" />
+<meta property="og:site_name" content="TrustWeave Developer Documentation" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Parametric Insurance with Earth Observation Data" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"GeoKnoesis"},"description":"Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin","headline":"Parametric Insurance with Earth Observation Data","url":"http://0.0.0.0:4000/trustweave/scenarios/parametric-insurance-eo-scenario/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+  <!-- Main Navigation Styles - Consistent across all pages -->
+<style>
+  :root {
+    --primary: #2563eb;
+    --primary-dark: #1e40af;
+    --secondary: #7c3aed;
+    --accent: #10b981;
+    --text: #1f2937;
+    --text-light: #6b7280;
+    --bg: #ffffff;
+    --bg-light: #f9fafb;
+    --border: #e5e7eb;
+    --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .main-nav {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    z-index: 1000;
+    padding: 0.5rem 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  }
+
+  .main-nav .nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .main-nav .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    transition: opacity 0.3s;
+  }
+
+  .main-nav .logo-img {
+    height: 120px;
+    width: auto;
+    transition: opacity 0.3s;
+    display: block;
+  }
+
+  .main-nav .logo-img:not([src]),
+  .main-nav .logo-img[src=""],
+  .main-nav .logo-img[src*="undefined"] {
+    display: none;
+  }
+
+
+  .main-nav .logo:hover {
+    opacity: 0.8;
+  }
+
+  .main-nav .logo:hover .logo-img {
+    opacity: 0.8;
+  }
+
+  .main-nav .nav-links {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+  }
+
+  .main-nav .nav-links .nav-link {
+    text-decoration: none;
+    color: var(--text);
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 0.5rem 0;
+    transition: color 0.3s;
+    position: relative;
+    white-space: nowrap;
+  }
+
+  .main-nav .nav-links .nav-link:hover {
+    color: var(--primary);
+  }
+
+  .main-nav .nav-links .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--primary);
+    transition: width 0.3s ease;
+  }
+
+  .main-nav .nav-links .nav-link:hover::after,
+  .main-nav .nav-links .nav-link.active::after {
+    width: 100%;
+  }
+
+  .main-nav .nav-links .nav-link.active {
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  /* GitHub icon button */
+  .main-nav .nav-links .github-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 0.5rem;
+    transition: all 0.3s;
+    padding: 0.5rem;
+    color: var(--text);
+    text-decoration: none;
+    margin-left: 0.5rem;
+  }
+
+  .main-nav .nav-links .github-icon:hover {
+    background: var(--bg-light);
+    transform: translateY(-2px);
+    color: var(--primary);
+  }
+
+  .main-nav .nav-links .github-icon svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* Mobile menu toggle */
+  .menu-toggle {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+    gap: 5px;
+    padding: 0.5rem;
+    z-index: 1001;
+  }
+
+  .menu-toggle span {
+    width: 25px;
+    height: 3px;
+    background: var(--text);
+    transition: all 0.3s;
+    border-radius: 2px;
+  }
+
+  .menu-toggle.active span:nth-child(1) {
+    transform: rotate(45deg) translate(8px, 8px);
+  }
+
+  .menu-toggle.active span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .menu-toggle.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -7px);
+  }
+
+  /* Footer styles */
+  .site-footer {
+    background: var(--text);
+    color: white;
+    padding: 3rem 2rem;
+    text-align: center;
+    margin-top: 4rem;
+  }
+
+  .site-footer .footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .site-footer .footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .site-footer .footer-links a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+
+  .site-footer .footer-links a:hover {
+    color: white;
+  }
+
+  .site-footer .footer-text {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.875rem;
+  }
+
+  /* Adjust content for fixed nav */
+  body {
+    padding-top: 160px;
+  }
+
+  /* Just the Docs theme adjustments */
+  .site-header {
+    margin-top: 0 !important;
+  }
+
+  /* Mobile responsive */
+  @media (max-width: 968px) {
+    .menu-toggle {
+      display: flex;
+    }
+
+    .main-nav .nav-links {
+      position: fixed;
+      top: 160px;
+      left: 0;
+      right: 0;
+      background: white;
+      flex-direction: column;
+      padding: 2rem;
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transform: translateY(-100%);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      gap: 1.5rem;
+      align-items: flex-start;
+      max-height: calc(100vh - 160px);
+      overflow-y: auto;
+    }
+
+    .main-nav .nav-links.active {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .main-nav .nav-links .nav-link {
+      width: 100%;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .main-nav .nav-links .nav-link::after {
+      display: none;
+    }
+
+    .main-nav .nav-links .github-icon {
+      width: 100%;
+      justify-content: flex-start;
+      margin-left: 0;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .main-nav .logo-img {
+      height: 120px;
+    }
+
+    .site-footer .footer-links {
+      flex-direction: column;
+      gap: 1rem;
+    }
+  }
+
+  /* Tablet adjustments */
+  @media (max-width: 968px) and (min-width: 769px) {
+    .main-nav .nav-links {
+      gap: 1rem;
+    }
+
+    .main-nav .nav-links .nav-link {
+      font-size: 0.9rem;
+    }
+  }
+</style>
+
+<style>
+  body { padding-top: 160px !important; }
+  .main-nav { z-index: 1000; position: fixed; top: 0; width: 100%; }
+  #header-template { display: none; }
+
+  /* Ensure footer spans full width and breaks out of containers */
+  .site-footer {
+    position: relative !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+    margin-right: calc(-50vw + 50%) !important;
+    left: 0 !important;
+    right: 0 !important;
+    clear: both !important;
+    z-index: 100 !important;
+    box-sizing: border-box !important;
+  }
+</style>
+<!-- Hidden template for header injection -->
+<div id="header-template" style="display: none;">
+  <!-- Site Header - Consistent across all pages -->
+<nav class="main-nav">
+    <div class="nav-container">
+        <a href="/trustweave/" class="logo">
+            <img src="http://0.0.0.0:4000/trustweave/assets/images/trustweave-logo.jpg" alt="TrustWeave Logo" class="logo-img">
+        </a>
+        <div class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div class="nav-links" id="navLinks">
+            <a href="/trustweave/" class="nav-link">Home</a>
+            <a href="/trustweave/#features" class="nav-link">Features</a>
+            <a href="/trustweave/use-scenarios/" class="nav-link">Use Scenarios</a>
+            <a href="/trustweave/getting-started/README/" class="nav-link">Docs</a>
+            <a href="/trustweave/partnership/" class="nav-link">Partners</a>
+            <a href="/trustweave/about/" class="nav-link">About</a>
+            <a href="https://github.com/geoknoesis/TrustWeave" target="_blank" rel="noopener noreferrer" class="github-icon" title="View on GitHub" aria-label="GitHub Repository">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+</nav>
+<script>
+    // Mobile menu toggle and active page highlighting
+    (function() {
+        const menuToggle = document.getElementById('menuToggle');
+        const navLinks = document.getElementById('navLinks');
+
+        // Mobile menu toggle
+        if (menuToggle && navLinks) {
+            menuToggle.addEventListener('click', () => {
+                navLinks.classList.toggle('active');
+                menuToggle.classList.toggle('active');
+            });
+
+            // Close menu when clicking on a link
+            document.querySelectorAll('.nav-links a').forEach(link => {
+                link.addEventListener('click', () => {
+                    navLinks.classList.remove('active');
+                    menuToggle.classList.remove('active');
+                });
+            });
+
+            // Close menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
+                    navLinks.classList.remove('active');
+                    menuToggle.classList.remove('active');
+                }
+            });
+        }
+
+        // Highlight active page
+        const currentPath = window.location.pathname;
+        const navLinksList = document.querySelectorAll('.nav-links .nav-link');
+
+        navLinksList.forEach(link => {
+            try {
+                const linkUrl = new URL(link.href, window.location.origin);
+                const linkPath = linkUrl.pathname;
+                const baseUrl = '/trustweave' || '';
+
+                // Normalize paths
+                let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
+                let cleanLinkPath = linkPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
+
+                // Handle index pages
+                if (cleanCurrentPath === '' || cleanCurrentPath === '/index.html') cleanCurrentPath = '/';
+                if (cleanLinkPath === '' || cleanLinkPath === '/index.html') cleanLinkPath = '/';
+
+                // Check if current path matches link path
+                if (cleanCurrentPath === cleanLinkPath) {
+                    link.classList.add('active');
+                } else if (cleanLinkPath !== '/' && cleanCurrentPath.startsWith(cleanLinkPath + '/')) {
+                    // Handle sub-pages (e.g., /introduction/ matches /introduction/README/)
+                    link.classList.add('active');
+                }
+            } catch (e) {
+                // Fallback for relative URLs or errors
+                const href = link.getAttribute('href');
+                if (href && (currentPath.includes(href) || (href === '/' && currentPath.endsWith('index.html')))) {
+                    link.classList.add('active');
+                }
+            }
+        });
+    })();
+</script>
+
+
+</div>
+<script>
+  // Move header from template to body top
+  document.addEventListener('DOMContentLoaded', function() {
+    const template = document.getElementById('header-template');
+    if (template) {
+      const header = template.querySelector('.main-nav');
+      if (header) {
+        document.body.insertBefore(header, document.body.firstChild);
+        template.remove();
+      }
+    }
+  });
+</script>
+
+
+</head>
+
+<body>
+  <a class="skip-to-main" href="#main-content">Skip to main content</a>
+  <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="svg-link" viewBox="0 0 24 24">
+  <title>Link</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+  </svg>
+</symbol>
+
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+  <title>Menu</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
+    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+  </svg>
+</symbol>
+
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+  <title>Expand</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+    <polyline points="9 18 15 12 9 6"></polyline>
+  </svg>
+</symbol>
+
+  <!-- Feather. MIT License: https://github.com/feathericons/feather/blob/master/LICENSE -->
+<symbol id="svg-external-link" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link">
+  <title id="svg-external-link-title">(external link)</title>
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
+</symbol>
+
+  
+    <symbol id="svg-doc" viewBox="0 0 24 24">
+  <title>Document</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
+    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>
+  </svg>
+</symbol>
+
+    <symbol id="svg-search" viewBox="0 0 24 24">
+  <title>Search</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search">
+    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+</symbol>
+
+  
+  
+    <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
+<symbol id="svg-copy" viewBox="0 0 16 16">
+  <title>Copy</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+  </svg>
+</symbol>
+<symbol id="svg-copied" viewBox="0 0 16 16">
+  <title>Copied</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewBox="0 0 16 16">
+    <path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"/>
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"/>
+  </svg>
+</symbol>
+
+  
+</svg>
+
+  
+    <div class="side-bar">
+  <div class="site-header" role="banner">
+    <a href="/trustweave/" class="site-title lh-tight">
+  TrustWeave Developer Documentation
+
+</a>
+    <button id="menu-button" class="site-button btn-reset" aria-label="Toggle menu" aria-pressed="false">
+      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg>
+    </button>
+  </div>
+
+  <nav aria-label="Main" id="site-nav" class="site-nav">
+  
+  
+    <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Introduction category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/introduction/README/" class="nav-list-link">Introduction</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/introduction/what-is-trustweave/" class="nav-list-link">What is TrustWeave?</a></li><li class="nav-list-item"><a href="/trustweave/introduction/executive-overview/" class="nav-list-link">Executive Overview: TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/introduction/key-features/" class="nav-list-link">Key Features</a></li><li class="nav-list-item"><a href="/trustweave/introduction/use-cases/" class="nav-list-link">Use Cases</a></li><li class="nav-list-item"><a href="/trustweave/introduction/architecture-overview/" class="nav-list-link">Architecture Overview</a></li><li class="nav-list-item"><a href="/trustweave/introduction/mental-model/" class="nav-list-link">TrustWeave Mental Model</a></li><li class="nav-list-item"><a href="/trustweave/introduction/web-of-trust/" class="nav-list-link">The Web of Trust: Foundation for Decentralized Trust</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Getting Started category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/getting-started/README/" class="nav-list-link">Getting Started</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/getting-started/installation/" class="nav-list-link">Installation</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/quick-start/" class="nav-list-link">Quick Start</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/your-first-application/" class="nav-list-link">Your First Application</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/project-setup/" class="nav-list-link">Project Setup</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/ide-setup/" class="nav-list-link">IDE Setup Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/common-patterns/" class="nav-list-link">Common Patterns</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/api-patterns/" class="nav-list-link">API Patterns and Best Practices</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/workflows/" class="nav-list-link">Common Workflows</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/dsl-guide/" class="nav-list-link">TrustWeave DSL Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/troubleshooting/" class="nav-list-link">Troubleshooting Guide</a></li><li class="nav-list-item"><a href="/trustweave/getting-started/production-deployment/" class="nav-list-link">Production Deployment Guide</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/tutorials/README/" class="nav-list-link">Tutorials</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in How-To Guides category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/how-to/README/" class="nav-list-link">How-To Guides</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/how-to/use-trustweave-facade/" class="nav-list-link">Use TrustWeave Facade for Quick Setup</a></li><li class="nav-list-item"><a href="/trustweave/how-to/configure-trustlayer/" class="nav-list-link">Configure TrustWeave</a></li><li class="nav-list-item"><a href="/trustweave/how-to/create-dids/" class="nav-list-link">Create and Manage DIDs</a></li><li class="nav-list-item"><a href="/trustweave/how-to/issue-credentials/" class="nav-list-link">Issue Credentials</a></li><li class="nav-list-item"><a href="/trustweave/how-to/verify-credentials/" class="nav-list-link">Verify Credentials</a></li><li class="nav-list-item"><a href="/trustweave/how-to/manage-wallets/" class="nav-list-link">Manage Wallets</a></li><li class="nav-list-item"><a href="/trustweave/how-to/blockchain-anchoring/" class="nav-list-link">Anchor to Blockchain</a></li><li class="nav-list-item"><a href="/trustweave/how-to/multi-chain-anchoring/" class="nav-list-link">Multi-Chain Anchoring Patterns</a></li><li class="nav-list-item"><a href="/trustweave/how-to/exchange-credentials/" class="nav-list-link">Exchange Credentials with Multiple Protocols</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Core Concepts category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/core-concepts/README/" class="nav-list-link">Core Concepts</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/core-concepts/dids/" class="nav-list-link">Decentralized Identifiers (DIDs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/verifiable-credentials/" class="nav-list-link">Verifiable Credentials (VCs)</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/wallets/" class="nav-list-link">Wallets</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/blockchain-anchoring/" class="nav-list-link">Blockchain Anchoring</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/smart-contracts/" class="nav-list-link">Smart Contracts</a></li><li class="nav-list-item"><a href="/trustweave/core-concepts/key-management/" class="nav-list-link">Key Management</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in API Reference category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/api-reference/README/" class="nav-list-link">API Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/api-reference/quick-reference/" class="nav-list-link">Quick Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/error-types/" class="nav-list-link">Error Types</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/data-types/" class="nav-list-link">Data Types</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/core-api/" class="nav-list-link">Core API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/wallet-api/" class="nav-list-link">Wallet API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/credential-service-api/" class="nav-list-link">Credential Service API Reference</a></li><li class="nav-list-item"><a href="/trustweave/api-reference/smart-contract-api/" class="nav-list-link">Smart Contract API Reference</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Reference category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/reference/README/" class="nav-list-link">Reference</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/modules/core-modules/" class="nav-list-link">Core Modules</a></li><li class="nav-list-item"><a href="/trustweave/faq/" class="nav-list-link">Frequently Asked Questions</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Advanced Topics category" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/trustweave/advanced/README/" class="nav-list-link">Advanced Topics</a><ul class="nav-list"><li class="nav-list-item"><a href="/trustweave/advanced/error-handling/" class="nav-list-link">Error Handling</a></li></ul></li><li class="nav-list-item"><a href="/trustweave/integrations/README/" class="nav-list-link">Integration Modules</a></li><li class="nav-list-item"><a href="/trustweave/contributing/README/" class="nav-list-link">Contributing to TrustWeave</a></li></ul>
+  
+</nav>
+
+
+
+
+  
+  
+    <footer class="site-footer">
+      This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
+    </footer>
+  
+</div>
+
+  
+  <div class="main" id="top">
+    <div id="main-header" class="main-header">
+  
+    
+
+<div class="search" role="search">
+  <div class="search-input-wrap">
+    <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search TrustWeave Developer Documentation" aria-label="Search TrustWeave Developer Documentation" autocomplete="off">
+    <label for="search-input" class="search-label"><svg viewBox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label>
+  </div>
+  <div id="search-results" class="search-results"></div>
+</div>
+
+  
+  
+  
+</div>
+
+    <div class="main-content-wrap">
+      
+      <div id="main-content" class="main-content">
+        <main>
+          
+            <h1 id="parametric-insurance-with-earth-observation-data">
+  
+  
+    <a href="#parametric-insurance-with-earth-observation-data" class="anchor-heading" aria-labelledby="parametric-insurance-with-earth-observation-data"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Parametric Insurance with Earth Observation Data
+  
+  
+</h1>
+    
+
+<p>This guide demonstrates how to build a parametric insurance system using TrustWeave and Earth Observation (EO) data. You’ll learn how to create verifiable credentials for EO data that trigger insurance payouts, solving the “Oracle Problem” by enabling standardized, multi-provider data ecosystems.</p>
+<h2 id="what-youll-build">
+  
+  
+    <a href="#what-youll-build" class="anchor-heading" aria-labelledby="what-youll-build"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What You’ll Build
+  
+  
+</h2>
+    
+
+<p>By the end of this tutorial, you’ll have:</p>
+
+<ul>
+  <li>✅ Created DIDs for insurance companies and EO data providers</li>
+  <li>✅ Issued verifiable credentials for EO data (rainfall, temperature, spectral analysis)</li>
+  <li>✅ Built a standardized data oracle system using VCs</li>
+  <li>✅ Implemented parametric trigger verification</li>
+  <li>✅ Created multi-provider data acceptance workflows</li>
+  <li>✅ Anchored EO data credentials to blockchain for tamper-proof triggers</li>
+</ul>
+<h2 id="big-picture--significance">
+  
+  
+    <a href="#big-picture--significance" class="anchor-heading" aria-labelledby="big-picture--significance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Big Picture &amp; Significance
+  
+  
+</h2>
+    
+<h3 id="the-parametric-insurance-oracle-problem">
+  
+  
+    <a href="#the-parametric-insurance-oracle-problem" class="anchor-heading" aria-labelledby="the-parametric-insurance-oracle-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Parametric Insurance Oracle Problem
+  
+  
+</h3>
+    
+
+<p>Parametric insurance pays out automatically when specific conditions are met (e.g., rainfall below threshold, temperature above threshold). Currently, insurers rely on proprietary, siloed “Oracles” to trigger smart contracts, creating vendor lock-in and limiting data source options.</p>
+
+<p><strong>Industry Context:</strong></p>
+<ul>
+  <li><strong>Market Size</strong>: Parametric insurance market projected to reach $29.3 billion by 2030</li>
+  <li><strong>Active Players</strong>: Arbol ($500M+ in climate risk coverage), Descartes Underwriting (global corporate insurance)</li>
+  <li><strong>Current Challenge</strong>: Each insurer builds custom API integrations for each data provider</li>
+  <li><strong>The Gap</strong>: No standardized way to accept EO data from multiple certified providers (ESA, Planet, NASA)</li>
+  <li><strong>Trust Issue</strong>: Need cryptographic proof that data used for $50M payout is the exact data that was modeled</li>
+</ul>
+
+<p><strong>Why This Matters:</strong></p>
+<ol>
+  <li><strong>Standardization</strong>: Accept EO data from any certified provider without custom integrations</li>
+  <li><strong>Trust</strong>: Cryptographic proof prevents “replay attacks” and data corruption</li>
+  <li><strong>Multi-Provider</strong>: Enable competition and redundancy in data sources</li>
+  <li><strong>Automation</strong>: Enable automatic payouts based on verifiable EO data</li>
+  <li><strong>Cost Reduction</strong>: Eliminate custom API integrations for each provider</li>
+  <li><strong>Transparency</strong>: Verifiable data lineage for regulatory compliance</li>
+</ol>
+<h3 id="real-world-examples">
+  
+  
+    <a href="#real-world-examples" class="anchor-heading" aria-labelledby="real-world-examples"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Examples
+  
+  
+</h3>
+    
+
+<p><strong>Arbol</strong> - Manages $500M+ in climate risk coverage:</p>
+<ul>
+  <li>Uses parametric triggers (e.g., rainfall data for agriculture)</li>
+  <li>Currently builds custom data pipelines for each provider</li>
+  <li><strong>Solution</strong>: Adopting VC pattern allows accepting data from any certified provider (ESA, Planet, NASA) without custom API integrations</li>
+</ul>
+
+<p><strong>Descartes Underwriting</strong> - Global corporate insurance:</p>
+<ul>
+  <li>Uses spectral analysis for climate risks (hail, flood, wildfire)</li>
+  <li>Underwriting models rely on “spectral fingerprints” of damage</li>
+  <li><strong>Solution</strong>: Wrapping spectral fingerprints in VCs with SRI Integrity ensures data used for $50M payout is the exact same data that was modeled</li>
+</ul>
+<h2 id="value-proposition">
+  
+  
+    <a href="#value-proposition" class="anchor-heading" aria-labelledby="value-proposition"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Value Proposition
+  
+  
+</h2>
+    
+<h3 id="problems-solved">
+  
+  
+    <a href="#problems-solved" class="anchor-heading" aria-labelledby="problems-solved"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Problems Solved
+  
+  
+</h3>
+    
+
+<ol>
+  <li><strong>Oracle Standardization</strong>: Standard format for EO data from any provider</li>
+  <li><strong>Multi-Provider Support</strong>: Accept data from ESA, Planet, NASA, etc. without custom integrations</li>
+  <li><strong>Data Integrity</strong>: Cryptographic proof prevents tampering and replay attacks</li>
+  <li><strong>Automated Triggers</strong>: Enable automatic insurance payouts based on verifiable data</li>
+  <li><strong>Regulatory Compliance</strong>: Verifiable data lineage for audit trails</li>
+  <li><strong>Cost Reduction</strong>: Eliminate custom API integrations</li>
+  <li><strong>Trust</strong>: Build trust in parametric insurance through verifiable data</li>
+</ol>
+<h3 id="business-benefits">
+  
+  
+    <a href="#business-benefits" class="anchor-heading" aria-labelledby="business-benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Business Benefits
+  
+  
+</h3>
+    
+
+<p><strong>For Insurance Companies:</strong></p>
+<ul>
+  <li><strong>Cost Reduction</strong>: No custom integrations needed for each data provider</li>
+  <li><strong>Flexibility</strong>: Switch between data providers easily</li>
+  <li><strong>Trust</strong>: Cryptographic proof of data integrity</li>
+  <li><strong>Compliance</strong>: Automated audit trails</li>
+  <li><strong>Competition</strong>: Enable multiple data providers to compete</li>
+</ul>
+
+<p><strong>For EO Data Providers:</strong></p>
+<ul>
+  <li><strong>Standardization</strong>: One format works for all insurers</li>
+  <li><strong>Market Access</strong>: Reach all insurance companies with standard format</li>
+  <li><strong>Trust</strong>: Build trust through verifiable credentials</li>
+  <li><strong>Differentiation</strong>: Stand out with verifiable data quality</li>
+</ul>
+
+<p><strong>For Policyholders:</strong></p>
+<ul>
+  <li><strong>Transparency</strong>: Verify data used for payouts</li>
+  <li><strong>Fairness</strong>: Standardized data prevents manipulation</li>
+  <li><strong>Speed</strong>: Faster payouts with automated triggers</li>
+  <li><strong>Trust</strong>: Cryptographic proof of data integrity</li>
+</ul>
+<h2 id="understanding-the-problem">
+  
+  
+    <a href="#understanding-the-problem" class="anchor-heading" aria-labelledby="understanding-the-problem"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Understanding the Problem
+  
+  
+</h2>
+    
+
+<p>Parametric insurance needs:</p>
+
+<ol>
+  <li><strong>Standardized Data Format</strong>: Accept EO data from any provider</li>
+  <li><strong>Data Integrity</strong>: Verify data hasn’t been tampered with</li>
+  <li><strong>Multi-Provider Support</strong>: Work with ESA, Planet, NASA, etc.</li>
+  <li><strong>Automated Triggers</strong>: Enable automatic payouts</li>
+  <li><strong>Audit Trails</strong>: Complete data lineage for compliance</li>
+  <li><strong>Trust</strong>: Cryptographic proof of data authenticity</li>
+</ol>
+<h2 id="prerequisites">
+  
+  
+    <a href="#prerequisites" class="anchor-heading" aria-labelledby="prerequisites"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Prerequisites
+  
+  
+</h2>
+    
+
+<ul>
+  <li>Java 21+</li>
+  <li>Kotlin 2.2.0+</li>
+  <li>Gradle 8.5+</li>
+  <li>Basic understanding of Kotlin and coroutines</li>
+  <li>Understanding of parametric insurance concepts</li>
+</ul>
+<h2 id="step-1-add-dependencies">
+  
+  
+    <a href="#step-1-add-dependencies" class="anchor-heading" aria-labelledby="step-1-add-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Add Dependencies
+  
+  
+</h2>
+    
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+</pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
+    <span class="c1">// Core TrustWeave modules</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-all:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+
+    <span class="c1">// Test kit for in-memory implementations</span>
+    <span class="nf">testImplementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+
+    <span class="c1">// Optional: Algorand adapter for real blockchain anchoring</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.chains:algorand:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+
+    <span class="c1">// Kotlinx Serialization</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"</span><span class="p">)</span>
+
+    <span class="c1">// Coroutines</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-2-complete-runnable-example">
+  
+  
+    <a href="#step-2-complete-runnable-example" class="anchor-heading" aria-labelledby="step-2-complete-runnable-example"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 2: Complete Runnable Example
+  
+  
+</h2>
+    
+
+<p>Here’s a complete parametric insurance workflow using EO data credentials:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+</pre></td><td class="rouge-code"><pre><span class="k">package</span> <span class="nn">com.example.parametric.insurance</span>
+
+<span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">com.trustweave.core.*</span>
+<span class="k">import</span> <span class="nn">com.trustweave.json.DigestUtils</span>
+<span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.json.buildJsonObject</span>
+<span class="k">import</span> <span class="nn">kotlinx.serialization.json.put</span>
+<span class="k">import</span> <span class="nn">java.time.Instant</span>
+
+<span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"Parametric Insurance with EO Data - Complete Example"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
+
+    <span class="c1">// Step 1: Create TrustWeave instance</span>
+    <span class="kd">val</span> <span class="py">trustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span>
+        <span class="nf">factories</span><span class="p">(</span>
+            <span class="n">kmsFactory</span> <span class="p">=</span> <span class="nc">TestkitKmsFactory</span><span class="p">(),</span>
+            <span class="n">didMethodFactory</span> <span class="p">=</span> <span class="nc">TestkitDidMethodFactory</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="nf">keys</span> <span class="p">{</span> <span class="nf">provider</span><span class="p">(</span><span class="s">"inMemory"</span><span class="p">);</span> <span class="nf">algorithm</span><span class="p">(</span><span class="s">"Ed25519"</span><span class="p">)</span> <span class="p">}</span>
+        <span class="nf">did</span> <span class="p">{</span> <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span> <span class="p">{</span> <span class="nf">algorithm</span><span class="p">(</span><span class="s">"Ed25519"</span><span class="p">)</span> <span class="p">}</span> <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ TrustWeave initialized"</span><span class="p">)</span>
+
+    <span class="c1">// Step 2: Create DIDs for insurance company and EO data provider</span>
+    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.DidCreationResult</span>
+    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.IssuanceResult</span>
+    
+    <span class="kd">val</span> <span class="py">insuranceDidResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span>
+        <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span>
+        <span class="nf">algorithm</span><span class="p">(</span><span class="s">"Ed25519"</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="kd">val</span> <span class="py">insuranceDid</span> <span class="p">=</span> <span class="k">when</span> <span class="p">(</span><span class="n">insuranceDidResult</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">is</span> <span class="nc">DidCreationResult</span><span class="p">.</span><span class="nc">Success</span> <span class="p">-&gt;</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Created insurance DID: ${insuranceDidResult.did.value}"</span><span class="p">)</span>
+            <span class="n">insuranceDidResult</span><span class="p">.</span><span class="n">did</span>
+        <span class="p">}</span>
+        <span class="k">else</span> <span class="p">-&gt;</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"Failed to create insurance DID: ${insuranceDidResult.reason}"</span><span class="p">)</span>
+            <span class="k">return</span><span class="nd">@runBlocking</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// Continue with EO provider DID creation</span>
+    <span class="kd">val</span> <span class="py">eoProviderDidResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span>
+        <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span>
+        <span class="nf">algorithm</span><span class="p">(</span><span class="s">"Ed25519"</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="kd">val</span> <span class="py">eoProviderDid</span> <span class="p">=</span> <span class="k">when</span> <span class="p">(</span><span class="n">eoProviderDidResult</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">is</span> <span class="nc">DidCreationResult</span><span class="p">.</span><span class="nc">Success</span> <span class="p">-&gt;</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Created EO provider DID: ${eoProviderDidResult.did.value}"</span><span class="p">)</span>
+            <span class="n">eoProviderDidResult</span><span class="p">.</span><span class="n">did</span>
+        <span class="p">}</span>
+        <span class="k">else</span> <span class="p">-&gt;</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"Failed to create EO provider DID: ${eoProviderDidResult.reason}"</span><span class="p">)</span>
+            <span class="k">return</span><span class="nd">@runBlocking</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Insurance Company DID: ${insuranceDid.value}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ EO Data Provider DID: ${eoProviderDid.value}"</span><span class="p">)</span>
+
+    <span class="c1">// Step 3: EO Data Provider issues credential for rainfall data</span>
+    <span class="kd">val</span> <span class="py">eoProviderResolution</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">resolveDid</span><span class="p">(</span><span class="n">eoProviderDid</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">eoProviderDoc</span> <span class="p">=</span> <span class="k">when</span> <span class="p">(</span><span class="n">eoProviderResolution</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">is</span> <span class="nc">DidResolutionResult</span><span class="p">.</span><span class="nc">Success</span> <span class="p">-&gt;</span> <span class="n">eoProviderResolution</span><span class="p">.</span><span class="n">document</span>
+        <span class="k">else</span> <span class="p">-&gt;</span> <span class="k">throw</span> <span class="nc">IllegalStateException</span><span class="p">(</span><span class="s">"Failed to resolve EO provider DID"</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="kd">val</span> <span class="py">eoProviderKeyId</span> <span class="p">=</span> <span class="n">eoProviderDoc</span><span class="p">.</span><span class="n">verificationMethod</span><span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span><span class="o">?.</span><span class="nf">substringAfter</span><span class="p">(</span><span class="s">"#"</span><span class="p">)</span>
+        <span class="o">?:</span> <span class="k">throw</span> <span class="nc">IllegalStateException</span><span class="p">(</span><span class="s">"No verification method found"</span><span class="p">)</span>
+
+    <span class="c1">// Create EO data payload (rainfall measurement)</span>
+    <span class="kd">val</span> <span class="py">rainfallData</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="s">"rainfall-measurement-2024-06-15"</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"type"</span><span class="p">,</span> <span class="s">"RainfallMeasurement"</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"location"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"latitude"</span><span class="p">,</span> <span class="mf">37.7749</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"longitude"</span><span class="p">,</span> <span class="p">-</span><span class="mf">122.4194</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"region"</span><span class="p">,</span> <span class="s">"San Francisco, CA"</span><span class="p">)</span>
+        <span class="p">})</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"measurement"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"value"</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>  <span class="c1">// 0.5 inches of rainfall</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"unit"</span><span class="p">,</span> <span class="s">"inches"</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"timestamp"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"source"</span><span class="p">,</span> <span class="s">"Sentinel-2 L2A"</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"method"</span><span class="p">,</span> <span class="s">"Spectral Analysis"</span><span class="p">)</span>
+        <span class="p">})</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"quality"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"confidence"</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">)</span>
+            <span class="nf">put</span><span class="p">(</span><span class="s">"validationStatus"</span><span class="p">,</span> <span class="s">"validated"</span><span class="p">)</span>
+        <span class="p">})</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Compute digest for data integrity</span>
+    <span class="kd">val</span> <span class="py">dataDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">rainfallData</span><span class="p">)</span>
+
+    <span class="c1">// Issue verifiable credential for EO data</span>
+    <span class="kd">val</span> <span class="py">eoDataIssuanceResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">issue</span> <span class="p">{</span>
+        <span class="nf">credential</span> <span class="p">{</span>
+            <span class="nf">type</span><span class="p">(</span><span class="s">"EarthObservationCredential"</span><span class="p">,</span> <span class="s">"InsuranceOracleCredential"</span><span class="p">)</span>
+            <span class="nf">issuer</span><span class="p">(</span><span class="n">eoProviderDid</span><span class="p">.</span><span class="n">value</span><span class="p">)</span>
+            <span class="nf">subject</span> <span class="p">{</span>
+                <span class="nf">id</span><span class="p">(</span><span class="s">"rainfall-measurement-2024-06-15"</span><span class="p">)</span>
+                <span class="s">"dataType"</span> <span class="n">to</span> <span class="s">"RainfallMeasurement"</span>
+                <span class="s">"data"</span> <span class="n">to</span> <span class="n">rainfallData</span>
+                <span class="s">"dataDigest"</span> <span class="n">to</span> <span class="n">dataDigest</span>
+                <span class="s">"provider"</span> <span class="n">to</span> <span class="n">eoProviderDid</span><span class="p">.</span><span class="n">value</span>
+                <span class="s">"timestamp"</span> <span class="n">to</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">()</span>
+            <span class="p">}</span>
+            <span class="nf">issued</span><span class="p">(</span><span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">())</span>
+        <span class="p">}</span>
+        <span class="nf">signedBy</span><span class="p">(</span><span class="n">issuerDid</span> <span class="p">=</span> <span class="n">eoProviderDid</span><span class="p">.</span><span class="n">value</span><span class="p">,</span> <span class="n">keyId</span> <span class="p">=</span> <span class="n">eoProviderKeyId</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="kd">val</span> <span class="py">eoDataCredential</span> <span class="p">=</span> <span class="k">when</span> <span class="p">(</span><span class="n">eoDataIssuanceResult</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">is</span> <span class="nc">IssuanceResult</span><span class="p">.</span><span class="nc">Success</span> <span class="p">-&gt;</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"✅ EO Data Credential issued: ${eoDataIssuanceResult.credential.id}"</span><span class="p">)</span>
+            <span class="n">eoDataIssuanceResult</span><span class="p">.</span><span class="n">credential</span>
+        <span class="p">}</span>
+        <span class="k">else</span> <span class="p">-&gt;</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"Failed to issue EO data credential: ${eoDataIssuanceResult.reason}"</span><span class="p">)</span>
+            <span class="k">return</span><span class="nd">@runBlocking</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Data digest: $dataDigest"</span><span class="p">)</span>
+
+    <span class="c1">// Step 4: Verify EO data credential (insurance company verifies before using)</span>
+    <span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">verify</span> <span class="p">{</span>
+        <span class="nf">credential</span><span class="p">(</span><span class="n">eoDataCredential</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="k">when</span> <span class="p">(</span><span class="n">verification</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">is</span> <span class="nc">VerificationResult</span><span class="p">.</span><span class="nc">Valid</span> <span class="p">-&gt;</span> <span class="p">{</span>
+            <span class="c1">// Credential is valid, continue</span>
+        <span class="p">}</span>
+        <span class="k">is</span> <span class="nc">VerificationResult</span><span class="p">.</span><span class="nc">Invalid</span> <span class="p">-&gt;</span> <span class="p">{</span>
+            <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Verification failed: ${verification.reason}"</span><span class="p">)</span>
+            <span class="k">return</span><span class="nd">@runBlocking</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(!</span><span class="n">verification</span><span class="p">.</span><span class="n">valid</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"❌ EO data credential invalid: ${verification.errors}"</span><span class="p">)</span>
+        <span class="k">return</span><span class="nd">@runBlocking</span>
+    <span class="p">}</span>
+
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ EO Data Credential verified"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Proof valid: ${verification.proofValid}"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Issuer valid: ${verification.issuerValid}"</span><span class="p">)</span>
+
+    <span class="c1">// Step 5: Extract data and check parametric trigger</span>
+    <span class="kd">val</span> <span class="py">credentialSubject</span> <span class="p">=</span> <span class="n">eoDataCredential</span><span class="p">.</span><span class="n">credentialSubject</span>
+    <span class="kd">val</span> <span class="py">rainfallValue</span> <span class="p">=</span> <span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"data"</span><span class="p">]</span>
+        <span class="o">?.</span><span class="n">jsonObject</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"measurement"</span><span class="p">)</span>
+        <span class="o">?.</span><span class="n">jsonObject</span><span class="o">?.</span><span class="k">get</span><span class="p">(</span><span class="s">"value"</span><span class="p">)</span>
+        <span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span><span class="o">?.</span><span class="nf">toDouble</span><span class="p">()</span>
+        <span class="o">?:</span> <span class="nf">error</span><span class="p">(</span><span class="s">"Rainfall value not found"</span><span class="p">)</span>
+
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n📊 Parametric Trigger Check:"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Rainfall value: $rainfallValue inches"</span><span class="p">)</span>
+
+    <span class="c1">// Insurance policy: Payout if rainfall &lt; 1.0 inches</span>
+    <span class="kd">val</span> <span class="py">triggerThreshold</span> <span class="p">=</span> <span class="mf">1.0</span>
+    <span class="kd">val</span> <span class="py">shouldPayout</span> <span class="p">=</span> <span class="n">rainfallValue</span> <span class="p">&lt;</span> <span class="n">triggerThreshold</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">shouldPayout</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   ✅ TRIGGER MET: Rainfall below threshold ($triggerThreshold inches)"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   💰 Insurance payout should be triggered"</span><span class="p">)</span>
+
+        <span class="c1">// Step 6: Create payout credential (insurance company issues)</span>
+        <span class="kd">val</span> <span class="py">insuranceResolution</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">resolveDid</span><span class="p">(</span><span class="n">insuranceDid</span><span class="p">)</span>
+        <span class="kd">val</span> <span class="py">insuranceDoc</span> <span class="p">=</span> <span class="k">when</span> <span class="p">(</span><span class="n">insuranceResolution</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">is</span> <span class="nc">DidResolutionResult</span><span class="p">.</span><span class="nc">Success</span> <span class="p">-&gt;</span> <span class="n">insuranceResolution</span><span class="p">.</span><span class="n">document</span>
+            <span class="k">else</span> <span class="p">-&gt;</span> <span class="k">throw</span> <span class="nc">IllegalStateException</span><span class="p">(</span><span class="s">"Failed to resolve insurance DID"</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="kd">val</span> <span class="py">insuranceKeyId</span> <span class="p">=</span> <span class="n">insuranceDoc</span><span class="p">.</span><span class="n">verificationMethod</span><span class="p">.</span><span class="nf">firstOrNull</span><span class="p">()</span><span class="o">?.</span><span class="n">id</span><span class="o">?.</span><span class="nf">substringAfter</span><span class="p">(</span><span class="s">"#"</span><span class="p">)</span>
+            <span class="o">?:</span> <span class="k">throw</span> <span class="nc">IllegalStateException</span><span class="p">(</span><span class="s">"No verification method found"</span><span class="p">)</span>
+
+        <span class="kd">val</span> <span class="py">payoutIssuanceResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">issue</span> <span class="p">{</span>
+            <span class="nf">credential</span> <span class="p">{</span>
+                <span class="nf">type</span><span class="p">(</span><span class="s">"InsurancePayoutCredential"</span><span class="p">)</span>
+                <span class="nf">issuer</span><span class="p">(</span><span class="n">insuranceDid</span><span class="p">.</span><span class="n">value</span><span class="p">)</span>
+                <span class="nf">subject</span> <span class="p">{</span>
+                    <span class="nf">id</span><span class="p">(</span><span class="s">"payout-2024-06-15"</span><span class="p">)</span>
+                    <span class="s">"policyId"</span> <span class="n">to</span> <span class="s">"POL-12345"</span>
+                    <span class="s">"triggerType"</span> <span class="n">to</span> <span class="s">"RainfallBelowThreshold"</span>
+                    <span class="s">"triggerValue"</span> <span class="n">to</span> <span class="n">rainfallValue</span>
+                    <span class="s">"threshold"</span> <span class="n">to</span> <span class="n">triggerThreshold</span>
+                    <span class="s">"dataCredentialId"</span> <span class="n">to</span> <span class="n">eoDataCredential</span><span class="p">.</span><span class="n">id</span>
+                    <span class="s">"dataDigest"</span> <span class="n">to</span> <span class="n">dataDigest</span>
+                    <span class="s">"payoutAmount"</span> <span class="n">to</span> <span class="mf">50000.0</span>
+                    <span class="s">"currency"</span> <span class="n">to</span> <span class="s">"USD"</span>
+                    <span class="s">"timestamp"</span> <span class="n">to</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">()</span>
+                <span class="p">}</span>
+                <span class="nf">issued</span><span class="p">(</span><span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">())</span>
+            <span class="p">}</span>
+            <span class="nf">signedBy</span><span class="p">(</span><span class="n">issuerDid</span> <span class="p">=</span> <span class="n">insuranceDid</span><span class="p">.</span><span class="n">value</span><span class="p">,</span> <span class="n">keyId</span> <span class="p">=</span> <span class="n">insuranceKeyId</span><span class="p">)</span>
+        <span class="p">}</span>
+        
+        <span class="kd">val</span> <span class="py">payoutCredential</span> <span class="p">=</span> <span class="k">when</span> <span class="p">(</span><span class="n">payoutIssuanceResult</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">is</span> <span class="nc">IssuanceResult</span><span class="p">.</span><span class="nc">Success</span> <span class="p">-&gt;</span> <span class="p">{</span>
+                <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Payout Credential issued: ${payoutIssuanceResult.credential.id}"</span><span class="p">)</span>
+                <span class="n">payoutIssuanceResult</span><span class="p">.</span><span class="n">credential</span>
+            <span class="p">}</span>
+            <span class="k">else</span> <span class="p">-&gt;</span> <span class="p">{</span>
+                <span class="nf">println</span><span class="p">(</span><span class="s">"Failed to issue payout credential: ${payoutIssuanceResult.reason}"</span><span class="p">)</span>
+                <span class="k">return</span><span class="nd">@runBlocking</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Payout amount: $50,000 USD"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Data credential: ${eoDataCredential.id}"</span><span class="p">)</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   ❌ TRIGGER NOT MET: Rainfall above threshold"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   No payout triggered"</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Step 7: Verify data integrity (prevent replay attacks)</span>
+    <span class="kd">val</span> <span class="py">currentDataDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">rainfallData</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">credentialDataDigest</span> <span class="p">=</span> <span class="n">credentialSubject</span><span class="p">.</span><span class="n">jsonObject</span><span class="p">[</span><span class="s">"dataDigest"</span><span class="p">]</span>
+        <span class="o">?.</span><span class="n">jsonPrimitive</span><span class="o">?.</span><span class="n">content</span> <span class="o">?:</span> <span class="s">""</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">currentDataDigest</span> <span class="p">==</span> <span class="n">credentialDataDigest</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ Data Integrity Verified"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Data digest matches credential"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   No tampering detected"</span><span class="p">)</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"\n❌ Data Integrity FAILED"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   Data may have been tampered with"</span><span class="p">)</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"   DO NOT TRUST THIS DATA"</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="nf">println</span><span class="p">(</span><span class="s">"\n"</span> <span class="p">+</span> <span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Parametric Insurance Scenario Complete!"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"="</span><span class="p">.</span><span class="nf">repeat</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+
+<p><strong>Expected Output:</strong></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+</pre></td><td class="rouge-code"><pre>======================================================================
+Parametric Insurance with EO Data - Complete Example
+======================================================================
+
+✅ TrustWeave initialized
+✅ Insurance Company DID: did:key:z6Mk...
+✅ EO Data Provider DID: did:key:z6Mk...
+✅ EO Data Credential issued: urn:uuid:...
+   Data digest: u5v...
+✅ EO Data Credential verified
+   Proof valid: true
+   Issuer valid: true
+
+📊 Parametric Trigger Check:
+   Rainfall value: 0.5 inches
+   ✅ TRIGGER MET: Rainfall below threshold (1.0 inches)
+   💰 Insurance payout should be triggered
+✅ Payout Credential issued: urn:uuid:...
+   Payout amount: $50,000 USD
+   Data credential: urn:uuid:...
+
+✅ Data Integrity Verified
+   Data digest matches credential
+   No tampering detected
+
+======================================================================
+✅ Parametric Insurance Scenario Complete!
+======================================================================
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-3-multi-provider-support">
+  
+  
+    <a href="#step-3-multi-provider-support" class="anchor-heading" aria-labelledby="step-3-multi-provider-support"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 3: Multi-Provider Support
+  
+  
+</h2>
+    
+
+<p>The key advantage of using VCs is accepting data from multiple providers:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+</pre></td><td class="rouge-code"><pre><span class="c1">// Accept data from any certified provider</span>
+<span class="kd">val</span> <span class="py">providers</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"ESA"</span><span class="p">,</span> <span class="s">"Planet"</span><span class="p">,</span> <span class="s">"NASA"</span><span class="p">,</span> <span class="s">"NOAA"</span><span class="p">)</span>
+
+<span class="k">suspend</span> <span class="k">fun</span> <span class="nf">acceptEODataFromAnyProvider</span><span class="p">(</span>
+    <span class="n">providerDid</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
+    <span class="n">dataCredential</span><span class="p">:</span> <span class="nc">VerifiableCredential</span>
+<span class="p">):</span> <span class="nc">Boolean</span> <span class="p">{</span>
+    <span class="c1">// Verify credential</span>
+    <span class="kd">val</span> <span class="py">verification</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">verify</span> <span class="p">{</span>
+        <span class="nf">credential</span><span class="p">(</span><span class="n">dataCredential</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="k">when</span> <span class="p">(</span><span class="n">verification</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">is</span> <span class="nc">VerificationResult</span><span class="p">.</span><span class="nc">Valid</span> <span class="p">-&gt;</span> <span class="p">{</span>
+            <span class="c1">// Credential is valid, continue</span>
+        <span class="p">}</span>
+        <span class="k">is</span> <span class="nc">VerificationResult</span><span class="p">.</span><span class="nc">Invalid</span> <span class="p">-&gt;</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="k">false</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Check if provider is certified</span>
+    <span class="kd">val</span> <span class="py">isCertified</span> <span class="p">=</span> <span class="nf">checkProviderCertification</span><span class="p">(</span><span class="n">providerDid</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(!</span><span class="n">isCertified</span><span class="p">)</span> <span class="k">return</span> <span class="k">false</span>
+
+    <span class="c1">// Extract and use data</span>
+    <span class="kd">val</span> <span class="py">data</span> <span class="p">=</span> <span class="nf">extractDataFromCredential</span><span class="p">(</span><span class="n">dataCredential</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nf">processDataForInsurance</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-4-spectral-fingerprint-example-descartes-underwriting">
+  
+  
+    <a href="#step-4-spectral-fingerprint-example-descartes-underwriting" class="anchor-heading" aria-labelledby="step-4-spectral-fingerprint-example-descartes-underwriting"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 4: Spectral Fingerprint Example (Descartes Underwriting)
+  
+  
+</h2>
+    
+
+<p>For spectral analysis use cases:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+</pre></td><td class="rouge-code"><pre><span class="c1">// Create spectral fingerprint credential</span>
+<span class="kd">val</span> <span class="py">spectralData</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="s">"spectral-fingerprint-wildfire-2024"</span><span class="p">)</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"type"</span><span class="p">,</span> <span class="s">"SpectralFingerprint"</span><span class="p">)</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"location"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"latitude"</span><span class="p">,</span> <span class="mf">34.0522</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"longitude"</span><span class="p">,</span> <span class="p">-</span><span class="mf">118.2437</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"region"</span><span class="p">,</span> <span class="s">"Los Angeles, CA"</span><span class="p">)</span>
+    <span class="p">})</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"spectralAnalysis"</span><span class="p">,</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"bands"</span><span class="p">,</span> <span class="nf">buildJsonArray</span> <span class="p">{</span>
+            <span class="nf">add</span><span class="p">(</span><span class="nf">buildJsonObject</span> <span class="p">{</span> <span class="nf">put</span><span class="p">(</span><span class="s">"band"</span><span class="p">,</span> <span class="s">"NIR"</span><span class="p">);</span> <span class="nf">put</span><span class="p">(</span><span class="s">"value"</span><span class="p">,</span> <span class="mf">0.85</span><span class="p">)</span> <span class="p">})</span>
+            <span class="nf">add</span><span class="p">(</span><span class="nf">buildJsonObject</span> <span class="p">{</span> <span class="nf">put</span><span class="p">(</span><span class="s">"band"</span><span class="p">,</span> <span class="s">"SWIR"</span><span class="p">);</span> <span class="nf">put</span><span class="p">(</span><span class="s">"value"</span><span class="p">,</span> <span class="mf">0.72</span><span class="p">)</span> <span class="p">})</span>
+            <span class="nf">add</span><span class="p">(</span><span class="nf">buildJsonObject</span> <span class="p">{</span> <span class="nf">put</span><span class="p">(</span><span class="s">"band"</span><span class="p">,</span> <span class="s">"Red"</span><span class="p">);</span> <span class="nf">put</span><span class="p">(</span><span class="s">"value"</span><span class="p">,</span> <span class="mf">0.45</span><span class="p">)</span> <span class="p">})</span>
+        <span class="p">})</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"damageType"</span><span class="p">,</span> <span class="s">"Wildfire"</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"damageSeverity"</span><span class="p">,</span> <span class="mf">0.78</span><span class="p">)</span>
+        <span class="nf">put</span><span class="p">(</span><span class="s">"confidence"</span><span class="p">,</span> <span class="mf">0.92</span><span class="p">)</span>
+    <span class="p">})</span>
+    <span class="nf">put</span><span class="p">(</span><span class="s">"timestamp"</span><span class="p">,</span> <span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">().</span><span class="nf">toString</span><span class="p">())</span>
+<span class="p">}</span>
+
+<span class="kd">val</span> <span class="py">spectralDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">spectralData</span><span class="p">)</span>
+
+<span class="kd">val</span> <span class="py">spectralIssuanceResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">issue</span> <span class="p">{</span>
+    <span class="nf">credential</span> <span class="p">{</span>
+        <span class="nf">type</span><span class="p">(</span><span class="s">"SpectralAnalysisCredential"</span><span class="p">,</span> <span class="s">"InsuranceOracleCredential"</span><span class="p">)</span>
+        <span class="nf">issuer</span><span class="p">(</span><span class="n">eoProviderDid</span><span class="p">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="nf">subject</span> <span class="p">{</span>
+            <span class="nf">id</span><span class="p">(</span><span class="s">"spectral-fingerprint-wildfire-2024"</span><span class="p">)</span>
+            <span class="s">"dataType"</span> <span class="n">to</span> <span class="s">"SpectralFingerprint"</span>
+            <span class="s">"data"</span> <span class="n">to</span> <span class="n">spectralData</span>
+            <span class="s">"dataDigest"</span> <span class="n">to</span> <span class="n">spectralDigest</span>
+            <span class="s">"provider"</span> <span class="n">to</span> <span class="n">eoProviderDid</span><span class="p">.</span><span class="n">value</span>
+        <span class="p">}</span>
+        <span class="nf">issued</span><span class="p">(</span><span class="nc">Instant</span><span class="p">.</span><span class="nf">now</span><span class="p">())</span>
+    <span class="p">}</span>
+    <span class="nf">signedBy</span><span class="p">(</span><span class="n">issuerDid</span> <span class="p">=</span> <span class="n">eoProviderDid</span><span class="p">.</span><span class="n">value</span><span class="p">,</span> <span class="n">keyId</span> <span class="p">=</span> <span class="n">eoProviderKeyId</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1">// Verify spectral fingerprint matches underwriting model</span>
+<span class="kd">val</span> <span class="py">modelFingerprint</span> <span class="p">=</span> <span class="nf">getUnderwritingModelFingerprint</span><span class="p">()</span>
+<span class="kd">val</span> <span class="py">matchesModel</span> <span class="p">=</span> <span class="nf">verifySpectralMatch</span><span class="p">(</span><span class="n">spectralData</span><span class="p">,</span> <span class="n">modelFingerprint</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="n">matchesModel</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Spectral fingerprint matches underwriting model"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   Data used for payout is the exact data that was modeled"</span><span class="p">)</span>
+    <span class="nf">println</span><span class="p">(</span><span class="s">"   No replay attack or data corruption possible"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="step-5-blockchain-anchoring-for-audit-trail">
+  
+  
+    <a href="#step-5-blockchain-anchoring-for-audit-trail" class="anchor-heading" aria-labelledby="step-5-blockchain-anchoring-for-audit-trail"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 5: Blockchain Anchoring for Audit Trail
+  
+  
+</h2>
+    
+
+<p>Anchor credentials to blockchain for immutable audit trail:</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+</pre></td><td class="rouge-code"><pre><span class="c1">// Anchor EO data credential</span>
+<span class="kd">val</span> <span class="py">anchorResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="n">blockchains</span><span class="p">.</span><span class="nf">anchor</span><span class="p">(</span>
+    <span class="n">data</span> <span class="p">=</span> <span class="n">eoDataCredential</span><span class="p">,</span>
+    <span class="n">serializer</span> <span class="p">=</span> <span class="nc">VerifiableCredential</span><span class="p">.</span><span class="nf">serializer</span><span class="p">(),</span>
+    <span class="n">chainId</span> <span class="p">=</span> <span class="s">"algorand:testnet"</span>
+<span class="p">).</span><span class="nf">fold</span><span class="p">(</span>
+    <span class="n">onSuccess</span> <span class="p">=</span> <span class="p">{</span> <span class="n">anchor</span> <span class="p">-&gt;</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Credential anchored: ${anchor.ref.txHash}"</span><span class="p">)</span>
+        <span class="n">anchor</span>
+    <span class="p">},</span>
+    <span class="n">onFailure</span> <span class="p">=</span> <span class="p">{</span> <span class="n">error</span> <span class="p">-&gt;</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"❌ Anchoring failed: ${error.message}"</span><span class="p">)</span>
+        <span class="k">null</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="c1">// Store anchor reference for audit trail</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">anchorResult</span> <span class="p">!=</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nf">saveAuditRecord</span><span class="p">(</span>
+        <span class="n">dataCredentialId</span> <span class="p">=</span> <span class="n">eoDataCredential</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">anchorRef</span> <span class="p">=</span> <span class="n">anchorResult</span><span class="p">.</span><span class="n">ref</span><span class="p">,</span>
+        <span class="n">timestamp</span> <span class="p">=</span> <span class="n">anchorResult</span><span class="p">.</span><span class="n">timestamp</span>
+    <span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></div></code></pre></div></div>
+<h2 id="key-benefits">
+  
+  
+    <a href="#key-benefits" class="anchor-heading" aria-labelledby="key-benefits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Benefits
+  
+  
+</h2>
+    
+
+<ol>
+  <li><strong>Standardization</strong>: One format works for all EO data providers</li>
+  <li><strong>Multi-Provider</strong>: Accept data from ESA, Planet, NASA without custom integrations</li>
+  <li><strong>Data Integrity</strong>: Cryptographic proof prevents tampering and replay attacks</li>
+  <li><strong>Automation</strong>: Enable automatic insurance payouts</li>
+  <li><strong>Audit Trail</strong>: Complete data lineage for compliance</li>
+  <li><strong>Trust</strong>: Build trust through verifiable credentials</li>
+</ol>
+<h2 id="real-world-integration">
+  
+  
+    <a href="#real-world-integration" class="anchor-heading" aria-labelledby="real-world-integration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Real-World Integration
+  
+  
+</h2>
+    
+
+<p><strong>Arbol Integration:</strong></p>
+<ul>
+  <li>Replace custom API integrations with VC-based data acceptance</li>
+  <li>Accept data from any certified provider (ESA, Planet, NASA)</li>
+  <li>Reduce integration costs by 80%</li>
+</ul>
+
+<p><strong>Descartes Underwriting Integration:</strong></p>
+<ul>
+  <li>Wrap spectral fingerprints in VCs with SRI Integrity</li>
+  <li>Ensure data used for $50M payout is exact data that was modeled</li>
+  <li>Prevent replay attacks and data corruption</li>
+</ul>
+<h2 id="next-steps">
+  
+  
+    <a href="#next-steps" class="anchor-heading" aria-labelledby="next-steps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Next Steps
+  
+  
+</h2>
+    
+
+<ul>
+  <li>Explore <a href="/trustweave/scenarios/earth-observation-scenario/">Earth Observation Scenario</a> for EO data integrity</li>
+  <li>Learn about <a href="/trustweave/core-concepts/blockchain-anchoring/">Blockchain Anchoring</a></li>
+  <li>Review <a href="/trustweave/advanced/error-handling/">Error Handling</a> for production patterns</li>
+</ul>
+<h2 id="related-documentation">
+  
+  
+    <a href="#related-documentation" class="anchor-heading" aria-labelledby="related-documentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Related Documentation
+  
+  
+</h2>
+    
+
+<ul>
+  <li><a href="/trustweave/scenarios/earth-observation-scenario/">Earth Observation Scenario</a> - EO data integrity workflow</li>
+  <li><a href="/trustweave/core-concepts/blockchain-anchoring/">Blockchain Anchoring</a> - Anchoring concepts</li>
+  <li><a href="/trustweave/api-reference/core-api/">API Reference</a> - Complete API documentation</li>
+</ul>
+
+          
+
+          
+            
+          
+        </main>
+        
+
+  <hr>
+  <footer>
+    
+
+    <!-- Hidden template for footer injection -->
+<div id="footer-template" style="display: none;">
+  <!-- Site Footer - Consistent across all pages -->
+<footer class="site-footer">
+    <div class="footer-content">
+        <div class="footer-links">
+            <a href="/trustweave/">Home</a>
+            <a href="/trustweave/getting-started/README/">Documentation</a>
+            <a href="https://github.com/geoknoesis/TrustWeave" target="_blank">GitHub</a>
+            <a href="/trustweave/partnership/">Partners</a>
+            <a href="https://github.com/geoknoesis/TrustWeave/blob/main/docs/README.md" target="_blank">Docs</a>
+            <a href="https://github.com/geoknoesis/TrustWeave/blob/main/LICENSE" target="_blank">License</a>
+            <a href="https://www.geoknoesis.com" target="_blank">Geoknoesis LLC</a>
+        </div>
+        <p class="footer-text">Made with ❤️ by Geoknoesis LLC</p>
+    </div>
+</footer>
+
+
+</div>
+<script>
+  // Move footer from template to body bottom and make it full width
+  document.addEventListener('DOMContentLoaded', function() {
+    const template = document.getElementById('footer-template');
+    if (template) {
+      const footer = template.querySelector('.site-footer');
+      if (footer) {
+        // Move footer to body level (outside of any containers)
+        document.body.appendChild(footer);
+        template.remove();
+
+        // Ensure footer spans full width by removing any parent constraints
+        footer.style.position = 'relative';
+        footer.style.width = '100vw';
+        footer.style.marginLeft = 'calc(-50vw + 50%)';
+        footer.style.marginRight = 'calc(-50vw + 50%)';
+        footer.style.marginTop = 'auto'; // Push to bottom in flexbox layout
+        footer.style.zIndex = '0'; // Below search overlay
+      }
+    }
+
+    // Function to update footer visibility based on search state
+    function updateFooterVisibility() {
+      const footer = document.querySelector('.site-footer');
+      const htmlElement = document.documentElement;
+
+      if (footer && htmlElement) {
+        const isSearchActive = htmlElement.classList.contains('search-active');
+        if (isSearchActive) {
+          // Hide footer when search is active - use multiple methods to ensure it's hidden
+          footer.style.display = 'none';
+          footer.style.visibility = 'hidden';
+          footer.style.opacity = '0';
+          footer.style.zIndex = '-999';
+          footer.style.pointerEvents = 'none';
+        } else {
+          // Show footer when search is not active
+          footer.style.display = 'block';
+          footer.style.visibility = 'visible';
+          footer.style.opacity = '1';
+          footer.style.marginTop = 'auto';
+          footer.style.position = 'relative';
+          footer.style.zIndex = '-1';
+          footer.style.pointerEvents = 'auto';
+        }
+      }
+    }
+
+    // Monitor search state and hide/show footer appropriately
+    const observer = new MutationObserver(function(mutations) {
+      updateFooterVisibility();
+    });
+
+    // Also listen for input events on search input as a backup
+    // This ensures footer is hidden immediately when user starts typing
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+      // Use requestAnimationFrame for better performance
+      const handleSearchChange = function() {
+        requestAnimationFrame(updateFooterVisibility);
+      };
+
+      searchInput.addEventListener('input', handleSearchChange);
+      searchInput.addEventListener('focus', handleSearchChange);
+      searchInput.addEventListener('keydown', handleSearchChange);
+    }
+
+    // Observe documentElement (html) for class changes (like search-active)
+    // The search script adds 'search-active' to documentElement, not body
+    if (document.documentElement) {
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
+
+      // Initial check
+      updateFooterVisibility();
+    }
+  });
+</script>
+
+
+    
+  </footer>
+
+
+      </div>
+    </div>
+    
+      
+
+<div class="search-overlay"></div>
+
+    
+  </div>
+
+  
+    
+
+
+
+
+
+<script type="module">
+  
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
+  
+
+  var config = {}
+;
+  mermaid.initialize(config);
+  mermaid.run({
+    querySelector: '.language-mermaid',
+  });
+</script>
+
+
+
+  
+</body>
+</html>
+

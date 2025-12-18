@@ -18,6 +18,8 @@ import com.trustweave.did.identifiers.Did
 import com.trustweave.did.identifiers.VerificationMethodId
 import com.trustweave.credential.results.IssuanceResult
 import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.credential.model.ProofType
+import com.trustweave.trust.dsl.TrustWeaveContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -117,7 +119,7 @@ class IssuanceBuilder(
     /**
      * Set issuer DID and key ID for signing.
      */
-    fun signedBy(issuerDid: com.trustweave.did.identifiers.Did, keyId: String) {
+    fun signedBy(issuerDid: Did, keyId: String) {
         require(keyId.isNotBlank()) { "Key ID cannot be blank" }
         this.issuerDid = issuerDid
         this.issuerKeyId = keyId
@@ -267,7 +269,7 @@ class IssuanceBuilder(
  * @return Sealed result type with success or detailed failure information
  */
 suspend fun CredentialDslProvider.issue(block: IssuanceBuilder.() -> Unit): IssuanceResult {
-    val dispatcher = (this as? com.trustweave.trust.dsl.TrustWeaveContext)?.getConfig()?.ioDispatcher
+    val dispatcher = (this as? TrustWeaveContext)?.getConfig()?.ioDispatcher
         ?: Dispatchers.IO
     
     // Get CredentialService - try from getIssuer() or return error
@@ -281,10 +283,10 @@ suspend fun CredentialDslProvider.issue(block: IssuanceBuilder.() -> Unit): Issu
     // Convert ProofType to ProofSuiteId
     val defaultProofType = getDefaultProofType()
     val defaultProofSuite = when (defaultProofType) {
-        is com.trustweave.credential.model.ProofType.Ed25519Signature2020 -> ProofSuiteId.VC_LD
-        is com.trustweave.credential.model.ProofType.JsonWebSignature2020 -> ProofSuiteId.VC_JWT
-        is com.trustweave.credential.model.ProofType.BbsBlsSignature2020 -> ProofSuiteId.SD_JWT_VC
-        is com.trustweave.credential.model.ProofType.Custom -> ProofSuiteId.VC_LD // Default fallback
+        is ProofType.Ed25519Signature2020 -> ProofSuiteId.VC_LD
+        is ProofType.JsonWebSignature2020 -> ProofSuiteId.VC_JWT
+        is ProofType.BbsBlsSignature2020 -> ProofSuiteId.SD_JWT_VC
+        is ProofType.Custom -> ProofSuiteId.VC_LD // Default fallback
     }
     
     val builder = IssuanceBuilder(

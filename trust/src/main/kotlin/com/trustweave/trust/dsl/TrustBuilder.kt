@@ -5,6 +5,7 @@ import com.trustweave.trust.TrustRegistry
 import com.trustweave.trust.types.TrustPath
 import com.trustweave.trust.types.VerifierIdentity
 import com.trustweave.trust.types.IssuerIdentity
+import com.trustweave.did.identifiers.Did
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
@@ -105,7 +106,7 @@ class TrustBuilder(
      * }
      * ```
      */
-    suspend fun addAnchor(config: com.trustweave.trust.dsl.TrustAnchorConfig): Boolean {
+    suspend fun addAnchor(config: TrustAnchorConfig): Boolean {
         // This will be called with the result of "did trusts type because { }"
         // We need to extract the DID from the config
         throw IllegalStateException(
@@ -126,7 +127,7 @@ class TrustBuilder(
      * }
      * ```
      */
-    suspend fun addAnchor(did: com.trustweave.did.identifiers.Did, config: com.trustweave.trust.dsl.TrustAnchorConfig): Boolean {
+    suspend fun addAnchor(did: Did, config: TrustAnchorConfig): Boolean {
         return addAnchor(did.value) {
             config.metadataBuilder.credentialTypes?.let { types ->
                 credentialTypes(types)
@@ -156,7 +157,7 @@ class TrustBuilder(
      * }
      * ```
      */
-    suspend fun resolve(pathFinder: com.trustweave.trust.dsl.TrustPathFinder): TrustPath {
+    suspend fun resolve(pathFinder: TrustPathFinder): TrustPath {
         return pathFinder.resolve(this)
     }
 }

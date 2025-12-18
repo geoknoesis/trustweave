@@ -9,6 +9,7 @@ import com.trustweave.credential.trust.TrustPolicy as CredentialTrustPolicy
 import com.trustweave.trust.types.VerificationResult
 import com.trustweave.trust.TrustRegistry
 import com.trustweave.trust.TrustPolicy
+import com.trustweave.trust.dsl.TrustWeaveContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -277,7 +278,7 @@ class VerificationBuilder(
  * ```
  */
 suspend fun CredentialDslProvider.verify(block: VerificationBuilder.() -> Unit): VerificationResult {
-    val dispatcher = (this as? com.trustweave.trust.dsl.TrustWeaveContext)?.getConfig()?.ioDispatcher
+    val dispatcher = (this as? TrustWeaveContext)?.getConfig()?.ioDispatcher
         ?: Dispatchers.IO
     val credentialService = getIssuer() as? CredentialService
         ?: throw IllegalStateException("CredentialService is not available. Configure it in TrustWeave.build { ... }")

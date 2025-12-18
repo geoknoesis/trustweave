@@ -3,6 +3,7 @@ package com.trustweave.trust
 import com.trustweave.credential.model.CredentialType
 import com.trustweave.did.identifiers.Did
 import com.trustweave.trust.types.IssuerIdentity
+import com.trustweave.trust.types.TrustPath
 import com.trustweave.trust.types.VerifierIdentity
 import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
@@ -81,7 +82,7 @@ interface TrustRegistry {
      * @param to The target identity (typically the issuer)
      * @return TrustPath.Verified if a path exists, TrustPath.NotFound otherwise
      */
-    suspend fun findTrustPath(from: VerifierIdentity, to: IssuerIdentity): com.trustweave.trust.types.TrustPath
+    suspend fun findTrustPath(from: VerifierIdentity, to: IssuerIdentity): TrustPath
 
     /**
      * Gets all trusted issuers for a specific credential type.

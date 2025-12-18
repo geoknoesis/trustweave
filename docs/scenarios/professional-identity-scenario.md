@@ -221,7 +221,7 @@ fun main() = runBlocking {
     // Step 2: Create professional wallet
     println("\nStep 2: Creating professional wallet...")
     val walletResult = trustWeave.wallet {
-        id("professional-wallet-${professionalDid.value.substringAfterLast(":")}")
+        id("urn:wallet:professional:${professionalDid.value.substringAfterLast(":")}")
         holder(professionalDid.value)
         enableOrganization()
         enablePresentation()

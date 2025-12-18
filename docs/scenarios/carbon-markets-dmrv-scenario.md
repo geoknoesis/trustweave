@@ -240,11 +240,11 @@ fun main() = runBlocking {
 
     val verificationCredentialResult = trustWeave.issue {
         credential {
-            id("verification-forest-2024")
+            id("urn:carbon:verification:forest-2024")
             type("VerifiableCredential", "CarbonVerificationCredential")
             issuer(verifierDid.value)
             subject {
-                id("verification-forest-2024")
+                id("urn:carbon:verification:forest-2024")
                 "verificationType" to "CarbonSequestration"
                 "eoEvidence" to eoEvidence
                 "eoEvidenceDigest" to eoEvidenceDigest
@@ -279,11 +279,11 @@ fun main() = runBlocking {
 
     val carbonCreditResult = trustWeave.issue {
         credential {
-            id("carbon-credit-CC-2024-001")
+            id("urn:carbon:credit:CC-2024-001")
             type("VerifiableCredential", "CarbonCreditCredential")
             issuer(issuerDid.value)
             subject {
-                id("carbon-credit-CC-2024-001")
+                id("urn:carbon:credit:CC-2024-001")
                 "creditType" to "ForestCarbonSequestration"
                 "amount" to 5000.0  // tons CO2
                 "unit" to "tCO2e"
@@ -336,11 +336,11 @@ fun main() = runBlocking {
         // Create sale credential
         val saleCredentialResult = trustWeave.issue {
             credential {
-                id("sale-CC-2024-001")
+                id("urn:carbon:sale:CC-2024-001")
                 type("VerifiableCredential", "CarbonCreditSaleCredential")
                 issuer(issuerDid.value)
                 subject {
-                    id("sale-CC-2024-001")
+                    id("urn:carbon:sale:CC-2024-001")
                     "creditId" to carbonCredit.id
                     "buyer" to buyerDid.value
                     "saleDate" to Instant.now().toString()
@@ -390,11 +390,11 @@ fun main() = runBlocking {
 
         val retirementCredentialResult = trustWeave.issue {
             credential {
-                id("retirement-CC-2024-001")
+                id("urn:carbon:retirement:CC-2024-001")
                 type("VerifiableCredential", "CarbonCreditRetirementCredential")
                 issuer(buyerDid.value)
                 subject {
-                    id("retirement-CC-2024-001")
+                    id("urn:carbon:retirement:CC-2024-001")
                     "creditId" to carbonCredit.id
                     "retirementDate" to Instant.now().toString()
                     "retirementReason" to "CarbonOffset"

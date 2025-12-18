@@ -9,6 +9,8 @@ This directory contains comparison documents that help you understand how TrustW
 
 ## Available Comparisons
 
+- **[GoDaddy ANS vs. TrustWeave](ANS_VS_TRUSTWEAVE_COMPARISON_REPORT.md)** - In-depth analysis comparing GoDaddy's Agent Name Service (ANS) with the Spatial Web / TrustWeave approach for AI agent identity, discovery, and trust. Includes scalability analysis at 100 billion and 1 trillion agents.
+
 - **[Complete Competitor Analysis](COMPLETE_COMPETITOR_ANALYSIS.md)** - Comprehensive comparison with all major competitors including 25+ open-source SDKs, commercial platforms, and blockchain networks. Includes detailed feature matrices and competitive positioning.
 
 - **[TrustWeave vs. Other APIs](trustweave-vs-other-apis.md)** - Detailed technical comparison of TrustWeave with WaltId, Veramo, didkit, did-jwt, and other equivalent libraries in different programming languages.

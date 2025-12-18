@@ -279,14 +279,14 @@ fun main() = runBlocking {
             type("EarthObservationCredential", "DataIntegrityCredential")
             issuer(providerDid.value)
             subject {
-                id("eo-dataset-1")
-                "dataset" to mapOf(
-                    "title" to "Sentinel-2 L2A Dataset",
-                    "linksetDigest" to linksetDigest,
-                    "metadataDigest" to metadataDigest,
-                    "provenanceDigest" to provenanceDigest,
+                id("urn:eo:dataset:eo-dataset-1")
+                "dataset" {
+                    "title" to "Sentinel-2 L2A Dataset"
+                    "linksetDigest" to linksetDigest
+                    "metadataDigest" to metadataDigest
+                    "provenanceDigest" to provenanceDigest
                     "qualityDigest" to qualityDigest
-                )
+                }
             }
             issued(Instant.now())
         }

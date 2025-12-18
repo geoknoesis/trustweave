@@ -252,11 +252,11 @@ fun main() = runBlocking {
     // Step 4: Issue software provenance credential
     val provenanceIssuanceResult = trustWeave.issue {
         credential {
-            id("software:secureapp:1.0.0")
+            id("urn:software:secureapp:1.0.0")
             type("VerifiableCredential", "SoftwareProvenanceCredential", "SoftwareCredential")
             issuer(publisherDid.value)
             subject {
-                id("software:secureapp:1.0.0")
+                id("urn:software:secureapp:1.0.0")
                 "software" {
                     "name" to "SecureApp"
                     "version" to "1.0.0"
@@ -344,11 +344,11 @@ fun main() = runBlocking {
     // Step 8: Issue SBOM credential
     val sbomIssuanceResult = trustWeave.issue {
         credential {
-            id("sbom:secureapp:1.0.0")
+            id("urn:sbom:secureapp:1.0.0")
             type("VerifiableCredential", "SBOMCredential", "SoftwareCredential")
             issuer(buildSystemDid.value)
             subject {
-                id("sbom:secureapp:1.0.0")
+                id("urn:sbom:secureapp:1.0.0")
                 "sbom" {
                     "softwareId" to "software:secureapp:1.0.0"
                     "sbomVersion" to "SPDX-2.3"

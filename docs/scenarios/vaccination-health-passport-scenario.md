@@ -221,7 +221,7 @@ fun main() = runBlocking {
     
     val vaccination1IssuanceResult = trustWeave.issue {
         credential {
-            id("vaccination-covid19-dose1-${Instant.now().toEpochMilli()}")
+            id("urn:health:vaccination:covid19-dose1-${Instant.now().toEpochMilli()}")
             type("VerifiableCredential", "VaccinationCredential", "HealthCredential")
             issuer(healthcareProviderDid.value)
             subject {
@@ -255,7 +255,7 @@ fun main() = runBlocking {
     // Step 4: Issue second vaccination credential (COVID-19, Dose 2)
     val vaccination2IssuanceResult = trustWeave.issue {
         credential {
-            id("vaccination-covid19-dose2-${Instant.now().toEpochMilli()}")
+            id("urn:health:vaccination:covid19-dose2-${Instant.now().toEpochMilli()}")
             type("VerifiableCredential", "VaccinationCredential", "HealthCredential")
             issuer(healthcareProviderDid.value)
             subject {
@@ -290,7 +290,7 @@ fun main() = runBlocking {
     // Step 5: Issue booster vaccination credential
     val boosterIssuanceResult = trustWeave.issue {
         credential {
-            id("vaccination-covid19-booster-${Instant.now().toEpochMilli()}")
+            id("urn:health:vaccination:covid19-booster-${Instant.now().toEpochMilli()}")
             type("VerifiableCredential", "VaccinationCredential", "HealthCredential", "BoosterCredential")
             issuer(healthcareProviderDid.value)
             subject {

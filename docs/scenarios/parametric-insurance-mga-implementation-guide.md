@@ -291,11 +291,11 @@ class SarFloodProduct(
 
         val floodIssuanceResult = trustWeave.issue {
             credential {
-                id("sar-flood-${location.id}-${timestamp.toEpochMilli()}")
+                id("urn:eo:sar-flood:${location.id}-${timestamp.toEpochMilli()}")
                 type("VerifiableCredential", "EarthObservationCredential", "InsuranceOracleCredential", "SarFloodCredential")
                 issuer(eoProviderDid)
                 subject {
-                    id("sar-flood-${location.id}-${timestamp.toEpochMilli()}")
+                    id("urn:eo:sar-flood:${location.id}-${timestamp.toEpochMilli()}")
                     "dataType" to "SarFloodMeasurement"
                     "data" to floodData
                     "dataDigest" to dataDigest
@@ -467,11 +467,11 @@ class HeatwaveProduct(
 
         val heatwaveIssuanceResult = trustWeave.issue {
             credential {
-                id("heatwave-${location.id}-${Instant.now().toEpochMilli()}")
+                id("urn:eo:heatwave:${location.id}-${Instant.now().toEpochMilli()}")
                 type("EarthObservationCredential", "InsuranceOracleCredential", "HeatwaveCredential")
                 issuer(eoProviderDid)
                 subject {
-                    id("heatwave-${location.id}-${Instant.now().toEpochMilli()}")
+                    id("urn:eo:heatwave:${location.id}-${Instant.now().toEpochMilli()}")
                     "dataType" to "HeatwaveMeasurement"
                     "data" to heatwaveData
                     "dataDigest" to dataDigest
@@ -713,11 +713,11 @@ class SolarAttenuationProduct(
 
         val solarIssuanceResult = trustWeave.issue {
             credential {
-                id("solar-attenuation-${location.id}-${Instant.now().toEpochMilli()}")
+                id("urn:eo:solar-attenuation:${location.id}-${Instant.now().toEpochMilli()}")
                 type("EarthObservationCredential", "InsuranceOracleCredential", "SolarAttenuationCredential")
                 issuer(eoProviderDid)
                 subject {
-                    id("solar-attenuation-${location.id}-${Instant.now().toEpochMilli()}")
+                    id("urn:eo:solar-attenuation:${location.id}-${Instant.now().toEpochMilli()}")
                     "dataType" to "SolarAttenuationMeasurement"
                     "data" to solarData
                     "dataDigest" to dataDigest

@@ -275,11 +275,11 @@ fun main() = runBlocking {
     // Step 4: Create ownership transfer request credential
     val transferRequestCredentialResult = trustWeave.issue {
         credential {
-            id("transfer-request:${deviceDid.value}:${Instant.now().toEpochMilli()}")
+            id("urn:transfer-request:${deviceDid.value}:${Instant.now().toEpochMilli()}")
             type("VerifiableCredential", "OwnershipTransferRequestCredential", "TransferCredential")
             issuer(currentOwnerDid.value)
             subject {
-                id("transfer-request:${deviceDid.value}:${Instant.now().toEpochMilli()}")
+                id("urn:transfer-request:${deviceDid.value}:${Instant.now().toEpochMilli()}")
                 "ownershipTransfer" {
                     "deviceId" to deviceDid.value
                     "currentOwnerDid" to currentOwnerDid.value

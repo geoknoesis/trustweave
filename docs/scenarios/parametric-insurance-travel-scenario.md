@@ -237,11 +237,11 @@ fun main() = runBlocking {
     // Airline issues verifiable credential for flight delay
     val flightDelayIssuanceResult = trustWeave.issue {
         credential {
-            id("flight-delay-AA1234-2024-10-08")
+            id("urn:travel:flight-delay:AA1234-2024-10-08")
             type("VerifiableCredential", "FlightDelayCredential", "TravelOracleCredential")
             issuer(airlineDid.value)
             subject {
-                id("flight-delay-AA1234-2024-10-08")
+                id("urn:travel:flight-delay:AA1234-2024-10-08")
                 "dataType" to "FlightDelay"
                 "data" to flightDelayData
                 "dataDigest" to delayDigest
@@ -300,11 +300,11 @@ fun main() = runBlocking {
 
         val delayPayoutIssuanceResult = trustWeave.issue {
             credential {
-                id("payout-delay-AA1234-2024-10-08")
+                id("urn:travel:payout:delay-AA1234-2024-10-08")
                 type("VerifiableCredential", "TravelInsurancePayoutCredential")
                 issuer(insuranceDid.value)
                 subject {
-                    id("payout-delay-AA1234-2024-10-08")
+                    id("urn:travel:payout:delay-AA1234-2024-10-08")
                     "policyId" to "TRAVEL-POL-12345"
                     "triggerType" to "FlightDelay"
                     "delayMinutes" to delayMinutes
@@ -380,11 +380,11 @@ fun main() = runBlocking {
     // Weather service issues verifiable credential
     val weatherIssuanceResult = trustWeave.issue {
         credential {
-            id("weather-event-LHR-2024-10-08")
+            id("urn:travel:weather-event:LHR-2024-10-08")
             type("VerifiableCredential", "WeatherEventCredential", "TravelOracleCredential")
             issuer(weatherServiceDid.value)
             subject {
-                id("weather-event-LHR-2024-10-08")
+                id("urn:travel:weather-event:LHR-2024-10-08")
                 "dataType" to "WeatherEvent"
                 "data" to weatherData
                 "dataDigest" to weatherDigest
@@ -438,11 +438,11 @@ fun main() = runBlocking {
 
         val weatherPayoutIssuanceResult = trustWeave.issue {
             credential {
-                id("payout-weather-LHR-2024-10-08")
+                id("urn:travel:payout:weather-LHR-2024-10-08")
                 type("VerifiableCredential", "TravelInsurancePayoutCredential")
                 issuer(insuranceDid.value)
                 subject {
-                    id("payout-weather-LHR-2024-10-08")
+                    id("urn:travel:payout:weather-LHR-2024-10-08")
                     "policyId" to "TRAVEL-POL-12345"
                     "triggerType" to "WeatherGuarantee"
                     "location" to "LHR"
@@ -509,11 +509,11 @@ fun main() = runBlocking {
     // Baggage system issues verifiable credential
     val baggageIssuanceResult = trustWeave.issue {
         credential {
-            id("baggage-delay-ABC123-2024-10-08")
+            id("urn:travel:baggage-delay:ABC123-2024-10-08")
             type("VerifiableCredential", "BaggageDelayCredential", "TravelOracleCredential")
             issuer(baggageSystemDid.value)
             subject {
-                id("baggage-delay-ABC123-2024-10-08")
+                id("urn:travel:baggage-delay:ABC123-2024-10-08")
                 "dataType" to "BaggageDelay"
                 "data" to baggageData
                 "dataDigest" to baggageDigest
@@ -564,11 +564,11 @@ fun main() = runBlocking {
 
         val baggagePayoutIssuanceResult = trustWeave.issue {
             credential {
-                id("payout-baggage-ABC123-2024-10-08")
+                id("urn:travel:payout:baggage-ABC123-2024-10-08")
                 type("VerifiableCredential", "TravelInsurancePayoutCredential")
                 issuer(insuranceDid.value)
                 subject {
-                    id("payout-baggage-ABC123-2024-10-08")
+                    id("urn:travel:payout:baggage-ABC123-2024-10-08")
                     "policyId" to "TRAVEL-POL-12345"
                     "triggerType" to "BaggageDelay"
                     "delayHours" to delayHours
@@ -772,11 +772,11 @@ val medicalDigest = DigestUtils.sha256DigestMultibase(medicalData)
 
 val medicalIssuanceResult = trustWeave.issue {
     credential {
-        id("medical-emergency-2024-10-08")
+        id("urn:travel:medical-emergency:2024-10-08")
         type("VerifiableCredential", "MedicalEmergencyCredential", "TravelOracleCredential")
         issuer(medicalProviderDid.value)
         subject {
-            id("medical-emergency-2024-10-08")
+            id("urn:travel:medical-emergency:2024-10-08")
             "dataType" to "MedicalEmergency"
             "data" to medicalData
             "dataDigest" to medicalDigest
@@ -794,11 +794,11 @@ val medicalCredential = when (medicalIssuanceResult) {
 // Automatic payout for medical emergencies
 val medicalPayoutIssuanceResult = trustWeave.issue {
     credential {
-        id("payout-medical-2024-10-08")
+        id("urn:travel:payout:medical-2024-10-08")
         type("VerifiableCredential", "TravelInsurancePayoutCredential")
         issuer(insuranceDid.value)
         subject {
-            id("payout-medical-2024-10-08")
+            id("urn:travel:payout:medical-2024-10-08")
             "policyId" to "TRAVEL-POL-12345"
             "triggerType" to "MedicalEmergency"
             "dataCredentialId" to medicalCredential.id

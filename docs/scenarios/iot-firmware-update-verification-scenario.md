@@ -249,11 +249,11 @@ fun main() = runBlocking {
     
     val firmwareAttestationResult = trustWeave.issue {
         credential {
-            id("firmware:device-model-2024:$firmwareVersion")
+            id("urn:firmware:device-model-2024:$firmwareVersion")
             type("VerifiableCredential", "FirmwareAttestationCredential", "SoftwareCredential")
             issuer(manufacturerDid.value)
             subject {
-                id("firmware:device-model-2024:$firmwareVersion")
+                id("urn:firmware:device-model-2024:$firmwareVersion")
                 "firmware" {
                     "firmwareId" to "fw-device-model-2024-$firmwareVersion"
                     "version" to firmwareVersion
@@ -291,11 +291,11 @@ fun main() = runBlocking {
     // Step 5: Issue firmware update authorization credential
     val updateAuthorizationResult = trustWeave.issue {
         credential {
-            id("update-auth:device-model-2024:$firmwareVersion")
+            id("urn:update-auth:device-model-2024:$firmwareVersion")
             type("VerifiableCredential", "FirmwareUpdateAuthorizationCredential", "UpdateCredential")
             issuer(updateServerDid.value)
             subject {
-                id("update-auth:device-model-2024:$firmwareVersion")
+                id("urn:update-auth:device-model-2024:$firmwareVersion")
                 "updateAuthorization" {
                     "firmwareId" to "fw-device-model-2024-$firmwareVersion"
                     "authorized" to true

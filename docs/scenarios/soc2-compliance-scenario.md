@@ -403,11 +403,11 @@ fun main() = runBlocking {
     // Issue key rotation credential
     val keyRotationCredentialResult = trustWeave.issue {
         credential {
-            id("key-rotation-${Instant.now().toEpochMilli()}")
+            id("urn:soc2:key-rotation:${Instant.now().toEpochMilli()}")
             type("VerifiableCredential", "KeyRotationCredential", "SOC2KeyManagementCredential")
             issuer(organizationDid.value)
             subject {
-                id("key-rotation-${Instant.now().toEpochMilli()}")
+                id("urn:soc2:key-rotation:${Instant.now().toEpochMilli()}")
                 "type" to "KeyRotation"
                 "oldKeyId" to oldAdminKeyId
                 "newKeyId" to newAdminKeyId
@@ -450,11 +450,11 @@ fun main() = runBlocking {
     // Step 7: Change management credential (CC7.4)
     val changeManagementCredentialResult = trustWeave.issue {
         credential {
-            id("change-${Instant.now().toEpochMilli()}")
+            id("urn:soc2:change:${Instant.now().toEpochMilli()}")
             type("VerifiableCredential", "ChangeManagementCredential", "SOC2ChangeCredential")
             issuer(organizationDid.value)
             subject {
-                id("change-${Instant.now().toEpochMilli()}")
+                id("urn:soc2:change:${Instant.now().toEpochMilli()}")
                 "type" to "SystemChange"
                 "changeType" to "Configuration"
                 "description" to "Updated KMS configuration"
@@ -483,11 +483,11 @@ fun main() = runBlocking {
     // Step 8: Incident response credential
     val incidentCredentialResult = trustWeave.issue {
         credential {
-            id("incident-${Instant.now().toEpochMilli()}")
+            id("urn:soc2:incident:${Instant.now().toEpochMilli()}")
             type("VerifiableCredential", "IncidentResponseCredential", "SOC2IncidentCredential")
             issuer(organizationDid.value)
             subject {
-                id("incident-${Instant.now().toEpochMilli()}")
+                id("urn:soc2:incident:${Instant.now().toEpochMilli()}")
                 "type" to "SecurityIncident"
                 "severity" to "Low"
                 "description" to "Failed authentication attempt"
@@ -726,11 +726,11 @@ suspend fun rotateKeyWithHistory(
     // Issue rotation credential
     val rotationCredentialResult = trustWeave.issue {
         credential {
-            id("rotation-${Instant.now().toEpochMilli()}")
+            id("urn:soc2:rotation:${Instant.now().toEpochMilli()}")
             type("VerifiableCredential", "KeyRotationCredential")
             issuer(issuerDid)
             subject {
-                id("rotation-${Instant.now().toEpochMilli()}")
+                id("urn:soc2:rotation:${Instant.now().toEpochMilli()}")
                 "type" to "KeyRotation"
                 "oldKeyId" to oldKeyId
                 "newKeyId" to newKeyId

@@ -253,11 +253,11 @@ fun main() = runBlocking {
 
     val complianceCredentialResult = trustWeave.issue {
         credential {
-            id("eudr-compliance-2024-001")
+            id("urn:eudr:compliance:2024-001")
             type("VerifiableCredential", "EUDRComplianceCredential")
             issuer(verifierDid.value)
             subject {
-                id("eudr-compliance-2024-001")
+                id("urn:eudr:compliance:2024-001")
                 "complianceType" to "EUDR"
                 "farm" {
                     "id" to farmDid.value
@@ -304,11 +304,11 @@ fun main() = runBlocking {
 
     val dppCredentialResult = trustWeave.issue {
         credential {
-            id("dpp-coffee-shipment-2024-001")
+            id("urn:eudr:dpp:coffee-shipment-2024-001")
             type("VerifiableCredential", "DigitalProductPassport", "EUDRProductCredential")
             issuer(exporterDid.value)
             subject {
-                id("dpp-coffee-shipment-2024-001")
+                id("urn:eudr:dpp:coffee-shipment-2024-001")
                 "productType" to "Coffee"
                 "commodity" to "Coffee Beans"
                 "quantity" to 10000.0  // kg

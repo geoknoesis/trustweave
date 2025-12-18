@@ -234,7 +234,7 @@ fun main() = runBlocking {
             type("EarthObservationCredential", "InsuranceOracleCredential")
             issuer(eoProviderDid.value)
             subject {
-                id("rainfall-measurement-2024-06-15")
+                id("urn:eo:measurement:rainfall-2024-06-15")
                 "dataType" to "RainfallMeasurement"
                 "data" to rainfallData
                 "dataDigest" to dataDigest
@@ -314,7 +314,7 @@ fun main() = runBlocking {
                 type("InsurancePayoutCredential")
                 issuer(insuranceDid.value)
                 subject {
-                    id("payout-2024-06-15")
+                    id("urn:insurance:payout:2024-06-15")
                     "policyId" to "POL-12345"
                     "triggerType" to "RainfallBelowThreshold"
                     "triggerValue" to rainfallValue
@@ -469,7 +469,7 @@ val spectralIssuanceResult = trustWeave.issue {
         type("SpectralAnalysisCredential", "InsuranceOracleCredential")
         issuer(eoProviderDid.value)
         subject {
-            id("spectral-fingerprint-wildfire-2024")
+            id("urn:eo:fingerprint:wildfire-2024")
             "dataType" to "SpectralFingerprint"
             "data" to spectralData
             "dataDigest" to spectralDigest

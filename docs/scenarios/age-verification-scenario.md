@@ -284,7 +284,7 @@ fun main() = runBlocking {
     // Step 5: Issue age verification credential with photo (privacy-preserving - only age, not DOB)
     val ageIssuanceResult = trustWeave.issue {
         credential {
-            id("age-verification-${Instant.now().toEpochMilli()}")
+            id("urn:identity:age-verification:${Instant.now().toEpochMilli()}")
             type("VerifiableCredential", "AgeVerificationCredential", "IdentityCredential")
             issuer(identityProviderDid.value)
             subject {

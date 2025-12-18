@@ -3,6 +3,7 @@ package com.trustweave.testkit.proof
 import com.trustweave.credential.format.ProofSuiteId
 import com.trustweave.credential.identifiers.CredentialId
 import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.model.vc.CredentialProof
 import com.trustweave.credential.model.vc.CredentialSubject
 import com.trustweave.credential.model.vc.Issuer
 import com.trustweave.credential.model.vc.VerifiableCredential
@@ -188,7 +189,7 @@ class ProofEngineTestHelpers(
         claims: Map<String, Any> = emptyMap(),
         issuedAt: Instant = Clock.System.now(),
         expirationDate: Instant? = null,
-        proof: com.trustweave.credential.model.vc.CredentialProof? = null
+        proof: CredentialProof? = null
     ): VerifiableCredential {
         val issuer = issuerDid ?: fixture.createIssuerDid().id
         val subject = subjectDid ?: fixture.createIssuerDid().id
@@ -404,7 +405,7 @@ class ProofEngineTestHelpers(
         format: ProofSuiteId
     ): VerifiableCredential {
         val invalidProof = when (format.value) {
-            "vc-ld" -> com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof(
+            "vc-ld" -> CredentialProof.LinkedDataProof(
                 type = "InvalidProofType",
                 created = Clock.System.now(),
                 verificationMethod = "invalid:verification:method",
@@ -412,11 +413,11 @@ class ProofEngineTestHelpers(
                 proofValue = "invalid-signature",
                 additionalProperties = emptyMap()
             )
-            "sd-jwt-vc" -> com.trustweave.credential.model.vc.CredentialProof.SdJwtVcProof(
+            "sd-jwt-vc" -> CredentialProof.SdJwtVcProof(
                 sdJwtVc = "invalid.jwt.token",
                 disclosures = null
             )
-            else -> com.trustweave.credential.model.vc.CredentialProof.LinkedDataProof(
+            else -> CredentialProof.LinkedDataProof(
                 type = "InvalidProofType",
                 created = Clock.System.now(),
                 verificationMethod = "invalid:verification:method",
@@ -492,7 +493,7 @@ object ProofEngineTestData {
         subjectDid: String = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
         credentialType: String = "TestCredential",
         claims: Map<String, Any> = emptyMap(),
-        proof: com.trustweave.credential.model.vc.CredentialProof? = null
+        proof: CredentialProof? = null
     ): VerifiableCredential {
         val jsonClaims = claims.mapValues { (_, value) ->
             when (value) {

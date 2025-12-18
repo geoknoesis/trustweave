@@ -1,6 +1,7 @@
 package com.trustweave.testkit.integration
 
 import com.trustweave.did.DidMethod
+import com.trustweave.did.didCreationOptions
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.kms.KeyManagementService
 import com.trustweave.testkit.TrustWeaveTestFixture
@@ -40,7 +41,7 @@ class MultiPluginScenario(
         // Create DIDs with each method
         val documents = methods.map { method ->
             method.createDid(
-                com.trustweave.did.didCreationOptions {
+                didCreationOptions {
                     algorithm = com.trustweave.did.KeyAlgorithm.ED25519
                 }
             )
@@ -103,7 +104,7 @@ class MultiPluginScenario(
             val method = didMethod // In real scenario, create new instance with kms
 
             val document = method.createDid(
-                com.trustweave.did.didCreationOptions {
+                didCreationOptions {
                     algorithm = com.trustweave.did.KeyAlgorithm.ED25519
                 }
             )

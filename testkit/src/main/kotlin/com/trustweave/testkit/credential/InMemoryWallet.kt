@@ -12,6 +12,8 @@ import com.trustweave.wallet.CredentialPresentation
 import com.trustweave.wallet.CredentialQueryBuilder
 import com.trustweave.wallet.DidManagement
 import com.trustweave.wallet.Wallet
+import com.trustweave.core.identifiers.Iri
+import com.trustweave.credential.proof.ProofOptions
 import com.trustweave.did.model.DidDocument
 import com.trustweave.did.DidCreationOptions
 import com.trustweave.did.identifiers.Did
@@ -284,7 +286,7 @@ class InMemoryWallet(
     override suspend fun createPresentation(
         credentialIds: List<String>,
         holderDid: String,
-        options: com.trustweave.credential.proof.ProofOptions
+        options: ProofOptions
     ): VerifiablePresentation {
         val credentialsToInclude = credentialIds.mapNotNull { id ->
             credentials[id] ?: archivedCredentials[id]
@@ -298,7 +300,7 @@ class InMemoryWallet(
             id = null, // Will be generated if needed
             type = listOf(CredentialType.Custom("VerifiablePresentation")),
             verifiableCredential = credentialsToInclude,
-            holder = com.trustweave.core.identifiers.Iri(holderDid),
+            holder = Iri(holderDid),
             proof = null, // Proof generation would be handled by PresentationService
             challenge = options.challenge,
             domain = options.domain
@@ -309,7 +311,7 @@ class InMemoryWallet(
         credentialIds: List<String>,
         disclosedFields: List<String>,
         holderDid: String,
-        options: com.trustweave.credential.proof.ProofOptions
+        options: ProofOptions
     ): VerifiablePresentation {
         // Simplified implementation - real selective disclosure would filter fields
         return createPresentation(credentialIds, holderDid, options)
@@ -351,7 +353,7 @@ class InMemoryWallet(
         return if (managedDids.contains(did)) {
             // Return a minimal mock DID document
             DidDocument(
-                id = com.trustweave.did.identifiers.Did(did),
+                id = Did(did),
                 verificationMethod = emptyList(),
                 authentication = emptyList(),
                 assertionMethod = emptyList()

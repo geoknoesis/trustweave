@@ -158,150 +158,98 @@ Here's the full Earth Observation data integrity workflow using the TrustWeave f
 ```kotlin
 package com.example.earth.observation
 
-import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.dsl.trustWeave
-import com.trustweave.trust.types.*
-import com.trustweave.core.util.DigestUtils
 import com.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
 import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 
 fun main() = runBlocking {
     println("=".repeat(70))
     println("Earth Observation Data Integrity Scenario - Complete End-to-End Example")
     println("=".repeat(70))
 
-    // Step 1: Initialize TrustWeave with in-memory providers for testing
-    val tw = trustWeave {
+    trustWeave {
         keys { provider("inMemory"); algorithm("Ed25519") }
         did { method("key") { algorithm("Ed25519") } }
         anchor { chain("inmemory:testnet") { provider("inMemory") } }
-    }
-    println("\n✅ TrustWeave initialized with blockchain anchoring")
-
-    // Step 2: Create DID for data provider (using getOrThrow for concise error handling)
-    val (providerDid, providerDoc) = tw.createDid { method("key") }.getOrThrow()
-    val providerKeyId = providerDoc.verificationMethod.first().id.substringAfter("#")
-    println("✅ Data Provider DID: ${providerDid.value}")
-
-    // Step 3-5: Create artifacts, compute digests, and issue credential inline
-    val credential = tw.issue {
-        // Compute artifact digests inline using run blocks
-        val metadataDigest = DigestUtils.sha256DigestMultibase(buildJsonObject {
-            put("id", "metadata-1")
-            put("title", "Sentinel-2 L2A Dataset")
-            put("description", "Atmospherically corrected Sentinel-2 Level 2A product")
-            put("spatialCoverage", buildJsonObject {
-                put("type", "Polygon")
-                put("coordinates", "[-122.5,37.8],[-122.3,37.8],[-122.3,37.9],[-122.5,37.9],[-122.5,37.8]")
-            })
-            put("temporalCoverage", buildJsonObject {
-                put("startDate", "2023-06-15T00:00:00Z")
-                put("endDate", "2023-06-15T23:59:59Z")
-            })
-        })
+    }.run {
+        println("\n✅ TrustWeave initialized")
         
-        val provenanceDigest = DigestUtils.sha256DigestMultibase(buildJsonObject {
-            put("id", "provenance-1")
-            put("activity", "EO Data Collection")
-            put("agent", providerDid.value)
-            put("startedAtTime", Clock.System.now().toString())
-            put("endedAtTime", Clock.System.now().toString())
-        })
-        
-        val qualityDigest = DigestUtils.sha256DigestMultibase(buildJsonObject {
-            put("id", "quality-1")
-            put("qualityScore", 0.95)
-            put("metrics", buildJsonObject {
-                put("completeness", 0.98)
-                put("accuracy", 0.92)
-                put("temporalConsistency", 0.96)
-            })
-        })
-        
-        val linksetDigest = DigestUtils.sha256DigestMultibase(buildJsonObject {
-            put("id", "linkset-1")
-            put("links", buildJsonObject {
-                put("metadata", buildJsonObject { put("href", "metadata-1"); put("digestMultibase", metadataDigest); put("type", "Metadata") })
-                put("provenance", buildJsonObject { put("href", "provenance-1"); put("digestMultibase", provenanceDigest); put("type", "Provenance") })
-                put("quality", buildJsonObject { put("href", "quality-1"); put("digestMultibase", qualityDigest); put("type", "QualityReport") })
-            })
-        })
-
-        credential {
-            type("EarthObservationCredential", "DataIntegrityCredential")
-            issuer(providerDid)
-            subject {
-                id("urn:eo:dataset:eo-dataset-1")
-                "dataset" {
-                    "title" to "Sentinel-2 L2A Dataset"
-                    "linksetDigest" to linksetDigest
-                    "metadataDigest" to metadataDigest
-                    "provenanceDigest" to provenanceDigest
-                    "qualityDigest" to qualityDigest
+        createDid { method("key") }.getOrThrow().let { (did, doc) ->
+            val datasetId = "did:web:eo.example.com:collections:Sentinel2:items:L1C_T31UFS_20230615"
+            println("✅ Data Provider DID: ${did.value}")
+            
+            issue {
+                credential {
+                    type("VerifiableCredential", "EOCredential")
+                    issuer(did)
+                    subject {
+                        id(datasetId)
+                        "relatedResource" to listOf(
+                            resource("eo:Imagery", "https://storage.example.com/L1C_T31UFS.tif", "sha384-oqVuAfXR..."),
+                            resource("eo:Metadata", "https://catalog.example.com/L1C_T31UFS/metadata.json", "sha384-8fA2K1n..."),
+                            resource("eo:Provenance", "https://catalog.example.com/L1C_T31UFS/provenance.json", "sha384-Qx7vBnM..."),
+                            resource("eo:QualityReport", "https://catalog.example.com/L1C_T31UFS/quality.json", "sha384-mP9kLwR...")
+                        )
+                    }
+                    issued(Clock.System.now())
+                }
+                signedBy(did, doc.verificationMethod.first().id.substringAfter("#"))
+            }.getOrThrow().also { cred ->
+                println("✅ Credential issued: ${cred.id}")
+                println("\n📄 Credential Structure:")
+                println(Json { prettyPrint = true }.encodeToString(VerifiableCredential.serializer(), cred))
+                
+                blockchains.anchor(cred, VerifiableCredential.serializer(), "inmemory:testnet").getOrThrow().ref.also { ref ->
+                    println("\n✅ Anchored: ${ref.chainId} / ${ref.txHash}")
+                    verify { credential(cred) }.getOrThrow()
+                    println("✅ Verified!")
                 }
             }
-            issued(Clock.System.now())
         }
-        signedBy(providerDid, providerKeyId)
-    }.getOrThrow()
-
-    println("✅ Artifacts created and credential issued: ${credential.id}")
-
-    // Step 6: Anchor credential to blockchain using the DSL
-    val anchorRef = tw.blockchains.anchor(
-        data = credential,
-        serializer = VerifiableCredential.serializer(),
-        chainId = "inmemory:testnet"
-    ).getOrThrow().ref
-
-    println("✅ Credential anchored to blockchain")
-    println("   Chain ID: ${anchorRef.chainId}")
-    println("   Transaction Hash: ${anchorRef.txHash}")
-
-    // Step 7: Verify the credential (throws on failure)
-    tw.verify { credential(credential) }.getOrThrow()
-    println("\n✅ Credential Verification SUCCESS")
-
-    // Step 8: Display integrity chain from credential's embedded digests
-    val dataset = credential.credentialSubject.claims["dataset"]?.jsonObject
-    println("\n🔗 Integrity Chain Verification (from credential):")
-    println("   Metadata digest: ${dataset?.get("metadataDigest")}")
-    println("   Provenance digest: ${dataset?.get("provenanceDigest")}")
-    println("   Quality digest: ${dataset?.get("qualityDigest")}")
-    println("   Linkset digest: ${dataset?.get("linksetDigest")}")
-    println("   Credential anchored: ${anchorRef.txHash}")
-    println("   ✅ Complete integrity chain verified!")
-
-    println("\n" + "=".repeat(70))
-    println("✅ Earth Observation Scenario Complete!")
-    println("=".repeat(70))
+    }
+    println("\n${"=".repeat(70)}\n✅ Earth Observation Scenario Complete!\n${"=".repeat(70)}")
 }
 
+// Helper to build relatedResource entries
+fun resource(type: String, url: String, digest: String) = mapOf(
+    "type" to listOf("Link", type),
+    "contentUrl" to url,
+    "digestSRI" to digest
+)
+```
+
 **Expected Output:**
+
 ```
 ======================================================================
 Earth Observation Data Integrity Scenario - Complete End-to-End Example
 ======================================================================
 
-✅ TrustWeave initialized with blockchain anchoring
+✅ TrustWeave initialized
 ✅ Data Provider DID: did:key:z6Mk...
-✅ Artifacts created and credential issued: urn:uuid:...
-✅ Credential anchored to blockchain
-   Chain ID: inmemory:testnet
-   Transaction Hash: tx_...
+✅ Credential issued: urn:uuid:...
 
-✅ Credential Verification SUCCESS
+📄 Credential Structure:
+{
+  "@context": "https://www.w3.org/ns/credentials/v2",
+  "id": "urn:uuid:...",
+  "type": ["VerifiableCredential", "EOCredential"],
+  "issuer": "did:key:z6Mk...",
+  "credentialSubject": {
+    "id": "did:web:eo.example.com:collections:Sentinel2:items:L1C_T31UFS_20230615",
+    "relatedResource": [
+      { "type": ["Link", "eo:Imagery"], "contentUrl": "https://storage.example.com/L1C_T31UFS.tif", "digestSRI": "sha384-oqVuAfXR..." },
+      { "type": ["Link", "eo:Metadata"], "contentUrl": "https://catalog.example.com/L1C_T31UFS/metadata.json", "digestSRI": "sha384-8fA2K1n..." },
+      ...
+    ]
+  },
+  "proof": { ... }
+}
 
-🔗 Integrity Chain Verification (from credential):
-   Metadata digest: "u5v..."
-   Provenance digest: "u5v..."
-   Quality digest: "u5v..."
-   Linkset digest: "u5v..."
-   Credential anchored: tx_...
-   ✅ Complete integrity chain verified!
+✅ Anchored: inmemory:testnet / tx_...
+✅ Verified!
 
 ======================================================================
 ✅ Earth Observation Scenario Complete!
@@ -314,14 +262,11 @@ Earth Observation Data Integrity Scenario - Complete End-to-End Example
 3. Run with `./gradlew run` or execute in your IDE
 
 **What this demonstrates:**
-- ✅ Complete data provider → integrity chain → blockchain workflow
-- ✅ DID creation using fluent `getOrThrow()` extensions
-- ✅ **All artifact digests computed inline within credential issuance**
-- ✅ Linkset creation linking all artifacts together
-- ✅ Single `issue { }` block handles everything
-- ✅ Blockchain anchoring via `blockchains.anchor()` API
-- ✅ Verification with `getOrThrow()` for concise error handling
-- ✅ Digests extracted from credential for display
+- ✅ W3C VC 2.0 compliant credential structure
+- ✅ `relatedResource` pattern with `digestSRI` for integrity
+- ✅ Clean DSL without intermediate variables
+- ✅ DID → Issue → Anchor → Verify in one fluent expression
+- ✅ Resources linked by URL with Subresource Integrity hashes
 
 ## Step 3: Step-by-Step Breakdown
 
@@ -440,81 +385,83 @@ val anchorClient = AlgorandBlockchainAnchorClient(
 
 **Important**: Never use real Algorand mainnet credentials in test code!
 
-## Step 6: Customizing Artifacts
+## Step 6: Customizing Resources
 
-The example uses standard artifact types, but you can customize them for your specific needs.
+The example uses standard resource types, but you can customize them for your specific needs.
 
-### Custom Metadata
+### Custom Resource Types
 
-Add domain-specific fields to metadata:
+Define domain-specific resource types:
 
 ```kotlin
-// Custom metadata artifact with EO-specific fields
-val customMetadata = buildJsonObject {
-    put("title", "My Custom Dataset")
-    put("description", "Custom description")
-    put("spatialResolution", "10m")  // Resolution in meters
-    put("temporalResolution", "5 days")  // How often data is collected
-    put("sensor", "Sentinel-2")  // Which satellite/sensor
-    put("processingLevel", "L2A")  // Processing level
-    put("cloudCoverage", 0.05)  // Cloud coverage percentage
-    put("bands", buildJsonArray {  // Available spectral bands
-        add("B02"); add("B03"); add("B04"); add("B08")
-    })
-}
-val metadataDigest = DigestUtils.sha256DigestMultibase(customMetadata)
-val metadataArtifact = TestDataBuilders.buildArtifact(
-    id = "custom-metadata-1",
-    type = "Metadata",
-    content = customMetadata,
-    digestMultibase = metadataDigest
+"relatedResource" to listOf(
+    // Core imagery with bands
+    resource("eo:Imagery", "https://storage.example.com/data.tif", computeSRI(imageryBytes)),
+    
+    // Spectral bands as separate resources
+    resource("eo:Band:B02", "https://storage.example.com/B02.tif", computeSRI(b02Bytes)),
+    resource("eo:Band:B03", "https://storage.example.com/B03.tif", computeSRI(b03Bytes)),
+    
+    // Processing provenance
+    resource("eo:Provenance", "https://catalog.example.com/provenance.json", computeSRI(provenanceJson)),
+    
+    // Quality metrics
+    resource("eo:QualityReport", "https://catalog.example.com/quality.json", computeSRI(qualityJson)),
+    
+    // STAC metadata
+    resource("stac:Item", "https://catalog.example.com/item.json", computeSRI(stacItemJson))
 )
 ```
 
-### Custom Provenance
+### Computing SRI Hashes
 
-Track detailed provenance information:
-
-```kotlin
-val customProvenance = buildJsonObject {
-    put("activity", "EO Data Collection")
-    put("agent", issuerDid)
-    put("startTime", "2024-01-15T10:00:00Z")
-    put("endTime", "2024-01-15T10:20:00Z")
-    put("instrument", "MSI")  // MultiSpectral Instrument
-    put("orbit", "12345")
-    put("processingSteps", buildJsonArray {
-        add("Atmospheric correction")
-        add("Cloud masking")
-        add("Radiometric calibration")
-    })
-}
-```
-
-### Custom Quality Metrics
-
-Add domain-specific quality metrics:
+Use standard Subresource Integrity (SRI) format:
 
 ```kotlin
-val customQuality = buildJsonObject {
-    put("overallQuality", 0.95)
-    put("metrics", buildJsonObject {
-        put("completeness", 0.98)
-        put("accuracy", 0.92)
-        put("temporalConsistency", 0.96)
-        put("spatialAccuracy", 0.94)  // EO-specific
-        put("radiometricAccuracy", 0.91)  // EO-specific
-        put("geometricAccuracy", 0.93)  // EO-specific
-    })
-    put("validation", buildJsonObject {
-        put("validatedBy", "Quality Assurance Team")
-        put("validationDate", "2024-01-16")
-        put("validationMethod", "Automated + Manual Review")
-    })
+import java.security.MessageDigest
+import java.util.Base64
+
+fun computeSRI(data: ByteArray, algorithm: String = "SHA-384"): String {
+    val digest = MessageDigest.getInstance(algorithm).digest(data)
+    val base64 = Base64.getEncoder().encodeToString(digest)
+    return "${algorithm.lowercase().replace("-", "")}-$base64"
 }
+
+// Example usage:
+val metadataJson = """{"title": "Sentinel-2 L2A", "sensor": "MSI"}""".toByteArray()
+val sri = computeSRI(metadataJson)  // "sha384-8fA2K1n..."
 ```
 
-**Tip**: Follow existing standards (ISO 19115, DCAT, PROV, DQV) when possible for interoperability.
+### Extended Resource Helper
+
+For more complex resources:
+
+```kotlin
+fun resource(
+    type: String,
+    url: String,
+    digest: String,
+    mediaType: String? = null,
+    size: Long? = null
+) = buildMap {
+    put("type", listOf("Link", type))
+    put("contentUrl", url)
+    put("digestSRI", digest)
+    mediaType?.let { put("encodingFormat", it) }
+    size?.let { put("contentSize", it) }
+}
+
+// Usage with full metadata:
+resource(
+    type = "eo:Imagery",
+    url = "https://storage.example.com/L1C_T31UFS.tif",
+    digest = "sha384-oqVuAfXR...",
+    mediaType = "image/tiff",
+    size = 1_234_567_890
+)
+```
+
+**Tip**: Follow W3C VC 2.0 `relatedResource` spec and standard media types for interoperability.
 
 ## Next Steps
 
@@ -523,39 +470,38 @@ val customQuality = buildJsonObject {
 
 ## Common Questions
 
-### Why do we compute digests before adding them?
+### Why use `relatedResource` with `digestSRI`?
 
-We compute digests before adding them to avoid circular dependencies:
-- **VC digest** depends on VC content (including linksetDigest)
-- But if VC digest was already in VC, it would change the digest!
-- Solution: Compute digest from VC without digest field, then add it
-
-Same logic applies to Linkset.
+This follows W3C VC 2.0 best practices:
+- **Standard format**: `digestSRI` uses Subresource Integrity (SRI) format (`sha384-base64...`)
+- **Self-contained**: Each resource carries its own integrity hash
+- **Web-native**: SRI is a W3C standard used by browsers for script integrity
+- **Verifiable**: Fetch the URL, compute hash, compare with `digestSRI`
 
 ### Why store only digests on blockchain?
 
 Storing full data on blockchain is expensive and unnecessary:
-- **Digests are small**: ~44 characters vs. potentially megabytes of data
+- **Digests are small**: ~64 characters vs. potentially megabytes of data
 - **Digests are sufficient**: If digest matches, data is intact
-- **Data can be stored elsewhere**: IPFS, cloud storage, etc.
-- **Blockchain provides proof**: Timestamp and immutability
+- **Data can be stored elsewhere**: IPFS, cloud storage, CDN, etc.
+- **Blockchain provides proof**: Timestamp and immutability of the credential
 
 ### What if I need to update data?
 
-The integrity chain is immutable, but you can:
-1. **Create a new VC**: Issue a new credential with updated data
-2. **Link versions**: Reference previous VC in new VC
-3. **Track history**: All versions remain verifiable
+The credential is immutable, but you can:
+1. **Issue a new credential**: With updated resources and digests
+2. **Link versions**: Reference previous credential ID in new credential
+3. **Revoke old**: Mark old credential as superseded
 
-### How do I share this with others?
+### How do I verify this credential?
 
-Share:
-- The VC (with digest and linksetDigest)
-- The Linkset
-- The artifacts
-- The blockchain anchor reference
+Verification flow:
+1. **Verify signature**: Check the credential's cryptographic proof
+2. **Fetch resources**: Download each `contentUrl`
+3. **Check digests**: Compute SRI hash, compare with `digestSRI`
+4. **Check anchor**: Verify blockchain anchor if present
 
-Anyone can verify the chain using these components!
+Anyone with the credential can verify the complete integrity chain!
 
 ## Troubleshooting
 

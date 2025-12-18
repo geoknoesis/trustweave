@@ -47,7 +47,7 @@ cd trustweave
 
 ```bash
 # Build specific module
-./gradlew :TrustWeave-core:build
+./gradlew :trust:build
 
 # Build all modules
 ./gradlew build
@@ -65,10 +65,10 @@ cd trustweave
 
 ```bash
 # Run tests for specific module
-./gradlew :TrustWeave-core:test
+./gradlew :trust:test
 
 # Run specific test class
-./gradlew :TrustWeave-core:test --tests "DidMethodTest"
+./gradlew :trust:test --tests "TrustWeaveTest"
 ```
 
 ### EO Integration Tests
@@ -133,7 +133,7 @@ git checkout -b feature/my-feature
 ./gradlew test
 
 # Run specific module tests
-./gradlew :TrustWeave-core:test
+./gradlew :trust:test
 ```
 
 ### Building Before Commit

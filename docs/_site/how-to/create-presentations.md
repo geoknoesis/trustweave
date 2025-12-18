@@ -21,7 +21,7 @@ Verifiable Presentations allow credential holders to share credentials selective
 - **Kotlin**: 2.2.0 or higher
 - **Java**: 21 or higher
 - **TrustWeave SDK**: Latest version
-- **Dependencies**: TrustWeave-core and TrustWeave-testkit
+- **Dependencies**: `distribution-all` and `testkit`
 
 **Required imports:**
 ```kotlin

@@ -20,7 +20,7 @@ Verifiable Credentials enable trust without intermediaries. They're tamper-proof
 - **Kotlin**: 2.2.0 or higher
 - **Java**: 21 or higher
 - **TrustWeave SDK**: Latest version
-- **Dependencies**: TrustWeave-core and TrustWeave-testkit (for in-memory KMS)
+- **Dependencies**: `distribution-all` and `testkit` (for in-memory KMS)
 
 **Required imports:**
 ```kotlin

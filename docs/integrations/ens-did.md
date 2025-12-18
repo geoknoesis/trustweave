@@ -26,7 +26,7 @@ dependencies {
     implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
     implementation("com.trustweave.did:ethr:1.0.0-SNAPSHOT")
     implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-core:1.0.0-SNAPSHOT")
+    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Web3j for Ethereum blockchain
     implementation("org.web3j:core:4.10.0")

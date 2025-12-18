@@ -14,7 +14,7 @@ dependencies {
 }
 ```
 
-**Result:** Your project can implement and register custom credential providers using the SPI documented below. SPI interfaces are included in `trustweave-core`.
+**Result:** Your project can implement and register custom credential providers using the SPI documented below. SPI interfaces are included in `distribution-all`.
 
 ## Core Interfaces
 

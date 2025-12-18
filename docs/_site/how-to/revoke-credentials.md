@@ -21,7 +21,7 @@ Revocation is essential for credential lifecycle management. It allows issuers t
 - **Kotlin**: 2.2.0 or higher
 - **Java**: 21 or higher
 - **TrustWeave SDK**: Latest version
-- **Dependencies**: TrustWeave-core with revocation support
+- **Dependencies**: `distribution-all` with revocation support
 
 **Required imports:**
 ```kotlin

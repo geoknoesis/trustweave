@@ -1,5 +1,6 @@
 ---
 title: Web DID Integration
+parent: Integration Modules
 ---
 
 # Web DID Integration

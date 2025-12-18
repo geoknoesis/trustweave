@@ -1,5 +1,6 @@
 ---
 title: GoDiddy Integration
+parent: Integration Modules
 ---
 
 # GoDiddy Integration

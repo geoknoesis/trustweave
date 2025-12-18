@@ -1,5 +1,6 @@
 ---
 title: Azure Key Vault Integration
+parent: Integration Modules
 ---
 
 # Azure Key Vault Integration

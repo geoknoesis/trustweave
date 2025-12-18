@@ -1,5 +1,6 @@
 ---
 title: Base Blockchain Anchor Integration
+parent: Integration Modules
 ---
 
 # Base Blockchain Anchor Integration

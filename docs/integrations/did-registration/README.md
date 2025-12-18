@@ -1,5 +1,7 @@
 ---
 title: DID Method Registration via JSON
+parent: Integration Modules
+has_children: true
 ---
 
 # DID Method Registration via JSON

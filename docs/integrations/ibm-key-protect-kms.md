@@ -1,5 +1,6 @@
 ---
 title: IBM Key Protect KMS Integration
+parent: Integration Modules
 ---
 
 # IBM Key Protect KMS Integration

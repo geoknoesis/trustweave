@@ -1,5 +1,6 @@
 ---
 title: Google Cloud KMS Integration
+parent: Integration Modules
 ---
 
 # Google Cloud KMS Integration

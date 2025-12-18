@@ -1,5 +1,6 @@
 ---
 title: ENS DID (did:ens) Integration
+parent: Integration Modules
 ---
 
 # ENS DID (did:ens) Integration

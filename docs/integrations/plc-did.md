@@ -1,5 +1,6 @@
 ---
 title: PLC DID (did:plc) Integration
+parent: Integration Modules
 ---
 
 # PLC DID (did:plc) Integration

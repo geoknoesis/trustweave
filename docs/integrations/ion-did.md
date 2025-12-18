@@ -1,5 +1,6 @@
 ---
 title: ION DID Integration
+parent: Integration Modules
 ---
 
 # ION DID Integration

@@ -1,5 +1,6 @@
 ---
 title: Key DID Integration
+parent: Integration Modules
 ---
 
 # Key DID Integration

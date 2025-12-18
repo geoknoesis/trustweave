@@ -1,5 +1,6 @@
 ---
 title: Ethereum DID (did:ethr) Integration
+parent: Integration Modules
 ---
 
 # Ethereum DID (did:ethr) Integration

@@ -1,5 +1,6 @@
 ---
 title: AWS KMS Integration
+parent: Integration Modules
 ---
 
 # AWS KMS Integration

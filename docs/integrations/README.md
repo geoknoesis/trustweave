@@ -1,6 +1,7 @@
 ---
 title: Integration Modules
 nav_order: 90
+has_children: true
 ---
 
 # Integration Modules

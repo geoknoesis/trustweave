@@ -1,5 +1,6 @@
 ---
 title: Cheqd DID (did:cheqd) Integration
+parent: Integration Modules
 ---
 
 # Cheqd DID (did:cheqd) Integration

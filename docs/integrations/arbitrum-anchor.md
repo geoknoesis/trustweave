@@ -1,5 +1,6 @@
 ---
 title: Arbitrum Blockchain Anchor Integration
+parent: Integration Modules
 ---
 
 # Arbitrum Blockchain Anchor Integration

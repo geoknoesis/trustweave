@@ -1,5 +1,7 @@
 ---
 title: Official DID Registration Specification Support
+parent: DID Method Registration via JSON
+grand_parent: Integration Modules
 ---
 
 # Official DID Registration Specification Support

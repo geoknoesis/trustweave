@@ -1,5 +1,6 @@
 ---
 title: JWK DID Integration
+parent: Integration Modules
 ---
 
 # JWK DID Integration

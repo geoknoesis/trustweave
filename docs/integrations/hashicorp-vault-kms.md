@@ -1,5 +1,6 @@
 ---
 title: HashiCorp Vault KMS Integration
+parent: Integration Modules
 ---
 
 # HashiCorp Vault KMS Integration

@@ -1,5 +1,6 @@
 ---
 title: walt.id Integration
+parent: Integration Modules
 ---
 
 # walt.id Integration

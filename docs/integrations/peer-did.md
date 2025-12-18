@@ -1,5 +1,6 @@
 ---
 title: Peer DID Integration
+parent: Integration Modules
 ---
 
 # Peer DID Integration

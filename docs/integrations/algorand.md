@@ -1,5 +1,6 @@
 ---
 title: Algorand Integration
+parent: Integration Modules
 ---
 
 # Algorand Integration

@@ -1,5 +1,7 @@
 ---
 title: DID Method Registration JSON Specification
+parent: DID Method Registration via JSON
+grand_parent: Integration Modules
 ---
 
 # DID Method Registration JSON Specification

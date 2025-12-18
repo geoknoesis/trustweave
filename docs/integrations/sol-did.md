@@ -1,5 +1,6 @@
 ---
 title: Solana DID Integration
+parent: Integration Modules
 ---
 
 # Solana DID Integration

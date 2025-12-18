@@ -1,5 +1,6 @@
 ---
 title: Polygon DID Integration
+parent: Integration Modules
 ---
 
 # Polygon DID Integration

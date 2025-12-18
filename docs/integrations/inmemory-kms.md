@@ -1,5 +1,6 @@
 ---
 title: InMemory KMS Integration
+parent: Integration Modules
 ---
 
 # InMemory KMS Integration

@@ -1,5 +1,6 @@
 ---
 title: Ethereum Blockchain Anchor Integration
+parent: Integration Modules
 ---
 
 # Ethereum Blockchain Anchor Integration

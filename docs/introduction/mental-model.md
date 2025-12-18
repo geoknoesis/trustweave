@@ -84,13 +84,13 @@ flowchart TB
 **Example:**
 ```kotlin
 val trustWeave = TrustWeave.build {
-    keys { provider("inMemory"); algorithm("Ed25519") }
-    did { method("key") { algorithm("Ed25519") } }
+    keys { provider(IN_MEMORY); algorithm(ED25519) }
+    did { method(KEY) { algorithm(ED25519) } }
 }
 
 // All operations throw exceptions
 try {
-    val did = trustWeave.createDid { method("key") }
+    val did = trustWeave.createDid { method(KEY) }
     val credential = trustWeave.issue { ... }
 } catch (error: TrustWeaveException) {
     // Handle error
@@ -216,16 +216,16 @@ TrustWeave uses a **builder pattern** for configuration:
 TrustWeave.build {
     // Configure KMS
     keys {
-        provider("inMemory")  // Select KMS plugin
-        algorithm("Ed25519")  // Select algorithm
+        provider(IN_MEMORY)  // Select KMS plugin
+        algorithm(ED25519)  // Select algorithm
     }
 
     // Configure DID methods
     did {
-        method("key") {        // Register did:key method
-            algorithm("Ed25519")
+        method(KEY) {        // Register did:key method
+            algorithm(ED25519)
         }
-        method("web") {        // Register did:web method
+        method(WEB) {        // Register did:web method
             domain("example.com")
         }
     }
@@ -233,13 +233,13 @@ TrustWeave.build {
     // Configure blockchain anchors
     anchor {
         chain("algorand:testnet") {
-            provider("algorand")
+            provider(ALGORAND)
         }
     }
 
     // Configure trust registry
     trust {
-        provider("inMemory")
+        provider(IN_MEMORY)
     }
 }
 ```
@@ -263,7 +263,7 @@ import com.trustweave.did.exception.DidException.DidMethodNotRegistered
 import com.trustweave.core.exception.TrustWeaveException
 
 try {
-    val did = trustWeave.createDid { method("key") }
+    val did = trustWeave.createDid { method(KEY) }
 } catch (error: DidException) {
     when (error) {
         is DidMethodNotRegistered -> {

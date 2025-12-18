@@ -837,8 +837,8 @@ suspend fun completeFloodInsuranceWorkflow() {
             kmsFactory = TestkitKmsFactory(),
             didMethodFactory = TestkitDidMethodFactory()
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
         blockchains {
             "algorand:mainnet" to algorandClient
         }
@@ -850,19 +850,19 @@ suspend fun completeFloodInsuranceWorkflow() {
     import com.trustweave.trust.types.IssuanceResult
     import com.trustweave.trust.types.VerificationResult
     
-    val insurerDidResult = trustWeave.createDid { method("key") }
+    val insurerDidResult = trustWeave.createDid { method(KEY) }
     val insurerDid = when (insurerDidResult) {
         is DidCreationResult.Success -> insurerDidResult.did
         else -> throw IllegalStateException("Failed to create insurer DID")
     }
     
-    val insuredDidResult = trustWeave.createDid { method("key") }
+    val insuredDidResult = trustWeave.createDid { method(KEY) }
     val insuredDid = when (insuredDidResult) {
         is DidCreationResult.Success -> insuredDidResult.did
         else -> throw IllegalStateException("Failed to create insured DID")
     }
     
-    val eoProviderDidResult = trustWeave.createDid { method("key") }
+    val eoProviderDidResult = trustWeave.createDid { method(KEY) }
     val eoProviderDid = when (eoProviderDidResult) {
         is DidCreationResult.Success -> eoProviderDidResult.did
         else -> throw IllegalStateException("Failed to create EO provider DID")
@@ -977,7 +977,7 @@ class AtlasParametricPlatform {
 
         // Create DIDs for EO providers
         val eoProviderDidResult = runBlocking {
-            trustWeave.createDid { method("key") }
+            trustWeave.createDid { method(KEY) }
         }
         
         val eoProviderDid = when (eoProviderDidResult) {
@@ -1342,4 +1342,5 @@ class AuditTrailService(
 - [Earth Observation Scenario](earth-observation-scenario.md) - EO data integrity
 - [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
+
 

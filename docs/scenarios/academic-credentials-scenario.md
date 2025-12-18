@@ -154,11 +154,11 @@ Here's the full academic credential flow using the TrustWeave facade API. This c
 ```kotlin
 package com.example.academic.credentials
 
-import com.trustweave.TrustWeave
-import com.trustweave.core.*
-import com.trustweave.credential.PresentationOptions
-import com.trustweave.credential.wallet.Wallet
-import com.trustweave.credential.format.ProofSuiteId
+import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods.KEY
+import com.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import com.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import com.trustweave.trust.types.VerificationResult
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -170,50 +170,22 @@ fun main() = runBlocking {
 
     // Step 1: Create TrustWeave instance
     val trustWeave = TrustWeave.build {
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
-        credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
     }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for university (issuer) and student (holder)
-    import com.trustweave.trust.types.DidCreationResult
-    
-    val universityDidResult = trustWeave.createDid { method("key") }
-    val universityDid = when (universityDidResult) {
-        is DidCreationResult.Success -> universityDidResult.did
-        else -> {
-            println("Failed to create university DID: ${universityDidResult.reason}")
-            return@runBlocking
-        }
-    }
-    
-    val universityResolution = trustWeave.resolveDid(universityDid)
-    val universityDoc = when (universityResolution) {
-        is DidResolutionResult.Success -> universityResolution.document
-        else -> throw IllegalStateException("Failed to resolve university DID")
-    }
-    val universityKeyId = universityDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
-        ?: throw IllegalStateException("No verification method found")
+    val (universityDid, universityDoc) = trustWeave.createDid().getOrThrow()
+    val universityKeyId = universityDoc.verificationMethod.first().id.substringAfter("#")
 
-    val studentDidResult = trustWeave.createDid { method("key") }
-    val studentDid = when (studentDidResult) {
-        is DidCreationResult.Success -> studentDidResult.did
-        else -> {
-            println("Failed to create student DID: ${studentDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    val (studentDid, _) = trustWeave.createDid().getOrThrow()
 
     println("✅ University DID: ${universityDid.value}")
     println("✅ Student DID: ${studentDid.value}")
 
     // Step 3: Issue a degree credential
-    import com.trustweave.trust.types.IssuanceResult
-    import com.trustweave.trust.types.WalletCreationResult
-    import com.trustweave.trust.types.VerificationResult
-    
-    val issuanceResult = trustWeave.issue {
+    val credential = trustWeave.issue {
         credential {
             id("https://example.edu/credentials/degree-${Instant.now().toEpochMilli()}")
             type("VerifiableCredential", "DegreeCredential", "BachelorDegreeCredential")
@@ -234,28 +206,18 @@ fun main() = runBlocking {
             expires(10, ChronoUnit.YEARS)
         }
         signedBy(issuerDid = universityDid.value, keyId = universityKeyId)
-    }
-    
-    val credential = when (issuanceResult) {
-        is IssuanceResult.Success -> issuanceResult.credential
-        else -> throw IllegalStateException("Failed to issue credential")
-    }
+    }.getOrThrow()
 
     println("✅ Credential issued: ${credential.id}")
     println("   Type: ${credential.type.joinToString()}")
     println("   Issuer: ${credential.issuer}")
 
     // Step 4: Create student wallet and store credential
-    val walletResult = trustWeave.wallet {
+    val studentWallet = trustWeave.wallet {
         holder(studentDid.value)
         organization { enabled = true }
         presentation { enabled = true }
-    }
-    
-    val studentWallet = when (walletResult) {
-        is WalletCreationResult.Success -> walletResult.wallet
-        else -> throw IllegalStateException("Failed to create wallet")
-    }
+    }.getOrThrow()
 
     val credentialId = studentWallet.store(credential)
     println("✅ Credential stored in wallet: $credentialId")
@@ -378,8 +340,8 @@ Create a TrustWeave instance that provides access to all functionality:
 
 ```kotlin
     val trustWeave = TrustWeave.build {
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
         credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
     }
 ```
@@ -394,7 +356,7 @@ Each party (university issuer and student holder) needs their own DID:
 // Create university DID (issuer)
 import com.trustweave.trust.types.DidCreationResult
 
-val universityDidResult = trustWeave.createDid { method("key") }
+val universityDidResult = trustWeave.createDid { method(KEY) }
 val universityDid = when (universityDidResult) {
     is DidCreationResult.Success -> universityDidResult.did
     else -> throw IllegalStateException("Failed to create university DID: ${universityDidResult.reason}")
@@ -409,7 +371,7 @@ val universityKeyId = universityDoc.verificationMethod.firstOrNull()?.id?.substr
     ?: throw IllegalStateException("No verification method found")
 
 // Create student DID (holder)
-val studentDidResult = trustWeave.createDid { method("key") }
+val studentDidResult = trustWeave.createDid { method(KEY) }
 val studentDid = when (studentDidResult) {
     is DidCreationResult.Success -> studentDidResult.did
     else -> throw IllegalStateException("Failed to create student DID: ${studentDidResult.reason}")
@@ -700,4 +662,5 @@ Use schemas to ensure credential structure:
 - Learn about [Wallet API Tutorial](../tutorials/wallet-api-tutorial.md)
 - Explore [Verifiable Credentials](../core-concepts/verifiable-credentials.md)
 - Check out [Professional Identity Scenario](professional-identity-scenario.md)
+
 

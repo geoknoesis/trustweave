@@ -235,8 +235,8 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),
             didMethodFactory = TestkitDidMethodFactory()
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
         credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
     }
 
@@ -248,7 +248,7 @@ fun main() = runBlocking {
 
     // Step 2: Create supply chain participant DIDs
     println("\nStep 2: Creating supply chain participant DIDs...")
-    val manufacturerDidResult = trustWeave.createDid { method("key") }
+    val manufacturerDidResult = trustWeave.createDid { method(KEY) }
     val manufacturerDid = when (manufacturerDidResult) {
         is DidCreationResult.Success -> {
             println("Manufacturer DID: ${manufacturerDidResult.did.value}")
@@ -260,7 +260,7 @@ fun main() = runBlocking {
         }
     }
 
-    val distributorDidResult = trustWeave.createDid { method("key") }
+    val distributorDidResult = trustWeave.createDid { method(KEY) }
     val distributorDid = when (distributorDidResult) {
         is DidCreationResult.Success -> {
             println("Distributor DID: ${distributorDidResult.did.value}")
@@ -272,7 +272,7 @@ fun main() = runBlocking {
         }
     }
 
-    val retailerDidResult = trustWeave.createDid { method("key") }
+    val retailerDidResult = trustWeave.createDid { method(KEY) }
     val retailerDid = when (retailerDidResult) {
         is DidCreationResult.Success -> {
             println("Retailer DID: ${retailerDidResult.did.value}")
@@ -1159,5 +1159,6 @@ fun verifyLuxuryGoodAuthenticity(
 - Explore [Proof of Location Scenario](proof-of-location-scenario.md) for geospatial tracking
 - Check out [Financial Services & KYC Scenario](financial-services-kyc-scenario.md) for related verification
 - Review [Core Concepts: Verifiable Credentials](../core-concepts/verifiable-credentials.md) for credential details
+
 
 

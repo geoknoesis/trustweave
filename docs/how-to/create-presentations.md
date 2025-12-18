@@ -126,19 +126,19 @@ Create a wallet with presentation capabilities enabled:
 ```kotlin
 val trustWeave = TrustWeave.build {
     keys {
-        provider("inMemory")
-        algorithm("Ed25519")
+        provider(IN_MEMORY)
+        algorithm(ED25519)
     }
     
     did {
-        method("key") {
-            algorithm("Ed25519")
+        method(KEY) {
+            algorithm(ED25519)
         }
     }
 }
 
 // Create holder DID
-val holderDid = trustWeave.createDid { method("key") }
+val holderDid = trustWeave.createDid { method(KEY) }
 
 // Create wallet with presentation support
 val wallet = trustWeave.wallet {
@@ -286,20 +286,20 @@ fun main() = runBlocking {
     // Step 1: Configure TrustWeave
     val trustWeave = TrustWeave.build {
         keys {
-            provider("inMemory")
-            algorithm("Ed25519")
+            provider(IN_MEMORY)
+            algorithm(ED25519)
         }
         
         did {
-            method("key") {
-                algorithm("Ed25519")
+            method(KEY) {
+                algorithm(ED25519)
             }
         }
     }
     
     // Step 2: Create DIDs
-    val issuerDid = trustWeave.createDid { method("key") }
-    val holderDid = trustWeave.createDid { method("key") }
+    val issuerDid = trustWeave.createDid { method(KEY) }
+    val holderDid = trustWeave.createDid { method(KEY) }
     
     // Step 3: Get issuer key ID
     val issuerResolution = trustWeave.resolveDid(issuerDid)

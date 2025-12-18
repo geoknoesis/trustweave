@@ -82,12 +82,12 @@ fun main() = runBlocking {
     // Create with defaults (in-memory KMS, did:key method)
     val trustWeave = TrustWeave.build {
         keys {
-            provider("inMemory")
-            algorithm("Ed25519")
+            provider(IN_MEMORY)
+            algorithm(ED25519)
         }
         did {
-            method("key") {
-                algorithm("Ed25519")
+            method(KEY) {
+                algorithm(ED25519)
             }
         }
     }
@@ -95,24 +95,24 @@ fun main() = runBlocking {
     // Create with custom configuration
     val trustWeave = TrustWeave.build {
         keys {
-            provider("inMemory")
-            algorithm("Ed25519")
+            provider(IN_MEMORY)
+            algorithm(ED25519)
         }
         did {
-            method("key") {
-                algorithm("Ed25519")
+            method(KEY) {
+                algorithm(ED25519)
             }
-            method("web") {
+            method(WEB) {
                 domain("example.com")
             }
         }
         anchor {
             chain("algorand:testnet") {
-                provider("algorand")
+                provider(ALGORAND)
             }
         }
         trust {
-            provider("inMemory")
+            provider(IN_MEMORY)
         }
     }
 }
@@ -150,8 +150,8 @@ fun main() = runBlocking {
 
     // Create DID
     val didResult = trustWeave.createDid {
-        method("key")
-        algorithm("Ed25519")
+        method(KEY)
+        algorithm(ED25519)
     }
     
     val issuerDid = when (didResult) {
@@ -255,8 +255,8 @@ suspend fun createDid(block: DidBuilder.() -> Unit): DidCreationResult
 ```kotlin
 // Simple usage (uses defaults: did:key, ED25519)
 val didResult = trustWeave.createDid {
-    method("key")
-    algorithm("Ed25519")
+    method(KEY)
+    algorithm(ED25519)
 }
 
 when (didResult) {
@@ -288,13 +288,13 @@ when (didResult) {
 import com.trustweave.testkit.getOrFail
 
 val did = trustWeave.createDid {
-    method("key")
-    algorithm("Ed25519")
+    method(KEY)
+    algorithm(ED25519)
 }.getOrFail() // Throws AssertionError on failure
 
 // With custom method
 val webDidResult = trustWeave.createDid {
-    method("web")
+    method(WEB)
     domain("example.com")
 }
 when (webDidResult) {
@@ -1113,7 +1113,7 @@ The DSL builder provides a fluent API for trust operations:
 **Example:**
 ```kotlin
 val trustWeave = TrustWeave.build {
-    trust { provider("inMemory") }
+    trust { provider(IN_MEMORY) }
 }
 
 // Using DSL
@@ -1443,8 +1443,8 @@ val config = trustWeave("my-instance") {
         kmsFactory = TestkitKmsFactory(),
         didMethodFactory = TestkitDidMethodFactory()
     )
-    keys { provider("inMemory"); algorithm("Ed25519") }
-    did { method("key") { algorithm("Ed25519") } }
+    keys { provider(IN_MEMORY); algorithm(ED25519) }
+    did { method(KEY) { algorithm(ED25519) } }
 }
 
 // Create multiple TrustWeave instances from the same config
@@ -1815,8 +1815,8 @@ import com.trustweave.core.TrustWeaveError
 try {
     val trustWeave = TrustWeave.build { ... }
     val did = trustWeave.createDid {
-        method("key")
-        algorithm("Ed25519")
+        method(KEY)
+        algorithm(ED25519)
     }
     val credential = trustWeave.issue {
         credential { ... }
@@ -1884,17 +1884,17 @@ import com.trustweave.trust.TrustWeave
 
 val trustWeave = TrustWeave.build {
     keys {
-        provider("inMemory")
-        algorithm("Ed25519")
+        provider(IN_MEMORY)
+        algorithm(ED25519)
     }
     did {
-        method("key") {
-            algorithm("Ed25519")
+        method(KEY) {
+            algorithm(ED25519)
         }
-        method("web") {
+        method(WEB) {
             domain("example.com")
         }
-        method("ion") {
+        method(ION) {
             // ION-specific configuration
         }
     }
@@ -1911,11 +1911,11 @@ val trustWeave = TrustWeave.build {
     did { ... }
     anchor {
         chain("algorand:testnet") {
-            provider("algorand")
+            provider(ALGORAND)
             // Chain-specific configuration
         }
         chain("polygon:mainnet") {
-            provider("polygon")
+            provider(POLYGON)
         }
     }
 }
@@ -1930,7 +1930,7 @@ val trustWeave = TrustWeave.build {
     keys { ... }
     did { ... }
     trust {
-        provider("inMemory")
+        provider(IN_MEMORY)
         // Or use a custom trust registry implementation
     }
 }

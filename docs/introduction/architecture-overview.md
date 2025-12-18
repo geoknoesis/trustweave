@@ -56,8 +56,8 @@ Use the DSL for declarative, readable configuration:
 
 ```kotlin
 val trustWeave = trustWeave {
-    keys { provider("inMemory") }
-    did { method("key") }
+    keys { provider(IN_MEMORY) }
+    did { method(KEY) }
     blockchains {
         "algorand:testnet" to algorandClient
     }
@@ -135,10 +135,10 @@ The **Trust Layer** is TrustWeave's configuration DSL that lets you declarativel
 ```kotlin
 val trustWeave = trustWeave {
     keys {
-        provider("inMemory")  // KMS configuration
+        provider(IN_MEMORY)  // KMS configuration
     }
     did {
-        method("key")          // DID method configuration
+        method(KEY)          // DID method configuration
     }
     blockchains {
         "algorand:testnet" to algorandClient  // Blockchain configuration
@@ -165,7 +165,7 @@ sequenceDiagram
     participant VC as CredentialServiceRegistry<br/>+ Issuer
     participant Anchor as BlockchainAnchorClient
 
-    App->>DID: request method("key")
+    App->>DID: request method(KEY)
     DID->>KMS: generateKey(algorithm)
     KMS-->>DID: KeyHandle
     DID-->>App: DidDocument
@@ -345,7 +345,7 @@ All external dependencies are abstracted through interfaces:
 ```
 Application
     ↓
-TrustWeaveContext.getDidMethod("key")
+TrustWeaveContext.getDidmethod(KEY)
     ↓
 DidMethod.createDid()
     ↓

@@ -29,12 +29,12 @@ fun main() = runBlocking {
     // Create TrustWeave instance
     val trustWeave = TrustWeave.build {
         keys {
-            provider("inMemory")
-            algorithm("Ed25519")
+            provider(IN_MEMORY)
+            algorithm(ED25519)
         }
         did {
-            method("key") {
-                algorithm("Ed25519")
+            method(KEY) {
+                algorithm(ED25519)
             }
         }
     }
@@ -57,7 +57,7 @@ fun main() = runBlocking {
     }
 
     // Issue and store credential
-    val issuerDidResult = trustWeave.createDid { method("key") }
+    val issuerDidResult = trustWeave.createDid { method(KEY) }
     val issuerDid = when (issuerDidResult) {
         is DidCreationResult.Success -> issuerDidResult.did
         else -> {

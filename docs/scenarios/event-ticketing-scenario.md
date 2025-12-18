@@ -175,8 +175,8 @@ fun main() = runBlocking {
 
     // Step 1: Create TrustWeave instance
     val trustWeave = TrustWeave.build {
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
         credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
     }
     println("\n✅ TrustWeave initialized")
@@ -185,7 +185,7 @@ fun main() = runBlocking {
     import com.trustweave.trust.types.DidCreationResult
     import com.trustweave.trust.types.WalletCreationResult
     
-    val organizerDidResult = trustWeave.createDid { method("key") }
+    val organizerDidResult = trustWeave.createDid { method(KEY) }
     val organizerDid = when (organizerDidResult) {
         is DidCreationResult.Success -> organizerDidResult.did
         else -> throw IllegalStateException("Failed to create organizer DID: ${organizerDidResult.reason}")
@@ -199,19 +199,19 @@ fun main() = runBlocking {
     val organizerKeyId = organizerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val attendeeDidResult = trustWeave.createDid { method("key") }
+    val attendeeDidResult = trustWeave.createDid { method(KEY) }
     val attendeeDid = when (attendeeDidResult) {
         is DidCreationResult.Success -> attendeeDidResult.did
         else -> throw IllegalStateException("Failed to create attendee DID: ${attendeeDidResult.reason}")
     }
     
-    val newAttendeeDidResult = trustWeave.createDid { method("key") }
+    val newAttendeeDidResult = trustWeave.createDid { method(KEY) }
     val newAttendeeDid = when (newAttendeeDidResult) {
         is DidCreationResult.Success -> newAttendeeDidResult.did
         else -> throw IllegalStateException("Failed to create new attendee DID: ${newAttendeeDidResult.reason}")
     }
     
-    val venueDidResult = trustWeave.createDid { method("key") }
+    val venueDidResult = trustWeave.createDid { method(KEY) }
     val venueDid = when (venueDidResult) {
         is DidCreationResult.Success -> venueDidResult.did
         else -> throw IllegalStateException("Failed to create venue DID: ${venueDidResult.reason}")
@@ -555,4 +555,5 @@ Event Ticketing and Access Control Scenario - Complete End-to-End Example
 - [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
 - [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+
 

@@ -65,8 +65,8 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),
             didMethodFactory = TestkitDidMethodFactory()
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
     }
 
     // Create allowlist policy
@@ -172,9 +172,9 @@ val trustWeave = TrustWeave.build {
         kmsFactory = TestkitKmsFactory(),
         didMethodFactory = TestkitDidMethodFactory()
     )
-    keys { provider("inMemory") }
-    did { method("key") { algorithm("Ed25519") } }
-    trust { provider("inMemory") }
+    keys { provider(IN_MEMORY) }
+    did { method(KEY) { algorithm(ED25519) } }
+    trust { provider(IN_MEMORY) }
 }
 
 // Require issuer to be a direct trust anchor

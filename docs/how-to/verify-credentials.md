@@ -29,12 +29,12 @@ fun main() = runBlocking {
         // Create TrustWeave instance
         val trustWeave = TrustWeave.build {
             keys {
-                provider("inMemory")
-                algorithm("Ed25519")
+                provider(IN_MEMORY)
+                algorithm(ED25519)
             }
             did {
-                method("key") {
-                    algorithm("Ed25519")
+                method(KEY) {
+                    algorithm(ED25519)
                 }
             }
         }

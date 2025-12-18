@@ -71,9 +71,9 @@ val TrustWeave = TrustWeave.create {
 }
 
 // Create DIDs for parties
-val insurerDid = trustWeave.createDid { method("key") }
-val insuredDid = trustWeave.createDid { method("key") }
-val eoProviderDid = trustWeave.createDid { method("key") }
+val insurerDid = trustWeave.createDid { method(KEY) }
+val insuredDid = trustWeave.createDid { method(KEY) }
+val eoProviderDid = trustWeave.createDid { method(KEY) }
 ```
 
 ## Step 2: Create Contract Draft
@@ -280,19 +280,19 @@ suspend fun completeParametricInsuranceWorkflow() {
     }
 
     // Step 1: Create DIDs
-    val insurerDidResult = trustWeave.createDid { method("key") }
+    val insurerDidResult = trustWeave.createDid { method(KEY) }
     val insurerDid = when (insurerDidResult) {
         is DidCreationResult.Success -> insurerDidResult.did
         else -> throw IllegalStateException("Failed to create insurer DID: ${insurerDidResult.reason}")
     }
     
-    val insuredDidResult = trustWeave.createDid { method("key") }
+    val insuredDidResult = trustWeave.createDid { method(KEY) }
     val insuredDid = when (insuredDidResult) {
         is DidCreationResult.Success -> insuredDidResult.did
         else -> throw IllegalStateException("Failed to create insured DID: ${insuredDidResult.reason}")
     }
     
-    val eoProviderDidResult = trustWeave.createDid { method("key") }
+    val eoProviderDidResult = trustWeave.createDid { method(KEY) }
     val eoProviderDid = when (eoProviderDidResult) {
         is DidCreationResult.Success -> eoProviderDidResult.did
         else -> throw IllegalStateException("Failed to create EO provider DID: ${eoProviderDidResult.reason}")
@@ -429,4 +429,5 @@ class FloodConditionEvaluator : ConditionEvaluator {
 - Explore [Parametric Insurance MGA Guide](parametric-insurance-mga-implementation-guide.md) for complete MGA implementation
 - See [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) for anchoring details
 - Check [API Reference](../api-reference/core-api.md) for complete API documentation
+
 

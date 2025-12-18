@@ -38,8 +38,8 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),
             didMethodFactory = TestkitDidMethodFactory()
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
     }
 
     // Create issuer DID
@@ -145,15 +145,15 @@ fun main() = runBlocking {
                 kmsFactory = TestkitKmsFactory(),
                 didMethodFactory = TestkitDidMethodFactory()
             )
-            keys {
-                provider("inMemory")
-                algorithm("Ed25519")
-            }
-            did {
-                method("key") {
-                    algorithm("Ed25519")
-                }
-            }
+    keys {
+        provider(IN_MEMORY)
+        algorithm(ED25519)
+    }
+    did {
+        method(KEY) {
+            algorithm(ED25519)
+        }
+    }
         }
 
         // Step 2: Compute a digest (demonstrates canonicalization)
@@ -168,8 +168,8 @@ fun main() = runBlocking {
 
         // Step 3: Create an issuer DID
         val didResult = trustWeave.createDid {
-            method("key")
-            algorithm("Ed25519")
+            method(KEY)
+            algorithm(ED25519)
         }
         
         val issuerDid = when (didResult) {
@@ -299,12 +299,12 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),
             didMethodFactory = TestkitDidMethodFactory()
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
     }
 
     // Operations will throw exceptions on failure
-    val did = trustWeave.createDid { method("key") }
+    val did = trustWeave.createDid { method(KEY) }
     val credential = trustWeave.issue { ... }
     // ... rest of code
 }
@@ -331,22 +331,22 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),
             didMethodFactory = TestkitDidMethodFactory()
         )
-        keys {
-            provider("inMemory")
-            algorithm("Ed25519")
+    keys {
+        provider(IN_MEMORY)
+        algorithm(ED25519)
+    }
+    did {
+        method(KEY) {
+            algorithm(ED25519)
         }
-        did {
-            method("key") {
-                algorithm("Ed25519")
-            }
-        }
+    }
     }
 
     // Production pattern: Use try-catch for all operations with domain-specific exceptions
     val issuerDid = try {
         trustWeave.createDid {
-            method("key")
-            algorithm("Ed25519")
+            method(KEY)
+            algorithm(ED25519)
         }
     } catch (error: DidException) {
         when (error) {
@@ -471,15 +471,15 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),
             didMethodFactory = TestkitDidMethodFactory()
         )
-        keys {
-            provider("inMemory")
-            algorithm("Ed25519")
+    keys {
+        provider(IN_MEMORY)
+        algorithm(ED25519)
+    }
+    did {
+        method(KEY) {
+            algorithm(ED25519)
         }
-        did {
-            method("key") {
-                algorithm("Ed25519")
-            }
-        }
+    }
     }
 
     // Build credential subject payload
@@ -517,16 +517,16 @@ Everything in TrustWeave assumes deterministic canonicalization, so the very fir
 ```kotlin
 // Simple: use defaults (did:key method, ED25519 algorithm)
 val issuerDid = trustWeave.createDid {
-    method("key")
-    algorithm("Ed25519")
+    method(KEY)
+    algorithm(ED25519)
 }
 val issuerKeyId = "$issuerDid#key-1"
 println("Issuer DID: $issuerDid (keyId=$issuerKeyId)")
 
 // Advanced: customize with builder
 val customDid = trustWeave.createDid {
-    method("key")
-    algorithm("Ed25519")
+    method(KEY)
+    algorithm(ED25519)
 }
 ```
 
@@ -659,7 +659,7 @@ Skip error handling **only** for:
 ```kotlin
 // ⚠️ Simple usage (exceptions will propagate) - Testing/Prototyping Only
 // For production, always use try-catch instead
-val did = trustWeave.createDid { method("key") }
+val did = trustWeave.createDid { method(KEY) }
 val credential = trustWeave.issue { ... }
 ```
 
@@ -682,8 +682,8 @@ import com.trustweave.core.exception.TrustWeaveException
 // ✅ Production pattern with domain-specific error handling
 try {
     val did = trustWeave.createDid {
-        method("key")
-        algorithm("Ed25519")
+        method(KEY)
+        algorithm(ED25519)
     }
     processDid(did)
 } catch (error: DidException) {

@@ -177,8 +177,8 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),
             didMethodFactory = TestkitDidMethodFactory()
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
     }
     println("\n✅ TrustWeave initialized")
 
@@ -186,7 +186,7 @@ fun main() = runBlocking {
     import com.trustweave.trust.types.DidCreationResult
     import com.trustweave.trust.types.WalletCreationResult
     
-    val authAuthorityDidResult = trustWeave.createDid { method("key") }
+    val authAuthorityDidResult = trustWeave.createDid { method(KEY) }
     val authAuthorityDid = when (authAuthorityDidResult) {
         is DidCreationResult.Success -> authAuthorityDidResult.did
         else -> throw IllegalStateException("Failed to create auth authority DID: ${authAuthorityDidResult.reason}")
@@ -200,19 +200,19 @@ fun main() = runBlocking {
     val authAuthorityKeyId = authAuthorityDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val userDidResult = trustWeave.createDid { method("key") }
+    val userDidResult = trustWeave.createDid { method(KEY) }
     val userDid = when (userDidResult) {
         is DidCreationResult.Success -> userDidResult.did
         else -> throw IllegalStateException("Failed to create user DID: ${userDidResult.reason}")
     }
     
-    val deviceDidResult = trustWeave.createDid { method("key") }
+    val deviceDidResult = trustWeave.createDid { method(KEY) }
     val deviceDid = when (deviceDidResult) {
         is DidCreationResult.Success -> deviceDidResult.did
         else -> throw IllegalStateException("Failed to create device DID: ${deviceDidResult.reason}")
     }
     
-    val systemDidResult = trustWeave.createDid { method("key") }
+    val systemDidResult = trustWeave.createDid { method(KEY) }
     val systemDid = when (systemDidResult) {
         is DidCreationResult.Success -> systemDidResult.did
         else -> throw IllegalStateException("Failed to create system DID: ${systemDidResult.reason}")
@@ -650,4 +650,5 @@ Zero Trust Continuous Authentication Scenario - Complete End-to-End Example
 - [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
 - [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+
 

@@ -43,13 +43,13 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
         keys {
-            provider("inMemory")  // or "waltid", "hardware", etc.
-            algorithm("Ed25519")
+            provider(IN_MEMORY)  // or "waltid", "hardware", etc.
+            algorithm(ED25519)
         }
 
         did {
-            method("key") {
-                algorithm("Ed25519")
+            method(KEY) {
+                algorithm(ED25519)
             }
         }
 
@@ -65,7 +65,7 @@ fun main() = runBlocking {
         }
 
         trust {
-            provider("inMemory")  // Trust registry provider
+            provider(IN_MEMORY)  // Trust registry provider
         }
     }
 }
@@ -80,14 +80,14 @@ You can create multiple trust layer configurations for different environments:
 // Production TrustWeave instance
 val productionTrustWeave = TrustWeave.build {
     keys { provider("hardware") }
-    did { method("web") { domain("company.com") } }
-    anchor { chain("algorand:mainnet") { provider("algorand") } }
+    did { method(WEB) { domain("company.com") } }
+    anchor { chain("algorand:mainnet") { provider(ALGORAND) } }
 }
 
 // Test TrustWeave instance
 val testTrustWeave = TrustWeave.build {
-    keys { provider("inMemory") }
-    did { method("key") }
+    keys { provider(IN_MEMORY) }
+    did { method(KEY) }
     anchor { chain("algorand:testnet") { inMemory() } }
 }
 ```
@@ -386,7 +386,7 @@ val result = trustWeave.verify {
 
 ```kotlin
 val result = trustWeave.createDid(method = "key") {
-    algorithm("Ed25519")
+    algorithm(ED25519)
 }
 ```
 

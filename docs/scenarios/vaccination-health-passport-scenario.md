@@ -176,8 +176,8 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),
             didMethodFactory = TestkitDidMethodFactory()
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
     }
     println("\n✅ TrustWeave initialized")
 
@@ -186,7 +186,7 @@ fun main() = runBlocking {
     import com.trustweave.trust.types.WalletCreationResult
     import com.trustweave.trust.types.DidResolutionResult
     
-    val healthcareProviderDidResult = trustWeave.createDid { method("key") }
+    val healthcareProviderDidResult = trustWeave.createDid { method(KEY) }
     val healthcareProviderDid = when (healthcareProviderDidResult) {
         is DidCreationResult.Success -> healthcareProviderDidResult.did
         else -> throw IllegalStateException("Failed to create healthcare provider DID: ${healthcareProviderDidResult.reason}")
@@ -200,13 +200,13 @@ fun main() = runBlocking {
     val healthcareProviderKeyId = healthcareProviderDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val individualDidResult = trustWeave.createDid { method("key") }
+    val individualDidResult = trustWeave.createDid { method(KEY) }
     val individualDid = when (individualDidResult) {
         is DidCreationResult.Success -> individualDidResult.did
         else -> throw IllegalStateException("Failed to create individual DID: ${individualDidResult.reason}")
     }
     
-    val airlineDidResult = trustWeave.createDid { method("key") }
+    val airlineDidResult = trustWeave.createDid { method(KEY) }
     val airlineDid = when (airlineDidResult) {
         is DidCreationResult.Success -> airlineDidResult.did
         else -> throw IllegalStateException("Failed to create airline DID: ${airlineDidResult.reason}")
@@ -519,4 +519,5 @@ Vaccination and Health Passport Scenario - Complete End-to-End Example
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
 - [Healthcare Medical Records Scenario](healthcare-medical-records-scenario.md) - Related healthcare scenario
 - [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+
 

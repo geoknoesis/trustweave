@@ -176,8 +176,8 @@ fun main() = runBlocking {
 
     // Step 1: Create TrustWeave instance
     val trustWeave = TrustWeave.build {
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
         credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
     }
     println("\n✅ TrustWeave initialized")
@@ -186,7 +186,7 @@ fun main() = runBlocking {
     import com.trustweave.trust.types.DidCreationResult
     import com.trustweave.trust.types.WalletCreationResult
     
-    val manufacturerDidResult = trustWeave.createDid { method("key") }
+    val manufacturerDidResult = trustWeave.createDid { method(KEY) }
     val manufacturerDid = when (manufacturerDidResult) {
         is DidCreationResult.Success -> manufacturerDidResult.did
         else -> throw IllegalStateException("Failed to create manufacturer DID: ${manufacturerDidResult.reason}")
@@ -200,7 +200,7 @@ fun main() = runBlocking {
     val manufacturerKeyId = manufacturerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val currentOwnerDidResult = trustWeave.createDid { method("key") }
+    val currentOwnerDidResult = trustWeave.createDid { method(KEY) }
     val currentOwnerDid = when (currentOwnerDidResult) {
         is DidCreationResult.Success -> currentOwnerDidResult.did
         else -> throw IllegalStateException("Failed to create current owner DID: ${currentOwnerDidResult.reason}")
@@ -214,7 +214,7 @@ fun main() = runBlocking {
     val currentOwnerKeyId = currentOwnerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val newOwnerDidResult = trustWeave.createDid { method("key") }
+    val newOwnerDidResult = trustWeave.createDid { method(KEY) }
     val newOwnerDid = when (newOwnerDidResult) {
         is DidCreationResult.Success -> newOwnerDidResult.did
         else -> throw IllegalStateException("Failed to create new owner DID: ${newOwnerDidResult.reason}")
@@ -228,7 +228,7 @@ fun main() = runBlocking {
     val newOwnerKeyId = newOwnerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val deviceDidResult = trustWeave.createDid { method("key") }
+    val deviceDidResult = trustWeave.createDid { method(KEY) }
     val deviceDid = when (deviceDidResult) {
         is DidCreationResult.Success -> deviceDidResult.did
         else -> throw IllegalStateException("Failed to create device DID: ${deviceDidResult.reason}")
@@ -625,4 +625,5 @@ IoT Device Ownership Transfer Scenario - Complete End-to-End Example
 - [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
 - [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+
 

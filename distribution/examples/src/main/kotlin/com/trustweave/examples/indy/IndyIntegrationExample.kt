@@ -3,6 +3,9 @@ package com.trustweave.examples.indy
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.types.VerificationResult
 import com.trustweave.trust.types.*
+import com.trustweave.trust.dsl.credential.DidMethods.KEY
+import com.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import com.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import com.trustweave.core.*
 import com.trustweave.credential.model.ProofType
 import com.trustweave.credential.model.vc.VerifiableCredential
@@ -57,12 +60,12 @@ fun main() = runBlocking {
     )
     val trustweave = TrustWeave.build {
         keys {
-            provider("inMemory")
-            algorithm("Ed25519")
+            provider(IN_MEMORY)
+            algorithm(ED25519)
         }
         did {
-            method("key") {
-                algorithm("Ed25519")
+            method(KEY) {
+                algorithm(ED25519)
             }
         }
         anchor {

@@ -261,8 +261,8 @@ val trustWeave = TrustWeave.build {
         kmsFactory = TestkitKmsFactory(),
         didMethodFactory = TestkitDidMethodFactory()
     )
-    keys { provider("inMemory"); algorithm("Ed25519") }
-    did { method("key") { algorithm("Ed25519") } }
+    keys { provider(IN_MEMORY); algorithm(ED25519) }
+    did { method(KEY) { algorithm(ED25519) } }
     credentials { defaultProofType(ProofType.Ed25519Signature2020) }
 }
 
@@ -270,8 +270,8 @@ import com.trustweave.trust.types.DidCreationResult
 import com.trustweave.trust.types.IssuanceResult
 
 val didResult = trustWeave.createDid {
-    method("key")
-    algorithm("Ed25519")
+    method(KEY)
+    algorithm(ED25519)
 }
 
 val issuerDid = when (didResult) {
@@ -352,8 +352,8 @@ val trustWeave = TrustWeave.build {
         kmsFactory = TestkitKmsFactory(),
         didMethodFactory = TestkitDidMethodFactory()
     )
-    keys { provider("inMemory"); algorithm("Ed25519") }
-    did { method("key") { algorithm("Ed25519") } }
+    keys { provider(IN_MEMORY); algorithm(ED25519) }
+    did { method(KEY) { algorithm(ED25519) } }
 }
 
 val result = trustWeave.verify {

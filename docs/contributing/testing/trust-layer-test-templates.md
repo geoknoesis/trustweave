@@ -95,7 +95,7 @@ fun `test complete in-memory workflow template`() = runBlocking {
             signer { data, keyId -> kms.sign(keyId, data) }
         }
         did { method(DidMethods.KEY) {} }
-        trust { provider("inMemory") }
+        trust { provider(IN_MEMORY) }
     }
 
     // Create DIDs, extract key IDs, issue credential, verify
@@ -119,7 +119,7 @@ fun `test complete in-memory workflow template`() = runBlocking {
 fun `test credential revocation workflow template`() = runBlocking {
     val trustLayer = trustLayer {
         // ... setup with revocation provider
-        revocation { provider("inMemory") }
+        revocation { provider(IN_MEMORY) }
     }
 
     // Issue credential with revocation
@@ -303,7 +303,7 @@ fun `test blockchain anchoring workflow template`() = runBlocking {
         // ... setup
         anchor {
             chain("testnet:inMemory") {
-                provider("inMemory") // Use in-memory anchor client
+                provider(IN_MEMORY) // Use in-memory anchor client
             }
         }
         credentials {
@@ -388,8 +388,8 @@ fun `test with external services template`() = runBlocking {
 
     val trustLayer = trustLayer {
         keys { provider("aws-kms") } // Requires AWS credentials
-        did { method("ethr") {} } // Requires ETHEREUM_RPC_URL
-        trust { provider("inMemory") }
+        did { method(ETHR) {} } // Requires ETHEREUM_RPC_URL
+        trust { provider(IN_MEMORY) }
     }
 
     // Test implementation here...
@@ -414,13 +414,13 @@ Example: Adapting for AWS KMS and Ethereum DID
 fun `test workflow with AWS KMS and Ethereum DID`() = runBlocking {
     val trustLayer = trustLayer {
         keys { provider("aws-kms") } // AWS KMS instead of in-memory
-        did { method("ethr") {} } // Ethereum DID instead of key DID
-        trust { provider("inMemory") }
+        did { method(ETHR) {} } // Ethereum DID instead of key DID
+        trust { provider(IN_MEMORY) }
     }
 
     // Same pattern: create DID, extract key ID, issue credential
     val didResult = trustLayer.createDid {
-        method("ethr")
+        method(ETHR)
         algorithm(KeyAlgorithms.ED25519)
     }
     
@@ -561,7 +561,7 @@ val credential = when (issuanceResult2) {
 ```kotlin
 val trustLayer = trustLayer {
     // ... setup
-    revocation { provider("inMemory") } // Must configure revocation provider
+    revocation { provider(IN_MEMORY) } // Must configure revocation provider
 }
 
 // VerificationDsl automatically passes statusListManager to verifier

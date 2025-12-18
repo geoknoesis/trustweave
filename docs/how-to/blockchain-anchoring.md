@@ -41,8 +41,8 @@ fun main() = runBlocking {
         // Create TrustWeave with blockchain support
         val trustWeave = TrustWeave.build {
             keys {
-                provider("inMemory")
-                algorithm("Ed25519")
+                provider(IN_MEMORY)
+                algorithm(ED25519)
             }
             anchor {
                 chain("algorand:testnet") {
@@ -102,8 +102,8 @@ Register blockchain clients in TrustWeave:
 ```kotlin
 val trustWeave = TrustWeave.build {
     keys {
-        provider("inMemory")
-        algorithm("Ed25519")
+        provider(IN_MEMORY)
+        algorithm(ED25519)
     }
     anchor {
         chain("algorand:testnet") {

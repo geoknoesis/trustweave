@@ -94,7 +94,7 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory for tutorials
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory for tutorials
         )
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
         credentials { defaultProofType(ProofType.Ed25519Signature2020) }  // Using ProofType enum
     }
@@ -193,7 +193,7 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory for tutorials
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory for tutorials
         )
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
     val didResult = trustWeave.createDid { method(DidMethods.KEY) }
@@ -293,7 +293,7 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory for tutorials
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory for tutorials
         )
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -335,7 +335,7 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory for tutorials
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory for tutorials
         )
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -381,7 +381,7 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory for tutorials
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory for tutorials
         )
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
         credentials { defaultProofType(ProofType.Ed25519Signature2020) }  // Using ProofType enum
     }
@@ -492,7 +492,7 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory for tutorials
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory for tutorials
         )
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
     val didResult = trustWeave.createDid { method(DidMethods.KEY) }
@@ -594,7 +594,7 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory for tutorials
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory for tutorials
         )
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -666,7 +666,7 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory for tutorials
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory for tutorials
         )
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
     

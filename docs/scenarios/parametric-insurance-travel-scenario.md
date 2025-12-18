@@ -153,8 +153,8 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),
             didMethodFactory = TestkitDidMethodFactory()
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
     }
     println("\n✅ TrustWeave initialized")
 
@@ -164,25 +164,25 @@ fun main() = runBlocking {
     import com.trustweave.trust.types.IssuanceResult
     import com.trustweave.trust.types.VerificationResult
     
-    val insuranceDidResult = trustWeave.createDid { method("key") }
+    val insuranceDidResult = trustWeave.createDid { method(KEY) }
     val insuranceDid = when (insuranceDidResult) {
         is DidCreationResult.Success -> insuranceDidResult.did
         else -> throw IllegalStateException("Failed to create insurance DID")
     }
     
-    val airlineDidResult = trustWeave.createDid { method("key") }
+    val airlineDidResult = trustWeave.createDid { method(KEY) }
     val airlineDid = when (airlineDidResult) {
         is DidCreationResult.Success -> airlineDidResult.did
         else -> throw IllegalStateException("Failed to create airline DID")
     }
     
-    val weatherServiceDidResult = trustWeave.createDid { method("key") }
+    val weatherServiceDidResult = trustWeave.createDid { method(KEY) }
     val weatherServiceDid = when (weatherServiceDidResult) {
         is DidCreationResult.Success -> weatherServiceDidResult.did
         else -> throw IllegalStateException("Failed to create weather service DID")
     }
     
-    val baggageSystemDidResult = trustWeave.createDid { method("key") }
+    val baggageSystemDidResult = trustWeave.createDid { method(KEY) }
     val baggageSystemDid = when (baggageSystemDidResult) {
         is DidCreationResult.Success -> baggageSystemDidResult.did
         else -> throw IllegalStateException("Failed to create baggage system DID")
@@ -930,4 +930,5 @@ if (anchorResult != null) {
 - [Parametric Insurance with Earth Observation](parametric-insurance-eo-scenario.md) - EO data insurance
 - [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
+
 

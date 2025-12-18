@@ -145,8 +145,8 @@ Automatic Payout
 **Purpose**: Identity for all participants
 ```kotlin
 // Create DIDs for EO providers, insurers, reinsurers
-val eoProviderDid = trustWeave.createDid { method("key") }
-val insuranceDid = trustWeave.createDid { method("key") }
+val eoProviderDid = trustWeave.createDid { method(KEY) }
+val insuranceDid = trustWeave.createDid { method(KEY) }
 ```
 
 ### 2. Smart Contracts
@@ -382,15 +382,15 @@ val trustWeave = TrustWeave.build {
         kmsFactory = TestkitKmsFactory(),
         didMethodFactory = TestkitDidMethodFactory()
     )
-    keys { provider("inMemory"); algorithm("Ed25519") }
-    did { method("key") { algorithm("Ed25519") } }
+    keys { provider(IN_MEMORY); algorithm(ED25519) }
+    did { method(KEY) { algorithm(ED25519) } }
     blockchains {
         "algorand:mainnet" to AlgorandBlockchainAnchorClient(...)
     }
 }
 
 // Create EO provider DID
-val eoProviderDid = trustWeave.createDid { method("key") }
+val eoProviderDid = trustWeave.createDid { method(KEY) }
 
 // Resolve DID to get key ID
 val resolution = trustWeave.resolveDid(eoProviderDid)
@@ -439,4 +439,5 @@ trustWeave.blockchains.anchor(
 ---
 
 **Built with TrustWeave** - The Foundation for Decentralized Trust and Identity
+
 

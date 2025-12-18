@@ -192,7 +192,7 @@ class FixtureTest {
     fun testWithFixture() = runBlocking {
         val fixture = TrustWeaveTestFixture.builder()
             .withKms(InMemoryKeyManagementService())
-            .withDidMethod("key") { DidKeyMockMethod(it) }
+            .withDidmethod(KEY) { DidKeyMockMethod(it) }
             .withBlockchainClient("algorand:testnet") {
                 InMemoryBlockchainAnchorClient("algorand:testnet")
             }

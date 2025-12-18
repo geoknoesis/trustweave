@@ -4,6 +4,7 @@ import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.dsl.*
 import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import com.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import com.trustweave.trust.dsl.credential.CredentialTypes
 import com.trustweave.trust.dsl.credential.SchemaValidatorTypes
 import com.trustweave.trust.dsl.credential.ServiceTypes
@@ -49,7 +50,7 @@ fun main() = runBlocking {
     println("Step 1: Configuring complete trust layer...")
     val trustWeave = TrustWeave.build {
         keys {
-            provider("inMemory")
+            provider(IN_MEMORY)
             algorithm(KeyAlgorithms.ED25519)
         }
 
@@ -65,7 +66,7 @@ fun main() = runBlocking {
         }
 
         revocation {
-            provider("inMemory")
+            provider(IN_MEMORY)
         }
 
         schemas {

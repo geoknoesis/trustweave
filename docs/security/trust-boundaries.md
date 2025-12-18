@@ -43,7 +43,7 @@ val trustweave = TrustWeave.create {
         credentials = secureCredentials
     )
     did {
-        method("web") {
+        method(WEB) {
             domain("yourdomain.com")
         }
     }
@@ -253,7 +253,7 @@ Configure which issuers you trust for which credential types:
 ```kotlin
 val trustweave = TrustWeave.build {
     trust {
-        provider("inMemory")
+        provider(IN_MEMORY)
     }
 }
 

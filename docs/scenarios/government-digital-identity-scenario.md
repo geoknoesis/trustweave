@@ -244,8 +244,8 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),
             didMethodFactory = TestkitDidMethodFactory()
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
         credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
     }
 
@@ -253,7 +253,7 @@ fun main() = runBlocking {
     println("\nStep 2: Creating government agency DIDs...")
     import com.trustweave.trust.types.DidCreationResult
     
-    val dmvDidResult = trustWeave.createDid { method("key") }
+    val dmvDidResult = trustWeave.createDid { method(KEY) }
     val dmvDid = when (dmvDidResult) {
         is DidCreationResult.Success -> {
             println("DMV DID: ${dmvDidResult.did.value}")
@@ -265,7 +265,7 @@ fun main() = runBlocking {
         }
     }
 
-    val passportOfficeDidResult = trustWeave.createDid { method("key") }
+    val passportOfficeDidResult = trustWeave.createDid { method(KEY) }
     val passportOfficeDid = when (passportOfficeDidResult) {
         is DidCreationResult.Success -> {
             println("Passport Office DID: ${passportOfficeDidResult.did.value}")
@@ -277,7 +277,7 @@ fun main() = runBlocking {
         }
     }
 
-    val taxAuthorityDidResult = trustWeave.createDid { method("key") }
+    val taxAuthorityDidResult = trustWeave.createDid { method(KEY) }
     val taxAuthorityDid = when (taxAuthorityDidResult) {
         is DidCreationResult.Success -> {
             println("Tax Authority DID: ${taxAuthorityDidResult.did.value}")
@@ -291,7 +291,7 @@ fun main() = runBlocking {
 
     // Step 3: Create citizen DID
     println("\nStep 3: Creating citizen DID...")
-    val citizenDidResult = trustWeave.createDid { method("key") }
+    val citizenDidResult = trustWeave.createDid { method(KEY) }
     val citizenDid = when (citizenDidResult) {
         is DidCreationResult.Success -> {
             println("Citizen DID: ${citizenDidResult.did.value}")
@@ -1075,5 +1075,6 @@ data class TaxFilingData(
 - Check out [Financial Services & KYC Scenario](financial-services-kyc-scenario.md) for identity verification
 - Review [Core Concepts: DIDs](../core-concepts/dids.md) for identity management
 - Study [Core Concepts: Verifiable Credentials](../core-concepts/verifiable-credentials.md) for credential details
+
 
 

@@ -60,7 +60,7 @@ fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
         factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -84,7 +84,7 @@ fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
         factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -114,7 +114,7 @@ fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
         factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -145,7 +145,7 @@ fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
         factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -208,7 +208,7 @@ fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
         factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -264,7 +264,7 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -344,7 +344,7 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -393,7 +393,7 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -468,7 +468,7 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -516,7 +516,7 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -574,7 +574,7 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -610,7 +610,7 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -695,7 +695,7 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -769,7 +769,7 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -803,7 +803,7 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -835,7 +835,7 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -882,7 +882,7 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -927,7 +927,7 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 

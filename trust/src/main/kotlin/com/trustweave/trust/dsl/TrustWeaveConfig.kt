@@ -82,6 +82,11 @@ class TrustWeaveConfig private constructor(
     val walletFactory: WalletFactory? = null,
     val kmsService: KmsService? = null,
     /**
+     * Default DID method for createDid() calls.
+     * Falls back to first registered method if not explicitly set.
+     */
+    val defaultDidMethod: String? = null,
+    /**
      * Coroutine dispatcher for I/O-bound operations.
      * 
      * Defaults to [Dispatchers.IO] for production use.
@@ -143,6 +148,7 @@ class TrustWeaveConfig private constructor(
         private var kmsAlgorithm: String = "Ed25519"
         private var kmsSigner: (suspend (ByteArray, String) -> ByteArray)? = null // Direct signer function
         private val didMethodConfigs = mutableMapOf<String, DidMethodConfig>()
+        private var defaultDidMethod: String? = null
         private val anchorConfigs = mutableMapOf<String, AnchorConfig>()
         private var defaultProofType: ProofType = ProofType.Ed25519Signature2020
         private var autoAnchor: Boolean = false
@@ -214,6 +220,7 @@ class TrustWeaveConfig private constructor(
             val builder = DidBuilder()
             builder.block()
             didMethodConfigs.putAll(builder.methods)
+            defaultDidMethod = builder.defaultMethod
         }
 
         /**
@@ -403,6 +410,7 @@ class TrustWeaveConfig private constructor(
                 trustRegistry = resolvedTrustRegistry,
                 walletFactory = resolvedWalletFactory,
                 kmsService = resolvedKmsService,
+                defaultDidMethod = defaultDidMethod,
                 ioDispatcher = ioDispatcher
             )
         }
@@ -557,11 +565,25 @@ class TrustWeaveConfig private constructor(
      */
     class DidBuilder {
         val methods = mutableMapOf<String, DidMethodConfig>()
+        var defaultMethod: String? = null
+            private set
+
+        /**
+         * Set the default DID method for createDid() calls.
+         * If not set, the first registered method will be used.
+         */
+        fun default(methodName: String) {
+            defaultMethod = methodName
+        }
 
         fun method(name: String, block: DidMethodConfigBuilder.() -> Unit) {
             val builder = DidMethodConfigBuilder()
             builder.block()
             methods[name] = builder.build()
+            // First registered method becomes default if not explicitly set
+            if (defaultMethod == null) {
+                defaultMethod = name
+            }
         }
     }
 

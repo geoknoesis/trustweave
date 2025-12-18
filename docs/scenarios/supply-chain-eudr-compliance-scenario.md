@@ -150,8 +150,8 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),
             didMethodFactory = TestkitDidMethodFactory()
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
         credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
     }
     println("\n✅ TrustWeave initialized")
@@ -159,7 +159,7 @@ fun main() = runBlocking {
     // Step 2: Create DIDs for exporter, importer, and verifier
     import com.trustweave.trust.types.DidCreationResult
     
-    val exporterDidResult = trustWeave.createDid { method("key") }
+    val exporterDidResult = trustWeave.createDid { method(KEY) }
     val exporterDid = when (exporterDidResult) {
         is DidCreationResult.Success -> {
             println("✅ Exporter DID: ${exporterDidResult.did.value}")
@@ -171,7 +171,7 @@ fun main() = runBlocking {
         }
     }
     
-    val importerDidResult = trustWeave.createDid { method("key") }
+    val importerDidResult = trustWeave.createDid { method(KEY) }
     val importerDid = when (importerDidResult) {
         is DidCreationResult.Success -> {
             println("✅ Importer DID: ${importerDidResult.did.value}")
@@ -183,7 +183,7 @@ fun main() = runBlocking {
         }
     }
     
-    val verifierDidResult = trustWeave.createDid { method("key") }
+    val verifierDidResult = trustWeave.createDid { method(KEY) }
     val verifierDid = when (verifierDidResult) {
         is DidCreationResult.Success -> {
             println("✅ Verifier DID: ${verifierDidResult.did.value}")
@@ -196,7 +196,7 @@ fun main() = runBlocking {
     }
 
     // Step 3: Create farm/production site DID
-    val farmDidResult = trustWeave.createDid { method("key") }
+    val farmDidResult = trustWeave.createDid { method(KEY) }
     val farmDid = when (farmDidResult) {
         is DidCreationResult.Success -> {
             println("✅ Farm DID: ${farmDidResult.did.value}")
@@ -611,4 +611,5 @@ suspend fun verifyAgainstClimateTrace(
 - [Earth Observation Scenario](earth-observation-scenario.md) - EO data integrity
 - [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
+
 

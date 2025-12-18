@@ -32,20 +32,20 @@ fun main() = runBlocking {
         // Create TrustWeave instance
         val trustWeave = TrustWeave.build {
             keys {
-                provider("inMemory")
-                algorithm("Ed25519")
+                provider(IN_MEMORY)
+                algorithm(ED25519)
             }
             did {
-                method("key") {
-                    algorithm("Ed25519")
+                method(KEY) {
+                    algorithm(ED25519)
                 }
             }
         }
 
         // Create a DID (returns type-safe Did)
         val issuerDid: Did = trustWeave.createDid {
-            method("key")
-            algorithm("Ed25519")
+            method(KEY)
+            algorithm(ED25519)
         }
 
         // Extract key ID for signing by resolving the DID
@@ -90,15 +90,15 @@ First, create a `TrustWeave` instance with DID method support:
 ```kotlin
 val trustWeave = TrustWeave.build {
     keys {
-        provider("inMemory")  // For testing; use production KMS in production
-        algorithm("Ed25519")
+        provider(IN_MEMORY)  // For testing; use production KMS in production
+        algorithm(ED25519)
     }
     did {
-        method("key") {  // Register did:key method
-            algorithm("Ed25519")
+        method(KEY) {  // Register did:key method
+            algorithm(ED25519)
         }
         // Add more methods as needed
-        method("web") {
+        method(WEB) {
             domain("example.com")
         }
     }
@@ -112,8 +112,8 @@ Create a DID using the default method (did:key) or specify a method:
 ```kotlin
 // Simple: Use defaults (did:key, ED25519)
 val did = trustWeave.createDid {
-    method("key")
-    algorithm("Ed25519")
+    method(KEY)
+    algorithm(ED25519)
 }
 
 // Or even simpler with default method
@@ -121,7 +121,7 @@ val didSimple = trustWeave.createDid()  // Uses "key" method by default
 
 // With custom method
 val webDid = trustWeave.createDid {
-    method("web")
+    method(WEB)
     domain("example.com")
 }
 ```
@@ -131,7 +131,7 @@ val webDid = trustWeave.createDid {
 Extract the key ID from the DID for signing operations:
 
 ```kotlin
-val did = trustWeave.createDid { method("key") }
+val did = trustWeave.createDid { method(KEY) }
 
 // Resolve DID to get verification method
 val resolutionResult = trustWeave.resolveDid(did)
@@ -167,9 +167,9 @@ val credential = trustWeave.issue {
 Create DIDs for different roles (issuer, holder, verifier):
 
 ```kotlin
-val issuerDid = trustWeave.createDid { method("key") }
-val holderDid = trustWeave.createDid { method("key") }
-val verifierDid = trustWeave.createDid { method("key") }
+val issuerDid = trustWeave.createDid { method(KEY) }
+val holderDid = trustWeave.createDid { method(KEY) }
+val verifierDid = trustWeave.createDid { method(KEY) }
 
 println("Issuer: $issuerDid")
 println("Holder: $holderDid")
@@ -183,8 +183,8 @@ Handle errors gracefully:
 ```kotlin
 val did = try {
     trustWeave.createDid {
-        method("key")
-        algorithm("Ed25519")
+        method(KEY)
+        algorithm(ED25519)
     }
 } catch (error: TrustWeaveException) {
     when (error) {
@@ -288,7 +288,7 @@ DID operations now return sealed result types instead of throwing exceptions. Th
 import com.trustweave.trust.types.DidCreationResult
 
 val didResult = trustWeave.createDid { 
-    method("key") 
+    method(KEY) 
 }
 
 when (didResult) {
@@ -322,7 +322,7 @@ when (didResult) {
 ```kotlin
 import com.trustweave.testkit.getOrFail
 
-val did = trustWeave.createDid { method("key") }.getOrFail()
+val did = trustWeave.createDid { method(KEY) }.getOrFail()
 // Throws AssertionError on failure (suitable for tests/examples only)
 ```
 

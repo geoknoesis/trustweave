@@ -46,14 +46,14 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
     }
 
     try {
         val did = trustWeave.createDid {
-            method("key")
-            algorithm("Ed25519")
+            method(KEY)
+            algorithm(ED25519)
         }
         println("Created DID: $did")
 
@@ -167,7 +167,7 @@ import com.trustweave.did.exception.DidException.InvalidDidFormat
 
 // Handle DID errors with short imports
 try {
-    val did = trustWeave.createDid { method("key") }
+    val did = trustWeave.createDid { method(KEY) }
 } catch (error: DidException) {
     when (error) {
         is DidMethodNotRegistered -> {

@@ -68,8 +68,8 @@ Quick lookup table of all TrustWeave API methods organized by category.
 import com.trustweave.trust.types.Did
 
 val did: Did = trustWeave.createDid {
-    method("key")
-    algorithm("Ed25519")
+    method(KEY)
+    algorithm(ED25519)
 }
 // Access DID string value: did.value
 ```
@@ -197,7 +197,7 @@ val delegation = trustLayer.delegate {
 val updated = trustLayer.rotateKey {
     did("did:key:example")
     oldKeyId("did:key:example#key-1")
-    newAlgorithm("Ed25519")
+    newalgorithm(ED25519)
 }
 ```
 

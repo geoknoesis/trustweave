@@ -1,6 +1,9 @@
 package com.trustweave.examples.did_key
 
 import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.DidMethods.KEY
+import com.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import com.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import com.trustweave.did.*
 import com.trustweave.did.KeyAlgorithm
 import com.trustweave.did.KeyPurpose
@@ -29,12 +32,12 @@ fun main() = runBlocking {
 
     val trustweave = TrustWeave.build {
         keys {
-            provider("inMemory")
-            algorithm("Ed25519")
+            provider(IN_MEMORY)
+            algorithm(ED25519)
         }
         did {
-            method("key") {
-                algorithm("Ed25519")
+            method(KEY) {
+                algorithm(ED25519)
             }
         }
     }
@@ -42,8 +45,8 @@ fun main() = runBlocking {
     // Step 2: Create did:key with Ed25519
     println("\nStep 2: Creating did:key with Ed25519...")
     val ed25519Did = trustweave.createDid {
-        method("key")
-        algorithm("Ed25519")
+        method(KEY)
+        algorithm(ED25519)
     }.getOrFail()
 
     println("Created Ed25519 DID: ${ed25519Did.value}")
@@ -66,14 +69,14 @@ fun main() = runBlocking {
 
     // secp256k1 (Ethereum-compatible)
     val secp256k1Did = trustweave.createDid {
-        method("key")
+        method(KEY)
         algorithm("secp256k1")
     }.getOrFail()
     println("Created secp256k1 DID: ${secp256k1Did.value}")
 
     // P-256 (NIST)
     val p256Did = trustweave.createDid {
-        method("key")
+        method(KEY)
         algorithm("P-256")
     }.getOrFail()
     println("Created P-256 DID: ${p256Did.value}")

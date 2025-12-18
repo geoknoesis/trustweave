@@ -151,8 +151,8 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),
             didMethodFactory = TestkitDidMethodFactory()
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
     }
     println("\n✅ TrustWeave initialized")
 
@@ -161,8 +161,8 @@ fun main() = runBlocking {
     import com.trustweave.trust.types.IssuanceResult
     
     val insuranceDidResult = trustWeave.createDid {
-        method("key")
-        algorithm("Ed25519")
+        method(KEY)
+        algorithm(ED25519)
     }
     val insuranceDid = when (insuranceDidResult) {
         is DidCreationResult.Success -> {
@@ -177,8 +177,8 @@ fun main() = runBlocking {
     
     // Continue with EO provider DID creation
     val eoProviderDidResult = trustWeave.createDid {
-        method("key")
-        algorithm("Ed25519")
+        method(KEY)
+        algorithm(ED25519)
     }
     val eoProviderDid = when (eoProviderDidResult) {
         is DidCreationResult.Success -> {
@@ -554,4 +554,5 @@ if (anchorResult != null) {
 - [Earth Observation Scenario](earth-observation-scenario.md) - EO data integrity workflow
 - [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
+
 

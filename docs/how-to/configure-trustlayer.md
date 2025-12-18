@@ -51,32 +51,32 @@ fun main() = runBlocking {
             trustRegistryFactory = TestkitTrustRegistryFactory()
         )
         keys {
-            provider("inMemory")
-            algorithm("Ed25519")
+            provider(IN_MEMORY)
+            algorithm(ED25519)
         }
 
         did {
-            method("key") {
-                algorithm("Ed25519")
+            method(KEY) {
+                algorithm(ED25519)
             }
-            method("web") {
+            method(WEB) {
                 domain("example.com")
             }
         }
 
         anchor {
             chain("algorand:testnet") {
-                provider("algorand")
+                provider(ALGORAND)
             }
         }
 
         trust {
-            provider("inMemory")
+            provider(IN_MEMORY)
         }
     }
 
     // Use the configured TrustWeave instance
-    val did = trustWeave.createDid { method("key") }
+    val did = trustWeave.createDid { method(KEY) }
     println("Created DID: ${did.value}")
 }
 ```
@@ -91,11 +91,11 @@ Created DID: did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK
 When using `TrustWeave.build { }` with providers like `"inMemory"`, you must explicitly provide factory instances. This ensures type safety and avoids reflection-based service discovery.
 
 **Required Factories:**
-- `kmsFactory` - Required when using `keys { provider("inMemory") }`
-- `didMethodFactory` - Required when using `did { method("key") }`
+- `kmsFactory` - Required when using `keys { provider(IN_MEMORY) }`
+- `didMethodFactory` - Required when using `did { method(KEY) }`
 - `anchorClientFactory` - Required when using `anchor { chain(...) { inMemory() } }`
-- `trustRegistryFactory` - Required when using `trust { provider("inMemory") }`
-- `statusListRegistryFactory` - Required when using `revocation { provider("inMemory") }`
+- `trustRegistryFactory` - Required when using `trust { provider(IN_MEMORY) }`
+- `statusListRegistryFactory` - Required when using `revocation { provider(IN_MEMORY) }`
 - `walletFactory` - Required when using `wallet { }`
 
 **For Testing:**
@@ -124,8 +124,8 @@ val trustWeave = TrustWeave.build {
         kmsFactory = TestkitKmsFactory()
     )
     keys {
-        provider("inMemory")
-        algorithm("Ed25519")
+        provider(IN_MEMORY)
+        algorithm(ED25519)
     }
 }
 ```
@@ -152,13 +152,13 @@ val trustWeave = TrustWeave.build {
         didMethodFactory = TestkitDidMethodFactory()
     )
     keys {
-        provider("inMemory")
-        algorithm("Ed25519")
+        provider(IN_MEMORY)
+        algorithm(ED25519)
     }
 
     did {
-        method("key") {
-            algorithm("Ed25519")
+        method(KEY) {
+            algorithm(ED25519)
         }
     }
 }
@@ -167,7 +167,7 @@ val trustWeave = TrustWeave.build {
 **What this does:**
 - Registers the `did:key` method
 - Configures it to use Ed25519 keys
-- Enables DID creation with `createDid { method("key") }`
+- Enables DID creation with `createDid { method(KEY) }`
 
 **Expected Result:** You can now create `did:key` identifiers.
 
@@ -186,18 +186,18 @@ val trustWeave = TrustWeave.build {
         didMethodFactory = TestkitDidMethodFactory()
     )
     keys {
-        provider("inMemory")
-        algorithm("Ed25519")
+        provider(IN_MEMORY)
+        algorithm(ED25519)
     }
 
     did {
-        method("key") {
-            algorithm("Ed25519")
+        method(KEY) {
+            algorithm(ED25519)
         }
-        method("web") {
+        method(WEB) {
             domain("example.com")
         }
-        method("ethr") {
+        method(ETHR) {
             // Ethereum-specific configuration
             network("sepolia")
         }
@@ -228,24 +228,24 @@ val trustWeave = TrustWeave.build {
         anchorClientFactory = TestkitBlockchainAnchorClientFactory()
     )
     keys {
-        provider("inMemory")
-        algorithm("Ed25519")
+        provider(IN_MEMORY)
+        algorithm(ED25519)
     }
 
     did {
-        method("key") {
-            algorithm("Ed25519")
+        method(KEY) {
+            algorithm(ED25519)
         }
     }
 
     anchor {
         chain("algorand:testnet") {
-            provider("algorand")
+            provider(ALGORAND)
             // Or use inMemory for testing
             // inMemory()
         }
         chain("polygon:mainnet") {
-            provider("polygon")
+            provider(POLYGON)
         }
     }
 }
@@ -275,24 +275,24 @@ val trustWeave = TrustWeave.build {
         trustRegistryFactory = TestkitTrustRegistryFactory()
     )
     keys {
-        provider("inMemory")
-        algorithm("Ed25519")
+        provider(IN_MEMORY)
+        algorithm(ED25519)
     }
 
     did {
-        method("key") {
-            algorithm("Ed25519")
+        method(KEY) {
+            algorithm(ED25519)
         }
     }
 
     anchor {
         chain("algorand:testnet") {
-            provider("algorand")
+            provider(ALGORAND)
         }
     }
 
     trust {
-        provider("inMemory")
+        provider(IN_MEMORY)
     }
 }
 ```
@@ -321,30 +321,30 @@ val trustWeave = TrustWeave.build {
         trustRegistryFactory = TestkitTrustRegistryFactory()
     )
     keys {
-        provider("inMemory")  // Use "awsKms" or "azureKeyVault" in production
-        algorithm("Ed25519")
+        provider(IN_MEMORY)  // Use "awsKms" or "azureKeyVault" in production
+        algorithm(ED25519)
     }
 
     did {
-        method("key") {
-            algorithm("Ed25519")
+        method(KEY) {
+            algorithm(ED25519)
         }
-        method("web") {
+        method(WEB) {
             domain("example.com")
         }
     }
 
     anchor {
         chain("algorand:testnet") {
-            provider("algorand")
+            provider(ALGORAND)
         }
         chain("polygon:mainnet") {
-            provider("polygon")
+            provider(POLYGON)
         }
     }
 
     trust {
-        provider("inMemory")
+        provider(IN_MEMORY)
     }
 
     credentials {
@@ -404,13 +404,13 @@ val trustWeave = TrustWeave.build {
         anchorClientFactory = TestkitBlockchainAnchorClientFactory(),
         trustRegistryFactory = TestkitTrustRegistryFactory()
     )
-    keys { provider("inMemory"); algorithm("Ed25519") }
-    did { method("key") { algorithm("Ed25519") } }
+    keys { provider(IN_MEMORY); algorithm(ED25519) }
+    did { method(KEY) { algorithm(ED25519) } }
     anchor {
-        chain("algorand:testnet") { provider("algorand") }
-        chain("polygon:mainnet") { provider("polygon") }
+        chain("algorand:testnet") { provider(ALGORAND) }
+        chain("polygon:mainnet") { provider(POLYGON) }
     }
-    trust { provider("inMemory") }
+    trust { provider(IN_MEMORY) }
 }
 ```
 
@@ -439,12 +439,12 @@ val trustWeave = TrustWeave.build {
         trustRegistryFactory = TestkitTrustRegistryFactory()
     )
     keys {
-        provider("inMemory")
-        algorithm("Ed25519")
+        provider(IN_MEMORY)
+        algorithm(ED25519)
     }
     did {
-        method("key") {
-            algorithm("Ed25519")
+        method(KEY) {
+            algorithm(ED25519)
         }
     }
     anchor {
@@ -453,7 +453,7 @@ val trustWeave = TrustWeave.build {
         }
     }
     trust {
-        provider("inMemory")
+        provider(IN_MEMORY)
     }
 }
 ```
@@ -465,24 +465,24 @@ For production with real services:
 ```kotlin
 val trustWeave = TrustWeave.build {
     keys {
-        provider("awsKms")  // Production KMS
-        algorithm("Ed25519")
+        provider(AWS)  // Production KMS
+        algorithm(ED25519)
     }
     did {
-        method("key") {
-            algorithm("Ed25519")
+        method(KEY) {
+            algorithm(ED25519)
         }
-        method("web") {
+        method(WEB) {
             domain("yourdomain.com")
         }
     }
     anchor {
         chain("algorand:mainnet") {
-            provider("algorand")
+            provider(ALGORAND)
             // Production client configuration
         }
         chain("polygon:mainnet") {
-            provider("polygon")
+            provider(POLYGON)
         }
     }
     trust {
@@ -504,17 +504,17 @@ val trustWeave = TrustWeave.build {
         didMethodFactory = TestkitDidMethodFactory()
     )
     keys {
-        provider("inMemory")
-        algorithm("Ed25519")
+        provider(IN_MEMORY)
+        algorithm(ED25519)
     }
     did {
-        method("key") {
-            algorithm("Ed25519")
+        method(KEY) {
+            algorithm(ED25519)
         }
-        method("web") {
+        method(WEB) {
             domain("example.com")
         }
-        method("ethr") {
+        method(ETHR) {
             network("sepolia")
         }
         method("polygon") {
@@ -541,12 +541,12 @@ try {
             didMethodFactory = TestkitDidMethodFactory()
         )
         keys {
-            provider("inMemory")
-            algorithm("Ed25519")
+            provider(IN_MEMORY)
+            algorithm(ED25519)
         }
         did {
-            method("key") {
-                algorithm("Ed25519")
+            method(KEY) {
+                algorithm(ED25519)
             }
         }
     }

@@ -37,15 +37,18 @@ Here's a complete example showing the simplicity of the facade API:
 
 ```kotlin
 import com.trustweave.trust.dsl.trustWeave
+import com.trustweave.trust.dsl.credential.DidMethods.KEY
+import com.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import com.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     trustWeave {
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
     }.run {
-        // Create DID (returns Did + DidDocument)
-        val (issuerDid, issuerDoc) = createDid { method("key") }.getOrThrow()
+        // Create DID (uses default method from config)
+        val (issuerDid, issuerDoc) = createDid().getOrThrow()
         
         // Issue credential using DSL
         val credential = issue {
@@ -81,10 +84,13 @@ Configure TrustWeave with minimal setup:
 
 ```kotlin
 import com.trustweave.trust.dsl.trustWeave
+import com.trustweave.trust.dsl.credential.DidMethods.KEY
+import com.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import com.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 
 val tw = trustWeave {
-    keys { provider("inMemory"); algorithm("Ed25519") }
-    did { method("key") { algorithm("Ed25519") } }
+    keys { provider(IN_MEMORY); algorithm(ED25519) }
+    did { method(KEY) { algorithm(ED25519) } }
 }
 ```
 
@@ -103,7 +109,7 @@ val tw = trustWeave {
 Create a DID with automatic defaults:
 
 ```kotlin
-val (issuerDid, issuerDoc) = tw.createDid { method("key") }.getOrThrow()
+val (issuerDid, issuerDoc) = tw.createDid().getOrThrow()  // Uses default from config
 ```
 
 **What this does:**
@@ -164,10 +170,10 @@ println("✅ Credential is valid")
 
 ```kotlin
 trustWeave {
-    keys { provider("inMemory"); algorithm("Ed25519") }
-    did { method("key") { algorithm("Ed25519") } }
+    keys { provider(IN_MEMORY); algorithm(ED25519) }
+    did { method(KEY) { algorithm(ED25519) } }
 }.run {
-    val (did, doc) = createDid { method("key") }.getOrThrow()
+    val (did, doc) = createDid().getOrThrow()  // Uses default
     val cred = issue {
         credential { type("MyCredential"); issuer(did); subject { "claim" to "value" } }
         signedBy(did, doc.verificationMethod.first().id.substringAfter("#"))
@@ -181,11 +187,11 @@ trustWeave {
 
 ```kotlin
 trustWeave {
-    keys { provider("inMemory"); algorithm("Ed25519") }
-    did { method("key") { algorithm("Ed25519") }; method("web") { domain("example.com") } }
-    anchor { chain("algorand:testnet") { provider("algorand") } }
+    keys { provider(IN_MEMORY); algorithm(ED25519) }
+    did { method(KEY) { algorithm(ED25519) }; method(WEB) { domain("example.com") } }
+    anchor { chain("algorand:testnet") { provider(ALGORAND) } }
 }.run {
-    val (did, doc) = createDid { method("key") }.getOrThrow()
+    val (did, doc) = createDid().getOrThrow()  // Uses default "key"
     val cred = issue {
         credential { type("MyCredential"); issuer(did); subject { "claim" to "value" } }
         signedBy(did, doc.verificationMethod.first().id.substringAfter("#"))
@@ -206,12 +212,12 @@ trustWeave {
 
 ```kotlin
 trustWeave {
-    keys { provider("inMemory"); algorithm("Ed25519") }
+    keys { provider(IN_MEMORY); algorithm(ED25519) }
     did {
-        method("key") { algorithm("Ed25519") }
-        method("web") { domain("example.com") }
+        method(KEY) { algorithm(ED25519) }
+        method(WEB) { domain("example.com") }
     }
-    anchor { chain("algorand:testnet") { provider("algorand") } }
+    anchor { chain("algorand:testnet") { provider(ALGORAND) } }
 }
 ```
 
@@ -231,11 +237,11 @@ For rapid prototyping and testing:
 ```kotlin
 fun main() = runBlocking {
     trustWeave {
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }  // First method becomes default
     }.run {
-        val (issuerDid, issuerDoc) = createDid { method("key") }.getOrThrow()
-        val (holderDid, _) = createDid { method("key") }.getOrThrow()
+        val (issuerDid, issuerDoc) = createDid().getOrThrow()  // Uses default "key"
+        val (holderDid, _) = createDid().getOrThrow()
         
         val credential = issue {
             credential {
@@ -257,11 +263,11 @@ fun main() = runBlocking {
 ```kotlin
 fun main() = runBlocking {
     trustWeave {
-        keys { provider("awsKms"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") }; method("web") { domain("yourdomain.com") } }
-        anchor { chain("algorand:mainnet") { provider("algorand") } }
+        keys { provider(AWS); algorithm(ED25519) }  // Production KMS
+        did { method(KEY) { algorithm(ED25519) }; method(WEB) { domain("yourdomain.com") } }
+        anchor { chain("algorand:mainnet") { provider(ALGORAND) } }
     }.run {
-        val (issuerDid, issuerDoc) = createDid { method("key") }.getOrThrow()
+        val (issuerDid, issuerDoc) = createDid().getOrThrow()  // Uses default "key"
         
         val credential = issue {
             credential { type("EmployeeCredential"); issuer(issuerDid); subject { "name" to "Alice" } }
@@ -282,12 +288,12 @@ End-to-end workflow with verification:
 ```kotlin
 fun main() = runBlocking {
     trustWeave {
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
     }.run {
-        // Create issuer and holder
-        val (issuerDid, issuerDoc) = createDid { method("key") }.getOrThrow()
-        val (holderDid, _) = createDid { method("key") }.getOrThrow()
+        // Create issuer and holder (uses default "key" method)
+        val (issuerDid, issuerDoc) = createDid().getOrThrow()
+        val (holderDid, _) = createDid().getOrThrow()
 
         // Issue credential
         val credential = issue {
@@ -319,12 +325,12 @@ Handle errors using Result pattern or try-catch:
 ```kotlin
 // Option 1: Using getOrThrow() - throws on error
 trustWeave { ... }.run {
-    val (did, doc) = createDid { method("key") }.getOrThrow()  // Throws if fails
+    val (did, doc) = createDid().getOrThrow()  // Throws if fails
 }
 
 // Option 2: Using fold() - handle success and failure
 trustWeave { ... }.run {
-    createDid { method("key") }.fold(
+    createDid().fold(
         onSuccess = { (did, doc) -> println("Created: ${did.value}") },
         onFailure = { error -> println("Failed: ${error.message}") }
     )
@@ -332,7 +338,7 @@ trustWeave { ... }.run {
 
 // Option 3: Using getOrElse() - provide default
 trustWeave { ... }.run {
-    val result = createDid { method("key") }.getOrElse { 
+    val result = createDid().getOrElse { 
         println("Error: ${it.message}")
         return@run
     }
@@ -347,6 +353,31 @@ trustWeave { ... }.run {
 |----------|---------------|
 | Prototypes, demos, learning | Minimal: `trustWeave { keys {...}; did {...} }` |
 | Production, blockchain, multi-DID | Full: Add `anchor {...}`, custom KMS |
+
+---
+
+## Type-Safe Constants
+
+Use these imports to avoid string typos:
+
+```kotlin
+import com.trustweave.trust.dsl.credential.DidMethods.KEY
+import com.trustweave.trust.dsl.credential.DidMethods.WEB
+import com.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import com.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import com.trustweave.trust.dsl.credential.KmsProviders.AWS
+import com.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
+```
+
+| Object | Constants |
+|--------|-----------|
+| `DidMethods` | `KEY`, `WEB`, `ION`, `ETHR` |
+| `KeyAlgorithms` | `ED25519`, `SECP256K1`, `RSA` |
+| `KmsProviders` | `IN_MEMORY`, `AWS`, `AZURE`, `GOOGLE`, `HASHICORP`, `FORTANIX`, `THALES` |
+| `AnchorProviders` | `IN_MEMORY`, `ALGORAND`, `ETHEREUM`, `POLYGON`, `BASE`, `ARBITRUM` |
+| `ProofTypes` | `ED25519`, `JWT`, `BBS_BLS` |
+
+For third-party/custom providers, use strings directly: `provider("myCustomKms")`
 
 ---
 

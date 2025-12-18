@@ -70,7 +70,7 @@ Most TrustWeave API operations throw `TrustWeaveError` exceptions on failure. So
 import com.trustweave.core.*
 
 try {
-    val did = trustWeave.createDid { method("key") }
+    val did = trustWeave.createDid { method(KEY) }
     val credential = trustWeave.issue { 
         credential { issuer(did.value); subject { id(did.value) } }
         signedBy(issuerDid = did.value, keyId = "key-1")

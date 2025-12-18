@@ -1178,3 +1178,4 @@ fun calculateConsensusLocation(
 - Check out [Earth Observation Scenario](earth-observation-scenario.md) for related geospatial concepts
 
 
+

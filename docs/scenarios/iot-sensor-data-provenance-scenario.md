@@ -178,8 +178,8 @@ fun main() = runBlocking {
 
     // Step 1: Create TrustWeave instance
     val trustWeave = TrustWeave.build {
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
         credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
     }
     println("\n✅ TrustWeave initialized")
@@ -188,7 +188,7 @@ fun main() = runBlocking {
     import com.trustweave.trust.types.DidCreationResult
     import com.trustweave.trust.types.WalletCreationResult
     
-    val manufacturerDidResult = trustWeave.createDid { method("key") }
+    val manufacturerDidResult = trustWeave.createDid { method(KEY) }
     val manufacturerDid = when (manufacturerDidResult) {
         is DidCreationResult.Success -> manufacturerDidResult.did
         else -> throw IllegalStateException("Failed to create manufacturer DID: ${manufacturerDidResult.reason}")
@@ -202,7 +202,7 @@ fun main() = runBlocking {
     val manufacturerKeyId = manufacturerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val temperatureSensorDidResult = trustWeave.createDid { method("key") }
+    val temperatureSensorDidResult = trustWeave.createDid { method(KEY) }
     val temperatureSensorDid = when (temperatureSensorDidResult) {
         is DidCreationResult.Success -> temperatureSensorDidResult.did
         else -> throw IllegalStateException("Failed to create temperature sensor DID: ${temperatureSensorDidResult.reason}")
@@ -216,7 +216,7 @@ fun main() = runBlocking {
     val temperatureSensorKeyId = temperatureSensorDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val humiditySensorDidResult = trustWeave.createDid { method("key") }
+    val humiditySensorDidResult = trustWeave.createDid { method(KEY) }
     val humiditySensorDid = when (humiditySensorDidResult) {
         is DidCreationResult.Success -> humiditySensorDidResult.did
         else -> throw IllegalStateException("Failed to create humidity sensor DID: ${humiditySensorDidResult.reason}")
@@ -230,7 +230,7 @@ fun main() = runBlocking {
     val humiditySensorKeyId = humiditySensorDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val dataConsumerDidResult = trustWeave.createDid { method("key") }
+    val dataConsumerDidResult = trustWeave.createDid { method(KEY) }
     val dataConsumerDid = when (dataConsumerDidResult) {
         is DidCreationResult.Success -> dataConsumerDidResult.did
         else -> throw IllegalStateException("Failed to create data consumer DID: ${dataConsumerDidResult.reason}")
@@ -683,4 +683,5 @@ IoT Sensor Data Provenance & Integrity Scenario - Complete End-to-End Example
 - [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
 - [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+
 

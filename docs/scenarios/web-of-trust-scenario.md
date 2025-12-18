@@ -43,7 +43,7 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     val trustLayer = trustLayer {
         keys {
-            provider("inMemory")
+            provider(IN_MEMORY)
             algorithm(KeyAlgorithms.ED25519)
         }
 
@@ -58,7 +58,7 @@ fun main() = runBlocking {
         }
 
         trust {
-            provider("inMemory")
+            provider(IN_MEMORY)
         }
     }
 }
@@ -392,9 +392,9 @@ println("  Trust Registry Valid: ${proofPurposeVerification.trustRegistryValid}"
 // Complete workflow combining all features
 fun completeWebOfTrustWorkflow() = runBlocking {
     val trustLayer = trustLayer {
-        keys { provider("inMemory") }
+        keys { provider(IN_MEMORY) }
         did { method(DidMethods.KEY) }
-        trust { provider("inMemory") }
+        trust { provider(IN_MEMORY) }
     }
 
     // 1. Create DIDs
@@ -587,4 +587,5 @@ try {
 - [DID Documentation](../core-concepts/dids.md)
 - [Web of Trust Example](../../distribution/TrustWeave-examples/src/main/kotlin/com/geoknoesis/TrustWeave/examples/trust/WebOfTrustExample.kt)
 - [Delegation Chain Example](../../distribution/TrustWeave-examples/src/main/kotlin/com/geoknoesis/TrustWeave/examples/delegation/DelegationChainExample.kt)
+
 

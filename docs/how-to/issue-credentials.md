@@ -33,12 +33,12 @@ fun main() = runBlocking {
             didMethodFactory = TestkitDidMethodFactory()
         )
         keys {
-            provider("inMemory")
-            algorithm("Ed25519")
+            provider(IN_MEMORY)
+            algorithm(ED25519)
         }
         did {
-            method("key") {
-                algorithm("Ed25519")
+            method(KEY) {
+                algorithm(ED25519)
             }
         }
     }
@@ -48,8 +48,8 @@ fun main() = runBlocking {
     import com.trustweave.credential.results.IssuanceResult
     
     val didResult = trustWeave.createDid {
-        method("key")
-        algorithm("Ed25519")
+        method(KEY)
+        algorithm(ED25519)
     }
     
     val issuerDid = when (didResult) {
@@ -120,13 +120,13 @@ val trustWeave = TrustWeave.build {
         kmsFactory = TestkitKmsFactory(),
         didMethodFactory = TestkitDidMethodFactory()
     )
-    keys { provider("inMemory"); algorithm("Ed25519") }
-    did { method("key") { algorithm("Ed25519") } }
+    keys { provider(IN_MEMORY); algorithm(ED25519) }
+    did { method(KEY) { algorithm(ED25519) } }
 }
 
 val issuerDid = trustWeave.createDid {
-    method("key")
-    algorithm("Ed25519")
+    method(KEY)
+    algorithm(ED25519)
 }
 
 // Get key ID from DID document

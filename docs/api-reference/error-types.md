@@ -179,7 +179,7 @@ import com.trustweave.did.exception.DidException
 import com.trustweave.core.exception.TrustWeaveException
 
 try {
-    val did = trustWeave.createDid { method("key") }
+    val did = trustWeave.createDid { method(KEY) }
 } catch (error: TrustWeaveException) {
     when (error) {
         is DidException.DidMethodNotRegistered -> {

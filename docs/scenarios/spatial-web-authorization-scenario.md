@@ -1106,3 +1106,4 @@ fun authorizeMonitoringActivities(
 - Study [Core Concepts: Verifiable Credentials](../core-concepts/verifiable-credentials.md) for credential details
 
 
+

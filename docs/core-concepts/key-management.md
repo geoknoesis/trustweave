@@ -63,7 +63,7 @@ suspend fun checkKmsCapabilities(kms: KeyManagementService) {
     }
 
     // Check by name (case-insensitive)
-    if (kms.supportsAlgorithm("secp256k1")) {
+    if (kms.supportsalgorithm(SECP256K1)) {
         println("secp256k1 is supported")
     }
 }

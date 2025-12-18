@@ -58,7 +58,7 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -92,7 +92,7 @@ import com.trustweave.trust.dsl.credential.DidMethods
 
 fun main() = runBlocking {
     val trustLayer = trustLayer {
-        keys { provider("inMemory") }
+        keys { provider(IN_MEMORY) }
         did { method(DidMethods.KEY) }
     }
 
@@ -512,7 +512,7 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),  // Test-only factory
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
     val wallet = trustWeave.wallet {

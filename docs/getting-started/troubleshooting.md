@@ -78,8 +78,8 @@ CredentialVerificationResult(valid=false, errors=[Proof verification failed])
    import com.trustweave.trust.types.DidCreationResult
    
    val didResult = trustWeave.createDid {
-       method("key")
-       algorithm("Ed25519")
+       method(KEY)
+       algorithm(ED25519)
    }
    
    val issuerDid = when (didResult) {
@@ -95,7 +95,7 @@ CredentialVerificationResult(valid=false, errors=[Proof verification failed])
 2. **Key ID mismatch**
    ```kotlin
    // Get the correct key ID from the DID document
-   val didResult = trustWeave.createDid { method("key") }
+   val didResult = trustWeave.createDid { method(KEY) }
    val issuerDid = when (didResult) {
        is DidCreationResult.Success -> didResult.did
        else -> throw IllegalStateException("Failed to create DID: ${didResult.reason}")
@@ -237,7 +237,7 @@ fun debugSystemState(trustweave: TrustWeave) {
 
     // Test basic operations
     println("\n=== Basic Operation Tests ===")
-    val didResult = trustWeave.createDid { method("key") }
+    val didResult = trustWeave.createDid { method(KEY) }
     when (didResult) {
         is DidCreationResult.Success -> {
             println("✅ DID creation works: ${didResult.did.value}")
@@ -360,14 +360,14 @@ suspend fun minimalReproducibleExample() {
             kmsFactory = TestkitKmsFactory(),
             didMethodFactory = TestkitDidMethodFactory()
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
     }
     println("✅ TrustWeave created")
 
     // Step 2: Create a DID
     println("\n[2] Creating DID...")
-    val didResult = trustWeave.createDid { method("key") }
+    val didResult = trustWeave.createDid { method(KEY) }
     val did = when (didResult) {
         is DidCreationResult.Success -> {
             println("✅ DID created: ${didResult.did.value}")
@@ -657,7 +657,7 @@ suspend fun operationWithTimeout(
 ) {
     try {
         withTimeout(timeoutMillis) {
-            val didResult = trustLayer.createDid { method("key") }
+            val didResult = trustLayer.createDid { method(KEY) }
             val did = when (didResult) {
                 is DidCreationResult.Success -> didResult.did
                 else -> {

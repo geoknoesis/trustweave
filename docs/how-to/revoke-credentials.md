@@ -52,7 +52,7 @@ Credential revocation uses **Status List 2021**—a compact, efficient method fo
 ```kotlin
 // 1. Configure revocation
 val trustWeave = TrustWeave.build {
-    revocation { provider("inMemory") }
+    revocation { provider(IN_MEMORY) }
 }
 
 // 2. Issue credential with revocation support
@@ -84,18 +84,18 @@ Enable revocation in your TrustWeave configuration:
 ```kotlin
 val trustWeave = TrustWeave.build {
     keys {
-        provider("inMemory")
-        algorithm("Ed25519")
+        provider(IN_MEMORY)
+        algorithm(ED25519)
     }
     
     did {
-        method("key") {
-            algorithm("Ed25519")
+        method(KEY) {
+            algorithm(ED25519)
         }
     }
     
     revocation {
-        provider("inMemory")  // For testing; use persistent provider in production
+        provider(IN_MEMORY)  // For testing; use persistent provider in production
     }
 }
 ```
@@ -256,23 +256,23 @@ fun main() = runBlocking {
     // Step 1: Configure TrustWeave with revocation
     val trustWeave = TrustWeave.build {
         keys {
-            provider("inMemory")
-            algorithm("Ed25519")
+            provider(IN_MEMORY)
+            algorithm(ED25519)
         }
         
         did {
-            method("key") {
-                algorithm("Ed25519")
+            method(KEY) {
+                algorithm(ED25519)
             }
         }
         
         revocation {
-            provider("inMemory")
+            provider(IN_MEMORY)
         }
     }
     
     // Step 2: Create issuer DID
-    val issuerDid = trustWeave.createDid { method("key") }
+    val issuerDid = trustWeave.createDid { method(KEY) }
     
     // Step 3: Get key ID
     val resolutionResult = trustWeave.resolveDid(issuerDid)
@@ -433,7 +433,7 @@ println("Credential is ${if (isRevoked) "revoked" else "active"}")
 // ✅ Ensure revocation is configured
 val trustWeave = TrustWeave.build {
     revocation {
-        provider("inMemory")  // or your provider
+        provider(IN_MEMORY)  // or your provider
     }
 }
 ```
@@ -628,7 +628,7 @@ val trustWeave = TrustWeave.build {
         }
     }
     revocation {
-        provider("inMemory")
+        provider(IN_MEMORY)
     }
 }
 

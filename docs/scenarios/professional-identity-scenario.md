@@ -745,3 +745,4 @@ fun createDetailedPresentation(wallet: Wallet): VerifiablePresentation {
 - Explore [Academic Credentials Scenario](academic-credentials-scenario.md)
 - Check out [Verifiable Credentials](../core-concepts/verifiable-credentials.md)
 
+

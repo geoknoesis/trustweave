@@ -3,6 +3,7 @@ package com.trustweave.examples.delegation
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.dsl.credential.DidMethods
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import com.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import com.trustweave.credential.model.ProofType
 import com.trustweave.trust.types.*
 import com.trustweave.credential.model.vc.VerifiableCredential
@@ -34,7 +35,7 @@ fun main() = runBlocking {
     println("Step 1: Setting up trust layer...")
     val trustWeave = TrustWeave.build {
         keys {
-            provider("inMemory")
+            provider(IN_MEMORY)
             algorithm(KeyAlgorithms.ED25519)
         }
 

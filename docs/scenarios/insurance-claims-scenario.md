@@ -183,7 +183,7 @@ fun main() = runBlocking {
     import com.trustweave.trust.types.DidCreationResult
     import com.trustweave.trust.types.WalletCreationResult
     
-    val insuranceCompanyDidResult = trustWeave.createDid { method("key") }
+    val insuranceCompanyDidResult = trustWeave.createDid { method(KEY) }
     val insuranceCompanyDid = when (insuranceCompanyDidResult) {
         is DidCreationResult.Success -> insuranceCompanyDidResult.did
         else -> throw IllegalStateException("Failed to create insurance company DID: ${insuranceCompanyDidResult.reason}")
@@ -197,13 +197,13 @@ fun main() = runBlocking {
     val insuranceCompanyKeyId = insuranceCompanyDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val policyholderDidResult = trustWeave.createDid { method("key") }
+    val policyholderDidResult = trustWeave.createDid { method(KEY) }
     val policyholderDid = when (policyholderDidResult) {
         is DidCreationResult.Success -> policyholderDidResult.did
         else -> throw IllegalStateException("Failed to create policyholder DID: ${policyholderDidResult.reason}")
     }
     
-    val assessorDidResult = trustWeave.createDid { method("key") }
+    val assessorDidResult = trustWeave.createDid { method(KEY) }
     val assessorDid = when (assessorDidResult) {
         is DidCreationResult.Success -> assessorDidResult.did
         else -> throw IllegalStateException("Failed to create assessor DID: ${assessorDidResult.reason}")
@@ -217,7 +217,7 @@ fun main() = runBlocking {
     val assessorKeyId = assessorDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val repairShopDidResult = trustWeave.createDid { method("key") }
+    val repairShopDidResult = trustWeave.createDid { method(KEY) }
     val repairShopDid = when (repairShopDidResult) {
         is DidCreationResult.Success -> repairShopDidResult.did
         else -> throw IllegalStateException("Failed to create repair shop DID: ${repairShopDidResult.reason}")
@@ -599,4 +599,5 @@ Repair Credential: ✅ VALID
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
 - [Healthcare Medical Records Scenario](healthcare-medical-records-scenario.md) - Related healthcare scenario
 - [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+
 

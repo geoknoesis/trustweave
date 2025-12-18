@@ -178,8 +178,8 @@ fun main() = runBlocking {
 
     // Step 1: Create TrustWeave instance
     val trustWeave = TrustWeave.build {
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
         credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
     }
     println("\n✅ TrustWeave initialized")
@@ -187,7 +187,7 @@ fun main() = runBlocking {
     // Step 2: Create DIDs for manufacturer, update server, and IoT device
     import com.trustweave.trust.types.DidCreationResult
     
-    val manufacturerDidResult = trustWeave.createDid { method("key") }
+    val manufacturerDidResult = trustWeave.createDid { method(KEY) }
     val manufacturerDid = when (manufacturerDidResult) {
         is DidCreationResult.Success -> manufacturerDidResult.did
         else -> throw IllegalStateException("Failed to create manufacturer DID: ${manufacturerDidResult.reason}")
@@ -201,7 +201,7 @@ fun main() = runBlocking {
     val manufacturerKeyId = manufacturerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val updateServerDidResult = trustWeave.createDid { method("key") }
+    val updateServerDidResult = trustWeave.createDid { method(KEY) }
     val updateServerDid = when (updateServerDidResult) {
         is DidCreationResult.Success -> updateServerDidResult.did
         else -> throw IllegalStateException("Failed to create update server DID: ${updateServerDidResult.reason}")
@@ -215,7 +215,7 @@ fun main() = runBlocking {
     val updateServerKeyId = updateServerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val deviceDidResult = trustWeave.createDid { method("key") }
+    val deviceDidResult = trustWeave.createDid { method(KEY) }
     val deviceDid = when (deviceDidResult) {
         is DidCreationResult.Success -> deviceDidResult.did
         else -> throw IllegalStateException("Failed to create device DID: ${deviceDidResult.reason}")
@@ -600,4 +600,5 @@ IoT Firmware Update Verification Scenario - Complete End-to-End Example
 - [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
 - [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+
 

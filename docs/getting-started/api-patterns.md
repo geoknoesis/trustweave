@@ -26,18 +26,18 @@ fun main() = runBlocking {
             didMethodFactory = TestkitDidMethodFactory()
         )
         keys {
-            provider("inMemory")
-            algorithm("Ed25519")
+            provider(IN_MEMORY)
+            algorithm(ED25519)
         }
         did {
-            method("key") {
-                algorithm("Ed25519")
+            method(KEY) {
+                algorithm(ED25519)
             }
         }
     }
 
     // Use trustWeave for all operations
-    val didResult = trustWeave.createDid { method("key") }
+    val didResult = trustWeave.createDid { method(KEY) }
 }
 ```
 
@@ -55,8 +55,8 @@ val trustWeave = TrustWeave.build { ... }
 
 // Create DID (returns sealed result)
 val didResult = trustWeave.createDid {
-    method("key")
-    algorithm("Ed25519")
+    method(KEY)
+    algorithm(ED25519)
 }
 val did = when (didResult) {
     is DidCreationResult.Success -> didResult.did
@@ -97,7 +97,7 @@ val rotated = when (rotationResult) {
 ❌ **Incorrect (Old API - Do Not Use):**
 ```kotlin
 // These patterns are from older documentation and should not be used
-val did = trustWeave.createDid { method("key") }
+val did = trustWeave.createDid { method(KEY) }
 val resolution = trustWeave.resolveDid(did)
 ```
 
@@ -178,7 +178,7 @@ val allCredentials = wallet.list()
 ✅ **Correct:**
 ```kotlin
 val trustWeave = TrustLayer.build {
-    trust { provider("inMemory") }
+    trust { provider(IN_MEMORY) }
 }
 
 // Using DSL
@@ -208,7 +208,7 @@ All `TrustWeave` methods throw exceptions. Always use try-catch for error handli
 import com.trustweave.core.TrustWeaveError
 
 try {
-    val didResult = trustWeave.createDid { method("key") }
+    val didResult = trustWeave.createDid { method(KEY) }
     val did = when (didResult) {
         is DidCreationResult.Success -> didResult.did
         is DidCreationResult.Failure.MethodNotRegistered -> {
@@ -279,20 +279,20 @@ val did = TrustWeave.dids.create()
 **Correct:**
 ```kotlin
 val trustWeave = TrustWeave.build { ... }
-val did = trustWeave.createDid { method("key") }
+val did = trustWeave.createDid { method(KEY) }
 ```
 
 ### ❌ Mistake 2: Ignoring Errors
 
 **Wrong:**
 ```kotlin
-val did = trustWeave.createDid { method("key") }
+val did = trustWeave.createDid { method(KEY) }
 // This returns DidCreationResult, not Did - need to unwrap!
 ```
 
 **Correct:**
 ```kotlin
-val didResult = trustWeave.createDid { method("key") }
+val didResult = trustWeave.createDid { method(KEY) }
 val did = when (didResult) {
     is DidCreationResult.Success -> didResult.did
     else -> {
@@ -310,7 +310,7 @@ val did = when (didResult) {
 val trustWeave = TrustLayer.build {
     // Missing KMS configuration!
 }
-val did = trustWeave.createDid { method("key") }
+val did = trustWeave.createDid { method(KEY) }
 // Fails: No KMS provider configured
 ```
 
@@ -318,11 +318,11 @@ val did = trustWeave.createDid { method("key") }
 ```kotlin
 val trustWeave = TrustLayer.build {
     keys {
-        provider("inMemory")
-        algorithm("Ed25519")
+        provider(IN_MEMORY)
+        algorithm(ED25519)
     }
     did {
-        method("key") { algorithm("Ed25519") }
+        method(KEY) { algorithm(ED25519) }
     }
 }
 ```
@@ -360,11 +360,11 @@ val credential = trustweave.credentials.issue(...)
 ### New Pattern
 ```kotlin
 val trustWeave = TrustLayer.build {
-    keys { provider("inMemory"); algorithm("Ed25519") }
-    did { method("key") { algorithm("Ed25519") } }
+    keys { provider(IN_MEMORY); algorithm(ED25519) }
+    did { method(KEY) { algorithm(ED25519) } }
 }
 
-val did = trustWeave.createDid { method("key") }
+val did = trustWeave.createDid { method(KEY) }
 val credential = trustWeave.issue {
     credential { ... }
     signedBy(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
@@ -380,15 +380,15 @@ Don't rely on defaults in production. Explicitly configure all components:
 ```kotlin
 val trustWeave = TrustLayer.build {
     keys {
-        provider("awsKms")  // Production KMS
-        algorithm("Ed25519")
+        provider(AWS)  // Production KMS
+        algorithm(ED25519)
     }
     did {
-        method("key") { algorithm("Ed25519") }
-        method("web") { domain("example.com") }
+        method(KEY) { algorithm(ED25519) }
+        method(WEB) { domain("example.com") }
     }
     anchor {
-        chain("algorand:mainnet") { provider("algorand") }
+        chain("algorand:mainnet") { provider(ALGORAND) }
     }
     trust {
         provider("database")  // Production trust registry
@@ -438,7 +438,7 @@ Create one `TrustWeave` instance and reuse it:
 // ✅ Good: Create once, reuse
 val trustWeave = TrustWeave.build { ... }
 
-fun createUserDid() = trustWeave.createDid { method("key") }
+fun createUserDid() = trustWeave.createDid { method(KEY) }
 fun issueCredential(...) = trustWeave.issue { ... }
 fun verifyCredential(...) = trustWeave.verify { ... }
 ```

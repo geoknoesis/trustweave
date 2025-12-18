@@ -75,7 +75,7 @@ Trust scores range from 0.0 to 1.0, with higher scores indicating greater trust.
 ```kotlin
 val trustLayer = trustLayer {
     keys {
-        provider("inMemory")
+        provider(IN_MEMORY)
         algorithm(KeyAlgorithms.ED25519)
     }
 
@@ -90,7 +90,7 @@ val trustLayer = trustLayer {
     }
 
     trust {
-        provider("inMemory") // or other provider
+        provider(IN_MEMORY) // or other provider
     }
 }
 ```

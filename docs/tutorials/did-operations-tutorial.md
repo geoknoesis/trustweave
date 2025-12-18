@@ -80,7 +80,7 @@ fun main() = runBlocking {
             didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
         )
         keys {
-            provider("inMemory")
+            provider(IN_MEMORY)
             algorithm(KeyAlgorithms.ED25519)
         }
         did {
@@ -129,7 +129,7 @@ fun main() = runBlocking {
     // Build TrustWeave instance with testkit factories (for tutorials)
     val trustWeave = TrustWeave.build {
         factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did {
             method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) }
             method(DidMethods.WEB) { domain("example.com") }
@@ -223,7 +223,7 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
         factories(didMethodFactory = TestkitDidMethodFactory())
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -301,7 +301,7 @@ import com.trustweave.testkit.services.*
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
         factories(didMethodFactory = TestkitDidMethodFactory())
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -346,7 +346,7 @@ import com.trustweave.testkit.services.*
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
         factories(didMethodFactory = TestkitDidMethodFactory())
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -430,7 +430,7 @@ fun main() = runBlocking {
     // Build TrustWeave instance with testkit factories (for tutorials)
     val trustWeave = TrustWeave.build {
         factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -483,7 +483,7 @@ fun main() = runBlocking {
     // Build TrustWeave instance with testkit factories (for tutorials)
     val trustWeave = TrustWeave.build {
         factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
-        keys { provider("inMemory"); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 

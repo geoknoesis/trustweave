@@ -847,3 +847,4 @@ suspend fun createVersionCredential(
 - Review [Core Concepts: Verifiable Credentials](../core-concepts/verifiable-credentials.md) for credential details
 
 
+

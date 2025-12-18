@@ -263,19 +263,22 @@ class TrustWeave private constructor(
      * val result = trustWeave.createDid()
      * ```
      *
-     * @param method DID method to use (default: "key")
+     * @param method DID method to use (default: first registered method from config, or "key")
      * @param timeout Maximum time to wait for DID creation (default: 10 seconds)
      * @param block Optional DSL block for configuring the DID (default: empty block)
      * @return Sealed result type with success or detailed failure information
      */
     suspend fun createDid(
-        method: String = "key",
+        method: String? = null,
         timeout: Duration = 10.seconds,
         block: DidBuilder.() -> Unit = {}
     ): DidCreationResult {
+        val resolvedMethod = method 
+            ?: context.getConfig().defaultDidMethod 
+            ?: "key"
         return withTimeout(timeout) {
             context.createDid {
-                this.method(method)
+                this.method(resolvedMethod)
                 block()
             }
         }

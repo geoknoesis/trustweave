@@ -151,8 +151,8 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),
             didMethodFactory = TestkitDidMethodFactory()
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
         credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
     }
     println("\n✅ TrustWeave initialized")
@@ -161,8 +161,8 @@ fun main() = runBlocking {
     import com.trustweave.trust.types.DidCreationResult
     
     val issuerDidResult = trustWeave.createDid {
-        method("key")
-        algorithm("Ed25519")
+        method(KEY)
+        algorithm(ED25519)
     }
     val issuerDid = when (issuerDidResult) {
         is DidCreationResult.Success -> {
@@ -176,8 +176,8 @@ fun main() = runBlocking {
     }
 
     val verifierDidResult = trustWeave.createDid {
-        method("key")
-        algorithm("Ed25519")
+        method(KEY)
+        algorithm(ED25519)
     }
     val verifierDid = when (verifierDidResult) {
         is DidCreationResult.Success -> {
@@ -191,8 +191,8 @@ fun main() = runBlocking {
     }
 
     val buyerDidResult = trustWeave.createDid {
-        method("key")
-        algorithm("Ed25519")
+        method(KEY)
+        algorithm(ED25519)
     }
     val buyerDid = when (buyerDidResult) {
         is DidCreationResult.Success -> {
@@ -563,4 +563,5 @@ val ttfToken = buildJsonObject {
 - [Earth Observation Scenario](earth-observation-scenario.md) - EO data integrity
 - [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
+
 

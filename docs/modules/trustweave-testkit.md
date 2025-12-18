@@ -159,8 +159,8 @@ val fixture = TrustWeaveTestFixture.builder()
 ```kotlin
 val fixture = TrustWeaveTestFixture.builder()
     .withKms(InMemoryKeyManagementService())
-    .withDidMethod("key") { DidKeyMockMethod(it) }
-    .withDidMethod("web") { DidWebMockMethod(it) }
+    .withDidmethod(KEY) { DidKeyMockMethod(it) }
+    .withDidmethod(WEB) { DidWebMockMethod(it) }
     .withBlockchainClient("algorand:testnet") { InMemoryBlockchainAnchorClient("algorand:testnet") }
     .withBlockchainClient("polygon:testnet") { InMemoryBlockchainAnchorClient("polygon:testnet") }
     .build()

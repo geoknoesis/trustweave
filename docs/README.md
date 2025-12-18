@@ -52,20 +52,20 @@ fun main() = runBlocking {
     // Create TrustLayer instance
     val trustLayer = TrustLayer.build {
         keys {
-            provider("inMemory")
-            algorithm("Ed25519")
+            provider(IN_MEMORY)
+            algorithm(ED25519)
         }
         did {
-            method("key") {
-                algorithm("Ed25519")
+            method(KEY) {
+                algorithm(ED25519)
             }
         }
     }
 
     // Create a Decentralized Identifier (DID)
     val issuerDid = trustLayer.createDid {
-        method("key")
-        algorithm("Ed25519")
+        method(KEY)
+        algorithm(ED25519)
     }
     println("Created DID: $issuerDid")
 
@@ -304,12 +304,12 @@ TrustWeave is designed for developer happiness:
 ```kotlin
 val trustLayer = TrustLayer.build {
     keys {
-        provider("inMemory")
-        algorithm("Ed25519")
+        provider(IN_MEMORY)
+        algorithm(ED25519)
     }
     did {
-        method("key") {
-            algorithm("Ed25519")
+        method(KEY) {
+            algorithm(ED25519)
         }
     }
 }
@@ -320,8 +320,8 @@ val trustLayer = TrustLayer.build {
 ```kotlin
 try {
     val did = trustLayer.createDid {
-        method("key")
-        algorithm("Ed25519")
+        method(KEY)
+        algorithm(ED25519)
     }
     println("Created: $did")
 } catch (error: Exception) {

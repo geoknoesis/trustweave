@@ -325,3 +325,4 @@ val eoData = acceptEoDataCredential(dataCredential)
 
 **Built with TrustWeave** - The Foundation for Decentralized Trust and Identity
 
+

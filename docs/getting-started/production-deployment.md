@@ -27,7 +27,7 @@ Never use `inMemory` KMS in production. Use a production-grade key management se
 val trustLayer = TrustLayer.build {
     keys {
         // ✅ Production: Use AWS KMS, Azure Key Vault, or HashiCorp Vault
-        provider("awsKms") {
+        provider(AWS) {
             region("us-east-1")
             keyAlias("trustweave-signing-key")
         }
@@ -36,7 +36,7 @@ val trustLayer = TrustLayer.build {
             vaultUrl("https://myvault.vault.azure.net")
             keyName("signing-key")
         }
-        algorithm("Ed25519")
+        algorithm(ED25519)
     }
     // ... rest of configuration
 }
@@ -89,14 +89,14 @@ val trustLayer = TrustLayer.build {
     anchor {
         // ✅ Production: Use mainnet or production testnets
         chain("algorand:mainnet") {
-            provider("algorand") {
+            provider(ALGORAND) {
                 apiKey(env("ALGORAND_API_KEY"))
                 network("mainnet")
             }
         }
         // Or
         chain("polygon:mainnet") {
-            provider("polygon") {
+            provider(POLYGON) {
                 rpcUrl("https://polygon-rpc.com")
                 privateKey(env("POLYGON_PRIVATE_KEY"))
             }
@@ -474,8 +474,8 @@ class TrustLayerHealthIndicator(
             runBlocking {
                 // Test DID creation
                 val testDid = trustLayer.createDid {
-                    method("key")
-                    algorithm("Ed25519")
+                    method(KEY)
+                    algorithm(ED25519)
                 }
 
                 Health.up()

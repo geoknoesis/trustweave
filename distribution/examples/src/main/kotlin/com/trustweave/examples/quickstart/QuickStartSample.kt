@@ -3,6 +3,9 @@ package com.trustweave.examples.quickstart
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.types.VerificationResult
 import com.trustweave.trust.types.*
+import com.trustweave.trust.dsl.credential.DidMethods.KEY
+import com.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import com.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import com.trustweave.anchor.BlockchainAnchorRegistry
 import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.credential.model.ProofType
@@ -22,12 +25,12 @@ import kotlinx.serialization.json.put
 fun main(): Unit = runBlocking {
     val trustweave = TrustWeave.build {
         keys {
-            provider("inMemory")
-            algorithm("Ed25519")
+            provider(IN_MEMORY)
+            algorithm(ED25519)
         }
         did {
-            method("key") {
-                algorithm("Ed25519")
+            method(KEY) {
+                algorithm(ED25519)
             }
         }
     }

@@ -174,8 +174,8 @@ fun main() = runBlocking {
 
     // Step 1: Create TrustWeave instance
     val trustWeave = TrustWeave.build {
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
         credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
     }
     println("\n✅ TrustWeave initialized")
@@ -184,7 +184,7 @@ fun main() = runBlocking {
     import com.trustweave.trust.types.DidCreationResult
     import com.trustweave.trust.types.WalletCreationResult
     
-    val isc2DidResult = trustWeave.createDid { method("key") }
+    val isc2DidResult = trustWeave.createDid { method(KEY) }
     val isc2Did = when (isc2DidResult) {
         is DidCreationResult.Success -> isc2DidResult.did
         else -> throw IllegalStateException("Failed to create ISC2 DID: ${isc2DidResult.reason}")
@@ -198,7 +198,7 @@ fun main() = runBlocking {
     val isc2KeyId = isc2Doc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val ecCouncilDidResult = trustWeave.createDid { method("key") }
+    val ecCouncilDidResult = trustWeave.createDid { method(KEY) }
     val ecCouncilDid = when (ecCouncilDidResult) {
         is DidCreationResult.Success -> ecCouncilDidResult.did
         else -> throw IllegalStateException("Failed to create EC-Council DID: ${ecCouncilDidResult.reason}")
@@ -212,7 +212,7 @@ fun main() = runBlocking {
     val ecCouncilKeyId = ecCouncilDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val comptiaDidResult = trustWeave.createDid { method("key") }
+    val comptiaDidResult = trustWeave.createDid { method(KEY) }
     val comptiaDid = when (comptiaDidResult) {
         is DidCreationResult.Success -> comptiaDidResult.did
         else -> throw IllegalStateException("Failed to create CompTIA DID: ${comptiaDidResult.reason}")
@@ -226,13 +226,13 @@ fun main() = runBlocking {
     val comptiaKeyId = comptiaDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val professionalDidResult = trustWeave.createDid { method("key") }
+    val professionalDidResult = trustWeave.createDid { method(KEY) }
     val professionalDid = when (professionalDidResult) {
         is DidCreationResult.Success -> professionalDidResult.did
         else -> throw IllegalStateException("Failed to create professional DID: ${professionalDidResult.reason}")
     }
     
-    val employerDidResult = trustWeave.createDid { method("key") }
+    val employerDidResult = trustWeave.createDid { method(KEY) }
     val employerDid = when (employerDidResult) {
         is DidCreationResult.Success -> employerDidResult.did
         else -> throw IllegalStateException("Failed to create employer DID: ${employerDidResult.reason}")
@@ -662,4 +662,5 @@ Security Training & Certification Verification Scenario - Complete End-to-End Ex
 - [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
 - [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+
 

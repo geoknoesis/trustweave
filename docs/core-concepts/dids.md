@@ -65,18 +65,18 @@ fun main() = runBlocking {
     // Create TrustWeave instance with DID methods registered
     val trustWeave = TrustWeave.build {
         factories(didMethodFactory = TestkitDidMethodFactory())
-        keys { provider("inMemory"); algorithm("Ed25519") }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
         did {
-            method("key") {
-                algorithm("Ed25519")
+            method(KEY) {
+                algorithm(ED25519)
             }
         }
     }
 
     // Create a DID using DSL
     val issuerDid = trustWeave.createDid {
-        method("key")
-        algorithm("Ed25519")
+        method(KEY)
+        algorithm(ED25519)
     }
 
     println("Issuer DID: ${issuerDid.value}")

@@ -2,7 +2,9 @@ package com.trustweave.examples.academic
 
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.dsl.credential.DidMethods
+import com.trustweave.trust.dsl.credential.DidMethods.KEY
 import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import com.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import com.trustweave.credential.model.ProofType
 import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.wallet.CredentialOrganization
@@ -80,12 +82,12 @@ fun main() = runBlocking {
                     is com.trustweave.kms.results.SignResult.Failure.Error -> throw IllegalStateException("Signing failed: ${signResult.reason}")
                 }
             }
-            algorithm("Ed25519")
+            algorithm(ED25519)
         }
 
         did {
-            method("key") {
-                algorithm("Ed25519")
+            method(KEY) {
+                algorithm(ED25519)
             }
         }
 

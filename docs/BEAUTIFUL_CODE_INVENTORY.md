@@ -102,30 +102,30 @@ Configuring a trust layer requires setting up multiple services (KMS, DID method
 ```kotlin
 val trustLayer = TrustLayer.build {
     keys {
-        provider("inMemory")
-        algorithm("Ed25519")
+        provider(IN_MEMORY)
+        algorithm(ED25519)
     }
 
     did {
-        method("key") {
-            algorithm("Ed25519")
+        method(KEY) {
+            algorithm(ED25519)
         }
-        method("web") {
+        method(WEB) {
             domain("example.com")
         }
     }
 
     anchor {
         chain("algorand:testnet") {
-            provider("algorand")
+            provider(ALGORAND)
         }
         chain("polygon:mainnet") {
-            provider("polygon")
+            provider(POLYGON)
         }
     }
 
     trust {
-        provider("inMemory")
+        provider(IN_MEMORY)
     }
 }
 ```
@@ -160,13 +160,13 @@ val trustLayer = TrustLayer(config)
 ```kotlin
 // Declarative, readable configuration
 val trustLayer = TrustLayer.build {
-    keys { provider("inMemory"); algorithm("Ed25519") }
-    did { method("key") { algorithm("Ed25519") } }
+    keys { provider(IN_MEMORY); algorithm(ED25519) }
+    did { method(KEY) { algorithm(ED25519) } }
     anchor {
-        chain("algorand:testnet") { provider("algorand") }
-        chain("polygon:mainnet") { provider("polygon") }
+        chain("algorand:testnet") { provider(ALGORAND) }
+        chain("polygon:mainnet") { provider(POLYGON) }
     }
-    trust { provider("inMemory") }
+    trust { provider(IN_MEMORY) }
 }
 ```
 

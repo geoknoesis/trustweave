@@ -238,12 +238,12 @@ fun main() = runBlocking {
 
     val trustWeave = TrustWeave.build {
         keys {
-            provider("inMemory")
-            algorithm("Ed25519")
+            provider(IN_MEMORY)
+            algorithm(ED25519)
         }
         did {
-            method("key") {
-                algorithm("Ed25519")
+            method(KEY) {
+                algorithm(ED25519)
             }
         }
         blockchains {
@@ -269,8 +269,8 @@ import com.trustweave.trust.types.DidResolutionResult
 import com.trustweave.trust.types.IssuanceResult
 
 val organizationDidResult = trustWeave.createDid {
-    method("key")
-    algorithm("Ed25519")
+    method(KEY)
+    algorithm(ED25519)
 }
 
 val organizationDid = when (organizationDidResult) {
@@ -293,8 +293,8 @@ import java.time.Instant
 
 // Create field worker DID
 val workerDidResult = trustWeave.createDid {
-    method("key")
-    algorithm("Ed25519")
+    method(KEY)
+    algorithm(ED25519)
 }
 
 val workerDid = when (workerDidResult) {
@@ -595,12 +595,12 @@ fun main() = runBlocking {
 
     val trustWeave = TrustWeave.build {
         keys {
-            provider("inMemory")
-            algorithm("Ed25519")
+            provider(IN_MEMORY)
+            algorithm(ED25519)
         }
         did {
-            method("key") {
-                algorithm("Ed25519")
+            method(KEY) {
+                algorithm(ED25519)
             }
         }
         blockchains {
@@ -618,7 +618,7 @@ fun main() = runBlocking {
     import com.trustweave.trust.types.IssuanceResult
     
     val organizationDidResult = trustWeave.createDid {
-        method("key")
+        method(KEY)
     }
     val organizationDid = when (organizationDidResult) {
         is DidCreationResult.Success -> organizationDidResult.did
@@ -639,7 +639,7 @@ fun main() = runBlocking {
 
     // Step 3: Create field worker DID
     val workerDidResult = trustWeave.createDid {
-        method("key")
+        method(KEY)
     }
     val workerDid = when (workerDidResult) {
         is DidCreationResult.Success -> workerDidResult.did
@@ -860,6 +860,7 @@ You've learned how to:
 - ✅ Verify data integrity and worker authorization
 
 This creates a complete, verifiable field data collection system that ensures data integrity, verifies worker identity, and provides immutable audit trails for compliance and trust.
+
 
 
 

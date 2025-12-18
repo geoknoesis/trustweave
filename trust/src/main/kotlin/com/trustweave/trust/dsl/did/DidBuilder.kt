@@ -84,9 +84,12 @@ class DidBuilder(
      * @return Sealed result type with success or detailed failure information
      */
     suspend fun build(): DidCreationResult = withContext(ioDispatcher) {
-        val methodName = method ?: return@withContext DidCreationResult.Failure.InvalidConfiguration(
-            reason = "DID method is required. Use method(\"key\") or method(\"web\") etc."
-        )
+        // Use explicit method, or config's default, or first registered method
+        val methodName = method 
+            ?: (provider as? com.trustweave.trust.dsl.TrustWeaveContext)?.getConfig()?.defaultDidMethod
+            ?: return@withContext DidCreationResult.Failure.InvalidConfiguration(
+                reason = "DID method is required. Use method(\"key\") or configure a default in did { method(\"key\") { ... } }"
+            )
 
         val didMethod = provider.getDidMethod(methodName) as? DidMethod
             ?: run {

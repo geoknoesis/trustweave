@@ -99,16 +99,16 @@ val policy = (
 
 ```kotlin
 val trustWeave = TrustWeave.build {
-    keys { provider("inMemory"); algorithm("Ed25519") }
-    did { method("key") { algorithm("Ed25519") } }
-    trust { provider("inMemory") }
+    keys { provider(IN_MEMORY); algorithm(ED25519) }
+    did { method(KEY) { algorithm(ED25519) } }
+    trust { provider(IN_MEMORY) }
 }
 
 // Create DIDs
-val universityDid = trustWeave.createDid { method("key") }.getOrThrowDid()
-val caDid = trustWeave.createDid { method("key") }.getOrThrowDid()
-val verifierDid = trustWeave.createDid { method("key") }.getOrThrowDid()
-val issuerDid = trustWeave.createDid { method("key") }.getOrThrowDid()
+val universityDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+val caDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+val verifierDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+val issuerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 
 // Add trust anchors using infix DSL
 trustWeave.trust {

@@ -95,4 +95,59 @@ object ProofPurposes {
     const val CAPABILITY_DELEGATION = "capabilityDelegation"
 }
 
+/**
+ * Type-safe KMS providers.
+ * 
+ * Use these constants for well-known providers:
+ * ```kotlin
+ * keys { provider(KmsProviders.IN_MEMORY); algorithm(ED25519) }
+ * ```
+ * 
+ * For third-party/custom providers, use strings directly:
+ * ```kotlin
+ * keys { provider("myCustomKms"); ... }
+ * ```
+ */
+object KmsProviders {
+    const val IN_MEMORY = "inMemory"
+    const val AWS = "awsKms"
+    const val AZURE = "azureKms"
+    const val GOOGLE = "googleKms"
+    const val HASHICORP = "hashicorp"
+    const val FORTANIX = "fortanix"
+    const val THALES = "thales"
+    const val CYBERARK = "cyberark"
+    const val IBM = "ibm"
+}
+
+/**
+ * Type-safe blockchain anchor providers.
+ * 
+ * Use these constants for well-known blockchain providers:
+ * ```kotlin
+ * anchor { chain("algorand:testnet") { provider(AnchorProviders.ALGORAND) } }
+ * ```
+ */
+object AnchorProviders {
+    const val IN_MEMORY = "inMemory"
+    const val ALGORAND = "algorand"
+    const val ETHEREUM = "ethereum"
+    const val POLYGON = "polygon"
+    const val BASE = "base"
+    const val ARBITRUM = "arbitrum"
+}
+
+/**
+ * Type-safe trust registry providers.
+ */
+object TrustProviders {
+    const val IN_MEMORY = "inMemory"
+}
+
+/**
+ * Type-safe revocation providers.
+ */
+object RevocationProviders {
+    const val IN_MEMORY = "inMemory"
+}
 

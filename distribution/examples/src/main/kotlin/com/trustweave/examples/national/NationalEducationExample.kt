@@ -3,6 +3,8 @@ package com.trustweave.examples.national
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.types.VerificationResult
 import com.trustweave.trust.types.*
+import com.trustweave.trust.dsl.credential.DidMethods.KEY
+import com.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import com.trustweave.core.*
 import com.trustweave.core.util.DigestUtils
 import com.trustweave.credential.model.vc.VerifiableCredential
@@ -94,11 +96,11 @@ fun main() = runBlocking {
         keys {
             custom(kmsRef)
             signer(signer)
-            algorithm("Ed25519")
+            algorithm(ED25519)
         }
         did {
-            method("key") {
-                algorithm("Ed25519")
+            method(KEY) {
+                algorithm(ED25519)
             }
         }
         issuer(credentialService)

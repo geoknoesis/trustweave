@@ -227,7 +227,7 @@ For tests and examples, use the `getOrFail()` extension from testkit:
 import com.trustweave.testkit.getOrFail
 
 // Throws IllegalStateException with detailed error message on failure
-val did = trustWeave.createDid { method("key") }.getOrFail()
+val did = trustWeave.createDid { method(KEY) }.getOrFail()
 val credential = trustWeave.issue { ... }.getOrFail()
 val wallet = trustWeave.wallet { holder("did:key:holder") }.getOrFail()
 ```

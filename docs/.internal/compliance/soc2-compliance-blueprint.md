@@ -376,7 +376,7 @@ fun createSOC2CompliantVeriCore(kmsConfig: Map<String, Any?>): TrustWeave {
 
         // Enable blockchain anchoring for audit trails
         blockchainAnchor {
-            provider("polygon") // or "algorand", etc.
+            provider(POLYGON) // or "algorand", etc.
             options(mapOf(
                 "network" to "mainnet",
                 "apiKey" to System.getenv("BLOCKCHAIN_API_KEY")

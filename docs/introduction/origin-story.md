@@ -127,7 +127,7 @@ You can now **play** with different technologies:
 // Try Ethereum
 val trustWeave = TrustWeave.build {
     blockchains { "ethereum:mainnet" to ethereumClient }
-    did { method("ethr") }
+    did { method(ETHR) }
 }
 
 // Switch to Algorand? Just change the config

@@ -181,8 +181,8 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),
             didMethodFactory = TestkitDidMethodFactory()
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
         credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
     }
     println("\n✅ TrustWeave initialized")
@@ -190,7 +190,7 @@ fun main() = runBlocking {
     // Step 2: Create DIDs for organization, employees, and auditors
     import com.trustweave.trust.types.DidCreationResult
     
-    val organizationDidResult = trustWeave.createDid { method("key") }
+    val organizationDidResult = trustWeave.createDid { method(KEY) }
     val organizationDid = when (organizationDidResult) {
         is DidCreationResult.Success -> {
             println("✅ Created organization DID: ${organizationDidResult.did.value}")
@@ -202,7 +202,7 @@ fun main() = runBlocking {
         }
     }
 
-    val adminDidResult = trustWeave.createDid { method("key") }
+    val adminDidResult = trustWeave.createDid { method(KEY) }
     val adminDid = when (adminDidResult) {
         is DidCreationResult.Success -> {
             println("✅ Created admin DID: ${adminDidResult.did.value}")
@@ -214,7 +214,7 @@ fun main() = runBlocking {
         }
     }
 
-    val employeeDidResult = trustWeave.createDid { method("key") }
+    val employeeDidResult = trustWeave.createDid { method(KEY) }
     val employeeDid = when (employeeDidResult) {
         is DidCreationResult.Success -> {
             println("✅ Created employee DID: ${employeeDidResult.did.value}")
@@ -226,7 +226,7 @@ fun main() = runBlocking {
         }
     }
 
-    val auditorDidResult = trustWeave.createDid { method("key") }
+    val auditorDidResult = trustWeave.createDid { method(KEY) }
     val auditorDid = when (auditorDidResult) {
         is DidCreationResult.Success -> {
             println("✅ Created auditor DID: ${auditorDidResult.did.value}")
@@ -372,7 +372,7 @@ fun main() = runBlocking {
     println("   Issuer valid: ${adminVerification.issuerValid}")
 
     // Step 6: Key rotation with history preservation (CC7.3)
-    val newAdminDidResult = trustWeave.createDid { method("key") }
+    val newAdminDidResult = trustWeave.createDid { method(KEY) }
     val newAdminDid = when (newAdminDidResult) {
         is DidCreationResult.Success -> {
             println("✅ Created new admin DID: ${newAdminDidResult.did.value}")
@@ -714,7 +714,7 @@ suspend fun rotateKeyWithHistory(
     oldKeyId: String
 ): String {
     // Create new key
-    val newDid = trustWeave.createDid { method("key") }
+    val newDid = trustWeave.createDid { method(KEY) }
     val newDidResolution = trustWeave.resolveDid(newDid)
     val newDidDoc = when (newDidResolution) {
         is DidResolutionResult.Success -> newDidResolution.document
@@ -873,4 +873,5 @@ suspend fun generateComplianceReport(
 - [Key Management](../core-concepts/key-management.md) - Key management guide
 - [Security Best Practices](../security/README.md) - Comprehensive security guidance
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
+
 

@@ -46,7 +46,7 @@ fun main() = runBlocking {
     // 1. ISSUER: Create DID and issue credential
     // ============================================
     val issuerDidDoc = try {
-        trustWeave.createDid { method("key") }
+        trustWeave.createDid { method(KEY) }
     } catch (error: Exception) {
         when (error) {
             is IllegalStateException -> {
@@ -99,7 +99,7 @@ fun main() = runBlocking {
     // 2. HOLDER: Store credential in wallet
     // ============================================
     val holderDid = try {
-        trustWeave.createDid { method("key") }
+        trustWeave.createDid { method(KEY) }
     } catch (error: Exception) {
         println("❌ Failed to create holder DID: ${error.message}")
         return@runBlocking
@@ -256,7 +256,7 @@ fun main() = runBlocking {
     
     val credentials = (1..10).mapAsync { index ->
         runCatching {
-            val didResult = trustWeave.createDid { method("key") }
+            val didResult = trustWeave.createDid { method(KEY) }
             val issuerDid = when (didResult) {
                 is DidCreationResult.Success -> didResult.did
                 else -> throw IllegalStateException("Failed to create DID: ${didResult.reason}")
@@ -408,7 +408,7 @@ fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
 
     // Create issuer and holder
-    val issuerDidResult = trustWeave.createDid { method("key") }
+    val issuerDidResult = trustWeave.createDid { method(KEY) }
     val issuerDid = when (issuerDidResult) {
         is DidCreationResult.Success -> issuerDidResult.did
         else -> {
@@ -417,7 +417,7 @@ fun main() = runBlocking {
         }
     }
     
-    val holderDidResult = trustWeave.createDid { method("key") }
+    val holderDidResult = trustWeave.createDid { method(KEY) }
     val holderDid = when (holderDidResult) {
         is DidCreationResult.Success -> holderDidResult.did
         else -> {
@@ -562,7 +562,7 @@ fun main() = runBlocking {
     }
 
     // Issue credential
-    val issuerDidResult = trustWeave.createDid { method("key") }
+    val issuerDidResult = trustWeave.createDid { method(KEY) }
     val issuerDid = when (issuerDidResult) {
         is DidCreationResult.Success -> issuerDidResult.did
         else -> {
@@ -650,7 +650,7 @@ fun main() = runBlocking {
     val trustweave = TrustWeave.create()
 
     val holderDid = try {
-        trustWeave.createDid { method("key") }
+        trustWeave.createDid { method(KEY) }
     } catch (error: Exception) {
         println("❌ Failed to create holder DID: ${error.message}")
         return@runBlocking
@@ -668,7 +668,7 @@ fun main() = runBlocking {
 
     // Issue multiple credentials
     val issuerDid = try {
-        trustWeave.createDid { method("key") }
+        trustWeave.createDid { method(KEY) }
     } catch (error: Exception) {
         println("❌ Failed to create issuer DID: ${error.message}")
         return@runBlocking

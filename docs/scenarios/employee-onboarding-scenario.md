@@ -178,8 +178,8 @@ fun main() = runBlocking {
 
     // Step 1: Create TrustWeave instance
     val trustWeave = TrustWeave.build {
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
         credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
     }
     println("\n✅ TrustWeave initialized")
@@ -187,7 +187,7 @@ fun main() = runBlocking {
     // Step 2: Create DIDs for all parties
     import com.trustweave.trust.types.DidCreationResult
     
-    val universityDidResult = trustWeave.createDid { method("key") }
+    val universityDidResult = trustWeave.createDid { method(KEY) }
     val universityDid = when (universityDidResult) {
         is DidCreationResult.Success -> universityDidResult.did
         else -> throw IllegalStateException("Failed to create university DID: ${universityDidResult.reason}")
@@ -201,7 +201,7 @@ fun main() = runBlocking {
     val universityKeyId = universityDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val previousEmployerDidResult = trustWeave.createDid { method("key") }
+    val previousEmployerDidResult = trustWeave.createDid { method(KEY) }
     val previousEmployerDid = when (previousEmployerDidResult) {
         is DidCreationResult.Success -> previousEmployerDidResult.did
         else -> throw IllegalStateException("Failed to create previous employer DID: ${previousEmployerDidResult.reason}")
@@ -215,7 +215,7 @@ fun main() = runBlocking {
     val previousEmployerKeyId = previousEmployerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val certificationBodyDidResult = trustWeave.createDid { method("key") }
+    val certificationBodyDidResult = trustWeave.createDid { method(KEY) }
     val certificationBodyDid = when (certificationBodyDidResult) {
         is DidCreationResult.Success -> certificationBodyDidResult.did
         else -> throw IllegalStateException("Failed to create certification body DID: ${certificationBodyDidResult.reason}")
@@ -229,7 +229,7 @@ fun main() = runBlocking {
     val certificationBodyKeyId = certificationBodyDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val backgroundCheckProviderDidResult = trustWeave.createDid { method("key") }
+    val backgroundCheckProviderDidResult = trustWeave.createDid { method(KEY) }
     val backgroundCheckProviderDid = when (backgroundCheckProviderDidResult) {
         is DidCreationResult.Success -> backgroundCheckProviderDidResult.did
         else -> throw IllegalStateException("Failed to create background check provider DID: ${backgroundCheckProviderDidResult.reason}")
@@ -243,13 +243,13 @@ fun main() = runBlocking {
     val backgroundCheckProviderKeyId = backgroundCheckProviderDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val candidateDidResult = trustWeave.createDid { method("key") }
+    val candidateDidResult = trustWeave.createDid { method(KEY) }
     val candidateDid = when (candidateDidResult) {
         is DidCreationResult.Success -> candidateDidResult.did
         else -> throw IllegalStateException("Failed to create candidate DID: ${candidateDidResult.reason}")
     }
 
-    val employerDidResult = trustWeave.createDid { method("key") }
+    val employerDidResult = trustWeave.createDid { method(KEY) }
     val employerDid = when (employerDidResult) {
         is DidCreationResult.Success -> employerDidResult.did
         else -> throw IllegalStateException("Failed to create employer DID: ${employerDidResult.reason}")
@@ -651,4 +651,5 @@ Background Check Credential: ✅ VALID
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
 - [Wallet API](../api-reference/wallet-api.md) - Wallet operations reference
 - [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+
 

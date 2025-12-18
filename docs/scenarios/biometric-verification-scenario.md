@@ -177,8 +177,8 @@ fun main() = runBlocking {
 
     // Step 1: Create TrustWeave instance
     val trustWeave = TrustWeave.build {
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
         credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
     }
     println("\n✅ TrustWeave initialized")
@@ -187,7 +187,7 @@ fun main() = runBlocking {
     import com.trustweave.trust.types.DidCreationResult
     import com.trustweave.trust.types.WalletCreationResult
     
-    val identityProviderDidResult = trustWeave.createDid { method("key") }
+    val identityProviderDidResult = trustWeave.createDid { method(KEY) }
     val identityProviderDid = when (identityProviderDidResult) {
         is DidCreationResult.Success -> identityProviderDidResult.did
         else -> throw IllegalStateException("Failed to create identity provider DID: ${identityProviderDidResult.reason}")
@@ -201,19 +201,19 @@ fun main() = runBlocking {
     val identityProviderKeyId = identityProviderDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val individualDidResult = trustWeave.createDid { method("key") }
+    val individualDidResult = trustWeave.createDid { method(KEY) }
     val individualDid = when (individualDidResult) {
         is DidCreationResult.Success -> individualDidResult.did
         else -> throw IllegalStateException("Failed to create individual DID: ${individualDidResult.reason}")
     }
     
-    val bankDidResult = trustWeave.createDid { method("key") }
+    val bankDidResult = trustWeave.createDid { method(KEY) }
     val bankDid = when (bankDidResult) {
         is DidCreationResult.Success -> bankDidResult.did
         else -> throw IllegalStateException("Failed to create bank DID: ${bankDidResult.reason}")
     }
     
-    val buildingAccessDidResult = trustWeave.createDid { method("key") }
+    val buildingAccessDidResult = trustWeave.createDid { method(KEY) }
     val buildingAccessDid = when (buildingAccessDidResult) {
         is DidCreationResult.Success -> buildingAccessDidResult.did
         else -> throw IllegalStateException("Failed to create building access DID: ${buildingAccessDidResult.reason}")
@@ -676,4 +676,5 @@ Biometric Verification Scenario - Complete End-to-End Example
 - [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
 - [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+
 

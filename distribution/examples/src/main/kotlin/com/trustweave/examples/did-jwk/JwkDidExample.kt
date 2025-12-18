@@ -1,6 +1,8 @@
 package com.trustweave.examples.did_jwk
 
 import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import com.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import com.trustweave.did.*
 import com.trustweave.did.KeyAlgorithm
 import com.trustweave.did.KeyPurpose
@@ -29,12 +31,12 @@ fun main() = runBlocking {
 
     val trustweave = TrustWeave.build {
         keys {
-            provider("inMemory")
-            algorithm("Ed25519")
+            provider(IN_MEMORY)
+            algorithm(ED25519)
         }
         did {
             method("jwk") {
-                algorithm("Ed25519")
+                algorithm(ED25519)
             }
         }
     }
@@ -43,7 +45,7 @@ fun main() = runBlocking {
     println("\nStep 2: Creating did:jwk with Ed25519...")
     val ed25519Did = trustweave.createDid {
         method("jwk")
-        algorithm("Ed25519")
+        algorithm(ED25519)
     }.getOrFail()
 
     println("Created Ed25519 DID: ${ed25519Did.value}")

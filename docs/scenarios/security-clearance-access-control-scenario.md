@@ -174,8 +174,8 @@ fun main() = runBlocking {
 
     // Step 1: Create TrustWeave instance
     val trustWeave = TrustWeave.build {
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
         credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
     }
     println("\n✅ TrustWeave initialized")
@@ -184,7 +184,7 @@ fun main() = runBlocking {
     import com.trustweave.trust.types.DidCreationResult
     import com.trustweave.trust.types.WalletCreationResult
     
-    val securityAuthorityDidResult = trustWeave.createDid { method("key") }
+    val securityAuthorityDidResult = trustWeave.createDid { method(KEY) }
     val securityAuthorityDid = when (securityAuthorityDidResult) {
         is DidCreationResult.Success -> securityAuthorityDidResult.did
         else -> throw IllegalStateException("Failed to create security authority DID: ${securityAuthorityDidResult.reason}")
@@ -198,31 +198,31 @@ fun main() = runBlocking {
     val securityAuthorityKeyId = securityAuthorityDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val personnel1DidResult = trustWeave.createDid { method("key") }
+    val personnel1DidResult = trustWeave.createDid { method(KEY) }
     val personnel1Did = when (personnel1DidResult) {
         is DidCreationResult.Success -> personnel1DidResult.did
         else -> throw IllegalStateException("Failed to create personnel 1 DID: ${personnel1DidResult.reason}")
     }
     
-    val personnel2DidResult = trustWeave.createDid { method("key") }
+    val personnel2DidResult = trustWeave.createDid { method(KEY) }
     val personnel2Did = when (personnel2DidResult) {
         is DidCreationResult.Success -> personnel2DidResult.did
         else -> throw IllegalStateException("Failed to create personnel 2 DID: ${personnel2DidResult.reason}")
     }
     
-    val topSecretSystemDidResult = trustWeave.createDid { method("key") }
+    val topSecretSystemDidResult = trustWeave.createDid { method(KEY) }
     val topSecretSystemDid = when (topSecretSystemDidResult) {
         is DidCreationResult.Success -> topSecretSystemDidResult.did
         else -> throw IllegalStateException("Failed to create top secret system DID: ${topSecretSystemDidResult.reason}")
     }
     
-    val secretSystemDidResult = trustWeave.createDid { method("key") }
+    val secretSystemDidResult = trustWeave.createDid { method(KEY) }
     val secretSystemDid = when (secretSystemDidResult) {
         is DidCreationResult.Success -> secretSystemDidResult.did
         else -> throw IllegalStateException("Failed to create secret system DID: ${secretSystemDidResult.reason}")
     }
     
-    val confidentialSystemDidResult = trustWeave.createDid { method("key") }
+    val confidentialSystemDidResult = trustWeave.createDid { method(KEY) }
     val confidentialSystemDid = when (confidentialSystemDidResult) {
         is DidCreationResult.Success -> confidentialSystemDidResult.did
         else -> throw IllegalStateException("Failed to create confidential system DID: ${confidentialSystemDidResult.reason}")
@@ -651,4 +651,5 @@ Security Clearance & Access Control Scenario - Complete End-to-End Example
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
 - [Zero Trust Continuous Authentication Scenario](zero-trust-authentication-scenario.md) - Related authentication scenario
 - [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+
 

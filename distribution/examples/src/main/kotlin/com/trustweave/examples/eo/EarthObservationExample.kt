@@ -3,6 +3,8 @@ package com.trustweave.examples.eo
 import com.trustweave.trust.TrustWeave
 import com.trustweave.trust.types.VerificationResult
 import com.trustweave.trust.types.*
+import com.trustweave.trust.dsl.credential.DidMethods.KEY
+import com.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import com.trustweave.core.*
 import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
@@ -80,11 +82,11 @@ fun main() = runBlocking {
                     is com.trustweave.kms.results.SignResult.Failure.Error -> throw IllegalStateException("Signing failed: ${signResult.reason}")
                 }
             }
-            algorithm("Ed25519")
+            algorithm(ED25519)
         }
         did {
-            method("key") {
-                algorithm("Ed25519")
+            method(KEY) {
+                algorithm(ED25519)
             }
         }
         // Note: Chain is registered manually below, not via DSL

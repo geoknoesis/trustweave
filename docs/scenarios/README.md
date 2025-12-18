@@ -235,13 +235,13 @@ fun main() = runBlocking {
     import com.trustweave.trust.types.IssuanceResult
     import com.trustweave.trust.types.WalletCreationResult
     
-    val issuerDidResult = trustWeave.createDid { method("key") }
+    val issuerDidResult = trustWeave.createDid { method(KEY) }
     val issuerDid = when (issuerDidResult) {
         is DidCreationResult.Success -> issuerDidResult.did
         else -> throw IllegalStateException("Failed to create issuer DID: ${issuerDidResult.reason}")
     }
     
-    val holderDidResult = trustWeave.createDid { method("key") }
+    val holderDidResult = trustWeave.createDid { method(KEY) }
     val holderDid = when (holderDidResult) {
         is DidCreationResult.Success -> holderDidResult.did
         else -> throw IllegalStateException("Failed to create holder DID: ${holderDidResult.reason}")
@@ -298,3 +298,4 @@ fun main() = runBlocking {
 ## Contributing Scenarios
 
 Have a use case that's not covered? See [Contributing](../contributing/README.md) for guidelines on creating new scenarios.
+

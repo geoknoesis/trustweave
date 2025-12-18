@@ -77,13 +77,13 @@ Set up TrustWeave with a Key Management Service and DID method. For development,
 ```kotlin
 val trustWeave = TrustWeave.build {
     keys {
-        provider("inMemory")
-        algorithm("Ed25519")
+        provider(IN_MEMORY)
+        algorithm(ED25519)
     }
     
     did {
-        method("key") {
-            algorithm("Ed25519")
+        method(KEY) {
+            algorithm(ED25519)
         }
     }
     
@@ -110,8 +110,8 @@ Create a DID (Decentralized Identifier) for the credential issuer. This identity
 import com.trustweave.trust.types.DidCreationResult
 
 val didResult = trustWeave.createDid {
-    method("key")
-    algorithm("Ed25519")
+    method(KEY)
+    algorithm(ED25519)
 }
 
 val issuerDid = when (didResult) {
@@ -300,13 +300,13 @@ fun main() = runBlocking {
     // Step 1: Configure TrustWeave
     val trustWeave = TrustWeave.build {
         keys {
-            provider("inMemory")
-            algorithm("Ed25519")
+            provider(IN_MEMORY)
+            algorithm(ED25519)
         }
         
         did {
-            method("key") {
-                algorithm("Ed25519")
+            method(KEY) {
+                algorithm(ED25519)
             }
         }
         
@@ -317,7 +317,7 @@ fun main() = runBlocking {
     
     // Step 2: Create issuer DID
     val didResult = trustWeave.createDid {
-        method("key")
+        method(KEY)
     }
     val issuerDid = when (didResult) {
         is DidCreationResult.Success -> {
@@ -481,8 +481,8 @@ trustWeave.issue {
 // ✅ Ensure KMS is configured
 val trustWeave = TrustWeave.build {
     keys {
-        provider("inMemory")  // or your KMS provider
-        algorithm("Ed25519")
+        provider(IN_MEMORY)  // or your KMS provider
+        algorithm(ED25519)
     }
     // ... rest of config
 }
@@ -499,8 +499,8 @@ val trustWeave = TrustWeave.build {
 // ✅ Register DID method
 val trustWeave = TrustWeave.build {
     did {
-        method("key") {  // Register the method
-            algorithm("Ed25519")
+        method(KEY) {  // Register the method
+            algorithm(ED25519)
         }
     }
     // ... rest of config
@@ -517,8 +517,8 @@ val trustWeave = TrustWeave.build {
 ```kotlin
 // ✅ Ensure DID is created and resolved
 val issuerDid = trustWeave.createDid {
-    method("key")
-    algorithm("Ed25519")
+    method(KEY)
+    algorithm(ED25519)
 }
 
 // Wait a moment for DID to be available, then resolve

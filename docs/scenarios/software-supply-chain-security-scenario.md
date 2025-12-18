@@ -183,8 +183,8 @@ fun main() = runBlocking {
             kmsFactory = TestkitKmsFactory(),
             didMethodFactory = TestkitDidMethodFactory()
         )
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
     }
     println("\n✅ TrustWeave initialized")
 
@@ -195,7 +195,7 @@ fun main() = runBlocking {
     import com.trustweave.trust.types.WalletCreationResult
     import com.trustweave.trust.types.VerificationResult
     
-    val publisherDidResult = trustWeave.createDid { method("key") }
+    val publisherDidResult = trustWeave.createDid { method(KEY) }
     val publisherDid = when (publisherDidResult) {
         is DidCreationResult.Success -> publisherDidResult.did
         else -> throw IllegalStateException("Failed to create publisher DID")
@@ -208,7 +208,7 @@ fun main() = runBlocking {
     val publisherKeyId = publisherDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val buildSystemDidResult = trustWeave.createDid { method("key") }
+    val buildSystemDidResult = trustWeave.createDid { method(KEY) }
     val buildSystemDid = when (buildSystemDidResult) {
         is DidCreationResult.Success -> buildSystemDidResult.did
         else -> throw IllegalStateException("Failed to create build system DID")
@@ -221,7 +221,7 @@ fun main() = runBlocking {
     val buildSystemKeyId = buildSystemDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
         ?: throw IllegalStateException("No verification method found")
 
-    val consumerDidResult = trustWeave.createDid { method("key") }
+    val consumerDidResult = trustWeave.createDid { method(KEY) }
     val consumerDid = when (consumerDidResult) {
         is DidCreationResult.Success -> consumerDidResult.did
         else -> throw IllegalStateException("Failed to create consumer DID")
@@ -670,4 +670,5 @@ Software Supply Chain Security Scenario - Complete End-to-End Example
 - [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
 - [API Reference](../api-reference/core-api.md) - Complete API documentation
 - [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+
 

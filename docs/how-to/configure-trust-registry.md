@@ -49,7 +49,7 @@ A trust registry maintains a graph of trusted DIDs (trust anchors) and allows ve
 ```kotlin
 // 1. Configure trust registry
 val trustWeave = TrustWeave.build {
-    trust { provider("inMemory") }
+    trust { provider(IN_MEMORY) }
 }
 
 // 2. Add trust anchors
@@ -77,18 +77,18 @@ Enable trust registry in your TrustWeave configuration:
 ```kotlin
 val trustWeave = TrustWeave.build {
     keys {
-        provider("inMemory")
-        algorithm("Ed25519")
+        provider(IN_MEMORY)
+        algorithm(ED25519)
     }
     
     did {
-        method("key") {
-            algorithm("Ed25519")
+        method(KEY) {
+            algorithm(ED25519)
         }
     }
     
     trust {
-        provider("inMemory")  // For testing; use persistent provider in production
+        provider(IN_MEMORY)  // For testing; use persistent provider in production
     }
 }
 ```
@@ -207,24 +207,24 @@ fun main() = runBlocking {
     // Step 1: Configure TrustWeave with trust registry
     val trustWeave = TrustWeave.build {
         keys {
-            provider("inMemory")
-            algorithm("Ed25519")
+            provider(IN_MEMORY)
+            algorithm(ED25519)
         }
         
         did {
-            method("key") {
-                algorithm("Ed25519")
+            method(KEY) {
+                algorithm(ED25519)
             }
         }
         
         trust {
-            provider("inMemory")
+            provider(IN_MEMORY)
         }
     }
     
     // Step 2: Create DIDs
-    val universityDid = trustWeave.createDid { method("key") }
-    val studentDid = trustWeave.createDid { method("key") }
+    val universityDid = trustWeave.createDid { method(KEY) }
+    val studentDid = trustWeave.createDid { method(KEY) }
     
     // Step 3: Get key ID
     val resolutionResult = trustWeave.resolveDid(universityDid)
@@ -375,7 +375,7 @@ Credential is valid and trusted
 // ✅ Ensure trust registry is configured
 val trustWeave = TrustWeave.build {
     trust {
-        provider("inMemory")  // or your provider
+        provider(IN_MEMORY)  // or your provider
     }
 }
 ```

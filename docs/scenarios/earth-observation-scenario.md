@@ -170,13 +170,13 @@ fun main() = runBlocking {
     println("=".repeat(70))
 
     trustWeave {
-        keys { provider("inMemory"); algorithm("Ed25519") }
-        did { method("key") { algorithm("Ed25519") } }
-        anchor { chain("inmemory:testnet") { provider("inMemory") } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
+        anchor { chain("inmemory:testnet") { provider(IN_MEMORY) } }
     }.run {
         println("\n✅ TrustWeave initialized")
         
-        createDid { method("key") }.getOrThrow().let { (did, doc) ->
+        createDid { method(KEY) }.getOrThrow().let { (did, doc) ->
             val datasetId = "did:web:eo.example.com:collections:Sentinel2:items:L1C_T31UFS_20230615"
             println("✅ Data Provider DID: ${did.value}")
             
@@ -596,4 +596,5 @@ This pattern works for:
 - **Data sharing**: Provide verifiable data to consumers
 
 This workflow ensures EO data integrity from collection to verification, providing tamper-proof guarantees through blockchain anchoring and cryptographic digests. Your data is now verifiable, traceable, and trustworthy! 🎉
+
 

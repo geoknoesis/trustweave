@@ -1,8 +1,12 @@
 package com.trustweave.testkit.trust
 
+import com.trustweave.did.identifiers.Did
 import com.trustweave.trust.TrustAnchorMetadata
 import com.trustweave.trust.TrustRegistry
-import com.trustweave.did.identifiers.Did
+import com.trustweave.trust.types.IssuerIdentity
+import com.trustweave.trust.types.TrustAnchor
+import com.trustweave.trust.types.TrustPath
+import com.trustweave.trust.types.VerifierIdentity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
@@ -72,9 +76,9 @@ class InMemoryTrustRegistry : TrustRegistry {
         }
 
     override suspend fun findTrustPath(
-        from: com.trustweave.trust.types.VerifierIdentity,
-        to: com.trustweave.trust.types.IssuerIdentity
-    ): com.trustweave.trust.types.TrustPath {
+        from: VerifierIdentity,
+        to: IssuerIdentity
+    ): TrustPath {
         val fromDid = from  // VerifierIdentity is a typealias for Did
         val toDid = to      // IssuerIdentity is a typealias for Did
         val fromDidStr = fromDid.value
@@ -82,7 +86,7 @@ class InMemoryTrustRegistry : TrustRegistry {
         
         // Direct trust check
         if (fromDidStr == toDidStr) {
-            return com.trustweave.trust.types.TrustPath.Verified(
+            return TrustPath.Verified(
                 from = from,
                 to = to,
                 anchors = emptyList(),
@@ -96,7 +100,7 @@ class InMemoryTrustRegistry : TrustRegistry {
         val toIsAnchor = trustAnchors.containsKey(toDidStr)
 
         if (!fromIsAnchor && !toIsAnchor) {
-            return com.trustweave.trust.types.TrustPath.NotFound(
+            return TrustPath.NotFound(
                 from = from,
                 to = to,
                 reason = "Neither ${fromDidStr} nor ${toDidStr} are trust anchors"
@@ -107,7 +111,7 @@ class InMemoryTrustRegistry : TrustRegistry {
         val path = findPathBFS(fromDidStr, toDidStr)
 
         if (path.isEmpty()) {
-            return com.trustweave.trust.types.TrustPath.NotFound(
+            return TrustPath.NotFound(
                 from = from,
                 to = to,
                 reason = "No trust path found between ${fromDidStr} and ${toDidStr}"
@@ -119,14 +123,14 @@ class InMemoryTrustRegistry : TrustRegistry {
 
         // Convert path to TrustAnchor list (excluding endpoints)
         val anchors = path.drop(1).dropLast(1).map { didString ->
-            val metadata = trustAnchors[didString] ?: com.trustweave.trust.TrustAnchorMetadata()
-            com.trustweave.trust.types.TrustAnchor(
+            val metadata = trustAnchors[didString] ?: TrustAnchorMetadata()
+            TrustAnchor(
                 did = Did(didString),
                 metadata = metadata
             )
         }
 
-        return com.trustweave.trust.types.TrustPath.Verified(
+        return TrustPath.Verified(
             from = from,
             to = to,
             anchors = anchors,

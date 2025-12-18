@@ -1,22 +1,27 @@
 package com.trustweave.testkit.services
 
-import com.trustweave.kms.services.KmsFactory
-import com.trustweave.did.services.DidMethodFactory
-import com.trustweave.anchor.services.BlockchainAnchorClientFactory
-import com.trustweave.trust.services.TrustRegistryFactory
-import com.trustweave.revocation.services.StatusListRegistryFactory
-import com.trustweave.kms.KeyManagementService
-import com.trustweave.kms.spi.KeyManagementServiceProvider
-import com.trustweave.did.DidMethod
-import com.trustweave.did.DidCreationOptions
-import com.trustweave.did.spi.DidMethodProvider
-import com.trustweave.testkit.kms.InMemoryKeyManagementService
-import com.trustweave.testkit.did.DidKeyMockMethod
-import com.trustweave.testkit.trust.InMemoryTrustRegistry
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.trustweave.credential.revocation.RevocationManagers
 import com.trustweave.anchor.BlockchainAnchorClient
+import com.trustweave.anchor.services.BlockchainAnchorClientFactory
 import com.trustweave.anchor.spi.BlockchainAnchorClientProvider
+import com.trustweave.core.identifiers.KeyId
+import com.trustweave.credential.revocation.CredentialRevocationManager
+import com.trustweave.credential.revocation.RevocationManagers
+import com.trustweave.did.DidCreationOptions
+import com.trustweave.did.DidMethod
+import com.trustweave.did.registry.DidMethodRegistry
+import com.trustweave.did.services.DidMethodFactory
+import com.trustweave.did.spi.DidMethodProvider
+import com.trustweave.kms.KeyManagementService
+import com.trustweave.kms.results.SignResult
+import com.trustweave.kms.services.KmsFactory
+import com.trustweave.kms.spi.KeyManagementServiceProvider
+import com.trustweave.revocation.services.StatusListRegistryFactory
+import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.testkit.did.DidKeyMockMethod
+import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.testkit.trust.InMemoryTrustRegistry
+import com.trustweave.trust.TrustRegistry
+import com.trustweave.trust.services.TrustRegistryFactory
 import java.util.ServiceLoader
 
 /**
@@ -35,10 +40,10 @@ class TestkitKmsFactory : KmsFactory {
         val kms = InMemoryKeyManagementService()
         val kmsRef = kms
         val signerFn: suspend (ByteArray, String) -> ByteArray = { data, keyId ->
-            val keyIdObj = com.trustweave.core.identifiers.KeyId(keyId)
+            val keyIdObj = KeyId(keyId)
             val result = kmsRef.sign(keyId = keyIdObj, data = data, algorithm = null)
             when (result) {
-                is com.trustweave.kms.results.SignResult.Success -> result.signature
+                is SignResult.Success -> result.signature
                 else -> throw RuntimeException("Failed to sign: $result")
             }
         }
@@ -82,7 +87,7 @@ class TestkitKmsFactory : KmsFactory {
  * to ensure DIDs created in one TrustWeave instance are resolvable in another.
  */
 class TestkitDidMethodFactory(
-    private val didRegistry: com.trustweave.did.registry.DidMethodRegistry? = null
+    private val didRegistry: DidMethodRegistry? = null
 ) : DidMethodFactory {
     override suspend fun create(
         methodName: String,
@@ -145,7 +150,7 @@ class TestkitDidMethodFactory(
  * StatusListRegistry Factory implementation.
  */
 class TestkitStatusListRegistryFactory : StatusListRegistryFactory {
-    override suspend fun create(providerName: String): com.trustweave.credential.revocation.CredentialRevocationManager {
+    override suspend fun create(providerName: String): CredentialRevocationManager {
         if (providerName == "inMemory") {
             return RevocationManagers.default()
         }
@@ -160,7 +165,7 @@ class TestkitStatusListRegistryFactory : StatusListRegistryFactory {
  * TrustRegistry Factory implementation.
  */
 class TestkitTrustRegistryFactory : TrustRegistryFactory {
-    override suspend fun create(providerName: String): com.trustweave.trust.TrustRegistry {
+    override suspend fun create(providerName: String): TrustRegistry {
         if (providerName == "inMemory") {
             return InMemoryTrustRegistry()
         }

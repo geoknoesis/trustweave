@@ -1,10 +1,13 @@
 package com.trustweave.trust.dsl.did
 
+import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.DidCreationOptions
 import com.trustweave.did.DidCreationOptionsBuilder
 import com.trustweave.did.KeyAlgorithm
 import com.trustweave.did.DidMethod
+import com.trustweave.did.exception.DidException
 import com.trustweave.did.identifiers.Did
+import com.trustweave.trust.dsl.TrustWeaveContext
 import com.trustweave.trust.types.DidCreationResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineDispatcher
@@ -86,7 +89,7 @@ class DidBuilder(
     suspend fun build(): DidCreationResult = withContext(ioDispatcher) {
         // Use explicit method, or config's default, or first registered method
         val methodName = method 
-            ?: (provider as? com.trustweave.trust.dsl.TrustWeaveContext)?.getConfig()?.defaultDidMethod
+            ?: (provider as? TrustWeaveContext)?.getConfig()?.defaultDidMethod
             ?: return@withContext DidCreationResult.Failure.InvalidConfiguration(
                 reason = "DID method is required. Use method(\"key\") or configure a default in did { method(\"key\") { ... } }"
             )
@@ -95,7 +98,7 @@ class DidBuilder(
             ?: run {
                 // Try to get available methods from registry if provider is TrustWeaveContext
                 val availableMethods = try {
-                    (provider as? com.trustweave.trust.dsl.TrustWeaveContext)
+                    (provider as? TrustWeaveContext)
                         ?.getConfig()
                         ?.registries
                         ?.didRegistry
@@ -116,9 +119,9 @@ class DidBuilder(
                 did = Did(document.id.value),
                 document = document
             )
-        } catch (e: com.trustweave.core.exception.TrustWeaveException) {
+        } catch (e: TrustWeaveException) {
             when (e) {
-                is com.trustweave.did.exception.DidException.DidMethodNotRegistered -> {
+                is DidException.DidMethodNotRegistered -> {
                     DidCreationResult.Failure.MethodNotRegistered(
                         method = methodName,
                         availableMethods = e.availableMethods
@@ -154,7 +157,7 @@ class DidBuilder(
  * is a [TrustWeaveContext] with a custom dispatcher configured.
  */
 suspend fun DidDslProvider.createDid(block: DidBuilder.() -> Unit): DidCreationResult {
-    val dispatcher = (this as? com.trustweave.trust.dsl.TrustWeaveContext)?.getConfig()?.ioDispatcher
+    val dispatcher = (this as? TrustWeaveContext)?.getConfig()?.ioDispatcher
         ?: Dispatchers.IO
     val builder = DidBuilder(this, dispatcher)
     builder.block()

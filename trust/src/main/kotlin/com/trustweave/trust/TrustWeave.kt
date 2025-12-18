@@ -24,6 +24,7 @@ import com.trustweave.trust.types.IssuerIdentity
 import com.trustweave.trust.types.VerifierIdentity
 import com.trustweave.trust.types.HolderIdentity
 import com.trustweave.trust.types.WalletCreationResult
+import com.trustweave.trust.types.TrustPath
 import kotlinx.datetime.Clock
 import kotlinx.coroutines.withTimeout
 import kotlin.time.Duration
@@ -452,7 +453,7 @@ class TrustWeave private constructor(
         verifier: VerifierIdentity,
         issuer: IssuerIdentity,
         timeout: Duration = 10.seconds
-    ): com.trustweave.trust.types.TrustPath {
+    ): TrustPath {
         return withTimeout(timeout) {
             val registry = config.trustRegistry
                 ?: throw IllegalStateException("Trust registry is not configured. Configure it in TrustWeave.build { trust { ... } }")

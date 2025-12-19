@@ -3,7 +3,7 @@ package com.trustweave.jwkdid
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
 import com.trustweave.did.identifiers.Did
-import VerificationMethodId
+import com.trustweave.did.identifiers.VerificationMethodId
 import com.trustweave.did.model.DidDocument
 import com.trustweave.did.model.VerificationMethod
 import com.trustweave.did.resolver.DidResolutionResult

@@ -26,45 +26,45 @@ Get started with TrustWeave in 5 minutes! This guide will walk you through creat
 Here's the absolute minimum to get your first credential working. Copy, paste, run:
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.types.*
+import com.trustweave.trust.dsl.trustWeave
+import com.trustweave.trust.dsl.credential.*
+import com.trustweave.trust.types.VerificationResult
 import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    // Build TrustWeave with test defaults
-    val trustWeave = TrustWeave.build {
+    trustWeave {
         factories(
             kmsFactory = TestkitKmsFactory(),
             didMethodFactory = TestkitDidMethodFactory()
         )
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
-    }
+    }.run {
+        // Create issuer DID (uses default method from config)
+        val (issuerDid, issuerDoc) = createDid().getOrThrow()
+        val keyId = issuerDoc.verificationMethod.first().id.substringAfter("#")
+        println("✅ Created DID: ${issuerDid.value}")
 
-    // Create issuer DID
-    val (issuerDid, issuerDoc) = trustWeave.createDid().getOrThrow()
-    val keyId = issuerDoc.verificationMethod.firstOrNull()?.id?.value?.substringAfter("#") ?: "key-1"
-    println("✅ Created DID: ${issuerDid.value}")
-
-    // Issue credential
-    val credential = trustWeave.issue {
-        credential {
-            type("HelloCredential")
-            issuer(issuerDid.value)
-            subject {
-                id("did:key:holder")
-                "message" to "Hello Trustweave!"
+        // Issue credential
+        val credential = issue {
+            credential {
+                type("HelloCredential")
+                issuer(issuerDid.value)
+                subject {
+                    id("did:key:holder")
+                    "message" to "Hello Trustweave!"
+                }
             }
-        }
-        signedBy(issuerDid = issuerDid.value, keyId = keyId)
-    }.getOrThrow()
+            signedBy(issuerDid.value, keyId)
+        }.getOrThrow()
 
-    // Verify credential
-    val result = trustWeave.verify { credential(credential) }
-    when (result) {
-        is VerificationResult.Valid -> println("✅ Credential verified!")
-        else -> println("❌ Verification failed")
+        // Verify credential
+        val result = verify { credential(credential) }
+        when (result) {
+            is VerificationResult.Valid -> println("✅ Credential verified!")
+            else -> println("❌ Verification failed")
+        }
     }
 }
 ```
@@ -118,46 +118,32 @@ Here's a complete, copy-paste ready example that demonstrates the full TrustWeav
 ```kotlin
 package com.example.TrustWeave.quickstart
 
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.types.IssuerIdentity
+import com.trustweave.trust.dsl.trustWeave
+import com.trustweave.trust.dsl.credential.*
 import com.trustweave.trust.types.VerificationResult
 import com.trustweave.core.util.DigestUtils
-import com.trustweave.core.exception.TrustWeaveException
-import com.trustweave.did.exception.DidException
-import com.trustweave.did.exception.DidException.DidMethodNotRegistered
-import com.trustweave.did.exception.DidException.DidNotFound
-import com.trustweave.did.exception.DidException.InvalidDidFormat
-import com.trustweave.credential.exception.CredentialException
-import com.trustweave.credential.exception.CredentialException.CredentialInvalid
-import com.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed
-import com.trustweave.wallet.exception.WalletException
-import com.trustweave.wallet.exception.WalletException.WalletCreationFailed
 import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 fun main() = runBlocking {
-    try {
-        // Step 1: Create TrustWeave instance with defaults
-        val trustWeave = TrustWeave.build {
-            factories(
-                kmsFactory = TestkitKmsFactory(),
-                didMethodFactory = TestkitDidMethodFactory()
-            )
-    keys {
-        provider(IN_MEMORY)
-        algorithm(ED25519)
-    }
-    did {
-        method(KEY) {
+    trustWeave {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
+        keys {
+            provider(IN_MEMORY)
             algorithm(ED25519)
         }
-    }
+        did {
+            method(KEY) {
+                algorithm(ED25519)
+            }
         }
-
-        // Step 2: Compute a digest (demonstrates canonicalization)
-        // Note: For digest computation, we still use buildJsonObject as it's outside the DSL
+    }.run {
+        // Step 1: Compute a digest (demonstrates canonicalization)
         val credentialSubject = buildJsonObject {
             put("id", "did:key:holder-placeholder")
             put("name", "Alice Example")
@@ -166,51 +152,15 @@ fun main() = runBlocking {
         val digest = DigestUtils.sha256DigestMultibase(credentialSubject)
         println("Canonical credential-subject digest: $digest")
 
-        // Step 3: Create an issuer DID
-        val didResult = trustWeave.createDid {
-            method(KEY)
-            algorithm(ED25519)
-        }
-        
-        val issuerDid = when (didResult) {
-            is DidCreationResult.Success -> {
-                println("Issuer DID: ${didResult.did.value}")
-                didResult.did
-            }
-            is DidCreationResult.Failure -> {
-                val errorMsg = when (didResult) {
-                    is DidCreationResult.Failure.MethodNotRegistered -> 
-                        "Method '${didResult.method}' not registered. Available: ${didResult.availableMethods.joinToString()}"
-                    is DidCreationResult.Failure.KeyGenerationFailed -> 
-                        "Key generation failed: ${didResult.reason}"
-                    is DidCreationResult.Failure.DocumentCreationFailed -> 
-                        "Document creation failed: ${didResult.reason}"
-                    is DidCreationResult.Failure.InvalidConfiguration -> 
-                        "Invalid configuration: ${didResult.reason}"
-                    is DidCreationResult.Failure.Other -> 
-                        "Error: ${didResult.reason}"
-                }
-                println("Failed to create DID: $errorMsg")
-                return@runBlocking
-            }
-        }
-        
-        // Extract key ID from DID document
-        val issuerDidResolution = trustWeave.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid.value)
-            ?: throw IllegalStateException("Failed to resolve issuer DID")
-        val issuerDidDoc = when (issuerDidResolution) {
-            is com.trustweave.did.resolver.DidResolutionResult.Success -> issuerDidResolution.document
-            else -> throw IllegalStateException("Failed to resolve issuer DID")
-        }
-        val issuerKeyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
-            ?: throw IllegalStateException("No verification method in issuer DID")
-        
+        // Step 2: Create issuer DID (uses default method from config)
+        val (issuerDid, issuerDoc) = createDid().getOrThrow()
+        val issuerKeyId = issuerDoc.verificationMethod.first().id.substringAfter("#")
         println("Issuer DID: ${issuerDid.value} (keyId=$issuerKeyId)")
 
-        // Step 4: Issue a verifiable credential
-        val issuanceResult = trustWeave.issue {
+        // Step 3: Issue credential
+        val credential = issue {
             credential {
-                type(CredentialType.VerifiableCredential, CredentialType.Custom("QuickStartCredential"))
+                type("QuickStartCredential")
                 issuer(issuerDid.value)
                 subject {
                     id("did:key:holder-placeholder")
@@ -218,22 +168,12 @@ fun main() = runBlocking {
                     "role" to "Site Reliability Engineer"
                 }
             }
-            signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
-        }
-        
-        val credential = when (issuanceResult) {
-            is IssuanceResult.Success -> {
-                println("Issued credential id: ${issuanceResult.credential.id}")
-                issuanceResult.credential
-            }
-            is IssuanceResult.Failure -> {
-                println("Failed to issue credential: ${issuanceResult.allErrors.joinToString("; ")}")
-                return@runBlocking
-            }
-        }
+            signedBy(issuerDid.value, issuerKeyId)
+        }.getOrThrow()
+        println("Issued credential id: ${credential.id}")
 
-        // Step 5: Verify the credential
-        val verification = trustWeave.verify {
+        // Step 4: Verify credential
+        val verification = verify {
             credential(credential)
             checkRevocation()
             checkExpiration()
@@ -266,23 +206,14 @@ fun main() = runBlocking {
             }
         }
 
-        // Step 6: Create a wallet and store the credential
-        val walletResult = trustWeave.wallet {
+        // Step 5: Create wallet and store credential
+        val wallet = wallet {
             holder("did:key:holder-placeholder")
-        }
-        
-        val wallet = when (walletResult) {
-            is WalletCreationResult.Success -> walletResult.wallet
-            else -> {
-                println("Failed to create wallet: ${walletResult.reason}")
-                return@runBlocking
-            }
-        }
+        }.getOrThrow()
         
         val credentialId = wallet.store(credential)
         println("✅ Stored credential: $credentialId")
-    // Error handling is now done via sealed results
-    // The when expressions above handle all error cases
+    }
 }
 ```
 
@@ -291,22 +222,25 @@ fun main() = runBlocking {
 For quick testing and prototypes, you can use a simplified version without detailed error handling. **Do not use this in production:**
 
 ```kotlin
+import com.trustweave.trust.dsl.trustWeave
+import com.trustweave.trust.dsl.credential.*
 import com.trustweave.testkit.services.*
+import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val trustWeave = TrustWeave.build {
+    trustWeave {
         factories(
             kmsFactory = TestkitKmsFactory(),
             didMethodFactory = TestkitDidMethodFactory()
         )
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
+    }.run {
+        // Operations will throw exceptions on failure
+        val (did, _) = createDid().getOrThrow()
+        val credential = issue { ... }.getOrThrow()
+        // ... rest of code
     }
-
-    // Operations will throw exceptions on failure
-    val did = trustWeave.createDid { method(KEY) }
-    val credential = trustWeave.issue { ... }
-    // ... rest of code
 }
 ```
 
@@ -317,93 +251,45 @@ fun main() = runBlocking {
 The example above already shows the production pattern. Here's an enhanced version with more detailed error handling:
 
 ```kotlin
-import com.trustweave.did.exception.DidException
-import com.trustweave.did.exception.DidException.DidMethodNotRegistered
-import com.trustweave.did.exception.DidException.DidNotFound
-import com.trustweave.credential.exception.CredentialException
-import com.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed
-import com.trustweave.core.exception.TrustWeaveException
+import com.trustweave.trust.dsl.trustWeave
+import com.trustweave.trust.dsl.credential.*
 import com.trustweave.testkit.services.*
+import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val trustWeave = TrustWeave.build {
+    trustWeave {
         factories(
             kmsFactory = TestkitKmsFactory(),
             didMethodFactory = TestkitDidMethodFactory()
         )
-    keys {
-        provider(IN_MEMORY)
-        algorithm(ED25519)
-    }
-    did {
-        method(KEY) {
+        keys {
+            provider(IN_MEMORY)
             algorithm(ED25519)
         }
-    }
-    }
-
-    // Production pattern: Use try-catch for all operations with domain-specific exceptions
-    val issuerDid = try {
-        trustWeave.createDid {
-            method(KEY)
-            algorithm(ED25519)
-        }
-    } catch (error: DidException) {
-        when (error) {
-            is DidMethodNotRegistered -> {
-                println("❌ DID method not registered: ${error.method}")
-                println("Available methods: ${error.availableMethods}")
-            }
-            is DidNotFound -> {
-                println("❌ DID not found: ${error.did}")
-            }
-            else -> {
-                println("❌ DID error: ${error.message}")
+        did {
+            method(KEY) {
+                algorithm(ED25519)
             }
         }
-        return@runBlocking
-    } catch (error: TrustWeaveException) {
-        println("❌ TrustWeave error [${error.code}]: ${error.message}")
-        return@runBlocking
-    } catch (error: Exception) {
-        println("❌ Unexpected error: ${error.message}")
-        return@runBlocking
-    }
+    }.run {
+        // Production pattern: Use getOrThrow() for concise error handling
+        val (issuerDid, issuerDoc) = createDid().getOrThrow()
+        val issuerKeyId = issuerDoc.verificationMethod.first().id.substringAfter("#")
 
-    val issuerKeyId = "$issuerDid#key-1"
-
-    val credential = try {
-        trustWeave.issue {
+        val credential = issue {
             credential {
-                type(CredentialType.VerifiableCredential, CredentialType.Custom("QuickStartCredential"))
-                issuer(issuerDid)
+                type("QuickStartCredential")
+                issuer(issuerDid.value)
                 subject {
                     id("did:key:holder")
                     "name" to "Alice"
                 }
             }
-            signedBy(IssuerIdentity.from(issuerDid, issuerKeyId))
-        }
-    } catch (error: CredentialException) {
-        when (error) {
-            is CredentialIssuanceFailed -> {
-                println("❌ Credential issuance failed: ${error.reason}")
-                error.issuerDid?.let { println("   Issuer DID: $it") }
-            }
-            else -> {
-                println("❌ Credential error: ${error.message}")
-            }
-        }
-        return@runBlocking
-    } catch (error: TrustWeaveException) {
-        println("❌ TrustWeave error [${error.code}]: ${error.message}")
-        return@runBlocking
-    } catch (error: Exception) {
-        println("❌ Failed to issue credential: ${error.message}")
-        return@runBlocking
-    }
+            signedBy(issuerDid.value, issuerKeyId)
+        }.getOrThrow()
 
-    println("✅ Credential issued: ${credential.id}")
+        println("✅ Credential issued: ${credential.id}")
+    }
 }
 ```
 
@@ -456,42 +342,41 @@ TrustWeave promotes a “batteries included” experience for newcomers. The mon
 **How simple:** One helper call, no manual canonicalisation.
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
+import com.trustweave.trust.dsl.trustWeave
+import com.trustweave.trust.dsl.credential.*
 import com.trustweave.core.util.DigestUtils
-import com.trustweave.core.TrustWeaveError
 import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 fun main() = runBlocking {
-    // Create TrustWeave with sensible defaults (in-memory KMS, did:key method)
-    val trustWeave = TrustWeave.build {
+    trustWeave {
         factories(
             kmsFactory = TestkitKmsFactory(),
             didMethodFactory = TestkitDidMethodFactory()
         )
-    keys {
-        provider(IN_MEMORY)
-        algorithm(ED25519)
-    }
-    did {
-        method(KEY) {
+        keys {
+            provider(IN_MEMORY)
             algorithm(ED25519)
         }
-    }
-    }
+        did {
+            method(KEY) {
+                algorithm(ED25519)
+            }
+        }
+    }.run {
+        // Build credential subject payload
+        val credentialSubject = buildJsonObject {
+            put("id", "did:key:holder-placeholder")
+            put("name", "Alice Example")
+            put("role", "Site Reliability Engineer")
+        }
 
-    // Build credential subject payload
-    val credentialSubject = buildJsonObject {
-        put("id", "did:key:holder-placeholder")
-        put("name", "Alice Example")
-        put("role", "Site Reliability Engineer")
+        // Compute deterministic digest (canonicalizes JSON first)
+        val digest = DigestUtils.sha256DigestMultibase(credentialSubject)
+        println("Digest: $digest")
     }
-
-    // Compute deterministic digest (canonicalizes JSON first)
-    val digest = DigestUtils.sha256DigestMultibase(credentialSubject)
-    println("Digest: $digest")
 }
 ```
 
@@ -515,19 +400,16 @@ Everything in TrustWeave assumes deterministic canonicalization, so the very fir
 **How simple:** Configure only what you need using a fluent builder—defaults cover the rest.
 
 ```kotlin
-// Simple: use defaults (did:key method, ED25519 algorithm)
-val issuerDid = trustWeave.createDid {
-    method(KEY)
-    algorithm(ED25519)
-}
-val issuerKeyId = "$issuerDid#key-1"
-println("Issuer DID: $issuerDid (keyId=$issuerKeyId)")
+// Simple: use defaults (did:key method, ED25519 algorithm from config)
+val (issuerDid, issuerDoc) = trustWeave.createDid().getOrThrow()
+val issuerKeyId = issuerDoc.verificationMethod.first().id.substringAfter("#")
+println("Issuer DID: ${issuerDid.value} (keyId=$issuerKeyId)")
 
-// Advanced: customize with builder
-val customDid = trustWeave.createDid {
+// Advanced: specify method explicitly
+val (customDid, customDoc) = trustWeave.createDid {
     method(KEY)
     algorithm(ED25519)
-}
+}.getOrThrow()
 ```
 
 **What this does**
@@ -551,16 +433,16 @@ Typed builders (`DidCreationOptions`) are a core design choice: they prevent mis
 // Issue credential using the issuer DID and key ID from Step 3
 val credential = trustWeave.issue {
     credential {
-        type(CredentialType.VerifiableCredential, CredentialType.Custom("QuickStartCredential"))
-        issuer(issuerDid)
+        type("QuickStartCredential")
+        issuer(issuerDid.value)
         subject {
             id("did:key:holder-placeholder")
             "name" to "Alice Example"
             "role" to "Site Reliability Engineer"
         }
     }
-    signedBy(IssuerIdentity.from(issuerDid, issuerKeyId))
-}
+    signedBy(issuerDid.value, issuerKeyId)
+}.getOrThrow()
 
 println("Issued credential id: ${credential.id}")
 ```
@@ -625,7 +507,7 @@ You get a `VerificationResult` sealed class that can be `Valid` or one of severa
 // Create wallet and store credential
 val wallet = trustWeave.wallet {
     holder("did:key:holder-placeholder")
-}
+}.getOrThrow()
 
 val credentialId = wallet.store(credential)
 println("✅ Stored credential: $credentialId")
@@ -659,8 +541,8 @@ Skip error handling **only** for:
 ```kotlin
 // ⚠️ Simple usage (exceptions will propagate) - Testing/Prototyping Only
 // For production, always use try-catch instead
-val did = trustWeave.createDid { method(KEY) }
-val credential = trustWeave.issue { ... }
+val (did, _) = trustWeave.createDid().getOrThrow()
+val credential = trustWeave.issue { ... }.getOrThrow()
 ```
 
 **Why not in production?** Unhandled exceptions can crash your application. Production code should handle errors gracefully.
@@ -675,30 +557,16 @@ Use try-catch blocks **always** for:
 - ✅ When you need to recover from errors
 
 ```kotlin
-import com.trustweave.did.exception.DidException
-import com.trustweave.did.exception.DidException.DidMethodNotRegistered
-import com.trustweave.core.exception.TrustWeaveException
+import com.trustweave.trust.dsl.credential.*
 
-// ✅ Production pattern with domain-specific error handling
+// ✅ Production pattern with getOrThrow() for concise error handling
 try {
-    val did = trustWeave.createDid {
-        method(KEY)
-        algorithm(ED25519)
-    }
+    val (did, doc) = trustWeave.createDid().getOrThrow()
     processDid(did)
-} catch (error: DidException) {
-    when (error) {
-        is DidMethodNotRegistered -> {
-            logger.warn("DID method not registered: ${error.method}")
-            // Handle method not registered - show available methods
-        }
-        else -> {
-            logger.warn("DID creation failed: ${error.message}")
-        }
-    }
-} catch (error: TrustWeaveException) {
-    logger.error("TrustWeave error [${error.code}]: ${error.message}", error)
-    // Handle TrustWeave-specific errors
+} catch (error: IllegalStateException) {
+    // getOrThrow() throws IllegalStateException with detailed error messages
+    logger.error("DID creation failed: ${error.message}", error)
+    // Handle error appropriately
 } catch (error: Exception) {
     logger.error("Unexpected error: ${error.message}", error)
     // Handle generic error

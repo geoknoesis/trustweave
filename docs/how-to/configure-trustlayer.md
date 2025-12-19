@@ -37,13 +37,13 @@ After completing this guide, you will have:
 Here's a complete example showing the power of declarative configuration:
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.types.ProofType
+import com.trustweave.trust.dsl.trustWeave
+import com.trustweave.trust.dsl.credential.*
 import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val trustWeave = TrustWeave.build {
+    val trustWeave = trustWeave {
         factories(
             kmsFactory = TestkitKmsFactory(),
             didMethodFactory = TestkitDidMethodFactory(),
@@ -76,7 +76,7 @@ fun main() = runBlocking {
     }
 
     // Use the configured TrustWeave instance
-    val did = trustWeave.createDid { method(KEY) }
+    val (did, _) = trustWeave.createDid().getOrThrow()
     println("Created DID: ${did.value}")
 }
 ```
@@ -88,12 +88,12 @@ Created DID: did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK
 
 ## Factory Configuration
 
-When using `TrustWeave.build { }` with providers like `"inMemory"`, you must explicitly provide factory instances. This ensures type safety and avoids reflection-based service discovery.
+When using `trustWeave { }` with providers like `"inMemory"`, you must explicitly provide factory instances. This ensures type safety and avoids reflection-based service discovery.
 
 **Required Factories:**
 - `kmsFactory` - Required when using `keys { provider(IN_MEMORY) }`
 - `didMethodFactory` - Required when using `did { method(KEY) }`
-- `anchorClientFactory` - Required when using `anchor { chain(...) { inMemory() } }`
+- `anchorClientFactory` - Required when using `anchor { chain(...) { provider(...) } }`
 - `trustRegistryFactory` - Required when using `trust { provider(IN_MEMORY) }`
 - `statusListRegistryFactory` - Required when using `revocation { provider(IN_MEMORY) }`
 - `walletFactory` - Required when using `wallet { }`
@@ -117,9 +117,11 @@ Use production factories from your KMS, DID method, and anchor client providers.
 Begin by creating a minimal TrustWeave configuration with just key management:
 
 ```kotlin
+import com.trustweave.trust.dsl.trustWeave
+import com.trustweave.trust.dsl.credential.*
 import com.trustweave.testkit.services.*
 
-val trustWeave = TrustWeave.build {
+val trustWeave = trustWeave {
     factories(
         kmsFactory = TestkitKmsFactory()
     )
@@ -144,9 +146,11 @@ val trustWeave = TrustWeave.build {
 Add DID method support to your configuration:
 
 ```kotlin
+import com.trustweave.trust.dsl.trustWeave
+import com.trustweave.trust.dsl.credential.*
 import com.trustweave.testkit.services.*
 
-val trustWeave = TrustWeave.build {
+val trustWeave = trustWeave {
     factories(
         kmsFactory = TestkitKmsFactory(),
         didMethodFactory = TestkitDidMethodFactory()
@@ -167,7 +171,7 @@ val trustWeave = TrustWeave.build {
 **What this does:**
 - Registers the `did:key` method
 - Configures it to use Ed25519 keys
-- Enables DID creation with `createDid { method(KEY) }`
+- Enables DID creation with `createDid().getOrThrow()` (uses default method from config)
 
 **Expected Result:** You can now create `did:key` identifiers.
 
@@ -178,9 +182,11 @@ val trustWeave = TrustWeave.build {
 Register additional DID methods for different use cases:
 
 ```kotlin
+import com.trustweave.trust.dsl.trustWeave
+import com.trustweave.trust.dsl.credential.*
 import com.trustweave.testkit.services.*
 
-val trustWeave = TrustWeave.build {
+val trustWeave = trustWeave {
     factories(
         kmsFactory = TestkitKmsFactory(),
         didMethodFactory = TestkitDidMethodFactory()
@@ -197,7 +203,7 @@ val trustWeave = TrustWeave.build {
         method(WEB) {
             domain("example.com")
         }
-        method(ETHR) {
+            method(ETHR) {
             // Ethereum-specific configuration
             network("sepolia")
         }
@@ -219,9 +225,11 @@ val trustWeave = TrustWeave.build {
 Add blockchain anchoring support for tamper evidence:
 
 ```kotlin
+import com.trustweave.trust.dsl.trustWeave
+import com.trustweave.trust.dsl.credential.*
 import com.trustweave.testkit.services.*
 
-val trustWeave = TrustWeave.build {
+val trustWeave = trustWeave {
     factories(
         kmsFactory = TestkitKmsFactory(),
         didMethodFactory = TestkitDidMethodFactory(),
@@ -265,9 +273,11 @@ val trustWeave = TrustWeave.build {
 Add trust registry for managing trusted issuers:
 
 ```kotlin
+import com.trustweave.trust.dsl.trustWeave
+import com.trustweave.trust.dsl.credential.*
 import com.trustweave.testkit.services.*
 
-val trustWeave = TrustWeave.build {
+val trustWeave = trustWeave {
     factories(
         kmsFactory = TestkitKmsFactory(),
         didMethodFactory = TestkitDidMethodFactory(),
@@ -311,9 +321,11 @@ val trustWeave = TrustWeave.build {
 Here's a complete production-ready configuration:
 
 ```kotlin
+import com.trustweave.trust.dsl.trustWeave
+import com.trustweave.trust.dsl.credential.*
 import com.trustweave.testkit.services.*
 
-val trustWeave = TrustWeave.build {
+val trustWeave = trustWeave {
     factories(
         kmsFactory = TestkitKmsFactory(),
         didMethodFactory = TestkitDidMethodFactory(),
@@ -397,7 +409,7 @@ val trustWeave = TrustWeave(config)
 import com.trustweave.testkit.services.*
 
 // Declarative, readable configuration
-val trustWeave = TrustWeave.build {
+val trustWeave = trustWeave {
     factories(
         kmsFactory = TestkitKmsFactory(),
         didMethodFactory = TestkitDidMethodFactory(),
@@ -429,9 +441,11 @@ val trustWeave = TrustWeave.build {
 For local development and testing:
 
 ```kotlin
+import com.trustweave.trust.dsl.trustWeave
+import com.trustweave.trust.dsl.credential.*
 import com.trustweave.testkit.services.*
 
-val trustWeave = TrustWeave.build {
+val trustWeave = trustWeave {
     factories(
         kmsFactory = TestkitKmsFactory(),
         didMethodFactory = TestkitDidMethodFactory(),
@@ -463,7 +477,7 @@ val trustWeave = TrustWeave.build {
 For production with real services:
 
 ```kotlin
-val trustWeave = TrustWeave.build {
+val trustWeave = trustWeave {
     keys {
         provider(AWS)  // Production KMS
         algorithm(ED25519)
@@ -496,9 +510,11 @@ val trustWeave = TrustWeave.build {
 Supporting multiple DID methods:
 
 ```kotlin
+import com.trustweave.trust.dsl.trustWeave
+import com.trustweave.trust.dsl.credential.*
 import com.trustweave.testkit.services.*
 
-val trustWeave = TrustWeave.build {
+val trustWeave = trustWeave {
     factories(
         kmsFactory = TestkitKmsFactory(),
         didMethodFactory = TestkitDidMethodFactory()
@@ -514,7 +530,7 @@ val trustWeave = TrustWeave.build {
         method(WEB) {
             domain("example.com")
         }
-        method(ETHR) {
+            method(ETHR) {
             network("sepolia")
         }
         method("polygon") {
@@ -535,7 +551,7 @@ import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.testkit.services.*
 
 try {
-    val trustWeave = TrustWeave.build {
+    val trustWeave = trustWeave {
         factories(
             kmsFactory = TestkitKmsFactory(),
             didMethodFactory = TestkitDidMethodFactory()

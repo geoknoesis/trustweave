@@ -21,55 +21,36 @@ This guide shows you how to create, resolve, update, and deactivate Decentralize
 Here's a complete example that creates a DID, extracts the key ID, and uses it:
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.types.Did
-import com.trustweave.did.resolver.DidResolutionResult
-import com.trustweave.core.exception.TrustWeaveException
+import com.trustweave.trust.dsl.trustWeave
+import com.trustweave.trust.dsl.credential.*
+import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    try {
-        // Create TrustWeave instance
-        val trustWeave = TrustWeave.build {
-            keys {
-                provider(IN_MEMORY)
-                algorithm(ED25519)
-            }
-            did {
-                method(KEY) {
-                    algorithm(ED25519)
-                }
-            }
-        }
-
-        // Create a DID (returns type-safe Did)
-        val issuerDid: Did = trustWeave.createDid {
-            method(KEY)
+    trustWeave {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
+        keys {
+            provider(IN_MEMORY)
             algorithm(ED25519)
         }
-
-        // Extract key ID for signing by resolving the DID
-        val resolutionResult = trustWeave.resolveDid(issuerDid)
-        val issuerDocument = when (resolutionResult) {
-            is DidResolutionResult.Success -> resolutionResult.document
-            else -> throw IllegalStateException("Failed to resolve issuer DID")
+        did {
+        method(KEY) {
+            algorithm(ED25519)
+            }
         }
-        val verificationMethod = issuerDocument.verificationMethod.firstOrNull()
-            ?: throw IllegalStateException("No verification method found")
-        val issuerKeyId = verificationMethod.id.substringAfter("#")
+    }.run {
+        // Create a DID (returns DID and document directly)
+        val (issuerDid, issuerDoc) = createDid().getOrThrow()
+        
+        // Extract key ID from document (no need to resolve separately)
+        val issuerKeyId = issuerDoc.verificationMethod.first().id.substringAfter("#")
 
         println("Created DID: ${issuerDid.value}")
         println("Key ID: $issuerKeyId")
-} catch (error: TrustWeaveException) {
-    when (error) {
-        is TrustWeaveException.PluginNotFound -> {
-            println("❌ DID method not registered: ${error.pluginId}")
-        }
-        else -> {
-            println("❌ Error: ${error.message}")
-        }
     }
-}
 }
 ```
 
@@ -88,7 +69,15 @@ Key ID: key-1
 First, create a `TrustWeave` instance with DID method support:
 
 ```kotlin
-val trustWeave = TrustWeave.build {
+import com.trustweave.trust.dsl.trustWeave
+import com.trustweave.trust.dsl.credential.*
+import com.trustweave.testkit.services.*
+
+val trustWeave = trustWeave {
+    factories(
+        kmsFactory = TestkitKmsFactory(),
+        didMethodFactory = TestkitDidMethodFactory()
+    )
     keys {
         provider(IN_MEMORY)  // For testing; use production KMS in production
         algorithm(ED25519)

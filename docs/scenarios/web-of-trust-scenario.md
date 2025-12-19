@@ -44,12 +44,12 @@ fun main() = runBlocking {
     val trustLayer = trustLayer {
         keys {
             provider(IN_MEMORY)
-            algorithm(KeyAlgorithms.ED25519)
+            algorithm(ED25519)
         }
 
         did {
-            method(DidMethods.KEY) {
-                algorithm(KeyAlgorithms.ED25519)
+            method(KEY) {
+                algorithm(ED25519)
             }
         }
 

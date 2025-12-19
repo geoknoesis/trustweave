@@ -154,11 +154,10 @@ Here's the full academic credential flow using the TrustWeave facade API. This c
 ```kotlin
 package com.example.academic.credentials
 
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods.KEY
-import com.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
-import com.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import com.trustweave.trust.dsl.trustWeave
+import com.trustweave.trust.dsl.credential.*
 import com.trustweave.trust.types.VerificationResult
+import com.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -169,7 +168,11 @@ fun main() = runBlocking {
     println("=".repeat(70))
 
     // Step 1: Create TrustWeave instance
-    val trustWeave = TrustWeave.build {
+    val trustWeave = trustWeave {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
     }
@@ -339,7 +342,11 @@ This section breaks down the complete example above into individual steps with e
 Create a TrustWeave instance that provides access to all functionality:
 
 ```kotlin
-    val trustWeave = TrustWeave.build {
+    val trustWeave = trustWeave {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
         credentials { defaultProofSuite(ProofSuiteId.VC_LD) }

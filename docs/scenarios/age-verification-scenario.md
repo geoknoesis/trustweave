@@ -157,11 +157,10 @@ Here's the full age verification flow with photo association using the TrustWeav
 ```kotlin
 package com.example.age.verification
 
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods.KEY
-import com.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
-import com.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import com.trustweave.trust.dsl.trustWeave
+import com.trustweave.trust.dsl.credential.*
 import com.trustweave.trust.types.VerificationResult
+import com.trustweave.testkit.services.*
 import com.trustweave.core.util.DigestUtils
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
@@ -178,7 +177,11 @@ fun main() = runBlocking {
     println("=".repeat(70))
 
     // Step 1: Create TrustWeave instance
-    val trustWeave = TrustWeave.build {
+    val trustWeave = trustWeave {
+        factories(
+            kmsFactory = TestkitKmsFactory(),
+            didMethodFactory = TestkitDidMethodFactory()
+        )
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
     }

@@ -3,6 +3,7 @@ package com.trustweave.jwkdid
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.*
 import com.trustweave.did.identifiers.Did
+import VerificationMethodId
 import com.trustweave.did.model.DidDocument
 import com.trustweave.did.model.VerificationMethod
 import com.trustweave.did.resolver.DidResolutionResult
@@ -224,7 +225,7 @@ class JwkDidMethod(
             }
 
             val verificationMethod = VerificationMethod(
-                id = com.trustweave.did.identifiers.VerificationMethodId.parse(verificationMethodId, Did(didString)),
+                id = VerificationMethodId.parse(verificationMethodId, Did(didString)),
                 type = verificationMethodType,
                 controller = Did(didString),
                 publicKeyJwk = jwk as Map<String, Any?>

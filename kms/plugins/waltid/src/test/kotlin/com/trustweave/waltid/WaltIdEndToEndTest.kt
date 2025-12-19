@@ -1,6 +1,7 @@
 package com.trustweave.waltid
 
 import com.trustweave.did.DidCreationOptions
+import com.trustweave.did.KeyAlgorithm
 import com.trustweave.did.registry.DidMethodRegistry
 import com.trustweave.did.didCreationOptions
 import com.trustweave.did.resolver.DidResolutionResult
@@ -63,7 +64,7 @@ class WaltIdEndToEndTest {
         val document = webMethod!!.createDid(
             didCreationOptions {
                 property("domain", "example.com")
-                algorithm = com.trustweave.did.KeyAlgorithm.ED25519
+                algorithm = KeyAlgorithm.ED25519
             }
         )
 

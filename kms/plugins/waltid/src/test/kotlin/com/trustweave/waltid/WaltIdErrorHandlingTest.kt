@@ -3,6 +3,10 @@ package com.trustweave.waltid
 import com.trustweave.core.exception.TrustWeaveException
 import com.trustweave.did.didCreationOptions
 import com.trustweave.did.resolver.DidResolutionResult
+import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import com.trustweave.waltid.did.WaltIdDidMethodProvider
+import com.trustweave.waltid.did.WaltIdKeyMethod
+import com.trustweave.waltid.did.WaltIdWebMethod
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
@@ -34,7 +38,7 @@ class WaltIdErrorHandlingTest {
     @Test
     fun `DID method should throw exception for invalid options`() = runBlocking {
         val kms = WaltIdKeyManagementService()
-        val webMethod = com.trustweave.waltid.did.WaltIdWebMethod(kms)
+        val webMethod = WaltIdWebMethod(kms)
 
         // did:web requires domain option
         assertFailsWith<IllegalArgumentException> {
@@ -45,7 +49,7 @@ class WaltIdErrorHandlingTest {
     @Test
     fun `DID method should throw exception when resolving non-existent DID`() = runBlocking {
         val kms = WaltIdKeyManagementService()
-        val keyMethod = com.trustweave.waltid.did.WaltIdKeyMethod(kms)
+        val keyMethod = WaltIdKeyMethod(kms)
 
         // Resolving a DID that was never created should return null document
         val result = keyMethod.resolveDid(com.trustweave.did.identifiers.Did("did:key:zNonexistent"))
@@ -55,7 +59,7 @@ class WaltIdErrorHandlingTest {
     @Test
     fun `DID method should throw exception when updating non-existent DID`() = runBlocking {
         val kms = WaltIdKeyManagementService()
-        val keyMethod = com.trustweave.waltid.did.WaltIdKeyMethod(kms)
+        val keyMethod = WaltIdKeyMethod(kms)
 
         assertFailsWith<IllegalArgumentException> {
             keyMethod.updateDid(com.trustweave.did.identifiers.Did("did:key:zNonexistent")) { it }
@@ -64,7 +68,7 @@ class WaltIdErrorHandlingTest {
 
     @Test
     fun `DID method provider should throw when KMS not available`() {
-        val provider = com.trustweave.waltid.did.WaltIdDidMethodProvider()
+        val provider = WaltIdDidMethodProvider()
 
         // If no KMS is provided and SPI discovery fails, should throw
         // Note: This test may need adjustment based on actual SPI discovery behavior
@@ -82,8 +86,8 @@ class WaltIdErrorHandlingTest {
 
     @Test
     fun `DID method provider should return null for unsupported method`() {
-        val kms = com.trustweave.testkit.kms.InMemoryKeyManagementService()
-        val provider = com.trustweave.waltid.did.WaltIdDidMethodProvider()
+        val kms = InMemoryKeyManagementService()
+        val provider = WaltIdDidMethodProvider()
 
         val method = provider.create("unsupported-method", didCreationOptions { property("kms", kms) })
         assertNull(method, "Unsupported method should return null")

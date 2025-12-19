@@ -6,6 +6,11 @@ import com.trustweave.did.model.DidDocument
 import com.trustweave.did.DidMethod
 import com.trustweave.did.identifiers.Did
 import com.trustweave.did.registrar.DidRegistrar
+import com.trustweave.did.registrar.model.CreateDidOptions
+import com.trustweave.did.registrar.model.DeactivateDidOptions
+import com.trustweave.did.registrar.model.KeyManagementMode
+import com.trustweave.did.registrar.model.OperationState
+import com.trustweave.did.registrar.model.UpdateDidOptions
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.resolver.UniversalResolver
 import com.trustweave.godiddy.resolver.GodiddyResolver
@@ -30,8 +35,8 @@ class GodiddyDidMethod(
             )
         }
         // Convert DidCreationOptions to CreateDidOptions
-        val createOptions = com.trustweave.did.registrar.model.CreateDidOptions(
-            keyManagementMode = com.trustweave.did.registrar.model.KeyManagementMode.INTERNAL_SECRET,
+        val createOptions = CreateDidOptions(
+            keyManagementMode = KeyManagementMode.INTERNAL_SECRET,
             storeSecrets = false,
             returnSecrets = false,
             didDocument = null,
@@ -75,7 +80,7 @@ class GodiddyDidMethod(
         val updatedDocument = updater(currentDocument)
 
         // Update via registrar
-        val updateOptions = com.trustweave.did.registrar.model.UpdateDidOptions(
+        val updateOptions = UpdateDidOptions(
             methodSpecificOptions = emptyMap()
         )
         val updateResponse = registrar.updateDid(didString, updatedDocument, updateOptions)
@@ -91,11 +96,11 @@ class GodiddyDidMethod(
             )
         }
         val didString = did.value
-        val deactivateOptions = com.trustweave.did.registrar.model.DeactivateDidOptions(
+        val deactivateOptions = DeactivateDidOptions(
             methodSpecificOptions = emptyMap()
         )
         val response = registrar.deactivateDid(didString, deactivateOptions)
-        response.didState.state == com.trustweave.did.registrar.model.OperationState.FINISHED
+        response.didState.state == OperationState.FINISHED
     }
 }
 

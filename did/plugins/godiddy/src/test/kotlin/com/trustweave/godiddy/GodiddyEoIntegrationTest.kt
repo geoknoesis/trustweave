@@ -6,8 +6,10 @@ import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.did.model.DidDocumentMetadata
 import com.trustweave.core.util.DigestUtils
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.testkit.did.DidKeyMockMethod
 import com.trustweave.testkit.integrity.IntegrityVerifier
 import com.trustweave.testkit.integrity.TestDataBuilders
+import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
@@ -54,8 +56,8 @@ class GodiddyEoIntegrationTest {
         if (keyMethod == null) {
             // If key method is not available, use in-memory DID method as fallback for testing
             println("Note: did:key method not available via GoDiddy, using fallback")
-            val kms = com.trustweave.testkit.kms.InMemoryKeyManagementService()
-            val fallbackMethod = com.trustweave.testkit.did.DidKeyMockMethod(kms)
+            val kms = InMemoryKeyManagementService()
+            val fallbackMethod = DidKeyMockMethod(kms)
             result.registry.register(fallbackMethod)
             val issuerDoc = fallbackMethod.createDid()
             val issuerDid = issuerDoc.id
@@ -77,8 +79,8 @@ class GodiddyEoIntegrationTest {
         } catch (e: Exception) {
             println("Warning: DID creation via GoDiddy failed: ${e.message}. Using fallback.")
             // Use in-memory DID method as fallback
-            val kms = com.trustweave.testkit.kms.InMemoryKeyManagementService()
-            val fallbackMethod = com.trustweave.testkit.did.DidKeyMockMethod(kms)
+            val kms = InMemoryKeyManagementService()
+            val fallbackMethod = DidKeyMockMethod(kms)
             result.registry.register(fallbackMethod)
             fallbackMethod.createDid()
         }

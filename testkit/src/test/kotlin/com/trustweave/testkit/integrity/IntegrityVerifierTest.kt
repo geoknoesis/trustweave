@@ -2,6 +2,7 @@ package com.trustweave.testkit.integrity
 
 import com.trustweave.anchor.AnchorRef
 import com.trustweave.anchor.BlockchainAnchorRegistry
+import com.trustweave.core.util.DigestUtils
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import com.trustweave.testkit.integrity.models.*
 import kotlinx.coroutines.runBlocking
@@ -24,7 +25,7 @@ class IntegrityVerifierTest {
             put("credentialSubject", buildJsonObject { put("id", "did:key:subject") })
             put("issued", "2024-01-01T00:00:00Z")
         }
-        val vcDigest = com.trustweave.core.util.DigestUtils.sha256DigestMultibase(vc)
+        val vcDigest = DigestUtils.sha256DigestMultibase(vc)
 
         val anchorResult = client.writePayload(
             payload = buildJsonObject { put("vcDigest", vcDigest) }
@@ -53,7 +54,7 @@ class IntegrityVerifierTest {
                 })
             })
         }
-        val linksetDigest = com.trustweave.core.util.DigestUtils.sha256DigestMultibase(
+        val linksetDigest = DigestUtils.sha256DigestMultibase(
             buildJsonObject {
                 linkset.entries.forEach { (key, value) ->
                     if (key != "digestMultibase") {
@@ -76,7 +77,7 @@ class IntegrityVerifierTest {
     @Test
     fun `test verifyArtifactIntegrity`() {
         val content = buildJsonObject { put("title", "Test Dataset") }
-        val contentDigest = com.trustweave.core.util.DigestUtils.sha256DigestMultibase(content)
+        val contentDigest = DigestUtils.sha256DigestMultibase(content)
 
         val artifact = buildJsonObject {
             put("id", "artifact-1")
@@ -96,7 +97,7 @@ class IntegrityVerifierTest {
         val registry = BlockchainAnchorRegistry().also { it.register("algorand:testnet", client) }
 
         val artifactContent = buildJsonObject { put("title", "Test Dataset") }
-        val artifactDigest = com.trustweave.core.util.DigestUtils.sha256DigestMultibase(artifactContent)
+        val artifactDigest = DigestUtils.sha256DigestMultibase(artifactContent)
         val artifact = buildJsonObject {
             put("id", "artifact-1")
             put("content", artifactContent)
@@ -112,7 +113,7 @@ class IntegrityVerifierTest {
                 })
             })
         }
-        val linksetDigest = com.trustweave.core.util.DigestUtils.sha256DigestMultibase(
+        val linksetDigest = DigestUtils.sha256DigestMultibase(
             buildJsonObject {
                 linkset.entries.forEach { (key, value) ->
                     if (key != "digestMultibase") {
@@ -129,7 +130,7 @@ class IntegrityVerifierTest {
             put("issued", "2024-01-01T00:00:00Z")
             put("linksetDigest", linksetDigest)
         }
-        val vcDigest = com.trustweave.core.util.DigestUtils.sha256DigestMultibase(
+        val vcDigest = DigestUtils.sha256DigestMultibase(
             buildJsonObject {
                 vc.entries.forEach { (key, value) ->
                     if (key != "digestMultibase" && key != "evidence" && key != "credentialStatus") {

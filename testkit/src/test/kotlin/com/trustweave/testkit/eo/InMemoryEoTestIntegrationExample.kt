@@ -2,6 +2,8 @@ package com.trustweave.testkit.eo
 
 import com.trustweave.anchor.BlockchainAnchorClient
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import com.trustweave.testkit.did.DidKeyMockMethod
+import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.AfterEach
@@ -80,8 +82,8 @@ class InMemoryEoTestIntegrationExample : BaseEoIntegrationTest() {
     @Test
     fun `test EO scenario step by step`() = runBlocking {
         // Setup DID method
-        val kms = com.trustweave.testkit.kms.InMemoryKeyManagementService()
-        val didMethod = com.trustweave.testkit.did.DidKeyMockMethod(kms)
+        val kms = InMemoryKeyManagementService()
+        val didMethod = DidKeyMockMethod(kms)
         didRegistry.register(didMethod)
 
         // Create issuer DID

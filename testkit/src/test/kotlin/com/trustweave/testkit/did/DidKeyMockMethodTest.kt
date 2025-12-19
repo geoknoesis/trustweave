@@ -1,11 +1,18 @@
 package com.trustweave.testkit.did
 
+import com.trustweave.core.identifiers.KeyId
 import com.trustweave.did.*
+import com.trustweave.did.identifiers.VerificationMethodId
 import com.trustweave.did.model.VerificationMethod
 import com.trustweave.did.resolver.DidResolutionResult
-import com.trustweave.kms.KeyManagementService
+import com.trustweave.kms.Algorithm
 import com.trustweave.kms.KeyHandle
+import com.trustweave.kms.KeyManagementService
 import com.trustweave.kms.exception.KmsException
+import com.trustweave.kms.results.DeleteKeyResult
+import com.trustweave.kms.results.GenerateKeyResult
+import com.trustweave.kms.results.GetPublicKeyResult
+import com.trustweave.kms.results.SignResult
 import kotlinx.coroutines.runBlocking
 import kotlin.test.*
 
@@ -50,7 +57,7 @@ class DidKeyMockMethodTest {
     fun `test create DID with Secp256k1 algorithm`() = runBlocking {
         val document = didMethod.createDid(
             didCreationOptions {
-                algorithm = com.trustweave.did.KeyAlgorithm.SECP256K1
+                algorithm = KeyAlgorithm.SECP256K1
             }
         )
 
@@ -62,7 +69,7 @@ class DidKeyMockMethodTest {
     fun `test create DID with fallback algorithm`() = runBlocking {
         val document = didMethod.createDid(
             didCreationOptions {
-                algorithm = com.trustweave.did.KeyAlgorithm.P256
+                algorithm = KeyAlgorithm.P256
             }
         )
 
@@ -102,7 +109,7 @@ class DidKeyMockMethodTest {
         val updated = didMethod.updateDid(did) { doc ->
             doc.copy(
                 verificationMethod = doc.verificationMethod + VerificationMethod(
-                    id = com.trustweave.did.identifiers.VerificationMethodId.parse("${did.value}#key-2"),
+                    id = VerificationMethodId.parse("${did.value}#key-2"),
                     type = "Ed25519VerificationKey2020",
                     controller = did,
                     publicKeyJwk = emptyMap()
@@ -176,34 +183,34 @@ class DidKeyMockMethodTest {
     private class MockKeyManagementService : KeyManagementService {
         private val keys = mutableMapOf<String, KeyHandle>()
 
-        override suspend fun getSupportedAlgorithms(): Set<com.trustweave.kms.Algorithm> {
+        override suspend fun getSupportedAlgorithms(): Set<Algorithm> {
             return setOf(
-                com.trustweave.kms.Algorithm.Ed25519,
-                com.trustweave.kms.Algorithm.Secp256k1,
-                com.trustweave.kms.Algorithm.P256,
-                com.trustweave.kms.Algorithm.P384,
-                com.trustweave.kms.Algorithm.P521
+                Algorithm.Ed25519,
+                Algorithm.Secp256k1,
+                Algorithm.P256,
+                Algorithm.P384,
+                Algorithm.P521
             )
         }
 
-        override suspend fun generateKey(algorithm: com.trustweave.kms.Algorithm, options: Map<String, Any?>): com.trustweave.kms.results.GenerateKeyResult {
+        override suspend fun generateKey(algorithm: Algorithm, options: Map<String, Any?>): GenerateKeyResult {
             val keyId = options["keyId"] as? String ?: "key-${System.currentTimeMillis()}"
             val handle = KeyHandle(
-                id = com.trustweave.core.identifiers.KeyId(keyId),
+                id = KeyId(keyId),
                 algorithm = algorithm.name,
                 publicKeyJwk = when (algorithm) {
-                    is com.trustweave.kms.Algorithm.Ed25519 -> mapOf(
+                    is Algorithm.Ed25519 -> mapOf(
                         "kty" to "OKP",
                         "crv" to "Ed25519",
                         "x" to "mock-public-key"
                     )
-                    is com.trustweave.kms.Algorithm.Secp256k1 -> mapOf(
+                    is Algorithm.Secp256k1 -> mapOf(
                         "kty" to "EC",
                         "crv" to "secp256k1",
                         "x" to "mock-public-key-x",
                         "y" to "mock-public-key-y"
                     )
-                    is com.trustweave.kms.Algorithm.P256 -> mapOf(
+                    is Algorithm.P256 -> mapOf(
                         "kty" to "EC",
                         "crv" to "P-256",
                         "x" to "mock-public-key-x",
@@ -218,28 +225,28 @@ class DidKeyMockMethodTest {
                 }
             )
             keys[keyId] = handle
-            return com.trustweave.kms.results.GenerateKeyResult.Success(handle)
+            return GenerateKeyResult.Success(handle)
         }
 
-        override suspend fun getPublicKey(keyId: com.trustweave.core.identifiers.KeyId): com.trustweave.kms.results.GetPublicKeyResult {
+        override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult {
             val handle = keys[keyId.value]
             return if (handle != null) {
-                com.trustweave.kms.results.GetPublicKeyResult.Success(handle)
+GetPublicKeyResult.Success(handle)
             } else {
-                com.trustweave.kms.results.GetPublicKeyResult.Failure.KeyNotFound(keyId = keyId)
+GetPublicKeyResult.Failure.KeyNotFound(keyId = keyId)
             }
         }
 
-        override suspend fun sign(keyId: com.trustweave.core.identifiers.KeyId, data: ByteArray, algorithm: com.trustweave.kms.Algorithm?): com.trustweave.kms.results.SignResult {
-            return com.trustweave.kms.results.SignResult.Success("signature".toByteArray())
+        override suspend fun sign(keyId: KeyId, data: ByteArray, algorithm: Algorithm?): SignResult {
+            return SignResult.Success("signature".toByteArray())
         }
 
-        override suspend fun deleteKey(keyId: com.trustweave.core.identifiers.KeyId): com.trustweave.kms.results.DeleteKeyResult {
+        override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult {
             val existed = keys.remove(keyId.value) != null
             return if (existed) {
-                com.trustweave.kms.results.DeleteKeyResult.Deleted
+DeleteKeyResult.Deleted
             } else {
-                com.trustweave.kms.results.DeleteKeyResult.NotFound
+DeleteKeyResult.NotFound
             }
         }
     }

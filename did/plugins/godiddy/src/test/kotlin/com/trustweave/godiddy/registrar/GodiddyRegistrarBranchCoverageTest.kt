@@ -7,6 +7,7 @@ import com.trustweave.did.model.DidService
 import com.trustweave.did.model.VerificationMethod
 import com.trustweave.did.didCreationOptions
 import com.trustweave.did.identifiers.Did
+import com.trustweave.did.identifiers.VerificationMethodId
 import com.trustweave.did.registrar.model.CreateDidOptions
 import com.trustweave.did.registrar.model.KeyManagementMode
 import com.trustweave.godiddy.GodiddyClient
@@ -192,13 +193,13 @@ class GodiddyRegistrarBranchCoverageTest {
             id = did,
             verificationMethod = listOf(
                 VerificationMethod(
-                    id = com.trustweave.did.identifiers.VerificationMethodId.parse("did:key:123#key-1"),
+                    id = VerificationMethodId.parse("did:key:123#key-1"),
                     type = "Ed25519VerificationKey2020",
                     controller = did
                 )
             ),
-            authentication = listOf(com.trustweave.did.identifiers.VerificationMethodId.parse("did:key:123#key-1")),
-            assertionMethod = listOf(com.trustweave.did.identifiers.VerificationMethodId.parse("did:key:123#key-1")),
+            authentication = listOf(VerificationMethodId.parse("did:key:123#key-1")),
+            assertionMethod = listOf(VerificationMethodId.parse("did:key:123#key-1")),
             service = listOf(
                 DidService(
                     id = "did:key:123#service-1",

@@ -1,15 +1,15 @@
 package com.trustweave.testkit.credential
 
 import com.trustweave.credential.model.vc.VerifiableCredential
-import com.trustweave.credential.identifiers.CredentialId
-import com.trustweave.credential.model.CredentialType
-import com.trustweave.credential.model.vc.Issuer
-import com.trustweave.credential.model.vc.CredentialSubject
-import com.trustweave.credential.model.vc.CredentialStatus
-import com.trustweave.credential.identifiers.StatusListId
-import com.trustweave.credential.model.StatusPurpose
-import com.trustweave.did.identifiers.Did
 import com.trustweave.core.identifiers.Iri
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.credential.identifiers.StatusListId
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.model.StatusPurpose
+import com.trustweave.credential.model.vc.CredentialStatus
+import com.trustweave.credential.model.vc.CredentialSubject
+import com.trustweave.credential.model.vc.Issuer
+import com.trustweave.did.identifiers.Did
 import com.trustweave.wallet.CredentialFilter
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
@@ -339,16 +339,16 @@ class BasicWalletBranchCoverageTest {
         },
         issuanceDate: String = kotlinx.datetime.Clock.System.now().toString(),
         expirationDate: String? = null,
-        credentialStatus: com.trustweave.credential.model.vc.CredentialStatus? = null
+        credentialStatus: CredentialStatus? = null
     ): VerifiableCredential {
         val subjectId = subject["id"]?.jsonPrimitive?.content ?: "did:key:subject"
         val claims = subject.toMutableMap().apply { remove("id") }
         return VerifiableCredential(
             id = id?.let { com.trustweave.credential.identifiers.CredentialId(it) },
-            type = types.map { com.trustweave.credential.model.CredentialType.Custom(it) },
-            issuer = com.trustweave.credential.model.vc.Issuer.fromDid(com.trustweave.did.identifiers.Did(issuerDid)),
-            credentialSubject = com.trustweave.credential.model.vc.CredentialSubject.fromIri(
-                com.trustweave.core.identifiers.Iri(subjectId),
+            type = types.map { CredentialType.Custom(it) },
+            issuer = Issuer.fromDid(Did(issuerDid)),
+            credentialSubject = CredentialSubject.fromIri(
+                Iri(subjectId),
                 claims = claims
             ),
             issuanceDate = try {

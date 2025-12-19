@@ -12,6 +12,9 @@ import com.trustweave.trust.dsl.wallet.organize
 import com.trustweave.trust.dsl.credential.credential
 import com.trustweave.trust.types.*
 import com.trustweave.core.identifiers.Iri
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.model.vc.VerifiablePresentation
 import com.trustweave.wallet.CredentialOrganization
 import com.trustweave.wallet.Wallet
 import com.trustweave.testkit.getOrFail
@@ -184,11 +187,11 @@ fun main() = runBlocking {
         ?: throw IllegalStateException("Credential not found in wallet")
     // Note: Presentation creation requires a PresentationService which is typically configured in TrustWeave
     // For this example, we'll create a simple presentation without proof
-    val presentation = com.trustweave.credential.model.vc.VerifiablePresentation(
-        id = com.trustweave.credential.identifiers.CredentialId("urn:example:presentation:${System.currentTimeMillis()}"),
-        type = listOf(com.trustweave.credential.model.CredentialType.fromString("VerifiablePresentation")),
+    val presentation = VerifiablePresentation(
+        id = CredentialId("urn:example:presentation:${System.currentTimeMillis()}"),
+        type = listOf(CredentialType.fromString("VerifiablePresentation")),
         verifiableCredential = listOf(retrievedCredential),
-        holder = com.trustweave.core.identifiers.Iri(studentDid.value),
+        holder = Iri(studentDid.value),
         challenge = "job-application-12345"
     )
 

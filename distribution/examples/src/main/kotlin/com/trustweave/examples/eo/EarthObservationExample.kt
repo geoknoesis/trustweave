@@ -10,6 +10,7 @@ import com.trustweave.credential.model.vc.VerifiableCredential
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import com.trustweave.testkit.integrity.IntegrityVerifier
 import com.trustweave.testkit.integrity.TestDataBuilders
+import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.testkit.services.TestkitDidMethodFactory
 import com.trustweave.anchor.DefaultBlockchainAnchorRegistry
 import com.trustweave.core.util.DigestUtils
@@ -65,7 +66,7 @@ fun main() = runBlocking {
     val anchorClient = InMemoryBlockchainAnchorClient(chainId)
     
     // Create KMS instance and capture reference for signer
-    val kms = com.trustweave.testkit.kms.InMemoryKeyManagementService()
+    val kms = InMemoryKeyManagementService()
     val kmsRef = kms
     
     val trustweave = TrustWeave.build {

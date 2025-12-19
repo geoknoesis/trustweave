@@ -19,6 +19,9 @@ import com.trustweave.trust.dsl.wallet.organize
 import com.trustweave.trust.dsl.wallet.query
 import com.trustweave.trust.dsl.wallet.QueryBuilder
 import com.trustweave.trust.types.*
+import com.trustweave.core.identifiers.Iri
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.credential.model.vc.VerifiablePresentation
 import com.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
@@ -215,11 +218,11 @@ fun main() = runBlocking {
     println("Step 9: Creating presentation...")
     val retrievedCredential = wallet.get(stored.id?.value ?: throw IllegalStateException("Credential must have ID"))
         ?: throw IllegalStateException("Credential not found in wallet")
-    val presentation = com.trustweave.credential.model.vc.VerifiablePresentation(
-        id = com.trustweave.credential.identifiers.CredentialId("urn:example:presentation:${System.currentTimeMillis()}"),
+    val presentation = VerifiablePresentation(
+        id = CredentialId("urn:example:presentation:${System.currentTimeMillis()}"),
         type = listOf(com.trustweave.credential.model.CredentialType.fromString("VerifiablePresentation")),
         verifiableCredential = listOf(retrievedCredential),
-        holder = com.trustweave.core.identifiers.Iri(holderDid.value),
+        holder = Iri(holderDid.value),
         challenge = "presentation-challenge-123",
         domain = "example.com"
     )

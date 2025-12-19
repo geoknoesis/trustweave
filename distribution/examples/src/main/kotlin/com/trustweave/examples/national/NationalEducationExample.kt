@@ -14,7 +14,12 @@ import com.trustweave.credential.model.ProofType
 import com.trustweave.credential.results.IssuanceResult
 import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import com.trustweave.anchor.DefaultBlockchainAnchorRegistry
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.registry.DidMethodRegistry
+import com.trustweave.did.resolver.DidResolver
+import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.testkit.services.TestkitDidMethodFactory
+import com.trustweave.trust.dsl.TrustWeaveRegistries
 import com.trustweave.testkit.getOrFail
 import com.trustweave.trust.types.DidCreationResult
 import kotlinx.coroutines.runBlocking
@@ -59,7 +64,7 @@ fun main() = runBlocking {
     val anchorClient = InMemoryBlockchainAnchorClient(chainId)
     
     // Create KMS instance and capture reference for signer
-    val kms = com.trustweave.testkit.kms.InMemoryKeyManagementService()
+    val kms = InMemoryKeyManagementService()
     val kmsRef = kms
     
     // Create signer function
@@ -71,10 +76,10 @@ fun main() = runBlocking {
     }
     
     // Create shared DID registry for consistent DID resolution
-    val sharedDidRegistry = com.trustweave.did.registry.DidMethodRegistry()
+    val sharedDidRegistry = DidMethodRegistry()
     
     // Create DID resolver
-    val didResolver = com.trustweave.did.resolver.DidResolver { did: com.trustweave.did.identifiers.Did ->
+    val didResolver = DidResolver { did: Did ->
         sharedDidRegistry.resolve(did.value) as com.trustweave.did.resolver.DidResolutionResult
     }
     
@@ -85,7 +90,7 @@ fun main() = runBlocking {
     )
     
     val trustweave = TrustWeave.build(
-        registries = com.trustweave.trust.dsl.TrustWeaveRegistries(
+        registries = TrustWeaveRegistries(
             didRegistry = sharedDidRegistry,
             blockchainRegistry = com.trustweave.anchor.BlockchainAnchorRegistry()
         )

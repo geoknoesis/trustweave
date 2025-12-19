@@ -23,6 +23,8 @@ import com.trustweave.credential.credentialService
 import com.trustweave.credential.requests.PresentationRequest
 import com.trustweave.credential.proof.ProofOptions
 import com.trustweave.credential.proof.ProofPurpose
+import com.trustweave.did.identifiers.Did
+import com.trustweave.did.registry.DidMethodRegistry
 import com.trustweave.did.resolver.DidResolver
 import com.trustweave.did.resolver.DidResolutionResult
 import com.trustweave.trust.dsl.TrustWeaveRegistries
@@ -34,7 +36,6 @@ import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.testkit.services.TestkitDidMethodFactory
 import com.trustweave.testkit.services.TestkitWalletFactory
 import com.trustweave.testkit.getOrFail
-import com.trustweave.did.identifiers.Did
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
@@ -57,10 +58,10 @@ fun main() = runBlocking {
     }
 
     // Create shared DID registry for consistent DID resolution
-    val sharedDidRegistry = com.trustweave.did.registry.DidMethodRegistry()
+    val sharedDidRegistry = DidMethodRegistry()
     
     // Create DID resolver
-    val didResolver = DidResolver { did: com.trustweave.did.identifiers.Did ->
+    val didResolver = DidResolver { did: Did ->
         sharedDidRegistry.resolve(did.value) as DidResolutionResult
     }
     

@@ -15,6 +15,11 @@ import com.trustweave.trust.dsl.wallet.organize
 import com.trustweave.trust.dsl.credential.credential
 import com.trustweave.trust.types.*
 import com.trustweave.core.identifiers.Iri
+import com.trustweave.credential.identifiers.CredentialId
+import com.trustweave.credential.model.CredentialType
+import com.trustweave.credential.model.vc.VerifiablePresentation
+import com.trustweave.did.services.DidMethodFactory
+import com.trustweave.kms.exception.KmsException
 import com.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.trustweave.testkit.services.TestkitDidMethodFactory
 import com.trustweave.testkit.did.DidKeyMockMethod
@@ -42,7 +47,7 @@ fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
         // Explicitly configure factories to ensure same KMS instance is used
         factories(
-            didMethodFactory = object : com.trustweave.did.services.DidMethodFactory {
+            didMethodFactory = object : DidMethodFactory {
                 override suspend fun create(
                     methodName: String,
                     config: DidCreationOptions,
@@ -127,7 +132,7 @@ fun main() = runBlocking {
     try {
         kmsRef.getPublicKey(com.trustweave.core.identifiers.KeyId(issuerKeyId))
         println("✓ Key verified in KMS: $issuerKeyId")
-    } catch (e: com.trustweave.kms.exception.KmsException.KeyNotFound) {
+    } catch (e: KmsException.KeyNotFound) {
         throw IllegalStateException(
             "Key '$issuerKeyId' not found in KMS immediately after DID creation. " +
             "This indicates the DID method is using a different KMS instance.",
@@ -213,11 +218,11 @@ fun main() = runBlocking {
     // Step 8: Create presentation (for demonstration purposes)
     // Note: In a real scenario, this would be signed with the holder's key
     println("\nStep 8: Creating presentation for job application...")
-    val presentation = com.trustweave.credential.model.vc.VerifiablePresentation(
-        id = com.trustweave.credential.identifiers.CredentialId("urn:example:presentation:${System.currentTimeMillis()}"),
-        type = listOf(com.trustweave.credential.model.CredentialType.fromString("VerifiablePresentation")),
+    val presentation = VerifiablePresentation(
+        id = CredentialId("urn:example:presentation:${System.currentTimeMillis()}"),
+        type = listOf(CredentialType.fromString("VerifiablePresentation")),
         verifiableCredential = listOf(issuedCredential),
-        holder = com.trustweave.core.identifiers.Iri(studentDid.value),
+        holder = Iri(studentDid.value),
         challenge = "job-application-12345"
     )
 

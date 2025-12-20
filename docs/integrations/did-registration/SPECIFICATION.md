@@ -6,14 +6,14 @@ grand_parent: Integration Modules
 
 # DID Method Registration JSON Specification
 
-This document explains how JSON registration files following the **official DID Registration specification** (https://identity.foundation/did-registration/) are used to create `DidMethod` implementations in Trustweave.
+This document explains how JSON registration files following the **official DID Registration specification** (https://identity.foundation/did-registration/) are used to create `DidMethod` implementations in TrustWeave.
 
 ## Overview
 
-Trustweave supports the **official DID Method Registry format** from identity.foundation/did-registration. The JSON file defines:
+TrustWeave supports the **official DID Method Registry format** from identity.foundation/did-registration. The JSON file defines:
 1. **Method Identity**: The method name and metadata (name, status, specification, contact)
 2. **Implementations**: Available resolver services with `driverUrl` pointing to resolver endpoints
-3. **Automatic Mapping**: Trustweave automatically maps registry entries to `HttpDidMethod` implementations
+3. **Automatic Mapping**: TrustWeave automatically maps registry entries to `HttpDidMethod` implementations
 
 ## JSON to DidMethod Mapping
 

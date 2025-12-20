@@ -21,7 +21,7 @@ Get started with TrustWeave in 5 minutes! This guide will walk you through creat
 > **Kotlin:** 2.2.21+ | **Java:** 21+
 > See [Installation](installation.md) for setup details.
 
-## Hello Trustweave (30 Seconds) ⚡
+## Hello TrustWeave (30 Seconds) ⚡
 
 Here's the absolute minimum to get your first credential working. Copy, paste, run:
 
@@ -53,7 +53,7 @@ fun main() = runBlocking {
                 issuer(issuerDid.value)
                 subject {
                     id("did:key:holder")
-                    "message" to "Hello Trustweave!"
+                    "message" to "Hello TrustWeave!"
                 }
             }
             signedBy(issuerDid.value, keyId)

@@ -6,11 +6,11 @@ grand_parent: Integration Modules
 
 # Official DID Registration Specification Support
 
-This document explains how Trustweave implements support for the official [DID Registration specification](https://identity.foundation/did-registration/) format.
+This document explains how TrustWeave implements support for the official [DID Registration specification](https://identity.foundation/did-registration/) format.
 
 ## Official Registry Format
 
-Trustweave now supports the **official DID Method Registry JSON format** used by identity.foundation/did-registration. This allows you to use registry entries directly without modification.
+TrustWeave now supports the **official DID Method Registry JSON format** used by identity.foundation/did-registration. This allows you to use registry entries directly without modification.
 
 ### Format Structure
 
@@ -52,7 +52,7 @@ data class DidMethodRegistryEntry(
 
 ### 2. Automatic Mapping to DidMethod
 
-The `RegistryEntryMapper` automatically converts registry entries to Trustweave `DidMethod` implementations:
+The `RegistryEntryMapper` automatically converts registry entries to TrustWeave `DidMethod` implementations:
 
 1. **Selects Best Implementation**: Chooses non-testnet implementation with `driverUrl`
 2. **Extracts Resolver URL**: Uses `implementations[].driverUrl` as the resolver endpoint
@@ -153,5 +153,5 @@ The mapper automatically detects GoDiddy from the URL and uses the appropriate a
 
 ## Backward Compatibility
 
-The loader also supports the legacy Trustweave format (with `driver` and `capabilities` fields) for backward compatibility, but the official registry format is recommended.
+The loader also supports the legacy TrustWeave format (with `driver` and `capabilities` fields) for backward compatibility, but the official registry format is recommended.
 

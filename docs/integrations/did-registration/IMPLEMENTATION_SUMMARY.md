@@ -8,7 +8,7 @@ grand_parent: Integration Modules
 
 ## Overview
 
-Trustweave now fully supports the **official DID Method Registry format** from https://identity.foundation/did-registration/. You can use registry entries directly to create DID method implementations without writing code.
+TrustWeave now fully supports the **official DID Method Registry format** from https://identity.foundation/did-registration/. You can use registry entries directly to create DID method implementations without writing code.
 
 ## What Was Implemented
 
@@ -22,7 +22,7 @@ Trustweave now fully supports the **official DID Method Registry format** from h
 ### 2. Automatic Mapping
 
 **Mapper**: `RegistryEntryMapper`
-- Converts official registry entries → Trustweave `DidMethod` implementations
+- Converts official registry entries → TrustWeave `DidMethod` implementations
 - Automatically extracts resolver configuration from `driverUrl`
 - Selects best implementation (prefers non-testnet)
 - Determines protocol adapter (standard or godiddy)
@@ -31,7 +31,7 @@ Trustweave now fully supports the **official DID Method Registry format** from h
 
 The loader supports both:
 1. **Official Format** (recommended): Registry format with `implementations[].driverUrl`
-2. **Legacy Format** (backward compatible): Trustweave format with `driver` and `capabilities`
+2. **Legacy Format** (backward compatible): TrustWeave format with `driver` and `capabilities`
 
 ## Usage Examples
 
@@ -107,7 +107,7 @@ val result = registry.resolve("did:web:example.com")
 1. **Official Format**: Uses the exact format from identity.foundation/did-registration
 2. **Automatic Detection**: Protocol adapter automatically determined from URL/name
 3. **Smart Selection**: Prefers mainnet over testnet implementations
-4. **Backward Compatible**: Still supports legacy Trustweave format
+4. **Backward Compatible**: Still supports legacy TrustWeave format
 5. **Zero Code**: Just drop a JSON file following the registry format
 
 ## Files Created/Modified

@@ -22,10 +22,10 @@ Add the Base adapter module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave.chains:base:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-json:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.chains:base:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-json:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Web3j for Base blockchain (EVM-compatible)
     implementation("org.web3j:core:5.0.1")
@@ -37,8 +37,8 @@ dependencies {
 ### Basic Configuration
 
 ```kotlin
-import com.trustweave.anchor.*
-import com.trustweave.base.*
+import org.trustweave.anchor.*
+import org.trustweave.base.*
 
 // Create Base anchor client for mainnet
 val options = mapOf(
@@ -79,8 +79,8 @@ val sepoliaClient = BaseBlockchainAnchorClient(
 When the module is on the classpath, Base adapter is automatically available:
 
 ```kotlin
-import com.trustweave.anchor.*
-import com.trustweave.anchor.spi.*
+import org.trustweave.anchor.*
+import org.trustweave.anchor.spi.*
 import java.util.ServiceLoader
 
 // Discover Base provider
@@ -99,8 +99,8 @@ val client = baseProvider?.create(
 ### Anchoring Data
 
 ```kotlin
-import com.trustweave.anchor.*
-import com.trustweave.base.*
+import org.trustweave.anchor.*
+import org.trustweave.base.*
 import kotlinx.serialization.json.*
 
 val client = BaseBlockchainAnchorClient(
@@ -139,8 +139,8 @@ println("Anchored to Base: ${result.ref.txHash}")
 ## Integration with TrustWeave
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.base.*
+import org.trustweave.TrustWeave
+import org.trustweave.base.*
 
 val TrustWeave = TrustWeave.create {
     blockchain {

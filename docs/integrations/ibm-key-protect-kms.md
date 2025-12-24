@@ -24,7 +24,7 @@ Add the IBM Key Protect module to your dependencies:
 ```kotlin
 dependencies {
     // Only need to add the IBM Key Protect KMS plugin - core dependencies are included transitively
-    implementation("com.trustweave.kms:ibm:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.kms:ibm:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -33,8 +33,8 @@ dependencies {
 ## Quick Start
 
 ```kotlin
-import com.trustweave.kms.ibm.*
-import com.trustweave.kms.*
+import org.trustweave.kms.ibm.*
+import org.trustweave.kms.*
 
 // Configure
 val config = IbmKmsConfig.builder()
@@ -108,7 +108,7 @@ val kms = IbmKeyManagementService(config ?: throw IllegalStateException("Config 
 The plugin registers itself via Java ServiceLoader:
 
 ```kotlin
-import com.trustweave.kms.*
+import org.trustweave.kms.*
 
 // Simple factory API - no ServiceLoader needed!
 val kms = KeyManagementServices.create("ibm", mapOf(
@@ -137,7 +137,7 @@ val kms = KeyManagementServices.create("ibm", mapOf(
 ## Key Options
 
 ```kotlin
-import com.trustweave.kms.KmsOptionKeys
+import org.trustweave.kms.KmsOptionKeys
 
 val result = kms.generateKey(
     Algorithm.Ed25519,

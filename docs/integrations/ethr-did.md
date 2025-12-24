@@ -23,17 +23,17 @@ Add the did:ethr module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave.did:ethr:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.did:ethr:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.did:base:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 
     // Web3j for Ethereum blockchain
     implementation("org.web3j:core:4.10.0")
 
     // Optional: Polygon client for EVM-compatible chains
-    implementation("com.trustweave.chains:polygon:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.chains:polygon:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -42,10 +42,10 @@ dependencies {
 ### Basic Configuration
 
 ```kotlin
-import com.trustweave.ethrdid.*
-import com.trustweave.anchor.*
-import com.trustweave.polygon.PolygonBlockchainAnchorClient
-import com.trustweave.kms.*
+import org.trustweave.ethrdid.*
+import org.trustweave.anchor.*
+import org.trustweave.polygon.PolygonBlockchainAnchorClient
+import org.trustweave.kms.*
 
 // Create configuration
 val config = EthrDidConfig.builder()
@@ -85,8 +85,8 @@ val sepoliaConfig = EthrDidConfig.sepolia(
 When the module is on the classpath, did:ethr is automatically available:
 
 ```kotlin
-import com.trustweave.did.*
-import com.trustweave.anchor.*
+import org.trustweave.did.*
+import org.trustweave.anchor.*
 import java.util.ServiceLoader
 
 // Discover did:ethr provider
@@ -127,8 +127,8 @@ println("Created: ${document.id}") // did:ethr:sepolia:0x... or did:ethr:0x...
 ### Resolving a did:ethr
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
-import com.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.resolver.DidResolutionResult
 
 val did = Did("did:ethr:0x1234...")
 val result = method.resolveDid(did)
@@ -148,7 +148,7 @@ when (result) {
 ### Updating a did:ethr
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 val did = Did("did:ethr:0x1234...")
 val document = method.updateDid(did) { currentDoc ->
@@ -165,7 +165,7 @@ val document = method.updateDid(did) { currentDoc ->
 ### Deactivating a did:ethr
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 val did = Did("did:ethr:0x1234...")
 val deactivated = method.deactivateDid(did)
@@ -224,10 +224,10 @@ val config = EthrDidConfig.builder()
 ## Integration with TrustWeave
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.ethrdid.*
-import com.trustweave.anchor.*
-import com.trustweave.polygon.PolygonBlockchainAnchorClient
+import org.trustweave.TrustWeave
+import org.trustweave.ethrdid.*
+import org.trustweave.anchor.*
+import org.trustweave.polygon.PolygonBlockchainAnchorClient
 
 val config = EthrDidConfig.sepolia("https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY")
 val anchorClient = PolygonBlockchainAnchorClient(config.chainId, config.toMap())
@@ -278,7 +278,7 @@ Common errors and solutions:
 For testing without actual blockchain:
 
 ```kotlin
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 
 val config = EthrDidConfig.sepolia("https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY")
 val anchorClient = InMemoryBlockchainAnchorClient(config.chainId)

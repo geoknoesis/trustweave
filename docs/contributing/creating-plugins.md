@@ -29,10 +29,10 @@ Add the necessary dependencies to your project:
 ```kotlin
 dependencies {
     // Core interfaces
-    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 
     // SPI support (optional, for auto-discovery)
     // Note: Module paths have been renamed to avoid circular dependency issues:
@@ -41,7 +41,7 @@ dependencies {
     // - kms:core → kms:kms-core
     // - anchors:core → anchors:anchor-core
     // - wallet:core → wallet:wallet-core
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -67,8 +67,8 @@ interface DidMethod {
 ```kotlin
 package com.example.TrustWeave.plugins
 
-import com.trustweave.did.*
-import com.trustweave.kms.KeyManagementService
+import org.trustweave.did.*
+import org.trustweave.kms.KeyManagementService
 import java.time.Instant
 import java.util.UUID
 
@@ -211,8 +211,8 @@ interface BlockchainAnchorClient {
 ```kotlin
 package com.example.TrustWeave.plugins
 
-import com.trustweave.anchor.*
-import com.trustweave.core.exception.NotFoundException
+import org.trustweave.anchor.*
+import org.trustweave.core.exception.NotFoundException
 import kotlinx.serialization.json.JsonElement
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
@@ -272,7 +272,7 @@ class ExampleBlockchainAnchorClient(
 For production implementations, extend `AbstractBlockchainAnchorClient` which provides fallback storage and common patterns:
 
 ```kotlin
-import com.trustweave.anchor.AbstractBlockchainAnchorClient
+import org.trustweave.anchor.AbstractBlockchainAnchorClient
 
 class MyBlockchainClient(
     chainId: String,
@@ -348,9 +348,9 @@ interface ProofGenerator {
 ```kotlin
 package com.example.TrustWeave.plugins
 
-import com.trustweave.credential.models.*
-import com.trustweave.credential.proof.*
-import com.trustweave.core.util.normalizeKeyId
+import org.trustweave.credential.models.*
+import org.trustweave.credential.proof.*
+import org.trustweave.core.util.normalizeKeyId
 
 /**
  * Example proof generator implementation.
@@ -436,7 +436,7 @@ interface KeyManagementService {
 ```kotlin
 package com.example.TrustWeave.plugins
 
-import com.trustweave.kms.*
+import org.trustweave.kms.*
 import java.security.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -555,10 +555,10 @@ interface CredentialService {
 ```kotlin
 package com.example.TrustWeave.plugins
 
-import com.trustweave.credential.*
-import com.trustweave.credential.models.*
-import com.trustweave.credential.proof.*
-import com.trustweave.spi.SchemaFormat
+import org.trustweave.credential.*
+import org.trustweave.credential.models.*
+import org.trustweave.credential.proof.*
+import org.trustweave.spi.SchemaFormat
 
 /**
  * Example credential service implementation.
@@ -712,8 +712,8 @@ interface WalletFactory {
 ```kotlin
 package com.example.TrustWeave.plugins
 
-import com.trustweave.spi.services.*
-import com.trustweave.credential.wallet.Wallet
+import org.trustweave.spi.services.*
+import org.trustweave.credential.wallet.Wallet
 
 /**
  * Example wallet factory implementation.
@@ -819,7 +819,7 @@ class MyDidMethodProvider : DidMethodProvider {
 }
 ```
 
-2. Create service file: `META-INF/services/com.trustweave.did.DidMethodProvider`
+2. Create service file: `META-INF/services/org.trustweave.did.DidMethodProvider`
 ```
 com.example.MyDidMethodProvider
 ```
@@ -829,7 +829,7 @@ com.example.MyDidMethodProvider
 Plugins can optionally implement `PluginLifecycle` for initialization and cleanup:
 
 ```kotlin
-import com.trustweave.spi.PluginLifecycle
+import org.trustweave.spi.PluginLifecycle
 
 class MyBlockchainClient : BlockchainAnchorClient, PluginLifecycle {
 

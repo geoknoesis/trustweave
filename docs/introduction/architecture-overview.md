@@ -231,12 +231,12 @@ TrustWeave/
 ## Core Modules
 
 ### trustweave-common
-- Base exception classes (`com.trustweave.core.exception`)
-- Common constants and utilities (`com.trustweave.core.util`)
-- Plugin infrastructure (`com.trustweave.core.plugin`)
-- JSON canonicalization and digest computation (`com.trustweave.core.util.DigestUtils`)
-- Input validation utilities (`com.trustweave.core.util`)
-- Result extensions and error handling (`com.trustweave.core.util`)
+- Base exception classes (`org.trustweave.core.exception`)
+- Common constants and utilities (`org.trustweave.core.util`)
+- Plugin infrastructure (`org.trustweave.core.plugin`)
+- JSON canonicalization and digest computation (`org.trustweave.core.util.DigestUtils`)
+- Input validation utilities (`org.trustweave.core.util`)
+- Result extensions and error handling (`org.trustweave.core.util`)
 
 ### trustweave-kms
 - `KeyManagementService` interface
@@ -264,41 +264,41 @@ TrustWeave/
 
 #### Cloud KMS Providers
 
-- **AWS KMS** (`com.trustweave.kms:aws`) – AWS Key Management Service. See [AWS KMS Integration Guide](../integrations/aws-kms.md).
-- **AWS CloudHSM** (`com.trustweave.kms:cloudhsm`) – AWS CloudHSM for dedicated hardware security modules. Documentation coming soon.
-- **Azure Key Vault** (`com.trustweave.kms:azure`) – Azure Key Vault integration. See [Azure KMS Integration Guide](../integrations/azure-kms.md).
-- **Google Cloud KMS** (`com.trustweave.kms:google`) – Google Cloud KMS integration. See [Google KMS Integration Guide](../integrations/google-kms.md).
-- **IBM Key Protect** (`com.trustweave.kms:ibm`) – IBM Cloud Key Protect integration. Documentation coming soon.
+- **AWS KMS** (`org.trustweave.kms:aws`) – AWS Key Management Service. See [AWS KMS Integration Guide](../integrations/aws-kms.md).
+- **AWS CloudHSM** (`org.trustweave.kms:cloudhsm`) – AWS CloudHSM for dedicated hardware security modules. Documentation coming soon.
+- **Azure Key Vault** (`org.trustweave.kms:azure`) – Azure Key Vault integration. See [Azure KMS Integration Guide](../integrations/azure-kms.md).
+- **Google Cloud KMS** (`org.trustweave.kms:google`) – Google Cloud KMS integration. See [Google KMS Integration Guide](../integrations/google-kms.md).
+- **IBM Key Protect** (`org.trustweave.kms:ibm`) – IBM Cloud Key Protect integration. Documentation coming soon.
 
 #### Self-Hosted KMS Providers
 
-- **HashiCorp Vault** (`com.trustweave.kms:hashicorp`) – HashiCorp Vault Transit engine. See [HashiCorp Vault KMS Integration Guide](../integrations/hashicorp-vault-kms.md).
-- **Thales CipherTrust** (`com.trustweave.kms:thales`) – Thales CipherTrust Manager integration. Documentation coming soon.
-- **Thales Luna** (`com.trustweave.kms:thales-luna`) – Thales Luna HSM integration. Documentation coming soon.
-- **CyberArk Conjur** (`com.trustweave.kms:cyberark`) – CyberArk Conjur secrets management integration. Documentation coming soon.
-- **Fortanix DSM** (`com.trustweave.kms:fortanix`) – Fortanix Data Security Manager multi-cloud key management. Documentation coming soon.
-- **Entrust** (`com.trustweave.kms:entrust`) – Entrust key management integration. Documentation coming soon.
-- **Utimaco** (`com.trustweave.kms:utimaco`) – Utimaco HSM integration. Documentation coming soon.
+- **HashiCorp Vault** (`org.trustweave.kms:hashicorp`) – HashiCorp Vault Transit engine. See [HashiCorp Vault KMS Integration Guide](../integrations/hashicorp-vault-kms.md).
+- **Thales CipherTrust** (`org.trustweave.kms:thales`) – Thales CipherTrust Manager integration. Documentation coming soon.
+- **Thales Luna** (`org.trustweave.kms:thales-luna`) – Thales Luna HSM integration. Documentation coming soon.
+- **CyberArk Conjur** (`org.trustweave.kms:cyberark`) – CyberArk Conjur secrets management integration. Documentation coming soon.
+- **Fortanix DSM** (`org.trustweave.kms:fortanix`) – Fortanix Data Security Manager multi-cloud key management. Documentation coming soon.
+- **Entrust** (`org.trustweave.kms:entrust`) – Entrust key management integration. Documentation coming soon.
+- **Utimaco** (`org.trustweave.kms:utimaco`) – Utimaco HSM integration. Documentation coming soon.
 
 #### Other KMS Integrations
 
-- **walt.id** (`com.trustweave.kms:waltid`) – walt.id-based KMS and DID methods. See [walt.id Integration Guide](../integrations/waltid.md).
+- **walt.id** (`org.trustweave.kms:waltid`) – walt.id-based KMS and DID methods. See [walt.id Integration Guide](../integrations/waltid.md).
 
 ### DID Method Plugins
 
-- **GoDiddy** (`com.trustweave.did:godiddy`) – HTTP integration with GoDiddy services. Universal Resolver, Registrar, Issuer, Verifier. Supports 20+ DID methods. See [GoDiddy Integration Guide](../integrations/godiddy.md).
-- **did:key** (`com.trustweave.did:key`) – Native did:key implementation. See [Key DID Integration Guide](../integrations/key-did.md).
-- **did:web** (`com.trustweave.did:web`) – Web DID method. See [Web DID Integration Guide](../integrations/web-did.md).
-- **did:ion** (`com.trustweave.did:ion`) – Microsoft ION DID method. See [ION DID Integration Guide](../integrations/ion-did.md).
+- **GoDiddy** (`org.trustweave.did:godiddy`) – HTTP integration with GoDiddy services. Universal Resolver, Registrar, Issuer, Verifier. Supports 20+ DID methods. See [GoDiddy Integration Guide](../integrations/godiddy.md).
+- **did:key** (`org.trustweave.did:key`) – Native did:key implementation. See [Key DID Integration Guide](../integrations/key-did.md).
+- **did:web** (`org.trustweave.did:web`) – Web DID method. See [Web DID Integration Guide](../integrations/web-did.md).
+- **did:ion** (`org.trustweave.did:ion`) – Microsoft ION DID method. See [ION DID Integration Guide](../integrations/ion-did.md).
 - See [Integration Modules](../integrations/README.md) for all DID method implementations.
 
 ### Blockchain Anchor Plugins
 
-- **Algorand** (`com.trustweave.chains:algorand`) – Algorand blockchain adapter. Mainnet and testnet support. See [Algorand Integration Guide](../integrations/algorand.md).
-- **Polygon** (`com.trustweave.chains:polygon`) – Polygon blockchain adapter. See [Integration Modules](../integrations/README.md#blockchain-anchor-integrations).
-- **Ethereum** (`com.trustweave.chains:ethereum`) – Ethereum blockchain adapter. See [Ethereum Anchor Integration Guide](../integrations/ethereum-anchor.md).
-- **Base** (`com.trustweave.chains:base`) – Base (Coinbase L2) adapter. See [Base Anchor Integration Guide](../integrations/base-anchor.md).
-- **Arbitrum** (`com.trustweave.chains:arbitrum`) – Arbitrum adapter. See [Arbitrum Anchor Integration Guide](../integrations/arbitrum-anchor.md).
+- **Algorand** (`org.trustweave.chains:algorand`) – Algorand blockchain adapter. Mainnet and testnet support. See [Algorand Integration Guide](../integrations/algorand.md).
+- **Polygon** (`org.trustweave.chains:polygon`) – Polygon blockchain adapter. See [Integration Modules](../integrations/README.md#blockchain-anchor-integrations).
+- **Ethereum** (`org.trustweave.chains:ethereum`) – Ethereum blockchain adapter. See [Ethereum Anchor Integration Guide](../integrations/ethereum-anchor.md).
+- **Base** (`org.trustweave.chains:base`) – Base (Coinbase L2) adapter. See [Base Anchor Integration Guide](../integrations/base-anchor.md).
+- **Arbitrum** (`org.trustweave.chains:arbitrum`) – Arbitrum adapter. See [Arbitrum Anchor Integration Guide](../integrations/arbitrum-anchor.md).
 - See [Integration Modules](../integrations/README.md) for all blockchain adapters.
 
 ## Design Patterns
@@ -408,18 +408,18 @@ trustweave-testkit
 ### Integration Module Dependencies
 
 ```
-KMS Plugins (com.trustweave.kms:*)
+KMS Plugins (org.trustweave.kms:*)
     → trustweave-common
     → trustweave-kms
     See: [KMS Integration Guides](../integrations/README.md#other-did--kms-integrations)
 
-DID Plugins (com.trustweave.did:*)
+DID Plugins (org.trustweave.did:*)
     → trustweave-common
     → trustweave-did
     → trustweave-kms
     See: [DID Integration Guides](../integrations/README.md#did-method-integrations)
 
-Chain Plugins (com.trustweave.chains:*)
+Chain Plugins (org.trustweave.chains:*)
     → trustweave-common
     → trustweave-anchor
     See: [Blockchain Integration Guides](../integrations/README.md#blockchain-anchor-integrations)

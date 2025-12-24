@@ -705,8 +705,8 @@
 55
 56
 57
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.TrustLayer</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.TrustWeaveError</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.TrustLayer</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.TrustWeaveError</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 
 <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">issueCredentialWorkflow</span><span class="p">(</span>
@@ -734,7 +734,7 @@
         <span class="kd">val</span> <span class="py">issuerKeyId</span> <span class="p">=</span> <span class="s">"$issuerDid#key-1"</span>
 
         <span class="c1">// 3. Issue credential</span>
-        <span class="k">import</span> <span class="nn">com.trustweave.trust.types.IssuanceResult</span>
+        <span class="k">import</span> <span class="nn">org.trustweave.trust.types.IssuanceResult</span>
         
         <span class="kd">val</span> <span class="py">issuanceResult</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">issue</span> <span class="p">{</span>
             <span class="nf">credential</span> <span class="p">{</span>
@@ -902,7 +902,7 @@
 34
 35
 36
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.revocation.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.revocation.*</span>
 
 <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">revokeCredentialWorkflow</span><span class="p">(</span>
     <span class="n">statusListManager</span><span class="p">:</span> <span class="nc">StatusListManager</span><span class="p">,</span>
@@ -1242,8 +1242,8 @@
 <span class="p">):</span> <span class="nc">Result</span><span class="p">&lt;</span><span class="nc">Wallet</span><span class="p">&gt;</span> <span class="p">{</span>
     <span class="k">return</span> <span class="k">try</span> <span class="p">{</span>
         <span class="c1">// 1. Create or get wallet</span>
-        <span class="k">import</span> <span class="nn">com.trustweave.trust.types.WalletCreationResult</span>
-        <span class="k">import</span> <span class="nn">com.trustweave.trust.types.IssuanceResult</span>
+        <span class="k">import</span> <span class="nn">org.trustweave.trust.types.WalletCreationResult</span>
+        <span class="k">import</span> <span class="nn">org.trustweave.trust.types.IssuanceResult</span>
         
         <span class="kd">val</span> <span class="py">walletResult</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">wallet</span> <span class="p">{</span>
             <span class="nf">holder</span><span class="p">(</span><span class="n">holderDid</span><span class="p">)</span>
@@ -1380,7 +1380,7 @@
 <span class="p">):</span> <span class="nc">Result</span><span class="p">&lt;</span><span class="nc">List</span><span class="p">&lt;</span><span class="nc">VerifiableCredential</span><span class="p">&gt;&gt;</span> <span class="p">{</span>
     <span class="k">return</span> <span class="k">try</span> <span class="p">{</span>
         <span class="c1">// Issue credentials concurrently</span>
-        <span class="k">import</span> <span class="nn">com.trustweave.trust.types.IssuanceResult</span>
+        <span class="k">import</span> <span class="nn">org.trustweave.trust.types.IssuanceResult</span>
         
         <span class="kd">val</span> <span class="py">issuanceResults</span> <span class="p">=</span> <span class="n">requests</span><span class="p">.</span><span class="nf">map</span> <span class="p">{</span> <span class="n">request</span> <span class="p">-&gt;</span>
             <span class="nf">async</span> <span class="p">{</span>

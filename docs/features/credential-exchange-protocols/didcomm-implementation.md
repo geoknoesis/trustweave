@@ -57,7 +57,7 @@ credentials/plugins/didcomm/
 └── src/
     ├── main/
     │   └── kotlin/
-    │       └── com/trustweave/didcomm/
+    │       └── org.trustweave/didcomm/
     │           ├── crypto/
     │           │   └── DidCommCrypto.kt
     │           ├── models/
@@ -79,7 +79,7 @@ credentials/plugins/didcomm/
     │           └── DidCommService.kt
     └── test/
         └── kotlin/
-            └── com/trustweave/didcomm/
+            └── org.trustweave/didcomm/
                 └── DidCommServiceTest.kt
 ```
 
@@ -125,9 +125,9 @@ credentials/plugins/didcomm/
 ## Usage Example
 
 ```kotlin
-import com.trustweave.credential.didcomm.*
-import com.trustweave.credential.didcomm.protocol.*
-import com.trustweave.testkit.InMemoryKeyManagementService
+import org.trustweave.credential.didcomm.*
+import org.trustweave.credential.didcomm.protocol.*
+import org.trustweave.testkit.InMemoryKeyManagementService
 
 val kms = InMemoryKeyManagementService()
 val resolveDid: suspend (String) -> DidDocument? = { /* resolve DID */ }

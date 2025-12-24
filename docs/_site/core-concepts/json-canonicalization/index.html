@@ -616,11 +616,11 @@
 2
 3
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
-<p><strong>Result:</strong> Lets you use <code class="language-plaintext highlighter-rouge">DigestUtils</code> and canonicalisation helpers shown in this guide. Note: <code class="language-plaintext highlighter-rouge">DigestUtils</code> is now part of the <code class="language-plaintext highlighter-rouge">common</code> module in <code class="language-plaintext highlighter-rouge">com.trustweave.core.util</code> package.</p>
+<p><strong>Result:</strong> Lets you use <code class="language-plaintext highlighter-rouge">DigestUtils</code> and canonicalisation helpers shown in this guide. Note: <code class="language-plaintext highlighter-rouge">DigestUtils</code> is now part of the <code class="language-plaintext highlighter-rouge">common</code> module in <code class="language-plaintext highlighter-rouge">org.trustweave.core.util</code> package.</p>
 <h2 id="why-canonicalize">
   
   
@@ -654,7 +654,7 @@
 2
 3
 4
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.core.util.DigestUtils</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.core.util.DigestUtils</span>
 
 <span class="kd">val</span> <span class="py">digest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">jsonElement</span><span class="p">)</span>
 <span class="nf">println</span><span class="p">(</span><span class="s">"Canonical digest: $digest"</span><span class="p">)</span>

@@ -850,7 +850,7 @@
 10
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
     <span class="c1">// Core TrustWeave modules</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-all:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-all:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 
     <span class="c1">// Kotlinx Serialization</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"</span><span class="p">)</span>
@@ -1201,11 +1201,11 @@
 329
 </pre></td><td class="rouge-code"><pre><span class="k">package</span> <span class="nn">com.example.iot.ownership.transfer</span>
 
-<span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.PresentationOptions</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.wallet.Wallet</span>
-<span class="k">import</span> <span class="nn">com.trustweave.spi.services.WalletCreationOptionsBuilder</span>
+<span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.PresentationOptions</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.wallet.Wallet</span>
+<span class="k">import</span> <span class="nn">org.trustweave.spi.services.WalletCreationOptionsBuilder</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.buildJsonObject</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.put</span>
@@ -1222,8 +1222,8 @@
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ TrustWeave initialized"</span><span class="p">)</span>
 
     <span class="c1">// Step 2: Create DIDs for manufacturer, current owner, and new owner</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.DidCreationResult</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.WalletCreationResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.DidCreationResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.WalletCreationResult</span>
     
     <span class="kd">val</span> <span class="py">manufacturerDidResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span> <span class="p">}</span>
     <span class="kd">val</span> <span class="py">manufacturerDid</span> <span class="p">=</span> <span class="k">when</span> <span class="p">(</span><span class="n">manufacturerDidResult</span><span class="p">)</span> <span class="p">{</span>

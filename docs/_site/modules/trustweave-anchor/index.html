@@ -618,9 +618,9 @@
 4
 5
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-json:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-json:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
@@ -670,7 +670,7 @@
 6
 7
 8
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.anchor.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.anchor.*</span>
 
 <span class="kd">interface</span> <span class="nc">BlockchainAnchorClient</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">chainId</span><span class="p">:</span> <span class="nc">String</span>  <span class="c1">// CAIP-2 format: "eip155:1", "algorand:testnet", etc.</span>
@@ -802,7 +802,7 @@
 22
 23
 24
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.anchor.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.anchor.*</span>
 <span class="k">import</span> <span class="nn">java.util.ServiceLoader</span>
 
 <span class="c1">// Discover blockchain adapter via SPI</span>
@@ -843,13 +843,13 @@
 <p>TrustWeave provides adapters for:</p>
 
 <ul>
-  <li><strong>Algorand</strong> (<code class="language-plaintext highlighter-rouge">com.trustweave.chains:algorand</code>) – Algorand mainnet and testnet. See <a href="/trustweave/integrations/algorand/">Algorand Integration Guide</a>.</li>
-  <li><strong>Polygon</strong> (<code class="language-plaintext highlighter-rouge">com.trustweave.chains:polygon</code>) – Polygon mainnet and Mumbai testnet. See <a href="/trustweave/integrations/README/#blockchain-anchor-integrations">Polygon Anchor Integration Guide</a>.</li>
-  <li><strong>Ethereum</strong> (<code class="language-plaintext highlighter-rouge">com.trustweave.chains:ethereum</code>) – Ethereum mainnet and Sepolia testnet. See <a href="/trustweave/integrations/ethereum-anchor/">Ethereum Anchor Integration Guide</a>.</li>
-  <li><strong>Base</strong> (<code class="language-plaintext highlighter-rouge">com.trustweave.chains:base</code>) – Base (Coinbase L2). See <a href="/trustweave/integrations/base-anchor/">Base Anchor Integration Guide</a>.</li>
-  <li><strong>Arbitrum</strong> (<code class="language-plaintext highlighter-rouge">com.trustweave.chains:arbitrum</code>) – Arbitrum One and Sepolia rollup. See <a href="/trustweave/integrations/arbitrum-anchor/">Arbitrum Anchor Integration Guide</a>.</li>
-  <li><strong>Ganache</strong> (<code class="language-plaintext highlighter-rouge">com.trustweave.chains:ganache</code>) – Local Ethereum node for testing. See <a href="/trustweave/integrations/README/#blockchain-anchor-integrations">Integration Modules</a>.</li>
-  <li><strong>Indy</strong> (<code class="language-plaintext highlighter-rouge">com.trustweave.chains:indy</code>) – Hyperledger Indy. See <a href="/trustweave/integrations/README/#other-did--kms-integrations">Integration Modules</a>.</li>
+  <li><strong>Algorand</strong> (<code class="language-plaintext highlighter-rouge">org.trustweave.chains:algorand</code>) – Algorand mainnet and testnet. See <a href="/trustweave/integrations/algorand/">Algorand Integration Guide</a>.</li>
+  <li><strong>Polygon</strong> (<code class="language-plaintext highlighter-rouge">org.trustweave.chains:polygon</code>) – Polygon mainnet and Mumbai testnet. See <a href="/trustweave/integrations/README/#blockchain-anchor-integrations">Polygon Anchor Integration Guide</a>.</li>
+  <li><strong>Ethereum</strong> (<code class="language-plaintext highlighter-rouge">org.trustweave.chains:ethereum</code>) – Ethereum mainnet and Sepolia testnet. See <a href="/trustweave/integrations/ethereum-anchor/">Ethereum Anchor Integration Guide</a>.</li>
+  <li><strong>Base</strong> (<code class="language-plaintext highlighter-rouge">org.trustweave.chains:base</code>) – Base (Coinbase L2). See <a href="/trustweave/integrations/base-anchor/">Base Anchor Integration Guide</a>.</li>
+  <li><strong>Arbitrum</strong> (<code class="language-plaintext highlighter-rouge">org.trustweave.chains:arbitrum</code>) – Arbitrum One and Sepolia rollup. See <a href="/trustweave/integrations/arbitrum-anchor/">Arbitrum Anchor Integration Guide</a>.</li>
+  <li><strong>Ganache</strong> (<code class="language-plaintext highlighter-rouge">org.trustweave.chains:ganache</code>) – Local Ethereum node for testing. See <a href="/trustweave/integrations/README/#blockchain-anchor-integrations">Integration Modules</a>.</li>
+  <li><strong>Indy</strong> (<code class="language-plaintext highlighter-rouge">org.trustweave.chains:indy</code>) – Hyperledger Indy. See <a href="/trustweave/integrations/README/#other-did--kms-integrations">Integration Modules</a>.</li>
 </ul>
 
 <p>See the <a href="/trustweave/integrations/README/">Blockchain Anchor Integration Guides</a> for detailed information about each adapter.</p>

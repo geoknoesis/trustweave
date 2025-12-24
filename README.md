@@ -7,8 +7,8 @@ A **neutral, reusable trust and identity core** library for Kotlin, designed to 
 ## Quick Start (30 Seconds) ⚡
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.types.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -59,9 +59,9 @@ fun main() = runBlocking {
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
     // For testing, use testkit module
-    testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
 }
 ```
 

@@ -647,9 +647,9 @@
 4
 5
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.kms:google:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.kms:google:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="configuration">
@@ -685,8 +685,8 @@
 12
 13
 14
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.googlekms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.googlekms.*</span>
 <span class="k">import</span> <span class="nn">java.util.ServiceLoader</span>
 
 <span class="c1">// Discover Google Cloud KMS provider</span>
@@ -837,7 +837,7 @@
 8
 9
 10
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.googlekms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.googlekms.*</span>
 
 <span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">GoogleKmsConfig</span><span class="p">.</span><span class="nf">builder</span><span class="p">()</span>
     <span class="p">.</span><span class="nf">projectId</span><span class="p">(</span><span class="s">"my-project"</span><span class="p">)</span>
@@ -992,9 +992,9 @@
 33
 34
 35
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.KmsOptionKeys</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.results.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.KmsOptionKeys</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.results.*</span>
 
 <span class="c1">// Generate secp256k1 key</span>
 <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">kms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span><span class="nc">Algorithm</span><span class="p">.</span><span class="nc">Secp256k1</span><span class="p">)</span>
@@ -1494,8 +1494,8 @@
 10
 11
 12
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.googlekms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.googlekms.*</span>
 
 <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span> <span class="p">{</span>
     <span class="n">kms</span> <span class="p">=</span> <span class="nc">GoogleCloudKeyManagementService</span><span class="p">(</span>

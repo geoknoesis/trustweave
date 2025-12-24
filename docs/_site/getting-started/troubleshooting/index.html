@@ -763,7 +763,7 @@ Register the blockchain client before anchoring:</p>
 15
 16
 </pre></td><td class="rouge-code"><pre><span class="c1">// Ensure issuer DID is created and resolvable</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.types.DidCreationResult</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.types.DidCreationResult</span>
    
 <span class="kd">val</span> <span class="py">didResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span>
     <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span>
@@ -871,7 +871,7 @@ Register the blockchain client before anchoring:</p>
 11
 12
 13
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.types.WalletCreationResult</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.types.WalletCreationResult</span>
 
 <span class="kd">val</span> <span class="py">walletResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">wallet</span> <span class="p">{</span>
     <span class="nf">id</span><span class="p">(</span><span class="s">"holder-wallet"</span><span class="p">)</span>
@@ -984,9 +984,9 @@ Register the blockchain client before anchoring:</p>
     <span class="p">&lt;/</span><span class="n">appender</span><span class="p">&gt;</span>
 
     <span class="p">&lt;!--</span> <span class="nc">TrustWeave</span> <span class="n">specific</span> <span class="n">loggers</span> <span class="p">--&gt;</span>
-    <span class="p">&lt;</span><span class="n">logger</span> <span class="n">name</span><span class="p">=</span><span class="s">"com.trustweave"</span> <span class="n">level</span><span class="p">=</span><span class="s">"DEBUG"</span><span class="p">/&gt;</span>
-    <span class="p">&lt;</span><span class="n">logger</span> <span class="n">name</span><span class="p">=</span><span class="s">"com.trustweave.core"</span> <span class="n">level</span><span class="p">=</span><span class="s">"TRACE"</span><span class="p">/&gt;</span>
-    <span class="p">&lt;</span><span class="n">logger</span> <span class="n">name</span><span class="p">=</span><span class="s">"com.trustweave.plugins"</span> <span class="n">level</span><span class="p">=</span><span class="s">"DEBUG"</span><span class="p">/&gt;</span>
+    <span class="p">&lt;</span><span class="n">logger</span> <span class="n">name</span><span class="p">=</span><span class="s">"org.trustweave"</span> <span class="n">level</span><span class="p">=</span><span class="s">"DEBUG"</span><span class="p">/&gt;</span>
+    <span class="p">&lt;</span><span class="n">logger</span> <span class="n">name</span><span class="p">=</span><span class="s">"org.trustweave.core"</span> <span class="n">level</span><span class="p">=</span><span class="s">"TRACE"</span><span class="p">/&gt;</span>
+    <span class="p">&lt;</span><span class="n">logger</span> <span class="n">name</span><span class="p">=</span><span class="s">"org.trustweave.plugins"</span> <span class="n">level</span><span class="p">=</span><span class="s">"DEBUG"</span><span class="p">/&gt;</span>
 
     <span class="p">&lt;</span><span class="n">root</span> <span class="n">level</span><span class="p">=</span><span class="s">"INFO"</span><span class="p">&gt;</span>
         <span class="p">&lt;</span><span class="n">appender-ref</span> <span class="n">ref</span><span class="p">=</span><span class="s">"STDOUT"</span> <span class="p">/&gt;</span>
@@ -1113,8 +1113,8 @@ Register the blockchain client before anchoring:</p>
 35
 36
 37
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.core.util.DidValidator</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.validation.CredentialValidator</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.core.util.DidValidator</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.validation.CredentialValidator</span>
 
 <span class="k">fun</span> <span class="nf">validateBeforeOperation</span><span class="p">(</span><span class="n">did</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span> <span class="n">credential</span><span class="p">:</span> <span class="nc">VerifiableCredential</span><span class="p">?</span> <span class="p">=</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
     <span class="c1">// Validate DID format</span>
@@ -1612,7 +1612,7 @@ Register the blockchain client before anchoring:</p>
 19
 20
 21
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.TrustLayer</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.TrustLayer</span>
 <span class="k">import</span> <span class="nn">com.github.benmanes.caffeine.cache.Cache</span>
 <span class="k">import</span> <span class="nn">com.github.benmanes.caffeine.cache.Caffeine</span>
 <span class="k">import</span> <span class="nn">java.util.concurrent.TimeUnit</span>
@@ -1935,7 +1935,7 @@ Register the blockchain client before anchoring:</p>
 9
 </pre></td><td class="rouge-code"><pre><span class="c1">// Configure connection pool</span>
 <span class="kd">val</span> <span class="py">dataSource</span> <span class="p">=</span> <span class="nc">HikariDataSource</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span>
-    <span class="n">jdbcUrl</span> <span class="p">=</span> <span class="s">"jdbc:postgresql://db.example.com/trustweave"</span>
+    <span class="n">jdbcUrl</span> <span class="p">=</span> <span class="s">"jdbc:postgresql://db.example.org.trustweave"</span>
     <span class="n">maximumPoolSize</span> <span class="p">=</span> <span class="mi">20</span>  <span class="c1">// Limit connections</span>
     <span class="n">minimumIdle</span> <span class="p">=</span> <span class="mi">5</span>
     <span class="n">connectionTimeout</span> <span class="p">=</span> <span class="mi">30000</span>

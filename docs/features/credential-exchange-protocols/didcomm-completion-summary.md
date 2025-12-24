@@ -110,7 +110,7 @@ credentials/plugins/didcomm/
 ├── IMPLEMENTATION.md                   # Architecture details
 ├── COMPLETION_SUMMARY.md              # This file
 └── src/
-    ├── main/kotlin/com/trustweave/didcomm/
+    ├── main/kotlin/org.trustweave/didcomm/
     │   ├── crypto/
     │   │   ├── DidCommCryptoInterface.kt      # Common interface
     │   │   ├── DidCommCrypto.kt                # Placeholder implementation
@@ -133,7 +133,7 @@ credentials/plugins/didcomm/
     │   │   └── DidCommExamples.kt
     │   ├── DidCommFactory.kt
     │   └── DidCommService.kt
-    └── test/kotlin/com/trustweave/didcomm/
+    └── test/kotlin/org.trustweave/didcomm/
         ├── DidCommServiceTest.kt
         └── CryptoImplementationTest.kt
 ```

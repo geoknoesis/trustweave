@@ -36,7 +36,7 @@ Add this module when you need:
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:trustweave-contract:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-contract:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -76,8 +76,8 @@ trustweave-contract
 ## Usage Example
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.contract.models.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.contract.models.*
 
 val trustweave = TrustWeave.build { ... }
 

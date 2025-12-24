@@ -1156,9 +1156,9 @@ common
 179
 180
 181
-</pre></td><td class="rouge-code"><pre><span class="c1">// common/src/main/kotlin/com/trustweave/core/identifiers/Identifiers.kt</span>
+</pre></td><td class="rouge-code"><pre><span class="c1">// common/src/main/kotlin/org.trustweave/core/identifiers/Identifiers.kt</span>
 
-<span class="k">package</span> <span class="nn">com.trustweave.core.identifiers</span>
+<span class="k">package</span> <span class="nn">org.trustweave.core.identifiers</span>
 
 <span class="k">import</span> <span class="nn">kotlinx.serialization.KSerializer</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.Serializable</span>
@@ -1355,7 +1355,7 @@ common
 </h3>
     
 
-<p><strong>Location</strong>: <code class="language-plaintext highlighter-rouge">did/did-core/src/main/kotlin/com/trustweave/did/identifiers/DidIdentifiers.kt</code></p>
+<p><strong>Location</strong>: <code class="language-plaintext highlighter-rouge">did/did-core/src/main/kotlin/org.trustweave/did/identifiers/DidIdentifiers.kt</code></p>
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1487,10 +1487,10 @@ common
 128
 129
 130
-</pre></td><td class="rouge-code"><pre><span class="k">package</span> <span class="nn">com.trustweave.did.identifiers</span>
+</pre></td><td class="rouge-code"><pre><span class="k">package</span> <span class="nn">org.trustweave.did.identifiers</span>
 
-<span class="k">import</span> <span class="nn">com.trustweave.core.identifiers.Iri</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.identifiers.KeyId</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.identifiers.Iri</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.identifiers.KeyId</span>
 
 <span class="cm">/**
  * Decentralized Identifier (DID).
@@ -1627,7 +1627,7 @@ common
 </h3>
     
 
-<p><strong>Location</strong>: <code class="language-plaintext highlighter-rouge">credentials/credential-core/src/main/kotlin/com/trustweave/credential/identifiers/CredentialIdentifiers.kt</code></p>
+<p><strong>Location</strong>: <code class="language-plaintext highlighter-rouge">credentials/credential-core/src/main/kotlin/org.trustweave/credential/identifiers/CredentialIdentifiers.kt</code></p>
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1710,10 +1710,10 @@ common
 79
 80
 81
-</pre></td><td class="rouge-code"><pre><span class="k">package</span> <span class="nn">com.trustweave.credential.identifiers</span>
+</pre></td><td class="rouge-code"><pre><span class="k">package</span> <span class="nn">org.trustweave.credential.identifiers</span>
 
-<span class="k">import</span> <span class="nn">com.trustweave.core.identifiers.Iri</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.identifiers.Did</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.identifiers.Iri</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.identifiers.Did</span>
 
 <span class="cm">/**
  * Credential identifier (URI, URN, DID, or other IRI).
@@ -1809,7 +1809,7 @@ common
 </h3>
     
 
-<p><strong>Location</strong>: <code class="language-plaintext highlighter-rouge">credentials/credential-core/src/main/kotlin/com/trustweave/credential/types/CredentialTypes.kt</code></p>
+<p><strong>Location</strong>: <code class="language-plaintext highlighter-rouge">credentials/credential-core/src/main/kotlin/org.trustweave/credential/types/CredentialTypes.kt</code></p>
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -1863,7 +1863,7 @@ common
 50
 51
 52
-</pre></td><td class="rouge-code"><pre><span class="k">package</span> <span class="nn">com.trustweave.credential.types</span>
+</pre></td><td class="rouge-code"><pre><span class="k">package</span> <span class="nn">org.trustweave.credential.types</span>
 
 <span class="cm">/**
  * Cryptographic proof/signature type classification.
@@ -2295,16 +2295,16 @@ common
 </h3>
     
 
-<p><strong>Identifiers</strong>: <code class="language-plaintext highlighter-rouge">com.trustweave.{module}.identifiers</code></p>
+<p><strong>Identifiers</strong>: <code class="language-plaintext highlighter-rouge">org.trustweave.{module}.identifiers</code></p>
 <ul>
-  <li>Example: <code class="language-plaintext highlighter-rouge">com.trustweave.credential.identifiers.CredentialId</code></li>
-  <li>Example: <code class="language-plaintext highlighter-rouge">com.trustweave.did.identifiers.Did</code></li>
+  <li>Example: <code class="language-plaintext highlighter-rouge">org.trustweave.credential.identifiers.CredentialId</code></li>
+  <li>Example: <code class="language-plaintext highlighter-rouge">org.trustweave.did.identifiers.Did</code></li>
 </ul>
 
-<p><strong>Types</strong>: <code class="language-plaintext highlighter-rouge">com.trustweave.{module}.types</code></p>
+<p><strong>Types</strong>: <code class="language-plaintext highlighter-rouge">org.trustweave.{module}.types</code></p>
 <ul>
-  <li>Example: <code class="language-plaintext highlighter-rouge">com.trustweave.credential.types.ProofType</code></li>
-  <li>Example: <code class="language-plaintext highlighter-rouge">com.trustweave.kms.types.Algorithm</code></li>
+  <li>Example: <code class="language-plaintext highlighter-rouge">org.trustweave.credential.types.ProofType</code></li>
+  <li>Example: <code class="language-plaintext highlighter-rouge">org.trustweave.kms.types.Algorithm</code></li>
 </ul>
 <h3 id="file-organization">
   
@@ -2323,7 +2323,7 @@ common
 5
 6
 7
-</pre></td><td class="rouge-code"><pre>credentials/credential-core/src/main/kotlin/com/trustweave/credential/
+</pre></td><td class="rouge-code"><pre>credentials/credential-core/src/main/kotlin/org.trustweave/credential/
   └── identifiers/
       └── CredentialIdentifiers.kt  (all credential identifiers)
   └── types/
@@ -2709,7 +2709,7 @@ common
 29
 30
 31
-</pre></td><td class="rouge-code"><pre><span class="c1">// common/src/main/kotlin/com/trustweave/core/identifiers/Identifiers.kt (extensions)</span>
+</pre></td><td class="rouge-code"><pre><span class="c1">// common/src/main/kotlin/org.trustweave/core/identifiers/Identifiers.kt (extensions)</span>
 
 <span class="cm">/**
  * Safe parsing extension functions for all identifiers.
@@ -2721,7 +2721,7 @@ common
 <span class="k">inline</span> <span class="k">fun</span> <span class="nc">String</span><span class="p">.</span><span class="nf">toKeyIdOrNull</span><span class="p">():</span> <span class="nc">KeyId</span><span class="p">?</span> <span class="p">=</span> 
     <span class="k">try</span> <span class="p">{</span> <span class="nc">KeyId</span><span class="p">(</span><span class="k">this</span><span class="p">)</span> <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">e</span><span class="p">:</span> <span class="nc">IllegalArgumentException</span><span class="p">)</span> <span class="p">{</span> <span class="k">null</span> <span class="p">}</span>
 
-<span class="c1">// did/did-core/src/main/kotlin/com/trustweave/did/identifiers/DidIdentifiersExtensions.kt</span>
+<span class="c1">// did/did-core/src/main/kotlin/org.trustweave/did/identifiers/DidIdentifiersExtensions.kt</span>
 <span class="k">inline</span> <span class="k">fun</span> <span class="nc">String</span><span class="p">.</span><span class="nf">toDidOrNull</span><span class="p">():</span> <span class="nc">Did</span><span class="p">?</span> <span class="p">=</span> 
     <span class="k">try</span> <span class="p">{</span> <span class="nc">Did</span><span class="p">(</span><span class="k">this</span><span class="p">)</span> <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">e</span><span class="p">:</span> <span class="nc">IllegalArgumentException</span><span class="p">)</span> <span class="p">{</span> <span class="k">null</span> <span class="p">}</span>
 

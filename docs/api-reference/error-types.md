@@ -175,8 +175,8 @@ All wallet errors are part of the `WalletException` sealed class hierarchy (exte
 ### Handling DID Errors
 
 ```kotlin
-import com.trustweave.did.exception.DidException
-import com.trustweave.core.exception.TrustWeaveException
+import org.trustweave.did.exception.DidException
+import org.trustweave.core.exception.TrustWeaveException
 
 try {
     val did = trustWeave.createDid { method(KEY) }
@@ -202,8 +202,8 @@ try {
 ### Handling Credential Errors
 
 ```kotlin
-import com.trustweave.credential.exception.CredentialException
-import com.trustweave.core.exception.TrustWeaveException
+import org.trustweave.credential.exception.CredentialException
+import org.trustweave.core.exception.TrustWeaveException
 
 try {
     val credential = trustWeave.issue { ... }
@@ -228,8 +228,8 @@ try {
 ### Handling Blockchain Errors
 
 ```kotlin
-import com.trustweave.anchor.exceptions.BlockchainException
-import com.trustweave.core.exception.TrustWeaveException
+import org.trustweave.anchor.exceptions.BlockchainException
+import org.trustweave.core.exception.TrustWeaveException
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -297,8 +297,8 @@ try {
 ### Handling Wallet Errors
 
 ```kotlin
-import com.trustweave.wallet.exception.WalletException
-import com.trustweave.core.exception.TrustWeaveException
+import org.trustweave.wallet.exception.WalletException
+import org.trustweave.core.exception.TrustWeaveException
 
 try {
     val wallet = trustWeave.wallet { ... }
@@ -320,7 +320,7 @@ try {
 All exceptions have a `code` property that contains a string error code. Error codes are defined as string constants within each exception class. You can access the error code via the `code` property:
 
 ```kotlin
-import com.trustweave.core.exception.TrustWeaveException
+import org.trustweave.core.exception.TrustWeaveException
 
 try {
     // ... operation

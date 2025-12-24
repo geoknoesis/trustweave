@@ -67,7 +67,7 @@ Complete API reference for TrustWeave.
 Most TrustWeave API operations throw `TrustWeaveError` exceptions on failure. Some operations (like contract operations) return `Result<T>` directly. Check the method signature for each operation.
 
 ```kotlin
-import com.trustweave.core.*
+import org.trustweave.core.*
 
 try {
     val did = trustWeave.createDid { method(KEY) }

@@ -31,9 +31,9 @@ TrustWeave defines several provider interfaces:
 SPI uses service files in `META-INF/services/` to discover providers:
 
 ```
-META-INF/services/com.trustweave.did.spi.DidMethodProvider
-META-INF/services/com.trustweave.kms.spi.KeyManagementServiceProvider
-META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
+META-INF/services/org.trustweave.did.spi.DidMethodProvider
+META-INF/services/org.trustweave.kms.spi.KeyManagementServiceProvider
+META-INF/services/org.trustweave.anchor.spi.BlockchainAnchorClientProvider
 ```
 
 Each file contains the fully qualified class name of the provider implementation.
@@ -43,7 +43,7 @@ Each file contains the fully qualified class name of the provider implementation
 ### Discovering Providers
 
 ```kotlin
-import com.trustweave.did.spi.DidMethodProvider
+import org.trustweave.did.spi.DidMethodProvider
 import java.util.ServiceLoader
 
 // Discover DID method providers
@@ -63,8 +63,8 @@ providers.forEach { provider ->
 ### Creating Providers
 
 ```kotlin
-import com.trustweave.did.spi.DidMethodProvider
-import com.trustweave.did.*
+import org.trustweave.did.spi.DidMethodProvider
+import org.trustweave.did.*
 
 class MyDidMethodProvider : DidMethodProvider {
     override val name: String = "my-did-method"
@@ -90,7 +90,7 @@ class MyDidMethodProvider : DidMethodProvider {
 Create a service file at:
 
 ```
-src/main/resources/META-INF/services/com.trustweave.did.spi.DidMethodProvider
+src/main/resources/META-INF/services/org.trustweave.did.spi.DidMethodProvider
 ```
 
 With content:
@@ -109,21 +109,21 @@ com.example.MyDidMethodProvider
 
 ```kotlin
 // did/plugins/key/src/main/resources/META-INF/services/...
-com.trustweave.did.key.KeyDidMethodProvider
+org.trustweave.did.key.KeyDidMethodProvider
 ```
 
 ### KMS Providers
 
 ```kotlin
 // kms/plugins/aws/src/main/resources/META-INF/services/...
-com.trustweave.awskms.AwsKeyManagementServiceProvider
+org.trustweave.awskms.AwsKeyManagementServiceProvider
 ```
 
 ### Blockchain Adapter Providers
 
 ```kotlin
 // chains/plugins/algorand/src/main/resources/META-INF/services/...
-com.trustweave.algorand.AlgorandBlockchainAnchorClientProvider
+org.trustweave.algorand.AlgorandBlockchainAnchorClientProvider
 ```
 
 ## Benefits of SPI
@@ -135,7 +135,7 @@ Plugins can be added or removed without modifying application code:
 ```kotlin
 // Add chains/plugins/algorand dependency to enable Algorand adapter
 dependencies {
-    implementation("com.trustweave:chains/plugins/algorand:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:chains/plugins/algorand:1.0.0-SNAPSHOT")
 }
 ```
 

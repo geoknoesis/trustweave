@@ -12,7 +12,7 @@ All advanced features for DIDComm message storage and SecretResolver have been s
 
 ### 1. EncryptedFileLocalKeyStore ✅
 
-**Location**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/crypto/secret/`
+**Location**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/crypto/secret/`
 
 **Files**:
 - `encryption/KeyEncryption.kt` - AES-256-GCM encryption utilities
@@ -41,7 +41,7 @@ val retrieved = keyStore.get("did:key:issuer#key-1")
 
 ### 2. Message Encryption at Rest ✅
 
-**Location**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/encryption/`
+**Location**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/encryption/`
 
 **Files**:
 - `MessageEncryption.kt` - Encryption interface and AES implementation
@@ -68,7 +68,7 @@ val storage = PostgresDidCommMessageStorage(
 
 ### 3. MongoDB Storage ✅
 
-**Location**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/database/`
+**Location**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/database/`
 
 **Files**:
 - `MongoDidCommMessageStorage.kt` - MongoDB-backed storage implementation
@@ -99,7 +99,7 @@ implementation("org.mongodb:mongodb-driver-kotlin-coroutine:4.11.0")
 
 ### 4. Message Archiving to Cold Storage ✅
 
-**Location**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/archive/`
+**Location**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/archive/`
 
 **Files**:
 - `ArchivePolicy.kt` - Archive policy definitions
@@ -129,7 +129,7 @@ val result = archiver.archiveMessages(policy)
 
 ### 5. Message Replication for High Availability ✅
 
-**Location**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/replication/`
+**Location**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/replication/`
 
 **Files**:
 - `ReplicationManager.kt` - Replication manager with multiple modes
@@ -158,7 +158,7 @@ val replicationManager = ReplicationManager(
 
 ### 6. Advanced Search Capabilities ✅
 
-**Location**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/search/`
+**Location**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/search/`
 
 **Files**:
 - `AdvancedSearch.kt` - Search interface definitions
@@ -193,7 +193,7 @@ val results = search.complexQuery(query)
 
 ### 7. Message Analytics and Reporting ✅
 
-**Location**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/analytics/`
+**Location**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/analytics/`
 
 **Files**:
 - `MessageAnalytics.kt` - Analytics interface definitions
@@ -231,7 +231,7 @@ val topDids = analytics.getTopDids(limit = 10)
 
 ### 8. Key Rotation Automation ✅
 
-**Location**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/crypto/rotation/`
+**Location**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/crypto/rotation/`
 
 **Files**:
 - `KeyRotationPolicy.kt` - Rotation policy definitions

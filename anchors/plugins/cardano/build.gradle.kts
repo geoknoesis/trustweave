@@ -3,7 +3,7 @@ plugins {
     kotlin("plugin.serialization")
 }
 
-group = "com.trustweave.chains"
+group = "org.trustweave.chains"
 dependencies {
     implementation(project(":common"))
     implementation(project(":anchors:anchor-core"))

@@ -20,8 +20,8 @@ This guide shows you how to verify verifiable credentials with TrustWeave. You'l
 Here's a complete example that verifies a credential:
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.types.VerificationResult
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.VerificationResult
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {

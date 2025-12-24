@@ -37,7 +37,7 @@ TrustWeave wallets support different capabilities through a **composable interfa
 A **Basic Wallet** provides only core credential storage:
 
 ```kotlin
-import com.trustweave.testkit.credential.BasicWallet
+import org.trustweave.testkit.credential.BasicWallet
 
 val wallet = BasicWallet()
 // Supports: store, get, list, delete, query
@@ -50,7 +50,7 @@ val wallet = BasicWallet()
 A **Full-Featured Wallet** implements all capabilities:
 
 ```kotlin
-import com.trustweave.testkit.credential.InMemoryWallet
+import org.trustweave.testkit.credential.InMemoryWallet
 
 val wallet = InMemoryWallet(
     walletDid = "did:key:wallet",
@@ -145,7 +145,7 @@ if (wallet.capabilities.supports("collections")) {
 Create your own directory when you need to manage multiple wallets:
 
 ```kotlin
-import com.trustweave.credential.wallet.WalletDirectory
+import org.trustweave.credential.wallet.WalletDirectory
 
 val directory = WalletDirectory()
 
@@ -296,7 +296,7 @@ if (wallet is CredentialPresentation) {
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 }
 ```
 

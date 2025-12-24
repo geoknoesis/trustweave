@@ -22,10 +22,10 @@ Add the Arbitrum adapter module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave.chains:arbitrum:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-json:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.chains:arbitrum:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-json:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Web3j for Arbitrum blockchain (EVM-compatible)
     implementation("org.web3j:core:5.0.1")
@@ -37,8 +37,8 @@ dependencies {
 ### Basic Configuration
 
 ```kotlin
-import com.trustweave.anchor.*
-import com.trustweave.arbitrum.*
+import org.trustweave.anchor.*
+import org.trustweave.arbitrum.*
 
 // Create Arbitrum anchor client for mainnet
 val options = mapOf(
@@ -79,8 +79,8 @@ val sepoliaClient = ArbitrumBlockchainAnchorClient(
 When the module is on the classpath, Arbitrum adapter is automatically available:
 
 ```kotlin
-import com.trustweave.anchor.*
-import com.trustweave.anchor.spi.*
+import org.trustweave.anchor.*
+import org.trustweave.anchor.spi.*
 import java.util.ServiceLoader
 
 // Discover Arbitrum provider
@@ -99,8 +99,8 @@ val client = arbitrumProvider?.create(
 ### Anchoring Data
 
 ```kotlin
-import com.trustweave.anchor.*
-import com.trustweave.arbitrum.*
+import org.trustweave.anchor.*
+import org.trustweave.arbitrum.*
 import kotlinx.serialization.json.*
 
 val client = ArbitrumBlockchainAnchorClient(
@@ -139,8 +139,8 @@ println("Anchored to Arbitrum: ${result.ref.txHash}")
 ## Integration with TrustWeave
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.arbitrum.*
+import org.trustweave.TrustWeave
+import org.trustweave.arbitrum.*
 
 val TrustWeave = TrustWeave.create {
     blockchain {

@@ -20,10 +20,10 @@ TrustWeave uses a type-safe system for identifiers and domain types to prevent e
 ## Quick Start
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
-import com.trustweave.credential.identifiers.CredentialId
-import com.trustweave.credential.types.ProofType
-import com.trustweave.credential.types.CredentialType
+import org.trustweave.did.identifiers.Did
+import org.trustweave.credential.identifiers.CredentialId
+import org.trustweave.credential.types.ProofType
+import org.trustweave.credential.types.CredentialType
 
 // ✅ Identifiers - identify WHICH resource
 val did = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
@@ -89,10 +89,10 @@ val purpose = StatusPurpose.REVOCATION          // What purpose?
 All identifiers are created using constructor-like syntax. They validate automatically and throw `IllegalArgumentException` if invalid.
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
-import com.trustweave.credential.identifiers.CredentialId
-import com.trustweave.credential.identifiers.IssuerId
-import com.trustweave.core.identifiers.KeyId
+import org.trustweave.did.identifiers.Did
+import org.trustweave.credential.identifiers.CredentialId
+import org.trustweave.credential.identifiers.IssuerId
+import org.trustweave.core.identifiers.KeyId
 
 // ✅ Direct construction (validates format automatically)
 val did = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
@@ -113,8 +113,8 @@ try {
 Use extension functions for safe parsing when the input might be invalid:
 
 ```kotlin
-import com.trustweave.did.identifiers.toDidOrNull
-import com.trustweave.credential.identifiers.toCredentialIdOrNull
+import org.trustweave.did.identifiers.toDidOrNull
+import org.trustweave.credential.identifiers.toCredentialIdOrNull
 
 // ✅ Safe parsing (returns null if invalid)
 val did = json.getString("issuer")?.toDidOrNull()
@@ -131,9 +131,9 @@ did?.let { issuerDid ->
 DIDs have specialized methods and operators for common operations:
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
-import com.trustweave.did.identifiers.VerificationMethodId
-import com.trustweave.core.identifiers.KeyId
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.VerificationMethodId
+import org.trustweave.core.identifiers.KeyId
 
 val did = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
 
@@ -162,8 +162,8 @@ val baseDid = did.baseDid
 Verification Method IDs combine a DID with a key fragment:
 
 ```kotlin
-import com.trustweave.did.identifiers.VerificationMethodId
-import com.trustweave.core.identifiers.KeyId
+import org.trustweave.did.identifiers.VerificationMethodId
+import org.trustweave.core.identifiers.KeyId
 
 val did = Did("did:key:z6Mk...")
 
@@ -193,9 +193,9 @@ val (didPart, keyIdPart) = vmId4.decompose()
 All identifiers extend the base `Iri` class, enabling polymorphism:
 
 ```kotlin
-import com.trustweave.core.identifiers.Iri
-import com.trustweave.did.identifiers.Did
-import com.trustweave.credential.identifiers.CredentialId
+import org.trustweave.core.identifiers.Iri
+import org.trustweave.did.identifiers.Did
+import org.trustweave.credential.identifiers.CredentialId
 
 val did = Did("did:key:z6Mk...")
 val credId = CredentialId("https://example.com/cred/123")
@@ -220,9 +220,9 @@ processIri(credId)   // Prints: "URI: https://..."
 ### Converting Between Identifier Types
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
-import com.trustweave.credential.identifiers.CredentialId
-import com.trustweave.credential.identifiers.IssuerId
+import org.trustweave.did.identifiers.Did
+import org.trustweave.credential.identifiers.CredentialId
+import org.trustweave.credential.identifiers.IssuerId
 
 val did = Did("did:key:z6Mk...")
 
@@ -245,8 +245,8 @@ val asCredId = iri.asCredentialIdOrNull()
 Proof types specify the cryptographic signature algorithm:
 
 ```kotlin
-import com.trustweave.credential.types.ProofType
-import com.trustweave.credential.types.ProofTypes
+import org.trustweave.credential.types.ProofType
+import org.trustweave.credential.types.ProofTypes
 
 // ✅ Using predefined types
 val ed25519 = ProofType.Ed25519Signature2020
@@ -273,8 +273,8 @@ val json = Json.encodeToString(ed25519)  // "Ed25519Signature2020"
 Credential types classify what kind of credential it is:
 
 ```kotlin
-import com.trustweave.credential.types.CredentialType
-import com.trustweave.credential.types.CredentialTypes
+import org.trustweave.credential.types.CredentialType
+import org.trustweave.credential.types.CredentialTypes
 
 // ✅ Standard types
 val verifiableCred = CredentialType.VerifiableCredential  // Always required
@@ -309,7 +309,7 @@ val credential = VerifiableCredential(
 Status purpose indicates why a status list exists:
 
 ```kotlin
-import com.trustweave.credential.types.StatusPurpose
+import org.trustweave.credential.types.StatusPurpose
 
 // ✅ Enum values
 val revocation = StatusPurpose.REVOCATION    // For revoking credentials
@@ -329,7 +329,7 @@ val status = CredentialStatus(
 Schema format specifies the validation schema type:
 
 ```kotlin
-import com.trustweave.credential.types.SchemaFormat
+import org.trustweave.credential.types.SchemaFormat
 
 // ✅ Enum values
 val jsonSchema = SchemaFormat.JSON_SCHEMA  // JSON Schema Draft 7/2020-12
@@ -352,10 +352,10 @@ val schema = CredentialSchema(
 All identifier and type fields are now strongly typed:
 
 ```kotlin
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.identifiers.CredentialId
-import com.trustweave.credential.identifiers.IssuerId
-import com.trustweave.credential.types.CredentialType
+import org.trustweave.credential.models.VerifiableCredential
+import org.trustweave.credential.identifiers.CredentialId
+import org.trustweave.credential.identifiers.IssuerId
+import org.trustweave.credential.types.CredentialType
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 
@@ -384,10 +384,10 @@ println(credential.type.first())   // CredentialType.VerifiableCredential
 Proofs use typed proof type and verification method ID:
 
 ```kotlin
-import com.trustweave.credential.models.Proof
-import com.trustweave.credential.types.ProofType
-import com.trustweave.did.identifiers.Did
-import com.trustweave.did.identifiers.VerificationMethodId
+import org.trustweave.credential.models.Proof
+import org.trustweave.credential.types.ProofType
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.VerificationMethodId
 
 val did = Did("did:key:z6Mk...")
 val proof = Proof(
@@ -406,10 +406,10 @@ val proof = Proof(
 DID documents use typed DIDs and verification method IDs:
 
 ```kotlin
-import com.trustweave.did.model.DidDocument
-import com.trustweave.did.model.VerificationMethod
-import com.trustweave.did.identifiers.Did
-import com.trustweave.did.identifiers.VerificationMethodId
+import org.trustweave.did.model.DidDocument
+import org.trustweave.did.model.VerificationMethod
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.VerificationMethodId
 
 val did = Did("did:key:z6Mk...")
 val document = DidDocument(
@@ -486,24 +486,24 @@ Type-safe identifiers make refactoring safer:
 
 ```kotlin
 // ✅ Identifiers
-import com.trustweave.core.identifiers.Iri
-import com.trustweave.core.identifiers.KeyId
-import com.trustweave.did.identifiers.Did
-import com.trustweave.did.identifiers.VerificationMethodId
-import com.trustweave.credential.identifiers.CredentialId
-import com.trustweave.credential.identifiers.IssuerId
-import com.trustweave.credential.identifiers.SchemaId
-import com.trustweave.credential.identifiers.StatusListId
+import org.trustweave.core.identifiers.Iri
+import org.trustweave.core.identifiers.KeyId
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.VerificationMethodId
+import org.trustweave.credential.identifiers.CredentialId
+import org.trustweave.credential.identifiers.IssuerId
+import org.trustweave.credential.identifiers.SchemaId
+import org.trustweave.credential.identifiers.StatusListId
 
 // ✅ Types
-import com.trustweave.credential.types.ProofType
-import com.trustweave.credential.types.CredentialType
-import com.trustweave.credential.types.StatusPurpose
-import com.trustweave.credential.types.SchemaFormat
+import org.trustweave.credential.types.ProofType
+import org.trustweave.credential.types.CredentialType
+import org.trustweave.credential.types.StatusPurpose
+import org.trustweave.credential.types.SchemaFormat
 
 // ✅ Extension functions (for safe parsing)
-import com.trustweave.did.identifiers.toDidOrNull
-import com.trustweave.credential.identifiers.toCredentialIdOrNull
+import org.trustweave.did.identifiers.toDidOrNull
+import org.trustweave.credential.identifiers.toCredentialIdOrNull
 ```
 
 ### Module Organization
@@ -519,8 +519,8 @@ import com.trustweave.credential.identifiers.toCredentialIdOrNull
 ### Pattern: Safe Parsing from JSON
 
 ```kotlin
-import com.trustweave.did.identifiers.toDidOrNull
-import com.trustweave.credential.identifiers.toCredentialIdOrNull
+import org.trustweave.did.identifiers.toDidOrNull
+import org.trustweave.credential.identifiers.toCredentialIdOrNull
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -551,8 +551,8 @@ fun parseCredentialFromJson(jsonString: String): VerifiableCredential? {
 ### Pattern: Working with Collections
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
-import com.trustweave.credential.identifiers.CredentialId
+import org.trustweave.did.identifiers.Did
+import org.trustweave.credential.identifiers.CredentialId
 
 // ✅ Type-safe collections
 val dids: List<Did> = listOf(
@@ -575,9 +575,9 @@ val didStrings = dids.map { it.value }
 ### Pattern: Type Narrowing
 
 ```kotlin
-import com.trustweave.core.identifiers.Iri
-import com.trustweave.did.identifiers.Did
-import com.trustweave.did.identifiers.asDidOrNull
+import org.trustweave.core.identifiers.Iri
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.asDidOrNull
 
 fun processIri(iri: Iri) {
     // ✅ Narrow Iri to Did if it's a DID
@@ -642,10 +642,10 @@ val proofType: String = "Ed25519Signature2020"  // Use ProofType instead
 **Error: "Unresolved reference: Did"**
 ```kotlin
 // ❌ Wrong import
-import com.trustweave.core.types.Did
+import org.trustweave.core.types.Did
 
 // ✅ Correct import
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 ```
 
 **Error: "Type mismatch: expected CredentialId, found Did"**

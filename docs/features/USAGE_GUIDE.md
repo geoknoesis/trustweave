@@ -15,9 +15,9 @@ All features are implemented as standalone plugins that can be instantiated and 
 Track all operations with immutable audit logs.
 
 ```kotlin
-import com.trustweave.audit.AuditLogger
-import com.trustweave.audit.InMemoryAuditLogger
-import com.trustweave.audit.AuditEvent
+import org.trustweave.audit.AuditLogger
+import org.trustweave.audit.InMemoryAuditLogger
+import org.trustweave.audit.AuditEvent
 
 val auditLogger: AuditLogger = InMemoryAuditLogger()
 
@@ -47,8 +47,8 @@ val events = auditLogger.getEvents(
 Collect performance and usage metrics.
 
 ```kotlin
-import com.trustweave.metrics.MetricsCollector
-import com.trustweave.metrics.InMemoryMetricsCollector
+import org.trustweave.metrics.MetricsCollector
+import org.trustweave.metrics.InMemoryMetricsCollector
 
 val metrics: MetricsCollector = InMemoryMetricsCollector()
 
@@ -67,9 +67,9 @@ println("Issued: ${counter?.value}, Avg latency: ${latency?.average}ms")
 Generate QR codes for credential sharing.
 
 ```kotlin
-import com.trustweave.qrcode.QrCodeGenerator
-import com.trustweave.qrcode.ZxingQrCodeGenerator
-import com.trustweave.qrcode.QrCodeFormat
+import org.trustweave.qrcode.QrCodeGenerator
+import org.trustweave.qrcode.ZxingQrCodeGenerator
+import org.trustweave.qrcode.QrCodeFormat
 
 val qrGenerator: QrCodeGenerator = ZxingQrCodeGenerator()
 
@@ -94,8 +94,8 @@ val deepLink = qrGenerator.generateDeepLink(
 Send push notifications and webhooks for credential events.
 
 ```kotlin
-import com.trustweave.notifications.NotificationService
-import com.trustweave.notifications.InMemoryNotificationService
+import org.trustweave.notifications.NotificationService
+import org.trustweave.notifications.InMemoryNotificationService
 
 val notifications: NotificationService = InMemoryNotificationService()
 
@@ -120,8 +120,8 @@ notifications.sendWebhook(
 Track credential versions and rollback if needed.
 
 ```kotlin
-import com.trustweave.versioning.CredentialVersioning
-import com.trustweave.versioning.InMemoryCredentialVersioning
+import org.trustweave.versioning.CredentialVersioning
+import org.trustweave.versioning.InMemoryCredentialVersioning
 
 val versioning: CredentialVersioning = InMemoryCredentialVersioning()
 
@@ -145,8 +145,8 @@ val rolledBack = versioning.rollback("cred-123", targetVersion = 1)
 Export and import credentials.
 
 ```kotlin
-import com.trustweave.backup.CredentialBackup
-import com.trustweave.backup.InMemoryCredentialBackup
+import org.trustweave.backup.CredentialBackup
+import org.trustweave.backup.InMemoryCredentialBackup
 
 val backup: CredentialBackup = InMemoryCredentialBackup()
 
@@ -168,8 +168,8 @@ backup.importCredentials(
 Monitor and manage expiring credentials.
 
 ```kotlin
-import com.trustweave.expiration.ExpirationManager
-import com.trustweave.expiration.InMemoryExpirationManager
+import org.trustweave.expiration.ExpirationManager
+import org.trustweave.expiration.InMemoryExpirationManager
 
 val expiration: ExpirationManager = InMemoryExpirationManager()
 
@@ -196,9 +196,9 @@ val renewed = expiration.renewCredential(
 Generate analytics reports.
 
 ```kotlin
-import com.trustweave.analytics.AnalyticsService
-import com.trustweave.analytics.InMemoryAnalyticsService
-import com.trustweave.analytics.ReportPeriod
+import org.trustweave.analytics.AnalyticsService
+import org.trustweave.analytics.InMemoryAnalyticsService
+import org.trustweave.analytics.ReportPeriod
 
 val analytics: AnalyticsService = InMemoryAnalyticsService()
 
@@ -218,8 +218,8 @@ println("Top issuers: ${report.topIssuers}")
 OpenID Connect for Verifiable Credential Issuance.
 
 ```kotlin
-import com.trustweave.oidc4vci.Oidc4VciService
-import com.trustweave.oidc4vci.InMemoryOidc4VciService
+import org.trustweave.oidc4vci.Oidc4VciService
+import org.trustweave.oidc4vci.InMemoryOidc4VciService
 
 val oidc4vci: Oidc4VciService = InMemoryOidc4VciService()
 
@@ -236,9 +236,9 @@ val credential = oidc4vci.issueCredential(
 DIDComm credential exchange protocol.
 
 ```kotlin
-import com.trustweave.didcomm.DidCommService
-import com.trustweave.didcomm.InMemoryDidCommService
-import com.trustweave.didcomm.DidCommMessage
+import org.trustweave.didcomm.DidCommService
+import org.trustweave.didcomm.InMemoryDidCommService
+import org.trustweave.didcomm.DidCommMessage
 
 val didcomm: DidCommService = InMemoryDidCommService()
 
@@ -261,8 +261,8 @@ val received = didcomm.receiveMessage(messageJson)
 Credential Handler API support.
 
 ```kotlin
-import com.trustweave.chapi.ChapiService
-import com.trustweave.chapi.InMemoryChapiService
+import org.trustweave.chapi.ChapiService
+import org.trustweave.chapi.InMemoryChapiService
 
 val chapi: ChapiService = InMemoryChapiService()
 
@@ -284,9 +284,9 @@ chapi.handleStoreRequest(
 Collaborative credential issuance.
 
 ```kotlin
-import com.trustweave.multiparty.MultiPartyIssuance
-import com.trustweave.multiparty.InMemoryMultiPartyIssuance
-import com.trustweave.multiparty.ConsensusType
+import org.trustweave.multiparty.MultiPartyIssuance
+import org.trustweave.multiparty.InMemoryMultiPartyIssuance
+import org.trustweave.multiparty.ConsensusType
 
 val multiParty: MultiPartyIssuance = InMemoryMultiPartyIssuance()
 
@@ -310,8 +310,8 @@ val finalCredential = multiParty.finalizeIssuance(issuanceId)
 System health monitoring.
 
 ```kotlin
-import com.trustweave.health.HealthCheckService
-import com.trustweave.health.InMemoryHealthCheckService
+import org.trustweave.health.HealthCheckService
+import org.trustweave.health.InMemoryHealthCheckService
 
 val health: HealthCheckService = InMemoryHealthCheckService()
 
@@ -326,9 +326,9 @@ println("Components: ${healthStatus.components}")
 Render credentials as HTML or PDF.
 
 ```kotlin
-import com.trustweave.rendering.CredentialRenderer
-import com.trustweave.rendering.InMemoryCredentialRenderer
-import com.trustweave.rendering.RenderingFormat
+import org.trustweave.rendering.CredentialRenderer
+import org.trustweave.rendering.InMemoryCredentialRenderer
+import org.trustweave.rendering.RenderingFormat
 
 val renderer: CredentialRenderer = InMemoryCredentialRenderer()
 
@@ -347,10 +347,10 @@ val htmlPresentation = renderer.renderHtml(presentation)
 Here's how to integrate multiple features together:
 
 ```kotlin
-import com.trustweave.*
-import com.trustweave.audit.*
-import com.trustweave.metrics.*
-import com.trustweave.qrcode.*
+import org.trustweave.*
+import org.trustweave.audit.*
+import org.trustweave.metrics.*
+import org.trustweave.qrcode.*
 
 val TrustWeave = TrustWeave.create()
 val auditLogger = InMemoryAuditLogger()

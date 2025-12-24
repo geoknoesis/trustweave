@@ -3,7 +3,7 @@ plugins {
     `java-test-fixtures`
 }
 
-group = "com.trustweave"
+group = "org.trustweave"
 dependencies {
     implementation(project(":common"))   // Root-level common (exceptions, common utilities)
     // KMS uses TrustWeaveException from root common module

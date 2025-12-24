@@ -5,9 +5,9 @@ This guide provides detailed examples and tutorials for getting started with Tru
 ## Quick Start (30 Seconds) ⚡
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.did.didCreationOptions
-import com.trustweave.spi.services.WalletCreationOptionsBuilder
+import org.trustweave.TrustWeave
+import org.trustweave.did.didCreationOptions
+import org.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -18,7 +18,7 @@ fun main() = runBlocking {
     val didDocument = trustweave.createDid(
         method = "key",
         options = didCreationOptions {
-            algorithm = com.trustweave.did.DidCreationOptions.KeyAlgorithm.ED25519
+            algorithm = org.trustweave.did.DidCreationOptions.KeyAlgorithm.ED25519
         }
     ).getOrThrow()
 
@@ -56,7 +56,7 @@ fun main() = runBlocking {
 - **Service Provider Interface (SPI)-ready from day one.** Drop in your own `WalletFactory` or `CredentialServiceProvider` without reflection or map juggling.
 
 ```kotlin
-import com.trustweave.spi.services.credentialServiceCreationOptions
+import org.trustweave.spi.services.credentialServiceCreationOptions
 
 val options = credentialServiceCreationOptions {
     enabled = true
@@ -73,8 +73,8 @@ Add TrustWeave to your project:
 ```kotlin
 dependencies {
     // All-in-one dependency (recommended)
-    implementation("com.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:testkit:1.0.0-SNAPSHOT")  // For testing
+    implementation("org.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:testkit:1.0.0-SNAPSHOT")  // For testing
 }
 ```
 
@@ -83,7 +83,7 @@ dependencies {
 ### Example: Computing a JSON Digest
 
 ```kotlin
-import com.trustweave.json.DigestUtils
+import org.trustweave.json.DigestUtils
 import kotlinx.serialization.json.*
 
 fun main() {
@@ -101,9 +101,9 @@ fun main() {
 ### Example: Creating a DID (New Simple API)
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.core.*
-import com.trustweave.did.*
+import org.trustweave.TrustWeave
+import org.trustweave.core.*
+import org.trustweave.did.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -111,7 +111,7 @@ fun main() = runBlocking {
     val TrustWeave = trustweave.create()
 
     // Use native did:key plugin (most widely-used)
-    // Add dependency: implementation("com.trustweave.did:key:1.0.0-SNAPSHOT")
+    // Add dependency: implementation("org.trustweave.did:key:1.0.0-SNAPSHOT")
 
     // Create a DID with error handling
     val document = trustweave.dids.create()
@@ -171,9 +171,9 @@ fun main() = runBlocking {
 <summary>Advanced: Using Direct APIs</summary>
 
 ```kotlin
-import com.trustweave.did.*
-import com.trustweave.testkit.did.DidKeyMockMethod
-import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import org.trustweave.did.*
+import org.trustweave.testkit.did.DidKeyMockMethod
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -196,11 +196,11 @@ fun main() = runBlocking {
 ### Example: Managing Credentials with Wallets (New Simple API)
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.credential.wallet.WalletProvider
-import com.trustweave.credential.wallet.Wallets
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.wallet.CredentialOrganization
+import org.trustweave.TrustWeave
+import org.trustweave.credential.wallet.WalletProvider
+import org.trustweave.credential.wallet.Wallets
+import org.trustweave.credential.models.VerifiableCredential
+import org.trustweave.credential.wallet.CredentialOrganization
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -274,11 +274,11 @@ fun main() = runBlocking {
 You can anchor data to multiple EVM-compatible chains using TrustWeave's chain-agnostic interface:
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.ethereum.*
-import com.trustweave.base.*
-import com.trustweave.arbitrum.*
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.TrustWeave
+import org.trustweave.ethereum.*
+import org.trustweave.base.*
+import org.trustweave.arbitrum.*
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import kotlinx.serialization.json.*
 
 val TrustWeave = trustweave.create {
@@ -303,8 +303,8 @@ val arbitrumResult = trustweave.anchor(ArbitrumBlockchainAnchorClient.MAINNET, p
 ### Example: Anchoring Data to a Blockchain (Original)
 
 ```kotlin
-import com.trustweave.anchor.*
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.anchor.*
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import kotlinx.serialization.Serializable
@@ -350,15 +350,15 @@ val retrieved = blockchainRegistry.readTyped<VerifiableCredentialDigest>(
 ### Example: Complete Workflow
 
 ```kotlin
-import com.trustweave.anchor.AnchorResult
-import com.trustweave.anchor.BlockchainAnchorRegistry
-import com.trustweave.anchor.anchorTyped
-import com.trustweave.anchor.readTyped
-import com.trustweave.did.DidMethodRegistry
-import com.trustweave.json.DigestUtils
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.trustweave.testkit.did.DidKeyMockMethod
-import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import org.trustweave.anchor.AnchorResult
+import org.trustweave.anchor.BlockchainAnchorRegistry
+import org.trustweave.anchor.anchorTyped
+import org.trustweave.anchor.readTyped
+import org.trustweave.did.DidMethodRegistry
+import org.trustweave.json.DigestUtils
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.testkit.did.DidKeyMockMethod
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import kotlinx.serialization.Serializable

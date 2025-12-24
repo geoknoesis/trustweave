@@ -13,7 +13,7 @@ This document describes the implementation of persistent message storage and Sec
 ### 1. Persistent Message Storage
 
 #### Storage Interface
-- **Location**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/DidCommMessageStorage.kt`
+- **Location**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/DidCommMessageStorage.kt`
 - **Purpose**: Abstract interface for message persistence
 - **Features**:
   - Store and retrieve messages
@@ -24,12 +24,12 @@ This document describes the implementation of persistent message storage and Sec
 #### Implementations
 
 **In-Memory Storage**
-- **Location**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/InMemoryDidCommMessageStorage.kt`
+- **Location**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/InMemoryDidCommMessageStorage.kt`
 - **Use Case**: Testing and development
 - **Limitation**: Data lost on restart
 
 **PostgreSQL Storage**
-- **Location**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/database/PostgresDidCommMessageStorage.kt`
+- **Location**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/database/PostgresDidCommMessageStorage.kt`
 - **Use Case**: Production deployments
 - **Features**:
   - Full SQL support
@@ -50,19 +50,19 @@ This document describes the implementation of persistent message storage and Sec
 ### 2. Secret Resolver
 
 #### Local Key Store
-- **Location**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/crypto/secret/LocalKeyStore.kt`
+- **Location**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/crypto/secret/LocalKeyStore.kt`
 - **Purpose**: Store DIDComm keys locally (for ECDH operations)
 - **Implementations**:
   - `InMemoryLocalKeyStore` - For testing
   - `EncryptedFileLocalKeyStore` - For production (to be implemented)
 
 #### KMS Secret Resolver
-- **Location**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/crypto/secret/KmsSecretResolver.kt`
+- **Location**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/crypto/secret/KmsSecretResolver.kt`
 - **Purpose**: Bridge KMS with didcomm-java library
 - **Strategy**: Uses local key store for DIDComm keys
 
 #### Hybrid Secret Resolver
-- **Location**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/crypto/secret/HybridKmsSecretResolver.kt`
+- **Location**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/crypto/secret/HybridKmsSecretResolver.kt`
 - **Purpose**: Recommended approach for production
 - **Strategy**:
   - DIDComm keys stored locally (for ECDH)
@@ -74,8 +74,8 @@ This document describes the implementation of persistent message storage and Sec
 
 ```kotlin
 import com.zaxxer.hikari.HikariDataSource
-import com.trustweave.credential.didcomm.*
-import com.trustweave.credential.didcomm.storage.database.PostgresDidCommMessageStorage
+import org.trustweave.credential.didcomm.*
+import org.trustweave.credential.didcomm.storage.database.PostgresDidCommMessageStorage
 
 // Create data source
 val dataSource = HikariDataSource().apply {
@@ -101,7 +101,7 @@ val didCommService = DidCommFactory.createDatabaseService(
 ### Hybrid Secret Resolver
 
 ```kotlin
-import com.trustweave.credential.didcomm.crypto.secret.*
+import org.trustweave.credential.didcomm.crypto.secret.*
 
 // Create local key store for DIDComm keys
 val localKeyStore = InMemoryLocalKeyStore() // Or EncryptedFileLocalKeyStore

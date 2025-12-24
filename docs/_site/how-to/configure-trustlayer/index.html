@@ -724,9 +724,9 @@
 40
 41
 42
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.types.ProofType</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.types.ProofType</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
@@ -794,7 +794,7 @@
 </ul>
 
 <p><strong>For Testing:</strong>
-Use testkit factories from <code class="language-plaintext highlighter-rouge">com.trustweave.testkit.services</code>:</p>
+Use testkit factories from <code class="language-plaintext highlighter-rouge">org.trustweave.testkit.services</code>:</p>
 <ul>
   <li><code class="language-plaintext highlighter-rouge">TestkitKmsFactory()</code></li>
   <li><code class="language-plaintext highlighter-rouge">TestkitDidMethodFactory()</code></li>
@@ -836,7 +836,7 @@ Use production factories from your KMS, DID method, and anchor client providers.
 9
 10
 11
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 
 <span class="kd">val</span> <span class="py">trustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span>
     <span class="nf">factories</span><span class="p">(</span>
@@ -886,7 +886,7 @@ Use production factories from your KMS, DID method, and anchor client providers.
 16
 17
 18
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 
 <span class="kd">val</span> <span class="py">trustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span>
     <span class="nf">factories</span><span class="p">(</span>
@@ -950,7 +950,7 @@ Use production factories from your KMS, DID method, and anchor client providers.
 23
 24
 25
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 
 <span class="kd">val</span> <span class="py">trustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span>
     <span class="nf">factories</span><span class="p">(</span>
@@ -1026,7 +1026,7 @@ Use production factories from your KMS, DID method, and anchor client providers.
 28
 29
 30
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 
 <span class="kd">val</span> <span class="py">trustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span>
     <span class="nf">factories</span><span class="p">(</span>
@@ -1107,7 +1107,7 @@ Use production factories from your KMS, DID method, and anchor client providers.
 28
 29
 30
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 
 <span class="kd">val</span> <span class="py">trustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span>
     <span class="nf">factories</span><span class="p">(</span>
@@ -1199,7 +1199,7 @@ Use production factories from your KMS, DID method, and anchor client providers.
 39
 40
 41
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 
 <span class="kd">val</span> <span class="py">trustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span>
     <span class="nf">factories</span><span class="p">(</span>
@@ -1336,7 +1336,7 @@ Use production factories from your KMS, DID method, and anchor client providers.
 16
 17
 18
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 
 <span class="c1">// Declarative, readable configuration</span>
 <span class="kd">val</span> <span class="py">trustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span>
@@ -1409,7 +1409,7 @@ Use production factories from your KMS, DID method, and anchor client providers.
 25
 26
 27
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 
 <span class="kd">val</span> <span class="py">trustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span>
     <span class="nf">factories</span><span class="p">(</span>
@@ -1538,7 +1538,7 @@ Use production factories from your KMS, DID method, and anchor client providers.
 24
 25
 26
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 
 <span class="kd">val</span> <span class="py">trustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span>
     <span class="nf">factories</span><span class="p">(</span>
@@ -1609,8 +1609,8 @@ Use production factories from your KMS, DID method, and anchor client providers.
 31
 32
 33
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.core.exception.TrustWeaveException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 
 <span class="k">try</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">trustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span>

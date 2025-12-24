@@ -59,7 +59,7 @@ val trustLayer = TrustLayer.build {
     trust {
         // ✅ Production: Use database-backed trust registry
         provider("database") {
-            connectionString("jdbc:postgresql://db.example.com/trustweave")
+            connectionString("jdbc:postgresql://db.example.org.trustweave")
             schema("trust_registry")
         }
     }
@@ -141,7 +141,7 @@ val verification = trustLayer.verify {
 Always handle errors explicitly in production:
 
 ```kotlin
-import com.trustweave.core.TrustWeaveError
+import org.trustweave.core.TrustWeaveError
 import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger(MyService::class.java)
@@ -247,7 +247,7 @@ Use connection pooling for database operations:
 ```kotlin
 // Configure connection pool
 val dataSource = HikariDataSource().apply {
-    jdbcUrl = "jdbc:postgresql://db.example.com/trustweave"
+    jdbcUrl = "jdbc:postgresql://db.example.org.trustweave"
     maximumPoolSize = 20
     minimumIdle = 5
     connectionTimeout = 30000

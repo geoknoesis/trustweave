@@ -5,22 +5,22 @@ This module contains runnable examples demonstrating various use cases for trust
 ## Available Examples
 
 ### Earth Observation
-- **File**: `com.trustweave.examples.eo.EarthObservationExample`
+- **File**: `org.trustweave.examples.eo.EarthObservationExample`
 - **Description**: Demonstrates EO data integrity workflow with artifacts, linksets, VCs, and blockchain anchoring
 - **Run**: `./gradlew :TrustWeave-examples:runEarthObservation`
 
 ### Academic Credentials
-- **File**: `com.trustweave.examples.academic.AcademicCredentialsExample`
+- **File**: `org.trustweave.examples.academic.AcademicCredentialsExample`
 - **Description**: Shows how universities issue degree credentials and students manage them in wallets
 - **Run**: `./gradlew :TrustWeave-examples:runAcademicCredentials`
 
 ### Professional Identity
-- **File**: `com.trustweave.examples.professional.ProfessionalIdentityExample`
+- **File**: `org.trustweave.examples.professional.ProfessionalIdentityExample`
 - **Description**: Demonstrates professional credential wallet with education, work experience, and certifications
 - **Run**: `./gradlew :TrustWeave-examples:runProfessionalIdentity`
 
 ### Indy Integration
-- **File**: `com.trustweave.examples.indy.IndyIntegrationExample`
+- **File**: `org.trustweave.examples.indy.IndyIntegrationExample`
 - **Description**: Complete end-to-end scenario using Hyperledger Indy for blockchain anchoring. Demonstrates DID creation, credential issuance, verification, wallet storage, and anchoring to Indy blockchain (BCovrin Testnet)
 - **Run**: `./gradlew :TrustWeave-examples:runIndyIntegration`
 

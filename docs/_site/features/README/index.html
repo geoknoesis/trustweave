@@ -723,13 +723,13 @@
 10
 11
 </pre></td><td class="rouge-code"><pre><span class="c1">// Example: Using Audit Logging</span>
-<span class="k">import</span> <span class="nn">com.trustweave.audit.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.audit.*</span>
 
 <span class="kd">val</span> <span class="py">auditLogger</span> <span class="p">=</span> <span class="nc">InMemoryAuditLogger</span><span class="p">()</span>
 <span class="n">auditLogger</span><span class="p">.</span><span class="nf">logEvent</span><span class="p">(</span><span class="nc">AuditEvent</span><span class="p">(</span><span class="o">..</span><span class="p">.))</span>
 
 <span class="c1">// Example: Using Metrics</span>
-<span class="k">import</span> <span class="nn">com.trustweave.metrics.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.metrics.*</span>
 
 <span class="kd">val</span> <span class="py">metrics</span> <span class="p">=</span> <span class="nc">InMemoryMetricsCollector</span><span class="p">()</span>
 <span class="n">metrics</span><span class="p">.</span><span class="nf">increment</span><span class="p">(</span><span class="s">"credentials.issued"</span><span class="p">)</span>

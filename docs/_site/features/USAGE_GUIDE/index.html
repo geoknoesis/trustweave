@@ -657,9 +657,9 @@
 23
 24
 25
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.audit.AuditLogger</span>
-<span class="k">import</span> <span class="nn">com.trustweave.audit.InMemoryAuditLogger</span>
-<span class="k">import</span> <span class="nn">com.trustweave.audit.AuditEvent</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.audit.AuditLogger</span>
+<span class="k">import</span> <span class="nn">org.trustweave.audit.InMemoryAuditLogger</span>
+<span class="k">import</span> <span class="nn">org.trustweave.audit.AuditEvent</span>
 
 <span class="kd">val</span> <span class="py">auditLogger</span><span class="p">:</span> <span class="nc">AuditLogger</span> <span class="p">=</span> <span class="nc">InMemoryAuditLogger</span><span class="p">()</span>
 
@@ -707,8 +707,8 @@
 11
 12
 13
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.metrics.MetricsCollector</span>
-<span class="k">import</span> <span class="nn">com.trustweave.metrics.InMemoryMetricsCollector</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.metrics.MetricsCollector</span>
+<span class="k">import</span> <span class="nn">org.trustweave.metrics.InMemoryMetricsCollector</span>
 
 <span class="kd">val</span> <span class="py">metrics</span><span class="p">:</span> <span class="nc">MetricsCollector</span> <span class="p">=</span> <span class="nc">InMemoryMetricsCollector</span><span class="p">()</span>
 
@@ -752,9 +752,9 @@
 18
 19
 20
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.qrcode.QrCodeGenerator</span>
-<span class="k">import</span> <span class="nn">com.trustweave.qrcode.ZxingQrCodeGenerator</span>
-<span class="k">import</span> <span class="nn">com.trustweave.qrcode.QrCodeFormat</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.qrcode.QrCodeGenerator</span>
+<span class="k">import</span> <span class="nn">org.trustweave.qrcode.ZxingQrCodeGenerator</span>
+<span class="k">import</span> <span class="nn">org.trustweave.qrcode.QrCodeFormat</span>
 
 <span class="kd">val</span> <span class="py">qrGenerator</span><span class="p">:</span> <span class="nc">QrCodeGenerator</span> <span class="p">=</span> <span class="nc">ZxingQrCodeGenerator</span><span class="p">()</span>
 
@@ -803,8 +803,8 @@
 17
 18
 19
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.notifications.NotificationService</span>
-<span class="k">import</span> <span class="nn">com.trustweave.notifications.InMemoryNotificationService</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.notifications.NotificationService</span>
+<span class="k">import</span> <span class="nn">org.trustweave.notifications.InMemoryNotificationService</span>
 
 <span class="kd">val</span> <span class="py">notifications</span><span class="p">:</span> <span class="nc">NotificationService</span> <span class="p">=</span> <span class="nc">InMemoryNotificationService</span><span class="p">()</span>
 
@@ -852,8 +852,8 @@
 16
 17
 18
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.versioning.CredentialVersioning</span>
-<span class="k">import</span> <span class="nn">com.trustweave.versioning.InMemoryCredentialVersioning</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.versioning.CredentialVersioning</span>
+<span class="k">import</span> <span class="nn">org.trustweave.versioning.InMemoryCredentialVersioning</span>
 
 <span class="kd">val</span> <span class="py">versioning</span><span class="p">:</span> <span class="nc">CredentialVersioning</span> <span class="p">=</span> <span class="nc">InMemoryCredentialVersioning</span><span class="p">()</span>
 
@@ -898,8 +898,8 @@
 14
 15
 16
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.backup.CredentialBackup</span>
-<span class="k">import</span> <span class="nn">com.trustweave.backup.InMemoryCredentialBackup</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.backup.CredentialBackup</span>
+<span class="k">import</span> <span class="nn">org.trustweave.backup.InMemoryCredentialBackup</span>
 
 <span class="kd">val</span> <span class="py">backup</span><span class="p">:</span> <span class="nc">CredentialBackup</span> <span class="p">=</span> <span class="nc">InMemoryCredentialBackup</span><span class="p">()</span>
 
@@ -947,8 +947,8 @@
 19
 20
 21
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.expiration.ExpirationManager</span>
-<span class="k">import</span> <span class="nn">com.trustweave.expiration.InMemoryExpirationManager</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.expiration.ExpirationManager</span>
+<span class="k">import</span> <span class="nn">org.trustweave.expiration.InMemoryExpirationManager</span>
 
 <span class="kd">val</span> <span class="py">expiration</span><span class="p">:</span> <span class="nc">ExpirationManager</span> <span class="p">=</span> <span class="nc">InMemoryExpirationManager</span><span class="p">()</span>
 
@@ -995,9 +995,9 @@
 13
 14
 15
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.analytics.AnalyticsService</span>
-<span class="k">import</span> <span class="nn">com.trustweave.analytics.InMemoryAnalyticsService</span>
-<span class="k">import</span> <span class="nn">com.trustweave.analytics.ReportPeriod</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.analytics.AnalyticsService</span>
+<span class="k">import</span> <span class="nn">org.trustweave.analytics.InMemoryAnalyticsService</span>
+<span class="k">import</span> <span class="nn">org.trustweave.analytics.ReportPeriod</span>
 
 <span class="kd">val</span> <span class="py">analytics</span><span class="p">:</span> <span class="nc">AnalyticsService</span> <span class="p">=</span> <span class="nc">InMemoryAnalyticsService</span><span class="p">()</span>
 
@@ -1033,8 +1033,8 @@
 9
 10
 11
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.oidc4vci.Oidc4VciService</span>
-<span class="k">import</span> <span class="nn">com.trustweave.oidc4vci.InMemoryOidc4VciService</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.oidc4vci.Oidc4VciService</span>
+<span class="k">import</span> <span class="nn">org.trustweave.oidc4vci.InMemoryOidc4VciService</span>
 
 <span class="kd">val</span> <span class="py">oidc4vci</span><span class="p">:</span> <span class="nc">Oidc4VciService</span> <span class="p">=</span> <span class="nc">InMemoryOidc4VciService</span><span class="p">()</span>
 
@@ -1074,9 +1074,9 @@
 16
 17
 18
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.didcomm.DidCommService</span>
-<span class="k">import</span> <span class="nn">com.trustweave.didcomm.InMemoryDidCommService</span>
-<span class="k">import</span> <span class="nn">com.trustweave.didcomm.DidCommMessage</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.didcomm.DidCommService</span>
+<span class="k">import</span> <span class="nn">org.trustweave.didcomm.InMemoryDidCommService</span>
+<span class="k">import</span> <span class="nn">org.trustweave.didcomm.DidCommMessage</span>
 
 <span class="kd">val</span> <span class="py">didcomm</span><span class="p">:</span> <span class="nc">DidCommService</span> <span class="p">=</span> <span class="nc">InMemoryDidCommService</span><span class="p">()</span>
 
@@ -1120,8 +1120,8 @@
 14
 15
 16
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.chapi.ChapiService</span>
-<span class="k">import</span> <span class="nn">com.trustweave.chapi.InMemoryChapiService</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.chapi.ChapiService</span>
+<span class="k">import</span> <span class="nn">org.trustweave.chapi.InMemoryChapiService</span>
 
 <span class="kd">val</span> <span class="py">chapi</span><span class="p">:</span> <span class="nc">ChapiService</span> <span class="p">=</span> <span class="nc">InMemoryChapiService</span><span class="p">()</span>
 
@@ -1167,9 +1167,9 @@
 17
 18
 19
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.multiparty.MultiPartyIssuance</span>
-<span class="k">import</span> <span class="nn">com.trustweave.multiparty.InMemoryMultiPartyIssuance</span>
-<span class="k">import</span> <span class="nn">com.trustweave.multiparty.ConsensusType</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.multiparty.MultiPartyIssuance</span>
+<span class="k">import</span> <span class="nn">org.trustweave.multiparty.InMemoryMultiPartyIssuance</span>
+<span class="k">import</span> <span class="nn">org.trustweave.multiparty.ConsensusType</span>
 
 <span class="kd">val</span> <span class="py">multiParty</span><span class="p">:</span> <span class="nc">MultiPartyIssuance</span> <span class="p">=</span> <span class="nc">InMemoryMultiPartyIssuance</span><span class="p">()</span>
 
@@ -1207,8 +1207,8 @@
 7
 8
 9
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.health.HealthCheckService</span>
-<span class="k">import</span> <span class="nn">com.trustweave.health.InMemoryHealthCheckService</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.health.HealthCheckService</span>
+<span class="k">import</span> <span class="nn">org.trustweave.health.InMemoryHealthCheckService</span>
 
 <span class="kd">val</span> <span class="py">health</span><span class="p">:</span> <span class="nc">HealthCheckService</span> <span class="p">=</span> <span class="nc">InMemoryHealthCheckService</span><span class="p">()</span>
 
@@ -1242,9 +1242,9 @@
 12
 13
 14
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.rendering.CredentialRenderer</span>
-<span class="k">import</span> <span class="nn">com.trustweave.rendering.InMemoryCredentialRenderer</span>
-<span class="k">import</span> <span class="nn">com.trustweave.rendering.RenderingFormat</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.rendering.CredentialRenderer</span>
+<span class="k">import</span> <span class="nn">org.trustweave.rendering.InMemoryCredentialRenderer</span>
+<span class="k">import</span> <span class="nn">org.trustweave.rendering.RenderingFormat</span>
 
 <span class="kd">val</span> <span class="py">renderer</span><span class="p">:</span> <span class="nc">CredentialRenderer</span> <span class="p">=</span> <span class="nc">InMemoryCredentialRenderer</span><span class="p">()</span>
 
@@ -1311,10 +1311,10 @@
 41
 42
 43
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.audit.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.metrics.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.qrcode.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.audit.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.metrics.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.qrcode.*</span>
 
 <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
 <span class="kd">val</span> <span class="py">auditLogger</span> <span class="p">=</span> <span class="nc">InMemoryAuditLogger</span><span class="p">()</span>

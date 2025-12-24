@@ -38,9 +38,9 @@ This format matches the official DID Method Registry structure from https://iden
 ### 2. Load and Register Methods
 
 ```kotlin
-import com.trustweave.did.registration.DidMethodRegistration
-import com.trustweave.did.registry.DidMethodRegistry
-import com.trustweave.kms.InMemoryKeyManagementService
+import org.trustweave.did.registration.DidMethodRegistration
+import org.trustweave.did.registry.DidMethodRegistry
+import org.trustweave.kms.InMemoryKeyManagementService
 
 val kms = InMemoryKeyManagementService()
 val registry = DidMethodRegistry()
@@ -143,7 +143,7 @@ The `implementations` array specifies available resolver services:
 ### Using JsonDidMethodLoader Directly
 
 ```kotlin
-import com.trustweave.did.registration.JsonDidMethodLoader
+import org.trustweave.did.registration.JsonDidMethodLoader
 
 val loader = JsonDidMethodLoader(kms)
 
@@ -160,7 +160,7 @@ val methods = loader.loadFromClasspath("did-methods")
 The `JsonDidMethodProvider` can be registered via Java ServiceLoader:
 
 ```kotlin
-import com.trustweave.did.registration.JsonDidMethodProvider
+import org.trustweave.did.registration.JsonDidMethodProvider
 
 // Create provider from classpath
 val provider = JsonDidMethodProvider.fromClasspath(kms)

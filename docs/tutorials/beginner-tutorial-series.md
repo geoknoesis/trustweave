@@ -43,17 +43,17 @@ Create a new Kotlin project and add dependencies:
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 }
 ```
 
 ### Step 2: Create TrustWeave Instance
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -73,11 +73,11 @@ fun main() = runBlocking {
 ### Step 3: Create Your First DID
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.did.resolver.DidResolutionResult
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -213,7 +213,7 @@ fun main() = runBlocking {
     }
 
     // Create issuer DID (the organization issuing credentials)
-    import com.trustweave.trust.types.DidCreationResult
+    import org.trustweave.trust.types.DidCreationResult
     
     val issuerDidResult = trustWeave.createDid { method(DidMethods.KEY) }
     val issuerDid = when (issuerDidResult) {
@@ -251,11 +251,11 @@ fun main() = runBlocking {
 import kotlinx.coroutines.runBlocking
 
 // TrustWeave core
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.credential.*
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.credential.*
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
@@ -297,7 +297,7 @@ fun main() = runBlocking {
         ?: throw IllegalStateException("No verification method found")
 
     // Issue a credential using DSL
-    import com.trustweave.trust.types.IssuanceResult
+    import org.trustweave.trust.types.IssuanceResult
     import java.time.Instant
     
     val issuanceResult = trustWeave.issue {
@@ -455,11 +455,11 @@ fun main() = runBlocking {
 import kotlinx.coroutines.runBlocking
 
 // TrustWeave core
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.wallet.*
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.wallet.*
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
@@ -483,7 +483,7 @@ fun main() = runBlocking {
     }
 
     // Create wallet for the holder
-    import com.trustweave.trust.types.WalletCreationResult
+    import org.trustweave.trust.types.WalletCreationResult
     
     val walletResult = trustWeave.wallet {
         holder(holderDid.value)
@@ -681,11 +681,11 @@ fun main() = runBlocking {
 ### Step 1: Setup All Parties
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.did.resolver.DidResolutionResult
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -822,11 +822,11 @@ fun main() = runBlocking {
 import kotlinx.coroutines.runBlocking
 
 // TrustWeave core
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.presentation.*
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.presentation.*
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
@@ -869,10 +869,10 @@ fun main() = runBlocking {
 ### Step 5: Verify Presentation (Verifier)
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -989,12 +989,12 @@ fun main() = runBlocking {
 import kotlinx.coroutines.runBlocking
 
 // TrustWeave core
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.anchor.*
-import com.trustweave.anchor.options.*
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.anchor.*
+import org.trustweave.anchor.options.*
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {

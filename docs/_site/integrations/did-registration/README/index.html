@@ -698,9 +698,9 @@
 22
 23
 24
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.registration.DidMethodRegistration</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.registry.DidMethodRegistry</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.InMemoryKeyManagementService</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.registration.DidMethodRegistration</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.registry.DidMethodRegistry</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.InMemoryKeyManagementService</span>
 
 <span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
 <span class="kd">val</span> <span class="py">registry</span> <span class="p">=</span> <span class="nc">DidMethodRegistry</span><span class="p">()</span>
@@ -897,7 +897,7 @@
 8
 9
 10
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.registration.JsonDidMethodLoader</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.registration.JsonDidMethodLoader</span>
 
 <span class="kd">val</span> <span class="py">loader</span> <span class="p">=</span> <span class="nc">JsonDidMethodLoader</span><span class="p">(</span><span class="n">kms</span><span class="p">)</span>
 
@@ -929,7 +929,7 @@
 8
 9
 10
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.registration.JsonDidMethodProvider</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.registration.JsonDidMethodProvider</span>
 
 <span class="c1">// Create provider from classpath</span>
 <span class="kd">val</span> <span class="py">provider</span> <span class="p">=</span> <span class="nc">JsonDidMethodProvider</span><span class="p">.</span><span class="nf">fromClasspath</span><span class="p">(</span><span class="n">kms</span><span class="p">)</span>

@@ -666,9 +666,9 @@
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
 3
-</pre></td><td class="rouge-code"><pre>META-INF/services/com.trustweave.did.spi.DidMethodProvider
-META-INF/services/com.trustweave.kms.spi.KeyManagementServiceProvider
-META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
+</pre></td><td class="rouge-code"><pre>META-INF/services/org.trustweave.did.spi.DidMethodProvider
+META-INF/services/org.trustweave.kms.spi.KeyManagementServiceProvider
+META-INF/services/org.trustweave.anchor.spi.BlockchainAnchorClientProvider
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
 <p>Each file contains the fully qualified class name of the provider implementation.</p>
@@ -700,7 +700,7 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
 9
 10
 11
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.spi.DidMethodProvider</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.spi.DidMethodProvider</span>
 <span class="k">import</span> <span class="nn">java.util.ServiceLoader</span>
 
 <span class="c1">// Discover DID method providers</span>
@@ -741,8 +741,8 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
 14
 15
 16
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.spi.DidMethodProvider</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.spi.DidMethodProvider</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.*</span>
 
 <span class="kd">class</span> <span class="nc">MyDidMethodProvider</span> <span class="p">:</span> <span class="nc">DidMethodProvider</span> <span class="p">{</span>
     <span class="k">override</span> <span class="kd">val</span> <span class="py">name</span><span class="p">:</span> <span class="nc">String</span> <span class="p">=</span> <span class="s">"my-did-method"</span>
@@ -774,7 +774,7 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
 <p>Create a service file at:</p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-</pre></td><td class="rouge-code"><pre>src/main/resources/META-INF/services/com.trustweave.did.spi.DidMethodProvider
+</pre></td><td class="rouge-code"><pre>src/main/resources/META-INF/services/org.trustweave.did.spi.DidMethodProvider
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
 <p>With content:</p>
@@ -861,7 +861,7 @@ META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider
 4
 </pre></td><td class="rouge-code"><pre><span class="c1">// Add chains/plugins/algorand dependency to enable Algorand adapter</span>
 <span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:chains/plugins/algorand:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:chains/plugins/algorand:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="loose-coupling">

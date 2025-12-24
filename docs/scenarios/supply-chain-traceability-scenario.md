@@ -174,10 +174,10 @@ Add TrustWeave dependencies to your `build.gradle.kts`. These modules provide DI
 dependencies {
     // Core TrustWeave modules
     // TrustWeave distribution (includes all modules)
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Test kit for in-memory implementations
-    testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -194,19 +194,19 @@ dependencies {
 Here's a complete example demonstrating supply chain traceability:
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.core.TestkitKmsFactory
-import com.trustweave.core.TestkitDidMethodFactory
-import com.trustweave.trust.types.DidCreationResult
-import com.trustweave.credential.results.IssuanceResult
-import com.trustweave.credential.model.vc.ProofSuiteId
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.models.VerifiablePresentation
-import com.trustweave.credential.PresentationOptions
-import com.trustweave.testkit.credential.InMemoryWallet
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.trustweave.anchor.BlockchainAnchorRegistry
-import com.trustweave.anchor.anchorTyped
+import org.trustweave.TrustWeave
+import org.trustweave.core.TestkitKmsFactory
+import org.trustweave.core.TestkitDidMethodFactory
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.model.vc.ProofSuiteId
+import org.trustweave.credential.models.VerifiableCredential
+import org.trustweave.credential.models.VerifiablePresentation
+import org.trustweave.credential.PresentationOptions
+import org.trustweave.testkit.credential.InMemoryWallet
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.anchor.BlockchainAnchorRegistry
+import org.trustweave.anchor.anchorTyped
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
@@ -338,9 +338,9 @@ val didResolver = CredentialDidResolver { did ->
 
     // Step 5: Anchor origin event to blockchain
     println("\nStep 5: Anchoring origin event to blockchain...")
-    val originDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
+    val originDigest = org.trustweave.json.DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(
-            com.trustweave.credential.models.VerifiableCredential.serializer(),
+            org.trustweave.credential.models.VerifiableCredential.serializer(),
             originCredential
         )
     )
@@ -401,9 +401,9 @@ val didResolver = CredentialDidResolver { did ->
 
     // Step 7: Anchor transfer event
     println("\nStep 7: Anchoring transfer event...")
-    val transferDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
+    val transferDigest = org.trustweave.json.DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(
-            com.trustweave.credential.models.VerifiableCredential.serializer(),
+            org.trustweave.credential.models.VerifiableCredential.serializer(),
             issuedTransferCredential
         )
     )
@@ -548,7 +548,7 @@ suspend fun createOriginCredential(
     }
     
     return when (result) {
-        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create origin credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -585,7 +585,7 @@ suspend fun createTransferCredential(
     }
     
     return when (result) {
-        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create transfer credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -622,7 +622,7 @@ suspend fun createSaleCredential(
     }
     
     return when (result) {
-        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create sale credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -638,7 +638,7 @@ suspend fun verifyProvenanceChain(
         val verification = trustWeave.verify {
             credential(credential)
         }
-        if (verification !is com.trustweave.credential.results.VerificationResult.Valid) return false
+        if (verification !is org.trustweave.credential.results.VerificationResult.Valid) return false
     }
 
     // Verify chain continuity (each credential references previous)
@@ -646,9 +646,9 @@ suspend fun verifyProvenanceChain(
         val current = credentials[i]
         val previous = credentials[i - 1]
 
-        val previousDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
+        val previousDigest = org.trustweave.json.DigestUtils.sha256DigestMultibase(
             Json.encodeToJsonElement(
-                com.trustweave.credential.models.VerifiableCredential.serializer(),
+                org.trustweave.credential.models.VerifiableCredential.serializer(),
                 previous
             )
         )
@@ -870,7 +870,7 @@ suspend fun createProcessingCredential(
     }
     
     return when (result) {
-        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create processing credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -910,7 +910,7 @@ suspend fun addQualityCertification(
     }
     
     return when (result) {
-        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create quality certification: ${result.allErrors.joinToString()}")
     }
 }
@@ -946,7 +946,7 @@ suspend fun recallProducts(
         }
         
         when (result) {
-            is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+            is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
             else -> throw IllegalStateException("Failed to create recall credential: ${result.allErrors.joinToString()}")
         }
     }

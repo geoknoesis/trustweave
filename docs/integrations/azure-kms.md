@@ -24,7 +24,7 @@ Add the Azure Key Vault module to your dependencies:
 ```kotlin
 dependencies {
     // Only need to add the Azure KMS plugin - core dependencies are included transitively
-    implementation("com.trustweave.kms:azure:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.kms:azure:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -37,7 +37,7 @@ dependencies {
 The Azure Key Vault provider can be configured via options map or environment variables:
 
 ```kotlin
-import com.trustweave.kms.*
+import org.trustweave.kms.*
 
 // Simple factory API - no ServiceLoader needed!
 val kms = KeyManagementServices.create("azure", mapOf(
@@ -115,7 +115,7 @@ val kms = AzureKeyManagementService(config ?: throw IllegalStateException("Azure
 You can also configure directly using the builder:
 
 ```kotlin
-import com.trustweave.azurekms.*
+import org.trustweave.azurekms.*
 
 val config = AzureKmsConfig.builder()
     .vaultUrl("https://myvault.vault.azure.net")
@@ -165,9 +165,9 @@ if (kms?.supportsAlgorithm(Algorithm.P256) == true) {
 ### Generating Keys
 
 ```kotlin
-import com.trustweave.kms.*
-import com.trustweave.kms.KmsOptionKeys
-import com.trustweave.kms.results.*
+import org.trustweave.kms.*
+import org.trustweave.kms.KmsOptionKeys
+import org.trustweave.kms.results.*
 
 // Generate P-256 key
 val result = kms.generateKey(Algorithm.P256)
@@ -437,8 +437,8 @@ val kms = azureProvider?.create(mapOf(
 ### Basic Setup
 
 ```kotlin
-import com.trustweave.*
-import com.trustweave.azurekms.*
+import org.trustweave.*
+import org.trustweave.azurekms.*
 
 val TrustWeave = TrustWeave.create {
     kms = AzureKeyManagementService(

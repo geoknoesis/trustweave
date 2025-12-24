@@ -23,7 +23,7 @@ Add the Google Cloud KMS module to your dependencies:
 ```kotlin
 dependencies {
     // Only need to add the Google Cloud KMS plugin - core dependencies are included transitively
-    implementation("com.trustweave.kms:google:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.kms:google:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -36,7 +36,7 @@ dependencies {
 The Google Cloud KMS provider can be configured via options map or environment variables:
 
 ```kotlin
-import com.trustweave.kms.*
+import org.trustweave.kms.*
 
 // Simple factory API - no ServiceLoader needed!
 val kms = KeyManagementServices.create("google-cloud-kms", mapOf(
@@ -117,7 +117,7 @@ val kms = GoogleCloudKeyManagementService(config ?: throw IllegalStateException(
 You can also configure directly using the builder:
 
 ```kotlin
-import com.trustweave.googlekms.*
+import org.trustweave.googlekms.*
 
 val config = GoogleKmsConfig.builder()
     .projectId("my-project")
@@ -168,9 +168,9 @@ if (kms?.supportsAlgorithm(Algorithm.Secp256k1) == true) {
 ### Generating Keys
 
 ```kotlin
-import com.trustweave.kms.*
-import com.trustweave.kms.KmsOptionKeys
-import com.trustweave.kms.results.*
+import org.trustweave.kms.*
+import org.trustweave.kms.KmsOptionKeys
+import org.trustweave.kms.results.*
 
 // Generate secp256k1 key
 val result = kms.generateKey(Algorithm.Secp256k1)
@@ -424,8 +424,8 @@ val kms = googleProvider?.create(mapOf(
 ### Basic Setup
 
 ```kotlin
-import com.trustweave.*
-import com.trustweave.googlekms.*
+import org.trustweave.*
+import org.trustweave.googlekms.*
 
 val TrustWeave = TrustWeave.create {
     kms = GoogleCloudKeyManagementService(

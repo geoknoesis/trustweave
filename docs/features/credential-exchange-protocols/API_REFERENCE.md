@@ -869,13 +869,13 @@ try {
 
 Plugin-specific exceptions are located in their respective plugin modules:
 
-- **DIDComm**: `com.trustweave.credential.didcomm.exception.DidCommException`
+- **DIDComm**: `org.trustweave.credential.didcomm.exception.DidCommException`
   - `EncryptionFailed`, `DecryptionFailed`, `PackingFailed`, `UnpackingFailed`, `ProtocolError`
 
-- **OIDC4VCI**: `com.trustweave.credential.oidc4vci.exception.Oidc4VciException`
+- **OIDC4VCI**: `org.trustweave.credential.oidc4vci.exception.Oidc4VciException`
   - `HttpRequestFailed`, `TokenExchangeFailed`, `MetadataFetchFailed`, `CredentialRequestFailed`
 
-- **CHAPI**: `com.trustweave.credential.chapi.exception.ChapiException`
+- **CHAPI**: `org.trustweave.credential.chapi.exception.ChapiException`
   - `BrowserNotAvailable`
 
 All plugin exceptions extend `ExchangeException`, ensuring consistent error handling.

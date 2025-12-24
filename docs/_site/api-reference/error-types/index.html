@@ -1226,8 +1226,8 @@
 20
 21
 22
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.exception.DidException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.exception.DidException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.exception.TrustWeaveException</span>
 
 <span class="k">try</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span> <span class="p">}</span>
@@ -1279,8 +1279,8 @@
 19
 20
 21
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.exception.CredentialException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.exception.CredentialException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.exception.TrustWeaveException</span>
 
 <span class="k">try</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">credential</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">issue</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
@@ -1374,8 +1374,8 @@
 62
 63
 64
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.anchor.exceptions.BlockchainException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.anchor.exceptions.BlockchainException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.exception.TrustWeaveException</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.Serializable</span>
 
 <span class="nd">@Serializable</span>
@@ -1464,8 +1464,8 @@
 14
 15
 16
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.wallet.exception.WalletException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.wallet.exception.WalletException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.exception.TrustWeaveException</span>
 
 <span class="k">try</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">wallet</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">wallet</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
@@ -1508,7 +1508,7 @@
 14
 15
 16
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.core.exception.TrustWeaveException</span>
 
 <span class="k">try</span> <span class="p">{</span>
     <span class="c1">// ... operation</span>

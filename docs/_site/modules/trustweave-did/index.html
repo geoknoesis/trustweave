@@ -618,9 +618,9 @@
 4
 5
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
@@ -719,8 +719,8 @@
 9
 10
 11
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.identifiers.Did</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.identifiers.Did</span>
 
 <span class="kd">interface</span> <span class="nc">DidMethod</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">method</span><span class="p">:</span> <span class="nc">String</span>  <span class="c1">// e.g., "key", "web", "ion"</span>
@@ -775,7 +775,7 @@
 3
 4
 5
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.identifiers.Did</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.identifiers.Did</span>
 
 <span class="kd">val</span> <span class="py">resolver</span> <span class="p">=</span> <span class="nc">RegistryBasedResolver</span><span class="p">(</span><span class="n">registry</span><span class="p">)</span>
 <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="nc">Did</span><span class="p">(</span><span class="s">"did:key:z6Mk..."</span><span class="p">)</span>
@@ -801,7 +801,7 @@
 5
 6
 7
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.registrar.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.registrar.*</span>
 
 <span class="kd">interface</span> <span class="nc">DidRegistrar</span> <span class="p">{</span>
     <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">createDid</span><span class="p">(</span><span class="n">method</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="nc">CreateDidOptions</span><span class="p">):</span> <span class="nc">DidRegistrationResponse</span>
@@ -951,8 +951,8 @@
 25
 26
 27
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.*</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
@@ -995,17 +995,17 @@
 <p>TrustWeave provides implementations for:</p>
 
 <ul>
-  <li><strong>did:key</strong> (<code class="language-plaintext highlighter-rouge">com.trustweave.did:key</code>) – Native did:key implementation. See <a href="/trustweave/integrations/key-did/">Key DID Integration Guide</a>.</li>
-  <li><strong>did:web</strong> (<code class="language-plaintext highlighter-rouge">com.trustweave.did:web</code>) – Web DID method. See <a href="/trustweave/integrations/web-did/">Web DID Integration Guide</a>.</li>
-  <li><strong>did:ethr</strong> (<code class="language-plaintext highlighter-rouge">com.trustweave.did:ethr</code>) – Ethereum DID method. See <a href="/trustweave/integrations/ethr-did/">Ethereum DID Integration Guide</a>.</li>
-  <li><strong>did:ion</strong> (<code class="language-plaintext highlighter-rouge">com.trustweave.did:ion</code>) – Microsoft ION DID method. See <a href="/trustweave/integrations/ion-did/">ION DID Integration Guide</a>.</li>
-  <li><strong>did:jwk</strong> (<code class="language-plaintext highlighter-rouge">com.trustweave.did:jwk</code>) – JWK DID method. See <a href="/trustweave/integrations/jwk-did/">JWK DID Integration Guide</a>.</li>
-  <li><strong>did:peer</strong> (<code class="language-plaintext highlighter-rouge">com.trustweave.did:peer</code>) – Peer DID method. See <a href="/trustweave/integrations/peer-did/">Peer DID Integration Guide</a>.</li>
-  <li><strong>did:plc</strong> (<code class="language-plaintext highlighter-rouge">com.trustweave.did:plc</code>) – PLC DID method. See <a href="/trustweave/integrations/plc-did/">PLC DID Integration Guide</a>.</li>
-  <li><strong>did:ens</strong> (<code class="language-plaintext highlighter-rouge">com.trustweave.did:ens</code>) – ENS DID method. See <a href="/trustweave/integrations/ens-did/">ENS DID Integration Guide</a>.</li>
-  <li><strong>did:polygon</strong> (<code class="language-plaintext highlighter-rouge">com.trustweave.did:polygon</code>) – Polygon DID method. See <a href="/trustweave/integrations/polygon-did/">Polygon DID Integration Guide</a>.</li>
-  <li><strong>did:sol</strong> (<code class="language-plaintext highlighter-rouge">com.trustweave.did:sol</code>) – Solana DID method. See <a href="/trustweave/integrations/sol-did/">Solana DID Integration Guide</a>.</li>
-  <li><strong>did:cheqd</strong> (<code class="language-plaintext highlighter-rouge">com.trustweave.did:cheqd</code>) – Cheqd DID method. See <a href="/trustweave/integrations/cheqd-did/">Cheqd DID Integration Guide</a>.</li>
+  <li><strong>did:key</strong> (<code class="language-plaintext highlighter-rouge">org.trustweave.did:key</code>) – Native did:key implementation. See <a href="/trustweave/integrations/key-did/">Key DID Integration Guide</a>.</li>
+  <li><strong>did:web</strong> (<code class="language-plaintext highlighter-rouge">org.trustweave.did:web</code>) – Web DID method. See <a href="/trustweave/integrations/web-did/">Web DID Integration Guide</a>.</li>
+  <li><strong>did:ethr</strong> (<code class="language-plaintext highlighter-rouge">org.trustweave.did:ethr</code>) – Ethereum DID method. See <a href="/trustweave/integrations/ethr-did/">Ethereum DID Integration Guide</a>.</li>
+  <li><strong>did:ion</strong> (<code class="language-plaintext highlighter-rouge">org.trustweave.did:ion</code>) – Microsoft ION DID method. See <a href="/trustweave/integrations/ion-did/">ION DID Integration Guide</a>.</li>
+  <li><strong>did:jwk</strong> (<code class="language-plaintext highlighter-rouge">org.trustweave.did:jwk</code>) – JWK DID method. See <a href="/trustweave/integrations/jwk-did/">JWK DID Integration Guide</a>.</li>
+  <li><strong>did:peer</strong> (<code class="language-plaintext highlighter-rouge">org.trustweave.did:peer</code>) – Peer DID method. See <a href="/trustweave/integrations/peer-did/">Peer DID Integration Guide</a>.</li>
+  <li><strong>did:plc</strong> (<code class="language-plaintext highlighter-rouge">org.trustweave.did:plc</code>) – PLC DID method. See <a href="/trustweave/integrations/plc-did/">PLC DID Integration Guide</a>.</li>
+  <li><strong>did:ens</strong> (<code class="language-plaintext highlighter-rouge">org.trustweave.did:ens</code>) – ENS DID method. See <a href="/trustweave/integrations/ens-did/">ENS DID Integration Guide</a>.</li>
+  <li><strong>did:polygon</strong> (<code class="language-plaintext highlighter-rouge">org.trustweave.did:polygon</code>) – Polygon DID method. See <a href="/trustweave/integrations/polygon-did/">Polygon DID Integration Guide</a>.</li>
+  <li><strong>did:sol</strong> (<code class="language-plaintext highlighter-rouge">org.trustweave.did:sol</code>) – Solana DID method. See <a href="/trustweave/integrations/sol-did/">Solana DID Integration Guide</a>.</li>
+  <li><strong>did:cheqd</strong> (<code class="language-plaintext highlighter-rouge">org.trustweave.did:cheqd</code>) – Cheqd DID method. See <a href="/trustweave/integrations/cheqd-did/">Cheqd DID Integration Guide</a>.</li>
 </ul>
 
 <p>Additionally, the module supports HTTP-based DID methods through JSON configuration. See <a href="/trustweave/integrations/did-registration/README/">DID Registration Integration Guide</a> for details.</p>
@@ -1020,7 +1020,7 @@
 
 <pre><code class="language-mermaid">graph TD
     subgraph "did:did-core Package Structure"
-        A[com.trustweave.did]
+        A[org.trustweave.did]
         A --&gt; B[DidMethod.kt]
         A --&gt; C[DidCreationOptions.kt]
         A --&gt; D[model/]

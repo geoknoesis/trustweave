@@ -231,9 +231,9 @@ fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
 
     // 2. Create DIDs
-    import com.trustweave.trust.types.DidCreationResult
-    import com.trustweave.trust.types.IssuanceResult
-    import com.trustweave.trust.types.WalletCreationResult
+    import org.trustweave.trust.types.DidCreationResult
+    import org.trustweave.trust.types.IssuanceResult
+    import org.trustweave.trust.types.WalletCreationResult
     
     val issuerDidResult = trustWeave.createDid { method(KEY) }
     val issuerDid = when (issuerDidResult) {

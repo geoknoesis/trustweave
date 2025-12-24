@@ -141,7 +141,7 @@ Add TrustWeave dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -158,13 +158,13 @@ Here's the full event ticketing flow using the TrustWeave facade API:
 ```kotlin
 package com.example.event.ticketing
 
-import com.trustweave.TrustWeave
-import com.trustweave.core.*
-import com.trustweave.credential.PresentationOptions
-import com.trustweave.credential.wallet.Wallet
-import com.trustweave.spi.services.WalletCreationOptionsBuilder
+import org.trustweave.TrustWeave
+import org.trustweave.core.*
+import org.trustweave.credential.PresentationOptions
+import org.trustweave.credential.wallet.Wallet
+import org.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
-import com.trustweave.credential.format.ProofSuiteId
+import org.trustweave.credential.format.ProofSuiteId
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -182,8 +182,8 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for event organizer, attendee, and venue
-    import com.trustweave.trust.types.DidCreationResult
-    import com.trustweave.trust.types.WalletCreationResult
+    import org.trustweave.trust.types.DidCreationResult
+    import org.trustweave.trust.types.WalletCreationResult
     
     val organizerDidResult = trustWeave.createDid { method(KEY) }
     val organizerDid = when (organizerDidResult) {
@@ -223,7 +223,7 @@ fun main() = runBlocking {
     println("✅ Venue DID: ${venueDid.value}")
 
     // Step 3: Issue event ticket credential
-    import com.trustweave.trust.types.IssuanceResult
+    import org.trustweave.trust.types.IssuanceResult
     
     val ticketCredentialResult = trustWeave.issue {
         credential {
@@ -289,7 +289,7 @@ fun main() = runBlocking {
     // Step 6: Verify ticket before venue entry
     println("\n🎫 Pre-Entry Ticket Verification:")
 
-    import com.trustweave.trust.types.VerificationResult
+    import org.trustweave.trust.types.VerificationResult
     
     val ticketVerification = trustWeave.verify {
         credential(ticketCredential)

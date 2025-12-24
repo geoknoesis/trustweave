@@ -52,10 +52,10 @@ EncryptedFileLocalKeyStore
 ### Implementation Steps
 
 #### Step 1: Create Encryption Utilities
-**File**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/crypto/secret/encryption/KeyEncryption.kt`
+**File**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/crypto/secret/encryption/KeyEncryption.kt`
 
 ```kotlin
-package com.trustweave.credential.didcomm.crypto.secret.encryption
+package org.trustweave.credential.didcomm.crypto.secret.encryption
 
 import javax.crypto.Cipher
 import javax.crypto.spec.GCMParameterSpec
@@ -137,12 +137,12 @@ object MasterKeyDerivation {
 ```
 
 #### Step 2: Implement File Format
-**File**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/crypto/secret/EncryptedFileLocalKeyStore.kt`
+**File**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/crypto/secret/EncryptedFileLocalKeyStore.kt`
 
 ```kotlin
-package com.trustweave.credential.didcomm.crypto.secret
+package org.trustweave.credential.didcomm.crypto.secret
 
-import com.trustweave.credential.didcomm.crypto.secret.encryption.*
+import org.trustweave.credential.didcomm.crypto.secret.encryption.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -396,12 +396,12 @@ PostgresDidCommMessageStorage
 ### Implementation Steps
 
 #### Step 1: Create Message Encryption Service
-**File**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/encryption/MessageEncryption.kt`
+**File**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/encryption/MessageEncryption.kt`
 
 ```kotlin
-package com.trustweave.credential.didcomm.storage.encryption
+package org.trustweave.credential.didcomm.storage.encryption
 
-import com.trustweave.credential.didcomm.models.DidCommMessage
+import org.trustweave.credential.didcomm.models.DidCommMessage
 import kotlinx.serialization.json.*
 import javax.crypto.Cipher
 import javax.crypto.spec.GCMParameterSpec
@@ -500,7 +500,7 @@ class AesMessageEncryption(
 ```
 
 #### Step 2: Update Storage Interface
-**File**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/DidCommMessageStorage.kt`
+**File**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/DidCommMessageStorage.kt`
 
 Add optional encryption parameter:
 
@@ -518,7 +518,7 @@ interface DidCommMessageStorage {
 ```
 
 #### Step 3: Update PostgreSQL Storage
-**File**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/database/PostgresDidCommMessageStorage.kt`
+**File**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/database/PostgresDidCommMessageStorage.kt`
 
 Add encryption support:
 
@@ -571,7 +571,7 @@ CREATE INDEX IF NOT EXISTS idx_messages_key_version ON didcomm_messages(key_vers
 
 ### Key Management
 
-**File**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/encryption/EncryptionKeyManager.kt`
+**File**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/encryption/EncryptionKeyManager.kt`
 
 ```kotlin
 /**
@@ -620,10 +620,10 @@ implementation("org.mongodb:mongodb-driver-kotlin-coroutine:4.11.0")
 ```
 
 #### Step 2: Create MongoDB Storage
-**File**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/database/MongoDidCommMessageStorage.kt`
+**File**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/database/MongoDidCommMessageStorage.kt`
 
 ```kotlin
-package com.trustweave.credential.didcomm.storage.database
+package org.trustweave.credential.didcomm.storage.database
 
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Indexes
@@ -631,8 +631,8 @@ import com.mongodb.client.model.Sorts
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoCollection
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
-import com.trustweave.credential.didcomm.models.DidCommMessage
-import com.trustweave.credential.didcomm.storage.*
+import org.trustweave.credential.didcomm.models.DidCommMessage
+import org.trustweave.credential.didcomm.storage.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -849,12 +849,12 @@ Message Archiver
 ### Implementation Steps
 
 #### Step 1: Create Archive Policy
-**File**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/archive/ArchivePolicy.kt`
+**File**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/archive/ArchivePolicy.kt`
 
 ```kotlin
-package com.trustweave.credential.didcomm.storage.archive
+package org.trustweave.credential.didcomm.storage.archive
 
-import com.trustweave.credential.didcomm.models.DidCommMessage
+import org.trustweave.credential.didcomm.models.DidCommMessage
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -900,13 +900,13 @@ class CompositeArchivePolicy(
 ```
 
 #### Step 2: Create Archive Service
-**File**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/archive/MessageArchiver.kt`
+**File**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/archive/MessageArchiver.kt`
 
 ```kotlin
-package com.trustweave.credential.didcomm.storage.archive
+package org.trustweave.credential.didcomm.storage.archive
 
-import com.trustweave.credential.didcomm.models.DidCommMessage
-import com.trustweave.credential.didcomm.storage.DidCommMessageStorage
+import org.trustweave.credential.didcomm.models.DidCommMessage
+import org.trustweave.credential.didcomm.storage.DidCommMessageStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -1058,13 +1058,13 @@ Primary Database
 ### Implementation Steps
 
 #### Step 1: Create Replication Manager
-**File**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/replication/ReplicationManager.kt`
+**File**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/replication/ReplicationManager.kt`
 
 ```kotlin
-package com.trustweave.credential.didcomm.storage.replication
+package org.trustweave.credential.didcomm.storage.replication
 
-import com.trustweave.credential.didcomm.models.DidCommMessage
-import com.trustweave.credential.didcomm.storage.DidCommMessageStorage
+import org.trustweave.credential.didcomm.models.DidCommMessage
+import org.trustweave.credential.didcomm.storage.DidCommMessageStorage
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -1129,7 +1129,7 @@ class ReplicationManager(
 ```
 
 #### Step 2: Health Checks
-**File**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/replication/ReplicaHealthCheck.kt`
+**File**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/replication/ReplicaHealthCheck.kt`
 
 ```kotlin
 /**
@@ -1174,12 +1174,12 @@ Advanced Search
 ### Implementation Steps
 
 #### Step 1: Create Search Interface
-**File**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/search/AdvancedSearch.kt`
+**File**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/search/AdvancedSearch.kt`
 
 ```kotlin
-package com.trustweave.credential.didcomm.storage.search
+package org.trustweave.credential.didcomm.storage.search
 
-import com.trustweave.credential.didcomm.models.DidCommMessage
+import org.trustweave.credential.didcomm.models.DidCommMessage
 
 /**
  * Advanced search interface.
@@ -1255,7 +1255,7 @@ enum class ComparisonOperator {
 ```
 
 #### Step 2: PostgreSQL Full-Text Search
-**File**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/search/PostgresFullTextSearch.kt`
+**File**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/search/PostgresFullTextSearch.kt`
 
 ```kotlin
 /**
@@ -1335,12 +1335,12 @@ Analytics Engine
 ### Implementation Steps
 
 #### Step 1: Create Analytics Service
-**File**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/analytics/MessageAnalytics.kt`
+**File**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/analytics/MessageAnalytics.kt`
 
 ```kotlin
-package com.trustweave.credential.didcomm.storage.analytics
+package org.trustweave.credential.didcomm.storage.analytics
 
-import com.trustweave.credential.didcomm.models.DidCommMessage
+import org.trustweave.credential.didcomm.models.DidCommMessage
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -1415,7 +1415,7 @@ data class DidStatistics(
 ```
 
 #### Step 2: Implement Analytics
-**File**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/analytics/PostgresMessageAnalytics.kt`
+**File**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/analytics/PostgresMessageAnalytics.kt`
 
 ```kotlin
 /**
@@ -1477,10 +1477,10 @@ Key Rotation Manager
 ### Implementation Steps
 
 #### Step 1: Create Rotation Policy
-**File**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/crypto/rotation/KeyRotationPolicy.kt`
+**File**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/crypto/rotation/KeyRotationPolicy.kt`
 
 ```kotlin
-package com.trustweave.credential.didcomm.crypto.rotation
+package org.trustweave.credential.didcomm.crypto.rotation
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -1535,13 +1535,13 @@ class UsageBasedRotationPolicy(
 ```
 
 #### Step 2: Create Rotation Manager
-**File**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/crypto/rotation/KeyRotationManager.kt`
+**File**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/crypto/rotation/KeyRotationManager.kt`
 
 ```kotlin
-package com.trustweave.credential.didcomm.crypto.rotation
+package org.trustweave.credential.didcomm.crypto.rotation
 
-import com.trustweave.credential.didcomm.crypto.secret.LocalKeyStore
-import com.trustweave.kms.KeyManagementService
+import org.trustweave.credential.didcomm.crypto.secret.LocalKeyStore
+import org.trustweave.kms.KeyManagementService
 import org.didcommx.didcomm.secret.Secret
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -1653,7 +1653,7 @@ data class KeyRotationResult(
 ```
 
 #### Step 3: Scheduled Rotation
-**File**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/crypto/rotation/ScheduledKeyRotation.kt`
+**File**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/crypto/rotation/ScheduledKeyRotation.kt`
 
 ```kotlin
 /**

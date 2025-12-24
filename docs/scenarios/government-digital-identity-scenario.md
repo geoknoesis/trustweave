@@ -179,10 +179,10 @@ Add TrustWeave dependencies to your `build.gradle.kts`. These modules provide DI
 dependencies {
     // Core TrustWeave modules
     // TrustWeave distribution (includes all modules)
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Test kit for in-memory implementations
-    testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -199,24 +199,24 @@ dependencies {
 Here’s the full government digital identity workflow. Run it once to see every step—from agency issuance to citizen presentation—before diving into the detailed breakdowns.
 
 ```kotlin
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.models.VerifiablePresentation
-import com.trustweave.credential.CredentialIssuanceOptions
-import com.trustweave.credential.CredentialVerificationOptions
-import com.trustweave.credential.PresentationOptions
-import com.trustweave.credential.issuer.CredentialIssuer
-import com.trustweave.credential.verifier.CredentialVerifier
-import com.trustweave.credential.proof.Ed25519ProofGenerator
-import com.trustweave.credential.proof.ProofGeneratorRegistry
-import com.trustweave.testkit.credential.InMemoryWallet
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.trustweave.anchor.BlockchainAnchorRegistry
-import com.trustweave.testkit.did.DidKeyMockMethod
-import com.trustweave.testkit.kms.InMemoryKeyManagementService
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.trustweave.anchor.BlockchainAnchorRegistry
-import com.trustweave.anchor.anchorTyped
-import com.trustweave.did.DidMethodRegistry
+import org.trustweave.credential.models.VerifiableCredential
+import org.trustweave.credential.models.VerifiablePresentation
+import org.trustweave.credential.CredentialIssuanceOptions
+import org.trustweave.credential.CredentialVerificationOptions
+import org.trustweave.credential.PresentationOptions
+import org.trustweave.credential.issuer.CredentialIssuer
+import org.trustweave.credential.verifier.CredentialVerifier
+import org.trustweave.credential.proof.Ed25519ProofGenerator
+import org.trustweave.credential.proof.ProofGeneratorRegistry
+import org.trustweave.testkit.credential.InMemoryWallet
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.anchor.BlockchainAnchorRegistry
+import org.trustweave.testkit.did.DidKeyMockMethod
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.anchor.BlockchainAnchorRegistry
+import org.trustweave.anchor.anchorTyped
+import org.trustweave.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
@@ -251,7 +251,7 @@ fun main() = runBlocking {
 
     // Step 2: Create government agency DIDs
     println("\nStep 2: Creating government agency DIDs...")
-    import com.trustweave.trust.types.DidCreationResult
+    import org.trustweave.trust.types.DidCreationResult
     
     val dmvDidResult = trustWeave.createDid { method(KEY) }
     val dmvDid = when (dmvDidResult) {
@@ -309,7 +309,7 @@ fun main() = runBlocking {
         holderDid(citizenDid.value)
     }
     val citizenWallet = when (walletResult) {
-        is com.trustweave.trust.types.WalletCreationResult.Success -> {
+        is org.trustweave.trust.types.WalletCreationResult.Success -> {
             println("Citizen wallet created: ${walletResult.wallet.walletId}")
             walletResult.wallet
         }
@@ -420,13 +420,13 @@ fun main() = runBlocking {
     }
 
     when (licenseVerification) {
-        is com.trustweave.credential.results.VerificationResult.Valid -> {
+        is org.trustweave.credential.results.VerificationResult.Valid -> {
             println("✅ Driver's license credential is valid!")
             println("  - Proof valid: true")
             println("  - Issuer valid: true")
             println("  - Not expired: true")
         }
-        is com.trustweave.credential.results.VerificationResult.Invalid -> {
+        is org.trustweave.credential.results.VerificationResult.Invalid -> {
             println("❌ Driver's license credential is invalid!")
             println("  - Errors: ${licenseVerification.allErrors.joinToString()}")
         }
@@ -449,9 +449,9 @@ fun main() = runBlocking {
 
     // Step 12: Anchor identity documents to blockchain
     println("\nStep 12: Anchoring identity documents to blockchain...")
-    val licenseDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
+    val licenseDigest = org.trustweave.json.DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(
-            com.trustweave.credential.models.VerifiableCredential.serializer(),
+            org.trustweave.credential.models.VerifiableCredential.serializer(),
             driversLicenseCredential
         )
     )
@@ -620,7 +620,7 @@ suspend fun verifyCrossBorderIdentity(
         credential(passportCredential)
     }
 
-    if (verification !is com.trustweave.credential.results.VerificationResult.Valid) return false
+    if (verification !is org.trustweave.credential.results.VerificationResult.Valid) return false
 
     // Check if passport is from recognized issuing country
     val issuerDid = passportCredential.issuer

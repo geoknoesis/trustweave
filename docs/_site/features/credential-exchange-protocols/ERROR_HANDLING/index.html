@@ -669,10 +669,10 @@
 28
 29
 30
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.exchange.exception.ExchangeException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.didcomm.exception.DidCommException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.oidc4vci.exception.Oidc4VciException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.chapi.exception.ChapiException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.exchange.exception.ExchangeException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.didcomm.exception.DidCommException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.oidc4vci.exception.Oidc4VciException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.chapi.exception.ChapiException</span>
 
 <span class="k">try</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">offer</span> <span class="p">=</span> <span class="n">registry</span><span class="p">.</span><span class="nf">offerCredential</span><span class="p">(</span><span class="s">"didcomm"</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
@@ -1075,7 +1075,7 @@
 <p>DIDComm-specific exceptions are located in the <code class="language-plaintext highlighter-rouge">didcomm</code> plugin module and extend <code class="language-plaintext highlighter-rouge">ExchangeException</code>:</p>
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.didcomm.exception.DidCommException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.didcomm.exception.DidCommException</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h4 id="didcommexceptionencryptionfailed">
   
@@ -1113,7 +1113,7 @@
 9
 10
 11
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.didcomm.exception.DidCommException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.didcomm.exception.DidCommException</span>
 
 <span class="k">try</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">offer</span> <span class="p">=</span> <span class="n">registry</span><span class="p">.</span><span class="nf">offerCredential</span><span class="p">(</span><span class="s">"didcomm"</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
@@ -1183,7 +1183,7 @@
 7
 8
 9
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.didcomm.exception.DidCommException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.didcomm.exception.DidCommException</span>
 
 <span class="k">try</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">message</span> <span class="p">=</span> <span class="n">didCommService</span><span class="p">.</span><span class="nf">unpack</span><span class="p">(</span><span class="n">encryptedMessage</span><span class="p">)</span>
@@ -1271,7 +1271,7 @@
 <p>OIDC4VCI-specific exceptions are located in the <code class="language-plaintext highlighter-rouge">oidc4vci</code> plugin module and extend <code class="language-plaintext highlighter-rouge">ExchangeException</code>:</p>
 
 <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.oidc4vci.exception.Oidc4VciException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.oidc4vci.exception.Oidc4VciException</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h4 id="oidc4vciexceptionhttprequestfailed">
   
@@ -1308,7 +1308,7 @@
 8
 9
 10
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.oidc4vci.exception.Oidc4VciException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.oidc4vci.exception.Oidc4VciException</span>
 
 <span class="k">try</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">offer</span> <span class="p">=</span> <span class="n">registry</span><span class="p">.</span><span class="nf">offerCredential</span><span class="p">(</span><span class="s">"oidc4vci"</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
@@ -1376,7 +1376,7 @@
 7
 8
 9
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.oidc4vci.exception.Oidc4VciException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.oidc4vci.exception.Oidc4VciException</span>
 
 <span class="k">try</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">token</span> <span class="p">=</span> <span class="n">oidc4vciService</span><span class="p">.</span><span class="nf">exchangeToken</span><span class="p">(</span><span class="n">authorizationCode</span><span class="p">)</span>
@@ -1419,7 +1419,7 @@
 7
 8
 9
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.oidc4vci.exception.Oidc4VciException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.oidc4vci.exception.Oidc4VciException</span>
 
 <span class="k">try</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">metadata</span> <span class="p">=</span> <span class="n">oidc4vciService</span><span class="p">.</span><span class="nf">fetchCredentialIssuerMetadata</span><span class="p">(</span><span class="n">issuerUrl</span><span class="p">)</span>
@@ -1462,7 +1462,7 @@
 7
 8
 9
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.oidc4vci.exception.Oidc4VciException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.oidc4vci.exception.Oidc4VciException</span>
 
 <span class="k">try</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">credential</span> <span class="p">=</span> <span class="n">oidc4vciService</span><span class="p">.</span><span class="nf">requestCredential</span><span class="p">(</span><span class="n">accessToken</span><span class="p">,</span> <span class="n">credentialOffer</span><span class="p">)</span>
@@ -2186,8 +2186,8 @@
 32
 33
 34
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.exchange.exception.ExchangeException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.didcomm.exception.DidCommException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.exchange.exception.ExchangeException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.didcomm.exception.DidCommException</span>
 
 <span class="k">try</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">offer</span> <span class="p">=</span> <span class="n">registry</span><span class="p">.</span><span class="nf">offerCredential</span><span class="p">(</span><span class="s">"didcomm"</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
@@ -2524,7 +2524,7 @@
 4
 5
 6
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.exchange.exception.retryExchangeOperation</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.exchange.exception.retryExchangeOperation</span>
 
 <span class="c1">// Automatically retries on transient errors</span>
 <span class="kd">val</span> <span class="py">offer</span> <span class="p">=</span> <span class="nf">retryExchangeOperation</span><span class="p">(</span><span class="n">maxRetries</span> <span class="p">=</span> <span class="mi">3</span><span class="p">)</span> <span class="p">{</span>
@@ -2553,7 +2553,7 @@
 11
 12
 13
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.exchange.exception.ExchangeExceptionRecovery</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.exchange.exception.ExchangeExceptionRecovery</span>
 
 <span class="kd">val</span> <span class="py">exception</span><span class="p">:</span> <span class="nc">ExchangeException</span> <span class="p">=</span> <span class="c1">// ... get exception</span>
 
@@ -2620,7 +2620,7 @@
 6
 7
 8
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.exchange.exception.ExchangeException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.exchange.exception.ExchangeException</span>
 
 <span class="c1">// Use companion object for convenience</span>
 <span class="k">if</span> <span class="p">(</span><span class="nc">ExchangeException</span><span class="p">.</span><span class="nf">isRetryable</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span> <span class="p">{</span>

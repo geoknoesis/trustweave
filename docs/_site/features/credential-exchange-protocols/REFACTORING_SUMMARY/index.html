@@ -636,7 +636,7 @@
 </h3>
     
 
-<p><strong>Created</strong>: <code class="language-plaintext highlighter-rouge">credentials/credential-core/src/main/kotlin/com/trustweave/credential/storage/ProtocolMessage.kt</code></p>
+<p><strong>Created</strong>: <code class="language-plaintext highlighter-rouge">credentials/credential-core/src/main/kotlin/org.trustweave/credential/storage/ProtocolMessage.kt</code></p>
 
 <ul>
   <li>Generic interface for all protocol messages</li>
@@ -654,7 +654,7 @@
 </h3>
     
 
-<p><strong>Created</strong>: <code class="language-plaintext highlighter-rouge">credentials/credential-core/src/main/kotlin/com/trustweave/credential/storage/ProtocolMessageStorage.kt</code></p>
+<p><strong>Created</strong>: <code class="language-plaintext highlighter-rouge">credentials/credential-core/src/main/kotlin/org.trustweave/credential/storage/ProtocolMessageStorage.kt</code></p>
 
 <ul>
   <li>Generic storage interface that works with any <code class="language-plaintext highlighter-rouge">ProtocolMessage</code></li>
@@ -670,7 +670,7 @@
 </h3>
     
 
-<p><strong>Created</strong>: <code class="language-plaintext highlighter-rouge">credentials/credential-core/src/main/kotlin/com/trustweave/credential/storage/database/PostgresMessageStorage.kt</code></p>
+<p><strong>Created</strong>: <code class="language-plaintext highlighter-rouge">credentials/credential-core/src/main/kotlin/org.trustweave/credential/storage/database/PostgresMessageStorage.kt</code></p>
 
 <ul>
   <li>Generic PostgreSQL storage that works with any <code class="language-plaintext highlighter-rouge">ProtocolMessage</code> type</li>
@@ -716,7 +716,7 @@
 </h3>
     
 
-<p><strong>Created</strong>: <code class="language-plaintext highlighter-rouge">credentials/credential-core/src/main/kotlin/com/trustweave/credential/storage/encryption/</code></p>
+<p><strong>Created</strong>: <code class="language-plaintext highlighter-rouge">credentials/credential-core/src/main/kotlin/org.trustweave/credential/storage/encryption/</code></p>
 
 <ul>
   <li><code class="language-plaintext highlighter-rouge">MessageEncryption.kt</code> - Generic message encryption interface and AES-256-GCM implementation</li>
@@ -733,7 +733,7 @@
 </h3>
     
 
-<p><strong>Created</strong>: <code class="language-plaintext highlighter-rouge">credentials/credential-core/src/main/kotlin/com/trustweave/credential/crypto/</code></p>
+<p><strong>Created</strong>: <code class="language-plaintext highlighter-rouge">credentials/credential-core/src/main/kotlin/org.trustweave/credential/crypto/</code></p>
 
 <ul>
   <li><code class="language-plaintext highlighter-rouge">secret/LocalKeyStore.kt</code> - Generic key storage interface</li>
@@ -751,7 +751,7 @@
 </h3>
     
 
-<p><strong>Created</strong>: <code class="language-plaintext highlighter-rouge">credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/DidCommMessageStorageAdapter.kt</code></p>
+<p><strong>Created</strong>: <code class="language-plaintext highlighter-rouge">credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/DidCommMessageStorageAdapter.kt</code></p>
 
 <ul>
   <li>Adapter to bridge DIDComm-specific storage interface with generic storage</li>
@@ -795,7 +795,7 @@
 26
 </pre></td><td class="rouge-code"><pre>credentials/
 ├── credential-core/
-│   └── src/main/kotlin/com/trustweave/credential/
+│   └── src/main/kotlin/org.trustweave/credential/
 │       ├── storage/
 │       │   ├── ProtocolMessage.kt                    [NEW]
 │       │   ├── ProtocolMessageStorage.kt             [NEW]
@@ -814,7 +814,7 @@
 │
 └── plugins/
     └── didcomm/
-        └── src/main/kotlin/com/trustweave/credential/didcomm/
+        └── src/main/kotlin/org.trustweave/credential/didcomm/
             ├── models/
             │   └── DidCommMessage.kt                 [UPDATED - implements ProtocolMessage]
             └── storage/

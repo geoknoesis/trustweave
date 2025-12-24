@@ -33,8 +33,8 @@ Complete workflow showing all three parties in a credential ecosystem. This exam
 ```kotlin
 package com.example.patterns.workflow
 
-import com.trustweave.TrustWeave
-import com.trustweave.core.*
+import org.trustweave.TrustWeave
+import org.trustweave.core.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -219,8 +219,8 @@ Process multiple DIDs or credentials efficiently using coroutines.
 ```kotlin
 package com.example.patterns.batch
 
-import com.trustweave.TrustWeave
-import com.trustweave.core.*
+import org.trustweave.TrustWeave
+import org.trustweave.core.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -251,8 +251,8 @@ fun main() = runBlocking {
     }
 
     // Batch credential creation
-    import com.trustweave.trust.types.DidCreationResult
-    import com.trustweave.credential.results.IssuanceResult
+    import org.trustweave.trust.types.DidCreationResult
+    import org.trustweave.credential.results.IssuanceResult
     
     val credentials = (1..10).mapAsync { index ->
         runCatching {
@@ -321,15 +321,15 @@ Handle errors gracefully with fallback strategies.
 ```kotlin
 package com.example.patterns.recovery
 
-import com.trustweave.TrustWeave
-import com.trustweave.core.*
+import org.trustweave.TrustWeave
+import org.trustweave.core.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
 
     // Pattern: Try multiple DID methods with fallback
-    import com.trustweave.trust.types.DidCreationResult
+    import org.trustweave.trust.types.DidCreationResult
     
     suspend fun createDidWithFallback(methods: List<String>): Did? {
         for (method in methods) {
@@ -394,10 +394,10 @@ Manage credentials through their entire lifecycle: issuance, storage, presentati
 ```kotlin
 package com.example.patterns.lifecycle
 
-import com.trustweave.TrustWeave
-import com.trustweave.core.*
-import com.trustweave.credential.PresentationOptions
-import com.trustweave.spi.services.WalletCreationOptionsBuilder
+import org.trustweave.TrustWeave
+import org.trustweave.core.*
+import org.trustweave.credential.PresentationOptions
+import org.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -544,11 +544,11 @@ Anchor the same credential to multiple blockchains for redundancy and interopera
 ```kotlin
 package com.example.patterns.multichain
 
-import com.trustweave.TrustWeave
-import com.trustweave.anchor.BlockchainAnchorRegistry
-import com.trustweave.core.*
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.TrustWeave
+import org.trustweave.anchor.BlockchainAnchorRegistry
+import org.trustweave.core.*
+import org.trustweave.credential.models.VerifiableCredential
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
@@ -639,9 +639,9 @@ Organize credentials efficiently using collections, tags, and metadata.
 ```kotlin
 package com.example.patterns.organization
 
-import com.trustweave.TrustWeave
-import com.trustweave.core.*
-import com.trustweave.spi.services.WalletCreationOptionsBuilder
+import org.trustweave.TrustWeave
+import org.trustweave.core.*
+import org.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put

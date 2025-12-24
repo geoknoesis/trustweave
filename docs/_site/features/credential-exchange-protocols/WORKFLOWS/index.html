@@ -745,12 +745,12 @@
 18
 19
 20
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.exchange.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.didcomm.exchange.DidCommExchangeProtocol</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.didcomm.DidCommFactory</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.KeyManagementService</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.InMemoryKeyManagementService</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.DidDocument</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.exchange.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.didcomm.exchange.DidCommExchangeProtocol</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.didcomm.DidCommFactory</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.KeyManagementService</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.InMemoryKeyManagementService</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.DidDocument</span>
 
 <span class="c1">// Setup dependencies</span>
 <span class="kd">val</span> <span class="py">kms</span><span class="p">:</span> <span class="nc">KeyManagementService</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
@@ -960,7 +960,7 @@
 33
 34
 35
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.models.VerifiableCredential</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.models.VerifiableCredential</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.buildJsonObject</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.put</span>
 

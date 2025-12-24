@@ -25,7 +25,7 @@ Add the InMemory KMS module to your dependencies:
 ```kotlin
 dependencies {
     // Only need to add the InMemory KMS plugin - core dependencies are included transitively
-    implementation("com.trustweave.kms:inmemory:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.kms:inmemory:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -34,8 +34,8 @@ dependencies {
 ## Quick Start
 
 ```kotlin
-import com.trustweave.kms.inmemory.*
-import com.trustweave.kms.*
+import org.trustweave.kms.inmemory.*
+import org.trustweave.kms.*
 
 // Create service (no configuration needed)
 val kms = InMemoryKeyManagementService()
@@ -87,7 +87,7 @@ val kms = InMemoryKeyManagementService()
 The plugin registers itself via Java ServiceLoader:
 
 ```kotlin
-import com.trustweave.kms.*
+import org.trustweave.kms.*
 
 // Simple factory API - no ServiceLoader needed!
 val kms = KeyManagementServices.create("inmemory")  // No options needed
@@ -109,7 +109,7 @@ val kms = KeyManagementServices.create("inmemory")  // No options needed
 ## Key Options
 
 ```kotlin
-import com.trustweave.kms.KmsOptionKeys
+import org.trustweave.kms.KmsOptionKeys
 
 val result = kms.generateKey(
     Algorithm.Ed25519,

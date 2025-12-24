@@ -647,7 +647,7 @@
 2
 3
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:TrustWeave-inmemory-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:TrustWeave-inmemory-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="quick-start">
@@ -697,8 +697,8 @@
 36
 37
 38
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.inmemory.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.inmemory.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
 
 <span class="c1">// Create service (no configuration needed)</span>
 <span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
@@ -768,7 +768,7 @@
 5
 6
 </pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">java.util.ServiceLoader</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.spi.KeyManagementServiceProvider</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.spi.KeyManagementServiceProvider</span>
 
 <span class="kd">val</span> <span class="py">providers</span> <span class="p">=</span> <span class="nc">ServiceLoader</span><span class="p">.</span><span class="nf">load</span><span class="p">(</span><span class="nc">KeyManagementServiceProvider</span><span class="o">::</span><span class="k">class</span><span class="p">.</span><span class="n">java</span><span class="p">)</span>
 <span class="kd">val</span> <span class="py">inMemoryProvider</span> <span class="p">=</span> <span class="n">providers</span><span class="p">.</span><span class="nf">find</span> <span class="p">{</span> <span class="n">it</span><span class="p">.</span><span class="n">name</span> <span class="p">==</span> <span class="s">"inmemory"</span> <span class="p">}</span>
@@ -851,7 +851,7 @@
 6
 7
 8
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.KmsOptionKeys</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.KmsOptionKeys</span>
 
 <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">kms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span>
     <span class="nc">Algorithm</span><span class="p">.</span><span class="nc">Ed25519</span><span class="p">,</span>

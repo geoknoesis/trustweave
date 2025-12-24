@@ -64,7 +64,7 @@ This guide covers how to implement new credential exchange protocols using the p
 credentials/plugins/your-protocol/
 ├── build.gradle.kts
 ├── README.md
-└── src/main/kotlin/com/trustweave/credential/yourprotocol/
+└── src/main/kotlin/org.trustweave/credential/yourprotocol/
     ├── YourProtocolService.kt
     ├── models/
     │   └── YourProtocolModels.kt
@@ -77,9 +77,9 @@ credentials/plugins/your-protocol/
 ### Step 2: Implement CredentialExchangeProtocol
 
 ```kotlin
-package com.trustweave.credential.yourprotocol.exchange
+package org.trustweave.credential.yourprotocol.exchange
 
-import com.trustweave.credential.exchange.*
+import org.trustweave.credential.exchange.*
 
 class YourProtocolExchangeProtocol(
     private val service: YourProtocolService
@@ -116,7 +116,7 @@ class YourProtocolExchangeProtocol(
 ### Step 3: Create Service Implementation
 
 ```kotlin
-package com.trustweave.credential.yourprotocol
+package org.trustweave.credential.yourprotocol
 
 class YourProtocolService {
     suspend fun createOffer(
@@ -132,10 +132,10 @@ class YourProtocolService {
 ### Step 4: Create SPI Provider
 
 ```kotlin
-package com.trustweave.credential.yourprotocol.exchange.spi
+package org.trustweave.credential.yourprotocol.exchange.spi
 
-import com.trustweave.credential.exchange.CredentialExchangeProtocol
-import com.trustweave.credential.exchange.spi.CredentialExchangeProtocolProvider
+import org.trustweave.credential.exchange.CredentialExchangeProtocol
+import org.trustweave.credential.exchange.spi.CredentialExchangeProtocolProvider
 
 class YourProtocolExchangeProtocolProvider : CredentialExchangeProtocolProvider {
     override val name = "yourprotocol"
@@ -158,10 +158,10 @@ class YourProtocolExchangeProtocolProvider : CredentialExchangeProtocolProvider 
 
 ### Step 5: Register SPI Provider
 
-Create `src/main/resources/META-INF/services/com.trustweave.credential.exchange.spi.CredentialExchangeProtocolProvider`:
+Create `src/main/resources/META-INF/services/org.trustweave.credential.exchange.spi.CredentialExchangeProtocolProvider`:
 
 ```
-com.trustweave.credential.yourprotocol.exchange.spi.YourProtocolExchangeProtocolProvider
+org.trustweave.credential.yourprotocol.exchange.spi.YourProtocolExchangeProtocolProvider
 ```
 
 ### Step 6: Add to Build File

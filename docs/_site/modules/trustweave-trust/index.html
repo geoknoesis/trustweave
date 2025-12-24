@@ -617,7 +617,7 @@ between credential workflows and registry/provider integrations.</p>
 2
 3
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-trust:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-trust:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
@@ -658,8 +658,8 @@ resolution logic.</li>
 9
 10
 11
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.TrustRegistry</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.TrustAnchorMetadata</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.TrustRegistry</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.TrustAnchorMetadata</span>
 
 <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">seedTrust</span><span class="p">(</span><span class="n">registry</span><span class="p">:</span> <span class="nc">TrustRegistry</span><span class="p">)</span> <span class="p">{</span>
     <span class="n">registry</span><span class="p">.</span><span class="nf">addTrustAnchor</span><span class="p">(</span>

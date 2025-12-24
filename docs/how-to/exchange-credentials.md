@@ -82,10 +82,10 @@ sequenceDiagram
 Here's a complete example showing unified API for all protocols:
 
 ```kotlin
-import com.trustweave.credential.exchange.*
-import com.trustweave.credential.didcomm.exchange.DidCommExchangeProtocol
-import com.trustweave.credential.oidc4vci.exchange.Oidc4VciExchangeProtocol
-import com.trustweave.credential.chapi.exchange.ChapiExchangeProtocol
+import org.trustweave.credential.exchange.*
+import org.trustweave.credential.didcomm.exchange.DidCommExchangeProtocol
+import org.trustweave.credential.oidc4vci.exchange.Oidc4VciExchangeProtocol
+import org.trustweave.credential.chapi.exchange.ChapiExchangeProtocol
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -125,10 +125,10 @@ fun main() = runBlocking {
 First, create the protocol-specific services:
 
 ```kotlin
-import com.trustweave.credential.didcomm.DidCommFactory
-import com.trustweave.credential.oidc4vci.Oidc4VciService
-import com.trustweave.credential.chapi.ChapiService
-import com.trustweave.kms.KeyManagementService
+import org.trustweave.credential.didcomm.DidCommFactory
+import org.trustweave.credential.oidc4vci.Oidc4VciService
+import org.trustweave.credential.chapi.ChapiService
+import org.trustweave.kms.KeyManagementService
 
 // Create KMS for cryptographic operations
 val kms: KeyManagementService = InMemoryKeyManagementService()
@@ -159,10 +159,10 @@ val chapiService = ChapiService(...)
 Create the registry and register all protocols:
 
 ```kotlin
-import com.trustweave.credential.exchange.CredentialExchangeProtocolRegistry
-import com.trustweave.credential.didcomm.exchange.DidCommExchangeProtocol
-import com.trustweave.credential.oidc4vci.exchange.Oidc4VciExchangeProtocol
-import com.trustweave.credential.chapi.exchange.ChapiExchangeProtocol
+import org.trustweave.credential.exchange.CredentialExchangeProtocolRegistry
+import org.trustweave.credential.didcomm.exchange.DidCommExchangeProtocol
+import org.trustweave.credential.oidc4vci.exchange.Oidc4VciExchangeProtocol
+import org.trustweave.credential.chapi.exchange.ChapiExchangeProtocol
 
 val registry = CredentialExchangeProtocolRegistry()
 
@@ -190,8 +190,8 @@ registry.register(ChapiExchangeProtocol(chapiService))
 Create a request that works with all protocols:
 
 ```kotlin
-import com.trustweave.credential.exchange.CredentialOfferRequest
-import com.trustweave.credential.exchange.CredentialPreview
+import org.trustweave.credential.exchange.CredentialOfferRequest
+import org.trustweave.credential.exchange.CredentialPreview
 
 val request = CredentialOfferRequest(
     issuerDid = "did:key:issuer",
@@ -384,7 +384,7 @@ suspend fun offerWithFallback(
 End-to-end credential exchange with protocol abstraction:
 
 ```kotlin
-import com.trustweave.credential.exchange.*
+import org.trustweave.credential.exchange.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -434,7 +434,7 @@ fun main() = runBlocking {
 Handle protocol-specific errors:
 
 ```kotlin
-import com.trustweave.credential.exchange.exception.ExchangeException
+import org.trustweave.credential.exchange.exception.ExchangeException
 
 try {
     val offer = registry.offerCredential("didcomm", request)

@@ -5,19 +5,19 @@
 ### Files Removed ✅
 
 1. **Old Credential Model** ✅
-   - `credentials/credential-api/src/main/kotlin/com/trustweave/credential/model/Credential.kt`
+   - `credentials/credential-api/src/main/kotlin/org.trustweave/credential/model/Credential.kt`
    - Old format-agnostic `Credential` class (replaced by `VerifiableCredential`)
 
 2. **Old CredentialProof** ✅
-   - `credentials/credential-api/src/main/kotlin/com/trustweave/credential/model/CredentialProof.kt`
+   - `credentials/credential-api/src/main/kotlin/org.trustweave/credential/model/CredentialProof.kt`
    - Old format-agnostic proof (replaced by VC-specific `CredentialProof` sealed class)
 
 3. **Old CredentialStatus** ✅
-   - `credentials/credential-api/src/main/kotlin/com/trustweave/credential/model/CredentialStatus.kt`
+   - `credentials/credential-api/src/main/kotlin/org.trustweave/credential/model/CredentialStatus.kt`
    - Old status model (replaced by VC-specific `CredentialStatus` in `model.vc` package)
 
 4. **EnvelopeSerialization Utility** ✅
-   - `credentials/credential-api/src/main/kotlin/com/trustweave/credential/internal/util/EnvelopeSerialization.kt`
+   - `credentials/credential-api/src/main/kotlin/org.trustweave/credential/internal/util/EnvelopeSerialization.kt`
    - Old utility for serializing format-agnostic credentials (no longer needed)
 
 ### Files That Still Need Updates

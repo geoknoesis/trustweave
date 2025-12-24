@@ -743,14 +743,14 @@
 68
 69
 70
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.types.IssuerIdentity</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.exception.DidException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.exception.DidException.DidMethodNotRegistered</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.exception.DidException.DidNotFound</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.exception.CredentialException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.types.IssuerIdentity</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.exception.TrustWeaveException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.exception.DidException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.exception.DidException.DidMethodNotRegistered</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.exception.DidException.DidNotFound</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.exception.CredentialException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
@@ -1115,10 +1115,10 @@
 20
 21
 22
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.exception.DidException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.exception.DidException.DidMethodNotRegistered</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.exception.DidException.DidNotFound</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.exception.DidException.InvalidDidFormat</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.exception.DidException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.exception.DidException.DidMethodNotRegistered</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.exception.DidException.DidNotFound</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.exception.DidException.InvalidDidFormat</span>
 
 <span class="c1">// Handle DID errors with short imports</span>
 <span class="k">try</span> <span class="p">{</span>
@@ -1167,9 +1167,9 @@
 18
 19
 20
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.exception.CredentialException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.exception.CredentialException.CredentialInvalid</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.exception.CredentialException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.exception.CredentialException.CredentialInvalid</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed</span>
 
 <span class="c1">// Handle credential errors with short imports</span>
 <span class="k">try</span> <span class="p">{</span>
@@ -1219,7 +1219,7 @@
 20
 21
 22
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.anchor.exceptions.BlockchainException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.anchor.exceptions.BlockchainException</span>
 
 <span class="c1">// Chain not registered</span>
 <span class="nc">BlockchainException</span><span class="p">.</span><span class="nc">ChainNotRegistered</span><span class="p">(</span>
@@ -1266,8 +1266,8 @@
 13
 14
 15
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.wallet.exception.WalletException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.wallet.exception.WalletException.WalletCreationFailed</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.wallet.exception.WalletException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.wallet.exception.WalletException.WalletCreationFailed</span>
 
 <span class="c1">// Handle wallet errors with short imports</span>
 <span class="k">try</span> <span class="p">{</span>
@@ -1313,7 +1313,7 @@
 20
 21
 22
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.core.exception.TrustWeaveException</span>
 
 <span class="c1">// Blank plugin ID</span>
 <span class="nc">TrustWeaveException</span><span class="p">.</span><span class="nc">BlankPluginId</span><span class="p">()</span>
@@ -1369,7 +1369,7 @@
 22
 23
 24
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.core.exception.TrustWeaveException</span>
 
 <span class="c1">// No providers found</span>
 <span class="nc">TrustWeaveException</span><span class="p">.</span><span class="nc">NoProvidersFound</span><span class="p">(</span>
@@ -1422,7 +1422,7 @@
 17
 18
 19
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.core.exception.TrustWeaveException</span>
 
 <span class="c1">// Configuration file not found</span>
 <span class="nc">TrustWeaveException</span><span class="p">.</span><span class="nc">ConfigNotFound</span><span class="p">(</span>
@@ -1477,7 +1477,7 @@
 24
 25
 26
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.core.exception.TrustWeaveException</span>
 
 <span class="c1">// Invalid JSON</span>
 <span class="nc">TrustWeaveException</span><span class="p">.</span><span class="nc">InvalidJson</span><span class="p">(</span>
@@ -1521,7 +1521,7 @@
 6
 7
 8
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.core.exception.TrustWeaveException</span>
 
 <span class="c1">// Validation failed</span>
 <span class="nc">TrustWeaveException</span><span class="p">.</span><span class="nc">ValidationFailed</span><span class="p">(</span>
@@ -1572,7 +1572,7 @@
 31
 32
 33
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.core.exception.TrustWeaveException</span>
 
 <span class="c1">// Invalid operation</span>
 <span class="nc">TrustWeaveException</span><span class="p">.</span><span class="nc">InvalidOperation</span><span class="p">(</span>
@@ -2128,8 +2128,8 @@
 26
 27
 28
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.*</span>
 
 <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
 
@@ -2238,7 +2238,7 @@
 8
 9
 10
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.core.toTrustWeaveException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.core.toTrustWeaveException</span>
 
 <span class="k">try</span> <span class="p">{</span>
     <span class="c1">// Some operation that might throw</span>
@@ -2389,7 +2389,7 @@
 15
 16
 17
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.core.util.DidValidator</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.core.util.DidValidator</span>
 
 <span class="c1">// Validate DID format</span>
 <span class="kd">val</span> <span class="py">validation</span> <span class="p">=</span> <span class="nc">DidValidator</span><span class="p">.</span><span class="nf">validateFormat</span><span class="p">(</span><span class="s">"did:key:z6Mk..."</span><span class="p">)</span>
@@ -2431,7 +2431,7 @@
 13
 14
 15
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.core.CredentialValidator</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.core.CredentialValidator</span>
 
 <span class="c1">// Validate credential structure</span>
 <span class="kd">val</span> <span class="py">validation</span> <span class="p">=</span> <span class="nc">CredentialValidator</span><span class="p">.</span><span class="nf">validateStructure</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
@@ -2470,7 +2470,7 @@
 12
 13
 14
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.core.ChainIdValidator</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.core.ChainIdValidator</span>
 
 <span class="c1">// Validate chain ID format</span>
 <span class="kd">val</span> <span class="py">validation</span> <span class="p">=</span> <span class="nc">ChainIdValidator</span><span class="p">.</span><span class="nf">validateFormat</span><span class="p">(</span><span class="s">"algorand:testnet"</span><span class="p">)</span>
@@ -2902,9 +2902,9 @@
 56
 </pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">kotlinx.coroutines.delay</span>
 <span class="k">import</span> <span class="nn">kotlin.random.Random</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.exception.DidException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.exception.CredentialException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.exception.TrustWeaveException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.exception.DidException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.exception.CredentialException</span>
 
 <span class="k">suspend</span> <span class="k">fun</span> <span class="p">&lt;</span><span class="nc">T</span><span class="p">&gt;</span> <span class="nf">retryWithBackoff</span><span class="p">(</span>
     <span class="n">maxRetries</span><span class="p">:</span> <span class="nc">Int</span> <span class="p">=</span> <span class="mi">3</span><span class="p">,</span>

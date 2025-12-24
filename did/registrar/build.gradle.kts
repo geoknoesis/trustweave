@@ -3,7 +3,7 @@ plugins {
     kotlin("plugin.serialization")
 }
 
-group = "com.trustweave"
+group = "org.trustweave"
 dependencies {
     implementation(project(":common"))
     implementation(project(":did:did-core"))

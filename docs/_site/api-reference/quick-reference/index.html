@@ -857,7 +857,7 @@
 5
 6
 7
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.types.Did</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.types.Did</span>
 
 <span class="kd">val</span> <span class="py">did</span><span class="p">:</span> <span class="nc">Did</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span>
     <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span>
@@ -871,7 +871,7 @@
 2
 3
 4
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.identifiers.Did</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.identifiers.Did</span>
 
 <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="nc">Did</span><span class="p">(</span><span class="s">"did:key:example"</span><span class="p">)</span>
 <span class="kd">val</span> <span class="py">document</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="n">context</span><span class="p">.</span><span class="nf">resolveDid</span><span class="p">(</span><span class="n">did</span><span class="p">)</span>
@@ -885,7 +885,7 @@
 5
 6
 7
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.identifiers.Did</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.identifiers.Did</span>
 
 <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="nc">Did</span><span class="p">(</span><span class="s">"did:key:example"</span><span class="p">)</span>
 <span class="kd">val</span> <span class="py">updated</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">updateDid</span> <span class="p">{</span>
@@ -899,7 +899,7 @@
 2
 3
 4
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.identifiers.Did</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.identifiers.Did</span>
 
 <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="nc">Did</span><span class="p">(</span><span class="s">"did:key:example"</span><span class="p">)</span>
 <span class="kd">val</span> <span class="py">deactivated</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">deactivateDid</span><span class="p">(</span><span class="n">did</span><span class="p">)</span>
@@ -929,7 +929,7 @@
 13
 14
 15
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.types.IssuerIdentity</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.types.IssuerIdentity</span>
 
 <span class="kd">val</span> <span class="py">issuerIdentity</span> <span class="p">=</span> <span class="nc">IssuerIdentity</span><span class="p">.</span><span class="nf">from</span><span class="p">(</span><span class="n">issuerDid</span><span class="p">,</span> <span class="n">keyId</span><span class="p">)</span>
 
@@ -958,7 +958,7 @@
 9
 10
 11
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.types.VerificationResult</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.types.VerificationResult</span>
 
 <span class="kd">val</span> <span class="py">result</span><span class="p">:</span> <span class="nc">VerificationResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">verify</span> <span class="p">{</span>
     <span class="nf">credential</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>

@@ -1,9 +1,9 @@
-package com.trustweave.testkit.templates
+package org.trustweave.testkit.templates
 
-import com.trustweave.anchor.AnchorRef
-import com.trustweave.anchor.AnchorResult
-import com.trustweave.anchor.BlockchainAnchorClient
-import com.trustweave.testkit.BasePluginTest
+import org.trustweave.anchor.AnchorRef
+import org.trustweave.anchor.AnchorResult
+import org.trustweave.anchor.BlockchainAnchorClient
+import org.trustweave.testkit.BasePluginTest
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject

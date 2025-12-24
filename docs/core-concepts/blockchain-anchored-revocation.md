@@ -84,10 +84,10 @@ Determines when status lists should be anchored to blockchain.
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
     // Add blockchain anchor client for your chain
-    implementation("com.trustweave:trustweave-anchor-algorand:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-anchor-algorand:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -96,7 +96,7 @@ dependencies {
 Choose an implementation based on your needs:
 
 ```kotlin
-import com.trustweave.credential.revocation.*
+import org.trustweave.credential.revocation.*
 
 // For development/testing
 val statusListManager = InMemoryStatusListManager()
@@ -110,7 +110,7 @@ val statusListManager = DatabaseStatusListManager(dataSource)
 Set up your blockchain anchor client:
 
 ```kotlin
-import com.trustweave.anchor.*
+import org.trustweave.anchor.*
 
 val anchorClient = AlgorandBlockchainAnchorClient(
     algodUrl = "https://testnet-api.algonode.cloud",
@@ -203,7 +203,7 @@ println("Status List Purpose: ${statusList.credentialSubject.statusPurpose}")
 When issuing a credential, include the status list reference:
 
 ```kotlin
-import com.trustweave.credential.models.*
+import org.trustweave.credential.models.*
 
 val credential = VerifiableCredential(
     id = "cred-123",
@@ -313,8 +313,8 @@ println("Status list anchored at: $anchorRef")
 Here's a complete example showing the full workflow:
 
 ```kotlin
-import com.trustweave.credential.revocation.*
-import com.trustweave.anchor.*
+import org.trustweave.credential.revocation.*
+import org.trustweave.anchor.*
 import java.time.Duration
 
 suspend fun main() {

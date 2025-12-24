@@ -12,7 +12,7 @@ Complete implementation of credential exchange protocols for TrustWeave, providi
 Get started in 5 minutes! See the [Complete Quick Start Guide](./QUICK_START.md) for a full working example.
 
 ```kotlin
-import com.trustweave.credential.exchange.*
+import org.trustweave.credential.exchange.*
 
 // Create registry
 val registry = CredentialExchangeProtocolRegistry()

@@ -37,9 +37,9 @@ After completing this guide, you will have:
 Here's a complete example showing the power of declarative configuration:
 
 ```kotlin
-import com.trustweave.trust.dsl.trustWeave
-import com.trustweave.trust.dsl.credential.*
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.dsl.credential.*
+import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -99,7 +99,7 @@ When using `trustWeave { }` with providers like `"inMemory"`, you must explicitl
 - `walletFactory` - Required when using `wallet { }`
 
 **For Testing:**
-Use testkit factories from `com.trustweave.testkit.services`:
+Use testkit factories from `org.trustweave.testkit.services`:
 - `TestkitKmsFactory()`
 - `TestkitDidMethodFactory()`
 - `TestkitBlockchainAnchorClientFactory()`
@@ -117,9 +117,9 @@ Use production factories from your KMS, DID method, and anchor client providers.
 Begin by creating a minimal TrustWeave configuration with just key management:
 
 ```kotlin
-import com.trustweave.trust.dsl.trustWeave
-import com.trustweave.trust.dsl.credential.*
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.dsl.credential.*
+import org.trustweave.testkit.services.*
 
 val trustWeave = trustWeave {
     factories(
@@ -146,9 +146,9 @@ val trustWeave = trustWeave {
 Add DID method support to your configuration:
 
 ```kotlin
-import com.trustweave.trust.dsl.trustWeave
-import com.trustweave.trust.dsl.credential.*
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.dsl.credential.*
+import org.trustweave.testkit.services.*
 
 val trustWeave = trustWeave {
     factories(
@@ -182,9 +182,9 @@ val trustWeave = trustWeave {
 Register additional DID methods for different use cases:
 
 ```kotlin
-import com.trustweave.trust.dsl.trustWeave
-import com.trustweave.trust.dsl.credential.*
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.dsl.credential.*
+import org.trustweave.testkit.services.*
 
 val trustWeave = trustWeave {
     factories(
@@ -225,9 +225,9 @@ val trustWeave = trustWeave {
 Add blockchain anchoring support for tamper evidence:
 
 ```kotlin
-import com.trustweave.trust.dsl.trustWeave
-import com.trustweave.trust.dsl.credential.*
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.dsl.credential.*
+import org.trustweave.testkit.services.*
 
 val trustWeave = trustWeave {
     factories(
@@ -273,9 +273,9 @@ val trustWeave = trustWeave {
 Add trust registry for managing trusted issuers:
 
 ```kotlin
-import com.trustweave.trust.dsl.trustWeave
-import com.trustweave.trust.dsl.credential.*
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.dsl.credential.*
+import org.trustweave.testkit.services.*
 
 val trustWeave = trustWeave {
     factories(
@@ -321,9 +321,9 @@ val trustWeave = trustWeave {
 Here's a complete production-ready configuration:
 
 ```kotlin
-import com.trustweave.trust.dsl.trustWeave
-import com.trustweave.trust.dsl.credential.*
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.dsl.credential.*
+import org.trustweave.testkit.services.*
 
 val trustWeave = trustWeave {
     factories(
@@ -360,7 +360,7 @@ val trustWeave = trustWeave {
     }
 
     credentials {
-        defaultProofType(com.trustweave.trust.types.ProofType.Ed25519Signature2020)
+        defaultProofType(org.trustweave.trust.types.ProofType.Ed25519Signature2020)
         autoAnchor(false)
     }
 }
@@ -406,7 +406,7 @@ val trustWeave = TrustWeave(config)
 ### After (Declarative DSL)
 
 ```kotlin
-import com.trustweave.testkit.services.*
+import org.trustweave.testkit.services.*
 
 // Declarative, readable configuration
 val trustWeave = trustWeave {
@@ -441,9 +441,9 @@ val trustWeave = trustWeave {
 For local development and testing:
 
 ```kotlin
-import com.trustweave.trust.dsl.trustWeave
-import com.trustweave.trust.dsl.credential.*
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.dsl.credential.*
+import org.trustweave.testkit.services.*
 
 val trustWeave = trustWeave {
     factories(
@@ -510,9 +510,9 @@ val trustWeave = trustWeave {
 Supporting multiple DID methods:
 
 ```kotlin
-import com.trustweave.trust.dsl.trustWeave
-import com.trustweave.trust.dsl.credential.*
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.dsl.credential.*
+import org.trustweave.testkit.services.*
 
 val trustWeave = trustWeave {
     factories(
@@ -547,8 +547,8 @@ val trustWeave = trustWeave {
 Handle configuration errors gracefully:
 
 ```kotlin
-import com.trustweave.core.exception.TrustWeaveException
-import com.trustweave.testkit.services.*
+import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.testkit.services.*
 
 try {
     val trustWeave = trustWeave {

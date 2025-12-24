@@ -1037,9 +1037,9 @@
 18
 19
 20
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.exception.DidException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.exception.DidException.DidMethodNotRegistered</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.exception.DidException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.exception.DidException.DidMethodNotRegistered</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.exception.TrustWeaveException</span>
 
 <span class="k">try</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span> <span class="p">}</span>
@@ -1200,8 +1200,8 @@
 11
 12
 13
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.exception.DidException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.exception.DidException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.exception.TrustWeaveException</span>
 
 <span class="k">try</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">operation</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>

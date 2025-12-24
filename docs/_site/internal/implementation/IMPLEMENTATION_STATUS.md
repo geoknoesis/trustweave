@@ -44,8 +44,8 @@
 ## ⚠️ Known Issues (Build/Compilation)
 
 The linter is showing "unresolved reference" errors for:
-- `com.trustweave.did.identifiers.Did`
-- `com.trustweave.did.identifiers.VerificationMethodId`
+- `org.trustweave.did.identifiers.Did`
+- `org.trustweave.did.identifiers.VerificationMethodId`
 
 **Root Cause:** These are likely false positives from the linter running before full compilation. The imports are correct and the package structure exists.
 
@@ -56,27 +56,27 @@ The linter is showing "unresolved reference" errors for:
 
 **Verification:**
 - All import statements are correct
-- Package structure exists: `did/did-core/src/main/kotlin/com/trustweave/did/identifiers/`
+- Package structure exists: `did/did-core/src/main/kotlin/org.trustweave/did/identifiers/`
 - Files are properly structured
 
 ## 📝 Files Modified
 
 ### New Files Created:
-1. `did/did-core/src/main/kotlin/com/trustweave/did/KeyAlgorithm.kt`
-2. `did/did-core/src/main/kotlin/com/trustweave/did/KeyPurpose.kt`
-3. `did/did-core/src/main/kotlin/com/trustweave/did/dsl/DidExtensions.kt`
-4. `did/did-core/src/main/kotlin/com/trustweave/did/dsl/ResolverExtensions.kt`
-5. `did/did-core/src/main/kotlin/com/trustweave/did/dsl/ResolutionResultExtensions.kt`
-6. `did/did-core/src/main/kotlin/com/trustweave/did/dsl/DidMethodExtensions.kt`
+1. `did/did-core/src/main/kotlin/org.trustweave/did/KeyAlgorithm.kt`
+2. `did/did-core/src/main/kotlin/org.trustweave/did/KeyPurpose.kt`
+3. `did/did-core/src/main/kotlin/org.trustweave/did/dsl/DidExtensions.kt`
+4. `did/did-core/src/main/kotlin/org.trustweave/did/dsl/ResolverExtensions.kt`
+5. `did/did-core/src/main/kotlin/org.trustweave/did/dsl/ResolutionResultExtensions.kt`
+6. `did/did-core/src/main/kotlin/org.trustweave/did/dsl/DidMethodExtensions.kt`
 
 ### Files Modified:
-1. `did/did-core/src/main/kotlin/com/trustweave/did/DidCreationOptions.kt`
-2. `did/did-core/src/main/kotlin/com/trustweave/did/DidMethod.kt`
-3. `did/did-core/src/main/kotlin/com/trustweave/did/resolver/DidResolver.kt`
-4. `did/did-core/src/main/kotlin/com/trustweave/did/resolver/RegistryBasedResolver.kt`
-5. `did/did-core/src/main/kotlin/com/trustweave/did/resolver/DidResolutionResultExtensions.kt`
-6. `did/did-core/src/main/kotlin/com/trustweave/did/resolver/DefaultUniversalResolver.kt`
-7. `did/did-core/src/main/kotlin/com/trustweave/did/verifier/DidDocumentDelegationVerifier.kt`
+1. `did/did-core/src/main/kotlin/org.trustweave/did/DidCreationOptions.kt`
+2. `did/did-core/src/main/kotlin/org.trustweave/did/DidMethod.kt`
+3. `did/did-core/src/main/kotlin/org.trustweave/did/resolver/DidResolver.kt`
+4. `did/did-core/src/main/kotlin/org.trustweave/did/resolver/RegistryBasedResolver.kt`
+5. `did/did-core/src/main/kotlin/org.trustweave/did/resolver/DidResolutionResultExtensions.kt`
+6. `did/did-core/src/main/kotlin/org.trustweave/did/resolver/DefaultUniversalResolver.kt`
+7. `did/did-core/src/main/kotlin/org.trustweave/did/verifier/DidDocumentDelegationVerifier.kt`
 
 ## 🔄 Next Steps
 
@@ -89,8 +89,8 @@ The linter is showing "unresolved reference" errors for:
 2. **Fix any remaining compilation errors** (if any appear after build)
 
 3. **Update example files** to use new top-level enums:
-   - `distribution/examples/src/main/kotlin/com/trustweave/examples/did-key/KeyDidExample.kt`
-   - `distribution/examples/src/main/kotlin/com/trustweave/examples/did-jwk/JwkDidExample.kt`
+   - `distribution/examples/src/main/kotlin/org.trustweave/examples/did-key/KeyDidExample.kt`
+   - `distribution/examples/src/main/kotlin/org.trustweave/examples/did-jwk/JwkDidExample.kt`
    - And others listed in `DID_IMPLEMENTATION_SUMMARY.md`
 
 ### Short-term:

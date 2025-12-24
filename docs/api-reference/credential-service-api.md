@@ -10,7 +10,7 @@ This document describes the SPI surface that credential issuers/verifiers plug i
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -82,7 +82,7 @@ interface CredentialServiceProvider {
 `CredentialServiceCreationOptions` replaces the old `Map<String, Any?>` pattern with a structured configuration object.
 
 ```kotlin
-import com.trustweave.credential.CredentialServiceCreationOptionsBuilder
+import org.trustweave.credential.CredentialServiceCreationOptionsBuilder
 
 val options = CredentialServiceCreationOptionsBuilder().apply {
     enabled = true

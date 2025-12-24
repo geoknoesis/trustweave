@@ -20,9 +20,9 @@ This guide shows you how to issue verifiable credentials with TrustWeave. You'll
 Here's a complete example that issues a credential:
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.did.resolver.DidResolutionResult
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -44,8 +44,8 @@ fun main() = runBlocking {
     }
 
     // Create issuer DID
-    import com.trustweave.trust.types.DidCreationResult
-    import com.trustweave.credential.results.IssuanceResult
+    import org.trustweave.trust.types.DidCreationResult
+    import org.trustweave.credential.results.IssuanceResult
     
     val didResult = trustWeave.createDid {
         method(KEY)
@@ -113,7 +113,7 @@ fun main() = runBlocking {
 First, create a DID for the issuer and extract the key ID:
 
 ```kotlin
-import com.trustweave.testkit.services.*
+import org.trustweave.testkit.services.*
 
 val trustWeave = TrustWeave.build {
     factories(
@@ -297,7 +297,7 @@ The proof type is automatically selected based on the key algorithm. For Ed25519
 Issue credentials for multiple subjects:
 
 ```kotlin
-import com.trustweave.trust.types.IssuerIdentity
+import org.trustweave.trust.types.IssuerIdentity
 
 val subjects = listOf(
     mapOf("id" to "did:key:alice", "name" to "Alice", "role" to "Engineer"),
@@ -328,7 +328,7 @@ val credentials = subjects.map { subjectData ->
 Handle errors gracefully:
 
 ```kotlin
-import com.trustweave.trust.types.IssuerIdentity
+import org.trustweave.trust.types.IssuerIdentity
 
 val issuerIdentity = IssuerIdentity.from(issuerDid, issuerKeyId)
 

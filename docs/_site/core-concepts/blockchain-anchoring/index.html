@@ -643,8 +643,8 @@
 3
 4
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-json:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-json:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
@@ -730,12 +730,12 @@
 27
 28
 29
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.*</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.Json</span>
 
 <span class="c1">// Using TrustWeave facade (recommended)</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.TrustWeave</span>
 
 <span class="kd">val</span> <span class="py">trustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
 <span class="kd">val</span> <span class="py">anchorResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="n">blockchains</span><span class="p">.</span><span class="nf">anchor</span><span class="p">(</span>
@@ -810,8 +810,8 @@
 23
 24
 25
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.*</span>
 
 <span class="c1">// Using TrustWeave facade (recommended)</span>
 <span class="kd">val</span> <span class="py">trustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>

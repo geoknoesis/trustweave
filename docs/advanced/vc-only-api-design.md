@@ -295,7 +295,7 @@ sealed class CredentialProof {
 
 ### 1. Refactor Credential Model
 
-**File:** `credentials/credential-api/src/main/kotlin/com/trustweave/credential/model/`
+**File:** `credentials/credential-api/src/main/kotlin/org.trustweave/credential/model/`
 
 - Remove: Generic `Credential` class
 - Add: `VerifiableCredential` aligned with W3C VC Data Model
@@ -304,7 +304,7 @@ sealed class CredentialProof {
 
 ### 2. Simplify Proof Adapters
 
-**File:** `credentials/credential-api/src/main/kotlin/com/trustweave/credential/spi/proof/`
+**File:** `credentials/credential-api/src/main/kotlin/org.trustweave/credential/spi/proof/`
 
 - Remove: Format-agnostic `ProofAdapter` interface
 - Add: VC-specific `VcProofAdapter` interface
@@ -328,7 +328,7 @@ sealed class CredentialProof {
 
 ### 4. Update CredentialService API
 
-**File:** `credentials/credential-api/src/main/kotlin/com/trustweave/credential/CredentialService.kt`
+**File:** `credentials/credential-api/src/main/kotlin/org.trustweave/credential/CredentialService.kt`
 
 ```kotlin
 /**
@@ -362,7 +362,7 @@ interface CredentialService {
 
 ### 5. Update Identifiers
 
-**File:** `credentials/credential-api/src/main/kotlin/com/trustweave/credential/identifiers/`
+**File:** `credentials/credential-api/src/main/kotlin/org.trustweave/credential/identifiers/`
 
 - Keep: `CredentialId`, `IssuerId`, `Iri` (base class from common module), `Did` (from did module, extends `Iri`)
 - Use: `Iri` in `CredentialSubject.id` to support DID, URI, URN, etc. (per W3C VC spec)
@@ -401,8 +401,8 @@ Iri (base class in common module)
 
 **Example:**
 ```kotlin
-import com.trustweave.core.identifiers.Iri
-import com.trustweave.did.identifiers.Did
+import org.trustweave.core.identifiers.Iri
+import org.trustweave.did.identifiers.Did
 
 // All of these work seamlessly:
 val didSubject = CredentialSubject(id = Did("did:key:..."), claims = ...)

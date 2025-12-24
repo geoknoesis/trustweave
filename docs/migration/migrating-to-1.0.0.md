@@ -41,8 +41,8 @@ val client = AlgorandBlockchainAnchorClient(
 ### After (Type-safe)
 
 ```kotlin
-import com.trustweave.anchor.options.AlgorandOptions
-import com.trustweave.anchor.ChainId
+import org.trustweave.anchor.options.AlgorandOptions
+import org.trustweave.anchor.ChainId
 
 val chainId = ChainId.Algorand.Testnet
 val options = AlgorandOptions(
@@ -187,7 +187,7 @@ val chainId = "algorand:testnet"  // Typo-prone string
 ### After
 
 ```kotlin
-import com.trustweave.anchor.ChainId
+import org.trustweave.anchor.ChainId
 
 val chainId = ChainId.Algorand.Testnet  // Compile-time safe
 // Or use string with validation

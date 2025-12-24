@@ -22,8 +22,8 @@ The tests use Testcontainers to:
 ### Basic Setup
 
 ```kotlin
-import com.trustweave.anchor.ganache.GanacheIntegration
-import com.trustweave.anchor.BlockchainAnchorRegistry
+import org.trustweave.anchor.ganache.GanacheIntegration
+import org.trustweave.anchor.BlockchainAnchorRegistry
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -43,10 +43,10 @@ val result = client.writePayload(payload)
 ### Direct Client Usage with Type-Safe Options
 
 ```kotlin
-import com.trustweave.anchor.ganache.GanacheBlockchainAnchorClient
-import com.trustweave.anchor.*
-import com.trustweave.anchor.options.GanacheOptions
-import com.trustweave.anchor.ChainId
+import org.trustweave.anchor.ganache.GanacheBlockchainAnchorClient
+import org.trustweave.anchor.*
+import org.trustweave.anchor.options.GanacheOptions
+import org.trustweave.anchor.ChainId
 
 // Type-safe chain ID
 val chainId = ChainId.Eip155.GanacheLocal
@@ -73,8 +73,8 @@ client.use {
 ### Direct Client Usage (Legacy Map-based Options)
 
 ```kotlin
-import com.trustweave.anchor.ganache.GanacheBlockchainAnchorClient
-import com.trustweave.anchor.*
+import org.trustweave.anchor.ganache.GanacheBlockchainAnchorClient
+import org.trustweave.anchor.*
 
 val client = GanacheBlockchainAnchorClient(
     chainId = "eip155:1337",
@@ -95,7 +95,7 @@ val retrieved = client.readPayload(anchorResult.ref)
 
 **Type-Safe Options (Recommended)**:
 ```kotlin
-import com.trustweave.anchor.options.GanacheOptions
+import org.trustweave.anchor.options.GanacheOptions
 
 val options = GanacheOptions(
     rpcUrl = "http://localhost:8545",  // Optional, default: "http://localhost:8545"
@@ -152,7 +152,7 @@ Tests use Testcontainers to:
 The adapter uses structured exception handling with rich error context:
 
 ```kotlin
-import com.trustweave.anchor.exceptions.*
+import org.trustweave.anchor.exceptions.*
 
 try {
     val result = client.writePayload(payload)
@@ -182,7 +182,7 @@ try {
 
 **Type-Safe Chain ID (Recommended)**:
 ```kotlin
-import com.trustweave.anchor.ChainId
+import org.trustweave.anchor.ChainId
 
 val chainId = ChainId.Eip155.GanacheLocal  // "eip155:1337"
 ```

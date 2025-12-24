@@ -90,8 +90,8 @@ val subjectId = SubjectId.fromUri("https://example.com")
 ## Files Modified
 
 ### Main Source (3 files)
-1. `did/did-core/src/main/kotlin/com/trustweave/did/identifiers/DidIdentifiers.kt` - Made constructor public
-2. `credentials/credential-api/src/main/kotlin/com/trustweave/credential/identifiers/CredentialIdentifiers.kt` - Removed `IssuerId.parse()` and `SubjectId.parse()`
+1. `did/did-core/src/main/kotlin/org.trustweave/did/identifiers/DidIdentifiers.kt` - Made constructor public
+2. `credentials/credential-api/src/main/kotlin/org.trustweave/credential/identifiers/CredentialIdentifiers.kt` - Removed `IssuerId.parse()` and `SubjectId.parse()`
 3. All files using `Did.invoke()` - Replaced with `Did()` (149 instances)
 
 ## Test Results

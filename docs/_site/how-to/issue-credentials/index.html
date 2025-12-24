@@ -725,9 +725,9 @@
 75
 76
 77
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.resolver.DidResolutionResult</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.resolver.DidResolutionResult</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
@@ -749,8 +749,8 @@
     <span class="p">}</span>
 
     <span class="c1">// Create issuer DID</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.DidCreationResult</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.IssuanceResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.DidCreationResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.IssuanceResult</span>
     
     <span class="kd">val</span> <span class="py">didResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span>
         <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span>
@@ -856,7 +856,7 @@
 23
 24
 25
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 
 <span class="kd">val</span> <span class="py">trustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span>
     <span class="nf">factories</span><span class="p">(</span>
@@ -1189,7 +1189,7 @@
 22
 23
 24
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.types.IssuerIdentity</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.types.IssuerIdentity</span>
 
 <span class="kd">val</span> <span class="py">subjects</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span>
     <span class="nf">mapOf</span><span class="p">(</span><span class="s">"id"</span> <span class="n">to</span> <span class="s">"did:key:alice"</span><span class="p">,</span> <span class="s">"name"</span> <span class="n">to</span> <span class="s">"Alice"</span><span class="p">,</span> <span class="s">"role"</span> <span class="n">to</span> <span class="s">"Engineer"</span><span class="p">),</span>
@@ -1246,7 +1246,7 @@
 19
 20
 21
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.types.IssuerIdentity</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.types.IssuerIdentity</span>
 
 <span class="kd">val</span> <span class="py">issuerIdentity</span> <span class="p">=</span> <span class="nc">IssuerIdentity</span><span class="p">.</span><span class="nf">from</span><span class="p">(</span><span class="n">issuerDid</span><span class="p">,</span> <span class="n">issuerKeyId</span><span class="p">)</span>
 

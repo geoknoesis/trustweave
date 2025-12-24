@@ -618,9 +618,9 @@
 4
 5
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-trust:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-trust:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
@@ -718,11 +718,11 @@
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 
 <span class="c1">// TrustWeave core</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.DidMethods</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.KeyAlgorithms</span>
-<span class="k">import</span> <span class="nn">com.trustweave.wallet.WalletCreationOptions</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.DidMethods</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.KeyAlgorithms</span>
+<span class="k">import</span> <span class="nn">org.trustweave.wallet.WalletCreationOptions</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="c1">// Build TrustWeave instance (for tutorials, using testkit factories)</span>
@@ -788,8 +788,8 @@
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 
 <span class="c1">// TrustWeave core</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.trustLayer</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.DidMethods</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.trustLayer</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.DidMethods</span>
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">trustLayer</span> <span class="p">=</span> <span class="nf">trustLayer</span> <span class="p">{</span>
@@ -826,8 +826,8 @@
 3
 4
 5
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.credential.BasicWallet</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.credential.InMemoryWallet</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.credential.BasicWallet</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.credential.InMemoryWallet</span>
 
 <span class="kd">val</span> <span class="py">basic</span> <span class="p">=</span> <span class="nc">BasicWallet</span><span class="p">()</span>
 <span class="kd">val</span> <span class="py">inMemory</span> <span class="p">=</span> <span class="nc">InMemoryWallet</span><span class="p">(</span><span class="n">holderDid</span> <span class="p">=</span> <span class="s">"did:key:test-holder"</span><span class="p">)</span>
@@ -871,7 +871,7 @@
 18
 19
 20
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.models.VerifiableCredential</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.models.VerifiableCredential</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.buildJsonObject</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.put</span>
 
@@ -977,7 +977,7 @@
 6
 7
 8
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.wallet.CredentialFilter</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.wallet.CredentialFilter</span>
 
 <span class="kd">val</span> <span class="py">workCredentials</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">list</span><span class="p">(</span>
     <span class="n">filter</span> <span class="p">=</span> <span class="nc">CredentialFilter</span><span class="p">(</span>
@@ -1267,7 +1267,7 @@
 14
 15
 16
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.PresentationOptions</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.PresentationOptions</span>
 
 <span class="k">if</span> <span class="p">(</span><span class="n">wallet</span> <span class="k">is</span> <span class="nc">CredentialPresentation</span><span class="p">)</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">presentation</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">createPresentation</span><span class="p">(</span>
@@ -1538,7 +1538,7 @@
 15
 16
 17
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.wallet.WalletDirectory</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.wallet.WalletDirectory</span>
 
 <span class="kd">val</span> <span class="py">directory</span> <span class="p">=</span> <span class="nc">WalletDirectory</span><span class="p">()</span>
 
@@ -1648,13 +1648,13 @@
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.put</span>
 
 <span class="c1">// TrustWeave core</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.DidMethods</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.KeyAlgorithms</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.models.VerifiableCredential</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.PresentationOptions</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.credential.InMemoryWallet</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.DidMethods</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.KeyAlgorithms</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.models.VerifiableCredential</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.PresentationOptions</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.credential.InMemoryWallet</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="c1">// Create wallet using TrustWeave service API</span>

@@ -1,10 +1,10 @@
-package com.trustweave.testkit.templates
+package org.trustweave.testkit.templates
 
-import com.trustweave.kms.Algorithm
-import com.trustweave.kms.KeyManagementService
-import com.trustweave.kms.KeyNotFoundException
-import com.trustweave.kms.UnsupportedAlgorithmException
-import com.trustweave.testkit.BasePluginTest
+import org.trustweave.kms.Algorithm
+import org.trustweave.kms.KeyManagementService
+import org.trustweave.kms.KeyNotFoundException
+import org.trustweave.kms.UnsupportedAlgorithmException
+import org.trustweave.testkit.BasePluginTest
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows

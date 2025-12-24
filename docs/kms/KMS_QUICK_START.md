@@ -39,7 +39,7 @@ This guide provides quick start examples for using TrustWeave KMS plugins. All e
 When you add a KMS plugin to your project (like `trustweave-kms-aws` or `trustweave-kms-azure`), the plugin automatically registers itself with `KeyManagementServices`. You can then create KMS instances by simply providing the provider name and configuration:
 
 ```kotlin
-import com.trustweave.kms.*
+import org.trustweave.kms.*
 
 // Create an AWS KMS instance
 val kms = KeyManagementServices.create("aws", mapOf(
@@ -63,7 +63,7 @@ The factory handles all the complexity of finding and instantiating the correct 
 Create a KMS instance by provider name:
 
 ```kotlin
-import com.trustweave.kms.*
+import org.trustweave.kms.*
 
 // AWS KMS
 val awsKms = KeyManagementServices.create("aws", mapOf(
@@ -84,8 +84,8 @@ val inMemoryKms = KeyManagementServices.create("inmemory")
 Many providers support typed configuration builders that provide compile-time safety and IDE autocomplete:
 
 ```kotlin
-import com.trustweave.kms.*
-import com.trustweave.awskms.awsKmsOptions
+import org.trustweave.kms.*
+import org.trustweave.awskms.awsKmsOptions
 
 // Type-safe configuration with IDE autocomplete
 val kms = KeyManagementServices.create("aws", awsKmsOptions {
@@ -101,7 +101,7 @@ val kms = KeyManagementServices.create("aws", awsKmsOptions {
 Check which KMS providers are available in your project:
 
 ```kotlin
-import com.trustweave.kms.*
+import org.trustweave.kms.*
 
 val providers = KeyManagementServices.availableProviders()
 println("Available providers: $providers")
@@ -117,7 +117,7 @@ println("Available providers: $providers")
 The factory provides helpful error messages when a provider isn't found:
 
 ```kotlin
-import com.trustweave.kms.*
+import org.trustweave.kms.*
 
 try {
     val kms = KeyManagementServices.create("unknown-provider")
@@ -147,9 +147,9 @@ try {
 Perfect for development and testing. No configuration required.
 
 ```kotlin
-import com.trustweave.kms.inmemory.*
-import com.trustweave.kms.*
-import com.trustweave.kms.KmsOptionKeys
+import org.trustweave.kms.inmemory.*
+import org.trustweave.kms.*
+import org.trustweave.kms.KmsOptionKeys
 
 // Create service (no configuration needed)
 val kms = InMemoryKeyManagementService()
@@ -195,7 +195,7 @@ when (result) {
 ### Configuration
 
 ```kotlin
-import com.trustweave.awskms.*
+import org.trustweave.awskms.*
 
 // Using IAM Role (Recommended for EC2/ECS/Lambda)
 val config = AwsKmsConfig.builder()
@@ -216,8 +216,8 @@ val kms = AwsKeyManagementService(config)
 ### Usage
 
 ```kotlin
-import com.trustweave.kms.*
-import com.trustweave.kms.KmsOptionKeys
+import org.trustweave.kms.*
+import org.trustweave.kms.KmsOptionKeys
 
 // Generate key with options
 val result = kms.generateKey(
@@ -253,7 +253,7 @@ when (result) {
 ### Configuration
 
 ```kotlin
-import com.trustweave.azurekms.*
+import org.trustweave.azurekms.*
 
 // Using Managed Identity (Recommended for Azure)
 val config = AzureKmsConfig.builder()
@@ -274,8 +274,8 @@ val kms = AzureKeyManagementService(config)
 ### Usage
 
 ```kotlin
-import com.trustweave.kms.*
-import com.trustweave.kms.KmsOptionKeys
+import org.trustweave.kms.*
+import org.trustweave.kms.KmsOptionKeys
 
 val result = kms.generateKey(
     Algorithm.P256,
@@ -303,7 +303,7 @@ when (result) {
 ### Configuration
 
 ```kotlin
-import com.trustweave.googlekms.*
+import org.trustweave.googlekms.*
 
 // Using Application Default Credentials (Recommended)
 val config = GoogleKmsConfig.builder()
@@ -319,8 +319,8 @@ val kms = GoogleCloudKeyManagementService(config)
 ### Usage
 
 ```kotlin
-import com.trustweave.kms.*
-import com.trustweave.kms.KmsOptionKeys
+import org.trustweave.kms.*
+import org.trustweave.kms.KmsOptionKeys
 
 val result = kms.generateKey(
     Algorithm.Ed25519,
@@ -351,7 +351,7 @@ when (result) {
 ### Configuration
 
 ```kotlin
-import com.trustweave.hashicorpkms.*
+import org.trustweave.hashicorpkms.*
 
 // Using Token Authentication
 val config = VaultKmsConfig.builder()
@@ -375,8 +375,8 @@ val kms = VaultKeyManagementService(config)
 ### Usage
 
 ```kotlin
-import com.trustweave.kms.*
-import com.trustweave.kms.KmsOptionKeys
+import org.trustweave.kms.*
+import org.trustweave.kms.KmsOptionKeys
 
 val result = kms.generateKey(
     Algorithm.Ed25519,
@@ -405,7 +405,7 @@ when (result) {
 ### Configuration
 
 ```kotlin
-import com.trustweave.kms.ibm.*
+import org.trustweave.kms.ibm.*
 
 val config = IbmKmsConfig.builder()
     .apiKey("your-api-key")
@@ -419,8 +419,8 @@ val kms = IbmKeyManagementService(config)
 ### Usage
 
 ```kotlin
-import com.trustweave.kms.*
-import com.trustweave.kms.KmsOptionKeys
+import org.trustweave.kms.*
+import org.trustweave.kms.KmsOptionKeys
 
 val result = kms.generateKey(
     Algorithm.P256,
@@ -451,8 +451,8 @@ All KMS plugins are automatically discovered via Java ServiceLoader. The recomme
 ### Using KeyManagementServices Factory (Recommended)
 
 ```kotlin
-import com.trustweave.kms.*
-import com.trustweave.kms.KmsOptionKeys
+import org.trustweave.kms.*
+import org.trustweave.kms.KmsOptionKeys
 
 // Simple factory API - no ServiceLoader needed!
 // Create KMS instances directly by provider name
@@ -480,7 +480,7 @@ val kms = awsKms
 ### Discovering Available Providers
 
 ```kotlin
-import com.trustweave.kms.*
+import org.trustweave.kms.*
 
 // Get list of all available providers
 val providers = KeyManagementServices.availableProviders()
@@ -493,7 +493,7 @@ println("Available providers: $providers")
 Once created, use the KMS instance to generate keys, sign data, and manage cryptographic operations:
 
 ```kotlin
-import com.trustweave.kms.*
+import org.trustweave.kms.*
 
 val kms = KeyManagementServices.create("aws", mapOf("region" to "us-east-1"))
 
@@ -578,7 +578,7 @@ when (deleteResult) {
 Always use `KmsOptionKeys` constants:
 
 ```kotlin
-import com.trustweave.kms.KmsOptionKeys
+import org.trustweave.kms.KmsOptionKeys
 
 val options = mapOf(
     KmsOptionKeys.KEY_ID to "my-key-id",  // ✅ Good

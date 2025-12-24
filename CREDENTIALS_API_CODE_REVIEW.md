@@ -87,7 +87,7 @@ if (options.checkNotBefore && credential.validFrom != null) {
 
 **Fix:** Ensure clean build and verify import:
 ```kotlin
-import com.trustweave.credential.proof.internal.engines.ProofEngineUtils
+import org.trustweave.credential.proof.internal.engines.ProofEngineUtils
 ```
 
 **Severity:** High - Compilation error
@@ -517,6 +517,8 @@ With the critical fixes applied, this would be production-ready for basic use ca
 5. ✅ Good documentation in most places
 6. ✅ Support for both VC 1.1 and VC 2.0
 7. ✅ Comprehensive revocation failure policies
+
+
 
 
 

@@ -711,10 +711,10 @@
 27
 28
 29
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.exchange.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.didcomm.exchange.DidCommExchangeProtocol</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.oidc4vci.exchange.Oidc4VciExchangeProtocol</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.chapi.exchange.ChapiExchangeProtocol</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.exchange.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.didcomm.exchange.DidCommExchangeProtocol</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.oidc4vci.exchange.Oidc4VciExchangeProtocol</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.chapi.exchange.ChapiExchangeProtocol</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
@@ -783,10 +783,10 @@
 16
 17
 18
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.didcomm.DidCommFactory</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.oidc4vci.Oidc4VciService</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.chapi.ChapiService</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.KeyManagementService</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.didcomm.DidCommFactory</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.oidc4vci.Oidc4VciService</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.chapi.ChapiService</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.KeyManagementService</span>
 
 <span class="c1">// Create KMS for cryptographic operations</span>
 <span class="kd">val</span> <span class="py">kms</span><span class="p">:</span> <span class="nc">KeyManagementService</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
@@ -837,10 +837,10 @@
 13
 14
 15
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.exchange.CredentialExchangeProtocolRegistry</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.didcomm.exchange.DidCommExchangeProtocol</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.oidc4vci.exchange.Oidc4VciExchangeProtocol</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.chapi.exchange.ChapiExchangeProtocol</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.exchange.CredentialExchangeProtocolRegistry</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.didcomm.exchange.DidCommExchangeProtocol</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.oidc4vci.exchange.Oidc4VciExchangeProtocol</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.chapi.exchange.ChapiExchangeProtocol</span>
 
 <span class="kd">val</span> <span class="py">registry</span> <span class="p">=</span> <span class="nc">CredentialExchangeProtocolRegistry</span><span class="p">()</span>
 
@@ -887,8 +887,8 @@
 12
 13
 14
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.exchange.CredentialOfferRequest</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.exchange.CredentialPreview</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.exchange.CredentialOfferRequest</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.exchange.CredentialPreview</span>
 
 <span class="kd">val</span> <span class="py">request</span> <span class="p">=</span> <span class="nc">CredentialOfferRequest</span><span class="p">(</span>
     <span class="n">issuerDid</span> <span class="p">=</span> <span class="s">"did:key:issuer"</span><span class="p">,</span>
@@ -1252,7 +1252,7 @@
 39
 40
 41
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.exchange.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.exchange.*</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
@@ -1323,7 +1323,7 @@
 16
 17
 18
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.exchange.exception.ExchangeException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.exchange.exception.ExchangeException</span>
 
 <span class="k">try</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">offer</span> <span class="p">=</span> <span class="n">registry</span><span class="p">.</span><span class="nf">offerCredential</span><span class="p">(</span><span class="s">"didcomm"</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>

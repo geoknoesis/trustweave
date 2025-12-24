@@ -18,7 +18,7 @@ These identifier classes already follow best practices:
 
 ### `IssuerId.parse()` - Unused Smart Constructor
 
-**Location**: `credentials/credential-api/src/main/kotlin/com/trustweave/credential/identifiers/CredentialIdentifiers.kt:118`
+**Location**: `credentials/credential-api/src/main/kotlin/org.trustweave/credential/identifiers/CredentialIdentifiers.kt:118`
 
 **Current Implementation**:
 ```kotlin
@@ -43,7 +43,7 @@ fun parse(id: String): IssuerId {
 
 ### `SubjectId.parse()` - Unused Smart Constructor
 
-**Location**: `credentials/credential-api/src/main/kotlin/com/trustweave/credential/identifiers/CredentialIdentifiers.kt:246`
+**Location**: `credentials/credential-api/src/main/kotlin/org.trustweave/credential/identifiers/CredentialIdentifiers.kt:246`
 
 **Current Implementation**:
 ```kotlin
@@ -67,7 +67,7 @@ fun parse(id: String): SubjectId =
 
 ### `VerificationMethodId.parse()` - Legitimate Use Case ✅
 
-**Location**: `did/did-core/src/main/kotlin/com/trustweave/did/identifiers/DidIdentifiers.kt:195`
+**Location**: `did/did-core/src/main/kotlin/org.trustweave/did/identifiers/DidIdentifiers.kt:195`
 
 **Current Implementation**:
 ```kotlin

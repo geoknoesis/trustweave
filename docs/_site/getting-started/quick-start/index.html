@@ -815,21 +815,21 @@ See <a href="/trustweave/getting-started/installation/">Installation</a> for set
 155
 </pre></td><td class="rouge-code"><pre><span class="k">package</span> <span class="nn">com.example.TrustWeave.quickstart</span>
 
-<span class="k">import</span> <span class="nn">com.trustweave.trust.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.types.IssuerIdentity</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.types.VerificationResult</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.util.DigestUtils</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.exception.DidException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.exception.DidException.DidMethodNotRegistered</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.exception.DidException.DidNotFound</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.exception.DidException.InvalidDidFormat</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.exception.CredentialException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.exception.CredentialException.CredentialInvalid</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed</span>
-<span class="k">import</span> <span class="nn">com.trustweave.wallet.exception.WalletException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.wallet.exception.WalletException.WalletCreationFailed</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.types.IssuerIdentity</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.types.VerificationResult</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.util.DigestUtils</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.exception.TrustWeaveException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.exception.DidException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.exception.DidException.DidMethodNotRegistered</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.exception.DidException.DidNotFound</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.exception.DidException.InvalidDidFormat</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.exception.CredentialException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.exception.CredentialException.CredentialInvalid</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed</span>
+<span class="k">import</span> <span class="nn">org.trustweave.wallet.exception.WalletException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.wallet.exception.WalletException.WalletCreationFailed</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.buildJsonObject</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.put</span>
@@ -997,7 +997,7 @@ See <a href="/trustweave/getting-started/installation/">Installation</a> for set
 15
 16
 17
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">trustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span>
@@ -1116,13 +1116,13 @@ See <a href="/trustweave/getting-started/installation/">Installation</a> for set
 86
 87
 88
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.exception.DidException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.exception.DidException.DidMethodNotRegistered</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.exception.DidException.DidNotFound</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.exception.CredentialException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.exception.DidException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.exception.DidException.DidMethodNotRegistered</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.exception.DidException.DidNotFound</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.exception.CredentialException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.exception.TrustWeaveException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">trustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span>
@@ -1257,8 +1257,8 @@ Anchored credential on inmemory:anchor: tx_...
 3
 4
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-all:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">testImplementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-all:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">testImplementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
@@ -1320,10 +1320,10 @@ TrustWeave promotes a “batteries included” experience for newcomers. The mon
 35
 36
 37
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.util.DigestUtils</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.TrustWeaveError</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.util.DigestUtils</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.TrustWeaveError</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.buildJsonObject</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.put</span>
@@ -1488,7 +1488,7 @@ The type-safe <code class="language-plaintext highlighter-rouge">IssuerIdentity<
 
 <blockquote>
   <p>✅ <strong>Run the sample</strong>
-The full quick-start flow lives in <code class="language-plaintext highlighter-rouge">distribution/examples/src/main/kotlin/com/trustweave/examples/quickstart/QuickStartSample.kt</code>.
+The full quick-start flow lives in <code class="language-plaintext highlighter-rouge">distribution/examples/src/main/kotlin/org.trustweave/examples/quickstart/QuickStartSample.kt</code>.
 Execute it locally with <code class="language-plaintext highlighter-rouge">./gradlew :distribution:examples:runQuickStartSample</code>.</p>
 </blockquote>
 <h2 id="step-5-verify-the-credential">
@@ -1680,9 +1680,9 @@ Anchoring is abstracted behind the same interface regardless of provider. The sa
 26
 27
 28
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.exception.DidException</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.exception.DidException.DidMethodNotRegistered</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.exception.DidException</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.exception.DidException.DidMethodNotRegistered</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.exception.TrustWeaveException</span>
 
 <span class="c1">// ✅ Production pattern with domain-specific error handling</span>
 <span class="k">try</span> <span class="p">{</span>

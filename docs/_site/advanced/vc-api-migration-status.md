@@ -96,7 +96,7 @@ All core credential API components have been successfully migrated to the VC-onl
 **Old `api/` Subdirectory**
 - Contains duplicate/old files causing linter errors
 - Files appear to be from a previous package structure
-- **Recommendation**: Remove `credentials/credential-api/src/main/kotlin/com/trustweave/credential/api/` directory
+- **Recommendation**: Remove `credentials/credential-api/src/main/kotlin/org.trustweave/credential/api/` directory
 
 ### Remaining Work (Lower Priority)
 

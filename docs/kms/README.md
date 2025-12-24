@@ -57,7 +57,7 @@ TrustWeave Key Management Service (KMS) provides a unified, type-safe interface 
 ### Using KeyManagementServices Factory (Recommended)
 
 ```kotlin
-import com.trustweave.kms.*
+import org.trustweave.kms.*
 
 // Simple factory API - no ServiceLoader needed!
 val kms = KeyManagementServices.create("inmemory")
@@ -82,8 +82,8 @@ when (result) {
 ### Direct Instantiation (Alternative)
 
 ```kotlin
-import com.trustweave.kms.inmemory.*
-import com.trustweave.kms.*
+import org.trustweave.kms.inmemory.*
+import org.trustweave.kms.*
 
 // Direct instantiation (for InMemory only)
 val kms = InMemoryKeyManagementService()
@@ -149,7 +149,7 @@ sealed class GenerateKeyResult {
 Use `KmsOptionKeys` constants instead of magic strings:
 
 ```kotlin
-import com.trustweave.kms.KmsOptionKeys
+import org.trustweave.kms.KmsOptionKeys
 
 val options = mapOf(
     KmsOptionKeys.KEY_ID to "my-key-id",
@@ -230,7 +230,7 @@ val config = AwsKmsConfig.builder()
 `KeyManagementServices` automatically caches KMS instances. Calling `create()` with the same provider and configuration returns the cached instance, avoiding expensive client initialization:
 
 ```kotlin
-import com.trustweave.kms.*
+import org.trustweave.kms.*
 
 // First call creates and caches instance
 val kms1 = KeyManagementServices.create("aws", mapOf("region" to "us-east-1"))

@@ -648,9 +648,9 @@
 4
 5
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.kms:aws:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.kms:aws:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="configuration">
@@ -683,7 +683,7 @@
 9
 10
 11
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
 <span class="k">import</span> <span class="nn">java.util.ServiceLoader</span>
 
 <span class="c1">// Discover AWS provider</span>
@@ -976,9 +976,9 @@
 31
 32
 33
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.KmsOptionKeys</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.results.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.KmsOptionKeys</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.results.*</span>
 
 <span class="c1">// Generate Ed25519 key</span>
 <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">kms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span><span class="nc">Algorithm</span><span class="p">.</span><span class="nc">Ed25519</span><span class="p">)</span>

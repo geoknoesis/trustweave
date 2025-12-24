@@ -23,10 +23,10 @@ Add the Algorand module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave.chains:algorand:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-json:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.chains:algorand:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-json:1.0.0-SNAPSHOT")
 
     // Algorand SDK
     implementation("com.algorand:algosdk:2.7.0")
@@ -40,9 +40,9 @@ dependencies {
 The Algorand adapter supports type-safe configuration using `AlgorandOptions`:
 
 ```kotlin
-import com.trustweave.algorand.*
-import com.trustweave.anchor.*
-import com.trustweave.anchor.options.AlgorandOptions
+import org.trustweave.algorand.*
+import org.trustweave.anchor.*
+import org.trustweave.anchor.options.AlgorandOptions
 
 // Create type-safe options
 val options = AlgorandOptions(
@@ -79,8 +79,8 @@ val mainnetClient = AlgorandBlockchainAnchorClient("algorand:mainnet", mainnetOp
 When the `chains/plugins/algorand` module is on the classpath, Algorand adapter is automatically discoverable:
 
 ```kotlin
-import com.trustweave.anchor.*
-import com.trustweave.anchor.options.AlgorandOptions
+import org.trustweave.anchor.*
+import org.trustweave.anchor.options.AlgorandOptions
 import java.util.ServiceLoader
 
 // Discover Algorand provider
@@ -101,9 +101,9 @@ val client = algorandProvider?.create("algorand:testnet", options)
 ### Anchoring Data
 
 ```kotlin
-import com.trustweave.algorand.*
-import com.trustweave.anchor.*
-import com.trustweave.anchor.options.AlgorandOptions
+import org.trustweave.algorand.*
+import org.trustweave.anchor.*
+import org.trustweave.anchor.options.AlgorandOptions
 import kotlinx.coroutines.runBlocking
 
 runBlocking {
@@ -134,7 +134,7 @@ runBlocking {
 ### Reading Anchored Data
 
 ```kotlin
-import com.trustweave.anchor.*
+import org.trustweave.anchor.*
 
 val anchorRef = AnchorRef(
     chainId = "algorand:testnet",
@@ -157,9 +157,9 @@ result.fold(
 ### Using with TrustWeave Facade
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.algorand.*
-import com.trustweave.anchor.options.AlgorandOptions
+import org.trustweave.TrustWeave
+import org.trustweave.algorand.*
+import org.trustweave.anchor.options.AlgorandOptions
 import kotlinx.coroutines.runBlocking
 
 runBlocking {
@@ -221,7 +221,7 @@ val options = AlgorandOptions(
 The Algorand adapter provides structured error handling:
 
 ```kotlin
-import com.trustweave.anchor.exceptions.*
+import org.trustweave.anchor.exceptions.*
 
 try {
     val result = client.writePayload(payload)

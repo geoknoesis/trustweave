@@ -19,8 +19,8 @@ Anchoring creates an immutable audit trail for important events or payloads by w
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-json:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-json:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -44,12 +44,12 @@ Anchoring complements verifiable credentials: you can notarise VC digests, prese
 | 4. Verify | `readPayload` rehydrates the JSON, or recompute the digest locally and compare to the stored reference. |
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.core.*
+import org.trustweave.TrustWeave
+import org.trustweave.core.*
 import kotlinx.serialization.json.Json
 
 // Using TrustWeave facade (recommended)
-import com.trustweave.trust.TrustWeave
+import org.trustweave.trust.TrustWeave
 
 val trustWeave = TrustWeave.build { ... }
 val anchorResult = trustWeave.blockchains.anchor(
@@ -86,8 +86,8 @@ result.fold(
 ## Reading and verifying
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.core.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.core.*
 
 // Using TrustWeave facade (recommended)
 val trustWeave = TrustWeave.build { ... }

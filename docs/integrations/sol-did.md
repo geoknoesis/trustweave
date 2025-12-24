@@ -23,11 +23,11 @@ Add the did:sol module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave.did:sol:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.did:sol:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.did:base:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 
     // HTTP client for Solana RPC
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
@@ -39,10 +39,10 @@ dependencies {
 ### Basic Configuration
 
 ```kotlin
-import com.trustweave.soldid.*
-import com.trustweave.anchor.*
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.trustweave.kms.*
+import org.trustweave.soldid.*
+import org.trustweave.anchor.*
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.kms.*
 
 // Create configuration
 val config = SolDidConfig.builder()
@@ -82,7 +82,7 @@ val devnetConfig = SolDidConfig.devnet(
 When the module is on the classpath, did:sol is automatically available:
 
 ```kotlin
-import com.trustweave.did.*
+import org.trustweave.did.*
 import java.util.ServiceLoader
 
 // Discover did:sol provider
@@ -122,8 +122,8 @@ println("Created: ${document.id}") // did:sol:devnet:7xK... or did:sol:7xK...
 ### Resolving a did:sol
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
-import com.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.resolver.DidResolutionResult
 
 val did = Did("did:sol:7xK...")
 val result = method.resolveDid(did)
@@ -143,7 +143,7 @@ when (result) {
 ### Updating a did:sol
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 val did = Did("did:sol:7xK...")
 val document = method.updateDid(did) { currentDoc ->
@@ -160,7 +160,7 @@ val document = method.updateDid(did) { currentDoc ->
 ### Deactivating a did:sol
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 val did = Did("did:sol:7xK...")
 val deactivated = method.deactivateDid(did)
@@ -223,10 +223,10 @@ val config = SolDidConfig.builder()
 ## Integration with TrustWeave
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.soldid.*
-import com.trustweave.anchor.*
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.TrustWeave
+import org.trustweave.soldid.*
+import org.trustweave.anchor.*
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 
 val config = SolDidConfig.devnet("https://api.devnet.solana.com")
 val anchorClient = InMemoryBlockchainAnchorClient("solana:devnet")
@@ -267,7 +267,7 @@ Common errors and solutions:
 For testing without actual Solana:
 
 ```kotlin
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 
 val config = SolDidConfig.devnet("https://api.devnet.solana.com")
 val anchorClient = InMemoryBlockchainAnchorClient("solana:devnet")

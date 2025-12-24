@@ -143,7 +143,7 @@ Add TrustWeave dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -162,11 +162,11 @@ Here's the full employee onboarding flow using the TrustWeave facade API. This c
 ```kotlin
 package com.example.employee.onboarding
 
-import com.trustweave.TrustWeave
-import com.trustweave.core.*
-import com.trustweave.credential.PresentationOptions
-import com.trustweave.credential.wallet.Wallet
-import com.trustweave.credential.format.ProofSuiteId
+import org.trustweave.TrustWeave
+import org.trustweave.core.*
+import org.trustweave.credential.PresentationOptions
+import org.trustweave.credential.wallet.Wallet
+import org.trustweave.credential.format.ProofSuiteId
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -185,7 +185,7 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for all parties
-    import com.trustweave.trust.types.DidCreationResult
+    import org.trustweave.trust.types.DidCreationResult
     
     val universityDidResult = trustWeave.createDid { method(KEY) }
     val universityDid = when (universityDidResult) {
@@ -263,7 +263,7 @@ fun main() = runBlocking {
     println("✅ Employer DID: ${employerDid.value}")
 
     // Step 3: Issue education credential
-    import com.trustweave.trust.types.IssuanceResult
+    import org.trustweave.trust.types.IssuanceResult
     
     val educationCredentialResult = trustWeave.issue {
         credential {
@@ -355,7 +355,7 @@ fun main() = runBlocking {
     println("✅ Certification credential issued: ${certificationCredential.id}")
 
     // Step 6: Create candidate wallet and store all credentials
-    import com.trustweave.trust.types.WalletCreationResult
+    import org.trustweave.trust.types.WalletCreationResult
     
     val walletResult = trustWeave.wallet {
         holder(candidateDid.value)
@@ -457,7 +457,7 @@ fun main() = runBlocking {
     // Step 10: Employer verifies all credentials
     println("\n📋 Employer Verification Process:")
 
-    import com.trustweave.trust.types.VerificationResult
+    import org.trustweave.trust.types.VerificationResult
     
     val educationVerification = trustWeave.verify {
         credential(educationCredential)

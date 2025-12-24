@@ -39,7 +39,7 @@ interface KeyManagementServiceProvider {
 ### Basic Usage
 
 ```kotlin
-import com.trustweave.testkit.annotations.RequiresPlugin
+import org.trustweave.testkit.annotations.RequiresPlugin
 
 @RequiresPlugin("aws")
 @Test
@@ -141,7 +141,7 @@ export VERICORE_TEST_SKIP_IF_NO_CREDENTIALS=false
 You can also check credentials programmatically:
 
 ```kotlin
-import com.trustweave.testkit.config.TestConfig
+import org.trustweave.testkit.config.TestConfig
 
 @Test
 fun `test with manual check`() = runBlocking {

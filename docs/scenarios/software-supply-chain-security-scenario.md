@@ -142,7 +142,7 @@ Add TrustWeave dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -159,12 +159,12 @@ Here's the full software supply chain security flow using the TrustWeave facade 
 ```kotlin
 package com.example.software.supplychain
 
-import com.trustweave.TrustWeave
-import com.trustweave.core.*
-import com.trustweave.credential.PresentationOptions
-import com.trustweave.credential.wallet.Wallet
-import com.trustweave.json.DigestUtils
-import com.trustweave.spi.services.WalletCreationOptionsBuilder
+import org.trustweave.TrustWeave
+import org.trustweave.core.*
+import org.trustweave.credential.PresentationOptions
+import org.trustweave.credential.wallet.Wallet
+import org.trustweave.json.DigestUtils
+import org.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -189,11 +189,11 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for software publisher, build system, and consumer
-    import com.trustweave.trust.types.DidCreationResult
-    import com.trustweave.trust.types.DidResolutionResult
-    import com.trustweave.trust.types.IssuanceResult
-    import com.trustweave.trust.types.WalletCreationResult
-    import com.trustweave.trust.types.VerificationResult
+    import org.trustweave.trust.types.DidCreationResult
+    import org.trustweave.trust.types.DidResolutionResult
+    import org.trustweave.trust.types.IssuanceResult
+    import org.trustweave.trust.types.WalletCreationResult
+    import org.trustweave.trust.types.VerificationResult
     
     val publisherDidResult = trustWeave.createDid { method(KEY) }
     val publisherDid = when (publisherDidResult) {

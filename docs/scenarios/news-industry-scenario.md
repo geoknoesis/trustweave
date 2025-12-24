@@ -130,10 +130,10 @@ Add TrustWeave dependencies to your `build.gradle.kts`. These modules provide DI
 ```kotlin
 dependencies {
     // TrustWeave distribution (includes all modules)
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Test kit for in-memory implementations
-    testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
@@ -154,9 +154,9 @@ dependencies {
 - **Attribution**: Enables proper attribution
 
 ```kotlin
-import com.trustweave.testkit.did.DidKeyMockMethod
-import com.trustweave.testkit.kms.InMemoryKeyManagementService
-import com.trustweave.did.DidMethodRegistry
+import org.trustweave.testkit.did.DidKeyMockMethod
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
+import org.trustweave.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -240,7 +240,7 @@ fun main() = runBlocking {
 - **Verification**: Can verify content hasn't changed
 
 ```kotlin
-import com.trustweave.credential.models.VerifiableCredential
+import org.trustweave.credential.models.VerifiableCredential
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
@@ -261,7 +261,7 @@ import java.time.Instant
 
     // Compute content hash for integrity verification
     // Any modification to content will change this hash
-    val contentHash = com.trustweave.json.DigestUtils.sha256DigestMultibase(
+    val contentHash = org.trustweave.json.DigestUtils.sha256DigestMultibase(
         articleContent.encodeToByteArray()
     )
 
@@ -311,7 +311,7 @@ import java.time.Instant
     }
     
     val authorshipCredential = when (authorshipResult) {
-        is com.trustweave.credential.results.IssuanceResult.Success -> authorshipResult.credential
+        is org.trustweave.credential.results.IssuanceResult.Success -> authorshipResult.credential
         else -> throw IllegalStateException("Failed to create authorship credential: ${authorshipResult.allErrors.joinToString()}")
     }
 
@@ -334,9 +334,9 @@ import java.time.Instant
 - **Verification**: Anyone can verify authorship
 
 ```kotlin
-import com.trustweave.credential.issuer.CredentialIssuer
-import com.trustweave.credential.proof.Ed25519ProofGenerator
-import com.trustweave.credential.CredentialIssuanceOptions
+import org.trustweave.credential.issuer.CredentialIssuer
+import org.trustweave.credential.proof.Ed25519ProofGenerator
+import org.trustweave.credential.CredentialIssuanceOptions
 
     // Step 5: Issue authorship credential
     println("\nStep 5: Issuing authorship credential...")
@@ -402,7 +402,7 @@ import com.trustweave.credential.CredentialIssuanceOptions
         lead researcher at the Medical Research Institute.
     """.trimIndent()
 
-    val modifiedHash = com.trustweave.json.DigestUtils.sha256DigestMultibase(
+    val modifiedHash = org.trustweave.json.DigestUtils.sha256DigestMultibase(
         modifiedContent.encodeToByteArray()
     )
 
@@ -432,7 +432,7 @@ import com.trustweave.credential.CredentialIssuanceOptions
     }
     
     val issuedModificationCredential = when (modificationResult) {
-        is com.trustweave.credential.results.IssuanceResult.Success -> modificationResult.credential
+        is org.trustweave.credential.results.IssuanceResult.Success -> modificationResult.credential
         else -> throw IllegalStateException("Failed to create modification credential: ${modificationResult.allErrors.joinToString()}")
     }
 
@@ -478,7 +478,7 @@ import com.trustweave.credential.CredentialIssuanceOptions
     }
     
     val issuedPublicationCredential = when (publicationResult) {
-        is com.trustweave.credential.results.IssuanceResult.Success -> publicationResult.credential
+        is org.trustweave.credential.results.IssuanceResult.Success -> publicationResult.credential
         else -> throw IllegalStateException("Failed to create publication credential: ${publicationResult.allErrors.joinToString()}")
     }
 
@@ -539,7 +539,7 @@ import com.trustweave.credential.CredentialIssuanceOptions
     }
     
     val factCheckCredential = when (factCheckResult) {
-        is com.trustweave.credential.results.IssuanceResult.Success -> factCheckResult.credential
+        is org.trustweave.credential.results.IssuanceResult.Success -> factCheckResult.credential
         else -> throw IllegalStateException("Failed to create fact-check credential: ${factCheckResult.allErrors.joinToString()}")
     }
 
@@ -565,8 +565,8 @@ import com.trustweave.credential.CredentialIssuanceOptions
 - **Trust**: Builds reader trust
 
 ```kotlin
-import com.trustweave.credential.verifier.CredentialVerifier
-import com.trustweave.credential.CredentialVerificationOptions
+import org.trustweave.credential.verifier.CredentialVerifier
+import org.trustweave.credential.CredentialVerificationOptions
 
     // Step 9: Verify content authenticity
     println("\nStep 9: Verifying content authenticity...")
@@ -600,7 +600,7 @@ import com.trustweave.credential.CredentialVerificationOptions
     }
 
     // Verify content hash matches
-    val currentContentHash = com.trustweave.json.DigestUtils.sha256DigestMultibase(
+    val currentContentHash = org.trustweave.json.DigestUtils.sha256DigestMultibase(
         modifiedContent.encodeToByteArray()
     )
 
@@ -624,9 +624,9 @@ import com.trustweave.credential.CredentialVerificationOptions
 - **Accountability**: Holds publishers accountable
 
 ```kotlin
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.trustweave.anchor.BlockchainAnchorRegistry
-import com.trustweave.anchor.anchorTyped
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.anchor.BlockchainAnchorRegistry
+import org.trustweave.anchor.anchorTyped
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -649,7 +649,7 @@ data class ContentProvenanceRecord(
     }
 
     // Create provenance record
-    val provenanceDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
+    val provenanceDigest = org.trustweave.json.DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(
             VerifiableCredential.serializer(),
             issuedPublicationCredential
@@ -706,7 +706,7 @@ suspend fun createJournalistCredential(
     }
     
     return when (result) {
-        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create journalist credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -748,7 +748,7 @@ suspend fun createMultiAuthorCredential(
     }
     
     return when (result) {
-        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create multi-author credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -787,7 +787,7 @@ suspend fun createVersionCredential(
     }
     
     return when (result) {
-        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create version credential: ${result.allErrors.joinToString()}")
     }
 }

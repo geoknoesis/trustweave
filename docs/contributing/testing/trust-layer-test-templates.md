@@ -33,9 +33,9 @@ core/TrustWeave-trust/src/test/kotlin/com/geoknoesis/TrustWeave/integration/InMe
 This ensures proof verification succeeds because the DID document contains the correct verification method.
 
 ```kotlin
-import com.trustweave.trust.types.DidCreationResult
-import com.trustweave.trust.types.IssuanceResult
-import com.trustweave.testkit.getOrFail
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.trust.types.IssuanceResult
+import org.trustweave.testkit.getOrFail
 
 // Step 1: Create DID (generates key and stores in DID document)
 val didResult = trustLayer.createDid {
@@ -168,8 +168,8 @@ fun `test credential revocation workflow template`() = runBlocking {
 @Test
 fun `test wallet storage workflow template`() = runBlocking {
     // Create wallet
-    import com.trustweave.trust.types.WalletCreationResult
-    import com.trustweave.testkit.getOrFail
+    import org.trustweave.trust.types.WalletCreationResult
+    import org.trustweave.testkit.getOrFail
     
     val walletResult = trustLayer.wallet {
         id("holder-wallet-1")
@@ -263,7 +263,7 @@ fun `test DID update workflow template`() = runBlocking {
     val newKey = kms.generateKey("Ed25519")
 
     // Update DID
-    import com.trustweave.trust.types.DidUpdateResult
+    import org.trustweave.trust.types.DidUpdateResult
     
     val updateResult = trustLayer.updateDid {
         did(issuerDid.value)

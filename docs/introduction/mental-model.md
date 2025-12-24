@@ -258,9 +258,9 @@ TrustWeave uses **two error handling patterns**:
 All `TrustWeave` methods throw exceptions:
 
 ```kotlin
-import com.trustweave.did.exception.DidException
-import com.trustweave.did.exception.DidException.DidMethodNotRegistered
-import com.trustweave.core.exception.TrustWeaveException
+import org.trustweave.did.exception.DidException
+import org.trustweave.did.exception.DidException.DidMethodNotRegistered
+import org.trustweave.core.exception.TrustWeaveException
 
 try {
     val did = trustWeave.createDid { method(KEY) }
@@ -338,8 +338,8 @@ val credential = trustWeave.issue { ... }
 ### Pattern 2: Error Handling
 
 ```kotlin
-import com.trustweave.did.exception.DidException
-import com.trustweave.core.exception.TrustWeaveException
+import org.trustweave.did.exception.DidException
+import org.trustweave.core.exception.TrustWeaveException
 
 try {
     val result = trustWeave.operation { ... }

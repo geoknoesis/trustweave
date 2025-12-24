@@ -10,7 +10,7 @@ Complete API reference for TrustWeave's Wallet system.
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -317,7 +317,7 @@ data class WalletStatistics(
 `WalletCreationOptions` is shared by the TrustWeave facade, the Trust Layer DSL, and custom `WalletFactory` implementations. It removes the need for untyped configuration blobs while still allowing provider-specific extensions.
 
 ```kotlin
-import com.trustweave.spi.services.WalletCreationOptionsBuilder
+import org.trustweave.spi.services.WalletCreationOptionsBuilder
 
 val options = WalletCreationOptionsBuilder().apply {
     label = "Production Wallet"

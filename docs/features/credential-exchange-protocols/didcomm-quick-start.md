@@ -19,10 +19,10 @@ dependencies {
 ### 1. Setup
 
 ```kotlin
-import com.trustweave.credential.didcomm.*
-import com.trustweave.credential.didcomm.protocol.*
-import com.trustweave.testkit.InMemoryKeyManagementService
-import com.trustweave.did.*
+import org.trustweave.credential.didcomm.*
+import org.trustweave.credential.didcomm.protocol.*
+import org.trustweave.testkit.InMemoryKeyManagementService
+import org.trustweave.did.*
 
 val kms = InMemoryKeyManagementService()
 

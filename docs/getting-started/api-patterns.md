@@ -15,8 +15,8 @@ This guide explains the correct API patterns to use with TrustWeave and clarifie
 ### Creating a TrustWeave Instance
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -47,9 +47,9 @@ fun main() = runBlocking {
 
 ✅ **Correct:**
 ```kotlin
-import com.trustweave.trust.types.DidCreationResult
-import com.trustweave.trust.types.DidUpdateResult
-import com.trustweave.trust.types.KeyRotationResult
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.trust.types.DidUpdateResult
+import org.trustweave.trust.types.KeyRotationResult
 
 val trustWeave = TrustWeave.build { ... }
 
@@ -105,7 +105,7 @@ val resolution = trustWeave.resolveDid(did)
 
 ✅ **Correct:**
 ```kotlin
-import com.trustweave.trust.types.IssuanceResult
+import org.trustweave.trust.types.IssuanceResult
 
 val trustWeave = TrustWeave.build { ... }
 
@@ -149,7 +149,7 @@ val verification = trustWeave.verify { credential(credential) }
 
 ✅ **Correct:**
 ```kotlin
-import com.trustweave.trust.types.WalletCreationResult
+import org.trustweave.trust.types.WalletCreationResult
 
 val trustWeave = TrustWeave.build { ... }
 
@@ -205,7 +205,7 @@ val isTrusted = trustWeave.isTrustedIssuer("did:key:university", "EducationCrede
 All `TrustWeave` methods throw exceptions. Always use try-catch for error handling:
 
 ```kotlin
-import com.trustweave.core.TrustWeaveError
+import org.trustweave.core.TrustWeaveError
 
 try {
     val didResult = trustWeave.createDid { method(KEY) }

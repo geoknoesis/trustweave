@@ -9,10 +9,10 @@ This tutorial provides a comprehensive guide to performing DID operations with T
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -41,8 +41,8 @@ dependencies {
 A DID method is an implementation of the `DidMethod` interface that supports a specific DID method (e.g., `did:key`, `did:web`, `did:ion`). Each DID method has its own creation, resolution, update, and deactivation logic.
 
 ```kotlin
-import com.trustweave.did.*
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.*
+import org.trustweave.did.identifiers.Did
 
 interface DidMethod {
     val method: String
@@ -66,12 +66,12 @@ interface DidMethod {
 import kotlinx.coroutines.runBlocking
 
 // TrustWeave core
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
 // Note: TestkitDidMethodFactory is for testing/tutorials only
 // In production, use appropriate DID method factories
-import com.trustweave.testkit.services.*
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     // Build TrustWeave instance with testkit factories (for tutorials)
@@ -91,7 +91,7 @@ fun main() = runBlocking {
     }
 
     // Create DID using did:key method (returns sealed result)
-    import com.trustweave.trust.types.DidCreationResult
+    import org.trustweave.trust.types.DidCreationResult
     
     val didResult = trustWeave.createDid {
         method(DidMethods.KEY)
@@ -118,12 +118,12 @@ fun main() = runBlocking {
 import kotlinx.coroutines.runBlocking
 
 // TrustWeave core
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
 // Note: TestkitDidMethodFactory is for testing/tutorials only
 // In production, use appropriate DID method factories
-import com.trustweave.testkit.services.*
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     // Build TrustWeave instance with testkit factories (for tutorials)
@@ -178,9 +178,9 @@ fun main() = runBlocking {
 import kotlinx.coroutines.runBlocking
 
 // TrustWeave core
-import com.trustweave.did.*
-import com.trustweave.kms.*
-import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import org.trustweave.did.*
+import org.trustweave.kms.*
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
 
 fun main() = runBlocking {
     // Create KMS
@@ -212,12 +212,12 @@ fun main() = runBlocking {
 ### Resolving DIDs with TrustWeave DSL
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.trust.types.Did
-import com.trustweave.did.resolver.DidResolutionResult
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.types.Did
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -261,7 +261,7 @@ fun main() = runBlocking {
 import kotlinx.coroutines.runBlocking
 
 // TrustWeave core
-import com.trustweave.did.*
+import org.trustweave.did.*
 
 fun main() = runBlocking {
     val registry = DidMethodRegistry()
@@ -292,11 +292,11 @@ fun main() = runBlocking {
 import kotlinx.coroutines.runBlocking
 
 // TrustWeave core
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.did.*
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.did.*
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
@@ -338,10 +338,10 @@ fun main() = runBlocking {
 import kotlinx.coroutines.runBlocking
 
 // TrustWeave core
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
@@ -377,8 +377,8 @@ fun main() = runBlocking {
 import kotlinx.coroutines.runBlocking
 
 // TrustWeave core
-import com.trustweave.did.*
-import com.trustweave.kms.*
+import org.trustweave.did.*
+import org.trustweave.kms.*
 
 fun main() = runBlocking {
     val kms = InMemoryKeyManagementService()
@@ -420,11 +420,11 @@ fun main() = runBlocking {
 import kotlinx.coroutines.runBlocking
 
 // TrustWeave core
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.did.*
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.did.*
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     // Build TrustWeave instance with testkit factories (for tutorials)
@@ -473,11 +473,11 @@ fun main() = runBlocking {
 import kotlinx.coroutines.runBlocking
 
 // TrustWeave core
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.core.exception.TrustWeaveError
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.core.exception.TrustWeaveError
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     // Build TrustWeave instance with testkit factories (for tutorials)

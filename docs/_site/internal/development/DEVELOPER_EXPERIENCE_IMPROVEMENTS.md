@@ -10,7 +10,7 @@ This document summarizes the ergonomic improvements made to transform the API in
 
 ### 1. Format Constants (`CredentialFormats`)
 
-**File:** `credentials/credential-api/src/main/kotlin/com/trustweave/credential/format/CredentialFormats.kt`
+**File:** `credentials/credential-api/src/main/kotlin/org.trustweave/credential/format/CredentialFormats.kt`
 
 **Before:**
 ```kotlin
@@ -32,7 +32,7 @@ val format = CredentialFormats.VC_LD  // ✅ Type-safe, discoverable
 
 ### 2. Default `issuedAt` Parameter
 
-**File:** `credentials/credential-api/src/main/kotlin/com/trustweave/credential/requests/IssuanceRequest.kt`
+**File:** `credentials/credential-api/src/main/kotlin/org.trustweave/credential/requests/IssuanceRequest.kt`
 
 **Before:**
 ```kotlin
@@ -59,7 +59,7 @@ IssuanceRequest(
 
 ### 3. Convenience Issue Overloads
 
-**File:** `credentials/credential-api/src/main/kotlin/com/trustweave/credential/CredentialServiceConvenience.kt`
+**File:** `credentials/credential-api/src/main/kotlin/org.trustweave/credential/CredentialServiceConvenience.kt`
 
 **Before:**
 ```kotlin
@@ -94,7 +94,7 @@ val result = service.issue(
 
 ### 4. Type Helper Functions
 
-**File:** `credentials/credential-api/src/main/kotlin/com/trustweave/credential/requests/IssuanceRequestExtensions.kt`
+**File:** `credentials/credential-api/src/main/kotlin/org.trustweave/credential/requests/IssuanceRequestExtensions.kt`
 
 **Added:**
 - `credentialTypes(vararg types: String)` - Auto-adds VerifiableCredential
@@ -110,7 +110,7 @@ val types = credentialTypes("PersonCredential")
 
 ### 5. String Extension Functions
 
-**File:** `credentials/credential-api/src/main/kotlin/com/trustweave/credential/extensions/StringExtensions.kt`
+**File:** `credentials/credential-api/src/main/kotlin/org.trustweave/credential/extensions/StringExtensions.kt`
 
 **Added:**
 - `String.toFormatId()` - Convert string to CredentialFormatId
@@ -129,7 +129,7 @@ val issuer = "did:key:issuer".asIssuer()
 
 ### 6. Result Convenience Methods
 
-**File:** `credentials/credential-api/src/main/kotlin/com/trustweave/credential/results/IssuanceResultExtensions.kt`
+**File:** `credentials/credential-api/src/main/kotlin/org.trustweave/credential/results/IssuanceResultExtensions.kt`
 
 **Added:**
 - `getOrReturn()` - Early return pattern
@@ -152,7 +152,7 @@ val credential = result.requireSuccess()
 
 ### 7. Verification Presets
 
-**File:** `credentials/credential-api/src/main/kotlin/com/trustweave/credential/requests/VerificationOptionsExtensions.kt`
+**File:** `credentials/credential-api/src/main/kotlin/org.trustweave/credential/requests/VerificationOptionsExtensions.kt`
 
 **Added:**
 - `VerificationOptionPresets.strict()` - Maximum validation

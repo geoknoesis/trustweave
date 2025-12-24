@@ -159,8 +159,8 @@ TrustWeave provides cryptographic foundations that support SOC2 compliance:
 #### Implementation Pattern
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.core.*
+import org.trustweave.TrustWeave
+import org.trustweave.core.*
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -332,9 +332,9 @@ interface AuditLogger {
 #### Enterprise KMS Integration
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.kms.KeyManagementService
-import com.trustweave.kms.spi.KeyManagementServiceProvider
+import org.trustweave.TrustWeave
+import org.trustweave.kms.KeyManagementService
+import org.trustweave.kms.spi.KeyManagementServiceProvider
 
 /**
  * Enterprise KMS provider (e.g., AWS KMS, Azure Key Vault, HashiCorp Vault)
@@ -391,8 +391,8 @@ fun createSOC2CompliantVeriCore(kmsConfig: Map<String, Any?>): TrustWeave {
 #### Blockchain-Anchored Audit Logs
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.anchor.anchorTyped
+import org.trustweave.TrustWeave
+import org.trustweave.anchor.anchorTyped
 import kotlinx.serialization.Serializable
 import java.time.Instant
 
@@ -558,8 +558,8 @@ class PrometheusMonitoringService : MonitoringService {
 #### Key Rotation with History
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.core.*
+import org.trustweave.TrustWeave
+import org.trustweave.core.*
 
 /**
  * Key rotation service that maintains history for credential verification

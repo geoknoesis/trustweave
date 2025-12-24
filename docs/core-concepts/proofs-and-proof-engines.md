@@ -24,7 +24,7 @@ A **proof suite** identifies the cryptographic proof format used in a Verifiable
 All proof suites are **built-in** and always available - no plugins or registration required.
 
 ```kotlin
-import com.trustweave.credential.format.ProofSuiteId
+import org.trustweave.credential.format.ProofSuiteId
 
 // Use enum values directly
 val vcLdSuite = ProofSuiteId.VC_LD
@@ -43,7 +43,7 @@ val anonCredsSuite = ProofSuiteId.ANONCREDS
 - **Additional Options** - Proof suite-specific parameters
 
 ```kotlin
-import com.trustweave.credential.proof.*
+import org.trustweave.credential.proof.*
 
 // Simple - defaults to assertionMethod
 val options = proofOptions()
@@ -136,8 +136,8 @@ val options = proofOptionsForCapabilityDelegation(
 ### In Issuance Requests
 
 ```kotlin
-import com.trustweave.credential.requests.*
-import com.trustweave.credential.proof.*
+import org.trustweave.credential.requests.*
+import org.trustweave.credential.proof.*
 
 val request = IssuanceRequest(
     format = ProofSuiteId.VC_LD,
@@ -210,7 +210,7 @@ TrustWeave includes built-in proof engines for all supported proof suites:
 These engines are automatically available when you create a `CredentialService`:
 
 ```kotlin
-import com.trustweave.credential.*
+import org.trustweave.credential.*
 
 val service = credentialService(didResolver)
 // All proof engines are automatically configured

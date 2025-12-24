@@ -648,10 +648,10 @@
 5
 6
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.kms:waltid:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.kms:waltid:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="configuration">
@@ -689,9 +689,9 @@
 14
 15
 16
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.waltid.WaltIdIntegration</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.waltid.WaltIdIntegration</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 
 <span class="nf">runBlocking</span> <span class="p">{</span>
@@ -732,9 +732,9 @@
 13
 14
 15
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.waltid.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.waltid.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
 
 <span class="c1">// Create walt.id KMS</span>
 <span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="nc">WaltIdKeyManagementService</span><span class="p">()</span>
@@ -782,8 +782,8 @@
 15
 16
 17
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.waltid.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.waltid.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
 
 <span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="nc">WaltIdKeyManagementService</span><span class="p">()</span>
 
@@ -826,8 +826,8 @@
 15
 16
 17
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.waltid.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.waltid.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.*</span>
 
 <span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="nc">WaltIdKeyManagementService</span><span class="p">()</span>
 <span class="kd">val</span> <span class="py">keyMethod</span> <span class="p">=</span> <span class="nc">WaltIdDidKeyMethod</span><span class="p">(</span><span class="n">kms</span><span class="p">)</span>
@@ -870,8 +870,8 @@
 15
 16
 17
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.waltid.WaltIdIntegration</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.waltid.WaltIdIntegration</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 
 <span class="nf">runBlocking</span> <span class="p">{</span>
@@ -948,8 +948,8 @@
 11
 12
 13
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.*</span>
 <span class="k">import</span> <span class="nn">java.util.ServiceLoader</span>
 
 <span class="c1">// Discover KMS provider</span>
@@ -1017,7 +1017,7 @@
 12
 13
 14
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveError</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.core.exception.TrustWeaveError</span>
 
 <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">kms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span><span class="nc">Algorithm</span><span class="p">.</span><span class="nc">Ed25519</span><span class="p">)</span>
 <span class="n">result</span><span class="p">.</span><span class="nf">fold</span><span class="p">(</span>

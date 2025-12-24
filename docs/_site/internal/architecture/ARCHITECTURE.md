@@ -30,9 +30,9 @@ TrustWeave is organized into a domain-centric structure with core modules and pl
 - **Chain Plugins** (`chains/plugins/`): Blockchain adapters (algorand, polygon, ethereum, base, etc.)
 
 All plugins use hierarchical Maven group IDs:
-- DID plugins: `com.trustweave.did:*`
-- KMS plugins: `com.trustweave.kms:*`
-- Chain plugins: `com.trustweave.chains:*`
+- DID plugins: `org.trustweave.did:*`
+- KMS plugins: `org.trustweave.kms:*`
+- Chain plugins: `org.trustweave.chains:*`
 
 ## Key Features
 
@@ -66,7 +66,7 @@ JSON canonicalization and digest utilities with performance optimizations:
 
 **Performance Configuration**:
 ```kotlin
-import com.trustweave.json.DigestUtils
+import org.trustweave.json.DigestUtils
 
 // Disable caching for memory-constrained environments
 DigestUtils.enableDigestCache = false
@@ -109,8 +109,8 @@ Blockchain anchoring abstraction with comprehensive type safety and error handli
 
 **Type-Safe Configuration**:
 ```kotlin
-import com.trustweave.anchor.options.AlgorandOptions
-import com.trustweave.anchor.ChainId
+import org.trustweave.anchor.options.AlgorandOptions
+import org.trustweave.anchor.ChainId
 
 // Type-safe chain ID
 val chainId = ChainId.Algorand.Testnet
@@ -127,7 +127,7 @@ val client = AlgorandBlockchainAnchorClient(chainId.toString(), options)
 
 **Exception Handling**:
 ```kotlin
-import com.trustweave.anchor.exceptions.*
+import org.trustweave.anchor.exceptions.*
 
 try {
     val result = client.writePayload(payload)
@@ -170,7 +170,7 @@ In-memory test implementations and test utilities:
 
 **Test Fixture Example**:
 ```kotlin
-import com.trustweave.testkit.TrustWeaveTestFixture
+import org.trustweave.testkit.TrustWeaveTestFixture
 
 TrustWeaveTestFixture.builder()
     .withInMemoryBlockchainClient("algorand:testnet")

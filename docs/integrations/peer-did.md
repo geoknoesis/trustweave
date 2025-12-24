@@ -23,10 +23,10 @@ Add the did:peer module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave.did:peer:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.did:peer:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.did:base:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -35,8 +35,8 @@ dependencies {
 ### Basic Configuration
 
 ```kotlin
-import com.trustweave.peerdid.*
-import com.trustweave.kms.*
+import org.trustweave.peerdid.*
+import org.trustweave.kms.*
 
 // Create configuration
 val config = PeerDidConfig.builder()
@@ -69,7 +69,7 @@ val config2 = PeerDidConfig.numalgo2()
 When the module is on the classpath, did:peer is automatically available:
 
 ```kotlin
-import com.trustweave.did.*
+import org.trustweave.did.*
 import java.util.ServiceLoader
 
 // Discover did:peer provider
@@ -105,8 +105,8 @@ println("Created: ${document.id}") // did:peer:2...
 ### Resolving a did:peer
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
-import com.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.resolver.DidResolutionResult
 
 val did = Did("did:peer:2...")
 val result = method.resolveDid(did)
@@ -126,7 +126,7 @@ when (result) {
 ### Updating a did:peer
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 val did = Did("did:peer:2...")
 val document = method.updateDid(did) { currentDoc ->
@@ -143,7 +143,7 @@ val document = method.updateDid(did) { currentDoc ->
 ### Deactivating a did:peer
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 val did = Did("did:peer:2...")
 val deactivated = method.deactivateDid(did)
@@ -207,8 +207,8 @@ val config = PeerDidConfig.builder()
 ## Integration with TrustWeave
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.peerdid.*
+import org.trustweave.TrustWeave
+import org.trustweave.peerdid.*
 
 val config = PeerDidConfig.numalgo2()
 

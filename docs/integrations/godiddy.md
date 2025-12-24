@@ -23,9 +23,9 @@ Add the GoDiddy module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave.did:godiddy:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.did:godiddy:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 
     // HTTP client (OkHttp recommended)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
@@ -37,8 +37,8 @@ dependencies {
 ### Basic Configuration
 
 ```kotlin
-import com.trustweave.godiddy.*
-import com.trustweave.did.*
+import org.trustweave.godiddy.*
+import org.trustweave.did.*
 
 // Create configuration
 val config = GodiddyConfig(
@@ -73,7 +73,7 @@ val method = GodiddyDidMethod(client, config)
 When the `did/plugins/godiddy` module is on the classpath, GoDiddy is automatically available:
 
 ```kotlin
-import com.trustweave.did.*
+import org.trustweave.did.*
 import java.util.ServiceLoader
 
 // Discover GoDiddy provider
@@ -94,7 +94,7 @@ val method = godiddyProvider?.create("godiddy", options)
 ### DID Resolution
 
 ```kotlin
-import com.trustweave.godiddy.*
+import org.trustweave.godiddy.*
 
 val client = GodiddyClient(GodiddyConfig.default())
 val resolver = GodiddyResolver(client)
@@ -117,7 +117,7 @@ resolutionResult.fold(
 ### DID Registration
 
 ```kotlin
-import com.trustweave.godiddy.*
+import org.trustweave.godiddy.*
 
 val client = GodiddyClient(GodiddyConfig.default())
 val registrar = GodiddyRegistrar(client)
@@ -143,7 +143,7 @@ registrationResult.fold(
 ### Credential Issuance
 
 ```kotlin
-import com.trustweave.godiddy.*
+import org.trustweave.godiddy.*
 
 val client = GodiddyClient(GodiddyConfig.default())
 val issuer = GodiddyIssuer(client)
@@ -176,7 +176,7 @@ issuanceResult.fold(
 ### Credential Verification
 
 ```kotlin
-import com.trustweave.godiddy.*
+import org.trustweave.godiddy.*
 
 val client = GodiddyClient(GodiddyConfig.default())
 val verifier = GodiddyVerifier(client)
@@ -219,7 +219,7 @@ See the [GoDiddy Documentation](https://godiddy.com/docs) for a complete list of
 The GoDiddy integration follows TrustWeave's error handling patterns:
 
 ```kotlin
-import com.trustweave.core.exception.TrustWeaveError
+import org.trustweave.core.exception.TrustWeaveError
 
 val result = resolver.resolveDid(did)
 result.fold(

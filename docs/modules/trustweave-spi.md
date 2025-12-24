@@ -24,8 +24,8 @@ other TrustWeave modules implement or consume. These interfaces are included in 
 ## Typical Usage
 
 ```kotlin
-import com.trustweave.spi.services.AdapterLoader
-import com.trustweave.spi.PluginRegistry
+import org.trustweave.spi.services.AdapterLoader
+import org.trustweave.spi.PluginRegistry
 
 // Locate DID method service at runtime
 val didMethodService = AdapterLoader.didMethodService()

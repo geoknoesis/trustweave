@@ -13,7 +13,7 @@ This document describes how to organize and structure plugins that implement the
 ```
 credentials/
 ├── credential-api/              # Core API (SPI definitions)
-│   └── src/main/kotlin/com/trustweave/credential/proof/spi/
+│   └── src/main/kotlin/org.trustweave/credential/proof/spi/
 │       ├── ProofAdapter.kt
 │       └── ProofAdapterProvider.kt
 │
@@ -22,11 +22,11 @@ credentials/
     │   ├── vcld/               # W3C Verifiable Credentials (Linked Data)
     │   │   ├── build.gradle.kts
     │   │   └── src/main/
-    │   │       ├── kotlin/com/trustweave/credential/proof/vcld/
+    │   │       ├── kotlin/org.trustweave/credential/proof/vcld/
     │   │       │   ├── VcLdProofAdapter.kt
     │   │       │   └── VcLdProofAdapterProvider.kt
     │   │       └── resources/META-INF/services/
-    │   │           └── com.trustweave.credential.proof.spi.ProofAdapterProvider
+    │   │           └── org.trustweave.credential.proof.spi.ProofAdapterProvider
     │   │
     │   ├── sdjwt/              # SD-JWT / SD-JWT-VC
     │   │   ├── build.gradle.kts
@@ -70,11 +70,11 @@ credentials/
   - `credential-proof-mdl`
 
 ### Package Names
-- Format: `com.trustweave.credential.proof.{format}`
+- Format: `org.trustweave.credential.proof.{format}`
 - Examples:
-  - `com.trustweave.credential.proof.vcld`
-  - `com.trustweave.credential.proof.sdjwt`
-  - `com.trustweave.credential.proof.anoncreds`
+  - `org.trustweave.credential.proof.vcld`
+  - `org.trustweave.credential.proof.sdjwt`
+  - `org.trustweave.credential.proof.anoncreds`
 
 ### Class Names
 - **Adapter**: `{Format}ProofAdapter`
@@ -94,7 +94,7 @@ plugins {
     kotlin("plugin.serialization")
 }
 
-group = "com.trustweave.credentials"
+group = "org.trustweave.credentials"
 
 dependencies {
     // Core API dependency
@@ -129,18 +129,18 @@ dependencies {
 ### 1. Create ProofAdapter Implementation
 
 ```kotlin
-package com.trustweave.credential.proof.vcld
+package org.trustweave.credential.proof.vcld
 
-import com.trustweave.credential.format.CredentialFormat
-import com.trustweave.credential.format.FormatOptions
-import com.trustweave.credential.model.CredentialEnvelope
-import com.trustweave.credential.proof.spi.ProofAdapter
-import com.trustweave.credential.proof.spi.ProofAdapterCapabilities
-import com.trustweave.credential.proof.spi.ProofAdapterConfig
-import com.trustweave.credential.requests.IssuanceRequest
-import com.trustweave.credential.requests.PresentationRequest
-import com.trustweave.credential.requests.VerificationOptions
-import com.trustweave.credential.results.VerificationResult
+import org.trustweave.credential.format.CredentialFormat
+import org.trustweave.credential.format.FormatOptions
+import org.trustweave.credential.model.CredentialEnvelope
+import org.trustweave.credential.proof.spi.ProofAdapter
+import org.trustweave.credential.proof.spi.ProofAdapterCapabilities
+import org.trustweave.credential.proof.spi.ProofAdapterConfig
+import org.trustweave.credential.requests.IssuanceRequest
+import org.trustweave.credential.requests.PresentationRequest
+import org.trustweave.credential.requests.VerificationOptions
+import org.trustweave.credential.results.VerificationResult
 
 /**
  * VC-LD (Verifiable Credentials Linked Data) proof adapter.
@@ -211,12 +211,12 @@ class VcLdProofAdapter(
 ### 2. Create ProofAdapterProvider
 
 ```kotlin
-package com.trustweave.credential.proof.vcld
+package org.trustweave.credential.proof.vcld
 
-import com.trustweave.credential.format.CredentialFormat
-import com.trustweave.credential.proof.spi.ProofAdapter
-import com.trustweave.credential.proof.spi.ProofAdapterConfig
-import com.trustweave.credential.proof.spi.ProofAdapterProvider
+import org.trustweave.credential.format.CredentialFormat
+import org.trustweave.credential.proof.spi.ProofAdapter
+import org.trustweave.credential.proof.spi.ProofAdapterConfig
+import org.trustweave.credential.proof.spi.ProofAdapterProvider
 
 /**
  * SPI Provider for VC-LD proof adapter.
@@ -243,10 +243,10 @@ class VcLdProofAdapterProvider : ProofAdapterProvider {
 
 ### 3. Register SPI Provider
 
-Create file: `src/main/resources/META-INF/services/com.trustweave.credential.proof.spi.ProofAdapterProvider`
+Create file: `src/main/resources/META-INF/services/org.trustweave.credential.proof.spi.ProofAdapterProvider`
 
 ```
-com.trustweave.credential.proof.vcld.VcLdProofAdapterProvider
+org.trustweave.credential.proof.vcld.VcLdProofAdapterProvider
 ```
 
 ---
@@ -255,7 +255,7 @@ com.trustweave.credential.proof.vcld.VcLdProofAdapterProvider
 
 ```
 credential-proof-vcld/
-└── src/main/kotlin/com/trustweave/credential/proof/vcld/
+└── src/main/kotlin/org.trustweave/credential/proof/vcld/
     ├── VcLdProofAdapter.kt              # Main adapter implementation
     ├── VcLdProofAdapterProvider.kt      # SPI provider
     ├── internal/                        # Internal implementation details
@@ -281,10 +281,10 @@ credential-proof-vcld/
 ### Auto-Discovery (Recommended)
 
 ```kotlin
-import com.trustweave.credential.*
-import com.trustweave.credential.proof.ProofAdapters
-import com.trustweave.credential.proof.ProofRegistries
-import com.trustweave.did.resolver.DidResolver
+import org.trustweave.credential.*
+import org.trustweave.credential.proof.ProofAdapters
+import org.trustweave.credential.proof.ProofRegistries
+import org.trustweave.did.resolver.DidResolver
 
 // Auto-discover and register all adapters on classpath
 val registry = ProofRegistries.default()
@@ -299,8 +299,8 @@ val service = createCredentialService(
 ### Manual Registration
 
 ```kotlin
-import com.trustweave.credential.proof.vcld.VcLdProofAdapter
-import com.trustweave.credential.proof.ProofRegistries
+import org.trustweave.credential.proof.vcld.VcLdProofAdapter
+import org.trustweave.credential.proof.ProofRegistries
 
 val registry = ProofRegistries.default()
 registry.register(VcLdProofAdapter())
@@ -329,7 +329,7 @@ ProofAdapters.autoRegisterFormats(
 
 ```
 credential-proof-vcld/
-└── src/test/kotlin/com/trustweave/credential/proof/vcld/
+└── src/test/kotlin/org.trustweave/credential/proof/vcld/
     ├── VcLdProofAdapterTest.kt
     ├── VcLdProofGeneratorTest.kt
     └── VcLdProofVerifierTest.kt
@@ -338,9 +338,9 @@ credential-proof-vcld/
 ### Example Test
 
 ```kotlin
-import com.trustweave.credential.*
-import com.trustweave.credential.proof.ProofRegistries
-import com.trustweave.credential.proof.vcld.VcLdProofAdapter
+import org.trustweave.credential.*
+import org.trustweave.credential.proof.ProofRegistries
+import org.trustweave.credential.proof.vcld.VcLdProofAdapter
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -420,7 +420,7 @@ credential-proof-vcld/
 ├── README.md
 └── src/
     ├── main/
-    │   ├── kotlin/com/trustweave/credential/proof/vcld/
+    │   ├── kotlin/org.trustweave/credential/proof/vcld/
     │   │   ├── VcLdProofAdapter.kt
     │   │   ├── VcLdProofAdapterProvider.kt
     │   │   └── internal/
@@ -428,9 +428,9 @@ credential-proof-vcld/
     │   │       ├── VcLdProofVerifier.kt
     │   │       └── VcLdCanonicalizer.kt
     │   └── resources/META-INF/services/
-    │       └── com.trustweave.credential.proof.spi.ProofAdapterProvider
+    │       └── org.trustweave.credential.proof.spi.ProofAdapterProvider
     └── test/
-        └── kotlin/com/trustweave/credential/proof/vcld/
+        └── kotlin/org.trustweave/credential/proof/vcld/
             └── VcLdProofAdapterTest.kt
 ```
 
@@ -459,7 +459,7 @@ credential-core/proof/JwtProofGenerator.kt
 **Key Principles:**
 1. ✅ One format = One module
 2. ✅ Clear naming: `credential-proof-{format}`
-3. ✅ Package: `com.trustweave.credential.proof.{format}`
+3. ✅ Package: `org.trustweave.credential.proof.{format}`
 4. ✅ SPI registration via `META-INF/services`
 5. ✅ Auto-discovery via `ProofAdapters.discoverProviders()`
 6. ✅ Format isolation (no cross-format deps)

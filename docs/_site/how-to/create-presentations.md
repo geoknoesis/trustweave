@@ -25,9 +25,9 @@ Verifiable Presentations allow credential holders to share credentials selective
 
 **Required imports:**
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.credential.models.VerifiablePresentation
-import com.trustweave.trust.types.ProofType
+import org.trustweave.trust.TrustWeave
+import org.trustweave.credential.models.VerifiablePresentation
+import org.trustweave.trust.types.ProofType
 import kotlinx.coroutines.runBlocking
 ```
 
@@ -227,10 +227,10 @@ if (isValid) {
 Here's a complete, runnable example:
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.types.ProofType
-import com.trustweave.trust.types.VerificationResult
-import com.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.ProofType
+import org.trustweave.trust.types.VerificationResult
+import org.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import java.time.temporal.ChronoUnit

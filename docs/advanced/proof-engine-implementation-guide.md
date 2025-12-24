@@ -77,11 +77,11 @@ enum class ProofSuiteId(val value: String) {
 ### 2. Implement the ProofEngine Interface
 
 ```kotlin
-import com.trustweave.credential.spi.proof.*
-import com.trustweave.credential.format.ProofSuiteId
-import com.trustweave.credential.model.vc.*
-import com.trustweave.credential.requests.*
-import com.trustweave.credential.results.*
+import org.trustweave.credential.spi.proof.*
+import org.trustweave.credential.format.ProofSuiteId
+import org.trustweave.credential.model.vc.*
+import org.trustweave.credential.requests.*
+import org.trustweave.credential.results.*
 
 class CustomProofEngine(
     private val config: ProofEngineConfig = ProofEngineConfig()
@@ -207,7 +207,7 @@ class CustomProofEngine(
 Create a provider for your proof engine:
 
 ```kotlin
-import com.trustweave.credential.spi.proof.*
+import org.trustweave.credential.spi.proof.*
 
 class CustomProofEngineProvider : ProofEngineProvider {
     
@@ -230,7 +230,7 @@ class CustomProofEngineProvider : ProofEngineProvider {
 
 For ServiceLoader-based discovery, create:
 
-**`META-INF/services/com.trustweave.credential.spi.proof.ProofEngineProvider`**
+**`META-INF/services/org.trustweave.credential.spi.proof.ProofEngineProvider`**
 
 ```
 com.example.CustomProofEngineProvider

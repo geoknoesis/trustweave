@@ -15,8 +15,8 @@ All major recommendations from the DID modules code review have been successfull
 ### 1. Top-Level Enums ✅
 
 **Files:**
-- `did/did-core/src/main/kotlin/com/trustweave/did/KeyAlgorithm.kt`
-- `did/did-core/src/main/kotlin/com/trustweave/did/KeyPurpose.kt`
+- `did/did-core/src/main/kotlin/org.trustweave/did/KeyAlgorithm.kt`
+- `did/did-core/src/main/kotlin/org.trustweave/did/KeyPurpose.kt`
 
 **Usage:**
 ```kotlin
@@ -39,7 +39,7 @@ KeyAlgorithm.ED25519
 
 ### 3. Fluent DSL Extensions ✅
 
-**New Extensions in `did/did-core/src/main/kotlin/com/trustweave/did/dsl/`:**
+**New Extensions in `did/did-core/src/main/kotlin/org.trustweave/did/dsl/`:**
 
 ```kotlin
 // Did extensions
@@ -87,21 +87,21 @@ didCreationOptions {
 ## Files Changed
 
 ### New Files (6):
-1. `did/did-core/src/main/kotlin/com/trustweave/did/KeyAlgorithm.kt`
-2. `did/did-core/src/main/kotlin/com/trustweave/did/KeyPurpose.kt`
-3. `did/did-core/src/main/kotlin/com/trustweave/did/dsl/DidExtensions.kt`
-4. `did/did-core/src/main/kotlin/com/trustweave/did/dsl/ResolverExtensions.kt`
-5. `did/did-core/src/main/kotlin/com/trustweave/did/dsl/ResolutionResultExtensions.kt`
-6. `did/did-core/src/main/kotlin/com/trustweave/did/dsl/DidMethodExtensions.kt`
+1. `did/did-core/src/main/kotlin/org.trustweave/did/KeyAlgorithm.kt`
+2. `did/did-core/src/main/kotlin/org.trustweave/did/KeyPurpose.kt`
+3. `did/did-core/src/main/kotlin/org.trustweave/did/dsl/DidExtensions.kt`
+4. `did/did-core/src/main/kotlin/org.trustweave/did/dsl/ResolverExtensions.kt`
+5. `did/did-core/src/main/kotlin/org.trustweave/did/dsl/ResolutionResultExtensions.kt`
+6. `did/did-core/src/main/kotlin/org.trustweave/did/dsl/DidMethodExtensions.kt`
 
 ### Modified Files (7):
-1. `did/did-core/src/main/kotlin/com/trustweave/did/DidCreationOptions.kt`
-2. `did/did-core/src/main/kotlin/com/trustweave/did/DidMethod.kt`
-3. `did/did-core/src/main/kotlin/com/trustweave/did/resolver/DidResolver.kt`
-4. `did/did-core/src/main/kotlin/com/trustweave/did/resolver/RegistryBasedResolver.kt`
-5. `did/did-core/src/main/kotlin/com/trustweave/did/resolver/DidResolutionResultExtensions.kt`
-6. `did/did-core/src/main/kotlin/com/trustweave/did/resolver/DefaultUniversalResolver.kt`
-7. `did/did-core/src/main/kotlin/com/trustweave/did/verifier/DidDocumentDelegationVerifier.kt`
+1. `did/did-core/src/main/kotlin/org.trustweave/did/DidCreationOptions.kt`
+2. `did/did-core/src/main/kotlin/org.trustweave/did/DidMethod.kt`
+3. `did/did-core/src/main/kotlin/org.trustweave/did/resolver/DidResolver.kt`
+4. `did/did-core/src/main/kotlin/org.trustweave/did/resolver/RegistryBasedResolver.kt`
+5. `did/did-core/src/main/kotlin/org.trustweave/did/resolver/DidResolutionResultExtensions.kt`
+6. `did/did-core/src/main/kotlin/org.trustweave/did/resolver/DefaultUniversalResolver.kt`
+7. `did/did-core/src/main/kotlin/org.trustweave/did/verifier/DidDocumentDelegationVerifier.kt`
 
 ## Next Steps
 
@@ -114,24 +114,24 @@ The linter errors about "unresolved reference" are likely false positives that w
 
 ### 2. Update Example Files
 Update these files to use top-level enums:
-- `distribution/examples/src/main/kotlin/com/trustweave/examples/did-key/KeyDidExample.kt`
-- `distribution/examples/src/main/kotlin/com/trustweave/examples/did-jwk/JwkDidExample.kt`
-- `did/plugins/jwk/src/test/kotlin/com/trustweave/jwkdid/JwkDidMethodTest.kt`
-- `did/plugins/key/src/test/kotlin/com/trustweave/keydid/KeyDidMethodTest.kt`
-- `testkit/src/main/kotlin/com/trustweave/testkit/TrustWeaveTestFixture.kt`
+- `distribution/examples/src/main/kotlin/org.trustweave/examples/did-key/KeyDidExample.kt`
+- `distribution/examples/src/main/kotlin/org.trustweave/examples/did-jwk/JwkDidExample.kt`
+- `did/plugins/jwk/src/test/kotlin/org.trustweave/jwkdid/JwkDidMethodTest.kt`
+- `did/plugins/key/src/test/kotlin/org.trustweave/keydid/KeyDidMethodTest.kt`
+- `testkit/src/main/kotlin/org.trustweave/testkit/TrustWeaveTestFixture.kt`
 - `docs/contributing/test-templates/DidMethodTestTemplate.kt`
-- `distribution/trustweave-examples/src/main/kotlin/com/trustweave/examples/did-key/KeyDidExample.kt`
-- `distribution/trustweave-examples/src/main/kotlin/com/trustweave/examples/did-jwk/JwkDidExample.kt`
+- `distribution/trustweave-examples/src/main/kotlin/org.trustweave/examples/did-key/KeyDidExample.kt`
+- `distribution/trustweave-examples/src/main/kotlin/org.trustweave/examples/did-jwk/JwkDidExample.kt`
 
 **Change:**
 ```kotlin
 // Old:
-import com.trustweave.did.DidCreationOptions.KeyAlgorithm
-import com.trustweave.did.DidCreationOptions.KeyPurpose
+import org.trustweave.did.DidCreationOptions.KeyAlgorithm
+import org.trustweave.did.DidCreationOptions.KeyPurpose
 
 // New:
-import com.trustweave.did.KeyAlgorithm
-import com.trustweave.did.KeyPurpose
+import org.trustweave.did.KeyAlgorithm
+import org.trustweave.did.KeyPurpose
 ```
 
 ### 3. Test New APIs

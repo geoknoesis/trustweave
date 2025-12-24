@@ -78,7 +78,7 @@ fun CredentialProof.getFormatId(): CredentialFormatId
 ## Known Issues
 
 ### Old `api/` Subdirectory
-There are linter errors in files under `credentials/credential-api/src/main/kotlin/com/trustweave/credential/api/`:
+There are linter errors in files under `credentials/credential-api/src/main/kotlin/org.trustweave/credential/api/`:
 - These appear to be old/duplicate files from a previous package structure
 - Files affected:
   - `api/identifiers/CredentialIdentifiers.kt`

@@ -12,7 +12,7 @@ Many components implemented for DIDComm are reusable across other protocols (OID
 
 ### 1. Encryption & Key Management
 
-**Location**: `credentials/credential-core/src/main/kotlin/com/trustweave/credential/`
+**Location**: `credentials/credential-core/src/main/kotlin/org.trustweave/credential/`
 
 #### KeyEncryption (`crypto/secret/encryption/KeyEncryption.kt`)
 - **Reusable**: ✅ Yes - Generic AES-256-GCM encryption

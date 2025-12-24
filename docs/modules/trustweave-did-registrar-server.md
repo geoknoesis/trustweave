@@ -8,10 +8,10 @@ The `trustweave-did-registrar-server-ktor` module provides a Ktor-based HTTP ser
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave.did:registrar-server-ktor:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-did-registrar:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.did:registrar-server-ktor:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-did-registrar:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -88,9 +88,9 @@ graph TB
 Main server class that configures and runs the DID Registrar HTTP service:
 
 ```kotlin
-import com.trustweave.did.registrar.server.*
-import com.trustweave.did.registrar.client.*
-import com.trustweave.kms.*
+import org.trustweave.did.registrar.server.*
+import org.trustweave.did.registrar.client.*
+import org.trustweave.kms.*
 
 // Create registrar backend
 val kms = InMemoryKeyManagementService()
@@ -164,7 +164,7 @@ interface JobStorage {
 Database-backed implementation that stores job responses in a relational database:
 
 ```kotlin
-import com.trustweave.did.registrar.server.*
+import org.trustweave.did.registrar.server.*
 import com.zaxxer.hikari.HikariDataSource
 import javax.sql.DataSource
 
@@ -407,9 +407,9 @@ sequenceDiagram
 ### Basic Server Setup
 
 ```kotlin
-import com.trustweave.did.registrar.server.*
-import com.trustweave.did.registrar.client.*
-import com.trustweave.kms.*
+import org.trustweave.did.registrar.server.*
+import org.trustweave.did.registrar.client.*
+import org.trustweave.kms.*
 
 fun main() {
     // Create registrar backend
@@ -431,7 +431,7 @@ fun main() {
 For production deployments, use the database-backed implementation:
 
 ```kotlin
-import com.trustweave.did.registrar.server.*
+import org.trustweave.did.registrar.server.*
 import com.zaxxer.hikari.HikariDataSource
 
 // Create DataSource
@@ -470,8 +470,8 @@ dependencies {
 You can also implement your own `JobStorage`:
 
 ```kotlin
-import com.trustweave.did.registrar.server.*
-import com.trustweave.did.registrar.model.*
+import org.trustweave.did.registrar.server.*
+import org.trustweave.did.registrar.model.*
 
 // Custom job storage implementation (e.g., Redis)
 class RedisJobStorage : JobStorage {
@@ -499,8 +499,8 @@ val server = DidRegistrarServer(
 You can chain registrars, using a local server that delegates to another Universal Registrar:
 
 ```kotlin
-import com.trustweave.did.registrar.server.*
-import com.trustweave.did.registrar.client.*
+import org.trustweave.did.registrar.server.*
+import org.trustweave.did.registrar.client.*
 
 // Create upstream registrar
 val upstreamRegistrar = DefaultUniversalRegistrar(
@@ -521,7 +521,7 @@ server.start()
 Once the server is running, clients can use it:
 
 ```kotlin
-import com.trustweave.did.registrar.client.*
+import org.trustweave.did.registrar.client.*
 
 // Client connects to your server
 val client = DefaultUniversalRegistrar(
@@ -542,7 +542,7 @@ val response = client.createDid(
 ```mermaid
 graph TD
     subgraph "did:registrar-server-ktor Package Structure"
-        A[com.trustweave.did.registrar.server]
+        A[org.trustweave.did.registrar.server]
         A --> B[DidRegistrarServer.kt]
         A --> C[DidRegistrarRoutes.kt]
         A --> D[dto/]

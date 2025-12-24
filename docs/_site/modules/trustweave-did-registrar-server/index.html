@@ -619,10 +619,10 @@
 5
 6
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.did:registrar-server-ktor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did-registrar:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.did:registrar-server-ktor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-did-registrar:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
@@ -742,9 +742,9 @@
 15
 16
 17
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.registrar.server.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.registrar.client.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.registrar.server.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.registrar.client.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
 
 <span class="c1">// Create registrar backend</span>
 <span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
@@ -873,7 +873,7 @@
 21
 22
 23
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.registrar.server.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.registrar.server.*</span>
 <span class="k">import</span> <span class="nn">com.zaxxer.hikari.HikariDataSource</span>
 <span class="k">import</span> <span class="nn">javax.sql.DataSource</span>
 
@@ -1285,9 +1285,9 @@
 15
 16
 17
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.registrar.server.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.registrar.client.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.registrar.server.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.registrar.client.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="c1">// Create registrar backend</span>
@@ -1337,7 +1337,7 @@
 21
 22
 23
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.registrar.server.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.registrar.server.*</span>
 <span class="k">import</span> <span class="nn">com.zaxxer.hikari.HikariDataSource</span>
 
 <span class="c1">// Create DataSource</span>
@@ -1406,8 +1406,8 @@
 20
 21
 22
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.registrar.server.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.registrar.model.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.registrar.server.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.registrar.model.*</span>
 
 <span class="c1">// Custom job storage implementation (e.g., Redis)</span>
 <span class="kd">class</span> <span class="nc">RedisJobStorage</span> <span class="p">:</span> <span class="nc">JobStorage</span> <span class="p">{</span>
@@ -1455,8 +1455,8 @@
 13
 14
 15
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.registrar.server.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.registrar.client.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.registrar.server.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.registrar.client.*</span>
 
 <span class="c1">// Create upstream registrar</span>
 <span class="kd">val</span> <span class="py">upstreamRegistrar</span> <span class="p">=</span> <span class="nc">DefaultUniversalRegistrar</span><span class="p">(</span>
@@ -1496,7 +1496,7 @@
 12
 13
 14
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.registrar.client.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.registrar.client.*</span>
 
 <span class="c1">// Client connects to your server</span>
 <span class="kd">val</span> <span class="py">client</span> <span class="p">=</span> <span class="nc">DefaultUniversalRegistrar</span><span class="p">(</span>
@@ -1522,7 +1522,7 @@
 
 <pre><code class="language-mermaid">graph TD
     subgraph "did:registrar-server-ktor Package Structure"
-        A[com.trustweave.did.registrar.server]
+        A[org.trustweave.did.registrar.server]
         A --&gt; B[DidRegistrarServer.kt]
         A --&gt; C[DidRegistrarRoutes.kt]
         A --&gt; D[dto/]

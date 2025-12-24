@@ -22,10 +22,10 @@ Add the Ethereum adapter module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave.chains:ethereum:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-json:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.chains:ethereum:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-json:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Web3j for Ethereum blockchain
     implementation("org.web3j:core:5.0.1")
@@ -37,8 +37,8 @@ dependencies {
 ### Basic Configuration
 
 ```kotlin
-import com.trustweave.anchor.*
-import com.trustweave.ethereum.*
+import org.trustweave.anchor.*
+import org.trustweave.ethereum.*
 
 // Create Ethereum anchor client for mainnet
 val options = mapOf(
@@ -79,8 +79,8 @@ val sepoliaClient = EthereumBlockchainAnchorClient(
 When the module is on the classpath, Ethereum adapter is automatically available:
 
 ```kotlin
-import com.trustweave.anchor.*
-import com.trustweave.anchor.spi.*
+import org.trustweave.anchor.*
+import org.trustweave.anchor.spi.*
 import java.util.ServiceLoader
 
 // Discover Ethereum provider
@@ -97,7 +97,7 @@ val client = ethereumProvider?.create(
 ### Integration Helper
 
 ```kotlin
-import com.trustweave.ethereum.*
+import org.trustweave.ethereum.*
 
 // Auto-discover and register
 val result = EthereumIntegration.discoverAndRegister(
@@ -120,8 +120,8 @@ val setup = EthereumIntegration.setup(
 ### Anchoring Data
 
 ```kotlin
-import com.trustweave.anchor.*
-import com.trustweave.ethereum.*
+import org.trustweave.anchor.*
+import org.trustweave.ethereum.*
 import kotlinx.serialization.json.*
 
 val client = EthereumBlockchainAnchorClient(
@@ -161,8 +161,8 @@ println("Retrieved: ${readResult.payload}")
 ## Integration with TrustWeave
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.ethereum.*
+import org.trustweave.TrustWeave
+import org.trustweave.ethereum.*
 
 val TrustWeave = TrustWeave.create {
     blockchain {

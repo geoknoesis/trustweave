@@ -651,10 +651,10 @@
 8
 9
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.did:plc:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.did:base:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.did:plc:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.did:base:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 
     <span class="c1">// HTTP client for AT Protocol integration</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.squareup.okhttp3:okhttp:4.12.0"</span><span class="p">)</span>
@@ -691,8 +691,8 @@
 12
 13
 14
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.plcdid.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.plcdid.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
 
 <span class="c1">// Create configuration</span>
 <span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">PlcDidConfig</span><span class="p">.</span><span class="nf">builder</span><span class="p">()</span>
@@ -747,7 +747,7 @@
 12
 13
 14
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.*</span>
 <span class="k">import</span> <span class="nn">java.util.ServiceLoader</span>
 
 <span class="c1">// Discover did:plc provider</span>
@@ -831,8 +831,8 @@
 14
 15
 16
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.identifiers.Did</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.resolver.DidResolutionResult</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.identifiers.Did</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.resolver.DidResolutionResult</span>
 
 <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="nc">Did</span><span class="p">(</span><span class="s">"did:plc:..."</span><span class="p">)</span>
 <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">method</span><span class="p">.</span><span class="nf">resolveDid</span><span class="p">(</span><span class="n">did</span><span class="p">)</span>
@@ -869,7 +869,7 @@
 10
 11
 12
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.identifiers.Did</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.identifiers.Did</span>
 
 <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="nc">Did</span><span class="p">(</span><span class="s">"did:plc:..."</span><span class="p">)</span>
 <span class="kd">val</span> <span class="py">document</span> <span class="p">=</span> <span class="n">method</span><span class="p">.</span><span class="nf">updateDid</span><span class="p">(</span><span class="n">did</span><span class="p">)</span> <span class="p">{</span> <span class="n">currentDoc</span> <span class="p">-&gt;</span>
@@ -896,7 +896,7 @@
 3
 4
 5
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.identifiers.Did</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.identifiers.Did</span>
 
 <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="nc">Did</span><span class="p">(</span><span class="s">"did:plc:..."</span><span class="p">)</span>
 <span class="kd">val</span> <span class="py">deactivated</span> <span class="p">=</span> <span class="n">method</span><span class="p">.</span><span class="nf">deactivateDid</span><span class="p">(</span><span class="n">did</span><span class="p">)</span>
@@ -1027,8 +1027,8 @@
 17
 18
 19
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.plcdid.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.plcdid.*</span>
 
 <span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">PlcDidConfig</span><span class="p">.</span><span class="nf">default</span><span class="p">()</span>
 

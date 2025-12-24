@@ -269,8 +269,8 @@ See **[Scenarios Overview](scenarios/README.md)** for all available scenarios or
 
 ### Type-Safe Configuration
 ```kotlin
-import com.trustweave.anchor.options.AlgorandOptions
-import com.trustweave.anchor.ChainId
+import org.trustweave.anchor.options.AlgorandOptions
+import org.trustweave.anchor.ChainId
 
 val chainId = ChainId.Algorand.Testnet
 val options = AlgorandOptions(algodUrl = "...", privateKey = "...")
@@ -279,7 +279,7 @@ val client = AlgorandBlockchainAnchorClient(chainId.toString(), options)
 
 ### Error Handling
 ```kotlin
-import com.trustweave.anchor.exceptions.*
+import org.trustweave.anchor.exceptions.*
 
 try {
     val result = client.writePayload(payload)

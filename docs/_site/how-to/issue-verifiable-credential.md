@@ -24,12 +24,12 @@ Verifiable Credentials enable trust without intermediaries. They're tamper-proof
 
 **Required imports:**
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.types.ProofType
-import com.trustweave.trust.types.VerificationResult
-import com.trustweave.trust.types.DidCreationResult
-import com.trustweave.trust.types.IssuanceResult
-import com.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.ProofType
+import org.trustweave.trust.types.VerificationResult
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.trust.types.IssuanceResult
+import org.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -107,7 +107,7 @@ val trustWeave = TrustWeave.build {
 Create a DID (Decentralized Identifier) for the credential issuer. This identity will sign the credential.
 
 ```kotlin
-import com.trustweave.trust.types.DidCreationResult
+import org.trustweave.trust.types.DidCreationResult
 
 val didResult = trustWeave.createDid {
     method(KEY)
@@ -171,7 +171,7 @@ println("Signing key ID: $keyId")
 Define the credential content using the DSL builder. Specify the subject, types, and metadata.
 
 ```kotlin
-import com.trustweave.trust.types.IssuanceResult
+import org.trustweave.trust.types.IssuanceResult
 
 val issuanceResult = trustWeave.issue {
     credential {
@@ -289,9 +289,9 @@ when (verificationResult) {
 Here's a complete, runnable example that brings all steps together:
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.types.ProofType
-import com.trustweave.trust.types.VerificationResult
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.ProofType
+import org.trustweave.trust.types.VerificationResult
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import java.time.temporal.ChronoUnit

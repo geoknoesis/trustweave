@@ -61,7 +61,7 @@
 2. It's explicit about the domain (credentials)
 3. "Manager" accurately describes its role (actively managing revocation)
 4. Suspension is a secondary use case and is still supported
-5. The package name `com.trustweave.credential.revocation` provides additional context
+5. The package name `org.trustweave.credential.revocation` provides additional context
 
 ## Migration
 - Rename `CredentialStatusListManager` → `CredentialRevocationManager`

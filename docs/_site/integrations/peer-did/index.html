@@ -649,10 +649,10 @@
 5
 6
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.did:peer:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.did:base:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.did:peer:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.did:base:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="configuration">
@@ -686,8 +686,8 @@
 12
 13
 14
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.peerdid.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.peerdid.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
 
 <span class="c1">// Create configuration</span>
 <span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">PeerDidConfig</span><span class="p">.</span><span class="nf">builder</span><span class="p">()</span>
@@ -748,7 +748,7 @@
 8
 9
 10
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.*</span>
 <span class="k">import</span> <span class="nn">java.util.ServiceLoader</span>
 
 <span class="c1">// Discover did:peer provider</span>
@@ -830,8 +830,8 @@
 14
 15
 16
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.identifiers.Did</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.resolver.DidResolutionResult</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.identifiers.Did</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.resolver.DidResolutionResult</span>
 
 <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="nc">Did</span><span class="p">(</span><span class="s">"did:peer:2..."</span><span class="p">)</span>
 <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">method</span><span class="p">.</span><span class="nf">resolveDid</span><span class="p">(</span><span class="n">did</span><span class="p">)</span>
@@ -868,7 +868,7 @@
 10
 11
 12
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.identifiers.Did</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.identifiers.Did</span>
 
 <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="nc">Did</span><span class="p">(</span><span class="s">"did:peer:2..."</span><span class="p">)</span>
 <span class="kd">val</span> <span class="py">document</span> <span class="p">=</span> <span class="n">method</span><span class="p">.</span><span class="nf">updateDid</span><span class="p">(</span><span class="n">did</span><span class="p">)</span> <span class="p">{</span> <span class="n">currentDoc</span> <span class="p">-&gt;</span>
@@ -895,7 +895,7 @@
 3
 4
 5
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.identifiers.Did</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.identifiers.Did</span>
 
 <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="nc">Did</span><span class="p">(</span><span class="s">"did:peer:2..."</span><span class="p">)</span>
 <span class="kd">val</span> <span class="py">deactivated</span> <span class="p">=</span> <span class="n">method</span><span class="p">.</span><span class="nf">deactivateDid</span><span class="p">(</span><span class="n">did</span><span class="p">)</span>
@@ -1046,8 +1046,8 @@
 17
 18
 19
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.peerdid.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.peerdid.*</span>
 
 <span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">PeerDidConfig</span><span class="p">.</span><span class="nf">numalgo2</span><span class="p">()</span>
 

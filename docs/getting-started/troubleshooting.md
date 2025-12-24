@@ -75,7 +75,7 @@ CredentialVerificationResult(valid=false, errors=[Proof verification failed])
 1. **Issuer DID not resolvable**
    ```kotlin
    // Ensure issuer DID is created and resolvable
-   import com.trustweave.trust.types.DidCreationResult
+   import org.trustweave.trust.types.DidCreationResult
    
    val didResult = trustWeave.createDid {
        method(KEY)
@@ -140,7 +140,7 @@ TrustWeaveError.WalletCreationFailed: Provider 'database' not found
 - Check wallet provider availability
 
 ```kotlin
-import com.trustweave.trust.types.WalletCreationResult
+import org.trustweave.trust.types.WalletCreationResult
 
 val walletResult = trustWeave.wallet {
     id("holder-wallet")
@@ -202,9 +202,9 @@ dependencies {
     </appender>
 
     <!-- TrustWeave specific loggers -->
-    <logger name="com.trustweave" level="DEBUG"/>
-    <logger name="com.trustweave.core" level="TRACE"/>
-    <logger name="com.trustweave.plugins" level="DEBUG"/>
+    <logger name="org.trustweave" level="DEBUG"/>
+    <logger name="org.trustweave.core" level="TRACE"/>
+    <logger name="org.trustweave.plugins" level="DEBUG"/>
 
     <root level="INFO">
         <appender-ref ref="STDOUT" />
@@ -254,8 +254,8 @@ fun debugSystemState(trustweave: TrustWeave) {
 Always validate inputs to catch errors early:
 
 ```kotlin
-import com.trustweave.core.util.DidValidator
-import com.trustweave.credential.validation.CredentialValidator
+import org.trustweave.core.util.DidValidator
+import org.trustweave.credential.validation.CredentialValidator
 
 fun validateBeforeOperation(did: String, credential: VerifiableCredential? = null) {
     // Validate DID format
@@ -511,7 +511,7 @@ See [Step 3: Validate Inputs Before Operations](#step-3-validate-inputs-before-o
 - Use local DID resolvers when possible
 
 ```kotlin
-import com.trustweave.trust.TrustLayer
+import org.trustweave.trust.TrustLayer
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import java.util.concurrent.TimeUnit
@@ -692,7 +692,7 @@ suspend fun operationWithTimeout(
 ```kotlin
 // Configure connection pool
 val dataSource = HikariDataSource().apply {
-    jdbcUrl = "jdbc:postgresql://db.example.com/trustweave"
+    jdbcUrl = "jdbc:postgresql://db.example.org.trustweave"
     maximumPoolSize = 20  // Limit connections
     minimumIdle = 5
     connectionTimeout = 30000

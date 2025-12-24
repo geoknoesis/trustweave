@@ -16,7 +16,7 @@ The `trustweave-common` module provides **domain-agnostic core infrastructure** 
 
 ## Key Components
 
-### Plugin Infrastructure (`com.trustweave.core.plugin`)
+### Plugin Infrastructure (`org.trustweave.core.plugin`)
 - **`PluginRegistry`** – Thread-safe, capability-based plugin discovery and registration
 - **`PluginMetadata`** – Plugin metadata with domain-agnostic capabilities
 - **`PluginConfiguration`** – Configuration loaded from YAML/JSON files
@@ -24,7 +24,7 @@ The `trustweave-common` module provides **domain-agnostic core infrastructure** 
 - **`PluginType`** – Framework-level plugin type enumeration (BLOCKCHAIN, CREDENTIAL_SERVICE, DID_METHOD, etc.)
 - **`PluginLifecycle`** – Lifecycle interface for plugin initialization, startup, shutdown, and cleanup
 
-### Error Handling (`com.trustweave.core.exception`)
+### Error Handling (`org.trustweave.core.exception`)
 - **`TrustWeaveException`** – Base exception for TrustWeave operations
 - **`TrustWeaveError`** – Sealed hierarchy of structured errors with rich context:
   - **Plugin Errors**: `BlankPluginId`, `PluginAlreadyRegistered`, `PluginNotFound`, `PluginInitializationFailed`
@@ -33,30 +33,30 @@ The `trustweave-common` module provides **domain-agnostic core infrastructure** 
   - **JSON/Digest Errors**: `InvalidJson`, `JsonEncodeFailed`, `DigestFailed`, `EncodeFailed`
   - **Generic Errors**: `ValidationFailed`, `InvalidOperation`, `InvalidState`, `Unknown`
 
-### Utilities (`com.trustweave.core.util`)
+### Utilities (`org.trustweave.core.util`)
 - **`DigestUtils`** – JSON canonicalization and SHA-256 digest computation with multibase encoding (base58btc)
 - **`ResultExtensions`** – Extension functions for `Result<T>` (mapError, combine, mapSequential, etc.)
 - **`Validation`** – Generic validation infrastructure (`ValidationResult` sealed class)
 - **`TrustWeaveConstants`** – Common constants
 
 **Note:** Domain-specific validators (DID, Chain ID) are in their respective domain modules:
-- DID validation → `com.trustweave.did.validation.DidValidator`
-- Chain ID validation → `com.trustweave.anchor.validation.ChainIdValidator`
+- DID validation → `org.trustweave.did.validation.DidValidator`
+- Chain ID validation → `org.trustweave.anchor.validation.ChainIdValidator`
 
 Add the module alongside any DID/KMS components you require:
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 }
 ```
 
 **Result:** Gradle exposes the core infrastructure APIs for plugin management, error handling, and JSON utilities:
 
 ```kotlin
-import com.trustweave.core.plugin.*
-import com.trustweave.core.exception.TrustWeaveError
-import com.trustweave.core.util.*
+import org.trustweave.core.plugin.*
+import org.trustweave.core.exception.TrustWeaveError
+import org.trustweave.core.util.*
 
 // Register a plugin
 val metadata = PluginMetadata(
@@ -116,25 +116,25 @@ result.fold(
 
 The `trustweave-common` module is organized into logical packages:
 
-- **`com.trustweave.core.exception`** – Exception types and error handling
+- **`org.trustweave.core.exception`** – Exception types and error handling
   - `TrustWeaveException`, `NotFoundException`, `InvalidOperationException`
   - `TrustWeaveError` (sealed class hierarchy with 13+ specific error types)
 
-- **`com.trustweave.core.plugin`** – Plugin infrastructure
+- **`org.trustweave.core.plugin`** – Plugin infrastructure
   - `PluginRegistry` (thread-safe, capability-based discovery)
   - `PluginMetadata`, `PluginCapabilities` (domain-agnostic)
   - `PluginConfiguration`, `PluginType` (framework-level plugin types)
   - `ProviderChain` (fallback support)
   - `PluginLifecycle` (lifecycle management)
 
-- **`com.trustweave.core.util`** – General utilities
+- **`org.trustweave.core.util`** – General utilities
   - `DigestUtils` (JSON canonicalization and SHA-256 digest computation)
   - `ResultExtensions` (Result<T> extension functions)
   - `TrustWeaveConstants`
   - `Validation` (generic validation infrastructure - `ValidationResult`)
 
 **Note:** Domain-specific components are in their respective modules:
-- DID validation → `com.trustweave.did.validation.DidValidator` (in `trustweave-did`)
-- Chain ID validation → `com.trustweave.anchor.validation.ChainIdValidator` (in `trustweave-anchor`)
-- Credential errors → `com.trustweave.credential.exception.CredentialError` (in `trustweave-credentials`)
-- Proof types → `com.trustweave.credential.proof.ProofType` (in `trustweave-credentials`)
+- DID validation → `org.trustweave.did.validation.DidValidator` (in `trustweave-did`)
+- Chain ID validation → `org.trustweave.anchor.validation.ChainIdValidator` (in `trustweave-anchor`)
+- Credential errors → `org.trustweave.credential.exception.CredentialError` (in `trustweave-credentials`)
+- Proof types → `org.trustweave.credential.proof.ProofType` (in `trustweave-credentials`)

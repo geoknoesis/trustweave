@@ -26,10 +26,10 @@ Get started with TrustWeave in 5 minutes! This guide will walk you through creat
 Here's the absolute minimum to get your first credential working. Copy, paste, run:
 
 ```kotlin
-import com.trustweave.trust.dsl.trustWeave
-import com.trustweave.trust.dsl.credential.*
-import com.trustweave.trust.types.VerificationResult
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.dsl.credential.*
+import org.trustweave.trust.types.VerificationResult
+import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -118,11 +118,11 @@ Here's a complete, copy-paste ready example that demonstrates the full TrustWeav
 ```kotlin
 package com.example.TrustWeave.quickstart
 
-import com.trustweave.trust.dsl.trustWeave
-import com.trustweave.trust.dsl.credential.*
-import com.trustweave.trust.types.VerificationResult
-import com.trustweave.core.util.DigestUtils
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.dsl.credential.*
+import org.trustweave.trust.types.VerificationResult
+import org.trustweave.core.util.DigestUtils
+import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -222,9 +222,9 @@ fun main() = runBlocking {
 For quick testing and prototypes, you can use a simplified version without detailed error handling. **Do not use this in production:**
 
 ```kotlin
-import com.trustweave.trust.dsl.trustWeave
-import com.trustweave.trust.dsl.credential.*
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.dsl.credential.*
+import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -251,9 +251,9 @@ fun main() = runBlocking {
 The example above already shows the production pattern. Here's an enhanced version with more detailed error handling:
 
 ```kotlin
-import com.trustweave.trust.dsl.trustWeave
-import com.trustweave.trust.dsl.credential.*
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.dsl.credential.*
+import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -323,8 +323,8 @@ The sections below explain each step in detail.
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
-    testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -342,10 +342,10 @@ TrustWeave promotes a “batteries included” experience for newcomers. The mon
 **How simple:** One helper call, no manual canonicalisation.
 
 ```kotlin
-import com.trustweave.trust.dsl.trustWeave
-import com.trustweave.trust.dsl.credential.*
-import com.trustweave.core.util.DigestUtils
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.dsl.credential.*
+import org.trustweave.core.util.DigestUtils
+import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -459,7 +459,7 @@ The printed ID corresponds to a tamper-evident credential JSON object that you c
 The type-safe `IssuerIdentity` ensures that issuer DID and key ID are properly validated at compile time, reducing runtime errors and improving developer experience.
 
 > ✅ **Run the sample**
-> The full quick-start flow lives in `distribution/examples/src/main/kotlin/com/trustweave/examples/quickstart/QuickStartSample.kt`.
+> The full quick-start flow lives in `distribution/examples/src/main/kotlin/org.trustweave/examples/quickstart/QuickStartSample.kt`.
 > Execute it locally with `./gradlew :distribution:examples:runQuickStartSample`.
 
 ## Step 5: Verify the credential
@@ -557,7 +557,7 @@ Use try-catch blocks **always** for:
 - ✅ When you need to recover from errors
 
 ```kotlin
-import com.trustweave.trust.dsl.credential.*
+import org.trustweave.trust.dsl.credential.*
 
 // ✅ Production pattern with getOrThrow() for concise error handling
 try {

@@ -30,11 +30,11 @@ Add the did:key module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave.did:key:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.did:key:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.did:base:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 
     // Multibase encoding (included automatically)
     implementation("org.multiformats:multibase:1.1.2")
@@ -48,9 +48,9 @@ dependencies {
 The did:key provider can be configured via options or automatically discovered via SPI:
 
 ```kotlin
-import com.trustweave.did.*
-import com.trustweave.keydid.*
-import com.trustweave.kms.*
+import org.trustweave.did.*
+import org.trustweave.keydid.*
+import org.trustweave.kms.*
 
 // Manual creation
 val kms = InMemoryKeyManagementService()
@@ -62,7 +62,7 @@ val method = KeyDidMethod(kms)
 When the module is on the classpath, did:key is automatically available:
 
 ```kotlin
-import com.trustweave.did.*
+import org.trustweave.did.*
 import java.util.ServiceLoader
 
 // Discover did:key provider
@@ -98,7 +98,7 @@ println("Created: ${document.id}") // did:key:z6Mk...
 ### Resolving a did:key
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 // Resolve DID (derived from public key)
 val did = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
@@ -141,9 +141,9 @@ val p256Did = method.createDid(p256Options)
 ### Integration with TrustWeave
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.keydid.*
-import com.trustweave.kms.InMemoryKeyManagementService
+import org.trustweave.TrustWeave
+import org.trustweave.keydid.*
+import org.trustweave.kms.InMemoryKeyManagementService
 
 val kms = InMemoryKeyManagementService()
 

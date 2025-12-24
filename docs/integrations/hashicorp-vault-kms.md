@@ -24,7 +24,7 @@ Add the HashiCorp Vault KMS module to your dependencies:
 ```kotlin
 dependencies {
     // Only need to add the HashiCorp Vault KMS plugin - core dependencies are included transitively
-    implementation("com.trustweave.kms:hashicorp:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.kms:hashicorp:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -60,7 +60,7 @@ vault secrets enable -path=custom-transit transit
 The Vault KMS provider can be configured via options map or environment variables:
 
 ```kotlin
-import com.trustweave.kms.*
+import org.trustweave.kms.*
 
 // Simple factory API - no ServiceLoader needed!
 val kms = KeyManagementServices.create("vault", mapOf(
@@ -178,9 +178,9 @@ if (kms?.supportsAlgorithm(Algorithm.Ed25519) == true) {
 ### Generating Keys
 
 ```kotlin
-import com.trustweave.kms.*
-import com.trustweave.kms.KmsOptionKeys
-import com.trustweave.kms.results.*
+import org.trustweave.kms.*
+import org.trustweave.kms.KmsOptionKeys
+import org.trustweave.kms.results.*
 
 // Generate Ed25519 key with auto-generated name
 val result = kms.generateKey(Algorithm.Ed25519)

@@ -132,10 +132,10 @@ Add TrustWeave dependencies to your `build.gradle.kts`. These modules cover DID 
 ```kotlin
 dependencies {
     // TrustWeave distribution (includes all modules)
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Test kit for in-memory implementations
-    testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -154,10 +154,10 @@ Here's the full academic credential flow using the TrustWeave facade API. This c
 ```kotlin
 package com.example.academic.credentials
 
-import com.trustweave.trust.dsl.trustWeave
-import com.trustweave.trust.dsl.credential.*
-import com.trustweave.trust.types.VerificationResult
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.dsl.credential.*
+import org.trustweave.trust.types.VerificationResult
+import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -361,7 +361,7 @@ Each party (university issuer and student holder) needs their own DID:
 
 ```kotlin
 // Create university DID (issuer)
-import com.trustweave.trust.types.DidCreationResult
+import org.trustweave.trust.types.DidCreationResult
 
 val universityDidResult = trustWeave.createDid { method(KEY) }
 val universityDid = when (universityDidResult) {
@@ -392,7 +392,7 @@ val studentDid = when (studentDidResult) {
 The university creates and issues a verifiable credential:
 
 ```kotlin
-import com.trustweave.trust.types.IssuanceResult
+import org.trustweave.trust.types.IssuanceResult
 
 val issuanceResult = trustWeave.issue {
     credential {
@@ -430,7 +430,7 @@ val credential = when (issuanceResult) {
 Students need a wallet to store their credentials:
 
 ```kotlin
-import com.trustweave.trust.types.WalletCreationResult
+import org.trustweave.trust.types.WalletCreationResult
 
 val walletResult = trustWeave.wallet {
     holder(studentDid.value)
@@ -507,7 +507,7 @@ val presentation = studentWallet.withPresentation { pres ->
 Employers verify the credential cryptographically:
 
 ```kotlin
-import com.trustweave.trust.types.VerificationResult
+import org.trustweave.trust.types.VerificationResult
 
 val verificationResult = trustWeave.verify {
     credential(credential)

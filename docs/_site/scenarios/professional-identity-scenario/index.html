@@ -854,14 +854,14 @@
 17
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
     <span class="c1">// Core TrustWeave modules</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-json:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-json:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 
     <span class="c1">// Test kit for in-memory implementations</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 
     <span class="c1">// Kotlinx Serialization</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"</span><span class="p">)</span>
@@ -1286,14 +1286,14 @@
 401
 402
 403
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.DidMethods</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.KeyAlgorithms</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.types.ProofType</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.credential</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.services.TestkitDidMethodFactory</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.services.TestkitWalletFactory</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.kms.InMemoryKeyManagementService</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.DidMethods</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.KeyAlgorithms</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.types.ProofType</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.credential</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.services.TestkitDidMethodFactory</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.services.TestkitWalletFactory</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.kms.InMemoryKeyManagementService</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 <span class="k">import</span> <span class="nn">java.time.Instant</span>
 
@@ -1327,8 +1327,8 @@
     <span class="p">}</span>
 
     <span class="c1">// Create professional DID using DSL</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.DidCreationResult</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.WalletCreationResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.DidCreationResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.WalletCreationResult</span>
     
     <span class="kd">val</span> <span class="py">professionalDidResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span>
         <span class="nf">method</span><span class="p">(</span><span class="nc">DidMethods</span><span class="p">.</span><span class="nc">KEY</span><span class="p">)</span>

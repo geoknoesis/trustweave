@@ -68,12 +68,12 @@ Need peer-to-peer encryption?
 ### Step 2: Setup Registry
 
 ```kotlin
-import com.trustweave.credential.exchange.*
-import com.trustweave.credential.didcomm.exchange.DidCommExchangeProtocol
-import com.trustweave.credential.didcomm.DidCommFactory
-import com.trustweave.kms.KeyManagementService
-import com.trustweave.testkit.InMemoryKeyManagementService
-import com.trustweave.did.DidDocument
+import org.trustweave.credential.exchange.*
+import org.trustweave.credential.didcomm.exchange.DidCommExchangeProtocol
+import org.trustweave.credential.didcomm.DidCommFactory
+import org.trustweave.kms.KeyManagementService
+import org.trustweave.testkit.InMemoryKeyManagementService
+import org.trustweave.did.DidDocument
 
 // Setup dependencies
 val kms: KeyManagementService = InMemoryKeyManagementService()
@@ -172,7 +172,7 @@ println("✅ Request created: ${request.requestId}")
 ### Step 6: Issue Credential
 
 ```kotlin
-import com.trustweave.credential.models.VerifiableCredential
+import org.trustweave.credential.models.VerifiableCredential
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 

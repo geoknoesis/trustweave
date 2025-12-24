@@ -24,17 +24,17 @@ DID method plugins enable TrustWeave to create, resolve, and manage DIDs using v
 
 | Plugin | Module ID | Documentation | Description |
 |--------|-----------|---------------|-------------|
-| **did:key** | `com.trustweave.did:key` | [Key DID Guide](integrations/key-did.md) | Native did:key implementation - most widely-used DID method with zero external dependencies |
-| **did:web** | `com.trustweave.did:web` | [Web DID Guide](integrations/web-did.md) | Web DID method for HTTP/HTTPS-based resolution with full W3C spec compliance |
-| **did:ethr** | `com.trustweave.did:ethr` | [Ethereum DID Guide](integrations/ethr-did.md) | Ethereum DID method with blockchain anchoring support for mainnet and testnets |
-| **did:ion** | `com.trustweave.did:ion` | [ION DID Guide](integrations/ion-did.md) | Microsoft ION DID method using Sidetree protocol with Bitcoin anchoring |
-| **did:polygon** | `com.trustweave.did:polygon` | [Polygon DID Guide](integrations/polygon-did.md) | Polygon DID method with lower transaction costs than Ethereum mainnet |
-| **did:sol** | `com.trustweave.did:sol` | [Solana DID Guide](integrations/sol-did.md) | Solana DID method with program integration and account-based storage |
-| **did:peer** | `com.trustweave.did:peer` | [Peer DID Guide](integrations/peer-did.md) | Peer-to-peer DID method with no external registry, supports numalgo 0, 1, and 2 |
-| **did:jwk** | `com.trustweave.did:jwk` | [JWK DID Guide](integrations/jwk-did.md) | W3C-standard did:jwk method using JSON Web Keys directly |
-| **did:ens** | `com.trustweave.did:ens` | [ENS DID Guide](integrations/ens-did.md) | Ethereum Name Service (ENS) resolver integration with human-readable identifiers |
-| **did:plc** | `com.trustweave.did:plc` | [PLC DID Guide](integrations/plc-did.md) | Personal Linked Container (PLC) DID method for AT Protocol with HTTP-based resolution |
-| **did:cheqd** | `com.trustweave.did:cheqd` | [Cheqd DID Guide](integrations/cheqd-did.md) | Cheqd network DID method with payment-enabled features on Cosmos-based blockchain |
+| **did:key** | `org.trustweave.did:key` | [Key DID Guide](integrations/key-did.md) | Native did:key implementation - most widely-used DID method with zero external dependencies |
+| **did:web** | `org.trustweave.did:web` | [Web DID Guide](integrations/web-did.md) | Web DID method for HTTP/HTTPS-based resolution with full W3C spec compliance |
+| **did:ethr** | `org.trustweave.did:ethr` | [Ethereum DID Guide](integrations/ethr-did.md) | Ethereum DID method with blockchain anchoring support for mainnet and testnets |
+| **did:ion** | `org.trustweave.did:ion` | [ION DID Guide](integrations/ion-did.md) | Microsoft ION DID method using Sidetree protocol with Bitcoin anchoring |
+| **did:polygon** | `org.trustweave.did:polygon` | [Polygon DID Guide](integrations/polygon-did.md) | Polygon DID method with lower transaction costs than Ethereum mainnet |
+| **did:sol** | `org.trustweave.did:sol` | [Solana DID Guide](integrations/sol-did.md) | Solana DID method with program integration and account-based storage |
+| **did:peer** | `org.trustweave.did:peer` | [Peer DID Guide](integrations/peer-did.md) | Peer-to-peer DID method with no external registry, supports numalgo 0, 1, and 2 |
+| **did:jwk** | `org.trustweave.did:jwk` | [JWK DID Guide](integrations/jwk-did.md) | W3C-standard did:jwk method using JSON Web Keys directly |
+| **did:ens** | `org.trustweave.did:ens` | [ENS DID Guide](integrations/ens-did.md) | Ethereum Name Service (ENS) resolver integration with human-readable identifiers |
+| **did:plc** | `org.trustweave.did:plc` | [PLC DID Guide](integrations/plc-did.md) | Personal Linked Container (PLC) DID method for AT Protocol with HTTP-based resolution |
+| **did:cheqd** | `org.trustweave.did:cheqd` | [Cheqd DID Guide](integrations/cheqd-did.md) | Cheqd network DID method with payment-enabled features on Cosmos-based blockchain |
 
 ---
 
@@ -44,12 +44,12 @@ Blockchain anchor plugins enable TrustWeave to anchor credential digests to vari
 
 | Plugin | Module ID | Documentation | Supported Networks | Description |
 |--------|-----------|---------------|-------------------|-------------|
-| **Ethereum** | `com.trustweave.chains:ethereum` | [Ethereum Anchor Guide](integrations/ethereum-anchor.md) | Mainnet, Sepolia | Ethereum mainnet anchoring with EVM-compatible transaction data storage |
-| **Base** | `com.trustweave.chains:base` | [Base Anchor Guide](integrations/base-anchor.md) | Mainnet, Sepolia | Base (Coinbase L2) anchoring with fast confirmations and lower fees |
-| **Arbitrum** | `com.trustweave.chains:arbitrum` | [Arbitrum Anchor Guide](integrations/arbitrum-anchor.md) | Mainnet, Sepolia | Arbitrum One (largest L2 by TVL) anchoring with EVM compatibility |
-| **Algorand** | `com.trustweave.chains:algorand` | [Algorand Guide](integrations/algorand.md) | Mainnet, Testnet | Algorand blockchain anchoring for production-ready anchoring |
-| **Polygon** | `com.trustweave.chains:polygon` | [Polygon DID Guide](integrations/polygon-did.md) | Mainnet, Mumbai | Polygon PoS anchoring with shared SPI plumbing |
-| **Ganache** | `com.trustweave.chains:ganache` | [Integration Modules](integrations/README.md#blockchain-anchor-integrations) | Local | Local developer anchoring using Ganache/Testcontainers for testing |
+| **Ethereum** | `org.trustweave.chains:ethereum` | [Ethereum Anchor Guide](integrations/ethereum-anchor.md) | Mainnet, Sepolia | Ethereum mainnet anchoring with EVM-compatible transaction data storage |
+| **Base** | `org.trustweave.chains:base` | [Base Anchor Guide](integrations/base-anchor.md) | Mainnet, Sepolia | Base (Coinbase L2) anchoring with fast confirmations and lower fees |
+| **Arbitrum** | `org.trustweave.chains:arbitrum` | [Arbitrum Anchor Guide](integrations/arbitrum-anchor.md) | Mainnet, Sepolia | Arbitrum One (largest L2 by TVL) anchoring with EVM compatibility |
+| **Algorand** | `org.trustweave.chains:algorand` | [Algorand Guide](integrations/algorand.md) | Mainnet, Testnet | Algorand blockchain anchoring for production-ready anchoring |
+| **Polygon** | `org.trustweave.chains:polygon` | [Polygon DID Guide](integrations/polygon-did.md) | Mainnet, Mumbai | Polygon PoS anchoring with shared SPI plumbing |
+| **Ganache** | `org.trustweave.chains:ganache` | [Integration Modules](integrations/README.md#blockchain-anchor-integrations) | Local | Local developer anchoring using Ganache/Testcontainers for testing |
 
 ---
 
@@ -61,15 +61,15 @@ KMS plugins enable TrustWeave to use various key management services for secure 
 
 | Plugin | Module ID | Documentation | Key Features |
 |--------|-----------|---------------|--------------|
-| **AWS KMS** | `com.trustweave.kms:aws` | [AWS KMS Guide](integrations/aws-kms.md) | FIPS 140-3 Level 3, Ed25519, secp256k1, P-256/P-384/P-521, RSA |
-| **Azure Key Vault** | `com.trustweave.kms:azure` | [Azure KMS Guide](integrations/azure-kms.md) | Managed Identity, Service Principal auth, secp256k1, P-256/P-384/P-521, RSA |
-| **Google Cloud KMS** | `com.trustweave.kms:google` | [Google KMS Guide](integrations/google-kms.md) | Application Default Credentials, secp256k1, P-256/P-384, RSA |
+| **AWS KMS** | `org.trustweave.kms:aws` | [AWS KMS Guide](integrations/aws-kms.md) | FIPS 140-3 Level 3, Ed25519, secp256k1, P-256/P-384/P-521, RSA |
+| **Azure Key Vault** | `org.trustweave.kms:azure` | [Azure KMS Guide](integrations/azure-kms.md) | Managed Identity, Service Principal auth, secp256k1, P-256/P-384/P-521, RSA |
+| **Google Cloud KMS** | `org.trustweave.kms:google` | [Google KMS Guide](integrations/google-kms.md) | Application Default Credentials, secp256k1, P-256/P-384, RSA |
 
 ### Self-Hosted KMS Providers
 
 | Plugin | Module ID | Documentation | Key Features |
 |--------|-----------|---------------|--------------|
-| **HashiCorp Vault** | `com.trustweave.kms:hashicorp` | [HashiCorp Vault Guide](integrations/hashicorp-vault-kms.md) | Transit engine, Token/AppRole auth, Ed25519, secp256k1, P-256/P-384/P-521, RSA |
+| **HashiCorp Vault** | `org.trustweave.kms:hashicorp` | [HashiCorp Vault Guide](integrations/hashicorp-vault-kms.md) | Transit engine, Token/AppRole auth, Ed25519, secp256k1, P-256/P-384/P-521, RSA |
 
 ---
 
@@ -121,8 +121,8 @@ Additional integrations that provide bridges to other identity ecosystems or com
 
 | Plugin | Module ID | Documentation | Description |
 |--------|-----------|---------------|-------------|
-| **GoDiddy** | `com.trustweave.did:godiddy` | [GoDiddy Guide](integrations/godiddy.md) | HTTP bridge to DID/VC services exposed by the GoDiddy stack |
-| **walt.id** | `com.trustweave.kms:waltid` | [walt.id Guide](integrations/waltid.md) | DID and KMS providers from the walt.id ecosystem |
+| **GoDiddy** | `org.trustweave.did:godiddy` | [GoDiddy Guide](integrations/godiddy.md) | HTTP bridge to DID/VC services exposed by the GoDiddy stack |
+| **walt.id** | `org.trustweave.kms:waltid` | [walt.id Guide](integrations/waltid.md) | DID and KMS providers from the walt.id ecosystem |
 
 ---
 
@@ -133,13 +133,13 @@ To use a plugin, simply add it as a dependency to your project:
 ```kotlin
 dependencies {
     // DID method plugin
-    implementation("com.trustweave.did:key:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.did:key:1.0.0-SNAPSHOT")
 
     // Blockchain anchor plugin
-    implementation("com.trustweave.chains:ethereum:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.chains:ethereum:1.0.0-SNAPSHOT")
 
     // KMS plugin
-    implementation("com.trustweave.kms:aws:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.kms:aws:1.0.0-SNAPSHOT")
 }
 ```
 

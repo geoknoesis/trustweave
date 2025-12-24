@@ -12,7 +12,7 @@ Add the walt.id adapter module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:TrustWeave-waltid:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:TrustWeave-waltid:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -21,8 +21,8 @@ dependencies {
 walt.id adapters are automatically discovered via Java ServiceLoader:
 
 ```kotlin
-import com.trustweave.waltid.WaltIdIntegration
-import com.trustweave.did.DidMethodRegistry
+import org.trustweave.waltid.WaltIdIntegration
+import org.trustweave.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -43,9 +43,9 @@ fun main() = runBlocking {
 You can also manually configure walt.id integration:
 
 ```kotlin
-import com.trustweave.waltid.WaltIdIntegration
-import com.trustweave.waltid.WaltIdKeyManagementService
-import com.trustweave.did.DidMethodRegistry
+import org.trustweave.waltid.WaltIdIntegration
+import org.trustweave.waltid.WaltIdKeyManagementService
+import org.trustweave.did.DidMethodRegistry
 
 fun main() = runBlocking {
     // Create walt.id KMS
@@ -95,7 +95,7 @@ Add the godiddy adapter module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:TrustWeave-godiddy:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:TrustWeave-godiddy:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -104,8 +104,8 @@ dependencies {
 godiddy adapters are automatically discovered via Java ServiceLoader:
 
 ```kotlin
-import com.trustweave.godiddy.GodiddyIntegration
-import com.trustweave.did.DidMethodRegistry
+import org.trustweave.godiddy.GodiddyIntegration
+import org.trustweave.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -126,8 +126,8 @@ fun main() = runBlocking {
 You can manually configure godiddy integration with a custom base URL:
 
 ```kotlin
-import com.trustweave.godiddy.GodiddyIntegration
-import com.trustweave.did.DidMethodRegistry
+import org.trustweave.godiddy.GodiddyIntegration
+import org.trustweave.did.DidMethodRegistry
 
 fun main() = runBlocking {
     // Setup integration with custom base URL (for self-hosted instances)
@@ -177,8 +177,8 @@ val result = GodiddyIntegration.discoverAndRegister(
 ### Example: Issuing and Verifying Credentials
 
 ```kotlin
-import com.trustweave.godiddy.GodiddyIntegration
-import com.trustweave.did.DidMethodRegistry
+import org.trustweave.godiddy.GodiddyIntegration
+import org.trustweave.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 

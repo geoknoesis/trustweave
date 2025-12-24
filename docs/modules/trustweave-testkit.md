@@ -8,7 +8,7 @@ The `trustweave-testkit` module provides in-memory test implementations and util
 
 ```kotlin
 dependencies {
-    testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -31,7 +31,7 @@ The `trustweave-testkit` module provides:
 #### InMemoryKeyManagementService
 
 ```kotlin
-import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
 
 val kms = InMemoryKeyManagementService()
 val key = kms.generateKey(Algorithm.Secp256k1)
@@ -45,7 +45,7 @@ val signature = kms.sign(key.id, data.toByteArray())
 #### InMemoryBlockchainAnchorClient
 
 ```kotlin
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 
 val client = InMemoryBlockchainAnchorClient("algorand:testnet")
 val result = client.writePayload(payload.toByteArray())
@@ -59,7 +59,7 @@ val readData = client.readPayload(result.anchorRef)
 #### DidKeyMockMethod
 
 ```kotlin
-import com.trustweave.testkit.did.DidKeyMockMethod
+import org.trustweave.testkit.did.DidKeyMockMethod
 
 val kms = InMemoryKeyManagementService()
 val method = DidKeyMockMethod(kms)
@@ -77,7 +77,7 @@ val didDoc = method.createDid(didCreationOptions {
 A comprehensive test fixture builder for setting up complete test environments:
 
 ```kotlin
-import com.trustweave.testkit.TrustWeaveTestFixture
+import org.trustweave.testkit.TrustWeaveTestFixture
 
 val fixture = TrustWeaveTestFixture.builder()
     .withKms(InMemoryKeyManagementService())
@@ -99,7 +99,7 @@ val anchorClient = fixture.getBlockchainClient("algorand:testnet")
 Reusable EO test scenarios with TestContainers support:
 
 ```kotlin
-import com.trustweave.testkit.eo.BaseEoIntegrationTest
+import org.trustweave.testkit.eo.BaseEoIntegrationTest
 
 class MyEoTest : BaseEoIntegrationTest() {
     override fun createAnchorClient(chainId: String, options: Map<String, Any?>): BlockchainAnchorClient {
@@ -123,7 +123,7 @@ class MyEoTest : BaseEoIntegrationTest() {
 Utilities for verifying integrity chains:
 
 ```kotlin
-import com.trustweave.testkit.integrity.IntegrityVerifier
+import org.trustweave.testkit.integrity.IntegrityVerifier
 
 val verifier = IntegrityVerifier()
 val result = verifier.verifyIntegrityChain(artifacts, linkset, credential)
@@ -139,7 +139,7 @@ assertTrue(result.valid)
 ### Basic Test Setup
 
 ```kotlin
-import com.trustweave.testkit.*
+import org.trustweave.testkit.*
 
 val fixture = TrustWeaveTestFixture.builder()
     .withInMemoryBlockchainClient("algorand:testnet")

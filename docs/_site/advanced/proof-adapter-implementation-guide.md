@@ -49,7 +49,7 @@ Located in `credential-api/internal/util/EnvelopeSerialization.kt`:
 
 **Usage Example**:
 ```kotlin
-import com.trustweave.credential.internal.util.EnvelopeSerialization
+import org.trustweave.credential.internal.util.EnvelopeSerialization
 
 // Convert request to JSON for format-specific processing
 val claimsJson = EnvelopeSerialization.claimsToJsonObject(request.claims)
@@ -135,7 +135,7 @@ For each `ProofAdapter` implementation:
 
 ### ✅ SPI Registration
 - [ ] Create `ProofAdapterProvider` implementation
-- [ ] Register in `META-INF/services/com.trustweave.credential.proof.spi.ProofAdapterProvider`
+- [ ] Register in `META-INF/services/org.trustweave.credential.proof.spi.ProofAdapterProvider`
 - [ ] Test auto-discovery
 
 ---

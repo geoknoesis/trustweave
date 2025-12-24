@@ -72,8 +72,8 @@ when (result) {
 ### Files Created/Modified
 
 **New Files:**
-- `credentials/credential-api/src/main/kotlin/com/trustweave/credential/trust/TrustPolicy.kt`
-- `credentials/credential-api/src/test/kotlin/com/trustweave/credential/TRUST_POLICY_EXAMPLE.kt`
+- `credentials/credential-api/src/main/kotlin/org.trustweave/credential/trust/TrustPolicy.kt`
+- `credentials/credential-api/src/test/kotlin/org.trustweave/credential/TRUST_POLICY_EXAMPLE.kt`
 
 **Modified Files:**
 - `CredentialService.kt` - Added trustPolicy parameter to verify methods

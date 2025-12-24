@@ -12,10 +12,10 @@ The TrustWeave DSL (Domain-Specific Language) provides a fluent, type-safe API f
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
     // Or use individual modules:
-    // implementation("com.trustweave:trust:1.0.0-SNAPSHOT")
-    // implementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
+    // implementation("org.trustweave:trust:1.0.0-SNAPSHOT")
+    // implementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -36,8 +36,8 @@ The trust layer configuration is the foundation of the DSL. It centralizes the s
 ### Basic Configuration
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -99,7 +99,7 @@ val testTrustWeave = TrustWeave.build {
 Create verifiable credentials using a fluent builder:
 
 ```kotlin
-import com.trustweave.trust.dsl.credential.credential
+import org.trustweave.trust.dsl.credential.credential
 import kotlinx.datetime.Clock
 import kotlin.time.Duration.Companion.years
 
@@ -142,9 +142,9 @@ val credential = credential {
 Issue credentials with automatic proof generation:
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.credential.format.ProofSuiteId
-import com.trustweave.credential.results.IssuanceResult
+import org.trustweave.trust.TrustWeave
+import org.trustweave.credential.format.ProofSuiteId
+import org.trustweave.credential.results.IssuanceResult
 import kotlinx.datetime.Clock
 import kotlinx.coroutines.runBlocking
 
@@ -194,9 +194,9 @@ fun main() = runBlocking {
 
 **Example:**
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.credential.format.ProofSuiteId
-import com.trustweave.credential.results.IssuanceResult
+import org.trustweave.trust.TrustWeave
+import org.trustweave.credential.format.ProofSuiteId
+import org.trustweave.credential.results.IssuanceResult
 import kotlinx.datetime.Clock
 import kotlinx.coroutines.runBlocking
 
@@ -236,7 +236,7 @@ fun main() = runBlocking {
 Verify credentials with exhaustive error handling using sealed result types:
 
 ```kotlin
-import com.trustweave.trust.types.VerificationResult
+import org.trustweave.trust.types.VerificationResult
 
 val result = trustWeave.verify {
     credential(credential)
@@ -287,7 +287,7 @@ when (result) {
 Create and manage wallets:
 
 ```kotlin
-import com.trustweave.trust.types.WalletCreationResult
+import org.trustweave.trust.types.WalletCreationResult
 
 val walletResult = trustWeave.wallet {
     holder("did:key:holder")

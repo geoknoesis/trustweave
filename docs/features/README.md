@@ -47,13 +47,13 @@ All features can be used independently:
 
 ```kotlin
 // Example: Using Audit Logging
-import com.trustweave.audit.*
+import org.trustweave.audit.*
 
 val auditLogger = InMemoryAuditLogger()
 auditLogger.logEvent(AuditEvent(...))
 
 // Example: Using Metrics
-import com.trustweave.metrics.*
+import org.trustweave.metrics.*
 
 val metrics = InMemoryMetricsCollector()
 metrics.increment("credentials.issued")

@@ -42,9 +42,9 @@ CHAPI is a browser-based API that enables credential wallet interactions through
 ### Basic Setup
 
 ```kotlin
-import com.trustweave.credential.chapi.ChapiService
-import com.trustweave.credential.chapi.exchange.ChapiExchangeProtocol
-import com.trustweave.credential.exchange.*
+import org.trustweave.credential.chapi.ChapiService
+import org.trustweave.credential.chapi.exchange.ChapiExchangeProtocol
+import org.trustweave.credential.exchange.*
 
 val chapiService = ChapiService()
 val protocol = ChapiExchangeProtocol(chapiService)

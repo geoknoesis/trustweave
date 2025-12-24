@@ -11,10 +11,10 @@ This document provides a complete walkthrough of using TrustWeave's web of trust
 ```kotlin
 dependencies {
     // TrustWeave distribution (includes all modules)
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Test kit for in-memory implementations
-    testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -36,7 +36,7 @@ The web of trust scenario demonstrates how to:
 ### Step 1: Configure Trust Layer with Trust Registry
 
 ```kotlin
-import com.trustweave.trust.dsl.*
+import org.trustweave.trust.dsl.*
 import java.time.Instant
 import kotlinx.coroutines.runBlocking
 
@@ -72,7 +72,7 @@ fun main() = runBlocking {
 ### Step 2: Create DIDs for Entities
 
 ```kotlin
-import com.trustweave.trust.types.DidCreationResult
+import org.trustweave.trust.types.DidCreationResult
 
 val universityDidResult = trustLayer.createDid {
     method(DidMethods.KEY)
@@ -146,7 +146,7 @@ trustLayer.trust {
 
 ```kotlin
 // Issue degree credential from university
-import com.trustweave.trust.types.IssuanceResult
+import org.trustweave.trust.types.IssuanceResult
 
 // First, resolve university DID to get key ID
 val universityResolution = trustLayer.resolveDid(universityDid)

@@ -39,7 +39,7 @@ Each plugin should implement the following test classes:
 ### Example Structure
 
 ```
-kms/plugins/myplugin/src/test/kotlin/com/trustweave/myplugin/
+kms/plugins/myplugin/src/test/kotlin/org.trustweave/myplugin/
 ├── MyPluginContractTest.kt          # Contract compliance
 ├── MyPluginEdgeCaseTest.kt           # Edge cases
 ├── MyPluginPerformanceTest.kt       # Performance benchmarks
@@ -331,10 +331,10 @@ fun `test key generation`() = runBlocking {
 
 ## Resources
 
-- [KeyManagementServiceContractTest](../kms/kms-core/src/test/kotlin/com/trustweave/kms/KeyManagementServiceContractTest.kt)
-- [PluginEdgeCaseTestTemplate](../testkit/src/main/kotlin/com/trustweave/testkit/kms/PluginEdgeCaseTestTemplate.kt)
-- [KeyManagementServicePerformanceTest](../kms/kms-core/src/test/kotlin/com/trustweave/kms/KeyManagementServicePerformanceTest.kt)
-- [KmsIntegrationTest](../testkit/src/main/kotlin/com/trustweave/testkit/integration/KmsIntegrationTest.kt)
+- [KeyManagementServiceContractTest](../kms/kms-core/src/test/kotlin/org.trustweave/kms/KeyManagementServiceContractTest.kt)
+- [PluginEdgeCaseTestTemplate](../testkit/src/main/kotlin/org.trustweave/testkit/kms/PluginEdgeCaseTestTemplate.kt)
+- [KeyManagementServicePerformanceTest](../kms/kms-core/src/test/kotlin/org.trustweave/kms/KeyManagementServicePerformanceTest.kt)
+- [KmsIntegrationTest](../testkit/src/main/kotlin/org.trustweave/testkit/integration/KmsIntegrationTest.kt)
 
 ---
 

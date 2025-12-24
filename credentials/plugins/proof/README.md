@@ -8,16 +8,16 @@ All proof format implementations are now built into `credential-api` and are alw
 
 | Format | Location | Capabilities |
 |--------|----------|--------------|
-| **VC-LD** | `credential-api/src/main/kotlin/com/trustweave/credential/proof/internal/engines/` | Selective disclosure, Predicates |
-| **SD-JWT-VC** | `credential-api/src/main/kotlin/com/trustweave/credential/proof/internal/engines/` | Selective disclosure |
-| **AnonCreds** | `credential-api/src/main/kotlin/com/trustweave/credential/proof/internal/engines/` | ZK-proofs, Selective disclosure |
+| **VC-LD** | `credential-api/src/main/kotlin/org.trustweave/credential/proof/internal/engines/` | Selective disclosure, Predicates |
+| **SD-JWT-VC** | `credential-api/src/main/kotlin/org.trustweave/credential/proof/internal/engines/` | Selective disclosure |
+| **AnonCreds** | `credential-api/src/main/kotlin/org.trustweave/credential/proof/internal/engines/` | ZK-proofs, Selective disclosure |
 
 ## Usage
 
 All proof formats are automatically available when you create a credential service:
 
 ```kotlin
-import com.trustweave.credential.*
+import org.trustweave.credential.*
 
 val service = credentialService(didResolver)
 
@@ -36,7 +36,7 @@ No registration or discovery needed - all formats are built-in!
 
 Proof engines are located in:
 ```
-credential-api/src/main/kotlin/com/trustweave/credential/proof/
+credential-api/src/main/kotlin/org.trustweave/credential/proof/
 ├── ProofOptions.kt                    # Public API
 └── internal/
     ├── ProofEngineRegistry.kt

@@ -11,7 +11,7 @@ allprojects {
     repositories {
         mavenCentral()
     }
-    group = "com.trustweave"
+    group = "org.trustweave"
     version = "1.0.0-SNAPSHOT"
 }
 

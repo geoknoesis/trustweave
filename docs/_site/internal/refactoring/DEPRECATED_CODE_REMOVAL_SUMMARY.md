@@ -15,11 +15,11 @@
 
 2. **`DidResolutionResult.requireDocument()`** ✅
    - **Removed**: Deprecated extension function
-   - **Replacement**: Use `getOrThrow()` from `com.trustweave.did.dsl` package
+   - **Replacement**: Use `getOrThrow()` from `org.trustweave.did.dsl` package
 
 3. **`DidResolutionResult.getDocumentOrNull()`** ✅
    - **Removed**: Deprecated extension function
-   - **Replacement**: Use `getOrNull()` from `com.trustweave.did.dsl` package
+   - **Replacement**: Use `getOrNull()` from `org.trustweave.did.dsl` package
 
 4. **`DidCreationOptionsKeyAlgorithm` typealias** ✅
    - **Removed**: Deprecated typealias
@@ -32,37 +32,37 @@
 ### Files Modified
 
 #### Main Source Files
-1. `did/did-core/src/main/kotlin/com/trustweave/did/DidMethod.kt`
+1. `did/did-core/src/main/kotlin/org.trustweave/did/DidMethod.kt`
    - Removed deprecated `resolveDid(did: String)` method
    - Now only has type-safe `resolveDid(did: Did)` method
 
-2. `did/did-core/src/main/kotlin/com/trustweave/did/resolver/DidResolutionResultExtensions.kt`
+2. `did/did-core/src/main/kotlin/org.trustweave/did/resolver/DidResolutionResultExtensions.kt`
    - Removed `requireDocument()` and `getDocumentOrNull()` methods
 
-3. `did/did-core/src/main/kotlin/com/trustweave/did/DidCreationOptions.kt`
+3. `did/did-core/src/main/kotlin/org.trustweave/did/DidCreationOptions.kt`
    - Removed deprecated type aliases
 
-4. `did/did-core/src/main/kotlin/com/trustweave/did/resolver/RegistryBasedResolver.kt`
+4. `did/did-core/src/main/kotlin/org.trustweave/did/resolver/RegistryBasedResolver.kt`
    - Updated to use type-safe `method.resolveDid(parsed)` instead of deprecated string version
 
-5. `did/did-core/src/main/kotlin/com/trustweave/did/registry/DefaultDidMethodRegistry.kt`
+5. `did/did-core/src/main/kotlin/org.trustweave/did/registry/DefaultDidMethodRegistry.kt`
    - Updated to pass `Did` object to `method.resolveDid(parsed)`
 
-6. `did/did-core/src/main/kotlin/com/trustweave/did/registration/impl/HttpDidMethod.kt`
+6. `did/did-core/src/main/kotlin/org.trustweave/did/registration/impl/HttpDidMethod.kt`
    - Updated `resolveDid()` to accept `Did` parameter instead of `String`
    - Added missing import for `Did`
 
 #### Test Files
-1. `did/did-core/src/test/kotlin/com/trustweave/did/DidTest.kt`
+1. `did/did-core/src/test/kotlin/org.trustweave/did/DidTest.kt`
    - Updated mock implementations to use `resolveDid(did: Did)`
 
-2. `did/did-core/src/test/kotlin/com/trustweave/did/DidMethodInterfaceContractTest.kt`
+2. `did/did-core/src/test/kotlin/org.trustweave/did/DidMethodInterfaceContractTest.kt`
    - Updated mock to use type-safe API
 
-3. `did/did-core/src/test/kotlin/com/trustweave/did/DidMethodEdgeCasesTest.kt`
+3. `did/did-core/src/test/kotlin/org.trustweave/did/DidMethodEdgeCasesTest.kt`
    - Updated all mocks to use type-safe API
 
-4. `did/did-core/src/test/kotlin/com/trustweave/did/spi/DidMethodProviderTest.kt`
+4. `did/did-core/src/test/kotlin/org.trustweave/did/spi/DidMethodProviderTest.kt`
    - Updated mock to use type-safe API
 
 ### Benefits
@@ -89,22 +89,22 @@ If you have code using the deprecated APIs:
 2. **`DidResolutionResult.requireDocument()`** → **`getOrThrow()`**
    ```kotlin
    // Before
-   import com.trustweave.did.resolver.requireDocument
+   import org.trustweave.did.resolver.requireDocument
    result.requireDocument()
    
    // After
-   import com.trustweave.did.dsl.getOrThrow
+   import org.trustweave.did.dsl.getOrThrow
    result.getOrThrow()
    ```
 
 3. **`DidResolutionResult.getDocumentOrNull()`** → **`getOrNull()`**
    ```kotlin
    // Before
-   import com.trustweave.did.resolver.getDocumentOrNull
+   import org.trustweave.did.resolver.getDocumentOrNull
    result.getDocumentOrNull()
    
    // After
-   import com.trustweave.did.dsl.getOrNull
+   import org.trustweave.did.dsl.getOrNull
    result.getOrNull()
    ```
 

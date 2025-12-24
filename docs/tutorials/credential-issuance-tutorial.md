@@ -9,10 +9,10 @@ This tutorial provides a comprehensive guide to issuing verifiable credentials w
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
     // Or use individual modules:
-    // implementation("com.trustweave:trust:1.0.0-SNAPSHOT")
-    // implementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
+    // implementation("org.trustweave:trust:1.0.0-SNAPSHOT")
+    // implementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -79,14 +79,14 @@ import kotlinx.serialization.json.*
 import java.time.Instant
 
 // TrustWeave core
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.trust.dsl.credential.ProofTypes
-import com.trustweave.trust.dsl.credential.CredentialTypes
-import com.trustweave.trust.types.ProofType
-import com.trustweave.trust.types.CredentialType
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.ProofTypes
+import org.trustweave.trust.dsl.credential.CredentialTypes
+import org.trustweave.trust.types.ProofType
+import org.trustweave.trust.types.CredentialType
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
@@ -100,9 +100,9 @@ fun main() = runBlocking {
     }
 
     // Create issuer DID (returns sealed result)
-import com.trustweave.trust.types.DidCreationResult
-import com.trustweave.credential.results.IssuanceResult
-import com.trustweave.trust.types.VerificationResult
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.trust.types.VerificationResult
     
     val didResult = trustWeave.createDid {
         method(DidMethods.KEY)
@@ -175,13 +175,13 @@ import com.trustweave.trust.types.VerificationResult
 ### Issuing Credentials with Custom Options
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.trust.dsl.credential.CredentialTypes
-import com.trustweave.trust.types.CredentialType
-import com.trustweave.credential.*
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.CredentialTypes
+import org.trustweave.trust.types.CredentialType
+import org.trustweave.credential.*
+import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import java.time.Instant
@@ -280,11 +280,11 @@ fun main() = runBlocking {
 ### Verifying Credentials
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.credential.VerificationConfig
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.credential.VerificationConfig
+import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -322,11 +322,11 @@ fun main() = runBlocking {
 ### Verifying with Custom Configuration
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.credential.VerificationConfig
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.credential.VerificationConfig
+import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -369,11 +369,11 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 
 // TrustWeave core
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.credential.*
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.credential.*
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
@@ -480,11 +480,11 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 
 // TrustWeave core
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.credential.*
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.credential.*
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
@@ -582,11 +582,11 @@ fun main() = runBlocking {
 import kotlinx.coroutines.runBlocking
 
 // TrustWeave core
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.credential.*
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.credential.*
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
@@ -652,13 +652,13 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 
 // TrustWeave core
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.trust.types.DidCreationResult
-import com.trustweave.credential.results.IssuanceResult
-import com.trustweave.credential.*
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.*
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {

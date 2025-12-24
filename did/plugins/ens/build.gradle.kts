@@ -3,7 +3,7 @@ plugins {
     kotlin("plugin.serialization")
 }
 
-group = "com.trustweave.did"
+group = "org.trustweave.did"
 dependencies {
     implementation(project(":common"))
     implementation(project(":credentials:credential-api"))

@@ -13,8 +13,8 @@ This guide documents common workflows for using TrustWeave in real-world applica
 Complete workflow for issuing a verifiable credential:
 
 ```kotlin
-import com.trustweave.trust.TrustLayer
-import com.trustweave.core.TrustWeaveError
+import org.trustweave.trust.TrustLayer
+import org.trustweave.core.TrustWeaveError
 import kotlinx.coroutines.runBlocking
 
 suspend fun issueCredentialWorkflow(
@@ -42,7 +42,7 @@ suspend fun issueCredentialWorkflow(
         val issuerKeyId = "$issuerDid#key-1"
 
         // 3. Issue credential
-        import com.trustweave.trust.types.IssuanceResult
+        import org.trustweave.trust.types.IssuanceResult
         
         val issuanceResult = trustLayer.issue {
             credential {
@@ -124,7 +124,7 @@ suspend fun verifyCredentialWorkflow(
 Complete workflow for revoking a credential:
 
 ```kotlin
-import com.trustweave.credential.revocation.*
+import org.trustweave.credential.revocation.*
 
 suspend fun revokeCredentialWorkflow(
     statusListManager: StatusListManager,
@@ -285,8 +285,8 @@ suspend fun walletManagementWorkflow(
 ): Result<Wallet> {
     return try {
         // 1. Create or get wallet
-        import com.trustweave.trust.types.WalletCreationResult
-        import com.trustweave.trust.types.IssuanceResult
+        import org.trustweave.trust.types.WalletCreationResult
+        import org.trustweave.trust.types.IssuanceResult
         
         val walletResult = trustLayer.wallet {
             holder(holderDid)
@@ -361,7 +361,7 @@ suspend fun batchIssuanceWorkflow(
 ): Result<List<VerifiableCredential>> {
     return try {
         // Issue credentials concurrently
-        import com.trustweave.trust.types.IssuanceResult
+        import org.trustweave.trust.types.IssuanceResult
         
         val issuanceResults = requests.map { request ->
             async {

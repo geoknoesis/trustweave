@@ -618,9 +618,9 @@
 4
 5
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did-registrar:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-did-registrar:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
@@ -743,8 +743,8 @@
 18
 19
 20
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.registrar.client.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.registrar.model.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.registrar.client.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.registrar.model.*</span>
 
 <span class="kd">val</span> <span class="py">registrar</span> <span class="p">=</span> <span class="nc">DefaultUniversalRegistrar</span><span class="p">(</span>
     <span class="n">baseUrl</span> <span class="p">=</span> <span class="s">"https://dev.uniregistrar.io"</span><span class="p">,</span>
@@ -794,8 +794,8 @@
 13
 14
 15
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.registrar.client.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.registrar.client.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
 
 <span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
 <span class="kd">val</span> <span class="py">registrar</span> <span class="p">=</span> <span class="nc">KmsBasedRegistrar</span><span class="p">(</span><span class="n">kms</span><span class="p">)</span>
@@ -1087,8 +1087,8 @@
 18
 19
 20
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.registrar.client.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.registrar.model.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.registrar.client.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.registrar.model.*</span>
 
 <span class="c1">// Create registrar client</span>
 <span class="kd">val</span> <span class="py">registrar</span> <span class="p">=</span> <span class="nc">DefaultUniversalRegistrar</span><span class="p">(</span>
@@ -1137,8 +1137,8 @@
 18
 19
 20
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.registrar.client.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.registrar.client.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
 
 <span class="c1">// Create KMS and registrar</span>
 <span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
@@ -1193,9 +1193,9 @@
 24
 25
 26
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.registrar.client.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.registration.impl.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.registrar.client.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.registration.impl.*</span>
 
 <span class="c1">// Create registrar</span>
 <span class="kd">val</span> <span class="py">registrar</span> <span class="p">=</span> <span class="nc">DefaultUniversalRegistrar</span><span class="p">(</span><span class="s">"https://dev.uniregistrar.io"</span><span class="p">)</span>
@@ -1231,7 +1231,7 @@
 
 <pre><code class="language-mermaid">graph TD
     subgraph "did:registrar Package Structure"
-        A[com.trustweave.did.registrar]
+        A[org.trustweave.did.registrar]
         A --&gt; B[client/]
         A --&gt; C[adapter/]
         A --&gt; D[util/]

@@ -22,11 +22,11 @@ title: Proposed Layout Improvements
 
 | Current Package | Proposed Destination | Rationale |
 | --- | --- | --- |
-| `com.trustweave.core.services` | ✅ `TrustWeave-spi` (`com.trustweave.spi.services`) | Adapter loading and services migrated |
-| `com.trustweave.trust` | ✅ `TrustWeave-trust` | Trust DSL runtime relocated |
-| `com.trustweave.did.delegation` | `TrustWeave-did.delegation` | Keeps DID-specific flows alongside other DID tooling |
-| `com.trustweave.credential.dsl` | Split between `TrustWeave-core.credential.dsl` (domain builders) and `TrustWeave-trust.dsl` (trust-layer wiring) | Clarifies boundary between credential manipulation and runtime configuration |
-| `com.trustweave.credential.wallet` | Consider `wallet` submodule if wallet providers grow further | Provides space for wallet registry replacements without polluting credential root package |
+| `org.trustweave.core.services` | ✅ `TrustWeave-spi` (`org.trustweave.spi.services`) | Adapter loading and services migrated |
+| `org.trustweave.trust` | ✅ `TrustWeave-trust` | Trust DSL runtime relocated |
+| `org.trustweave.did.delegation` | `TrustWeave-did.delegation` | Keeps DID-specific flows alongside other DID tooling |
+| `org.trustweave.credential.dsl` | Split between `TrustWeave-core.credential.dsl` (domain builders) and `TrustWeave-trust.dsl` (trust-layer wiring) | Clarifies boundary between credential manipulation and runtime configuration |
+| `org.trustweave.credential.wallet` | Consider `wallet` submodule if wallet providers grow further | Provides space for wallet registry replacements without polluting credential root package |
 
 ## 3. Documentation & Navigation
 - Introduce a top-level `docs/modules/overview.md` linking each module to its responsibilities and entry points.

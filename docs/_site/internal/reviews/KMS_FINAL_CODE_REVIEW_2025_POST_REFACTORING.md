@@ -31,7 +31,7 @@ The KMS modules have been successfully refactored to use cleaner, more intuitive
 ### Files Updated
 
 **Core Interface (1 file)**
-- ✅ `kms/kms-core/src/main/kotlin/com/trustweave/kms/KeyManagementService.kt`
+- ✅ `kms/kms-core/src/main/kotlin/org.trustweave/kms/KeyManagementService.kt`
 
 **Plugin Implementations (14 plugins)**
 - ✅ AWS KMS (`AwsKeyManagementService.kt`)

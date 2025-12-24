@@ -22,10 +22,10 @@ Add the did:ion module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave.did:ion:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.did:ion:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.did:base:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -34,8 +34,8 @@ dependencies {
 ### Basic Configuration
 
 ```kotlin
-import com.trustweave.iondid.*
-import com.trustweave.kms.*
+import org.trustweave.iondid.*
+import org.trustweave.kms.*
 
 // Create configuration
 val config = IonDidConfig.builder()
@@ -69,7 +69,7 @@ val testnetConfig = IonDidConfig.testnet(
 When the module is on the classpath, did:ion is automatically available:
 
 ```kotlin
-import com.trustweave.did.*
+import org.trustweave.did.*
 import java.util.ServiceLoader
 
 // Discover did:ion provider
@@ -111,8 +111,8 @@ println("Created: ${document.id}") // Long-form DID initially
 ### Resolving a did:ion
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
-import com.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.resolver.DidResolutionResult
 
 // Resolve short-form DID (after anchoring)
 val did = Did("did:ion:EiA2...")
@@ -137,7 +137,7 @@ when (result) {
 ### Updating a did:ion
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 val did = Did("did:ion:EiA2...")
 val document = method.updateDid(did) { currentDoc ->
@@ -154,7 +154,7 @@ val document = method.updateDid(did) { currentDoc ->
 ### Deactivating a did:ion
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 val did = Did("did:ion:EiA2...")
 val deactivated = method.deactivateDid(did)
@@ -220,8 +220,8 @@ val config = IonDidConfig.builder()
 ## Integration with TrustWeave
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.iondid.*
+import org.trustweave.TrustWeave
+import org.trustweave.iondid.*
 
 val config = IonDidConfig.testnet()
 

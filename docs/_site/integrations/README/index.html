@@ -648,13 +648,13 @@ and trust/runtime layers. They can now share infrastructure exposed by
 10
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
     <span class="c1">// Chain plugins use hierarchical group IDs</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.chains:algorand:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.chains:algorand:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 
     <span class="c1">// DID plugins use hierarchical group IDs</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.did:key:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.did:key:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 
     <span class="c1">// KMS plugins use hierarchical group IDs</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.kms:aws:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.kms:aws:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
@@ -683,63 +683,63 @@ and trust/runtime layers. They can now share infrastructure exposed by
   <tbody>
     <tr>
       <td><strong>Algorand</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.chains:algorand</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.chains:algorand</code></td>
       <td>Mainnet, Testnet</td>
       <td><a href="/trustweave/integrations/algorand/">Algorand Guide</a></td>
       <td>Production-ready anchoring for Algorand mainnet/testnet</td>
     </tr>
     <tr>
       <td><strong>Ethereum</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.chains:ethereum</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.chains:ethereum</code></td>
       <td>Mainnet, Sepolia</td>
       <td><a href="/trustweave/integrations/ethereum-anchor/">Ethereum Anchor Guide</a></td>
       <td>Ethereum mainnet anchoring with Sepolia testnet support</td>
     </tr>
     <tr>
       <td><strong>Base</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.chains:base</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.chains:base</code></td>
       <td>Mainnet, Sepolia</td>
       <td><a href="/trustweave/integrations/base-anchor/">Base Anchor Guide</a></td>
       <td>Base (Coinbase L2) anchoring with fast confirmations and lower fees</td>
     </tr>
     <tr>
       <td><strong>Arbitrum</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.chains:arbitrum</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.chains:arbitrum</code></td>
       <td>Mainnet, Sepolia</td>
       <td><a href="/trustweave/integrations/arbitrum-anchor/">Arbitrum Anchor Guide</a></td>
       <td>Arbitrum One (largest L2 by TVL) anchoring with EVM compatibility</td>
     </tr>
     <tr>
       <td><strong>Polygon</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.chains:polygon</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.chains:polygon</code></td>
       <td>Mainnet, Mumbai</td>
       <td><a href="/trustweave/integrations/polygon-did/">Polygon DID Guide</a></td>
       <td>Polygon PoS anchoring with the shared SPI plumbing</td>
     </tr>
     <tr>
       <td><strong>Optimism</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.chains:optimism</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.chains:optimism</code></td>
       <td>Mainnet, Sepolia</td>
       <td>Documentation coming soon</td>
       <td>Optimism L2 anchoring with Web3j integration</td>
     </tr>
     <tr>
       <td><strong>zkSync Era</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.chains:zksync</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.chains:zksync</code></td>
       <td>Mainnet, Sepolia</td>
       <td>Documentation coming soon</td>
       <td>zkSync Era L2 anchoring with Web3j integration</td>
     </tr>
     <tr>
       <td><strong>Bitcoin</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.chains:bitcoin</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.chains:bitcoin</code></td>
       <td>Mainnet, Testnet</td>
       <td>Documentation coming soon</td>
       <td>Bitcoin blockchain anchoring with OP_RETURN support via RPC</td>
     </tr>
     <tr>
       <td><strong>Ganache</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.chains:ganache</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.chains:ganache</code></td>
       <td>Local</td>
       <td><a href="#blockchain-anchor-integrations">Integration Modules</a></td>
       <td>Local developer anchoring using Ganache/Testcontainers for testing</td>
@@ -772,67 +772,67 @@ and trust/runtime layers. They can now share infrastructure exposed by
   <tbody>
     <tr>
       <td><strong>did:key</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.did:key</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.did:key</code></td>
       <td><a href="/trustweave/integrations/key-did/">Key DID Guide</a></td>
       <td>Native did:key implementation, the most widely-used DID method. Zero external dependencies, portable public key-based DIDs</td>
     </tr>
     <tr>
       <td><strong>did:web</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.did:web</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.did:web</code></td>
       <td><a href="/trustweave/integrations/web-did/">Web DID Guide</a></td>
       <td>Web DID method for HTTP/HTTPS-based resolution. Full W3C spec compliance with domain and path-based identifiers</td>
     </tr>
     <tr>
       <td><strong>did:ethr</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.did:ethr</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.did:ethr</code></td>
       <td><a href="/trustweave/integrations/ethr-did/">Ethereum DID Guide</a></td>
       <td>Ethereum DID method with blockchain anchoring support. Integrates with Ethereum mainnet and testnets (Sepolia)</td>
     </tr>
     <tr>
       <td><strong>did:ion</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.did:ion</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.did:ion</code></td>
       <td><a href="/trustweave/integrations/ion-did/">ION DID Guide</a></td>
       <td>Microsoft ION DID method using Sidetree protocol. Bitcoin-anchored DIDs with ION node integration</td>
     </tr>
     <tr>
       <td><strong>did:polygon</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.did:polygon</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.did:polygon</code></td>
       <td><a href="/trustweave/integrations/polygon-did/">Polygon DID Guide</a></td>
       <td>Polygon DID method reusing Ethereum registry pattern. Lower transaction costs than Ethereum mainnet</td>
     </tr>
     <tr>
       <td><strong>did:sol</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.did:sol</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.did:sol</code></td>
       <td><a href="/trustweave/integrations/sol-did/">Solana DID Guide</a></td>
       <td>Solana DID method with program integration. Account-based storage on Solana blockchain</td>
     </tr>
     <tr>
       <td><strong>did:peer</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.did:peer</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.did:peer</code></td>
       <td><a href="/trustweave/integrations/peer-did/">Peer DID Guide</a></td>
       <td>Peer-to-peer DID method. No external registry required, supports numalgo 0, 1, and 2</td>
     </tr>
     <tr>
       <td><strong>did:jwk</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.did:jwk</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.did:jwk</code></td>
       <td><a href="/trustweave/integrations/jwk-did/">JWK DID Guide</a></td>
       <td>W3C-standard did:jwk method using JSON Web Keys directly. Standardized approach with JWK format</td>
     </tr>
     <tr>
       <td><strong>did:ens</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.did:ens</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.did:ens</code></td>
       <td><a href="/trustweave/integrations/ens-did/">ENS DID Guide</a></td>
       <td>Ethereum Name Service (ENS) resolver integration. Human-readable DID identifiers mapped to Ethereum addresses</td>
     </tr>
     <tr>
       <td><strong>did:plc</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.did:plc</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.did:plc</code></td>
       <td><a href="/trustweave/integrations/plc-did/">PLC DID Guide</a></td>
       <td>Personal Linked Container (PLC) DID method for AT Protocol. Distributed registry with HTTP-based resolution</td>
     </tr>
     <tr>
       <td><strong>did:cheqd</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.did:cheqd</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.did:cheqd</code></td>
       <td><a href="/trustweave/integrations/cheqd-did/">Cheqd DID Guide</a></td>
       <td>Cheqd network DID method with payment-enabled features. Cosmos-based blockchain for identity and credentials</td>
     </tr>
@@ -861,55 +861,55 @@ and trust/runtime layers. They can now share infrastructure exposed by
   <tbody>
     <tr>
       <td><strong>AWS KMS</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.kms:aws</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.kms:aws</code></td>
       <td><a href="/trustweave/integrations/aws-kms/">AWS KMS Guide</a></td>
       <td>Full algorithm support (Ed25519, secp256k1, P-256/P-384/P-521, RSA). FIPS 140-3 Level 3 compliance</td>
     </tr>
     <tr>
       <td><strong>Azure Key Vault</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.kms:azure</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.kms:azure</code></td>
       <td><a href="/trustweave/integrations/azure-kms/">Azure KMS Guide</a></td>
       <td>Algorithm support (secp256k1, P-256/P-384/P-521, RSA). Managed Identity and Service Principal authentication</td>
     </tr>
     <tr>
       <td><strong>Google Cloud KMS</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.kms:google</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.kms:google</code></td>
       <td><a href="/trustweave/integrations/google-kms/">Google KMS Guide</a></td>
       <td>Algorithm support (secp256k1, P-256/P-384, RSA). Application Default Credentials and service account authentication</td>
     </tr>
     <tr>
       <td><strong>HashiCorp Vault</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.kms:hashicorp</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.kms:hashicorp</code></td>
       <td><a href="/trustweave/integrations/hashicorp-vault-kms/">HashiCorp Vault Guide</a></td>
       <td>Transit engine integration with algorithm support (Ed25519, secp256k1, P-256/P-384/P-521, RSA). Token and AppRole authentication</td>
     </tr>
     <tr>
       <td><strong>IBM Key Protect</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.kms:ibm</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.kms:ibm</code></td>
       <td><a href="ibm-key-protect-kms.md">IBM Key Protect Guide</a></td>
       <td>IBM Cloud Key Protect integration with full REST API support. FIPS 140-3 Level 4 compliance</td>
     </tr>
     <tr>
       <td><strong>InMemory KMS</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.kms:inmemory</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.kms:inmemory</code></td>
       <td><a href="inmemory-kms.md">InMemory KMS Guide</a></td>
       <td>Native TrustWeave in-memory KMS for development and testing. No external dependencies</td>
     </tr>
     <tr>
       <td><strong>Thales CipherTrust</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.kms:thales</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.kms:thales</code></td>
       <td>Documentation coming soon</td>
       <td>Thales CipherTrust Manager integration with OAuth2 authentication</td>
     </tr>
     <tr>
       <td><strong>CyberArk Conjur</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.kms:cyberark</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.kms:cyberark</code></td>
       <td>Documentation coming soon</td>
       <td>CyberArk Conjur integration with secrets management</td>
     </tr>
     <tr>
       <td><strong>Fortanix DSM</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.kms:fortanix</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.kms:fortanix</code></td>
       <td>Documentation coming soon</td>
       <td>Fortanix DSM multi-cloud key management integration</td>
     </tr>
@@ -938,19 +938,19 @@ and trust/runtime layers. They can now share infrastructure exposed by
   <tbody>
     <tr>
       <td><strong>JWT Proof Generator</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.core:jwt-proof</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.core:jwt-proof</code></td>
       <td>Documentation coming soon</td>
       <td>JWT-based proofs using nimbus-jose-jwt. Supports Ed25519, ECDSA, and RSA algorithms</td>
     </tr>
     <tr>
       <td><strong>BBS+ Proof Generator</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.core:bbs-proof</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.core:bbs-proof</code></td>
       <td>Documentation coming soon</td>
       <td>BBS+ signature proofs for selective disclosure. Uses JSON-LD canonicalization</td>
     </tr>
     <tr>
       <td><strong>LD-Proof Generator</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.core:ld-proof</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.core:ld-proof</code></td>
       <td>Documentation coming soon</td>
       <td>Linked Data Proofs using JSON-LD signatures. Supports multiple signature suites</td>
     </tr>
@@ -979,19 +979,19 @@ and trust/runtime layers. They can now share infrastructure exposed by
   <tbody>
     <tr>
       <td><strong>Database Wallet</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.core:database-wallet</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.core:database-wallet</code></td>
       <td>Documentation coming soon</td>
       <td>Database-backed wallet with full CredentialStorage implementation. Supports PostgreSQL, MySQL, H2, and other JDBC-compatible databases</td>
     </tr>
     <tr>
       <td><strong>File Wallet</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.core:file-wallet</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.core:file-wallet</code></td>
       <td>Documentation coming soon</td>
       <td>File-based wallet with local filesystem storage. Optional AES encryption support</td>
     </tr>
     <tr>
       <td><strong>Cloud Wallet</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.core:cloud-wallet</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.core:cloud-wallet</code></td>
       <td>Documentation coming soon</td>
       <td>Abstract base for cloud storage wallets. Supports AWS S3, Azure Blob Storage, and Google Cloud Storage</td>
     </tr>
@@ -1020,13 +1020,13 @@ and trust/runtime layers. They can now share infrastructure exposed by
   <tbody>
     <tr>
       <td><strong>GoDiddy</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.did:godiddy</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.did:godiddy</code></td>
       <td><a href="/trustweave/integrations/godiddy/">GoDiddy Guide</a></td>
       <td>HTTP bridge to DID/VC services exposed by the GoDiddy stack</td>
     </tr>
     <tr>
       <td><strong>walt.id</strong></td>
-      <td><code class="language-plaintext highlighter-rouge">com.trustweave.kms:waltid</code></td>
+      <td><code class="language-plaintext highlighter-rouge">org.trustweave.kms:waltid</code></td>
       <td><a href="/trustweave/integrations/waltid/">walt.id Guide</a></td>
       <td>DID and KMS providers from the walt.id ecosystem</td>
     </tr>

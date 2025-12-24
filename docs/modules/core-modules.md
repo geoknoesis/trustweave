@@ -41,8 +41,8 @@ When you need a specific building block, add it to `dependencies` explicitly:
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
 }
 ```
 

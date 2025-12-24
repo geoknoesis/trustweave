@@ -656,18 +656,18 @@
 13
 14
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.did:ens:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.did:base:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.did:ethr:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.did:ens:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.did:base:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.did:ethr:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 
     <span class="c1">// Web3j for Ethereum blockchain</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.web3j:core:4.10.0"</span><span class="p">)</span>
 
     <span class="c1">// Optional: Polygon client for EVM-compatible chains</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.chains:polygon:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.chains:polygon:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="configuration">
@@ -708,10 +708,10 @@
 19
 20
 21
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.ensdid.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.anchor.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.polygon.PolygonBlockchainAnchorClient</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.ensdid.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.anchor.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.polygon.PolygonBlockchainAnchorClient</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
 
 <span class="c1">// Create configuration</span>
 <span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">EnsDidConfig</span><span class="p">.</span><span class="nf">builder</span><span class="p">()</span>
@@ -778,8 +778,8 @@
 15
 16
 17
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.anchor.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.anchor.*</span>
 <span class="k">import</span> <span class="nn">java.util.ServiceLoader</span>
 
 <span class="c1">// Discover did:ens provider</span>
@@ -844,8 +844,8 @@
 <span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
 <span class="kd">val</span> <span class="py">method</span> <span class="p">=</span> <span class="nc">EnsDidMethod</span><span class="p">(</span><span class="n">kms</span><span class="p">,</span> <span class="n">anchorClient</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
 
-<span class="k">import</span> <span class="nn">com.trustweave.did.identifiers.Did</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.resolver.DidResolutionResult</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.identifiers.Did</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.resolver.DidResolutionResult</span>
 
 <span class="c1">// Resolve ENS domain to DID document</span>
 <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="nc">Did</span><span class="p">(</span><span class="s">"did:ens:example.eth"</span><span class="p">)</span>
@@ -1052,10 +1052,10 @@ did:ens:organization.eth
 23
 24
 25
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.ensdid.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.anchor.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.polygon.PolygonBlockchainAnchorClient</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.ensdid.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.anchor.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.polygon.PolygonBlockchainAnchorClient</span>
 
 <span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">EnsDidConfig</span><span class="p">.</span><span class="nf">mainnet</span><span class="p">(</span><span class="s">"https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY"</span><span class="p">)</span>
 <span class="kd">val</span> <span class="py">anchorClient</span> <span class="p">=</span> <span class="nc">PolygonBlockchainAnchorClient</span><span class="p">(</span><span class="n">config</span><span class="p">.</span><span class="n">chainId</span><span class="p">,</span> <span class="n">config</span><span class="p">.</span><span class="nf">toMap</span><span class="p">())</span>
@@ -1073,7 +1073,7 @@ did:ens:organization.eth
 <span class="p">}</span>
 
 <span class="c1">// Resolve did:ens</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.identifiers.Did</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.identifiers.Did</span>
 
 <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="nc">Did</span><span class="p">(</span><span class="s">"did:ens:example.eth"</span><span class="p">)</span>
 <span class="kd">val</span> <span class="py">resolved</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">resolveDid</span><span class="p">(</span><span class="n">did</span><span class="p">).</span><span class="nf">getOrThrow</span><span class="p">()</span>
@@ -1149,7 +1149,7 @@ did:ens:organization.eth
 6
 7
 8
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient</span>
 
 <span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">EnsDidConfig</span><span class="p">.</span><span class="nf">mainnet</span><span class="p">(</span><span class="s">"https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY"</span><span class="p">)</span>
 <span class="kd">val</span> <span class="py">anchorClient</span> <span class="p">=</span> <span class="nc">InMemoryBlockchainAnchorClient</span><span class="p">(</span><span class="n">config</span><span class="p">.</span><span class="n">chainId</span><span class="p">)</span>

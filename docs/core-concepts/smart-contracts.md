@@ -21,8 +21,8 @@ A **Smart Contract** in TrustWeave is an executable agreement between parties th
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:trustweave-contract:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-contract:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-all:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -163,8 +163,8 @@ ExecutionModel.Manual
 ## Example: Creating a Contract
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.contract.models.*
+import org.trustweave.TrustWeave
+import org.trustweave.contract.models.*
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant

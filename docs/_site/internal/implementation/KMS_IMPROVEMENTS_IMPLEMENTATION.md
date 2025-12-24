@@ -15,7 +15,7 @@ This document summarizes the implementation of recommendations from the KMS Core
 
 **Solution**: Cached the key metadata in a single call and reused it for both purposes.
 
-**File**: `kms/plugins/aws/src/main/kotlin/com/trustweave/awskms/AwsKeyManagementService.kt`
+**File**: `kms/plugins/aws/src/main/kotlin/org.trustweave/awskms/AwsKeyManagementService.kt`
 
 **Changes**:
 - Lines 233-261: Combined duplicate `describeKey` calls into a single call
@@ -30,8 +30,8 @@ This document summarizes the implementation of recommendations from the KMS Core
 **Solution**: Added structured logging using SLF4J to all error paths in AWS and Azure plugins.
 
 **Files Modified**:
-- `kms/plugins/aws/src/main/kotlin/com/trustweave/awskms/AwsKeyManagementService.kt`
-- `kms/plugins/azure/src/main/kotlin/com/trustweave/azurekms/AzureKeyManagementService.kt`
+- `kms/plugins/aws/src/main/kotlin/org.trustweave/awskms/AwsKeyManagementService.kt`
+- `kms/plugins/azure/src/main/kotlin/org.trustweave/azurekms/AzureKeyManagementService.kt`
 
 **Changes**:
 - Added `LoggerFactory.getLogger()` to both service classes
@@ -58,8 +58,8 @@ logger.error("Failed to generate key", mapOf(
 **Solution**: Made it configurable via `AwsKmsConfig` with validation.
 
 **Files Modified**:
-- `kms/plugins/aws/src/main/kotlin/com/trustweave/awskms/AwsKmsConfig.kt`
-- `kms/plugins/aws/src/main/kotlin/com/trustweave/awskms/AwsKeyManagementService.kt`
+- `kms/plugins/aws/src/main/kotlin/org.trustweave/awskms/AwsKmsConfig.kt`
+- `kms/plugins/aws/src/main/kotlin/org.trustweave/awskms/AwsKeyManagementService.kt`
 
 **Changes**:
 - Added `pendingWindowInDays: Int?` to `AwsKmsConfig`
@@ -86,10 +86,10 @@ val config = AwsKmsConfig.builder()
 - Include status and issue tracking information
 
 **Files Modified**:
-- `kms/plugins/utimaco/src/main/kotlin/com/trustweave/kms/utimaco/UtimacoKeyManagementService.kt`
-- `kms/plugins/thales-luna/src/main/kotlin/com/trustweave/kms/thalesluna/ThalesLunaKeyManagementService.kt`
-- `kms/plugins/cloudhsm/src/main/kotlin/com/trustweave/kms/cloudhsm/CloudHsmKeyManagementService.kt`
-- `kms/plugins/entrust/src/main/kotlin/com/trustweave/kms/entrust/EntrustKeyManagementService.kt`
+- `kms/plugins/utimaco/src/main/kotlin/org.trustweave/kms/utimaco/UtimacoKeyManagementService.kt`
+- `kms/plugins/thales-luna/src/main/kotlin/org.trustweave/kms/thalesluna/ThalesLunaKeyManagementService.kt`
+- `kms/plugins/cloudhsm/src/main/kotlin/org.trustweave/kms/cloudhsm/CloudHsmKeyManagementService.kt`
+- `kms/plugins/entrust/src/main/kotlin/org.trustweave/kms/entrust/EntrustKeyManagementService.kt`
 
 **Impact**: Prevents accidental use of incomplete plugins and provides clear error messages.
 
@@ -99,7 +99,7 @@ val config = AwsKmsConfig.builder()
 
 **Solution**: Added properties and methods to `Algorithm` sealed class.
 
-**File**: `kms/kms-core/src/main/kotlin/com/trustweave/kms/Algorithm.kt`
+**File**: `kms/kms-core/src/main/kotlin/org.trustweave/kms/Algorithm.kt`
 
 **New Features**:
 - `securityLevel: SecurityLevel` - LEGACY, STANDARD, or HIGH
@@ -121,7 +121,7 @@ println(algorithm.isCompatibleWith(Algorithm.RSA.RSA_3072))  // true
 
 **Solution**: Added `@Deprecated` annotation with `WARNING` level.
 
-**File**: `kms/kms-core/src/main/kotlin/com/trustweave/kms/Algorithm.kt`
+**File**: `kms/kms-core/src/main/kotlin/org.trustweave/kms/Algorithm.kt`
 
 **Changes**:
 - Marked `RSA.RSA_2048` as deprecated
@@ -134,7 +134,7 @@ println(algorithm.isCompatibleWith(Algorithm.RSA.RSA_3072))  // true
 
 **Solution**: Created `KmsErrorHandler` utility object.
 
-**File**: `kms/kms-core/src/main/kotlin/com/trustweave/kms/util/KmsErrorHandler.kt`
+**File**: `kms/kms-core/src/main/kotlin/org.trustweave/kms/util/KmsErrorHandler.kt`
 
 **Features**:
 - `handleAwsError()` - Standardized AWS error handling
@@ -149,7 +149,7 @@ println(algorithm.isCompatibleWith(Algorithm.RSA.RSA_3072))  // true
 
 **Solution**: Replaced with the new `Algorithm.isCompatibleWith()` method.
 
-**File**: `kms/plugins/aws/src/main/kotlin/com/trustweave/awskms/AwsKeyManagementService.kt`
+**File**: `kms/plugins/aws/src/main/kotlin/org.trustweave/awskms/AwsKeyManagementService.kt`
 
 **Changes**:
 - Removed private `isAlgorithmCompatible()` method
@@ -161,7 +161,7 @@ println(algorithm.isCompatibleWith(Algorithm.RSA.RSA_3072))  // true
 
 **Solution**: Added comprehensive structured logging using SLF4J to all error paths and successful operations.
 
-**File**: `kms/plugins/google/src/main/kotlin/com/trustweave/googlekms/GoogleCloudKeyManagementService.kt`
+**File**: `kms/plugins/google/src/main/kotlin/org.trustweave/googlekms/GoogleCloudKeyManagementService.kt`
 
 **Changes**:
 - Added `LoggerFactory.getLogger()` to service class
@@ -187,7 +187,7 @@ logger.error("Permission denied when generating key in Google Cloud KMS", mapOf(
 
 **Solution**: Implemented a `ConcurrentHashMap` cache for key metadata to avoid duplicate `getCryptoKey` calls.
 
-**File**: `kms/plugins/google/src/main/kotlin/com/trustweave/googlekms/GoogleCloudKeyManagementService.kt`
+**File**: `kms/plugins/google/src/main/kotlin/org.trustweave/googlekms/GoogleCloudKeyManagementService.kt`
 
 **Changes**:
 - Added `keyMetadataCache: ConcurrentHashMap<String, CryptoKey>` field
@@ -203,7 +203,7 @@ logger.error("Permission denied when generating key in Google Cloud KMS", mapOf(
 
 **Solution**: Replaced with the new `Algorithm.isCompatibleWith()` method and removed the private method.
 
-**File**: `kms/plugins/google/src/main/kotlin/com/trustweave/googlekms/GoogleCloudKeyManagementService.kt`
+**File**: `kms/plugins/google/src/main/kotlin/org.trustweave/googlekms/GoogleCloudKeyManagementService.kt`
 
 **Changes**:
 - Removed private `isAlgorithmCompatible()` method
@@ -268,24 +268,24 @@ val key = kms.generateKeyResult(Algorithm.RSA.RSA_3072)
 ## Files Changed
 
 ### Core
-- `kms/kms-core/src/main/kotlin/com/trustweave/kms/Algorithm.kt` - Added metadata and compatibility
-- `kms/kms-core/src/main/kotlin/com/trustweave/kms/util/KmsErrorHandler.kt` - New utility
+- `kms/kms-core/src/main/kotlin/org.trustweave/kms/Algorithm.kt` - Added metadata and compatibility
+- `kms/kms-core/src/main/kotlin/org.trustweave/kms/util/KmsErrorHandler.kt` - New utility
 
 ### AWS Plugin
-- `kms/plugins/aws/src/main/kotlin/com/trustweave/awskms/AwsKeyManagementService.kt` - Logging, caching, config
-- `kms/plugins/aws/src/main/kotlin/com/trustweave/awskms/AwsKmsConfig.kt` - Pending window config
+- `kms/plugins/aws/src/main/kotlin/org.trustweave/awskms/AwsKeyManagementService.kt` - Logging, caching, config
+- `kms/plugins/aws/src/main/kotlin/org.trustweave/awskms/AwsKmsConfig.kt` - Pending window config
 
 ### Azure Plugin
-- `kms/plugins/azure/src/main/kotlin/com/trustweave/azurekms/AzureKeyManagementService.kt` - Logging
+- `kms/plugins/azure/src/main/kotlin/org.trustweave/azurekms/AzureKeyManagementService.kt` - Logging
 
 ### Google Plugin
-- `kms/plugins/google/src/main/kotlin/com/trustweave/googlekms/GoogleCloudKeyManagementService.kt` - Logging, caching, algorithm compatibility
+- `kms/plugins/google/src/main/kotlin/org.trustweave/googlekms/GoogleCloudKeyManagementService.kt` - Logging, caching, algorithm compatibility
 
 ### Experimental Plugins
-- `kms/plugins/utimaco/src/main/kotlin/com/trustweave/kms/utimaco/UtimacoKeyManagementService.kt`
-- `kms/plugins/thales-luna/src/main/kotlin/com/trustweave/kms/thalesluna/ThalesLunaKeyManagementService.kt`
-- `kms/plugins/cloudhsm/src/main/kotlin/com/trustweave/kms/cloudhsm/CloudHsmKeyManagementService.kt`
-- `kms/plugins/entrust/src/main/kotlin/com/trustweave/kms/entrust/EntrustKeyManagementService.kt`
+- `kms/plugins/utimaco/src/main/kotlin/org.trustweave/kms/utimaco/UtimacoKeyManagementService.kt`
+- `kms/plugins/thales-luna/src/main/kotlin/org.trustweave/kms/thalesluna/ThalesLunaKeyManagementService.kt`
+- `kms/plugins/cloudhsm/src/main/kotlin/org.trustweave/kms/cloudhsm/CloudHsmKeyManagementService.kt`
+- `kms/plugins/entrust/src/main/kotlin/org.trustweave/kms/entrust/EntrustKeyManagementService.kt`
 
 ## Dependencies Added
 
@@ -298,8 +298,8 @@ val key = kms.generateKeyResult(Algorithm.RSA.RSA_3072)
 **Solution**: Added proper type checking and conversion with null safety.
 
 **Files Modified**:
-- `kms/plugins/aws/src/main/kotlin/com/trustweave/awskms/AwsKeyManagementService.kt`
-- `kms/plugins/google/src/main/kotlin/com/trustweave/googlekms/GoogleCloudKeyManagementService.kt`
+- `kms/plugins/aws/src/main/kotlin/org.trustweave/awskms/AwsKeyManagementService.kt`
+- `kms/plugins/google/src/main/kotlin/org.trustweave/googlekms/GoogleCloudKeyManagementService.kt`
 
 **Changes**:
 - Replaced unsafe casts with safe type checking
@@ -326,10 +326,10 @@ val tags = (options["tags"] as? Map<*, *>)?.let { map ->
 **Solution**: Removed placeholder issue references and improved documentation clarity.
 
 **Files Modified**:
-- `kms/plugins/utimaco/src/main/kotlin/com/trustweave/kms/utimaco/UtimacoKeyManagementService.kt`
-- `kms/plugins/cloudhsm/src/main/kotlin/com/trustweave/kms/cloudhsm/CloudHsmKeyManagementService.kt`
-- `kms/plugins/thales-luna/src/main/kotlin/com/trustweave/kms/thalesluna/ThalesLunaKeyManagementService.kt`
-- `kms/plugins/entrust/src/main/kotlin/com/trustweave/kms/entrust/EntrustKeyManagementService.kt`
+- `kms/plugins/utimaco/src/main/kotlin/org.trustweave/kms/utimaco/UtimacoKeyManagementService.kt`
+- `kms/plugins/cloudhsm/src/main/kotlin/org.trustweave/kms/cloudhsm/CloudHsmKeyManagementService.kt`
+- `kms/plugins/thales-luna/src/main/kotlin/org.trustweave/kms/thalesluna/ThalesLunaKeyManagementService.kt`
+- `kms/plugins/entrust/src/main/kotlin/org.trustweave/kms/entrust/EntrustKeyManagementService.kt`
 
 **Changes**:
 - Removed "See issue #XXX" placeholders
@@ -341,7 +341,7 @@ val tags = (options["tags"] as? Map<*, *>)?.let { map ->
 
 **Solution**: Completely rewrote the plugin to use Result-based API with proper Java crypto implementations.
 
-**File**: `kms/plugins/waltid/src/main/kotlin/com/trustweave/waltid/WaltIdKeyManagementService.kt`
+**File**: `kms/plugins/waltid/src/main/kotlin/org.trustweave/waltid/WaltIdKeyManagementService.kt`
 
 **Changes**:
 - Migrated from exception-based to Result-based API (`generateKeyResult`, `signResult`, etc.)
@@ -350,7 +350,7 @@ val tags = (options["tags"] as? Map<*, *>)?.let { map ->
 - Added comprehensive error handling and structured logging
 - Implemented proper JWK conversion for Ed25519 and EC keys
 - Added algorithm compatibility checking using `Algorithm.isCompatibleWith()`
-- Changed from `com.trustweave.core.types.KeyId` to `com.trustweave.core.identifiers.KeyId` for consistency
+- Changed from `org.trustweave.core.types.KeyId` to `org.trustweave.core.identifiers.KeyId` for consistency
 
 **Features**:
 - In-memory key storage using `ConcurrentHashMap`
@@ -366,7 +366,7 @@ val tags = (options["tags"] as? Map<*, *>)?.let { map ->
 
 **Solution**: Implemented proper PEM parsing using Java's `KeyFactory` and `X509EncodedKeySpec`.
 
-**File**: `kms/plugins/hashicorp/src/main/kotlin/com/trustweave/hashicorpkms/AlgorithmMapping.kt`
+**File**: `kms/plugins/hashicorp/src/main/kotlin/org.trustweave/hashicorpkms/AlgorithmMapping.kt`
 
 **Changes**:
 - Added proper EC key parsing from PEM format
@@ -384,7 +384,7 @@ val tags = (options["tags"] as? Map<*, *>)?.let { map ->
 
 **Solution**: Added comprehensive input validation and specific exception handling.
 
-**File**: `kms/plugins/waltid/src/main/kotlin/com/trustweave/waltid/WaltIdKeyManagementService.kt`
+**File**: `kms/plugins/waltid/src/main/kotlin/org.trustweave/waltid/WaltIdKeyManagementService.kt`
 
 **Improvements**:
 - **Input Validation**:
@@ -422,7 +422,7 @@ catch (e: InvalidKeyException) {
 
 **Solution**: Added comprehensive documentation and a new utility method.
 
-**File**: `kms/kms-core/src/main/kotlin/com/trustweave/kms/util/KmsErrorHandler.kt`
+**File**: `kms/kms-core/src/main/kotlin/org.trustweave/kms/util/KmsErrorHandler.kt`
 
 **Improvements**:
 - Added complete KDoc documentation for `createErrorContext()`

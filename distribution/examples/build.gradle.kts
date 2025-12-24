@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.kover)
 }
 
-group = "com.trustweave"
+group = "org.trustweave"
 dependencies {
     implementation(project(":credentials:credential-api"))
 
@@ -41,7 +41,7 @@ val javaToolchain = javaToolchains.launcherFor {
 tasks.register<JavaExec>("runEarthObservation") {
     group = "examples"
     description = "Run Earth Observation scenario example"
-    mainClass.set("com.trustweave.examples.eo.EarthObservationExampleKt")
+    mainClass.set("org.trustweave.examples.eo.EarthObservationExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
     javaLauncher.set(javaToolchain)
 }
@@ -49,7 +49,7 @@ tasks.register<JavaExec>("runEarthObservation") {
 tasks.register<JavaExec>("runAcademicCredentials") {
     group = "examples"
     description = "Run Academic Credentials scenario example"
-    mainClass.set("com.trustweave.examples.academic.AcademicCredentialsExampleKt")
+    mainClass.set("org.trustweave.examples.academic.AcademicCredentialsExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
     javaLauncher.set(javaToolchain)
 }
@@ -57,7 +57,7 @@ tasks.register<JavaExec>("runAcademicCredentials") {
 tasks.register<JavaExec>("runProfessionalIdentity") {
     group = "examples"
     description = "Run Professional Identity scenario example"
-    mainClass.set("com.trustweave.examples.professional.ProfessionalIdentityExampleKt")
+    mainClass.set("org.trustweave.examples.professional.ProfessionalIdentityExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
     javaLauncher.set(javaToolchain)
 }
@@ -65,7 +65,7 @@ tasks.register<JavaExec>("runProfessionalIdentity") {
 tasks.register<JavaExec>("runProofOfLocation") {
     group = "examples"
     description = "Run Proof of Location scenario example"
-    mainClass.set("com.trustweave.examples.location.ProofOfLocationExampleKt")
+    mainClass.set("org.trustweave.examples.location.ProofOfLocationExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
     javaLauncher.set(javaToolchain)
 }
@@ -73,7 +73,7 @@ tasks.register<JavaExec>("runProofOfLocation") {
 tasks.register<JavaExec>("runSpatialWeb") {
     group = "examples"
     description = "Run Spatial Web Authorization scenario example"
-    mainClass.set("com.trustweave.examples.spatial.SpatialWebExampleKt")
+    mainClass.set("org.trustweave.examples.spatial.SpatialWebExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
     javaLauncher.set(javaToolchain)
 }
@@ -81,7 +81,7 @@ tasks.register<JavaExec>("runSpatialWeb") {
 tasks.register<JavaExec>("runDigitalWorkflow") {
     group = "examples"
     description = "Run Digital Workflow Provenance scenario example"
-    mainClass.set("com.trustweave.examples.workflow.DigitalWorkflowExampleKt")
+    mainClass.set("org.trustweave.examples.workflow.DigitalWorkflowExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
     javaLauncher.set(javaToolchain)
 }
@@ -89,7 +89,7 @@ tasks.register<JavaExec>("runDigitalWorkflow") {
 tasks.register<JavaExec>("runNewsIndustry") {
     group = "examples"
     description = "Run News Industry scenario example"
-    mainClass.set("com.trustweave.examples.news.NewsIndustryExampleKt")
+    mainClass.set("org.trustweave.examples.news.NewsIndustryExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
     javaLauncher.set(javaToolchain)
 }
@@ -97,7 +97,7 @@ tasks.register<JavaExec>("runNewsIndustry") {
 tasks.register<JavaExec>("runDataCatalog") {
     group = "examples"
     description = "Run Data Catalog DCAT scenario example"
-    mainClass.set("com.trustweave.examples.dcat.DataCatalogExampleKt")
+    mainClass.set("org.trustweave.examples.dcat.DataCatalogExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
     javaLauncher.set(javaToolchain)
 }
@@ -105,7 +105,7 @@ tasks.register<JavaExec>("runDataCatalog") {
 tasks.register<JavaExec>("runHealthcare") {
     group = "examples"
     description = "Run Healthcare Medical Records scenario example"
-    mainClass.set("com.trustweave.examples.healthcare.HealthcareExampleKt")
+    mainClass.set("org.trustweave.examples.healthcare.HealthcareExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
     javaLauncher.set(javaToolchain)
 }
@@ -113,7 +113,7 @@ tasks.register<JavaExec>("runHealthcare") {
 tasks.register<JavaExec>("runGovernment") {
     group = "examples"
     description = "Run Government Digital Identity scenario example"
-    mainClass.set("com.trustweave.examples.government.GovernmentIdentityExampleKt")
+    mainClass.set("org.trustweave.examples.government.GovernmentIdentityExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
     javaLauncher.set(javaToolchain)
 }
@@ -121,7 +121,7 @@ tasks.register<JavaExec>("runGovernment") {
 tasks.register<JavaExec>("runSupplyChain") {
     group = "examples"
     description = "Run Supply Chain Traceability scenario example"
-    mainClass.set("com.trustweave.examples.supplychain.SupplyChainExampleKt")
+    mainClass.set("org.trustweave.examples.supplychain.SupplyChainExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
     javaLauncher.set(javaToolchain)
 }
@@ -129,7 +129,7 @@ tasks.register<JavaExec>("runSupplyChain") {
 tasks.register<JavaExec>("runFinancialServices") {
     group = "examples"
     description = "Run Financial Services KYC scenario example"
-    mainClass.set("com.trustweave.examples.financial.FinancialServicesExampleKt")
+    mainClass.set("org.trustweave.examples.financial.FinancialServicesExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
     javaLauncher.set(javaToolchain)
 }
@@ -137,7 +137,7 @@ tasks.register<JavaExec>("runFinancialServices") {
 tasks.register<JavaExec>("runIoT") {
     group = "examples"
     description = "Run IoT Device Identity scenario example"
-    mainClass.set("com.trustweave.examples.iot.IoTDeviceExampleKt")
+    mainClass.set("org.trustweave.examples.iot.IoTDeviceExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
     javaLauncher.set(javaToolchain)
 }
@@ -145,7 +145,7 @@ tasks.register<JavaExec>("runIoT") {
 tasks.register<JavaExec>("runNationalEducation") {
     group = "examples"
     description = "Run National Education Credentials Algeria scenario example"
-    mainClass.set("com.trustweave.examples.national.NationalEducationExampleKt")
+    mainClass.set("org.trustweave.examples.national.NationalEducationExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
     javaLauncher.set(javaToolchain)
 }
@@ -153,7 +153,7 @@ tasks.register<JavaExec>("runNationalEducation") {
 tasks.register<JavaExec>("runQuickStartSample") {
     group = "examples"
     description = "Run Quick Start credential issuance sample"
-    mainClass.set("com.trustweave.examples.quickstart.QuickStartSampleKt")
+    mainClass.set("org.trustweave.examples.quickstart.QuickStartSampleKt")
     classpath = sourceSets["main"].runtimeClasspath
     javaLauncher.set(javaToolchain)
 }
@@ -161,7 +161,7 @@ tasks.register<JavaExec>("runQuickStartSample") {
 tasks.register<JavaExec>("runIndyIntegration") {
     group = "examples"
     description = "Run Indy Integration scenario example"
-    mainClass.set("com.trustweave.examples.indy.IndyIntegrationExampleKt")
+    mainClass.set("org.trustweave.examples.indy.IndyIntegrationExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
     javaLauncher.set(javaToolchain)
 }
@@ -169,7 +169,7 @@ tasks.register<JavaExec>("runIndyIntegration") {
 tasks.register<JavaExec>("runKeyDid") {
     group = "examples"
     description = "Run did:key example"
-    mainClass.set("com.trustweave.examples.did_key.KeyDidExampleKt")
+    mainClass.set("org.trustweave.examples.did_key.KeyDidExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
     javaLauncher.set(javaToolchain)
 }
@@ -177,7 +177,7 @@ tasks.register<JavaExec>("runKeyDid") {
 tasks.register<JavaExec>("runJwkDid") {
     group = "examples"
     description = "Run did:jwk example"
-    mainClass.set("com.trustweave.examples.did_jwk.JwkDidExampleKt")
+    mainClass.set("org.trustweave.examples.did_jwk.JwkDidExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
     javaLauncher.set(javaToolchain)
 }
@@ -185,7 +185,7 @@ tasks.register<JavaExec>("runJwkDid") {
 tasks.register<JavaExec>("runBlockchainAnchoring") {
     group = "examples"
     description = "Run blockchain anchoring example (Ethereum, Base, Arbitrum)"
-    mainClass.set("com.trustweave.examples.blockchain.BlockchainAnchoringExampleKt")
+    mainClass.set("org.trustweave.examples.blockchain.BlockchainAnchoringExampleKt")
     classpath = sourceSets["main"].runtimeClasspath
     javaLauncher.set(javaToolchain)
 }

@@ -257,12 +257,12 @@ val oidc4vciOffer = registry.offerCredential("oidc4vci", request)
 Protocols can be auto-discovered using Java ServiceLoader:
 
 1. Implement `CredentialExchangeProtocolProvider`
-2. Create `META-INF/services/com.trustweave.credential.exchange.spi.CredentialExchangeProtocolProvider`
+2. Create `META-INF/services/org.trustweave.credential.exchange.spi.CredentialExchangeProtocolProvider`
 3. List your provider class in the file
 
 Example (DIDComm):
 ```
-com.trustweave.credential.didcomm.exchange.spi.DidCommExchangeProtocolProvider
+org.trustweave.credential.didcomm.exchange.spi.DidCommExchangeProtocolProvider
 ```
 
 ## Protocol-Specific Options

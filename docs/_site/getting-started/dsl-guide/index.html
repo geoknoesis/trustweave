@@ -652,9 +652,9 @@
 4
 5
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-trust:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-trust:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
@@ -723,7 +723,7 @@
 27
 28
 29
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.*</span>
 
 <span class="kd">val</span> <span class="py">trustLayer</span> <span class="p">=</span> <span class="nf">trustLayer</span> <span class="p">{</span>
     <span class="nf">keys</span> <span class="p">{</span>
@@ -901,10 +901,10 @@
 26
 27
 28
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.types.IssuerIdentity</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.types.ProofType</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.types.IssuerIdentity</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.types.ProofType</span>
 
-<span class="k">import</span> <span class="nn">com.trustweave.trust.types.IssuanceResult</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.types.IssuanceResult</span>
 
 <span class="kd">val</span> <span class="py">issuanceResult</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">issue</span> <span class="p">{</span>
     <span class="nf">credential</span> <span class="p">{</span>
@@ -979,8 +979,8 @@
 25
 26
 27
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.types.IssuerIdentity</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.types.ProofType</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.types.IssuerIdentity</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.types.ProofType</span>
 
 <span class="kd">val</span> <span class="py">issuanceResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">issue</span> <span class="p">{</span>
     <span class="nf">credential</span> <span class="p">{</span>
@@ -1051,7 +1051,7 @@
 31
 32
 33
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.types.VerificationResult</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.types.VerificationResult</span>
 
 <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">verify</span> <span class="p">{</span>
     <span class="nf">credential</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
@@ -1134,7 +1134,7 @@
 18
 19
 20
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.types.WalletCreationResult</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.types.WalletCreationResult</span>
 
 <span class="kd">val</span> <span class="py">walletResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">wallet</span> <span class="p">{</span>
     <span class="nf">holder</span><span class="p">(</span><span class="s">"did:key:holder"</span><span class="p">)</span>

@@ -619,10 +619,10 @@
 5
 6
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
@@ -822,14 +822,14 @@
 <span class="k">import</span> <span class="nn">java.time.Instant</span>
 
 <span class="c1">// TrustWeave core</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.DidMethods</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.KeyAlgorithms</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.ProofTypes</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.CredentialTypes</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.types.ProofType</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.types.CredentialType</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.DidMethods</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.KeyAlgorithms</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.ProofTypes</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.CredentialTypes</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.types.ProofType</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.types.CredentialType</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">trustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span>
@@ -843,8 +843,8 @@
     <span class="p">}</span>
 
     <span class="c1">// Create issuer DID (returns sealed result)</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.DidCreationResult</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.IssuanceResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.DidCreationResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.IssuanceResult</span>
     
     <span class="kd">val</span> <span class="py">didResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span>
         <span class="nf">method</span><span class="p">(</span><span class="nc">DidMethods</span><span class="p">.</span><span class="nc">KEY</span><span class="p">)</span>
@@ -986,13 +986,13 @@
 74
 75
 76
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.DidMethods</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.KeyAlgorithms</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.CredentialTypes</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.types.CredentialType</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.DidMethods</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.KeyAlgorithms</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.CredentialTypes</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.types.CredentialType</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.*</span>
 <span class="k">import</span> <span class="nn">java.time.Instant</span>
@@ -1117,11 +1117,11 @@
 33
 34
 35
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.DidMethods</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.KeyAlgorithms</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.VerificationConfig</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.DidMethods</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.KeyAlgorithms</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.VerificationConfig</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
@@ -1197,11 +1197,11 @@
 31
 32
 33
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.DidMethods</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.KeyAlgorithms</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.VerificationConfig</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.DidMethods</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.KeyAlgorithms</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.VerificationConfig</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
@@ -1333,11 +1333,11 @@
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.*</span>
 
 <span class="c1">// TrustWeave core</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.DidMethods</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.KeyAlgorithms</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.DidMethods</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.KeyAlgorithms</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">trustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span>
@@ -1503,11 +1503,11 @@
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.*</span>
 
 <span class="c1">// TrustWeave core</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.DidMethods</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.KeyAlgorithms</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.DidMethods</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.KeyAlgorithms</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">trustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span>
@@ -1644,11 +1644,11 @@
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 
 <span class="c1">// TrustWeave core</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.DidMethods</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.KeyAlgorithms</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.DidMethods</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.KeyAlgorithms</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">trustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span>
@@ -1811,13 +1811,13 @@
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.*</span>
 
 <span class="c1">// TrustWeave core</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.DidMethods</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.credential.KeyAlgorithms</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.types.DidCreationResult</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.types.IssuanceResult</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.services.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.DidMethods</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.credential.KeyAlgorithms</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.types.DidCreationResult</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.types.IssuanceResult</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.services.*</span>
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">trustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span>

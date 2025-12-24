@@ -25,8 +25,8 @@ Trust registries enable verifiers to determine which issuers they trust without 
 
 **Required imports:**
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.types.VerificationResult
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.VerificationResult
 import kotlinx.coroutines.runBlocking
 ```
 
@@ -196,9 +196,9 @@ when (result) {
 Here's a complete, runnable example:
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.types.VerificationResult
-import com.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.VerificationResult
+import org.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import java.time.temporal.ChronoUnit

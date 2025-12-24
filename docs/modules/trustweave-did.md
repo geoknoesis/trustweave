@@ -8,9 +8,9 @@ The `trustweave-did` module provides Decentralized Identifier (DID) and DID Docu
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -74,8 +74,8 @@ graph TB
 ### DidMethod Interface
 
 ```kotlin
-import com.trustweave.did.*
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.*
+import org.trustweave.did.identifiers.Did
 
 interface DidMethod {
     val method: String  // e.g., "key", "web", "ion"
@@ -109,7 +109,7 @@ val didDoc = method?.createDid(options)
 ### DidResolver
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 val resolver = RegistryBasedResolver(registry)
 val did = Did("did:key:z6Mk...")
@@ -123,7 +123,7 @@ val result = resolver.resolve(did)
 ### DidRegistrar Interface
 
 ```kotlin
-import com.trustweave.did.registrar.*
+import org.trustweave.did.registrar.*
 
 interface DidRegistrar {
     suspend fun createDid(method: String, options: CreateDidOptions): DidRegistrationResponse
@@ -220,8 +220,8 @@ graph LR
 ## Usage Example
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.did.*
+import org.trustweave.TrustWeave
+import org.trustweave.did.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -257,17 +257,17 @@ fun main() = runBlocking {
 
 TrustWeave provides implementations for:
 
-- **did:key** (`com.trustweave.did:key`) – Native did:key implementation. See [Key DID Integration Guide](../integrations/key-did.md).
-- **did:web** (`com.trustweave.did:web`) – Web DID method. See [Web DID Integration Guide](../integrations/web-did.md).
-- **did:ethr** (`com.trustweave.did:ethr`) – Ethereum DID method. See [Ethereum DID Integration Guide](../integrations/ethr-did.md).
-- **did:ion** (`com.trustweave.did:ion`) – Microsoft ION DID method. See [ION DID Integration Guide](../integrations/ion-did.md).
-- **did:jwk** (`com.trustweave.did:jwk`) – JWK DID method. See [JWK DID Integration Guide](../integrations/jwk-did.md).
-- **did:peer** (`com.trustweave.did:peer`) – Peer DID method. See [Peer DID Integration Guide](../integrations/peer-did.md).
-- **did:plc** (`com.trustweave.did:plc`) – PLC DID method. See [PLC DID Integration Guide](../integrations/plc-did.md).
-- **did:ens** (`com.trustweave.did:ens`) – ENS DID method. See [ENS DID Integration Guide](../integrations/ens-did.md).
-- **did:polygon** (`com.trustweave.did:polygon`) – Polygon DID method. See [Polygon DID Integration Guide](../integrations/polygon-did.md).
-- **did:sol** (`com.trustweave.did:sol`) – Solana DID method. See [Solana DID Integration Guide](../integrations/sol-did.md).
-- **did:cheqd** (`com.trustweave.did:cheqd`) – Cheqd DID method. See [Cheqd DID Integration Guide](../integrations/cheqd-did.md).
+- **did:key** (`org.trustweave.did:key`) – Native did:key implementation. See [Key DID Integration Guide](../integrations/key-did.md).
+- **did:web** (`org.trustweave.did:web`) – Web DID method. See [Web DID Integration Guide](../integrations/web-did.md).
+- **did:ethr** (`org.trustweave.did:ethr`) – Ethereum DID method. See [Ethereum DID Integration Guide](../integrations/ethr-did.md).
+- **did:ion** (`org.trustweave.did:ion`) – Microsoft ION DID method. See [ION DID Integration Guide](../integrations/ion-did.md).
+- **did:jwk** (`org.trustweave.did:jwk`) – JWK DID method. See [JWK DID Integration Guide](../integrations/jwk-did.md).
+- **did:peer** (`org.trustweave.did:peer`) – Peer DID method. See [Peer DID Integration Guide](../integrations/peer-did.md).
+- **did:plc** (`org.trustweave.did:plc`) – PLC DID method. See [PLC DID Integration Guide](../integrations/plc-did.md).
+- **did:ens** (`org.trustweave.did:ens`) – ENS DID method. See [ENS DID Integration Guide](../integrations/ens-did.md).
+- **did:polygon** (`org.trustweave.did:polygon`) – Polygon DID method. See [Polygon DID Integration Guide](../integrations/polygon-did.md).
+- **did:sol** (`org.trustweave.did:sol`) – Solana DID method. See [Solana DID Integration Guide](../integrations/sol-did.md).
+- **did:cheqd** (`org.trustweave.did:cheqd`) – Cheqd DID method. See [Cheqd DID Integration Guide](../integrations/cheqd-did.md).
 
 Additionally, the module supports HTTP-based DID methods through JSON configuration. See [DID Registration Integration Guide](../integrations/did-registration/README.md) for details.
 
@@ -276,7 +276,7 @@ Additionally, the module supports HTTP-based DID methods through JSON configurat
 ```mermaid
 graph TD
     subgraph "did:did-core Package Structure"
-        A[com.trustweave.did]
+        A[org.trustweave.did]
         A --> B[DidMethod.kt]
         A --> C[DidCreationOptions.kt]
         A --> D[model/]

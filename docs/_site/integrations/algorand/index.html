@@ -652,10 +652,10 @@
 8
 9
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.chains:algorand:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-json:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.chains:algorand:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-json:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 
     <span class="c1">// Algorand SDK</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.algorand:algosdk:2.7.0"</span><span class="p">)</span>
@@ -694,9 +694,9 @@
 12
 13
 14
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.algorand.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.anchor.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.anchor.options.AlgorandOptions</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.algorand.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.anchor.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.anchor.options.AlgorandOptions</span>
 
 <span class="c1">// Create type-safe options</span>
 <span class="kd">val</span> <span class="py">options</span> <span class="p">=</span> <span class="nc">AlgorandOptions</span><span class="p">(</span>
@@ -771,8 +771,8 @@
 13
 14
 15
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.anchor.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.anchor.options.AlgorandOptions</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.anchor.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.anchor.options.AlgorandOptions</span>
 <span class="k">import</span> <span class="nn">java.util.ServiceLoader</span>
 
 <span class="c1">// Discover Algorand provider</span>
@@ -832,9 +832,9 @@
 26
 27
 28
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.algorand.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.anchor.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.anchor.options.AlgorandOptions</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.algorand.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.anchor.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.anchor.options.AlgorandOptions</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 
 <span class="nf">runBlocking</span> <span class="p">{</span>
@@ -888,7 +888,7 @@
 16
 17
 18
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.anchor.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.anchor.*</span>
 
 <span class="kd">val</span> <span class="py">anchorRef</span> <span class="p">=</span> <span class="nc">AnchorRef</span><span class="p">(</span>
     <span class="n">chainId</span> <span class="p">=</span> <span class="s">"algorand:testnet"</span><span class="p">,</span>
@@ -955,9 +955,9 @@
 37
 38
 39
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.algorand.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.anchor.options.AlgorandOptions</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.algorand.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.anchor.options.AlgorandOptions</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 
 <span class="nf">runBlocking</span> <span class="p">{</span>
@@ -1053,7 +1053,7 @@
 15
 16
 17
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.anchor.exceptions.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.anchor.exceptions.*</span>
 
 <span class="k">try</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">client</span><span class="p">.</span><span class="nf">writePayload</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>

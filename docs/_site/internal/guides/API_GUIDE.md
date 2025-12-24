@@ -23,12 +23,12 @@ val trustWeave = TrustWeave.build {
 }
 
 // Simple usage with domain-specific error handling
-import com.trustweave.did.exception.DidException
-import com.trustweave.did.exception.DidException.DidMethodNotRegistered
-import com.trustweave.credential.exception.CredentialException
-import com.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed
-import com.trustweave.trust.types.IssuerIdentity
-import com.trustweave.core.exception.TrustWeaveException
+import org.trustweave.did.exception.DidException
+import org.trustweave.did.exception.DidException.DidMethodNotRegistered
+import org.trustweave.credential.exception.CredentialException
+import org.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed
+import org.trustweave.trust.types.IssuerIdentity
+import org.trustweave.core.exception.TrustWeaveException
 
 try {
     val did = trustWeave.createDid {

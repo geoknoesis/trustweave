@@ -644,7 +644,7 @@
 </h4>
     
 <ul>
-  <li><strong>Location</strong>: <code class="language-plaintext highlighter-rouge">credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/DidCommMessageStorage.kt</code></li>
+  <li><strong>Location</strong>: <code class="language-plaintext highlighter-rouge">credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/DidCommMessageStorage.kt</code></li>
   <li><strong>Purpose</strong>: Abstract interface for message persistence</li>
   <li><strong>Features</strong>:
     <ul>
@@ -666,14 +666,14 @@
 
 <p><strong>In-Memory Storage</strong></p>
 <ul>
-  <li><strong>Location</strong>: <code class="language-plaintext highlighter-rouge">credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/InMemoryDidCommMessageStorage.kt</code></li>
+  <li><strong>Location</strong>: <code class="language-plaintext highlighter-rouge">credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/InMemoryDidCommMessageStorage.kt</code></li>
   <li><strong>Use Case</strong>: Testing and development</li>
   <li><strong>Limitation</strong>: Data lost on restart</li>
 </ul>
 
 <p><strong>PostgreSQL Storage</strong></p>
 <ul>
-  <li><strong>Location</strong>: <code class="language-plaintext highlighter-rouge">credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/database/PostgresDidCommMessageStorage.kt</code></li>
+  <li><strong>Location</strong>: <code class="language-plaintext highlighter-rouge">credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/database/PostgresDidCommMessageStorage.kt</code></li>
   <li><strong>Use Case</strong>: Production deployments</li>
   <li><strong>Features</strong>:
     <ul>
@@ -721,7 +721,7 @@
 </h4>
     
 <ul>
-  <li><strong>Location</strong>: <code class="language-plaintext highlighter-rouge">credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/crypto/secret/LocalKeyStore.kt</code></li>
+  <li><strong>Location</strong>: <code class="language-plaintext highlighter-rouge">credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/crypto/secret/LocalKeyStore.kt</code></li>
   <li><strong>Purpose</strong>: Store DIDComm keys locally (for ECDH operations)</li>
   <li><strong>Implementations</strong>:
     <ul>
@@ -739,7 +739,7 @@
 </h4>
     
 <ul>
-  <li><strong>Location</strong>: <code class="language-plaintext highlighter-rouge">credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/crypto/secret/KmsSecretResolver.kt</code></li>
+  <li><strong>Location</strong>: <code class="language-plaintext highlighter-rouge">credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/crypto/secret/KmsSecretResolver.kt</code></li>
   <li><strong>Purpose</strong>: Bridge KMS with didcomm-java library</li>
   <li><strong>Strategy</strong>: Uses local key store for DIDComm keys</li>
 </ul>
@@ -752,7 +752,7 @@
 </h4>
     
 <ul>
-  <li><strong>Location</strong>: <code class="language-plaintext highlighter-rouge">credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/crypto/secret/HybridKmsSecretResolver.kt</code></li>
+  <li><strong>Location</strong>: <code class="language-plaintext highlighter-rouge">credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/crypto/secret/HybridKmsSecretResolver.kt</code></li>
   <li><strong>Purpose</strong>: Recommended approach for production</li>
   <li><strong>Strategy</strong>:
     <ul>
@@ -802,8 +802,8 @@
 22
 23
 </pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.zaxxer.hikari.HikariDataSource</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.didcomm.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.didcomm.storage.database.PostgresDidCommMessageStorage</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.didcomm.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.didcomm.storage.database.PostgresDidCommMessageStorage</span>
 
 <span class="c1">// Create data source</span>
 <span class="kd">val</span> <span class="py">dataSource</span> <span class="p">=</span> <span class="nc">HikariDataSource</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span>
@@ -851,7 +851,7 @@
 15
 16
 17
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.didcomm.crypto.secret.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.didcomm.crypto.secret.*</span>
 
 <span class="c1">// Create local key store for DIDComm keys</span>
 <span class="kd">val</span> <span class="py">localKeyStore</span> <span class="p">=</span> <span class="nc">InMemoryLocalKeyStore</span><span class="p">()</span> <span class="c1">// Or EncryptedFileLocalKeyStore</span>

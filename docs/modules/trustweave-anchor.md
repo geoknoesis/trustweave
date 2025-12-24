@@ -8,9 +8,9 @@ The `trustweave-anchor` module provides blockchain anchoring abstraction with ch
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-json:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-json:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -33,7 +33,7 @@ The `trustweave-anchor` module provides:
 ### BlockchainAnchorClient Interface
 
 ```kotlin
-import com.trustweave.anchor.*
+import org.trustweave.anchor.*
 
 interface BlockchainAnchorClient {
     val chainId: String  // CAIP-2 format: "eip155:1", "algorand:testnet", etc.
@@ -98,7 +98,7 @@ sealed class ChainId {
 ## Usage Example
 
 ```kotlin
-import com.trustweave.anchor.*
+import org.trustweave.anchor.*
 import java.util.ServiceLoader
 
 // Discover blockchain adapter via SPI
@@ -132,13 +132,13 @@ val readData = result?.anchorRef?.let { client.readPayload(it) }
 
 TrustWeave provides adapters for:
 
-- **Algorand** (`com.trustweave.chains:algorand`) – Algorand mainnet and testnet. See [Algorand Integration Guide](../integrations/algorand.md).
-- **Polygon** (`com.trustweave.chains:polygon`) – Polygon mainnet and Mumbai testnet. See [Polygon Anchor Integration Guide](../integrations/README.md#blockchain-anchor-integrations).
-- **Ethereum** (`com.trustweave.chains:ethereum`) – Ethereum mainnet and Sepolia testnet. See [Ethereum Anchor Integration Guide](../integrations/ethereum-anchor.md).
-- **Base** (`com.trustweave.chains:base`) – Base (Coinbase L2). See [Base Anchor Integration Guide](../integrations/base-anchor.md).
-- **Arbitrum** (`com.trustweave.chains:arbitrum`) – Arbitrum One and Sepolia rollup. See [Arbitrum Anchor Integration Guide](../integrations/arbitrum-anchor.md).
-- **Ganache** (`com.trustweave.chains:ganache`) – Local Ethereum node for testing. See [Integration Modules](../integrations/README.md#blockchain-anchor-integrations).
-- **Indy** (`com.trustweave.chains:indy`) – Hyperledger Indy. See [Integration Modules](../integrations/README.md#other-did--kms-integrations).
+- **Algorand** (`org.trustweave.chains:algorand`) – Algorand mainnet and testnet. See [Algorand Integration Guide](../integrations/algorand.md).
+- **Polygon** (`org.trustweave.chains:polygon`) – Polygon mainnet and Mumbai testnet. See [Polygon Anchor Integration Guide](../integrations/README.md#blockchain-anchor-integrations).
+- **Ethereum** (`org.trustweave.chains:ethereum`) – Ethereum mainnet and Sepolia testnet. See [Ethereum Anchor Integration Guide](../integrations/ethereum-anchor.md).
+- **Base** (`org.trustweave.chains:base`) – Base (Coinbase L2). See [Base Anchor Integration Guide](../integrations/base-anchor.md).
+- **Arbitrum** (`org.trustweave.chains:arbitrum`) – Arbitrum One and Sepolia rollup. See [Arbitrum Anchor Integration Guide](../integrations/arbitrum-anchor.md).
+- **Ganache** (`org.trustweave.chains:ganache`) – Local Ethereum node for testing. See [Integration Modules](../integrations/README.md#blockchain-anchor-integrations).
+- **Indy** (`org.trustweave.chains:indy`) – Hyperledger Indy. See [Integration Modules](../integrations/README.md#other-did--kms-integrations).
 
 See the [Blockchain Anchor Integration Guides](../integrations/README.md) for detailed information about each adapter.
 

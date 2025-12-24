@@ -14,7 +14,7 @@ A **Verifiable Credential** is a tamper-evident attestation following the W3C VC
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -80,9 +80,9 @@ Detailed API signatures live in the [Credential Service API reference](../api-re
 ### Example: issuing a credential
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.credential.IssuanceConfig
-import com.trustweave.credential.ProofType
+import org.trustweave.TrustWeave
+import org.trustweave.credential.IssuanceConfig
+import org.trustweave.credential.ProofType
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -113,8 +113,8 @@ TrustWeave automatically:
 ### Example: verifying a credential
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.credential.models.VerifiableCredential
+import org.trustweave.TrustWeave
+import org.trustweave.credential.models.VerifiableCredential
 
 suspend fun verifyBadge(trustWeave: TrustWeave, credential: VerifiableCredential) {
     val result = trustWeave.verify {
@@ -252,8 +252,8 @@ A Verifiable Credential contains:
 A credential is **issued** by an issuer to a subject:
 
 ```kotlin
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.CredentialIssuanceOptions
+import org.trustweave.credential.models.VerifiableCredential
+import org.trustweave.credential.CredentialIssuanceOptions
 
 // Issue credential using TrustWeave DSL API
 val trustWeave = TrustWeave.build {
@@ -266,8 +266,8 @@ val trustWeave = TrustWeave.build {
     credentials { defaultProofType(ProofType.Ed25519Signature2020) }
 }
 
-import com.trustweave.trust.types.DidCreationResult
-import com.trustweave.trust.types.IssuanceResult
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.trust.types.IssuanceResult
 
 val didResult = trustWeave.createDid {
     method(KEY)
@@ -313,7 +313,7 @@ val issuedCredential = when (issuanceResult) {
 Store credentials in a wallet:
 
 ```kotlin
-import com.trustweave.testkit.credential.BasicWallet
+import org.trustweave.testkit.credential.BasicWallet
 
 val wallet = BasicWallet()
 val credentialId = wallet.store(issuedCredential)
@@ -326,8 +326,8 @@ val credentialId = wallet.store(issuedCredential)
 Create a **Verifiable Presentation** to share credentials:
 
 ```kotlin
-import com.trustweave.credential.models.VerifiablePresentation
-import com.trustweave.credential.PresentationOptions
+import org.trustweave.credential.models.VerifiablePresentation
+import org.trustweave.credential.PresentationOptions
 
 val presentation = VerifiablePresentation(
     type = listOf("VerifiablePresentation"),
@@ -344,8 +344,8 @@ val presentation = VerifiablePresentation(
 Verify a credential or presentation:
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.credential.VerificationConfig
+import org.trustweave.TrustWeave
+import org.trustweave.credential.VerificationConfig
 
 val trustWeave = TrustWeave.build {
     factories(

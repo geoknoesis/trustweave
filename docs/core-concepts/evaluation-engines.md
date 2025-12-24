@@ -286,8 +286,8 @@ engines.verify("parametric-insurance", expectedHash)
 ```kotlin
 package com.example.contracts.engines
 
-import com.trustweave.contract.evaluation.*
-import com.trustweave.contract.models.*
+import org.trustweave.contract.evaluation.*
+import org.trustweave.contract.models.*
 
 class MyCustomEngine : BaseEvaluationEngine() {
     override val engineId: String = "my-custom-engine"

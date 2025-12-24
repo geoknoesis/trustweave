@@ -712,7 +712,7 @@
 2
 3
 4
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.credential.BasicWallet</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.credential.BasicWallet</span>
 
 <span class="kd">val</span> <span class="py">wallet</span> <span class="p">=</span> <span class="nc">BasicWallet</span><span class="p">()</span>
 <span class="c1">// Supports: store, get, list, delete, query</span>
@@ -737,7 +737,7 @@
 5
 6
 7
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.credential.InMemoryWallet</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.credential.InMemoryWallet</span>
 
 <span class="kd">val</span> <span class="py">wallet</span> <span class="p">=</span> <span class="nc">InMemoryWallet</span><span class="p">(</span>
     <span class="n">walletDid</span> <span class="p">=</span> <span class="s">"did:key:wallet"</span><span class="p">,</span>
@@ -923,7 +923,7 @@
 17
 18
 19
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.wallet.WalletDirectory</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.wallet.WalletDirectory</span>
 
 <span class="kd">val</span> <span class="py">directory</span> <span class="p">=</span> <span class="nc">WalletDirectory</span><span class="p">()</span>
 
@@ -1208,7 +1208,7 @@
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:trustweave-core:1.0.0-</span><span class="nc">SNAPSHOT</span><span class="s">")
+    implementation("org.trustweave:trustweave-core:1.0.0-</span><span class="nc">SNAPSHOT</span><span class="s">")
 </span><span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 

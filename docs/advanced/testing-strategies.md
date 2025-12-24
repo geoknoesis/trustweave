@@ -29,7 +29,7 @@ The `trustweave-testkit` module provides in-memory implementations:
 
 ```kotlin
 dependencies {
-    testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -38,8 +38,8 @@ dependencies {
 ### Testing DID Methods
 
 ```kotlin
-import com.trustweave.testkit.*
-import com.trustweave.did.*
+import org.trustweave.testkit.*
+import org.trustweave.did.*
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 
@@ -67,8 +67,8 @@ class DidMethodTest {
 ### Testing Key Management
 
 ```kotlin
-import com.trustweave.testkit.kms.InMemoryKeyManagementService
-import com.trustweave.kms.*
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
+import org.trustweave.kms.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -96,9 +96,9 @@ class KmsTest {
 ### Testing Credential Workflows
 
 ```kotlin
-import com.trustweave.testkit.*
-import com.trustweave.TrustWeave
-import com.trustweave.did.*
+import org.trustweave.testkit.*
+import org.trustweave.TrustWeave
+import org.trustweave.did.*
 import kotlin.test.Test
 
 class CredentialWorkflowTest {
@@ -136,8 +136,8 @@ class CredentialWorkflowTest {
 ### Testing Blockchain Anchoring
 
 ```kotlin
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.trustweave.anchor.*
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.anchor.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -162,9 +162,9 @@ class AnchoringTest {
 ### EO Integration Tests
 
 ```kotlin
-import com.trustweave.testkit.eo.BaseEoIntegrationTest
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.trustweave.anchor.*
+import org.trustweave.testkit.eo.BaseEoIntegrationTest
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.anchor.*
 import kotlin.test.Test
 
 class MyEoIntegrationTest : BaseEoIntegrationTest() {
@@ -190,7 +190,7 @@ class MyEoIntegrationTest : BaseEoIntegrationTest() {
 ### Using TrustWeaveTestFixture
 
 ```kotlin
-import com.trustweave.testkit.*
+import org.trustweave.testkit.*
 import kotlin.test.Test
 
 class FixtureTest {
@@ -287,8 +287,8 @@ fun testPerformance() = runBlocking {
 ### Testing Custom DID Methods
 
 ```kotlin
-import com.trustweave.testkit.*
-import com.trustweave.did.*
+import org.trustweave.testkit.*
+import org.trustweave.did.*
 import kotlin.test.Test
 
 class MyCustomDidMethodTest {
@@ -314,8 +314,8 @@ class MyCustomDidMethodTest {
 ### Testing Custom Blockchain Adapters
 
 ```kotlin
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.trustweave.anchor.*
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.anchor.*
 import kotlin.test.Test
 
 class MyBlockchainAdapterTest {

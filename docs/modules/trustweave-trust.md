@@ -9,7 +9,7 @@ between credential workflows and registry/provider integrations.
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:trustweave-trust:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-trust:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -26,8 +26,8 @@ dependencies {
 ## Usage
 
 ```kotlin
-import com.trustweave.trust.TrustRegistry
-import com.trustweave.trust.TrustAnchorMetadata
+import org.trustweave.trust.TrustRegistry
+import org.trustweave.trust.TrustAnchorMetadata
 
 suspend fun seedTrust(registry: TrustRegistry) {
     registry.addTrustAnchor(

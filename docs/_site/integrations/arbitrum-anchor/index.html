@@ -651,10 +651,10 @@
 8
 9
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.chains:arbitrum:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-json:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.chains:arbitrum:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-json:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 
     <span class="c1">// Web3j for Arbitrum blockchain (EVM-compatible)</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.web3j:core:5.0.1"</span><span class="p">)</span>
@@ -690,8 +690,8 @@
 11
 12
 13
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.anchor.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.arbitrum.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.anchor.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.arbitrum.*</span>
 
 <span class="c1">// Create Arbitrum anchor client for mainnet</span>
 <span class="kd">val</span> <span class="py">options</span> <span class="p">=</span> <span class="nf">mapOf</span><span class="p">(</span>
@@ -772,8 +772,8 @@
 11
 12
 13
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.anchor.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.anchor.spi.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.anchor.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.anchor.spi.*</span>
 <span class="k">import</span> <span class="nn">java.util.ServiceLoader</span>
 
 <span class="c1">// Discover Arbitrum provider</span>
@@ -823,8 +823,8 @@
 18
 19
 20
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.anchor.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.arbitrum.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.anchor.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.arbitrum.*</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.*</span>
 
 <span class="kd">val</span> <span class="py">client</span> <span class="p">=</span> <span class="nc">ArbitrumBlockchainAnchorClient</span><span class="p">(</span>
@@ -913,8 +913,8 @@
 12
 13
 14
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.arbitrum.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.arbitrum.*</span>
 
 <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span> <span class="p">{</span>
     <span class="nf">blockchain</span> <span class="p">{</span>

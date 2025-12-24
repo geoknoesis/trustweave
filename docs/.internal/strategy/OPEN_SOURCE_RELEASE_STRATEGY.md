@@ -115,7 +115,7 @@ version = "1.0.0"  // Remove -SNAPSHOT for release
 
 1. **Sonatype OSSRH Account:**
    - [ ] Create account at https://issues.sonatype.org
-   - [ ] Request namespace: `com.trustweave`
+   - [ ] Request namespace: `org.trustweave`
    - [ ] Set up GPG signing keys
 
 2. **Gradle Configuration:**

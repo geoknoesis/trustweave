@@ -675,7 +675,7 @@
 17
 18
 19
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.TrustLayer</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.TrustLayer</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
@@ -758,9 +758,9 @@
 43
 44
 45
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.types.DidCreationResult</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.types.DidUpdateResult</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.types.KeyRotationResult</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.types.DidCreationResult</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.types.DidUpdateResult</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.types.KeyRotationResult</span>
 
 <span class="kd">val</span> <span class="py">trustLayer</span> <span class="p">=</span> <span class="nc">TrustLayer</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
 
@@ -854,7 +854,7 @@
 29
 30
 31
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.types.IssuanceResult</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.types.IssuanceResult</span>
 
 <span class="kd">val</span> <span class="py">trustLayer</span> <span class="p">=</span> <span class="nc">TrustLayer</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
 
@@ -927,7 +927,7 @@
 20
 21
 22
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.types.WalletCreationResult</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.types.WalletCreationResult</span>
 
 <span class="kd">val</span> <span class="py">trustLayer</span> <span class="p">=</span> <span class="nc">TrustLayer</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span> <span class="o">..</span><span class="p">.</span> <span class="p">}</span>
 
@@ -1051,7 +1051,7 @@
 31
 32
 33
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.core.TrustWeaveError</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.core.TrustWeaveError</span>
 
 <span class="k">try</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">didResult</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span> <span class="p">}</span>

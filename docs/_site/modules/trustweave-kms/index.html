@@ -617,8 +617,8 @@
 3
 4
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
@@ -668,7 +668,7 @@
 6
 7
 8
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
 
 <span class="kd">interface</span> <span class="nc">KeyManagementService</span> <span class="p">{</span>
     <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">generateKey</span><span class="p">(</span><span class="n">algorithm</span><span class="p">:</span> <span class="nc">Algorithm</span><span class="p">):</span> <span class="nc">KeyHandle</span>
@@ -742,7 +742,7 @@
 16
 17
 18
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
 <span class="k">import</span> <span class="nn">java.util.ServiceLoader</span>
 
 <span class="c1">// Discover KMS provider via SPI</span>
@@ -777,12 +777,12 @@
 <p>TrustWeave provides several KMS implementations:</p>
 
 <ul>
-  <li><strong>In-Memory</strong> (<code class="language-plaintext highlighter-rouge">com.trustweave:trustweave-testkit</code>) – For testing and development. See <a href="/trustweave/modules/trustweave-testkit/">TestKit Documentation</a>.</li>
-  <li><strong>AWS KMS</strong> (<code class="language-plaintext highlighter-rouge">com.trustweave.kms:aws</code>) – AWS Key Management Service integration. See <a href="/trustweave/integrations/aws-kms/">AWS KMS Integration Guide</a>.</li>
-  <li><strong>Azure Key Vault</strong> (<code class="language-plaintext highlighter-rouge">com.trustweave.kms:azure</code>) – Azure Key Vault integration. See <a href="/trustweave/integrations/azure-kms/">Azure KMS Integration Guide</a>.</li>
-  <li><strong>Google Cloud KMS</strong> (<code class="language-plaintext highlighter-rouge">com.trustweave.kms:google</code>) – Google Cloud KMS integration. See <a href="/trustweave/integrations/google-kms/">Google KMS Integration Guide</a>.</li>
-  <li><strong>HashiCorp Vault</strong> (<code class="language-plaintext highlighter-rouge">com.trustweave.kms:hashicorp</code>) – HashiCorp Vault Transit engine integration. See <a href="/trustweave/integrations/hashicorp-vault-kms/">HashiCorp Vault KMS Integration Guide</a>.</li>
-  <li><strong>walt.id</strong> (<code class="language-plaintext highlighter-rouge">com.trustweave.kms:waltid</code>) – walt.id KMS integration. See <a href="/trustweave/integrations/waltid/">walt.id Integration Guide</a>.</li>
+  <li><strong>In-Memory</strong> (<code class="language-plaintext highlighter-rouge">org.trustweave:trustweave-testkit</code>) – For testing and development. See <a href="/trustweave/modules/trustweave-testkit/">TestKit Documentation</a>.</li>
+  <li><strong>AWS KMS</strong> (<code class="language-plaintext highlighter-rouge">org.trustweave.kms:aws</code>) – AWS Key Management Service integration. See <a href="/trustweave/integrations/aws-kms/">AWS KMS Integration Guide</a>.</li>
+  <li><strong>Azure Key Vault</strong> (<code class="language-plaintext highlighter-rouge">org.trustweave.kms:azure</code>) – Azure Key Vault integration. See <a href="/trustweave/integrations/azure-kms/">Azure KMS Integration Guide</a>.</li>
+  <li><strong>Google Cloud KMS</strong> (<code class="language-plaintext highlighter-rouge">org.trustweave.kms:google</code>) – Google Cloud KMS integration. See <a href="/trustweave/integrations/google-kms/">Google KMS Integration Guide</a>.</li>
+  <li><strong>HashiCorp Vault</strong> (<code class="language-plaintext highlighter-rouge">org.trustweave.kms:hashicorp</code>) – HashiCorp Vault Transit engine integration. See <a href="/trustweave/integrations/hashicorp-vault-kms/">HashiCorp Vault KMS Integration Guide</a>.</li>
+  <li><strong>walt.id</strong> (<code class="language-plaintext highlighter-rouge">org.trustweave.kms:waltid</code>) – walt.id KMS integration. See <a href="/trustweave/integrations/waltid/">walt.id Integration Guide</a>.</li>
 </ul>
 
 <p>See the <a href="/trustweave/core-concepts/key-management/">Key Management</a> guide for detailed information about each implementation.</p>

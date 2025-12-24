@@ -9,8 +9,8 @@ The TrustWeave Credential Service provides a simple, type-safe API for issuing a
 ### 1. Create a Service
 
 ```kotlin
-import com.trustweave.credential.CredentialServices
-import com.trustweave.did.resolver.DidResolver
+import org.trustweave.credential.CredentialServices
+import org.trustweave.did.resolver.DidResolver
 
 val service = CredentialServices.default(didResolver)
 ```
@@ -20,13 +20,13 @@ That's it! All proof formats are automatically available.
 ### 2. Issue a Credential
 
 ```kotlin
-import com.trustweave.credential.format.CredentialFormatId
-import com.trustweave.credential.model.vc.Issuer
-import com.trustweave.credential.model.vc.CredentialSubject
-import com.trustweave.credential.model.CredentialType
-import com.trustweave.credential.requests.IssuanceRequest
-import com.trustweave.credential.results.IssuanceResult
-import com.trustweave.did.identifiers.Did
+import org.trustweave.credential.format.CredentialFormatId
+import org.trustweave.credential.model.vc.Issuer
+import org.trustweave.credential.model.vc.CredentialSubject
+import org.trustweave.credential.model.CredentialType
+import org.trustweave.credential.requests.IssuanceRequest
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.did.identifiers.Did
 import kotlinx.serialization.json.JsonPrimitive
 import java.time.Instant
 
@@ -62,10 +62,10 @@ when (result) {
 ### 3. Verify a Credential
 
 ```kotlin
-import com.trustweave.credential.requests.VerificationOptions
-import com.trustweave.credential.results.VerificationResult
-import com.trustweave.credential.trust.TrustPolicy
-import com.trustweave.did.identifiers.Did
+import org.trustweave.credential.requests.VerificationOptions
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.credential.trust.TrustPolicy
+import org.trustweave.did.identifiers.Did
 
 // Basic verification (no trust policy)
 val verification: VerificationResult = service.verify(
@@ -106,7 +106,7 @@ when (verificationWithTrust) {
 For DID-based credentials, use the extension function that handles DID resolution automatically:
 
 ```kotlin
-import com.trustweave.credential.did.issueForDid
+import org.trustweave.credential.did.issueForDid
 
 val result = service.issueForDid(
     didResolver = didResolver,
@@ -196,8 +196,8 @@ The old API still works but is deprecated. Migrate to the new simplified API for
 ## Complete Example
 
 ```kotlin
-import com.trustweave.credential.*
-import com.trustweave.did.resolver.DidResolver
+import org.trustweave.credential.*
+import org.trustweave.did.resolver.DidResolver
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {

@@ -168,8 +168,8 @@ TrustWeave.cleanup().fold(
 ## Complete Lifecycle Example
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.core.*
+import org.trustweave.TrustWeave
+import org.trustweave.core.*
 
 suspend fun main() {
     // Create TrustWeave instance
@@ -211,7 +211,7 @@ suspend fun main() {
 To implement lifecycle management in your plugin:
 
 ```kotlin
-import com.trustweave.spi.PluginLifecycle
+import org.trustweave.spi.PluginLifecycle
 
 class MyBlockchainClient : BlockchainAnchorClient, PluginLifecycle {
     private var initialized = false

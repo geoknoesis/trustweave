@@ -670,7 +670,7 @@
     
 
 <ul>
-  <li><strong>Docker</strong> (optional): Required for <code class="language-plaintext highlighter-rouge">com.trustweave.chains:ganache</code> tests using TestContainers</li>
+  <li><strong>Docker</strong> (optional): Required for <code class="language-plaintext highlighter-rouge">org.trustweave.chains:ganache</code> tests using TestContainers</li>
   <li><strong>IDE</strong>: IntelliJ IDEA or VS Code with Kotlin support (recommended for better developer experience)</li>
 </ul>
 <h3 id="verify-your-setup">
@@ -705,7 +705,7 @@
 19
 20
 21
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.TrustLayer</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.TrustLayer</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
@@ -765,20 +765,20 @@
 23
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
     <span class="c1">// Core modules (required)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-json:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-json:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 
     <span class="c1">// Test kit (for testing)</span>
-    <span class="nf">testImplementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">testImplementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 
     <span class="c1">// Optional: Integration modules (using hierarchical group IDs)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.kms:waltid:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.did:godiddy:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.chains:algorand:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.chains:polygon:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.kms:waltid:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.did:godiddy:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.chains:algorand:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.chains:polygon:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 
     <span class="c1">// Kotlinx Serialization (required)</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"</span><span class="p">)</span>
@@ -819,20 +819,20 @@
 17
 </pre></td><td class="rouge-code"><pre><span class="n">dependencies</span> <span class="o">{</span>
     <span class="c1">// Core modules (required)</span>
-    <span class="n">implementation</span> <span class="s1">'com.trustweave:trustweave-core:1.0.0-SNAPSHOT'</span>
-    <span class="n">implementation</span> <span class="s1">'com.trustweave:trustweave-json:1.0.0-SNAPSHOT'</span>
-    <span class="n">implementation</span> <span class="s1">'com.trustweave:trustweave-kms:1.0.0-SNAPSHOT'</span>
-    <span class="n">implementation</span> <span class="s1">'com.trustweave:trustweave-did:1.0.0-SNAPSHOT'</span>
-    <span class="n">implementation</span> <span class="s1">'com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT'</span>
+    <span class="n">implementation</span> <span class="s1">'org.trustweave:trustweave-core:1.0.0-SNAPSHOT'</span>
+    <span class="n">implementation</span> <span class="s1">'org.trustweave:trustweave-json:1.0.0-SNAPSHOT'</span>
+    <span class="n">implementation</span> <span class="s1">'org.trustweave:trustweave-kms:1.0.0-SNAPSHOT'</span>
+    <span class="n">implementation</span> <span class="s1">'org.trustweave:trustweave-did:1.0.0-SNAPSHOT'</span>
+    <span class="n">implementation</span> <span class="s1">'org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT'</span>
 
     <span class="c1">// Test kit (for testing)</span>
-    <span class="n">testImplementation</span> <span class="s1">'com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT'</span>
+    <span class="n">testImplementation</span> <span class="s1">'org.trustweave:trustweave-testkit:1.0.0-SNAPSHOT'</span>
 
     <span class="c1">// Optional: Integration modules (using hierarchical group IDs)</span>
-    <span class="n">implementation</span> <span class="s1">'com.trustweave.kms:waltid:1.0.0-SNAPSHOT'</span>
-    <span class="n">implementation</span> <span class="s1">'com.trustweave.did:godiddy:1.0.0-SNAPSHOT'</span>
-    <span class="n">implementation</span> <span class="s1">'com.trustweave.chains:algorand:1.0.0-SNAPSHOT'</span>
-    <span class="n">implementation</span> <span class="s1">'com.trustweave.chains:polygon:1.0.0-SNAPSHOT'</span>
+    <span class="n">implementation</span> <span class="s1">'org.trustweave.kms:waltid:1.0.0-SNAPSHOT'</span>
+    <span class="n">implementation</span> <span class="s1">'org.trustweave.did:godiddy:1.0.0-SNAPSHOT'</span>
+    <span class="n">implementation</span> <span class="s1">'org.trustweave.chains:algorand:1.0.0-SNAPSHOT'</span>
+    <span class="n">implementation</span> <span class="s1">'org.trustweave.chains:polygon:1.0.0-SNAPSHOT'</span>
 <span class="o">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
@@ -887,34 +887,34 @@
 </pre></td><td class="rouge-code"><pre><span class="nt">&lt;dependencies&gt;</span>
     <span class="c">&lt;!-- Core modules (required) --&gt;</span>
     <span class="nt">&lt;dependency&gt;</span>
-        <span class="nt">&lt;groupId&gt;</span>com.trustweave<span class="nt">&lt;/groupId&gt;</span>
+        <span class="nt">&lt;groupId&gt;</span>org.trustweave<span class="nt">&lt;/groupId&gt;</span>
         <span class="nt">&lt;artifactId&gt;</span>trustweave-core<span class="nt">&lt;/artifactId&gt;</span>
         <span class="nt">&lt;version&gt;</span>1.0.0-SNAPSHOT<span class="nt">&lt;/version&gt;</span>
     <span class="nt">&lt;/dependency&gt;</span>
     <span class="nt">&lt;dependency&gt;</span>
-        <span class="nt">&lt;groupId&gt;</span>com.trustweave<span class="nt">&lt;/groupId&gt;</span>
+        <span class="nt">&lt;groupId&gt;</span>org.trustweave<span class="nt">&lt;/groupId&gt;</span>
         <span class="nt">&lt;artifactId&gt;</span>trustweave-json<span class="nt">&lt;/artifactId&gt;</span>
         <span class="nt">&lt;version&gt;</span>1.0.0-SNAPSHOT<span class="nt">&lt;/version&gt;</span>
     <span class="nt">&lt;/dependency&gt;</span>
     <span class="nt">&lt;dependency&gt;</span>
-        <span class="nt">&lt;groupId&gt;</span>com.trustweave<span class="nt">&lt;/groupId&gt;</span>
+        <span class="nt">&lt;groupId&gt;</span>org.trustweave<span class="nt">&lt;/groupId&gt;</span>
         <span class="nt">&lt;artifactId&gt;</span>trustweave-kms<span class="nt">&lt;/artifactId&gt;</span>
         <span class="nt">&lt;version&gt;</span>1.0.0-SNAPSHOT<span class="nt">&lt;/version&gt;</span>
     <span class="nt">&lt;/dependency&gt;</span>
     <span class="nt">&lt;dependency&gt;</span>
-        <span class="nt">&lt;groupId&gt;</span>com.trustweave<span class="nt">&lt;/groupId&gt;</span>
+        <span class="nt">&lt;groupId&gt;</span>org.trustweave<span class="nt">&lt;/groupId&gt;</span>
         <span class="nt">&lt;artifactId&gt;</span>trustweave-did<span class="nt">&lt;/artifactId&gt;</span>
         <span class="nt">&lt;version&gt;</span>1.0.0-SNAPSHOT<span class="nt">&lt;/version&gt;</span>
     <span class="nt">&lt;/dependency&gt;</span>
     <span class="nt">&lt;dependency&gt;</span>
-        <span class="nt">&lt;groupId&gt;</span>com.trustweave<span class="nt">&lt;/groupId&gt;</span>
+        <span class="nt">&lt;groupId&gt;</span>org.trustweave<span class="nt">&lt;/groupId&gt;</span>
         <span class="nt">&lt;artifactId&gt;</span>trustweave-anchor<span class="nt">&lt;/artifactId&gt;</span>
         <span class="nt">&lt;version&gt;</span>1.0.0-SNAPSHOT<span class="nt">&lt;/version&gt;</span>
     <span class="nt">&lt;/dependency&gt;</span>
 
     <span class="c">&lt;!-- Test kit (for testing) --&gt;</span>
     <span class="nt">&lt;dependency&gt;</span>
-        <span class="nt">&lt;groupId&gt;</span>com.trustweave<span class="nt">&lt;/groupId&gt;</span>
+        <span class="nt">&lt;groupId&gt;</span>org.trustweave<span class="nt">&lt;/groupId&gt;</span>
         <span class="nt">&lt;artifactId&gt;</span>trustweave-testkit<span class="nt">&lt;/artifactId&gt;</span>
         <span class="nt">&lt;version&gt;</span>1.0.0-SNAPSHOT<span class="nt">&lt;/version&gt;</span>
         <span class="nt">&lt;scope&gt;</span>test<span class="nt">&lt;/scope&gt;</span>
@@ -942,11 +942,11 @@
 6
 7
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-json:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">testImplementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-json:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">testImplementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 

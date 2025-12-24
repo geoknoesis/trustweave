@@ -24,7 +24,7 @@ Add the AWS KMS module to your dependencies:
 ```kotlin
 dependencies {
     // Only need to add the AWS KMS plugin - core dependencies are included transitively
-    implementation("com.trustweave.kms:aws:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.kms:aws:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -41,8 +41,8 @@ The AWS KMS provider supports both **typed configuration** (recommended) and **M
 Use the type-safe builder for compile-time safety and IDE autocomplete:
 
 ```kotlin
-import com.trustweave.kms.*
-import com.trustweave.awskms.awsKmsOptions
+import org.trustweave.kms.*
+import org.trustweave.awskms.awsKmsOptions
 
 // Simple and elegant - no ServiceLoader needed!
 val kms = KeyManagementServices.create("aws", awsKmsOptions {
@@ -55,7 +55,7 @@ val kms = KeyManagementServices.create("aws", awsKmsOptions {
 For backward compatibility, you can still use Map-based configuration:
 
 ```kotlin
-import com.trustweave.kms.*
+import org.trustweave.kms.*
 
 // Simple factory API
 val kms = KeyManagementServices.create("aws", mapOf(
@@ -80,8 +80,8 @@ When running on AWS infrastructure (EC2, ECS, Lambda), use IAM roles:
 
 **Typed Configuration:**
 ```kotlin
-import com.trustweave.kms.*
-import com.trustweave.awskms.awsKmsOptions
+import org.trustweave.kms.*
+import org.trustweave.awskms.awsKmsOptions
 
 // No credentials needed - uses IAM role automatically
 val kms = KeyManagementServices.create("aws", awsKmsOptions {
@@ -91,7 +91,7 @@ val kms = KeyManagementServices.create("aws", awsKmsOptions {
 
 **Map Configuration:**
 ```kotlin
-import com.trustweave.kms.*
+import org.trustweave.kms.*
 
 // No credentials needed - uses IAM role automatically
 val kms = KeyManagementServices.create("aws", mapOf(
@@ -105,8 +105,8 @@ For local development or non-AWS environments:
 
 **Typed Configuration:**
 ```kotlin
-import com.trustweave.kms.*
-import com.trustweave.awskms.awsKmsOptions
+import org.trustweave.kms.*
+import org.trustweave.awskms.awsKmsOptions
 
 val kms = KeyManagementServices.create("aws", awsKmsOptions {
     region = "us-east-1"
@@ -117,7 +117,7 @@ val kms = KeyManagementServices.create("aws", awsKmsOptions {
 
 **Map Configuration:**
 ```kotlin
-import com.trustweave.kms.*
+import org.trustweave.kms.*
 
 val kms = KeyManagementServices.create("aws", mapOf(
     "region" to "us-east-1",
@@ -148,8 +148,8 @@ For local testing with LocalStack:
 
 **Typed Configuration:**
 ```kotlin
-import com.trustweave.kms.*
-import com.trustweave.awskms.awsKmsOptions
+import org.trustweave.kms.*
+import org.trustweave.awskms.awsKmsOptions
 
 val kms = KeyManagementServices.create("aws", awsKmsOptions {
     region = "us-east-1"
@@ -159,7 +159,7 @@ val kms = KeyManagementServices.create("aws", awsKmsOptions {
 
 **Map Configuration:**
 ```kotlin
-import com.trustweave.kms.*
+import org.trustweave.kms.*
 
 val kms = KeyManagementServices.create("aws", mapOf(
     "region" to "us-east-1",
@@ -172,8 +172,8 @@ val kms = KeyManagementServices.create("aws", mapOf(
 The typed builder supports all AWS KMS configuration options:
 
 ```kotlin
-import com.trustweave.kms.*
-import com.trustweave.awskms.awsKmsOptions
+import org.trustweave.kms.*
+import org.trustweave.awskms.awsKmsOptions
 
 val kms = KeyManagementServices.create("aws", awsKmsOptions {
     region = "us-east-1"
@@ -219,8 +219,8 @@ AWS KMS uses FIPS 140-3 Level 3 validated HSMs (Certificate #4884, validated 11/
 ### Checking Algorithm Support
 
 ```kotlin
-import com.trustweave.kms.*
-import com.trustweave.awskms.awsKmsOptions
+import org.trustweave.kms.*
+import org.trustweave.awskms.awsKmsOptions
 
 val kms = KeyManagementServices.create("aws", awsKmsOptions {
     region = "us-east-1"
@@ -241,9 +241,9 @@ if (kms?.supportsAlgorithm(Algorithm.Ed25519) == true) {
 ### Generating Keys
 
 ```kotlin
-import com.trustweave.kms.*
-import com.trustweave.kms.KmsOptionKeys
-import com.trustweave.kms.results.*
+import org.trustweave.kms.*
+import org.trustweave.kms.KmsOptionKeys
+import org.trustweave.kms.results.*
 
 // Generate Ed25519 key
 val result = kms.generateKey(Algorithm.Ed25519)
@@ -554,8 +554,8 @@ For integration testing, use LocalStack:
 
 **Typed Configuration:**
 ```kotlin
-import com.trustweave.kms.*
-import com.trustweave.awskms.awsKmsOptions
+import org.trustweave.kms.*
+import org.trustweave.awskms.awsKmsOptions
 
 // Configure for LocalStack
 val kms = KeyManagementServices.create("aws", awsKmsOptions {
@@ -566,7 +566,7 @@ val kms = KeyManagementServices.create("aws", awsKmsOptions {
 
 **Map Configuration:**
 ```kotlin
-import com.trustweave.kms.*
+import org.trustweave.kms.*
 
 // Configure for LocalStack
 val kms = KeyManagementServices.create("aws", mapOf(

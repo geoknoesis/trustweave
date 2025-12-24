@@ -23,8 +23,8 @@ A **Decentralized Identifier (DID)** is a self-sovereign identifier controlled b
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -57,8 +57,8 @@ Wallets expose DID helpers through the `DidManagement` capability (see the [Wall
 ### Example: Registering and using DID methods
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.did.*
+import org.trustweave.TrustWeave
+import org.trustweave.did.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {

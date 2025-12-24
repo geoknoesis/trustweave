@@ -845,7 +845,7 @@
 10
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
     <span class="c1">// Core TrustWeave modules</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-all:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-all:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 
     <span class="c1">// Kotlinx Serialization</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"</span><span class="p">)</span>
@@ -1156,11 +1156,11 @@
 289
 </pre></td><td class="rouge-code"><pre><span class="k">package</span> <span class="nn">com.example.vaccination.healthpassport</span>
 
-<span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.PresentationOptions</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.wallet.Wallet</span>
-<span class="k">import</span> <span class="nn">com.trustweave.spi.services.WalletCreationOptionsBuilder</span>
+<span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.PresentationOptions</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.wallet.Wallet</span>
+<span class="k">import</span> <span class="nn">org.trustweave.spi.services.WalletCreationOptionsBuilder</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.buildJsonObject</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.put</span>
@@ -1184,9 +1184,9 @@
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ TrustWeave initialized"</span><span class="p">)</span>
 
     <span class="c1">// Step 2: Create DIDs for healthcare provider and individual</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.DidCreationResult</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.WalletCreationResult</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.DidResolutionResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.DidCreationResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.WalletCreationResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.DidResolutionResult</span>
     
     <span class="kd">val</span> <span class="py">healthcareProviderDidResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span> <span class="p">}</span>
     <span class="kd">val</span> <span class="py">healthcareProviderDid</span> <span class="p">=</span> <span class="k">when</span> <span class="p">(</span><span class="n">healthcareProviderDidResult</span><span class="p">)</span> <span class="p">{</span>
@@ -1219,7 +1219,7 @@
     <span class="nf">println</span><span class="p">(</span><span class="s">"✅ Airline Verifier DID: ${airlineDid.value}"</span><span class="p">)</span>
 
     <span class="c1">// Step 3: Issue first vaccination credential (COVID-19, Dose 1)</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.IssuanceResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.IssuanceResult</span>
     
     <span class="kd">val</span> <span class="py">vaccination1IssuanceResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">issue</span> <span class="p">{</span>
         <span class="nf">credential</span> <span class="p">{</span>
@@ -1375,7 +1375,7 @@
     <span class="c1">// Step 9: Airline verifies vaccination status</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n✈️ Airline Verification Process:"</span><span class="p">)</span>
 
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.VerificationResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.VerificationResult</span>
     
     <span class="kd">val</span> <span class="py">boosterVerificationResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">verify</span> <span class="p">{</span>
         <span class="nf">credential</span><span class="p">(</span><span class="n">boosterCredential</span><span class="p">)</span>

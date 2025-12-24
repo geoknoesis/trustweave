@@ -24,12 +24,12 @@ Verifiable Credentials enable trust without intermediaries. They're tamper-proof
 
 **Required imports:**
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.types.ProofType
-import com.trustweave.trust.types.VerificationResult
-import com.trustweave.trust.types.DidCreationResult
-import com.trustweave.trust.types.IssuanceResult
-import com.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.ProofType
+import org.trustweave.trust.types.VerificationResult
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.trust.types.IssuanceResult
+import org.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -75,9 +75,9 @@ val result = trustWeave.verify { ... }
 Set up TrustWeave with a Key Management Service and DID method. For development, use the in-memory KMS.
 
 ```kotlin
-import com.trustweave.trust.dsl.trustWeave
-import com.trustweave.trust.dsl.credential.*
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.dsl.credential.*
+import org.trustweave.testkit.services.*
 
 val trustWeave = trustWeave {
     factories(
@@ -154,7 +154,7 @@ println("Signing key ID: $keyId")
 Define the credential content using the DSL builder. Specify the subject, types, and metadata.
 
 ```kotlin
-import com.trustweave.trust.types.IssuanceResult
+import org.trustweave.trust.types.IssuanceResult
 
 val credential = trustWeave.issue {
     credential {
@@ -262,9 +262,9 @@ when (verificationResult) {
 Here's a complete, runnable example that brings all steps together:
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.types.ProofType
-import com.trustweave.trust.types.VerificationResult
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.ProofType
+import org.trustweave.trust.types.VerificationResult
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import java.time.temporal.ChronoUnit

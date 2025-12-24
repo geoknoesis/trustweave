@@ -109,13 +109,13 @@ Carbon markets need:
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Test kit for in-memory implementations
-    testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
 
     // Optional: Algorand adapter for real blockchain anchoring
-    implementation("com.trustweave.chains:algorand:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.chains:algorand:1.0.0-SNAPSHOT")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -132,9 +132,9 @@ Here's a complete carbon credit dMRV workflow:
 ```kotlin
 package com.example.carbon.markets
 
-import com.trustweave.TrustWeave
-import com.trustweave.core.*
-import com.trustweave.json.DigestUtils
+import org.trustweave.TrustWeave
+import org.trustweave.core.*
+import org.trustweave.json.DigestUtils
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import java.time.Instant
@@ -158,7 +158,7 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for carbon credit issuer, verifier, and buyer
-    import com.trustweave.trust.types.DidCreationResult
+    import org.trustweave.trust.types.DidCreationResult
     
     val issuerDidResult = trustWeave.createDid {
         method(KEY)
@@ -440,7 +440,7 @@ fun main() = runBlocking {
 // Helper function to check credit status on blockchain
 suspend fun checkCreditStatus(
     creditId: String,
-    anchorRef: com.trustweave.anchor.AnchorRef
+    anchorRef: org.trustweave.anchor.AnchorRef
 ): String {
     // In production, query blockchain for credit status
     // This prevents double counting by checking if credit was already sold/retired
@@ -490,7 +490,7 @@ The key feature is preventing double counting:
 ```kotlin
 suspend fun preventDoubleCounting(
     creditId: String,
-    anchorRef: com.trustweave.anchor.AnchorRef
+    anchorRef: org.trustweave.anchor.AnchorRef
 ): Boolean {
     // Check blockchain for credit status
     val status = queryBlockchainStatus(creditId, anchorRef)

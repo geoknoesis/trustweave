@@ -17,7 +17,7 @@ TrustWeave uses sealed result types for exhaustive, type-safe error handling. Th
 
 ## IssuanceResult
 
-**Package:** `com.trustweave.credential.results.IssuanceResult`
+**Package:** `org.trustweave.credential.results.IssuanceResult`
 
 **Structure:**
 ```kotlin
@@ -35,7 +35,7 @@ sealed class IssuanceResult {
 
 **Correct Usage:**
 ```kotlin
-import com.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.results.IssuanceResult
 
 val result = trustWeave.issue { ... }
 
@@ -52,7 +52,7 @@ when (result) {
 }
 
 // Or use testkit helper for tests/examples
-import com.trustweave.testkit.getOrFail
+import org.trustweave.testkit.getOrFail
 
 val credential = result.getOrFail() // Throws on failure
 ```
@@ -68,7 +68,7 @@ val errors = result.allErrors.joinToString("; ")
 
 ## DidCreationResult
 
-**Package:** `com.trustweave.trust.types.DidCreationResult`
+**Package:** `org.trustweave.trust.types.DidCreationResult`
 
 **Structure:**
 ```kotlin
@@ -86,7 +86,7 @@ sealed class DidCreationResult {
 
 **Correct Usage:**
 ```kotlin
-import com.trustweave.trust.types.DidCreationResult
+import org.trustweave.trust.types.DidCreationResult
 
 val result = trustWeave.createDid { ... }
 
@@ -115,7 +115,7 @@ when (result) {
 }
 
 // Or use testkit helper for tests/examples
-import com.trustweave.testkit.getOrFail
+import org.trustweave.testkit.getOrFail
 
 val did = result.getOrFail() // Throws on failure
 ```
@@ -135,7 +135,7 @@ when (result) {
 
 ## VerificationResult
 
-**Package:** `com.trustweave.trust.types.VerificationResult`
+**Package:** `org.trustweave.trust.types.VerificationResult`
 
 **Structure:**
 ```kotlin
@@ -155,7 +155,7 @@ sealed class VerificationResult {
 
 **Correct Usage:**
 ```kotlin
-import com.trustweave.trust.types.VerificationResult
+import org.trustweave.trust.types.VerificationResult
 
 val result = trustWeave.verify { credential(credential) }
 
@@ -184,11 +184,11 @@ when (result) {
 
 ## WalletCreationResult
 
-**Package:** `com.trustweave.trust.types.WalletCreationResult`
+**Package:** `org.trustweave.trust.types.WalletCreationResult`
 
 **Correct Usage:**
 ```kotlin
-import com.trustweave.trust.types.WalletCreationResult
+import org.trustweave.trust.types.WalletCreationResult
 
 val result = trustWeave.wallet { holder("did:key:holder") }
 
@@ -214,7 +214,7 @@ when (result) {
 }
 
 // Or use testkit helper
-import com.trustweave.testkit.getOrFail
+import org.trustweave.testkit.getOrFail
 
 val wallet = result.getOrFail() // Throws on failure
 ```
@@ -224,7 +224,7 @@ val wallet = result.getOrFail() // Throws on failure
 For tests and examples, use the `getOrFail()` extension from testkit:
 
 ```kotlin
-import com.trustweave.testkit.getOrFail
+import org.trustweave.testkit.getOrFail
 
 // Throws IllegalStateException with detailed error message on failure
 val did = trustWeave.createDid { method(KEY) }.getOrFail()

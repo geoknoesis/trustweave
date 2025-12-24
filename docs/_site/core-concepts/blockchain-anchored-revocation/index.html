@@ -772,10 +772,10 @@
 5
 6
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
     <span class="c1">// Add blockchain anchor client for your chain</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-anchor-algorand:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-anchor-algorand:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h3 id="step-2-create-status-list-manager">
@@ -796,7 +796,7 @@
 5
 6
 7
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.revocation.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.revocation.*</span>
 
 <span class="c1">// For development/testing</span>
 <span class="kd">val</span> <span class="py">statusListManager</span> <span class="p">=</span> <span class="nc">InMemoryStatusListManager</span><span class="p">()</span>
@@ -822,7 +822,7 @@
 5
 6
 7
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.anchor.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.anchor.*</span>
 
 <span class="kd">val</span> <span class="py">anchorClient</span> <span class="p">=</span> <span class="nc">AlgorandBlockchainAnchorClient</span><span class="p">(</span>
     <span class="n">algodUrl</span> <span class="p">=</span> <span class="s">"https://testnet-api.algonode.cloud"</span><span class="p">,</span>
@@ -997,7 +997,7 @@
 16
 17
 18
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.models.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.models.*</span>
 
 <span class="kd">val</span> <span class="py">credential</span> <span class="p">=</span> <span class="nc">VerifiableCredential</span><span class="p">(</span>
     <span class="n">id</span> <span class="p">=</span> <span class="s">"cred-123"</span><span class="p">,</span>
@@ -1230,8 +1230,8 @@
 41
 42
 43
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.revocation.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.anchor.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.revocation.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.anchor.*</span>
 <span class="k">import</span> <span class="nn">java.time.Duration</span>
 
 <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>

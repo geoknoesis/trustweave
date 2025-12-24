@@ -15,7 +15,7 @@ The Smart Contract API provides methods for creating, binding, executing, and ma
 ## Service Access
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
+import org.trustweave.trust.TrustWeave
 
 val trustWeave = TrustWeave.build { ... }
 val contracts = trustWeave.contracts
@@ -54,7 +54,7 @@ suspend fun createDraft(
 
 **Example:**
 ```kotlin
-import com.trustweave.trust.TrustWeave
+import org.trustweave.trust.TrustWeave
 
 val trustWeave = TrustWeave.build { ... }
 

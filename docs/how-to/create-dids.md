@@ -21,9 +21,9 @@ This guide shows you how to create, resolve, update, and deactivate Decentralize
 Here's a complete example that creates a DID, extracts the key ID, and uses it:
 
 ```kotlin
-import com.trustweave.trust.dsl.trustWeave
-import com.trustweave.trust.dsl.credential.*
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.dsl.credential.*
+import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -69,9 +69,9 @@ Key ID: key-1
 First, create a `TrustWeave` instance with DID method support:
 
 ```kotlin
-import com.trustweave.trust.dsl.trustWeave
-import com.trustweave.trust.dsl.credential.*
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.dsl.credential.*
+import org.trustweave.testkit.services.*
 
 val trustWeave = trustWeave {
     factories(
@@ -194,7 +194,7 @@ val did = try {
 Resolve a DID to get its document:
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 val did = Did("did:key:z6Mk...")
 val result = trustWeave.resolveDid(did)
@@ -224,7 +224,7 @@ when (result) {
 Update a DID document to add services or verification methods:
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 val did = Did("did:key:example")
 val updated = trustWeave.updateDid {
@@ -242,7 +242,7 @@ val updated = trustWeave.updateDid {
 Deactivate a DID when it's no longer needed:
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 // Note: Deactivation depends on the DID method implementation
 // For did:key, deactivation is typically not supported as it's stateless
@@ -274,7 +274,7 @@ See [DID Method Integrations](../how-to/README.md#did-method-integrations) for c
 DID operations now return sealed result types instead of throwing exceptions. This provides type-safe, exhaustive error handling:
 
 ```kotlin
-import com.trustweave.trust.types.DidCreationResult
+import org.trustweave.trust.types.DidCreationResult
 
 val didResult = trustWeave.createDid { 
     method(KEY) 
@@ -309,7 +309,7 @@ when (didResult) {
 **For tests and examples**, you can use the `getOrFail()` helper:
 
 ```kotlin
-import com.trustweave.testkit.getOrFail
+import org.trustweave.testkit.getOrFail
 
 val did = trustWeave.createDid { method(KEY) }.getOrFail()
 // Throws AssertionError on failure (suitable for tests/examples only)

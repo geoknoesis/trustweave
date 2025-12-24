@@ -848,17 +848,17 @@
 20
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
     <span class="c1">// Core TrustWeave modules</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-json:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-json:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 
     <span class="c1">// Test kit for in-memory implementations</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 
     <span class="c1">// Optional: Algorand adapter for real blockchain anchoring</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.chains:algorand:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.chains:algorand:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 
     <span class="c1">// Kotlinx Serialization</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"</span><span class="p">)</span>
@@ -1075,12 +1075,12 @@
 193
 </pre></td><td class="rouge-code"><pre><span class="k">package</span> <span class="nn">com.example.earth.observation</span>
 
-<span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.anchor.BlockchainAnchorRegistry</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.models.VerifiableCredential</span>
-<span class="k">import</span> <span class="nn">com.trustweave.json.DigestUtils</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient</span>
+<span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.anchor.BlockchainAnchorRegistry</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.models.VerifiableCredential</span>
+<span class="k">import</span> <span class="nn">org.trustweave.json.DigestUtils</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.Json</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.buildJsonObject</span>
@@ -1102,8 +1102,8 @@
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ TrustWeave initialized with blockchain anchoring"</span><span class="p">)</span>
 
     <span class="c1">// Step 2: Create DID for data provider</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.DidCreationResult</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.IssuanceResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.DidCreationResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.IssuanceResult</span>
     
     <span class="kd">val</span> <span class="py">providerDidResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span> <span class="p">}</span>
     <span class="kd">val</span> <span class="py">providerDid</span> <span class="p">=</span> <span class="k">when</span> <span class="p">(</span><span class="n">providerDidResult</span><span class="p">)</span> <span class="p">{</span>
@@ -1523,7 +1523,7 @@ Earth Observation Data Integrity Scenario - Complete End-to-End Example
 11
 12
 13
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.algorand.AlgorandBlockchainAnchorClient</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.algorand.AlgorandBlockchainAnchorClient</span>
 
 <span class="c1">// Replace this:</span>
 <span class="c1">// val anchorClient = InMemoryBlockchainAnchorClient(chainId)</span>

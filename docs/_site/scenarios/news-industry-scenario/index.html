@@ -841,12 +841,12 @@
 9
 10
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-json:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-json:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"</span><span class="p">)</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"</span><span class="p">)</span>
 <span class="p">}</span>
@@ -896,9 +896,9 @@
 20
 21
 22
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.did.DidKeyMockMethod</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.kms.InMemoryKeyManagementService</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.DidMethodRegistry</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.did.DidKeyMockMethod</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.kms.InMemoryKeyManagementService</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.DidMethodRegistry</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
@@ -1045,7 +1045,7 @@
 27
 28
 29
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.models.VerifiableCredential</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.models.VerifiableCredential</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.buildJsonObject</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.put</span>
 <span class="k">import</span> <span class="nn">java.time.Instant</span>
@@ -1207,9 +1207,9 @@
 33
 34
 35
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.issuer.CredentialIssuer</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.proof.Ed25519ProofGenerator</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.CredentialIssuanceOptions</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.issuer.CredentialIssuer</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.proof.Ed25519ProofGenerator</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.CredentialIssuanceOptions</span>
 
     <span class="c1">// Step 5: Issue authorship credential</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 5: Issuing authorship credential..."</span><span class="p">)</span>
@@ -1668,8 +1668,8 @@
 42
 43
 44
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.verifier.CredentialVerifier</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.CredentialVerificationOptions</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.verifier.CredentialVerifier</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.CredentialVerificationOptions</span>
 
     <span class="c1">// Step 9: Verify content authenticity</span>
     <span class="nf">println</span><span class="p">(</span><span class="s">"\nStep 9: Verifying content authenticity..."</span><span class="p">)</span>
@@ -1811,9 +1811,9 @@
 75
 76
 77
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient</span>
-<span class="k">import</span> <span class="nn">com.trustweave.anchor.BlockchainAnchorRegistry</span>
-<span class="k">import</span> <span class="nn">com.trustweave.anchor.anchorTyped</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient</span>
+<span class="k">import</span> <span class="nn">org.trustweave.anchor.BlockchainAnchorRegistry</span>
+<span class="k">import</span> <span class="nn">org.trustweave.anchor.anchorTyped</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.Serializable</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.Json</span>
 

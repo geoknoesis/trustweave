@@ -52,11 +52,11 @@ TrustWeave supports several trust policy patterns:
 Here's a simple example using an allowlist policy:
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.credential.trust.TrustPolicy
-import com.trustweave.did.identifiers.Did
-import com.trustweave.trust.types.VerificationResult
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.credential.trust.TrustPolicy
+import org.trustweave.did.identifiers.Did
+import org.trustweave.trust.types.VerificationResult
+import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {

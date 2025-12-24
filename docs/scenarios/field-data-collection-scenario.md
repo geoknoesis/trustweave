@@ -144,13 +144,13 @@ Add TrustWeave dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // TrustWeave distribution (includes all modules)
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Test kit for in-memory implementations
-    testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
 
     // Optional: Blockchain adapters for real blockchain anchoring
-    implementation("com.trustweave.chains:algorand:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.chains:algorand:1.0.0-SNAPSHOT")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -165,7 +165,7 @@ dependencies {
 Create data models for field data collection:
 
 ```kotlin
-package com.trustweave.examples.fielddata
+package org.trustweave.examples.fielddata
 
 import kotlinx.serialization.Serializable
 import java.time.Instant
@@ -227,8 +227,8 @@ data class FieldDataAnchor(
 Configure TrustWeave with blockchain anchoring support:
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.trust.TrustWeave
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -264,9 +264,9 @@ Create a DID for your organization (the issuer of credentials):
 
 ```kotlin
 // Create organization DID
-import com.trustweave.trust.types.DidCreationResult
-import com.trustweave.trust.types.DidResolutionResult
-import com.trustweave.trust.types.IssuanceResult
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.trust.types.DidResolutionResult
+import org.trustweave.trust.types.IssuanceResult
 
 val organizationDidResult = trustWeave.createDid {
     method(KEY)
@@ -288,7 +288,7 @@ println("  - This DID will issue credentials for collection events")
 Create a DID for a field worker and issue an authorization credential:
 
 ```kotlin
-import com.trustweave.credential.models.VerifiableCredential
+import org.trustweave.credential.models.VerifiableCredential
 import java.time.Instant
 
 // Create field worker DID
@@ -418,7 +418,7 @@ println("  - Location: (${collectionEvent.location.latitude}, ${collectionEvent.
 Compute the data digest and issue a verifiable credential for the collection event:
 
 ```kotlin
-import com.trustweave.core.util.DigestUtils
+import org.trustweave.core.util.DigestUtils
 import kotlinx.serialization.json.*
 
 // Compute data digest
@@ -470,7 +470,7 @@ println("  - Data Digest: $dataDigest")
 Anchor the collection event digest to blockchain for tamper-proof records:
 
 ```kotlin
-import com.trustweave.anchor.AnchorResult
+import org.trustweave.anchor.AnchorResult
 
 // Create anchor payload
 val anchorPayload = FieldDataAnchor(
@@ -573,12 +573,12 @@ when (collectionVerification) {
 Here's a complete runnable example that brings everything together:
 
 ```kotlin
-package com.trustweave.examples.fielddata
+package org.trustweave.examples.fielddata
 
-import com.trustweave.trust.TrustWeave
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.trustweave.core.util.DigestUtils
-import com.trustweave.trust.types.VerificationResult
+import org.trustweave.trust.TrustWeave
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.core.util.DigestUtils
+import org.trustweave.trust.types.VerificationResult
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import java.time.Instant
@@ -613,9 +613,9 @@ fun main() = runBlocking {
     println()
 
     // Step 2: Create organization DID
-    import com.trustweave.trust.types.DidCreationResult
-    import com.trustweave.trust.types.DidResolutionResult
-    import com.trustweave.trust.types.IssuanceResult
+    import org.trustweave.trust.types.DidCreationResult
+    import org.trustweave.trust.types.DidResolutionResult
+    import org.trustweave.trust.types.IssuanceResult
     
     val organizationDidResult = trustWeave.createDid {
         method(KEY)

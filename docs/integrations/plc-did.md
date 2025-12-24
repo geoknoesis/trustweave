@@ -22,10 +22,10 @@ Add the did:plc module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave.did:plc:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.did:plc:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.did:base:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 
     // HTTP client for AT Protocol integration
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
@@ -37,8 +37,8 @@ dependencies {
 ### Basic Configuration
 
 ```kotlin
-import com.trustweave.plcdid.*
-import com.trustweave.kms.*
+import org.trustweave.plcdid.*
+import org.trustweave.kms.*
 
 // Create configuration
 val config = PlcDidConfig.builder()
@@ -66,7 +66,7 @@ val method = PlcDidMethod(kms, config)
 When the module is on the classpath, did:plc is automatically available:
 
 ```kotlin
-import com.trustweave.did.*
+import org.trustweave.did.*
 import java.util.ServiceLoader
 
 // Discover did:plc provider
@@ -105,8 +105,8 @@ println("Created: ${document.id}") // did:plc:...
 ### Resolving a did:plc
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
-import com.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.resolver.DidResolutionResult
 
 val did = Did("did:plc:...")
 val result = method.resolveDid(did)
@@ -126,7 +126,7 @@ when (result) {
 ### Updating a did:plc
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 val did = Did("did:plc:...")
 val document = method.updateDid(did) { currentDoc ->
@@ -143,7 +143,7 @@ val document = method.updateDid(did) { currentDoc ->
 ### Deactivating a did:plc
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 val did = Did("did:plc:...")
 val deactivated = method.deactivateDid(did)
@@ -193,8 +193,8 @@ val config = PlcDidConfig.builder()
 ## Integration with TrustWeave
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.plcdid.*
+import org.trustweave.TrustWeave
+import org.trustweave.plcdid.*
 
 val config = PlcDidConfig.default()
 

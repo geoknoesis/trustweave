@@ -240,11 +240,11 @@ VaultKmsConfig.builder()
 **Task**: Create SPI registration file
 
 **Files**:
-- `kms/plugins/hashicorp/src/main/resources/META-INF/services/com.trustweave.kms.spi.KeyManagementServiceProvider`
+- `kms/plugins/hashicorp/src/main/resources/META-INF/services/org.trustweave.kms.spi.KeyManagementServiceProvider`
 
 **Content**:
 ```
-com.trustweave.hashicorpkms.VaultKeyManagementServiceProvider
+org.trustweave.hashicorpkms.VaultKeyManagementServiceProvider
 ```
 
 **Acceptance Criteria**:

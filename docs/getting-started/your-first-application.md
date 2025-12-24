@@ -45,12 +45,12 @@ flowchart TD
 The block below wires together in-memory services so you can run the whole workflow locally without external infrastructure.
 
 ```kotlin
-import com.trustweave.anchor.*
-import com.trustweave.did.*
-import com.trustweave.json.DigestUtils
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.trustweave.testkit.did.DidKeyMockMethod
-import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import org.trustweave.anchor.*
+import org.trustweave.did.*
+import org.trustweave.json.DigestUtils
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.testkit.did.DidKeyMockMethod
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import kotlinx.serialization.Serializable

@@ -138,10 +138,10 @@ Add TrustWeave dependencies to your `build.gradle.kts`. These modules cover DID 
 dependencies {
     // Core TrustWeave modules
     // TrustWeave distribution (includes all modules)
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Test kit for in-memory implementations
-    testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -158,14 +158,14 @@ dependencies {
 Here’s the full professional identity wallet flow. Execute it once to see the end-to-end experience before exploring the step-by-step explanations.
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.trust.types.ProofType
-import com.trustweave.trust.dsl.credential.credential
-import com.trustweave.testkit.services.TestkitDidMethodFactory
-import com.trustweave.testkit.services.TestkitWalletFactory
-import com.trustweave.testkit.kms.InMemoryKeyManagementService
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.types.ProofType
+import org.trustweave.trust.dsl.credential.credential
+import org.trustweave.testkit.services.TestkitDidMethodFactory
+import org.trustweave.testkit.services.TestkitWalletFactory
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
 
@@ -185,7 +185,7 @@ fun main() = runBlocking {
         keys {
             custom(kmsRef)
             signer { data, keyId ->
-                kmsRef.sign(com.trustweave.core.types.KeyId(keyId), data)
+                kmsRef.sign(org.trustweave.core.types.KeyId(keyId), data)
             }
         }
         did {
@@ -199,8 +199,8 @@ fun main() = runBlocking {
     }
 
     // Create professional DID using DSL
-    import com.trustweave.trust.types.DidCreationResult
-    import com.trustweave.trust.types.WalletCreationResult
+    import org.trustweave.trust.types.DidCreationResult
+    import org.trustweave.trust.types.WalletCreationResult
     
     val professionalDidResult = trustWeave.createDid {
         method(DidMethods.KEY)

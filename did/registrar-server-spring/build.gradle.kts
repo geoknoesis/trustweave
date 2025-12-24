@@ -5,7 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.spring)
 }
 
-group = "com.trustweave.did"
+group = "org.trustweave.did"
 
 dependencies {
     implementation(project(":common"))

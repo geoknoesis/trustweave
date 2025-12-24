@@ -20,11 +20,11 @@ This guide shows you how to anchor data to blockchains for tamper evidence and t
 Here's a complete example that anchors a credential digest to a blockchain:
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.anchor.AnchorResult
-import com.trustweave.anchor.AnchorRef
-import com.trustweave.anchor.BlockchainAnchorClient
-import com.trustweave.anchor.exceptions.BlockchainException
+import org.trustweave.trust.TrustWeave
+import org.trustweave.anchor.AnchorResult
+import org.trustweave.anchor.AnchorRef
+import org.trustweave.anchor.BlockchainAnchorClient
+import org.trustweave.anchor.exceptions.BlockchainException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json

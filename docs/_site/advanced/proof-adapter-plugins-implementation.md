@@ -144,11 +144,11 @@ credentials/plugins/proof/
 ├── vcld/
 │   ├── build.gradle.kts
 │   └── src/main/
-│       ├── kotlin/com/trustweave/credential/proof/vcld/
+│       ├── kotlin/org.trustweave/credential/proof/vcld/
 │       │   ├── VcLdProofAdapter.kt
 │       │   └── VcLdProofAdapterProvider.kt
 │       └── resources/META-INF/services/
-│           └── com.trustweave.credential.proof.spi.ProofAdapterProvider
+│           └── org.trustweave.credential.proof.spi.ProofAdapterProvider
 │
 ├── sdjwt/
 │   ├── build.gradle.kts
@@ -199,9 +199,9 @@ Each plugin needs full implementation of:
 ### Auto-Discovery (Recommended)
 
 ```kotlin
-import com.trustweave.credential.*
-import com.trustweave.credential.proof.ProofAdapters
-import com.trustweave.credential.proof.ProofRegistries
+import org.trustweave.credential.*
+import org.trustweave.credential.proof.ProofAdapters
+import org.trustweave.credential.proof.ProofRegistries
 
 // Auto-discover and register all plugins on classpath
 val registry = ProofRegistries.default()
@@ -220,8 +220,8 @@ val formats = service.supportedFormats()
 ### Manual Registration
 
 ```kotlin
-import com.trustweave.credential.proof.vcld.VcLdProofAdapter
-import com.trustweave.credential.proof.ProofRegistries
+import org.trustweave.credential.proof.vcld.VcLdProofAdapter
+import org.trustweave.credential.proof.ProofRegistries
 
 val registry = ProofRegistries.default()
 registry.register(VcLdProofAdapter())

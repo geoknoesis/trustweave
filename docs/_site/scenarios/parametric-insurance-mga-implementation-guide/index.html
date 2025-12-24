@@ -1110,10 +1110,10 @@
 276
 </pre></td><td class="rouge-code"><pre><span class="k">package</span> <span class="nn">com.atlasparametric.products.flood</span>
 
-<span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.contract.models.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.json.DigestUtils</span>
+<span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.contract.models.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.json.DigestUtils</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.buildJsonObject</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.put</span>
 <span class="k">import</span> <span class="nn">java.time.Instant</span>
@@ -1269,7 +1269,7 @@
 
         <span class="c1">// Step 3: Issue verifiable credential for EO data</span>
         <span class="c1">// Note: eoProviderDid is a String (DID value), so we need to create a Did object for resolveDid</span>
-        <span class="k">import</span> <span class="nn">com.trustweave.core.Did</span>
+        <span class="k">import</span> <span class="nn">org.trustweave.core.Did</span>
         <span class="kd">val</span> <span class="py">eoProviderDidObj</span> <span class="p">=</span> <span class="nc">Did</span><span class="p">(</span><span class="n">eoProviderDid</span><span class="p">)</span>
         <span class="kd">val</span> <span class="py">resolution</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">resolveDid</span><span class="p">(</span><span class="n">eoProviderDidObj</span><span class="p">)</span>
         <span class="kd">val</span> <span class="py">eoProviderDoc</span> <span class="p">=</span> <span class="k">when</span> <span class="p">(</span><span class="n">resolution</span><span class="p">)</span> <span class="p">{</span>
@@ -1643,9 +1643,9 @@
 234
 </pre></td><td class="rouge-code"><pre><span class="k">package</span> <span class="nn">com.atlasparametric.products.heatwave</span>
 
-<span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.json.DigestUtils</span>
+<span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.json.DigestUtils</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.buildJsonObject</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.put</span>
 <span class="k">import</span> <span class="nn">java.time.Instant</span>
@@ -1690,7 +1690,7 @@
         <span class="kd">val</span> <span class="py">dataDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">heatwaveData</span><span class="p">)</span>
 
         <span class="c1">// Resolve DID from string (eoProviderDid is a DID string)</span>
-        <span class="k">import</span> <span class="nn">com.trustweave.core.Did</span>
+        <span class="k">import</span> <span class="nn">org.trustweave.core.Did</span>
         <span class="kd">val</span> <span class="py">eoProviderDidObj</span> <span class="p">=</span> <span class="nc">Did</span><span class="p">(</span><span class="n">eoProviderDid</span><span class="p">)</span>
         <span class="kd">val</span> <span class="py">eoProviderResolution</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">resolveDid</span><span class="p">(</span><span class="n">eoProviderDidObj</span><span class="p">)</span>
         <span class="kd">val</span> <span class="py">eoProviderDoc</span> <span class="p">=</span> <span class="k">when</span> <span class="p">(</span><span class="n">eoProviderResolution</span><span class="p">)</span> <span class="p">{</span>
@@ -2071,9 +2071,9 @@
 171
 </pre></td><td class="rouge-code"><pre><span class="k">package</span> <span class="nn">com.atlasparametric.products.solar</span>
 
-<span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.json.DigestUtils</span>
+<span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.json.DigestUtils</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.buildJsonObject</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.put</span>
 <span class="k">import</span> <span class="nn">java.time.Instant</span>
@@ -2118,7 +2118,7 @@
         <span class="kd">val</span> <span class="py">dataDigest</span> <span class="p">=</span> <span class="nc">DigestUtils</span><span class="p">.</span><span class="nf">sha256DigestMultibase</span><span class="p">(</span><span class="n">solarData</span><span class="p">)</span>
 
         <span class="c1">// Resolve DID from string (eoProviderDid is a DID string)</span>
-        <span class="k">import</span> <span class="nn">com.trustweave.core.Did</span>
+        <span class="k">import</span> <span class="nn">org.trustweave.core.Did</span>
         <span class="kd">val</span> <span class="py">eoProviderDidObj</span> <span class="p">=</span> <span class="nc">Did</span><span class="p">(</span><span class="n">eoProviderDid</span><span class="p">)</span>
         <span class="kd">val</span> <span class="py">eoProviderResolution</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">resolveDid</span><span class="p">(</span><span class="n">eoProviderDidObj</span><span class="p">)</span>
         <span class="kd">val</span> <span class="py">eoProviderDoc</span> <span class="p">=</span> <span class="k">when</span> <span class="p">(</span><span class="n">eoProviderResolution</span><span class="p">)</span> <span class="p">{</span>
@@ -2379,10 +2379,10 @@
     <span class="p">}</span>
 
     <span class="c1">// Step 2: Create DIDs for parties</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.DidCreationResult</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.DidResolutionResult</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.IssuanceResult</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.VerificationResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.DidCreationResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.DidResolutionResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.IssuanceResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.VerificationResult</span>
     
     <span class="kd">val</span> <span class="py">insurerDidResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span> <span class="p">}</span>
     <span class="kd">val</span> <span class="py">insurerDid</span> <span class="p">=</span> <span class="k">when</span> <span class="p">(</span><span class="n">insurerDidResult</span><span class="p">)</span> <span class="p">{</span>
@@ -2643,8 +2643,8 @@
 153
 </pre></td><td class="rouge-code"><pre><span class="k">package</span> <span class="nn">com.atlasparametric</span>
 
-<span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.chains.algorand.AlgorandBlockchainAnchorClient</span>
+<span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.chains.algorand.AlgorandBlockchainAnchorClient</span>
 <span class="k">import</span> <span class="nn">com.atlasparametric.products.flood.SarFloodProduct</span>
 <span class="k">import</span> <span class="nn">com.atlasparametric.products.heatwave.HeatwaveProduct</span>
 <span class="k">import</span> <span class="nn">com.atlasparametric.products.solar.SolarAttenuationProduct</span>

@@ -36,8 +36,8 @@ After completing this guide, you will have:
 Here's a complete example showing the simplicity of the facade API:
 
 ```kotlin
-import com.trustweave.trust.dsl.trustWeave
-import com.trustweave.trust.dsl.credential.*
+import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.dsl.credential.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -81,8 +81,8 @@ fun main() = runBlocking {
 Configure TrustWeave with minimal setup:
 
 ```kotlin
-import com.trustweave.trust.dsl.trustWeave
-import com.trustweave.trust.dsl.credential.*
+import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.dsl.credential.*
 
 val tw = trustWeave {
     keys { provider(IN_MEMORY); algorithm(ED25519) }
@@ -357,7 +357,7 @@ trustWeave { ... }.run {
 Use these imports to avoid string typos:
 
 ```kotlin
-import com.trustweave.trust.dsl.credential.*
+import org.trustweave.trust.dsl.credential.*
 ```
 
 | Object | Constants |

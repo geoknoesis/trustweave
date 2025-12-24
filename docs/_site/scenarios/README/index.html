@@ -1090,9 +1090,9 @@ Instant verification of security certifications (CISSP, CEH, Security+, etc.) an
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
 
     <span class="c1">// 2. Create DIDs</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.DidCreationResult</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.IssuanceResult</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.WalletCreationResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.DidCreationResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.IssuanceResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.WalletCreationResult</span>
     
     <span class="kd">val</span> <span class="py">issuerDidResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span> <span class="p">}</span>
     <span class="kd">val</span> <span class="py">issuerDid</span> <span class="p">=</span> <span class="k">when</span> <span class="p">(</span><span class="n">issuerDidResult</span><span class="p">)</span> <span class="p">{</span>

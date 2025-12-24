@@ -40,9 +40,9 @@ OIDC4VCI is a protocol that enables credential issuance using OpenID Connect flo
 ### Basic Setup
 
 ```kotlin
-import com.trustweave.credential.oidc4vci.Oidc4VciService
-import com.trustweave.credential.oidc4vci.exchange.Oidc4VciExchangeProtocol
-import com.trustweave.credential.exchange.*
+import org.trustweave.credential.oidc4vci.Oidc4VciService
+import org.trustweave.credential.oidc4vci.exchange.Oidc4VciExchangeProtocol
+import org.trustweave.credential.exchange.*
 import okhttp3.OkHttpClient
 
 val kms = // Your KMS instance

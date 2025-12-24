@@ -89,10 +89,10 @@ Organize files logically:
 
 ```kotlin
 // Package declaration
-package com.trustweave.example
+package org.trustweave.example
 
 // Imports
-import com.trustweave.did.*
+import org.trustweave.did.*
 import kotlinx.coroutines.runBlocking
 
 // Class/object definitions

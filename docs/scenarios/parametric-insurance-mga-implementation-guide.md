@@ -120,10 +120,10 @@ Automated payouts:
 ```kotlin
 package com.atlasparametric.products.flood
 
-import com.trustweave.TrustWeave
-import com.trustweave.contract.models.*
-import com.trustweave.core.*
-import com.trustweave.json.DigestUtils
+import org.trustweave.TrustWeave
+import org.trustweave.contract.models.*
+import org.trustweave.core.*
+import org.trustweave.json.DigestUtils
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
@@ -279,7 +279,7 @@ class SarFloodProduct(
 
         // Step 3: Issue verifiable credential for EO data
         // Note: eoProviderDid is a String (DID value), so we need to create a Did object for resolveDid
-        import com.trustweave.core.Did
+        import org.trustweave.core.Did
         val eoProviderDidObj = Did(eoProviderDid)
         val resolution = trustWeave.resolveDid(eoProviderDidObj)
         val eoProviderDoc = when (resolution) {
@@ -408,9 +408,9 @@ data class SarFloodMeasurement(
 ```kotlin
 package com.atlasparametric.products.heatwave
 
-import com.trustweave.TrustWeave
-import com.trustweave.core.*
-import com.trustweave.json.DigestUtils
+import org.trustweave.TrustWeave
+import org.trustweave.core.*
+import org.trustweave.json.DigestUtils
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
@@ -455,7 +455,7 @@ class HeatwaveProduct(
         val dataDigest = DigestUtils.sha256DigestMultibase(heatwaveData)
 
         // Resolve DID from string (eoProviderDid is a DID string)
-        import com.trustweave.core.Did
+        import org.trustweave.core.Did
         val eoProviderDidObj = Did(eoProviderDid)
         val eoProviderResolution = trustWeave.resolveDid(eoProviderDidObj)
         val eoProviderDoc = when (eoProviderResolution) {
@@ -654,9 +654,9 @@ data class HeatwavePolicy(
 ```kotlin
 package com.atlasparametric.products.solar
 
-import com.trustweave.TrustWeave
-import com.trustweave.core.*
-import com.trustweave.json.DigestUtils
+import org.trustweave.TrustWeave
+import org.trustweave.core.*
+import org.trustweave.json.DigestUtils
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
@@ -701,7 +701,7 @@ class SolarAttenuationProduct(
         val dataDigest = DigestUtils.sha256DigestMultibase(solarData)
 
         // Resolve DID from string (eoProviderDid is a DID string)
-        import com.trustweave.core.Did
+        import org.trustweave.core.Did
         val eoProviderDidObj = Did(eoProviderDid)
         val eoProviderResolution = trustWeave.resolveDid(eoProviderDidObj)
         val eoProviderDoc = when (eoProviderResolution) {
@@ -845,10 +845,10 @@ suspend fun completeFloodInsuranceWorkflow() {
     }
 
     // Step 2: Create DIDs for parties
-    import com.trustweave.trust.types.DidCreationResult
-    import com.trustweave.trust.types.DidResolutionResult
-    import com.trustweave.trust.types.IssuanceResult
-    import com.trustweave.trust.types.VerificationResult
+    import org.trustweave.trust.types.DidCreationResult
+    import org.trustweave.trust.types.DidResolutionResult
+    import org.trustweave.trust.types.IssuanceResult
+    import org.trustweave.trust.types.VerificationResult
     
     val insurerDidResult = trustWeave.createDid { method(KEY) }
     val insurerDid = when (insurerDidResult) {
@@ -945,8 +945,8 @@ suspend fun completeFloodInsuranceWorkflow() {
 ```kotlin
 package com.atlasparametric
 
-import com.trustweave.TrustWeave
-import com.trustweave.chains.algorand.AlgorandBlockchainAnchorClient
+import org.trustweave.TrustWeave
+import org.trustweave.chains.algorand.AlgorandBlockchainAnchorClient
 import com.atlasparametric.products.flood.SarFloodProduct
 import com.atlasparametric.products.heatwave.HeatwaveProduct
 import com.atlasparametric.products.solar.SolarAttenuationProduct

@@ -3,7 +3,7 @@ plugins {
     kotlin("plugin.serialization")
 }
 
-group = "com.trustweave.credentials"
+group = "org.trustweave.credentials"
 dependencies {
     implementation(project(":credentials:credential-api"))
     implementation(project(":common"))  // Needed for Iri access

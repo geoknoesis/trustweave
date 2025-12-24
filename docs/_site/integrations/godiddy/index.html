@@ -651,9 +651,9 @@
 7
 8
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.did:godiddy:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.did:godiddy:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 
     <span class="c1">// HTTP client (OkHttp recommended)</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.squareup.okhttp3:okhttp:4.12.0"</span><span class="p">)</span>
@@ -691,8 +691,8 @@
 13
 14
 15
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.godiddy.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.godiddy.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.*</span>
 
 <span class="c1">// Create configuration</span>
 <span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">GodiddyConfig</span><span class="p">(</span>
@@ -760,7 +760,7 @@
 12
 13
 14
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.*</span>
 <span class="k">import</span> <span class="nn">java.util.ServiceLoader</span>
 
 <span class="c1">// Discover GoDiddy provider</span>
@@ -810,7 +810,7 @@
 16
 17
 18
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.godiddy.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.godiddy.*</span>
 
 <span class="kd">val</span> <span class="py">client</span> <span class="p">=</span> <span class="nc">GodiddyClient</span><span class="p">(</span><span class="nc">GodiddyConfig</span><span class="p">.</span><span class="nf">default</span><span class="p">())</span>
 <span class="kd">val</span> <span class="py">resolver</span> <span class="p">=</span> <span class="nc">GodiddyResolver</span><span class="p">(</span><span class="n">client</span><span class="p">)</span>
@@ -859,7 +859,7 @@
 19
 20
 21
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.godiddy.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.godiddy.*</span>
 
 <span class="kd">val</span> <span class="py">client</span> <span class="p">=</span> <span class="nc">GodiddyClient</span><span class="p">(</span><span class="nc">GodiddyConfig</span><span class="p">.</span><span class="nf">default</span><span class="p">())</span>
 <span class="kd">val</span> <span class="py">registrar</span> <span class="p">=</span> <span class="nc">GodiddyRegistrar</span><span class="p">(</span><span class="n">client</span><span class="p">)</span>
@@ -918,7 +918,7 @@
 26
 27
 28
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.godiddy.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.godiddy.*</span>
 
 <span class="kd">val</span> <span class="py">client</span> <span class="p">=</span> <span class="nc">GodiddyClient</span><span class="p">(</span><span class="nc">GodiddyConfig</span><span class="p">.</span><span class="nf">default</span><span class="p">())</span>
 <span class="kd">val</span> <span class="py">issuer</span> <span class="p">=</span> <span class="nc">GodiddyIssuer</span><span class="p">(</span><span class="n">client</span><span class="p">)</span>
@@ -976,7 +976,7 @@
 18
 19
 20
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.godiddy.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.godiddy.*</span>
 
 <span class="kd">val</span> <span class="py">client</span> <span class="p">=</span> <span class="nc">GodiddyClient</span><span class="p">(</span><span class="nc">GodiddyConfig</span><span class="p">.</span><span class="nf">default</span><span class="p">())</span>
 <span class="kd">val</span> <span class="py">verifier</span> <span class="p">=</span> <span class="nc">GodiddyVerifier</span><span class="p">(</span><span class="n">client</span><span class="p">)</span>
@@ -1049,7 +1049,7 @@
 15
 16
 17
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveError</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.core.exception.TrustWeaveError</span>
 
 <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">resolver</span><span class="p">.</span><span class="nf">resolveDid</span><span class="p">(</span><span class="n">did</span><span class="p">)</span>
 <span class="n">result</span><span class="p">.</span><span class="nf">fold</span><span class="p">(</span>

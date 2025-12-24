@@ -81,7 +81,7 @@ suspend fun CredentialService.issueForDid(...): IssuanceResult {
 
 Use the new simplified factory:
 ```kotlin
-import com.trustweave.credential.CredentialServices
+import org.trustweave.credential.CredentialServices
 
 val service = CredentialServices.default(didResolver)
 ```
@@ -148,14 +148,14 @@ See `ADDITIONAL_IMPROVEMENTS.md` for details.
 ## Files Changed
 
 ### New Files
-- `credentials/credential-api/src/main/kotlin/com/trustweave/credential/CredentialServiceFactory.kt`
-- `credentials/credential-api/src/main/kotlin/com/trustweave/credential/internal/BuiltInAdapters.kt`
+- `credentials/credential-api/src/main/kotlin/org.trustweave/credential/CredentialServiceFactory.kt`
+- `credentials/credential-api/src/main/kotlin/org.trustweave/credential/internal/BuiltInAdapters.kt`
 
 ### Modified Files
-- `credentials/credential-api/src/main/kotlin/com/trustweave/credential/CredentialServices.kt`
-- `credentials/credential-api/src/main/kotlin/com/trustweave/credential/did/CredentialServiceDidExtensions.kt`
-- `credentials/credential-api/src/main/kotlin/com/trustweave/credential/CredentialServicesExtensions.kt`
-- `credentials/credential-api/src/main/kotlin/com/trustweave/credential/proof/ProofRegistries.kt`
-- `credentials/credential-api/src/main/kotlin/com/trustweave/credential/proof/ProofAdapters.kt`
-- `credentials/credential-api/src/main/kotlin/com/trustweave/credential/proof/registry/ProofAdapterRegistry.kt`
+- `credentials/credential-api/src/main/kotlin/org.trustweave/credential/CredentialServices.kt`
+- `credentials/credential-api/src/main/kotlin/org.trustweave/credential/did/CredentialServiceDidExtensions.kt`
+- `credentials/credential-api/src/main/kotlin/org.trustweave/credential/CredentialServicesExtensions.kt`
+- `credentials/credential-api/src/main/kotlin/org.trustweave/credential/proof/ProofRegistries.kt`
+- `credentials/credential-api/src/main/kotlin/org.trustweave/credential/proof/ProofAdapters.kt`
+- `credentials/credential-api/src/main/kotlin/org.trustweave/credential/proof/registry/ProofAdapterRegistry.kt`
 

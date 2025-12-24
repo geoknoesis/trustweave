@@ -879,11 +879,11 @@
 121
 122
 123
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.spi.proof.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.format.ProofSuiteId</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.model.vc.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.requests.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.results.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.spi.proof.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.format.ProofSuiteId</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.model.vc.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.requests.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.results.*</span>
 
 <span class="kd">class</span> <span class="nc">CustomProofEngine</span><span class="p">(</span>
     <span class="k">private</span> <span class="kd">val</span> <span class="py">config</span><span class="p">:</span> <span class="nc">ProofEngineConfig</span> <span class="p">=</span> <span class="nc">ProofEngineConfig</span><span class="p">()</span>
@@ -1031,7 +1031,7 @@
 15
 16
 17
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.spi.proof.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.spi.proof.*</span>
 
 <span class="kd">class</span> <span class="nc">CustomProofEngineProvider</span> <span class="p">:</span> <span class="nc">ProofEngineProvider</span> <span class="p">{</span>
     
@@ -1060,7 +1060,7 @@
 
 <p>For ServiceLoader-based discovery, create:</p>
 
-<p><strong><code class="language-plaintext highlighter-rouge">META-INF/services/com.trustweave.credential.spi.proof.ProofEngineProvider</code></strong></p>
+<p><strong><code class="language-plaintext highlighter-rouge">META-INF/services/org.trustweave.credential.spi.proof.ProofEngineProvider</code></strong></p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 </pre></td><td class="rouge-code"><pre>com.example.CustomProofEngineProvider

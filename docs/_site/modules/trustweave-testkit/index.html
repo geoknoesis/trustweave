@@ -616,7 +616,7 @@
 2
 3
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">testImplementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">testImplementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
@@ -669,7 +669,7 @@
 3
 4
 5
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.kms.InMemoryKeyManagementService</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.kms.InMemoryKeyManagementService</span>
 
 <span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
 <span class="kd">val</span> <span class="py">key</span> <span class="p">=</span> <span class="n">kms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span><span class="nc">Algorithm</span><span class="p">.</span><span class="nc">Secp256k1</span><span class="p">)</span>
@@ -693,7 +693,7 @@
 3
 4
 5
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient</span>
 
 <span class="kd">val</span> <span class="py">client</span> <span class="p">=</span> <span class="nc">InMemoryBlockchainAnchorClient</span><span class="p">(</span><span class="s">"algorand:testnet"</span><span class="p">)</span>
 <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">client</span><span class="p">.</span><span class="nf">writePayload</span><span class="p">(</span><span class="n">payload</span><span class="p">.</span><span class="nf">toByteArray</span><span class="p">())</span>
@@ -719,7 +719,7 @@
 5
 6
 7
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.did.DidKeyMockMethod</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.did.DidKeyMockMethod</span>
 
 <span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
 <span class="kd">val</span> <span class="py">method</span> <span class="p">=</span> <span class="nc">DidKeyMockMethod</span><span class="p">(</span><span class="n">kms</span><span class="p">)</span>
@@ -753,7 +753,7 @@
 9
 10
 11
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.TrustWeaveTestFixture</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.TrustWeaveTestFixture</span>
 
 <span class="kd">val</span> <span class="py">fixture</span> <span class="p">=</span> <span class="nc">TrustWeaveTestFixture</span><span class="p">.</span><span class="nf">builder</span><span class="p">()</span>
     <span class="p">.</span><span class="nf">withKms</span><span class="p">(</span><span class="nc">InMemoryKeyManagementService</span><span class="p">())</span>
@@ -793,7 +793,7 @@
 11
 12
 13
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.eo.BaseEoIntegrationTest</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.eo.BaseEoIntegrationTest</span>
 
 <span class="kd">class</span> <span class="nc">MyEoTest</span> <span class="p">:</span> <span class="nc">BaseEoIntegrationTest</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">override</span> <span class="k">fun</span> <span class="nf">createAnchorClient</span><span class="p">(</span><span class="n">chainId</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="nc">Map</span><span class="p">&lt;</span><span class="nc">String</span><span class="p">,</span> <span class="nc">Any</span><span class="p">?&gt;):</span> <span class="nc">BlockchainAnchorClient</span> <span class="p">{</span>
@@ -827,7 +827,7 @@
 3
 4
 5
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.integrity.IntegrityVerifier</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.integrity.IntegrityVerifier</span>
 
 <span class="kd">val</span> <span class="py">verifier</span> <span class="p">=</span> <span class="nc">IntegrityVerifier</span><span class="p">()</span>
 <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">verifier</span><span class="p">.</span><span class="nf">verifyIntegrityChain</span><span class="p">(</span><span class="n">artifacts</span><span class="p">,</span> <span class="n">linkset</span><span class="p">,</span> <span class="n">credential</span><span class="p">)</span>
@@ -863,7 +863,7 @@
 7
 8
 9
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.*</span>
 
 <span class="kd">val</span> <span class="py">fixture</span> <span class="p">=</span> <span class="nc">TrustWeaveTestFixture</span><span class="p">.</span><span class="nf">builder</span><span class="p">()</span>
     <span class="p">.</span><span class="nf">withInMemoryBlockchainClient</span><span class="p">(</span><span class="s">"algorand:testnet"</span><span class="p">)</span>

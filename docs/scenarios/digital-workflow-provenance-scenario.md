@@ -163,10 +163,10 @@ Add TrustWeave dependencies to your `build.gradle.kts`. These modules provide DI
 dependencies {
     // Core TrustWeave modules
     // TrustWeave distribution (includes all modules)
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Test kit for in-memory implementations
-    testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -191,9 +191,9 @@ dependencies {
 - **Separation**: Clear separation enables precise provenance tracking
 
 ```kotlin
-import com.trustweave.testkit.did.DidKeyMockMethod
-import com.trustweave.testkit.kms.InMemoryKeyManagementService
-import com.trustweave.did.DidMethodRegistry
+import org.trustweave.testkit.did.DidKeyMockMethod
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
+import org.trustweave.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -341,7 +341,7 @@ fun main() = runBlocking {
     }
     
     val resizeActivityCredential = when (resizeActivityResult) {
-        is com.trustweave.credential.results.IssuanceResult.Success -> resizeActivityResult.credential
+        is org.trustweave.credential.results.IssuanceResult.Success -> resizeActivityResult.credential
         else -> throw IllegalStateException("Failed to create activity credential: ${resizeActivityResult.allErrors.joinToString()}")
     }
 
@@ -424,7 +424,7 @@ fun main() = runBlocking {
     }
     
     val provenanceChainCredential = when (provenanceChainResult) {
-        is com.trustweave.credential.results.IssuanceResult.Success -> provenanceChainResult.credential
+        is org.trustweave.credential.results.IssuanceResult.Success -> provenanceChainResult.credential
         else -> throw IllegalStateException("Failed to create provenance chain credential: ${provenanceChainResult.allErrors.joinToString()}")
     }
 
@@ -502,7 +502,7 @@ fun main() = runBlocking {
     }
     
     val filterActivityCredential = when (filterActivityResult) {
-        is com.trustweave.credential.results.IssuanceResult.Success -> filterActivityResult.credential
+        is org.trustweave.credential.results.IssuanceResult.Success -> filterActivityResult.credential
         else -> throw IllegalStateException("Failed to create filter activity credential: ${filterActivityResult.allErrors.joinToString()}")
     }
 
@@ -545,7 +545,7 @@ fun main() = runBlocking {
     }
     
     val filterProvenanceChain = when (filterProvenanceChainResult) {
-        is com.trustweave.credential.results.IssuanceResult.Success -> filterProvenanceChainResult.credential
+        is org.trustweave.credential.results.IssuanceResult.Success -> filterProvenanceChainResult.credential
         else -> throw IllegalStateException("Failed to create filter provenance chain: ${filterProvenanceChainResult.allErrors.joinToString()}")
     }
 
@@ -571,8 +571,8 @@ fun main() = runBlocking {
 - **Completeness**: Ensure no missing steps
 
 ```kotlin
-import com.trustweave.credential.verifier.CredentialVerifier
-import com.trustweave.credential.CredentialVerificationOptions
+import org.trustweave.credential.verifier.CredentialVerifier
+import org.trustweave.credential.CredentialVerificationOptions
 
     // Step 9: Verify provenance chain
     println("\nStep 9: Verifying provenance chain...")
@@ -722,7 +722,7 @@ suspend fun createEntityCredential(
     }
     
     return when (result) {
-        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create entity credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -741,9 +741,9 @@ suspend fun createEntityCredential(
 - **Non-Repudiation**: Agents cannot deny activities
 
 ```kotlin
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.trustweave.anchor.BlockchainAnchorRegistry
-import com.trustweave.anchor.anchorTyped
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.anchor.BlockchainAnchorRegistry
+import org.trustweave.anchor.anchorTyped
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -767,9 +767,9 @@ data class ProvenanceRecord(
 
     // Compute digest of complete provenance chain
     // This digest uniquely identifies the entire workflow
-    val provenanceDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
+    val provenanceDigest = org.trustweave.json.DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(
-            com.trustweave.credential.models.VerifiableCredential.serializer(),
+            org.trustweave.credential.models.VerifiableCredential.serializer(),
             issuedProvenanceChain
         )
     )
@@ -1052,7 +1052,7 @@ suspend fun createDataScienceProvenance(
         }
 
         val chainCredential = when (chainResult) {
-            is com.trustweave.credential.results.IssuanceResult.Success -> chainResult.credential
+            is org.trustweave.credential.results.IssuanceResult.Success -> chainResult.credential
             else -> throw IllegalStateException("Failed to create provenance chain: ${chainResult.allErrors.joinToString()}")
         }
 

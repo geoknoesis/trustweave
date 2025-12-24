@@ -21,12 +21,12 @@ Complete code examples for credential exchange protocols.
 ### Example 1: Simple Credential Offer
 
 ```kotlin
-import com.trustweave.credential.exchange.*
-import com.trustweave.credential.didcomm.exchange.DidCommExchangeProtocol
-import com.trustweave.credential.didcomm.DidCommFactory
-import com.trustweave.kms.KeyManagementService
-import com.trustweave.testkit.InMemoryKeyManagementService
-import com.trustweave.did.DidDocument
+import org.trustweave.credential.exchange.*
+import org.trustweave.credential.didcomm.exchange.DidCommExchangeProtocol
+import org.trustweave.credential.didcomm.DidCommFactory
+import org.trustweave.kms.KeyManagementService
+import org.trustweave.testkit.InMemoryKeyManagementService
+import org.trustweave.did.DidDocument
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -67,8 +67,8 @@ fun main() = runBlocking {
 ### Example 2: Complete Credential Exchange
 
 ```kotlin
-import com.trustweave.credential.exchange.*
-import com.trustweave.credential.models.VerifiableCredential
+import org.trustweave.credential.exchange.*
+import org.trustweave.credential.models.VerifiableCredential
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put

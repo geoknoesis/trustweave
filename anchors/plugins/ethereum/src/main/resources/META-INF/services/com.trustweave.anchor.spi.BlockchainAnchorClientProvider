@@ -1,2 +1,2 @@
-com.trustweave.chain.ethereum.EthereumBlockchainAnchorClientProvider
+org.trustweave.chain.ethereum.EthereumBlockchainAnchorClientProvider
 

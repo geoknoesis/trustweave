@@ -646,7 +646,7 @@
 2
 3
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:TrustWeave-ibm-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:TrustWeave-ibm-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="quick-start">
@@ -689,8 +689,8 @@
 29
 30
 31
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.ibm.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.ibm.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
 
 <span class="c1">// Configure</span>
 <span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">IbmKmsConfig</span><span class="p">.</span><span class="nf">builder</span><span class="p">()</span>
@@ -818,7 +818,7 @@
 10
 11
 12
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.spi.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.spi.*</span>
 <span class="k">import</span> <span class="nn">java.util.ServiceLoader</span>
 
 <span class="kd">val</span> <span class="py">providers</span> <span class="p">=</span> <span class="nc">ServiceLoader</span><span class="p">.</span><span class="nf">load</span><span class="p">(</span><span class="nc">KeyManagementServiceProvider</span><span class="o">::</span><span class="k">class</span><span class="p">.</span><span class="n">java</span><span class="p">)</span>
@@ -912,7 +912,7 @@
 8
 9
 10
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.KmsOptionKeys</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.KmsOptionKeys</span>
 
 <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">kms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span>
     <span class="nc">Algorithm</span><span class="p">.</span><span class="nc">Ed25519</span><span class="p">,</span>

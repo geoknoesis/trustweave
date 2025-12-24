@@ -183,9 +183,9 @@ All identifiers in TrustWeave are Internationalized Resource Identifiers (IRIs) 
 ### Implementation
 
 ```kotlin
-// common/src/main/kotlin/com/trustweave/core/identifiers/Identifiers.kt
+// common/src/main/kotlin/org.trustweave/core/identifiers/Identifiers.kt
 
-package com.trustweave.core.identifiers
+package org.trustweave.core.identifiers
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -372,13 +372,13 @@ object KeyIdSerializer : KSerializer<KeyId> {
 
 ### DID Module Identifiers
 
-**Location**: `did/did-core/src/main/kotlin/com/trustweave/did/identifiers/DidIdentifiers.kt`
+**Location**: `did/did-core/src/main/kotlin/org.trustweave/did/identifiers/DidIdentifiers.kt`
 
 ```kotlin
-package com.trustweave.did.identifiers
+package org.trustweave.did.identifiers
 
-import com.trustweave.core.identifiers.Iri
-import com.trustweave.core.identifiers.KeyId
+import org.trustweave.core.identifiers.Iri
+import org.trustweave.core.identifiers.KeyId
 
 /**
  * Decentralized Identifier (DID).
@@ -509,13 +509,13 @@ data class VerificationMethodId(
 
 ### Credential Module Identifiers
 
-**Location**: `credentials/credential-core/src/main/kotlin/com/trustweave/credential/identifiers/CredentialIdentifiers.kt`
+**Location**: `credentials/credential-core/src/main/kotlin/org.trustweave/credential/identifiers/CredentialIdentifiers.kt`
 
 ```kotlin
-package com.trustweave.credential.identifiers
+package org.trustweave.credential.identifiers
 
-import com.trustweave.core.identifiers.Iri
-import com.trustweave.did.identifiers.Did
+import org.trustweave.core.identifiers.Iri
+import org.trustweave.did.identifiers.Did
 
 /**
  * Credential identifier (URI, URN, DID, or other IRI).
@@ -601,10 +601,10 @@ class SchemaId(
 
 ### Credential Types
 
-**Location**: `credentials/credential-core/src/main/kotlin/com/trustweave/credential/types/CredentialTypes.kt`
+**Location**: `credentials/credential-core/src/main/kotlin/org.trustweave/credential/types/CredentialTypes.kt`
 
 ```kotlin
-package com.trustweave.credential.types
+package org.trustweave.credential.types
 
 /**
  * Cryptographic proof/signature type classification.
@@ -853,19 +853,19 @@ val invalid = Did("not-a-did")
 
 ### Package Naming Convention
 
-**Identifiers**: `com.trustweave.{module}.identifiers`
-- Example: `com.trustweave.credential.identifiers.CredentialId`
-- Example: `com.trustweave.did.identifiers.Did`
+**Identifiers**: `org.trustweave.{module}.identifiers`
+- Example: `org.trustweave.credential.identifiers.CredentialId`
+- Example: `org.trustweave.did.identifiers.Did`
 
-**Types**: `com.trustweave.{module}.types`
-- Example: `com.trustweave.credential.types.ProofType`
-- Example: `com.trustweave.kms.types.Algorithm`
+**Types**: `org.trustweave.{module}.types`
+- Example: `org.trustweave.credential.types.ProofType`
+- Example: `org.trustweave.kms.types.Algorithm`
 
 ### File Organization
 
 **One file per module for identifiers:**
 ```
-credentials/credential-core/src/main/kotlin/com/trustweave/credential/
+credentials/credential-core/src/main/kotlin/org.trustweave/credential/
   └── identifiers/
       └── CredentialIdentifiers.kt  (all credential identifiers)
   └── types/
@@ -1034,7 +1034,7 @@ fun verifyCredential(
 Provide extension functions for null-safe identifier creation, aligning with Kotlin's idiomatic patterns:
 
 ```kotlin
-// common/src/main/kotlin/com/trustweave/core/identifiers/Identifiers.kt (extensions)
+// common/src/main/kotlin/org.trustweave/core/identifiers/Identifiers.kt (extensions)
 
 /**
  * Safe parsing extension functions for all identifiers.
@@ -1046,7 +1046,7 @@ inline fun String.toIriOrNull(): Iri? =
 inline fun String.toKeyIdOrNull(): KeyId? = 
     try { KeyId(this) } catch (e: IllegalArgumentException) { null }
 
-// did/did-core/src/main/kotlin/com/trustweave/did/identifiers/DidIdentifiersExtensions.kt
+// did/did-core/src/main/kotlin/org.trustweave/did/identifiers/DidIdentifiersExtensions.kt
 inline fun String.toDidOrNull(): Did? = 
     try { Did(this) } catch (e: IllegalArgumentException) { null }
 

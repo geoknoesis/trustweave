@@ -38,8 +38,8 @@ After completing this guide, you will have:
 Here's a complete example showing multi-chain anchoring:
 
 ```kotlin
-import com.trustweave.anchor.BlockchainAnchorRegistry
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.anchor.BlockchainAnchorRegistry
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -94,8 +94,8 @@ fun main() = runBlocking {
 Register all chains you want to support:
 
 ```kotlin
-import com.trustweave.anchor.BlockchainAnchorRegistry
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.anchor.BlockchainAnchorRegistry
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 
 val anchorRegistry = BlockchainAnchorRegistry()
 
@@ -440,7 +440,7 @@ val result = anchorRegistry.anchor(chainId, payload)
 Handle multi-chain anchoring errors:
 
 ```kotlin
-import com.trustweave.anchor.exceptions.BlockchainException
+import org.trustweave.anchor.exceptions.BlockchainException
 
 val chains = listOf("algorand:testnet", "polygon:mainnet", "ethereum:sepolia")
 val results = chains.mapNotNull { chainId ->

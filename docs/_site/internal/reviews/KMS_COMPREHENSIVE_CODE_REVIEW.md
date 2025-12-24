@@ -65,8 +65,8 @@ sealed class Algorithm(val name: String) {
 1. **API Inconsistency** ⚠️ **MEDIUM PRIORITY**
    - **Hashicorp** and **IBM** plugins still use old exception-based API (`generateKey`, `sign`) instead of Result-based API (`generateKeyResult`, `signResult`)
    - **Location**: 
-     - `kms/plugins/hashicorp/src/main/kotlin/com/trustweave/hashicorpkms/VaultKeyManagementService.kt`
-     - `kms/plugins/ibm/src/main/kotlin/com/trustweave/kms/ibm/IbmKeyManagementService.kt`
+     - `kms/plugins/hashicorp/src/main/kotlin/org.trustweave/hashicorpkms/VaultKeyManagementService.kt`
+     - `kms/plugins/ibm/src/main/kotlin/org.trustweave/kms/ibm/IbmKeyManagementService.kt`
 
    **Impact**: Breaks consistency, prevents type-safe error handling
    
@@ -364,8 +364,8 @@ sealed class SignResult {
 **Issue**: Hashicorp and IBM plugins use old exception-based API
 
 **Files**:
-- `kms/plugins/hashicorp/src/main/kotlin/com/trustweave/hashicorpkms/VaultKeyManagementService.kt`
-- `kms/plugins/ibm/src/main/kotlin/com/trustweave/kms/ibm/IbmKeyManagementService.kt`
+- `kms/plugins/hashicorp/src/main/kotlin/org.trustweave/hashicorpkms/VaultKeyManagementService.kt`
+- `kms/plugins/ibm/src/main/kotlin/org.trustweave/kms/ibm/IbmKeyManagementService.kt`
 
 **Impact**: Breaks consistency, prevents type-safe error handling
 
@@ -374,10 +374,10 @@ sealed class SignResult {
 ### 7.2 Package Naming ⚠️ **MINOR**
 
 **Issue**: Inconsistent package naming:
-- Most plugins: `com.trustweave.{provider}kms` (e.g., `com.trustweave.awskms`)
-- Some plugins: `com.trustweave.kms.{provider}` (e.g., `com.trustweave.kms.ibm`)
+- Most plugins: `org.trustweave.{provider}kms` (e.g., `org.trustweave.awskms`)
+- Some plugins: `org.trustweave.kms.{provider}` (e.g., `org.trustweave.kms.ibm`)
 
-**Recommendation**: Standardize on `com.trustweave.{provider}kms` pattern
+**Recommendation**: Standardize on `org.trustweave.{provider}kms` pattern
 
 ### 7.3 Configuration Patterns ✅ **GOOD**
 
@@ -471,11 +471,11 @@ sealed class SignResult {
 ### 🔴 **HIGH PRIORITY** (Fix Before Next Release)
 
 1. **Migrate Hashicorp Plugin to Result-Based API**
-   - File: `kms/plugins/hashicorp/src/main/kotlin/com/trustweave/hashicorpkms/VaultKeyManagementService.kt`
+   - File: `kms/plugins/hashicorp/src/main/kotlin/org.trustweave/hashicorpkms/VaultKeyManagementService.kt`
    - Replace `generateKey`, `sign`, `getPublicKey`, `deleteKey` with `*Result` variants
 
 2. **Migrate IBM Plugin to Result-Based API**
-   - File: `kms/plugins/ibm/src/main/kotlin/com/trustweave/kms/ibm/IbmKeyManagementService.kt`
+   - File: `kms/plugins/ibm/src/main/kotlin/org.trustweave/kms/ibm/IbmKeyManagementService.kt`
    - Replace `generateKey`, `sign`, `getPublicKey`, `deleteKey` with `*Result` variants
 
 ### 🟡 **MEDIUM PRIORITY** (Next Sprint)
@@ -508,7 +508,7 @@ sealed class SignResult {
    - Add invalidation on key operations
 
 8. **Standardize Package Naming**
-   - Migrate `com.trustweave.kms.{provider}` to `com.trustweave.{provider}kms`
+   - Migrate `org.trustweave.kms.{provider}` to `org.trustweave.{provider}kms`
 
 9. **Add Retry Logic**
    - Implement retry policies for transient failures

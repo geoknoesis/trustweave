@@ -8,7 +8,7 @@ Instead of adding multiple dependencies individually, use the distribution modul
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -32,17 +32,17 @@ Optional modules must be added explicitly if needed:
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Add blockchain adapters as needed
-    implementation("com.trustweave.chains:algorand:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.chains:algorand:1.0.0-SNAPSHOT")
 }
 ```
 
 ## Quick Start
 
 ```kotlin
-import com.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.dsl.trustWeave
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {

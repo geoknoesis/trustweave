@@ -110,13 +110,13 @@ Travel parametric insurance needs:
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Test kit for in-memory implementations
-    testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
 
     // Optional: Algorand adapter for real blockchain anchoring
-    implementation("com.trustweave.chains:algorand:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.chains:algorand:1.0.0-SNAPSHOT")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -133,9 +133,9 @@ Here's a complete travel parametric insurance workflow covering flight delays, w
 ```kotlin
 package com.example.travel.insurance
 
-import com.trustweave.TrustWeave
-import com.trustweave.core.*
-import com.trustweave.json.DigestUtils
+import org.trustweave.TrustWeave
+import org.trustweave.core.*
+import org.trustweave.json.DigestUtils
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -159,10 +159,10 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for insurance company, airline, weather service, and baggage system
-    import com.trustweave.trust.types.DidCreationResult
-    import com.trustweave.trust.types.DidResolutionResult
-    import com.trustweave.trust.types.IssuanceResult
-    import com.trustweave.trust.types.VerificationResult
+    import org.trustweave.trust.types.DidCreationResult
+    import org.trustweave.trust.types.DidResolutionResult
+    import org.trustweave.trust.types.IssuanceResult
+    import org.trustweave.trust.types.VerificationResult
     
     val insuranceDidResult = trustWeave.createDid { method(KEY) }
     val insuranceDid = when (insuranceDidResult) {

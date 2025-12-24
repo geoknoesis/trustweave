@@ -12,7 +12,7 @@ Successfully extracted reusable components from DIDComm-specific implementations
 
 ### 1. Generic Protocol Message Interface
 
-**Created**: `credentials/credential-core/src/main/kotlin/com/trustweave/credential/storage/ProtocolMessage.kt`
+**Created**: `credentials/credential-core/src/main/kotlin/org.trustweave/credential/storage/ProtocolMessage.kt`
 
 - Generic interface for all protocol messages
 - Defines common properties: `messageId`, `messageType`, `from`, `to`, `created`, `expiresTime`, `threadId`, `parentThreadId`
@@ -22,7 +22,7 @@ Successfully extracted reusable components from DIDComm-specific implementations
 
 ### 2. Generic Storage Interface
 
-**Created**: `credentials/credential-core/src/main/kotlin/com/trustweave/credential/storage/ProtocolMessageStorage.kt`
+**Created**: `credentials/credential-core/src/main/kotlin/org.trustweave/credential/storage/ProtocolMessageStorage.kt`
 
 - Generic storage interface that works with any `ProtocolMessage`
 - Methods: `store`, `get`, `getMessagesForParticipant`, `getThreadMessages`, `delete`, `search`, etc.
@@ -30,7 +30,7 @@ Successfully extracted reusable components from DIDComm-specific implementations
 
 ### 3. Generic Storage Implementation
 
-**Created**: `credentials/credential-core/src/main/kotlin/com/trustweave/credential/storage/database/PostgresMessageStorage.kt`
+**Created**: `credentials/credential-core/src/main/kotlin/org.trustweave/credential/storage/database/PostgresMessageStorage.kt`
 
 - Generic PostgreSQL storage that works with any `ProtocolMessage` type
 - Uses Kotlinx Serialization for type-safe serialization
@@ -56,7 +56,7 @@ val oidcStorage = PostgresMessageStorage(
 
 ### 4. Encryption Utilities (Moved to Shared)
 
-**Created**: `credentials/credential-core/src/main/kotlin/com/trustweave/credential/storage/encryption/`
+**Created**: `credentials/credential-core/src/main/kotlin/org.trustweave/credential/storage/encryption/`
 
 - `MessageEncryption.kt` - Generic message encryption interface and AES-256-GCM implementation
 - `EncryptionKeyManager.kt` - Key management with rotation support
@@ -65,7 +65,7 @@ val oidcStorage = PostgresMessageStorage(
 
 ### 5. Key Management (Moved to Shared)
 
-**Created**: `credentials/credential-core/src/main/kotlin/com/trustweave/credential/crypto/`
+**Created**: `credentials/credential-core/src/main/kotlin/org.trustweave/credential/crypto/`
 
 - `secret/LocalKeyStore.kt` - Generic key storage interface
 - `secret/encryption/KeyEncryption.kt` - AES-256-GCM key encryption
@@ -75,7 +75,7 @@ val oidcStorage = PostgresMessageStorage(
 
 ### 6. DIDComm Adapter
 
-**Created**: `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/storage/DidCommMessageStorageAdapter.kt`
+**Created**: `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/storage/DidCommMessageStorageAdapter.kt`
 
 - Adapter to bridge DIDComm-specific storage interface with generic storage
 - Allows DIDComm to use generic storage implementations
@@ -86,7 +86,7 @@ val oidcStorage = PostgresMessageStorage(
 ```
 credentials/
 ├── credential-core/
-│   └── src/main/kotlin/com/trustweave/credential/
+│   └── src/main/kotlin/org.trustweave/credential/
 │       ├── storage/
 │       │   ├── ProtocolMessage.kt                    [NEW]
 │       │   ├── ProtocolMessageStorage.kt             [NEW]
@@ -105,7 +105,7 @@ credentials/
 │
 └── plugins/
     └── didcomm/
-        └── src/main/kotlin/com/trustweave/credential/didcomm/
+        └── src/main/kotlin/org.trustweave/credential/didcomm/
             ├── models/
             │   └── DidCommMessage.kt                 [UPDATED - implements ProtocolMessage]
             └── storage/

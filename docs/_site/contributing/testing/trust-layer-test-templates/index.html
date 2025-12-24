@@ -696,9 +696,9 @@
 34
 35
 36
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.types.DidCreationResult</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.types.IssuanceResult</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.getOrFail</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.types.DidCreationResult</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.types.IssuanceResult</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.getOrFail</span>
 
 <span class="c1">// Step 1: Create DID (generates key and stores in DID document)</span>
 <span class="kd">val</span> <span class="py">didResult</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span>
@@ -943,8 +943,8 @@
 </pre></td><td class="rouge-code"><pre><span class="nd">@Test</span>
 <span class="k">fun</span> <span class="nf">`test</span> <span class="n">wallet</span> <span class="n">storage</span> <span class="n">workflow</span> <span class="nf">template`</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="c1">// Create wallet</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.WalletCreationResult</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.testkit.getOrFail</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.WalletCreationResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.testkit.getOrFail</span>
     
     <span class="kd">val</span> <span class="py">walletResult</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">wallet</span> <span class="p">{</span>
         <span class="nf">id</span><span class="p">(</span><span class="s">"holder-wallet-1"</span><span class="p">)</span>
@@ -1108,7 +1108,7 @@
     <span class="kd">val</span> <span class="py">newKey</span> <span class="p">=</span> <span class="n">kms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span><span class="s">"Ed25519"</span><span class="p">)</span>
 
     <span class="c1">// Update DID</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.DidUpdateResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.DidUpdateResult</span>
     
     <span class="kd">val</span> <span class="py">updateResult</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">updateDid</span> <span class="p">{</span>
         <span class="nf">did</span><span class="p">(</span><span class="n">issuerDid</span><span class="p">.</span><span class="n">value</span><span class="p">)</span>

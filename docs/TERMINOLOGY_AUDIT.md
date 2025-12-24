@@ -195,7 +195,7 @@ The [GLOSSARY.md](GLOSSARY.md) file should be updated to include:
 
 1. **Always use exact SDK class names** when referring to types
 2. **Use `TrustWeave`** (never `TrustLayer`)
-3. **Use `distribution-all`** for the main module (never `trustweave-all` or `TrustWeave-core`)
+3. **Use `distribution-all`** for the main module 
 4. **Use `testkit`** for testing utilities
 5. **Define abbreviations** on first use
 6. **Follow W3C terminology** for DID and VC terms

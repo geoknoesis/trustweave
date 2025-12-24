@@ -656,17 +656,17 @@
 12
 13
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.did:polygon:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.did:base:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.did:polygon:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-did:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.did:base:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 
     <span class="c1">// Web3j for Polygon blockchain</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.web3j:core:4.10.0"</span><span class="p">)</span>
 
     <span class="c1">// Polygon anchor client</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.chains:polygon:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.chains:polygon:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="configuration">
@@ -706,10 +706,10 @@
 18
 19
 20
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.polygondid.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.anchor.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.polygon.PolygonBlockchainAnchorClient</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.polygondid.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.anchor.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.polygon.PolygonBlockchainAnchorClient</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
 
 <span class="c1">// Create configuration</span>
 <span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">PolygonDidConfig</span><span class="p">.</span><span class="nf">builder</span><span class="p">()</span>
@@ -785,7 +785,7 @@
 13
 14
 15
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.*</span>
 <span class="k">import</span> <span class="nn">java.util.ServiceLoader</span>
 
 <span class="c1">// Discover did:polygon provider</span>
@@ -872,8 +872,8 @@
 14
 15
 16
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.identifiers.Did</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.resolver.DidResolutionResult</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.identifiers.Did</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.resolver.DidResolutionResult</span>
 
 <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="nc">Did</span><span class="p">(</span><span class="s">"did:polygon:0x1234..."</span><span class="p">)</span>
 <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">method</span><span class="p">.</span><span class="nf">resolveDid</span><span class="p">(</span><span class="n">did</span><span class="p">)</span>
@@ -910,7 +910,7 @@
 10
 11
 12
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.identifiers.Did</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.identifiers.Did</span>
 
 <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="nc">Did</span><span class="p">(</span><span class="s">"did:polygon:0x1234..."</span><span class="p">)</span>
 <span class="kd">val</span> <span class="py">document</span> <span class="p">=</span> <span class="n">method</span><span class="p">.</span><span class="nf">updateDid</span><span class="p">(</span><span class="n">did</span><span class="p">)</span> <span class="p">{</span> <span class="n">currentDoc</span> <span class="p">-&gt;</span>
@@ -937,7 +937,7 @@
 3
 4
 5
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.identifiers.Did</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.identifiers.Did</span>
 
 <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="nc">Did</span><span class="p">(</span><span class="s">"did:polygon:0x1234..."</span><span class="p">)</span>
 <span class="kd">val</span> <span class="py">deactivated</span> <span class="p">=</span> <span class="n">method</span><span class="p">.</span><span class="nf">deactivateDid</span><span class="p">(</span><span class="n">did</span><span class="p">)</span>
@@ -1110,10 +1110,10 @@ did:polygon:mumbai:0x1234567890123456789012345678901234567890
 24
 25
 26
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.polygondid.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.anchor.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.polygon.PolygonBlockchainAnchorClient</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.polygondid.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.anchor.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.polygon.PolygonBlockchainAnchorClient</span>
 
 <span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">PolygonDidConfig</span><span class="p">.</span><span class="nf">mumbai</span><span class="p">(</span><span class="s">"https://rpc-mumbai.maticvigil.com"</span><span class="p">)</span>
 <span class="kd">val</span> <span class="py">anchorClient</span> <span class="p">=</span> <span class="nc">PolygonBlockchainAnchorClient</span><span class="p">(</span><span class="n">config</span><span class="p">.</span><span class="n">chainId</span><span class="p">,</span> <span class="n">config</span><span class="p">.</span><span class="nf">toMap</span><span class="p">())</span>
@@ -1199,7 +1199,7 @@ did:polygon:mumbai:0x1234567890123456789012345678901234567890
 7
 8
 9
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient</span>
 
 <span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">PolygonDidConfig</span><span class="p">.</span><span class="nf">mumbai</span><span class="p">(</span><span class="s">"https://rpc-mumbai.maticvigil.com"</span><span class="p">)</span>
 <span class="kd">val</span> <span class="py">anchorClient</span> <span class="p">=</span> <span class="nc">InMemoryBlockchainAnchorClient</span><span class="p">(</span><span class="n">config</span><span class="p">.</span><span class="n">chainId</span><span class="p">)</span>

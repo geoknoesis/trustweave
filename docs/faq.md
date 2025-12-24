@@ -63,8 +63,8 @@ Configure `CredentialVerificationOptions` (see [Verification Policies](advanced/
 All `TrustWeave` methods throw `TrustWeaveException` exceptions on failure. Always wrap operations in try-catch blocks:
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.core.exception.TrustWeaveException
+import org.trustweave.trust.TrustWeave
+import org.trustweave.core.exception.TrustWeaveException
 
 val trustWeave = TrustWeave.build {
     keys { provider(IN_MEMORY); algorithm(ED25519) }

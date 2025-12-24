@@ -9,9 +9,9 @@ This tutorial provides a comprehensive guide to using TrustWeave's Wallet API. Y
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-trust:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-trust:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -45,11 +45,11 @@ dependencies {
 import kotlinx.coroutines.runBlocking
 
 // TrustWeave core
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.wallet.WalletCreationOptions
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.wallet.WalletCreationOptions
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
@@ -87,8 +87,8 @@ fun main() = runBlocking {
 import kotlinx.coroutines.runBlocking
 
 // TrustWeave core
-import com.trustweave.trust.dsl.trustLayer
-import com.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.trustLayer
+import org.trustweave.trust.dsl.credential.DidMethods
 
 fun main() = runBlocking {
     val trustLayer = trustLayer {
@@ -115,8 +115,8 @@ fun main() = runBlocking {
 `BasicWallet` and `InMemoryWallet` remain available for lightweight unit tests:
 
 ```kotlin
-import com.trustweave.testkit.credential.BasicWallet
-import com.trustweave.testkit.credential.InMemoryWallet
+import org.trustweave.testkit.credential.BasicWallet
+import org.trustweave.testkit.credential.InMemoryWallet
 
 val basic = BasicWallet()
 val inMemory = InMemoryWallet(holderDid = "did:key:test-holder")
@@ -129,7 +129,7 @@ val inMemory = InMemoryWallet(holderDid = "did:key:test-holder")
 ### Basic Storage
 
 ```kotlin
-import com.trustweave.credential.models.VerifiableCredential
+import org.trustweave.credential.models.VerifiableCredential
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -190,7 +190,7 @@ println("Total credentials: ${allCredentials.size}")
 ### List with Filter
 
 ```kotlin
-import com.trustweave.credential.wallet.CredentialFilter
+import org.trustweave.credential.wallet.CredentialFilter
 
 val workCredentials = wallet.list(
     filter = CredentialFilter(
@@ -331,7 +331,7 @@ val specific = wallet.query {
 ### Basic Presentation
 
 ```kotlin
-import com.trustweave.credential.PresentationOptions
+import org.trustweave.credential.PresentationOptions
 
 if (wallet is CredentialPresentation) {
     val presentation = wallet.createPresentation(
@@ -466,7 +466,7 @@ wallet.withPresentation { presentation ->
 Manage multiple wallets with an instance-scoped directory:
 
 ```kotlin
-import com.trustweave.credential.wallet.WalletDirectory
+import org.trustweave.credential.wallet.WalletDirectory
 
 val directory = WalletDirectory()
 
@@ -496,13 +496,13 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 // TrustWeave core
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.dsl.credential.DidMethods
-import com.trustweave.trust.dsl.credential.KeyAlgorithms
-import com.trustweave.credential.models.VerifiableCredential
-import com.trustweave.credential.PresentationOptions
-import com.trustweave.testkit.credential.InMemoryWallet
-import com.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.credential.models.VerifiableCredential
+import org.trustweave.credential.PresentationOptions
+import org.trustweave.testkit.credential.InMemoryWallet
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     // Create wallet using TrustWeave service API

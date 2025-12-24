@@ -175,10 +175,10 @@ Add TrustWeave dependencies to your `build.gradle.kts`. These provide DID/creden
 dependencies {
     // Core TrustWeave modules
     // TrustWeave distribution (includes all modules)
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Test kit for in-memory implementations
-    testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -202,9 +202,9 @@ dependencies {
 - **Interoperability**: Works across different systems
 
 ```kotlin
-import com.trustweave.testkit.did.DidKeyMockMethod
-import com.trustweave.testkit.kms.InMemoryKeyManagementService
-import com.trustweave.did.DidMethodRegistry
+import org.trustweave.testkit.did.DidKeyMockMethod
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
+import org.trustweave.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -321,7 +321,7 @@ fun main() = runBlocking {
     }
     
     val deviceAttestation = when (deviceAttestationResult) {
-        is com.trustweave.credential.results.IssuanceResult.Success -> deviceAttestationResult.credential
+        is org.trustweave.credential.results.IssuanceResult.Success -> deviceAttestationResult.credential
         else -> throw IllegalStateException("Failed to create device attestation: ${deviceAttestationResult.allErrors.joinToString()}")
     }
 
@@ -461,7 +461,7 @@ fun main() = runBlocking {
     }
     
     val issuedCapability = when (capabilityResult) {
-        is com.trustweave.credential.results.IssuanceResult.Success -> capabilityResult.credential
+        is org.trustweave.credential.results.IssuanceResult.Success -> capabilityResult.credential
         else -> throw IllegalStateException("Failed to create capability credential: ${capabilityResult.allErrors.joinToString()}")
     }
 
@@ -519,7 +519,7 @@ fun main() = runBlocking {
     }
     
     val networkAuthorization = when (networkAuthorizationResult) {
-        is com.trustweave.credential.results.IssuanceResult.Success -> networkAuthorizationResult.credential
+        is org.trustweave.credential.results.IssuanceResult.Success -> networkAuthorizationResult.credential
         else -> throw IllegalStateException("Failed to create network authorization: ${networkAuthorizationResult.allErrors.joinToString()}")
     }
 
@@ -546,8 +546,8 @@ fun main() = runBlocking {
 - **Revocation Check**: Ensures credentials haven't been revoked
 
 ```kotlin
-import com.trustweave.credential.verifier.CredentialVerifier
-import com.trustweave.credential.CredentialVerificationOptions
+import org.trustweave.credential.verifier.CredentialVerifier
+import org.trustweave.credential.CredentialVerificationOptions
 
     // Step 9: Verify device before network access
     println("\nStep 9: Verifying device before network access...")
@@ -640,7 +640,7 @@ import com.trustweave.credential.CredentialVerificationOptions
     }
     
     val device2Attestation = when (device2AttestationResult) {
-        is com.trustweave.credential.results.IssuanceResult.Success -> device2AttestationResult.credential
+        is org.trustweave.credential.results.IssuanceResult.Success -> device2AttestationResult.credential
         else -> throw IllegalStateException("Failed to create device 2 attestation: ${device2AttestationResult.allErrors.joinToString()}")
     }
 
@@ -677,9 +677,9 @@ import com.trustweave.credential.CredentialVerificationOptions
 - **Verification**: Anyone can verify device identity from blockchain
 
 ```kotlin
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.trustweave.anchor.BlockchainAnchorRegistry
-import com.trustweave.anchor.anchorTyped
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.anchor.BlockchainAnchorRegistry
+import org.trustweave.anchor.anchorTyped
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -702,9 +702,9 @@ data class DeviceIdentityRecord(
 
     // Compute digest of device attestation credential
     // This digest uniquely identifies the credential
-    val attestationDigest = com.trustweave.json.DigestUtils.sha256DigestMultibase(
+    val attestationDigest = org.trustweave.json.DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(
-            com.trustweave.credential.models.VerifiableCredential.serializer(),
+            org.trustweave.credential.models.VerifiableCredential.serializer(),
             issuedAttestation
         )
     )
@@ -989,7 +989,7 @@ suspend fun createSecureBootCredential(
     }
     
     return when (result) {
-        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create secure boot credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -1027,7 +1027,7 @@ suspend fun createLifecycleCredential(
     }
     
     return when (result) {
-        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create lifecycle credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -1067,7 +1067,7 @@ suspend fun createUpdateCredential(
     }
     
     return when (result) {
-        is com.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create update credential: ${result.allErrors.joinToString()}")
     }
 }

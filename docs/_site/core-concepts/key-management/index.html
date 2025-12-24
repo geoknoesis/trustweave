@@ -655,8 +655,8 @@
 3
 4
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-kms:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
@@ -738,7 +738,7 @@
 15
 16
 17
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
 
 <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">checkKmsCapabilities</span><span class="p">(</span><span class="n">kms</span><span class="p">:</span> <span class="nc">KeyManagementService</span><span class="p">)</span> <span class="p">{</span>
     <span class="c1">// Get all supported algorithms</span>
@@ -802,7 +802,7 @@
 35
 36
 37
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
 
 <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">issueSignerKey</span><span class="p">(</span><span class="n">kms</span><span class="p">:</span> <span class="nc">KeyManagementService</span><span class="p">):</span> <span class="nc">KeyId</span><span class="p">?</span> <span class="p">{</span>
     <span class="c1">// Type-safe algorithm usage with Result-based API (recommended)</span>
@@ -870,8 +870,8 @@
 19
 20
 21
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.results.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.results.*</span>
 
 <span class="kd">val</span> <span class="py">keyResult</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">withKeyManagement</span> <span class="p">{</span> <span class="n">keys</span> <span class="p">-&gt;</span>
     <span class="n">keys</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span><span class="nc">Algorithm</span><span class="p">.</span><span class="nc">Ed25519</span><span class="p">,</span> <span class="nf">mapOf</span><span class="p">(</span>
@@ -1042,8 +1042,8 @@
 37
 38
 39
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.results.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.results.*</span>
 
 <span class="c1">// Get key and validate algorithm</span>
 <span class="kd">val</span> <span class="py">publicKeyResult</span> <span class="p">=</span> <span class="n">kms</span><span class="p">.</span><span class="nf">getPublicKey</span><span class="p">(</span><span class="n">keyId</span><span class="p">)</span>
@@ -1119,7 +1119,7 @@
       <td>Community</td>
       <td>SPI implementations</td>
       <td>Varies by provider</td>
-      <td>Register via <code class="language-plaintext highlighter-rouge">META-INF/services/com.trustweave.kms.spi.KeyManagementServiceProvider</code>.</td>
+      <td>Register via <code class="language-plaintext highlighter-rouge">META-INF/services/org.trustweave.kms.spi.KeyManagementServiceProvider</code>.</td>
     </tr>
   </tbody>
 </table></div>
@@ -1153,7 +1153,7 @@
 15
 16
 17
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
 
 <span class="c1">// Discover all providers and their algorithms</span>
 <span class="kd">val</span> <span class="py">providers</span> <span class="p">=</span> <span class="nc">AlgorithmDiscovery</span><span class="p">.</span><span class="nf">discoverProviders</span><span class="p">()</span>
@@ -1203,9 +1203,9 @@
 19
 20
 21
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.KmsOptionKeys</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.results.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.KmsOptionKeys</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.results.*</span>
 
 <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">withKeyManagement</span> <span class="p">{</span> <span class="n">kms</span> <span class="p">-&gt;</span>
     <span class="n">kms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span><span class="nc">Algorithm</span><span class="p">.</span><span class="nc">Ed25519</span><span class="p">,</span> <span class="nf">mapOf</span><span class="p">(</span>
@@ -1331,7 +1331,7 @@
 57
 58
 59
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
 
 <span class="kd">class</span> <span class="nc">VaultKmsProvider</span> <span class="p">:</span> <span class="nc">KeyManagementServiceProvider</span> <span class="p">{</span>
     <span class="k">override</span> <span class="kd">val</span> <span class="py">name</span> <span class="p">=</span> <span class="s">"vault"</span>
@@ -1392,7 +1392,7 @@
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
-<p>Add <code class="language-plaintext highlighter-rouge">META-INF/services/com.trustweave.kms.spi.KeyManagementServiceProvider</code> containing the provider’s fully qualified class name. After that, <code class="language-plaintext highlighter-rouge">TrustWeaveDefaults</code> can pick it up automatically.</p>
+<p>Add <code class="language-plaintext highlighter-rouge">META-INF/services/org.trustweave.kms.spi.KeyManagementServiceProvider</code> containing the provider’s fully qualified class name. After that, <code class="language-plaintext highlighter-rouge">TrustWeaveDefaults</code> can pick it up automatically.</p>
 
 <p><strong>Important:</strong> All providers MUST implement <code class="language-plaintext highlighter-rouge">supportedAlgorithms</code> and all KMS instances MUST implement <code class="language-plaintext highlighter-rouge">getSupportedAlgorithms()</code>.</p>
 <h2 id="next-steps">

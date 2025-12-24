@@ -10,7 +10,7 @@ This module implements `BlockchainAnchorClient` for Hyperledger Indy ledgers, al
 
 **Type-Safe Chain IDs (Recommended)**:
 ```kotlin
-import com.trustweave.anchor.ChainId
+import org.trustweave.anchor.ChainId
 
 val sovrinMainnet = ChainId.Indy.SovrinMainnet      // "indy:mainnet:sovrin"
 val sovrinStaging = ChainId.Indy.SovrinStaging     // "indy:testnet:sovrin-staging"
@@ -30,14 +30,14 @@ Supported chain ID format: `indy:<network>:<pool-name>`
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:TrustWeave-indy:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:TrustWeave-indy:1.0.0-SNAPSHOT")
 }
 ```
 
 ### Automatic Discovery via SPI
 
 ```kotlin
-import com.trustweave.anchor.indy.IndyIntegration
+import org.trustweave.anchor.indy.IndyIntegration
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -51,9 +51,9 @@ fun main() = runBlocking {
 ### Manual Setup with Type-Safe Options
 
 ```kotlin
-import com.trustweave.anchor.indy.IndyIntegration
-import com.trustweave.anchor.options.IndyOptions
-import com.trustweave.anchor.ChainId
+import org.trustweave.anchor.indy.IndyIntegration
+import org.trustweave.anchor.options.IndyOptions
+import org.trustweave.anchor.ChainId
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -80,7 +80,7 @@ fun main() = runBlocking {
 ### Manual Setup (Legacy Map-based Options)
 
 ```kotlin
-import com.trustweave.anchor.indy.IndyIntegration
+import org.trustweave.anchor.indy.IndyIntegration
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -101,9 +101,9 @@ fun main() = runBlocking {
 ### Anchoring Data with Type-Safe Configuration
 
 ```kotlin
-import com.trustweave.anchor.*
-import com.trustweave.anchor.ChainId
-import com.trustweave.anchor.indy.IndyIntegration
+import org.trustweave.anchor.*
+import org.trustweave.anchor.ChainId
+import org.trustweave.anchor.indy.IndyIntegration
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import kotlinx.serialization.Serializable

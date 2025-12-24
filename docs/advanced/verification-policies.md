@@ -27,7 +27,7 @@ Verifiers often need more than a boolean “valid/invalid”. TrustWeave lets yo
 **Prerequisites:** A `VerifiableCredential` you want to vet and a `TrustWeave` facade that is already configured with the necessary DID resolvers and status services.
 
 ```kotlin
-import com.trustweave.credential.CredentialVerificationOptions
+import org.trustweave.credential.CredentialVerificationOptions
 
 val options = CredentialVerificationOptions(
     checkExpiration = true,

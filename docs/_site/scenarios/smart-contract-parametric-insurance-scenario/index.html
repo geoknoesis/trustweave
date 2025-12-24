@@ -727,8 +727,8 @@
 15
 16
 17
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.contract.models.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.contract.models.*</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.buildJsonObject</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.put</span>
 <span class="k">import</span> <span class="nn">java.time.Instant</span>
@@ -1313,7 +1313,7 @@
     <span class="kd">val</span> <span class="py">floodDepth</span> <span class="p">=</span> <span class="mf">75.0</span> <span class="c1">// cm</span>
 
     <span class="c1">// Issue EO data credential (simplified - in production, EO provider issues this)</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.IssuanceResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.IssuanceResult</span>
     
     <span class="kd">val</span> <span class="py">eoDataIssuanceResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">issue</span> <span class="p">{</span>
         <span class="nf">credential</span> <span class="p">{</span>

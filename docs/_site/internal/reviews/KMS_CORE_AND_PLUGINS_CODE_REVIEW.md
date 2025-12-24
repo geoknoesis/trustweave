@@ -32,7 +32,7 @@ The KMS (Key Management Service) module provides a well-designed, type-safe abst
 
 ### 1.1 Core Interface Design
 
-**File**: `kms-core/src/main/kotlin/com/trustweave/kms/KeyManagementService.kt`
+**File**: `kms-core/src/main/kotlin/org.trustweave/kms/KeyManagementService.kt`
 
 ✅ **Strengths**:
 - Clean, focused interface with clear responsibilities
@@ -64,7 +64,7 @@ The KMS (Key Management Service) module provides a well-designed, type-safe abst
 
 ### 1.2 Result Type Design
 
-**File**: `kms-core/src/main/kotlin/com/trustweave/kms/results/KmsOperationResult.kt`
+**File**: `kms-core/src/main/kotlin/org.trustweave/kms/results/KmsOperationResult.kt`
 
 ✅ **Strengths**:
 - Excellent sealed class hierarchy design
@@ -92,7 +92,7 @@ The KMS (Key Management Service) module provides a well-designed, type-safe abst
 
 ### 1.3 Algorithm Type Design
 
-**File**: `kms-core/src/main/kotlin/com/trustweave/kms/Algorithm.kt`
+**File**: `kms-core/src/main/kotlin/org.trustweave/kms/Algorithm.kt`
 
 ✅ **Strengths**:
 - Excellent sealed class design prevents algorithm confusion attacks
@@ -130,7 +130,7 @@ The KMS (Key Management Service) module provides a well-designed, type-safe abst
 
 ### 2.1 AWS KMS Plugin
 
-**File**: `plugins/aws/src/main/kotlin/com/trustweave/awskms/AwsKeyManagementService.kt`
+**File**: `plugins/aws/src/main/kotlin/org.trustweave/awskms/AwsKeyManagementService.kt`
 
 ✅ **Strengths**:
 - Comprehensive implementation
@@ -177,7 +177,7 @@ The KMS (Key Management Service) module provides a well-designed, type-safe abst
 
 ### 2.2 Azure KMS Plugin
 
-**File**: `plugins/azure/src/main/kotlin/com/trustweave/azurekms/AzureKeyManagementService.kt`
+**File**: `plugins/azure/src/main/kotlin/org.trustweave/azurekms/AzureKeyManagementService.kt`
 
 ✅ **Strengths**:
 - Good error handling
@@ -225,7 +225,7 @@ The KMS (Key Management Service) module provides a well-designed, type-safe abst
        init {
            require(false) { 
                "Utimaco KMS plugin is not yet implemented. " +
-               "See https://github.com/trustweave/trustweave/issues/XXX"
+               "See https://github.org.trustweave/trustweave/issues/XXX"
            }
        }
    }
@@ -546,12 +546,12 @@ The KMS core and plugins demonstrate **excellent software engineering practices*
 ## Appendix: Files Reviewed
 
 ### Core
-- `kms-core/src/main/kotlin/com/trustweave/kms/KeyManagementService.kt`
-- `kms-core/src/main/kotlin/com/trustweave/kms/Algorithm.kt`
-- `kms-core/src/main/kotlin/com/trustweave/kms/results/KmsOperationResult.kt`
-- `kms-core/src/main/kotlin/com/trustweave/kms/spi/KeyManagementServiceProvider.kt`
-- `kms-core/src/main/kotlin/com/trustweave/kms/services/KmsFactory.kt`
-- `kms-core/src/main/kotlin/com/trustweave/kms/exception/KmsExceptions.kt`
+- `kms-core/src/main/kotlin/org.trustweave/kms/KeyManagementService.kt`
+- `kms-core/src/main/kotlin/org.trustweave/kms/Algorithm.kt`
+- `kms-core/src/main/kotlin/org.trustweave/kms/results/KmsOperationResult.kt`
+- `kms-core/src/main/kotlin/org.trustweave/kms/spi/KeyManagementServiceProvider.kt`
+- `kms-core/src/main/kotlin/org.trustweave/kms/services/KmsFactory.kt`
+- `kms-core/src/main/kotlin/org.trustweave/kms/exception/KmsExceptions.kt`
 
 ### Plugins (Reviewed)
 - `plugins/aws/AwsKeyManagementService.kt`
@@ -562,6 +562,6 @@ The KMS core and plugins demonstrate **excellent software engineering practices*
 - `plugins/entrust/EntrustKeyManagementService.kt` (incomplete)
 
 ### Tests
-- `kms-core/src/test/kotlin/com/trustweave/kms/KeyManagementServiceTest.kt`
-- `kms-core/src/test/kotlin/com/trustweave/kms/KeyManagementServiceInterfaceContractTest.kt`
+- `kms-core/src/test/kotlin/org.trustweave/kms/KeyManagementServiceTest.kt`
+- `kms-core/src/test/kotlin/org.trustweave/kms/KeyManagementServiceInterfaceContractTest.kt`
 

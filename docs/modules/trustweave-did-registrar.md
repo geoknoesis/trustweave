@@ -8,9 +8,9 @@ The `trustweave-did-registrar` module provides implementations of the `DidRegist
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:trustweave-did-registrar:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-did-registrar:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -87,8 +87,8 @@ A client implementation for Universal Registrar services that supports:
 - Automatic job tracking
 
 ```kotlin
-import com.trustweave.did.registrar.client.*
-import com.trustweave.did.registrar.model.*
+import org.trustweave.did.registrar.client.*
+import org.trustweave.did.registrar.model.*
 
 val registrar = DefaultUniversalRegistrar(
     baseUrl = "https://dev.uniregistrar.io",
@@ -118,8 +118,8 @@ val did = finalResponse.didState.did
 A local registrar implementation that uses a Key Management Service (KMS) for Internal Secret Mode:
 
 ```kotlin
-import com.trustweave.did.registrar.client.*
-import com.trustweave.kms.*
+import org.trustweave.did.registrar.client.*
+import org.trustweave.kms.*
 
 val kms = InMemoryKeyManagementService()
 val registrar = KmsBasedRegistrar(kms)
@@ -287,8 +287,8 @@ sequenceDiagram
 ### Using Universal Registrar Client
 
 ```kotlin
-import com.trustweave.did.registrar.client.*
-import com.trustweave.did.registrar.model.*
+import org.trustweave.did.registrar.client.*
+import org.trustweave.did.registrar.model.*
 
 // Create registrar client
 val registrar = DefaultUniversalRegistrar(
@@ -312,8 +312,8 @@ println("Created DID: ${response.didState.did}")
 ### Using KMS-Based Registrar
 
 ```kotlin
-import com.trustweave.did.registrar.client.*
-import com.trustweave.kms.*
+import org.trustweave.did.registrar.client.*
+import org.trustweave.kms.*
 
 // Create KMS and registrar
 val kms = InMemoryKeyManagementService()
@@ -337,9 +337,9 @@ if (response.didState.secret != null) {
 ### Integrating with DidMethod
 
 ```kotlin
-import com.trustweave.did.*
-import com.trustweave.did.registrar.client.*
-import com.trustweave.did.registration.impl.*
+import org.trustweave.did.*
+import org.trustweave.did.registrar.client.*
+import org.trustweave.did.registration.impl.*
 
 // Create registrar
 val registrar = DefaultUniversalRegistrar("https://dev.uniregistrar.io")
@@ -370,7 +370,7 @@ val didDoc = method.createDid(DidCreationOptions())
 ```mermaid
 graph TD
     subgraph "did:registrar Package Structure"
-        A[com.trustweave.did.registrar]
+        A[org.trustweave.did.registrar]
         A --> B[client/]
         A --> C[adapter/]
         A --> D[util/]

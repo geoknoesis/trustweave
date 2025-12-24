@@ -618,9 +618,9 @@
 4
 5
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-trust:1.0.0-SNAPSHOT"</span><span class="p">)</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-core:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-trust:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
@@ -688,7 +688,7 @@
 25
 26
 27
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.dsl.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.dsl.*</span>
 <span class="k">import</span> <span class="nn">java.time.Instant</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 
@@ -766,7 +766,7 @@
 35
 36
 37
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.types.DidCreationResult</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.types.DidCreationResult</span>
 
 <span class="kd">val</span> <span class="py">universityDidResult</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span>
     <span class="nf">method</span><span class="p">(</span><span class="nc">DidMethods</span><span class="p">.</span><span class="nc">KEY</span><span class="p">)</span>
@@ -922,7 +922,7 @@
 53
 54
 </pre></td><td class="rouge-code"><pre><span class="c1">// Issue degree credential from university</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.types.IssuanceResult</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.types.IssuanceResult</span>
 
 <span class="c1">// First, resolve university DID to get key ID</span>
 <span class="kd">val</span> <span class="py">universityResolution</span> <span class="p">=</span> <span class="n">trustLayer</span><span class="p">.</span><span class="nf">resolveDid</span><span class="p">(</span><span class="n">universityDid</span><span class="p">)</span>

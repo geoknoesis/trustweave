@@ -810,13 +810,13 @@
 16
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
     <span class="c1">// Core TrustWeave modules</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-all:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-all:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 
     <span class="c1">// Test kit for in-memory implementations</span>
-    <span class="nf">testImplementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">testImplementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-testkit:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 
     <span class="c1">// Optional: Algorand adapter for real blockchain anchoring</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave.chains:algorand:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave.chains:algorand:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 
     <span class="c1">// Kotlinx Serialization</span>
     <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"</span><span class="p">)</span>
@@ -1133,9 +1133,9 @@
 295
 </pre></td><td class="rouge-code"><pre><span class="k">package</span> <span class="nn">com.example.eudr.compliance</span>
 
-<span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.json.DigestUtils</span>
+<span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.json.DigestUtils</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.*</span>
 <span class="k">import</span> <span class="nn">java.time.Instant</span>
@@ -1157,7 +1157,7 @@
     <span class="nf">println</span><span class="p">(</span><span class="s">"\n✅ TrustWeave initialized"</span><span class="p">)</span>
 
     <span class="c1">// Step 2: Create DIDs for exporter, importer, and verifier</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.DidCreationResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.DidCreationResult</span>
     
     <span class="kd">val</span> <span class="py">exporterDidResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span> <span class="p">}</span>
     <span class="kd">val</span> <span class="py">exporterDid</span> <span class="p">=</span> <span class="k">when</span> <span class="p">(</span><span class="n">exporterDidResult</span><span class="p">)</span> <span class="p">{</span>

@@ -66,8 +66,8 @@ class DidMethodTest {
 ### Testing DID Methods
 
 ```kotlin
-import com.trustweave.testkit.*
-import com.trustweave.did.*
+import org.trustweave.testkit.*
+import org.trustweave.did.*
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 
@@ -91,8 +91,8 @@ class DidMethodTest {
 ### Testing Key Management
 
 ```kotlin
-import com.trustweave.testkit.kms.InMemoryKeyManagementService
-import com.trustweave.kms.*
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
+import org.trustweave.kms.*
 import kotlin.test.Test
 
 class KmsTest {
@@ -117,8 +117,8 @@ class KmsTest {
 ### Testing Credential Workflows
 
 ```kotlin
-import com.trustweave.testkit.*
-import com.trustweave.TrustWeave
+import org.trustweave.testkit.*
+import org.trustweave.TrustWeave
 import kotlin.test.Test
 
 class CredentialWorkflowTest {
@@ -156,9 +156,9 @@ class CredentialWorkflowTest {
 ### EO Integration Tests
 
 ```kotlin
-import com.trustweave.testkit.eo.BaseEoIntegrationTest
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.trustweave.anchor.*
+import org.trustweave.testkit.eo.BaseEoIntegrationTest
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.anchor.*
 import kotlin.test.Test
 
 class MyEoIntegrationTest : BaseEoIntegrationTest() {
@@ -184,7 +184,7 @@ class MyEoIntegrationTest : BaseEoIntegrationTest() {
 Use test fixtures for setup:
 
 ```kotlin
-import com.trustweave.testkit.*
+import org.trustweave.testkit.*
 import kotlin.test.Test
 
 class FixtureTest {

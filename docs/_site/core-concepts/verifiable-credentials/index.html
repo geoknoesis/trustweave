@@ -654,7 +654,7 @@
 2
 3
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
@@ -834,9 +834,9 @@
 107
 108
 109
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.IssuanceConfig</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.ProofType</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.IssuanceConfig</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.ProofType</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.buildJsonObject</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.put</span>
 
@@ -867,8 +867,8 @@
 ### </span><span class="nc">Example</span><span class="p">:</span> <span class="n">verifying</span> <span class="n">a</span> <span class="n">credential</span>
 
 <span class="err">``</span><span class="n">`kotlin</span>
-<span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.models.VerifiableCredential</span>
+<span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.models.VerifiableCredential</span>
 
 <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">verifyBadge</span><span class="p">(</span><span class="n">trustWeave</span><span class="p">:</span> <span class="nc">TrustWeave</span><span class="p">,</span> <span class="n">credential</span><span class="p">:</span> <span class="nc">VerifiableCredential</span><span class="p">)</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">verify</span> <span class="p">{</span>
@@ -1030,8 +1030,8 @@
 65
 66
 67
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.models.VerifiableCredential</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.CredentialIssuanceOptions</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.models.VerifiableCredential</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.CredentialIssuanceOptions</span>
 
 <span class="c1">// Issue credential using TrustWeave DSL API</span>
 <span class="kd">val</span> <span class="py">trustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span>
@@ -1044,8 +1044,8 @@
     <span class="nf">credentials</span> <span class="p">{</span> <span class="nf">defaultProofType</span><span class="p">(</span><span class="nc">ProofType</span><span class="p">.</span><span class="nc">Ed25519Signature2020</span><span class="p">)</span> <span class="p">}</span>
 <span class="p">}</span>
 
-<span class="k">import</span> <span class="nn">com.trustweave.trust.types.DidCreationResult</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.types.IssuanceResult</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.types.DidCreationResult</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.types.IssuanceResult</span>
 
 <span class="kd">val</span> <span class="py">didResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span>
     <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span>
@@ -1091,7 +1091,7 @@
 <span class="nc">Store</span> <span class="n">credentials</span> <span class="k">in</span> <span class="n">a</span> <span class="n">wallet</span><span class="p">:</span>
 
 <span class="err">``</span><span class="n">`kotlin</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.credential.BasicWallet</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.credential.BasicWallet</span>
 
 <span class="kd">val</span> <span class="py">wallet</span> <span class="p">=</span> <span class="nc">BasicWallet</span><span class="p">()</span>
 <span class="kd">val</span> <span class="py">credentialId</span> <span class="p">=</span> <span class="n">wallet</span><span class="p">.</span><span class="nf">store</span><span class="p">(</span><span class="n">issuedCredential</span><span class="p">)</span>
@@ -1120,8 +1120,8 @@
 9
 10
 11
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.models.VerifiablePresentation</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.PresentationOptions</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.models.VerifiablePresentation</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.PresentationOptions</span>
 
 <span class="kd">val</span> <span class="py">presentation</span> <span class="p">=</span> <span class="nc">VerifiablePresentation</span><span class="p">(</span>
     <span class="n">type</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span><span class="s">"VerifiablePresentation"</span><span class="p">),</span>
@@ -1169,8 +1169,8 @@
 24
 25
 26
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.VerificationConfig</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.VerificationConfig</span>
 
 <span class="kd">val</span> <span class="py">trustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">build</span> <span class="p">{</span>
     <span class="nf">factories</span><span class="p">(</span>

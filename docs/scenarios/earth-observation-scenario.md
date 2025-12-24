@@ -133,13 +133,13 @@ Add TrustWeave dependencies to your `build.gradle.kts`. This pulls in the core r
 dependencies {
     // Core TrustWeave modules
     // TrustWeave distribution (includes all modules)
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Test kit for in-memory implementations
-    testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
 
     // Optional: Algorand adapter for real blockchain anchoring
-    implementation("com.trustweave.chains:algorand:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.chains:algorand:1.0.0-SNAPSHOT")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -158,8 +158,8 @@ Here's the full Earth Observation data integrity workflow using the TrustWeave f
 ```kotlin
 package com.example.earth.observation
 
-import com.trustweave.trust.dsl.trustWeave
-import com.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.datetime.Clock
@@ -362,7 +362,7 @@ So far, we've used an in-memory blockchain client for testing. For production, y
 Replace the in-memory client with Algorand:
 
 ```kotlin
-import com.trustweave.algorand.AlgorandBlockchainAnchorClient
+import org.trustweave.algorand.AlgorandBlockchainAnchorClient
 
 // Replace this:
 // val anchorClient = InMemoryBlockchainAnchorClient(chainId)

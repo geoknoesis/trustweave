@@ -2,7 +2,7 @@ plugins {
     kotlin("jvm")
 }
 
-group = "com.trustweave.kms"
+group = "org.trustweave.kms"
 
 dependencies {
     // API dependencies - exposed transitively to consumers

@@ -951,8 +951,8 @@
 34
 35
 36
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.*</span>
 
 <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="c1">// Create TrustWeave instance</span>
@@ -1045,7 +1045,7 @@
 44
 45
 46
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.spi.PluginLifecycle</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.spi.PluginLifecycle</span>
 
 <span class="kd">class</span> <span class="nc">MyBlockchainClient</span> <span class="p">:</span> <span class="nc">BlockchainAnchorClient</span><span class="p">,</span> <span class="nc">PluginLifecycle</span> <span class="p">{</span>
     <span class="k">private</span> <span class="kd">var</span> <span class="py">initialized</span> <span class="p">=</span> <span class="k">false</span>

@@ -23,17 +23,17 @@ Add the did:polygon module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave.did:polygon:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.did:polygon:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.did:base:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 
     // Web3j for Polygon blockchain
     implementation("org.web3j:core:4.10.0")
 
     // Polygon anchor client
-    implementation("com.trustweave.chains:polygon:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.chains:polygon:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -42,10 +42,10 @@ dependencies {
 ### Basic Configuration
 
 ```kotlin
-import com.trustweave.polygondid.*
-import com.trustweave.anchor.*
-import com.trustweave.polygon.PolygonBlockchainAnchorClient
-import com.trustweave.kms.*
+import org.trustweave.polygondid.*
+import org.trustweave.anchor.*
+import org.trustweave.polygon.PolygonBlockchainAnchorClient
+import org.trustweave.kms.*
 
 // Create configuration
 val config = PolygonDidConfig.builder()
@@ -85,7 +85,7 @@ val mumbaiConfig = PolygonDidConfig.mumbai(
 When the module is on the classpath, did:polygon is automatically available:
 
 ```kotlin
-import com.trustweave.did.*
+import org.trustweave.did.*
 import java.util.ServiceLoader
 
 // Discover did:polygon provider
@@ -126,8 +126,8 @@ println("Created: ${document.id}") // did:polygon:mumbai:0x... or did:polygon:0x
 ### Resolving a did:polygon
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
-import com.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.resolver.DidResolutionResult
 
 val did = Did("did:polygon:0x1234...")
 val result = method.resolveDid(did)
@@ -147,7 +147,7 @@ when (result) {
 ### Updating a did:polygon
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 val did = Did("did:polygon:0x1234...")
 val document = method.updateDid(did) { currentDoc ->
@@ -164,7 +164,7 @@ val document = method.updateDid(did) { currentDoc ->
 ### Deactivating a did:polygon
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 val did = Did("did:polygon:0x1234...")
 val deactivated = method.deactivateDid(did)
@@ -227,10 +227,10 @@ val config = PolygonDidConfig.builder()
 ## Integration with TrustWeave
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.polygondid.*
-import com.trustweave.anchor.*
-import com.trustweave.polygon.PolygonBlockchainAnchorClient
+import org.trustweave.TrustWeave
+import org.trustweave.polygondid.*
+import org.trustweave.anchor.*
+import org.trustweave.polygon.PolygonBlockchainAnchorClient
 
 val config = PolygonDidConfig.mumbai("https://rpc-mumbai.maticvigil.com")
 val anchorClient = PolygonBlockchainAnchorClient(config.chainId, config.toMap())
@@ -271,7 +271,7 @@ Common errors and solutions:
 For testing without actual blockchain:
 
 ```kotlin
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 
 val config = PolygonDidConfig.mumbai("https://rpc-mumbai.maticvigil.com")
 val anchorClient = InMemoryBlockchainAnchorClient(config.chainId)

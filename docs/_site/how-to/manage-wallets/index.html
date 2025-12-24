@@ -726,8 +726,8 @@
 76
 77
 78
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.resolver.DidResolutionResult</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.resolver.DidResolutionResult</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
@@ -745,9 +745,9 @@
     <span class="p">}</span>
 
     <span class="c1">// Create wallet</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.WalletCreationResult</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.DidCreationResult</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.IssuanceResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.WalletCreationResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.DidCreationResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.IssuanceResult</span>
     
     <span class="kd">val</span> <span class="py">walletResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">wallet</span> <span class="p">{</span>
         <span class="nf">holder</span><span class="p">(</span><span class="s">"did:key:holder-placeholder"</span><span class="p">)</span>
@@ -842,7 +842,7 @@
 11
 12
 13
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.types.WalletCreationResult</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.types.WalletCreationResult</span>
 
 <span class="kd">val</span> <span class="py">walletResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">wallet</span> <span class="p">{</span>
     <span class="nf">holder</span><span class="p">(</span><span class="s">"did:key:holder"</span><span class="p">)</span>
@@ -1631,7 +1631,7 @@
 30
 31
 32
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.types.WalletCreationResult</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.types.WalletCreationResult</span>
 
 <span class="kd">val</span> <span class="py">walletResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">wallet</span> <span class="p">{</span>
     <span class="nf">holder</span><span class="p">(</span><span class="s">"did:key:holder"</span><span class="p">)</span>

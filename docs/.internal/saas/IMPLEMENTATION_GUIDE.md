@@ -265,7 +265,7 @@ dependencies {
     implementation("io.ktor:ktor-server-rate-limit-jvm")
 
     // TrustWeave
-    implementation("com.trustweave:TrustWeave-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:TrustWeave-all:1.0.0-SNAPSHOT")
 
     // Database
     implementation("org.jetbrains.exposed:exposed-core:0.45.0")
@@ -298,11 +298,11 @@ dependencies {
 **Result:** A minimal `module` function that defers to dedicated plugin files—easier to test and override between environments.
 
 ```kotlin
-package com.trustweave.cloud
+package org.trustweave.cloud
 
 import io.ktor.server.application.*
 import io.ktor.server.netty.*
-import com.trustweave.cloud.plugins.*
+import org.trustweave.cloud.plugins.*
 
 fun main(args: Array<String>) {
     EngineMain.main(args)
@@ -399,7 +399,7 @@ object UsageRecords : UUIDTable("usage_records") {
 
 ```kotlin
 // src/main/kotlin/services/UsageService.kt
-package com.trustweave.cloud.services
+package org.trustweave.cloud.services
 
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.sync.RedisCommands
@@ -506,7 +506,7 @@ data class UsageSnapshot(
 
 ```kotlin
 // src/main/kotlin/plugins/RateLimiting.kt
-package com.trustweave.cloud.plugins
+package org.trustweave.cloud.plugins
 
 import io.ktor.server.application.*
 import io.ktor.server.plugins.ratelimit.*
@@ -539,17 +539,17 @@ fun Application.configureRateLimiting() {
 
 ```kotlin
 // src/main/kotlin/routes/DidRoutes.kt
-package com.trustweave.cloud.routes
+package org.trustweave.cloud.routes
 
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.http.*
-import com.trustweave.TrustWeave
-import com.trustweave.cloud.services.UsageService
-import com.trustweave.did.DidCreationOptions
-import com.trustweave.did.didCreationOptions
+import org.trustweave.TrustWeave
+import org.trustweave.cloud.services.UsageService
+import org.trustweave.did.DidCreationOptions
+import org.trustweave.did.didCreationOptions
 import kotlinx.serialization.Serializable
 
 fun Route.didRoutes(
@@ -634,14 +634,14 @@ data class CreateDidRequest(
 @Serializable
 data class DidResponse(
     val id: String,
-    val document: com.trustweave.did.DidDocument,
+    val document: org.trustweave.did.DidDocument,
     val createdAt: Long
 )
 
 @Serializable
 data class DidResolutionResponse(
-    val document: com.trustweave.did.DidDocument,
-    val metadata: com.trustweave.did.ResolutionMetadata?
+    val document: org.trustweave.did.DidDocument,
+    val metadata: org.trustweave.did.ResolutionMetadata?
 )
 
 @Serializable
@@ -655,15 +655,15 @@ data class ErrorResponse(
 
 ```kotlin
 // src/main/kotlin/routes/CredentialRoutes.kt
-package com.trustweave.cloud.routes
+package org.trustweave.cloud.routes
 
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.http.*
-import com.trustweave.TrustWeave
-import com.trustweave.cloud.services.UsageService
+import org.trustweave.TrustWeave
+import org.trustweave.cloud.services.UsageService
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
@@ -713,7 +713,7 @@ fun Route.credentialRoutes(
             // Verify
             val result = TrustWeave.verifyCredential(
                 credential = request.credential,
-                options = request.options ?: com.trustweave.credential.CredentialVerificationOptions()
+                options = request.options ?: org.trustweave.credential.CredentialVerificationOptions()
             ).getOrThrow()
 
             // Track usage
@@ -739,14 +739,14 @@ data class IssueCredentialRequest(
 
 @Serializable
 data class CredentialResponse(
-    val credential: com.trustweave.credential.models.VerifiableCredential,
+    val credential: org.trustweave.credential.models.VerifiableCredential,
     val issuedAt: Long
 )
 
 @Serializable
 data class VerifyCredentialRequest(
-    val credential: com.trustweave.credential.models.VerifiableCredential,
-    val options: com.trustweave.credential.CredentialVerificationOptions? = null
+    val credential: org.trustweave.credential.models.VerifiableCredential,
+    val options: org.trustweave.credential.CredentialVerificationOptions? = null
 )
 
 @Serializable
@@ -765,7 +765,7 @@ data class VerificationResponse(
 
 ```kotlin
 // src/main/kotlin/routes/BillingRoutes.kt
-package com.trustweave.cloud.routes
+package org.trustweave.cloud.routes
 
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -875,7 +875,7 @@ data class MessageResponse(
 
 ```kotlin
 // src/main/kotlin/routes/WebhookRoutes.kt
-package com.trustweave.cloud.routes
+package org.trustweave.cloud.routes
 
 import io.ktor.server.application.*
 import io.ktor.server.request.*

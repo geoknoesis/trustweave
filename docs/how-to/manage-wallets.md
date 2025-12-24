@@ -21,8 +21,8 @@ This guide shows you how to create wallets, store credentials, organize them wit
 Here's a complete example that creates a wallet, stores a credential, and organizes it:
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.trust.TrustWeave
+import org.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -40,9 +40,9 @@ fun main() = runBlocking {
     }
 
     // Create wallet
-    import com.trustweave.trust.types.WalletCreationResult
-    import com.trustweave.trust.types.DidCreationResult
-    import com.trustweave.trust.types.IssuanceResult
+    import org.trustweave.trust.types.WalletCreationResult
+    import org.trustweave.trust.types.DidCreationResult
+    import org.trustweave.trust.types.IssuanceResult
     
     val walletResult = trustWeave.wallet {
         holder("did:key:holder-placeholder")
@@ -113,7 +113,7 @@ fun main() = runBlocking {
 Create a wallet for a holder:
 
 ```kotlin
-import com.trustweave.trust.types.WalletCreationResult
+import org.trustweave.trust.types.WalletCreationResult
 
 val walletResult = trustWeave.wallet {
     holder("did:key:holder")
@@ -510,7 +510,7 @@ println("Tags: ${stats.tagsCount}")
 Wallet operations return sealed results. Always handle errors:
 
 ```kotlin
-import com.trustweave.trust.types.WalletCreationResult
+import org.trustweave.trust.types.WalletCreationResult
 
 val walletResult = trustWeave.wallet {
     holder("did:key:holder")

@@ -750,7 +750,7 @@
     <span class="nf">trust</span> <span class="p">{</span>
         <span class="c1">// ✅ Production: Use database-backed trust registry</span>
         <span class="nf">provider</span><span class="p">(</span><span class="s">"database"</span><span class="p">)</span> <span class="p">{</span>
-            <span class="nf">connectionString</span><span class="p">(</span><span class="s">"jdbc:postgresql://db.example.com/trustweave"</span><span class="p">)</span>
+            <span class="nf">connectionString</span><span class="p">(</span><span class="s">"jdbc:postgresql://db.example.org.trustweave"</span><span class="p">)</span>
             <span class="nf">schema</span><span class="p">(</span><span class="s">"trust_registry"</span><span class="p">)</span>
         <span class="p">}</span>
     <span class="p">}</span>
@@ -946,7 +946,7 @@
 52
 53
 54
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.core.TrustWeaveError</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.core.TrustWeaveError</span>
 <span class="k">import</span> <span class="nn">org.slf4j.LoggerFactory</span>
 
 <span class="k">private</span> <span class="kd">val</span> <span class="py">logger</span> <span class="p">=</span> <span class="nc">LoggerFactory</span><span class="p">.</span><span class="nf">getLogger</span><span class="p">(</span><span class="nc">MyService</span><span class="o">::</span><span class="k">class</span><span class="p">.</span><span class="n">java</span><span class="p">)</span>
@@ -1111,7 +1111,7 @@
 9
 </pre></td><td class="rouge-code"><pre><span class="c1">// Configure connection pool</span>
 <span class="kd">val</span> <span class="py">dataSource</span> <span class="p">=</span> <span class="nc">HikariDataSource</span><span class="p">().</span><span class="nf">apply</span> <span class="p">{</span>
-    <span class="n">jdbcUrl</span> <span class="p">=</span> <span class="s">"jdbc:postgresql://db.example.com/trustweave"</span>
+    <span class="n">jdbcUrl</span> <span class="p">=</span> <span class="s">"jdbc:postgresql://db.example.org.trustweave"</span>
     <span class="n">maximumPoolSize</span> <span class="p">=</span> <span class="mi">20</span>
     <span class="n">minimumIdle</span> <span class="p">=</span> <span class="mi">5</span>
     <span class="n">connectionTimeout</span> <span class="p">=</span> <span class="mi">30000</span>

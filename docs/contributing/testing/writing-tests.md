@@ -13,7 +13,7 @@ This guide explains how to write tests for TrustWeave plugins and components.
 Use `BasePluginTest` for unit tests:
 
 ```kotlin
-import com.trustweave.testkit.BasePluginTest
+import org.trustweave.testkit.BasePluginTest
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
@@ -33,7 +33,7 @@ class MyPluginTest : BasePluginTest() {
 Use `BaseIntegrationTest` for integration tests:
 
 ```kotlin
-import com.trustweave.testkit.BaseIntegrationTest
+import org.trustweave.testkit.BaseIntegrationTest
 import org.junit.jupiter.api.Tag
 import org.testcontainers.junit.jupiter.Testcontainers
 

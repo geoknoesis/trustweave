@@ -799,8 +799,8 @@ Learn common usage patterns and best practices for TrustWeave.</p>
 129
 </pre></td><td class="rouge-code"><pre><span class="k">package</span> <span class="nn">com.example.patterns.workflow</span>
 
-<span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.*</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.buildJsonObject</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.put</span>
@@ -1086,8 +1086,8 @@ Learn common usage patterns and best practices for TrustWeave.</p>
 88
 </pre></td><td class="rouge-code"><pre><span class="k">package</span> <span class="nn">com.example.patterns.batch</span>
 
-<span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.*</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
@@ -1118,8 +1118,8 @@ Learn common usage patterns and best practices for TrustWeave.</p>
     <span class="p">}</span>
 
     <span class="c1">// Batch credential creation</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.DidCreationResult</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.IssuanceResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.DidCreationResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.IssuanceResult</span>
     
     <span class="kd">val</span> <span class="py">credentials</span> <span class="p">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">..</span><span class="mi">10</span><span class="p">).</span><span class="nf">mapAsync</span> <span class="p">{</span> <span class="n">index</span> <span class="p">-&gt;</span>
         <span class="nf">runCatching</span> <span class="p">{</span>
@@ -1251,15 +1251,15 @@ Learn common usage patterns and best practices for TrustWeave.</p>
 58
 </pre></td><td class="rouge-code"><pre><span class="k">package</span> <span class="nn">com.example.patterns.recovery</span>
 
-<span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.*</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
     <span class="kd">val</span> <span class="py">TrustWeave</span> <span class="p">=</span> <span class="nc">TrustWeave</span><span class="p">.</span><span class="nf">create</span><span class="p">()</span>
 
     <span class="c1">// Pattern: Try multiple DID methods with fallback</span>
-    <span class="k">import</span> <span class="nn">com.trustweave.trust.types.DidCreationResult</span>
+    <span class="k">import</span> <span class="nn">org.trustweave.trust.types.DidCreationResult</span>
     
     <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">createDidWithFallback</span><span class="p">(</span><span class="n">methods</span><span class="p">:</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">String</span><span class="p">&gt;):</span> <span class="nc">Did</span><span class="p">?</span> <span class="p">{</span>
         <span class="k">for</span> <span class="p">(</span><span class="n">method</span> <span class="k">in</span> <span class="n">methods</span><span class="p">)</span> <span class="p">{</span>
@@ -1463,10 +1463,10 @@ Learn common usage patterns and best practices for TrustWeave.</p>
 134
 </pre></td><td class="rouge-code"><pre><span class="k">package</span> <span class="nn">com.example.patterns.lifecycle</span>
 
-<span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.PresentationOptions</span>
-<span class="k">import</span> <span class="nn">com.trustweave.spi.services.WalletCreationOptionsBuilder</span>
+<span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.PresentationOptions</span>
+<span class="k">import</span> <span class="nn">org.trustweave.spi.services.WalletCreationOptionsBuilder</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.buildJsonObject</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.put</span>
@@ -1698,11 +1698,11 @@ Learn common usage patterns and best practices for TrustWeave.</p>
 80
 </pre></td><td class="rouge-code"><pre><span class="k">package</span> <span class="nn">com.example.patterns.multichain</span>
 
-<span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.anchor.BlockchainAnchorRegistry</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.models.VerifiableCredential</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient</span>
+<span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.anchor.BlockchainAnchorRegistry</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.models.VerifiableCredential</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.Json</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.encodeToJsonElement</span>
@@ -1919,9 +1919,9 @@ Learn common usage patterns and best practices for TrustWeave.</p>
 121
 </pre></td><td class="rouge-code"><pre><span class="k">package</span> <span class="nn">com.example.patterns.organization</span>
 
-<span class="k">import</span> <span class="nn">com.trustweave.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.spi.services.WalletCreationOptionsBuilder</span>
+<span class="k">import</span> <span class="nn">org.trustweave.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.spi.services.WalletCreationOptionsBuilder</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.buildJsonObject</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.put</span>

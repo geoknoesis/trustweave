@@ -738,7 +738,7 @@
 └── src/
     ├── main/
     │   └── kotlin/
-    │       └── com/trustweave/didcomm/
+    │       └── org.trustweave/didcomm/
     │           ├── crypto/
     │           │   └── DidCommCrypto.kt
     │           ├── models/
@@ -760,7 +760,7 @@
     │           └── DidCommService.kt
     └── test/
         └── kotlin/
-            └── com/trustweave/didcomm/
+            └── org.trustweave/didcomm/
                 └── DidCommServiceTest.kt
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 <h2 id="supported-protocols">
@@ -880,9 +880,9 @@
 21
 22
 23
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.didcomm.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.didcomm.protocol.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.testkit.InMemoryKeyManagementService</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.didcomm.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.didcomm.protocol.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.testkit.InMemoryKeyManagementService</span>
 
 <span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
 <span class="kd">val</span> <span class="py">resolveDid</span><span class="p">:</span> <span class="k">suspend</span> <span class="p">(</span><span class="nc">String</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="nc">DidDocument</span><span class="p">?</span> <span class="p">=</span> <span class="p">{</span> <span class="cm">/* resolve DID */</span> <span class="p">}</span>

@@ -23,8 +23,8 @@ Key management covers the generation, storage, rotation, and usage of cryptograp
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -50,7 +50,7 @@ Built-in providers include the in-memory test Key Management Service (KMS) and t
 ### Example: checking algorithm support
 
 ```kotlin
-import com.trustweave.kms.*
+import org.trustweave.kms.*
 
 suspend fun checkKmsCapabilities(kms: KeyManagementService) {
     // Get all supported algorithms
@@ -72,7 +72,7 @@ suspend fun checkKmsCapabilities(kms: KeyManagementService) {
 ### Example: generating and using keys
 
 ```kotlin
-import com.trustweave.kms.*
+import org.trustweave.kms.*
 
 suspend fun issueSignerKey(kms: KeyManagementService): KeyId? {
     // Type-safe algorithm usage with Result-based API (recommended)
@@ -114,8 +114,8 @@ suspend fun signDigest(kms: KeyManagementService, keyId: KeyId, digest: ByteArra
 ### Example: wallet-level key generation
 
 ```kotlin
-import com.trustweave.kms.*
-import com.trustweave.kms.results.*
+import org.trustweave.kms.*
+import org.trustweave.kms.results.*
 
 val keyResult = wallet.withKeyManagement { keys ->
     keys.generateKey(Algorithm.Ed25519, mapOf(
@@ -201,8 +201,8 @@ TrustWeave provides built-in algorithm validation to ensure that the algorithm s
 **Algorithm validation is built into the Result-based API:**
 
 ```kotlin
-import com.trustweave.kms.*
-import com.trustweave.kms.results.*
+import org.trustweave.kms.*
+import org.trustweave.kms.results.*
 
 // Get key and validate algorithm
 val publicKeyResult = kms.getPublicKey(keyId)
@@ -250,7 +250,7 @@ when (sign) {
 |--------|----------|----------------------|-------|
 | `TrustWeave-testkit` | `InMemoryKeyManagementService` | Ed25519, secp256k1 | Ideal for unit tests; stores keys in-memory. |
 | `kms/plugins/waltid` | `WaltIdKeyManagementService` | Ed25519, secp256k1, P-256, P-384, P-521 | Uses walt.id crypto to generate and sign keys. |
-| Community | SPI implementations | Varies by provider | Register via `META-INF/services/com.trustweave.kms.spi.KeyManagementServiceProvider`. |
+| Community | SPI implementations | Varies by provider | Register via `META-INF/services/org.trustweave.kms.spi.KeyManagementServiceProvider`. |
 
 To use a custom provider, include it on the classpath and TrustWeave will discover it automatically when building the facade (`TrustWeave.create { keys { provider("custom") } }`).
 
@@ -259,7 +259,7 @@ To use a custom provider, include it on the classpath and TrustWeave will discov
 You can discover which providers support specific algorithms:
 
 ```kotlin
-import com.trustweave.kms.*
+import org.trustweave.kms.*
 
 // Discover all providers and their algorithms
 val providers = AlgorithmDiscovery.discoverProviders()
@@ -283,9 +283,9 @@ val kms = AlgorithmDiscovery.createProviderFor(
 Use `KmsOptionKeys` constants for type-safe option keys:
 
 ```kotlin
-import com.trustweave.kms.*
-import com.trustweave.kms.KmsOptionKeys
-import com.trustweave.kms.results.*
+import org.trustweave.kms.*
+import org.trustweave.kms.KmsOptionKeys
+import org.trustweave.kms.results.*
 
 val result = wallet.withKeyManagement { kms ->
     kms.generateKey(Algorithm.Ed25519, mapOf(
@@ -331,7 +331,7 @@ Presentation workflows follow the same pattern when creating verifiable presenta
 Create a module that implements `KeyManagementServiceProvider`:
 
 ```kotlin
-import com.trustweave.kms.*
+import org.trustweave.kms.*
 
 class VaultKmsProvider : KeyManagementServiceProvider {
     override val name = "vault"
@@ -392,7 +392,7 @@ class VaultKms(private val options: Map<String, Any?>) : KeyManagementService {
 }
 ```
 
-Add `META-INF/services/com.trustweave.kms.spi.KeyManagementServiceProvider` containing the provider's fully qualified class name. After that, `TrustWeaveDefaults` can pick it up automatically.
+Add `META-INF/services/org.trustweave.kms.spi.KeyManagementServiceProvider` containing the provider's fully qualified class name. After that, `TrustWeaveDefaults` can pick it up automatically.
 
 **Important:** All providers MUST implement `supportedAlgorithms` and all KMS instances MUST implement `getSupportedAlgorithms()`.
 

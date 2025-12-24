@@ -732,8 +732,8 @@
 84
 85
 86
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
 
 <span class="kd">class</span> <span class="nc">MyCustomDidMethod</span><span class="p">(</span>
     <span class="k">private</span> <span class="kd">val</span> <span class="py">kms</span><span class="p">:</span> <span class="nc">KeyManagementService</span><span class="p">,</span>
@@ -855,8 +855,8 @@
 25
 26
 27
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.spi.DidMethodProvider</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.spi.DidMethodProvider</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.*</span>
 
 <span class="kd">class</span> <span class="nc">MyDidMethodProvider</span> <span class="p">:</span> <span class="nc">DidMethodProvider</span> <span class="p">{</span>
     <span class="k">override</span> <span class="kd">val</span> <span class="py">name</span><span class="p">:</span> <span class="nc">String</span> <span class="p">=</span> <span class="s">"my-did-method"</span>
@@ -892,7 +892,7 @@
 </h3>
     
 
-<p>Create service file at <code class="language-plaintext highlighter-rouge">src/main/resources/META-INF/services/com.trustweave.did.spi.DidMethodProvider</code>:</p>
+<p>Create service file at <code class="language-plaintext highlighter-rouge">src/main/resources/META-INF/services/org.trustweave.did.spi.DidMethodProvider</code>:</p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 </pre></td><td class="rouge-code"><pre>com.example.MyDidMethodProvider
@@ -961,7 +961,7 @@
 45
 46
 47
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.anchor.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.anchor.*</span>
 
 <span class="kd">class</span> <span class="nc">MyBlockchainAnchorClient</span><span class="p">(</span>
     <span class="k">override</span> <span class="kd">val</span> <span class="py">chainId</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>
@@ -1036,8 +1036,8 @@
 16
 17
 18
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.anchor.spi.BlockchainAnchorClientProvider</span>
-<span class="k">import</span> <span class="nn">com.trustweave.anchor.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.anchor.spi.BlockchainAnchorClientProvider</span>
+<span class="k">import</span> <span class="nn">org.trustweave.anchor.*</span>
 
 <span class="kd">class</span> <span class="nc">MyBlockchainAdapterProvider</span> <span class="p">:</span> <span class="nc">BlockchainAnchorClientProvider</span> <span class="p">{</span>
     <span class="k">override</span> <span class="kd">val</span> <span class="py">name</span><span class="p">:</span> <span class="nc">String</span> <span class="p">=</span> <span class="s">"my-blockchain"</span>
@@ -1064,7 +1064,7 @@
 </h3>
     
 
-<p>Create service file at <code class="language-plaintext highlighter-rouge">src/main/resources/META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider</code>:</p>
+<p>Create service file at <code class="language-plaintext highlighter-rouge">src/main/resources/META-INF/services/org.trustweave.anchor.spi.BlockchainAnchorClientProvider</code>:</p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 </pre></td><td class="rouge-code"><pre>com.example.MyBlockchainAdapterProvider
@@ -1139,7 +1139,7 @@
 51
 52
 53
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
 
 <span class="kd">class</span> <span class="nc">MyKeyManagementService</span><span class="p">(</span>
     <span class="k">private</span> <span class="kd">val</span> <span class="py">config</span><span class="p">:</span> <span class="nc">MyKmsConfig</span>
@@ -1218,8 +1218,8 @@
 14
 15
 16
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.spi.KeyManagementServiceProvider</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.spi.KeyManagementServiceProvider</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
 
 <span class="kd">class</span> <span class="nc">MyKmsProvider</span> <span class="p">:</span> <span class="nc">KeyManagementServiceProvider</span> <span class="p">{</span>
     <span class="k">override</span> <span class="kd">val</span> <span class="py">name</span><span class="p">:</span> <span class="nc">String</span> <span class="p">=</span> <span class="s">"my-kms"</span>
@@ -1244,7 +1244,7 @@
 </h3>
     
 
-<p>Create service file at <code class="language-plaintext highlighter-rouge">src/main/resources/META-INF/services/com.trustweave.kms.spi.KeyManagementServiceProvider</code>:</p>
+<p>Create service file at <code class="language-plaintext highlighter-rouge">src/main/resources/META-INF/services/org.trustweave.kms.spi.KeyManagementServiceProvider</code>:</p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><div class="table-wrapper"><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 </pre></td><td class="rouge-code"><pre>com.example.MyKmsProvider
@@ -1285,7 +1285,7 @@
 17
 18
 19
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.*</span>
 <span class="k">import</span> <span class="nn">kotlin.test.Test</span>
 <span class="k">import</span> <span class="nn">kotlin.test.assertNotNull</span>
 
@@ -1330,7 +1330,7 @@
 14
 15
 16
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.*</span>
 <span class="k">import</span> <span class="nn">kotlin.test.Test</span>
 
 <span class="kd">class</span> <span class="nc">MyBlockchainAdapterIntegrationTest</span> <span class="p">{</span>
@@ -1381,7 +1381,7 @@
 13
 14
 15
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveError</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.core.exception.TrustWeaveError</span>
 <span class="k">import</span> <span class="nn">kotlin.Result</span>
 
 <span class="k">suspend</span> <span class="k">fun</span> <span class="nf">createDid</span><span class="p">(</span><span class="n">options</span><span class="p">:</span> <span class="nc">DidCreationOptions</span><span class="p">):</span> <span class="nc">Result</span><span class="p">&lt;</span><span class="nc">DidDocument</span><span class="p">&gt;</span> <span class="p">{</span>
@@ -1477,7 +1477,7 @@
 25
 26
 27
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.spi.PluginLifecycle</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.spi.PluginLifecycle</span>
 
 <span class="kd">class</span> <span class="nc">MyBlockchainAnchorClient</span><span class="p">(</span>
     <span class="k">override</span> <span class="kd">val</span> <span class="py">chainId</span><span class="p">:</span> <span class="nc">String</span><span class="p">,</span>

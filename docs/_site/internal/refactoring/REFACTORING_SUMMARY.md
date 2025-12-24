@@ -64,15 +64,15 @@ This aligns with W3C DID Core specification requirements.
 ## Files Modified
 
 ### Main Source (5 files)
-1. `did/did-core/src/main/kotlin/com/trustweave/did/identifiers/DidIdentifiers.kt`
-2. `did/did-core/src/main/kotlin/com/trustweave/did/identifiers/DidIdentifiersExtensions.kt`
-3. `did/did-core/src/main/kotlin/com/trustweave/did/resolver/RegistryBasedResolver.kt`
-4. `did/did-core/src/main/kotlin/com/trustweave/did/verifier/DidDocumentDelegationVerifier.kt`
-5. `did/did-core/src/main/kotlin/com/trustweave/did/resolver/DefaultUniversalResolver.kt`
+1. `did/did-core/src/main/kotlin/org.trustweave/did/identifiers/DidIdentifiers.kt`
+2. `did/did-core/src/main/kotlin/org.trustweave/did/identifiers/DidIdentifiersExtensions.kt`
+3. `did/did-core/src/main/kotlin/org.trustweave/did/resolver/RegistryBasedResolver.kt`
+4. `did/did-core/src/main/kotlin/org.trustweave/did/verifier/DidDocumentDelegationVerifier.kt`
+5. `did/did-core/src/main/kotlin/org.trustweave/did/resolver/DefaultUniversalResolver.kt`
 
 ### Other Modules (2 files)
-6. `credentials/credential-api/src/main/kotlin/com/trustweave/credential/identifiers/CredentialIdentifiers.kt`
-7. `trust/src/main/kotlin/com/trustweave/trust/dsl/did/DidBuilder.kt`
+6. `credentials/credential-api/src/main/kotlin/org.trustweave/credential/identifiers/CredentialIdentifiers.kt`
+7. `trust/src/main/kotlin/org.trustweave/trust/dsl/did/DidBuilder.kt`
 
 ### Test Files (15 files)
 All test files automatically updated via bulk replace.

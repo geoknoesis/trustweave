@@ -824,7 +824,7 @@
 31
 32
 33
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.awskms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.awskms.*</span>
 
 <span class="c1">// Using IAM Role (Recommended for EC2/ECS/Lambda)</span>
 <span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">AwsKmsConfig</span><span class="p">.</span><span class="nf">builder</span><span class="p">()</span>
@@ -905,7 +905,7 @@
 8
 9
 10
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.KmsOptionKeys</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.KmsOptionKeys</span>
 
 <span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="n">awsProvider</span><span class="p">.</span><span class="nf">create</span><span class="p">(</span><span class="nf">mapOf</span><span class="p">(</span>
     <span class="nc">KmsOptionKeys</span><span class="p">.</span><span class="nc">REGION</span> <span class="n">to</span> <span class="s">"us-east-1"</span><span class="p">,</span>
@@ -940,7 +940,7 @@
 13
 14
 15
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.KmsOptionKeys</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.KmsOptionKeys</span>
 
 <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">kms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span>
     <span class="nc">Algorithm</span><span class="p">.</span><span class="nc">Ed25519</span><span class="p">,</span>
@@ -1027,7 +1027,7 @@
 12
 13
 14
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.azurekms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.azurekms.*</span>
 
 <span class="c1">// Using Managed Identity (Recommended for Azure VMs/App Service/Functions)</span>
 <span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">AzureKmsConfig</span><span class="p">.</span><span class="nf">builder</span><span class="p">()</span>
@@ -1110,7 +1110,7 @@
 11
 12
 13
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.KmsOptionKeys</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.KmsOptionKeys</span>
 
 <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">kms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span>
     <span class="nc">Algorithm</span><span class="p">.</span><span class="nc">P256</span><span class="p">,</span>
@@ -1216,7 +1216,7 @@
 28
 29
 30
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.googlekms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.googlekms.*</span>
 
 <span class="c1">// Using Application Default Credentials (Recommended)</span>
 <span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">GoogleKmsConfig</span><span class="p">.</span><span class="nf">builder</span><span class="p">()</span>
@@ -1318,7 +1318,7 @@
 10
 11
 12
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.KmsOptionKeys</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.KmsOptionKeys</span>
 
 <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">kms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span>
     <span class="nc">Algorithm</span><span class="p">.</span><span class="nc">Ed25519</span><span class="p">,</span>
@@ -1419,7 +1419,7 @@
 23
 24
 25
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.hashicorpkms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.hashicorpkms.*</span>
 
 <span class="c1">// Using Token Authentication (Default)</span>
 <span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">VaultKmsConfig</span><span class="p">.</span><span class="nf">builder</span><span class="p">()</span>
@@ -1508,7 +1508,7 @@
 6
 7
 8
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.KmsOptionKeys</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.KmsOptionKeys</span>
 
 <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">kms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span>
     <span class="nc">Algorithm</span><span class="p">.</span><span class="nc">Ed25519</span><span class="p">,</span>
@@ -1581,7 +1581,7 @@
 5
 6
 7
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.ibm.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.ibm.*</span>
 
 <span class="kd">val</span> <span class="py">config</span> <span class="p">=</span> <span class="nc">IbmKmsConfig</span><span class="p">.</span><span class="nf">builder</span><span class="p">()</span>
     <span class="p">.</span><span class="nf">apiKey</span><span class="p">(</span><span class="s">"your-api-key"</span><span class="p">)</span>
@@ -1653,7 +1653,7 @@
 7
 8
 9
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.KmsOptionKeys</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.KmsOptionKeys</span>
 
 <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">kms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span>
     <span class="nc">Algorithm</span><span class="p">.</span><span class="nc">P256</span><span class="p">,</span>
@@ -1703,7 +1703,7 @@
 2
 3
 4
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.inmemory.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.inmemory.*</span>
 
 <span class="c1">// No configuration needed</span>
 <span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
@@ -1737,7 +1737,7 @@
 6
 7
 8
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.KmsOptionKeys</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.KmsOptionKeys</span>
 
 <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">kms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span>
     <span class="nc">Algorithm</span><span class="p">.</span><span class="nc">Ed25519</span><span class="p">,</span>
@@ -1786,7 +1786,7 @@
 2
 3
 4
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.waltid.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.waltid.*</span>
 
 <span class="c1">// No configuration needed</span>
 <span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="nc">WaltIdKeyManagementService</span><span class="p">()</span>
@@ -1820,7 +1820,7 @@
 6
 7
 8
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.KmsOptionKeys</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.KmsOptionKeys</span>
 
 <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">kms</span><span class="p">.</span><span class="nf">generateKey</span><span class="p">(</span>
     <span class="nc">Algorithm</span><span class="p">.</span><span class="nc">Ed25519</span><span class="p">,</span>
@@ -1876,7 +1876,7 @@
 18
 19
 20
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.spi.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.spi.*</span>
 <span class="k">import</span> <span class="nn">java.util.ServiceLoader</span>
 
 <span class="c1">// Discover all providers</span>
@@ -1954,7 +1954,7 @@
 18
 19
 20
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.KmsOptionKeys</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.KmsOptionKeys</span>
 
 <span class="kd">val</span> <span class="py">options</span> <span class="p">=</span> <span class="nf">mapOf</span><span class="p">(</span>
     <span class="c1">// Key Identification</span>

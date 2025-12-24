@@ -3,7 +3,7 @@ plugins {
     kotlin("plugin.serialization")
 }
 
-group = "com.trustweave.kms"
+group = "org.trustweave.kms"
 // Add waltid maven repositories
 repositories {
     maven("https://maven.waltid.dev/releases")

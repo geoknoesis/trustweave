@@ -698,10 +698,10 @@
 48
 49
 50
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.TrustWeave</span>
-<span class="k">import</span> <span class="nn">com.trustweave.trust.types.Did</span>
-<span class="k">import</span> <span class="nn">com.trustweave.did.resolver.DidResolutionResult</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveException</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.TrustWeave</span>
+<span class="k">import</span> <span class="nn">org.trustweave.trust.types.Did</span>
+<span class="k">import</span> <span class="nn">org.trustweave.did.resolver.DidResolutionResult</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.exception.TrustWeaveException</span>
 <span class="k">import</span> <span class="nn">kotlinx.coroutines.runBlocking</span>
 
 <span class="k">fun</span> <span class="nf">main</span><span class="p">()</span> <span class="p">=</span> <span class="nf">runBlocking</span> <span class="p">{</span>
@@ -1026,7 +1026,7 @@ Key ID: key-1
 21
 22
 23
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.identifiers.Did</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.identifiers.Did</span>
 
 <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="nc">Did</span><span class="p">(</span><span class="s">"did:key:z6Mk..."</span><span class="p">)</span>
 <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">resolveDid</span><span class="p">(</span><span class="n">did</span><span class="p">)</span>
@@ -1072,7 +1072,7 @@ Key ID: key-1
 9
 10
 11
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.identifiers.Did</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.identifiers.Did</span>
 
 <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="nc">Did</span><span class="p">(</span><span class="s">"did:key:example"</span><span class="p">)</span>
 <span class="kd">val</span> <span class="py">updated</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">updateDid</span> <span class="p">{</span>
@@ -1106,7 +1106,7 @@ Key ID: key-1
 9
 10
 11
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.did.identifiers.Did</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.did.identifiers.Did</span>
 
 <span class="c1">// Note: Deactivation depends on the DID method implementation</span>
 <span class="c1">// For did:key, deactivation is typically not supported as it's stateless</span>
@@ -1208,7 +1208,7 @@ Key ID: key-1
 28
 29
 30
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.trust.types.DidCreationResult</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.trust.types.DidCreationResult</span>
 
 <span class="kd">val</span> <span class="py">didResult</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> 
     <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span> 
@@ -1246,7 +1246,7 @@ Key ID: key-1
 2
 3
 4
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.testkit.getOrFail</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.testkit.getOrFail</span>
 
 <span class="kd">val</span> <span class="py">did</span> <span class="p">=</span> <span class="n">trustWeave</span><span class="p">.</span><span class="nf">createDid</span> <span class="p">{</span> <span class="nf">method</span><span class="p">(</span><span class="s">"key"</span><span class="p">)</span> <span class="p">}.</span><span class="nf">getOrFail</span><span class="p">()</span>
 <span class="c1">// Throws AssertionError on failure (suitable for tests/examples only)</span>

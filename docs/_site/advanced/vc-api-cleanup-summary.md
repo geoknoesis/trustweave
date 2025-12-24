@@ -34,22 +34,22 @@
 
 ### Files Removed ✅
 
-- `credentials/credential-api/src/main/kotlin/com/trustweave/credential/exchange/options/ExchangeOptionsExtensions.kt`
+- `credentials/credential-api/src/main/kotlin/org.trustweave/credential/exchange/options/ExchangeOptionsExtensions.kt`
 
 ### Files Updated ✅
 
-- `credentials/plugins/didcomm/src/main/kotlin/com/trustweave/credential/didcomm/protocol/util/CredentialSerialization.kt`
+- `credentials/plugins/didcomm/src/main/kotlin/org.trustweave/credential/didcomm/protocol/util/CredentialSerialization.kt`
   - Removed deprecated `Credential.toJsonObject()` method
   - Kept only VC type serialization
 
-- `credentials/credential-api/src/main/kotlin/com/trustweave/credential/spi/proof/ProofAdapter.kt`
+- `credentials/credential-api/src/main/kotlin/org.trustweave/credential/spi/proof/ProofAdapter.kt`
   - Removed deprecated `derivePresentation()` method
 
-- `credentials/credential-api/src/main/kotlin/com/trustweave/credential/proof/ProofAdapters.kt`
+- `credentials/credential-api/src/main/kotlin/org.trustweave/credential/proof/ProofAdapters.kt`
   - Updated to use `CredentialFormatId` throughout
   - Renamed method: `autoRegisterFormats()` → `autoRegisterFormatIds()`
 
-- `credentials/credential-api/src/main/kotlin/com/trustweave/credential/CredentialServices.kt`
+- `credentials/credential-api/src/main/kotlin/org.trustweave/credential/CredentialServices.kt`
   - Updated to use `CredentialFormatId` instead of `CredentialFormat`
 
 ### Remaining Valid Types

@@ -88,10 +88,10 @@ Always include complete imports at the top of examples:
 
 ```kotlin
 // TrustWeave imports
-import com.trustweave.TrustWeave
-import com.trustweave.core.*
-import com.trustweave.did.*
-import com.trustweave.credential.models.VerifiableCredential
+import org.trustweave.TrustWeave
+import org.trustweave.core.*
+import org.trustweave.did.*
+import org.trustweave.credential.models.VerifiableCredential
 
 // Kotlinx imports
 import kotlinx.coroutines.runBlocking
@@ -252,9 +252,9 @@ val testDid = TrustWeave.createDid().getOrThrow()
 package com.example.TrustWeave.example
 
 // TrustWeave imports
-import com.trustweave.TrustWeave
-import com.trustweave.core.*
-import com.trustweave.did.*
+import org.trustweave.TrustWeave
+import org.trustweave.core.*
+import org.trustweave.did.*
 
 // Kotlinx imports
 import kotlinx.coroutines.runBlocking

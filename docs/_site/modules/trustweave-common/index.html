@@ -632,7 +632,7 @@
 <h3 id="plugin-infrastructure-comtrustweavecoreplugin">
   
   
-    <a href="#plugin-infrastructure-comtrustweavecoreplugin" class="anchor-heading" aria-labelledby="plugin-infrastructure-comtrustweavecoreplugin"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Plugin Infrastructure (<code class="language-plaintext highlighter-rouge">com.trustweave.core.plugin</code>)
+    <a href="#plugin-infrastructure-comtrustweavecoreplugin" class="anchor-heading" aria-labelledby="plugin-infrastructure-comtrustweavecoreplugin"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Plugin Infrastructure (<code class="language-plaintext highlighter-rouge">org.trustweave.core.plugin</code>)
   
   
 </h3>
@@ -648,7 +648,7 @@
 <h3 id="error-handling-comtrustweavecoreexception">
   
   
-    <a href="#error-handling-comtrustweavecoreexception" class="anchor-heading" aria-labelledby="error-handling-comtrustweavecoreexception"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Error Handling (<code class="language-plaintext highlighter-rouge">com.trustweave.core.exception</code>)
+    <a href="#error-handling-comtrustweavecoreexception" class="anchor-heading" aria-labelledby="error-handling-comtrustweavecoreexception"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Error Handling (<code class="language-plaintext highlighter-rouge">org.trustweave.core.exception</code>)
   
   
 </h3>
@@ -668,7 +668,7 @@
 <h3 id="utilities-comtrustweavecoreutil">
   
   
-    <a href="#utilities-comtrustweavecoreutil" class="anchor-heading" aria-labelledby="utilities-comtrustweavecoreutil"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Utilities (<code class="language-plaintext highlighter-rouge">com.trustweave.core.util</code>)
+    <a href="#utilities-comtrustweavecoreutil" class="anchor-heading" aria-labelledby="utilities-comtrustweavecoreutil"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Utilities (<code class="language-plaintext highlighter-rouge">org.trustweave.core.util</code>)
   
   
 </h3>
@@ -682,8 +682,8 @@
 
 <p><strong>Note:</strong> Domain-specific validators (DID, Chain ID) are in their respective domain modules:</p>
 <ul>
-  <li>DID validation → <code class="language-plaintext highlighter-rouge">com.trustweave.did.validation.DidValidator</code></li>
-  <li>Chain ID validation → <code class="language-plaintext highlighter-rouge">com.trustweave.anchor.validation.ChainIdValidator</code></li>
+  <li>DID validation → <code class="language-plaintext highlighter-rouge">org.trustweave.did.validation.DidValidator</code></li>
+  <li>Chain ID validation → <code class="language-plaintext highlighter-rouge">org.trustweave.anchor.validation.ChainIdValidator</code></li>
 </ul>
 
 <p>Add the module alongside any DID/KMS components you require:</p>
@@ -692,7 +692,7 @@
 2
 3
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
@@ -739,9 +739,9 @@
 39
 40
 41
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.core.plugin.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.exception.TrustWeaveError</span>
-<span class="k">import</span> <span class="nn">com.trustweave.core.util.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.core.plugin.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.exception.TrustWeaveError</span>
+<span class="k">import</span> <span class="nn">org.trustweave.core.util.*</span>
 
 <span class="c1">// Register a plugin</span>
 <span class="kd">val</span> <span class="py">metadata</span> <span class="p">=</span> <span class="nc">PluginMetadata</span><span class="p">(</span>
@@ -824,13 +824,13 @@
 <p>The <code class="language-plaintext highlighter-rouge">trustweave-common</code> module is organized into logical packages:</p>
 
 <ul>
-  <li><strong><code class="language-plaintext highlighter-rouge">com.trustweave.core.exception</code></strong> – Exception types and error handling
+  <li><strong><code class="language-plaintext highlighter-rouge">org.trustweave.core.exception</code></strong> – Exception types and error handling
     <ul>
       <li><code class="language-plaintext highlighter-rouge">TrustWeaveException</code>, <code class="language-plaintext highlighter-rouge">NotFoundException</code>, <code class="language-plaintext highlighter-rouge">InvalidOperationException</code></li>
       <li><code class="language-plaintext highlighter-rouge">TrustWeaveError</code> (sealed class hierarchy with 13+ specific error types)</li>
     </ul>
   </li>
-  <li><strong><code class="language-plaintext highlighter-rouge">com.trustweave.core.plugin</code></strong> – Plugin infrastructure
+  <li><strong><code class="language-plaintext highlighter-rouge">org.trustweave.core.plugin</code></strong> – Plugin infrastructure
     <ul>
       <li><code class="language-plaintext highlighter-rouge">PluginRegistry</code> (thread-safe, capability-based discovery)</li>
       <li><code class="language-plaintext highlighter-rouge">PluginMetadata</code>, <code class="language-plaintext highlighter-rouge">PluginCapabilities</code> (domain-agnostic)</li>
@@ -839,7 +839,7 @@
       <li><code class="language-plaintext highlighter-rouge">PluginLifecycle</code> (lifecycle management)</li>
     </ul>
   </li>
-  <li><strong><code class="language-plaintext highlighter-rouge">com.trustweave.core.util</code></strong> – General utilities
+  <li><strong><code class="language-plaintext highlighter-rouge">org.trustweave.core.util</code></strong> – General utilities
     <ul>
       <li><code class="language-plaintext highlighter-rouge">DigestUtils</code> (JSON canonicalization and SHA-256 digest computation)</li>
       <li><code class="language-plaintext highlighter-rouge">ResultExtensions</code> (Result<T> extension functions)</T></li>
@@ -851,10 +851,10 @@
 
 <p><strong>Note:</strong> Domain-specific components are in their respective modules:</p>
 <ul>
-  <li>DID validation → <code class="language-plaintext highlighter-rouge">com.trustweave.did.validation.DidValidator</code> (in <code class="language-plaintext highlighter-rouge">trustweave-did</code>)</li>
-  <li>Chain ID validation → <code class="language-plaintext highlighter-rouge">com.trustweave.anchor.validation.ChainIdValidator</code> (in <code class="language-plaintext highlighter-rouge">trustweave-anchor</code>)</li>
-  <li>Credential errors → <code class="language-plaintext highlighter-rouge">com.trustweave.credential.exception.CredentialError</code> (in <code class="language-plaintext highlighter-rouge">trustweave-credentials</code>)</li>
-  <li>Proof types → <code class="language-plaintext highlighter-rouge">com.trustweave.credential.proof.ProofType</code> (in <code class="language-plaintext highlighter-rouge">trustweave-credentials</code>)</li>
+  <li>DID validation → <code class="language-plaintext highlighter-rouge">org.trustweave.did.validation.DidValidator</code> (in <code class="language-plaintext highlighter-rouge">trustweave-did</code>)</li>
+  <li>Chain ID validation → <code class="language-plaintext highlighter-rouge">org.trustweave.anchor.validation.ChainIdValidator</code> (in <code class="language-plaintext highlighter-rouge">trustweave-anchor</code>)</li>
+  <li>Credential errors → <code class="language-plaintext highlighter-rouge">org.trustweave.credential.exception.CredentialError</code> (in <code class="language-plaintext highlighter-rouge">trustweave-credentials</code>)</li>
+  <li>Proof types → <code class="language-plaintext highlighter-rouge">org.trustweave.credential.proof.ProofType</code> (in <code class="language-plaintext highlighter-rouge">trustweave-credentials</code>)</li>
 </ul>
 
           

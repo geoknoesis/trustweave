@@ -20,10 +20,10 @@ All credential exchange operations throw structured exceptions from the `Exchang
 All exchange-related exceptions extend `ExchangeException`, which extends `TrustWeaveException`. Plugin-specific exceptions are located in their respective plugin modules:
 
 ```kotlin
-import com.trustweave.credential.exchange.exception.ExchangeException
-import com.trustweave.credential.didcomm.exception.DidCommException
-import com.trustweave.credential.oidc4vci.exception.Oidc4VciException
-import com.trustweave.credential.chapi.exception.ChapiException
+import org.trustweave.credential.exchange.exception.ExchangeException
+import org.trustweave.credential.didcomm.exception.DidCommException
+import org.trustweave.credential.oidc4vci.exception.Oidc4VciException
+import org.trustweave.credential.chapi.exception.ChapiException
 
 try {
     val offer = registry.offerCredential("didcomm", request)
@@ -266,7 +266,7 @@ try {
 DIDComm-specific exceptions are located in the `didcomm` plugin module and extend `ExchangeException`:
 
 ```kotlin
-import com.trustweave.credential.didcomm.exception.DidCommException
+import org.trustweave.credential.didcomm.exception.DidCommException
 ```
 
 #### DidCommException.EncryptionFailed
@@ -284,7 +284,7 @@ import com.trustweave.credential.didcomm.exception.DidCommException
 
 **Code example:**
 ```kotlin
-import com.trustweave.credential.didcomm.exception.DidCommException
+import org.trustweave.credential.didcomm.exception.DidCommException
 
 try {
     val offer = registry.offerCredential("didcomm", request)
@@ -331,7 +331,7 @@ try {
 
 **Code example:**
 ```kotlin
-import com.trustweave.credential.didcomm.exception.DidCommException
+import org.trustweave.credential.didcomm.exception.DidCommException
 
 try {
     val message = didCommService.unpack(encryptedMessage)
@@ -391,7 +391,7 @@ try {
 OIDC4VCI-specific exceptions are located in the `oidc4vci` plugin module and extend `ExchangeException`:
 
 ```kotlin
-import com.trustweave.credential.oidc4vci.exception.Oidc4VciException
+import org.trustweave.credential.oidc4vci.exception.Oidc4VciException
 ```
 
 #### Oidc4VciException.HttpRequestFailed
@@ -409,7 +409,7 @@ import com.trustweave.credential.oidc4vci.exception.Oidc4VciException
 
 **Code example:**
 ```kotlin
-import com.trustweave.credential.oidc4vci.exception.Oidc4VciException
+import org.trustweave.credential.oidc4vci.exception.Oidc4VciException
 
 try {
     val offer = registry.offerCredential("oidc4vci", request)
@@ -455,7 +455,7 @@ try {
 
 **Code example:**
 ```kotlin
-import com.trustweave.credential.oidc4vci.exception.Oidc4VciException
+import org.trustweave.credential.oidc4vci.exception.Oidc4VciException
 
 try {
     val token = oidc4vciService.exchangeToken(authorizationCode)
@@ -482,7 +482,7 @@ try {
 
 **Code example:**
 ```kotlin
-import com.trustweave.credential.oidc4vci.exception.Oidc4VciException
+import org.trustweave.credential.oidc4vci.exception.Oidc4VciException
 
 try {
     val metadata = oidc4vciService.fetchCredentialIssuerMetadata(issuerUrl)
@@ -509,7 +509,7 @@ try {
 
 **Code example:**
 ```kotlin
-import com.trustweave.credential.oidc4vci.exception.Oidc4VciException
+import org.trustweave.credential.oidc4vci.exception.Oidc4VciException
 
 try {
     val credential = oidc4vciService.requestCredential(accessToken, credentialOffer)
@@ -936,8 +936,8 @@ val offer = registry.offerCredential("didcomm", request)
 ### Pattern 2: Try-Catch with Specific Handling
 
 ```kotlin
-import com.trustweave.credential.exchange.exception.ExchangeException
-import com.trustweave.credential.didcomm.exception.DidCommException
+import org.trustweave.credential.exchange.exception.ExchangeException
+import org.trustweave.credential.didcomm.exception.DidCommException
 
 try {
     val offer = registry.offerCredential("didcomm", request)
@@ -1137,7 +1137,7 @@ The `ExchangeExceptionRecovery` object provides comprehensive error recovery uti
 ### Automatic Retry with Exponential Backoff
 
 ```kotlin
-import com.trustweave.credential.exchange.exception.retryExchangeOperation
+import org.trustweave.credential.exchange.exception.retryExchangeOperation
 
 // Automatically retries on transient errors
 val offer = retryExchangeOperation(maxRetries = 3) {
@@ -1148,7 +1148,7 @@ val offer = retryExchangeOperation(maxRetries = 3) {
 ### Error Classification
 
 ```kotlin
-import com.trustweave.credential.exchange.exception.ExchangeExceptionRecovery
+import org.trustweave.credential.exchange.exception.ExchangeExceptionRecovery
 
 val exception: ExchangeException = // ... get exception
 
@@ -1184,7 +1184,7 @@ val result = ExchangeExceptionRecovery.tryAlternativeProtocol(
 ### Companion Object Helpers
 
 ```kotlin
-import com.trustweave.credential.exchange.exception.ExchangeException
+import org.trustweave.credential.exchange.exception.ExchangeException
 
 // Use companion object for convenience
 if (ExchangeException.isRetryable(exception)) {

@@ -22,10 +22,10 @@ Add the did:web module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave.did:web:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.did:web:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.did:base:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -36,9 +36,9 @@ dependencies {
 The did:web provider can be configured via options or automatically discovered via SPI:
 
 ```kotlin
-import com.trustweave.did.*
-import com.trustweave.webdid.*
-import com.trustweave.kms.*
+import org.trustweave.did.*
+import org.trustweave.webdid.*
+import org.trustweave.kms.*
 import okhttp3.OkHttpClient
 
 // Manual creation
@@ -54,7 +54,7 @@ val method = WebDidMethod(kms, httpClient, config)
 When the module is on the classpath, did:web is automatically available:
 
 ```kotlin
-import com.trustweave.did.*
+import org.trustweave.did.*
 import java.util.ServiceLoader
 
 // Discover did:web provider
@@ -91,8 +91,8 @@ println("Created: ${document.id}") // did:web:example.com
 ### Resolving a did:web
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
-import com.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.resolver.DidResolutionResult
 
 val did = Did("did:web:example.com")
 val result = method.resolveDid(did)
@@ -126,7 +126,7 @@ val document = method.createDid(options)
 ### Updating a did:web
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 val did = Did("did:web:example.com")
 val document = method.updateDid(did) { currentDoc ->
@@ -143,7 +143,7 @@ val document = method.updateDid(did) { currentDoc ->
 ### Deactivating a did:web
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 val did = Did("did:web:example.com")
 val deactivated = method.deactivateDid(did)
@@ -229,9 +229,9 @@ s3Client.putObject(
 ## Integration with TrustWeave
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.webdid.WebDidMethod
-import com.trustweave.webdid.WebDidConfig
+import org.trustweave.TrustWeave
+import org.trustweave.webdid.WebDidMethod
+import org.trustweave.webdid.WebDidConfig
 
 val TrustWeave = TrustWeave.create {
     kms = InMemoryKeyManagementService()

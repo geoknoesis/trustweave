@@ -139,13 +139,13 @@ flowchart TD
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Test kit for in-memory implementations
-    testImplementation("com.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
 
     // Optional: Algorand adapter for real blockchain anchoring
-    implementation("com.trustweave.chains:algorand:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.chains:algorand:1.0.0-SNAPSHOT")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -162,9 +162,9 @@ Here's a complete SOC2 compliance workflow:
 ```kotlin
 package com.example.soc2.compliance
 
-import com.trustweave.TrustWeave
-import com.trustweave.core.*
-import com.trustweave.json.DigestUtils
+import org.trustweave.TrustWeave
+import org.trustweave.core.*
+import org.trustweave.json.DigestUtils
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import java.time.Instant
@@ -188,7 +188,7 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for organization, employees, and auditors
-    import com.trustweave.trust.types.DidCreationResult
+    import org.trustweave.trust.types.DidCreationResult
     
     val organizationDidResult = trustWeave.createDid { method(KEY) }
     val organizationDid = when (organizationDidResult) {
@@ -248,7 +248,7 @@ fun main() = runBlocking {
         ?: throw IllegalStateException("No verification method found")
 
     // Admin access credential
-    import com.trustweave.trust.types.IssuanceResult
+    import org.trustweave.trust.types.IssuanceResult
     
     val adminAccessCredentialResult = trustWeave.issue {
         credential {

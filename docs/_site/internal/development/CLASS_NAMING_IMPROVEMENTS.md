@@ -10,7 +10,7 @@ This document summarizes the class naming improvements made to ensure all names 
 
 ### 1. Renamed `VerificationPresets` → `VerificationOptionPresets`
 
-**File:** `credentials/credential-api/src/main/kotlin/com/trustweave/credential/requests/VerificationOptionsExtensions.kt`
+**File:** `credentials/credential-api/src/main/kotlin/org.trustweave/credential/requests/VerificationOptionsExtensions.kt`
 
 **Reason:**
 - More explicit - clearly indicates it's for `VerificationOptions`
@@ -189,11 +189,11 @@ val options = VerificationOptionPresets.strict()
 **Migration:**
 ```kotlin
 // Old (will not compile)
-import com.trustweave.credential.requests.VerificationPresets
+import org.trustweave.credential.requests.VerificationPresets
 val options = VerificationPresets.strict()
 
 // New
-import com.trustweave.credential.requests.VerificationOptionPresets
+import org.trustweave.credential.requests.VerificationOptionPresets
 val options = VerificationOptionPresets.strict()
 ```
 

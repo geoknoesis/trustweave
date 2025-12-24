@@ -24,7 +24,7 @@ title: TrustWeave Layout Audit
 ## 2. Key Packages inside `TrustWeave-core`
 
 ```
-com.trustweave
+org.trustweave
 ├── credential.*           # primary issuance, verification, wallet APIs
 ├── did.delegation         # DID delegation util (still hosted here for now)
 └── core                   # shared constants/exceptions

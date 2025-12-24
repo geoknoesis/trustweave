@@ -16,7 +16,7 @@ All recommendations from the comprehensive code review have been successfully im
 
 ### 1. ✅ Removed Unused Deprecated Method
 
-**File**: `kms/kms-core/src/main/kotlin/com/trustweave/kms/util/KmsErrorHandler.kt`
+**File**: `kms/kms-core/src/main/kotlin/org.trustweave/kms/util/KmsErrorHandler.kt`
 
 - **Action**: Removed `handleAwsError()` method that was deprecated and unused
 - **Rationale**: Clean codebase, no dead code
@@ -24,7 +24,7 @@ All recommendations from the comprehensive code review have been successfully im
 
 ### 2. ✅ Created Plugin Edge Case Test Template
 
-**File**: `testkit/src/main/kotlin/com/trustweave/testkit/kms/PluginEdgeCaseTestTemplate.kt`
+**File**: `testkit/src/main/kotlin/org.trustweave/testkit/kms/PluginEdgeCaseTestTemplate.kt`
 
 - **Purpose**: Abstract base class for plugin-specific edge case testing
 - **Features**:
@@ -75,12 +75,12 @@ class MyPluginEdgeCaseTest : PluginEdgeCaseTestTemplate() {
 ### 4. ✅ Updated InMemory Plugin with Complete Test Suite
 
 **Files Created**:
-- `kms/plugins/inmemory/src/test/kotlin/com/trustweave/kms/inmemory/InMemoryKeyManagementServiceContractTest.kt`
-- `kms/plugins/inmemory/src/test/kotlin/com/trustweave/kms/inmemory/InMemoryKeyManagementServiceEdgeCaseTest.kt`
-- `kms/plugins/inmemory/src/test/kotlin/com/trustweave/kms/inmemory/InMemoryKeyManagementServicePerformanceTest.kt`
+- `kms/plugins/inmemory/src/test/kotlin/org.trustweave/kms/inmemory/InMemoryKeyManagementServiceContractTest.kt`
+- `kms/plugins/inmemory/src/test/kotlin/org.trustweave/kms/inmemory/InMemoryKeyManagementServiceEdgeCaseTest.kt`
+- `kms/plugins/inmemory/src/test/kotlin/org.trustweave/kms/inmemory/InMemoryKeyManagementServicePerformanceTest.kt`
 
 **Updated**:
-- `kms/plugins/inmemory/src/test/kotlin/com/trustweave/kms/inmemory/InMemoryKeyManagementServiceTest.kt` - Added contract test class
+- `kms/plugins/inmemory/src/test/kotlin/org.trustweave/kms/inmemory/InMemoryKeyManagementServiceTest.kt` - Added contract test class
 
 **Coverage**:
 - ✅ Contract tests (interface compliance)
@@ -144,17 +144,17 @@ class MyPluginEdgeCaseTest : PluginEdgeCaseTestTemplate() {
 ## Files Changed
 
 ### Core Changes
-1. `kms/kms-core/src/main/kotlin/com/trustweave/kms/util/KmsErrorHandler.kt` - Removed deprecated method
+1. `kms/kms-core/src/main/kotlin/org.trustweave/kms/util/KmsErrorHandler.kt` - Removed deprecated method
 
 ### New Files
-1. `testkit/src/main/kotlin/com/trustweave/testkit/kms/PluginEdgeCaseTestTemplate.kt` - Edge case test template
+1. `testkit/src/main/kotlin/org.trustweave/testkit/kms/PluginEdgeCaseTestTemplate.kt` - Edge case test template
 2. `docs/internal/development/KMS_PLUGIN_TESTING_GUIDE.md` - Testing guide
-3. `kms/plugins/inmemory/src/test/kotlin/com/trustweave/kms/inmemory/InMemoryKeyManagementServiceContractTest.kt` - Contract tests
-4. `kms/plugins/inmemory/src/test/kotlin/com/trustweave/kms/inmemory/InMemoryKeyManagementServiceEdgeCaseTest.kt` - Edge case tests
-5. `kms/plugins/inmemory/src/test/kotlin/com/trustweave/kms/inmemory/InMemoryKeyManagementServicePerformanceTest.kt` - Performance tests
+3. `kms/plugins/inmemory/src/test/kotlin/org.trustweave/kms/inmemory/InMemoryKeyManagementServiceContractTest.kt` - Contract tests
+4. `kms/plugins/inmemory/src/test/kotlin/org.trustweave/kms/inmemory/InMemoryKeyManagementServiceEdgeCaseTest.kt` - Edge case tests
+5. `kms/plugins/inmemory/src/test/kotlin/org.trustweave/kms/inmemory/InMemoryKeyManagementServicePerformanceTest.kt` - Performance tests
 
 ### Updated Files
-1. `kms/plugins/inmemory/src/test/kotlin/com/trustweave/kms/inmemory/InMemoryKeyManagementServiceTest.kt` - Added contract test class
+1. `kms/plugins/inmemory/src/test/kotlin/org.trustweave/kms/inmemory/InMemoryKeyManagementServiceTest.kt` - Added contract test class
 
 ---
 

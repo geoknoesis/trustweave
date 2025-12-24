@@ -23,7 +23,7 @@ Add the walt.id module to your dependencies:
 ```kotlin
 dependencies {
     // Only need to add the walt.id plugin - core dependencies are included transitively
-    implementation("com.trustweave.kms:waltid:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.kms:waltid:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -36,9 +36,9 @@ dependencies {
 The walt.id integration supports automatic discovery via SPI:
 
 ```kotlin
-import com.trustweave.waltid.WaltIdIntegration
-import com.trustweave.did.*
-import com.trustweave.kms.*
+import org.trustweave.waltid.WaltIdIntegration
+import org.trustweave.did.*
+import org.trustweave.kms.*
 import kotlinx.coroutines.runBlocking
 
 runBlocking {
@@ -59,9 +59,9 @@ runBlocking {
 You can also manually configure walt.id components:
 
 ```kotlin
-import com.trustweave.waltid.*
-import com.trustweave.did.*
-import com.trustweave.kms.*
+import org.trustweave.waltid.*
+import org.trustweave.did.*
+import org.trustweave.kms.*
 
 // Create walt.id KMS
 val kms = WaltIdKeyManagementService()
@@ -81,8 +81,8 @@ registry.register("web", webMethod)
 ### KMS Operations
 
 ```kotlin
-import com.trustweave.waltid.*
-import com.trustweave.kms.*
+import org.trustweave.waltid.*
+import org.trustweave.kms.*
 
 val kms = WaltIdKeyManagementService()
 
@@ -103,8 +103,8 @@ println("Public key: ${publicKey.toHexString()}")
 ### DID Operations
 
 ```kotlin
-import com.trustweave.waltid.*
-import com.trustweave.did.*
+import org.trustweave.waltid.*
+import org.trustweave.did.*
 
 val kms = WaltIdKeyManagementService()
 val keyMethod = WaltIdDidKeyMethod(kms)
@@ -125,8 +125,8 @@ println("Resolved DID: ${resolutionResult.didDocument?.id}")
 ### Using TrustWeave Facade
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.waltid.WaltIdIntegration
+import org.trustweave.TrustWeave
+import org.trustweave.waltid.WaltIdIntegration
 import kotlinx.coroutines.runBlocking
 
 runBlocking {
@@ -163,8 +163,8 @@ runBlocking {
 When the `kms/plugins/waltid` module is on the classpath, walt.id providers are automatically discoverable via SPI:
 
 ```kotlin
-import com.trustweave.kms.*
-import com.trustweave.did.*
+import org.trustweave.kms.*
+import org.trustweave.did.*
 import java.util.ServiceLoader
 
 // Simple factory API for KMS - no ServiceLoader needed!
@@ -196,7 +196,7 @@ See the [walt.id Testing Guide](../../kms/plugins/waltid/TESTING.md) for detaile
 The walt.id integration follows TrustWeave's error handling patterns:
 
 ```kotlin
-import com.trustweave.core.exception.TrustWeaveError
+import org.trustweave.core.exception.TrustWeaveError
 
 val result = kms.generateKey(Algorithm.Ed25519)
 result.fold(

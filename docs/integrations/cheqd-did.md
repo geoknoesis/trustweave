@@ -22,11 +22,11 @@ Add the did:cheqd module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave.did:cheqd:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.did:cheqd:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.did:base:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // HTTP client for Cheqd network integration
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
@@ -38,10 +38,10 @@ dependencies {
 ### Basic Configuration
 
 ```kotlin
-import com.trustweave.cheqddid.*
-import com.trustweave.anchor.*
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import com.trustweave.kms.*
+import org.trustweave.cheqddid.*
+import org.trustweave.anchor.*
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.kms.*
 
 // Create configuration
 val config = CheqdDidConfig.builder()
@@ -81,8 +81,8 @@ val testnetConfig = CheqdDidConfig.testnet(
 When the module is on the classpath, did:cheqd is automatically available:
 
 ```kotlin
-import com.trustweave.did.*
-import com.trustweave.anchor.*
+import org.trustweave.did.*
+import org.trustweave.anchor.*
 import java.util.ServiceLoader
 
 // Discover did:cheqd provider
@@ -123,8 +123,8 @@ println("Created: ${document.id}") // did:cheqd:mainnet:...
 ### Resolving a did:cheqd
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
-import com.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.resolver.DidResolutionResult
 
 val did = Did("did:cheqd:mainnet:...")
 val result = method.resolveDid(did)
@@ -144,7 +144,7 @@ when (result) {
 ### Updating a did:cheqd
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 val did = Did("did:cheqd:mainnet:...")
 val document = method.updateDid(did) { currentDoc ->
@@ -161,7 +161,7 @@ val document = method.updateDid(did) { currentDoc ->
 ### Deactivating a did:cheqd
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 val did = Did("did:cheqd:mainnet:...")
 val deactivated = method.deactivateDid(did)
@@ -239,10 +239,10 @@ val config = CheqdDidConfig.builder()
 ## Integration with TrustWeave
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.cheqddid.*
-import com.trustweave.anchor.*
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.TrustWeave
+import org.trustweave.cheqddid.*
+import org.trustweave.anchor.*
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 
 val config = CheqdDidConfig.mainnet("https://api.cheqd.net")
 val anchorClient = InMemoryBlockchainAnchorClient("cheqd:mainnet")
@@ -303,7 +303,7 @@ Common errors and solutions:
 For testing without actual blockchain:
 
 ```kotlin
-import com.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 
 val config = CheqdDidConfig.testnet("https://testnet-api.cheqd.net")
 val anchorClient = InMemoryBlockchainAnchorClient("cheqd:testnet")

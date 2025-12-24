@@ -62,7 +62,7 @@ gradle :TrustWeave-waltid:test --tests "WaltIdDidMethodTest"
 
 ### Test SPI Discovery
 ```kotlin
-import com.trustweave.waltid.WaltIdIntegration
+import org.trustweave.waltid.WaltIdIntegration
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -74,7 +74,7 @@ fun main() = runBlocking {
 
 ### Test DID Creation
 ```kotlin
-import com.trustweave.waltid.WaltIdIntegration
+import org.trustweave.waltid.WaltIdIntegration
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {

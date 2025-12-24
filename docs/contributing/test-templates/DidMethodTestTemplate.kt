@@ -1,9 +1,9 @@
-package com.trustweave.testkit.templates
+package org.trustweave.testkit.templates
 
-import com.trustweave.did.DidCreationOptions
-import com.trustweave.did.DidCreationOptions.KeyAlgorithm
-import com.trustweave.did.DidMethod
-import com.trustweave.testkit.BasePluginTest
+import org.trustweave.did.DidCreationOptions
+import org.trustweave.did.DidCreationOptions.KeyAlgorithm
+import org.trustweave.did.DidMethod
+import org.trustweave.testkit.BasePluginTest
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -106,7 +106,7 @@ abstract class DidMethodTestTemplate : BasePluginTest() {
         val updated = method.updateDid(document.id) { doc ->
             // Add a service endpoint
             doc.copy(
-                service = doc.service + com.trustweave.did.Service(
+                service = doc.service + org.trustweave.did.Service(
                     id = "${doc.id}#service-1",
                     type = "LinkedDomains",
                     serviceEndpoint = "https://example.com"

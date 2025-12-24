@@ -30,12 +30,12 @@ Add the did:jwk module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave.did:jwk:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("com.trustweave.did:base:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-common:1.0.0-SNAPSHOT")
-    implementation("com.trustweave:trustweave-json:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.did:jwk:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
+    implementation("org.trustweave.did:base:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-json:1.0.0-SNAPSHOT")
 
     // JSON processing (included automatically)
     implementation("org.jose4j:jose4j:0.9.5")
@@ -49,9 +49,9 @@ dependencies {
 The did:jwk provider can be configured via options or automatically discovered via SPI:
 
 ```kotlin
-import com.trustweave.did.*
-import com.trustweave.jwkdid.*
-import com.trustweave.kms.*
+import org.trustweave.did.*
+import org.trustweave.jwkdid.*
+import org.trustweave.kms.*
 
 // Manual creation
 val kms = InMemoryKeyManagementService()
@@ -63,7 +63,7 @@ val method = JwkDidMethod(kms)
 When the module is on the classpath, did:jwk is automatically available:
 
 ```kotlin
-import com.trustweave.did.*
+import org.trustweave.did.*
 import java.util.ServiceLoader
 
 // Discover did:jwk provider
@@ -99,8 +99,8 @@ println("Created: ${document.id}") // did:jwk:eyJ...
 ### Resolving a did:jwk
 
 ```kotlin
-import com.trustweave.did.identifiers.Did
-import com.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.resolver.DidResolutionResult
 
 // Resolve DID (derived from JWK)
 val did = Did("did:jwk:eyJkIjoieCIsImNydiI6IkVkMjU1MTkiLCJrdHkiOiJPS1AifQ")
@@ -143,9 +143,9 @@ val p256Did = method.createDid(p256Options)
 ### Integration with TrustWeave
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.jwkdid.*
-import com.trustweave.kms.InMemoryKeyManagementService
+import org.trustweave.TrustWeave
+import org.trustweave.jwkdid.*
+import org.trustweave.kms.InMemoryKeyManagementService
 
 val kms = InMemoryKeyManagementService()
 

@@ -51,7 +51,7 @@ The project includes code quality tools:
 - **Java 21+**: Required for compilation and runtime
 - **Kotlin 2.2.0+**: Included via Gradle plugin
 - **Gradle 8.5+**: Automatically downloaded via Gradle Wrapper (no manual installation needed)
-- **Docker** (optional): Required for `com.trustweave.chains:ganache` tests using TestContainers
+- **Docker** (optional): Required for `org.trustweave.chains:ganache` tests using TestContainers
 
 ## Contributing
 

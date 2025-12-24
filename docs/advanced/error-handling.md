@@ -34,14 +34,14 @@ TrustWeave provides structured error handling with rich context for better debug
 The `TrustWeave` facade methods throw exceptions on failure. Always use try-catch blocks:
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.types.IssuerIdentity
-import com.trustweave.core.exception.TrustWeaveException
-import com.trustweave.did.exception.DidException
-import com.trustweave.did.exception.DidException.DidMethodNotRegistered
-import com.trustweave.did.exception.DidException.DidNotFound
-import com.trustweave.credential.exception.CredentialException
-import com.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.IssuerIdentity
+import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.did.exception.DidException
+import org.trustweave.did.exception.DidException.DidMethodNotRegistered
+import org.trustweave.did.exception.DidException.DidNotFound
+import org.trustweave.credential.exception.CredentialException
+import org.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -160,10 +160,10 @@ TrustWeave uses a sealed hierarchy of error types that extend `TrustWeaveExcepti
 ### DID-Related Errors (in `trustweave-did` module)
 
 ```kotlin
-import com.trustweave.did.exception.DidException
-import com.trustweave.did.exception.DidException.DidMethodNotRegistered
-import com.trustweave.did.exception.DidException.DidNotFound
-import com.trustweave.did.exception.DidException.InvalidDidFormat
+import org.trustweave.did.exception.DidException
+import org.trustweave.did.exception.DidException.DidMethodNotRegistered
+import org.trustweave.did.exception.DidException.DidNotFound
+import org.trustweave.did.exception.DidException.InvalidDidFormat
 
 // Handle DID errors with short imports
 try {
@@ -187,9 +187,9 @@ try {
 ### Credential-Related Errors (in `trustweave-credentials` module)
 
 ```kotlin
-import com.trustweave.credential.exception.CredentialException
-import com.trustweave.credential.exception.CredentialException.CredentialInvalid
-import com.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed
+import org.trustweave.credential.exception.CredentialException
+import org.trustweave.credential.exception.CredentialException.CredentialInvalid
+import org.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed
 
 // Handle credential errors with short imports
 try {
@@ -212,7 +212,7 @@ try {
 ### Blockchain-Related Errors (in `trustweave-anchor` module)
 
 ```kotlin
-import com.trustweave.anchor.exceptions.BlockchainException
+import org.trustweave.anchor.exceptions.BlockchainException
 
 // Chain not registered
 BlockchainException.ChainNotRegistered(
@@ -239,8 +239,8 @@ BlockchainException.ConnectionFailed(
 ### Wallet-Related Errors (in `trustweave-wallet` module)
 
 ```kotlin
-import com.trustweave.wallet.exception.WalletException
-import com.trustweave.wallet.exception.WalletException.WalletCreationFailed
+import org.trustweave.wallet.exception.WalletException
+import org.trustweave.wallet.exception.WalletException.WalletCreationFailed
 
 // Handle wallet errors with short imports
 try {
@@ -259,7 +259,7 @@ try {
 ### Plugin-Related Errors
 
 ```kotlin
-import com.trustweave.core.exception.TrustWeaveException
+import org.trustweave.core.exception.TrustWeaveException
 
 // Blank plugin ID
 TrustWeaveException.BlankPluginId()
@@ -286,7 +286,7 @@ TrustWeaveException.PluginInitializationFailed(
 ### Provider Chain Errors
 
 ```kotlin
-import com.trustweave.core.exception.TrustWeaveException
+import org.trustweave.core.exception.TrustWeaveException
 
 // No providers found
 TrustWeaveException.NoProvidersFound(
@@ -315,7 +315,7 @@ TrustWeaveException.AllProvidersFailed(
 ### Configuration Errors
 
 ```kotlin
-import com.trustweave.core.exception.TrustWeaveException
+import org.trustweave.core.exception.TrustWeaveException
 
 // Configuration file not found
 TrustWeaveException.ConfigNotFound(
@@ -339,7 +339,7 @@ TrustWeaveException.InvalidConfigFormat(
 ### JSON/Digest Errors
 
 ```kotlin
-import com.trustweave.core.exception.TrustWeaveException
+import org.trustweave.core.exception.TrustWeaveException
 
 // Invalid JSON
 TrustWeaveException.InvalidJson(
@@ -370,7 +370,7 @@ TrustWeaveException.EncodeFailed(
 ### Validation Errors
 
 ```kotlin
-import com.trustweave.core.exception.TrustWeaveException
+import org.trustweave.core.exception.TrustWeaveException
 
 // Validation failed
 TrustWeaveException.ValidationFailed(
@@ -383,7 +383,7 @@ TrustWeaveException.ValidationFailed(
 ### Generic Errors
 
 ```kotlin
-import com.trustweave.core.exception.TrustWeaveException
+import org.trustweave.core.exception.TrustWeaveException
 
 // Invalid operation
 TrustWeaveException.InvalidOperation(
@@ -631,8 +631,8 @@ result.fold(
 ### Basic Error Handling
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.core.*
+import org.trustweave.TrustWeave
+import org.trustweave.core.*
 
 val TrustWeave = TrustWeave.create()
 
@@ -697,7 +697,7 @@ result.fold(
 TrustWeave automatically converts exceptions to `TrustWeaveException`:
 
 ```kotlin
-import com.trustweave.core.toTrustWeaveException
+import org.trustweave.core.toTrustWeaveException
 
 try {
     // Some operation that might throw
@@ -770,7 +770,7 @@ TrustWeave validates inputs before operations to catch errors early:
 ### DID Validation
 
 ```kotlin
-import com.trustweave.core.util.DidValidator
+import org.trustweave.core.util.DidValidator
 
 // Validate DID format
 val validation = DidValidator.validateFormat("did:key:z6Mk...")
@@ -792,7 +792,7 @@ if (!methodValidation.isValid()) {
 ### Credential Validation
 
 ```kotlin
-import com.trustweave.core.CredentialValidator
+import org.trustweave.core.CredentialValidator
 
 // Validate credential structure
 val validation = CredentialValidator.validateStructure(credential)
@@ -812,7 +812,7 @@ if (!proofValidation.isValid()) {
 ### Chain ID Validation
 
 ```kotlin
-import com.trustweave.core.ChainIdValidator
+import org.trustweave.core.ChainIdValidator
 
 // Validate chain ID format
 val validation = ChainIdValidator.validateFormat("algorand:testnet")
@@ -1005,9 +1005,9 @@ For transient errors (network issues, temporary unavailability), implement retry
 ```kotlin
 import kotlinx.coroutines.delay
 import kotlin.random.Random
-import com.trustweave.core.exception.TrustWeaveException
-import com.trustweave.did.exception.DidException
-import com.trustweave.credential.exception.CredentialException
+import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.did.exception.DidException
+import org.trustweave.credential.exception.CredentialException
 
 suspend fun <T> retryWithBackoff(
     maxRetries: Int = 3,

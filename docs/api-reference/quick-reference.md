@@ -65,7 +65,7 @@ Quick lookup table of all TrustWeave API methods organized by category.
 
 **Create DID:**
 ```kotlin
-import com.trustweave.trust.types.Did
+import org.trustweave.trust.types.Did
 
 val did: Did = trustWeave.createDid {
     method(KEY)
@@ -76,7 +76,7 @@ val did: Did = trustWeave.createDid {
 
 **Resolve DID:**
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 val did = Did("did:key:example")
 val document = trustWeave.context.resolveDid(did)
@@ -84,7 +84,7 @@ val document = trustWeave.context.resolveDid(did)
 
 **Update DID:**
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 val did = Did("did:key:example")
 val updated = trustLayer.updateDid {
@@ -95,7 +95,7 @@ val updated = trustLayer.updateDid {
 
 **Deactivate DID:**
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 val did = Did("did:key:example")
 val deactivated = trustLayer.deactivateDid(did)
@@ -105,7 +105,7 @@ val deactivated = trustLayer.deactivateDid(did)
 
 **Issue Credential:**
 ```kotlin
-import com.trustweave.trust.types.IssuerIdentity
+import org.trustweave.trust.types.IssuerIdentity
 
 val issuerIdentity = IssuerIdentity.from(issuerDid, keyId)
 
@@ -124,7 +124,7 @@ val credential = trustWeave.issue {
 
 **Verify Credential:**
 ```kotlin
-import com.trustweave.trust.types.VerificationResult
+import org.trustweave.trust.types.VerificationResult
 
 val result: VerificationResult = trustWeave.verify {
     credential(credential)

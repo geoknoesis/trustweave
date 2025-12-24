@@ -752,8 +752,8 @@
 19
 20
 21
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.inmemory.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.kms.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.inmemory.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.kms.*</span>
 
 <span class="c1">// Create KMS (no configuration needed for InMemory)</span>
 <span class="kd">val</span> <span class="py">kms</span> <span class="p">=</span> <span class="nc">InMemoryKeyManagementService</span><span class="p">()</span>
@@ -876,7 +876,7 @@
 5
 6
 7
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.kms.KmsOptionKeys</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.kms.KmsOptionKeys</span>
 
 <span class="kd">val</span> <span class="py">options</span> <span class="p">=</span> <span class="nf">mapOf</span><span class="p">(</span>
     <span class="nc">KmsOptionKeys</span><span class="p">.</span><span class="nc">KEY_ID</span> <span class="n">to</span> <span class="s">"my-key-id"</span><span class="p">,</span>

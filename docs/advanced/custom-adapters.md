@@ -22,8 +22,8 @@ TrustWeave's adapter architecture allows you to implement custom:
 ### Implementing DidMethod
 
 ```kotlin
-import com.trustweave.did.*
-import com.trustweave.kms.*
+import org.trustweave.did.*
+import org.trustweave.kms.*
 
 class MyCustomDidMethod(
     private val kms: KeyManagementService,
@@ -113,8 +113,8 @@ class MyCustomDidMethod(
 ### Creating DID Method Provider
 
 ```kotlin
-import com.trustweave.did.spi.DidMethodProvider
-import com.trustweave.did.*
+import org.trustweave.did.spi.DidMethodProvider
+import org.trustweave.did.*
 
 class MyDidMethodProvider : DidMethodProvider {
     override val name: String = "my-did-method"
@@ -144,7 +144,7 @@ class MyDidMethodProvider : DidMethodProvider {
 
 ### Registering Provider
 
-Create service file at `src/main/resources/META-INF/services/com.trustweave.did.spi.DidMethodProvider`:
+Create service file at `src/main/resources/META-INF/services/org.trustweave.did.spi.DidMethodProvider`:
 
 ```
 com.example.MyDidMethodProvider
@@ -155,7 +155,7 @@ com.example.MyDidMethodProvider
 ### Implementing BlockchainAnchorClient
 
 ```kotlin
-import com.trustweave.anchor.*
+import org.trustweave.anchor.*
 
 class MyBlockchainAnchorClient(
     override val chainId: String,
@@ -207,8 +207,8 @@ class MyBlockchainAnchorClient(
 ### Creating Blockchain Adapter Provider
 
 ```kotlin
-import com.trustweave.anchor.spi.BlockchainAnchorClientProvider
-import com.trustweave.anchor.*
+import org.trustweave.anchor.spi.BlockchainAnchorClientProvider
+import org.trustweave.anchor.*
 
 class MyBlockchainAdapterProvider : BlockchainAnchorClientProvider {
     override val name: String = "my-blockchain"
@@ -229,7 +229,7 @@ class MyBlockchainAdapterProvider : BlockchainAnchorClientProvider {
 
 ### Registering Provider
 
-Create service file at `src/main/resources/META-INF/services/com.trustweave.anchor.spi.BlockchainAnchorClientProvider`:
+Create service file at `src/main/resources/META-INF/services/org.trustweave.anchor.spi.BlockchainAnchorClientProvider`:
 
 ```
 com.example.MyBlockchainAdapterProvider
@@ -240,7 +240,7 @@ com.example.MyBlockchainAdapterProvider
 ### Implementing KeyManagementService
 
 ```kotlin
-import com.trustweave.kms.*
+import org.trustweave.kms.*
 
 class MyKeyManagementService(
     private val config: MyKmsConfig
@@ -298,8 +298,8 @@ class MyKeyManagementService(
 ### Creating KMS Provider
 
 ```kotlin
-import com.trustweave.kms.spi.KeyManagementServiceProvider
-import com.trustweave.kms.*
+import org.trustweave.kms.spi.KeyManagementServiceProvider
+import org.trustweave.kms.*
 
 class MyKmsProvider : KeyManagementServiceProvider {
     override val name: String = "my-kms"
@@ -318,7 +318,7 @@ class MyKmsProvider : KeyManagementServiceProvider {
 
 ### Registering Provider
 
-Create service file at `src/main/resources/META-INF/services/com.trustweave.kms.spi.KeyManagementServiceProvider`:
+Create service file at `src/main/resources/META-INF/services/org.trustweave.kms.spi.KeyManagementServiceProvider`:
 
 ```
 com.example.MyKmsProvider
@@ -329,7 +329,7 @@ com.example.MyKmsProvider
 ### Unit Testing
 
 ```kotlin
-import com.trustweave.testkit.*
+import org.trustweave.testkit.*
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 
@@ -353,7 +353,7 @@ class MyCustomDidMethodTest {
 ### Integration Testing
 
 ```kotlin
-import com.trustweave.testkit.*
+import org.trustweave.testkit.*
 import kotlin.test.Test
 
 class MyBlockchainAdapterIntegrationTest {
@@ -378,7 +378,7 @@ class MyBlockchainAdapterIntegrationTest {
 Use TrustWeave's error types:
 
 ```kotlin
-import com.trustweave.core.exception.TrustWeaveError
+import org.trustweave.core.exception.TrustWeaveError
 import kotlin.Result
 
 suspend fun createDid(options: DidCreationOptions): Result<DidDocument> {
@@ -422,7 +422,7 @@ class MyDidConfig private constructor(
 Implement `PluginLifecycle` if needed:
 
 ```kotlin
-import com.trustweave.spi.PluginLifecycle
+import org.trustweave.spi.PluginLifecycle
 
 class MyBlockchainAnchorClient(
     override val chainId: String,

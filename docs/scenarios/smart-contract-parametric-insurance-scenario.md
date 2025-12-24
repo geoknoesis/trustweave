@@ -57,8 +57,8 @@ By the end of this tutorial, you'll have:
 ## Step 1: Setup TrustWeave
 
 ```kotlin
-import com.trustweave.TrustWeave
-import com.trustweave.contract.models.*
+import org.trustweave.TrustWeave
+import org.trustweave.contract.models.*
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
@@ -344,7 +344,7 @@ suspend fun completeParametricInsuranceWorkflow() {
     val floodDepth = 75.0 // cm
 
     // Issue EO data credential (simplified - in production, EO provider issues this)
-    import com.trustweave.trust.types.IssuanceResult
+    import org.trustweave.trust.types.IssuanceResult
     
     val eoDataIssuanceResult = trustWeave.issue {
         credential {

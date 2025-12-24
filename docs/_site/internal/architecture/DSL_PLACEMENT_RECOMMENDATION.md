@@ -29,7 +29,7 @@ did-core → trust module (no dependencies - good!)
 
 ### 1. **did-core**: Basic, Standalone DSL Extensions
 
-**Location**: `did/did-core/src/main/kotlin/com/trustweave/did/dsl/`
+**Location**: `did/did-core/src/main/kotlin/org.trustweave/did/dsl/`
 
 **Purpose**: Provide fluent, ergonomic extensions that work with DID types directly, without requiring orchestration context.
 
@@ -38,7 +38,7 @@ did-core → trust module (no dependencies - good!)
 #### A. Extension Functions on Core Types
 ```kotlin
 // did-core DSL extensions
-package com.trustweave.did.dsl
+package org.trustweave.did.dsl
 
 // Extension on Did type
 suspend fun Did.resolveWith(resolver: DidResolver): DidResolutionResult {
@@ -106,7 +106,7 @@ infix fun Did.resolvedBy(resolver: DidResolver): DidResolutionResult {
 
 ### 2. **trust module**: Higher-Level Orchestration DSL
 
-**Location**: `trust/src/main/kotlin/com/trustweave/trust/dsl/did/` (keep current location)
+**Location**: `trust/src/main/kotlin/org.trustweave/trust/dsl/did/` (keep current location)
 
 **Purpose**: Provide orchestrated DSL that requires context (KMS, registries, trust policies, multiple services).
 
@@ -182,13 +182,13 @@ suspend fun TrustWeave.createIdentityWithCredential(
 ### Phase 1: Add Basic DSL to did-core
 
 ```kotlin
-// did/did-core/src/main/kotlin/com/trustweave/did/dsl/DidExtensions.kt
-package com.trustweave.did.dsl
+// did/did-core/src/main/kotlin/org.trustweave/did/dsl/DidExtensions.kt
+package org.trustweave.did.dsl
 
-import com.trustweave.did.identifiers.Did
-import com.trustweave.did.resolver.DidResolver
-import com.trustweave.did.resolver.DidResolutionResult
-import com.trustweave.did.exception.DidException
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.resolver.DidResolver
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.exception.DidException
 
 /**
  * Extension functions for fluent DID operations.
@@ -230,14 +230,14 @@ suspend fun Did.resolveOrNull(resolver: DidResolver): DidDocument? {
 ```
 
 ```kotlin
-// did/did-core/src/main/kotlin/com/trustweave/did/dsl/ResolverExtensions.kt
-package com.trustweave.did.dsl
+// did/did-core/src/main/kotlin/org.trustweave/did/dsl/ResolverExtensions.kt
+package org.trustweave.did.dsl
 
-import com.trustweave.did.identifiers.Did
-import com.trustweave.did.model.DidDocument
-import com.trustweave.did.resolver.DidResolver
-import com.trustweave.did.resolver.DidResolutionResult
-import com.trustweave.did.exception.DidException
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.model.DidDocument
+import org.trustweave.did.resolver.DidResolver
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.exception.DidException
 
 /**
  * Extension functions for DidResolver to improve ergonomics.
@@ -268,14 +268,14 @@ suspend fun DidResolver.resolveOrNull(did: Did): DidDocument? {
 ```
 
 ```kotlin
-// did/did-core/src/main/kotlin/com/trustweave/did/dsl/DidMethodExtensions.kt
-package com.trustweave.did.dsl
+// did/did-core/src/main/kotlin/org.trustweave/did/dsl/DidMethodExtensions.kt
+package org.trustweave.did.dsl
 
-import com.trustweave.did.DidMethod
-import com.trustweave.did.DidCreationOptions
-import com.trustweave.did.DidCreationOptionsBuilder
-import com.trustweave.did.model.DidDocument
-import com.trustweave.did.didCreationOptions
+import org.trustweave.did.DidMethod
+import org.trustweave.did.DidCreationOptions
+import org.trustweave.did.DidCreationOptionsBuilder
+import org.trustweave.did.model.DidDocument
+import org.trustweave.did.didCreationOptions
 
 /**
  * Extension functions for DidMethod to provide fluent DSL.
@@ -297,7 +297,7 @@ suspend fun DidMethod.createDidWith(
 The trust module DSL remains for context-aware operations:
 
 ```kotlin
-// trust/src/main/kotlin/com/trustweave/trust/dsl/did/DidBuilder.kt
+// trust/src/main/kotlin/org.trustweave/trust/dsl/did/DidBuilder.kt
 // Keep existing - provides orchestration context
 ```
 
@@ -325,7 +325,7 @@ The trust module DSL remains for context-aware operations:
 ```kotlin
 // User only needs did-core
 dependencies {
-    implementation("com.trustweave:trustweave-did:1.0.0")
+    implementation("org.trustweave:trustweave-did:1.0.0")
 }
 
 val resolver = RegistryBasedResolver(registry)
@@ -336,7 +336,7 @@ val document = Did("did:key:...").resolveWith(resolver).getOrThrow()
 ```kotlin
 // User needs orchestration
 dependencies {
-    implementation("com.trustweave:trustweave-trust:1.0.0")
+    implementation("org.trustweave:trustweave-trust:1.0.0")
 }
 
 val trustWeave = TrustWeave.build { ... }

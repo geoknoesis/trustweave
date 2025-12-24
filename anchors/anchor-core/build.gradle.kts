@@ -3,7 +3,7 @@ plugins {
     kotlin("plugin.serialization")
 }
 
-group = "com.trustweave"
+group = "org.trustweave"
 dependencies {
     implementation(project(":common"))    // Root-level common (exceptions, common utilities, JSON)
     implementation(libs.kotlinx.coroutines.core)

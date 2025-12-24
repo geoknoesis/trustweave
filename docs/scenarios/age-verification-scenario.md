@@ -140,7 +140,7 @@ Add TrustWeave dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -157,11 +157,11 @@ Here's the full age verification flow with photo association using the TrustWeav
 ```kotlin
 package com.example.age.verification
 
-import com.trustweave.trust.dsl.trustWeave
-import com.trustweave.trust.dsl.credential.*
-import com.trustweave.trust.types.VerificationResult
-import com.trustweave.testkit.services.*
-import com.trustweave.core.util.DigestUtils
+import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.dsl.credential.*
+import org.trustweave.trust.types.VerificationResult
+import org.trustweave.testkit.services.*
+import org.trustweave.core.util.DigestUtils
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put

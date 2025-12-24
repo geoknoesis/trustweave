@@ -660,7 +660,7 @@
 4
 5
 6
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.format.ProofSuiteId</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.format.ProofSuiteId</span>
 
 <span class="c1">// Use enum values directly</span>
 <span class="kd">val</span> <span class="py">vcLdSuite</span> <span class="p">=</span> <span class="nc">ProofSuiteId</span><span class="p">.</span><span class="nc">VC_LD</span>
@@ -709,7 +709,7 @@
 21
 22
 23
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.proof.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.proof.*</span>
 
 <span class="c1">// Simple - defaults to assertionMethod</span>
 <span class="kd">val</span> <span class="py">options</span> <span class="p">=</span> <span class="nf">proofOptions</span><span class="p">()</span>
@@ -890,8 +890,8 @@
 18
 19
 20
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.requests.*</span>
-<span class="k">import</span> <span class="nn">com.trustweave.credential.proof.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.requests.*</span>
+<span class="k">import</span> <span class="nn">org.trustweave.credential.proof.*</span>
 
 <span class="kd">val</span> <span class="py">request</span> <span class="p">=</span> <span class="nc">IssuanceRequest</span><span class="p">(</span>
     <span class="n">format</span> <span class="p">=</span> <span class="nc">ProofSuiteId</span><span class="p">.</span><span class="nc">VC_LD</span><span class="p">,</span>
@@ -1018,7 +1018,7 @@
 2
 3
 4
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.credential.*</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.credential.*</span>
 
 <span class="kd">val</span> <span class="py">service</span> <span class="p">=</span> <span class="nf">credentialService</span><span class="p">(</span><span class="n">didResolver</span><span class="p">)</span>
 <span class="c1">// All proof engines are automatically configured</span>

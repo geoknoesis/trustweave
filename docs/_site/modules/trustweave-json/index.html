@@ -613,7 +613,7 @@
 <p>JSON canonicalization and digest computation utilities are part of the <code class="language-plaintext highlighter-rouge">trustweave-common</code> module.</p>
 
 <blockquote>
-  <p><strong>Note:</strong> As of version 1.0.0, JSON utilities are no longer in a separate module. They are included in <code class="language-plaintext highlighter-rouge">trustweave-common</code> under the <code class="language-plaintext highlighter-rouge">com.trustweave.core.util</code> package.</p>
+  <p><strong>Note:</strong> As of version 1.0.0, JSON utilities are no longer in a separate module. They are included in <code class="language-plaintext highlighter-rouge">trustweave-common</code> under the <code class="language-plaintext highlighter-rouge">org.trustweave.core.util</code> package.</p>
 </blockquote>
 
 <p>Add the common module to your build when you need deterministic hashing:</p>
@@ -622,11 +622,11 @@
 2
 3
 </pre></td><td class="rouge-code"><pre><span class="nf">dependencies</span> <span class="p">{</span>
-    <span class="nf">implementation</span><span class="p">(</span><span class="s">"com.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
+    <span class="nf">implementation</span><span class="p">(</span><span class="s">"org.trustweave:trustweave-common:1.0.0-SNAPSHOT"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></td></tr></tbody></table></div></code></pre></div></div>
 
-<p><strong>Result:</strong> Gradle pulls in the canonicalisation helpers so calls such as <code class="language-plaintext highlighter-rouge">DigestUtils.sha256DigestMultibase</code> are available in your project. The <code class="language-plaintext highlighter-rouge">DigestUtils</code> class is located in the <code class="language-plaintext highlighter-rouge">com.trustweave.core.util</code> package.</p>
+<p><strong>Result:</strong> Gradle pulls in the canonicalisation helpers so calls such as <code class="language-plaintext highlighter-rouge">DigestUtils.sha256DigestMultibase</code> are available in your project. The <code class="language-plaintext highlighter-rouge">DigestUtils</code> class is located in the <code class="language-plaintext highlighter-rouge">org.trustweave.core.util</code> package.</p>
 <h2 id="overview">
   
   
@@ -891,7 +891,7 @@
 11
 12
 13
-</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">com.trustweave.core.util.DigestUtils</span>
+</pre></td><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.trustweave.core.util.DigestUtils</span>
 <span class="k">import</span> <span class="nn">kotlinx.serialization.json.*</span>
 
 <span class="kd">val</span> <span class="py">vc</span> <span class="p">=</span> <span class="nf">buildJsonObject</span> <span class="p">{</span>

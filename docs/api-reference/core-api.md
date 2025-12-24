@@ -25,7 +25,7 @@ Complete API reference for TrustWeave's TrustWeave API.
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 }
 ```
 
@@ -75,7 +75,7 @@ The TrustWeave provides a unified, DSL-based API for decentralized identity and 
 ### Creating TrustWeave Instances
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
+import org.trustweave.trust.TrustWeave
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -140,9 +140,9 @@ The TrustWeave provides DSL-based operations:
 
 **Example:**
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.trust.types.DidCreationResult
-import com.trustweave.credential.results.IssuanceResult
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.credential.results.IssuanceResult
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -285,7 +285,7 @@ when (didResult) {
 }
 
 // For tests and examples, use getOrFail() helper
-import com.trustweave.testkit.getOrFail
+import org.trustweave.testkit.getOrFail
 
 val did = trustWeave.createDid {
     method(KEY)
@@ -369,7 +369,7 @@ data class DidResolutionMetadata(
 
 **Example:**
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 // Simple usage - access resolver via DSL context
 val context = trustWeave.getDslContext()
@@ -413,7 +413,7 @@ suspend fun updateDid(block: DidUpdateBuilder.() -> Unit): DidUpdateResult
 
 **Example:**
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 val did = Did("did:key:example")
 val updateResult = trustWeave.updateDid {
@@ -466,7 +466,7 @@ suspend fun deactivateDid(did: Did): Boolean
 
 **Example:**
 ```kotlin
-import com.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.Did
 
 // Access via DSL context
 val context = trustWeave.getDslContext()
@@ -633,7 +633,7 @@ when (issuanceResult) {
 }
 
 // For tests and examples, use getOrFail() helper
-import com.trustweave.testkit.getOrFail
+import org.trustweave.testkit.getOrFail
 
 val credential = trustWeave.issue {
     credential {
@@ -1013,7 +1013,7 @@ val status = TrustWeave.checkRevocationStatus(credential).fold(
 For blockchain-anchored revocation, use `BlockchainRevocationRegistry` with an anchoring strategy:
 
 ```kotlin
-import com.trustweave.credential.revocation.*
+import org.trustweave.credential.revocation.*
 import java.time.Duration
 
 // Create status list manager
@@ -1436,7 +1436,7 @@ fun from(config: TrustWeaveConfig): TrustWeave
 **Example:**
 ```kotlin
 // Create config once (using suspend function)
-import com.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.dsl.trustWeave
 
 val config = trustWeave("my-instance") {
     factories(
@@ -1809,8 +1809,8 @@ All operations can return errors of type `TrustWeaveError`. See [Error Handling]
 
 **Example:**
 ```kotlin
-import com.trustweave.trust.TrustWeave
-import com.trustweave.core.TrustWeaveError
+import org.trustweave.trust.TrustWeave
+import org.trustweave.core.TrustWeaveError
 
 try {
     val trustWeave = TrustWeave.build { ... }
@@ -1880,7 +1880,7 @@ result.fold(
 DID methods are registered during `TrustWeave` creation using the DSL:
 
 ```kotlin
-import com.trustweave.trust.TrustWeave
+import org.trustweave.trust.TrustWeave
 
 val trustWeave = TrustWeave.build {
     keys {

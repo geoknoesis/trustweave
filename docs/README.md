@@ -43,7 +43,7 @@ TrustWeave is a **production-ready Kotlin library** for building decentralized i
 Get started with TrustWeave in **30 seconds**:
 
 ```kotlin
-import com.trustweave.trust.TrustLayer
+import org.trustweave.trust.TrustLayer
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -102,7 +102,7 @@ fun main() = runBlocking {
 
 ```kotlin
 dependencies {
-    implementation("com.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
 }
 ```
 

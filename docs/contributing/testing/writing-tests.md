@@ -63,7 +63,7 @@ Use the provided templates as starting points:
 
 Comprehensive in-memory workflow templates for trust layer integration tests:
 
-- **Location**: `core/TrustWeave-trust/src/test/kotlin/com/geoknoesis/TrustWeave/integration/InMemoryTrustLayerIntegrationTest.kt`
+- **Location**: `trust/src/test/kotlin/org/trustweave/integration/InMemoryTrustLayerIntegrationTest.kt`
 - **Templates Available**:
   - Complete in-memory workflow
   - Credential revocation workflow

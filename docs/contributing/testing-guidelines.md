@@ -328,7 +328,7 @@ Aim for:
 
 ## References
 
-- [TrustWeave-testkit Module](../modules/trustweave-testkit.md)
+- [trustweave-testkit Module](../modules/trustweave-testkit.md)
 - [Testing Strategies](../advanced/testing-strategies.md)
 - [Kotlin Test Documentation](https://kotlinlang.org/api/latest/kotlin.test/)
 

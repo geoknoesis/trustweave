@@ -19,7 +19,7 @@ The trust layer test templates provide complete, working examples of common Trus
 
 The test templates are located in:
 ```
-core/TrustWeave-trust/src/test/kotlin/com/geoknoesis/TrustWeave/integration/InMemoryTrustLayerIntegrationTest.kt
+trust/src/test/kotlin/org/trustweave/integration/InMemoryTrustLayerIntegrationTest.kt
 ```
 
 ## Key Pattern: Extract Key ID from DID Document

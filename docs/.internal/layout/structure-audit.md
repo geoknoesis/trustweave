@@ -9,15 +9,15 @@ title: TrustWeave Layout Audit
 | Module | Responsibility Highlights | Notes |
 | --- | --- | --- |
 | `common` (trustweave-common) | Credential issuance/verification flows, wallet abstractions | Focused on domain logic under `credential.*` |
-| `TrustWeave-spi` | Service/adapter interfaces and plugin registry | New home for adapter loader, factories, stubs |
-| `TrustWeave-trust` | Trust registry APIs and shared trust-layer contracts | Consumed by DSL/runtime modules |
-| `TrustWeave-did` | DID method registry, DID resolution helpers, delegation services | Depends on `common` (trustweave-common), `TrustWeave-spi`, `TrustWeave-kms` |
-| `TrustWeave-anchor` | Blockchain anchoring abstractions and default registry | Integrations live in separate modules (`algorand`, `polygon`, `ganache`) with similar structure |
-| `TrustWeave-kms` | Key management abstractions & in-memory implementations | Consumed by core credential flows and examples |
-| `TrustWeave-json` | JSON helpers and serializers shared across modules | Lightweight but required nearly everywhere |
-| `TrustWeave-testkit` | Test doubles (wallets, DID methods), fixture DSLs | Mixes reusable test utilities with demo implementations |
-| `TrustWeave-examples` | Scenario-driven sample apps/tests | Currently focused on academic credential workflow |
-| `TrustWeave-all` | Aggregated facade combining core + supporting modules | Exposes library entry point (`TrustWeave`) |
+| `trustweave-spi` | Service/adapter interfaces and plugin registry | New home for adapter loader, factories, stubs |
+| `trustweave-trust` | Trust registry APIs and shared trust-layer contracts | Consumed by DSL/runtime modules |
+| `trustweave-did` | DID method registry, DID resolution helpers, delegation services | Depends on `common` (trustweave-common), `trustweave-spi`, `trustweave-kms` |
+| `trustweave-anchor` | Blockchain anchoring abstractions and default registry | Integrations live in separate modules (`algorand`, `polygon`, `ganache`) with similar structure |
+| `trustweave-kms` | Key management abstractions & in-memory implementations | Consumed by core credential flows and examples |
+| `trustweave-json` | JSON helpers and serializers shared across modules | Lightweight but required nearly everywhere |
+| `trustweave-testkit` | Test doubles (wallets, DID methods), fixture DSLs | Mixes reusable test utilities with demo implementations |
+| `trustweave-examples` | Scenario-driven sample apps/tests | Currently focused on academic credential workflow |
+| `distribution-all` | Aggregated facade combining core + supporting modules | Exposes library entry point (`TrustWeave`) |
 | `did/plugins/godiddy`, `kms/plugins/waltid`, etc. | Vendor-specific DID/KMS integrations | Each repeats similar adapter plumbing |
 | Blockchain adapters (`algorand`, `polygon`, `ganache`) | Provide `BlockchainAnchorClient` implementations | Flat module list; no shared integration base module |
 
@@ -38,8 +38,8 @@ Observations:
 
 - **Adapter loading / Service Locator**: consolidated under `TrustWeave-spi`.
 - **Plugin SPI + Registry**: `TrustWeave-spi` now owns metadata/configuration helpers used across modules.
-- **Test Helpers**: `TrustWeave-testkit` exports in-memory wallet/DID helpers that some runtime examples rely upon, blurring the boundary between test-code and production usage.
-- **Blockchain Integrations**: `TrustWeave-anchor` holds registry abstractions while each chain module duplicates provider boilerplate without a shared base (e.g., `BlockchainIntegrationHelper` sits in `TrustWeave-anchor` but is referenced by multiple adapters).
+- **Test Helpers**: `trustweave-testkit` exports in-memory wallet/DID helpers that some runtime examples rely upon, blurring the boundary between test-code and production usage.
+- **Blockchain Integrations**: `trustweave-anchor` holds registry abstractions while each chain module duplicates provider boilerplate without a shared base (e.g., `BlockchainIntegrationHelper` sits in `trustweave-anchor` but is referenced by multiple adapters).
 
 These findings highlight where responsibilities straddle module boundaries and where additional submodules or clearer package naming could improve discoverability.
 

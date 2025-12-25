@@ -6,23 +6,23 @@ title: Layout Migration Roadmap
 
 ## Phase 0 – Preparation
 - Publish an ADR summarizing the new module layout (core, trust, spi, integrations).
-- Create Gradle module skeletons (`TrustWeave-trust`, `TrustWeave-spi`) with empty `package-info` placeholders and updated settings.gradle entries.
-- Add documentation placeholder pages referencing the upcoming split (`docs/modules/TrustWeave-trust.md`, `docs/modules/TrustWeave-spi.md`).
+- Create Gradle module skeletons (`trustweave-trust`, `trustweave-spi`) with empty `package-info` placeholders and updated settings.gradle entries.
+- Add documentation placeholder pages referencing the upcoming split (`docs/modules/trustweave-trust.md`, `docs/modules/trustweave-spi.md`).
 
 ## Phase 1 – SPI Extraction ✅
 1. Move service locator + adapter loader code from `org.trustweave.core.services` into `TrustWeave-spi`.
 2. Relocate plugin descriptor classes (`org.trustweave.spi`) into the same module.
-3. Update dependent modules (`TrustWeave-did`, `TrustWeave-anchor`, integrations) to depend on `TrustWeave-spi` 
+3. Update dependent modules (`trustweave-did`, `trustweave-anchor`, integrations) to depend on `trustweave-spi` 
 4. Run Gradle build to ensure dependency graph remains acyclic; adjust package imports accordingly.
 
 ## Phase 2 – Trust Runtime Split ✅
-1. Migrate `org.trustweave.trust` and supporting DSL runtime pieces from `common` (trustweave-common) into `TrustWeave-trust`.
-2. Within `common` (trustweave-common), keep only credential-facing DSL entry points; refactor DSL builders to delegate to `TrustWeave-trust` contexts.
-3. Update `TrustWeave-all` and examples to include the new module dependency.
-4. Expand docs to highlight configurations now available via `TrustWeave-trust`.
+1. Migrate `org.trustweave.trust` and supporting DSL runtime pieces from `common` (trustweave-common) into `trustweave-trust`.
+2. Within `common` (trustweave-common), keep only credential-facing DSL entry points; refactor DSL builders to delegate to `trustweave-trust` contexts.
+3. Update `distribution-all` and examples to include the new module dependency.
+4. Expand docs to highlight configurations now available via `trustweave-trust`.
 
 ## Phase 3 – Package Cleanup
-1. Move `org.trustweave.did.delegation` into `TrustWeave-did`.
+1. Move `org.trustweave.did.delegation` into `trustweave-did`.
 2. Evaluate whether wallet abstractions warrant their own module (`TrustWeave-wallet`); if not, consolidate package naming (`credential.wallet.*` -> `wallet.*`).
 3. Consolidate blockchain integration helpers into a shared package or module and update adapter modules accordingly.
 

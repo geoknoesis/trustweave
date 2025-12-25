@@ -148,7 +148,7 @@ Gradle tasks let you execute tests for the whole workspace or specific modules/c
 ./gradlew test
 
 # Run tests for specific module
-./gradlew :core:TrustWeave-common:test
+./gradlew :common:test
 
 # Run specific test class
 ./gradlew :common:test --tests "TrustWeaveExceptionTest"

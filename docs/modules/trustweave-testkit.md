@@ -192,7 +192,7 @@ val fixture = TrustWeaveTestFixture.builder()
 
 Comprehensive in-memory test templates for trust layer integration tests are available in:
 ```
-core/TrustWeave-trust/src/test/kotlin/com/geoknoesis/TrustWeave/integration/InMemoryTrustLayerIntegrationTest.kt
+trust/src/test/kotlin/org/trustweave/integration/InMemoryTrustLayerIntegrationTest.kt
 ```
 
 These templates provide complete, working examples of:
@@ -224,7 +224,7 @@ See [Plugin Credential Handling](../contributing/testing/plugin-credential-handl
 - Review [Testing Strategies](../advanced/testing-strategies.md) for advanced testing patterns
 - See [Trust Layer Test Templates](../contributing/testing/trust-layer-test-templates.md) for comprehensive workflow templates
 - Explore [Plugin Credential Handling](../contributing/testing/plugin-credential-handling.md) for external service testing
-- Explore [EO Test Integration README](../../core/TrustWeave-testkit/src/main/kotlin/com/geoknoesis/TrustWeave/testkit/eo/README.md) for detailed EO test utilities
-- See [Test Fixtures](../../core/TrustWeave-testkit/src/main/kotlin/com/geoknoesis/TrustWeave/testkit/TrustWeaveTestFixture.kt) for fixture builder documentation
+- Explore [EO Test Integration README](../../testkit/src/main/kotlin/org/trustweave/testkit/eo/README.md) for detailed EO test utilities
+- See [Test Fixtures](../../testkit/src/main/kotlin/org/trustweave/testkit/TrustWeaveTestFixture.kt) for fixture builder documentation
 - Check [Creating Plugins](../contributing/creating-plugins.md) to understand SPI interfaces being mocked
 

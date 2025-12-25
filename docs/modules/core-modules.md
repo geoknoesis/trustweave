@@ -6,7 +6,19 @@ parent: Reference
 
 # Core Modules
 
-TrustWeave is organised into small, composable modules. The list below explains when to add each module and what responsibility it carries so you can mix and match only what you need in your build.
+TrustWeave is organized into small, composable modules. The list below explains when to add each module and what responsibility it carries so you can mix and match only what you need in your build.
+
+## Getting Started
+
+For most users, start with `distribution-all` which includes all core modules:
+
+```kotlin
+dependencies {
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+}
+```
+
+For production deployments requiring minimal bundle size, use individual modules as shown below.
 
 ## Module Overview
 

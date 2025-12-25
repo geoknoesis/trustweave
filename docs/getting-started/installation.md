@@ -142,17 +142,19 @@ For production deployments, you may want to use individual modules instead of `d
 ```kotlin
 dependencies {
     // Core modules (required)
-    implementation("org.trustweave:trust:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:credentials:credential-api:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:did:did-core:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:kms:kms-core:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:anchors:anchor-core:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-trust:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:credentials-credential-api:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
 
     // Test kit (for testing)
     testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
 }
 ```
+
+> **Note:** For getting started, use `distribution-all` instead. Only use individual modules if you need to minimize bundle size in production.
 
 **Result:** You get the same APIs with a smaller bundle size. See [Module Architecture](../modules/core-modules.md) for details on available modules.
 

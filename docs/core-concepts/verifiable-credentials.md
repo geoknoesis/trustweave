@@ -318,7 +318,7 @@ import org.trustweave.testkit.credential.BasicWallet
 val wallet = BasicWallet()
 val credentialId = wallet.store(issuedCredential)
 
-**Outcome:** Persists the credential in a wallet so it can be queried, organised, and presented later.
+**Outcome:** Persists the credential in a wallet so it can be queried, organized, and presented later.
 ```
 
 ### 3. Presentation

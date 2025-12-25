@@ -215,7 +215,7 @@ To verify terminology consistency:
 
 1. **Check documentation for SDK class names**:
    ```bash
-   grep -r "TrustLayer\|trustweave-all\|TrustWeave-core" docs/ --include="*.md"
+   grep -r "TrustLayer\|trustweave-all\|TrustWeave-core\|trustweave-core" docs/ --include="*.md"
    ```
 
 2. **Check for correct module names**:

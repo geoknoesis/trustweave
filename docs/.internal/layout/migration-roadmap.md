@@ -16,8 +16,8 @@ title: Layout Migration Roadmap
 4. Run Gradle build to ensure dependency graph remains acyclic; adjust package imports accordingly.
 
 ## Phase 2 – Trust Runtime Split ✅
-1. Migrate `org.trustweave.trust` and supporting DSL runtime pieces from `TrustWeave-core` into `TrustWeave-trust`.
-2. Within `TrustWeave-core`, keep only credential-facing DSL entry points; refactor DSL builders to delegate to `TrustWeave-trust` contexts.
+1. Migrate `org.trustweave.trust` and supporting DSL runtime pieces from `common` (trustweave-common) into `TrustWeave-trust`.
+2. Within `common` (trustweave-common), keep only credential-facing DSL entry points; refactor DSL builders to delegate to `TrustWeave-trust` contexts.
 3. Update `TrustWeave-all` and examples to include the new module dependency.
 4. Expand docs to highlight configurations now available via `TrustWeave-trust`.
 

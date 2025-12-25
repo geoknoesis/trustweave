@@ -73,7 +73,7 @@ Add TrustWeave to your project:
 ```kotlin
 dependencies {
     // All-in-one dependency (recommended)
-    implementation("org.trustweave:TrustWeave-core:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
     implementation("org.trustweave:testkit:1.0.0-SNAPSHOT")  // For testing
 }
 ```

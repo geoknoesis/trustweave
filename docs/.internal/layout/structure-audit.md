@@ -8,10 +8,10 @@ title: TrustWeave Layout Audit
 
 | Module | Responsibility Highlights | Notes |
 | --- | --- | --- |
-| `TrustWeave-core` | Credential issuance/verification flows, wallet abstractions | Focused on domain logic under `credential.*` |
+| `common` (trustweave-common) | Credential issuance/verification flows, wallet abstractions | Focused on domain logic under `credential.*` |
 | `TrustWeave-spi` | Service/adapter interfaces and plugin registry | New home for adapter loader, factories, stubs |
 | `TrustWeave-trust` | Trust registry APIs and shared trust-layer contracts | Consumed by DSL/runtime modules |
-| `TrustWeave-did` | DID method registry, DID resolution helpers, delegation services | Depends on `TrustWeave-core`, `TrustWeave-spi`, `TrustWeave-kms` |
+| `TrustWeave-did` | DID method registry, DID resolution helpers, delegation services | Depends on `common` (trustweave-common), `TrustWeave-spi`, `TrustWeave-kms` |
 | `TrustWeave-anchor` | Blockchain anchoring abstractions and default registry | Integrations live in separate modules (`algorand`, `polygon`, `ganache`) with similar structure |
 | `TrustWeave-kms` | Key management abstractions & in-memory implementations | Consumed by core credential flows and examples |
 | `TrustWeave-json` | JSON helpers and serializers shared across modules | Lightweight but required nearly everywhere |
@@ -21,7 +21,7 @@ title: TrustWeave Layout Audit
 | `did/plugins/godiddy`, `kms/plugins/waltid`, etc. | Vendor-specific DID/KMS integrations | Each repeats similar adapter plumbing |
 | Blockchain adapters (`algorand`, `polygon`, `ganache`) | Provide `BlockchainAnchorClient` implementations | Flat module list; no shared integration base module |
 
-## 2. Key Packages inside `TrustWeave-core`
+## 2. Key Packages inside `common` (trustweave-common)
 
 ```
 org.trustweave
@@ -32,7 +32,7 @@ org.trustweave
 
 Observations:
 - `credential.*` combines domain objects with DSL helpers; remaining infrastructure now lives in dedicated modules.
-- `did.delegation` is the main non-credential package still residing in `TrustWeave-core`.
+- `did.delegation` is the main non-credential package still residing in `common` (trustweave-common).
 
 ## 3. Shared Utilities Living in Feature Modules
 

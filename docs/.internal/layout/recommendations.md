@@ -8,10 +8,10 @@ title: Proposed Layout Improvements
 
 ### A. Extract Cross-Cutting Infrastructure ✅
 - **Module `TrustWeave-trust`**
-  Trust-layer runtime lives here; `TrustWeave-core` now focuses on credential domain APIs.
+  Trust-layer runtime lives here; `common` (trustweave-common) now focuses on credential domain APIs.
 - **Module `TrustWeave-spi`**
   Plugin/SPI definitions and adapter loaders now reside here; other modules depend on it.
-- **Refined `TrustWeave-core` scope**
+- **Refined `common` (trustweave-common) scope**
   Contains credential issuance, verification, wallet DSLs, and models only.
 
 ### B. Group Integrations
@@ -25,11 +25,11 @@ title: Proposed Layout Improvements
 | `org.trustweave.core.services` | ✅ `TrustWeave-spi` (`org.trustweave.spi.services`) | Adapter loading and services migrated |
 | `org.trustweave.trust` | ✅ `TrustWeave-trust` | Trust DSL runtime relocated |
 | `org.trustweave.did.delegation` | `TrustWeave-did.delegation` | Keeps DID-specific flows alongside other DID tooling |
-| `org.trustweave.credential.dsl` | Split between `TrustWeave-core.credential.dsl` (domain builders) and `TrustWeave-trust.dsl` (trust-layer wiring) | Clarifies boundary between credential manipulation and runtime configuration |
+| `org.trustweave.credential.dsl` | Split between `common.credential.dsl` (domain builders) and `TrustWeave-trust.dsl` (trust-layer wiring) | Clarifies boundary between credential manipulation and runtime configuration |
 | `org.trustweave.credential.wallet` | Consider `wallet` submodule if wallet providers grow further | Provides space for wallet registry replacements without polluting credential root package |
 
 ## 3. Documentation & Navigation
 - Introduce a top-level `docs/modules/overview.md` linking each module to its responsibilities and entry points.
-- Update existing module READMEs (e.g., `TrustWeave-core/README.md`, `TrustWeave-did/README.md`) to reflect the refined scope after extraction.
+- Update existing module READMEs (e.g., `common/README.md`, `TrustWeave-did/README.md`) to reflect the refined scope after extraction.
 - Provide a migration note in `docs/migration/` describing the SPI module and trust module split for third-party integrators.
 

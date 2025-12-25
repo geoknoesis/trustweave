@@ -45,7 +45,7 @@ All plugins use hierarchical Maven group IDs:
 
 ## Module Details
 
-### TrustWeave-core
+### trustweave-common
 
 Shared types and utilities:
 - `TrustWeaveException`: Base exception class

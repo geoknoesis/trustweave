@@ -43,10 +43,13 @@ data class CredentialSubject(
         get() = id.isDid
     
     /**
-     * Check if the subject ID is a URI.
+     * Check if the subject ID is an HTTP/HTTPS URL.
+     * 
+     * **Note:** All URLs are URIs, but not all URIs are URLs.
+     * DIDs and URNs are URIs but not URLs.
      */
-    val isUri: Boolean
-        get() = id.isUri
+    val isHttpUrl: Boolean
+        get() = id.isHttpUrl
     
     /**
      * Check if the subject ID is a URN.

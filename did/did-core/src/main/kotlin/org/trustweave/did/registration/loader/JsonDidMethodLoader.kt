@@ -4,6 +4,7 @@ import org.trustweave.did.DidMethod
 import org.trustweave.did.registration.impl.HttpDidMethod
 import org.trustweave.did.registration.mapper.RegistryEntryMapper
 import org.trustweave.did.registration.model.*
+import org.trustweave.did.util.DidLogging
 import kotlinx.serialization.json.*
 import java.io.InputStream
 import java.nio.file.Files
@@ -32,6 +33,8 @@ import java.nio.file.Paths
  * ```
  */
 class JsonDidMethodLoader {
+
+    private val logger = DidLogging.getLogger(JsonDidMethodLoader::class.java)
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -123,7 +126,7 @@ class JsonDidMethodLoader {
                         loadFromFile(filePath)
                     } catch (e: Exception) {
                         // Log error but continue loading other files
-                        System.err.println("Failed to load DID method from ${filePath}: ${e.message}")
+                        logger.error("Failed to load DID method from $filePath", e)
                         null
                     }
                 }
@@ -158,7 +161,7 @@ class JsonDidMethodLoader {
                 loadFromJarResource(classLoader, resourcePath)
             }
             else -> {
-                System.err.println("Unsupported resource protocol: ${resourceUrl.protocol}")
+                logger.warn("Unsupported resource protocol: ${resourceUrl.protocol}")
                 emptyList()
             }
         }
@@ -187,7 +190,7 @@ class JsonDidMethodLoader {
                                 methods.add(loadFromInputStream(inputStream))
                             }
                         } catch (e: Exception) {
-                            System.err.println("Failed to load DID method from JAR entry $name: ${e.message}")
+                            logger.error("Failed to load DID method from JAR entry $name", e)
                         }
                     }
                 }
@@ -220,7 +223,7 @@ class JsonDidMethodLoader {
                             // Convert legacy spec to registry entry
                             convertLegacySpecToEntry(spec)
                         } catch (e2: Exception) {
-                            System.err.println("Failed to load DID method from ${filePath}: ${e.message}")
+                            logger.error("Failed to load DID method from $filePath", e2)
                             null
                         }
                     }
@@ -250,7 +253,7 @@ class JsonDidMethodLoader {
                 loadRegistryEntriesFromJarResource(classLoader, resourcePath)
             }
             else -> {
-                System.err.println("Unsupported resource protocol: ${resourceUrl.protocol}")
+                logger.warn("Unsupported resource protocol: ${resourceUrl.protocol}")
                 emptyList()
             }
         }
@@ -288,7 +291,7 @@ class JsonDidMethodLoader {
                                     entries.add(convertLegacySpecToEntry(spec))
                                 }
                             } catch (e2: Exception) {
-                                System.err.println("Failed to load DID method from JAR entry $name: ${e.message}")
+                                logger.error("Failed to load DID method from JAR entry $name", e2)
                             }
                         }
                     }

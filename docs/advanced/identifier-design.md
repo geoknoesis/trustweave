@@ -228,9 +228,15 @@ open class Iri(val value: String) {
     }
     
     /**
-     * Check if this IRI represents a URI/URL (starts with http:// or https://).
+     * Check if this IRI represents an HTTP/HTTPS URL.
+     * 
+     * This checks specifically for web URLs (http:// or https://).
+     * 
+     * **Note:** All URLs are URIs, but not all URIs are URLs. 
+     * DIDs and URNs are URIs but not URLs. For a general URI check, 
+     * any IRI with a scheme is a URI (use [scheme] property).
      */
-    val isUri: Boolean
+    val isHttpUrl: Boolean
         get() = value.startsWith("http://") || value.startsWith("https://")
     
     /**

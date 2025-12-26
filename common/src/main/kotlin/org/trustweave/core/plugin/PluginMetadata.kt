@@ -73,6 +73,48 @@ data class PluginDependency(
  *
  * Plugins can implement this interface to receive lifecycle callbacks
  * for initialization, startup, shutdown, and cleanup.
+ *
+ * **When to Implement:**
+ * - Database-backed plugins (need connection initialization)
+ * - Remote service plugins (need connection establishment)
+ * - File-based storage (need directory creation)
+ * - Blockchain clients (need network connection setup)
+ * - Any plugin requiring external resources
+ * - Production deployments with persistent storage
+ *
+ * **When NOT to Implement:**
+ * - In-memory implementations (e.g., `InMemoryKeyManagementService`)
+ * - Simple test scenarios
+ * - Stateless plugins
+ * - Quick start examples
+ *
+ * **Example:**
+ * ```kotlin
+ * class DatabasePlugin : CredentialService, PluginLifecycle {
+ *     private var connection: Connection? = null
+ *
+ *     override suspend fun initialize(config: Map<String, Any?>): Boolean {
+ *         val url = config["databaseUrl"] as? String ?: return false
+ *         connection = DriverManager.getConnection(url)
+ *         return true
+ *     }
+ *
+ *     override suspend fun start(): Boolean {
+ *         // Start connection pool, background threads, etc.
+ *         return connection != null
+ *     }
+ *
+ *     override suspend fun stop(): Boolean {
+ *         // Stop background processes
+ *         return true
+ *     }
+ *
+ *     override suspend fun cleanup() {
+ *         connection?.close()
+ *         connection = null
+ *     }
+ * }
+ * ```
  */
 interface PluginLifecycle {
     /**

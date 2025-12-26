@@ -207,7 +207,7 @@ val iri2: Iri = credId   // CredentialId IS-A Iri
 // ✅ Use Iri features on any identifier
 fun processIri(iri: Iri) {
     when {
-        iri.isUri -> println("URI: ${iri.value}")
+        iri.isHttpUrl -> println("HTTP/HTTPS URL: ${iri.value}")
         iri.isDid -> println("DID: ${iri.value}")
         iri.isUrn -> println("URN: ${iri.value}")
     }

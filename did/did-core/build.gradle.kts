@@ -10,6 +10,10 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)
-    // Test dependencies are standardized in root build.gradle.kts
+    // Logging (compileOnly - implementations provide actual logger)
+    compileOnly("org.slf4j:slf4j-api:2.0.9")
+    // Test dependencies
+    testImplementation(libs.kotlinx.coroutines.test)
+    // Other test dependencies are standardized in root build.gradle.kts
 }
 

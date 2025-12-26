@@ -32,18 +32,6 @@ fun <T> Result<T>.getOrThrowException(): T {
     }
 }
 
-/**
- * Gets the result value or returns a default value based on the error.
- *
- * @param transform Function to transform the error into a default value
- * @return The result value or the default value
- */
-inline fun <T> Result<T>.getOrElse(transform: (Throwable) -> T): T {
-    return fold(
-        onSuccess = { it },
-        onFailure = transform
-    )
-}
 
 /**
  * Combines multiple Results into a single Result containing a list of values.
@@ -68,11 +56,30 @@ fun <T, R> List<Result<T>>.combine(transform: (List<T>) -> R): Result<R> = runCa
 /**
  * Maps a list of items to Results and combines them sequentially.
  *
- * Note: Despite the name, this function executes sequentially, not in parallel.
- * For parallel execution, use coroutines with async/await.
+ * This function processes items one by one, stopping at the first failure.
+ * All items are processed in order, making it suitable for operations that
+ * must complete sequentially (e.g., database transactions, file operations).
+ *
+ * **When to use:**
+ * - Operations that must complete in order
+ * - When you need to stop on first failure
+ * - Sequential processing with early termination
+ *
+ * **When NOT to use:**
+ * - For parallel processing (use `async`/`await` instead)
+ * - When you need all results even if some fail (use `mapNotNull` instead)
+ *
+ * **Example:**
+ * ```kotlin
+ * val items = listOf(1, 2, 3)
+ * val results = items.mapSequential { item ->
+ *     Result.success(item * 2)
+ * }
+ * // Result.success([2, 4, 6])
+ * ```
  *
  * @param transform Function to transform each item to a Result
- * @return Result containing the list of transformed values
+ * @return Result containing the list of transformed values, or failure if any transform fails
  */
 suspend fun <T, R> List<T>.mapSequential(
     transform: suspend (T) -> Result<R>

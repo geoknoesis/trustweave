@@ -50,36 +50,46 @@ class Did(
     
     /**
      * Get the DID method from this DID (e.g., "key", "web", "ion").
-     * Cached for performance.
+     * Cached for performance using lazy initialization.
      */
-    private val _method: String by lazy {
+    val method: String by lazy {
         val parts = this.value.substringAfter("did:").split(":", limit = 2)
         parts.firstOrNull() ?: throw IllegalStateException("Invalid DID: ${this.value}")
     }
     
-    val method: String
-        get() = _method
-    
     /**
      * Get the method-specific identifier.
+     * Cached for performance.
      */
-    val identifier: String
-        get() = this.value.substringAfter("did:$method:")
+    val identifier: String by lazy {
+        this.value.substringAfter("did:$method:")
+    }
     
     /**
      * Parse DID URL path (e.g., "/path" from "did:web:example.com/path").
+     * Cached for performance.
      */
-    val path: String?
-        get() {
-            val parts = this.value.split("/", limit = 2)
-            return parts.getOrNull(1)
-        }
+    val path: String? by lazy {
+        val parts = this.value.split("/", limit = 2)
+        parts.getOrNull(1)
+    }
     
     /**
      * Get DID without path or fragment.
+     * Optimized to avoid creating new instance if no path/fragment exists.
      */
     val baseDid: Did
-        get() = Did(this.value.substringBefore("/"))
+        get() {
+            val withoutFragment = this.value.substringBefore("#")
+            val withoutPath = withoutFragment.substringBefore("/")
+            return if (withoutPath == this.value) {
+                // No path or fragment, return this instance
+                this
+            } else {
+                // Path or fragment exists, create new instance
+                Did(withoutPath)
+            }
+        }
     
     override fun toString(): String = value
     

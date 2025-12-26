@@ -26,48 +26,27 @@ class RegistryBasedResolver(
 ) : DidResolver {
 
     override suspend fun resolve(did: Did): DidResolutionResult {
+        // DID is already parsed and validated (Did constructor validates)
+        // No need to re-parse or re-validate
         val didString = did.value
-        // Validate DID format
-        val validationResult = DidValidator.validateFormat(didString)
-        if (!validationResult.isValid()) {
-            return DidResolutionResult.Failure.InvalidFormat(
-                did = didString,
-                reason = validationResult.errorMessage() ?: "Invalid DID format",
-                resolutionMetadata = mapOf(
-                    "error" to "invalidDid",
-                    "errorMessage" to (validationResult.errorMessage() ?: "Invalid DID format")
-                )
-            )
-        }
-
+        
         try {
-            val parsed = Did(didString)
-            val method = registry.get(parsed.method)
+            val method = registry.get(did.method)
 
             if (method == null) {
                 return DidResolutionResult.Failure.MethodNotRegistered(
-                    method = parsed.method,
+                    method = did.method,
                     availableMethods = registry.getAllMethodNames(),
                     resolutionMetadata = mapOf(
                         "error" to "methodNotSupported",
-                        "errorMessage" to "DID method '${parsed.method}' is not registered",
+                        "errorMessage" to "DID method '${did.method}' is not registered",
                         "did" to didString
                     )
                 )
             }
 
             // Use type-safe resolveDid(Did) method
-            return method.resolveDid(parsed)
-        } catch (e: IllegalArgumentException) {
-            // Invalid DID format
-            return DidResolutionResult.Failure.InvalidFormat(
-                did = didString,
-                reason = e.message ?: "Invalid DID format",
-                resolutionMetadata = mapOf(
-                    "error" to "invalidDid",
-                    "errorMessage" to (e.message ?: "Invalid DID format")
-                )
-            )
+            return method.resolveDid(did)
         } catch (e: DidException) {
             // Convert DidException to resolution result
             val errorMetadata = mutableMapOf<String, Any?>(

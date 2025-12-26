@@ -1,7 +1,6 @@
 package org.trustweave.core.util
 
 import org.trustweave.core.exception.TrustWeaveException
-import org.trustweave.core.util.DigestUtils.maxCacheSize
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.*
 import java.security.MessageDigest
@@ -131,9 +130,10 @@ object DigestUtils {
                 position = null
             )
         } catch (e: Exception) {
+            // Catch any other unexpected exceptions (e.g., OutOfMemoryError, etc.)
             throw TrustWeaveException.InvalidJson(
                 jsonString = jsonString,
-                parseError = e.message ?: "Unknown error",
+                parseError = e.message ?: "Unknown error: ${e::class.simpleName}",
                 position = null
             )
         }
@@ -201,14 +201,18 @@ object DigestUtils {
         } catch (e: Exception) {
             // Not valid JSON or parsing failed, compute digest directly on original string
             val canonical = data
+            // Optimize: single synchronized block for cache check and store
             if (enableDigestCache && maxCacheSize > 0) {
                 synchronized(cacheLock) {
                     digestCache[canonical]?.let { return it }
+                    // Compute digest outside synchronized block to reduce lock time
                 }
             }
             val digest = computeDigest(canonical)
             if (enableDigestCache && maxCacheSize > 0) {
                 synchronized(cacheLock) {
+                    // Double-check pattern: another thread might have computed it
+                    digestCache[canonical]?.let { return it }
                     digestCache[canonical] = digest
                 }
             }
@@ -229,19 +233,22 @@ object DigestUtils {
     fun sha256DigestMultibase(element: JsonElement): String {
         val canonical = canonicalizeJson(element)
 
-        // Check cache if enabled
+        // Optimize: single synchronized block with double-check pattern
         if (enableDigestCache && maxCacheSize > 0) {
             synchronized(cacheLock) {
                 digestCache[canonical]?.let { return it }
+                // Compute digest outside synchronized block to reduce lock time
             }
         }
 
         // Compute digest
         val digest = computeDigest(canonical)
 
-        // Cache if enabled
+        // Cache if enabled with double-check pattern
         if (enableDigestCache && maxCacheSize > 0) {
             synchronized(cacheLock) {
+                // Double-check: another thread might have computed it while we were computing
+                digestCache[canonical]?.let { return it }
                 digestCache[canonical] = digest
             }
         }

@@ -1,17 +1,34 @@
 package org.trustweave.core.exception
 
 /**
- * Base sealed exception hierarchy for all TrustWeave operations.
+ * Base exception hierarchy for all TrustWeave operations.
  *
  * All TrustWeave exceptions provide structured error codes and context
  * for better error handling and debugging. Exceptions are organized by
  * naming convention (Plugin*, Provider*, Config*, etc.) for clarity.
  *
- * This sealed class ensures exhaustive handling in when expressions.
+ * **Design Note:** This is an `open class` to allow domain-specific exception
+ * hierarchies (DidException, WalletException, BlockchainException, etc.) in
+ * other modules to extend it. Domain-specific exception classes are typically
+ * `sealed` for exhaustive handling within their respective domains.
+ *
+ * **Exception Hierarchy:**
+ * - Core exceptions (in this class) - Plugin, Provider, Config, JSON, etc.
+ * - Domain exceptions (in other modules) - DidException, WalletException, etc.
+ * - Plugin exceptions (in plugin modules) - DidCommException, Oidc4VciException, etc.
  */
 open class TrustWeaveException(
     open val code: String,
     override val message: String,
+    /**
+     * Context map containing additional error information.
+     *
+     * **Null Handling:** Null values in the context map are typically filtered out
+     * using `.filterValues { it != null }` to keep the context map clean and avoid
+     * unnecessary null entries. However, some exceptions may intentionally include
+     * null values if they represent meaningful state (e.g., optional fields that
+     * were explicitly set to null vs. not provided).
+     */
     open val context: Map<String, Any?> = emptyMap(),
     override val cause: Throwable? = null
 ) : Exception(message, cause) {
@@ -45,7 +62,13 @@ open class TrustWeaveException(
         )
     )
 
-    class BlankPluginId : TrustWeaveException(
+    /**
+     * Exception thrown when a plugin ID is blank or empty.
+     *
+     * This is a singleton object since it has no state and represents
+     * a single, well-defined error condition.
+     */
+    object BlankPluginId : TrustWeaveException(
         code = "BLANK_PLUGIN_ID",
         message = "Plugin ID cannot be blank",
         context = emptyMap()
@@ -258,14 +281,21 @@ open class TrustWeaveException(
     data class NotFound(
         val resource: String? = null,
         override val message: String = resource?.let { "Resource not found: $it" } ?: "Resource not found",
-        override val context: Map<String, Any?> = emptyMap(),
+        private val baseContext: Map<String, Any?> = emptyMap(),
         override val cause: Throwable? = null
     ) : TrustWeaveException(
         code = "NOT_FOUND",
         message = message,
-        context = context + (resource?.let { mapOf("resource" to it) } ?: emptyMap()),
+        context = buildMap {
+            putAll(baseContext)  // Preserve any custom context passed
+            resource?.let { put("resource", it) }  // Add resource if present
+        },
         cause = cause
-    )
+    ) {
+        // Override context to return the computed value from parent
+        override val context: Map<String, Any?>
+            get() = super.context
+    }
 
     data class UnsupportedAlgorithm(
         val algorithm: String,
@@ -334,54 +364,77 @@ fun trustWeaveException(message: String, cause: Throwable? = null): TrustWeaveEx
 }
 
 /**
- * Helper functions for category-based exception handling.
+ * Checks if the exception is plugin-related.
+ *
+ * Plugin exceptions include: PluginNotFound, PluginInitializationFailed,
+ * BlankPluginId, and PluginAlreadyRegistered.
+ *
+ * **Note:** This only checks for core plugin exceptions. Domain-specific
+ * exceptions (e.g., DidException, WalletException) are not considered
+ * plugin exceptions even though they extend TrustWeaveException.
  */
-object TrustWeaveExceptionHelpers {
-    /**
-     * Checks if the exception is plugin-related.
-     */
-    fun TrustWeaveException.isPluginException(): Boolean = when (this) {
-        is TrustWeaveException.PluginNotFound,
-        is TrustWeaveException.PluginInitializationFailed,
-        is TrustWeaveException.BlankPluginId,
-        is TrustWeaveException.PluginAlreadyRegistered -> true
-        else -> false
-    }
+fun TrustWeaveException.isPluginException(): Boolean = when (this) {
+    is TrustWeaveException.PluginNotFound,
+    is TrustWeaveException.PluginInitializationFailed,
+    is TrustWeaveException.BlankPluginId,
+    is TrustWeaveException.PluginAlreadyRegistered -> true
+    else -> false
+}
 
-    /**
-     * Checks if the exception is provider-related.
-     */
-    fun TrustWeaveException.isProviderException(): Boolean = when (this) {
-        is TrustWeaveException.NoProvidersFound,
-        is TrustWeaveException.PartialProvidersFound,
-        is TrustWeaveException.AllProvidersFailed -> true
-        else -> false
-    }
+/**
+ * Checks if the exception is provider-related.
+ *
+ * Provider exceptions include: NoProvidersFound, PartialProvidersFound,
+ * and AllProvidersFailed.
+ */
+fun TrustWeaveException.isProviderException(): Boolean = when (this) {
+    is TrustWeaveException.NoProvidersFound,
+    is TrustWeaveException.PartialProvidersFound,
+    is TrustWeaveException.AllProvidersFailed -> true
+    else -> false
+}
 
-    /**
-     * Checks if the exception is configuration-related.
-     */
-    fun TrustWeaveException.isConfigException(): Boolean = when (this) {
-        is TrustWeaveException.ConfigNotFound,
-        is TrustWeaveException.ConfigReadFailed,
-        is TrustWeaveException.InvalidConfigFormat -> true
-        else -> false
-    }
+/**
+ * Checks if the exception is configuration-related.
+ *
+ * Configuration exceptions include: ConfigNotFound, ConfigReadFailed,
+ * and InvalidConfigFormat.
+ */
+fun TrustWeaveException.isConfigException(): Boolean = when (this) {
+    is TrustWeaveException.ConfigNotFound,
+    is TrustWeaveException.ConfigReadFailed,
+    is TrustWeaveException.InvalidConfigFormat -> true
+    else -> false
+}
 
-    /**
-     * Checks if the exception is JSON-related.
-     */
-    fun TrustWeaveException.isJsonException(): Boolean = when (this) {
-        is TrustWeaveException.InvalidJson,
-        is TrustWeaveException.JsonEncodeFailed -> true
-        else -> false
-    }
+/**
+ * Checks if the exception is JSON-related.
+ *
+ * JSON exceptions include: InvalidJson and JsonEncodeFailed.
+ */
+fun TrustWeaveException.isJsonException(): Boolean = when (this) {
+    is TrustWeaveException.InvalidJson,
+    is TrustWeaveException.JsonEncodeFailed -> true
+    else -> false
+}
 
-    /**
-     * Checks if the exception is validation-related.
-     */
-    fun TrustWeaveException.isValidationException(): Boolean = when (this) {
-        is TrustWeaveException.ValidationFailed -> true
-        else -> false
-    }
+/**
+ * Checks if the exception is validation-related.
+ *
+ * Validation exceptions include: ValidationFailed.
+ */
+fun TrustWeaveException.isValidationException(): Boolean = when (this) {
+    is TrustWeaveException.ValidationFailed -> true
+    else -> false
+}
+
+/**
+ * Checks if the exception is encoding/digest-related.
+ *
+ * Encoding exceptions include: DigestFailed and EncodeFailed.
+ */
+fun TrustWeaveException.isEncodingException(): Boolean = when (this) {
+    is TrustWeaveException.DigestFailed,
+    is TrustWeaveException.EncodeFailed -> true
+    else -> false
 }

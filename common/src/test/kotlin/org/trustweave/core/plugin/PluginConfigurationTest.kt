@@ -86,6 +86,63 @@ class PluginConfigurationTest {
     }
 
     @Test
+    fun `test PluginConfig getConfigInt`() {
+        val pluginConfig = PluginConfig(
+            id = "test-plugin",
+            type = PluginType.CREDENTIAL_SERVICE,
+            provider = "test",
+            config = mapOf("port" to "8080", "invalid" to "not-a-number")
+        )
+
+        assertEquals(8080, pluginConfig.getConfigInt("port"))
+        assertNull(pluginConfig.getConfigInt("invalid"))
+        assertNull(pluginConfig.getConfigInt("nonexistent"))
+    }
+
+    @Test
+    fun `test PluginConfig getConfigBoolean`() {
+        val pluginConfig = PluginConfig(
+            id = "test-plugin",
+            type = PluginType.CREDENTIAL_SERVICE,
+            provider = "test",
+            config = mapOf("enabled" to "true", "disabled" to "false", "invalid" to "maybe")
+        )
+
+        assertEquals(true, pluginConfig.getConfigBoolean("enabled"))
+        assertEquals(false, pluginConfig.getConfigBoolean("disabled"))
+        assertNull(pluginConfig.getConfigBoolean("invalid"))
+        assertNull(pluginConfig.getConfigBoolean("nonexistent"))
+    }
+
+    @Test
+    fun `test PluginConfig getConfigLong`() {
+        val pluginConfig = PluginConfig(
+            id = "test-plugin",
+            type = PluginType.CREDENTIAL_SERVICE,
+            provider = "test",
+            config = mapOf("timestamp" to "1234567890", "invalid" to "not-a-long")
+        )
+
+        assertEquals(1234567890L, pluginConfig.getConfigLong("timestamp"))
+        assertNull(pluginConfig.getConfigLong("invalid"))
+        assertNull(pluginConfig.getConfigLong("nonexistent"))
+    }
+
+    @Test
+    fun `test PluginConfig getConfigDouble`() {
+        val pluginConfig = PluginConfig(
+            id = "test-plugin",
+            type = PluginType.CREDENTIAL_SERVICE,
+            provider = "test",
+            config = mapOf("ratio" to "3.14", "invalid" to "not-a-double")
+        )
+
+        assertEquals(3.14, pluginConfig.getConfigDouble("ratio"))
+        assertNull(pluginConfig.getConfigDouble("invalid"))
+        assertNull(pluginConfig.getConfigDouble("nonexistent"))
+    }
+
+    @Test
     fun `test PluginConfig getConfigAsJsonObject`() {
         val pluginConfig = PluginConfig(
             id = "test-plugin",
@@ -98,6 +155,40 @@ class PluginConfigurationTest {
 
         assertEquals("value", jsonObject["key"]?.jsonPrimitive?.content)
         assertEquals("42", jsonObject["number"]?.jsonPrimitive?.content)
+    }
+
+    @Test
+    fun `test PluginConfig getConfigAsJsonObject with JSON values`() {
+        val pluginConfig = PluginConfig(
+            id = "test-plugin",
+            type = PluginType.CREDENTIAL_SERVICE,
+            provider = "test",
+            config = mapOf(
+                "simple" to "value",
+                "json" to """{"nested": "object"}"""
+            )
+        )
+
+        val jsonObject = pluginConfig.getConfigAsJsonObject()
+
+        assertEquals("value", jsonObject["simple"]?.jsonPrimitive?.content)
+        // JSON value should be parsed as JsonObject
+        assertTrue(jsonObject["json"] is JsonObject)
+    }
+
+    @Test
+    fun `test PluginConfig getConfigAsJsonObject with invalid JSON falls back to string`() {
+        val pluginConfig = PluginConfig(
+            id = "test-plugin",
+            type = PluginType.CREDENTIAL_SERVICE,
+            provider = "test",
+            config = mapOf("invalid" to "{ invalid json }")
+        )
+
+        val jsonObject = pluginConfig.getConfigAsJsonObject()
+
+        // Should fall back to string when JSON parsing fails
+        assertEquals("{ invalid json }", jsonObject["invalid"]?.jsonPrimitive?.content)
     }
 
     @Test

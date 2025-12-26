@@ -63,6 +63,7 @@ class ResultExtensionsTest {
     fun `test getOrElse returns default on failure`() {
         val result: Result<String> = Result.failure(IllegalArgumentException("Error"))
 
+        // Uses standard library getOrElse
         val value = result.getOrElse { "default" }
 
         assertEquals("default", value)
@@ -72,6 +73,7 @@ class ResultExtensionsTest {
     fun `test getOrElse returns value on success`() {
         val result: Result<String> = Result.success("value")
 
+        // Uses standard library getOrElse
         val value = result.getOrElse { "default" }
 
         assertEquals("value", value)

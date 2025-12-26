@@ -161,5 +161,49 @@ class PluginRegistryErrorTest {
         assertNotNull(selected)
         assertEquals("test-plugin", selected.id)
     }
+
+    @Test
+    fun `test unregister throws exception for blank plugin ID`() {
+        val exception = assertFailsWith<IllegalArgumentException> {
+            registry.unregister("")
+        }
+
+        assertTrue(exception.message?.contains("blank") == true)
+    }
+
+    @Test
+    fun `test unregister is idempotent for non-existent plugin`() {
+        // Should not throw, just return silently
+        registry.unregister("nonexistent-plugin")
+
+        // Verify it's still not registered
+        assertFalse(registry.isRegistered("nonexistent-plugin"))
+    }
+
+    @Test
+    fun `test unregister removes all plugin data`() {
+        val metadata = PluginMetadata(
+            id = "test-plugin",
+            name = "Test Plugin",
+            version = "1.0.0",
+            provider = "test",
+            capabilities = PluginCapabilities()
+        )
+        val instance = "test-instance"
+        registry.register(metadata, instance)
+
+        // Verify registered
+        assertTrue(registry.isRegistered("test-plugin"))
+        assertNotNull(registry.getMetadata("test-plugin"))
+        assertNotNull(registry.getInstance<String>("test-plugin"))
+
+        // Unregister
+        registry.unregister("test-plugin")
+
+        // Verify all data removed
+        assertFalse(registry.isRegistered("test-plugin"))
+        assertNull(registry.getMetadata("test-plugin"))
+        assertNull(registry.getInstance<String>("test-plugin"))
+    }
 }
 

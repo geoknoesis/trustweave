@@ -18,11 +18,19 @@ internal class ProviderChain<T>(
     private val providers: List<T>,
     private val selector: (T) -> Boolean = { true }
 ) {
+    // Cache selected providers to avoid repeated filtering
+    // This provides O(1) access to selected providers after initial filtering
+    private val selectedProviders: List<T> by lazy {
+        providers.filter(selector)
+    }
+
     init {
-        require(providers.isNotEmpty()) { "Provider chain must contain at least one provider" }
+        require(providers.isNotEmpty()) { 
+            "Provider chain must contain at least one provider" 
+        }
         // Validate that selector doesn't filter out all providers
-        val selectedCount = providers.count(selector)
-        require(selectedCount > 0) {
+        // Access selectedProviders to trigger lazy initialization and validation
+        require(selectedProviders.isNotEmpty()) {
             "Selector function filters out all providers. At least one provider must be selected."
         }
     }
@@ -41,14 +49,13 @@ internal class ProviderChain<T>(
      */
     suspend fun <R> execute(operation: suspend (T) -> R): R {
         var lastException: Throwable? = null
-        val attemptedProviders = mutableListOf<String>()
-        val providerErrors = mutableMapOf<String, String>()
-        var attemptCount = 0
+        // Pre-size collections for better performance
+        val selected = selectedProviders
+        val attemptedProviders = ArrayList<String>(selected.size)
+        val providerErrors = HashMap<String, String>(selected.size)
 
-        for ((index, provider) in providers.withIndex()) {
-            if (!selector(provider)) continue
-            attemptCount++
-
+        // Use cached selected providers instead of filtering in loop
+        for ((index, provider) in selected.withIndex()) {
             try {
                 return operation(provider)
             } catch (e: Throwable) {
@@ -66,23 +73,18 @@ internal class ProviderChain<T>(
                 // 1. Multiple instances of the same class may exist in the chain
                 // 2. The index ensures uniqueness even for identical class types
                 // 3. This helps with debugging by showing which specific instance failed
-                // Note: provider is non-null here (we're in the catch block after a non-null check)
-                val providerInstance = provider!!
-                val className = providerInstance.javaClass.name
-                    .substringAfterLast('.')
+                // Use simpleName for better performance (no substring operation needed)
+                val className = (provider as Any).javaClass.simpleName
                 val providerId = "$className[$index]"
                 attemptedProviders.add(providerId)
 
                 // Store error message for detailed failure reporting.
                 // Fallback chain: exception message -> class name -> "Unknown error"
                 providerErrors[providerId] = e.message ?: e::class.simpleName ?: "Unknown error"
-
-                // Continue to next provider in the chain (failover behavior)
-                continue
             }
         }
 
-        if (attemptCount == 0) {
+        if (attemptedProviders.isEmpty()) {
             throw TrustWeaveException.InvalidState(
                 message = "No providers were selected by the selector function. " +
                     "At least one provider must be available for execution."
@@ -121,8 +123,10 @@ internal class ProviderChain<T>(
 
     /**
      * Get the number of selected providers (after applying selector).
+     * 
+     * Performance: O(1) - uses cached selected providers list.
      */
-    fun selectedSize(): Int = providers.count(selector)
+    fun selectedSize(): Int = selectedProviders.size
 
     /**
      * Check if chain is empty.
@@ -144,18 +148,17 @@ internal inline fun <reified T> createProviderChain(
     pluginIds: List<String>,
     registry: PluginRegistry
 ): ProviderChain<T> {
-    // Map each plugin ID to its instance, preserving the original index.
-    // mapIndexedNotNull filters out null results (when plugin not found) while
-    // keeping the index for potential ordering/priority information.
-    val found = pluginIds.mapIndexedNotNull { _, pluginId ->
-        registry.getInstance(pluginId, T::class.java)?.let { pluginId to it }
+    // Pre-size collections for better performance
+    val found = ArrayList<Pair<String, T>>(pluginIds.size)
+    val foundIdsSet = HashSet<String>(pluginIds.size)
+    
+    // Map each plugin ID to its instance, preserving the original order.
+    for (pluginId in pluginIds) {
+        registry.getInstance(pluginId, T::class.java)?.let { instance ->
+            found.add(pluginId to instance)
+            foundIdsSet.add(pluginId)
+        }
     }
-
-    // Extract found IDs and compute missing IDs by set difference.
-    // This allows us to provide detailed error information about which
-    // specific plugins were not found.
-    val foundIds = found.map { it.first }
-    val missingIds = pluginIds.filter { id -> foundIds.none { it == id } }
 
     // Error handling: Fail fast if no providers found at all.
     // This prevents creating an invalid chain that would fail on first use.
@@ -169,10 +172,13 @@ internal inline fun <reified T> createProviderChain(
     // Error handling: Fail if some (but not all) providers are missing.
     // This ensures that the chain contains exactly the requested providers,
     // maintaining predictable behavior and preventing partial configurations.
+    // Performance: O(n) using Set lookup instead of O(n²) with list.contains()
+    val missingIds = pluginIds.filterNot { it in foundIdsSet }
+    
     if (missingIds.isNotEmpty()) {
         throw TrustWeaveException.PartialProvidersFound(
             requestedIds = pluginIds,
-            foundIds = foundIds,
+            foundIds = found.map { it.first },
             missingIds = missingIds
         )
     }

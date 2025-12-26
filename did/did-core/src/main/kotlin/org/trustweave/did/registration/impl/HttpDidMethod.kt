@@ -5,6 +5,7 @@ import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.DidMethod
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
+import org.trustweave.did.exception.DidException
 import org.trustweave.did.registrar.DidRegistrar
 import org.trustweave.did.registrar.model.*
 import org.trustweave.did.registration.model.DidRegistrationSpec
@@ -111,17 +112,17 @@ class HttpDidMethod(
     override suspend fun createDid(options: DidCreationOptions): DidDocument = withContext(Dispatchers.IO) {
         val capabilities = registrationSpec.capabilities
         if (capabilities?.create != true) {
-            throw org.trustweave.core.exception.TrustWeaveException.InvalidOperation(
-                message = "DID method '${registrationSpec.name}' does not support creation. This method only supports resolution via HTTP endpoint.",
-                context = mapOf("method" to registrationSpec.name, "operation" to "create")
+            throw org.trustweave.did.exception.DidException.DidResolutionFailed(
+                did = Did("did:${registrationSpec.name}:unknown"),
+                reason = "DID method '${registrationSpec.name}' does not support creation. This method only supports resolution via HTTP endpoint."
             )
         }
 
         // Use registrar if available
         val registrarToUse = registrar
-            ?: throw org.trustweave.core.exception.TrustWeaveException.InvalidState(
-                message = "DID creation requires a DidRegistrar. Provide a registrar when creating HttpDidMethod or use a native implementation.",
-                context = mapOf("method" to registrationSpec.name, "operation" to "create")
+            ?: throw org.trustweave.did.exception.DidException.DidResolutionFailed(
+                did = Did("did:${registrationSpec.name}:unknown"),
+                reason = "DID creation requires a DidRegistrar. Provide a registrar when creating HttpDidMethod or use a native implementation."
             )
 
         // Convert legacy options to spec-compliant options
@@ -152,14 +153,14 @@ class HttpDidMethod(
         } else if (response.jobId != null) {
             // For now, throw an error for long-running operations
             // In the future, we could add polling support
-            throw org.trustweave.core.exception.TrustWeaveException.InvalidOperation(
-                message = "DID creation is a long-running operation (jobId: ${response.jobId}). Use the registrar directly to poll for completion.",
-                context = mapOf("jobId" to (response.jobId ?: ""), "operation" to "create")
+            throw DidException.DidResolutionFailed(
+                did = Did("did:${registrationSpec.name}:unknown"),
+                reason = "DID creation is a long-running operation (jobId: ${response.jobId}). Use the registrar directly to poll for completion."
             )
         } else {
-            throw org.trustweave.core.exception.TrustWeaveException.Unknown(
-                message = "DID creation failed: ${response.didState.state}",
-                context = mapOf("operation" to "create", "state" to response.didState.state.toString())
+            throw DidException.DidResolutionFailed(
+                did = Did("did:${registrationSpec.name}:unknown"),
+                reason = "DID creation failed: ${response.didState.state}"
             )
         }
 
@@ -174,9 +175,9 @@ class HttpDidMethod(
     override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
         val capabilities = registrationSpec.capabilities
         if (capabilities?.resolve != true) {
-            throw org.trustweave.core.exception.TrustWeaveException.InvalidOperation(
-                message = "DID method '${registrationSpec.name}' does not support resolution.",
-                context = mapOf("method" to registrationSpec.name, "operation" to "resolve")
+            throw DidException.DidResolutionFailed(
+                did = did,
+                reason = "DID method '${registrationSpec.name}' does not support resolution."
             )
         }
 
@@ -188,10 +189,13 @@ class HttpDidMethod(
         // Delegate to HTTP resolver endpoint
         try {
             resolver.resolveDid(did.value)
+        } catch (e: DidException) {
+            // Re-throw DidException as-is
+            throw e
         } catch (e: Exception) {
-            throw org.trustweave.core.exception.TrustWeaveException.Unknown(
-                message = "Failed to resolve DID $did using HTTP endpoint: ${e.message ?: "Unknown error"}",
-                context = mapOf("did" to did, "method" to registrationSpec.name),
+            throw DidException.DidResolutionFailed(
+                did = did,
+                reason = "Failed to resolve DID using HTTP endpoint: ${e.message ?: "Unknown error"}",
                 cause = e
             )
         }
@@ -203,17 +207,17 @@ class HttpDidMethod(
     ): DidDocument = withContext(Dispatchers.IO) {
         val capabilities = registrationSpec.capabilities
         if (capabilities?.update != true) {
-            throw org.trustweave.core.exception.TrustWeaveException.InvalidOperation(
-                message = "DID method '${registrationSpec.name}' does not support updates.",
-                context = mapOf("method" to registrationSpec.name, "operation" to "update")
+            throw DidException.DidResolutionFailed(
+                did = did,
+                reason = "DID method '${registrationSpec.name}' does not support updates."
             )
         }
 
         // Use registrar if available
         val registrarToUse = registrar
-            ?: throw org.trustweave.core.exception.TrustWeaveException.InvalidState(
-                message = "DID updates require a DidRegistrar. Provide a registrar when creating HttpDidMethod or use a native implementation.",
-                context = mapOf("method" to registrationSpec.name, "operation" to "update")
+            ?: throw DidException.DidResolutionFailed(
+                did = did,
+                reason = "DID updates require a DidRegistrar. Provide a registrar when creating HttpDidMethod or use a native implementation."
             )
 
         // First resolve the current document
@@ -236,14 +240,14 @@ class HttpDidMethod(
         val finalResponse = if (response.isComplete()) {
             response
         } else if (response.jobId != null) {
-            throw org.trustweave.core.exception.TrustWeaveException.InvalidOperation(
-                message = "DID update is a long-running operation (jobId: ${response.jobId}). Use the registrar directly to poll for completion.",
-                context = mapOf("jobId" to (response.jobId ?: ""), "operation" to "update")
+            throw DidException.DidResolutionFailed(
+                did = did,
+                reason = "DID update is a long-running operation (jobId: ${response.jobId}). Use the registrar directly to poll for completion."
             )
         } else {
-            throw org.trustweave.core.exception.TrustWeaveException.Unknown(
-                message = "DID update failed: ${response.didState.state}",
-                context = mapOf("operation" to "update", "state" to response.didState.state.toString())
+            throw DidException.DidResolutionFailed(
+                did = did,
+                reason = "DID update failed: ${response.didState.state}"
             )
         }
 
@@ -258,17 +262,17 @@ class HttpDidMethod(
     override suspend fun deactivateDid(did: Did): Boolean = withContext(Dispatchers.IO) {
         val capabilities = registrationSpec.capabilities
         if (capabilities?.deactivate != true) {
-            throw org.trustweave.core.exception.TrustWeaveException.InvalidOperation(
-                message = "DID method '${registrationSpec.name}' does not support deactivation.",
-                context = mapOf("method" to registrationSpec.name, "operation" to "deactivate")
+            throw DidException.DidResolutionFailed(
+                did = did,
+                reason = "DID method '${registrationSpec.name}' does not support deactivation."
             )
         }
 
         // Use registrar if available
         val registrarToUse = registrar
-            ?: throw org.trustweave.core.exception.TrustWeaveException.InvalidState(
-                message = "DID deactivation requires a DidRegistrar. Provide a registrar when creating HttpDidMethod or use a native implementation.",
-                context = mapOf("method" to registrationSpec.name, "operation" to "deactivate")
+            ?: throw DidException.DidResolutionFailed(
+                did = did,
+                reason = "DID deactivation requires a DidRegistrar. Provide a registrar when creating HttpDidMethod or use a native implementation."
             )
 
         // Deactivate via registrar (registrar still uses String for backward compatibility)
@@ -278,14 +282,14 @@ class HttpDidMethod(
         val finalResponse = if (response.isComplete()) {
             response
         } else if (response.jobId != null) {
-            throw org.trustweave.core.exception.TrustWeaveException.InvalidOperation(
-                message = "DID deactivation is a long-running operation (jobId: ${response.jobId}). Use the registrar directly to poll for completion.",
-                context = mapOf("jobId" to (response.jobId ?: ""), "operation" to "deactivate")
+            throw DidException.DidResolutionFailed(
+                did = did,
+                reason = "DID deactivation is a long-running operation (jobId: ${response.jobId}). Use the registrar directly to poll for completion."
             )
         } else {
-            throw org.trustweave.core.exception.TrustWeaveException.Unknown(
-                message = "DID deactivation failed: ${response.didState.state}",
-                context = mapOf("operation" to "deactivate", "state" to response.didState.state.toString())
+            throw DidException.DidResolutionFailed(
+                did = did,
+                reason = "DID deactivation failed: ${response.didState.state}"
             )
         }
 

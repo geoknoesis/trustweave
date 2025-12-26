@@ -126,13 +126,21 @@ internal class DefaultPluginRegistry : PluginRegistry {
     private val instances = ConcurrentHashMap<String, Any>()
     // Store runtime class information for each instance to enable type-safe retrieval
     private val instanceTypes = ConcurrentHashMap<String, Class<*>>()
+    
+    // Index capabilities for O(1) lookup instead of O(n) filtering
+    // Maps capability name -> set of plugin IDs that support it
+    private val capabilityIndex = ConcurrentHashMap<String, MutableSet<String>>()
+    
+    // Index providers for O(1) lookup instead of O(n) filtering
+    // Maps provider name -> set of plugin IDs from that provider
+    private val providerIndex = ConcurrentHashMap<String, MutableSet<String>>()
 
     // Synchronization lock for operations that need atomicity across multiple maps
     private val lock = Any()
 
     override fun register(metadata: PluginMetadata, instance: Any) {
         if (metadata.id.isBlank()) {
-            throw TrustWeaveException.BlankPluginId()
+            throw TrustWeaveException.BlankPluginId
         }
 
         // Synchronization is required to ensure atomicity across both maps.
@@ -156,14 +164,38 @@ internal class DefaultPluginRegistry : PluginRegistry {
             instances[metadata.id] = instance
             // Store the runtime class for type-safe retrieval
             instanceTypes[metadata.id] = instance.javaClass
+            
+            // Update capability index for O(1) lookups
+            metadata.capabilities.features.forEach { capability ->
+                capabilityIndex.computeIfAbsent(capability) { 
+                    ConcurrentHashMap.newKeySet() 
+                }.add(metadata.id)
+            }
+            
+            // Update provider index for O(1) lookups
+            providerIndex.computeIfAbsent(metadata.provider) { 
+                ConcurrentHashMap.newKeySet() 
+            }.add(metadata.id)
         }
     }
 
     override fun unregister(pluginId: String) {
+        require(pluginId.isNotBlank()) { "Plugin ID cannot be blank" }
         synchronized(lock) {
+            // Idempotent operation: silently return if plugin not found
+            val metadata = plugins[pluginId] ?: return
+            
             plugins.remove(pluginId)
             instances.remove(pluginId)
             instanceTypes.remove(pluginId)
+            
+            // Remove from capability index
+            metadata.capabilities.features.forEach { capability ->
+                capabilityIndex[capability]?.remove(pluginId)
+            }
+            
+            // Remove from provider index
+            providerIndex[metadata.provider]?.remove(pluginId)
         }
     }
 
@@ -188,15 +220,16 @@ internal class DefaultPluginRegistry : PluginRegistry {
 
     override fun findByCapability(capability: String): List<PluginMetadata> {
         require(capability.isNotBlank()) { "Capability cannot be blank" }
-        return plugins.values.filter {
-            it.capabilities.features.contains(capability)
-        }
+        // O(1) lookup using capability index instead of O(n) filtering
+        val pluginIds = capabilityIndex[capability] ?: return emptyList()
+        return pluginIds.mapNotNull { plugins[it] }
     }
-
 
     override fun findByProvider(provider: String): List<PluginMetadata> {
         require(provider.isNotBlank()) { "Provider name cannot be blank" }
-        return plugins.values.filter { it.provider == provider }
+        // O(1) lookup using provider index instead of O(n) filtering
+        val pluginIds = providerIndex[provider] ?: return emptyList()
+        return pluginIds.mapNotNull { plugins[it] }
     }
 
 
@@ -206,16 +239,17 @@ internal class DefaultPluginRegistry : PluginRegistry {
     ): PluginMetadata? {
         require(capability.isNotBlank()) { "Capability cannot be blank" }
         val candidates = findByCapability(capability)
+        if (candidates.isEmpty()) return null
+
+        // Build provider map for O(1) lookup instead of O(n) find() calls
+        val providerMap = candidates.associateBy { it.provider }
 
         // Selection algorithm: Try each preference in order until a match is found.
         // This implements a priority-based selection where the first matching
         // provider in the preferences list is chosen, regardless of other candidates.
         for (pref in preferences) {
             if (pref.isNotBlank()) {
-                // find() returns the first matching element, or null if none found.
-                // The let block returns early if a match is found, implementing
-                // the "first match wins" strategy.
-                candidates.find { it.provider == pref }?.let { return it }
+                providerMap[pref]?.let { return it }
             }
         }
 
@@ -237,6 +271,8 @@ internal class DefaultPluginRegistry : PluginRegistry {
             plugins.clear()
             instances.clear()
             instanceTypes.clear()
+            capabilityIndex.clear()
+            providerIndex.clear()
         }
     }
 

@@ -64,6 +64,75 @@ sealed class DidException(
         ),
         cause = cause
     )
+
+    data class DidCreationFailed(
+        val did: Did?,
+        val reason: String,
+        override val cause: Throwable? = null
+    ) : DidException(
+        code = "DID_CREATION_FAILED",
+        message = "DID creation failed: $reason",
+        context = mapOf(
+            "did" to (did?.value ?: "unknown"),
+            "reason" to reason
+        ),
+        cause = cause
+    )
+
+    data class DidUpdateFailed(
+        val did: Did,
+        val reason: String,
+        override val cause: Throwable? = null
+    ) : DidException(
+        code = "DID_UPDATE_FAILED",
+        message = "DID update failed for '${did.value}': $reason",
+        context = mapOf(
+            "did" to did.value,
+            "reason" to reason
+        ),
+        cause = cause
+    )
+
+    data class DidDeactivationFailed(
+        val did: Did,
+        val reason: String,
+        override val cause: Throwable? = null
+    ) : DidException(
+        code = "DID_DEACTIVATION_FAILED",
+        message = "DID deactivation failed for '${did.value}': $reason",
+        context = mapOf(
+            "did" to did.value,
+            "reason" to reason
+        ),
+        cause = cause
+    )
+
+    /**
+     * Exception thrown when a DID operation requires additional action (ACTION state).
+     * 
+     * According to the DID Registration specification, some operations may return
+     * an ACTION state requiring user interaction (e.g., redirect, sign, wait).
+     * This exception is thrown to allow the caller to handle the action appropriately.
+     * 
+     * @param did The DID being operated on (if available)
+     * @param action The action details from the registration response
+     * @param reason Human-readable reason for the action requirement
+     */
+    data class RequiresAction(
+        val did: Did?,
+        val action: org.trustweave.did.registrar.model.Action,
+        val reason: String
+    ) : DidException(
+        code = "DID_REQUIRES_ACTION",
+        message = "DID operation requires action: $reason",
+        context = mapOf(
+            "did" to (did?.value ?: "unknown"),
+            "actionType" to action.type,
+            "actionUrl" to action.url,
+            "actionDescription" to action.description,
+            "reason" to reason
+        )
+    )
 }
 
 /**

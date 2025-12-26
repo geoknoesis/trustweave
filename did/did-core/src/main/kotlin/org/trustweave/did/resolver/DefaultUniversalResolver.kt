@@ -55,8 +55,26 @@ class DefaultUniversalResolver(
     override val baseUrl: String,
     private val timeout: Int = 30,
     private val apiKey: String? = null,
-    private val protocolAdapter: UniversalResolverProtocolAdapter = StandardUniversalResolverAdapter()
+    private val protocolAdapter: UniversalResolverProtocolAdapter = StandardUniversalResolverAdapter(),
+    private val retryConfig: RetryConfig = RetryConfig.default()
 ) : UniversalResolver {
+
+    init {
+        // Validate and cache baseUrl format once during initialization
+        require(baseUrl.isNotBlank()) { "Base URL cannot be blank" }
+        require(baseUrl.matches(Regex("^https?://[^/]+"))) {
+            "Invalid base URL format: $baseUrl. Must be a valid HTTP/HTTPS URL."
+        }
+        // Validate URL can be parsed
+        try {
+            URI.create(baseUrl)
+        } catch (e: IllegalArgumentException) {
+            throw DidException.InvalidDidFormat(
+                did = baseUrl,
+                reason = "Invalid base URL format: ${e.message}"
+            )
+        }
+    }
 
     private val httpClient: HttpClient = HttpClient.newBuilder()
         .connectTimeout(Duration.ofSeconds(timeout.toLong()))
@@ -67,82 +85,100 @@ class DefaultUniversalResolver(
         require(did.isNotBlank()) { "DID cannot be blank" }
         require(did.startsWith("did:")) { "DID must start with 'did:'" }
         
+        // Use retry logic for HTTP operations
         try {
-            // Use protocol adapter to build URL
-            val url = protocolAdapter.buildResolveUrl(baseUrl, did)
-            require(url.isNotBlank()) { "Resolve URL cannot be blank" }
-
-            val requestBuilder = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .timeout(Duration.ofSeconds(timeout.toLong()))
-                .header("Accept", "application/json")
-
-            // Use protocol adapter to configure authentication
-            protocolAdapter.configureAuth(requestBuilder, apiKey)
-
-            val request = requestBuilder.build()
-            val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
-
-            when (response.statusCode()) {
-                200 -> {
-                    // Parse JSON response
-                    val jsonResponse = parseJsonResponse(response.body())
-
-                    // Use protocol adapter to extract data
-                    val didDocumentJson = protocolAdapter.extractDidDocument(jsonResponse)
-                    val document = didDocumentJson?.let { parseDidDocumentFromJson(it) }
-                    val documentMetadata = parseDidDocumentMetadata(
-                        protocolAdapter.extractDocumentMetadata(jsonResponse)
-                    )
-                    val resolutionMetadata = parseResolutionMetadata(
-                        protocolAdapter.extractResolutionMetadata(jsonResponse)
-                    )
-
-                    if (document != null) {
-                        DidResolutionResult.Success(
-                            document = document,
-                            documentMetadata = documentMetadata,
-                            resolutionMetadata = resolutionMetadata.plus("provider" to protocolAdapter.providerName)
-                        )
-                    } else {
-                        DidResolutionResult.Failure.NotFound(
-                            did = Did(did),
-                            reason = "DID document not found in response",
-                            resolutionMetadata = resolutionMetadata.plus("provider" to protocolAdapter.providerName)
-                        )
-                    }
-                }
-                404 -> {
-                    DidResolutionResult.Failure.NotFound(
-                        did = Did(did),
-                        reason = "DID not found",
-                        resolutionMetadata = mapOf(
-                            "error" to "notFound",
-                            "provider" to protocolAdapter.providerName
-                        )
-                    )
-                }
-                else -> {
-                    DidResolutionResult.Failure.ResolutionError(
-                        did = Did(did),
-                        reason = "HTTP ${response.statusCode()}",
-                        cause = null,
-                        resolutionMetadata = mapOf(
-                            "statusCode" to response.statusCode(),
-                            "provider" to protocolAdapter.providerName
-                        )
-                    )
-                }
+            retryConfig.executeWithRetry {
+                performResolution(did)
             }
-        } catch (e: org.trustweave.did.exception.DidException) {
-            // Re-throw DidException as-is
+        } catch (e: DidException) {
             throw e
         } catch (e: Exception) {
-            throw org.trustweave.did.exception.DidException.DidResolutionFailed(
+            throw DidException.DidResolutionFailed(
                 did = Did(did),
                 reason = e.message ?: "Unknown error during resolution",
                 cause = e
             )
+        }
+    }
+
+    private suspend fun performResolution(did: String): DidResolutionResult {
+        // Use protocol adapter to build URL
+        val url = protocolAdapter.buildResolveUrl(baseUrl, did)
+        require(url.isNotBlank()) { "Resolve URL cannot be blank" }
+        
+        // Validate URL format
+        val uri = try {
+            URI.create(url)
+        } catch (e: IllegalArgumentException) {
+            throw DidException.InvalidDidFormat(
+                did = did,
+                reason = "Invalid resolver URL format: $url. Error: ${e.message}"
+            )
+        }
+
+        val requestBuilder = HttpRequest.newBuilder()
+            .uri(uri)
+            .timeout(Duration.ofSeconds(timeout.toLong()))
+            .header("Accept", "application/json")
+
+        // Use protocol adapter to configure authentication
+        protocolAdapter.configureAuth(requestBuilder, apiKey)
+
+        val request = requestBuilder.build()
+        val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
+
+        return when (response.statusCode()) {
+            200 -> {
+                // Parse JSON response
+                val jsonResponse = parseJsonResponse(response.body())
+
+                // Use protocol adapter to extract data
+                val didDocumentJson = protocolAdapter.extractDidDocument(jsonResponse)
+                val document = didDocumentJson?.let { parseDidDocumentFromJson(it) }
+                val documentMetadata = parseDidDocumentMetadata(
+                    protocolAdapter.extractDocumentMetadata(jsonResponse)
+                )
+                val resolutionMetadata = parseResolutionMetadata(
+                    protocolAdapter.extractResolutionMetadata(jsonResponse)
+                )
+
+                if (document != null) {
+                    DidResolutionResult.Success(
+                        document = document,
+                        documentMetadata = documentMetadata,
+                        resolutionMetadata = resolutionMetadata.plus("provider" to protocolAdapter.providerName)
+                    )
+                } else {
+                    DidResolutionResult.Failure.NotFound(
+                        did = Did(did),
+                        reason = "DID document not found in response",
+                        resolutionMetadata = resolutionMetadata.plus("provider" to protocolAdapter.providerName)
+                    )
+                }
+            }
+            404 -> {
+                DidResolutionResult.Failure.NotFound(
+                    did = Did(did),
+                    reason = "DID not found",
+                    resolutionMetadata = mapOf(
+                        "error" to "notFound",
+                        "provider" to protocolAdapter.providerName
+                    )
+                )
+            }
+            else -> {
+                // Retryable errors (5xx) will be retried by retryConfig
+                // Non-retryable errors (4xx except 404) return immediately
+                DidResolutionResult.Failure.ResolutionError(
+                    did = Did(did),
+                    reason = "HTTP ${response.statusCode()}",
+                    cause = null,
+                    resolutionMetadata = mapOf(
+                        "statusCode" to response.statusCode(),
+                        "provider" to protocolAdapter.providerName
+                    )
+                )
+            }
         }
     }
 
@@ -151,8 +187,16 @@ class DefaultUniversalResolver(
         val methodsUrl = protocolAdapter.buildMethodsUrl(baseUrl) ?: return null
 
         return try {
+            // Validate URL format
+            val uri = try {
+                URI.create(methodsUrl)
+            } catch (e: IllegalArgumentException) {
+                // Invalid URL format - return null instead of throwing
+                return null
+            }
+            
             val requestBuilder = HttpRequest.newBuilder()
-                .uri(URI.create(methodsUrl))
+                .uri(uri)
                 .timeout(Duration.ofSeconds(timeout.toLong()))
                 .header("Accept", "application/json")
 

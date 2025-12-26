@@ -99,6 +99,15 @@ data class DriverConfig(
     val baseUrl: String? = null,
 
     /**
+     * Base URL for Universal Registrar (optional, for create/update/deactivate operations)
+     * 
+     * If provided, HttpDidMethod will automatically create a DefaultUniversalRegistrar
+     * instance to handle registration operations. This enables full DID Registration
+     * specification compliance without requiring explicit registrar configuration.
+     */
+    val registrarUrl: String? = null,
+
+    /**
      * Protocol adapter name for Universal Resolver (e.g., "standard", "godiddy")
      */
     val protocolAdapter: String? = null,

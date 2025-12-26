@@ -94,31 +94,60 @@ interface DidMethod {
 ### DidMethodRegistry
 
 ```kotlin
-val registry = DidMethodRegistry()
-registry.register("key", keyDidMethod)
-registry.register("web", webDidMethod)
+// Traditional API
+val registry = DefaultDidMethodRegistry()
+registry.register(keyDidMethod)
+registry.register(webDidMethod)
 
 val method = registry.get("key")
 val didDoc = method?.createDid(options)
+
+// Idiomatic Kotlin API with builder DSL
+val registry = didMethodRegistry {
+    register(KeyDidMethod(kms))
+    register(WebDidMethod())
+}
+
+// Operator overloads
+val method = registry["key"]  // Bracket notation
+if ("key" in registry) {     // `in` operator
+    // Method is registered
+}
+registry["new"] = NewDidMethod()  // Assignment
 ```
 
-**What this does:** Provides instance-scoped registration and retrieval of DID methods.
+**What this does:** Provides instance-scoped registration and retrieval of DID methods with both traditional and idiomatic Kotlin APIs.
 
-**Outcome:** Allows multiple DID methods to coexist in the same application context.
+**Outcome:** Allows multiple DID methods to coexist in the same application context with improved developer experience.
 
 ### DidResolver
 
 ```kotlin
 import org.trustweave.did.identifiers.Did
+import org.trustweave.did.resolver.RegistryBasedResolver
+import org.trustweave.did.resolver.DefaultUniversalResolver
 
+// Registry-based resolver
 val resolver = RegistryBasedResolver(registry)
 val did = Did("did:key:z6Mk...")
 val result = resolver.resolve(did)
+
+// Universal Resolver with retry logic
+val universalResolver = DefaultUniversalResolver(
+    baseUrl = "https://dev.uniresolver.io",
+    retryConfig = RetryConfig.default()
+)
+val result2 = universalResolver.resolveDid(did.value)
+
+// Fluent API with extensions
+val document = did.resolveWith(resolver).getOrThrow()
+val docOrNull = did.resolveOrNull(resolver)
+val docOrDefault = did.resolveOrDefault(resolver, defaultDocument)
 ```
 
-**What this does:** Provides a unified interface for resolving DIDs across different methods.
+**What this does:** Provides a unified interface for resolving DIDs across different methods with automatic retry and fluent API support.
 
-**Outcome:** Enables method-agnostic DID resolution with proper error handling.
+**Outcome:** Enables method-agnostic DID resolution with proper error handling, resilience, and improved developer experience.
 
 ### DidRegistrar Interface
 
@@ -217,7 +246,9 @@ graph LR
     style DRes fill:#e1f5ff
 ```
 
-## Usage Example
+## Usage Examples
+
+### Basic Usage
 
 ```kotlin
 import org.trustweave.TrustWeave
@@ -252,6 +283,103 @@ fun main() = runBlocking {
 **What this does:** Uses SPI to discover a DID method provider, creates a DID using the did:key method, and then resolves it.
 
 **Outcome:** Enables seamless DID operations across different DID methods.
+
+### Idiomatic Kotlin API
+
+The module provides a fluent, idiomatic Kotlin API with builder DSLs, extension functions, and operator overloads:
+
+```kotlin
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.resolver.universalResolver
+import org.trustweave.did.registry.didMethodRegistry
+import org.trustweave.did.resolver.RegistryBasedResolver
+
+// Builder DSL for resolver with retry configuration
+val resolver = universalResolver("https://dev.uniresolver.io") {
+    timeout = 60
+    apiKey = "my-api-key"
+    retry {
+        maxRetries = 3
+        initialDelayMs = 200
+        maxDelayMs = 2000
+    }
+}
+
+// Builder DSL for registry
+val registry = didMethodRegistry {
+    register(KeyDidMethod(kms))
+    register(WebDidMethod())
+    registerAll(OtherMethod1(), OtherMethod2())
+}
+
+// Operator overloads for registry
+val method = registry["key"]  // Bracket notation
+if ("key" in registry) {      // `in` operator
+    // Method is registered
+}
+registry["new"] = NewDidMethod()  // Assignment
+
+// Fluent resolution with extensions
+val document = Did("did:key:123")
+    .resolveWith(resolver)
+    .getOrThrow()
+
+// Or with safe access
+val doc = Did("did:key:123")
+    .resolveWith(resolver)
+    .getOrNull()
+
+// Functional style with callbacks
+Did("did:key:123")
+    .resolveWith(resolver)
+    .onSuccess { println("Resolved: ${it.id}") }
+    .onFailure { println("Failed: ${it.reason}") }
+```
+
+**What this does:** Provides a modern, fluent API that leverages Kotlin's language features for better developer experience.
+
+**Outcome:** More readable, maintainable code with better error handling and type safety.
+
+### Retry Logic and Resilience
+
+The module includes automatic retry logic with exponential backoff for HTTP operations:
+
+```kotlin
+import org.trustweave.did.resolver.DefaultUniversalResolver
+import org.trustweave.did.resolver.RetryConfig
+
+// Default retry configuration (3 retries, 100ms initial delay)
+val resolver = DefaultUniversalResolver(
+    baseUrl = "https://dev.uniresolver.io",
+    retryConfig = RetryConfig.default()
+)
+
+// Aggressive retry for unreliable networks
+val aggressiveResolver = DefaultUniversalResolver(
+    baseUrl = "https://dev.uniresolver.io",
+    retryConfig = RetryConfig.aggressive()  // 5 retries, 200ms initial delay
+)
+
+// Custom retry configuration
+val customRetry = RetryConfig(
+    maxRetries = 5,
+    initialDelayMs = 200,
+    maxDelayMs = 5000,
+    retryableStatusCodes = setOf(500, 502, 503, 504),
+    retryableExceptions = setOf(
+        java.net.ConnectException::class.java,
+        java.net.SocketTimeoutException::class.java
+    )
+)
+val customResolver = DefaultUniversalResolver(
+    baseUrl = "https://dev.uniresolver.io",
+    retryConfig = customRetry
+)
+```
+
+**What this does:** Automatically retries transient failures (network errors, 5xx HTTP errors) with exponential backoff and jitter.
+
+**Outcome:** Improved reliability and resilience for production deployments.
 
 ## Supported DID Methods
 
@@ -303,6 +431,27 @@ graph TD
     style G fill:#fff4e1
     style H fill:#e8f5e9
 ```
+
+## Key Features
+
+### Performance Optimizations
+
+- **Cached Validation**: Base URL validation is cached during initialization, eliminating redundant validation overhead
+- **Efficient Parsing**: Optimized string operations for DID parsing with lazy initialization
+- **Thread Safety**: ConcurrentHashMap-based registry for thread-safe operations without explicit locks
+
+### Resilience Features
+
+- **Automatic Retry**: Exponential backoff with jitter for transient failures
+- **Configurable Retry**: Customizable retry policies for different network conditions
+- **Error Recovery**: Structured error handling with detailed context
+
+### Developer Experience
+
+- **Builder DSLs**: Fluent API for resolver and registry configuration
+- **Extension Functions**: Functional-style operations for common tasks
+- **Operator Overloads**: Intuitive API with bracket notation and `in` operator
+- **Type Safety**: Strong typing throughout with sealed classes for exhaustive handling
 
 ## Dependencies
 

@@ -3,6 +3,7 @@ package org.trustweave.did.registrar.client
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.registrar.DidRegistrar
+import org.trustweave.did.registrar.PollableRegistrar
 import org.trustweave.did.registrar.adapter.UniversalRegistrarProtocolAdapter
 import org.trustweave.did.registrar.adapter.StandardUniversalRegistrarAdapter
 import org.trustweave.did.registrar.model.*
@@ -54,7 +55,7 @@ class DefaultUniversalRegistrar(
     private val protocolAdapter: UniversalRegistrarProtocolAdapter = StandardUniversalRegistrarAdapter(),
     private val pollInterval: Long = 1000,
     private val maxPollAttempts: Int = 60
-) : DidRegistrar {
+) : DidRegistrar, PollableRegistrar {
 
     /**
      * Creates a new DID.
@@ -103,15 +104,19 @@ class DefaultUniversalRegistrar(
     /**
      * Gets the status of a long-running operation.
      *
+     * Implements [PollableRegistrar.getOperationStatus] for automatic polling support.
+     *
      * @param jobId Job identifier from a previous operation
      * @return Registration response with current didState
      */
-    suspend fun getOperationStatus(jobId: String): DidRegistrationResponse = withContext(Dispatchers.IO) {
+    override suspend fun getOperationStatus(jobId: String): DidRegistrationResponse = withContext(Dispatchers.IO) {
         protocolAdapter.getOperationStatus(baseUrl, jobId)
     }
 
     /**
      * Waits for a long-running operation to complete by polling status.
+     *
+     * Implements [PollableRegistrar.waitForCompletion] for automatic polling support.
      *
      * This method will:
      * 1. Check if the response indicates a long-running operation (has jobId)
@@ -121,7 +126,7 @@ class DefaultUniversalRegistrar(
      * @param response Initial registration response (may contain jobId)
      * @return Final registration response when operation is complete
      */
-    suspend fun waitForCompletion(response: DidRegistrationResponse): DidRegistrationResponse {
+    override suspend fun waitForCompletion(response: DidRegistrationResponse): DidRegistrationResponse {
         // If already complete, return immediately
         if (response.isComplete()) {
             return response

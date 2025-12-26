@@ -10,16 +10,48 @@ import org.trustweave.did.validation.DidValidator
  * Resolver implementation that uses a [DidMethodRegistry] to resolve DIDs.
  *
  * This separates resolution concerns from registry management, following
- * the single responsibility principle.
+ * the single responsibility principle. The resolver delegates to the appropriate
+ * DID method based on the DID's method name.
+ *
+ * **Architecture:**
+ * - Registry manages DID method instances
+ * - Resolver handles resolution logic and error conversion
+ * - Methods implement actual resolution logic
+ *
+ * **Error Handling:**
+ * - Converts [DidException] to [DidResolutionResult.Failure]
+ * - Provides detailed error metadata for debugging
+ * - Never throws exceptions (always returns result)
+ *
+ * **Performance:**
+ * - O(1) method lookup from registry
+ * - Delegates actual resolution to the method implementation
+ * - No caching (methods may implement their own caching)
  *
  * **Example Usage:**
  * ```kotlin
- * val registry = DidMethodRegistry()
+ * val registry = DefaultDidMethodRegistry()
  * registry.register(KeyDidMethod(kms))
+ * registry.register(WebDidMethod())
  *
  * val resolver = RegistryBasedResolver(registry)
- * val result = resolver.resolve("did:key:...")
+ * 
+ * // Resolve a DID
+ * val result = resolver.resolve(Did("did:key:z6Mk..."))
+ * when (result) {
+ *     is DidResolutionResult.Success -> {
+ *         println("Resolved: ${result.document.id}")
+ *     }
+ *     is DidResolutionResult.Failure.MethodNotRegistered -> {
+ *         println("Method not available: ${result.method}")
+ *     }
+ *     // ... handle other cases
+ * }
  * ```
+ *
+ * @param registry The DID method registry to use for method lookup
+ * @see DidMethodRegistry for registry operations
+ * @see DidResolver for the resolver interface
  */
 class RegistryBasedResolver(
     private val registry: DidMethodRegistry

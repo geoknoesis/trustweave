@@ -8,6 +8,49 @@ has_children: true
 
 This package provides support for registering DID methods using JSON files that follow the [DID Registration specification](https://identity.foundation/did-registration/). This makes it easy to add support for new DID methods without writing code.
 
+## What is DID Registration in Trustweave?
+
+In Trustweave, **DID Registration** refers to registering support for **DID methods** (like `did:web`, `did:ion`, `did:key`) via JSON configuration files. This is different from creating individual DIDs—instead, you're configuring which DID methods your application can work with and how to resolve them.
+
+### The Core Concept
+
+Rather than writing custom Kotlin code to support each DID method, you provide a JSON file that follows the [official DID Method Registry format](https://identity.foundation/did-registration/). Trustweave automatically converts this JSON configuration into a `DidMethod` implementation that can resolve DIDs for that method.
+
+### What Gets Registered
+
+When you register a DID method, you're providing:
+
+1. **Method Identity**: The DID method name (e.g., `"web"`, `"ion"`)
+2. **Resolver Configuration**: Where to send resolution requests (typically a Universal Resolver endpoint via `driverUrl`)
+3. **Capabilities**: Which operations are supported (currently resolution is fully implemented)
+4. **Metadata**: Specification URL, contact information, implementation status
+
+### How It Works
+
+A simple JSON file like this:
+
+```json
+{
+  "name": "web",
+  "implementations": [
+    {
+      "driverUrl": "https://dev.uniresolver.io"
+    }
+  ]
+}
+```
+
+Gets automatically converted into a `DidMethod` implementation that can resolve DIDs like `did:web:example.com` by delegating to the specified resolver service.
+
+### Current Implementation Status
+
+- ✅ **Resolution**: Fully supported for JSON-registered methods
+- ❌ **Create, Update, Deactivate**: Not yet implemented for JSON-registered methods (require native implementations)
+
+### Difference from the DID Registration Specification
+
+While Trustweave uses the **DID Method Registry format** from the DID Registration specification, it currently focuses on method registration (configuring which methods are available) rather than the full lifecycle operations (create/update/deactivate individual DIDs) defined in the spec. The registry format allows you to configure resolver endpoints and capabilities, making it easy to add new DID method support without writing code.
+
 ## Quick Start
 
 ### 1. Create a JSON Registration File

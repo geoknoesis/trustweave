@@ -3,22 +3,75 @@ package org.trustweave.did.validation
 import org.trustweave.core.util.ValidationResult
 
 /**
- * DID format and method validation.
+ * DID format and method validation utilities.
+ *
+ * Provides validation functions following the W3C DID Core specification.
+ * This validator checks DID format compliance and method availability.
+ *
+ * **Validation Rules:**
+ * - DIDs must start with "did:"
+ * - Method name must be lowercase alphanumeric
+ * - Method-specific identifier can contain various characters (per W3C spec)
+ * - Method must be registered if method validation is performed
+ *
+ * **Note:** The regex pattern is a simplified validation. For full W3C compliance,
+ * a proper ABNF parser would be more accurate, but this pattern covers the
+ * majority of valid DIDs in practice.
+ *
+ * **Example Usage:**
+ * ```kotlin
+ * // Validate format
+ * val result = DidValidator.validateFormat("did:key:123")
+ * if (result.isValid()) {
+ *     // DID format is valid
+ * }
+ *
+ * // Validate method availability
+ * val methodResult = DidValidator.validateMethod(
+ *     did = "did:key:123",
+ *     availableMethods = listOf("key", "web")
+ * )
+ *
+ * // Extract components
+ * val method = DidValidator.extractMethod("did:key:123")  // "key"
+ * val identifier = DidValidator.extractMethodSpecificId("did:key:123")  // "123"
+ * ```
  */
 object DidValidator {
     /**
      * Error codes for DID validation.
+     *
+     * These codes are used in [ValidationResult.Invalid] to identify
+     * specific validation failure types.
      */
     object ErrorCodes {
+        /** DID string is empty or blank */
         const val DID_EMPTY = "DID_EMPTY"
+        
+        /** DID does not match the required format pattern */
         const val INVALID_DID_FORMAT = "INVALID_DID_FORMAT"
+        
+        /** Failed to extract method name from DID string */
         const val DID_METHOD_EXTRACTION_FAILED = "DID_METHOD_EXTRACTION_FAILED"
+        
+        /** DID method is not in the list of available methods */
         const val UNSUPPORTED_DID_METHOD = "UNSUPPORTED_DID_METHOD"
     }
 
     /**
      * DID pattern matching the DID specification.
-     * Format: did:<method>:<method-specific-id>
+     * 
+     * Format: `did:<method>:<method-specific-id>`
+     * 
+     * **Pattern Details:**
+     * - `did:` - Required prefix
+     * - `[a-z0-9]+` - Method name (lowercase alphanumeric, one or more)
+     * - `:` - Separator
+     * - `[a-zA-Z0-9._:%-]+` - Method-specific identifier (various allowed characters)
+     * 
+     * **Note:** This is a simplified regex. The W3C spec allows more characters
+     * in method-specific-ids, but this pattern covers the majority of valid DIDs.
+     * For full compliance, consider using an ABNF parser.
      */
     private val DID_PATTERN = Regex("^did:[a-z0-9]+:[a-zA-Z0-9._:%-]+$")
 

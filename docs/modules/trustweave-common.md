@@ -35,9 +35,28 @@ The `trustweave-common` module provides **domain-agnostic core infrastructure** 
 
 ### Utilities (`org.trustweave.core.util`)
 - **`DigestUtils`** – JSON canonicalization and SHA-256 digest computation with multibase encoding (base58btc)
-- **`ResultExtensions`** – Extension functions for `Result<T>` (mapError, combine, mapSequential, etc.)
+  - Optimized JSON canonicalization with lexicographical key sorting
+  - Efficient SHA-256 digest computation
+  - Multibase encoding (base58btc) support
+- **`ResultExtensions`** – Extension functions for `Result<T>` (mapError, combine, mapSequential, trustweaveCatching, etc.)
+  - Functional-style error handling
+  - Automatic conversion of `Throwable` to `TrustWeaveException`
+  - Error code extraction and categorization
 - **`Validation`** – Generic validation infrastructure (`ValidationResult` sealed class)
+  - Type-safe validation results
+  - Reusable validation patterns
 - **`TrustWeaveConstants`** – Common constants
+
+### Identifiers (`org.trustweave.core.identifiers`)
+- **`Iri`** – RFC 3987 compliant Internationalized Resource Identifier
+- **`KeyId`** – Type-safe key identifier with fragment support
+- **`Did`**, **`VerificationMethodId`**, **`DidUrl`** – DID-related identifiers (in `trustweave-did` module)
+- Extension functions for safe parsing (`toIriOrNull`, `toKeyIdOrNull`, etc.)
+
+### Serialization (`org.trustweave.core.serialization`)
+- **Custom Serializers**: `IriSerializer`, `KeyIdSerializer`, `InstantSerializer`, `DidSerializer`, `VerificationMethodIdSerializer`, `DidUrlSerializer`
+- **SerializationModule**: Centralized serialization configuration
+- Optimized JSON serialization for TrustWeave types
 
 **Note:** Domain-specific validators (DID, Chain ID) are in their respective domain modules:
 - DID validation → `org.trustweave.did.validation.DidValidator`
@@ -132,6 +151,15 @@ The `trustweave-common` module is organized into logical packages:
   - `ResultExtensions` (Result<T> extension functions)
   - `TrustWeaveConstants`
   - `Validation` (generic validation infrastructure - `ValidationResult`)
+
+- **`org.trustweave.core.identifiers`** – Identifier types
+  - `Iri` (RFC 3987 compliant Internationalized Resource Identifier)
+  - `KeyId` (type-safe key identifier)
+  - Extension functions for safe parsing
+
+- **`org.trustweave.core.serialization`** – Serialization support
+  - Custom serializers for TrustWeave types (Iri, KeyId, Instant, Did, etc.)
+  - `SerializationModule` for centralized configuration
 
 **Note:** Domain-specific components are in their respective modules:
 - DID validation → `org.trustweave.did.validation.DidValidator` (in `trustweave-did`)

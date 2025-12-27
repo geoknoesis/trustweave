@@ -12,6 +12,7 @@ import org.trustweave.credential.model.ProofType
 import org.trustweave.core.util.DigestUtils
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import org.trustweave.testkit.getOrFail
+import org.trustweave.did.identifiers.extractKeyId
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
@@ -52,7 +53,7 @@ fun main(): Unit = runBlocking {
         is org.trustweave.did.resolver.DidResolutionResult.Success -> issuerDidResolution.document
         else -> throw IllegalStateException("Failed to resolve issuer DID")
     }
-    val issuerKeyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.value?.substringAfter("#")
+    val issuerKeyId = issuerDidDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: error("No verification method generated for ${issuerDid.value}")
     println("Issuer DID: ${issuerDid.value} (keyId=$issuerKeyId)")
 

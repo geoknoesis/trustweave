@@ -9,6 +9,7 @@ import org.trustweave.trust.dsl.credential.presentation
 import org.trustweave.trust.types.VerificationResult
 import org.trustweave.trust.types.*
 import org.trustweave.did.resolver.DidResolver
+import org.trustweave.did.identifiers.extractKeyId
 import org.trustweave.credential.credentialService
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.testkit.annotations.RequiresPlugin
@@ -286,7 +287,7 @@ class InMemoryTrustLayerIntegrationTest {
             else -> throw IllegalStateException("Failed to resolve issuer DID")
         }
 
-        val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.value?.substringAfter("#")
+        val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.extractKeyId()
             ?: throw IllegalStateException("No verification method in issuer DID")
 
         // Issue credential with revocation support
@@ -362,7 +363,7 @@ class InMemoryTrustLayerIntegrationTest {
             else -> throw IllegalStateException("Failed to resolve issuer DID")
         }
 
-        val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.value?.substringAfter("#")
+        val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.extractKeyId()
             ?: throw IllegalStateException("No verification method in issuer DID")
 
         // Issue credential
@@ -621,7 +622,7 @@ class InMemoryTrustLayerIntegrationTest {
             else -> throw IllegalStateException("Failed to resolve issuer DID")
         }
 
-        val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.value?.substringAfter("#")
+        val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.extractKeyId()
             ?: throw IllegalStateException("No verification method in issuer DID")
 
         // Issue credential with blockchain anchoring
@@ -697,7 +698,7 @@ class InMemoryTrustLayerIntegrationTest {
             else -> throw IllegalStateException("Failed to resolve issuer DID")
         }
 
-        val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.value?.substringAfter("#")
+        val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.extractKeyId()
             ?: throw IllegalStateException("No verification method in issuer DID")
 
         // Issue contract as verifiable credential

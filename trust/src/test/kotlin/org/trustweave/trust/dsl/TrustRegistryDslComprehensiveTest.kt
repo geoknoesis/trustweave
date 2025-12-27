@@ -5,6 +5,7 @@ import org.trustweave.did.model.DidDocument
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolver
 import org.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.extractKeyId
 import org.trustweave.credential.credentialService
 import org.trustweave.trust.dsl.TrustWeaveRegistries
 import org.trustweave.anchor.BlockchainAnchorRegistry
@@ -312,8 +313,9 @@ class TrustRegistryDslComprehensiveTest {
         val verificationMethod = issuerDidDoc.verificationMethod.firstOrNull()
             ?: throw IllegalStateException("No verification method found in issuer DID document")
 
-        // Extract key ID from verification method ID (e.g., "did:key:xxx#key-1" -> "key-1")
-        val keyId = verificationMethod.id.value.substringAfter("#")
+        // Extract key ID from verification method ID using type-safe approach
+        val keyId = verificationMethod.extractKeyId()
+            ?: throw IllegalStateException("Failed to extract key ID from verification method")
 
         // Issue credential using the key ID from the DID document
         // The IssuanceDsl will construct verificationMethodId as "$issuerDid#$keyId" which matches the DID document

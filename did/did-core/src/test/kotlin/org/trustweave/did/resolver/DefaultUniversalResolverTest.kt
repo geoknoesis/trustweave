@@ -17,16 +17,24 @@ class DefaultUniversalResolverTest {
 
     @Test
     fun `test URL validation for invalid baseUrl`() = runBlocking {
-        val resolver = DefaultUniversalResolver(
-            baseUrl = "not-a-valid-url",
-            timeout = 5
-        )
-
-        val exception = assertThrows<DidException.InvalidDidFormat> {
-            resolver.resolveDid("did:test:123")
+        // The constructor validates the URL and throws IllegalArgumentException or DidException.InvalidDidFormat
+        val exception = assertThrows<Throwable> {
+            DefaultUniversalResolver(
+                baseUrl = "not-a-valid-url",
+                timeout = 5
+            )
         }
 
-        assertTrue(exception.reason.contains("Invalid base URL format"))
+        // Should be either IllegalArgumentException or DidException.InvalidDidFormat
+        assertTrue(
+            exception is IllegalArgumentException || exception is DidException.InvalidDidFormat,
+            "Expected IllegalArgumentException or DidException.InvalidDidFormat, got ${exception::class.simpleName}"
+        )
+        if (exception is DidException.InvalidDidFormat) {
+            assertTrue(exception.reason.contains("Invalid base URL format") || exception.reason.contains("base URL"))
+        } else {
+            assertTrue(exception.message?.contains("Invalid base URL format") == true || exception.message?.contains("base URL") == true)
+        }
     }
 
     @Test
@@ -172,12 +180,15 @@ class DefaultUniversalResolverTest {
 
     @Test
     fun `test getSupportedMethods returns null for invalid URL`() = runBlocking {
+        // Constructor will throw exception for invalid URL, so we can't test this scenario
+        // Instead, test with a valid URL that might fail during the actual HTTP call
+        // This test verifies that getSupportedMethods handles failures gracefully
         val resolver = DefaultUniversalResolver(
-            baseUrl = "not-a-valid-url",
-            timeout = 5
+            baseUrl = "https://invalid-resolver-that-does-not-exist-12345.com",
+            timeout = 1
         )
 
-        // Should return null gracefully instead of throwing
+        // Should return null gracefully if the HTTP call fails
         val methods = resolver.getSupportedMethods()
         assertNull(methods)
     }

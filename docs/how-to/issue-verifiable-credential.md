@@ -134,16 +134,18 @@ The DID document includes verification methods that prove ownership of the signi
 Retrieve the key ID from the issuer's DID document. This key will be used to sign the credential.
 
 ```kotlin
+import org.trustweave.did.identifiers.extractKeyId
+
 // Extract key ID from DID document (already available from createDid().getOrThrow())
-val keyId = issuerDoc.verificationMethod.first().id.substringAfter("#")
+val keyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
+    ?: throw IllegalStateException("No verification method found")
 println("Signing key ID: $keyId")
 ```
 
 **What this does:**
-- Resolves the issuer DID using `resolveDid()` which returns a sealed result type
-- Extracts the DID document from the success result
 - Gets the verification method (public key) that will be used for signing
-- Extracts the key ID fragment (the part after `#`) which references the private key stored in the KMS
+- Extracts the key ID fragment using the type-safe `extractKeyId()` extension function
+- Returns the key ID string (e.g., "key-1") which references the private key stored in the KMS
 
 > **Tip:** In production, you might store the key ID separately or derive it from your key management workflow.
 
@@ -304,6 +306,8 @@ fun main() = runBlocking {
     }
     
     // Step 3: Get signing key
+    import org.trustweave.did.identifiers.extractKeyId
+    
     val resolutionResult = trustWeave.resolveDid(issuerDid)
     val issuerDocument = when (resolutionResult) {
         is DidResolutionResult.Success -> resolutionResult.document
@@ -311,7 +315,8 @@ fun main() = runBlocking {
     }
     val verificationMethod = issuerDocument.verificationMethod.firstOrNull()
         ?: throw IllegalStateException("No verification method found")
-    val keyId = verificationMethod.id.substringAfter("#")
+    val keyId = verificationMethod.extractKeyId()
+        ?: throw IllegalStateException("Failed to extract key ID")
     
     // Step 4 & 5: Issue credential
     val issuanceResult = trustWeave.issue {
@@ -496,8 +501,11 @@ val trustWeave = trustWeave {
 **Solution:**
 ```kotlin
 // ✅ Ensure DID is created (returns DID and document directly)
+import org.trustweave.did.identifiers.extractKeyId
+
 val (issuerDid, issuerDoc) = trustWeave.createDid().getOrThrow()
-val keyId = issuerDoc.verificationMethod.first().id.substringAfter("#")
+val keyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
+    ?: throw IllegalStateException("No verification method found")
 
 // Wait a moment for DID to be available, then resolve
 val issuerDocument = trustWeave.getDslContext().resolveDid(issuerDid)

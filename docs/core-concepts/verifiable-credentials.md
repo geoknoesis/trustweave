@@ -284,7 +284,9 @@ val issuerDoc = when (resolution) {
     is DidResolutionResult.Success -> resolution.document
     else -> throw IllegalStateException("Failed to resolve issuer DID")
 }
-val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+import org.trustweave.did.identifiers.extractKeyId
+
+val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
     ?: throw IllegalStateException("No verification method found")
 
 val issuanceResult = trustWeave.issue {

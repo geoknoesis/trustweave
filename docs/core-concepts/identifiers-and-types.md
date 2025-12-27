@@ -186,6 +186,16 @@ val vmId4 = VerificationMethodId.parse("did:key:z6Mk...#key-1")
 
 // ✅ Decompose
 val (didPart, keyIdPart) = vmId4.decompose()
+
+// ✅ Extract key ID fragment using type-safe extension function
+import org.trustweave.did.identifiers.extractKeyId
+
+val vmId = VerificationMethodId(did, KeyId("#key-1"))
+val keyId = vmId.extractKeyId()  // Returns "key-1" (without # prefix)
+
+// Or directly from VerificationMethod
+val verificationMethod = document.verificationMethod.firstOrNull()
+val keyId2 = verificationMethod?.extractKeyId()  // Returns "key-1" or null
 ```
 
 ### Type Inheritance: All Identifiers are IRIs

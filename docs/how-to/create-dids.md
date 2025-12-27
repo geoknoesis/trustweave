@@ -24,6 +24,7 @@ Here's a complete example that creates a DID, extracts the key ID, and uses it:
 import org.trustweave.trust.dsl.trustWeave
 import org.trustweave.trust.dsl.credential.*
 import org.trustweave.testkit.services.*
+import org.trustweave.did.identifiers.extractKeyId
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -45,8 +46,9 @@ fun main() = runBlocking {
         // Create a DID (returns DID and document directly)
         val (issuerDid, issuerDoc) = createDid().getOrThrow()
         
-        // Extract key ID from document (no need to resolve separately)
-        val issuerKeyId = issuerDoc.verificationMethod.first().id.substringAfter("#")
+        // Extract key ID from document using type-safe extension function
+        val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
+            ?: throw IllegalStateException("No verification method found")
 
         println("Created DID: ${issuerDid.value}")
         println("Key ID: $issuerKeyId")
@@ -120,6 +122,8 @@ val webDid = trustWeave.createDid {
 Extract the key ID from the DID for signing operations:
 
 ```kotlin
+import org.trustweave.did.identifiers.extractKeyId
+
 val did = trustWeave.createDid { method(KEY) }
 
 // Resolve DID to get verification method
@@ -129,10 +133,10 @@ val document = when (resolutionResult) {
     else -> throw IllegalStateException("Failed to resolve DID")
 }
 
-// Extract key ID from verification method
+// Extract key ID from verification method using type-safe extension function
 val verificationMethod = document.verificationMethod.firstOrNull()
     ?: throw IllegalStateException("No verification method found")
-val keyId = verificationMethod.id.substringAfter("#")  // e.g., "key-1"
+val keyId = verificationMethod.extractKeyId()  // e.g., "key-1"
 ```
 
 ### Step 4: Use the DID

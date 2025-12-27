@@ -49,10 +49,12 @@ val issuerDid = when (didResult) {
 }
 
 // Step 2: Extract key ID from DID document
+import org.trustweave.did.identifiers.extractKeyId
+
 val issuerDidDoc = trustLayer.dsl().getConfig().registries.didRegistry.resolve(issuerDid.value)?.document
     ?: throw IllegalStateException("Failed to resolve issuer DID")
 
-val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.extractKeyId()
     ?: throw IllegalStateException("No verification method in issuer DID")
 
 // Step 3: Use extracted key ID for signing
@@ -433,7 +435,7 @@ fun `test workflow with AWS KMS and Ethereum DID`() = runBlocking {
     val issuerDidDoc = trustLayer.dsl().getConfig().registries.didRegistry.resolve(issuerDid.value)?.document
         ?: throw IllegalStateException("Failed to resolve issuer DID")
 
-    val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method in issuer DID")
 
     // Issue credential (same pattern)
@@ -462,10 +464,12 @@ fun `test workflow with AWS KMS and Ethereum DID`() = runBlocking {
 ### Pattern 1: Extract Key ID from DID Document
 
 ```kotlin
+import org.trustweave.did.identifiers.extractKeyId
+
 val issuerDidDoc = trustLayer.dsl().getConfig().registries.didRegistry.resolve(issuerDid)?.document
     ?: throw IllegalStateException("Failed to resolve issuer DID")
 
-val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.extractKeyId()
     ?: throw IllegalStateException("No verification method in issuer DID")
 ```
 
@@ -539,7 +543,7 @@ val issuanceResult1 = trustLayer.issue {
 // ✅ CORRECT: Extract key from DID document
 val issuerDidDoc = trustLayer.dsl().getConfig().registries.didRegistry.resolve(issuerDid.value)?.document
     ?: throw IllegalStateException("Failed to resolve issuer DID")
-val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.extractKeyId()
     ?: throw IllegalStateException("No verification method in issuer DID")
 
 val issuanceResult2 = trustLayer.issue {

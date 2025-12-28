@@ -1,5 +1,7 @@
 package org.trustweave.credential.proof.internal.engines
 
+import org.trustweave.credential.internal.CredentialConstants
+import org.trustweave.credential.internal.JsonLdUtils
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.model.vc.VerifiableCredential
@@ -102,7 +104,7 @@ internal class VcLdProofEngine(
         }
         
         // Create Linked Data Proof
-        val proofPurpose = request.proofOptions?.purpose?.standardValue ?: "assertionMethod"
+        val proofPurpose = request.proofOptions?.purpose?.standardValue ?: CredentialConstants.ProofPurposes.ASSERTION_METHOD
         val proofCreated = Clock.System.now()
         val additionalProperties = buildMap<String, JsonElement> {
             request.proofOptions?.challenge?.let { put("challenge", JsonPrimitive(it)) }
@@ -110,7 +112,7 @@ internal class VcLdProofEngine(
         }
         
         val linkedDataProof = CredentialProof.LinkedDataProof(
-            type = request.proofOptions?.additionalOptions?.get("proofType")?.toString()?.removeSurrounding("\"") ?: "Ed25519Signature2020",
+            type = request.proofOptions?.additionalOptions?.get("proofType")?.toString()?.removeSurrounding("\"") ?: CredentialConstants.ProofTypes.ED25519_SIGNATURE_2020,
             created = proofCreated,
             verificationMethod = verificationMethod,
             proofPurpose = proofPurpose,
@@ -121,8 +123,8 @@ internal class VcLdProofEngine(
         // Build VerifiableCredential
         return VerifiableCredential(
             context = listOf(
-                "https://www.w3.org/2018/credentials/v1",
-                "https://w3id.org/security/suites/ed25519-2020/v1"
+                CredentialConstants.VcContexts.VC_1_1,
+                CredentialConstants.SecuritySuites.ED25519_2020_V1
             ),
             id = request.id ?: CredentialId("urn:uuid:${UUID.randomUUID()}"),
             type = request.type,
@@ -440,44 +442,9 @@ internal class VcLdProofEngine(
     }
     
     private fun canonicalizeDocument(document: JsonObject): String {
-        return try {
-            // Convert JsonObject to Map for jsonld-java
-            val documentMap = jsonObjectToMap(document)
-            
-            // Canonicalize using JSON-LD
-            val options = JsonLdOptions()
-            options.format = "application/n-quads"
-            val canonical = JsonLdProcessor.normalize(documentMap, options)
-            canonical?.toString() ?: Json.encodeToString(JsonObject.serializer(), document)
-        } catch (e: Exception) {
-            // Fallback: use JSON serialization
-            Json.encodeToString(JsonObject.serializer(), document)
-        }
-    }
-    
-    private fun jsonObjectToMap(jsonObject: JsonObject): Map<String, Any> {
-        return jsonObject.entries.associate { (key, value) ->
-            key to when (value) {
-                is JsonPrimitive -> {
-                    when {
-                        value.isString -> value.content
-                        value.booleanOrNull != null -> value.boolean
-                        value.longOrNull != null -> value.long
-                        value.doubleOrNull != null -> value.double
-                        else -> value.content
-                    }
-                }
-                is JsonArray -> value.map { element ->
-                    when (element) {
-                        is JsonPrimitive -> element.content
-                        is JsonObject -> jsonObjectToMap(element)
-                        else -> element.toString()
-                    }
-                }
-                is JsonObject -> jsonObjectToMap(value)
-                else -> value.toString()
-            }
-        }
+        // Use shared JSON-LD canonicalization utility
+        val json = Json { serializersModule = org.trustweave.core.serialization.SerializationModule.default }
+        return JsonLdUtils.canonicalizeDocument(document, json)
     }
     
     private suspend fun signDocument(canonical: String, keyId: String): String {
@@ -521,7 +488,7 @@ internal class VcLdProofEngine(
         }
         
         // Only support Ed25519Signature2020 for now
-        if (proofType != "Ed25519Signature2020") {
+        if (proofType != CredentialConstants.ProofTypes.ED25519_SIGNATURE_2020) {
             logger.warn("Unsupported proof type: {}", proofType)
             return false
         }

@@ -94,6 +94,7 @@ include("credentials:plugins:platforms:servicenow")
 include("credentials:plugins:platforms:salesforce")
 include("credentials:plugins:platforms:entra")
 include("credentials:plugins:oidc4vci")
+include("credentials:plugins:oidc4vp")
 include("credentials:plugins:didcomm")
 include("credentials:plugins:chapi")
 

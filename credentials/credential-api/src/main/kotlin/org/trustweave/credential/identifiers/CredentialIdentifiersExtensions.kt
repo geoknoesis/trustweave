@@ -12,25 +12,25 @@ import org.trustweave.core.identifiers.Iri
 /**
  * Safe parsing: Convert String to CredentialId, returns null if invalid.
  */
-inline fun String.toCredentialIdOrNull(): CredentialId? = 
+fun String.toCredentialIdOrNull(): CredentialId? = 
     try { CredentialId(this) } catch (e: IllegalArgumentException) { null }
 
 /**
  * Safe parsing: Convert String to IssuerId, returns null if invalid.
  */
-inline fun String.toIssuerIdOrNull(): IssuerId? = 
+fun String.toIssuerIdOrNull(): IssuerId? = 
     try { IssuerId(this) } catch (e: IllegalArgumentException) { null }
 
 /**
  * Safe parsing: Convert String to StatusListId, returns null if invalid.
  */
-inline fun String.toStatusListIdOrNull(): StatusListId? = 
+fun String.toStatusListIdOrNull(): StatusListId? = 
     try { StatusListId(this) } catch (e: IllegalArgumentException) { null }
 
 /**
  * Safe parsing: Convert String to SchemaId, returns null if invalid.
  */
-inline fun String.toSchemaIdOrNull(): SchemaId? = 
+fun String.toSchemaIdOrNull(): SchemaId? = 
     try { SchemaId(this) } catch (e: IllegalArgumentException) { null }
 
 /**

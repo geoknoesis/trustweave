@@ -33,7 +33,7 @@ package org.trustweave.credential.identifiers
  * val knownProtocol = ExchangeProtocolName.DidComm
  * ```
  */
-inline fun String.toExchangeProtocolNameOrNull(): ExchangeProtocolName? = 
+fun String.toExchangeProtocolNameOrNull(): ExchangeProtocolName? = 
     try { ExchangeProtocolName(this) } catch (e: IllegalArgumentException) { null }
 
 /**
@@ -53,7 +53,7 @@ fun String.requireExchangeProtocolName(): ExchangeProtocolName =
 /**
  * Safe parsing: Convert String to OfferId, returns null if invalid.
  */
-inline fun String.toOfferIdOrNull(): OfferId? = 
+fun String.toOfferIdOrNull(): OfferId? = 
     try { OfferId(this) } catch (e: IllegalArgumentException) { null }
 
 /**
@@ -69,7 +69,7 @@ fun String.requireOfferId(): OfferId =
 /**
  * Safe parsing: Convert String to RequestId, returns null if invalid.
  */
-inline fun String.toRequestIdOrNull(): RequestId? = 
+fun String.toRequestIdOrNull(): RequestId? = 
     try { RequestId(this) } catch (e: IllegalArgumentException) { null }
 
 /**
@@ -85,7 +85,7 @@ fun String.requireRequestId(): RequestId =
 /**
  * Safe parsing: Convert String to IssueId, returns null if invalid.
  */
-inline fun String.toIssueIdOrNull(): IssueId? = 
+fun String.toIssueIdOrNull(): IssueId? = 
     try { IssueId(this) } catch (e: IllegalArgumentException) { null }
 
 /**
@@ -101,7 +101,7 @@ fun String.requireIssueId(): IssueId =
 /**
  * Safe parsing: Convert String to PresentationId, returns null if invalid.
  */
-inline fun String.toPresentationIdOrNull(): PresentationId? = 
+fun String.toPresentationIdOrNull(): PresentationId? = 
     try { PresentationId(this) } catch (e: IllegalArgumentException) { null }
 
 /**

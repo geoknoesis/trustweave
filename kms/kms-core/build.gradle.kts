@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm")
     `java-test-fixtures`
+    alias(libs.plugins.kover)
 }
 
 group = "org.trustweave"
@@ -24,5 +25,37 @@ dependencies {
     testFixturesImplementation(libs.kotlinx.coroutines.core)
     testFixturesImplementation(libs.kotlin.test)
     testFixturesImplementation("org.junit.jupiter:junit-jupiter-api:5.10.1")
+}
+
+// Configure Kover for test coverage
+kover {
+    reports {
+        filters {
+            excludes {
+                classes(
+                    "*.*Test",
+                    "*.*Test\$*",
+                    "*.*TestKt",
+                    "*.*TestKt\$*"
+                )
+            }
+        }
+        verify {
+            rule {
+                bound {
+                    // Set minimum coverage threshold to 70%
+                    // This is a reasonable target for a core interface module
+                    minValue = 70
+                }
+            }
+        }
+    }
+}
+
+// Ensure Kover directories exist before test task runs
+tasks.test.configure {
+    doFirst {
+        layout.buildDirectory.dir("tmp/test").get().asFile.mkdirs()
+    }
 }
 

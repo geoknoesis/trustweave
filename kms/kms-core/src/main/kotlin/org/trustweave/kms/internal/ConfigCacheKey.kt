@@ -1,5 +1,26 @@
 package org.trustweave.kms.internal
 
+/**
+ * Internal utility for creating cache keys from provider name and configuration.
+ * 
+ * This class is used internally by [KeyManagementServices] to create unique
+ * cache keys for KMS instances. The cache key is based on the provider name
+ * and the configuration options, ensuring that instances with the same
+ * configuration are reused from the cache.
+ * 
+ * **Cache Key Strategy:**
+ * - Provider name and configuration map are combined to create a unique key
+ * - Same provider + same configuration = same cache key = same instance
+ * - Different configurations for the same provider create different cache entries
+ * 
+ * **Thread Safety:**
+ * Cache key creation is thread-safe and immutable once created.
+ * 
+ * **Internal Use Only:**
+ * This is an internal class and should not be used directly by KMS plugins
+ * or consumers of the KMS API.
+ */
+
 import org.trustweave.kms.KmsCreationOptions
 
 /**

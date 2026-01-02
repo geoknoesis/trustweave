@@ -1,5 +1,18 @@
 package org.trustweave.kms.services
 
+/**
+ * Internal factory interface for creating KMS instances.
+ * 
+ * This internal interface provides a factory abstraction for creating KMS
+ * instances from configuration. It's used internally by the SPI implementation
+ * to create service instances from providers.
+ * 
+ * **Internal Use Only:**
+ * This is an internal factory interface and should not be implemented or used
+ * directly by KMS plugins or consumers. Use [KeyManagementServices] factory
+ * or implement [KeyManagementServiceProvider] SPI instead.
+ */
+
 import org.trustweave.kms.KeyManagementService
 
 /**

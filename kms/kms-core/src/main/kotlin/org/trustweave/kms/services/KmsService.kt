@@ -1,6 +1,19 @@
 package org.trustweave.kms.services
 
 /**
+ * Internal service abstraction for KMS creation.
+ * 
+ * This internal interface provides an abstraction layer for KMS instance creation
+ * that is used by the [KeyManagementServices] factory. It allows for different
+ * creation strategies and is used internally for service provider integration.
+ * 
+ * **Internal Use Only:**
+ * This is an internal service interface and should not be implemented or used
+ * directly by KMS plugins or consumers. Use [KeyManagementServices] factory
+ * or implement [KeyManagementServiceProvider] SPI instead.
+ */
+
+/**
  * Service interface for Key Management Service operations.
  *
  * Provides a way to call KMS methods without direct dependency or reflection.

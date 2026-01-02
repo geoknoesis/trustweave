@@ -5,7 +5,22 @@ import java.util.concurrent.TimeUnit
 /**
  * Cache entry with timestamp for TTL-based expiration.
  * 
+ * This utility class represents a cache entry that stores a value along with
+ * metadata for cache management, including timestamp and optional time-to-live (TTL).
+ * 
+ * **Usage:**
  * Used by KMS plugins to cache key metadata with configurable time-to-live.
+ * Also used internally by the [KeyManagementServices] factory for instance caching.
+ * 
+ * **Thread Safety:**
+ * Cache entries are immutable data classes, making them inherently thread-safe.
+ * When used in caches (e.g., ConcurrentHashMap), the cache implementation provides
+ * thread-safety guarantees.
+ * 
+ * **Lifecycle:**
+ * Cache entries can have optional TTL-based expiration. Use [isExpired] to check
+ * if an entry has expired. The factory's cache entries are automatically cleared
+ * when [KeyManagementServices.shutdown] is called.
  * 
  * @param value The cached value
  * @param timestampMillis Timestamp when the entry was created (in milliseconds since epoch)

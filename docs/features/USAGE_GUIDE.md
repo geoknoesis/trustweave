@@ -347,27 +347,46 @@ val htmlPresentation = renderer.renderHtml(presentation)
 Here's how to integrate multiple features together:
 
 ```kotlin
-import org.trustweave.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.IssuanceResult
 import org.trustweave.audit.*
 import org.trustweave.metrics.*
 import org.trustweave.qrcode.*
+import kotlinx.datetime.Clock
+import java.time.Instant
 
-val TrustWeave = TrustWeave.create()
+val trustWeave = TrustWeave.build {
+    // Configure TrustWeave instance
+    keys { provider(IN_MEMORY); algorithm(ED25519) }
+    did { method(KEY) { algorithm(ED25519) } }
+}
 val auditLogger = InMemoryAuditLogger()
 val metrics = InMemoryMetricsCollector()
 val qrGenerator = ZxingQrCodeGenerator()
 
 // Issue credential with audit logging and metrics
 suspend fun issueCredentialWithTracking(
+    trustWeave: TrustWeave,
     issuerDid: String,
     subjectDid: String
 ): VerifiableCredential {
     val startTime = System.currentTimeMillis()
 
-    val credential = TrustWeave.issueCredential(
-        issuerDid = issuerDid,
-        subjectDid = subjectDid
-    ) { /* credential data */ }.getOrThrow()
+    val issuanceResult = trustWeave.issue {
+        credential {
+            issuer(issuerDid)
+            subject {
+                id(subjectDid)
+                // credential data
+            }
+        }
+        signedBy(issuerDid = issuerDid, keyId = "key-1")
+    }
+    
+    val credential = when (issuanceResult) {
+        is IssuanceResult.Success -> issuanceResult.credential
+        else -> throw IllegalStateException("Failed to issue credential")
+    }
 
     // Track metrics
     metrics.increment("credentials.issued")

@@ -471,7 +471,7 @@ fun register(protocol: CredentialExchangeProtocol)
 
 **Example:**
 ```kotlin
-val registry = CredentialExchangeProtocolRegistry()
+val registry = ExchangeProtocolRegistries.default()
 registry.register(DidCommExchangeProtocol(didCommService))
 ```
 
@@ -578,10 +578,25 @@ suspend fun offerCredential(
 
 **Example:**
 ```kotlin
-val offer = registry.offerCredential(
-    protocolName = "didcomm",
-    request = CredentialOfferRequest(...)
+val exchangeService = ExchangeServices.createExchangeService(
+    protocolRegistry = registry,
+    credentialService = credentialService,
+    didResolver = didResolver
 )
+
+val offerResult = exchangeService.offer(
+    ExchangeRequest.Offer(
+        protocolName = "didcomm".requireExchangeProtocolName(),
+        issuerDid = Did("did:key:issuer"),
+        holderDid = Did("did:key:holder"),
+        credentialPreview = credentialPreview,
+        options = ExchangeOptions.Empty
+    )
+)
+val offer = when (offerResult) {
+    is ExchangeResult.Success -> offerResult.value
+    else -> throw IllegalStateException("Offer failed: $offerResult")
+}
 ```
 
 ---
@@ -791,11 +806,26 @@ All credential exchange operations throw structured exceptions from the `Exchang
 
 **Example:**
 ```kotlin
-try {
-    val offer = registry.offerCredential("didcomm", request)
-} catch (e: ExchangeException.ProtocolNotRegistered) {
-    println("Protocol: ${e.protocolName}")
-    println("Available: ${e.availableProtocols}")
+val offerResult = exchangeService.offer(
+    ExchangeRequest.Offer(
+        protocolName = "didcomm".requireExchangeProtocolName(),
+        issuerDid = issuerDid,
+        holderDid = holderDid,
+        credentialPreview = preview,
+        options = ExchangeOptions.Empty
+    )
+)
+when (offerResult) {
+    is ExchangeResult.Failure.ProtocolNotSupported -> {
+        println("Protocol: ${offerResult.protocolName}")
+        println("Available: ${offerResult.availableProtocols}")
+    }
+    is ExchangeResult.Success -> {
+        // Use offerResult.value
+    }
+    else -> {
+        // Handle other errors
+    }
 }
 ```
 
@@ -813,12 +843,27 @@ try {
 
 **Example:**
 ```kotlin
-try {
-    val proofRequest = registry.requestProof("oidc4vci", request)
-} catch (e: ExchangeException.OperationNotSupported) {
-    println("Protocol: ${e.protocolName}")
-    println("Operation: ${e.operation}")
-    println("Supported: ${e.supportedOperations}")
+val proofRequestResult = exchangeService.requestProof(
+    ProofExchangeRequest.Request(
+        protocolName = "oidc4vci".requireExchangeProtocolName(),
+        verifierDid = verifierDid,
+        proverDid = proverDid,
+        proofRequest = proofRequest,
+        options = ExchangeOptions.Empty
+    )
+)
+when (proofRequestResult) {
+    is ExchangeResult.Failure.OperationNotSupported -> {
+        println("Protocol: ${proofRequestResult.protocolName}")
+        println("Operation: ${proofRequestResult.operation}")
+        println("Supported: ${proofRequestResult.supportedOperations}")
+    }
+    is ExchangeResult.Success -> {
+        // Use proofRequestResult.value
+    }
+    else -> {
+        // Handle other errors
+    }
 }
 ```
 

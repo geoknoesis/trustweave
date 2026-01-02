@@ -19,6 +19,8 @@ dependencies {
     testImplementation(project(":kms:plugins:inmemory"))
     testImplementation(libs.kotlin.test)
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.1")
+    // Add SLF4J for testing logging utilities
+    testImplementation("org.slf4j:slf4j-api:2.0.9")
     
     // TestFixtures dependencies - exposed to consumers
     testFixturesImplementation(project(":common"))

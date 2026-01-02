@@ -14,8 +14,8 @@ This guide covers how to implement new credential exchange protocols using the p
 
 ```
 ┌─────────────────────────────────────────────┐
-│  CredentialExchangeProtocolRegistry         │
-│  (Manages all protocol implementations)    │
+│  ExchangeProtocolRegistry                   │
+│  (Manages all protocol implementations)     │
 └─────────────────────────────────────────────┘
                      │
          ┌───────────┼───────────┐
@@ -25,6 +25,14 @@ This guide covers how to implement new credential exchange protocols using the p
 │  DIDComm    │ │ OIDC4VCI  │ │  CHAPI   │
 │  Protocol   │ │ Protocol  │ │ Protocol │
 └─────────────┘ └──────────┘ └──────────┘
+                     │
+         ┌───────────┴───────────┐
+         │                       │
+         ▼                       ▼
+┌──────────────────┐  ┌──────────────────┐
+│  ExchangeService  │  │  CredentialService│
+│  (Unified API)    │  │  (Issuance/Verify)│
+└──────────────────┘  └──────────────────┘
 ```
 
 ## Implemented Protocols
@@ -185,32 +193,38 @@ Each protocol may require specific options in the `options` map:
 ### DIDComm
 
 ```kotlin
-options = mapOf(
-    "fromKeyId" to "did:key:issuer#key-1",
-    "toKeyId" to "did:key:holder#key-1",
-    "encrypt" to true,
-    "thid" to "thread-id"
-)
+import org.trustweave.credential.exchange.options.ExchangeOptions
+
+val options = ExchangeOptions.builder()
+    .addMetadata("fromKeyId", "did:key:issuer#key-1")
+    .addMetadata("toKeyId", "did:key:holder#key-1")
+    .addMetadata("encrypt", true)
+    .threadId("thread-id")
+    .build()
 ```
 
 ### OIDC4VCI
 
 ```kotlin
-options = mapOf(
-    "credentialIssuer" to "https://issuer.example.com",
-    "credentialTypes" to listOf("VerifiableCredential", "PersonCredential"),
-    "grants" to mapOf("authorization_code" to mapOf(...)),
-    "redirectUri" to "https://holder.example.com/callback"
-)
+import org.trustweave.credential.exchange.options.ExchangeOptions
+import kotlinx.serialization.json.JsonPrimitive
+
+val options = ExchangeOptions.builder()
+    .addMetadata("credentialIssuer", "https://issuer.example.com")
+    .addMetadata("credentialTypes", JsonPrimitive("VerifiableCredential,PersonCredential"))
+    .addMetadata("grants", JsonPrimitive("authorization_code"))
+    .addMetadata("redirectUri", "https://holder.example.com/callback")
+    .build()
 ```
 
 ### CHAPI
 
 ```kotlin
-options = mapOf(
-    // CHAPI typically doesn't require additional options
-    // Messages are generated for browser use
-)
+import org.trustweave.credential.exchange.options.ExchangeOptions
+
+val options = ExchangeOptions.Empty
+// CHAPI typically doesn't require additional options
+// Messages are generated for browser use
 ```
 
 ## Testing
@@ -241,15 +255,66 @@ fun `test offer credential`() = runTest {
 ### Integration Tests
 
 ```kotlin
+import org.trustweave.credential.exchange.*
+import org.trustweave.credential.exchange.registry.ExchangeProtocolRegistries
+import org.trustweave.credential.exchange.request.ExchangeRequest
+import org.trustweave.credential.exchange.result.ExchangeResult
+import org.trustweave.credential.identifiers.*
+
 @Test
 fun `test complete exchange flow`() = runTest {
-    val registry = CredentialExchangeProtocolRegistry()
+    val registry = ExchangeProtocolRegistries.default()
     registry.register(YourProtocolExchangeProtocol(service))
+    
+    val exchangeService = ExchangeServices.createExchangeService(
+        protocolRegistry = registry,
+        credentialService = credentialService,
+        didResolver = didResolver
+    )
 
     // Test full flow
-    val offer = registry.offerCredential("yourprotocol", offerRequest)
-    val request = registry.requestCredential("yourprotocol", requestRequest)
-    val issue = registry.issueCredential("yourprotocol", issueRequest)
+    val offerResult = exchangeService.offer(
+        ExchangeRequest.Offer(
+            protocolName = "yourprotocol".requireExchangeProtocolName(),
+            issuerDid = issuerDid,
+            holderDid = holderDid,
+            credentialPreview = preview,
+            options = ExchangeOptions.builder().build()
+        )
+    )
+    val offer = when (offerResult) {
+        is ExchangeResult.Success -> offerResult.value
+        else -> throw IllegalStateException("Offer failed: $offerResult")
+    }
+    
+    val requestResult = exchangeService.request(
+        ExchangeRequest.Request(
+            protocolName = "yourprotocol".requireExchangeProtocolName(),
+            holderDid = holderDid,
+            issuerDid = issuerDid,
+            offerId = offer.offerId,
+            options = ExchangeOptions.builder().build()
+        )
+    )
+    val request = when (requestResult) {
+        is ExchangeResult.Success -> requestResult.value
+        else -> throw IllegalStateException("Request failed: $requestResult")
+    }
+    
+    val issueResult = exchangeService.issue(
+        ExchangeRequest.Issue(
+            protocolName = "yourprotocol".requireExchangeProtocolName(),
+            issuerDid = issuerDid,
+            holderDid = holderDid,
+            credential = credential,
+            requestId = request.requestId,
+            options = ExchangeOptions.builder().build()
+        )
+    )
+    val issue = when (issueResult) {
+        is ExchangeResult.Success -> issueResult.value
+        else -> throw IllegalStateException("Issue failed: $issueResult")
+    }
 
     assertNotNull(issue.credential)
 }

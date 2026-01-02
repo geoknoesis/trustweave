@@ -14,39 +14,67 @@ Here's a complete, copy-paste ready example that demonstrates the full credentia
 package com.example.credentialexchange.quickstart
 
 import org.trustweave.credential.exchange.*
+import org.trustweave.credential.exchange.registry.ExchangeProtocolRegistries
+import org.trustweave.credential.exchange.request.ExchangeRequest
+import org.trustweave.credential.exchange.response.ExchangeResponse
+import org.trustweave.credential.exchange.result.ExchangeResult
+import org.trustweave.credential.exchange.options.ExchangeOptions
+import org.trustweave.credential.exchange.model.CredentialPreview
+import org.trustweave.credential.exchange.model.CredentialAttribute
 import org.trustweave.credential.didcomm.exchange.DidCommExchangeProtocol
 import org.trustweave.credential.didcomm.DidCommFactory
-import org.trustweave.credential.models.VerifiableCredential
+import org.trustweave.credential.CredentialService
+import org.trustweave.credential.credentialService
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.identifiers.*
 import org.trustweave.kms.KeyManagementService
-import org.trustweave.testkit.InMemoryKeyManagementService
-import org.trustweave.did.DidDocument
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
+import org.trustweave.did.resolver.DidResolver
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.model.DidDocument
+import org.trustweave.did.identifiers.Did
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import kotlinx.serialization.json.*
+import kotlinx.datetime.Clock
 
 fun main() = runBlocking {
     try {
         // Step 1: Setup dependencies
         val kms: KeyManagementService = InMemoryKeyManagementService()
-        val resolveDid: suspend (String) -> DidDocument? = { did ->
-            // Mock DID resolution - replace with real resolver in production
+        val didResolver: DidResolver = object : DidResolver {
+            override suspend fun resolve(did: Did): DidResolutionResult {
+                // Mock DID resolution - replace with real resolver in production
+                return DidResolutionResult.Success(
+                    DidDocument(id = did, verificationMethod = emptyList())
+                )
+            }
+        }
+        val credentialService: CredentialService = credentialService(didResolver = didResolver)
+
+        // Step 2: Create registry and register protocol
+        val registry = ExchangeProtocolRegistries.default()
+        val didCommService = DidCommFactory.createInMemoryService(kms) { didStr ->
+            val did = Did(didStr)
             DidDocument(id = did, verificationMethod = emptyList())
         }
-
-        // Step 2: Create and register protocol
-        val registry = CredentialExchangeProtocolRegistry()
-        val didCommService = DidCommFactory.createInMemoryService(kms, resolveDid)
         registry.register(DidCommExchangeProtocol(didCommService))
 
-        println("✅ Protocol registered: ${registry.getAllProtocolNames()}")
+        // Step 3: Create ExchangeService
+        val exchangeService = ExchangeServices.createExchangeService(
+            protocolRegistry = registry,
+            credentialService = credentialService,
+            didResolver = didResolver
+        )
 
-        // Step 3: Create credential offer
-        val issuerDid = "did:key:issuer"
-        val holderDid = "did:key:holder"
+        println("✅ Protocol registered: ${registry.getSupportedProtocols()}")
 
-        val offer = registry.offerCredential(
-            protocolName = "didcomm",
-            request = CredentialOfferRequest(
+        // Step 4: Create credential offer
+        val issuerDid = Did("did:key:issuer")
+        val holderDid = Did("did:key:holder")
+
+        val offerResult = exchangeService.offer(
+            ExchangeRequest.Offer(
+                protocolName = "didcomm".requireExchangeProtocolName(),
                 issuerDid = issuerDid,
                 holderDid = holderDid,
                 credentialPreview = CredentialPreview(
@@ -55,85 +83,116 @@ fun main() = runBlocking {
                         CredentialAttribute("email", "alice@example.com")
                     )
                 ),
-                options = mapOf(
-                    "fromKeyId" to "$issuerDid#key-1",
-                    "toKeyId" to "$holderDid#key-1"
-                )
+                options = ExchangeOptions.builder()
+                    .addMetadata("fromKeyId", "$issuerDid#key-1")
+                    .addMetadata("toKeyId", "$holderDid#key-1")
+                    .build()
             )
         )
+
+        val offer = when (offerResult) {
+            is ExchangeResult.Success -> offerResult.value
+            is ExchangeResult.Failure.ProtocolNotSupported -> {
+                println("❌ Protocol not supported: ${offerResult.protocolName}")
+                return@runBlocking
+            }
+            is ExchangeResult.Failure.OperationNotSupported -> {
+                println("❌ Operation not supported: ${offerResult.operation}")
+                return@runBlocking
+            }
+            else -> {
+                println("❌ Offer failed: ${offerResult}")
+                return@runBlocking
+            }
+        }
 
         println("✅ Offer created:")
         println("   Offer ID: ${offer.offerId}")
         println("   Protocol: ${offer.protocolName}")
 
-        // Step 4: Request credential
-        val request = registry.requestCredential(
-            protocolName = "didcomm",
-            request = CredentialRequestRequest(
+        // Step 5: Request credential
+        val requestResult = exchangeService.request(
+            ExchangeRequest.Request(
+                protocolName = "didcomm".requireExchangeProtocolName(),
                 holderDid = holderDid,
                 issuerDid = issuerDid,
                 offerId = offer.offerId,
-                options = mapOf(
-                    "fromKeyId" to "$holderDid#key-1",
-                    "toKeyId" to "$issuerDid#key-1"
-                )
+                options = ExchangeOptions.builder()
+                    .addMetadata("fromKeyId", "$holderDid#key-1")
+                    .addMetadata("toKeyId", "$issuerDid#key-1")
+                    .build()
             )
         )
+
+        val request = when (requestResult) {
+            is ExchangeResult.Success -> requestResult.value
+            is ExchangeResult.Failure.ProtocolNotSupported -> {
+                println("❌ Protocol not supported: ${requestResult.protocolName}")
+                return@runBlocking
+            }
+            is ExchangeResult.Failure.OperationNotSupported -> {
+                println("❌ Operation not supported: ${requestResult.operation}")
+                return@runBlocking
+            }
+            else -> {
+                println("❌ Request failed: ${requestResult}")
+                return@runBlocking
+            }
+        }
 
         println("✅ Request created:")
         println("   Request ID: ${request.requestId}")
         println("   Protocol: ${request.protocolName}")
 
-        // Step 5: Issue credential
+        // Step 6: Issue credential
         val credential = VerifiableCredential(
-            type = listOf("VerifiableCredential", "PersonCredential"),
-            issuer = issuerDid,
-            credentialSubject = buildJsonObject {
-                put("id", holderDid)
-                put("name", "Alice")
-                put("email", "alice@example.com")
-            },
-            issuanceDate = java.time.Instant.now().toString()
+            type = listOf(CredentialType.fromString("VerifiableCredential"), CredentialType.fromString("PersonCredential")),
+            issuer = Issuer.IriIssuer(Iri(issuerDid.value)),
+            issuanceDate = Clock.System.now(),
+            credentialSubject = CredentialSubject(
+                id = holderDid,
+                claims = mapOf(
+                    "name" to JsonPrimitive("Alice"),
+                    "email" to JsonPrimitive("alice@example.com")
+                )
+            )
         )
 
-        val issue = registry.issueCredential(
-            protocolName = "didcomm",
-            request = CredentialIssueRequest(
+        val issueResult = exchangeService.issue(
+            ExchangeRequest.Issue(
+                protocolName = "didcomm".requireExchangeProtocolName(),
                 issuerDid = issuerDid,
                 holderDid = holderDid,
                 credential = credential,
                 requestId = request.requestId,
-                options = mapOf(
-                    "fromKeyId" to "$issuerDid#key-1",
-                    "toKeyId" to "$holderDid#key-1"
-                )
+                options = ExchangeOptions.builder()
+                    .addMetadata("fromKeyId", "$issuerDid#key-1")
+                    .addMetadata("toKeyId", "$holderDid#key-1")
+                    .build()
             )
         )
+
+        val issue = when (issueResult) {
+            is ExchangeResult.Success -> issueResult.value
+            is ExchangeResult.Failure.ProtocolNotSupported -> {
+                println("❌ Protocol not supported: ${issueResult.protocolName}")
+                return@runBlocking
+            }
+            is ExchangeResult.Failure.OperationNotSupported -> {
+                println("❌ Operation not supported: ${issueResult.operation}")
+                return@runBlocking
+            }
+            else -> {
+                println("❌ Issue failed: ${issueResult}")
+                return@runBlocking
+            }
+        }
 
         println("✅ Credential issued:")
         println("   Issue ID: ${issue.issueId}")
         println("   Credential ID: ${issue.credential.id}")
         println("   Protocol: ${issue.protocolName}")
 
-    } catch (e: ExchangeException) {
-        when (e) {
-            is ExchangeException.ProtocolNotRegistered -> {
-                println("❌ Protocol not registered: ${e.protocolName}")
-                println("   Available: ${e.availableProtocols}")
-            }
-            is ExchangeException.OperationNotSupported -> {
-                println("❌ Operation not supported: ${e.operation}")
-                println("   Supported: ${e.supportedOperations}")
-            }
-            is ExchangeException.MissingRequiredOption -> {
-                println("❌ Missing required option: ${e.optionName}")
-            }
-            else -> {
-                println("❌ Exchange error: ${e.message}")
-                println("   Error code: ${e.code}")
-            }
-        }
-        e.printStackTrace()
     } catch (e: Exception) {
         println("❌ Unexpected error: ${e.message}")
         e.printStackTrace()
@@ -213,15 +272,15 @@ val resolveDid: suspend (String) -> DidDocument? = { did ->
 
 ```kotlin
 // Create registry
-val registry = CredentialExchangeProtocolRegistry()
+val registry = ExchangeProtocolRegistries.default()
 
 // Create and register DIDComm protocol
 val didCommService = DidCommFactory.createInMemoryService(kms, resolveDid)
 registry.register(DidCommExchangeProtocol(didCommService))
 
 // Verify registration
-println("Registered protocols: ${registry.getAllProtocolNames()}")
-// Output: Registered protocols: [didcomm]
+println("Registered protocols: ${registry.getSupportedProtocols()}")
+// Output: Registered protocols: [ExchangeProtocolName("didcomm")]
 ```
 
 ### Step 4: Create Credential Offer
@@ -229,30 +288,51 @@ println("Registered protocols: ${registry.getAllProtocolNames()}")
 An offer is a message from the issuer to the holder proposing a credential.
 
 ```kotlin
-val offer = registry.offerCredential(
-    protocolName = "didcomm",
-    request = CredentialOfferRequest(
-        issuerDid = "did:key:issuer",
-        holderDid = "did:key:holder",
+import org.trustweave.credential.exchange.request.ExchangeRequest
+import org.trustweave.credential.exchange.options.ExchangeOptions
+import org.trustweave.credential.exchange.model.CredentialPreview
+import org.trustweave.credential.exchange.model.CredentialAttribute
+import org.trustweave.credential.identifiers.*
+import org.trustweave.did.identifiers.Did
+import kotlinx.serialization.json.JsonPrimitive
+
+val issuerDid = Did("did:key:issuer")
+val holderDid = Did("did:key:holder")
+
+val offerResult = exchangeService.offer(
+    ExchangeRequest.Offer(
+        protocolName = "didcomm".requireExchangeProtocolName(),
+        issuerDid = issuerDid,
+        holderDid = holderDid,
         credentialPreview = CredentialPreview(
             attributes = listOf(
                 CredentialAttribute("name", "Alice"),
                 CredentialAttribute("email", "alice@example.com")
             )
         ),
-        options = mapOf(
-            "fromKeyId" to "did:key:issuer#key-1",  // Required for DIDComm
-            "toKeyId" to "did:key:holder#key-1"    // Required for DIDComm
-        )
+        options = ExchangeOptions.builder()
+            .addMetadata("fromKeyId", "$issuerDid#key-1")  // Required for DIDComm
+            .addMetadata("toKeyId", "$holderDid#key-1")    // Required for DIDComm
+            .build()
     )
 )
+
+val offer = when (offerResult) {
+    is ExchangeResult.Success -> {
+        offerResult.value
+    }
+    else -> {
+        throw IllegalStateException("Offer failed: $offerResult")
+    }
+}
 
 println("Offer ID: ${offer.offerId}")
 ```
 
 **What this does:**
 - Creates a credential offer using the DIDComm protocol
-- Returns an `offerId` that can be used to reference this offer
+- Returns an `ExchangeResult` that must be handled
+- On success, provides an `offerId` that can be used to reference this offer
 - The offer contains a preview of the credential attributes
 
 ### Step 5: Request Credential
@@ -260,25 +340,35 @@ println("Offer ID: ${offer.offerId}")
 After receiving an offer, the holder requests the credential.
 
 ```kotlin
-val request = registry.requestCredential(
-    protocolName = "didcomm",
-    request = CredentialRequestRequest(
-        holderDid = "did:key:holder",
-        issuerDid = "did:key:issuer",
+val requestResult = exchangeService.request(
+    ExchangeRequest.Request(
+        protocolName = "didcomm".requireExchangeProtocolName(),
+        holderDid = holderDid,
+        issuerDid = issuerDid,
         offerId = offer.offerId,  // Reference to the offer
-        options = mapOf(
-            "fromKeyId" to "did:key:holder#key-1",
-            "toKeyId" to "did:key:issuer#key-1"
-        )
+        options = ExchangeOptions.builder()
+            .addMetadata("fromKeyId", "$holderDid#key-1")
+            .addMetadata("toKeyId", "$issuerDid#key-1")
+            .build()
     )
 )
+
+val request = when (requestResult) {
+    is ExchangeResult.Success -> {
+        requestResult.value
+    }
+    else -> {
+        throw IllegalStateException("Request failed: $requestResult")
+    }
+}
 
 println("Request ID: ${request.requestId}")
 ```
 
 **What this does:**
 - Creates a credential request referencing the offer
-- Returns a `requestId` that can be used to reference this request
+- Returns an `ExchangeResult` that must be handled
+- On success, provides a `requestId` that can be used to reference this request
 - The request indicates the holder wants to receive the credential
 
 ### Step 6: Issue Credential
@@ -286,37 +376,58 @@ println("Request ID: ${request.requestId}")
 After receiving a request, the issuer issues the credential.
 
 ```kotlin
-val credential = VerifiableCredential(
-    type = listOf("VerifiableCredential", "PersonCredential"),
-    issuer = "did:key:issuer",
-    credentialSubject = buildJsonObject {
-        put("id", "did:key:holder")
-        put("name", "Alice")
-        put("email", "alice@example.com")
-    },
-    issuanceDate = java.time.Instant.now().toString()
-)
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.model.vc.CredentialSubject
+import org.trustweave.credential.model.vc.Issuer
+import org.trustweave.credential.model.CredentialType
+import org.trustweave.core.identifiers.Iri
+import org.trustweave.credential.identifiers.*
+import kotlinx.datetime.Clock
+import kotlinx.serialization.json.JsonPrimitive
 
-val issue = registry.issueCredential(
-    protocolName = "didcomm",
-    request = CredentialIssueRequest(
-        issuerDid = "did:key:issuer",
-        holderDid = "did:key:holder",
-        credential = credential,
-        requestId = request.requestId,  // Reference to the request
-        options = mapOf(
-            "fromKeyId" to "did:key:issuer#key-1",
-            "toKeyId" to "did:key:holder#key-1"
+val credential = VerifiableCredential(
+    type = listOf(CredentialType.fromString("VerifiableCredential"), CredentialType.fromString("PersonCredential")),
+    issuer = Issuer.IriIssuer(Iri(issuerDid.value)),
+    issuanceDate = Clock.System.now(),
+    credentialSubject = CredentialSubject(
+        id = holderDid,
+        claims = mapOf(
+            "name" to JsonPrimitive("Alice"),
+            "email" to JsonPrimitive("alice@example.com")
         )
     )
 )
+
+val issueResult = exchangeService.issue(
+    ExchangeRequest.Issue(
+        protocolName = "didcomm".requireExchangeProtocolName(),
+        issuerDid = issuerDid,
+        holderDid = holderDid,
+        credential = credential,
+        requestId = request.requestId,  // Reference to the request
+        options = ExchangeOptions.builder()
+            .addMetadata("fromKeyId", "$issuerDid#key-1")
+            .addMetadata("toKeyId", "$holderDid#key-1")
+            .build()
+    )
+)
+
+val issue = when (issueResult) {
+    is ExchangeResult.Success -> {
+        issueResult.value
+    }
+    else -> {
+        throw IllegalStateException("Issue failed: $issueResult")
+    }
+}
 
 println("Credential ID: ${issue.credential.id}")
 ```
 
 **What this does:**
 - Issues a verifiable credential to the holder
-- Returns the issued credential with proof
+- Returns an `ExchangeResult` that must be handled
+- On success, provides the issued credential with proof
 - The credential can now be stored, verified, and presented
 
 ---
@@ -328,60 +439,77 @@ Each protocol requires different options. Here's what you need for each:
 ### DIDComm Options
 
 ```kotlin
-options = mapOf(
-    "fromKeyId" to "did:key:issuer#key-1",  // Required: Sender's key ID
-    "toKeyId" to "did:key:holder#key-1",    // Required: Recipient's key ID
-    "encrypt" to true,                       // Optional: Encrypt message (default: true)
-    "thid" to "thread-id"                    // Optional: Thread ID for message threading
-)
+import org.trustweave.credential.exchange.options.ExchangeOptions
+import kotlinx.serialization.json.JsonPrimitive
+
+val options = ExchangeOptions.builder()
+    .addMetadata("fromKeyId", "did:key:issuer#key-1")  // Required: Sender's key ID
+    .addMetadata("toKeyId", "did:key:holder#key-1")     // Required: Recipient's key ID
+    .addMetadata("encrypt", true)                       // Optional: Encrypt message (default: true)
+    .threadId("thread-id")                              // Optional: Thread ID for message threading
+    .build()
 ```
 
 ### OIDC4VCI Options
 
 ```kotlin
-options = mapOf(
-    "credentialIssuer" to "https://issuer.example.com",  // Required: OIDC issuer URL
-    "credentialTypes" to listOf("VerifiableCredential"), // Optional: Credential types
-    "redirectUri" to "https://holder.example.com/callback" // Optional: Redirect URI
-)
+val options = ExchangeOptions.builder()
+    .addMetadata("credentialIssuer", "https://issuer.example.com")  // Required: OIDC issuer URL
+    .addMetadata("credentialTypes", JsonPrimitive("VerifiableCredential")) // Optional: Credential types
+    .addMetadata("redirectUri", "https://holder.example.com/callback") // Optional: Redirect URI
+    .build()
 ```
 
 ### CHAPI Options
 
 ```kotlin
-options = mapOf(
-    // CHAPI typically doesn't require additional options
-    // Messages are generated for browser use
-)
+val options = ExchangeOptions.Empty  // CHAPI typically doesn't require additional options
+// Messages are generated for browser use
 ```
 
 ---
 
 ## Error Handling
 
-All registry methods can throw exceptions. Always wrap operations in try-catch:
+All `ExchangeService` methods return `ExchangeResult` sealed classes. Always handle the result:
 
 ```kotlin
-try {
-    val offer = registry.offerCredential("didcomm", request)
-} catch (e: IllegalArgumentException) {
-    // Protocol not registered or invalid argument
-    println("Error: ${e.message}")
-} catch (e: UnsupportedOperationException) {
-    // Protocol doesn't support this operation
-    println("Error: ${e.message}")
-} catch (e: Exception) {
-    // Other errors
-    println("Unexpected error: ${e.message}")
+val offerResult = exchangeService.offer(
+    ExchangeRequest.Offer(...)
+)
+
+when (offerResult) {
+    is ExchangeResult.Success -> {
+        val offer = offerResult.value
+        // Handle success
+    }
+    is ExchangeResult.Failure.ProtocolNotSupported -> {
+        println("❌ Protocol not supported: ${offerResult.protocolName}")
+        println("   Available: ${offerResult.availableProtocols}")
+    }
+    is ExchangeResult.Failure.OperationNotSupported -> {
+        println("❌ Operation not supported: ${offerResult.operation}")
+        println("   Supported: ${offerResult.supportedOperations}")
+    }
+    is ExchangeResult.Failure.InvalidRequest -> {
+        println("❌ Invalid request: ${offerResult.reason}")
+        println("   Field: ${offerResult.field}")
+    }
+    is ExchangeResult.Failure.NetworkError -> {
+        println("❌ Network error: ${offerResult.reason}")
+    }
+    else -> {
+        println("❌ Exchange error: $offerResult")
+    }
 }
 ```
 
-**Common Errors:**
-- `ExchangeException.ProtocolNotRegistered`: Protocol not registered
-- `ExchangeException.OperationNotSupported`: Protocol doesn't support the operation
-- `ExchangeException.MissingRequiredOption`: Missing required option
-- `ExchangeException.InvalidRequest`: Invalid request field
-- Plugin-specific exceptions (e.g., `DidCommException`, `Oidc4VciException`, `ChapiException`)
+**Common Error Types:**
+- `ExchangeResult.Failure.ProtocolNotSupported`: Protocol not registered
+- `ExchangeResult.Failure.OperationNotSupported`: Protocol doesn't support the operation
+- `ExchangeResult.Failure.InvalidRequest`: Invalid request field
+- `ExchangeResult.Failure.NetworkError`: Network-related errors
+- `ExchangeResult.Failure.MessageNotFound`: Message reference not found
 - Protocol-specific errors: See [Error Handling Guide](./ERROR_HANDLING.md)
 
 ---

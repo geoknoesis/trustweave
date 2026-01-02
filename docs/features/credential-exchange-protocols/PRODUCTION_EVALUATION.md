@@ -167,13 +167,31 @@ val protocol = ChapiExchangeProtocol(chapiService)
 
 **Usage:**
 ```kotlin
-val registry = CredentialExchangeProtocolRegistry()
+val registry = ExchangeProtocolRegistries.default()
 registry.register(DidCommExchangeProtocol(didCommService))
 registry.register(Oidc4VciExchangeProtocol(oidc4vciService))
 registry.register(ChapiExchangeProtocol(chapiService))
 
+val exchangeService = ExchangeServices.createExchangeService(
+    protocolRegistry = registry,
+    credentialService = credentialService,
+    didResolver = didResolver
+)
+
 // Use any protocol with same API
-val offer = registry.offerCredential("didcomm", request)
+val offerResult = exchangeService.offer(
+    ExchangeRequest.Offer(
+        protocolName = "didcomm".requireExchangeProtocolName(),
+        issuerDid = Did("did:key:issuer"),
+        holderDid = Did("did:key:holder"),
+        credentialPreview = credentialPreview,
+        options = ExchangeOptions.Empty
+    )
+)
+val offer = when (offerResult) {
+    is ExchangeResult.Success -> offerResult.value
+    else -> throw IllegalStateException("Offer failed: $offerResult")
+}
 ```
 
 ## Testing Status

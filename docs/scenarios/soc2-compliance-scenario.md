@@ -162,13 +162,17 @@ Here's a complete SOC2 compliance workflow:
 ```kotlin
 package com.example.soc2.compliance
 
-import org.trustweave.TrustWeave
-import org.trustweave.core.*
-import org.trustweave.json.DigestUtils
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.VerificationResult
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.trust.types.IssuanceResult
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
-import java.time.Instant
-import java.time.temporal.ChronoUnit
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.days
 
 fun main() = runBlocking {
     println("=".repeat(70))
@@ -354,22 +358,38 @@ fun main() = runBlocking {
     println("✅ Audit log entry created and anchored")
 
     // Step 5: Verify access control (CC6.3)
-    val adminVerification = TrustWeave.verifyCredential(adminAccessCredential).fold(
-        onSuccess = { it },
-        onFailure = { error ->
-            println("❌ Admin credential verification failed: ${error.message}")
-            return@runBlocking
-        }
-    )
-
-    if (!adminVerification.valid) {
-        println("❌ Admin credential invalid: ${adminVerification.errors}")
-        return@runBlocking
+    val adminVerificationResult = trustWeave.verify {
+        credential(adminAccessCredential)
+        checkRevocation()
+        checkExpiration()
     }
 
-    println("✅ Admin access credential verified")
-    println("   Proof valid: ${adminVerification.proofValid}")
-    println("   Issuer valid: ${adminVerification.issuerValid}")
+    when (adminVerificationResult) {
+        is VerificationResult.Valid -> {
+            println("✅ Admin access credential verified")
+            println("   Credential ID: ${adminVerificationResult.credential.id}")
+        }
+        is VerificationResult.Invalid.Expired -> {
+            println("❌ Admin credential expired at ${adminVerificationResult.expiredAt}")
+            return@runBlocking
+        }
+        is VerificationResult.Invalid.Revoked -> {
+            println("❌ Admin credential revoked")
+            return@runBlocking
+        }
+        is VerificationResult.Invalid.InvalidProof -> {
+            println("❌ Admin credential invalid proof: ${adminVerificationResult.reason}")
+            return@runBlocking
+        }
+        is VerificationResult.Invalid.UntrustedIssuer -> {
+            println("❌ Admin credential untrusted issuer: ${adminVerificationResult.issuer}")
+            return@runBlocking
+        }
+        else -> {
+            println("❌ Admin credential verification failed")
+            return@runBlocking
+        }
+    }
 
     // Step 6: Key rotation with history preservation (CC7.3)
     val newAdminDidResult = trustWeave.createDid { method(KEY) }
@@ -625,13 +645,24 @@ Implement role-based access control using verifiable credentials:
 
 ```kotlin
 suspend fun checkAccess(
+    trustWeave: TrustWeave,
     userId: String,
     action: String,
     accessCredential: VerifiableCredential
 ): Boolean {
     // Verify credential
-    val verification = TrustWeave.verifyCredential(accessCredential).getOrThrow()
-    if (!verification.valid) return false
+    val verificationResult = trustWeave.verify {
+        credential(accessCredential)
+        checkRevocation()
+        checkExpiration()
+    }
+    
+    val isValid = when (verificationResult) {
+        is VerificationResult.Valid -> true
+        else -> false
+    }
+    
+    if (!isValid) return false
 
     // Check expiration
     val expirationDate = accessCredential.expirationDate

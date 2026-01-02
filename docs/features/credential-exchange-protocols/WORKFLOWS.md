@@ -65,40 +65,68 @@ Need peer-to-peer encryption?
 | OIDC4VCI | Via HTTPS | Web-based, OAuth integration |
 | CHAPI | Browser | Browser wallet interactions |
 
-### Step 2: Setup Registry
+### Step 2: Setup Registry and ExchangeService
 
 ```kotlin
 import org.trustweave.credential.exchange.*
+import org.trustweave.credential.exchange.registry.ExchangeProtocolRegistries
 import org.trustweave.credential.didcomm.exchange.DidCommExchangeProtocol
 import org.trustweave.credential.didcomm.DidCommFactory
+import org.trustweave.credential.CredentialService
+import org.trustweave.credential.credentialService
 import org.trustweave.kms.KeyManagementService
-import org.trustweave.testkit.InMemoryKeyManagementService
-import org.trustweave.did.DidDocument
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
+import org.trustweave.did.resolver.DidResolver
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.model.DidDocument
+import org.trustweave.did.identifiers.Did
 
 // Setup dependencies
 val kms: KeyManagementService = InMemoryKeyManagementService()
-val resolveDid: suspend (String) -> DidDocument? = { did ->
-    // Your DID resolver implementation
-    yourDidResolver.resolve(did)
+val didResolver: DidResolver = object : DidResolver {
+    override suspend fun resolve(did: Did): DidResolutionResult {
+        // Your DID resolver implementation
+        val doc = yourDidResolver.resolve(did)
+        return DidResolutionResult.Success(doc ?: DidDocument(id = did, verificationMethod = emptyList()))
+    }
 }
+val credentialService: CredentialService = credentialService(didResolver = didResolver)
 
 // Create registry
-val registry = CredentialExchangeProtocolRegistry()
+val registry = ExchangeProtocolRegistries.default()
 
 // Register protocol
-val didCommService = DidCommFactory.createInMemoryService(kms, resolveDid)
+val didCommService = DidCommFactory.createInMemoryService(kms) { didStr ->
+    val did = Did(didStr)
+    DidDocument(id = did, verificationMethod = emptyList())
+}
 registry.register(DidCommExchangeProtocol(didCommService))
+
+// Create ExchangeService
+val exchangeService = ExchangeServices.createExchangeService(
+    protocolRegistry = registry,
+    credentialService = credentialService,
+    didResolver = didResolver
+)
 ```
 
 ### Step 3: Create Credential Offer
 
 ```kotlin
-val issuerDid = "did:key:issuer"
-val holderDid = "did:key:holder"
+import org.trustweave.credential.exchange.request.ExchangeRequest
+import org.trustweave.credential.exchange.result.ExchangeResult
+import org.trustweave.credential.exchange.options.ExchangeOptions
+import org.trustweave.credential.exchange.model.CredentialPreview
+import org.trustweave.credential.exchange.model.CredentialAttribute
+import org.trustweave.credential.identifiers.*
+import org.trustweave.did.identifiers.Did
 
-val offer = registry.offerCredential(
-    protocolName = "didcomm",
-    request = CredentialOfferRequest(
+val issuerDid = Did("did:key:issuer")
+val holderDid = Did("did:key:holder")
+
+val offerResult = exchangeService.offer(
+    ExchangeRequest.Offer(
+        protocolName = "didcomm".requireExchangeProtocolName(),
         issuerDid = issuerDid,
         holderDid = holderDid,
         credentialPreview = CredentialPreview(
@@ -108,12 +136,17 @@ val offer = registry.offerCredential(
                 CredentialAttribute("role", "Developer")
             )
         ),
-        options = mapOf(
-            "fromKeyId" to "$issuerDid#key-1",
-            "toKeyId" to "$holderDid#key-1"
-        )
+        options = ExchangeOptions.builder()
+            .addMetadata("fromKeyId", "$issuerDid#key-1")
+            .addMetadata("toKeyId", "$holderDid#key-1")
+            .build()
     )
 )
+
+val offer = when (offerResult) {
+    is ExchangeResult.Success -> offerResult.value
+    else -> throw IllegalStateException("Offer failed: $offerResult")
+}
 
 println("✅ Offer created: ${offer.offerId}")
 ```
@@ -147,18 +180,23 @@ when (offer.protocolName) {
 ### Step 5: Request Credential
 
 ```kotlin
-val request = registry.requestCredential(
-    protocolName = "didcomm",
-    request = CredentialRequestRequest(
+val requestResult = exchangeService.request(
+    ExchangeRequest.Request(
+        protocolName = "didcomm".requireExchangeProtocolName(),
         holderDid = holderDid,
         issuerDid = issuerDid,
         offerId = offerId,  // Reference to the offer
-        options = mapOf(
-            "fromKeyId" to "$holderDid#key-1",
-            "toKeyId" to "$issuerDid#key-1"
-        )
+        options = ExchangeOptions.builder()
+            .addMetadata("fromKeyId", "$holderDid#key-1")
+            .addMetadata("toKeyId", "$issuerDid#key-1")
+            .build()
     )
 )
+
+val request = when (requestResult) {
+    is ExchangeResult.Success -> requestResult.value
+    else -> throw IllegalStateException("Request failed: $requestResult")
+}
 
 println("✅ Request created: ${request.requestId}")
 ```
@@ -172,37 +210,48 @@ println("✅ Request created: ${request.requestId}")
 ### Step 6: Issue Credential
 
 ```kotlin
-import org.trustweave.credential.models.VerifiableCredential
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.model.vc.CredentialSubject
+import org.trustweave.credential.model.vc.Issuer
+import org.trustweave.credential.model.CredentialType
+import org.trustweave.core.identifiers.Iri
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.datetime.Clock
 
 // Create the credential
 val credential = VerifiableCredential(
-    type = listOf("VerifiableCredential", "PersonCredential"),
-    issuer = issuerDid,
-    credentialSubject = buildJsonObject {
-        put("id", holderDid)
-        put("name", "Alice")
-        put("email", "alice@example.com")
-        put("role", "Developer")
-    },
-    issuanceDate = java.time.Instant.now().toString()
+    type = listOf(CredentialType.fromString("VerifiableCredential"), CredentialType.fromString("PersonCredential")),
+    issuer = Issuer.IriIssuer(Iri(issuerDid.value)),
+    issuanceDate = Clock.System.now(),
+    credentialSubject = CredentialSubject(
+        id = holderDid,
+        claims = mapOf(
+            "name" to JsonPrimitive("Alice"),
+            "email" to JsonPrimitive("alice@example.com"),
+            "role" to JsonPrimitive("Developer")
+        )
+    )
 )
 
 // Issue the credential
-val issue = registry.issueCredential(
-    protocolName = "didcomm",
-    request = CredentialIssueRequest(
+val issueResult = exchangeService.issue(
+    ExchangeRequest.Issue(
+        protocolName = "didcomm".requireExchangeProtocolName(),
         issuerDid = issuerDid,
         holderDid = holderDid,
         credential = credential,
         requestId = request.requestId,  // Reference to the request
-        options = mapOf(
-            "fromKeyId" to "$issuerDid#key-1",
-            "toKeyId" to "$holderDid#key-1"
-        )
+        options = ExchangeOptions.builder()
+            .addMetadata("fromKeyId", "$issuerDid#key-1")
+            .addMetadata("toKeyId", "$holderDid#key-1")
+            .build()
     )
 )
+
+val issue = when (issueResult) {
+    is ExchangeResult.Success -> issueResult.value
+    else -> throw IllegalStateException("Issue failed: $issueResult")
+}
 
 println("✅ Credential issued:")
 println("   Credential ID: ${issue.credential.id}")
@@ -239,37 +288,52 @@ Complete workflow for requesting and receiving a proof presentation.
 ### Step 1: Create Proof Request
 
 ```kotlin
-val verifierDid = "did:key:verifier"
-val proverDid = "did:key:prover"
+import org.trustweave.credential.exchange.request.ProofExchangeRequest
+import org.trustweave.credential.exchange.request.ProofRequest
+import org.trustweave.credential.exchange.request.AttributeRequest
+import org.trustweave.credential.exchange.request.AttributeRestriction
+import org.trustweave.credential.exchange.result.ExchangeResult
 
-val proofRequest = registry.requestProof(
-    protocolName = "didcomm",
-    request = ProofRequestRequest(
+val verifierDid = Did("did:key:verifier")
+val proverDid = Did("did:key:prover")
+
+val proofRequestResult = exchangeService.requestProof(
+    ProofExchangeRequest.Request(
+        protocolName = "didcomm".requireExchangeProtocolName(),
         verifierDid = verifierDid,
         proverDid = proverDid,
-        name = "Age Verification",
-        version = "1.0",
-        requestedAttributes = mapOf(
-            "name" to RequestedAttribute(
-                name = "name",
-                restrictions = listOf(
-                    AttributeRestriction(issuerDid = "did:key:issuer")
+        proofRequest = ProofRequest(
+            name = "Age Verification",
+            version = "1.0",
+            requestedAttributes = mapOf(
+                "name" to AttributeRequest(
+                    name = "name",
+                    restrictions = listOf(
+                        AttributeRestriction(issuerDid = Did("did:key:issuer"))
+                    )
                 )
-            )
+            ),
+            options = ExchangeOptions.builder()
+                .addMetadata("requestedPredicates", mapOf(
+                    "age_verification" to mapOf(
+                        "name" to "age",
+                        "pType" to ">=",
+                        "pValue" to 18
+                    )
+                ))
+                .build()
         ),
-        requestedPredicates = mapOf(
-            "age_verification" to RequestedPredicate(
-                name = "age",
-                pType = ">=",
-                pValue = 18
-            )
-        ),
-        options = mapOf(
-            "fromKeyId" to "$verifierDid#key-1",
-            "toKeyId" to "$proverDid#key-1"
-        )
+        options = ExchangeOptions.builder()
+            .addMetadata("fromKeyId", "$verifierDid#key-1")
+            .addMetadata("toKeyId", "$proverDid#key-1")
+            .build()
     )
 )
+
+val proofRequest = when (proofRequestResult) {
+    is ExchangeResult.Success -> proofRequestResult.value
+    else -> throw IllegalStateException("Proof request failed: $proofRequestResult")
+}
 
 println("✅ Proof request created: ${proofRequest.requestId}")
 ```
@@ -289,18 +353,24 @@ val presentation = VerifiablePresentation(
 ### Step 3: Present Proof
 
 ```kotlin
-val presentationResponse = registry.presentProof(
-    protocolName = "didcomm",
-    request = ProofPresentationRequest(
+val presentationResult = exchangeService.presentProof(
+    ProofExchangeRequest.Presentation(
+        protocolName = "didcomm".requireExchangeProtocolName(),
         proverDid = proverDid,
         verifierDid = verifierDid,
         presentation = presentation,
         requestId = proofRequest.requestId,  // Reference to the request
-        options = mapOf(
-            "fromKeyId" to "$proverDid#key-1",
-            "toKeyId" to "$verifierDid#key-1"
-        )
+        options = ExchangeOptions.builder()
+            .addMetadata("fromKeyId", "$proverDid#key-1")
+            .addMetadata("toKeyId", "$verifierDid#key-1")
+            .build()
     )
+)
+
+val presentationResponse = when (presentationResult) {
+    is ExchangeResult.Success -> presentationResult.value
+    else -> throw IllegalStateException("Presentation failed: $presentationResult")
+}
 )
 
 println("✅ Proof presented: ${presentationResponse.presentationId}")
@@ -351,7 +421,19 @@ Guide for choosing the right protocol for your use case.
 **Example:**
 ```kotlin
 // High-security credential exchange
-val offer = registry.offerCredential("didcomm", request)
+val offerResult = exchangeService.offer(
+    ExchangeRequest.Offer(
+        protocolName = "didcomm".requireExchangeProtocolName(),
+        issuerDid = issuerDid,
+        holderDid = holderDid,
+        credentialPreview = preview,
+        options = ExchangeOptions.builder().build()
+    )
+)
+val offer = when (offerResult) {
+    is ExchangeResult.Success -> offerResult.value
+    else -> throw IllegalStateException("Offer failed: $offerResult")
+}
 ```
 
 ### Use OIDC4VCI When:
@@ -364,17 +446,21 @@ val offer = registry.offerCredential("didcomm", request)
 **Example:**
 ```kotlin
 // Web-based credential issuance
-val offer = registry.offerCredential(
-    protocolName = "oidc4vci",
-    request = CredentialOfferRequest(
+val offerResult = exchangeService.offer(
+    ExchangeRequest.Offer(
+        protocolName = "oidc4vci".requireExchangeProtocolName(),
         issuerDid = issuerDid,
         holderDid = holderDid,
         credentialPreview = preview,
-        options = mapOf(
-            "credentialIssuer" to "https://issuer.example.com"
-        )
+        options = ExchangeOptions.builder()
+            .addMetadata("credentialIssuer", "https://issuer.example.com")
+            .build()
     )
 )
+val offer = when (offerResult) {
+    is ExchangeResult.Success -> offerResult.value
+    else -> throw IllegalStateException("Offer failed: $offerResult")
+}
 ```
 
 ### Use CHAPI When:
@@ -387,7 +473,19 @@ val offer = registry.offerCredential(
 **Example:**
 ```kotlin
 // Browser wallet interaction
-val offer = registry.offerCredential("chapi", request)
+val offerResult = exchangeService.offer(
+    ExchangeRequest.Offer(
+        protocolName = "chapi".requireExchangeProtocolName(),
+        issuerDid = issuerDid,
+        holderDid = holderDid,
+        credentialPreview = preview,
+        options = ExchangeOptions.Empty
+    )
+)
+val offer = when (offerResult) {
+    is ExchangeResult.Success -> offerResult.value
+    else -> throw IllegalStateException("Offer failed: $offerResult")
+}
 // Use offer.chapiMessage with navigator.credentials.store()
 ```
 
@@ -401,35 +499,57 @@ Strategies for handling errors and recovering from failures.
 
 ```kotlin
 suspend fun offerCredentialWithFallback(
-    preferredProtocol: String,
-    request: CredentialOfferRequest
-): CredentialOfferResponse {
+    exchangeService: ExchangeService,
+    registry: ExchangeProtocolRegistry,
+    preferredProtocol: ExchangeProtocolName,
+    issuerDid: Did,
+    holderDid: Did,
+    preview: CredentialPreview,
+    options: ExchangeOptions
+): ExchangeResponse.Offer? {
     // Try preferred protocol
-    try {
-        return registry.offerCredential(preferredProtocol, request)
-    } catch (e: Exception) {
-        println("Preferred protocol failed: ${e.message}")
+    val preferredResult = exchangeService.offer(
+        ExchangeRequest.Offer(
+            protocolName = preferredProtocol,
+            issuerDid = issuerDid,
+            holderDid = holderDid,
+            credentialPreview = preview,
+            options = options
+        )
+    )
+    when (preferredResult) {
+        is ExchangeResult.Success -> return preferredResult.value
+        else -> println("Preferred protocol failed: $preferredResult")
     }
 
     // Try fallback protocols
-    val fallbacks = when (preferredProtocol) {
+    val fallbacks = when (preferredProtocol.value) {
         "didcomm" -> listOf("oidc4vci", "chapi")
         "oidc4vci" -> listOf("didcomm", "chapi")
         "chapi" -> listOf("didcomm", "oidc4vci")
         else -> listOf("didcomm", "oidc4vci", "chapi")
     }
 
-    for (protocol in fallbacks) {
-        if (registry.isRegistered(protocol)) {
-            try {
-                return registry.offerCredential(protocol, request)
-            } catch (e: Exception) {
-                println("Fallback protocol $protocol failed: ${e.message}")
+    for (protocolStr in fallbacks) {
+        val protocolName = protocolStr.requireExchangeProtocolName()
+        if (registry.isRegistered(protocolName)) {
+            val result = exchangeService.offer(
+                ExchangeRequest.Offer(
+                    protocolName = protocolName,
+                    issuerDid = issuerDid,
+                    holderDid = holderDid,
+                    credentialPreview = preview,
+                    options = options
+                )
+            )
+            when (result) {
+                is ExchangeResult.Success -> return result.value
+                else -> println("Fallback protocol $protocolStr failed: $result")
             }
         }
     }
 
-    throw IllegalStateException("All protocols failed")
+    return null  // All protocols failed
 }
 ```
 
@@ -462,15 +582,28 @@ fun validateRequest(request: CredentialOfferRequest): ValidationResult {
     }
 }
 
-// Use before operation
-val validation = validateRequest(request)
+// Use before operation (validate DIDs, preview, etc. before calling exchangeService)
+// Note: The new API uses Did types and ExchangeRequest types which provide better type safety
+val validation = validateRequest(issuerDid, holderDid, credentialPreview)
 if (validation is ValidationResult.Invalid) {
     println("Validation failed:")
     validation.errors.forEach { println("  - $it") }
     return
 }
 
-val offer = registry.offerCredential("didcomm", request)
+val offerResult = exchangeService.offer(
+    ExchangeRequest.Offer(
+        protocolName = "didcomm".requireExchangeProtocolName(),
+        issuerDid = issuerDid,
+        holderDid = holderDid,
+        credentialPreview = credentialPreview,
+        options = ExchangeOptions.builder().build()
+    )
+)
+val offer = when (offerResult) {
+    is ExchangeResult.Success -> offerResult.value
+    else -> throw IllegalStateException("Offer failed: $offerResult")
+}
 ```
 
 ---
@@ -483,12 +616,34 @@ How to switch between protocols seamlessly.
 
 ```kotlin
 // Start with DIDComm
-val didCommOffer = registry.offerCredential("didcomm", request)
+val didCommOfferResult = exchangeService.offer(
+    ExchangeRequest.Offer(
+        protocolName = "didcomm".requireExchangeProtocolName(),
+        issuerDid = issuerDid,
+        holderDid = holderDid,
+        credentialPreview = credentialPreview,
+        options = ExchangeOptions.Empty
+    )
+)
+val didCommOffer = when (didCommOfferResult) {
+    is ExchangeResult.Success -> didCommOfferResult.value
+    else -> throw IllegalStateException("DIDComm offer failed: $didCommOfferResult")
+}
 
 // Switch to OIDC4VCI for request (if needed)
-val oidcRequest = registry.requestCredential(
-    protocolName = "oidc4vci",
-    request = CredentialRequestRequest(
+val oidcRequestResult = exchangeService.request(
+    ExchangeRequest.Request(
+        protocolName = "oidc4vci".requireExchangeProtocolName(),
+        holderDid = holderDid,
+        issuerDid = issuerDid,
+        offerId = didCommOffer.offerId,
+        options = ExchangeOptions.Empty
+    )
+)
+val oidcRequest = when (oidcRequestResult) {
+    is ExchangeResult.Success -> oidcRequestResult.value
+    else -> throw IllegalStateException("OIDC4VCI request failed: $oidcRequestResult")
+}
         holderDid = holderDid,
         issuerDid = issuerDid,
         offerId = didCommOffer.offerId,
@@ -499,7 +654,20 @@ val oidcRequest = registry.requestCredential(
 )
 
 // Continue with OIDC4VCI
-val issue = registry.issueCredential("oidc4vci", issueRequest)
+val issueResult = exchangeService.issue(
+    ExchangeRequest.Issue(
+        protocolName = "oidc4vci".requireExchangeProtocolName(),
+        issuerDid = issuerDid,
+        holderDid = holderDid,
+        credential = credential,
+        requestId = oidcRequest.requestId,
+        options = ExchangeOptions.builder().build()
+    )
+)
+val issue = when (issueResult) {
+    is ExchangeResult.Success -> issueResult.value
+    else -> throw IllegalStateException("Issue failed: $issueResult")
+}
 ```
 
 **Note:** Protocol switching may not always be possible. Check protocol compatibility before switching.

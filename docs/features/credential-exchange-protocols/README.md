@@ -13,16 +13,35 @@ Get started in 5 minutes! See the [Complete Quick Start Guide](./QUICK_START.md)
 
 ```kotlin
 import org.trustweave.credential.exchange.*
+import org.trustweave.credential.exchange.registry.ExchangeProtocolRegistries
+import org.trustweave.credential.exchange.request.ExchangeRequest
+import org.trustweave.credential.exchange.result.ExchangeResult
 
-// Create registry
-val registry = CredentialExchangeProtocolRegistry()
-
-// Register protocols
+// Create registry and exchange service
+val registry = ExchangeProtocolRegistries.default()
 val didCommService = DidCommFactory.createInMemoryService(kms, resolveDid)
 registry.register(DidCommExchangeProtocol(didCommService))
 
+val exchangeService = ExchangeServices.createExchangeService(
+    protocolRegistry = registry,
+    credentialService = credentialService,
+    didResolver = didResolver
+)
+
 // Use any protocol with the same API
-val offer = registry.offerCredential("didcomm", request)
+val offerResult = exchangeService.offer(
+    ExchangeRequest.Offer(
+        protocolName = "didcomm".requireExchangeProtocolName(),
+        issuerDid = Did("did:key:issuer"),
+        holderDid = Did("did:key:holder"),
+        credentialPreview = credentialPreview,
+        options = ExchangeOptions.Empty
+    )
+)
+val offer = when (offerResult) {
+    is ExchangeResult.Success -> offerResult.value
+    else -> throw IllegalStateException("Offer failed: $offerResult")
+}
 ```
 
 **For complete examples, see:**

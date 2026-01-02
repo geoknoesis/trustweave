@@ -56,31 +56,54 @@ val oidc4vciService = Oidc4VciService(
 
 val protocol = Oidc4VciExchangeProtocol(oidc4vciService)
 
-val registry = CredentialExchangeProtocolRegistry()
+import org.trustweave.credential.exchange.registry.ExchangeProtocolRegistries
+import org.trustweave.credential.exchange.ExchangeServices
+
+val registry = ExchangeProtocolRegistries.default()
 registry.register(protocol)
+
+val exchangeService = ExchangeServices.createExchangeService(
+    protocolRegistry = registry,
+    credentialService = credentialService,
+    didResolver = didResolver
+)
 ```
 
 ### Credential Offer
 
 ```kotlin
-val offer = registry.offerCredential(
-    protocolName = "oidc4vci",
-    request = CredentialOfferRequest(
-        issuerDid = "did:key:issuer",
-        holderDid = "did:key:holder",
+import org.trustweave.credential.exchange.*
+import org.trustweave.credential.exchange.request.ExchangeRequest
+import org.trustweave.credential.exchange.result.ExchangeResult
+import org.trustweave.credential.exchange.options.ExchangeOptions
+import org.trustweave.credential.identifiers.*
+import org.trustweave.did.identifiers.Did
+import kotlinx.serialization.json.JsonPrimitive
+
+val offerResult = exchangeService.offer(
+    ExchangeRequest.Offer(
+        protocolName = "oidc4vci".requireExchangeProtocolName(),
+        issuerDid = Did("did:key:issuer"),
+        holderDid = Did("did:key:holder"),
         credentialPreview = CredentialPreview(
             attributes = listOf(
                 CredentialAttribute("name", "Alice"),
                 CredentialAttribute("email", "alice@example.com")
             )
         ),
-        options = mapOf(
-            "credentialIssuer" to "https://issuer.example.com",
-            "credentialTypes" to listOf("VerifiableCredential", "PersonCredential"),
-            "grants" to mapOf("authorization_code" to mapOf("issuer_state" to "state123"))
-        )
+        options = ExchangeOptions.builder()
+            .addMetadata("credentialIssuer", "https://issuer.example.com")
+            .addMetadata("credentialTypes", JsonPrimitive("VerifiableCredential,PersonCredential"))
+            .addMetadata("grants", JsonPrimitive("authorization_code"))
+            .addMetadata("issuer_state", JsonPrimitive("state123"))
+            .build()
     )
 )
+
+val offer = when (offerResult) {
+    is ExchangeResult.Success -> offerResult.value
+    else -> throw IllegalStateException("Offer failed: $offerResult")
+}
 
 // The offer contains an offer URI that can be shared with the holder
 val offerUri = (offer.offerData as Oidc4VciOffer).offerUri
@@ -90,42 +113,63 @@ val offerUri = (offer.offerData as Oidc4VciOffer).offerUri
 ### Credential Request
 
 ```kotlin
-val credentialRequest = registry.requestCredential(
-    protocolName = "oidc4vci",
-    request = CredentialRequestRequest(
-        holderDid = "did:key:holder",
-        issuerDid = "did:key:issuer",
+val requestResult = exchangeService.request(
+    ExchangeRequest.Request(
+        protocolName = "oidc4vci".requireExchangeProtocolName(),
+        holderDid = Did("did:key:holder"),
+        issuerDid = Did("did:key:issuer"),
         offerId = offer.offerId,
-        options = mapOf(
-            "redirectUri" to "https://holder.example.com/callback"
-        )
+        options = ExchangeOptions.builder()
+            .addMetadata("redirectUri", "https://holder.example.com/callback")
+            .build()
     )
 )
+
+val credentialRequest = when (requestResult) {
+    is ExchangeResult.Success -> requestResult.value
+    else -> throw IllegalStateException("Request failed: $requestResult")
+}
 ```
 
 ### Credential Issuance
 
 ```kotlin
-val credential = VerifiableCredential(
-    type = listOf("VerifiableCredential", "PersonCredential"),
-    issuer = "did:key:issuer",
-    credentialSubject = buildJsonObject {
-        put("id", "did:key:holder")
-        put("name", "Alice")
-        put("email", "alice@example.com")
-    },
-    issuanceDate = Instant.now().toString()
-)
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.model.vc.CredentialSubject
+import org.trustweave.credential.model.vc.Issuer
+import org.trustweave.credential.model.CredentialType
+import org.trustweave.core.identifiers.Iri
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.datetime.Clock
 
-val issue = registry.issueCredential(
-    protocolName = "oidc4vci",
-    request = CredentialIssueRequest(
-        issuerDid = "did:key:issuer",
-        holderDid = "did:key:holder",
-        credential = credential,
-        requestId = credentialRequest.requestId
+val credential = VerifiableCredential(
+    type = listOf(CredentialType.fromString("VerifiableCredential"), CredentialType.fromString("PersonCredential")),
+    issuer = Issuer.IriIssuer(Iri("did:key:issuer")),
+    issuanceDate = Clock.System.now(),
+    credentialSubject = CredentialSubject(
+        id = Did("did:key:holder"),
+        claims = mapOf(
+            "name" to JsonPrimitive("Alice"),
+            "email" to JsonPrimitive("alice@example.com")
+        )
     )
 )
+
+val issueResult = exchangeService.issue(
+    ExchangeRequest.Issue(
+        protocolName = "oidc4vci".requireExchangeProtocolName(),
+        issuerDid = Did("did:key:issuer"),
+        holderDid = Did("did:key:holder"),
+        credential = credential,
+        requestId = credentialRequest.requestId,
+        options = ExchangeOptions.builder().build()
+    )
+)
+
+val issue = when (issueResult) {
+    is ExchangeResult.Success -> issueResult.value
+    else -> throw IllegalStateException("Issue failed: $issueResult")
+}
 ```
 
 ## OIDC4VCI Flow

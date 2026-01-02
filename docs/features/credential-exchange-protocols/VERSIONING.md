@@ -77,18 +77,29 @@ val offer = didCommService.createOffer(
 
 ```kotlin
 // Using protocol abstraction
-val registry = CredentialExchangeProtocolRegistry()
+val registry = ExchangeProtocolRegistries.default()
 val didCommService = DidCommFactory.createInMemoryService(kms, resolveDid)
 registry.register(DidCommExchangeProtocol(didCommService))
 
-val offer = registry.offerCredential(
-    protocolName = "didcomm",
-    request = CredentialOfferRequest(
-        issuerDid = "did:key:issuer",
-        holderDid = "did:key:holder",
-        credentialPreview = preview
+val exchangeService = ExchangeServices.createExchangeService(
+    protocolRegistry = registry,
+    credentialService = credentialService,
+    didResolver = didResolver
+)
+
+val offerResult = exchangeService.offer(
+    ExchangeRequest.Offer(
+        protocolName = "didcomm".requireExchangeProtocolName(),
+        issuerDid = Did("did:key:issuer"),
+        holderDid = Did("did:key:holder"),
+        credentialPreview = preview,
+        options = ExchangeOptions.Empty
     )
 )
+val offer = when (offerResult) {
+    is ExchangeResult.Success -> offerResult.value
+    else -> throw IllegalStateException("Offer failed: $offerResult")
+}
 ```
 
 **Benefits:**
@@ -136,10 +147,26 @@ val offer = registry.offerCredential(
 3. **Update protocol name:**
    ```kotlin
    // Before
-   registry.offerCredential("didcomm", request)
+   exchangeService.offer(
+       ExchangeRequest.Offer(
+           protocolName = "didcomm".requireExchangeProtocolName(),
+           issuerDid = issuerDid,
+           holderDid = holderDid,
+           credentialPreview = preview,
+           options = ExchangeOptions.builder().build()
+       )
+   )
 
    // After
-   registry.offerCredential("oidc4vci", request)
+   exchangeService.offer(
+       ExchangeRequest.Offer(
+           protocolName = "oidc4vci".requireExchangeProtocolName(),
+           issuerDid = issuerDid,
+           holderDid = holderDid,
+           credentialPreview = preview,
+           options = ExchangeOptions.builder().build()
+       )
+   )
    ```
 
 **Limitations:**
@@ -181,10 +208,26 @@ val offer = registry.offerCredential(
 3. **Update protocol name:**
    ```kotlin
    // Before
-   registry.offerCredential("oidc4vci", request)
+   exchangeService.offer(
+       ExchangeRequest.Offer(
+           protocolName = "oidc4vci".requireExchangeProtocolName(),
+           issuerDid = issuerDid,
+           holderDid = holderDid,
+           credentialPreview = preview,
+           options = ExchangeOptions.builder().build()
+       )
+   )
 
    // After
-   registry.offerCredential("didcomm", request)
+   exchangeService.offer(
+       ExchangeRequest.Offer(
+           protocolName = "didcomm".requireExchangeProtocolName(),
+           issuerDid = issuerDid,
+           holderDid = holderDid,
+           credentialPreview = preview,
+           options = ExchangeOptions.builder().build()
+       )
+   )
    ```
 
 **Benefits:**

@@ -25,7 +25,7 @@ ExchangeException.ProtocolNotRegistered: Protocol 'didcomm' not registered. Avai
 
 1. **Register the protocol:**
    ```kotlin
-   val registry = CredentialExchangeProtocolRegistry()
+   val registry = ExchangeProtocolRegistries.default()
    val didCommService = DidCommFactory.createInMemoryService(kms, resolveDid)
    registry.register(DidCommExchangeProtocol(didCommService))
    ```
@@ -120,14 +120,31 @@ ExchangeException.OperationNotSupported: Protocol 'oidc4vci' does not support op
 2. **Use a different protocol:**
    ```kotlin
    // OIDC4VCI doesn't support proof requests, use DIDComm
-   val proofRequest = registry.requestProof("didcomm", request)
+   val proofRequestResult = exchangeService.requestProof(
+       ProofExchangeRequest.Request(
+           protocolName = "didcomm".requireExchangeProtocolName(),
+           verifierDid = verifierDid,
+           proverDid = proverDid,
+           proofRequest = proofRequest,
+           options = ExchangeOptions.Empty
+       )
+   )
    ```
 
 3. **Use a different operation:**
    ```kotlin
    // If you need proof functionality, use DIDComm or CHAPI
-   if (registry.isRegistered("didcomm")) {
-       val proofRequest = registry.requestProof("didcomm", request)
+   val protocolName = "didcomm".requireExchangeProtocolName()
+   if (exchangeService.supports(protocolName)) {
+       val proofRequestResult = exchangeService.requestProof(
+           ProofExchangeRequest.Request(
+               protocolName = protocolName,
+               verifierDid = verifierDid,
+               proverDid = proverDid,
+               proofRequest = proofRequest,
+               options = ExchangeOptions.Empty
+           )
+       )
    }
    ```
 
@@ -272,18 +289,31 @@ Exception: HTTP request failed: 404 Not Found
 
 2. **Handle HTTP errors:**
    ```kotlin
-   try {
-       val offer = registry.offerCredential("oidc4vci", request)
-   } catch (e: Exception) {
-       when {
-           e.message?.contains("404") == true -> {
-               println("Credential issuer not found. Check URL.")
-           }
-           e.message?.contains("401") == true -> {
-               println("Authentication failed. Check credentials.")
-           }
-           e.message?.contains("timeout") == true -> {
-               println("Request timed out. Retry later.")
+   val offerResult = exchangeService.offer(
+       ExchangeRequest.Offer(
+           protocolName = "oidc4vci".requireExchangeProtocolName(),
+           issuerDid = issuerDid,
+           holderDid = holderDid,
+           credentialPreview = preview,
+           options = ExchangeOptions.Empty
+       )
+   )
+   when (offerResult) {
+       is ExchangeResult.Success -> {
+           // Use offerResult.value
+       }
+       is ExchangeResult.Failure -> {
+           val message = offerResult.reason
+           when {
+               message.contains("404") -> {
+                   println("Credential issuer not found. Check URL.")
+               }
+               message.contains("401") -> {
+                   println("Authentication failed. Check credentials.")
+               }
+               message.contains("timeout") -> {
+                   println("Request timed out. Retry later.")
+               }
            }
        }
    }
@@ -302,7 +332,7 @@ Exception: HTTP request failed: 404 Not Found
 
 ```kotlin
 // Enable debug logging
-val registry = CredentialExchangeProtocolRegistry()
+val registry = ExchangeProtocolRegistries.default()
 // Add logging interceptor or enable debug mode
 ```
 
@@ -331,16 +361,29 @@ fun validateOfferRequest(request: CredentialOfferRequest): Boolean {
 ### Tip 4: Use Try-Catch
 
 ```kotlin
-// Always use try-catch for error handling
-try {
-    val offer = registry.offerCredential("didcomm", request)
-} catch (e: IllegalArgumentException) {
-    println("Invalid argument: ${e.message}")
-} catch (e: UnsupportedOperationException) {
-    println("Unsupported operation: ${e.message}")
-} catch (e: Exception) {
-    println("Unexpected error: ${e.message}")
-    e.printStackTrace()
+// Always handle ExchangeResult for error handling
+val offerResult = exchangeService.offer(
+    ExchangeRequest.Offer(
+        protocolName = "didcomm".requireExchangeProtocolName(),
+        issuerDid = issuerDid,
+        holderDid = holderDid,
+        credentialPreview = preview,
+        options = ExchangeOptions.Empty
+    )
+)
+when (offerResult) {
+    is ExchangeResult.Success -> {
+        // Use offerResult.value
+    }
+    is ExchangeResult.Failure.InvalidRequest -> {
+        println("Invalid argument: ${offerResult.reason}")
+    }
+    is ExchangeResult.Failure.OperationNotSupported -> {
+        println("Unsupported operation: ${offerResult.reason}")
+    }
+    else -> {
+        println("Unexpected error: ${offerResult.reason}")
+    }
 }
 ```
 

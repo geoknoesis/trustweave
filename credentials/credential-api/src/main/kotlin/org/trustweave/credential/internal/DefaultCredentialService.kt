@@ -71,61 +71,14 @@ internal class DefaultCredentialService(
             )
         }
         
-        val engine = engines[request.format]
-            ?: return IssuanceResult.Failure.UnsupportedFormat(
-                format = request.format,
-                supportedFormats = engines.keys.toList()
-            )
+        // Validate engine availability
+        ErrorHandling.validateEngineAvailability(request.format, engines)?.let { return it }
         
-        if (!engine.isReady()) {
-            return IssuanceResult.Failure.AdapterNotReady(
-                format = request.format,
-                reason = "Proof engine not initialized"
-            )
-        }
+        val engine = engines[request.format]!! // Safe because validateEngineAvailability ensures it exists
         
-        return try {
-            val credential = engine.issue(request)
-            IssuanceResult.Success(credential)
-        } catch (e: IllegalArgumentException) {
-            IssuanceResult.Failure.InvalidRequest(
-                field = "request",
-                reason = e.message ?: "Invalid request"
-            )
-        } catch (e: IllegalStateException) {
-            IssuanceResult.Failure.AdapterNotReady(
-                format = request.format,
-                reason = e.message
-            )
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            // Re-throw cancellation exceptions to respect coroutine cancellation
-            throw e
-        } catch (e: java.util.concurrent.TimeoutException) {
-            IssuanceResult.Failure.AdapterError(
-                format = request.format,
-                reason = "Issuance operation timed out: ${e.message}",
-                cause = e
-            )
-        } catch (e: java.io.IOException) {
-            IssuanceResult.Failure.AdapterError(
-                format = request.format,
-                reason = "I/O error during issuance: ${e.message}",
-                cause = e
-            )
-        } catch (e: RuntimeException) {
-            // Catch other runtime exceptions (IllegalArgumentException, IllegalStateException already handled above)
-            IssuanceResult.Failure.AdapterError(
-                format = request.format,
-                reason = "Runtime error during issuance: ${e.message ?: e.javaClass.simpleName}",
-                cause = e
-            )
-        } catch (e: Exception) {
-            // Catch checked exceptions and other unexpected errors
-            IssuanceResult.Failure.AdapterError(
-                format = request.format,
-                reason = "Unexpected error during issuance: ${e.message ?: e.javaClass.simpleName}",
-                cause = e
-            )
+        // Handle issuance with centralized error handling
+        return ErrorHandling.handleIssuanceErrors(request.format) {
+            engine.issue(request)
         }
     }
     

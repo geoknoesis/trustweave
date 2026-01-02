@@ -200,8 +200,7 @@ import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.VerificationResult
 import org.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.runBlocking
-import java.time.Instant
-import java.time.temporal.ChronoUnit
+import kotlinx.datetime.Clock
 
 fun main() = runBlocking {
     // Step 1: Configure TrustWeave with trust registry
@@ -256,7 +255,7 @@ fun main() = runBlocking {
                     "name" to "Bachelor of Science"
                 }
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
         signedBy(issuerDid = universityDid.value, keyId = keyId)
     }

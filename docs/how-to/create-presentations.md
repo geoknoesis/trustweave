@@ -29,6 +29,7 @@ import org.trustweave.trust.TrustWeave
 import org.trustweave.credential.models.VerifiablePresentation
 import org.trustweave.trust.types.ProofType
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Clock
 ```
 
 **Configuration needed:**
@@ -279,8 +280,7 @@ import org.trustweave.trust.types.ProofType
 import org.trustweave.trust.types.VerificationResult
 import org.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.runBlocking
-import java.time.Instant
-import java.time.temporal.ChronoUnit
+import kotlinx.datetime.Clock
 
 fun main() = runBlocking {
     // Step 1: Configure TrustWeave
@@ -323,7 +323,7 @@ fun main() = runBlocking {
                     "university" to "Example University"
                 }
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
         signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
     }

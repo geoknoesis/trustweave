@@ -76,8 +76,11 @@ internal class VcLdProofEngine(
         
         logger.debug("Issuing VC-LD credential: issuerKeyId={}, extracted keyId={}", request.issuerKeyId?.value, keyId)
         
-        // Build VC document for canonicalization
-        val vcDocument = buildVcDocument(request)
+        // Generate credential ID if not provided (must be consistent between document building and credential object)
+        val credentialId = request.id ?: CredentialId("urn:uuid:${UUID.randomUUID()}")
+        
+        // Build VC document for canonicalization (must use same ID that will be in the credential object)
+        val vcDocument = buildVcDocument(request, credentialId.value)
         
         // Canonicalize document (without proof)
         val canonicalDocument = canonicalizeDocument(vcDocument)
@@ -126,7 +129,7 @@ internal class VcLdProofEngine(
                 CredentialConstants.VcContexts.VC_1_1,
                 CredentialConstants.SecuritySuites.ED25519_2020_V1
             ),
-            id = request.id ?: CredentialId("urn:uuid:${UUID.randomUUID()}"),
+            id = credentialId,
             type = request.type,
             issuer = request.issuer,
             issuanceDate = request.issuedAt,
@@ -144,76 +147,183 @@ internal class VcLdProofEngine(
         credential: VerifiableCredential,
         options: VerificationOptions
     ): VerificationResult {
-        val proof = credential.proof as? CredentialProof.LinkedDataProof
-            ?: return VerificationResult.Invalid.InvalidProof(
-                credential = credential,
-                reason = "VC-LD credential must have LinkedDataProof",
-                errors = listOf("Expected LinkedDataProof but got ${credential.proof?.javaClass?.simpleName}"),
-                warnings = emptyList()
-            )
+        // Validate proof type
+        val proof = validateProofType(credential) ?: return createInvalidProofResult(
+            credential,
+            "VC-LD credential must have LinkedDataProof",
+            "Expected LinkedDataProof but got ${credential.proof?.javaClass?.simpleName}"
+        )
         
-        try {
-            // Get issuer IRI
-            val issuerIri = when (val issuer = credential.issuer) {
-                is Issuer.IriIssuer -> issuer.id
-                is Issuer.ObjectIssuer -> issuer.id
-            }
+        return try {
+            // Extract issuer IRI
+            val issuerIri = extractIssuerIri(credential)
             
-            // Get verifier using DID resolution
-            val verificationMethod = getVerificationMethodFromDid(issuerIri, proof.verificationMethod)
-                ?: return VerificationResult.Invalid.InvalidIssuer(
-                    credential = credential,
-                    issuerIri = issuerIri,
-                    reason = "Could not resolve issuer IRI or get verification key",
-                    errors = listOf("Failed to resolve issuer: ${issuerIri.value}"),
-                    warnings = emptyList()
-                )
+            // Resolve verification method
+            val verificationMethod = resolveVerificationMethod(issuerIri, proof.verificationMethod, credential)
+                ?: return createInvalidIssuerResult(credential, issuerIri)
             
-            // Build VC document without proof for canonicalization
-            val vcDocument = buildVcDocumentWithoutProof(credential)
-            val canonical = canonicalizeDocument(vcDocument)
+            // Canonicalize document
+            val canonical = canonicalizeCredentialDocument(credential)
             logger.debug("Verifying VC-LD credential: canonicalLength={}, verificationMethod={}, publicKeyJwkPresent={}", 
                 canonical.length, proof.verificationMethod, verificationMethod.publicKeyJwk != null)
             
             // Verify signature
-            val isValid = verifySignature(canonical, proof.proofValue, verificationMethod, proof.type)
-            logger.debug("VC-LD signature verification result: isValid={}", isValid)
-            
-            if (!isValid) {
-                return VerificationResult.Invalid.InvalidProof(
-                    credential = credential,
-                    reason = "Linked Data Proof signature verification failed",
-                    errors = listOf("Invalid signature on VC-LD document"),
-                    warnings = emptyList()
+            if (!verifyCredentialSignature(canonical, proof, verificationMethod)) {
+                return createInvalidProofResult(
+                    credential,
+                    "Linked Data Proof signature verification failed",
+                    "Invalid signature on VC-LD document"
                 )
             }
             
-            // Get subject IRI
-            val subjectIri = credential.credentialSubject.id
-            
-            return VerificationResult.Valid(
-                credential = credential,
-                issuerIri = issuerIri,
-                subjectIri = subjectIri,
-                issuedAt = credential.issuanceDate,
-                expiresAt = credential.expirationDate,
-                warnings = emptyList(),
-                formatMetadata = buildJsonObject {
-                    put("proofType", proof.type)
-                    put("verificationMethod", proof.verificationMethod)
-                    put("proofPurpose", proof.proofPurpose)
-                }
-            )
+            // Create valid result
+            createValidVerificationResult(credential, issuerIri, proof)
             
         } catch (e: Exception) {
             logger.error("Failed to verify VC-LD proof: credentialId={}, error={}", credential.id?.value ?: "unknown", e.message, e)
-            return VerificationResult.Invalid.InvalidProof(
-                credential = credential,
-                reason = "Failed to verify VC-LD proof: ${e.message}",
-                errors = listOf("Verification error: ${e.message}"),
-                warnings = emptyList()
+            createInvalidProofResult(
+                credential,
+                "Failed to verify VC-LD proof: ${e.message}",
+                "Verification error: ${e.message}"
             )
         }
+    }
+    
+    /**
+     * Validates that the credential has a LinkedDataProof.
+     * 
+     * @param credential The credential to validate
+     * @return The LinkedDataProof if valid, null otherwise
+     */
+    private fun validateProofType(credential: VerifiableCredential): CredentialProof.LinkedDataProof? {
+        return credential.proof as? CredentialProof.LinkedDataProof
+    }
+    
+    /**
+     * Extracts the issuer IRI from the credential.
+     * 
+     * @param credential The credential
+     * @return The issuer IRI
+     */
+    private fun extractIssuerIri(credential: VerifiableCredential): Iri {
+        return when (val issuer = credential.issuer) {
+            is Issuer.IriIssuer -> issuer.id
+            is Issuer.ObjectIssuer -> issuer.id
+        }
+    }
+    
+    /**
+     * Resolves the verification method from the issuer DID.
+     * 
+     * @param issuerIri The issuer IRI
+     * @param verificationMethodId The verification method ID from the proof
+     * @param credential The credential (for error reporting)
+     * @return The verification method, or null if resolution fails
+     */
+    private suspend fun resolveVerificationMethod(
+        issuerIri: Iri,
+        verificationMethodId: String,
+        credential: VerifiableCredential
+    ): VerificationMethod? {
+        return getVerificationMethodFromDid(issuerIri, verificationMethodId)
+    }
+    
+    /**
+     * Canonicalizes the credential document for signature verification.
+     * 
+     * @param credential The credential to canonicalize
+     * @return The canonicalized document string
+     */
+    private fun canonicalizeCredentialDocument(credential: VerifiableCredential): String {
+        val vcDocument = buildVcDocumentWithoutProof(credential)
+        return canonicalizeDocument(vcDocument)
+    }
+    
+    /**
+     * Verifies the credential signature.
+     * 
+     * @param canonical The canonicalized document
+     * @param proof The LinkedDataProof
+     * @param verificationMethod The verification method containing the public key
+     * @return True if signature is valid, false otherwise
+     */
+    private fun verifyCredentialSignature(
+        canonical: String,
+        proof: CredentialProof.LinkedDataProof,
+        verificationMethod: VerificationMethod
+    ): Boolean {
+        val isValid = verifySignature(canonical, proof.proofValue, verificationMethod, proof.type)
+        logger.debug("VC-LD signature verification result: isValid={}", isValid)
+        return isValid
+    }
+    
+    /**
+     * Creates a valid verification result.
+     * 
+     * @param credential The verified credential
+     * @param issuerIri The issuer IRI
+     * @param proof The LinkedDataProof
+     * @return VerificationResult.Valid
+     */
+    private fun createValidVerificationResult(
+        credential: VerifiableCredential,
+        issuerIri: Iri,
+        proof: CredentialProof.LinkedDataProof
+    ): VerificationResult.Valid {
+        return VerificationResult.Valid(
+            credential = credential,
+            issuerIri = issuerIri,
+            subjectIri = credential.credentialSubject.id,
+            issuedAt = credential.issuanceDate,
+            expiresAt = credential.expirationDate,
+            warnings = emptyList(),
+            formatMetadata = buildJsonObject {
+                put("proofType", proof.type)
+                put("verificationMethod", proof.verificationMethod)
+                put("proofPurpose", proof.proofPurpose)
+            }
+        )
+    }
+    
+    /**
+     * Creates an invalid proof result.
+     * 
+     * @param credential The credential
+     * @param reason The reason for failure
+     * @param errorMessage The error message
+     * @return VerificationResult.Invalid.InvalidProof
+     */
+    private fun createInvalidProofResult(
+        credential: VerifiableCredential,
+        reason: String,
+        errorMessage: String
+    ): VerificationResult.Invalid.InvalidProof {
+        return VerificationResult.Invalid.InvalidProof(
+            credential = credential,
+            reason = reason,
+            errors = listOf(errorMessage),
+            warnings = emptyList()
+        )
+    }
+    
+    /**
+     * Creates an invalid issuer result.
+     * 
+     * @param credential The credential
+     * @param issuerIri The issuer IRI that failed to resolve
+     * @return VerificationResult.Invalid.InvalidIssuer
+     */
+    private fun createInvalidIssuerResult(
+        credential: VerifiableCredential,
+        issuerIri: Iri
+    ): VerificationResult.Invalid.InvalidIssuer {
+        return VerificationResult.Invalid.InvalidIssuer(
+            credential = credential,
+            issuerIri = issuerIri,
+            reason = "Could not resolve issuer IRI or get verification key",
+            errors = listOf("Failed to resolve issuer: ${issuerIri.value}"),
+            warnings = emptyList()
+        )
     }
     
     override suspend fun createPresentation(
@@ -302,7 +412,7 @@ internal class VcLdProofEngine(
     
     // Helper methods
     
-    private fun buildVcDocument(request: IssuanceRequest): JsonObject {
+    private fun buildVcDocument(request: IssuanceRequest, credentialIdValue: String): JsonObject {
         val issuerIri = when (val issuer = request.issuer) {
             is Issuer.IriIssuer -> issuer.id.value
             is Issuer.ObjectIssuer -> issuer.id.value
@@ -310,10 +420,10 @@ internal class VcLdProofEngine(
         
         return buildJsonObject {
             put("@context", buildJsonArray {
-                add("https://www.w3.org/2018/credentials/v1")
-                add("https://w3id.org/security/suites/ed25519-2020/v1")
+                add(CredentialConstants.VcContexts.VC_1_1)
+                add(CredentialConstants.SecuritySuites.ED25519_2020_V1)
             })
-            request.id?.let { put("id", it.value) }
+            put("id", credentialIdValue)
             put("type", buildJsonArray {
                 request.type.forEach { type ->
                     add(type.value)
@@ -321,6 +431,7 @@ internal class VcLdProofEngine(
             })
             put("issuer", issuerIri)
             put("issuanceDate", request.issuedAt.toString())
+            request.validFrom?.let { put("validFrom", it.toString()) }
             request.validUntil?.let { put("expirationDate", it.toString()) }
             put("credentialSubject", buildJsonObject {
                 put("id", request.credentialSubject.id.value)

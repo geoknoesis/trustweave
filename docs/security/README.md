@@ -1,289 +1,33 @@
----
-title: Security Best Practices
-nav_order: 1
-parent: Security
-keywords:
-  - security
-  - best practices
-  - production
-  - kms
-  - encryption
----
+# Security Documentation
 
-# Security Best Practices
+This directory contains security-related documentation for the credential-api module.
 
-This guide covers security best practices for using TrustWeave in production environments.
+## Contents
 
-## Overview
+- **[rate-limiting.md](./rate-limiting.md)**: Documentation on rate limiting approach and recommendations
 
-TrustWeave handles sensitive cryptographic operations and identity management. Following security best practices is essential for production deployments.
+## Security Features
 
-## Key Management
+The credential-api module implements multiple layers of security:
 
-### Use Production-Grade KMS
+1. **Input Validation**: Comprehensive validation of all inputs
+2. **Resource Limits**: Size and count limits to prevent DoS attacks
+3. **Security Constants**: Well-documented security boundaries
+4. **Security Testing**: Comprehensive security-focused test suites
 
-❌ **Don't**: Use in-memory KMS in production
-```kotlin
-val kms = InMemoryKeyManagementService()  // Only for testing!
-```
+## Rate Limiting
 
-✅ **Do**: Use production KMS providers
-```kotlin
-// AWS KMS
-val kms = AwsKeyManagementService(
-    region = "us-east-1",
-    credentials = awsCredentials
-)
+Rate limiting is **not implemented at the library level** by design. See [rate-limiting.md](./rate-limiting.md) for details on why and how to implement it at the application layer.
 
-// Azure Key Vault
-val kms = AzureKeyManagementService(
-    vaultUrl = "https://your-vault.vault.azure.net/",
-    credentials = azureCredentials
-)
+## Security Best Practices
 
-// Google Cloud KMS
-val kms = GoogleKeyManagementService(
-    projectId = "your-project",
-    location = "us-east1",
-    keyRing = "your-keyring",
-    credentials = googleCredentials
-)
-```
+When using credential-api in production:
 
-### Key Rotation
-
-- **Regular Rotation**: Rotate keys regularly (every 90 days recommended)
-- **Key Versioning**: Use key versioning for gradual rotation
-- **Backup Keys**: Maintain secure backups of key material
-- See [Key Rotation Guide](../advanced/key-rotation.md) for details
-
-### Key Access Control
-
-- **Principle of Least Privilege**: Grant minimum required permissions
-- **Separate Keys**: Use different keys for different purposes (issuance, signing, etc.)
-- **Audit Logging**: Enable audit logging for all key operations
-
-## Credential Storage
-
-### Secure Storage
-
-❌ **Don't**: Store credentials in plain text
-```kotlin
-// BAD: No encryption
-val wallet = TrustWeave.createWallet(holderDid) {
-    storagePath = "/var/credentials"  // Unencrypted!
-}
-```
-
-✅ **Do**: Use encrypted storage
-```kotlin
-// GOOD: Encrypted storage
-val wallet = TrustWeave.createWallet(holderDid) {
-    storagePath = "/var/credentials"
-    encryptionKey = secureKey  // Use secure key management
-    property("encryptionAlgorithm", "AES-256-GCM")
-}
-```
-
-### Access Control
-
-- **File Permissions**: Restrict file system permissions (600 for files, 700 for directories)
-- **Network Security**: Use encrypted connections (TLS) for network storage
-- **Authentication**: Implement proper authentication for credential access
-
-## DID Management
-
-### DID Method Selection
-
-- **Security**: Choose DID methods with strong security guarantees
-- **Resolvability**: Ensure DID resolution is reliable and secure
-- **Privacy**: Consider privacy implications of DID methods
-
-### DID Document Security
-
-- **Key Management**: Store verification keys securely
-- **Service Endpoints**: Use HTTPS for all service endpoints
-- **Document Updates**: Implement secure update mechanisms
-
-## Credential Issuance
-
-### Issuer Authentication
-
-- **Verify Identity**: Verify issuer identity before accepting credentials
-- **Trust Registry**: Use trust registries to validate issuers
-- **Revocation**: Implement revocation mechanisms
-
-### Credential Validation
-
-- **Structure Validation**: Always validate credential structure
-- **Proof Verification**: Verify cryptographic proofs
-- **Expiration Checks**: Check credential expiration
-- **Revocation Checks**: Verify credential is not revoked
-
-```kotlin
-// Verify credential with sealed result
-when (val verification = trustweave.verifyCredential(credential)) {
-    is CredentialVerificationResult.Valid -> {
-        // Additional trust check
-        val issuerTrusted = trustweave.trust.isTrustedIssuer(
-            issuer = IssuerIdentity(credential.issuer),
-            credentialType = CredentialType(credential.type.first())
-        )
-        
-        if (!issuerTrusted) {
-            throw SecurityException("Issuer not trusted")
-        }
-        
-        // Safe to use credential
-    }
-    is CredentialVerificationResult.Invalid.Expired -> {
-        throw SecurityException("Credential expired at ${verification.expiredAt}")
-    }
-    is CredentialVerificationResult.Invalid.Revoked -> {
-        throw SecurityException("Credential revoked at ${verification.revokedAt}")
-    }
-    is CredentialVerificationResult.Invalid.InvalidProof -> {
-        throw SecurityException("Proof validation failed: ${verification.reason}")
-    }
-    else -> {
-        throw SecurityException("Credential validation failed: ${verification.errors}")
-    }
-}
-```
-
-## Blockchain Anchoring
-
-### Chain Selection
-
-- **Security**: Choose chains with strong security guarantees
-- **Finality**: Consider finality time for your use case
-- **Cost**: Balance security and cost
-
-### Transaction Security
-
-- **Private Keys**: Never expose private keys
-- **Transaction Signing**: Use secure signing mechanisms
-- **Gas Management**: Implement proper gas management
-
-## Network Security
-
-### TLS/HTTPS
-
-- **Always Use TLS**: Use HTTPS for all network communications
-- **Certificate Validation**: Validate TLS certificates
-- **Cipher Suites**: Use strong cipher suites
-
-### API Security
-
-- **Authentication**: Implement proper API authentication
-- **Authorization**: Use role-based access control (RBAC)
-- **Rate Limiting**: Implement rate limiting to prevent abuse
-- **Input Validation**: Validate all inputs
-
-## Error Handling
-
-### Secure Error Messages
-
-❌ **Don't**: Expose sensitive information in errors
-```kotlin
-catch (e: Exception) {
-    println("Error: ${e.message}")  // May expose sensitive data
-    println("Stack trace: ${e.stackTrace}")  // May expose internals
-}
-```
-
-✅ **Do**: Sanitize error messages
-```kotlin
-catch (e: Exception) {
-    logger.error("Operation failed", e)  // Log full details
-    return Result.failure(
-        TrustWeaveError.Unknown(
-            message = "Operation failed. Please try again.",  // Generic message
-            context = emptyMap()
-        )
-    )
-}
-```
-
-## Logging and Monitoring
-
-### Secure Logging
-
-- **No Sensitive Data**: Never log keys, passwords, or credentials
-- **Structured Logging**: Use structured logging for better analysis
-- **Log Rotation**: Implement log rotation and retention policies
-
-### Monitoring
-
-- **Security Events**: Monitor security-relevant events
-- **Anomaly Detection**: Implement anomaly detection
-- **Alerting**: Set up alerts for security incidents
-
-## Compliance
-
-### Data Protection
-
-- **GDPR**: Ensure GDPR compliance for EU users
-- **CCPA**: Ensure CCPA compliance for California users
-- **Data Minimization**: Collect only necessary data
-
-### Audit Trails
-
-- **Comprehensive Logging**: Log all security-relevant operations
-- **Immutable Logs**: Use immutable log storage
-- **Retention**: Maintain logs according to compliance requirements
-
-## Threat Modeling
-
-### Common Threats
-
-1. **Key Theft**: Protect keys with strong access controls
-2. **Credential Forgery**: Verify all credentials cryptographically
-3. **Man-in-the-Middle**: Use TLS for all communications
-4. **Replay Attacks**: Use nonces and timestamps
-5. **Denial of Service**: Implement rate limiting and resource limits
-
-### Mitigation Strategies
-
-- **Defense in Depth**: Use multiple security layers
-- **Least Privilege**: Grant minimum required permissions
-- **Regular Updates**: Keep dependencies updated
-- **Security Audits**: Conduct regular security audits
-
-## Best Practices Summary
-
-1. ✅ Use production-grade KMS (AWS, Azure, Google Cloud)
-2. ✅ Encrypt credential storage
-3. ✅ Validate all credentials before use
-4. ✅ Use TLS/HTTPS for all network communications
-5. ✅ Implement proper authentication and authorization
-6. ✅ Log security events (without sensitive data)
-7. ✅ Rotate keys regularly
-8. ✅ Keep dependencies updated
-9. ✅ Conduct security audits
-10. ✅ Follow principle of least privilege
-
-## Trust Boundaries
-
-Understanding trust boundaries is crucial for secure deployments. See [Trust Boundaries](trust-boundaries.md) for detailed guidance on:
-- What to trust and what not to trust
-- Establishing secure trust relationships
-- Trust verification patterns
-- Security zones and boundaries
-
-## Additional Resources
-
-- [Trust Boundaries](trust-boundaries.md) - Understanding trust boundaries in TrustWeave
-- [Key Rotation Guide](../advanced/key-rotation.md)
-- [Error Handling](../advanced/error-handling.md)
-- [Verification Policies](../advanced/verification-policies.md)
-- [W3C Security Considerations](https://www.w3.org/TR/vc-data-model/#security-considerations)
-
-## Getting Help
-
-For security concerns:
-
-1. **Security Issues**: Report to security@geoknoesis.com
-2. **General Questions**: See [FAQ](../faq.md)
-3. **Support**: Contact [www.geoknoesis.com](https://www.geoknoesis.com)
-
+1. **Implement rate limiting** at the API gateway or application layer
+2. **Configure security constants** based on your use case
+3. **Monitor resource usage** and adjust limits as needed
+4. **Use HTTPS** for all network communications
+5. **Validate all inputs** before passing to credential-api
+6. **Keep dependencies updated** for security patches
+7. **Review security logs** regularly
+8. **Perform security audits** before production deployment

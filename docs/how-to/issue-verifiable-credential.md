@@ -31,8 +31,8 @@ import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.trust.types.IssuanceResult
 import org.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.runBlocking
-import java.time.Instant
-import java.time.temporal.ChronoUnit
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.days
 ```
 
 **Configuration needed:**
@@ -173,8 +173,8 @@ val credential = trustWeave.issue {
                 "gpa" to "3.8"
             }
         }
-        issued(Instant.now())
-        expires(365 * 10, ChronoUnit.DAYS) // Valid for 10 years
+        issued(Clock.System.now())
+        expires((365 * 10).days) // Valid for 10 years
     }
     signedBy(issuerDid.value, keyId)
 }.getOrThrow()
@@ -268,8 +268,8 @@ import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.ProofType
 import org.trustweave.trust.types.VerificationResult
 import kotlinx.coroutines.runBlocking
-import java.time.Instant
-import java.time.temporal.ChronoUnit
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.days
 
 fun main() = runBlocking {
     // Step 1: Configure TrustWeave
@@ -331,8 +331,8 @@ fun main() = runBlocking {
                     "university" to "Example University"
                 }
             }
-            issued(Instant.now())
-            expires(365 * 10, ChronoUnit.DAYS)
+            issued(Clock.System.now())
+            expires((365 * 10).days)
         }
         signedBy(issuerDid = issuerDid.value, keyId = keyId)
     }
@@ -553,10 +553,10 @@ when (result) {
 // ✅ Set appropriate expiration
 credential {
     // ...
-    issued(Instant.now())
-    expires(365 * 10, ChronoUnit.DAYS)  // 10 years
+    issued(Clock.System.now())
+    expires((365 * 10).days)  // 10 years
     // or
-    expires(Instant.now().plus(365, ChronoUnit.DAYS))  // 1 year from now
+    expires(Clock.System.now().plus(365.days))  // 1 year from now
 }
 ```
 

@@ -333,6 +333,7 @@ class SubjectObjectBuilder {
                         is JsonObject -> it
                         is Map<*, *> -> {
                             // Convert Map to JsonObject
+                            @Suppress("UNCHECKED_CAST")
                             buildJsonObject {
                                 (it as Map<String, Any?>).forEach { (key, v) ->
                                     put(key, when (v) {

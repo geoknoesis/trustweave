@@ -97,3 +97,64 @@ fun credentialService(
     )
 }
 
+/**
+ * Factory object for creating CredentialService instances with custom configurations.
+ */
+object CredentialServices {
+    /**
+     * Creates a credential service with specified proof formats and KMS.
+     * 
+     * @param kms Key management service for signing operations
+     * @param didResolver DID resolver for issuer/subject resolution
+     * @param formats List of proof suite IDs to enable (defaults to all built-in formats)
+     * @param schemaRegistry Optional schema registry for credential validation
+     * @param revocationManager Optional revocation manager for credential revocation checking
+     * @return CredentialService instance with specified proof formats
+     */
+    fun createCredentialService(
+        kms: org.trustweave.kms.KeyManagementService,
+        didResolver: DidResolver,
+        formats: List<ProofSuiteId> = listOf(ProofSuiteId.VC_LD, ProofSuiteId.SD_JWT_VC),
+        schemaRegistry: SchemaRegistry? = null,
+        revocationManager: CredentialRevocationManager? = null
+    ): CredentialService {
+        // Create signer function from KMS
+        val signer: suspend (ByteArray, String) -> ByteArray = { data, keyId ->
+            val signResult = kms.sign(org.trustweave.core.identifiers.KeyId(keyId), data)
+            when (signResult) {
+                is org.trustweave.kms.results.SignResult.Success -> signResult.signature
+                is org.trustweave.kms.results.SignResult.Failure.KeyNotFound -> {
+                    throw IllegalStateException("Signing failed: Key not found: ${signResult.keyId.value}")
+                }
+                is org.trustweave.kms.results.SignResult.Failure.UnsupportedAlgorithm -> {
+                    throw IllegalStateException("Signing failed: Unsupported algorithm: ${signResult.reason ?: "Algorithm mismatch"}")
+                }
+                is org.trustweave.kms.results.SignResult.Failure.Error -> {
+                    throw IllegalStateException("Signing failed: ${signResult.reason}")
+                }
+            }
+        }
+        
+        // Create config with DID resolver and signer
+        val config = ProofEngineConfig(
+            didResolver = didResolver,
+            properties = mapOf("signer" to signer)
+        )
+        
+        // Create engines for requested formats
+        val engines = mutableMapOf<ProofSuiteId, org.trustweave.credential.spi.proof.ProofEngine>()
+        if (formats.contains(ProofSuiteId.VC_LD)) {
+            engines[ProofSuiteId.VC_LD] = VcLdProofEngine(config)
+        }
+        if (formats.contains(ProofSuiteId.SD_JWT_VC)) {
+            engines[ProofSuiteId.SD_JWT_VC] = SdJwtProofEngine(config)
+        }
+        
+        return DefaultCredentialService(
+            engines = engines,
+            didResolver = didResolver,
+            schemaRegistry = schemaRegistry,
+            revocationManager = revocationManager
+        )
+    }
+}

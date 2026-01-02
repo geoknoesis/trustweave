@@ -129,7 +129,7 @@ internal class JsonSchemaValidator : SchemaValidator {
                         else -> "string"
                     }
                 }
-                else -> "unknown"
+                is kotlinx.serialization.json.JsonNull -> "null"
             }
 
             if (actualType != expectedType && !isTypeCompatible(actualType, expectedType)) {

@@ -240,15 +240,15 @@ subject {
 Set an expiration date for time-sensitive credentials:
 
 ```kotlin
-import java.time.Instant
-import java.time.temporal.ChronoUnit
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.days
 
 val credential = trustWeave.issue {
     credential {
         type("VerifiableCredential", "TemporaryCredential")
         issuer(issuerDid)
         subject { id("did:key:holder"); "access" to "temporary" }
-        expires(Instant.now().plus(30, ChronoUnit.DAYS))
+        expires(Clock.System.now().plus(30.days))
     }
     signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
 }

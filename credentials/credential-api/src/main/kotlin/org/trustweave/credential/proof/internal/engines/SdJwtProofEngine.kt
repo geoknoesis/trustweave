@@ -316,11 +316,12 @@ internal class SdJwtProofEngine(
                     when (element) {
                         is JsonPrimitive -> element.content
                         is JsonObject -> jsonObjectToMap(element)
-                        else -> element.toString()
+                        is JsonArray -> element.map { it.toString() }
+                        is kotlinx.serialization.json.JsonNull -> "null"
                     }
                 }
                 is JsonObject -> jsonObjectToMap(value)
-                else -> value.toString()
+                is kotlinx.serialization.json.JsonNull -> "null"
             }
         }
     }

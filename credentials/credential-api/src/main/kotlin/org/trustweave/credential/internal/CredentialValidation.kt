@@ -11,8 +11,28 @@ import kotlinx.datetime.Instant
 /**
  * Credential validation utilities.
  * 
- * Extracted validation logic from DefaultCredentialService to improve maintainability
- * and testability.
+ * This utility object provides validation functions for Verifiable Credentials,
+ * ensuring they comply with W3C VC Data Model specifications. It validates
+ * credential structure, context, and required fields.
+ * 
+ * **Validation Checks:**
+ * - VC context validation (VC 1.1 or VC 2.0)
+ * - Proof existence validation
+ * - Required field presence
+ * - Type validation
+ * 
+ * **Usage:**
+ * ```kotlin
+ * // Validate context
+ * CredentialValidation.validateContext(credential)?.let { return it }
+ * 
+ * // Validate proof exists
+ * CredentialValidation.validateProofExists(credential)?.let { return it }
+ * ```
+ * 
+ * **Note:** This is an internal utility used by DefaultCredentialService during
+ * credential verification. It returns VerificationResult.Invalid if validation fails,
+ * or null if validation passes.
  */
 internal object CredentialValidation {
     /**

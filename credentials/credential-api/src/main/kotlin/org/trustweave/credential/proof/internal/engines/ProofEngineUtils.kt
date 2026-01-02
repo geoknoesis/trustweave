@@ -25,7 +25,30 @@ import org.slf4j.LoggerFactory
 /**
  * Shared utilities for proof engines.
  * 
- * Provides common functionality for DID resolution, key extraction, and verification.
+ * This utility object provides shared functionality for proof engine implementations,
+ * including DID resolution, verification method extraction, and public key operations.
+ * 
+ * **Key Operations:**
+ * - DID resolution and verification method lookup
+ * - Public key extraction from verification methods (JWK, multibase)
+ * - Ed25519 public key creation from various formats
+ * - Key format conversion and validation
+ * 
+ * **Usage:**
+ * ```kotlin
+ * // Resolve verification method from DID
+ * val verificationMethod = ProofEngineUtils.getVerificationMethodFromDid(
+ *     issuerIri = issuerIri,
+ *     verificationMethodId = proof.verificationMethod
+ * )
+ * 
+ * // Extract public key
+ * val publicKey = ProofEngineUtils.extractPublicKey(verificationMethod)
+ * ```
+ * 
+ * **Note:** This is an internal utility used by proof engines (VC-LD, SD-JWT-VC, etc.)
+ * for cryptographic operations. It handles multiple key formats and provides fallback
+ * mechanisms for key extraction.
  */
 internal object ProofEngineUtils {
     
@@ -125,8 +148,31 @@ internal object ProofEngineUtils {
     /**
      * Extract public key from verification method.
      * 
-     * @param verificationMethod The verification method
-     * @return The public key, or null if extraction fails
+     * Attempts to extract a Java PublicKey from a verification method by trying multiple
+     * key formats in order of preference. This function handles various key encoding formats
+     * commonly used in DID documents and verifiable credentials.
+     * 
+     * **Extraction Algorithm:**
+     * 1. **JWK (JSON Web Key)**: Primary method - checks for `publicKeyJwk` field
+     *    - Extracts key from JWK map using `extractPublicKeyFromJwk()`
+     *    - Supports Ed25519 keys (OKP key type)
+     * 2. **Multibase**: Secondary method - checks for `publicKeyMultibase` field
+     *    - Extracts key from multibase-encoded string
+     *    - Decodes multibase prefix and extracts raw key bytes
+     * 3. **Fallback**: Returns null if neither format is available
+     * 
+     * **Key Format Support:**
+     * - Ed25519 keys in JWK format (OKP with crv=Ed25519)
+     * - Ed25519 keys in multibase format (base58-btc encoding)
+     * - Additional key types may be supported via extensions
+     * 
+     * **Error Handling:**
+     * - Returns null if extraction fails (graceful degradation)
+     * - Logs warnings for debugging purposes
+     * - Multiple extraction strategies ensure compatibility with different DID methods
+     * 
+     * @param verificationMethod The verification method containing the public key
+     * @return The public key, or null if extraction fails or key format is unsupported
      */
     fun extractPublicKey(verificationMethod: VerificationMethod): PublicKey? {
         logger.debug("Extracting public key: verificationMethodId={}, type={}, hasJwk={}, hasMultibase={}", 
@@ -240,10 +286,40 @@ internal object ProofEngineUtils {
     }
     
     /**
-     * Extract public key from multibase encoding.
+     * Extract public key from multibase-encoded string.
      * 
-     * Note: Multibase decoding is not yet implemented. This function will return null
-     * for multibase-encoded keys. JWK format is preferred and fully supported.
+     * Parses a multibase-encoded public key string and extracts the corresponding Java PublicKey.
+     * Multibase encoding uses a single character prefix to indicate the base encoding scheme,
+     * followed by the base-encoded key data.
+     * 
+     * **Supported Multibase Encodings:**
+     * - **base58-btc** (prefix 'z'): Most common for Ed25519 keys in DID documents
+     * - Additional encodings may be supported via extensions
+     * 
+     * **Extraction Algorithm:**
+     * 1. Extract multibase prefix (first character)
+     * 2. Decode the base-encoded portion based on prefix
+     * 3. Validate key length (Ed25519 requires 32 bytes)
+     * 4. Convert raw bytes to Java PublicKey using BouncyCastle
+     * 
+     * **Key Format:**
+     * - Ed25519 keys are 32 bytes in length
+     * - Multibase format: `{prefix}{base-encoded-key}`
+     * - Example: `z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK`
+     * 
+     * **Error Handling:**
+     * - Returns null if multibase prefix is unsupported
+     * - Returns null if key length is incorrect
+     * - Returns null if key conversion fails
+     * - Logs warnings for debugging purposes
+     * 
+     * **Current Status:**
+     * Multibase decoding is not yet implemented. This function returns null for multibase-encoded keys.
+     * JWK format (via `publicKeyJwk`) is preferred and fully supported.
+     * 
+     * @param multibase The multibase-encoded key string
+     * @param keyType The key type (used for validation)
+     * @return The extracted PublicKey, or null if extraction fails or format is not yet supported
      */
     private fun extractPublicKeyFromMultibase(multibase: String, keyType: String): PublicKey? {
         // Multibase decoding requires base58btc decoding library

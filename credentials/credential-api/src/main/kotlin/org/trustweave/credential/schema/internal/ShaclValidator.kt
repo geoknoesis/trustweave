@@ -165,29 +165,32 @@ class ShaclValidator : SchemaValidator {
         }
 
         // Validate credentialSubject against property shapes
-        val subject = credential.credentialSubject
-        if (subject is JsonObject) {
-            val properties = schema["sh:property"]?.let {
-                when (it) {
-                    is JsonArray -> it
-                    else -> null
-                }
+        // Convert credentialSubject.claims to JsonObject for validation
+        val subjectClaimsObject = buildJsonObject {
+            for (entry in credential.credentialSubject.claims) {
+                put(entry.key, entry.value)
             }
-            if (properties != null) {
-                for (propertyShape in properties) {
-                    val propertyObj = propertyShape.jsonObject
-                    val path = propertyObj["sh:path"]?.jsonPrimitive?.contentOrNull
-                    val minCount = propertyObj["sh:minCount"]?.jsonPrimitive?.intOrNull ?: 0
+        }
+        val properties = schema["sh:property"]?.let {
+            when (it) {
+                is JsonArray -> it
+                else -> null
+            }
+        }
+        if (properties != null) {
+            for (propertyShape in properties) {
+                val propertyObj = propertyShape.jsonObject
+                val path = propertyObj["sh:path"]?.jsonPrimitive?.contentOrNull
+                val minCount = propertyObj["sh:minCount"]?.jsonPrimitive?.intOrNull ?: 0
 
-                    if (path != null && minCount > 0) {
-                        val fieldName = path.substringAfterLast("/").substringAfterLast(":")
-                        if (!subject.containsKey(fieldName)) {
-                            errors.add(SchemaValidationError(
-                                path = "/credentialSubject/$fieldName",
-                                message = "Required property '$fieldName' is missing (minCount: $minCount)",
-                                code = "missing_required_property"
-                            ))
-                        }
+                if (path != null && minCount > 0) {
+                    val fieldName = path.substringAfterLast("/").substringAfterLast(":")
+                    if (!subjectClaimsObject.containsKey(fieldName)) {
+                        errors.add(SchemaValidationError(
+                            path = "/credentialSubject/$fieldName",
+                            message = "Required property '$fieldName' is missing (minCount: $minCount)",
+                            code = "missing_required_property"
+                        ))
                     }
                 }
             }

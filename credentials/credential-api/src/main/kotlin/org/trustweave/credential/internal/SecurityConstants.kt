@@ -3,8 +3,31 @@ package org.trustweave.credential.internal
 /**
  * Security-related constants for input validation and resource limits.
  * 
- * These constants help prevent denial-of-service attacks and ensure system stability
- * by enforcing reasonable limits on input sizes and operation counts.
+ * These constants help prevent denial-of-service (DoS) attacks and ensure system stability
+ * by enforcing reasonable limits on input sizes and operation counts. All limits are set
+ * conservatively to accommodate realistic use cases while preventing resource exhaustion.
+ * 
+ * **Security Rationale:**
+ * 
+ * **Size Limits (MAX_*_SIZE_BYTES):**
+ * - Prevent memory exhaustion from extremely large inputs
+ * - Protect against malicious actors sending oversized payloads
+ * - Ensure reasonable processing times
+ * - Based on typical credential/presentation sizes (most are < 10KB)
+ * 
+ * **Count Limits (MAX_*_PER_*):**
+ * - Prevent CPU exhaustion from processing too many items
+ * - Limit concurrent operations to manageable levels
+ * - Based on typical use cases (most credentials have < 50 claims)
+ * 
+ * **Length Limits (MAX_*_LENGTH):**
+ * - Prevent issues with extremely long identifiers
+ * - Based on specifications (DIDs are typically 20-200 chars)
+ * - Include generous safety margins for future-proofing
+ * 
+ * **Usage:**
+ * These constants are used by `InputValidation` and other validation utilities
+ * throughout the credential API to enforce security boundaries.
  */
 internal object SecurityConstants {
     /**

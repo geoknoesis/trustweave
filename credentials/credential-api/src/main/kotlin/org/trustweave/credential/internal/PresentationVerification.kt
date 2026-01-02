@@ -182,11 +182,6 @@ internal object PresentationVerification {
             // Extract public key from verification method
             val publicKey = ProofEngineUtils.extractPublicKey(verificationMethod) ?: return false
             
-            // Validate public key type
-            if (publicKey !is PublicKey) {
-                return false
-            }
-            
             // Decode signature (base64url)
             val signatureBytes = try {
                 Base64.getUrlDecoder().decode(proofValue)

@@ -151,7 +151,7 @@ val credential = trustWeave.issue {
                 "name" to "Bachelor of Science"
             }
         }
-        issued(Instant.now())
+        issued(Clock.System.now())
     }
     signedBy(issuerDid = issuerDid.value, keyId = keyId)
     withRevocation()  // Auto-creates status list if needed
@@ -249,8 +249,8 @@ import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.credential.revocation.RevocationStatus
 import org.trustweave.credential.revocation.StatusPurpose
 import kotlinx.coroutines.runBlocking
-import java.time.Instant
-import java.time.temporal.ChronoUnit
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.days
 
 fun main() = runBlocking {
     // Step 1: Configure TrustWeave with revocation
@@ -295,8 +295,8 @@ fun main() = runBlocking {
                     "name" to "Bachelor of Science"
                 }
             }
-            issued(Instant.now())
-            expires(365 * 10, ChronoUnit.DAYS)
+            issued(Clock.System.now())
+            expires((365 * 10).days)
         }
         signedBy(issuerDid = issuerDid.value, keyId = keyId)
         withRevocation()  // Auto-creates status list

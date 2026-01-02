@@ -366,14 +366,23 @@ class ProfessionalIdentityExampleTest {
             holderDidObj = professionalDid
         )
 
+        // Use fixed dates that are clearly expired and active
+        // Expired: January 1, 2021 (definitely in the past)
+        val expiredIssueDate = "2020-01-01T00:00:00Z"
+        val expiredExpirationDate = "2021-01-01T00:00:00Z"
+        
+        // Active: Use a date far in the future (2099) to ensure it's always active
+        val activeIssueDate = "2024-01-01T00:00:00Z"
+        val activeExpirationDate = "2099-12-31T23:59:59Z"
+
         // Store expired certification
         val expiredCert = createCertificationCredential(
             issuerDid = Did("did:key:aws"),
             holderDid = professionalDid,
             certificationName = "Expired Cert",
             issuer = "Test Issuer",
-            issueDate = "2020-01-01T00:00:00Z",
-            expirationDate = "2021-01-01T00:00:00Z", // Expired
+            issueDate = expiredIssueDate,
+            expirationDate = expiredExpirationDate,
             credentialId = "EXPIRED-1"
         )
         wallet.store(expiredCert)
@@ -384,18 +393,31 @@ class ProfessionalIdentityExampleTest {
             holderDid = professionalDid,
             certificationName = "Active Cert",
             issuer = "Test Issuer",
-            issueDate = "2023-01-01T00:00:00Z",
-            expirationDate = "2026-01-01T00:00:00Z", // Active
+            issueDate = activeIssueDate,
+            expirationDate = activeExpirationDate,
             credentialId = "ACTIVE-1"
         )
         wallet.store(activeCert)
 
+        // First, verify we can find credentials by type
+        val allCerts = wallet.query {
+            byType("CertificationCredential")
+        }
+        assertEquals(2, allCerts.size, "Should find 2 certifications")
+        
+        // Verify expirationDate is set on credentials
+        val expiredStored = allCerts.find { it.id?.value?.contains("EXPIRED-1") == true }
+        val activeStored = allCerts.find { it.id?.value?.contains("ACTIVE-1") == true }
+        assertNotNull(expiredStored?.expirationDate, "Expired cert should have expirationDate")
+        assertNotNull(activeStored?.expirationDate, "Active cert should have expirationDate")
+        
         // Query active certifications
         val activeCerts = wallet.query {
             byType("CertificationCredential")
             notExpired()
         }
-        assertEquals(1, activeCerts.size)
-        assertTrue(activeCerts.first().id?.value?.contains("ACTIVE-1") == true)
+        assertEquals(1, activeCerts.size, "Should find exactly 1 active certification")
+        assertTrue(activeCerts.first().id?.value?.contains("ACTIVE-1") == true, 
+            "Active certification should have ACTIVE-1 in its ID")
     }
 }

@@ -9,7 +9,36 @@ import kotlinx.datetime.Clock
 /**
  * Revocation checking utilities.
  * 
- * Handles credential revocation status checks with proper error handling and policy enforcement.
+ * This utility object handles credential revocation status checks with proper error handling
+ * and policy enforcement. It provides a centralized way to check if a credential has been
+ * revoked or suspended, with configurable failure policies.
+ * 
+ * **Key Features:**
+ * - Revocation status checking via CredentialRevocationManager
+ * - Suspension status checking
+ * - Policy-based error handling (fail-fast vs. fail-soft)
+ * - Comprehensive error handling for network and I/O errors
+ * - Proper cancellation support for coroutines
+ * 
+ * **Failure Policies:**
+ * - `FAIL_FAST`: Return invalid result immediately on revocation check failure
+ * - `FAIL_SOFT`: Return warnings but allow verification to proceed
+ * 
+ * **Usage:**
+ * ```kotlin
+ * val (invalidResult, warnings) = RevocationChecker.checkRevocationStatus(
+ *     credential = credential,
+ *     revocationManager = revocationManager,
+ *     policy = RevocationFailurePolicy.FAIL_FAST
+ * )
+ * 
+ * if (invalidResult != null) {
+ *     return invalidResult
+ * }
+ * // Add warnings to verification result
+ * ```
+ * 
+ * **Note:** This is an internal utility used by DefaultCredentialService during verification.
  */
 internal object RevocationChecker {
     /**

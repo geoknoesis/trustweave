@@ -314,28 +314,26 @@ fun main() = runBlocking {
     val credential = credentialResult.getOrThrow()
 
     // Verify the credential
-    val verificationResult = TrustWeave.verifyCredential(credential)
+    val verificationResult = trustWeave.verify {
+        credential(credential)
+    }
 
-    verificationResult.fold(
-        onSuccess = { verification ->
-            if (verification.valid) {
-                println("✅ Credential is valid")
-                println("   Proof valid: ${verification.proofValid}")
-                println("   Not expired: ${verification.notExpired}")
-                println("   Not revoked: ${verification.notRevoked}")
+    when (verificationResult) {
+        is VerificationResult.Valid -> {
+            println("✅ Credential is valid")
+            println("   Proof valid: ${verificationResult.proofValid}")
+            println("   Not expired: ${verificationResult.notExpired}")
+            println("   Not revoked: ${verificationResult.notRevoked}")
 
-                if (verification.warnings.isNotEmpty()) {
-                    println("   Warnings: ${verification.warnings}")
-                }
-            } else {
-                println("❌ Credential is invalid")
-                println("   Errors: ${verification.errors}")
+            if (verificationResult.allWarnings.isNotEmpty()) {
+                println("   Warnings: ${verificationResult.allWarnings}")
             }
-        },
-        onFailure = { error ->
-            println("❌ Verification failed: ${error.message}")
         }
-    )
+        is VerificationResult.Invalid -> {
+            println("❌ Credential is invalid")
+            println("   Errors: ${verificationResult.allErrors}")
+        }
+    }
 }
 ```
 
@@ -359,19 +357,20 @@ fun main() = runBlocking {
     // ... (create DIDs) ...
 
     // Issue credential with expiration date (1 year from now)
-    val expirationDate = Instant.now().plus(365, ChronoUnit.DAYS)
-
-    val credentialResult = TrustWeave.issueCredential(
-        issuerDid = issuerDid.value,
-        issuerKeyId = issuerKeyId,
-        credentialSubject = mapOf(
-            "id" to holderDid.value,
-            "name" to "Alice",
-            "degree" to "Bachelor of Science"
-        ),
-        types = listOf("VerifiableCredential", "EducationalCredential"),
-        expirationDate = expirationDate
-    )
+    val credentialResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "EducationalCredential")
+            issuer(issuerDid)
+            subject {
+                id(holderDid)
+                "name" to "Alice"
+                "degree" to "Bachelor of Science"
+            }
+            issued(Instant.now())
+            expires(365, ChronoUnit.DAYS)
+        }
+        signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+    }
 
     // ... (verify credential) ...
 }
@@ -708,18 +707,21 @@ fun main() = runBlocking {
     // ... (setup parties) ...
 
     // ISSUER: Issue credential
-    val credential = TrustWeave.issueCredential(
-        issuerDid = issuerDid.value,
-        issuerKeyId = issuerKeyId,
-        credentialSubject = mapOf(
-            "id" to holderDid.value,
-            "name" to "Alice",
-            "degree" to "Bachelor of Science in Computer Science",
-            "university" to "Example University",
-            "graduationDate" to "2024-05-15"
-        ),
-        types = listOf("VerifiableCredential", "EducationalCredential")
-    ).getOrThrow()
+    val credential = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "EducationalCredential")
+            issuer(issuerDid)
+            subject {
+                id(holderDid)
+                "name" to "Alice"
+                "degree" to "Bachelor of Science in Computer Science"
+                "university" to "Example University"
+                "graduationDate" to "2024-05-15"
+            }
+            issued(Instant.now())
+        }
+        signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+    }.getOrThrow()
 
     println("✅ Credential issued by issuer")
 }

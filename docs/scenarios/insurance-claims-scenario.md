@@ -283,37 +283,42 @@ fun main() = runBlocking {
     println("   Assessment Status: Completed")
 
     // Step 5: Repair shop performs repair and issues repair credential
-    val repairCredential = TrustWeave.issueCredential(
-        issuerDid = repairShopDid.value,
-        issuerKeyId = repairShopKeyId,
-        credentialSubject = buildJsonObject {
-            put("id", policyholderDid.value)
-            put("repair", buildJsonObject {
-                put("claimNumber", "CLM-2024-001234")
-                put("repairShopName", "Quality Auto Repair")
-                put("repairShopLicense", "RSH-78901")
-                put("repairStartDate", "2024-10-20")
-                put("repairCompletionDate", "2024-10-25")
-                put("repairDescription", "Replaced front bumper and headlight assembly")
-                put("partsUsed", listOf(
-                    "Front Bumper - OEM",
-                    "Headlight Assembly - OEM",
-                    "Paint and Materials"
-                ))
-                put("laborHours", 8.5)
-                put("laborRate", "125.00")
-                put("partsCost", "3200.00")
-                put("laborCost", "1062.50")
-                put("totalCost", "4262.50")
-                put("currency", "USD")
-                put("warrantyProvided", true)
-                put("warrantyPeriod", "12 months")
-                put("repairStatus", "Completed")
-            })
-        },
-        types = listOf("VerifiableCredential", "RepairCredential", "ServiceCredential"),
-        expirationDate = Instant.now().plus(2, ChronoUnit.YEARS).toString()
-    ).getOrThrow()
+    val repairCredentialResult = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "RepairCredential", "ServiceCredential")
+            issuer(repairShopDid)
+            subject {
+                id(policyholderDid)
+                "repair" {
+                    "claimNumber" to "CLM-2024-001234"
+                    "repairShopName" to "Quality Auto Repair"
+                    "repairShopLicense" to "RSH-78901"
+                    "repairStartDate" to "2024-10-20"
+                    "repairCompletionDate" to "2024-10-25"
+                    "repairDescription" to "Replaced front bumper and headlight assembly"
+                    "partsUsed" to listOf(
+                        "Front Bumper - OEM",
+                        "Headlight Assembly - OEM",
+                        "Paint and Materials"
+                    )
+                    "laborHours" to 8.5
+                    "laborRate" to "125.00"
+                    "partsCost" to "3200.00"
+                    "laborCost" to "1062.50"
+                    "totalCost" to "4262.50"
+                    "currency" to "USD"
+                    "warrantyProvided" to true
+                    "warrantyPeriod" to "12 months"
+                    "repairStatus" to "Completed"
+                }
+            }
+            issued(Instant.now())
+            expires(2, ChronoUnit.YEARS)
+        }
+        signedBy(issuerDid = repairShopDid, keyId = repairShopKeyId)
+    }
+    
+    val repairCredential = repairCredentialResult.getOrThrow()
 
     println("✅ Repair credential issued: ${repairCredential.id}")
     println("   Total Repair Cost: $4,262.50")
@@ -350,13 +355,13 @@ fun main() = runBlocking {
     // Step 8: Insurance company verifies all credentials
     println("\n📋 Insurance Company Verification Process:")
 
-    val claimVerification = TrustWeave.verifyCredential(claimCredential).getOrThrow()
+    val claimVerification = trustWeave.verify { credential(claimCredential) }
     println("Claim Credential: ${if (claimVerification.valid) "✅ VALID" else "❌ INVALID"}")
 
-    val assessmentVerification = TrustWeave.verifyCredential(assessmentCredential).getOrThrow()
+    val assessmentVerification = trustWeave.verify { credential(assessmentCredential) }
     println("Assessment Credential: ${if (assessmentVerification.valid) "✅ VALID" else "❌ INVALID"}")
 
-    val repairVerification = TrustWeave.verifyCredential(repairCredential).getOrThrow()
+    val repairVerification = trustWeave.verify { credential(repairCredential) }
     println("Repair Credential: ${if (repairVerification.valid) "✅ VALID" else "❌ INVALID"}")
 
     // Step 9: Verify claim consistency and fraud prevention

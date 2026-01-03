@@ -390,7 +390,7 @@ fun main() = runBlocking {
     // Step 9: Verify new ownership
     println("\n🔍 New Ownership Verification:")
 
-    val newOwnershipVerification = TrustWeave.verifyCredential(newOwnershipCredential).getOrThrow()
+    val newOwnershipVerification = trustWeave.verify { credential(newOwnershipCredential) }
 
     if (newOwnershipVerification.valid) {
         val credentialSubject = newOwnershipCredential.credentialSubject
@@ -419,7 +419,7 @@ fun main() = runBlocking {
     // Step 10: Verify previous owner revocation
     println("\n🔍 Previous Owner Revocation Verification:")
 
-    val currentOwnershipVerification = TrustWeave.verifyCredential(currentOwnershipCredential).getOrThrow()
+    val currentOwnershipVerification = trustWeave.verify { credential(currentOwnershipCredential) }
 
     if (currentOwnershipVerification.valid) {
         val credentialSubject = currentOwnershipCredential.credentialSubject

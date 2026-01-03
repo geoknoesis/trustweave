@@ -391,7 +391,7 @@ fun main() = runBlocking {
     // Step 9: Bank service - Fingerprint authentication
     println("\n🏦 Bank Service - Fingerprint Authentication:")
 
-    val fingerprintVerification = TrustWeave.verifyCredential(fingerprintCredential).getOrThrow()
+    val fingerprintVerification = trustWeave.verify { credential(fingerprintCredential) }
 
     if (fingerprintVerification.valid) {
         println("✅ Fingerprint Credential: VALID")
@@ -427,7 +427,7 @@ fun main() = runBlocking {
     // Step 10: Building access - Face recognition
     println("\n🏢 Building Access - Face Recognition:")
 
-    val faceVerification = TrustWeave.verifyCredential(faceCredential).getOrThrow()
+    val faceVerification = trustWeave.verify { credential(faceCredential) }
 
     if (faceVerification.valid) {
         println("✅ Face Credential: VALID")
@@ -465,8 +465,8 @@ fun main() = runBlocking {
     // Step 11: Multi-modal biometric verification (fingerprint + face)
     println("\n🔐 Multi-Modal Biometric Verification (Fingerprint + Face):")
 
-    val fingerprintValid = TrustWeave.verifyCredential(fingerprintCredential).getOrThrow().valid
-    val faceValid = TrustWeave.verifyCredential(faceCredential).getOrThrow().valid
+    val fingerprintValid = trustWeave.verify { credential(fingerprintCredential) }.valid
+    val faceValid = trustWeave.verify { credential(faceCredential) }.valid
 
     if (fingerprintValid && faceValid) {
         println("✅ Both biometric credentials are valid")

@@ -254,7 +254,7 @@ fun main() = runBlocking {
     val credentialId = wallet.store(credential)
 
     // 5. Verify
-    val verification = TrustWeave.verifyCredential(credential).getOrThrow()
+    val verification = trustWeave.verify { credential(credential) }
 
     // 6. Advanced features (scenario-specific)
     // ...

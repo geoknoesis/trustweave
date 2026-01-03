@@ -585,7 +585,7 @@ suspend fun verifyAcademicCredential(
 
 ### Trust & Failure Modes
 
-- **Proof verification**: TrustWeave's `verifyCredential` performs full cryptographic proof verification. For high-assurance decisions, ensure you're using production-grade KMS providers.
+- **Proof verification**: TrustWeave's `verify { credential(...) }` DSL performs full cryptographic proof verification. For high-assurance decisions, ensure you're using production-grade KMS providers.
 - **Schema validation**: Register schema definitions before enabling schema validation in verification options.
 - **Revocation**: When you add a `credentialStatus` to credentials, ensure you configure a status list resolver. Set `checkRevocation = true` in verification options.
 - **Key custody**: Replace the default in-memory KMS with an HSM or cloud KMS (AWS KMS, Azure Key Vault, etc.) for production. Never persist private keys in plaintext.

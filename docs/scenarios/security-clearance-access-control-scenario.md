@@ -318,7 +318,7 @@ fun main() = runBlocking {
     // Step 7: Top Secret system access control
     println("\n🔐 Top Secret System Access Control:")
 
-    val topSecretVerification = TrustWeave.verifyCredential(topSecretClearance).getOrThrow()
+    val topSecretVerification = trustWeave.verify { credential(topSecretClearance) }
 
     if (topSecretVerification.valid) {
         val credentialSubject = topSecretClearance.credentialSubject
@@ -348,7 +348,7 @@ fun main() = runBlocking {
     // Step 8: Secret system access control
     println("\n🔐 Secret System Access Control:")
 
-    val secretVerification = TrustWeave.verifyCredential(secretClearance).getOrThrow()
+    val secretVerification = trustWeave.verify { credential(secretClearance) }
 
     if (secretVerification.valid) {
         val credentialSubject = secretClearance.credentialSubject
@@ -376,7 +376,7 @@ fun main() = runBlocking {
     println("\n🔐 Confidential System Access Control:")
 
     // Personnel 2 attempts to access Confidential system (lower clearance)
-    val confidentialVerification = TrustWeave.verifyCredential(secretClearance).getOrThrow()
+    val confidentialVerification = trustWeave.verify { credential(secretClearance) }
 
     if (confidentialVerification.valid) {
         val credentialSubject = secretClearance.credentialSubject

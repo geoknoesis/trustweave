@@ -257,7 +257,7 @@ if (isValid) {
     
     // Verify each credential in the presentation
     presentation.verifiableCredential.forEach { cred ->
-        val result = trustWeave.verifyCredential(cred)
+        val result = trustWeave.verify { credential(cred) }
         when (result) {
             is VerificationResult.Valid -> println("   ✅ Credential valid: ${cred.id}")
             else -> println("   ❌ Credential invalid: ${cred.id}")
@@ -368,7 +368,7 @@ fun main() = runBlocking {
     
     // Step 9: Verify presentation
     val allValid = presentation.verifiableCredential.all { cred ->
-        val result = trustWeave.verifyCredential(cred)
+        val result = trustWeave.verify { credential(cred) }
         result is VerificationResult.Valid
     }
     
@@ -647,7 +647,7 @@ val isValid = presentation.proof != null &&
 
 // Verify each credential
 presentation.verifiableCredential.forEach { cred ->
-    val result = trustWeave.verifyCredential(cred)
+    val result = trustWeave.verify { credential(cred) }
     // Handle result
 }
 ```

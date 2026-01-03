@@ -513,7 +513,7 @@ fun main() = runBlocking {
     println("\n🔍 Complete Data Provenance Verification Workflow:")
 
     val sensorAttestationValid = trustWeave.verify { credential(temperatureSensorAttestation) } is VerificationResult.Valid
-    val dataAttestationValid = TrustWeave.verifyCredential(temperatureDataAttestation).getOrThrow().valid
+    val dataAttestationValid = trustWeave.verify { credential(temperatureDataAttestation) }.valid
 
     if (sensorAttestationValid && dataAttestationValid) {
         println("✅ Sensor Attestation: VERIFIED")

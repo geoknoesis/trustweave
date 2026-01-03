@@ -1,6 +1,7 @@
 package org.trustweave.trust.dsl
 
 import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.resolver.DidResolver
 import org.trustweave.kms.KeyHandle
@@ -8,7 +9,6 @@ import org.trustweave.kms.results.SignResult
 import org.trustweave.kms.results.GenerateKeyResult
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.testkit.services.TestkitDidMethodFactory
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.createTestCredentialService
 import org.trustweave.trust.dsl.credential.DidMethods
@@ -43,9 +43,7 @@ class IssuanceBuilderBranchCoverageTest {
 
         // Create DID resolver that uses the DID registry from TrustWeave
         val tempTrustWeave = TrustWeave.build {
-            factories(
-                didMethodFactory = TestkitDidMethodFactory()
-            )
+            // DID methods auto-discovered via SPI
             keys {
                 custom(kmsRef)
                 signer { data, keyId ->
@@ -66,9 +64,7 @@ class IssuanceBuilderBranchCoverageTest {
         
         val credentialService = createTestCredentialService(kms = kmsRef, didResolver = didResolver)
         trustWeave = TrustWeave.build {
-            factories(
-                didMethodFactory = TestkitDidMethodFactory()
-            )
+            // DID methods auto-discovered via SPI
             keys {
                 custom(kmsRef)
                 // Provide signer function directly to avoid reflection
@@ -98,7 +94,7 @@ class IssuanceBuilderBranchCoverageTest {
         assertFailsWith<IllegalStateException> {
             trustWeave.issue {
                 // Missing credential
-                signedBy(issuerDid = "did:key:issuer", keyId = "key-1")
+                signedBy(issuerDid = Did("did:key:issuer"), keyId = "key-1")
             }
         }
     }
@@ -396,9 +392,7 @@ class IssuanceBuilderBranchCoverageTest {
     fun `test branch auto-anchor enabled in config`() = runBlocking {
         val kmsRef = kms
         val trustLayerWithAutoAnchor = TrustWeave.build {
-            factories(
-                didMethodFactory = TestkitDidMethodFactory()
-            )
+            // DID methods auto-discovered via SPI
             keys {
                 custom(kmsRef)
             }
@@ -488,9 +482,7 @@ class IssuanceBuilderBranchCoverageTest {
     fun `test branch anchor error when chain ID missing`() = runBlocking {
         val kmsRef = kms
         val trustLayerWithAutoAnchor = TrustWeave.build {
-            factories(
-                didMethodFactory = TestkitDidMethodFactory()
-            )
+            // DID methods auto-discovered via SPI
             keys {
                 custom(kmsRef)
             }
@@ -532,9 +524,7 @@ class IssuanceBuilderBranchCoverageTest {
     fun `test branch anchor error when anchor client not found`() = runBlocking {
         val kmsRef = kms
         val trustLayerWithAutoAnchor = TrustWeave.build {
-            factories(
-                didMethodFactory = TestkitDidMethodFactory()
-            )
+            // DID methods auto-discovered via SPI
             keys {
                 custom(kmsRef)
             }
@@ -576,9 +566,7 @@ class IssuanceBuilderBranchCoverageTest {
         // The credential should still be issued even if anchoring fails
         val kmsRef = kms
         val trustLayerWithAutoAnchor = TrustWeave.build {
-            factories(
-                didMethodFactory = TestkitDidMethodFactory()
-            )
+            // DID methods auto-discovered via SPI
             keys {
                 custom(kmsRef)
             }

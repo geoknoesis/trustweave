@@ -30,7 +30,7 @@ import org.trustweave.did.validation.DidValidator
  *
  * **Example Usage:**
  * ```kotlin
- * val registry = DefaultDidMethodRegistry()
+ * val registry = DidMethodRegistry()
  * registry.register(KeyDidMethod(kms))
  * registry.register(WebDidMethod())
  *

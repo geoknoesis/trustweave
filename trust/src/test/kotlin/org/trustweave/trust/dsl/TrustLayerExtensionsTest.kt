@@ -3,9 +3,9 @@ package org.trustweave.trust.dsl
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.testkit.credential.InMemoryWallet
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.testkit.services.TestkitDidMethodFactory
 import org.trustweave.trust.dsl.TrustWeaveConfig
 import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.did.identifiers.Did
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
 import org.trustweave.trust.dsl.wallet.organize
@@ -39,9 +39,7 @@ class TrustLayerExtensionsTest {
 
         // Create temporary TrustWeaveConfig to get DID registry for resolver
         val tempTrustWeaveConfig = trustWeave {
-            factories(
-                didMethodFactory = TestkitDidMethodFactory()
-            )
+            // DID methods auto-discovered via SPI
             keys {
                 custom(kms)
                 signer { data, keyId ->
@@ -82,9 +80,7 @@ class TrustLayerExtensionsTest {
         )
 
         trustWeave = trustWeave {
-            factories(
-                didMethodFactory = TestkitDidMethodFactory()
-            )
+            // DID methods auto-discovered via SPI
             keys {
                 custom(kms)
                 signer { data, keyId ->
@@ -133,7 +129,7 @@ class TrustLayerExtensionsTest {
                     }
                     issued(Instant.parse("2024-01-01T00:00:00Z"))
                 }
-                signedBy(issuerDid = did, keyId = keyId)
+                signedBy(issuerDid = Did(did), keyId = keyId)
             }
         }.getOrFail()
 
@@ -168,7 +164,7 @@ class TrustLayerExtensionsTest {
                         }
                         issued(Instant.parse("2024-01-01T00:00:00Z"))
                     }
-                    signedBy(issuerDid = did, keyId = keyId)
+                    signedBy(issuerDid = Did(did), keyId = keyId)
                 }
             },
             wallet = wallet
@@ -209,7 +205,7 @@ class TrustLayerExtensionsTest {
                         }
                         issued(Instant.parse("2024-01-01T00:00:00Z"))
                     }
-                    signedBy(issuerDid = did, keyId = keyId)
+                    signedBy(issuerDid = Did(did), keyId = keyId)
                 }
             },
             wallet = wallet,
@@ -257,7 +253,7 @@ class TrustLayerExtensionsTest {
                         }
                         issued(Instant.parse("2024-01-01T00:00:00Z"))
                     }
-                    signedBy(issuerDid = did, keyId = keyId)
+                    signedBy(issuerDid = Did(did), keyId = keyId)
                 }
             },
             wallet = wallet
@@ -295,7 +291,7 @@ class TrustLayerExtensionsTest {
                     }
                     issued(Instant.parse("2024-01-01T00:00:00Z"))
                 }
-                signedBy(issuerDid = did, keyId = keyId)
+                signedBy(issuerDid = Did(did), keyId = keyId)
             }
         }.getOrFail()
 
@@ -331,7 +327,7 @@ class TrustLayerExtensionsTest {
                         }
                         issued(Instant.parse("2024-01-01T00:00:00Z"))
                     }
-                    signedBy(issuerDid = did, keyId = keyId)
+                    signedBy(issuerDid = Did(did), keyId = keyId)
                 }
             },
             wallet = wallet

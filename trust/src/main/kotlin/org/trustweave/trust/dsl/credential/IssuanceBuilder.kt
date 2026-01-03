@@ -13,7 +13,6 @@ import org.trustweave.credential.proof.ProofOptions
 import org.trustweave.credential.proof.ProofPurpose
 import org.trustweave.credential.proof.proofOptionsForIssuance
 import org.trustweave.trust.dsl.credential.CredentialBuilder
-import org.trustweave.trust.types.IssuerIdentity
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.credential.results.IssuanceResult
@@ -60,7 +59,12 @@ class IssuanceBuilder(
      * Coroutine dispatcher for I/O-bound operations.
      * Defaults to [Dispatchers.IO] if not provided.
      */
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    /**
+     * Optional DID resolver for auto-extracting key IDs from DIDs.
+     * If provided, enables signedBy(Did) overload that auto-extracts key ID.
+     */
+    private val didResolver: org.trustweave.did.resolver.DidResolver? = null
 ) {
     private var credential: VerifiableCredential? = null
     private var issuerDid: Did? = null
@@ -87,37 +91,44 @@ class IssuanceBuilder(
     }
 
     /**
-     * Set issuer identity for signing.
+     * Set issuer DID for signing, automatically extracting the key ID.
      *
-     * @param issuer The issuer identity (DID)
+     * This method resolves the DID and extracts the first verification method's
+     * key ID automatically. The resolution happens during build().
+     *
+     * **Example:**
+     * ```kotlin
+     * val issuerDid = trustWeave.createDid().getOrFail()
+     * val credential = trustWeave.issue {
+     *     credential { ... }
+     *     signedBy(issuerDid)  // Key ID auto-extracted during build
+     * }
+     * ```
+     *
+     * @param issuerDid The issuer DID (key ID will be auto-extracted during build)
      */
-    fun signedBy(issuer: IssuerIdentity) {
-        this.issuerDid = issuer
-        // Extract keyId from DID if it's a full verification method ID
-        // Otherwise, assume it's just the DID and keyId will be set separately
+    fun signedBy(issuerDid: Did) {
+        this.issuerDid = issuerDid
+        // Key ID will be resolved during build() if didResolver is available
+        this.issuerKeyId = null  // Mark for lazy resolution
     }
 
     /**
-     * Set issuer identity for signing from DID and key ID strings.
+     * Set issuer DID and explicit key ID for signing.
      *
-     * Domain-precise naming that clearly indicates signing operation.
+     * Use this method when you need to specify a particular key ID from the DID document.
      *
-     * @param issuerDid Must be a valid DID starting with "did:"
-     * @param keyId The key ID (can be just the fragment or full key ID)
-     * @throws IllegalArgumentException if issuerDid is blank, doesn't start with "did:", or keyId is blank
-     */
-    fun signedBy(issuerDid: String, keyId: String) {
-        require(issuerDid.isNotBlank()) { "Issuer DID cannot be blank" }
-        require(issuerDid.startsWith("did:")) { 
-            "Issuer DID must start with 'did:'. Got: $issuerDid" 
-        }
-        require(keyId.isNotBlank()) { "Key ID cannot be blank" }
-        this.issuerDid = Did(issuerDid)
-        this.issuerKeyId = keyId
-    }
-    
-    /**
-     * Set issuer DID and key ID for signing.
+     * **Example:**
+     * ```kotlin
+     * val issuerDid = trustWeave.createDid().getOrFail()
+     * val credential = trustWeave.issue {
+     *     credential { ... }
+     *     signedBy(issuerDid, "key-1")  // Explicit key ID
+     * }
+     * ```
+     *
+     * @param issuerDid The issuer DID
+     * @param keyId The key ID (fragment part, e.g., "key-1")
      */
     fun signedBy(issuerDid: Did, keyId: String) {
         require(keyId.isNotBlank()) { "Key ID cannot be blank" }
@@ -172,9 +183,23 @@ class IssuanceBuilder(
             field = "issuerIdentity",
             reason = "Issuer DID is required. Use signedBy(issuerDid, keyId) to specify the issuer."
         )
-        val resolvedKeyId = issuerKeyId ?: return@withContext IssuanceResult.Failure.InvalidRequest(
+        
+        // Auto-resolve key ID if not provided but DID resolver is available
+        val resolvedKeyId = issuerKeyId ?: run {
+            val resolver = didResolver ?: return@run null
+            val resolution = resolver.resolve(resolvedIssuerDid)
+            when (resolution) {
+                is org.trustweave.did.resolver.DidResolutionResult.Success -> {
+                    resolution.document.verificationMethod.firstOrNull()?.let { vm ->
+                        vm.id.value.substringAfter("#").takeIf { it.isNotEmpty() }
+                    }
+                }
+                else -> null
+            }
+        } ?: return@withContext IssuanceResult.Failure.InvalidRequest(
             field = "issuerKeyId",
-            reason = "Issuer key ID is required. Use signedBy(issuerDid, keyId) to specify the issuer."
+            reason = "Issuer key ID is required. Use signedBy(issuerDid, keyId) to specify the issuer, " +
+                    "or ensure TrustWeave is properly configured with a DID resolver for auto-extraction."
         )
         
         // Build verification method ID
@@ -280,6 +305,9 @@ suspend fun CredentialDslProvider.issue(block: IssuanceBuilder.() -> Unit): Issu
             reason = "CredentialService is not available. Issuer must be a CredentialService instance."
         )
     
+    // Get DID resolver from TrustWeaveContext if available
+    val didResolver = (this as? TrustWeaveContext)?.getConfig()?.didResolver
+    
     // Convert ProofType to ProofSuiteId
     val defaultProofType = getDefaultProofType()
     val defaultProofSuite = when (defaultProofType) {
@@ -293,7 +321,8 @@ suspend fun CredentialDslProvider.issue(block: IssuanceBuilder.() -> Unit): Issu
         credentialService = credentialService,
         revocationManager = getRevocationManager() as? CredentialRevocationManager,
         defaultProofSuite = defaultProofSuite,
-        ioDispatcher = dispatcher
+        ioDispatcher = dispatcher,
+        didResolver = didResolver
     )
     builder.block()
     return builder.build()

@@ -383,10 +383,9 @@ suspend fun issueCredentialWithTracking(
         signedBy(issuerDid = issuerDid, keyId = "key-1")
     }
     
-    val credential = when (issuanceResult) {
-        is IssuanceResult.Success -> issuanceResult.credential
-        else -> throw IllegalStateException("Failed to issue credential")
-    }
+    import org.trustweave.trust.types.getOrThrow
+    
+    val credential = issuanceResult.getOrThrow()
 
     // Track metrics
     metrics.increment("credentials.issued")

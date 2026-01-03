@@ -164,43 +164,38 @@ fun main() = runBlocking {
         method(KEY)
         algorithm(ED25519)
     }
-    val insuranceDid = when (insuranceDidResult) {
-        is DidCreationResult.Success -> {
-            println("✅ Created insurance DID: ${insuranceDidResult.did.value}")
-            insuranceDidResult.did
-        }
-        else -> {
-            println("Failed to create insurance DID: ${insuranceDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    import org.trustweave.trust.types.getOrThrowDid
     
-    // Continue with EO provider DID creation
-    val eoProviderDidResult = trustWeave.createDid {
+    val insuranceDid = trustWeave.createDid {
         method(KEY)
         algorithm(ED25519)
+    }.getOrThrowDid()
+    println("✅ Created insurance DID: ${insuranceDid.value}")
+    
+    // Continue with EO provider DID creation
+    import org.trustweave.trust.types.getOrThrowDid
+    import org.trustweave.trust.types.getOrThrow
+    import org.trustweave.did.resolver.DidResolutionResult
+    import org.trustweave.did.identifiers.extractKeyId
+    
+    // Helper extension for resolution results
+    fun DidResolutionResult.getOrThrow() = when (this) {
+        is DidResolutionResult.Success -> this.document
+        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
     }
-    val eoProviderDid = when (eoProviderDidResult) {
-        is DidCreationResult.Success -> {
-            println("✅ Created EO provider DID: ${eoProviderDidResult.did.value}")
-            eoProviderDidResult.did
-        }
-        else -> {
-            println("Failed to create EO provider DID: ${eoProviderDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    
+    val eoProviderDid = trustWeave.createDid {
+        method(KEY)
+        algorithm(ED25519)
+    }.getOrThrowDid()
+    println("✅ Created EO provider DID: ${eoProviderDid.value}")
 
     println("✅ Insurance Company DID: ${insuranceDid.value}")
     println("✅ EO Data Provider DID: ${eoProviderDid.value}")
 
     // Step 3: EO Data Provider issues credential for rainfall data
-    val eoProviderResolution = trustWeave.resolveDid(eoProviderDid)
-    val eoProviderDoc = when (eoProviderResolution) {
-        is DidResolutionResult.Success -> eoProviderResolution.document
-        else -> throw IllegalStateException("Failed to resolve EO provider DID")
-    }
-    val eoProviderKeyId = eoProviderDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val eoProviderDoc = trustWeave.resolveDid(eoProviderDid).getOrThrow()
+    val eoProviderKeyId = eoProviderDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     // Create EO data payload (rainfall measurement)
@@ -232,7 +227,7 @@ fun main() = runBlocking {
     val eoDataIssuanceResult = trustWeave.issue {
         credential {
             type("EarthObservationCredential", "InsuranceOracleCredential")
-            issuer(eoProviderDid.value)
+            issuer(eoProviderDid)
             subject {
                 id("urn:eo:measurement:rainfall-2024-06-15")
                 "dataType" to "RainfallMeasurement"
@@ -243,19 +238,13 @@ fun main() = runBlocking {
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = eoProviderDid.value, keyId = eoProviderKeyId)
+        signedBy(eoProviderDid)
     }
     
-    val eoDataCredential = when (eoDataIssuanceResult) {
-        is IssuanceResult.Success -> {
-            println("✅ EO Data Credential issued: ${eoDataIssuanceResult.credential.id}")
-            eoDataIssuanceResult.credential
-        }
-        else -> {
-            println("Failed to issue EO data credential: ${eoDataIssuanceResult.reason}")
-            return@runBlocking
-        }
-    }
+    import org.trustweave.trust.types.getOrThrow
+    
+    val eoDataCredential = eoDataIssuanceResult.getOrThrow()
+    println("✅ EO Data Credential issued: ${eoDataCredential.id}")
     println("   Data digest: $dataDigest")
 
     // Step 4: Verify EO data credential (insurance company verifies before using)
@@ -301,12 +290,8 @@ fun main() = runBlocking {
         println("   💰 Insurance payout should be triggered")
 
         // Step 6: Create payout credential (insurance company issues)
-        val insuranceResolution = trustWeave.resolveDid(insuranceDid)
-        val insuranceDoc = when (insuranceResolution) {
-            is DidResolutionResult.Success -> insuranceResolution.document
-            else -> throw IllegalStateException("Failed to resolve insurance DID")
-        }
-        val insuranceKeyId = insuranceDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        val insuranceDoc = trustWeave.resolveDid(insuranceDid).getOrThrow()
+        val insuranceKeyId = insuranceDoc.verificationMethod.firstOrNull()?.extractKeyId()
             ?: throw IllegalStateException("No verification method found")
 
         val payoutIssuanceResult = trustWeave.issue {
@@ -330,16 +315,8 @@ fun main() = runBlocking {
             signedBy(issuerDid = insuranceDid.value, keyId = insuranceKeyId)
         }
         
-        val payoutCredential = when (payoutIssuanceResult) {
-            is IssuanceResult.Success -> {
-                println("✅ Payout Credential issued: ${payoutIssuanceResult.credential.id}")
-                payoutIssuanceResult.credential
-            }
-            else -> {
-                println("Failed to issue payout credential: ${payoutIssuanceResult.reason}")
-                return@runBlocking
-            }
-        }
+        val payoutCredential = payoutIssuanceResult.getOrThrow()
+        println("✅ Payout Credential issued: ${payoutCredential.id}")
         println("   Payout amount: $50,000 USD")
         println("   Data credential: ${eoDataCredential.id}")
     } else {

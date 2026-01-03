@@ -167,9 +167,20 @@ import org.trustweave.core.*
 import org.trustweave.credential.PresentationOptions
 import org.trustweave.credential.wallet.Wallet
 import org.trustweave.credential.format.ProofSuiteId
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.trust.types.VerificationResult
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.identifiers.extractKeyId
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+
+// Helper extension for resolution results
+fun DidResolutionResult.getOrThrow() = when (this) {
+    is DidResolutionResult.Success -> this.document
+    else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
+}
 
 fun main() = runBlocking {
     println("=".repeat(70))
@@ -185,75 +196,28 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for all parties
-    import org.trustweave.trust.types.DidCreationResult
-    
-    val universityDidResult = trustWeave.createDid { method(KEY) }
-    val universityDid = when (universityDidResult) {
-        is DidCreationResult.Success -> universityDidResult.did
-        else -> throw IllegalStateException("Failed to create university DID: ${universityDidResult.reason}")
-    }
-    
-    val universityResolution = trustWeave.resolveDid(universityDid)
-    val universityDoc = when (universityResolution) {
-        is DidResolutionResult.Success -> universityResolution.document
-        else -> throw IllegalStateException("Failed to resolve university DID")
-    }
-    val universityKeyId = universityDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val universityDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val universityDoc = trustWeave.resolveDid(universityDid).getOrThrow()
+    val universityKeyId = universityDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
-    val previousEmployerDidResult = trustWeave.createDid { method(KEY) }
-    val previousEmployerDid = when (previousEmployerDidResult) {
-        is DidCreationResult.Success -> previousEmployerDidResult.did
-        else -> throw IllegalStateException("Failed to create previous employer DID: ${previousEmployerDidResult.reason}")
-    }
-    
-    val previousEmployerResolution = trustWeave.resolveDid(previousEmployerDid)
-    val previousEmployerDoc = when (previousEmployerResolution) {
-        is DidResolutionResult.Success -> previousEmployerResolution.document
-        else -> throw IllegalStateException("Failed to resolve previous employer DID")
-    }
-    val previousEmployerKeyId = previousEmployerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val previousEmployerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val previousEmployerDoc = trustWeave.resolveDid(previousEmployerDid).getOrThrow()
+    val previousEmployerKeyId = previousEmployerDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
-    val certificationBodyDidResult = trustWeave.createDid { method(KEY) }
-    val certificationBodyDid = when (certificationBodyDidResult) {
-        is DidCreationResult.Success -> certificationBodyDidResult.did
-        else -> throw IllegalStateException("Failed to create certification body DID: ${certificationBodyDidResult.reason}")
-    }
-    
-    val certificationBodyResolution = trustWeave.resolveDid(certificationBodyDid)
-    val certificationBodyDoc = when (certificationBodyResolution) {
-        is DidResolutionResult.Success -> certificationBodyResolution.document
-        else -> throw IllegalStateException("Failed to resolve certification body DID")
-    }
-    val certificationBodyKeyId = certificationBodyDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val certificationBodyDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val certificationBodyDoc = trustWeave.resolveDid(certificationBodyDid).getOrThrow()
+    val certificationBodyKeyId = certificationBodyDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
-    val backgroundCheckProviderDidResult = trustWeave.createDid { method(KEY) }
-    val backgroundCheckProviderDid = when (backgroundCheckProviderDidResult) {
-        is DidCreationResult.Success -> backgroundCheckProviderDidResult.did
-        else -> throw IllegalStateException("Failed to create background check provider DID: ${backgroundCheckProviderDidResult.reason}")
-    }
-    
-    val backgroundCheckProviderResolution = trustWeave.resolveDid(backgroundCheckProviderDid)
-    val backgroundCheckProviderDoc = when (backgroundCheckProviderResolution) {
-        is DidResolutionResult.Success -> backgroundCheckProviderResolution.document
-        else -> throw IllegalStateException("Failed to resolve background check provider DID")
-    }
-    val backgroundCheckProviderKeyId = backgroundCheckProviderDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val backgroundCheckProviderDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val backgroundCheckProviderDoc = trustWeave.resolveDid(backgroundCheckProviderDid).getOrThrow()
+    val backgroundCheckProviderKeyId = backgroundCheckProviderDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
-    val candidateDidResult = trustWeave.createDid { method(KEY) }
-    val candidateDid = when (candidateDidResult) {
-        is DidCreationResult.Success -> candidateDidResult.did
-        else -> throw IllegalStateException("Failed to create candidate DID: ${candidateDidResult.reason}")
-    }
-
-    val employerDidResult = trustWeave.createDid { method(KEY) }
-    val employerDid = when (employerDidResult) {
-        is DidCreationResult.Success -> employerDidResult.did
-        else -> throw IllegalStateException("Failed to create employer DID: ${employerDidResult.reason}")
-    }
+    val candidateDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val employerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 
     println("✅ University DID: ${universityDid.value}")
     println("✅ Previous Employer DID: ${previousEmployerDid.value}")
@@ -263,14 +227,12 @@ fun main() = runBlocking {
     println("✅ Employer DID: ${employerDid.value}")
 
     // Step 3: Issue education credential
-    import org.trustweave.trust.types.IssuanceResult
-    
-    val educationCredentialResult = trustWeave.issue {
+    val educationCredential = trustWeave.issue {
         credential {
             type("VerifiableCredential", "EducationCredential", "DegreeCredential")
-            issuer(universityDid.value)
+            issuer(universityDid)
             subject {
-                id(candidateDid.value)
+                id(candidateDid)
                 "degree" {
                     "type" to "MasterDegree"
                     "name" to "Master of Business Administration"
@@ -282,23 +244,18 @@ fun main() = runBlocking {
             issued(Instant.now())
             expires(50, ChronoUnit.YEARS)
         }
-        signedBy(issuerDid = universityDid.value, keyId = universityKeyId)
-    }
-    
-    val educationCredential = when (educationCredentialResult) {
-        is IssuanceResult.Success -> educationCredentialResult.credential
-        else -> throw IllegalStateException("Failed to issue education credential")
-    }
+        signedBy(universityDid)
+    }.getOrThrow()
 
     println("\n✅ Education credential issued: ${educationCredential.id}")
 
     // Step 4: Issue work history credential
-    val workHistoryCredentialResult = trustWeave.issue {
+    val workHistoryCredential = trustWeave.issue {
         credential {
             type("VerifiableCredential", "EmploymentCredential", "WorkHistoryCredential")
-            issuer(previousEmployerDid.value)
+            issuer(previousEmployerDid)
             subject {
-                id(candidateDid.value)
+                id(candidateDid)
                 "employment" {
                     "company" to "Tech Corp Inc"
                     "position" to "Senior Software Engineer"
@@ -315,23 +272,18 @@ fun main() = runBlocking {
             issued(Instant.now())
             expires(10, ChronoUnit.YEARS)
         }
-        signedBy(issuerDid = previousEmployerDid.value, keyId = previousEmployerKeyId)
-    }
-    
-    val workHistoryCredential = when (workHistoryCredentialResult) {
-        is IssuanceResult.Success -> workHistoryCredentialResult.credential
-        else -> throw IllegalStateException("Failed to issue work history credential")
-    }
+        signedBy(previousEmployerDid)
+    }.getOrThrow()
 
     println("✅ Work history credential issued: ${workHistoryCredential.id}")
 
     // Step 5: Issue certification credential
-    val certificationCredentialResult = trustWeave.issue {
+    val certificationCredential = trustWeave.issue {
         credential {
             type("VerifiableCredential", "CertificationCredential", "ProfessionalCertificationCredential")
-            issuer(certificationBodyDid.value)
+            issuer(certificationBodyDid)
             subject {
-                id(candidateDid.value)
+                id(candidateDid)
                 "certification" {
                     "name" to "AWS Certified Solutions Architect"
                     "issuingOrganization" to "Amazon Web Services"
@@ -344,29 +296,17 @@ fun main() = runBlocking {
             issued(Instant.parse("2021-03-15T00:00:00Z"))
             expires(Instant.parse("2024-03-15T00:00:00Z"))
         }
-        signedBy(issuerDid = certificationBodyDid.value, keyId = certificationBodyKeyId)
-    }
-    
-    val certificationCredential = when (certificationCredentialResult) {
-        is IssuanceResult.Success -> certificationCredentialResult.credential
-        else -> throw IllegalStateException("Failed to issue certification credential")
-    }
+        signedBy(certificationBodyDid)
+    }.getOrThrow()
 
     println("✅ Certification credential issued: ${certificationCredential.id}")
 
     // Step 6: Create candidate wallet and store all credentials
-    import org.trustweave.trust.types.WalletCreationResult
-    
-    val walletResult = trustWeave.wallet {
-        holder(candidateDid.value)
+    val candidateWallet = trustWeave.wallet {
+        holder(candidateDid)
         enableOrganization()
         enablePresentation()
-    }
-    
-    val candidateWallet = when (walletResult) {
-        is WalletCreationResult.Success -> walletResult.wallet
-        else -> throw IllegalStateException("Failed to create wallet: ${walletResult.reason}")
-    }
+    }.getOrThrow()
 
     val educationCredentialId = candidateWallet.store(educationCredential)
     val workHistoryCredentialId = candidateWallet.store(workHistoryCredential)
@@ -392,12 +332,12 @@ fun main() = runBlocking {
     }
 
     // Step 8: Background check provider verifies credentials and issues verification credential
-    val backgroundCheckCredentialResult = trustWeave.issue {
+    val backgroundCheckCredential = trustWeave.issue {
         credential {
             type("VerifiableCredential", "BackgroundCheckCredential", "VerificationCredential")
-            issuer(backgroundCheckProviderDid.value)
+            issuer(backgroundCheckProviderDid)
             subject {
-                id(candidateDid.value)
+                id(candidateDid)
                 "backgroundCheck" {
                     "checkType" to "Comprehensive"
                     "checkDate" to Instant.now().toString()
@@ -416,13 +356,8 @@ fun main() = runBlocking {
             issued(Instant.now())
             expires(1, ChronoUnit.YEARS)
         }
-        signedBy(issuerDid = backgroundCheckProviderDid.value, keyId = backgroundCheckProviderKeyId)
-    }
-    
-    val backgroundCheckCredential = when (backgroundCheckCredentialResult) {
-        is IssuanceResult.Success -> backgroundCheckCredentialResult.credential
-        else -> throw IllegalStateException("Failed to issue background check credential")
-    }
+        signedBy(backgroundCheckProviderDid)
+    }.getOrThrow()
 
     val backgroundCheckCredentialId = candidateWallet.store(backgroundCheckCredential)
     candidateWallet.withOrganization { org ->
@@ -456,8 +391,6 @@ fun main() = runBlocking {
 
     // Step 10: Employer verifies all credentials
     println("\n📋 Employer Verification Process:")
-
-    import org.trustweave.trust.types.VerificationResult
     
     val educationVerification = trustWeave.verify {
         credential(educationCredential)

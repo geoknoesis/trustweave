@@ -44,35 +44,30 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val trustWeave = trustWeave {
-        factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory(),
-            anchorClientFactory = TestkitBlockchainAnchorClientFactory(),
-            trustRegistryFactory = TestkitTrustRegistryFactory()
-        )
         keys {
-            provider(IN_MEMORY)
+            provider(IN_MEMORY)  // Auto-discovered via SPI
             algorithm(ED25519)
         }
 
         did {
-            method(KEY) {
+            method(KEY) {  // Auto-discovered via SPI
                 algorithm(ED25519)
             }
-            method(WEB) {
+            method(WEB) {  // Auto-discovered via SPI
                 domain("example.com")
             }
         }
 
         anchor {
             chain("algorand:testnet") {
-                provider(ALGORAND)
+                provider(ALGORAND)  // Auto-discovered via SPI
             }
         }
 
         trust {
             provider(IN_MEMORY)
         }
+        // KMS, DID methods, anchor clients, and CredentialService all auto-created!
     }
 
     // Use the configured TrustWeave instance
@@ -86,29 +81,27 @@ fun main() = runBlocking {
 Created DID: did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK
 ```
 
-## Factory Configuration
+## Auto-Discovery via SPI
 
-When using `trustWeave { }` with providers like `"inMemory"`, you must explicitly provide factory instances. This ensures type safety and avoids reflection-based service discovery.
+TrustWeave automatically discovers KMS, DID methods, and anchor clients via Java Service Provider Interface (SPI). When you specify a provider name, TrustWeave will automatically find and use the appropriate implementation from the classpath.
 
-**Required Factories:**
-- `kmsFactory` - Required when using `keys { provider(IN_MEMORY) }`
-- `didMethodFactory` - Required when using `did { method(KEY) }`
-- `anchorClientFactory` - Required when using `anchor { chain(...) { provider(...) } }`
-- `trustRegistryFactory` - Required when using `trust { provider(IN_MEMORY) }`
-- `statusListRegistryFactory` - Required when using `revocation { provider(IN_MEMORY) }`
-- `walletFactory` - Required when using `wallet { }`
+**Auto-Discovered Services:**
+- **KMS** - Automatically discovered when using `keys { provider("inMemory") }` or other provider names
+- **DID Methods** - Automatically discovered when using `did { method("key") }` or other method names
+- **Anchor Clients** - Automatically discovered when using `anchor { chain(...) { provider(...) } }`
+
+**Optional Factories (for services without SPI):**
+- `trustRegistryFactory` - Optional when using `trust { provider(IN_MEMORY) }`
+- `statusListRegistryFactory` - Optional when using `revocation { provider(IN_MEMORY) }`
+- `walletFactory` - Optional when using `wallet { }`
 
 **For Testing:**
-Use testkit factories from `org.trustweave.testkit.services`:
-- `TestkitKmsFactory()`
-- `TestkitDidMethodFactory()`
-- `TestkitBlockchainAnchorClientFactory()`
-- `TestkitTrustRegistryFactory()`
-- `TestkitStatusListRegistryFactory()`
-- `TestkitWalletFactory()`
+Use testkit factories from `org.trustweave.testkit.services` (only for services without SPI):
+- `TestkitTrustRegistryFactory()` - For trust registries
+- `TestkitStatusListRegistryFactory()` - For revocation managers
+- `TestkitWalletFactory()` - For wallets
 
-**For Production:**
-Use production factories from your KMS, DID method, and anchor client providers.
+**Note:** KMS, DID methods, and anchor clients are automatically discovered via SPI when testkit is on the classpath. No factories needed!
 
 ## Step-by-Step Guide
 
@@ -122,13 +115,11 @@ import org.trustweave.trust.dsl.credential.*
 import org.trustweave.testkit.services.*
 
 val trustWeave = trustWeave {
-    factories(
-        kmsFactory = TestkitKmsFactory()
-    )
     keys {
-        provider(IN_MEMORY)
+        provider(IN_MEMORY)  // Auto-discovered via SPI
         algorithm(ED25519)
     }
+    // KMS auto-created!
 }
 ```
 
@@ -151,20 +142,17 @@ import org.trustweave.trust.dsl.credential.*
 import org.trustweave.testkit.services.*
 
 val trustWeave = trustWeave {
-    factories(
-        kmsFactory = TestkitKmsFactory(),
-        didMethodFactory = TestkitDidMethodFactory()
-    )
     keys {
-        provider(IN_MEMORY)
+        provider(IN_MEMORY)  // Auto-discovered via SPI
         algorithm(ED25519)
     }
 
     did {
-        method(KEY) {
+        method(KEY) {  // Auto-discovered via SPI
             algorithm(ED25519)
         }
     }
+    // KMS, DID methods, and CredentialService all auto-created!
 }
 ```
 
@@ -187,10 +175,7 @@ import org.trustweave.trust.dsl.credential.*
 import org.trustweave.testkit.services.*
 
 val trustWeave = trustWeave {
-    factories(
-        kmsFactory = TestkitKmsFactory(),
-        didMethodFactory = TestkitDidMethodFactory()
-    )
+    // KMS and DID methods auto-discovered via SPI
     keys {
         provider(IN_MEMORY)
         algorithm(ED25519)
@@ -230,11 +215,7 @@ import org.trustweave.trust.dsl.credential.*
 import org.trustweave.testkit.services.*
 
 val trustWeave = trustWeave {
-    factories(
-        kmsFactory = TestkitKmsFactory(),
-        didMethodFactory = TestkitDidMethodFactory(),
-        anchorClientFactory = TestkitBlockchainAnchorClientFactory()
-    )
+    // KMS, DID methods, and anchor clients auto-discovered via SPI
     keys {
         provider(IN_MEMORY)
         algorithm(ED25519)
@@ -279,11 +260,9 @@ import org.trustweave.testkit.services.*
 
 val trustWeave = trustWeave {
     factories(
-        kmsFactory = TestkitKmsFactory(),
-        didMethodFactory = TestkitDidMethodFactory(),
-        anchorClientFactory = TestkitBlockchainAnchorClientFactory(),
-        trustRegistryFactory = TestkitTrustRegistryFactory()
+        trustRegistryFactory = TestkitTrustRegistryFactory()  // Only needed for trust registry
     )
+    // KMS, DID methods, and anchor clients auto-discovered via SPI
     keys {
         provider(IN_MEMORY)
         algorithm(ED25519)
@@ -327,11 +306,9 @@ import org.trustweave.testkit.services.*
 
 val trustWeave = trustWeave {
     factories(
-        kmsFactory = TestkitKmsFactory(),
-        didMethodFactory = TestkitDidMethodFactory(),
-        anchorClientFactory = TestkitBlockchainAnchorClientFactory(),
-        trustRegistryFactory = TestkitTrustRegistryFactory()
+        trustRegistryFactory = TestkitTrustRegistryFactory()  // Only needed for trust registry
     )
+    // KMS, DID methods, and anchor clients auto-discovered via SPI
     keys {
         provider(IN_MEMORY)  // Use "awsKms" or "azureKeyVault" in production
         algorithm(ED25519)
@@ -411,11 +388,9 @@ import org.trustweave.testkit.services.*
 // Declarative, readable configuration
 val trustWeave = trustWeave {
     factories(
-        kmsFactory = TestkitKmsFactory(),
-        didMethodFactory = TestkitDidMethodFactory(),
-        anchorClientFactory = TestkitBlockchainAnchorClientFactory(),
-        trustRegistryFactory = TestkitTrustRegistryFactory()
+        trustRegistryFactory = TestkitTrustRegistryFactory()  // Only needed for trust registry
     )
+    // KMS, DID methods, and anchor clients auto-discovered via SPI
     keys { provider(IN_MEMORY); algorithm(ED25519) }
     did { method(KEY) { algorithm(ED25519) } }
     anchor {
@@ -447,11 +422,9 @@ import org.trustweave.testkit.services.*
 
 val trustWeave = trustWeave {
     factories(
-        kmsFactory = TestkitKmsFactory(),
-        didMethodFactory = TestkitDidMethodFactory(),
-        anchorClientFactory = TestkitBlockchainAnchorClientFactory(),
-        trustRegistryFactory = TestkitTrustRegistryFactory()
+        trustRegistryFactory = TestkitTrustRegistryFactory()  // Only needed for trust registry
     )
+    // KMS, DID methods, and anchor clients auto-discovered via SPI
     keys {
         provider(IN_MEMORY)
         algorithm(ED25519)
@@ -515,10 +488,7 @@ import org.trustweave.trust.dsl.credential.*
 import org.trustweave.testkit.services.*
 
 val trustWeave = trustWeave {
-    factories(
-        kmsFactory = TestkitKmsFactory(),
-        didMethodFactory = TestkitDidMethodFactory()
-    )
+    // KMS and DID methods auto-discovered via SPI
     keys {
         provider(IN_MEMORY)
         algorithm(ED25519)

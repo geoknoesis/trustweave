@@ -6,7 +6,7 @@ import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.DidMethod
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
-import org.trustweave.did.registry.DefaultDidMethodRegistry
+import org.trustweave.did.registry.DidMethodRegistry
 import org.trustweave.did.resolver.RegistryBasedResolver
 import org.trustweave.did.resolver.DidResolutionResult
 import kotlin.test.assertTrue
@@ -20,7 +20,7 @@ class RegistryBasedResolverPerformanceTest {
 
     @Test
     fun `test resolution performance`() = runBlocking {
-        val registry = DefaultDidMethodRegistry()
+        val registry = DidMethodRegistry()
         val resolver = RegistryBasedResolver(registry)
         
         val method = object : DidMethod {
@@ -65,7 +65,7 @@ class RegistryBasedResolverPerformanceTest {
 
     @Test
     fun `test resolution with invalid format performance`() = runBlocking {
-        val registry = DefaultDidMethodRegistry()
+        val registry = DidMethodRegistry()
         val resolver = RegistryBasedResolver(registry)
         
         val invalidDids = (1..1000).map { "invalid-did-$it" }
@@ -90,7 +90,7 @@ class RegistryBasedResolverPerformanceTest {
 
     @Test
     fun `test resolution with method not registered performance`() = runBlocking {
-        val registry = DefaultDidMethodRegistry()
+        val registry = DidMethodRegistry()
         val resolver = RegistryBasedResolver(registry)
         
         val dids = (1..1000).map { Did("did:unknown:identifier$it") }

@@ -15,6 +15,7 @@ import org.trustweave.trust.dsl.KeyRotationBuilder
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.verifier.DelegationChainResult
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidResolver
 import org.trustweave.did.identifiers.Did
 import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.credential.results.IssuanceResult
@@ -25,9 +26,6 @@ import org.trustweave.trust.types.VerifierIdentity
 import org.trustweave.trust.types.HolderIdentity
 import org.trustweave.trust.types.WalletCreationResult
 import org.trustweave.trust.types.TrustPath
-import org.trustweave.anchor.services.BlockchainAnchorClientFactory
-import org.trustweave.did.services.DidMethodFactory
-import org.trustweave.kms.services.KmsFactory
 import org.trustweave.revocation.services.StatusListRegistryFactory
 import org.trustweave.trust.dsl.credential.RevocationBuilder
 import org.trustweave.trust.services.TrustRegistryFactory
@@ -110,7 +108,7 @@ import kotlin.time.Duration.Companion.seconds
 class TrustWeave private constructor(
     private val config: TrustWeaveConfig,
     private val context: TrustWeaveContext
-) {
+) : DidResolver {
     /**
      * Get the DSL context for advanced operations.
      * Internal use only - prefer using TrustWeave facade methods.
@@ -295,6 +293,66 @@ class TrustWeave private constructor(
     }
 
     /**
+     * Create a DID and automatically extract the key ID.
+     *
+     * This is a convenience method that combines DID creation with key ID extraction,
+     * eliminating the need for manual resolution and extraction.
+     *
+     * **Example:**
+     * ```kotlin
+     * val (did, keyId) = trustWeave.createDidWithKey().getOrFail()
+     * // Now you can use both did and keyId directly
+     * ```
+     *
+     * @param method DID method to use (default: first registered method from config, or "key")
+     * @param timeout Maximum time to wait for DID creation (default: 10 seconds)
+     * @param block Optional DSL block for configuring the DID (default: empty block)
+     * @return Result containing Pair<Did, String> where String is the key ID, or failure
+     */
+    suspend fun createDidWithKey(
+        method: String? = null,
+        timeout: Duration = 10.seconds,
+        block: DidBuilder.() -> Unit = {}
+    ): Result<Pair<Did, String>> {
+        return when (val result = createDid(method, timeout, block)) {
+            is DidCreationResult.Success -> {
+                val keyId = getKeyId(result.did)
+                Result.success(result.did to keyId)
+            }
+            else -> Result.failure(
+                IllegalStateException("Failed to create DID: ${result.javaClass.simpleName}")
+            )
+        }
+    }
+
+    /**
+     * Get the first key ID from a DID document.
+     *
+     * Simplifies the common pattern of resolving a DID and extracting its key ID.
+     *
+     * **Example:**
+     * ```kotlin
+     * val did = trustWeave.createDid().getOrFail()
+     * val keyId = trustWeave.getKeyId(did)
+     * ```
+     *
+     * @param did The DID to extract the key ID from
+     * @return The key ID string (fragment part without the '#')
+     * @throws IllegalStateException if DID resolution fails or no verification method found
+     */
+    suspend fun getKeyId(did: Did): String {
+        val resolutionResult = resolveDid(did)
+        val document = when (resolutionResult) {
+            is DidResolutionResult.Success -> resolutionResult.document
+            else -> throw IllegalStateException("Failed to resolve DID: ${did.value}")
+        }
+        return document.verificationMethod.firstOrNull()?.let { vm ->
+            vm.id.value.substringAfter("#").takeIf { it.isNotEmpty() }
+                ?: throw IllegalStateException("No key ID found in verification method: ${vm.id.value}")
+        } ?: throw IllegalStateException("No verification method found for DID: ${did.value}")
+    }
+
+    /**
      * Resolve a DID to a DID document.
      *
      * Returns a sealed result type for exhaustive error handling.
@@ -369,6 +427,25 @@ class TrustWeave private constructor(
         timeout: Duration = 30.seconds
     ): DidResolutionResult {
         return resolveDid(did.value, timeout)
+    }
+
+    /**
+     * Implement DidResolver interface.
+     * 
+     * This allows TrustWeave to be used directly wherever a DidResolver is needed,
+     * such as when creating CredentialService instances.
+     * 
+     * **Example:**
+     * ```kotlin
+     * val trustweave = TrustWeave.build { ... }
+     * val credentialService = CredentialServices.createCredentialService(
+     *     kms = kms,
+     *     didResolver = trustweave  // TrustWeave IS a DidResolver!
+     * )
+     * ```
+     */
+    override suspend fun resolve(did: Did): DidResolutionResult {
+        return resolveDid(did)
     }
 
     /**
@@ -523,37 +600,34 @@ class TrustWeave private constructor(
          *
          * **Example**:
          * ```kotlin
-         * val trustWeave = TrustWeave.inMemory(
-         *     kmsFactory = TestkitKmsFactory(),
-         *     didMethodFactory = TestkitDidMethodFactory()
-         * )
+         * val trustWeave = TrustWeave.inMemory()
          * val did = trustWeave.createDid()
+         * ```
+         *
+         * **Example with blockchain anchor**:
+         * ```kotlin
+         * val trustWeave = TrustWeave.inMemory(chainId = "algorand:testnet")
          * ```
          *
          * **Example with custom dispatcher for testing**:
          * ```kotlin
          * val testDispatcher = Dispatchers.Unconfined
-         * val trustWeave = TrustWeave.inMemory(
-         *     dispatcher = testDispatcher,
-         *     kmsFactory = TestkitKmsFactory(),
-         *     didMethodFactory = TestkitDidMethodFactory()
-         * )
+         * val trustWeave = TrustWeave.inMemory(dispatcher = testDispatcher)
          * ```
          *
+         * Note: KMS, DID methods, and Anchor clients are auto-discovered via SPI.
+         * Only factories for Wallet, TrustRegistry, and StatusListRegistry are needed if required.
+         *
+         * @param chainId Optional blockchain chain ID for anchoring (e.g., "algorand:testnet")
          * @param dispatcher Coroutine dispatcher for I/O operations (defaults to Dispatchers.IO)
-         * @param kmsFactory KMS factory (required)
-         * @param didMethodFactory DID method factory (required)
-         * @param anchorClientFactory Blockchain anchor client factory (optional)
-         * @param statusListManagerFactory Status list manager factory (optional)
+         * @param statusListRegistryFactory Status list registry factory (optional)
          * @param trustRegistryFactory Trust registry factory (optional)
          * @param walletFactory Wallet factory (optional)
          * @return A configured TrustWeave instance with in-memory providers
          */
         suspend fun inMemory(
+            chainId: String? = null,
             dispatcher: CoroutineDispatcher = Dispatchers.IO,
-            kmsFactory: KmsFactory,
-            didMethodFactory: DidMethodFactory,
-            anchorClientFactory: BlockchainAnchorClientFactory? = null,
             statusListRegistryFactory: StatusListRegistryFactory? = null,
             trustRegistryFactory: TrustRegistryFactory? = null,
             walletFactory: WalletFactory? = null
@@ -561,9 +635,6 @@ class TrustWeave private constructor(
             return build {
                 dispatcher(dispatcher)
                 factories(
-                    kmsFactory = kmsFactory,
-                    didMethodFactory = didMethodFactory,
-                    anchorClientFactory = anchorClientFactory,
                     statusListRegistryFactory = statusListRegistryFactory,
                     trustRegistryFactory = trustRegistryFactory,
                     walletFactory = walletFactory
@@ -575,6 +646,11 @@ class TrustWeave private constructor(
                 did {
                     method("key") {
                         algorithm("Ed25519")
+                    }
+                }
+                chainId?.let {
+                    anchor {
+                        chain(it) { inMemory() }
                     }
                 }
                 trust {
@@ -591,12 +667,8 @@ class TrustWeave private constructor(
          * **Example**:
          * ```kotlin
          * val trustWeave = TrustWeave.build {
-         *     factories(
-         *         kmsFactory = TestkitKmsFactory(),
-         *         didMethodFactory = TestkitDidMethodFactory()
-         *     )
          *     keys {
-         *         provider("inMemory")
+         *         provider("inMemory")  // Auto-discovered via SPI
          *         algorithm("Ed25519")
          *     }
          *
@@ -611,12 +683,21 @@ class TrustWeave private constructor(
          * @param block DSL block for configuring TrustWeave
          * @return A configured TrustWeave instance
          */
+        /**
+         * Build a TrustWeave instance with the given configuration.
+         *
+         * Registries are automatically created with SPI auto-registration.
+         * DID resolver and CredentialService are auto-created from the registry and KMS.
+         *
+         * @param name Optional name for this TrustWeave instance (default: "default")
+         * @param block DSL block for configuring TrustWeave
+         * @return A configured TrustWeave instance
+         */
         suspend fun build(
             name: String = "default",
-            registries: TrustWeaveRegistries = TrustWeaveRegistries(),
             block: TrustWeaveConfig.Builder.() -> Unit
         ): TrustWeave {
-            val config = trustWeave(name, registries, block)
+            val config = trustWeave(name, block)
             val context = TrustWeaveContext(config)
             return TrustWeave(config, context)
         }

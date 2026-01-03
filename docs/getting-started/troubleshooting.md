@@ -77,36 +77,32 @@ CredentialVerificationResult(valid=false, errors=[Proof verification failed])
    // Ensure issuer DID is created and resolvable
    import org.trustweave.trust.types.DidCreationResult
    
-   val didResult = trustWeave.createDid {
+   import org.trustweave.trust.types.getOrThrowDid
+   
+   val issuerDid = trustWeave.createDid {
        method(KEY)
        algorithm(ED25519)
-   }
-   
-   val issuerDid = when (didResult) {
-       is DidCreationResult.Success -> didResult.did
-       else -> {
-           println("Failed to create DID: ${didResult.reason}")
-           return@runBlocking // or handle appropriately
-       }
-   }
+   }.getOrThrowDid()
    // Use this DID for issuance
    ```
 
 2. **Key ID mismatch**
    ```kotlin
    // Get the correct key ID from the DID document
-   val didResult = trustWeave.createDid { method(KEY) }
-   val issuerDid = when (didResult) {
-       is DidCreationResult.Success -> didResult.did
-       else -> throw IllegalStateException("Failed to create DID: ${didResult.reason}")
+   import org.trustweave.trust.types.getOrThrowDid
+   import org.trustweave.trust.types.getOrThrow
+   import org.trustweave.did.resolver.DidResolutionResult
+   import org.trustweave.did.identifiers.extractKeyId
+   
+   // Helper extension for resolution results
+   fun DidResolutionResult.getOrThrow() = when (this) {
+       is DidResolutionResult.Success -> this.document
+       else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
    }
    
-   val issuerResolution = trustWeave.resolveDid(issuerDid)
-   val issuerDoc = when (issuerResolution) {
-       is DidResolutionResult.Success -> issuerResolution.document
-       else -> throw IllegalStateException("Failed to resolve issuer DID")
-   }
-   val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+   val issuerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+   val issuerDoc = trustWeave.resolveDid(issuerDid).getOrThrow()
+   val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
        ?: throw IllegalStateException("No verification method found")
    ```
 
@@ -142,17 +138,14 @@ TrustWeaveError.WalletCreationFailed: Provider 'database' not found
 ```kotlin
 import org.trustweave.trust.types.WalletCreationResult
 
-val walletResult = trustWeave.wallet {
+import org.trustweave.trust.types.getOrThrow
+
+val wallet = trustWeave.wallet {
     id("holder-wallet")
     holder("did:key:holder")
     enableOrganization()
     enablePresentation()
-}
-
-val wallet = when (walletResult) {
-    is WalletCreationResult.Success -> walletResult.wallet
-    else -> throw IllegalStateException("Failed to create wallet: ${walletResult.reason}")
-}
+}.getOrThrow()
 ```
 
 ### Plugin Initialization Fails
@@ -237,14 +230,13 @@ fun debugSystemState(trustweave: TrustWeave) {
 
     // Test basic operations
     println("\n=== Basic Operation Tests ===")
-    val didResult = trustWeave.createDid { method(KEY) }
-    when (didResult) {
-        is DidCreationResult.Success -> {
-            println("✅ DID creation works: ${didResult.did.value}")
-        }
-        else -> {
-            println("❌ DID creation failed: ${didResult.reason}")
-        }
+    import org.trustweave.trust.types.getOrThrowDid
+    
+    try {
+        val did = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+        println("✅ DID creation works: ${did.value}")
+    } catch (e: IllegalStateException) {
+        println("❌ DID creation failed: ${e.message}")
     }
 }
 ```
@@ -367,17 +359,10 @@ suspend fun minimalReproducibleExample() {
 
     // Step 2: Create a DID
     println("\n[2] Creating DID...")
-    val didResult = trustWeave.createDid { method(KEY) }
-    val did = when (didResult) {
-        is DidCreationResult.Success -> {
-            println("✅ DID created: ${didResult.did.value}")
-            didResult.did
-        }
-        else -> {
-            println("❌ DID creation failed: ${didResult.reason}")
-            return@minimalReproducibleExample
-        }
-    }
+    import org.trustweave.trust.types.getOrThrowDid
+    
+    val did = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    println("✅ DID created: ${did.value}")
 
     // Step 3: Resolve the DID
     println("\n[3] Resolving DID...")
@@ -657,13 +642,13 @@ suspend fun operationWithTimeout(
 ) {
     try {
         withTimeout(timeoutMillis) {
-            val didResult = trustLayer.createDid { method(KEY) }
-            val did = when (didResult) {
-                is DidCreationResult.Success -> didResult.did
-                else -> {
-                    logger.error("DID creation failed: ${didResult.reason}")
-                    return@withTimeout
-                }
+            import org.trustweave.trust.types.getOrThrowDid
+            
+            val did = try {
+                trustLayer.createDid { method(KEY) }.getOrThrowDid()
+            } catch (e: IllegalStateException) {
+                logger.error("DID creation failed: ${e.message}")
+                return@withTimeout
             }
             // ... operation
         }

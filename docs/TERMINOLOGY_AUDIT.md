@@ -100,8 +100,8 @@ This document provides a comprehensive audit of terminology used across TrustWea
 
 2. **Factories**: All factory interfaces end with `Factory`
    - `WalletFactory`
-   - `KmsFactory`
-   - `DidMethodFactory`
+   - ~~`KmsFactory`~~ (Deprecated - use SPI auto-discovery)
+   - ~~`DidMethodFactory`~~ (Deprecated - use SPI auto-discovery)
 
 3. **Registries**: All registry classes end with `Registry`
    - `TrustRegistry`

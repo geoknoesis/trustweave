@@ -163,7 +163,6 @@ import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
 import org.trustweave.trust.types.ProofType
 import org.trustweave.trust.dsl.credential.credential
-import org.trustweave.testkit.services.TestkitDidMethodFactory
 import org.trustweave.testkit.services.TestkitWalletFactory
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
@@ -179,9 +178,9 @@ fun main() = runBlocking {
 
     val trustWeave = TrustWeave.build {
         factories(
-            didMethodFactory = TestkitDidMethodFactory(),
-            walletFactory = TestkitWalletFactory()
+            walletFactory = TestkitWalletFactory()  // Only wallet factory needed
         )
+        // DID methods auto-discovered via SPI
         keys {
             custom(kmsRef)
             signer { data, keyId ->
@@ -199,44 +198,24 @@ fun main() = runBlocking {
     }
 
     // Create professional DID using DSL
-    import org.trustweave.trust.types.DidCreationResult
-    import org.trustweave.trust.types.WalletCreationResult
+    import org.trustweave.trust.types.getOrThrowDid
+    import org.trustweave.trust.types.getOrThrow
     
-    val professionalDidResult = trustWeave.createDid {
+    val professionalDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }
-    
-    val professionalDid = when (professionalDidResult) {
-        is DidCreationResult.Success -> {
-            println("Professional DID: ${professionalDidResult.did.value}")
-            professionalDidResult.did
-        }
-        else -> {
-            println("Failed to create professional DID: ${professionalDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    }.getOrThrowDid()
+    println("Professional DID: ${professionalDid.value}")
 
     // Step 2: Create professional wallet
     println("\nStep 2: Creating professional wallet...")
-    val walletResult = trustWeave.wallet {
+    val wallet = trustWeave.wallet {
         id("urn:wallet:professional:${professionalDid.value.substringAfterLast(":")}")
-        holder(professionalDid.value)
+        holder(professionalDid)
         enableOrganization()
         enablePresentation()
-    }
-    
-    val wallet = when (walletResult) {
-        is WalletCreationResult.Success -> {
-            println("Wallet created: ${walletResult.wallet.walletId}")
-            walletResult.wallet
-        }
-        else -> {
-            println("Failed to create wallet: ${walletResult.reason}")
-            return@runBlocking
-        }
-    }
+    }.getOrThrow()
+    println("Wallet created: ${wallet.walletId}")
 
     // Step 3: Store education credentials
     println("\nStep 3: Storing education credentials...")

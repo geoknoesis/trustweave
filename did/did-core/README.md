@@ -45,7 +45,7 @@ did-core/
 ```kotlin
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.resolver.DefaultUniversalResolver
-import org.trustweave.did.registry.DefaultDidMethodRegistry
+import org.trustweave.did.registry.DidMethodRegistry
 import org.trustweave.did.resolver.RegistryBasedResolver
 
 // Create a DID
@@ -56,7 +56,7 @@ val resolver = DefaultUniversalResolver("https://dev.uniresolver.io")
 val result = resolver.resolveDid(did.value)
 
 // Or use a registry-based resolver
-val registry = DefaultDidMethodRegistry()
+val registry = DidMethodRegistry()
 // ... register methods
 val registryResolver = RegistryBasedResolver(registry)
 val result2 = registryResolver.resolve(did)
@@ -122,7 +122,7 @@ val message = result.fold(
 
 ```kotlin
 // Register a DID method
-val registry = DefaultDidMethodRegistry()
+val registry = DidMethodRegistry()
 registry.register(KeyDidMethod(kms))
 registry.register(WebDidMethod())
 
@@ -171,8 +171,7 @@ try {
 - `StandardUniversalResolverAdapter`: Standard adapter implementation
 
 ### Registry (`registry/`)
-- `DidMethodRegistry`: Interface for method management
-- `DefaultDidMethodRegistry`: Thread-safe in-memory implementation
+- `DidMethodRegistry`: Thread-safe in-memory implementation with optional SPI auto-registration
 
 ### Validation (`validation/`)
 - `DidValidator`: DID format and method validation

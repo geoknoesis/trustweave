@@ -1,10 +1,10 @@
 package org.trustweave.trust.dsl
 
 import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.did.identifiers.Did
 import org.trustweave.did.resolver.DidResolver
 import org.trustweave.trust.TrustWeave
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.testkit.services.TestkitDidMethodFactory
 import org.trustweave.testkit.getOrFail
 import org.trustweave.kms.results.SignResult
 import org.trustweave.trust.dsl.credential.credential
@@ -56,7 +56,7 @@ class PresentationDslTest {
                 }
                 issued(Clock.System.now())
             }
-            signedBy(issuerDid = issuerDid, keyId = keyId)
+            signedBy(issuerDid = Did(issuerDid), keyId = keyId)
         }.getOrFail()
     }
 
@@ -66,9 +66,7 @@ class PresentationDslTest {
         
         // Create temporary TrustWeave to get DID registry for resolver
         val tempTrustWeave = TrustWeave.build {
-            factories(
-                didMethodFactory = TestkitDidMethodFactory()
-            )
+            // DID methods auto-discovered via SPI
             keys {
                 custom(kms)
                 signer { data, keyId ->
@@ -91,9 +89,7 @@ class PresentationDslTest {
         
         val credentialService = createTestCredentialService(kms = kms, didResolver = didResolver)
         trustWeave = TrustWeave.build {
-            factories(
-                didMethodFactory = TestkitDidMethodFactory()
-            )
+            // DID methods auto-discovered via SPI
             keys {
                 custom(kms)
                 signer { data, keyId ->

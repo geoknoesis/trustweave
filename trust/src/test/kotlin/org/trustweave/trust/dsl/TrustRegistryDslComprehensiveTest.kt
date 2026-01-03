@@ -7,13 +7,9 @@ import org.trustweave.did.resolver.DidResolver
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.extractKeyId
 import org.trustweave.credential.credentialService
-import org.trustweave.trust.dsl.TrustWeaveRegistries
-import org.trustweave.anchor.BlockchainAnchorRegistry
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.kms.results.SignResult
-import org.trustweave.testkit.services.TestkitDidMethodFactory
 import org.trustweave.testkit.services.TestkitTrustRegistryFactory
-import org.trustweave.testkit.services.TestkitKmsFactory
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
@@ -37,10 +33,9 @@ class TrustRegistryDslComprehensiveTest {
     fun `test trust registry configuration in trust layer`() = runBlocking {
         val trustWeave = TrustWeave.build {
             factories(
-                kmsFactory = TestkitKmsFactory(),
-                didMethodFactory = TestkitDidMethodFactory(),
                 trustRegistryFactory = TestkitTrustRegistryFactory()
             )
+            // KMS and DID methods auto-discovered via SPI
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -54,10 +49,9 @@ class TrustRegistryDslComprehensiveTest {
     fun `test add multiple trust anchors with different credential types`() = runBlocking {
         val trustWeave = TrustWeave.build {
             factories(
-                kmsFactory = TestkitKmsFactory(),
-                didMethodFactory = TestkitDidMethodFactory(),
                 trustRegistryFactory = TestkitTrustRegistryFactory()
             )
+            // KMS and DID methods auto-discovered via SPI
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -95,10 +89,9 @@ class TrustRegistryDslComprehensiveTest {
     fun `test trust path discovery with multiple anchors`() = runBlocking {
         val trustWeave = TrustWeave.build {
             factories(
-                kmsFactory = TestkitKmsFactory(),
-                didMethodFactory = TestkitDidMethodFactory(),
                 trustRegistryFactory = TestkitTrustRegistryFactory()
             )
+            // KMS and DID methods auto-discovered via SPI
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -144,10 +137,9 @@ class TrustRegistryDslComprehensiveTest {
     fun `test get trusted issuers with filtering`() = runBlocking {
         val trustWeave = TrustWeave.build {
             factories(
-                kmsFactory = TestkitKmsFactory(),
-                didMethodFactory = TestkitDidMethodFactory(),
                 trustRegistryFactory = TestkitTrustRegistryFactory()
             )
+            // KMS and DID methods auto-discovered via SPI
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -199,10 +191,9 @@ class TrustRegistryDslComprehensiveTest {
     fun `test remove trust anchor via DSL`() = runBlocking {
         val trustWeave = TrustWeave.build {
             factories(
-                kmsFactory = TestkitKmsFactory(),
-                didMethodFactory = TestkitDidMethodFactory(),
                 trustRegistryFactory = TestkitTrustRegistryFactory()
             )
+            // KMS and DID methods auto-discovered via SPI
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -238,28 +229,9 @@ class TrustRegistryDslComprehensiveTest {
             }
         }
         
-        // Create a shared DidMethodRegistry to ensure DIDs are stored in the same registry
-        // that the resolver uses. This ensures DIDs created via createDid are resolvable.
-        val sharedDidRegistry = org.trustweave.did.registry.DidMethodRegistry()
-        
-        // Create resolver that uses the shared registry
-        val didResolver = DidResolver { did: Did ->
-            sharedDidRegistry.resolve(did.value) as org.trustweave.did.resolver.DidResolutionResult
-        }
-        
-        val credentialService = org.trustweave.credential.credentialService(
-            didResolver = didResolver,
-            signer = signer
-        )
-        
-        val finalTrustWeave = TrustWeave.build(
-            registries = TrustWeaveRegistries(
-                didRegistry = sharedDidRegistry,
-                blockchainRegistry = BlockchainAnchorRegistry()
-            )
-        ) {
+        // Build TrustWeave (auto-creates registry, resolver, and CredentialService)
+        val finalTrustWeave = TrustWeave.build {
             factories(
-                didMethodFactory = TestkitDidMethodFactory(didRegistry = sharedDidRegistry),
                 trustRegistryFactory = TestkitTrustRegistryFactory()
             )
             keys {
@@ -273,7 +245,7 @@ class TrustRegistryDslComprehensiveTest {
             }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
-            issuer(credentialService)
+            // CredentialService is auto-created with custom signer from keys{} block
         }
         
         return finalTrustWeave
@@ -330,7 +302,7 @@ class TrustRegistryDslComprehensiveTest {
                 }
                 issued(Clock.System.now())
             }
-            signedBy(issuerDid = issuerDid.value, keyId = keyId)
+            signedBy(issuerDid = issuerDid, keyId = keyId)
         }.getOrFail()
 
         val result = trustWeave.verify {

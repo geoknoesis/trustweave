@@ -6,7 +6,7 @@ import org.trustweave.did.DidMethod
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
-import org.trustweave.did.registry.DefaultDidMethodRegistry
+import org.trustweave.did.registry.DidMethodRegistry
 import org.trustweave.did.registry.didMethodRegistry
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolver
@@ -49,7 +49,7 @@ class IdiomaticApiTest {
 
     @Test
     fun `test registry operator overloads`() {
-        val registry = DefaultDidMethodRegistry()
+        val registry = DidMethodRegistry()
         val method = object : DidMethod {
             override val method = "test"
             override suspend fun createDid(options: DidCreationOptions) = DidDocument(id = Did("did:test:123"))

@@ -164,46 +164,40 @@ fun main() = runBlocking {
         method(KEY)
         algorithm(ED25519)
     }
-    val issuerDid = when (issuerDidResult) {
-        is DidCreationResult.Success -> {
-            println("✅ Created issuer DID: ${issuerDidResult.did.value}")
-            issuerDidResult.did
-        }
-        else -> {
-            println("Failed to create issuer DID: ${issuerDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    import org.trustweave.trust.types.getOrThrowDid
+    
+    val issuerDid = trustWeave.createDid {
+        method(KEY)
+        algorithm(ED25519)
+    }.getOrThrowDid()
+    println("✅ Created issuer DID: ${issuerDid.value}")
 
     val verifierDidResult = trustWeave.createDid {
         method(KEY)
         algorithm(ED25519)
     }
-    val verifierDid = when (verifierDidResult) {
-        is DidCreationResult.Success -> {
-            println("✅ Created verifier DID: ${verifierDidResult.did.value}")
-            verifierDidResult.did
-        }
-        else -> {
-            println("Failed to create verifier DID: ${verifierDidResult.reason}")
-            return@runBlocking
-        }
+    import org.trustweave.trust.types.getOrThrowDid
+    import org.trustweave.trust.types.getOrThrow
+    import org.trustweave.did.resolver.DidResolutionResult
+    import org.trustweave.did.identifiers.extractKeyId
+    
+    // Helper extension for resolution results
+    fun DidResolutionResult.getOrThrow() = when (this) {
+        is DidResolutionResult.Success -> this.document
+        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
     }
-
-    val buyerDidResult = trustWeave.createDid {
+    
+    val verifierDid = trustWeave.createDid {
         method(KEY)
         algorithm(ED25519)
-    }
-    val buyerDid = when (buyerDidResult) {
-        is DidCreationResult.Success -> {
-            println("✅ Created buyer DID: ${buyerDidResult.did.value}")
-            buyerDidResult.did
-        }
-        else -> {
-            println("Failed to create buyer DID: ${buyerDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    }.getOrThrowDid()
+    println("✅ Created verifier DID: ${verifierDid.value}")
+
+    val buyerDid = trustWeave.createDid {
+        method(KEY)
+        algorithm(ED25519)
+    }.getOrThrowDid()
+    println("✅ Created buyer DID: ${buyerDid.value}")
 
     // Step 3: Create EO data evidence (forest carbon sequestration)
     val eoEvidence = buildJsonObject {
@@ -230,19 +224,15 @@ fun main() = runBlocking {
     val eoEvidenceDigest = DigestUtils.sha256DigestMultibase(eoEvidence)
 
     // Step 4: Verifier issues verification credential
-    val verifierResolution = trustWeave.resolveDid(verifierDid)
-    val verifierDoc = when (verifierResolution) {
-        is DidResolutionResult.Success -> verifierResolution.document
-        else -> throw IllegalStateException("Failed to resolve verifier DID")
-    }
-    val verifierKeyId = verifierDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val verifierDoc = trustWeave.resolveDid(verifierDid).getOrThrow()
+    val verifierKeyId = verifierDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     val verificationCredentialResult = trustWeave.issue {
         credential {
             id("urn:carbon:verification:forest-2024")
             type("VerifiableCredential", "CarbonVerificationCredential")
-            issuer(verifierDid.value)
+            issuer(verifierDid)
             subject {
                 id("urn:carbon:verification:forest-2024")
                 "verificationType" to "CarbonSequestration"
@@ -255,26 +245,18 @@ fun main() = runBlocking {
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = verifierDid.value, keyId = verifierKeyId)
+        signedBy(verifierDid)
     }
     
-    val verificationCredential = when (verificationCredentialResult) {
-        is IssuanceResult.Success -> verificationCredentialResult.credential
-        else -> {
-            println("❌ Failed to issue verification credential: ${verificationCredentialResult.allErrors.joinToString()}")
-            return@runBlocking
-        }
-    }
+    import org.trustweave.trust.types.getOrThrow
+    
+    val verificationCredential = verificationCredentialResult.getOrThrow()
 
     println("✅ Verification Credential issued: ${verificationCredential.id}")
 
     // Step 5: Issuer issues carbon credit credential
-    val issuerResolution = trustWeave.resolveDid(issuerDid)
-    val issuerDoc = when (issuerResolution) {
-        is DidResolutionResult.Success -> issuerResolution.document
-        else -> throw IllegalStateException("Failed to resolve issuer DID")
-    }
-    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val issuerDoc = trustWeave.resolveDid(issuerDid).getOrThrow()
+    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     val carbonCreditResult = trustWeave.issue {
@@ -303,13 +285,7 @@ fun main() = runBlocking {
         signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
     }
     
-    val carbonCredit = when (carbonCreditResult) {
-        is IssuanceResult.Success -> carbonCreditResult.credential
-        else -> {
-            println("❌ Failed to issue carbon credit: ${carbonCreditResult.allErrors.joinToString()}")
-            return@runBlocking
-        }
-    }
+    val carbonCredit = carbonCreditResult.getOrThrow()
 
     println("✅ Carbon Credit issued: ${carbonCredit.id}")
     println("   Amount: 5000 tCO2e")
@@ -359,13 +335,7 @@ fun main() = runBlocking {
             signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
         }
         
-        val saleCredential = when (saleCredentialResult) {
-            is IssuanceResult.Success -> saleCredentialResult.credential
-            else -> {
-                println("❌ Failed to issue sale credential: ${saleCredentialResult.allErrors.joinToString()}")
-                return@runBlocking
-            }
-        }
+        val saleCredential = saleCredentialResult.getOrThrow()
 
         println("✅ Sale Credential issued: ${saleCredential.id}")
         println("   Buyer: ${buyerDid.id}")
@@ -380,12 +350,8 @@ fun main() = runBlocking {
         }
 
         // Step 9: Retire credit (final state)
-        val buyerResolution = trustWeave.resolveDid(buyerDid)
-        val buyerDoc = when (buyerResolution) {
-            is DidResolutionResult.Success -> buyerResolution.document
-            else -> throw IllegalStateException("Failed to resolve buyer DID")
-        }
-        val buyerKeyId = buyerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        val buyerDoc = trustWeave.resolveDid(buyerDid).getOrThrow()
+        val buyerKeyId = buyerDoc.verificationMethod.firstOrNull()?.extractKeyId()
             ?: throw IllegalStateException("No verification method found")
 
         val retirementCredentialResult = trustWeave.issue {
@@ -410,13 +376,7 @@ fun main() = runBlocking {
             signedBy(issuerDid = buyerDid.value, keyId = buyerKeyId)
         }
         
-        val retirementCredential = when (retirementCredentialResult) {
-            is IssuanceResult.Success -> retirementCredentialResult.credential
-            else -> {
-                println("❌ Failed to issue retirement credential: ${retirementCredentialResult.allErrors.joinToString()}")
-                return@runBlocking
-            }
-        }
+        val retirementCredential = retirementCredentialResult.getOrThrow()
 
         println("✅ Retirement Credential issued: ${retirementCredential.id}")
         println("   Status: retired")

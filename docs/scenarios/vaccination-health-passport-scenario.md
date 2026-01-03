@@ -182,35 +182,24 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for healthcare provider and individual
-    import org.trustweave.trust.types.DidCreationResult
-    import org.trustweave.trust.types.WalletCreationResult
-    import org.trustweave.trust.types.DidResolutionResult
+    import org.trustweave.trust.types.getOrThrowDid
+    import org.trustweave.trust.types.getOrThrow
+    import org.trustweave.did.resolver.DidResolutionResult
+    import org.trustweave.did.identifiers.extractKeyId
     
-    val healthcareProviderDidResult = trustWeave.createDid { method(KEY) }
-    val healthcareProviderDid = when (healthcareProviderDidResult) {
-        is DidCreationResult.Success -> healthcareProviderDidResult.did
-        else -> throw IllegalStateException("Failed to create healthcare provider DID: ${healthcareProviderDidResult.reason}")
+    // Helper extension for resolution results
+    fun DidResolutionResult.getOrThrow() = when (this) {
+        is DidResolutionResult.Success -> this.document
+        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
     }
     
-    val healthcareProviderResolution = trustWeave.resolveDid(healthcareProviderDid)
-    val healthcareProviderDoc = when (healthcareProviderResolution) {
-        is DidResolutionResult.Success -> healthcareProviderResolution.document
-        else -> throw IllegalStateException("Failed to resolve healthcare provider DID")
-    }
-    val healthcareProviderKeyId = healthcareProviderDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val healthcareProviderDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val healthcareProviderDoc = trustWeave.resolveDid(healthcareProviderDid).getOrThrow()
+    val healthcareProviderKeyId = healthcareProviderDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
-    val individualDidResult = trustWeave.createDid { method(KEY) }
-    val individualDid = when (individualDidResult) {
-        is DidCreationResult.Success -> individualDidResult.did
-        else -> throw IllegalStateException("Failed to create individual DID: ${individualDidResult.reason}")
-    }
-    
-    val airlineDidResult = trustWeave.createDid { method(KEY) }
-    val airlineDid = when (airlineDidResult) {
-        is DidCreationResult.Success -> airlineDidResult.did
-        else -> throw IllegalStateException("Failed to create airline DID: ${airlineDidResult.reason}")
-    }
+    val individualDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val airlineDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 
     println("✅ Healthcare Provider DID: ${healthcareProviderDid.value}")
     println("✅ Individual DID: ${individualDid.value}")
@@ -223,9 +212,9 @@ fun main() = runBlocking {
         credential {
             id("urn:health:vaccination:covid19-dose1-${Instant.now().toEpochMilli()}")
             type("VerifiableCredential", "VaccinationCredential", "HealthCredential")
-            issuer(healthcareProviderDid.value)
+            issuer(healthcareProviderDid)
             subject {
-                id(individualDid.value)
+                id(individualDid)
                 "vaccination" {
                     "vaccineType" to "COVID-19"
                     "vaccineName" to "Pfizer-BioNTech"
@@ -242,13 +231,10 @@ fun main() = runBlocking {
             issued(Instant.now())
             expires(2, ChronoUnit.YEARS)
         }
-        signedBy(issuerDid = healthcareProviderDid.value, keyId = healthcareProviderKeyId)
+        signedBy(healthcareProviderDid)
     }
     
-    val vaccination1Credential = when (vaccination1IssuanceResult) {
-        is IssuanceResult.Success -> vaccination1IssuanceResult.credential
-        else -> throw IllegalStateException("Failed to issue first vaccination credential")
-    }
+    val vaccination1Credential = vaccination1IssuanceResult.getOrThrow()
 
     println("\n✅ First vaccination credential issued: ${vaccination1Credential.id}")
 
@@ -257,9 +243,9 @@ fun main() = runBlocking {
         credential {
             id("urn:health:vaccination:covid19-dose2-${Instant.now().toEpochMilli()}")
             type("VerifiableCredential", "VaccinationCredential", "HealthCredential")
-            issuer(healthcareProviderDid.value)
+            issuer(healthcareProviderDid)
             subject {
-                id(individualDid.value)
+                id(individualDid)
                 "vaccination" {
                     "vaccineType" to "COVID-19"
                     "vaccineName" to "Pfizer-BioNTech"
@@ -277,13 +263,10 @@ fun main() = runBlocking {
             issued(Instant.now())
             expires(2, ChronoUnit.YEARS)
         }
-        signedBy(issuerDid = healthcareProviderDid.value, keyId = healthcareProviderKeyId)
+        signedBy(healthcareProviderDid)
     }
     
-    val vaccination2Credential = when (vaccination2IssuanceResult) {
-        is IssuanceResult.Success -> vaccination2IssuanceResult.credential
-        else -> throw IllegalStateException("Failed to issue second vaccination credential")
-    }
+    val vaccination2Credential = vaccination2IssuanceResult.getOrThrow()
 
     println("✅ Second vaccination credential issued: ${vaccination2Credential.id}")
 
@@ -292,9 +275,9 @@ fun main() = runBlocking {
         credential {
             id("urn:health:vaccination:covid19-booster-${Instant.now().toEpochMilli()}")
             type("VerifiableCredential", "VaccinationCredential", "HealthCredential", "BoosterCredential")
-            issuer(healthcareProviderDid.value)
+            issuer(healthcareProviderDid)
             subject {
-                id(individualDid.value)
+                id(individualDid)
                 "vaccination" {
                     "vaccineType" to "COVID-19"
                     "vaccineName" to "Pfizer-BioNTech Booster"
@@ -312,27 +295,19 @@ fun main() = runBlocking {
             }
             expirationDate(Instant.now().plus(1, ChronoUnit.YEARS).toString())
         }
-        by(issuerDid = healthcareProviderDid.value, keyId = healthcareProviderKeyId)
+        signedBy(healthcareProviderDid)
     }
     
-    val boosterCredential = when (boosterIssuanceResult) {
-        is IssuanceResult.Success -> boosterIssuanceResult.credential
-        else -> throw IllegalStateException("Failed to issue booster vaccination credential")
-    }
+    val boosterCredential = boosterIssuanceResult.getOrThrow()
 
     println("✅ Booster vaccination credential issued: ${boosterCredential.id}")
 
     // Step 6: Create health wallet and store all vaccination credentials
-    val walletCreationResult = trustWeave.wallet {
-        holder(individualDid.value)
+    val healthWallet = trustWeave.wallet {
+        holder(individualDid)
         organization { enabled = true }
         presentation { enabled = true }
-    }
-    
-    val healthWallet = when (walletCreationResult) {
-        is WalletCreationResult.Success -> walletCreationResult.wallet
-        else -> throw IllegalStateException("Failed to create health wallet")
-    }
+    }.getOrThrow()
 
     val vaccination1Id = healthWallet.store(vaccination1Credential)
     val vaccination2Id = healthWallet.store(vaccination2Credential)

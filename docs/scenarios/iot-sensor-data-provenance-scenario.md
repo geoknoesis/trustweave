@@ -185,56 +185,33 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for sensor manufacturer, sensors, and data consumer
-    import org.trustweave.trust.types.DidCreationResult
-    import org.trustweave.trust.types.WalletCreationResult
+    import org.trustweave.trust.types.getOrThrowDid
+    import org.trustweave.trust.types.getOrThrow
+    import org.trustweave.did.resolver.DidResolutionResult
+    import org.trustweave.did.identifiers.extractKeyId
     
-    val manufacturerDidResult = trustWeave.createDid { method(KEY) }
-    val manufacturerDid = when (manufacturerDidResult) {
-        is DidCreationResult.Success -> manufacturerDidResult.did
-        else -> throw IllegalStateException("Failed to create manufacturer DID: ${manufacturerDidResult.reason}")
+    // Helper extension for resolution results
+    fun DidResolutionResult.getOrThrow() = when (this) {
+        is DidResolutionResult.Success -> this.document
+        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
     }
     
-    val manufacturerResolution = trustWeave.resolveDid(manufacturerDid)
-    val manufacturerDoc = when (manufacturerResolution) {
-        is DidResolutionResult.Success -> manufacturerResolution.document
-        else -> throw IllegalStateException("Failed to resolve manufacturer DID")
-    }
-    val manufacturerKeyId = manufacturerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val manufacturerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val manufacturerDoc = trustWeave.resolveDid(manufacturerDid).getOrThrow()
+    val manufacturerKeyId = manufacturerDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
-    val temperatureSensorDidResult = trustWeave.createDid { method(KEY) }
-    val temperatureSensorDid = when (temperatureSensorDidResult) {
-        is DidCreationResult.Success -> temperatureSensorDidResult.did
-        else -> throw IllegalStateException("Failed to create temperature sensor DID: ${temperatureSensorDidResult.reason}")
-    }
-    
-    val temperatureSensorResolution = trustWeave.resolveDid(temperatureSensorDid)
-    val temperatureSensorDoc = when (temperatureSensorResolution) {
-        is DidResolutionResult.Success -> temperatureSensorResolution.document
-        else -> throw IllegalStateException("Failed to resolve temperature sensor DID")
-    }
-    val temperatureSensorKeyId = temperatureSensorDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val temperatureSensorDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val temperatureSensorDoc = trustWeave.resolveDid(temperatureSensorDid).getOrThrow()
+    val temperatureSensorKeyId = temperatureSensorDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
-    val humiditySensorDidResult = trustWeave.createDid { method(KEY) }
-    val humiditySensorDid = when (humiditySensorDidResult) {
-        is DidCreationResult.Success -> humiditySensorDidResult.did
-        else -> throw IllegalStateException("Failed to create humidity sensor DID: ${humiditySensorDidResult.reason}")
-    }
-    
-    val humiditySensorResolution = trustWeave.resolveDid(humiditySensorDid)
-    val humiditySensorDoc = when (humiditySensorResolution) {
-        is DidResolutionResult.Success -> humiditySensorResolution.document
-        else -> throw IllegalStateException("Failed to resolve humidity sensor DID")
-    }
-    val humiditySensorKeyId = humiditySensorDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val humiditySensorDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val humiditySensorDoc = trustWeave.resolveDid(humiditySensorDid).getOrThrow()
+    val humiditySensorKeyId = humiditySensorDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
-    val dataConsumerDidResult = trustWeave.createDid { method(KEY) }
-    val dataConsumerDid = when (dataConsumerDidResult) {
-        is DidCreationResult.Success -> dataConsumerDidResult.did
-        else -> throw IllegalStateException("Failed to create data consumer DID: ${dataConsumerDidResult.reason}")
-    }
+    val dataConsumerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 
     println("✅ Sensor Manufacturer DID: ${manufacturerDid.value}")
     println("✅ Temperature Sensor DID: ${temperatureSensorDid.value}")
@@ -247,9 +224,9 @@ fun main() = runBlocking {
     val temperatureSensorAttestationResult = trustWeave.issue {
         credential {
             type("VerifiableCredential", "SensorAttestationCredential", "IoTDeviceCredential")
-            issuer(manufacturerDid.value)
+            issuer(manufacturerDid)
             subject {
-                id(temperatureSensorDid.value)
+                id(temperatureSensorDid)
                 "sensor" {
                     "sensorType" to "Temperature"
                     "model" to "TempSense-Pro-2024"
@@ -273,13 +250,10 @@ fun main() = runBlocking {
             issued(Instant.now())
             // Sensor attestation doesn't expire - no expires() call
         }
-        signedBy(issuerDid = manufacturerDid.value, keyId = manufacturerKeyId)
+        signedBy(manufacturerDid)
     }
     
-    val temperatureSensorAttestation = when (temperatureSensorAttestationResult) {
-        is IssuanceResult.Success -> temperatureSensorAttestationResult.credential
-        else -> throw IllegalStateException("Failed to issue temperature sensor attestation")
-    }
+    val temperatureSensorAttestation = temperatureSensorAttestationResult.getOrThrow()
 
     println("\n✅ Temperature sensor attestation credential issued: ${temperatureSensorAttestation.id}")
 
@@ -287,9 +261,9 @@ fun main() = runBlocking {
     val humiditySensorAttestationResult = trustWeave.issue {
         credential {
             type("VerifiableCredential", "SensorAttestationCredential", "IoTDeviceCredential")
-            issuer(manufacturerDid.value)
+            issuer(manufacturerDid)
             subject {
-                id(humiditySensorDid.value)
+                id(humiditySensorDid)
                 "sensor" {
                     "sensorType" to "Humidity"
                     "model" to "HumidSense-Pro-2024"
@@ -313,13 +287,10 @@ fun main() = runBlocking {
             issued(Instant.now())
             // Sensor attestation doesn't expire - no expires() call
         }
-        signedBy(issuerDid = manufacturerDid.value, keyId = manufacturerKeyId)
+        signedBy(manufacturerDid)
     }
     
-    val humiditySensorAttestation = when (humiditySensorAttestationResult) {
-        is IssuanceResult.Success -> humiditySensorAttestationResult.credential
-        else -> throw IllegalStateException("Failed to issue humidity sensor attestation")
-    }
+    val humiditySensorAttestation = humiditySensorAttestationResult.getOrThrow()
 
     println("✅ Humidity sensor attestation credential issued: ${humiditySensorAttestation.id}")
 
@@ -375,7 +346,7 @@ fun main() = runBlocking {
     val temperatureDataAttestationResult = trustWeave.issue {
         credential {
             type("VerifiableCredential", "SensorDataAttestationCredential", "DataProvenanceCredential")
-            issuer(temperatureSensorDid.value)
+            issuer(temperatureSensorDid)
             subject {
                 id("data:temperature:${Instant.now().toEpochMilli()}")
                 "sensorData" {
@@ -395,20 +366,17 @@ fun main() = runBlocking {
             issued(Instant.now())
             // Data attestation doesn't expire - no expires() call
         }
-        signedBy(issuerDid = temperatureSensorDid.value, keyId = temperatureSensorKeyId)
+        signedBy(temperatureSensorDid)
     }
     
-    val temperatureDataAttestation = when (temperatureDataAttestationResult) {
-        is IssuanceResult.Success -> temperatureDataAttestationResult.credential
-        else -> throw IllegalStateException("Failed to issue temperature data attestation")
-    }
+    val temperatureDataAttestation = temperatureDataAttestationResult.getOrThrow()
 
     println("\n✅ Temperature data attestation credential issued: ${temperatureDataAttestation.id}")
 
     val humidityDataAttestationResult = trustWeave.issue {
         credential {
             type("VerifiableCredential", "SensorDataAttestationCredential", "DataProvenanceCredential")
-            issuer(humiditySensorDid.value)
+            issuer(humiditySensorDid)
             subject {
                 id("data:humidity:${Instant.now().toEpochMilli()}")
                 "sensorData" {
@@ -428,27 +396,19 @@ fun main() = runBlocking {
             issued(Instant.now())
             // Data attestation doesn't expire - no expires() call
         }
-        signedBy(issuerDid = humiditySensorDid.value, keyId = humiditySensorKeyId)
+        signedBy(humiditySensorDid)
     }
     
-    val humidityDataAttestation = when (humidityDataAttestationResult) {
-        is IssuanceResult.Success -> humidityDataAttestationResult.credential
-        else -> throw IllegalStateException("Failed to issue humidity data attestation")
-    }
+    val humidityDataAttestation = humidityDataAttestationResult.getOrThrow()
 
     println("✅ Humidity data attestation credential issued: ${humidityDataAttestation.id}")
 
     // Step 7: Create consumer wallet and store credentials
-    val walletResult = trustWeave.wallet {
-        holder(dataConsumerDid.value)
+    val consumerWallet = trustWeave.wallet {
+        holder(dataConsumerDid)
         enableOrganization()
         enablePresentation()
-    }
-    
-    val consumerWallet = when (walletResult) {
-        is WalletCreationResult.Success -> walletResult.wallet
-        else -> throw IllegalStateException("Failed to create wallet: ${walletResult.reason}")
-    }
+    }.getOrThrow()
 
     val tempSensorAttestationId = consumerWallet.store(temperatureSensorAttestation)
     val humiditySensorAttestationId = consumerWallet.store(humiditySensorAttestation)

@@ -57,11 +57,11 @@ import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    // Build TrustWeave instance (for tutorials, using testkit factories)
+    // Build TrustWeave instance (auto-discovered via SPI)
     val trustWeave = TrustWeave.build {
-        factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
-        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }  // Auto-discovered via SPI
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }  // Auto-discovered via SPI
+        // KMS, DID methods, and CredentialService all auto-created!
     }
 
     println("✅ TrustWeave initialized")
@@ -81,11 +81,11 @@ import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    // Build TrustWeave instance (for tutorials, using testkit factories)
+    // Build TrustWeave instance (auto-discovered via SPI)
     val trustWeave = TrustWeave.build {
-        factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
-        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }  // Auto-discovered via SPI
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }  // Auto-discovered via SPI
+        // KMS, DID methods, and CredentialService all auto-created!
     }
 
     // Create a DID using the default method (did:key)
@@ -111,11 +111,11 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    // Build TrustWeave instance (for tutorials, using testkit factories)
+    // Build TrustWeave instance (auto-discovered via SPI)
     val trustWeave = TrustWeave.build {
-        factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
-        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }  // Auto-discovered via SPI
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }  // Auto-discovered via SPI
+        // KMS, DID methods, and CredentialService all auto-created!
     }
 
     // Create a DID using the modern DSL
@@ -142,11 +142,11 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    // Build TrustWeave instance (for tutorials, using testkit factories)
+    // Build TrustWeave instance (auto-discovered via SPI)
     val trustWeave = TrustWeave.build {
-        factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
-        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }  // Auto-discovered via SPI
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }  // Auto-discovered via SPI
+        // KMS, DID methods, and CredentialService all auto-created!
     }
 
     // Try to resolve a non-existent DID
@@ -205,40 +205,22 @@ fun main() = runBlocking {
 
 ```kotlin
 fun main() = runBlocking {
-    // Build TrustWeave instance (for tutorials, using testkit factories)
+    // Build TrustWeave instance (auto-discovered via SPI)
     val trustWeave = TrustWeave.build {
-        factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
-        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
+        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }  // Auto-discovered via SPI
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }  // Auto-discovered via SPI
+        // KMS, DID methods, and CredentialService all auto-created!
     }
 
     // Create issuer DID (the organization issuing credentials)
-    import org.trustweave.trust.types.DidCreationResult
+    import org.trustweave.trust.types.getOrThrowDid
     
-    val issuerDidResult = trustWeave.createDid { method(DidMethods.KEY) }
-    val issuerDid = when (issuerDidResult) {
-        is DidCreationResult.Success -> {
-            println("Issuer DID: ${issuerDidResult.did.value}")
-            issuerDidResult.did
-        }
-        else -> {
-            println("Failed to create issuer DID: ${issuerDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    val issuerDid = trustWeave.createDid { method(DidMethods.KEY) }.getOrThrowDid()
+    println("Issuer DID: ${issuerDid.value}")
 
     // Create holder DID (the person receiving the credential)
-    val holderDidResult = trustWeave.createDid { method(DidMethods.KEY) }
-    val holderDid = when (holderDidResult) {
-        is DidCreationResult.Success -> {
-            println("Holder DID: ${holderDidResult.did.value}")
-            holderDidResult.did
-        }
-        else -> {
-            println("Failed to create holder DID: ${holderDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    val holderDid = trustWeave.createDid { method(DidMethods.KEY) }.getOrThrowDid()
+    println("Holder DID: ${holderDid.value}")
 }
 ```
 
@@ -261,49 +243,37 @@ fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
         factories(
-            kmsFactory = TestkitKmsFactory(),  // Test-only factory
-            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
-        )
+        // KMS and DID methods auto-discovered via SPI
         keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     // Create DIDs
-    val issuerDidResult = trustWeave.createDid { method(DidMethods.KEY) }
-    val issuerDid = when (issuerDidResult) {
-        is DidCreationResult.Success -> issuerDidResult.did
-        else -> {
-            println("Failed to create issuer DID: ${issuerDidResult.reason}")
-            return@runBlocking
-        }
+    import org.trustweave.trust.types.getOrThrowDid
+    import org.trustweave.trust.types.getOrThrow
+    import org.trustweave.did.resolver.DidResolutionResult
+    import org.trustweave.did.identifiers.extractKeyId
+    import java.time.Instant
+    
+    // Helper extension for resolution results
+    fun DidResolutionResult.getOrThrow() = when (this) {
+        is DidResolutionResult.Success -> this.document
+        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
     }
     
-    val holderDidResult = trustWeave.createDid { method(DidMethods.KEY) }
-    val holderDid = when (holderDidResult) {
-        is DidCreationResult.Success -> holderDidResult.did
-        else -> {
-            println("Failed to create holder DID: ${holderDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    val issuerDid = trustWeave.createDid { method(DidMethods.KEY) }.getOrThrowDid()
+    val holderDid = trustWeave.createDid { method(DidMethods.KEY) }.getOrThrowDid()
 
     // Get the first verification method from issuer's DID document
-    val issuerResolution = trustWeave.resolveDid(issuerDid)
-    val issuerDoc = when (issuerResolution) {
-        is DidResolutionResult.Success -> issuerResolution.document
-        else -> throw IllegalStateException("Failed to resolve issuer DID")
-    }
-    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val issuerDoc = trustWeave.resolveDid(issuerDid).getOrThrow()
+    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     // Issue a credential using DSL
-    import org.trustweave.trust.types.IssuanceResult
-    import java.time.Instant
-    
-    val issuanceResult = trustWeave.issue {
+    val credential = trustWeave.issue {
         credential {
             type("VerifiableCredential", "EducationalCredential")
-            issuer(issuerDid.value)
+            issuer(issuerDid)
             subject {
                 id(holderDid.value)
                 "name" to "Alice"
@@ -312,21 +282,14 @@ fun main() = runBlocking {
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
-    }
+        signedBy(issuerDid)
+    }.getOrThrow()
 
-    when (issuanceResult) {
-        is IssuanceResult.Success -> {
-            println("✅ Credential issued")
-            println("   ID: ${issuanceResult.credential.id}")
-            println("   Issuer: ${issuanceResult.credential.issuer}")
-            println("   Subject: ${issuanceResult.credential.credentialSubject}")
-            println("   Types: ${issuanceResult.credential.type}")
-        }
-        else -> {
-            println("❌ Failed to issue credential: ${issuanceResult.reason}")
-        }
-    }
+    println("✅ Credential issued")
+    println("   ID: ${credential.id}")
+    println("   Issuer: ${credential.issuer}")
+    println("   Subject: ${credential.credentialSubject}")
+    println("   Types: ${credential.type}")
 }
 ```
 
@@ -341,9 +304,7 @@ fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
         factories(
-            kmsFactory = TestkitKmsFactory(),  // Test-only factory
-            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
-        )
+        // KMS and DID methods auto-discovered via SPI
         keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
@@ -390,9 +351,7 @@ fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
         factories(
-            kmsFactory = TestkitKmsFactory(),  // Test-only factory
-            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
-        )
+        // KMS and DID methods auto-discovered via SPI
         keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
@@ -465,42 +424,25 @@ fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
         factories(
-            kmsFactory = TestkitKmsFactory(),  // Test-only factory
-            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
-        )
+        // KMS and DID methods auto-discovered via SPI
         keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     // Create holder DID
-    val holderDidResult = trustWeave.createDid { method(DidMethods.KEY) }
-    val holderDid = when (holderDidResult) {
-        is DidCreationResult.Success -> holderDidResult.did
-        else -> {
-            println("Failed to create holder DID: ${holderDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    import org.trustweave.trust.types.getOrThrowDid
+    import org.trustweave.trust.types.getOrThrow
+    
+    val holderDid = trustWeave.createDid { method(DidMethods.KEY) }.getOrThrowDid()
 
     // Create wallet for the holder
-    import org.trustweave.trust.types.WalletCreationResult
-    
-    val walletResult = trustWeave.wallet {
+    val wallet = trustWeave.wallet {
         holder(holderDid.value)
         type("inMemory")
-    }
-
-    val wallet = when (walletResult) {
-        is WalletCreationResult.Success -> {
-            println("✅ Wallet created: ${walletResult.wallet.walletId}")
-            println("   Holder: ${holderDid.value}")
-            walletResult.wallet
-        }
-        else -> {
-            println("❌ Failed to create wallet: ${walletResult.reason}")
-            return@runBlocking
-        }
-    }
+    }.getOrThrow()
+    
+    println("✅ Wallet created: ${wallet.walletId}")
+    println("   Holder: ${holderDid.value}")
 }
 ```
 
@@ -513,9 +455,7 @@ fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
         factories(
-            kmsFactory = TestkitKmsFactory(),  // Test-only factory
-            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
-        )
+        // KMS and DID methods auto-discovered via SPI
         keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
@@ -571,9 +511,7 @@ fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
         factories(
-            kmsFactory = TestkitKmsFactory(),  // Test-only factory
-            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
-        )
+        // KMS and DID methods auto-discovered via SPI
         keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
@@ -607,9 +545,7 @@ fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
         factories(
-            kmsFactory = TestkitKmsFactory(),  // Test-only factory
-            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
-        )
+        // KMS and DID methods auto-discovered via SPI
         keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
@@ -692,9 +628,7 @@ fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
         factories(
-            kmsFactory = TestkitKmsFactory(),  // Test-only factory
-            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
-        )
+        // KMS and DID methods auto-discovered via SPI
         keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
@@ -766,9 +700,7 @@ fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
         factories(
-            kmsFactory = TestkitKmsFactory(),  // Test-only factory
-            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
-        )
+        // KMS and DID methods auto-discovered via SPI
         keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
@@ -800,9 +732,7 @@ fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
         factories(
-            kmsFactory = TestkitKmsFactory(),  // Test-only factory
-            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
-        )
+        // KMS and DID methods auto-discovered via SPI
         keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
@@ -832,9 +762,7 @@ fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
         factories(
-            kmsFactory = TestkitKmsFactory(),  // Test-only factory
-            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
-        )
+        // KMS and DID methods auto-discovered via SPI
         keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
@@ -879,9 +807,7 @@ fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
         factories(
-            kmsFactory = TestkitKmsFactory(),  // Test-only factory
-            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
-        )
+        // KMS and DID methods auto-discovered via SPI
         keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
@@ -924,9 +850,7 @@ fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
         factories(
-            kmsFactory = TestkitKmsFactory(),  // Test-only factory
-            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
-        )
+        // KMS and DID methods auto-discovered via SPI
         keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }

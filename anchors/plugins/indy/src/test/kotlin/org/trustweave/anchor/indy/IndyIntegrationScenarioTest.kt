@@ -10,7 +10,6 @@ import org.trustweave.did.model.DidDocument
 import org.trustweave.trust.types.VerificationResult
 import org.trustweave.wallet.Wallet
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.testkit.services.TestkitDidMethodFactory
 import org.trustweave.testkit.services.TestkitWalletFactory
 import org.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
@@ -65,28 +64,9 @@ class IndyIntegrationScenarioTest {
             }
         }
         
-        // Create shared DID registry for consistent DID resolution
-        val sharedDidRegistry = org.trustweave.did.registry.DidMethodRegistry()
-        
-        // Create DID resolver
-        val didResolver = org.trustweave.did.resolver.DidResolver { did: org.trustweave.did.identifiers.Did ->
-            sharedDidRegistry.resolve(did.value) as org.trustweave.did.resolver.DidResolutionResult
-        }
-        
-        // Create CredentialService
-        val credentialService = org.trustweave.credential.credentialService(
-            didResolver = didResolver,
-            signer = signer
-        )
-
-        trustweave = TrustWeave.build(
-        registries = org.trustweave.trust.dsl.TrustWeaveRegistries(
-            didRegistry = sharedDidRegistry,
-            blockchainRegistry = org.trustweave.anchor.BlockchainAnchorRegistry()
-        )
-        ) {
+        // Build TrustWeave (auto-creates registry, resolver, and CredentialService)
+        trustweave = TrustWeave.build {
             factories(
-                didMethodFactory = TestkitDidMethodFactory(didRegistry = sharedDidRegistry),
                 walletFactory = TestkitWalletFactory()
             )
             keys {
@@ -98,7 +78,7 @@ class IndyIntegrationScenarioTest {
                     algorithm("Ed25519")
                 }
             }
-            issuer(credentialService)
+            // CredentialService is auto-created with custom signer from keys{} block
             // Note: Chain is registered manually below, not via DSL
         }.also {
             it.configuration.registries.blockchainRegistry.register(chainId, indyClient)
@@ -143,7 +123,7 @@ class IndyIntegrationScenarioTest {
                 }
                 issued(Clock.System.now())
             }
-            signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+            signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
         }.getOrFail()
         println("  ✓ Credential ID: ${credential.id}")
         println("  ✓ Credential Issuer: ${credential.issuer}")
@@ -346,7 +326,7 @@ class IndyIntegrationScenarioTest {
                     }
                     issued(Clock.System.now())
                 }
-                signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+                signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
             }.getOrFail()
 
             credentials.add(credential)

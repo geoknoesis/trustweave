@@ -6,19 +6,10 @@ import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.ProofType
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.vc.VerifiablePresentation
-import org.trustweave.did.DidCreationOptions
-import org.trustweave.did.DidMethod
-import org.trustweave.did.services.DidMethodFactory
-import org.trustweave.kms.KeyManagementService
-import org.trustweave.kms.exception.KmsException
-import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.getOrFail
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.DidMethods.KEY
-import org.trustweave.trust.dsl.credential.KeyAlgorithms
-import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import org.trustweave.trust.dsl.credential.credential
 import org.trustweave.trust.dsl.wallet.QueryBuilder
 import org.trustweave.trust.dsl.wallet.organize
@@ -32,113 +23,25 @@ import kotlin.time.Duration.Companion.days
 fun main() = runBlocking {
     println("=== Academic Credentials Scenario ===\n")
 
-    // Step 1: Configure Trust Layer
+    // Step 1: Configure Trust Layer (simplified with smart defaults)
     println("Step 1: Configuring trust layer...")
-    // Create KMS instance that will be shared across all operations
     val kms = InMemoryKeyManagementService()
-    // Capture reference for closure
-    val kmsRef = kms
 
     val trustWeave = TrustWeave.build {
-        // Explicitly configure factories to ensure same KMS instance is used
-        factories(
-            didMethodFactory = object : DidMethodFactory {
-                override suspend fun create(
-                    methodName: String,
-                    config: DidCreationOptions,
-                    kms: KeyManagementService
-                ): DidMethod? {
-                    if (methodName == "key") {
-                        // CRITICAL: Verify this is the same KMS instance we're using for signing
-                        if (kms !== kmsRef) {
-                            throw IllegalStateException(
-                                "KMS instance mismatch: Factory received different KMS instance than signer. " +
-                                "This will cause KeyNotFound errors during signing."
-                            )
-                        }
-                        return DidKeyMockMethod(kms)
-                    }
-                    return null
-                }
-            }
-        )
-        
-        keys {
-            custom(kmsRef)
-            // Ensure signer uses the same KMS instance that was used to create DIDs
-            // Extract fragment if keyId is in format "did:key:xxx#key-id", otherwise use as-is
-            signer { data, keyId ->
-                // The keyId passed to the signer should match what's stored in KMS
-                // If it's a full verification method ID, extract the fragment part
-                val actualKeyId = if (keyId.contains("#")) {
-                    keyId.substringAfter("#")
-                } else {
-                    keyId
-                }
-                when (val signResult = kmsRef.sign(org.trustweave.core.identifiers.KeyId(actualKeyId), data)) {
-                    is org.trustweave.kms.results.SignResult.Success -> signResult.signature
-                    is org.trustweave.kms.results.SignResult.Failure.KeyNotFound -> throw IllegalStateException("Signing failed: Key not found: ${signResult.keyId}")
-                    is org.trustweave.kms.results.SignResult.Failure.UnsupportedAlgorithm -> throw IllegalStateException("Signing failed: Unsupported algorithm")
-                    is org.trustweave.kms.results.SignResult.Failure.Error -> throw IllegalStateException("Signing failed: ${signResult.reason}")
-                }
-            }
-            algorithm(ED25519)
-        }
-
-        did {
-            method(KEY) {
-                algorithm(ED25519)
-            }
-        }
-
-        anchor {
-            chain("algorand:testnet") {
-                inMemory()
-            }
-        }
-
-        credentials {
-            defaultProofType(ProofType.Ed25519Signature2020)
-            autoAnchor(false)
-        }
+        keys { custom(kms) }  // Auto-signer created from KMS
+        did { method(KEY) {} }   // Algorithm defaults to ED25519
+        anchor { chain("algorand:testnet") { inMemory() } }
+        credentials { defaultProofType(ProofType.Ed25519Signature2020) }
     }
     println("✓ Trust layer configured")
 
-    // Step 2: Create DIDs using TrustWeave (ensures keys are in the same KMS)
+    // Step 2: Create DIDs (simplified with auto key extraction)
     println("\nStep 2: Creating DIDs...")
-    val universityDid = trustWeave.createDid {
-        method(DidMethods.KEY)
-        algorithm(KeyAlgorithms.ED25519)
-    }.getOrFail()
+    val (universityDid, issuerKeyId) = trustWeave.createDidWithKey().getOrFail()
     println("University DID: ${universityDid.value}")
-    
-    // Verify the key exists in KMS immediately after DID creation
-    val universityDidResolution = trustWeave.configuration.registries.didRegistry.resolve(universityDid.value)
-        ?: throw IllegalStateException("Failed to resolve university DID")
-    val universityDidDoc = when (universityDidResolution) {
-        is org.trustweave.did.resolver.DidResolutionResult.Success -> universityDidResolution.document
-        else -> throw IllegalStateException("Failed to resolve university DID")
-    }
-    val verificationMethod = universityDidDoc.verificationMethod.firstOrNull()
-        ?: throw IllegalStateException("No verification method found in university DID document")
-    // Extract key ID from verification method ID (e.g., "did:key:xxx#key-1" -> "key-1")
-    // This will be used later for signing the credential
-    val issuerKeyId = verificationMethod.id.value.substringAfter("#")
-    try {
-        kmsRef.getPublicKey(org.trustweave.core.identifiers.KeyId(issuerKeyId))
-        println("✓ Key verified in KMS: $issuerKeyId")
-    } catch (e: KmsException.KeyNotFound) {
-        throw IllegalStateException(
-            "Key '$issuerKeyId' not found in KMS immediately after DID creation. " +
-            "This indicates the DID method is using a different KMS instance.",
-            e
-        )
-    }
+    println("✓ Key ID: $issuerKeyId")
 
-    val studentDid = trustWeave.createDid {
-        method(DidMethods.KEY)
-        algorithm(KeyAlgorithms.ED25519)
-    }.getOrFail()
+    val studentDid = trustWeave.createDid().getOrFail()
     println("Student DID: ${studentDid.value}")
 
     // Step 3: Create student wallet using DSL
@@ -162,9 +65,9 @@ fun main() = runBlocking {
         credential {
             id("https://example.edu/credentials/degree-${studentDid.value.substringAfterLast(":")}")
             type("DegreeCredential", "BachelorDegreeCredential")
-            issuer(universityDid.value)
+            issuer(universityDid)  // Accept Did type directly
             subject {
-                id(studentDid.value)
+                id(studentDid)  // Accept Did type directly
                 "degree" {
                     "type" to "BachelorDegree"
                     "name" to "Bachelor of Science in Computer Science"
@@ -176,7 +79,7 @@ fun main() = runBlocking {
             issued(Clock.System.now())
             expires((365 * 10).days) // Valid for 10 years
         }
-        signedBy(issuerDid = universityDid.value, keyId = issuerKeyId)
+        signedBy(universityDid)  // Auto-extract key ID
     }.getOrFail()
 
     println("Credential issued:")
@@ -242,17 +145,8 @@ fun main() = runBlocking {
             println("  - Not expired: true")
             println("  - Not revoked: true")
         }
-        is VerificationResult.Invalid.Expired -> {
-            println("❌ Credential expired at ${verificationResult.expiredAt}")
-            verificationResult.errors.forEach { println("  - $it") }
-        }
-        is VerificationResult.Invalid.Revoked -> {
-            println("❌ Credential revoked")
-            verificationResult.errors.forEach { println("  - $it") }
-        }
-        else -> {
-            println("❌ Credential verification failed:")
-            verificationResult.errors.forEach { println("  - $it") }
+        is VerificationResult.Invalid -> {
+            println("❌ Credential verification failed: ${verificationResult.allErrors.joinToString("; ")}")
         }
     }
 
@@ -274,27 +168,27 @@ fun main() = runBlocking {
  * Used by tests and can be used for programmatic credential creation.
  */
 fun createDegreeCredential(
-    issuerDid: String,
-    studentDid: String,
+    issuerDid: org.trustweave.did.identifiers.Did,
+    studentDid: org.trustweave.did.identifiers.Did,
     degreeName: String,
     universityName: String,
     graduationDate: String,
     gpa: String
 ): VerifiableCredential {
     return credential {
-        id("https://example.edu/credentials/degree-${studentDid.substringAfterLast(":")}")
+        id("https://example.edu/credentials/degree-${studentDid.value.substringAfterLast(":")}")
         type("VerifiableCredential", "DegreeCredential")
         issuer(issuerDid)
-            subject {
-                id(studentDid)
-                "degree" {
-                    "type" to "BachelorDegree"
-                    "name" to degreeName
-                    "university" to universityName
-                    "graduationDate" to graduationDate
-                    "gpa" to gpa
-                }
+        subject {
+            id(studentDid)
+            "degree" {
+                "type" to "BachelorDegree"
+                "name" to degreeName
+                "university" to universityName
+                "graduationDate" to graduationDate
+                "gpa" to gpa
             }
+        }
         issued(Clock.System.now())
         expires(365.days * 10) // Valid for 10 years
     }

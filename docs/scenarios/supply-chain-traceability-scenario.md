@@ -195,8 +195,6 @@ Here's a complete example demonstrating supply chain traceability:
 
 ```kotlin
 import org.trustweave.TrustWeave
-import org.trustweave.core.TestkitKmsFactory
-import org.trustweave.core.TestkitDidMethodFactory
 import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.credential.model.vc.ProofSuiteId
@@ -231,10 +229,7 @@ fun main() = runBlocking {
     // Step 1: Setup TrustWeave
     println("Step 1: Setting up TrustWeave...")
     val trustWeave = TrustWeave.build {
-        factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
-        )
+        // KMS and DID methods auto-discovered via SPI
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
         credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
@@ -248,41 +243,16 @@ fun main() = runBlocking {
 
     // Step 2: Create supply chain participant DIDs
     println("\nStep 2: Creating supply chain participant DIDs...")
-    val manufacturerDidResult = trustWeave.createDid { method(KEY) }
-    val manufacturerDid = when (manufacturerDidResult) {
-        is DidCreationResult.Success -> {
-            println("Manufacturer DID: ${manufacturerDidResult.did.value}")
-            manufacturerDidResult.did
-        }
-        else -> {
-            println("Failed to create manufacturer DID: ${manufacturerDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    import org.trustweave.trust.types.getOrThrowDid
+    
+    val manufacturerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    println("Manufacturer DID: ${manufacturerDid.value}")
 
-    val distributorDidResult = trustWeave.createDid { method(KEY) }
-    val distributorDid = when (distributorDidResult) {
-        is DidCreationResult.Success -> {
-            println("Distributor DID: ${distributorDidResult.did.value}")
-            distributorDidResult.did
-        }
-        else -> {
-            println("Failed to create distributor DID: ${distributorDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    val distributorDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    println("Distributor DID: ${distributorDid.value}")
 
-    val retailerDidResult = trustWeave.createDid { method(KEY) }
-    val retailerDid = when (retailerDidResult) {
-        is DidCreationResult.Success -> {
-            println("Retailer DID: ${retailerDidResult.did.value}")
-            retailerDidResult.did
-        }
-        else -> {
-            println("Failed to create retailer DID: ${retailerDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    val retailerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    println("Retailer DID: ${retailerDid.value}")
 
     // Step 3: Create product
     println("\nStep 3: Creating product...")

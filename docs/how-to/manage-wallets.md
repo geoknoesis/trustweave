@@ -48,53 +48,40 @@ fun main() = runBlocking {
         holder("did:key:holder-placeholder")
     }
     
-    val wallet = when (walletResult) {
-        is WalletCreationResult.Success -> walletResult.wallet
-        else -> {
-            println("❌ Failed to create wallet: ${walletResult.reason}")
-            return@runBlocking
-        }
+    import org.trustweave.trust.types.getOrThrowDid
+    import org.trustweave.trust.types.getOrThrow
+    import org.trustweave.did.resolver.DidResolutionResult
+    import org.trustweave.did.identifiers.extractKeyId
+    
+    // Helper extension for resolution results
+    fun DidResolutionResult.getOrThrow() = when (this) {
+        is DidResolutionResult.Success -> this.document
+        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
     }
+    
+    val wallet = trustWeave.wallet {
+        holder("did:key:holder")
+    }.getOrThrow()
 
     // Issue and store credential
-    val issuerDidResult = trustWeave.createDid { method(KEY) }
-    val issuerDid = when (issuerDidResult) {
-        is DidCreationResult.Success -> issuerDidResult.did
-        else -> {
-            println("❌ Failed to create issuer DID: ${issuerDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    val issuerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     
     // Get key ID for signing
-    val resolutionResult = trustWeave.resolveDid(issuerDid)
-    val issuerDocument = when (resolutionResult) {
-        is DidResolutionResult.Success -> resolutionResult.document
-        else -> throw IllegalStateException("Failed to resolve issuer DID")
-    }
-    val verificationMethod = issuerDocument.verificationMethod.firstOrNull()
+    val issuerDocument = trustWeave.resolveDid(issuerDid).getOrThrow()
+    val issuerKeyId = issuerDocument.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
-    val issuerKeyId = verificationMethod.id.substringAfter("#")
     
-    val issuanceResult = trustWeave.issue {
+    val credential = trustWeave.issue {
         credential {
             type("VerifiableCredential", "PersonCredential")
-            issuer(issuerDid.value)
+            issuer(issuerDid)
             subject {
                 id("did:key:holder-placeholder")
                 "name" to "Alice Example"
             }
         }
-        signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
-    }
-    
-    val credential = when (issuanceResult) {
-        is IssuanceResult.Success -> issuanceResult.credential
-        else -> {
-            println("❌ Failed to issue credential: ${issuanceResult.reason}")
-            return@runBlocking
-        }
-    }
+        signedBy(issuerDid)
+    }.getOrThrow()
 
     val credentialId = wallet.store(credential)
     println("✅ Stored credential: $credentialId")
@@ -113,19 +100,11 @@ fun main() = runBlocking {
 Create a wallet for a holder:
 
 ```kotlin
-import org.trustweave.trust.types.WalletCreationResult
+import org.trustweave.trust.types.getOrThrow
 
-val walletResult = trustWeave.wallet {
+val wallet = trustWeave.wallet {
     holder("did:key:holder")
-}
-
-val wallet = when (walletResult) {
-    is WalletCreationResult.Success -> walletResult.wallet
-    else -> {
-        println("Failed to create wallet: ${walletResult.reason}")
-        return@runBlocking // or handle appropriately
-    }
-}
+}.getOrThrow()
 ```
 
 ### Step 2: Store Credentials

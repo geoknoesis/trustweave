@@ -251,41 +251,35 @@ fun main() = runBlocking {
     }
 
     // Batch credential creation
-    import org.trustweave.trust.types.DidCreationResult
-    import org.trustweave.credential.results.IssuanceResult
+    import org.trustweave.trust.types.getOrThrowDid
+    import org.trustweave.trust.types.getOrThrow
+    import org.trustweave.did.resolver.DidResolutionResult
+    import org.trustweave.did.identifiers.extractKeyId
+    
+    // Helper extension for resolution results
+    fun DidResolutionResult.getOrThrow() = when (this) {
+        is DidResolutionResult.Success -> this.document
+        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
+    }
     
     val credentials = (1..10).mapAsync { index ->
         runCatching {
-            val didResult = trustWeave.createDid { method(KEY) }
-            val issuerDid = when (didResult) {
-                is DidCreationResult.Success -> didResult.did
-                else -> throw IllegalStateException("Failed to create DID: ${didResult.reason}")
-            }
-            
-            val issuerResolution = trustWeave.resolveDid(issuerDid)
-            val issuerDoc = when (issuerResolution) {
-                is DidResolutionResult.Success -> issuerResolution.document
-                else -> throw IllegalStateException("Failed to resolve issuer DID")
-            }
-            val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+            val issuerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+            val issuerDoc = trustWeave.resolveDid(issuerDid).getOrThrow()
+            val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
                 ?: throw IllegalStateException("No verification method found")
             
-            val issuanceResult = trustWeave.issue {
+            trustWeave.issue {
                 credential {
-                    issuer(issuerDid.value)
+                    issuer(issuerDid)
                     subject {
                         id("did:key:holder-$index")
                         "index" to index
                     }
                     issued(Instant.now())
                 }
-                signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
-            }
-            
-            when (issuanceResult) {
-                is IssuanceResult.Success -> issuanceResult.credential
-                else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
-            }
+                signedBy(issuerDid)
+            }.getOrThrow()
         }
     }
 
@@ -408,35 +402,27 @@ fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
 
     // Create issuer and holder
-    val issuerDidResult = trustWeave.createDid { method(KEY) }
-    val issuerDid = when (issuerDidResult) {
-        is DidCreationResult.Success -> issuerDidResult.did
-        else -> {
-            println("Failed to create issuer DID: ${issuerDidResult.reason}")
-            return@runBlocking
-        }
+    import org.trustweave.trust.types.getOrThrowDid
+    import org.trustweave.trust.types.getOrThrow
+    import org.trustweave.did.resolver.DidResolutionResult
+    import org.trustweave.did.identifiers.extractKeyId
+    
+    // Helper extension for resolution results
+    fun DidResolutionResult.getOrThrow() = when (this) {
+        is DidResolutionResult.Success -> this.document
+        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
     }
     
-    val holderDidResult = trustWeave.createDid { method(KEY) }
-    val holderDid = when (holderDidResult) {
-        is DidCreationResult.Success -> holderDidResult.did
-        else -> {
-            println("Failed to create holder DID: ${holderDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    val issuerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val holderDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 
     // Issue credential with expiration
     val expirationDate = Instant.now().plus(1, ChronoUnit.YEARS)
-    val issuerResolution = trustWeave.resolveDid(issuerDid)
-    val issuerDoc = when (issuerResolution) {
-        is DidResolutionResult.Success -> issuerResolution.document
-        else -> throw IllegalStateException("Failed to resolve issuer DID")
-    }
-    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val issuerDoc = trustWeave.resolveDid(issuerDid).getOrThrow()
+    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
     
-    val issuanceResult = trustWeave.issue {
+    val credential = trustWeave.issue {
         credential {
             issuer(issuerDid.value)
             subject {
@@ -447,30 +433,14 @@ fun main() = runBlocking {
             expires(expirationDate)
         }
         signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
-    }
-    
-    val credential = when (issuanceResult) {
-        is IssuanceResult.Success -> issuanceResult.credential
-        else -> {
-            println("❌ Failed to issue credential: ${issuanceResult.reason}")
-            return@runBlocking
-        }
-    }
+    }.getOrThrow()
 
     // Store in wallet with lifecycle support
-    val walletResult = trustWeave.wallet {
+    val wallet = trustWeave.wallet {
         holder(holderDid.value)
         enableOrganization()
         enablePresentation()
-    }
-    
-    val wallet = when (walletResult) {
-        is WalletCreationResult.Success -> walletResult.wallet
-        else -> {
-            println("❌ Failed to create wallet: ${walletResult.reason}")
-            return@runBlocking
-        }
-    }
+    }.getOrThrow()
 
     val credentialId = wallet.store(credential)
 
@@ -692,14 +662,14 @@ fun main() = runBlocking {
         val credential = try {
             trustWeave.issue {
                 credential {
-                    issuer(issuerDid.value)
+                    issuer(issuerDid)
                     subject {
                         id(holderDid.value)
                         "credentialName" to name
                     }
                     issued(Instant.now())
                 }
-                signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+                signedBy(issuerDid)
             }
                     issuerDid = issuerDid.id
                 ),

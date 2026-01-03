@@ -183,56 +183,33 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for manufacturer, current owner, and new owner
-    import org.trustweave.trust.types.DidCreationResult
-    import org.trustweave.trust.types.WalletCreationResult
+    import org.trustweave.trust.types.getOrThrowDid
+    import org.trustweave.trust.types.getOrThrow
+    import org.trustweave.did.resolver.DidResolutionResult
+    import org.trustweave.did.identifiers.extractKeyId
     
-    val manufacturerDidResult = trustWeave.createDid { method(KEY) }
-    val manufacturerDid = when (manufacturerDidResult) {
-        is DidCreationResult.Success -> manufacturerDidResult.did
-        else -> throw IllegalStateException("Failed to create manufacturer DID: ${manufacturerDidResult.reason}")
+    // Helper extension for resolution results
+    fun DidResolutionResult.getOrThrow() = when (this) {
+        is DidResolutionResult.Success -> this.document
+        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
     }
     
-    val manufacturerResolution = trustWeave.resolveDid(manufacturerDid)
-    val manufacturerDoc = when (manufacturerResolution) {
-        is DidResolutionResult.Success -> manufacturerResolution.document
-        else -> throw IllegalStateException("Failed to resolve manufacturer DID")
-    }
-    val manufacturerKeyId = manufacturerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val manufacturerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val manufacturerDoc = trustWeave.resolveDid(manufacturerDid).getOrThrow()
+    val manufacturerKeyId = manufacturerDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
-    val currentOwnerDidResult = trustWeave.createDid { method(KEY) }
-    val currentOwnerDid = when (currentOwnerDidResult) {
-        is DidCreationResult.Success -> currentOwnerDidResult.did
-        else -> throw IllegalStateException("Failed to create current owner DID: ${currentOwnerDidResult.reason}")
-    }
-    
-    val currentOwnerResolution = trustWeave.resolveDid(currentOwnerDid)
-    val currentOwnerDoc = when (currentOwnerResolution) {
-        is DidResolutionResult.Success -> currentOwnerResolution.document
-        else -> throw IllegalStateException("Failed to resolve current owner DID")
-    }
-    val currentOwnerKeyId = currentOwnerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val currentOwnerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val currentOwnerDoc = trustWeave.resolveDid(currentOwnerDid).getOrThrow()
+    val currentOwnerKeyId = currentOwnerDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
-    val newOwnerDidResult = trustWeave.createDid { method(KEY) }
-    val newOwnerDid = when (newOwnerDidResult) {
-        is DidCreationResult.Success -> newOwnerDidResult.did
-        else -> throw IllegalStateException("Failed to create new owner DID: ${newOwnerDidResult.reason}")
-    }
-    
-    val newOwnerResolution = trustWeave.resolveDid(newOwnerDid)
-    val newOwnerDoc = when (newOwnerResolution) {
-        is DidResolutionResult.Success -> newOwnerResolution.document
-        else -> throw IllegalStateException("Failed to resolve new owner DID")
-    }
-    val newOwnerKeyId = newOwnerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val newOwnerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val newOwnerDoc = trustWeave.resolveDid(newOwnerDid).getOrThrow()
+    val newOwnerKeyId = newOwnerDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
-    val deviceDidResult = trustWeave.createDid { method(KEY) }
-    val deviceDid = when (deviceDidResult) {
-        is DidCreationResult.Success -> deviceDidResult.did
-        else -> throw IllegalStateException("Failed to create device DID: ${deviceDidResult.reason}")
-    }
+    val deviceDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 
     println("✅ Manufacturer DID: ${manufacturerDid.value}")
     println("✅ Current Owner DID: ${currentOwnerDid.value}")
@@ -243,7 +220,7 @@ fun main() = runBlocking {
     val currentOwnershipCredentialResult = trustWeave.issue {
         credential {
             type("VerifiableCredential", "DeviceOwnershipCredential", "IoTDeviceCredential")
-            issuer(manufacturerDid.value)
+            issuer(manufacturerDid)
             subject {
                 id(deviceDid.value)
                 "deviceOwnership" {
@@ -260,13 +237,10 @@ fun main() = runBlocking {
             issued(Instant.now())
             // Ownership doesn't expire - no expires() call
         }
-        signedBy(issuerDid = manufacturerDid.value, keyId = manufacturerKeyId)
+        signedBy(manufacturerDid)
     }
     
-    val currentOwnershipCredential = when (currentOwnershipCredentialResult) {
-        is IssuanceResult.Success -> currentOwnershipCredentialResult.credential
-        else -> throw IllegalStateException("Failed to issue current ownership credential")
-    }
+    val currentOwnershipCredential = currentOwnershipCredentialResult.getOrThrow()
 
     println("\n✅ Current ownership credential issued: ${currentOwnershipCredential.id}")
     println("   Owner: ${currentOwnerDid.take(20)}...")
@@ -277,7 +251,7 @@ fun main() = runBlocking {
         credential {
             id("urn:transfer-request:${deviceDid.value}:${Instant.now().toEpochMilli()}")
             type("VerifiableCredential", "OwnershipTransferRequestCredential", "TransferCredential")
-            issuer(currentOwnerDid.value)
+            issuer(currentOwnerDid)
             subject {
                 id("urn:transfer-request:${deviceDid.value}:${Instant.now().toEpochMilli()}")
                 "ownershipTransfer" {
@@ -297,13 +271,10 @@ fun main() = runBlocking {
             issued(Instant.now())
             expires(7, ChronoUnit.DAYS) // Transfer request expires
         }
-        signedBy(issuerDid = currentOwnerDid.value, keyId = currentOwnerKeyId)
+        signedBy(currentOwnerDid)
     }
     
-    val transferRequestCredential = when (transferRequestCredentialResult) {
-        is IssuanceResult.Success -> transferRequestCredentialResult.credential
-        else -> throw IllegalStateException("Failed to issue transfer request credential")
-    }
+    val transferRequestCredential = transferRequestCredentialResult.getOrThrow()
 
     println("✅ Ownership transfer request credential issued: ${transferRequestCredential.id}")
 
@@ -347,7 +318,7 @@ fun main() = runBlocking {
     val newOwnershipCredentialResult = trustWeave.issue {
         credential {
             type("VerifiableCredential", "DeviceOwnershipCredential", "IoTDeviceCredential")
-            issuer(manufacturerDid.value)
+            issuer(manufacturerDid)
             subject {
                 id(deviceDid.value)
                 "deviceOwnership" {
@@ -371,40 +342,27 @@ fun main() = runBlocking {
             issued(Instant.now())
             // Ownership doesn't expire - no expires() call
         }
-        signedBy(issuerDid = manufacturerDid.value, keyId = manufacturerKeyId)
+        signedBy(manufacturerDid)
     }
     
-    val newOwnershipCredential = when (newOwnershipCredentialResult) {
-        is IssuanceResult.Success -> newOwnershipCredentialResult.credential
-        else -> throw IllegalStateException("Failed to issue new ownership credential")
-    }
+    val newOwnershipCredential = newOwnershipCredentialResult.getOrThrow()
 
     println("\n✅ New ownership credential issued: ${newOwnershipCredential.id}")
     println("   New Owner: ${newOwnerDid.take(20)}...")
     println("   Ownership Date: ${Instant.now()}")
 
     // Step 7: Create wallets for current and new owners
-    val currentOwnerWalletResult = trustWeave.wallet {
-        holder(currentOwnerDid.value)
+    val currentOwnerWallet = trustWeave.wallet {
+        holder(currentOwnerDid)
         enableOrganization()
         enablePresentation()
-    }
-    
-    val currentOwnerWallet = when (currentOwnerWalletResult) {
-        is WalletCreationResult.Success -> currentOwnerWalletResult.wallet
-        else -> throw IllegalStateException("Failed to create current owner wallet: ${currentOwnerWalletResult.reason}")
-    }
+    }.getOrThrow()
 
-    val newOwnerWalletResult = trustWeave.wallet {
-        holder(newOwnerDid.value)
+    val newOwnerWallet = trustWeave.wallet {
+        holder(newOwnerDid)
         enableOrganization()
         enablePresentation()
-    }
-    
-    val newOwnerWallet = when (newOwnerWalletResult) {
-        is WalletCreationResult.Success -> newOwnerWalletResult.wallet
-        else -> throw IllegalStateException("Failed to create new owner wallet: ${newOwnerWalletResult.reason}")
-    }
+    }.getOrThrow()
 
     val currentOwnershipId = currentOwnerWallet.store(currentOwnershipCredential)
     val transferRequestId = currentOwnerWallet.store(transferRequestCredential)

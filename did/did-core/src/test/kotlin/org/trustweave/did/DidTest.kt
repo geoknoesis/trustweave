@@ -9,7 +9,6 @@ import kotlin.test.*
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.registry.DidMethodRegistry
-import org.trustweave.did.registry.DefaultDidMethodRegistry
 import org.trustweave.did.exception.DidException
 import org.trustweave.did.exception.DidException.InvalidDidFormat
 import org.trustweave.did.exception.DidException.DidMethodNotRegistered
@@ -20,7 +19,7 @@ class DidTest {
 
     @BeforeEach
     fun setup() {
-        registry = DefaultDidMethodRegistry()
+        registry = DidMethodRegistry()
     }
 
     // Basic Did constructor tests - comprehensive coverage in DidParseBranchCoverageTest
@@ -38,7 +37,7 @@ class DidRegistryTest {
 
     @BeforeEach
     fun setup() {
-        registry = DefaultDidMethodRegistry()
+        registry = DidMethodRegistry()
     }
 
     @Test

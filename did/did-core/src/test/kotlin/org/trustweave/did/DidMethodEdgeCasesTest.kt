@@ -7,7 +7,6 @@ import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.registry.DidMethodRegistry
-import org.trustweave.did.registry.DefaultDidMethodRegistry
 import kotlinx.coroutines.runBlocking
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.didCreationOptions
@@ -25,7 +24,7 @@ class DidMethodEdgeCasesTest {
 
     @BeforeEach
     fun setup() {
-        registry = DefaultDidMethodRegistry()
+        registry = DidMethodRegistry()
     }
 
     @Test

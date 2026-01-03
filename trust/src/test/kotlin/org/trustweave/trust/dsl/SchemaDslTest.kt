@@ -5,7 +5,6 @@ import org.trustweave.credential.schema.SchemaRegistry
 import org.trustweave.credential.model.SchemaFormat
 import org.trustweave.kms.results.SignResult
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.testkit.services.TestkitDidMethodFactory
 import org.trustweave.trust.dsl.TrustWeaveConfig
 import org.trustweave.trust.dsl.trustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
@@ -30,9 +29,7 @@ class SchemaDslTest {
     fun setup() = runBlocking {
         val kms = InMemoryKeyManagementService()
         trustWeave = trustWeave {
-            factories(
-                didMethodFactory = TestkitDidMethodFactory()
-            )
+            // DID methods auto-discovered via SPI
             keys {
                 custom(kms)
                 signer { data, keyId ->

@@ -34,12 +34,9 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     trustWeave {
-        factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
-        )
-        keys { provider(IN_MEMORY); algorithm(ED25519) }
-        did { method(KEY) { algorithm(ED25519) } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }  // Auto-discovered via SPI
+        did { method(KEY) { algorithm(ED25519) } }  // Auto-discovered via SPI
+        // KMS, DID methods, and CredentialService all auto-created!
     }.run {
         // Create issuer DID (uses default method from config)
         val (issuerDid, issuerDoc) = createDid().getOrThrow()
@@ -50,13 +47,13 @@ fun main() = runBlocking {
         val credential = issue {
             credential {
                 type("HelloCredential")
-                issuer(issuerDid.value)
+                issuer(issuerDid)
                 subject {
-                    id("did:key:holder")
+                    id(org.trustweave.did.identifiers.Did("did:key:holder"))
                     "message" to "Hello TrustWeave!"
                 }
             }
-            signedBy(issuerDid.value, keyId)
+            signedBy(issuerDid)
         }.getOrThrow()
 
         // Verify credential
@@ -130,9 +127,7 @@ import kotlinx.serialization.json.put
 fun main() = runBlocking {
     trustWeave {
         factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
-        )
+        // KMS and DID methods auto-discovered via SPI
         keys {
             provider(IN_MEMORY)
             algorithm(ED25519)
@@ -153,22 +148,21 @@ fun main() = runBlocking {
         println("Canonical credential-subject digest: $digest")
 
         // Step 2: Create issuer DID (uses default method from config)
-        val (issuerDid, issuerDoc) = createDid().getOrThrow()
-        val issuerKeyId = issuerDoc.verificationMethod.first().id.substringAfter("#")
-        println("Issuer DID: ${issuerDid.value} (keyId=$issuerKeyId)")
+        val issuerDid = createDid().getOrThrow()
+        println("Issuer DID: ${issuerDid.value}")
 
         // Step 3: Issue credential
         val credential = issue {
             credential {
                 type("QuickStartCredential")
-                issuer(issuerDid.value)
+                issuer(issuerDid)
                 subject {
-                    id("did:key:holder-placeholder")
+                    id(org.trustweave.did.identifiers.Did("did:key:holder-placeholder"))
                     "name" to "Alice Example"
                     "role" to "Site Reliability Engineer"
                 }
             }
-            signedBy(issuerDid.value, issuerKeyId)
+            signedBy(issuerDid)
         }.getOrThrow()
         println("Issued credential id: ${credential.id}")
 
@@ -229,12 +223,9 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     trustWeave {
-        factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
-        )
-        keys { provider(IN_MEMORY); algorithm(ED25519) }
-        did { method(KEY) { algorithm(ED25519) } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }  // Auto-discovered via SPI
+        did { method(KEY) { algorithm(ED25519) } }  // Auto-discovered via SPI
+        // KMS, DID methods, and CredentialService all auto-created!
     }.run {
         // Operations will throw exceptions on failure
         val (did, _) = createDid().getOrThrow()
@@ -259,9 +250,7 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     trustWeave {
         factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
-        )
+        // KMS and DID methods auto-discovered via SPI
         keys {
             provider(IN_MEMORY)
             algorithm(ED25519)
@@ -273,19 +262,18 @@ fun main() = runBlocking {
         }
     }.run {
         // Production pattern: Use getOrThrow() for concise error handling
-        val (issuerDid, issuerDoc) = createDid().getOrThrow()
-        val issuerKeyId = issuerDoc.verificationMethod.first().id.substringAfter("#")
+        val issuerDid = createDid().getOrThrow()
 
         val credential = issue {
             credential {
                 type("QuickStartCredential")
-                issuer(issuerDid.value)
+                issuer(issuerDid)
                 subject {
-                    id("did:key:holder")
+                    id(org.trustweave.did.identifiers.Did("did:key:holder"))
                     "name" to "Alice"
                 }
             }
-            signedBy(issuerDid.value, issuerKeyId)
+            signedBy(issuerDid)
         }.getOrThrow()
 
         println("✅ Credential issued: ${credential.id}")
@@ -353,9 +341,7 @@ import kotlinx.serialization.json.put
 fun main() = runBlocking {
     trustWeave {
         factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
-        )
+        // KMS and DID methods auto-discovered via SPI
         keys {
             provider(IN_MEMORY)
             algorithm(ED25519)
@@ -434,14 +420,14 @@ Typed builders (`DidCreationOptions`) are a core design choice: they prevent mis
 val credential = trustWeave.issue {
     credential {
         type("QuickStartCredential")
-        issuer(issuerDid.value)
+        issuer(issuerDid)
         subject {
-            id("did:key:holder-placeholder")
+            id(org.trustweave.did.identifiers.Did("did:key:holder-placeholder"))
             "name" to "Alice Example"
             "role" to "Site Reliability Engineer"
         }
     }
-    signedBy(issuerDid.value, issuerKeyId)
+    signedBy(issuerDid)
 }.getOrThrow()
 
 println("Issued credential id: ${credential.id}")

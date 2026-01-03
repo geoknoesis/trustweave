@@ -181,62 +181,34 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for training providers, professionals, and employers
-    import org.trustweave.trust.types.DidCreationResult
-    import org.trustweave.trust.types.WalletCreationResult
+    import org.trustweave.trust.types.getOrThrowDid
+    import org.trustweave.trust.types.getOrThrow
+    import org.trustweave.did.resolver.DidResolutionResult
+    import org.trustweave.did.identifiers.extractKeyId
     
-    val isc2DidResult = trustWeave.createDid { method(KEY) }
-    val isc2Did = when (isc2DidResult) {
-        is DidCreationResult.Success -> isc2DidResult.did
-        else -> throw IllegalStateException("Failed to create ISC2 DID: ${isc2DidResult.reason}")
+    // Helper extension for resolution results
+    fun DidResolutionResult.getOrThrow() = when (this) {
+        is DidResolutionResult.Success -> this.document
+        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
     }
     
-    val isc2Resolution = trustWeave.resolveDid(isc2Did)
-    val isc2Doc = when (isc2Resolution) {
-        is DidResolutionResult.Success -> isc2Resolution.document
-        else -> throw IllegalStateException("Failed to resolve ISC2 DID")
-    }
-    val isc2KeyId = isc2Doc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val isc2Did = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val isc2Doc = trustWeave.resolveDid(isc2Did).getOrThrow()
+    val isc2KeyId = isc2Doc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
-    val ecCouncilDidResult = trustWeave.createDid { method(KEY) }
-    val ecCouncilDid = when (ecCouncilDidResult) {
-        is DidCreationResult.Success -> ecCouncilDidResult.did
-        else -> throw IllegalStateException("Failed to create EC-Council DID: ${ecCouncilDidResult.reason}")
-    }
-    
-    val ecCouncilResolution = trustWeave.resolveDid(ecCouncilDid)
-    val ecCouncilDoc = when (ecCouncilResolution) {
-        is DidResolutionResult.Success -> ecCouncilResolution.document
-        else -> throw IllegalStateException("Failed to resolve EC-Council DID")
-    }
-    val ecCouncilKeyId = ecCouncilDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val ecCouncilDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val ecCouncilDoc = trustWeave.resolveDid(ecCouncilDid).getOrThrow()
+    val ecCouncilKeyId = ecCouncilDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
-    val comptiaDidResult = trustWeave.createDid { method(KEY) }
-    val comptiaDid = when (comptiaDidResult) {
-        is DidCreationResult.Success -> comptiaDidResult.did
-        else -> throw IllegalStateException("Failed to create CompTIA DID: ${comptiaDidResult.reason}")
-    }
-    
-    val comptiaResolution = trustWeave.resolveDid(comptiaDid)
-    val comptiaDoc = when (comptiaResolution) {
-        is DidResolutionResult.Success -> comptiaResolution.document
-        else -> throw IllegalStateException("Failed to resolve CompTIA DID")
-    }
-    val comptiaKeyId = comptiaDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val comptiaDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val comptiaDoc = trustWeave.resolveDid(comptiaDid).getOrThrow()
+    val comptiaKeyId = comptiaDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
-    val professionalDidResult = trustWeave.createDid { method(KEY) }
-    val professionalDid = when (professionalDidResult) {
-        is DidCreationResult.Success -> professionalDidResult.did
-        else -> throw IllegalStateException("Failed to create professional DID: ${professionalDidResult.reason}")
-    }
-    
-    val employerDidResult = trustWeave.createDid { method(KEY) }
-    val employerDid = when (employerDidResult) {
-        is DidCreationResult.Success -> employerDidResult.did
-        else -> throw IllegalStateException("Failed to create employer DID: ${employerDidResult.reason}")
-    }
+    val professionalDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val employerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 
     println("✅ (ISC)² DID: ${isc2Did.value}")
     println("✅ EC-Council DID: ${ecCouncilDid.value}")
@@ -250,9 +222,9 @@ fun main() = runBlocking {
     val cisspCredentialResult = trustWeave.issue {
         credential {
             type("VerifiableCredential", "CertificationCredential", "SecurityCertification")
-            issuer(isc2Did.value)
+            issuer(isc2Did)
             subject {
-                id(professionalDid.value)
+                id(professionalDid)
                 "certification" {
                     "certificationName" to "CISSP"
                     "certificationFullName" to "Certified Information Systems Security Professional"
@@ -283,13 +255,10 @@ fun main() = runBlocking {
             issued(Instant.now().minus(365, ChronoUnit.DAYS))
             expires(Instant.now().plus(2, ChronoUnit.YEARS))
         }
-        signedBy(issuerDid = isc2Did.value, keyId = isc2KeyId)
+        signedBy(isc2Did)
     }
     
-    val cisspCredential = when (cisspCredentialResult) {
-        is IssuanceResult.Success -> cisspCredentialResult.credential
-        else -> throw IllegalStateException("Failed to issue CISSP credential")
-    }
+    val cisspCredential = cisspCredentialResult.getOrThrow()
 
     println("\n✅ CISSP certification credential issued: ${cisspCredential.id}")
 
@@ -297,9 +266,9 @@ fun main() = runBlocking {
     val cehCredentialResult = trustWeave.issue {
         credential {
             type("VerifiableCredential", "CertificationCredential", "SecurityCertification")
-            issuer(ecCouncilDid.value)
+            issuer(ecCouncilDid)
             subject {
-                id(professionalDid.value)
+                id(professionalDid)
                 "certification" {
                     "certificationName" to "CEH"
                     "certificationFullName" to "Certified Ethical Hacker"
@@ -336,13 +305,10 @@ fun main() = runBlocking {
             issued(Instant.now().minus(180, ChronoUnit.DAYS))
             expires(Instant.now().plus(3, ChronoUnit.YEARS))
         }
-        signedBy(issuerDid = ecCouncilDid.value, keyId = ecCouncilKeyId)
+        signedBy(ecCouncilDid)
     }
     
-    val cehCredential = when (cehCredentialResult) {
-        is IssuanceResult.Success -> cehCredentialResult.credential
-        else -> throw IllegalStateException("Failed to issue CEH credential")
-    }
+    val cehCredential = cehCredentialResult.getOrThrow()
 
     println("✅ CEH certification credential issued: ${cehCredential.id}")
 
@@ -350,9 +316,9 @@ fun main() = runBlocking {
     val securityPlusTrainingCredentialResult = trustWeave.issue {
         credential {
             type("VerifiableCredential", "TrainingCredential", "SecurityTraining")
-            issuer(comptiaDid.value)
+            issuer(comptiaDid)
             subject {
-                id(professionalDid.value)
+                id(professionalDid)
                 "training" {
                     "trainingName" to "Security+ Training"
                     "trainingProvider" to "CompTIA"
@@ -372,27 +338,19 @@ fun main() = runBlocking {
             issued(Instant.now().minus(30, ChronoUnit.DAYS))
             // Training credentials don't expire - no expires() call
         }
-        signedBy(issuerDid = comptiaDid.value, keyId = comptiaKeyId)
+        signedBy(comptiaDid)
     }
     
-    val securityPlusTrainingCredential = when (securityPlusTrainingCredentialResult) {
-        is IssuanceResult.Success -> securityPlusTrainingCredentialResult.credential
-        else -> throw IllegalStateException("Failed to issue Security+ training credential")
-    }
+    val securityPlusTrainingCredential = securityPlusTrainingCredentialResult.getOrThrow()
 
     println("✅ Security+ training credential issued: ${securityPlusTrainingCredential.id}")
 
     // Step 6: Create professional wallet and store all credentials
-    val walletResult = trustWeave.wallet {
-        holder(professionalDid.value)
+    val professionalWallet = trustWeave.wallet {
+        holder(professionalDid)
         enableOrganization()
         enablePresentation()
-    }
-    
-    val professionalWallet = when (walletResult) {
-        is WalletCreationResult.Success -> walletResult.wallet
-        else -> throw IllegalStateException("Failed to create wallet: ${walletResult.reason}")
-    }
+    }.getOrThrow()
 
     val cisspCredentialId = professionalWallet.store(cisspCredential)
     val cehCredentialId = professionalWallet.store(cehCredential)
@@ -475,9 +433,9 @@ fun main() = runBlocking {
     val expiredCertCredentialResult = trustWeave.issue {
         credential {
             type("VerifiableCredential", "CertificationCredential", "SecurityCertification")
-            issuer(isc2Did.value)
+            issuer(isc2Did)
             subject {
-                id(professionalDid.value)
+                id(professionalDid)
                 "certification" {
                     "certificationName" to "CISSP"
                     "status" to "Expired"
@@ -487,13 +445,12 @@ fun main() = runBlocking {
             issued(Instant.now().minus(365, ChronoUnit.DAYS))
             expires(Instant.now().minus(30, ChronoUnit.DAYS)) // Already expired
         }
-        signedBy(issuerDid = isc2Did.value, keyId = isc2KeyId)
+        signedBy(isc2Did)
     }
     
-    val expiredCertCredential = when (expiredCertCredentialResult) {
-        is IssuanceResult.Success -> expiredCertCredentialResult.credential
-        else -> throw IllegalStateException("Failed to issue expired cert credential")
-    }
+    import org.trustweave.trust.types.getOrThrow
+    
+    val expiredCertCredential = expiredCertCredentialResult.getOrThrow()
 
     val expiredVerification = trustWeave.verify {
         credential(expiredCertCredential)

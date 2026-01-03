@@ -7,7 +7,6 @@ import org.trustweave.kms.KeyHandle
 import org.trustweave.kms.results.SignResult
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.testkit.services.TestkitDidMethodFactory
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.createTestCredentialService
 import org.trustweave.trust.dsl.credential.credential
@@ -39,9 +38,7 @@ class IssuanceDslTest {
         // Create DID resolver that uses the DID registry from TrustWeave
         // We'll create a temporary TrustWeave to get the DID registry, then rebuild with CredentialService
         val tempTrustWeave = TrustWeave.build {
-            factories(
-                didMethodFactory = TestkitDidMethodFactory()
-            )
+            // DID methods auto-discovered via SPI
             keys {
                 custom(kmsRef)
                 signer { data, keyId ->
@@ -62,9 +59,7 @@ class IssuanceDslTest {
         
         val credentialService = createTestCredentialService(kms = kmsRef, didResolver = didResolver)
         trustWeave = TrustWeave.build {
-            factories(
-                didMethodFactory = TestkitDidMethodFactory()
-            )
+            // DID methods auto-discovered via SPI
             keys {
                 custom(kmsRef)
                 // Provide signer function directly to avoid reflection

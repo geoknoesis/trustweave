@@ -2,7 +2,6 @@ package org.trustweave.trust.dsl
 
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.testkit.services.TestkitDidMethodFactory
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.TrustWeaveConfig
 import org.trustweave.trust.dsl.TrustWeaveContext
@@ -338,9 +337,7 @@ class VerificationBuilderBranchCoverageTest {
     fun `test branch anchor verification enabled without chain ID`() = runBlocking {
         val kmsRef = kms
         val trustWeaveWithAnchor = TrustWeave.build {
-            factories(
-                didMethodFactory = TestkitDidMethodFactory()
-            )
+            // DID methods auto-discovered via SPI
             keys {
                 custom(kmsRef)
             }
@@ -379,9 +376,7 @@ class VerificationBuilderBranchCoverageTest {
     fun `test branch anchor verification enabled with explicit chain ID`() = runBlocking {
         val kmsRef = kms
         val trustWeaveWithAnchor = TrustWeave.build {
-            factories(
-                didMethodFactory = TestkitDidMethodFactory()
-            )
+            // DID methods auto-discovered via SPI
             keys {
                 custom(kmsRef)
             }
@@ -419,9 +414,7 @@ class VerificationBuilderBranchCoverageTest {
     fun `test branch anchor verification error when no chain ID`() = runBlocking {
         val kmsRef = kms
         val trustWeaveNoAnchor = TrustWeave.build {
-            factories(
-                didMethodFactory = TestkitDidMethodFactory()
-            )
+            // DID methods auto-discovered via SPI
             keys {
                 custom(kmsRef)
             }
@@ -457,9 +450,7 @@ class VerificationBuilderBranchCoverageTest {
     fun `test branch all verification options enabled`() = runBlocking {
         val kmsRef = kms
         val trustWeaveWithAnchor = TrustWeave.build {
-            factories(
-                didMethodFactory = TestkitDidMethodFactory()
-            )
+            // DID methods auto-discovered via SPI
             keys {
                 custom(kmsRef)
             }

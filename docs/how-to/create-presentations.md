@@ -52,7 +52,7 @@ A Verifiable Presentation is a wrapper around one or more Verifiable Credentials
 ```kotlin
 // 1. Store credentials in wallet
 val wallet = trustWeave.wallet {
-    holder(holderDid.value)
+    holder(holderDid)
     enablePresentation()
 }
 
@@ -61,7 +61,7 @@ val credentialId = wallet.store(credential)
 // 2. Create presentation
 val presentation = wallet.presentation {
     fromWallet(credentialId)
-    holder(holderDid.value)
+    holder(holderDid)
     challenge("job-application-123")
 }
 
@@ -143,7 +143,7 @@ val holderDid = trustWeave.createDid { method(KEY) }
 
 // Create wallet with presentation support
 val wallet = trustWeave.wallet {
-    holder(holderDid.value)
+    holder(holderDid)
     enablePresentation()  // Enable presentation creation
 }
 ```
@@ -182,7 +182,7 @@ Create a presentation from stored credentials:
 ```kotlin
 val presentation = wallet.presentation {
     fromWallet(credentialId)
-    holder(holderDid.value)
+    holder(holderDid)
     challenge("job-application-${System.currentTimeMillis()}")
 }
 
@@ -210,17 +210,22 @@ Sign the presentation with the holder's key:
 
 ```kotlin
 // Get holder's key ID
-val resolutionResult = trustWeave.resolveDid(holderDid)
-val holderDocument = when (resolutionResult) {
-    is DidResolutionResult.Success -> resolutionResult.document
-    else -> throw IllegalStateException("Failed to resolve holder DID")
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.identifiers.extractKeyId
+
+// Helper extension for resolution results
+fun DidResolutionResult.getOrThrow() = when (this) {
+    is DidResolutionResult.Success -> this.document
+    else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
 }
-val holderKeyId = holderDocument.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+
+val holderDocument = trustWeave.resolveDid(holderDid).getOrThrow()
+val holderKeyId = holderDocument.verificationMethod.firstOrNull()?.extractKeyId()
     ?: throw IllegalStateException("No verification method found")
 
 val presentation = wallet.presentation {
     fromWallet(credentialId)
-    holder(holderDid.value)
+    holder(holderDid)
     challenge("job-application-123")
     keyId(holderKeyId)  // Sign with holder's key
     proofType(ProofType.Ed25519Signature2020.value)
@@ -301,23 +306,14 @@ fun main() = runBlocking {
     val issuerDid = trustWeave.createDid { method(KEY) }
     val holderDid = trustWeave.createDid { method(KEY) }
     
-    // Step 3: Get issuer key ID
-    val issuerResolution = trustWeave.resolveDid(issuerDid)
-    val issuerDocument = when (issuerResolution) {
-        is DidResolutionResult.Success -> issuerResolution.document
-        else -> throw IllegalStateException("Failed to resolve issuer DID")
-    }
-    val issuerKeyId = issuerDocument.verificationMethod.firstOrNull()?.id?.substringAfter("#")
-        ?: throw IllegalStateException("No verification method found")
-    
-    // Step 4: Issue credential
+    // Step 3: Issue credential (key ID auto-extracted)
     val credential = trustWeave.issue {
         credential {
             id("https://example.edu/credentials/degree-123")
             type("DegreeCredential")
-            issuer(issuerDid.value)
+            issuer(issuerDid)
             subject {
-                id(holderDid.value)
+                id(holderDid)
                 "degree" {
                     "name" to "Bachelor of Science"
                     "university" to "Example University"
@@ -325,14 +321,14 @@ fun main() = runBlocking {
             }
             issued(Clock.System.now())
         }
-        signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+        signedBy(issuerDid)
     }
     
     println("✅ Credential issued: ${credential.id}")
     
     // Step 5: Create wallet with presentation support
     val wallet = trustWeave.wallet {
-        holder(holderDid.value)
+        holder(holderDid)
         enablePresentation()
     }
     
@@ -341,18 +337,23 @@ fun main() = runBlocking {
     println("✅ Credential stored: $credentialId")
     
     // Step 7: Get holder key ID
-    val holderResolution = trustWeave.resolveDid(holderDid)
-    val holderDocument = when (holderResolution) {
-        is DidResolutionResult.Success -> holderResolution.document
-        else -> throw IllegalStateException("Failed to resolve holder DID")
+    import org.trustweave.did.resolver.DidResolutionResult
+    import org.trustweave.did.identifiers.extractKeyId
+    
+    // Helper extension for resolution results
+    fun DidResolutionResult.getOrThrow() = when (this) {
+        is DidResolutionResult.Success -> this.document
+        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
     }
-    val holderKeyId = holderDocument.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    
+    val holderDocument = trustWeave.resolveDid(holderDid).getOrThrow()
+    val holderKeyId = holderDocument.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
     
     // Step 8: Create presentation
     val presentation = wallet.presentation {
         fromWallet(credentialId)
-        holder(holderDid.value)
+        holder(holderDid)
         challenge("job-application-${System.currentTimeMillis()}")
         keyId(holderKeyId)
         proofType(ProofType.Ed25519Signature2020.value)
@@ -473,12 +474,12 @@ println("Presentation is ${if (isValid) "valid" else "invalid"}")
 ```kotlin
 // ❌ Missing enablePresentation()
 val wallet = trustWeave.wallet {
-    holder(holderDid.value)
+    holder(holderDid)
 }
 
 // ✅ Correct
 val wallet = trustWeave.wallet {
-    holder(holderDid.value)
+    holder(holderDid)
     enablePresentation()  // Required for presentations
 }
 ```
@@ -500,7 +501,7 @@ wallet.presentation {
 // ✅ Correct
 wallet.presentation {
     fromWallet(credentialId)
-    holder(holderDid.value)  // Required
+    holder(holderDid)  // Required
 }
 ```
 
@@ -517,7 +518,7 @@ val credentialId = wallet.store(credential)
 
 val presentation = wallet.presentation {
     fromWallet(credentialId)  // Must reference stored credential
-    holder(holderDid.value)
+    holder(holderDid)
 }
 ```
 
@@ -550,7 +551,7 @@ Reveal only specific fields from credentials:
 ```kotlin
 val presentation = wallet.presentation {
     fromWallet(credentialId)
-    holder(holderDid.value)
+    holder(holderDid)
     challenge("age-verification-123")
     
     selectiveDisclosure {
@@ -576,7 +577,7 @@ val credentialIds = listOf(degreeId, employmentId, certificationId)
 
 val presentation = wallet.presentation {
     fromWallet(credentialIds)  // Multiple credentials
-    holder(holderDid.value)
+    holder(holderDid)
     challenge("job-application-123")
 }
 ```
@@ -598,7 +599,7 @@ val presentation = wallet.presentation {
         type("EducationCredential")
         valid()
     }
-    holder(holderDid.value)
+    holder(holderDid)
     challenge("education-verification-123")
 }
 ```
@@ -617,7 +618,7 @@ Include domain for additional context:
 ```kotlin
 val presentation = wallet.presentation {
     fromWallet(credentialId)
-    holder(holderDid.value)
+    holder(holderDid)
     challenge("job-application-123")
     domain("https://employer.example.com")  // Verifier domain
 }
@@ -662,7 +663,7 @@ Implement zero-knowledge proofs and selective disclosure:
 ```kotlin
 val presentation = wallet.presentation {
     fromWallet(credentialId)
-    holder(holderDid.value)
+    holder(holderDid)
     selectiveDisclosure {
         reveal("age")  // Only reveal age, hide other fields
     }
@@ -693,7 +694,7 @@ Track presentation usage:
 fun createPresentationWithLogging(credentialId: String, challenge: String) {
     val presentation = wallet.presentation {
         fromWallet(credentialId)
-        holder(holderDid.value)
+        holder(holderDid)
         challenge(challenge)
     }
     

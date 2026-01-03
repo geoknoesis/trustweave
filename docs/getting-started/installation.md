@@ -43,19 +43,16 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
-        factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
-        )
         keys {
-            provider(IN_MEMORY)
+            provider(IN_MEMORY)  // Auto-discovered via SPI
             algorithm(ED25519)
         }
         did {
-            method(KEY) {
+            method(KEY) {  // Auto-discovered via SPI
                 algorithm(ED25519)
             }
         }
+        // KMS, DID methods, and CredentialService all auto-created!
     }
     val (did, document) = trustWeave.createDid().getOrThrow()
     println("✅ TrustWeave is working! Created DID: ${did.value}")

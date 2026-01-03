@@ -241,9 +241,7 @@ fun main() = runBlocking {
     println("Step 1: Setting up TrustWeave...")
     val trustWeave = TrustWeave.build {
         factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
-        )
+        // KMS and DID methods auto-discovered via SPI
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
         credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
@@ -251,88 +249,51 @@ fun main() = runBlocking {
 
     // Step 2: Create government agency DIDs
     println("\nStep 2: Creating government agency DIDs...")
-    import org.trustweave.trust.types.DidCreationResult
+    import org.trustweave.trust.types.getOrThrowDid
+    import org.trustweave.trust.types.getOrThrow
+    import org.trustweave.did.resolver.DidResolutionResult
+    import org.trustweave.did.identifiers.extractKeyId
     
-    val dmvDidResult = trustWeave.createDid { method(KEY) }
-    val dmvDid = when (dmvDidResult) {
-        is DidCreationResult.Success -> {
-            println("DMV DID: ${dmvDidResult.did.value}")
-            dmvDidResult.did
-        }
-        else -> {
-            println("Failed to create DMV DID: ${dmvDidResult.reason}")
-            return@runBlocking
-        }
+    // Helper extension for resolution results
+    fun DidResolutionResult.getOrThrow() = when (this) {
+        is DidResolutionResult.Success -> this.document
+        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
     }
+    
+    val dmvDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    println("DMV DID: ${dmvDid.value}")
 
-    val passportOfficeDidResult = trustWeave.createDid { method(KEY) }
-    val passportOfficeDid = when (passportOfficeDidResult) {
-        is DidCreationResult.Success -> {
-            println("Passport Office DID: ${passportOfficeDidResult.did.value}")
-            passportOfficeDidResult.did
-        }
-        else -> {
-            println("Failed to create Passport Office DID: ${passportOfficeDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    val passportOfficeDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    println("Passport Office DID: ${passportOfficeDid.value}")
 
-    val taxAuthorityDidResult = trustWeave.createDid { method(KEY) }
-    val taxAuthorityDid = when (taxAuthorityDidResult) {
-        is DidCreationResult.Success -> {
-            println("Tax Authority DID: ${taxAuthorityDidResult.did.value}")
-            taxAuthorityDidResult.did
-        }
-        else -> {
-            println("Failed to create Tax Authority DID: ${taxAuthorityDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    val taxAuthorityDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    println("Tax Authority DID: ${taxAuthorityDid.value}")
 
     // Step 3: Create citizen DID
     println("\nStep 3: Creating citizen DID...")
-    val citizenDidResult = trustWeave.createDid { method(KEY) }
-    val citizenDid = when (citizenDidResult) {
-        is DidCreationResult.Success -> {
-            println("Citizen DID: ${citizenDidResult.did.value}")
-            citizenDidResult.did
-        }
-        else -> {
-            println("Failed to create citizen DID: ${citizenDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    val citizenDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    println("Citizen DID: ${citizenDid.value}")
 
     // Step 4: Create citizen identity wallet
     println("\nStep 4: Creating citizen identity wallet...")
-    val walletResult = trustWeave.wallet {
+    import org.trustweave.trust.types.getOrThrow
+    
+    val citizenWallet = trustWeave.wallet {
         holderDid(citizenDid.value)
-    }
-    val citizenWallet = when (walletResult) {
-        is org.trustweave.trust.types.WalletCreationResult.Success -> {
-            println("Citizen wallet created: ${walletResult.wallet.walletId}")
-            walletResult.wallet
-        }
-        else -> {
-            println("Failed to create citizen wallet: ${walletResult.reason}")
-            return@runBlocking
-        }
-    }
+    }.getOrThrow()
+    println("Citizen wallet created: ${citizenWallet.walletId}")
 
     // Step 5: Get key IDs for signing
-    val dmvDoc = trustWeave.resolveDid(dmvDid).getOrNull()?.document
-        ?: throw IllegalStateException("Failed to resolve DMV DID")
-    val dmvKeyId = dmvDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val dmvDoc = trustWeave.resolveDid(dmvDid).getOrThrow()
+    val dmvKeyId = dmvDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found for DMV")
     
-    val passportOfficeDoc = trustWeave.resolveDid(passportOfficeDid).getOrNull()?.document
-        ?: throw IllegalStateException("Failed to resolve Passport Office DID")
-    val passportOfficeKeyId = passportOfficeDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val passportOfficeDoc = trustWeave.resolveDid(passportOfficeDid).getOrThrow()
+    val passportOfficeKeyId = passportOfficeDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found for Passport Office")
     
-    val taxAuthorityDoc = trustWeave.resolveDid(taxAuthorityDid).getOrNull()?.document
-        ?: throw IllegalStateException("Failed to resolve Tax Authority DID")
-    val taxAuthorityKeyId = taxAuthorityDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val taxAuthorityDoc = trustWeave.resolveDid(taxAuthorityDid).getOrThrow()
+    val taxAuthorityKeyId = taxAuthorityDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found for Tax Authority")
 
     // Step 6: Issue driver's license credential
@@ -523,10 +484,9 @@ suspend fun createDriversLicenseCredential(
         signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
     }
     
-    return when (result) {
-        is IssuanceResult.Success -> result.credential
-        else -> throw IllegalStateException("Failed to create drivers license credential: ${result.allErrors.joinToString()}")
-    }
+    import org.trustweave.trust.types.getOrThrow
+    
+    return result.getOrThrow()
 }
 
 suspend fun createPassportCredential(
@@ -566,10 +526,7 @@ suspend fun createPassportCredential(
         signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
     }
     
-    return when (result) {
-        is IssuanceResult.Success -> result.credential
-        else -> throw IllegalStateException("Failed to create passport credential: ${result.allErrors.joinToString()}")
-    }
+    return result.getOrThrow()
 }
 
 suspend fun createTaxCredential(
@@ -604,10 +561,7 @@ suspend fun createTaxCredential(
         signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
     }
     
-    return when (result) {
-        is IssuanceResult.Success -> result.credential
-        else -> throw IllegalStateException("Failed to create tax credential: ${result.allErrors.joinToString()}")
-    }
+    return result.getOrThrow()
 }
 
 suspend fun verifyCrossBorderIdentity(

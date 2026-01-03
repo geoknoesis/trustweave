@@ -13,15 +13,11 @@ import org.trustweave.did.identifiers.extractKeyId
 import org.trustweave.credential.credentialService
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.testkit.annotations.RequiresPlugin
-import org.trustweave.testkit.services.TestkitDidMethodFactory
 import org.trustweave.testkit.services.TestkitTrustRegistryFactory
 import org.trustweave.testkit.services.TestkitWalletFactory
 import org.trustweave.testkit.services.TestkitStatusListRegistryFactory
-import org.trustweave.testkit.services.TestkitBlockchainAnchorClientFactory
 import org.trustweave.testkit.getOrFail
 import org.trustweave.kms.results.SignResult
-import org.trustweave.trust.dsl.TrustWeaveRegistries
-import org.trustweave.anchor.BlockchainAnchorRegistry
 import org.trustweave.kms.results.GenerateKeyResult
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
@@ -61,49 +57,13 @@ class InMemoryTrustLayerIntegrationTest {
             }
         }
         
-        // ROOT CAUSE ANALYSIS:
-        // DidKeyMockMethod stores DIDs in an instance variable (documents map).
-        // When createDid is called, it uses the DidMethod from config.registries.didRegistry.
-        // When the resolver resolves, it uses sharedDidRegistry.resolve() which gets the method from the registry.
-        // These MUST be the SAME DidMethod instance, otherwise DIDs created in one instance won't be visible to the other.
-        //
-        // The key insight: Both the resolver and createDid use sharedDidRegistry, so they should use the same DidMethod instance.
-        // The resolver is created BEFORE build(), but that's OK - it will work once the method is registered during build().
-        // The resolver calls sharedDidRegistry.resolve() at resolution time, not at creation time.
-        
-        val sharedDidRegistry = org.trustweave.did.registry.DidMethodRegistry()
-        
-        // Create resolver that uses the shared registry
-        // This resolver will work once the DidMethod is registered during build()
-        val didResolver = DidResolver { did: org.trustweave.did.identifiers.Did ->
-            // Use the shared registry to resolve the DID
-            // This will find the DidMethod instance that has the DID stored
-            val result = sharedDidRegistry.resolve(did.value)
-            result as org.trustweave.did.resolver.DidResolutionResult
-        }
-        
         // Create a shared revocation manager that will be used by both builds
         // This ensures that revocation operations in one build are visible to verification in another
         val sharedRevocationManager = org.trustweave.credential.revocation.RevocationManagers.default()
         
-        // Step 1: Build TrustWeave with CredentialService, using the shared revocation manager
-        // We create the CredentialService with the shared revocation manager upfront
-        val credentialService = credentialService(
-            didResolver = didResolver,
-            signer = signer,
-            revocationManager = sharedRevocationManager
-        )
-        
-        // Build TrustWeave with CredentialService and shared revocation manager
-        // Note: The build will still call resolveRevocationManager, but we'll override it
-        val finalTrustWeave = TrustWeave.build(
-            registries = TrustWeaveRegistries(
-                didRegistry = sharedDidRegistry,
-                blockchainRegistry = BlockchainAnchorRegistry()
-            )
-        ) {
+        // Build TrustWeave (auto-creates registry, resolver, and CredentialService)
+        val finalTrustWeave = TrustWeave.build {
             factories(
-                didMethodFactory = TestkitDidMethodFactory(didRegistry = sharedDidRegistry),
                 trustRegistryFactory = TestkitTrustRegistryFactory(),
                 walletFactory = TestkitWalletFactory()
             )
@@ -118,21 +78,32 @@ class InMemoryTrustLayerIntegrationTest {
             }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
-            issuer(credentialService)
-            additionalConfig() // This may configure revocation, but we've already set it in CredentialService
-            // Re-apply didMethodFactory with shared registry to override any changes from additionalConfig
-            factories(
-                didMethodFactory = TestkitDidMethodFactory(didRegistry = sharedDidRegistry)
-            )
+            additionalConfig() // This may configure revocation
         }
         
-        // Override the revocation manager in the built config to use the shared instance
+        // Create CredentialService with shared revocation manager, using TrustWeave as resolver
+        // TrustWeave implements DidResolver, so we can use it directly
+        val credentialService = credentialService(
+            didResolver = finalTrustWeave,
+            signer = { data, keyId ->
+                when (val result = kms.sign(org.trustweave.core.identifiers.KeyId(keyId), data)) {
+                    is SignResult.Success -> result.signature
+                    else -> throw IllegalStateException("Signing failed: $result")
+                }
+            },
+            revocationManager = sharedRevocationManager
+        )
+        
+        // Override the issuer and revocation manager in the built config to use the shared instance
         // This ensures that trustWeave.revoke() uses the same manager as CredentialService.verify()
-        // We need to use reflection to set the revocationManager field
         try {
             val configField = finalTrustWeave.javaClass.getDeclaredField("config")
             configField.isAccessible = true
             val config = configField.get(finalTrustWeave) as org.trustweave.trust.dsl.TrustWeaveConfig
+            
+            val issuerField = config.javaClass.getDeclaredField("issuer")
+            issuerField.isAccessible = true
+            issuerField.set(config, credentialService)
             
             val revocationManagerField = config.javaClass.getDeclaredField("revocationManager")
             revocationManagerField.isAccessible = true
@@ -140,7 +111,7 @@ class InMemoryTrustLayerIntegrationTest {
         } catch (e: Exception) {
             // If reflection fails, the test will still work if additionalConfig doesn't create a new manager
             // The CredentialService already has the shared manager, so verification should work
-            println("WARNING: Could not override revocation manager via reflection: ${e.message}")
+            println("WARNING: Could not override issuer/revocation manager via reflection: ${e.message}")
         }
         
         return finalTrustWeave
@@ -203,7 +174,7 @@ class InMemoryTrustLayerIntegrationTest {
                 }
                 issued(Clock.System.now())
             }
-            signedBy(issuerDid = issuerDid.value, keyId = keyId) // MUST match key in DID document
+            signedBy(issuerDid = issuerDid, keyId = keyId) // MUST match key in DID document
         }.getOrFail()
 
         assertNotNull(credential, "Credential should be issued")
@@ -302,7 +273,7 @@ class InMemoryTrustLayerIntegrationTest {
                 }
                 issued(Clock.System.now())
             }
-            signedBy(issuerDid = issuerDid.value, keyId = keyId)
+            signedBy(issuerDid = issuerDid, keyId = keyId)
             withRevocation() // Enable revocation status list
         }.getOrFail()
 
@@ -378,7 +349,7 @@ class InMemoryTrustLayerIntegrationTest {
                 }
                 issued(Clock.System.now())
             }
-            signedBy(issuerDid = issuerDid.value, keyId = keyId)
+            signedBy(issuerDid = issuerDid, keyId = keyId)
         }.getOrFail()
 
         // Create wallet for holder
@@ -460,7 +431,7 @@ class InMemoryTrustLayerIntegrationTest {
                 }
                 issued(Clock.System.now())
             }
-            signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+            signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
         }.getOrFail()
 
         val credential2 = trustWeave.issue {
@@ -474,7 +445,7 @@ class InMemoryTrustLayerIntegrationTest {
                 }
                 issued(Clock.System.now())
             }
-            signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+            signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
         }.getOrFail()
 
         // Create wallet and store credentials
@@ -571,7 +542,7 @@ class InMemoryTrustLayerIntegrationTest {
                 }
                 issued(Clock.System.now())
             }
-            signedBy(issuerDid = issuerDid.value, keyId = keyId)
+            signedBy(issuerDid = issuerDid, keyId = keyId)
         }.getOrFail()
 
         assertNotNull(credential, "Credential should be issued with updated DID")
@@ -591,9 +562,7 @@ class InMemoryTrustLayerIntegrationTest {
         val kms = InMemoryKeyManagementService()
 
         val trustWeave = createTrustWeaveWithCredentialService(kms) {
-            factories(
-                anchorClientFactory = TestkitBlockchainAnchorClientFactory()
-            )
+            // Anchor client auto-discovered via SPI
             anchor {
                 chain("testnet:inMemory") {
                     provider("inMemory") // Use in-memory anchor client for testing
@@ -637,7 +606,7 @@ class InMemoryTrustLayerIntegrationTest {
                 }
                 issued(Clock.System.now())
             }
-            signedBy(issuerDid = issuerDid.value, keyId = keyId)
+            signedBy(issuerDid = issuerDid, keyId = keyId)
             // Note: anchor() function not available in current DSL
         }.getOrFail()
 
@@ -667,9 +636,7 @@ class InMemoryTrustLayerIntegrationTest {
         val kms = InMemoryKeyManagementService()
 
         val trustWeave = createTrustWeaveWithCredentialService(kms) {
-            factories(
-                anchorClientFactory = TestkitBlockchainAnchorClientFactory()
-            )
+            // Anchor client auto-discovered via SPI
             anchor {
                 chain("testnet:inMemory") {
                     provider("inMemory") // Use in-memory anchor client for testing
@@ -720,7 +687,7 @@ class InMemoryTrustLayerIntegrationTest {
                 }
                 issued(Clock.System.now())
             }
-            signedBy(issuerDid = issuerDid.value, keyId = keyId)
+            signedBy(issuerDid = issuerDid, keyId = keyId)
             // Note: anchor() function not available in current DSL
         }.getOrFail()
 

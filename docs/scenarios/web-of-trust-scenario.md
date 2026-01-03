@@ -72,43 +72,27 @@ fun main() = runBlocking {
 ### Step 2: Create DIDs for Entities
 
 ```kotlin
-import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.trust.types.getOrThrowDid
 
-val universityDidResult = trustLayer.createDid {
+val universityDid = trustLayer.createDid {
     method(DidMethods.KEY)
     algorithm(KeyAlgorithms.ED25519)
-}
-val universityDid = when (universityDidResult) {
-    is DidCreationResult.Success -> universityDidResult.did
-    else -> throw IllegalStateException("Failed to create university DID: ${universityDidResult.reason}")
-}
+}.getOrThrowDid()
 
-val companyDidResult = trustLayer.createDid {
+val companyDid = trustLayer.createDid {
     method(DidMethods.KEY)
     algorithm(KeyAlgorithms.ED25519)
-}
-val companyDid = when (companyDidResult) {
-    is DidCreationResult.Success -> companyDidResult.did
-    else -> throw IllegalStateException("Failed to create company DID: ${companyDidResult.reason}")
-}
+}.getOrThrowDid()
 
-val studentDidResult = trustLayer.createDid {
+val studentDid = trustLayer.createDid {
     method(DidMethods.KEY)
     algorithm(KeyAlgorithms.ED25519)
-}
-val studentDid = when (studentDidResult) {
-    is DidCreationResult.Success -> studentDidResult.did
-    else -> throw IllegalStateException("Failed to create student DID: ${studentDidResult.reason}")
-}
+}.getOrThrowDid()
 
-val hrDeptDidResult = trustLayer.createDid {
+val hrDeptDid = trustLayer.createDid {
     method(DidMethods.KEY)
     algorithm(KeyAlgorithms.ED25519)
-}
-val hrDeptDid = when (hrDeptDidResult) {
-    is DidCreationResult.Success -> hrDeptDidResult.did
-    else -> throw IllegalStateException("Failed to create HR dept DID: ${hrDeptDidResult.reason}")
-}
+}.getOrThrowDid()
 ```
 
 **What this does:** Issues four DIDs—university, company, student, and HR department—using the configured DID method.
@@ -148,22 +132,28 @@ trustLayer.trust {
 // Issue degree credential from university
 import org.trustweave.trust.types.IssuanceResult
 
-// First, resolve university DID to get key ID
-val universityResolution = trustLayer.resolveDid(universityDid)
-val universityDoc = when (universityResolution) {
-    is DidResolutionResult.Success -> universityResolution.document
-    else -> throw IllegalStateException("Failed to resolve university DID")
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.identifiers.extractKeyId
+
+// Helper extension for resolution results
+fun DidResolutionResult.getOrThrow() = when (this) {
+    is DidResolutionResult.Success -> this.document
+    else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
 }
-val universityKeyId = universityDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+
+// First, resolve university DID to get key ID
+val universityDoc = trustLayer.resolveDid(universityDid).getOrThrow()
+val universityKeyId = universityDoc.verificationMethod.firstOrNull()?.extractKeyId()
     ?: throw IllegalStateException("No verification method found")
 
-val degreeIssuanceResult = trustLayer.issue {
+val degreeCredential = trustLayer.issue {
     credential {
         id("https://university.edu/credentials/degree-123")
         type(CredentialType.Education, CredentialType.Degree)
-        issuer(universityDid.value)
+        issuer(universityDid)
         subject {
-            id(studentDid.value)
+            id(studentDid)
             "degree" {
                 "type" to "Bachelor"
                 "field" to "Computer Science"
@@ -173,13 +163,8 @@ val degreeIssuanceResult = trustLayer.issue {
         issued(Instant.now())
         expires(Instant.now().plusSeconds(31536000)) // 1 year
     }
-    signedBy(issuerDid = universityDid.value, keyId = universityKeyId)
-}
-
-val degreeCredential = when (degreeIssuanceResult) {
-    is IssuanceResult.Success -> degreeIssuanceResult.credential
-    else -> throw IllegalStateException("Failed to issue credential: ${degreeIssuanceResult.reason}")
-}
+    signedBy(universityDid)
+}.getOrThrow()
 
 // Verify with trust registry
 val verification = trustLayer.verify {
@@ -238,21 +223,19 @@ if (delegationResult.valid) {
 ```kotlin
 // HR department issues credential using delegated authority
 // First resolve HR DID to get key ID
-val hrResolution = trustLayer.resolveDid(hrDeptDid)
-val hrDoc = when (hrResolution) {
-    is DidResolutionResult.Success -> hrResolution.document
-    else -> throw IllegalStateException("Failed to resolve HR DID")
-}
-val hrKeyId = hrDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+val hrDoc = trustLayer.resolveDid(hrDeptDid).getOrThrow()
+val hrKeyId = hrDoc.verificationMethod.firstOrNull()?.extractKeyId()
     ?: throw IllegalStateException("No verification method found")
+
+import org.trustweave.trust.types.getOrThrow
 
 val employmentIssuanceResult = trustLayer.issue {
     credential {
         id("https://company.com/credentials/employment-456")
         type("EmploymentCredential")
-        issuer(hrDeptDid.value) // HR issues on behalf of company
+        issuer(hrDeptDid) // HR issues on behalf of company
         subject {
-            id(studentDid.value)
+            id(studentDid)
             "employment" {
                 "company" to "Tech Corp"
                 "role" to "Software Engineer"
@@ -261,13 +244,10 @@ val employmentIssuanceResult = trustLayer.issue {
         }
         issued(Instant.now())
     }
-    signedBy(issuerDid = hrDeptDid.value, keyId = hrKeyId)
+    signedBy(hrDeptDid)
 }
 
-val employmentCredential = when (employmentIssuanceResult) {
-    is IssuanceResult.Success -> employmentIssuanceResult.credential
-    else -> throw IllegalStateException("Failed to issue credential: ${employmentIssuanceResult.reason}")
-}
+val employmentCredential = employmentIssuanceResult.getOrThrow()
 
 // Verify credential with delegation check
 val employmentVerification = trustLayer.verify {
@@ -347,13 +327,15 @@ trustLayer.updateDid {
 }
 
 // Issue credential with assertionMethod proof purpose
+import org.trustweave.trust.types.getOrThrow
+
 val validatedIssuanceResult = trustLayer.issue {
     credential {
         id("https://university.edu/credentials/validated-789")
         type("EducationCredential")
-        issuer(universityDid.value)
+        issuer(universityDid)
         subject {
-            id(studentDid.value)
+            id(studentDid)
             "certification" {
                 "name" to "Certified Developer"
                 "level" to "Advanced"
@@ -361,14 +343,11 @@ val validatedIssuanceResult = trustLayer.issue {
         }
         issued(Instant.now())
     }
-    signedBy(issuerDid = universityDid.value, keyId = universityKeyId)
+    signedBy(universityDid)
     proofPurpose(ProofPurposes.ASSERTION_METHOD)
 }
 
-val validatedCredential = when (validatedIssuanceResult) {
-    is IssuanceResult.Success -> validatedIssuanceResult.credential
-    else -> throw IllegalStateException("Failed to issue credential: ${validatedIssuanceResult.reason}")
-}
+val validatedCredential = validatedIssuanceResult.getOrThrow()
 
 // Verify with proof purpose validation
 val proofPurposeVerification = trustLayer.verify {
@@ -398,17 +377,10 @@ fun completeWebOfTrustWorkflow() = runBlocking {
     }
 
     // 1. Create DIDs
-    val issuerDidResult = trustLayer.createDid { method(DidMethods.KEY) }
-    val issuerDid = when (issuerDidResult) {
-        is DidCreationResult.Success -> issuerDidResult.did
-        else -> throw IllegalStateException("Failed to create issuer DID: ${issuerDidResult.reason}")
-    }
+    import org.trustweave.trust.types.getOrThrowDid
     
-    val holderDidResult = trustLayer.createDid { method(DidMethods.KEY) }
-    val holderDid = when (holderDidResult) {
-        is DidCreationResult.Success -> holderDidResult.did
-        else -> throw IllegalStateException("Failed to create holder DID: ${holderDidResult.reason}")
-    }
+    val issuerDid = trustLayer.createDid { method(DidMethods.KEY) }.getOrThrowDid()
+    val holderDid = trustLayer.createDid { method(DidMethods.KEY) }.getOrThrowDid()
 
     // 2. Set up trust anchor
     trustLayer.trust {
@@ -429,34 +401,27 @@ fun completeWebOfTrustWorkflow() = runBlocking {
     }
 
     // 4. Resolve issuer DID to get key ID
-    val issuerResolution = trustLayer.resolveDid(issuerDid)
-    val issuerDoc = when (issuerResolution) {
-        is DidResolutionResult.Success -> issuerResolution.document
-        else -> throw IllegalStateException("Failed to resolve issuer DID")
-    }
-    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val issuerDoc = trustLayer.resolveDid(issuerDid).getOrThrow()
+    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     // 5. Issue credential
-    val issuanceResult = trustLayer.issue {
+    import org.trustweave.trust.types.getOrThrow
+    
+    val credential = trustLayer.issue {
         credential {
             id("https://example.com/credential-1")
             type("TestCredential")
-            issuer(issuerDid.value)
+            issuer(issuerDid)
             subject {
                 id(holderDid.value)
                 "test" to "value"
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+        signedBy(issuerDid)
         proofPurpose(ProofPurposes.ASSERTION_METHOD)
-    }
-    
-    val credential = when (issuanceResult) {
-        is IssuanceResult.Success -> issuanceResult.credential
-        else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
-    }
+    }.getOrThrow()
 
     // 6. Verify with all checks enabled
     val result = trustLayer.verify {

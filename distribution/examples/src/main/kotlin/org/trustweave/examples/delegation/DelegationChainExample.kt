@@ -137,9 +137,9 @@ fun main() = runBlocking {
         credential {
             id("https://company.com/credentials/employee-${employeeDid.value.substringAfterLast(":")}")
             type("EmploymentCredential")
-            issuer(hrManagerDid.value) // HR Manager issues on behalf of company
+            issuer(hrManagerDid) // HR Manager issues on behalf of company
             subject {
-                id(employeeDid.value)
+                id(employeeDid)
                 "employment" {
                     "company" to "Tech Corp"
                     "role" to "Software Engineer"
@@ -149,7 +149,7 @@ fun main() = runBlocking {
             }
             issued(Clock.System.now())
         }
-        signedBy(issuerDid = hrManagerDid.value, keyId = "key-1")
+        signedBy(hrManagerDid)
     }.getOrFail()
     println("✓ Credential issued by HR Manager (delegated authority)\n")
 

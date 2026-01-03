@@ -5,7 +5,7 @@ import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
 import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.credential.model.ProofType
-import org.trustweave.trust.types.VerificationResult
+import org.trustweave.trust.types.*
 import org.trustweave.trust.dsl.credential.CredentialTypes
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.VerifiableCredential
@@ -153,9 +153,9 @@ fun main() = runBlocking {
         credential {
             id("https://university.edu/credentials/degree-${studentDid.value.substringAfterLast(":")}")
             type(CredentialTypes.EDUCATION, CredentialType.Custom("DegreeCredential"))
-            issuer(universityDid.value)
+            issuer(universityDid)
             subject {
-                id(studentDid.value)
+                id(studentDid)
                 "degree" {
                     "type" to "Bachelor"
                     "field" to "Computer Science"
@@ -165,7 +165,7 @@ fun main() = runBlocking {
             }
             issued(Clock.System.now())
         }
-        signedBy(issuerDid = universityDid.value, keyId = "key-1")
+        signedBy(universityDid)
     }.getOrFail()
     println("✓ Issued degree credential from university")
 
@@ -174,9 +174,9 @@ fun main() = runBlocking {
         credential {
             id("https://company.com/credentials/employment-${studentDid.value.substringAfterLast(":")}")
             type("EmploymentCredential")
-            issuer(hrDeptDid.value)
+            issuer(hrDeptDid)
             subject {
-                id(studentDid.value)
+                id(studentDid)
                 "employment" {
                     "company" to "Tech Corp"
                     "role" to "Software Engineer"
@@ -185,7 +185,7 @@ fun main() = runBlocking {
             }
             issued(Clock.System.now())
         }
-        signedBy(issuerDid = hrDeptDid.value, keyId = "key-1")
+        signedBy(hrDeptDid)
     }.getOrFail()
     println("✓ Issued employment credential from HR department (delegated)\n")
 
@@ -206,17 +206,7 @@ fun main() = runBlocking {
         }
         is VerificationResult.Invalid -> {
             println("  Valid: false")
-            val errorList = when (degreeVerification) {
-                is VerificationResult.Invalid.Expired -> degreeVerification.errors
-                is VerificationResult.Invalid.Revoked -> degreeVerification.errors
-                is VerificationResult.Invalid.InvalidProof -> degreeVerification.errors
-                is VerificationResult.Invalid.IssuerResolutionFailed -> degreeVerification.errors
-                is VerificationResult.Invalid.UntrustedIssuer -> degreeVerification.errors
-                is VerificationResult.Invalid.SchemaValidationFailed -> degreeVerification.errors
-                is VerificationResult.Invalid.MultipleFailures -> degreeVerification.errors
-                is VerificationResult.Invalid.Other -> degreeVerification.errors
-            }
-            println("  Errors: ${errorList.joinToString(", ")}")
+            println("  Errors: ${degreeVerification.allErrors.joinToString(", ")}")
         }
     }
 
@@ -241,17 +231,7 @@ fun main() = runBlocking {
         }
         is VerificationResult.Invalid -> {
             println("  Valid: false")
-            val errorList = when (employmentVerification) {
-                is VerificationResult.Invalid.Expired -> employmentVerification.errors
-                is VerificationResult.Invalid.Revoked -> employmentVerification.errors
-                is VerificationResult.Invalid.InvalidProof -> employmentVerification.errors
-                is VerificationResult.Invalid.IssuerResolutionFailed -> employmentVerification.errors
-                is VerificationResult.Invalid.UntrustedIssuer -> employmentVerification.errors
-                is VerificationResult.Invalid.SchemaValidationFailed -> employmentVerification.errors
-                is VerificationResult.Invalid.MultipleFailures -> employmentVerification.errors
-                is VerificationResult.Invalid.Other -> employmentVerification.errors
-            }
-            println("  Errors: ${errorList.joinToString(", ")}")
+            println("  Errors: ${employmentVerification.allErrors.joinToString(", ")}")
         }
     }
 

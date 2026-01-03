@@ -1,9 +1,6 @@
 package org.trustweave.trust.dsl
 
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.testkit.services.TestkitDidMethodFactory
-import org.trustweave.testkit.services.TestkitKmsFactory
-import org.trustweave.testkit.services.TestkitBlockchainAnchorClientFactory
 import org.trustweave.trust.dsl.TrustWeaveConfig
 import org.trustweave.trust.dsl.trustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
@@ -27,11 +24,7 @@ class TrustLayerConfigTest {
     @Test
     fun `test trust layer configuration with inMemory KMS`() = runBlocking {
         val trustWeave = trustWeave {
-            factories(
-                kmsFactory = TestkitKmsFactory(),
-                didMethodFactory = TestkitDidMethodFactory(),
-                anchorClientFactory = TestkitBlockchainAnchorClientFactory()
-            )
+            // KMS, DID methods, and Anchor clients auto-discovered via SPI
             keys {
                 provider("inMemory")
                 algorithm("Ed25519")
@@ -69,10 +62,7 @@ class TrustLayerConfigTest {
         // For custom KMS without signer function, use provider("inMemory") instead
         // This test verifies that custom KMS can be set, but signer must be provided
         val trustWeave = trustWeave {
-            factories(
-                kmsFactory = TestkitKmsFactory(),
-                didMethodFactory = TestkitDidMethodFactory()
-            )
+            // KMS and DID methods auto-discovered via SPI
             keys {
                 provider("inMemory")
             }
@@ -91,11 +81,7 @@ class TrustLayerConfigTest {
     @Test
     fun `test trust layer configuration with multiple DID methods`() = runBlocking {
         val trustWeave = trustWeave {
-            factories(
-                kmsFactory = TestkitKmsFactory(),
-                didMethodFactory = TestkitDidMethodFactory(),
-                anchorClientFactory = TestkitBlockchainAnchorClientFactory()
-            )
+            // KMS, DID methods, and Anchor clients auto-discovered via SPI
             keys {
                 provider("inMemory")
             }
@@ -119,11 +105,7 @@ class TrustLayerConfigTest {
     @Test
     fun `test trust layer configuration with multiple anchor chains`() = runBlocking {
         val trustWeave = trustWeave {
-            factories(
-                kmsFactory = TestkitKmsFactory(),
-                didMethodFactory = TestkitDidMethodFactory(),
-                anchorClientFactory = TestkitBlockchainAnchorClientFactory()
-            )
+            // KMS, DID methods, and Anchor clients auto-discovered via SPI
             keys {
                 provider("inMemory")
             }
@@ -151,10 +133,7 @@ class TrustLayerConfigTest {
     @Test
     fun `test trust layer configuration with named layer`() = runBlocking {
         val trustWeave = trustWeave("production") {
-            factories(
-                kmsFactory = TestkitKmsFactory(),
-                didMethodFactory = TestkitDidMethodFactory()
-            )
+            // KMS and DID methods auto-discovered via SPI
             keys {
                 provider("inMemory")
             }
@@ -172,10 +151,7 @@ class TrustLayerConfigTest {
     @Test
     fun `test trust layer credential config defaults`() = runBlocking {
         val trustWeave = trustWeave {
-            factories(
-                kmsFactory = TestkitKmsFactory(),
-                didMethodFactory = TestkitDidMethodFactory()
-            )
+            // KMS and DID methods auto-discovered via SPI
             keys {
                 provider("inMemory")
             }
@@ -195,10 +171,7 @@ class TrustLayerConfigTest {
     @Test
     fun `test trust layer credential config custom values`() = runBlocking {
         val trustWeave = trustWeave {
-            factories(
-                kmsFactory = TestkitKmsFactory(),
-                didMethodFactory = TestkitDidMethodFactory()
-            )
+            // KMS and DID methods auto-discovered via SPI
             keys {
                 provider("inMemory")
             }
@@ -224,10 +197,7 @@ class TrustLayerConfigTest {
     @Test
     fun `test trust layer context provides access to components`() = runBlocking {
         val trustWeave = trustWeave {
-            factories(
-                kmsFactory = TestkitKmsFactory(),
-                didMethodFactory = TestkitDidMethodFactory()
-            )
+            // KMS and DID methods auto-discovered via SPI
             keys {
                 provider("inMemory")
             }

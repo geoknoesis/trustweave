@@ -29,19 +29,16 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     trustWeave {
-        factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
-        )
         keys {
-            provider(IN_MEMORY)
+            provider(IN_MEMORY)  // Auto-discovered via SPI
             algorithm(ED25519)
         }
         did {
-        method(KEY) {
-            algorithm(ED25519)
+            method(KEY) {  // Auto-discovered via SPI
+                algorithm(ED25519)
             }
         }
+        // KMS, DID methods, and CredentialService all auto-created!
     }.run {
         // Create a DID (returns DID and document directly)
         val (issuerDid, issuerDoc) = createDid().getOrThrow()
@@ -76,23 +73,20 @@ import org.trustweave.trust.dsl.credential.*
 import org.trustweave.testkit.services.*
 
 val trustWeave = trustWeave {
-    factories(
-        kmsFactory = TestkitKmsFactory(),
-        didMethodFactory = TestkitDidMethodFactory()
-    )
     keys {
-        provider(IN_MEMORY)  // For testing; use production KMS in production
+        provider(IN_MEMORY)  // Auto-discovered via SPI (for testing; use production KMS in production)
         algorithm(ED25519)
     }
     did {
-        method(KEY) {  // Register did:key method
+        method(KEY) {  // Auto-discovered via SPI
             algorithm(ED25519)
         }
         // Add more methods as needed
-        method(WEB) {
+        method(WEB) {  // Auto-discovered via SPI
             domain("example.com")
         }
     }
+    // KMS, DID methods, and CredentialService all auto-created!
 }
 ```
 
@@ -127,16 +121,20 @@ import org.trustweave.did.identifiers.extractKeyId
 val did = trustWeave.createDid { method(KEY) }
 
 // Resolve DID to get verification method
-val resolutionResult = trustWeave.resolveDid(did)
-val document = when (resolutionResult) {
-    is DidResolutionResult.Success -> resolutionResult.document
-    else -> throw IllegalStateException("Failed to resolve DID")
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.identifiers.extractKeyId
+
+// Helper extension for resolution results
+fun DidResolutionResult.getOrThrow() = when (this) {
+    is DidResolutionResult.Success -> this.document
+    else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
 }
 
+val document = trustWeave.resolveDid(did).getOrThrow()
+
 // Extract key ID from verification method using type-safe extension function
-val verificationMethod = document.verificationMethod.firstOrNull()
-    ?: throw IllegalStateException("No verification method found")
-val keyId = verificationMethod.extractKeyId()  // e.g., "key-1"
+val keyId = document.verificationMethod.firstOrNull()?.extractKeyId()
+    ?: throw IllegalStateException("No verification method found")  // e.g., "key-1"
 ```
 
 ### Step 4: Use the DID
@@ -146,10 +144,10 @@ Use the DID and key ID in credential operations:
 ```kotlin
 val credential = trustWeave.issue {
     credential {
-        issuer(did.value)
+        issuer(did)
         // ... credential configuration
     }
-    signedBy(issuerDid = did.value, keyId = keyId)  // keyId is already a String
+    signedBy(did)  // keyId is automatically resolved
 }
 ```
 

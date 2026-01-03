@@ -231,46 +231,26 @@ fun main() = runBlocking {
     val TrustWeave = TrustWeave.create()
 
     // 2. Create DIDs
-    import org.trustweave.trust.types.DidCreationResult
-    import org.trustweave.trust.types.IssuanceResult
-    import org.trustweave.trust.types.WalletCreationResult
+    import org.trustweave.trust.types.getOrThrowDid
+    import org.trustweave.trust.types.getOrThrow
     
-    val issuerDidResult = trustWeave.createDid { method(KEY) }
-    val issuerDid = when (issuerDidResult) {
-        is DidCreationResult.Success -> issuerDidResult.did
-        else -> throw IllegalStateException("Failed to create issuer DID: ${issuerDidResult.reason}")
-    }
-    
-    val holderDidResult = trustWeave.createDid { method(KEY) }
-    val holderDid = when (holderDidResult) {
-        is DidCreationResult.Success -> holderDidResult.did
-        else -> throw IllegalStateException("Failed to create holder DID: ${holderDidResult.reason}")
-    }
+    val issuerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val holderDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 
     // 3. Issue Credential
-    val issuanceResult = trustWeave.issue {
+    val credential = trustWeave.issue {
         credential {
-            issuer(issuerDid.value)
-            subject { id(holderDid.value) }
+            issuer(issuerDid)
+            subject { id(holderDid) }
             issued(Instant.now())
         }
-        signedBy(issuerDid = issuerDid.value, keyId = "key-1")
-    }
-    
-    val credential = when (issuanceResult) {
-        is IssuanceResult.Success -> issuanceResult.credential
-        else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
-    }
+        signedBy(issuerDid)
+    }.getOrThrow()
 
     // 4. Store in Wallet
-    val walletResult = trustWeave.wallet {
-        holder(holderDid.value)
-    }
-    
-    val wallet = when (walletResult) {
-        is WalletCreationResult.Success -> walletResult.wallet
-        else -> throw IllegalStateException("Failed to create wallet: ${walletResult.reason}")
-    }
+    val wallet = trustWeave.wallet {
+        holder(holderDid)
+    }.getOrThrow()
     val credentialId = wallet.store(credential)
 
     // 5. Verify

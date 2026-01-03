@@ -170,9 +170,7 @@ fun main() = runBlocking {
     // Step 1: Create TrustWeave instance
     val trustWeave = trustWeave {
         factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
-        )
+        // KMS and DID methods auto-discovered via SPI
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
     }
@@ -192,9 +190,9 @@ fun main() = runBlocking {
         credential {
             id("https://example.edu/credentials/degree-${Instant.now().toEpochMilli()}")
             type("VerifiableCredential", "DegreeCredential", "BachelorDegreeCredential")
-            issuer(universityDid.value)
+            issuer(universityDid)
             subject {
-                id(studentDid.value)
+                id(studentDid)
                 "degree" {
                     "type" to "BachelorDegree"
                     "name" to "Bachelor of Science in Computer Science"
@@ -208,7 +206,7 @@ fun main() = runBlocking {
             issued(Instant.now())
             expires(10, ChronoUnit.YEARS)
         }
-        signedBy(issuerDid = universityDid.value, keyId = universityKeyId)
+        signedBy(universityDid)
     }.getOrThrow()
 
     println("✅ Credential issued: ${credential.id}")
@@ -217,7 +215,7 @@ fun main() = runBlocking {
 
     // Step 4: Create student wallet and store credential
     val studentWallet = trustWeave.wallet {
-        holder(studentDid.value)
+        holder(studentDid)
         organization { enabled = true }
         presentation { enabled = true }
     }.getOrThrow()
@@ -344,9 +342,7 @@ Create a TrustWeave instance that provides access to all functionality:
 ```kotlin
     val trustWeave = trustWeave {
         factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
-        )
+        // KMS and DID methods auto-discovered via SPI
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
         credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
@@ -361,28 +357,23 @@ Each party (university issuer and student holder) needs their own DID:
 
 ```kotlin
 // Create university DID (issuer)
-import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.identifiers.extractKeyId
 
-val universityDidResult = trustWeave.createDid { method(KEY) }
-val universityDid = when (universityDidResult) {
-    is DidCreationResult.Success -> universityDidResult.did
-    else -> throw IllegalStateException("Failed to create university DID: ${universityDidResult.reason}")
+// Helper extension for resolution results
+fun DidResolutionResult.getOrThrow() = when (this) {
+    is DidResolutionResult.Success -> this.document
+    else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
 }
 
-val universityResolution = trustWeave.resolveDid(universityDid)
-val universityDoc = when (universityResolution) {
-    is DidResolutionResult.Success -> universityResolution.document
-    else -> throw IllegalStateException("Failed to resolve university DID")
-}
-val universityKeyId = universityDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+val universityDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+val universityDoc = trustWeave.resolveDid(universityDid).getOrThrow()
+val universityKeyId = universityDoc.verificationMethod.firstOrNull()?.extractKeyId()
     ?: throw IllegalStateException("No verification method found")
 
 // Create student DID (holder)
-val studentDidResult = trustWeave.createDid { method(KEY) }
-val studentDid = when (studentDidResult) {
-    is DidCreationResult.Success -> studentDidResult.did
-    else -> throw IllegalStateException("Failed to create student DID: ${studentDidResult.reason}")
-}
+val studentDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 ```
 
 **What this does:** Creates self-sovereign identifiers for both parties. The university DID will be used as the credential issuer, and the student DID will be the credential subject.
@@ -392,13 +383,13 @@ val studentDid = when (studentDidResult) {
 The university creates and issues a verifiable credential:
 
 ```kotlin
-import org.trustweave.trust.types.IssuanceResult
+import org.trustweave.trust.types.getOrThrow
 
-val issuanceResult = trustWeave.issue {
+val credential = trustWeave.issue {
     credential {
         id("https://example.edu/credentials/degree-${Instant.now().toEpochMilli()}")
         type("VerifiableCredential", "DegreeCredential", "BachelorDegreeCredential")
-        issuer(universityDid.value)
+        issuer(universityDid)
         subject {
             id(studentDid.value)
             "degree" {
@@ -414,13 +405,8 @@ val issuanceResult = trustWeave.issue {
         issued(Instant.now())
         expires(10, ChronoUnit.YEARS)
     }
-    signedBy(issuerDid = universityDid.value, keyId = universityKeyId)
-}
-
-val credential = when (issuanceResult) {
-    is IssuanceResult.Success -> issuanceResult.credential
-    else -> throw IllegalStateException("Failed to issue credential")
-}
+    signedBy(universityDid)
+}.getOrThrow()
 ```
 
 **What this does:** Issues a cryptographically signed credential with the university's DID. The credential includes degree information and is valid for 10 years.
@@ -430,18 +416,13 @@ val credential = when (issuanceResult) {
 Students need a wallet to store their credentials:
 
 ```kotlin
-import org.trustweave.trust.types.WalletCreationResult
+import org.trustweave.trust.types.getOrThrow
 
-val walletResult = trustWeave.wallet {
+val studentWallet = trustWeave.wallet {
     holder(studentDid.value)
     organization { enabled = true }  // Enable collections and tags
     presentation { enabled = true }  // Enable presentation creation
-}
-
-val studentWallet = when (walletResult) {
-    is WalletCreationResult.Success -> walletResult.wallet
-    else -> throw IllegalStateException("Failed to create wallet")
-}
+}.getOrThrow()
 ```
 
 **What this does:** Creates an in-memory wallet for the student with organization and presentation capabilities enabled.

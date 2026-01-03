@@ -20,22 +20,18 @@ import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.vc.CredentialProof
 import org.trustweave.credential.model.SchemaFormat
 import org.trustweave.credential.credentialService
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.resolver.DidResolver
 import org.trustweave.credential.requests.PresentationRequest
 import org.trustweave.credential.proof.ProofOptions
 import org.trustweave.credential.proof.ProofPurpose
-import org.trustweave.did.identifiers.Did
-import org.trustweave.did.registry.DidMethodRegistry
-import org.trustweave.did.resolver.DidResolver
 import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.trust.dsl.TrustWeaveRegistries
-import org.trustweave.anchor.BlockchainAnchorRegistry
 import org.trustweave.wallet.CredentialOrganization
 import org.trustweave.wallet.Wallet
-import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.testkit.services.TestkitDidMethodFactory
 import org.trustweave.testkit.services.TestkitWalletFactory
 import org.trustweave.testkit.getOrFail
+import org.trustweave.did.identifiers.extractKeyId
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
@@ -57,29 +53,10 @@ fun main() = runBlocking {
         }
     }
 
-    // Create shared DID registry for consistent DID resolution
-    val sharedDidRegistry = DidMethodRegistry()
-    
-    // Create DID resolver
-    val didResolver = DidResolver { did: Did ->
-        sharedDidRegistry.resolve(did.value) as DidResolutionResult
-    }
-    
-    // Create CredentialService
-    val credentialService = credentialService(
-        didResolver = didResolver,
-        signer = signer
-    )
-
-    val trustWeave = TrustWeave.build(
-        registries = TrustWeaveRegistries(
-            didRegistry = sharedDidRegistry,
-            blockchainRegistry = BlockchainAnchorRegistry()
-        )
-    ) {
+    // TrustWeave auto-creates everything via SPI - minimal configuration needed
+    val trustWeave = TrustWeave.build {
         factories(
-            didMethodFactory = TestkitDidMethodFactory(didRegistry = sharedDidRegistry),
-            walletFactory = TestkitWalletFactory()
+            walletFactory = TestkitWalletFactory()  // Only wallet factory needed
         )
         keys {
             custom(kmsRef)
@@ -101,14 +78,13 @@ fun main() = runBlocking {
         credentials {
             defaultProofType(ProofType.Ed25519Signature2020)
         }
+        // CredentialService is auto-created with custom signer from keys{} block
 
         schemas {
             autoValidate(false)
             defaultFormat(SchemaFormat.JSON_SCHEMA)
         }
-        
-        // Configure CredentialService
-        issuer(credentialService)
+        // CredentialService is auto-created with custom signer from keys{} block
     }
 
     // Create professional DID using new DSL
@@ -188,7 +164,8 @@ fun main() = runBlocking {
     }
     val universityVerificationMethod = universityDidDoc.verificationMethod.firstOrNull()
         ?: throw IllegalStateException("No verification method found in university DID document")
-    val universityKeyId = universityVerificationMethod.id.value.substringAfter("#")
+    val universityKeyId = universityVerificationMethod.extractKeyId()
+        ?: throw IllegalStateException("No key ID found in university verification method")
 
     // Issue credentials using new DSL with revocation support
     val bachelorDegree = trustWeave.issue {

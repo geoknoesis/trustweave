@@ -99,74 +99,49 @@ fun main() = runBlocking {
         credentials { defaultProofType(ProofType.Ed25519Signature2020) }  // Using ProofType enum
     }
 
-    // Create issuer DID (returns sealed result)
-import org.trustweave.trust.types.DidCreationResult
-import org.trustweave.credential.results.IssuanceResult
-import org.trustweave.trust.types.VerificationResult
+    // Create issuer DID
+    import org.trustweave.trust.types.getOrThrowDid
+    import org.trustweave.trust.types.getOrThrow
+    import org.trustweave.did.resolver.DidResolutionResult
+    import org.trustweave.did.identifiers.extractKeyId
+    import org.trustweave.trust.types.VerificationResult
     
-    val didResult = trustWeave.createDid {
+    // Helper extension for resolution results
+    fun DidResolutionResult.getOrThrow() = when (this) {
+        is DidResolutionResult.Success -> this.document
+        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
+    }
+    
+    val issuerDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }
-    
-    val issuerDid = when (didResult) {
-        is DidCreationResult.Success -> didResult.did
-        else -> {
-            val errorMsg = when (didResult) {
-                is DidCreationResult.Failure.MethodNotRegistered -> 
-                    "Method '${didResult.method}' not registered. Available: ${didResult.availableMethods.joinToString()}"
-                is DidCreationResult.Failure.KeyGenerationFailed -> 
-                    "Key generation failed: ${didResult.reason}"
-                is DidCreationResult.Failure.DocumentCreationFailed -> 
-                    "Document creation failed: ${didResult.reason}"
-                is DidCreationResult.Failure.InvalidConfiguration -> 
-                    "Invalid configuration: ${didResult.reason}"
-                is DidCreationResult.Failure.Other -> 
-                    "Error: ${didResult.reason}"
-            }
-            println("Failed to create DID: $errorMsg")
-            return@runBlocking
-        }
-    }
+    }.getOrThrowDid()
     
     // Resolve DID to get key ID
-    val resolution = trustWeave.resolveDid(issuerDid)
-    val issuerDoc = when (resolution) {
-        is DidResolutionResult.Success -> resolution.document
-        else -> throw IllegalStateException("Failed to resolve issuer DID")
-    }
-    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val issuerDoc = trustWeave.resolveDid(issuerDid).getOrThrow()
+    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     // Issue credential using DSL
-    val issuanceResult = trustWeave.issue {
+    val credential = trustWeave.issue {
         credential {
             type(CredentialTypes.PERSON)
-            issuer(issuerDid.value)  // Using typed Did object's value
+            issuer(issuerDid)
             subject {
-                id("did:key:subject")
+                id(org.trustweave.did.identifiers.Did("did:key:subject"))
                 "type" to "Person"
                 "name" to "Alice"
                 "email" to "alice@example.com"
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)  // Using typed Did object's value
-    }
+        signedBy(issuerDid)
+    }.getOrThrow()
 
-    val credential = when (issuanceResult) {
-        is IssuanceResult.Success -> {
-            println("Issued credential: ${issuanceResult.credential.id}")
-            println("Issuer: ${issuanceResult.credential.issuer}")
-            println("Subject: ${issuanceResult.credential.credentialSubject}")
-            println("Proof: ${issuanceResult.credential.proof}")
-            issuanceResult.credential
-        }
-        else -> {
-            println("Issuance failed: ${issuanceResult.allErrors.joinToString("; ")}")
-            return@runBlocking
-        }
-    }
+    println("Issued credential: ${credential.id}")
+    println("Issuer: ${credential.issuer}")
+    println("Subject: ${credential.credentialSubject}")
+    println("Proof: ${credential.proof}")
 }
 ```
 
@@ -244,7 +219,7 @@ fun main() = runBlocking {
     val issuanceResult = trustWeave.issue {
         credential {
             type(CredentialTypes.PERSON)
-            issuer(issuerDid.value)
+            issuer(issuerDid)
             subject {
                 id("did:key:subject")
                 "type" to "Person"
@@ -257,18 +232,10 @@ fun main() = runBlocking {
         signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
     }
 
-    val credential = when (issuanceResult) {
-        is IssuanceResult.Success -> {
-            println("Issued credential with expiration: ${issuanceResult.credential.expirationDate}")
-            if (issuanceResult.credential.credentialStatus != null) {
-                println("Status: ${issuanceResult.credential.credentialStatus}")
-            }
-            issuanceResult.credential
-        }
-        else -> {
-            println("Error: ${issuanceResult.allErrors.joinToString("; ")}")
-            return@runBlocking
-        }
+    val credential = issuanceResult.getOrThrow()
+    println("Issued credential with expiration: ${credential.expirationDate}")
+    if (credential.credentialStatus != null) {
+        println("Status: ${credential.credentialStatus}")
     }
 }
 ```
@@ -422,7 +389,7 @@ fun main() = runBlocking {
     // Issue credential
     val issuanceResult = trustWeave.issue {
         credential {
-            issuer(issuerDid.value)
+            issuer(issuerDid)
             subject {
                 id("did:key:subject")
             }
@@ -548,7 +515,7 @@ fun main() = runBlocking {
             }
             credential {
                 type(CredentialTypes.PERSON)
-                issuer(issuerDid.value)
+                issuer(issuerDid)
                 subject {
                     addClaims(subject)
                 }
@@ -713,7 +680,7 @@ fun main() = runBlocking {
     // Issue credential with error handling
     val issuanceResult = trustWeave.issue {
         credential {
-            issuer(issuerDid.value)
+            issuer(issuerDid)
             subject {
                 id("did:key:subject")
             }

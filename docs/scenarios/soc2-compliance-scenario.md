@@ -181,74 +181,40 @@ fun main() = runBlocking {
 
     // Step 1: Create TrustWeave instance
     val trustWeave = TrustWeave.build {
-        factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
-        )
-        keys { provider(IN_MEMORY); algorithm(ED25519) }
-        did { method(KEY) { algorithm(ED25519) } }
+        keys { provider(IN_MEMORY); algorithm(ED25519) }  // Auto-discovered via SPI
+        did { method(KEY) { algorithm(ED25519) } }  // Auto-discovered via SPI
         credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
+        // KMS, DID methods, and CredentialService all auto-created!
     }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for organization, employees, and auditors
-    import org.trustweave.trust.types.DidCreationResult
+    import org.trustweave.trust.types.getOrThrowDid
+    import org.trustweave.trust.types.getOrThrow
+    import org.trustweave.did.resolver.DidResolutionResult
+    import org.trustweave.did.identifiers.extractKeyId
     
-    val organizationDidResult = trustWeave.createDid { method(KEY) }
-    val organizationDid = when (organizationDidResult) {
-        is DidCreationResult.Success -> {
-            println("✅ Created organization DID: ${organizationDidResult.did.value}")
-            organizationDidResult.did
-        }
-        else -> {
-            println("Failed to create organization DID: ${organizationDidResult.reason}")
-            return@runBlocking
-        }
+    // Helper extension for resolution results
+    fun DidResolutionResult.getOrThrow() = when (this) {
+        is DidResolutionResult.Success -> this.document
+        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
     }
+    
+    val organizationDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    println("✅ Created organization DID: ${organizationDid.value}")
 
-    val adminDidResult = trustWeave.createDid { method(KEY) }
-    val adminDid = when (adminDidResult) {
-        is DidCreationResult.Success -> {
-            println("✅ Created admin DID: ${adminDidResult.did.value}")
-            adminDidResult.did
-        }
-        else -> {
-            println("Failed to create admin DID: ${adminDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    val adminDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    println("✅ Created admin DID: ${adminDid.value}")
 
-    val employeeDidResult = trustWeave.createDid { method(KEY) }
-    val employeeDid = when (employeeDidResult) {
-        is DidCreationResult.Success -> {
-            println("✅ Created employee DID: ${employeeDidResult.did.value}")
-            employeeDidResult.did
-        }
-        else -> {
-            println("Failed to create employee DID: ${employeeDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    val employeeDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    println("✅ Created employee DID: ${employeeDid.value}")
 
-    val auditorDidResult = trustWeave.createDid { method(KEY) }
-    val auditorDid = when (auditorDidResult) {
-        is DidCreationResult.Success -> {
-            println("✅ Created auditor DID: ${auditorDidResult.did.value}")
-            auditorDidResult.did
-        }
-        else -> {
-            println("Failed to create auditor DID: ${auditorDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    val auditorDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    println("✅ Created auditor DID: ${auditorDid.value}")
 
     // Step 3: Issue access control credentials (CC6.1, CC6.2, CC6.3)
-    val orgResolution = trustWeave.resolveDid(organizationDid)
-    val orgDoc = when (orgResolution) {
-        is DidResolutionResult.Success -> orgResolution.document
-        else -> throw IllegalStateException("Failed to resolve organization DID")
-    }
-    val orgKeyId = orgDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val orgDoc = trustWeave.resolveDid(organizationDid).getOrThrow()
+    val orgKeyId = orgDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     // Admin access credential
@@ -257,7 +223,7 @@ fun main() = runBlocking {
     val adminAccessCredentialResult = trustWeave.issue {
         credential {
             type("VerifiableCredential", "AccessControlCredential", "SOC2AccessCredential")
-            issuer(organizationDid.value)
+            issuer(organizationDid)
             subject {
                 id(adminDid.value)
                 "role" to "Administrator"
@@ -276,16 +242,12 @@ fun main() = runBlocking {
             issued(Instant.now())
             expires(365, ChronoUnit.DAYS)
         }
-        signedBy(issuerDid = organizationDid.value, keyId = orgKeyId)
+        signedBy(organizationDid)
     }
     
-    val adminAccessCredential = when (adminAccessCredentialResult) {
-        is IssuanceResult.Success -> adminAccessCredentialResult.credential
-        else -> {
-            println("❌ Failed to issue admin access credential: ${adminAccessCredentialResult.allErrors.joinToString()}")
-            return@runBlocking
-        }
-    }
+    import org.trustweave.trust.types.getOrThrow
+    
+    val adminAccessCredential = adminAccessCredentialResult.getOrThrow()
 
     println("✅ Admin Access Credential issued: ${adminAccessCredential.id}")
 
@@ -293,7 +255,7 @@ fun main() = runBlocking {
     val employeeAccessCredentialResult = trustWeave.issue {
         credential {
             type("VerifiableCredential", "AccessControlCredential", "SOC2AccessCredential")
-            issuer(organizationDid.value)
+            issuer(organizationDid)
             subject {
                 id(employeeDid.value)
                 "role" to "User"
@@ -308,16 +270,10 @@ fun main() = runBlocking {
             issued(Instant.now())
             expires(365, ChronoUnit.DAYS)
         }
-        signedBy(issuerDid = organizationDid.value, keyId = orgKeyId)
+        signedBy(organizationDid)
     }
     
-    val employeeAccessCredential = when (employeeAccessCredentialResult) {
-        is IssuanceResult.Success -> employeeAccessCredentialResult.credential
-        else -> {
-            println("❌ Failed to issue employee access credential: ${employeeAccessCredentialResult.allErrors.joinToString()}")
-            return@runBlocking
-        }
-    }
+    val employeeAccessCredential = employeeAccessCredentialResult.getOrThrow()
 
     println("✅ Employee Access Credential issued: ${employeeAccessCredential.id}")
 
@@ -369,55 +325,22 @@ fun main() = runBlocking {
             println("✅ Admin access credential verified")
             println("   Credential ID: ${adminVerificationResult.credential.id}")
         }
-        is VerificationResult.Invalid.Expired -> {
-            println("❌ Admin credential expired at ${adminVerificationResult.expiredAt}")
-            return@runBlocking
-        }
-        is VerificationResult.Invalid.Revoked -> {
-            println("❌ Admin credential revoked")
-            return@runBlocking
-        }
-        is VerificationResult.Invalid.InvalidProof -> {
-            println("❌ Admin credential invalid proof: ${adminVerificationResult.reason}")
-            return@runBlocking
-        }
-        is VerificationResult.Invalid.UntrustedIssuer -> {
-            println("❌ Admin credential untrusted issuer: ${adminVerificationResult.issuer}")
-            return@runBlocking
-        }
-        else -> {
-            println("❌ Admin credential verification failed")
+        is VerificationResult.Invalid -> {
+            println("❌ Admin credential verification failed: ${adminVerificationResult.allErrors.joinToString("; ")}")
             return@runBlocking
         }
     }
 
     // Step 6: Key rotation with history preservation (CC7.3)
-    val newAdminDidResult = trustWeave.createDid { method(KEY) }
-    val newAdminDid = when (newAdminDidResult) {
-        is DidCreationResult.Success -> {
-            println("✅ Created new admin DID: ${newAdminDidResult.did.value}")
-            newAdminDidResult.did
-        }
-        else -> {
-            println("Failed to create new admin DID: ${newAdminDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    val newAdminDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    println("✅ Created new admin DID: ${newAdminDid.value}")
     
-    val newAdminResolution = trustWeave.resolveDid(newAdminDid)
-    val newAdminDoc = when (newAdminResolution) {
-        is DidResolutionResult.Success -> newAdminResolution.document
-        else -> throw IllegalStateException("Failed to resolve new admin DID")
-    }
-    val newAdminKeyId = newAdminDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val newAdminDoc = trustWeave.resolveDid(newAdminDid).getOrThrow()
+    val newAdminKeyId = newAdminDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
     
-    val adminResolution = trustWeave.resolveDid(adminDid)
-    val adminDoc = when (adminResolution) {
-        is DidResolutionResult.Success -> adminResolution.document
-        else -> throw IllegalStateException("Failed to resolve admin DID")
-    }
-    val oldAdminKeyId = adminDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val adminDoc = trustWeave.resolveDid(adminDid).getOrThrow()
+    val oldAdminKeyId = adminDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     // Issue key rotation credential
@@ -425,7 +348,7 @@ fun main() = runBlocking {
         credential {
             id("urn:soc2:key-rotation:${Instant.now().toEpochMilli()}")
             type("VerifiableCredential", "KeyRotationCredential", "SOC2KeyManagementCredential")
-            issuer(organizationDid.value)
+            issuer(organizationDid)
             subject {
                 id("urn:soc2:key-rotation:${Instant.now().toEpochMilli()}")
                 "type" to "KeyRotation"
@@ -438,16 +361,10 @@ fun main() = runBlocking {
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = organizationDid.value, keyId = orgKeyId)
+        signedBy(organizationDid)
     }
     
-    val keyRotationCredential = when (keyRotationCredentialResult) {
-        is IssuanceResult.Success -> keyRotationCredentialResult.credential
-        else -> {
-            println("❌ Failed to issue key rotation credential: ${keyRotationCredentialResult.allErrors.joinToString()}")
-            return@runBlocking
-        }
-    }
+    val keyRotationCredential = keyRotationCredentialResult.getOrThrow()
 
     println("✅ Key rotation credential issued: ${keyRotationCredential.id}")
 
@@ -472,7 +389,7 @@ fun main() = runBlocking {
         credential {
             id("urn:soc2:change:${Instant.now().toEpochMilli()}")
             type("VerifiableCredential", "ChangeManagementCredential", "SOC2ChangeCredential")
-            issuer(organizationDid.value)
+            issuer(organizationDid)
             subject {
                 id("urn:soc2:change:${Instant.now().toEpochMilli()}")
                 "type" to "SystemChange"
@@ -487,16 +404,10 @@ fun main() = runBlocking {
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = organizationDid.value, keyId = orgKeyId)
+        signedBy(organizationDid)
     }
     
-    val changeManagementCredential = when (changeManagementCredentialResult) {
-        is IssuanceResult.Success -> changeManagementCredentialResult.credential
-        else -> {
-            println("❌ Failed to issue change management credential: ${changeManagementCredentialResult.allErrors.joinToString()}")
-            return@runBlocking
-        }
-    }
+    val changeManagementCredential = changeManagementCredentialResult.getOrThrow()
 
     println("✅ Change management credential issued: ${changeManagementCredential.id}")
 
@@ -505,7 +416,7 @@ fun main() = runBlocking {
         credential {
             id("urn:soc2:incident:${Instant.now().toEpochMilli()}")
             type("VerifiableCredential", "IncidentResponseCredential", "SOC2IncidentCredential")
-            issuer(organizationDid.value)
+            issuer(organizationDid)
             subject {
                 id("urn:soc2:incident:${Instant.now().toEpochMilli()}")
                 "type" to "SecurityIncident"
@@ -519,16 +430,10 @@ fun main() = runBlocking {
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = organizationDid.value, keyId = orgKeyId)
+        signedBy(organizationDid)
     }
     
-    val incidentCredential = when (incidentCredentialResult) {
-        is IssuanceResult.Success -> incidentCredentialResult.credential
-        else -> {
-            println("❌ Failed to issue incident credential: ${incidentCredentialResult.allErrors.joinToString()}")
-            return@runBlocking
-        }
-    }
+    val incidentCredential = incidentCredentialResult.getOrThrow()
 
     println("✅ Incident response credential issued: ${incidentCredential.id}")
 
@@ -751,7 +656,7 @@ suspend fun rotateKeyWithHistory(
         is DidResolutionResult.Success -> newDidResolution.document
         else -> throw IllegalStateException("Failed to resolve new DID")
     }
-    val newKeyId = newDidDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val newKeyId = newDidDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     // Issue rotation credential
@@ -772,10 +677,7 @@ suspend fun rotateKeyWithHistory(
         signedBy(issuerDid = issuerDid, keyId = oldKeyId) // Use old key to sign rotation
     }
     
-    val rotationCredential = when (rotationCredentialResult) {
-        is IssuanceResult.Success -> rotationCredentialResult.credential
-        else -> throw IllegalStateException("Failed to issue rotation credential: ${rotationCredentialResult.allErrors.joinToString()}")
-    }
+    val rotationCredential = rotationCredentialResult.getOrThrow()
 
     // Anchor rotation to blockchain
     trustWeave.blockchains.anchor(

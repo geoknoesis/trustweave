@@ -6,6 +6,7 @@ import org.trustweave.did.identifiers.Did
 import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.trust.types.WalletCreationResult
 import org.trustweave.wallet.Wallet
+import kotlin.Result
 
 /**
  * Extension functions for Result types to extract success values or throw exceptions.
@@ -82,4 +83,10 @@ fun WalletCreationResult.getOrFail(): Wallet {
     }
 }
 
+/**
+ * Extract the value from a successful Result, or throw an exception.
+ */
+fun <T> Result<T>.getOrFail(): T {
+    return getOrElse { throw it }
+}
 

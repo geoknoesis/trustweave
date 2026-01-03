@@ -53,18 +53,13 @@ import org.trustweave.trust.types.KeyRotationResult
 
 val trustWeave = TrustWeave.build { ... }
 
-// Create DID (returns sealed result)
-val didResult = trustWeave.createDid {
+// Create DID (using compact pattern)
+import org.trustweave.trust.types.getOrThrowDid
+
+val did = trustWeave.createDid {
     method(KEY)
     algorithm(ED25519)
-}
-val did = when (didResult) {
-    is DidCreationResult.Success -> didResult.did
-    else -> {
-        println("Failed to create DID: ${didResult.reason}")
-        return@runBlocking
-    }
-}
+}.getOrThrowDid()
 
 // Update DID (returns sealed result)
 val updateResult = trustWeave.updateDid {
@@ -109,8 +104,10 @@ import org.trustweave.trust.types.IssuanceResult
 
 val trustWeave = TrustWeave.build { ... }
 
-// Issue credential (returns sealed result)
-val issuanceResult = trustWeave.issue {
+// Issue credential (using compact pattern)
+import org.trustweave.trust.types.getOrThrow
+
+val credential = trustWeave.issue {
     credential {
         type(CredentialType.VerifiableCredential, CredentialType.Person)
         issuer(issuerDid)
@@ -120,14 +117,7 @@ val issuanceResult = trustWeave.issue {
         }
     }
     signedBy(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
-}
-val credential = when (issuanceResult) {
-    is IssuanceResult.Success -> issuanceResult.credential
-    else -> {
-        println("Failed to issue credential: ${issuanceResult.reason}")
-        return@runBlocking
-    }
-}
+}.getOrThrow()
 
 // Verify credential (returns VerificationResult, not sealed)
 val verification = trustWeave.verify {
@@ -153,19 +143,14 @@ import org.trustweave.trust.types.WalletCreationResult
 
 val trustWeave = TrustWeave.build { ... }
 
-// Create wallet (returns sealed result)
-val walletResult = trustWeave.wallet {
+// Create wallet (using compact pattern)
+import org.trustweave.trust.types.getOrThrow
+
+val wallet = trustWeave.wallet {
     holder(holderDid)
     enableOrganization()
     enablePresentation()
-}
-val wallet = when (walletResult) {
-    is WalletCreationResult.Success -> walletResult.wallet
-    else -> {
-        println("Failed to create wallet: ${walletResult.reason}")
-        return@runBlocking
-    }
-}
+}.getOrThrow()
 
 // Use wallet
 val credentialId = wallet.store(credential)

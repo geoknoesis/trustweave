@@ -171,10 +171,7 @@ fun main() = runBlocking {
         // Use trustWeave.blockchains.anchor() separately if needed
     }
 
-    val issuedCredential = when (issuanceResult) {
-        is IssuanceResult.Success -> issuanceResult.credential
-        else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
-    }
+    val issuedCredential = issuanceResult.getOrThrow()
 }
 ```
 
@@ -224,10 +221,7 @@ fun main() = runBlocking {
         withRevocation() // Auto-creates status list if needed
     }
 
-    val issuedCredential = when (issuanceResult) {
-        is IssuanceResult.Success -> issuanceResult.credential
-        else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
-    }
+    val issuedCredential = issuanceResult.getOrThrow()
 }
 ```
 
@@ -252,22 +246,9 @@ when (result) {
             println("   Warnings: ${result.warnings.joinToString()}")
         }
     }
-    is VerificationResult.Invalid.Expired -> {
-        println("❌ Credential expired at ${result.expiredAt}")
+    is VerificationResult.Invalid -> {
+        println("❌ Verification failed: ${result.allErrors.joinToString("; ")}")
     }
-    is VerificationResult.Invalid.Revoked -> {
-        println("❌ Credential revoked")
-    }
-    is VerificationResult.Invalid.InvalidProof -> {
-        println("❌ Invalid proof: ${result.reason}")
-    }
-    is VerificationResult.Invalid.UntrustedIssuer -> {
-        println("❌ Untrusted issuer: ${result.issuer}")
-    }
-    is VerificationResult.Invalid.SchemaValidationFailed -> {
-        println("❌ Schema validation failed: ${result.errors.joinToString()}")
-    }
-    // ... other error cases handled exhaustively
 }
 ```
 
@@ -294,10 +275,9 @@ val walletResult = trustWeave.wallet {
     // Additional wallet configuration
 }
 
-val wallet = when (walletResult) {
-    is WalletCreationResult.Success -> walletResult.wallet
-    else -> throw IllegalStateException("Failed to create wallet: ${walletResult.reason}")
-}
+import org.trustweave.trust.types.getOrThrow
+
+val wallet = walletResult.getOrThrow()
 
 // Store credentials
 val credentialId = wallet.store(credential)
@@ -400,9 +380,13 @@ trustWeave.issueBatch {
     )
     maxConcurrency = 5
 }.collect { result ->
-    when (result) {
-        is IssuanceResult.Success -> println("Issued: ${result.credential.id}")
-        is IssuanceResult.Failure -> println("Failed: ${result.allErrors}")
+    import org.trustweave.trust.types.getOrThrow
+    
+    try {
+        val credential = result.getOrThrow()
+        println("Issued: ${credential.id}")
+    } catch (e: IllegalStateException) {
+        println("Failed: ${e.message}")
     }
 }
 ```

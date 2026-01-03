@@ -46,29 +46,22 @@ fun main(): Unit = runBlocking {
     println("Canonical credential-subject digest: $digest")
 
     val issuerDid = trustweave.createDid().getOrFail()
-    
-    // Resolve DID to get verification method
-    val issuerDidResolution = trustweave.resolveDid(issuerDid)
-    val issuerDidDoc = when (issuerDidResolution) {
-        is org.trustweave.did.resolver.DidResolutionResult.Success -> issuerDidResolution.document
-        else -> throw IllegalStateException("Failed to resolve issuer DID")
-    }
-    val issuerKeyId = issuerDidDoc.verificationMethod.firstOrNull()?.extractKeyId()
-        ?: error("No verification method generated for ${issuerDid.value}")
-    println("Issuer DID: ${issuerDid.value} (keyId=$issuerKeyId)")
+    println("Issuer DID: ${issuerDid.value}")
+
+    val holderDid = org.trustweave.did.identifiers.Did("did:key:holder-placeholder")
 
     val credential = trustweave.issue {
         credential {
             type("QuickStartCredential")
-            issuer(issuerDid.value)
+            issuer(issuerDid)
             subject {
-                id("did:key:holder-placeholder")
+                id(holderDid)
                 "name" to "Alice Example"
                 "role" to "Site Reliability Engineer"
             }
             issued(kotlinx.datetime.Clock.System.now())
         }
-        signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+        signedBy(issuerDid)
     }.getOrFail()
     println("Issued credential id: ${credential.id}")
 

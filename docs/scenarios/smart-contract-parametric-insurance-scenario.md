@@ -280,38 +280,27 @@ suspend fun completeParametricInsuranceWorkflow() {
     }
 
     // Step 1: Create DIDs
-    val insurerDidResult = trustWeave.createDid { method(KEY) }
-    val insurerDid = when (insurerDidResult) {
-        is DidCreationResult.Success -> insurerDidResult.did
-        else -> throw IllegalStateException("Failed to create insurer DID: ${insurerDidResult.reason}")
+    import org.trustweave.trust.types.getOrThrowDid
+    import org.trustweave.trust.types.getOrThrow
+    import org.trustweave.did.resolver.DidResolutionResult
+    import org.trustweave.did.identifiers.extractKeyId
+    
+    // Helper extension for resolution results
+    fun DidResolutionResult.getOrThrow() = when (this) {
+        is DidResolutionResult.Success -> this.document
+        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
     }
     
-    val insuredDidResult = trustWeave.createDid { method(KEY) }
-    val insuredDid = when (insuredDidResult) {
-        is DidCreationResult.Success -> insuredDidResult.did
-        else -> throw IllegalStateException("Failed to create insured DID: ${insuredDidResult.reason}")
-    }
+    val insurerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val insuredDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val eoProviderDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     
-    val eoProviderDidResult = trustWeave.createDid { method(KEY) }
-    val eoProviderDid = when (eoProviderDidResult) {
-        is DidCreationResult.Success -> eoProviderDidResult.did
-        else -> throw IllegalStateException("Failed to create EO provider DID: ${eoProviderDidResult.reason}")
-    }
-    
-    val insurerResolution = trustWeave.resolveDid(insurerDid)
-    val insurerDoc = when (insurerResolution) {
-        is DidResolutionResult.Success -> insurerResolution.document
-        else -> throw IllegalStateException("Failed to resolve insurer DID")
-    }
-    val insurerKeyId = insurerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val insurerDoc = trustWeave.resolveDid(insurerDid).getOrThrow()
+    val insurerKeyId = insurerDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No key found")
     
-    val eoProviderResolution = trustWeave.resolveDid(eoProviderDid)
-    val eoProviderDoc = when (eoProviderResolution) {
-        is DidResolutionResult.Success -> eoProviderResolution.document
-        else -> throw IllegalStateException("Failed to resolve EO provider DID")
-    }
-    val eoProviderKeyId = eoProviderDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val eoProviderDoc = trustWeave.resolveDid(eoProviderDid).getOrThrow()
+    val eoProviderKeyId = eoProviderDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No key found")
 
     // Step 2: Create contract draft
@@ -349,20 +338,19 @@ suspend fun completeParametricInsuranceWorkflow() {
     val eoDataIssuanceResult = trustWeave.issue {
         credential {
             type("EarthObservationCredential")
-            issuer(eoProviderDid.value)
+            issuer(eoProviderDid)
             subject {
                 "floodDepthCm" to floodDepth
                 "timestamp" to Instant.now().toString()
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = eoProviderDid.value, keyId = eoProviderKeyId)
+        signedBy(eoProviderDid)
     }
     
-    val eoDataCredential = when (eoDataIssuanceResult) {
-        is IssuanceResult.Success -> eoDataIssuanceResult.credential
-        else -> throw IllegalStateException("Failed to issue EO data credential: ${eoDataIssuanceResult.reason}")
-    }
+    import org.trustweave.trust.types.getOrThrow
+    
+    val eoDataCredential = eoDataIssuanceResult.getOrThrow()
 
     // Step 6: Execute contract
     val executionResult = processFloodDataAndExecute(

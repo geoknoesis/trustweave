@@ -144,9 +144,9 @@ val credential = trustWeave.issue {
     credential {
         id("https://example.edu/credentials/degree-123")
         type("DegreeCredential")
-        issuer(issuerDid.value)
+        issuer(issuerDid)
         subject {
-            id("did:key:student")
+            id(org.trustweave.did.identifiers.Did("did:key:student"))
             "degree" {
                 "name" to "Bachelor of Science"
             }
@@ -275,12 +275,17 @@ fun main() = runBlocking {
     val issuerDid = trustWeave.createDid { method(KEY) }
     
     // Step 3: Get key ID
-    val resolutionResult = trustWeave.resolveDid(issuerDid)
-    val issuerDocument = when (resolutionResult) {
-        is DidResolutionResult.Success -> resolutionResult.document
-        else -> throw IllegalStateException("Failed to resolve issuer DID")
+    import org.trustweave.did.resolver.DidResolutionResult
+    import org.trustweave.did.identifiers.extractKeyId
+    
+    // Helper extension for resolution results
+    fun DidResolutionResult.getOrThrow() = when (this) {
+        is DidResolutionResult.Success -> this.document
+        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
     }
-    val keyId = issuerDocument.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    
+    val issuerDocument = trustWeave.resolveDid(issuerDid).getOrThrow()
+    val keyId = issuerDocument.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
     
     // Step 4: Issue credential with revocation support

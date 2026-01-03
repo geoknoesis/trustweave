@@ -159,54 +159,32 @@ fun main() = runBlocking {
     // Step 2: Create DIDs for exporter, importer, and verifier
     import org.trustweave.trust.types.DidCreationResult
     
-    val exporterDidResult = trustWeave.createDid { method(KEY) }
-    val exporterDid = when (exporterDidResult) {
-        is DidCreationResult.Success -> {
-            println("✅ Exporter DID: ${exporterDidResult.did.value}")
-            exporterDidResult.did
-        }
-        else -> {
-            println("Failed to create exporter DID: ${exporterDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    import org.trustweave.trust.types.getOrThrowDid
     
-    val importerDidResult = trustWeave.createDid { method(KEY) }
-    val importerDid = when (importerDidResult) {
-        is DidCreationResult.Success -> {
-            println("✅ Importer DID: ${importerDidResult.did.value}")
-            importerDidResult.did
-        }
-        else -> {
-            println("Failed to create importer DID: ${importerDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    val exporterDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    println("✅ Exporter DID: ${exporterDid.value}")
+    
+    val importerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    println("✅ Importer DID: ${importerDid.value}")
     
     val verifierDidResult = trustWeave.createDid { method(KEY) }
-    val verifierDid = when (verifierDidResult) {
-        is DidCreationResult.Success -> {
-            println("✅ Verifier DID: ${verifierDidResult.did.value}")
-            verifierDidResult.did
-        }
-        else -> {
-            println("Failed to create verifier DID: ${verifierDidResult.reason}")
-            return@runBlocking
-        }
+    import org.trustweave.trust.types.getOrThrowDid
+    import org.trustweave.trust.types.getOrThrow
+    import org.trustweave.did.resolver.DidResolutionResult
+    import org.trustweave.did.identifiers.extractKeyId
+    
+    // Helper extension for resolution results
+    fun DidResolutionResult.getOrThrow() = when (this) {
+        is DidResolutionResult.Success -> this.document
+        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
     }
+    
+    val verifierDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    println("✅ Verifier DID: ${verifierDid.value}")
 
     // Step 3: Create farm/production site DID
-    val farmDidResult = trustWeave.createDid { method(KEY) }
-    val farmDid = when (farmDidResult) {
-        is DidCreationResult.Success -> {
-            println("✅ Farm DID: ${farmDidResult.did.value}")
-            farmDidResult.did
-        }
-        else -> {
-            println("Failed to create farm DID: ${farmDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    val farmDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    println("✅ Farm DID: ${farmDid.value}")
 
     // Step 4: Create EO data evidence (non-deforestation proof)
     val eoDeforestationProof = buildJsonObject {
@@ -243,19 +221,15 @@ fun main() = runBlocking {
     val eoProofDigest = DigestUtils.sha256DigestMultibase(eoDeforestationProof)
 
     // Step 5: Verifier issues compliance credential
-    val verifierResolution = trustWeave.resolveDid(verifierDid)
-    val verifierDoc = when (verifierResolution) {
-        is DidResolutionResult.Success -> verifierResolution.document
-        else -> throw IllegalStateException("Failed to resolve verifier DID")
-    }
-    val verifierKeyId = verifierDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val verifierDoc = trustWeave.resolveDid(verifierDid).getOrThrow()
+    val verifierKeyId = verifierDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     val complianceCredentialResult = trustWeave.issue {
         credential {
             id("urn:eudr:compliance:2024-001")
             type("VerifiableCredential", "EUDRComplianceCredential")
-            issuer(verifierDid.value)
+            issuer(verifierDid)
             subject {
                 id("urn:eudr:compliance:2024-001")
                 "complianceType" to "EUDR"
@@ -278,35 +252,27 @@ fun main() = runBlocking {
             issued(Instant.now())
             expires(365, java.time.temporal.ChronoUnit.DAYS)
         }
-        signedBy(issuerDid = verifierDid.value, keyId = verifierKeyId)
+        signedBy(verifierDid)
     }
     
-    val complianceCredential = when (complianceCredentialResult) {
-        is IssuanceResult.Success -> complianceCredentialResult.credential
-        else -> {
-            println("❌ Failed to issue compliance credential: ${complianceCredentialResult.allErrors.joinToString()}")
-            return@runBlocking
-        }
-    }
+    import org.trustweave.trust.types.getOrThrow
+    
+    val complianceCredential = complianceCredentialResult.getOrThrow()
 
     println("✅ Compliance Credential issued: ${complianceCredential.id}")
     println("   Status: compliant")
     println("   Farm: ${farmDid.id}")
 
     // Step 6: Create Digital Product Passport (DPP)
-    val exporterResolution = trustWeave.resolveDid(exporterDid)
-    val exporterDoc = when (exporterResolution) {
-        is DidResolutionResult.Success -> exporterResolution.document
-        else -> throw IllegalStateException("Failed to resolve exporter DID")
-    }
-    val exporterKeyId = exporterDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val exporterDoc = trustWeave.resolveDid(exporterDid).getOrThrow()
+    val exporterKeyId = exporterDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     val dppCredentialResult = trustWeave.issue {
         credential {
             id("urn:eudr:dpp:coffee-shipment-2024-001")
             type("VerifiableCredential", "DigitalProductPassport", "EUDRProductCredential")
-            issuer(exporterDid.value)
+            issuer(exporterDid)
             subject {
                 id("urn:eudr:dpp:coffee-shipment-2024-001")
                 "productType" to "Coffee"
@@ -323,16 +289,10 @@ fun main() = runBlocking {
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = exporterDid.value, keyId = exporterKeyId)
+        signedBy(exporterDid)
     }
     
-    val dppCredential = when (dppCredentialResult) {
-        is IssuanceResult.Success -> dppCredentialResult.credential
-        else -> {
-            println("❌ Failed to issue DPP: ${dppCredentialResult.allErrors.joinToString()}")
-            return@runBlocking
-        }
-    }
+    val dppCredential = dppCredentialResult.getOrThrow()
 
     println("✅ Digital Product Passport issued: ${dppCredential.id}")
     println("   Product: Coffee Beans")

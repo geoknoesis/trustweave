@@ -94,12 +94,16 @@ interface DidMethod {
 ### DidMethodRegistry
 
 ```kotlin
-// Traditional API
-val registry = DefaultDidMethodRegistry()
+// Manual registration
+val registry = DidMethodRegistry()
 registry.register(keyDidMethod)
 registry.register(webDidMethod)
 
-val method = registry.get("key")
+// Auto-register from SPI providers
+val registry = DidMethodRegistry.autoRegister(kms)
+
+// Access methods
+val method = registry["key"]  // Using bracket notation
 val didDoc = method?.createDid(options)
 
 // Idiomatic Kotlin API with builder DSL
@@ -116,7 +120,7 @@ if ("key" in registry) {     // `in` operator
 registry["new"] = NewDidMethod()  // Assignment
 ```
 
-**What this does:** Provides instance-scoped registration and retrieval of DID methods with both traditional and idiomatic Kotlin APIs.
+**What this does:** Provides instance-scoped registration and retrieval of DID methods. Supports both manual registration and automatic discovery via Service Provider Interface (SPI). All operations are thread-safe.
 
 **Outcome:** Allows multiple DID methods to coexist in the same application context with improved developer experience.
 

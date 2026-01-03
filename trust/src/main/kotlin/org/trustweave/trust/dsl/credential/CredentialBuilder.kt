@@ -328,29 +328,12 @@ class SubjectBuilder {
     private val properties = mutableMapOf<String, JsonElement>()
 
     /**
-     * Set subject ID.
+     * Set subject ID from a Did type.
      * 
-     * According to W3C Verifiable Credentials spec, subject IDs must be an IRI
-     * (Internationalized Resource Identifier), which includes:
-     * - A DID (starting with "did:")
-     * - A URI/URL (starting with "http:", "https:", "urn:", etc.)
-     * - Any valid IRI with a scheme
-     * 
-     * If the subject ID is omitted, the subject becomes a blank node in JSON-LD terms.
-     * 
-     * @param id Subject identifier (must be a valid IRI/URI)
-     * @throws IllegalArgumentException if id is blank or not a valid IRI format
+     * @param did The subject DID
      */
-    fun id(id: String) {
-        require(id.isNotBlank()) { "Subject ID cannot be blank" }
-        // W3C VC spec requires IRI format (URI, URL, DID, URN, etc.)
-        // An IRI must have a scheme (e.g., "https:", "did:", "urn:", etc.)
-        require(id.matches(Regex("^[a-zA-Z][a-zA-Z0-9+.-]*:.*"))) { 
-            "Subject ID must be a valid IRI (URI, URL, DID, URN, etc.) with a scheme. " +
-            "Examples: 'https://example.com/subject', 'did:example:123', 'urn:example:subject'. " +
-            "Got: $id" 
-        }
-        properties["id"] = JsonPrimitive(id)
+    fun id(did: Did) {
+        properties["id"] = JsonPrimitive(did.value)
     }
 
     /**

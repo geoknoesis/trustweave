@@ -3,9 +3,7 @@ package org.trustweave.trust.dsl
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.testkit.trust.InMemoryTrustRegistry
-import org.trustweave.testkit.services.TestkitDidMethodFactory
 import org.trustweave.testkit.services.TestkitTrustRegistryFactory
-import org.trustweave.testkit.services.TestkitKmsFactory
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
@@ -26,10 +24,9 @@ class TrustDslTest {
     fun `test trust layer configuration with trust registry`() = runBlocking {
         val trustWeave = TrustWeave.build {
             factories(
-                kmsFactory = TestkitKmsFactory(),
-                didMethodFactory = TestkitDidMethodFactory(),
                 trustRegistryFactory = TestkitTrustRegistryFactory()
             )
+            // KMS and DID methods auto-discovered via SPI
             keys {
                 provider("inMemory")
                 algorithm(KeyAlgorithms.ED25519)
@@ -54,10 +51,9 @@ class TrustDslTest {
     fun `test add anchor via DSL`() = runBlocking {
         val trustWeave = TrustWeave.build {
             factories(
-                kmsFactory = TestkitKmsFactory(),
-                didMethodFactory = TestkitDidMethodFactory(),
                 trustRegistryFactory = TestkitTrustRegistryFactory()
             )
+            // KMS and DID methods auto-discovered via SPI
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -77,10 +73,9 @@ class TrustDslTest {
     fun `test check trust via DSL`() = runBlocking {
         val trustWeave = TrustWeave.build {
             factories(
-                kmsFactory = TestkitKmsFactory(),
-                didMethodFactory = TestkitDidMethodFactory(),
                 trustRegistryFactory = TestkitTrustRegistryFactory()
             )
+            // KMS and DID methods auto-discovered via SPI
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -103,10 +98,9 @@ class TrustDslTest {
     fun `test get trust path via DSL`() = runBlocking {
         val trustWeave = TrustWeave.build {
             factories(
-                kmsFactory = TestkitKmsFactory(),
-                didMethodFactory = TestkitDidMethodFactory(),
                 trustRegistryFactory = TestkitTrustRegistryFactory()
             )
+            // KMS and DID methods auto-discovered via SPI
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -135,10 +129,9 @@ class TrustDslTest {
     fun `test get trusted issuers via DSL`() = runBlocking {
         val trustWeave = TrustWeave.build {
             factories(
-                kmsFactory = TestkitKmsFactory(),
-                didMethodFactory = TestkitDidMethodFactory(),
                 trustRegistryFactory = TestkitTrustRegistryFactory()
             )
+            // KMS and DID methods auto-discovered via SPI
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -162,10 +155,9 @@ class TrustDslTest {
     fun `test remove anchor via DSL`() = runBlocking {
         val trustWeave = TrustWeave.build {
             factories(
-                kmsFactory = TestkitKmsFactory(),
-                didMethodFactory = TestkitDidMethodFactory(),
                 trustRegistryFactory = TestkitTrustRegistryFactory()
             )
+            // KMS and DID methods auto-discovered via SPI
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }

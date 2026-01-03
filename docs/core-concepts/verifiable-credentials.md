@@ -258,41 +258,36 @@ import org.trustweave.credential.CredentialIssuanceOptions
 // Issue credential using TrustWeave DSL API
 val trustWeave = TrustWeave.build {
     factories(
-        kmsFactory = TestkitKmsFactory(),
-        didMethodFactory = TestkitDidMethodFactory()
-    )
+    // KMS and DID methods auto-discovered via SPI
     keys { provider(IN_MEMORY); algorithm(ED25519) }
     did { method(KEY) { algorithm(ED25519) } }
     credentials { defaultProofType(ProofType.Ed25519Signature2020) }
 }
 
-import org.trustweave.trust.types.DidCreationResult
-import org.trustweave.trust.types.IssuanceResult
-
-val didResult = trustWeave.createDid {
-    method(KEY)
-    algorithm(ED25519)
-}
-
-val issuerDid = when (didResult) {
-    is DidCreationResult.Success -> didResult.did
-    else -> throw IllegalStateException("Failed to create DID: ${didResult.reason}")
-}
-
-val resolution = trustWeave.resolveDid(issuerDid)
-val issuerDoc = when (resolution) {
-    is DidResolutionResult.Success -> resolution.document
-    else -> throw IllegalStateException("Failed to resolve issuer DID")
-}
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.identifiers.extractKeyId
 
+// Helper extension for resolution results
+fun DidResolutionResult.getOrThrow() = when (this) {
+    is DidResolutionResult.Success -> this.document
+    else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
+}
+
+val issuerDid = trustWeave.createDid {
+    method(KEY)
+    algorithm(ED25519)
+}.getOrThrowDid()
+
+val issuerDoc = trustWeave.resolveDid(issuerDid).getOrThrow()
 val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
     ?: throw IllegalStateException("No verification method found")
 
-val issuanceResult = trustWeave.issue {
+val issuedCredential = trustWeave.issue {
     credential {
         type(CredentialType.Person)
-        issuer(issuerDid.value)
+        issuer(issuerDid)
         subject {
             id(subjectDid)
             "name" to "Alice"
@@ -300,13 +295,8 @@ val issuanceResult = trustWeave.issue {
         }
         issued(Instant.now())
     }
-    signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
-}
-
-val issuedCredential = when (issuanceResult) {
-    is IssuanceResult.Success -> issuanceResult.credential
-    else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
-}
+    signedBy(issuerDid)
+}.getOrThrow()
 
 **Outcome:** Produces a signed credential ready for distribution, anchored to the specific proof type and key you configured.
 
@@ -351,9 +341,7 @@ import org.trustweave.credential.VerificationConfig
 
 val trustWeave = TrustWeave.build {
     factories(
-        kmsFactory = TestkitKmsFactory(),
-        didMethodFactory = TestkitDidMethodFactory()
-    )
+    // KMS and DID methods auto-discovered via SPI
     keys { provider(IN_MEMORY); algorithm(ED25519) }
     did { method(KEY) { algorithm(ED25519) } }
 }

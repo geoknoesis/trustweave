@@ -280,13 +280,20 @@ class SarFloodProduct(
         // Step 3: Issue verifiable credential for EO data
         // Note: eoProviderDid is a String (DID value), so we need to create a Did object for resolveDid
         import org.trustweave.core.Did
-        val eoProviderDidObj = Did(eoProviderDid)
-        val resolution = trustWeave.resolveDid(eoProviderDidObj)
-        val eoProviderDoc = when (resolution) {
-            is DidResolutionResult.Success -> resolution.document
-            else -> throw IllegalStateException("Failed to resolve EO provider DID")
+        import org.trustweave.trust.types.getOrThrow
+        import org.trustweave.did.resolver.DidResolutionResult
+        import org.trustweave.did.identifiers.extractKeyId
+        
+        // Helper extension for resolution results
+        fun DidResolutionResult.getOrThrow() = when (this) {
+            is DidResolutionResult.Success -> this.document
+            else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
         }
-        val eoProviderKeyId = eoProviderDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        
+        import org.trustweave.core.Did
+        val eoProviderDidObj = Did(eoProviderDid)
+        val eoProviderDoc = trustWeave.resolveDid(eoProviderDidObj).getOrThrow()
+        val eoProviderKeyId = eoProviderDoc.verificationMethod.firstOrNull()?.extractKeyId()
             ?: throw IllegalStateException("No verification method found")
 
         val floodIssuanceResult = trustWeave.issue {
@@ -307,10 +314,7 @@ class SarFloodProduct(
             by(issuerDid = eoProviderDid, keyId = eoProviderKeyId)
         }
         
-        val floodCredential = when (floodIssuanceResult) {
-            is IssuanceResult.Success -> floodIssuanceResult.credential
-            else -> throw IllegalStateException("Failed to issue flood credential")
-        }
+        val floodCredential = floodIssuanceResult.getOrThrow()
 
         // Step 4: Anchor to blockchain for tamper-proof record
         val anchorResult = trustWeave.blockchains.anchor(
@@ -457,12 +461,8 @@ class HeatwaveProduct(
         // Resolve DID from string (eoProviderDid is a DID string)
         import org.trustweave.core.Did
         val eoProviderDidObj = Did(eoProviderDid)
-        val eoProviderResolution = trustWeave.resolveDid(eoProviderDidObj)
-        val eoProviderDoc = when (eoProviderResolution) {
-            is DidResolutionResult.Success -> eoProviderResolution.document
-            else -> throw IllegalStateException("Failed to resolve EO provider DID")
-        }
-        val eoProviderKeyId = eoProviderDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        val eoProviderDoc = trustWeave.resolveDid(eoProviderDidObj).getOrThrow()
+        val eoProviderKeyId = eoProviderDoc.verificationMethod.firstOrNull()?.extractKeyId()
             ?: throw IllegalStateException("No verification method found")
 
         val heatwaveIssuanceResult = trustWeave.issue {
@@ -483,10 +483,7 @@ class HeatwaveProduct(
             by(issuerDid = eoProviderDid, keyId = eoProviderKeyId)
         }
         
-        val heatwaveCredential = when (heatwaveIssuanceResult) {
-            is IssuanceResult.Success -> heatwaveIssuanceResult.credential
-            else -> throw IllegalStateException("Failed to issue heatwave credential")
-        }
+        val heatwaveCredential = heatwaveIssuanceResult.getOrThrow()
 
         // Anchor to blockchain
         val anchorResult = trustWeave.blockchains.anchor(
@@ -703,12 +700,8 @@ class SolarAttenuationProduct(
         // Resolve DID from string (eoProviderDid is a DID string)
         import org.trustweave.core.Did
         val eoProviderDidObj = Did(eoProviderDid)
-        val eoProviderResolution = trustWeave.resolveDid(eoProviderDidObj)
-        val eoProviderDoc = when (eoProviderResolution) {
-            is DidResolutionResult.Success -> eoProviderResolution.document
-            else -> throw IllegalStateException("Failed to resolve EO provider DID")
-        }
-        val eoProviderKeyId = eoProviderDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        val eoProviderDoc = trustWeave.resolveDid(eoProviderDidObj).getOrThrow()
+        val eoProviderKeyId = eoProviderDoc.verificationMethod.firstOrNull()?.extractKeyId()
             ?: throw IllegalStateException("No verification method found")
 
         val solarIssuanceResult = trustWeave.issue {
@@ -729,10 +722,7 @@ class SolarAttenuationProduct(
             by(issuerDid = eoProviderDid, keyId = eoProviderKeyId)
         }
         
-        val solarCredential = when (solarIssuanceResult) {
-            is IssuanceResult.Success -> solarIssuanceResult.credential
-            else -> throw IllegalStateException("Failed to issue solar credential")
-        }
+        val solarCredential = solarIssuanceResult.getOrThrow()
 
         // Anchor to blockchain
         val anchorResult = trustWeave.blockchains.anchor(
@@ -850,30 +840,23 @@ suspend fun completeFloodInsuranceWorkflow() {
     import org.trustweave.trust.types.IssuanceResult
     import org.trustweave.trust.types.VerificationResult
     
-    val insurerDidResult = trustWeave.createDid { method(KEY) }
-    val insurerDid = when (insurerDidResult) {
-        is DidCreationResult.Success -> insurerDidResult.did
-        else -> throw IllegalStateException("Failed to create insurer DID")
+    import org.trustweave.trust.types.getOrThrowDid
+    import org.trustweave.trust.types.getOrThrow
+    import org.trustweave.did.resolver.DidResolutionResult
+    import org.trustweave.did.identifiers.extractKeyId
+    
+    // Helper extension for resolution results
+    fun DidResolutionResult.getOrThrow() = when (this) {
+        is DidResolutionResult.Success -> this.document
+        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
     }
     
-    val insuredDidResult = trustWeave.createDid { method(KEY) }
-    val insuredDid = when (insuredDidResult) {
-        is DidCreationResult.Success -> insuredDidResult.did
-        else -> throw IllegalStateException("Failed to create insured DID")
-    }
+    val insurerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val insuredDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val eoProviderDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     
-    val eoProviderDidResult = trustWeave.createDid { method(KEY) }
-    val eoProviderDid = when (eoProviderDidResult) {
-        is DidCreationResult.Success -> eoProviderDidResult.did
-        else -> throw IllegalStateException("Failed to create EO provider DID")
-    }
-    
-    val insurerResolution = trustWeave.resolveDid(insurerDid)
-    val insurerDoc = when (insurerResolution) {
-        is DidResolutionResult.Success -> insurerResolution.document
-        else -> throw IllegalStateException("Failed to resolve insurer DID")
-    }
-    val insurerKeyId = insurerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val insurerDoc = trustWeave.resolveDid(insurerDid).getOrThrow()
+    val insurerKeyId = insurerDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No key found")
 
     // Step 3: Initialize product
@@ -980,10 +963,9 @@ class AtlasParametricPlatform {
             trustWeave.createDid { method(KEY) }
         }
         
-        val eoProviderDid = when (eoProviderDidResult) {
-            is DidCreationResult.Success -> eoProviderDidResult.did
-            else -> throw IllegalStateException("Failed to create EO provider DID")
-        }
+        import org.trustweave.trust.types.getOrThrowDid
+        
+        val eoProviderDid = eoProviderDidResult.getOrThrowDid()
 
         // Initialize products
         sarFloodProduct = SarFloodProduct(trustWeave, eoProviderDid.value)

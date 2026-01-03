@@ -226,12 +226,17 @@ fun main() = runBlocking {
     val studentDid = trustWeave.createDid { method(KEY) }
     
     // Step 3: Get key ID
-    val resolutionResult = trustWeave.resolveDid(universityDid)
-    val issuerDocument = when (resolutionResult) {
-        is DidResolutionResult.Success -> resolutionResult.document
-        else -> throw IllegalStateException("Failed to resolve issuer DID")
+    import org.trustweave.did.resolver.DidResolutionResult
+    import org.trustweave.did.identifiers.extractKeyId
+    
+    // Helper extension for resolution results
+    fun DidResolutionResult.getOrThrow() = when (this) {
+        is DidResolutionResult.Success -> this.document
+        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
     }
-    val keyId = issuerDocument.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    
+    val issuerDocument = trustWeave.resolveDid(universityDid).getOrThrow()
+    val keyId = issuerDocument.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
     
     // Step 4: Add university as trust anchor
@@ -248,7 +253,7 @@ fun main() = runBlocking {
         credential {
             id("https://example.edu/credentials/degree-123")
             type("DegreeCredential")
-            issuer(universityDid.value)
+            issuer(universityDid)
             subject {
                 id(studentDid.value)
                 "degree" {
@@ -257,7 +262,7 @@ fun main() = runBlocking {
             }
             issued(Clock.System.now())
         }
-        signedBy(issuerDid = universityDid.value, keyId = keyId)
+        signedBy(universityDid)
     }
     
     // Step 6: Verify with trust checking

@@ -393,25 +393,31 @@ val trustWeave = TrustWeave.build {
 val eoProviderDid = trustWeave.createDid { method(KEY) }
 
 // Resolve DID to get key ID
-val resolution = trustWeave.resolveDid(eoProviderDid)
-val issuerDoc = when (resolution) {
-    is DidResolutionResult.Success -> resolution.document
-    else -> throw IllegalStateException("Failed to resolve DID")
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.identifiers.extractKeyId
+
+// Helper extension for resolution results
+fun DidResolutionResult.getOrThrow() = when (this) {
+    is DidResolutionResult.Success -> this.document
+    else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
 }
-val eoProviderKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+
+val issuerDoc = trustWeave.resolveDid(eoProviderDid).getOrThrow()
+val eoProviderKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
     ?: throw IllegalStateException("No verification method found")
 
 // Issue EO data credential
 val floodCredential = trustWeave.issue {
     credential {
         type("EarthObservationCredential")
-        issuer(eoProviderDid.value)
+        issuer(eoProviderDid)
         subject {
             addClaims(floodData)
         }
         issued(Instant.now())
     }
-    signedBy(issuerDid = eoProviderDid.value, keyId = eoProviderKeyId)
+    signedBy(eoProviderDid)
 ).getOrThrow()
 
 // Anchor to blockchain

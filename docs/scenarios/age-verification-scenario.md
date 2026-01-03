@@ -248,7 +248,7 @@ fun main() = runBlocking {
         credential {
             id("urn:identity:age-verification:${Instant.now().toEpochMilli()}")
             type("VerifiableCredential", "AgeVerificationCredential", "IdentityCredential")
-            issuer(identityProviderDid.value)
+            issuer(identityProviderDid)
             subject {
                 id(individualDid.value)
                 "ageVerification" {
@@ -273,7 +273,7 @@ fun main() = runBlocking {
             issued(Instant.now())
             expires(5, ChronoUnit.YEARS)
         }
-        signedBy(issuerDid = identityProviderDid.value, keyId = identityProviderKeyId)
+        signedBy(identityProviderDid)
     }.getOrThrow()
 
     println("\n✅ Age verification credential with photo issued: ${ageCredential.id}")
@@ -284,7 +284,7 @@ fun main() = runBlocking {
 
     // Step 6: Create individual wallet and store age credential
     val individualWallet = trustWeave.wallet {
-        holder(individualDid.value)
+        holder(individualDid)
         enableOrganization()
         enablePresentation()
     }.getOrThrow()

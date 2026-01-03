@@ -98,7 +98,7 @@ fun main() = runBlocking {
     println("\nStep 3: Creating student wallet...")
     val studentWallet: Wallet = trustWeave.wallet {
         id("student-wallet-${studentDid.value.substringAfterLast(":")}")
-        holder(studentDid.value)
+        holder(studentDid)
         enableOrganization()
         enablePresentation()
     }.getOrFail()
@@ -118,9 +118,9 @@ fun main() = runBlocking {
         credential {
             id("https://example.edu/credentials/degree-${studentDid.value.substringAfterLast(":")}")
             type("DegreeCredential", "BachelorDegreeCredential")
-            issuer(universityDid.value)
+            issuer(universityDid)
             subject {
-                id(studentDid.value)
+                id(studentDid)
                 "degree" {
                     "type" to "BachelorDegree"
                     "name" to "Bachelor of Science in Computer Science"
@@ -132,7 +132,7 @@ fun main() = runBlocking {
             issued(Clock.System.now())
             expires((365 * 10).days) // Valid for 10 years
         }
-        signedBy(issuerDid = universityDid.value, keyId = issuerKey.id.value)
+        signedBy(universityDid)
         withRevocation() // Auto-create status list
     }.getOrFail()
 
@@ -216,17 +216,8 @@ fun main() = runBlocking {
             println("  - Not expired: true")
             println("  - Not revoked: true")
         }
-        is VerificationResult.Invalid.Expired -> {
-            println("❌ Credential expired at ${verificationResult.expiredAt}")
-            verificationResult.errors.forEach { println("  - $it") }
-        }
-        is VerificationResult.Invalid.Revoked -> {
-            println("❌ Credential revoked")
-            verificationResult.errors.forEach { println("  - $it") }
-        }
-        else -> {
-            println("❌ Credential verification failed:")
-            verificationResult.errors.forEach { println("  - $it") }
+        is VerificationResult.Invalid -> {
+            println("❌ Credential verification failed: ${verificationResult.allErrors.joinToString("; ")}")
         }
     }
 

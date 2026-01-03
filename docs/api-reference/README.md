@@ -72,12 +72,12 @@ import org.trustweave.core.*
 try {
     val did = trustWeave.createDid { method(KEY) }
     val credential = trustWeave.issue { 
-        credential { issuer(did.value); subject { id(did.value) } }
-        signedBy(issuerDid = did.value, keyId = "key-1")
+        credential { issuer(did); subject { id(did) } }
+        signedBy(did)
     }
     val wallet = trustWeave.wallet { 
         id("wallet-1")
-        holder(did.value)
+        holder(did)
     }
 } catch (error: TrustWeaveError) {
     when (error) {

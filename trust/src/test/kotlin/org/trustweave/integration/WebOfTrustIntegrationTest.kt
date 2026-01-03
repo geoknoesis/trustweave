@@ -9,15 +9,11 @@ import org.trustweave.trust.types.*
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.testkit.services.TestkitDidMethodFactory
 import org.trustweave.testkit.services.TestkitTrustRegistryFactory
-import org.trustweave.testkit.services.TestkitKmsFactory
 import org.trustweave.testkit.getOrFail
 import org.trustweave.kms.results.SignResult
 import org.trustweave.did.resolver.DidResolver
 import org.trustweave.credential.credentialService
-import org.trustweave.trust.dsl.TrustWeaveRegistries
-import org.trustweave.anchor.BlockchainAnchorRegistry
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -42,28 +38,9 @@ class WebOfTrustIntegrationTest {
             }
         }
         
-        // Create a shared DidMethodRegistry to ensure DIDs are stored in the same registry
-        // that the resolver uses. This ensures DIDs created via createDid are resolvable.
-        val sharedDidRegistry = org.trustweave.did.registry.DidMethodRegistry()
-        
-        // Create resolver that uses the shared registry
-        val didResolver = DidResolver { did: org.trustweave.did.identifiers.Did ->
-            sharedDidRegistry.resolve(did.value) as org.trustweave.did.resolver.DidResolutionResult
-        }
-        
-        val credentialService = org.trustweave.credential.credentialService(
-            didResolver = didResolver,
-            signer = signer
-        )
-        
-        val finalTrustWeave = TrustWeave.build(
-            registries = TrustWeaveRegistries(
-                didRegistry = sharedDidRegistry,
-                blockchainRegistry = BlockchainAnchorRegistry()
-            )
-        ) {
+        // Build TrustWeave (auto-creates registry, resolver, and CredentialService)
+        val finalTrustWeave = TrustWeave.build {
             factories(
-                didMethodFactory = TestkitDidMethodFactory(didRegistry = sharedDidRegistry),
                 trustRegistryFactory = TestkitTrustRegistryFactory()
             )
             keys {
@@ -77,7 +54,7 @@ class WebOfTrustIntegrationTest {
             }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
-            issuer(credentialService)
+            // CredentialService is auto-created with custom signer from keys{} block
         }
         
         return finalTrustWeave
@@ -134,7 +111,7 @@ class WebOfTrustIntegrationTest {
                 }
                 issued(Clock.System.now())
             }
-            signedBy(issuerDid = issuerDid.value, keyId = keyId)
+            signedBy(issuerDid = issuerDid, keyId = keyId)
         }.getOrFail()
 
         // Verify with trust registry
@@ -150,9 +127,7 @@ class WebOfTrustIntegrationTest {
     @Test
     fun `test delegation chain with credential issuance`() = runBlocking {
         val trustLayer = TrustWeave.build {
-            factories(
-                didMethodFactory = TestkitDidMethodFactory()
-            )
+            // DID methods auto-discovered via SPI
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
         }
@@ -199,7 +174,7 @@ class WebOfTrustIntegrationTest {
                 }
                 issued(Clock.System.now())
             }
-            signedBy(issuerDid = delegateDid.value, keyId = "key-1")
+            signedBy(issuerDid = delegateDid, keyId = "key-1")
         }.getOrFail()
 
         assertNotNull(credential)
@@ -209,10 +184,9 @@ class WebOfTrustIntegrationTest {
     fun `test trust path discovery with multiple anchors`() = runBlocking {
         val trustLayer = TrustWeave.build {
             factories(
-                kmsFactory = TestkitKmsFactory(),
-                didMethodFactory = TestkitDidMethodFactory(),
                 trustRegistryFactory = TestkitTrustRegistryFactory()
             )
+            // KMS and DID methods auto-discovered via SPI
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
             trust { provider("inMemory") }
@@ -256,9 +230,7 @@ class WebOfTrustIntegrationTest {
     @Test
     fun `test proof purpose validation in credential verification`() = runBlocking {
         val trustLayer = TrustWeave.build {
-            factories(
-                didMethodFactory = TestkitDidMethodFactory()
-            )
+            // DID methods auto-discovered via SPI
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
         }
@@ -294,7 +266,7 @@ class WebOfTrustIntegrationTest {
                 }
                 issued(Clock.System.now())
             }
-            signedBy(issuerDid = issuerDid.value, keyId = "key-1")
+            signedBy(issuerDid = issuerDid, keyId = "key-1")
         }.getOrFail()
 
         // Verify with proof purpose validation

@@ -148,9 +148,9 @@ fun main() = runBlocking {
         credential {
             id("https://example.edu/credentials/degree-123")
             type(CredentialTypes.EDUCATION, CredentialTypes.DEGREE)
-            issuer(issuerDid.value)
+            issuer(issuerDid)
             subject {
-                id(holderDid.value)
+                id(holderDid)
                 "degree" {
                     "type" to "Bachelor"
                     "field" to "Computer Science"
@@ -161,7 +161,7 @@ fun main() = runBlocking {
             issued(Clock.System.now())
             schema("https://example.com/schemas/degree", SchemaValidatorTypes.JSON_SCHEMA)
         }
-        signedBy(issuerDid = issuerDid.value, keyId = "key-1")
+        signedBy(issuerDid)
         withRevocation() // Auto-creates status list
     }.getOrFail()
     println("✓ Credential issued with ID: ${credential.id}")
@@ -173,7 +173,7 @@ fun main() = runBlocking {
     println("Step 6: Creating wallet and storing credential...")
     val wallet: Wallet = trustWeave.wallet {
         id("comprehensive-wallet")
-        holder(holderDid.value)
+        holder(holderDid)
         enableOrganization()
         enablePresentation()
     }.getOrFail()

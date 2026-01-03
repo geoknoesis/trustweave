@@ -33,6 +33,7 @@ class DidCommExchangeProtocolProvider : CredentialExchangeProtocolProvider {
         val kms = options["kms"] as? KeyManagementService
             ?: return null
 
+        @Suppress("UNCHECKED_CAST")
         val resolveDid = options["resolveDid"] as? (suspend (String) -> DidDocument?)
             ?: return null
 

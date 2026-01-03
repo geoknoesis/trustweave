@@ -43,14 +43,20 @@ val didResult = trustLayer.createDid {
     algorithm(KeyAlgorithms.ED25519)
 }
 
-val issuerDid = when (didResult) {
-    is DidCreationResult.Success -> didResult.did
-    else -> throw IllegalStateException("Failed to create DID: ${didResult.reason}")
-}
-
-// Step 2: Extract key ID from DID document
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.identifiers.extractKeyId
 
+// Helper extension for resolution results
+fun DidResolutionResult.getOrThrow() = when (this) {
+    is DidResolutionResult.Success -> this.document
+    else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
+}
+
+val issuerDid = didResult.getOrThrowDid()
+
+// Step 2: Extract key ID from DID document
 val issuerDidDoc = trustLayer.dsl().getConfig().registries.didRegistry.resolve(issuerDid.value)?.document
     ?: throw IllegalStateException("Failed to resolve issuer DID")
 
@@ -58,15 +64,10 @@ val keyId = issuerDidDoc.verificationMethod.firstOrNull()?.extractKeyId()
     ?: throw IllegalStateException("No verification method in issuer DID")
 
 // Step 3: Use extracted key ID for signing
-val issuanceResult = trustLayer.issue {
+val credential = trustLayer.issue {
     credential { /* ... */ }
-    signedBy(issuerDid = issuerDid.value, keyId = keyId) // MUST match key in DID document
-}
-
-val credential = when (issuanceResult) {
-    is IssuanceResult.Success -> issuanceResult.credential
-    else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
-}
+    signedBy(issuerDid) // Key ID automatically resolved from DID
+}.getOrThrow()
 
 // For tests, you can use getOrFail() helper:
 // val issuerDid = trustLayer.createDid { ... }.getOrFail()
@@ -175,7 +176,7 @@ fun `test wallet storage workflow template`() = runBlocking {
     
     val walletResult = trustLayer.wallet {
         id("holder-wallet-1")
-        holder(holderDid.value)
+        holder(holderDid)
         inMemory()
         enableOrganization()
         enablePresentation()

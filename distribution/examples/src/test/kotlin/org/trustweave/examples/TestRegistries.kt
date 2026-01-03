@@ -4,11 +4,10 @@ import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.anchor.BlockchainAnchorRegistry
 import org.trustweave.anchor.DefaultBlockchainAnchorRegistry
 import org.trustweave.did.DidMethod
-import org.trustweave.did.registry.DefaultDidMethodRegistry
 import org.trustweave.did.registry.DidMethodRegistry
 
 fun createTestDidRegistry(vararg methods: DidMethod): DidMethodRegistry {
-    return DefaultDidMethodRegistry().apply {
+    return DidMethodRegistry().apply {
         methods.forEach { register(it) }
     }
 }

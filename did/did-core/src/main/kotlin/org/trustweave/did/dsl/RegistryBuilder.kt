@@ -4,7 +4,7 @@ import org.trustweave.did.DidMethod
 import kotlin.DslMarker
 
 /**
- * Builder DSL for creating [DefaultDidMethodRegistry] instances.
+ * Builder DSL for creating [DidMethodRegistry] instances.
  *
  * Provides a fluent, idiomatic Kotlin API for registry configuration.
  *
@@ -21,16 +21,16 @@ import kotlin.DslMarker
 annotation class RegistryDsl
 
 /**
- * Creates a [DefaultDidMethodRegistry] using a builder DSL.
+ * Creates a [DidMethodRegistry] using a builder DSL.
  */
-inline fun didMethodRegistry(block: RegistryBuilder.() -> Unit = {}): DefaultDidMethodRegistry {
+inline fun didMethodRegistry(block: RegistryBuilder.() -> Unit = {}): DidMethodRegistry {
     val builder = RegistryBuilder()
     builder.block()
     return builder.build()
 }
 
 /**
- * Builder for [DefaultDidMethodRegistry].
+ * Builder for [DidMethodRegistry].
  */
 @RegistryDsl
 class RegistryBuilder {
@@ -57,8 +57,8 @@ class RegistryBuilder {
         this.methods.addAll(methods)
     }
 
-    fun build(): DefaultDidMethodRegistry {
-        val registry = DefaultDidMethodRegistry()
+    fun build(): DidMethodRegistry {
+        val registry = DidMethodRegistry()
         methods.forEach { registry.register(it) }
         return registry
     }

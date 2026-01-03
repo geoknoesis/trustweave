@@ -33,11 +33,11 @@ This format matches the official DID Method Registry structure from https://iden
 
 ```kotlin
 import org.trustweave.did.registration.loader.JsonDidMethodLoader
-import org.trustweave.did.registry.DefaultDidMethodRegistry
+import org.trustweave.did.registry.DidMethodRegistry
 import java.nio.file.Paths
 
 val loader = JsonDidMethodLoader()
-val registry = DefaultDidMethodRegistry()
+val registry = DidMethodRegistry()
 
 // Load from file
 val method = loader.loadFromFile(Paths.get("src/main/resources/did-methods/example.json"))

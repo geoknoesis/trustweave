@@ -80,10 +80,7 @@ import org.trustweave.trust.dsl.credential.*
 import org.trustweave.testkit.services.*
 
 val trustWeave = trustWeave {
-    factories(
-        kmsFactory = TestkitKmsFactory(),
-        didMethodFactory = TestkitDidMethodFactory()
-    )
+    // KMS and DID methods auto-discovered via SPI
     keys {
         provider(IN_MEMORY)
         algorithm(ED25519)
@@ -162,9 +159,9 @@ val credential = trustWeave.issue {
     credential {
         id("https://example.edu/credentials/degree-123")
         type("DegreeCredential", "BachelorDegreeCredential")
-        issuer(issuerDid.value)
+        issuer(issuerDid)
         subject {
-            id("did:key:student-456")
+            id(org.trustweave.did.identifiers.Did("did:key:student-456"))
             "degree" {
                 "type" to "BachelorDegree"
                 "name" to "Bachelor of Science in Computer Science"
@@ -176,7 +173,7 @@ val credential = trustWeave.issue {
         issued(Clock.System.now())
         expires((365 * 10).days) // Valid for 10 years
     }
-    signedBy(issuerDid.value, keyId)
+    signedBy(issuerDid)
 }.getOrThrow()
 ```
 
@@ -205,7 +202,7 @@ val issuedCredential = trustWeave.issue {
     credential {
         // ... credential definition from Step 4
     }
-    signedBy(issuerDid.value, keyId)
+    signedBy(issuerDid)
     withProof(ED25519_SIGNATURE_2020)
 }.getOrThrow()
 ```
@@ -238,15 +235,8 @@ when (verificationResult) {
         println("  - Proof valid: ${verificationResult.proofValid}")
         println("  - Issuer valid: ${verificationResult.issuerValid}")
     }
-    is VerificationResult.Invalid.Expired -> {
-        println("❌ Credential expired at ${verificationResult.expiredAt}")
-    }
-    is VerificationResult.Invalid.InvalidProof -> {
-        println("❌ Invalid proof: ${verificationResult.reason}")
-    }
-    else -> {
-        println("❌ Verification failed")
-        verificationResult.errors.forEach { println("  - $it") }
+    is VerificationResult.Invalid -> {
+        println("❌ Verification failed: ${verificationResult.allErrors.joinToString("; ")}")
     }
 }
 ```
@@ -291,39 +281,37 @@ fun main() = runBlocking {
     }
     
     // Step 2: Create issuer DID
-    val didResult = trustWeave.createDid {
-        method(KEY)
-    }
-    val issuerDid = when (didResult) {
-        is DidCreationResult.Success -> {
-            println("Issuer DID: ${didResult.did.value}")
-            didResult.did
-        }
-        else -> {
-            println("Failed to create DID: ${didResult.reason}")
-            return@runBlocking
-        }
-    }
-    
-    // Step 3: Get signing key
+    import org.trustweave.trust.types.getOrThrowDid
+    import org.trustweave.trust.types.getOrThrow
+    import org.trustweave.did.resolver.DidResolutionResult
     import org.trustweave.did.identifiers.extractKeyId
     
-    val resolutionResult = trustWeave.resolveDid(issuerDid)
-    val issuerDocument = when (resolutionResult) {
-        is DidResolutionResult.Success -> resolutionResult.document
-        else -> throw IllegalStateException("Failed to resolve issuer DID: ${resolutionResult}")
+    // Helper extension for resolution results
+    fun DidResolutionResult.getOrThrow() = when (this) {
+        is DidResolutionResult.Success -> this.document
+        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
     }
+    
+    val issuerDid = trustWeave.createDid {
+        method(KEY)
+    }.getOrThrowDid()
+    println("Issuer DID: ${issuerDid.value}")
+    
+    // Step 3: Get signing key
+    val issuerDocument = trustWeave.resolveDid(issuerDid).getOrThrow()
     val verificationMethod = issuerDocument.verificationMethod.firstOrNull()
         ?: throw IllegalStateException("No verification method found")
     val keyId = verificationMethod.extractKeyId()
         ?: throw IllegalStateException("Failed to extract key ID")
     
     // Step 4 & 5: Issue credential
-    val issuanceResult = trustWeave.issue {
+    import org.trustweave.trust.types.getOrThrow
+    
+    val issuedCredential = trustWeave.issue {
         credential {
             id("https://example.edu/credentials/degree-123")
             type("DegreeCredential")
-            issuer(issuerDid.value)
+            issuer(issuerDid)
             subject {
                 id("did:key:student-456")
                 "degree" {
@@ -335,15 +323,7 @@ fun main() = runBlocking {
             expires((365 * 10).days)
         }
         signedBy(issuerDid = issuerDid.value, keyId = keyId)
-    }
-    
-    val issuedCredential = when (issuanceResult) {
-        is IssuanceResult.Success -> issuanceResult.credential
-        else -> {
-            println("Failed to issue credential: ${issuanceResult.reason}")
-            return@runBlocking
-        }
-    }
+    }.getOrThrow()
     
     println("Credential issued:")
     println("  - ID: ${issuedCredential.id}")
@@ -458,10 +438,7 @@ trustWeave.issue {
 ```kotlin
 // ✅ Ensure KMS is configured
 val trustWeave = trustWeave {
-    factories(
-        kmsFactory = TestkitKmsFactory(),
-        didMethodFactory = TestkitDidMethodFactory()
-    )
+    // KMS and DID methods auto-discovered via SPI
     keys {
         provider(IN_MEMORY)  // or your KMS provider
         algorithm(ED25519)

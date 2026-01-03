@@ -183,40 +183,25 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for authentication authority, users, and systems
-    import org.trustweave.trust.types.DidCreationResult
-    import org.trustweave.trust.types.WalletCreationResult
+    import org.trustweave.trust.types.getOrThrowDid
+    import org.trustweave.trust.types.getOrThrow
+    import org.trustweave.did.resolver.DidResolutionResult
+    import org.trustweave.did.identifiers.extractKeyId
     
-    val authAuthorityDidResult = trustWeave.createDid { method(KEY) }
-    val authAuthorityDid = when (authAuthorityDidResult) {
-        is DidCreationResult.Success -> authAuthorityDidResult.did
-        else -> throw IllegalStateException("Failed to create auth authority DID: ${authAuthorityDidResult.reason}")
+    // Helper extension for resolution results
+    fun DidResolutionResult.getOrThrow() = when (this) {
+        is DidResolutionResult.Success -> this.document
+        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
     }
     
-    val authAuthorityResolution = trustWeave.resolveDid(authAuthorityDid)
-    val authAuthorityDoc = when (authAuthorityResolution) {
-        is DidResolutionResult.Success -> authAuthorityResolution.document
-        else -> throw IllegalStateException("Failed to resolve auth authority DID")
-    }
-    val authAuthorityKeyId = authAuthorityDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val authAuthorityDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val authAuthorityDoc = trustWeave.resolveDid(authAuthorityDid).getOrThrow()
+    val authAuthorityKeyId = authAuthorityDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
-    val userDidResult = trustWeave.createDid { method(KEY) }
-    val userDid = when (userDidResult) {
-        is DidCreationResult.Success -> userDidResult.did
-        else -> throw IllegalStateException("Failed to create user DID: ${userDidResult.reason}")
-    }
-    
-    val deviceDidResult = trustWeave.createDid { method(KEY) }
-    val deviceDid = when (deviceDidResult) {
-        is DidCreationResult.Success -> deviceDidResult.did
-        else -> throw IllegalStateException("Failed to create device DID: ${deviceDidResult.reason}")
-    }
-    
-    val systemDidResult = trustWeave.createDid { method(KEY) }
-    val systemDid = when (systemDidResult) {
-        is DidCreationResult.Success -> systemDidResult.did
-        else -> throw IllegalStateException("Failed to create system DID: ${systemDidResult.reason}")
-    }
+    val userDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val deviceDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val systemDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 
     println("✅ Authentication Authority DID: ${authAuthorityDid.value}")
     println("✅ User DID: ${userDid.value}")
@@ -230,9 +215,9 @@ import org.trustweave.trust.types.VerificationResult
     val authCredentialResult = trustWeave.issue {
         credential {
             type("VerifiableCredential", "AuthenticationCredential", "ZeroTrustCredential")
-            issuer(authAuthorityDid.value)
+            issuer(authAuthorityDid)
             subject {
-                id(userDid.value)
+                id(userDid)
                 "authentication" {
                     "authenticated" to true
                     "authenticationMethod" to "Multi-Factor"
@@ -253,13 +238,10 @@ import org.trustweave.trust.types.VerificationResult
             issued(Instant.now())
             expires(15, ChronoUnit.MINUTES) // Short-lived
         }
-        signedBy(issuerDid = authAuthorityDid.value, keyId = authAuthorityKeyId)
+        signedBy(authAuthorityDid)
     }
     
-    val authCredential = when (authCredentialResult) {
-        is IssuanceResult.Success -> authCredentialResult.credential
-        else -> throw IllegalStateException("Failed to issue authentication credential")
-    }
+    val authCredential = authCredentialResult.getOrThrow()
 
     println("\n✅ Short-lived authentication credential issued: ${authCredential.id}")
     println("   Validity: 15 minutes")
@@ -267,16 +249,11 @@ import org.trustweave.trust.types.VerificationResult
     println("   Note: No traditional session created")
 
     // Step 4: Create user wallet and store authentication credential
-    val walletResult = trustWeave.wallet {
-        holder(userDid.value)
+    val userWallet = trustWeave.wallet {
+        holder(userDid)
         enableOrganization()
         enablePresentation()
-    }
-    
-    val userWallet = when (walletResult) {
-        is WalletCreationResult.Success -> walletResult.wallet
-        else -> throw IllegalStateException("Failed to create wallet: ${walletResult.reason}")
-    }
+    }.getOrThrow()
 
     val authCredentialId = userWallet.store(authCredential)
     println("✅ Authentication credential stored in wallet: $authCredentialId")
@@ -340,9 +317,9 @@ import org.trustweave.trust.types.VerificationResult
     val reAuthCredentialResult = trustWeave.issue {
         credential {
             type("VerifiableCredential", "AuthenticationCredential", "ZeroTrustCredential")
-            issuer(authAuthorityDid.value)
+            issuer(authAuthorityDid)
             subject {
-                id(userDid.value)
+                id(userDid)
                 "authentication" {
                     "authenticated" to true
                     "authenticationMethod" to "Continuous"
@@ -364,13 +341,10 @@ import org.trustweave.trust.types.VerificationResult
             issued(Instant.now())
             expires(15, ChronoUnit.MINUTES)
         }
-        signedBy(issuerDid = authAuthorityDid.value, keyId = authAuthorityKeyId)
+        signedBy(authAuthorityDid)
     }
     
-    val reAuthCredential = when (reAuthCredentialResult) {
-        is IssuanceResult.Success -> reAuthCredentialResult.credential
-        else -> throw IllegalStateException("Failed to issue re-authentication credential")
-    }
+    val reAuthCredential = reAuthCredentialResult.getOrThrow()
 
     val reAuthVerification = trustWeave.verify {
         credential(reAuthCredential)
@@ -401,9 +375,9 @@ import org.trustweave.trust.types.VerificationResult
     val expiredCredentialResult = trustWeave.issue {
         credential {
             type("VerifiableCredential", "AuthenticationCredential", "ZeroTrustCredential")
-            issuer(authAuthorityDid.value)
+            issuer(authAuthorityDid)
             subject {
-                id(userDid.value)
+                id(userDid)
                 "authentication" {
                     "authenticated" to true
                     "authenticationDate" to Instant.now().minus(20, ChronoUnit.MINUTES).toString()
@@ -412,11 +386,10 @@ import org.trustweave.trust.types.VerificationResult
             issued(Instant.now().minus(20, ChronoUnit.MINUTES))
             expires(Instant.now().minus(5, ChronoUnit.MINUTES)) // Already expired
         }
-        signedBy(issuerDid = authAuthorityDid.value, keyId = authAuthorityKeyId)
+        signedBy(authAuthorityDid)
     }
     
-    val expiredCredential = when (expiredCredentialResult) {
-        is IssuanceResult.Success -> expiredCredentialResult.credential
+    val expiredCredential = expiredCredentialResult.getOrThrow()
         else -> throw IllegalStateException("Failed to issue expired credential")
     }
 
@@ -442,9 +415,9 @@ import org.trustweave.trust.types.VerificationResult
     val highRiskCredentialResult = trustWeave.issue {
         credential {
             type("VerifiableCredential", "AuthenticationCredential", "ZeroTrustCredential")
-            issuer(authAuthorityDid.value)
+            issuer(authAuthorityDid)
             subject {
-                id(userDid.value)
+                id(userDid)
                 "authentication" {
                     "authenticated" to true
                     "authenticationDate" to Instant.now().toString()
@@ -462,13 +435,10 @@ import org.trustweave.trust.types.VerificationResult
             issued(Instant.now())
             expires(15, ChronoUnit.MINUTES)
         }
-        signedBy(issuerDid = authAuthorityDid.value, keyId = authAuthorityKeyId)
+        signedBy(authAuthorityDid)
     }
     
-    val highRiskCredential = when (highRiskCredentialResult) {
-        is IssuanceResult.Success -> highRiskCredentialResult.credential
-        else -> throw IllegalStateException("Failed to issue high-risk credential")
-    }
+    val highRiskCredential = highRiskCredentialResult.getOrThrow()
 
     val highRiskVerification = trustWeave.verify {
         credential(highRiskCredential)

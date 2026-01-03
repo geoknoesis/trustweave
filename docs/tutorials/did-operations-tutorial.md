@@ -69,22 +69,15 @@ import kotlinx.coroutines.runBlocking
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
-// Note: TestkitDidMethodFactory is for testing/tutorials only
-// In production, use appropriate DID method factories
-import org.trustweave.testkit.services.*
-
 fun main() = runBlocking {
-    // Build TrustWeave instance with testkit factories (for tutorials)
+    // Build TrustWeave instance - KMS and DID methods auto-discovered via SPI
     val trustWeave = TrustWeave.build {
-        factories(
-            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
-        )
         keys {
-            provider(IN_MEMORY)
+            provider(IN_MEMORY)  // Auto-discovered via SPI
             algorithm(KeyAlgorithms.ED25519)
         }
         did {
-            method(DidMethods.KEY) {
+            method(DidMethods.KEY) {  // Auto-discovered via SPI
                 algorithm(KeyAlgorithms.ED25519)
             }
         }
@@ -137,32 +130,18 @@ fun main() = runBlocking {
     }
 
     // Create DID with did:key method
-    val keyDidResult = trustWeave.createDid {
+    import org.trustweave.trust.types.getOrThrowDid
+    
+    val keyDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }
-    
-    val keyDid = when (keyDidResult) {
-        is DidCreationResult.Success -> keyDidResult.did
-        else -> {
-            println("Failed to create key DID: ${keyDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    }.getOrThrowDid()
 
     // Create DID with did:web method
-    val webDidResult = trustWeave.createDid {
+    val webDid = trustWeave.createDid {
         method(DidMethods.WEB)
         domain("example.com")
-    }
-    
-    val webDid = when (webDidResult) {
-        is DidCreationResult.Success -> webDidResult.did
-        else -> {
-            println("Failed to create web DID: ${webDidResult.reason}")
-            return@runBlocking
-        }
-    }
+    }.getOrThrowDid()
 
     println("Key DID: ${keyDid.value}")
     println("Web DID: ${webDid.value}")
@@ -227,28 +206,21 @@ fun main() = runBlocking {
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
-    val did = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
-    val resolution = trustWeave.resolveDid(did)
+    import org.trustweave.trust.types.getOrThrow
+    import org.trustweave.did.resolver.DidResolutionResult
     
-    when (resolution) {
-        is DidResolutionResult.Success -> {
-            println("Resolved DID: ${resolution.document.id}")
-            println("Document: ${resolution.document}")
-            println("Verification methods: ${resolution.document.verificationMethod.size}")
-        }
-        is DidResolutionResult.Failure.NotFound -> {
-            println("DID not found: ${resolution.did.value}")
-        }
-        is DidResolutionResult.Failure.InvalidFormat -> {
-            println("Invalid DID format: ${resolution.reason}")
-        }
-        is DidResolutionResult.Failure.MethodNotRegistered -> {
-            println("DID method not registered: ${resolution.method}")
-        }
-        else -> {
-            println("Resolution failed")
-        }
+    // Helper extension for resolution results
+    fun DidResolutionResult.getOrThrow() = when (this) {
+        is DidResolutionResult.Success -> this.document
+        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
     }
+    
+    val did = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
+    val document = trustWeave.resolveDid(did).getOrThrow()
+    
+    println("Resolved DID: ${document.id}")
+    println("Document: ${document}")
+    println("Verification methods: ${document.verificationMethod.size}")
 }
 ```
 

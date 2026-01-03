@@ -46,7 +46,7 @@ val registry = didMethodRegistry {
 ### Registry Operators
 
 ```kotlin
-val registry = DefaultDidMethodRegistry()
+val registry = DidMethodRegistry()
 
 // Bracket notation for access
 val method = registry["key"]
@@ -188,7 +188,7 @@ Automatic retry with exponential backoff for transient failures:
 ### Before
 
 ```kotlin
-val registry = DefaultDidMethodRegistry()
+val registry = DidMethodRegistry()
 registry.register(KeyDidMethod(kms))
 val method = registry.get("key")
 

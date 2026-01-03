@@ -9,7 +9,6 @@ import org.trustweave.did.model.DidDocument
 import org.trustweave.kms.results.SignResult
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.testkit.services.TestkitDidMethodFactory
 import org.trustweave.trust.dsl.TrustWeaveConfig
 import org.trustweave.trust.dsl.trustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
@@ -35,9 +34,7 @@ class DidDslTest {
         kms = InMemoryKeyManagementService()
         val kmsInstance = kms
         trustWeave = trustWeave {
-            factories(
-                didMethodFactory = TestkitDidMethodFactory()
-            )
+            // DID methods auto-discovered via SPI
             keys {
                 custom(kmsInstance)
                 signer { data, keyId ->

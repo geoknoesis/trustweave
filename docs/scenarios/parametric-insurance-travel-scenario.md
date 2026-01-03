@@ -164,29 +164,23 @@ fun main() = runBlocking {
     import org.trustweave.trust.types.IssuanceResult
     import org.trustweave.trust.types.VerificationResult
     
-    val insuranceDidResult = trustWeave.createDid { method(KEY) }
-    val insuranceDid = when (insuranceDidResult) {
-        is DidCreationResult.Success -> insuranceDidResult.did
-        else -> throw IllegalStateException("Failed to create insurance DID")
-    }
-    
-    val airlineDidResult = trustWeave.createDid { method(KEY) }
-    val airlineDid = when (airlineDidResult) {
-        is DidCreationResult.Success -> airlineDidResult.did
-        else -> throw IllegalStateException("Failed to create airline DID")
-    }
+    val insuranceDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val airlineDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     
     val weatherServiceDidResult = trustWeave.createDid { method(KEY) }
-    val weatherServiceDid = when (weatherServiceDidResult) {
-        is DidCreationResult.Success -> weatherServiceDidResult.did
-        else -> throw IllegalStateException("Failed to create weather service DID")
+    import org.trustweave.trust.types.getOrThrowDid
+    import org.trustweave.trust.types.getOrThrow
+    import org.trustweave.did.resolver.DidResolutionResult
+    import org.trustweave.did.identifiers.extractKeyId
+    
+    // Helper extension for resolution results
+    fun DidResolutionResult.getOrThrow() = when (this) {
+        is DidResolutionResult.Success -> this.document
+        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
     }
     
-    val baggageSystemDidResult = trustWeave.createDid { method(KEY) }
-    val baggageSystemDid = when (baggageSystemDidResult) {
-        is DidCreationResult.Success -> baggageSystemDidResult.did
-        else -> throw IllegalStateException("Failed to create baggage system DID")
-    }
+    val weatherServiceDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val baggageSystemDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 
     println("✅ Insurance Company DID: ${insuranceDid.value}")
     println("✅ Airline DID: ${airlineDid.value}")
@@ -200,12 +194,8 @@ fun main() = runBlocking {
     println("Scenario 1: Flight Delay Automatic Payout")
     println("-".repeat(70))
 
-    val airlineResolution = trustWeave.resolveDid(airlineDid)
-    val airlineDoc = when (airlineResolution) {
-        is DidResolutionResult.Success -> airlineResolution.document
-        else -> throw IllegalStateException("Failed to resolve airline DID")
-    }
-    val airlineKeyId = airlineDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val airlineDoc = trustWeave.resolveDid(airlineDid).getOrThrow()
+    val airlineKeyId = airlineDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: error("No verification method found")
 
     // Create flight delay data (issued by airline)
@@ -239,7 +229,7 @@ fun main() = runBlocking {
         credential {
             id("urn:travel:flight-delay:AA1234-2024-10-08")
             type("VerifiableCredential", "FlightDelayCredential", "TravelOracleCredential")
-            issuer(airlineDid.value)
+            issuer(airlineDid)
             subject {
                 id("urn:travel:flight-delay:AA1234-2024-10-08")
                 "dataType" to "FlightDelay"
@@ -249,13 +239,12 @@ fun main() = runBlocking {
                 "timestamp" to Instant.now().toString()
             }
         }
-        by(issuerDid = airlineDid.value, keyId = airlineKeyId)
+        signedBy(airlineDid)
     }
     
-    val flightDelayCredential = when (flightDelayIssuanceResult) {
-        is IssuanceResult.Success -> flightDelayIssuanceResult.credential
-        else -> throw IllegalStateException("Failed to issue flight delay credential")
-    }
+    import org.trustweave.trust.types.getOrThrow
+    
+    val flightDelayCredential = flightDelayIssuanceResult.getOrThrow()
 
     println("✅ Flight Delay Credential issued: ${flightDelayCredential.id}")
 
@@ -290,19 +279,15 @@ fun main() = runBlocking {
         println("   ✅ TRIGGER MET: Delay exceeds threshold")
         println("   💰 Automatic payout should be triggered")
 
-        val insuranceResolution = trustWeave.resolveDid(insuranceDid)
-        val insuranceDoc = when (insuranceResolution) {
-            is DidResolutionResult.Success -> insuranceResolution.document
-            else -> throw IllegalStateException("Failed to resolve insurance DID")
-        }
-        val insuranceKeyId = insuranceDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+        val insuranceDoc = trustWeave.resolveDid(insuranceDid).getOrThrow()
+        val insuranceKeyId = insuranceDoc.verificationMethod.firstOrNull()?.extractKeyId()
             ?: error("No verification method found")
 
         val delayPayoutIssuanceResult = trustWeave.issue {
             credential {
                 id("urn:travel:payout:delay-AA1234-2024-10-08")
                 type("VerifiableCredential", "TravelInsurancePayoutCredential")
-                issuer(insuranceDid.value)
+                issuer(insuranceDid)
                 subject {
                     id("urn:travel:payout:delay-AA1234-2024-10-08")
                     "policyId" to "TRAVEL-POL-12345"
@@ -316,13 +301,10 @@ fun main() = runBlocking {
                     "timestamp" to Instant.now().toString()
                 }
             }
-            by(issuerDid = insuranceDid.value, keyId = insuranceKeyId)
+            signedBy(insuranceDid)
         }
         
-        val delayPayoutCredential = when (delayPayoutIssuanceResult) {
-            is IssuanceResult.Success -> delayPayoutIssuanceResult.credential
-            else -> throw IllegalStateException("Failed to issue delay payout credential")
-        }
+        val delayPayoutCredential = delayPayoutIssuanceResult.getOrThrow()
 
         println("✅ Delay Payout Credential issued: ${delayPayoutCredential.id}")
         println("   Payout amount: $250 USD via virtual card")
@@ -337,12 +319,8 @@ fun main() = runBlocking {
     println("Scenario 2: Weather Guarantee Automatic Payout")
     println("-".repeat(70))
 
-    val weatherResolution = trustWeave.resolveDid(weatherServiceDid)
-    val weatherDoc = when (weatherResolution) {
-        is DidResolutionResult.Success -> weatherResolution.document
-        else -> throw IllegalStateException("Failed to resolve weather service DID")
-    }
-    val weatherKeyId = weatherDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val weatherDoc = trustWeave.resolveDid(weatherServiceDid).getOrThrow()
+    val weatherKeyId = weatherDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: error("No verification method found")
 
     // Create weather event data (issued by weather service)
@@ -392,13 +370,10 @@ fun main() = runBlocking {
                 "timestamp" to Instant.now().toString()
             }
         }
-        by(issuerDid = weatherServiceDid.value, keyId = weatherKeyId)
+        signedBy(weatherServiceDid)
     }
     
-    val weatherCredential = when (weatherIssuanceResult) {
-        is IssuanceResult.Success -> weatherIssuanceResult.credential
-        else -> throw IllegalStateException("Failed to issue weather credential")
-    }
+    val weatherCredential = weatherIssuanceResult.getOrThrow()
 
     println("✅ Weather Event Credential issued: ${weatherCredential.id}")
 
@@ -440,7 +415,7 @@ fun main() = runBlocking {
             credential {
                 id("urn:travel:payout:weather-LHR-2024-10-08")
                 type("VerifiableCredential", "TravelInsurancePayoutCredential")
-                issuer(insuranceDid.value)
+                issuer(insuranceDid)
                 subject {
                     id("urn:travel:payout:weather-LHR-2024-10-08")
                     "policyId" to "TRAVEL-POL-12345"
@@ -454,13 +429,10 @@ fun main() = runBlocking {
                     "timestamp" to Instant.now().toString()
                 }
             }
-            by(issuerDid = insuranceDid.value, keyId = insuranceKeyId)
+            signedBy(insuranceDid)
         }
         
-        val weatherPayoutCredential = when (weatherPayoutIssuanceResult) {
-            is IssuanceResult.Success -> weatherPayoutIssuanceResult.credential
-            else -> throw IllegalStateException("Failed to issue weather payout credential")
-        }
+        val weatherPayoutCredential = weatherPayoutIssuanceResult.getOrThrow()
 
         println("✅ Weather Payout Credential issued: ${weatherPayoutCredential.id}")
         println("   Payout amount: $500 USD in airline miles")
@@ -475,12 +447,8 @@ fun main() = runBlocking {
     println("Scenario 3: Baggage Delay Automatic Payout")
     println("-".repeat(70))
 
-    val baggageResolution = trustWeave.resolveDid(baggageSystemDid)
-    val baggageDoc = when (baggageResolution) {
-        is DidResolutionResult.Success -> baggageResolution.document
-        else -> throw IllegalStateException("Failed to resolve baggage system DID")
-    }
-    val baggageKeyId = baggageDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val baggageDoc = trustWeave.resolveDid(baggageSystemDid).getOrThrow()
+    val baggageKeyId = baggageDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: error("No verification method found")
 
     // Create baggage delay data (issued by baggage tracking system)
@@ -521,13 +489,10 @@ fun main() = runBlocking {
                 "timestamp" to Instant.now().toString()
             }
         }
-        by(issuerDid = baggageSystemDid.value, keyId = baggageKeyId)
+        signedBy(baggageSystemDid)
     }
     
-    val baggageCredential = when (baggageIssuanceResult) {
-        is IssuanceResult.Success -> baggageIssuanceResult.credential
-        else -> throw IllegalStateException("Failed to issue baggage credential")
-    }
+    val baggageCredential = baggageIssuanceResult.getOrThrow()
 
     println("✅ Baggage Delay Credential issued: ${baggageCredential.id}")
 
@@ -566,7 +531,7 @@ fun main() = runBlocking {
             credential {
                 id("urn:travel:payout:baggage-ABC123-2024-10-08")
                 type("VerifiableCredential", "TravelInsurancePayoutCredential")
-                issuer(insuranceDid.value)
+                issuer(insuranceDid)
                 subject {
                     id("urn:travel:payout:baggage-ABC123-2024-10-08")
                     "policyId" to "TRAVEL-POL-12345"
@@ -580,13 +545,10 @@ fun main() = runBlocking {
                     "timestamp" to Instant.now().toString()
                 }
             }
-            by(issuerDid = insuranceDid.value, keyId = insuranceKeyId)
+            signedBy(insuranceDid)
         }
         
-        val baggagePayoutCredential = when (baggagePayoutIssuanceResult) {
-            is IssuanceResult.Success -> baggagePayoutIssuanceResult.credential
-            else -> throw IllegalStateException("Failed to issue baggage payout credential")
-        }
+        val baggagePayoutCredential = baggagePayoutIssuanceResult.getOrThrow()
 
         println("✅ Baggage Payout Credential issued: ${baggagePayoutCredential.id}")
         println("   Payout amount: $200 USD via e-voucher")
@@ -783,13 +745,10 @@ val medicalIssuanceResult = trustWeave.issue {
             "provider" to medicalProviderDid.value
         }
     }
-    by(issuerDid = medicalProviderDid.value, keyId = medicalKeyId)
+    signedBy(medicalProviderDid)
 }
 
-val medicalCredential = when (medicalIssuanceResult) {
-    is IssuanceResult.Success -> medicalIssuanceResult.credential
-    else -> throw IllegalStateException("Failed to issue medical credential")
-}
+val medicalCredential = medicalIssuanceResult.getOrThrow()
 
 // Automatic payout for medical emergencies
 val medicalPayoutIssuanceResult = trustWeave.issue {
@@ -811,10 +770,7 @@ val medicalPayoutIssuanceResult = trustWeave.issue {
     by(issuerDid = insuranceDid.value, keyId = insuranceKeyId)
 }
 
-val medicalPayoutCredential = when (medicalPayoutIssuanceResult) {
-    is IssuanceResult.Success -> medicalPayoutIssuanceResult.credential
-    else -> throw IllegalStateException("Failed to issue medical payout credential")
-}
+val medicalPayoutCredential = medicalPayoutIssuanceResult.getOrThrow()
 ```
 
 ## Step 5: Embedding in Travel Booking Process
@@ -835,7 +791,7 @@ suspend fun bookFlightWithInsurance(
         credential {
             id(booking.id)
             type("VerifiableCredential", "TravelInsurancePolicyCredential")
-            issuer(insuranceDid.value)
+            issuer(insuranceDid)
             subject {
                 id(booking.id)
                 "policyId" to insurancePolicy.id
@@ -852,10 +808,7 @@ suspend fun bookFlightWithInsurance(
         by(issuerDid = insuranceDid.value, keyId = insuranceKeyId)
     }
     
-    val policyCredential = when (policyIssuanceResult) {
-        is IssuanceResult.Success -> policyIssuanceResult.credential
-        else -> throw IllegalStateException("Failed to issue policy credential")
-    }
+    val policyCredential = policyIssuanceResult.getOrThrow()
 
     // Store policy credential with booking
     booking.storeCredential(policyCredential)

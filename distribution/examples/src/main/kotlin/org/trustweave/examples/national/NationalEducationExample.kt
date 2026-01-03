@@ -14,14 +14,10 @@ import org.trustweave.credential.model.ProofType
 import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import org.trustweave.anchor.DefaultBlockchainAnchorRegistry
-import org.trustweave.did.identifiers.Did
-import org.trustweave.did.registry.DidMethodRegistry
-import org.trustweave.did.resolver.DidResolver
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.testkit.services.TestkitDidMethodFactory
-import org.trustweave.trust.dsl.TrustWeaveRegistries
 import org.trustweave.testkit.getOrFail
-import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import kotlinx.datetime.Instant
@@ -75,43 +71,25 @@ fun main() = runBlocking {
         }
     }
     
-    // Create shared DID registry for consistent DID resolution
-    val sharedDidRegistry = DidMethodRegistry()
-    
-    // Create DID resolver
-    val didResolver = DidResolver { did: Did ->
-        sharedDidRegistry.resolve(did.value) as org.trustweave.did.resolver.DidResolutionResult
-    }
-    
-    // Create CredentialService
-    val credentialService = org.trustweave.credential.credentialService(
-        didResolver = didResolver,
-        signer = signer
-    )
-    
-    val trustweave = TrustWeave.build(
-        registries = TrustWeaveRegistries(
-            didRegistry = sharedDidRegistry,
-            blockchainRegistry = org.trustweave.anchor.BlockchainAnchorRegistry()
-        )
-    ) {
-        factories(
-            didMethodFactory = TestkitDidMethodFactory(didRegistry = sharedDidRegistry)
-        )
+    // TrustWeave auto-creates everything via SPI - minimal configuration needed
+    val trustweave = TrustWeave.build {
         keys {
-            custom(kmsRef)
+            custom(kmsRef)  // Custom KMS still supported
             signer(signer)
             algorithm(ED25519)
         }
         did {
             method(KEY) {
-                algorithm(ED25519)
+                algorithm(ED25519)  // Auto-discovered via SPI
             }
         }
-        issuer(credentialService)
-        // Note: Chain is registered manually below, not via DSL
-    }.also {
-        it.configuration.registries.blockchainRegistry.register(chainId, anchorClient)
+        anchor {
+            chain(chainId) { inMemory() }  // Auto-discovered via SPI
+        }
+        credentials {
+            defaultProofType(ProofType.Ed25519Signature2020)
+        }
+        // KMS, CredentialService, DidResolver, registries all auto-created!
     }
     println("✓ TrustWeave instance created")
     println("✓ Blockchain client registered: $chainId")
@@ -126,46 +104,29 @@ fun main() = runBlocking {
     println("  Role: Trusted issuer of national-level education credentials")
     println("  Method: key (default)")
 
-    val authorityDidResult = trustweave.createDid()
-    val authorityDid = when (authorityDidResult) {
-        is DidCreationResult.Success -> authorityDidResult.did
-        is DidCreationResult.Failure -> {
-            val reason = when (authorityDidResult) {
-                is DidCreationResult.Failure.MethodNotRegistered -> "Method not registered: ${authorityDidResult.method}"
-                is DidCreationResult.Failure.KeyGenerationFailed -> authorityDidResult.reason
-                is DidCreationResult.Failure.DocumentCreationFailed -> authorityDidResult.reason
-                is DidCreationResult.Failure.InvalidConfiguration -> authorityDidResult.reason
-                is DidCreationResult.Failure.Other -> authorityDidResult.reason
-            }
-            println("\n📥 RESPONSE: DID Creation Failed")
-            println("  ✗ Error: $reason")
-            return@runBlocking
-        }
-    }
+    val authorityDid = trustweave.createDid().getOrFail()
     
     // Resolve authority DID to get document
-    val authorityDidResolution = try {
-        trustweave.resolveDid(authorityDid)
+    val authorityDidDoc = try {
+        when (val authorityDidResolution = trustweave.resolveDid(authorityDid)) {
+            is DidResolutionResult.Success -> authorityDidResolution.document
+            else -> {
+                println("\n📥 RESPONSE: DID Resolution Failed")
+                println("  ⚠ Status: No document found (may be in-memory)")
+                return@runBlocking
+            }
+        }
     } catch (error: Throwable) {
         println("\n📥 RESPONSE: DID Resolution Failed")
         println("  ✗ Error: ${error.message}")
         return@runBlocking
-    }
-    val authorityDidDoc = when (authorityDidResolution) {
-        is org.trustweave.did.resolver.DidResolutionResult.Success -> authorityDidResolution.document
-        else -> {
-            println("\n📥 RESPONSE: DID Resolution Failed")
-            println("  ⚠ Status: No document found (may be in-memory)")
-            return@runBlocking
-        }
     }
 
     println("\n📥 RESPONSE: Authority DID Created Successfully")
     println("  ✓ DID: ${authorityDid.value}")
     println("  ✓ Verification Methods: ${authorityDidDoc.verificationMethod.size}")
     println("  ✓ Role: National Education Authority (Ministry of Higher Education)")
-    val authorityKeyId = authorityDidDoc.verificationMethod.first().id.value.substringAfter("#")
-    println("  ✓ Authority Key ID: $authorityKeyId")
+    println("  ✓ Authority Key ID: (auto-extracted during signing)")
     println()
 
     // Step 3: Create Educational Institution DID
@@ -175,38 +136,22 @@ fun main() = runBlocking {
     println("  Role: Recognized educational institution")
     println("  Institution: University of Algiers (UA-001)")
 
-    val institutionDidResult = trustweave.createDid()
-    val institutionDid = when (institutionDidResult) {
-        is DidCreationResult.Success -> institutionDidResult.did
-        is DidCreationResult.Failure -> {
-            val reason = when (institutionDidResult) {
-                is DidCreationResult.Failure.MethodNotRegistered -> "Method not registered: ${institutionDidResult.method}"
-                is DidCreationResult.Failure.KeyGenerationFailed -> institutionDidResult.reason
-                is DidCreationResult.Failure.DocumentCreationFailed -> institutionDidResult.reason
-                is DidCreationResult.Failure.InvalidConfiguration -> institutionDidResult.reason
-                is DidCreationResult.Failure.Other -> institutionDidResult.reason
-            }
-            println("\n📥 RESPONSE: DID Creation Failed")
-            println("  ✗ Error: $reason")
-            return@runBlocking
-        }
-    }
+    val institutionDid = trustweave.createDid().getOrFail()
     
     // Resolve institution DID
-    val institutionDidResolution = try {
-        trustweave.resolveDid(institutionDid)
+    val institutionDidDoc = try {
+        when (val institutionDidResolution = trustweave.resolveDid(institutionDid)) {
+            is DidResolutionResult.Success -> institutionDidResolution.document
+            else -> {
+                println("\n📥 RESPONSE: DID Resolution Failed")
+                println("  ⚠ Status: No document found (may be in-memory)")
+                return@runBlocking
+            }
+        }
     } catch (error: Throwable) {
         println("\n📥 RESPONSE: DID Resolution Failed")
         println("  ✗ Error: ${error.message}")
         return@runBlocking
-    }
-    val institutionDidDoc = when (institutionDidResolution) {
-        is org.trustweave.did.resolver.DidResolutionResult.Success -> institutionDidResolution.document
-        else -> {
-            println("\n📥 RESPONSE: DID Resolution Failed")
-            println("  ⚠ Status: No document found (may be in-memory)")
-            return@runBlocking
-        }
     }
 
     println("\n📥 RESPONSE: Institution DID Created Successfully")
@@ -214,8 +159,7 @@ fun main() = runBlocking {
     println("  ✓ Verification Methods: ${institutionDidDoc.verificationMethod.size}")
     println("  ✓ Institution: University of Algiers")
     println("  ✓ Institution Code: UA-001")
-    val institutionKeyId = institutionDidDoc.verificationMethod.first().id.value.substringAfter("#")
-    println("  ✓ Institution Key ID: $institutionKeyId")
+    println("  ✓ Institution Key ID: (auto-extracted during signing)")
     println()
 
     // Step 4: Create Student DID
@@ -253,9 +197,9 @@ fun main() = runBlocking {
     val enrollmentCredential = trustweave.issue {
         credential {
             type("AlgeroPassCredential", "EnrollmentCredential", "EducationCredential")
-            issuer(authorityDid.value)
+            issuer(authorityDid)
             subject {
-                id(studentDid.value)
+                id(studentDid)
                 "algeroPass" {
                     "credentialType" to "enrollment"
                     "studentId" to "STU-2024-001234"
@@ -277,7 +221,7 @@ fun main() = runBlocking {
             }
             issued(Clock.System.now())
         }
-        signedBy(issuerDid = authorityDid.value, keyId = authorityKeyId)
+        signedBy(authorityDid)
     }.getOrFail()
 
     println("\n📥 RESPONSE: Enrollment Credential Issued Successfully")
@@ -362,9 +306,9 @@ fun main() = runBlocking {
     val achievementCredential = trustweave.issue {
         credential {
             type("AlgeroPassCredential", "AchievementCredential", "EducationCredential")
-            issuer(authorityDid.value)
+            issuer(authorityDid)
             subject {
-                id(studentDid.value)
+                id(studentDid)
                 "algeroPass" {
                     "credentialType" to "achievement"
                     "studentId" to "STU-2024-001234"
@@ -404,7 +348,7 @@ fun main() = runBlocking {
             }
             issued(Clock.System.now())
         }
-        signedBy(issuerDid = authorityDid.value, keyId = authorityKeyId)
+        signedBy(authorityDid)
     }.getOrFail()
 
     println("\n📥 RESPONSE: Achievement Credential Issued Successfully")

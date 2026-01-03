@@ -180,52 +180,36 @@ fun main() = runBlocking {
     // Step 1: Create TrustWeave instance
     val trustWeave = TrustWeave.build {
         factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
-        )
+        // KMS and DID methods auto-discovered via SPI
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
     }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for software publisher, build system, and consumer
-    import org.trustweave.trust.types.DidCreationResult
-    import org.trustweave.trust.types.DidResolutionResult
-    import org.trustweave.trust.types.IssuanceResult
-    import org.trustweave.trust.types.WalletCreationResult
+    import org.trustweave.trust.types.getOrThrowDid
+    import org.trustweave.trust.types.getOrThrow
+    import org.trustweave.did.resolver.DidResolutionResult
+    import org.trustweave.did.identifiers.extractKeyId
     import org.trustweave.trust.types.VerificationResult
     
-    val publisherDidResult = trustWeave.createDid { method(KEY) }
-    val publisherDid = when (publisherDidResult) {
-        is DidCreationResult.Success -> publisherDidResult.did
-        else -> throw IllegalStateException("Failed to create publisher DID")
+    // Helper extension for resolution results
+    fun DidResolutionResult.getOrThrow() = when (this) {
+        is DidResolutionResult.Success -> this.document
+        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
     }
-    val publisherResolution = trustWeave.resolveDid(publisherDid)
-    val publisherDoc = when (publisherResolution) {
-        is DidResolutionResult.Success -> publisherResolution.document
-        else -> throw IllegalStateException("Failed to resolve publisher DID")
-    }
-    val publisherKeyId = publisherDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    
+    val publisherDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val publisherDoc = trustWeave.resolveDid(publisherDid).getOrThrow()
+    val publisherKeyId = publisherDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
-    val buildSystemDidResult = trustWeave.createDid { method(KEY) }
-    val buildSystemDid = when (buildSystemDidResult) {
-        is DidCreationResult.Success -> buildSystemDidResult.did
-        else -> throw IllegalStateException("Failed to create build system DID")
-    }
-    val buildSystemResolution = trustWeave.resolveDid(buildSystemDid)
-    val buildSystemDoc = when (buildSystemResolution) {
-        is DidResolutionResult.Success -> buildSystemResolution.document
-        else -> throw IllegalStateException("Failed to resolve build system DID")
-    }
-    val buildSystemKeyId = buildSystemDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val buildSystemDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val buildSystemDoc = trustWeave.resolveDid(buildSystemDid).getOrThrow()
+    val buildSystemKeyId = buildSystemDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
-    val consumerDidResult = trustWeave.createDid { method(KEY) }
-    val consumerDid = when (consumerDidResult) {
-        is DidCreationResult.Success -> consumerDidResult.did
-        else -> throw IllegalStateException("Failed to create consumer DID")
-    }
+    val consumerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 
     println("✅ Software Publisher DID: ${publisherDid.value}")
     println("✅ Build System DID: ${buildSystemDid.value}")
@@ -254,7 +238,7 @@ fun main() = runBlocking {
         credential {
             id("urn:software:secureapp:1.0.0")
             type("VerifiableCredential", "SoftwareProvenanceCredential", "SoftwareCredential")
-            issuer(publisherDid.value)
+            issuer(publisherDid)
             subject {
                 id("urn:software:secureapp:1.0.0")
                 "software" {
@@ -272,10 +256,9 @@ fun main() = runBlocking {
         by(issuerDid = publisherDid.value, keyId = publisherKeyId)
     }
     
-    val provenanceCredential = when (provenanceIssuanceResult) {
-        is IssuanceResult.Success -> provenanceIssuanceResult.credential
-        else -> throw IllegalStateException("Failed to issue provenance credential")
-    }
+    import org.trustweave.trust.types.getOrThrow
+    
+    val provenanceCredential = provenanceIssuanceResult.getOrThrow()
 
     println("\n✅ Software provenance credential issued: ${provenanceCredential.id}")
 
@@ -294,7 +277,7 @@ fun main() = runBlocking {
         credential {
             id("build:secureapp:1.0.0")
             type("VerifiableCredential", "BuildAttestationCredential", "SLSACredential")
-            issuer(buildSystemDid.value)
+            issuer(buildSystemDid)
             subject {
                 id("build:secureapp:1.0.0")
                 "build" {
@@ -321,10 +304,7 @@ fun main() = runBlocking {
         by(issuerDid = buildSystemDid.value, keyId = buildSystemKeyId)
     }
     
-    val buildAttestationCredential = when (buildAttestationIssuanceResult) {
-        is IssuanceResult.Success -> buildAttestationIssuanceResult.credential
-        else -> throw IllegalStateException("Failed to issue build attestation credential")
-    }
+    val buildAttestationCredential = buildAttestationIssuanceResult.getOrThrow()
 
     println("✅ Build attestation credential issued: ${buildAttestationCredential.id}")
 
@@ -346,7 +326,7 @@ fun main() = runBlocking {
         credential {
             id("urn:sbom:secureapp:1.0.0")
             type("VerifiableCredential", "SBOMCredential", "SoftwareCredential")
-            issuer(buildSystemDid.value)
+            issuer(buildSystemDid)
             subject {
                 id("urn:sbom:secureapp:1.0.0")
                 "sbom" {
@@ -367,24 +347,18 @@ fun main() = runBlocking {
         by(issuerDid = buildSystemDid.value, keyId = buildSystemKeyId)
     }
     
-    val sbomCredential = when (sbomIssuanceResult) {
-        is IssuanceResult.Success -> sbomIssuanceResult.credential
-        else -> throw IllegalStateException("Failed to issue SBOM credential")
-    }
+    val sbomCredential = sbomIssuanceResult.getOrThrow()
 
     println("✅ SBOM credential issued: ${sbomCredential.id}")
 
     // Step 9: Create consumer wallet and store credentials
     val walletCreationResult = trustWeave.wallet {
-        holder(consumerDid.value)
+        holder(consumerDid)
         organization { enabled = true }
         presentation { enabled = true }
     }
     
-    val consumerWallet = when (walletCreationResult) {
-        is WalletCreationResult.Success -> walletCreationResult.wallet
-        else -> throw IllegalStateException("Failed to create consumer wallet")
-    }
+    val consumerWallet = walletCreationResult.getOrThrow()
 
     val provenanceCredentialId = consumerWallet.store(provenanceCredential)
     val buildAttestationCredentialId = consumerWallet.store(buildAttestationCredential)

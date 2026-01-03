@@ -180,55 +180,32 @@ fun main() = runBlocking {
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for all parties
-    import org.trustweave.trust.types.DidCreationResult
-    import org.trustweave.trust.types.WalletCreationResult
+    import org.trustweave.trust.types.getOrThrowDid
+    import org.trustweave.trust.types.getOrThrow
+    import org.trustweave.did.resolver.DidResolutionResult
+    import org.trustweave.did.identifiers.extractKeyId
     
-    val insuranceCompanyDidResult = trustWeave.createDid { method(KEY) }
-    val insuranceCompanyDid = when (insuranceCompanyDidResult) {
-        is DidCreationResult.Success -> insuranceCompanyDidResult.did
-        else -> throw IllegalStateException("Failed to create insurance company DID: ${insuranceCompanyDidResult.reason}")
+    // Helper extension for resolution results
+    fun DidResolutionResult.getOrThrow() = when (this) {
+        is DidResolutionResult.Success -> this.document
+        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
     }
     
-    val insuranceCompanyResolution = trustWeave.resolveDid(insuranceCompanyDid)
-    val insuranceCompanyDoc = when (insuranceCompanyResolution) {
-        is DidResolutionResult.Success -> insuranceCompanyResolution.document
-        else -> throw IllegalStateException("Failed to resolve insurance company DID")
-    }
-    val insuranceCompanyKeyId = insuranceCompanyDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val insuranceCompanyDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val insuranceCompanyDoc = trustWeave.resolveDid(insuranceCompanyDid).getOrThrow()
+    val insuranceCompanyKeyId = insuranceCompanyDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
-    val policyholderDidResult = trustWeave.createDid { method(KEY) }
-    val policyholderDid = when (policyholderDidResult) {
-        is DidCreationResult.Success -> policyholderDidResult.did
-        else -> throw IllegalStateException("Failed to create policyholder DID: ${policyholderDidResult.reason}")
-    }
+    val policyholderDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     
-    val assessorDidResult = trustWeave.createDid { method(KEY) }
-    val assessorDid = when (assessorDidResult) {
-        is DidCreationResult.Success -> assessorDidResult.did
-        else -> throw IllegalStateException("Failed to create assessor DID: ${assessorDidResult.reason}")
-    }
-    
-    val assessorResolution = trustWeave.resolveDid(assessorDid)
-    val assessorDoc = when (assessorResolution) {
-        is DidResolutionResult.Success -> assessorResolution.document
-        else -> throw IllegalStateException("Failed to resolve assessor DID")
-    }
-    val assessorKeyId = assessorDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val assessorDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val assessorDoc = trustWeave.resolveDid(assessorDid).getOrThrow()
+    val assessorKeyId = assessorDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
-    val repairShopDidResult = trustWeave.createDid { method(KEY) }
-    val repairShopDid = when (repairShopDidResult) {
-        is DidCreationResult.Success -> repairShopDidResult.did
-        else -> throw IllegalStateException("Failed to create repair shop DID: ${repairShopDidResult.reason}")
-    }
-    
-    val repairShopResolution = trustWeave.resolveDid(repairShopDid)
-    val repairShopDoc = when (repairShopResolution) {
-        is DidResolutionResult.Success -> repairShopResolution.document
-        else -> throw IllegalStateException("Failed to resolve repair shop DID")
-    }
-    val repairShopKeyId = repairShopDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val repairShopDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val repairShopDoc = trustWeave.resolveDid(repairShopDid).getOrThrow()
+    val repairShopKeyId = repairShopDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     println("✅ Insurance Company DID: ${insuranceCompanyDid.value}")
@@ -242,9 +219,9 @@ fun main() = runBlocking {
     val claimCredentialResult = trustWeave.issue {
         credential {
             type("VerifiableCredential", "InsuranceClaimCredential", "ClaimCredential")
-            issuer(insuranceCompanyDid.value)
+            issuer(insuranceCompanyDid)
             subject {
-                id(policyholderDid.value)
+                id(policyholderDid)
                 "claim" {
                     "claimNumber" to "CLM-2024-001234"
                     "claimType" to "Auto Damage"
@@ -261,13 +238,10 @@ fun main() = runBlocking {
             issued(Instant.now())
             expires(1, ChronoUnit.YEARS)
         }
-        signedBy(issuerDid = insuranceCompanyDid.value, keyId = insuranceCompanyKeyId)
+        signedBy(insuranceCompanyDid)
     }
     
-    val claimCredential = when (claimCredentialResult) {
-        is IssuanceResult.Success -> claimCredentialResult.credential
-        else -> throw IllegalStateException("Failed to issue claim credential")
-    }
+    val claimCredential = claimCredentialResult.getOrThrow()
 
     println("\n✅ Claim credential issued: ${claimCredential.id}")
     println("   Claim Number: CLM-2024-001234")
@@ -278,9 +252,9 @@ fun main() = runBlocking {
     val assessmentCredentialResult = trustWeave.issue {
         credential {
             type("VerifiableCredential", "DamageAssessmentCredential", "AssessmentCredential")
-            issuer(assessorDid.value)
+            issuer(assessorDid)
             subject {
-                id(policyholderDid.value)
+                id(policyholderDid)
                 "assessment" {
                     "claimNumber" to "CLM-2024-001234"
                     "assessmentDate" to Instant.now().toString()
@@ -299,13 +273,10 @@ fun main() = runBlocking {
             issued(Instant.now())
             expires(6, ChronoUnit.MONTHS)
         }
-        signedBy(issuerDid = assessorDid.value, keyId = assessorKeyId)
+        signedBy(assessorDid)
     }
     
-    val assessmentCredential = when (assessmentCredentialResult) {
-        is IssuanceResult.Success -> assessmentCredentialResult.credential
-        else -> throw IllegalStateException("Failed to issue assessment credential")
-    }
+    val assessmentCredential = assessmentCredentialResult.getOrThrow()
 
     println("✅ Damage assessment credential issued: ${assessmentCredential.id}")
     println("   Estimated Repair Cost: $4,800.00")
@@ -349,16 +320,11 @@ fun main() = runBlocking {
     println("   Repair Status: Completed")
 
     // Step 6: Create policyholder wallet and store all credentials
-    val walletResult = trustWeave.wallet {
+    val policyholderWallet = trustWeave.wallet {
         holder(policyholderDid.value)
         enableOrganization()
         enablePresentation()
-    }
-    
-    val policyholderWallet = when (walletResult) {
-        is WalletCreationResult.Success -> walletResult.wallet
-        else -> throw IllegalStateException("Failed to create wallet: ${walletResult.reason}")
-    }
+    }.getOrThrow()
 
     val claimCredentialId = policyholderWallet.store(claimCredential)
     val assessmentCredentialId = policyholderWallet.store(assessmentCredential)
@@ -467,13 +433,12 @@ fun main() = runBlocking {
                 issued(Instant.now())
                 expires(7, ChronoUnit.YEARS)
             }
-            signedBy(issuerDid = insuranceCompanyDid.value, keyId = insuranceCompanyKeyId)
+            signedBy(insuranceCompanyDid)
         }
         
-        val paymentCredential = when (paymentCredentialResult) {
-            is IssuanceResult.Success -> paymentCredentialResult.credential
-            else -> throw IllegalStateException("Failed to issue payment credential")
-        }
+        import org.trustweave.trust.types.getOrThrow
+        
+        val paymentCredential = paymentCredentialResult.getOrThrow()
 
         val paymentCredentialId = policyholderWallet.store(paymentCredential)
         policyholderWallet.withOrganization { org ->

@@ -15,15 +15,15 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 /**
- * Tests for concurrent access to DefaultDidMethodRegistry.
+ * Tests for concurrent access to DidMethodRegistry.
  *
  * Verifies thread safety and correctness under high concurrency.
  */
-class DefaultDidMethodRegistryConcurrencyTest {
+class DidMethodRegistryConcurrencyTest {
 
     @Test
     fun `test concurrent registration`() = runTest {
-        val registry = DefaultDidMethodRegistry()
+        val registry = DidMethodRegistry()
         val methods = (1..100).map { i ->
             object : DidMethod {
                 override val method: String = "test$i"
@@ -61,7 +61,7 @@ class DefaultDidMethodRegistryConcurrencyTest {
 
     @Test
     fun `test concurrent registration and retrieval`() = runTest {
-        val registry = DefaultDidMethodRegistry()
+        val registry = DidMethodRegistry()
         val methods = (1..50).map { i ->
             object : DidMethod {
                 override val method: String = "method$i"
@@ -106,7 +106,7 @@ class DefaultDidMethodRegistryConcurrencyTest {
 
     @Test
     fun `test concurrent unregister`() = runTest {
-        val registry = DefaultDidMethodRegistry()
+        val registry = DidMethodRegistry()
         val methods = (1..100).map { i ->
             object : DidMethod {
                 override val method: String = "method$i"
@@ -147,7 +147,7 @@ class DefaultDidMethodRegistryConcurrencyTest {
 
     @Test
     fun `test concurrent getAllMethods`() = runTest {
-        val registry = DefaultDidMethodRegistry()
+        val registry = DidMethodRegistry()
         val methods = (1..50).map { i ->
             object : DidMethod {
                 override val method: String = "method$i"
@@ -193,51 +193,10 @@ class DefaultDidMethodRegistryConcurrencyTest {
         }
     }
 
-    @Test
-    fun `test concurrent snapshot`() = runTest {
-        val registry = DefaultDidMethodRegistry()
-        val methods = (1..50).map { i ->
-            object : DidMethod {
-                override val method: String = "method$i"
-                override suspend fun createDid(options: DidCreationOptions): DidDocument {
-                    throw UnsupportedOperationException()
-                }
-                override suspend fun resolveDid(did: Did): DidResolutionResult {
-                    throw UnsupportedOperationException()
-                }
-                override suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument): DidDocument {
-                    throw UnsupportedOperationException()
-                }
-                override suspend fun deactivateDid(did: Did): Boolean {
-                    throw UnsupportedOperationException()
-                }
-            }
-        }
-
-        // Register methods
-        methods.forEach { registry.register(it) }
-
-        // Create snapshots concurrently
-        val snapshots = coroutineScope {
-            (1..10).map {
-                async {
-                    registry.snapshot()
-                }
-            }.awaitAll()
-        }
-
-        // All snapshots should be consistent
-        snapshots.forEach { snapshot ->
-            assertEquals(50, snapshot.size())
-            (1..50).forEach { i ->
-                assertTrue(snapshot.has("method$i"))
-            }
-        }
-    }
 
     @Test
     fun `test concurrent clear`() = runTest {
-        val registry = DefaultDidMethodRegistry()
+        val registry = DidMethodRegistry()
         val methods = (1..50).map { i ->
             object : DidMethod {
                 override val method: String = "method$i"
@@ -274,7 +233,7 @@ class DefaultDidMethodRegistryConcurrencyTest {
 
     @Test
     fun `test concurrent registration and resolution`() = runTest {
-        val registry = DefaultDidMethodRegistry()
+        val registry = DidMethodRegistry()
         val testDid = Did("did:test:123")
         
         val method = object : DidMethod {

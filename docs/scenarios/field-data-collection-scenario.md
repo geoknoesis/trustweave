@@ -268,15 +268,12 @@ import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.trust.types.DidResolutionResult
 import org.trustweave.trust.types.IssuanceResult
 
-val organizationDidResult = trustWeave.createDid {
+import org.trustweave.trust.types.getOrThrowDid
+
+val organizationDid = trustWeave.createDid {
     method(KEY)
     algorithm(ED25519)
-}
-
-val organizationDid = when (organizationDidResult) {
-    is DidCreationResult.Success -> organizationDidResult.did
-    else -> throw IllegalStateException("Failed to create organization DID")
-}
+}.getOrThrowDid()
 
 println("✓ Organization DID created: ${organizationDid.value}")
 println("  - This DID will issue credentials to field workers")
@@ -292,25 +289,26 @@ import org.trustweave.credential.models.VerifiableCredential
 import java.time.Instant
 
 // Create field worker DID
-val workerDidResult = trustWeave.createDid {
+val workerDid = trustWeave.createDid {
     method(KEY)
     algorithm(ED25519)
-}
-
-val workerDid = when (workerDidResult) {
-    is DidCreationResult.Success -> workerDidResult.did
-    else -> throw IllegalStateException("Failed to create worker DID")
-}
+}.getOrThrowDid()
 
 println("✓ Field worker DID created: ${workerDid.value}")
 
 // Resolve organization DID to get key ID
-val organizationResolution = trustWeave.resolveDid(organizationDid)
-val organizationDoc = when (organizationResolution) {
-    is DidResolutionResult.Success -> organizationResolution.document
-    else -> throw IllegalStateException("Failed to resolve organization DID")
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.identifiers.extractKeyId
+
+// Helper extension for resolution results
+fun DidResolutionResult.getOrThrow() = when (this) {
+    is DidResolutionResult.Success -> this.document
+    else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
 }
-val organizationKeyId = organizationDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+
+val organizationDoc = trustWeave.resolveDid(organizationDid).getOrThrow()
+val organizationKeyId = organizationDoc.verificationMethod.firstOrNull()?.extractKeyId()
     ?: throw IllegalStateException("No verification method found")
 
 // Issue authorization credential
@@ -322,7 +320,7 @@ val workerIssuanceResult = trustWeave.issue {
     credential {
         id("credential:worker-auth-001")
         type("VerifiableCredential", "FieldWorkerCredential")
-        issuer(organizationDid.value)
+        issuer(organizationDid)
         subject {
             id(workerDid.value)
             "role" to "ForestSurveyor"
@@ -339,10 +337,7 @@ val workerIssuanceResult = trustWeave.issue {
     )
 }
 
-val workerCredential = when (workerIssuanceResult) {
-    is IssuanceResult.Success -> workerIssuanceResult.credential
-    else -> throw IllegalStateException("Failed to issue worker credential")
-}
+val workerCredential = workerIssuanceResult.getOrThrow()
 
 println("✓ Worker authorization credential issued")
 println("  - Credential ID: ${workerCredential.id}")
@@ -432,7 +427,7 @@ val collectionIssuanceResult = trustWeave.issue {
     credential {
         id("credential:${collectionEvent.id}")
         type("VerifiableCredential", "FieldDataCollectionCredential")
-        issuer(organizationDid.value)
+        issuer(organizationDid)
         subject {
             id(workerDid.value)
             "collectionEventId" to collectionEvent.id
@@ -455,10 +450,9 @@ val collectionIssuanceResult = trustWeave.issue {
     )
 }
 
-val collectionCredential = when (collectionIssuanceResult) {
-    is IssuanceResult.Success -> collectionIssuanceResult.credential
-    else -> throw IllegalStateException("Failed to issue collection credential")
-}
+import org.trustweave.trust.types.getOrThrow
+
+val collectionCredential = collectionIssuanceResult.getOrThrow()
 
 println("✓ Collection event credential issued")
 println("  - Credential ID: ${collectionCredential.id}")
@@ -613,38 +607,33 @@ fun main() = runBlocking {
     println()
 
     // Step 2: Create organization DID
-    import org.trustweave.trust.types.DidCreationResult
-    import org.trustweave.trust.types.DidResolutionResult
-    import org.trustweave.trust.types.IssuanceResult
+    import org.trustweave.trust.types.getOrThrowDid
+    import org.trustweave.trust.types.getOrThrow
+    import org.trustweave.did.resolver.DidResolutionResult
+    import org.trustweave.did.identifiers.extractKeyId
     
-    val organizationDidResult = trustWeave.createDid {
+    // Helper extension for resolution results
+    fun DidResolutionResult.getOrThrow() = when (this) {
+        is DidResolutionResult.Success -> this.document
+        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
+    }
+    
+    val organizationDid = trustWeave.createDid {
         method(KEY)
-    }
-    val organizationDid = when (organizationDidResult) {
-        is DidCreationResult.Success -> organizationDidResult.did
-        else -> throw IllegalStateException("Failed to create organization DID")
-    }
+    }.getOrThrowDid()
     println("Step 2: Organization DID created")
     println("  - DID: ${organizationDid.value}")
     println()
 
     // Resolve organization DID to get key ID
-    val organizationResolution = trustWeave.resolveDid(organizationDid)
-    val organizationDoc = when (organizationResolution) {
-        is DidResolutionResult.Success -> organizationResolution.document
-        else -> throw IllegalStateException("Failed to resolve organization DID")
-    }
-    val organizationKeyId = organizationDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val organizationDoc = trustWeave.resolveDid(organizationDid).getOrThrow()
+    val organizationKeyId = organizationDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     // Step 3: Create field worker DID
-    val workerDidResult = trustWeave.createDid {
+    val workerDid = trustWeave.createDid {
         method(KEY)
-    }
-    val workerDid = when (workerDidResult) {
-        is DidCreationResult.Success -> workerDidResult.did
-        else -> throw IllegalStateException("Failed to create worker DID")
-    }
+    }.getOrThrowDid()
     println("Step 3: Field worker DID created")
     println("  - DID: ${workerDid.value}")
     println()
@@ -658,7 +647,7 @@ fun main() = runBlocking {
         credential {
             id("credential:worker-auth-001")
             type("VerifiableCredential", "FieldWorkerCredential")
-            issuer(organizationDid.value)
+            issuer(organizationDid)
             subject {
                 id(workerDid.value)
                 "role" to "ForestSurveyor"
@@ -675,10 +664,9 @@ fun main() = runBlocking {
         )
     }
     
-    val workerCredential = when (workerIssuanceResult) {
-        is IssuanceResult.Success -> workerIssuanceResult.credential
-        else -> throw IllegalStateException("Failed to issue worker credential")
-    }
+    import org.trustweave.trust.types.getOrThrow
+    
+    val workerCredential = workerIssuanceResult.getOrThrow()
 
     println("Step 4: Worker authorization credential issued")
     println("  - Credential ID: ${workerCredential.id}")
@@ -728,7 +716,7 @@ fun main() = runBlocking {
         credential {
             id("credential:${collectionEvent.id}")
             type("VerifiableCredential", "FieldDataCollectionCredential")
-            issuer(organizationDid.value)
+            issuer(organizationDid)
             subject {
                 id(workerDid.value)
                 "collectionEventId" to collectionEvent.id
@@ -745,10 +733,7 @@ fun main() = runBlocking {
         )
     }
     
-    val collectionCredential = when (collectionIssuanceResult) {
-        is IssuanceResult.Success -> collectionIssuanceResult.credential
-        else -> throw IllegalStateException("Failed to issue collection credential")
-    }
+    val collectionCredential = collectionIssuanceResult.getOrThrow()
 
     println("Step 6: Collection credential issued")
     println("  - Data Digest: $dataDigest")

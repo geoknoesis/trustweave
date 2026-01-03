@@ -13,7 +13,6 @@ import org.trustweave.did.identifiers.Did
 import org.trustweave.kms.results.SignResult
 import kotlinx.datetime.Instant
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.testkit.services.TestkitDidMethodFactory
 import org.trustweave.testkit.services.TestkitStatusListRegistryFactory
 import org.trustweave.trust.dsl.TrustWeaveConfig
 import org.trustweave.trust.dsl.trustWeave
@@ -39,9 +38,9 @@ class RevocationDslTest {
 
         trustWeave = trustWeave {
             factories(
-                didMethodFactory = TestkitDidMethodFactory(),
                 statusListRegistryFactory = TestkitStatusListRegistryFactory()
             )
+            // DID methods auto-discovered via SPI
             keys {
                 custom(kms)
                 signer { data, keyId ->

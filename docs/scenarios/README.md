@@ -228,7 +228,10 @@ Each scenario follows this structure:
 ```kotlin
 fun main() = runBlocking {
     // 1. Setup
-    val TrustWeave = TrustWeave.create()
+    val trustWeave = TrustWeave.build {
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
+    }
 
     // 2. Create DIDs
     import org.trustweave.trust.types.getOrThrowDid

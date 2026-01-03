@@ -16,6 +16,7 @@ allprojects {
 }
 
 subprojects {
+
     // Configure all subprojects to build into the root project's build directory.
     // This centralizes all build outputs under the project root for easier cleanup and organization.
     // Each subproject's build output will be in build/<project-path>/ (e.g., build/did/core/)
@@ -90,6 +91,52 @@ subprojects {
         // Without this, Gradle defaults to JUnit 4, which doesn't match our JUnit Jupiter dependencies.
         tasks.withType<Test>().configureEach {
             useJUnitPlatform()
+        }
+
+        // Apply maven-publish plugin and configure publishing for all subprojects that produce JAR files
+        // Skip java-platform projects (like BOM) as they configure their own publishing
+        if ((plugins.hasPlugin("org.jetbrains.kotlin.jvm") || plugins.hasPlugin("java")) 
+            && !plugins.hasPlugin("java-platform")) {
+            // Apply maven-publish plugin if not already applied
+            if (!plugins.hasPlugin("maven-publish")) {
+                apply(plugin = "maven-publish")
+            }
+            
+            // Configure Maven publishing
+            configure<org.gradle.api.publish.PublishingExtension> {
+                publications {
+                    create<org.gradle.api.publish.maven.MavenPublication>("maven") {
+                        from(components["java"])
+                        
+                        // Set artifact ID based on project path (matches archivesName configuration)
+                        val artifactName = project.path
+                            .removePrefix(":")
+                            .replace(":", "-")
+                        artifactId = artifactName
+                        
+                        pom {
+                            name.set(project.name)
+                            description.set(project.description ?: "TrustWeave ${project.name} module")
+                            url.set("https://github.com/geoknoesis/trustweave")
+                            
+                            licenses {
+                                license {
+                                    name.set("AGPL-3.0")
+                                    url.set("https://www.gnu.org/licenses/agpl-3.0.txt")
+                                }
+                            }
+                            
+                            developers {
+                                developer {
+                                    id.set("trustweave-team")
+                                    name.set("TrustWeave Team")
+                                    email.set("info@geoknoesis.com")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

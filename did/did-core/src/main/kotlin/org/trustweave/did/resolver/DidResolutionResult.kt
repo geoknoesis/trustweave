@@ -39,8 +39,26 @@ sealed class DidResolutionResult {
     data class Success(
         val document: DidDocument,
         val documentMetadata: DidDocumentMetadata = DidDocumentMetadata(),
-        val resolutionMetadata: Map<String, Any?> = emptyMap()
-    ) : DidResolutionResult()
+        val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata()
+    ) : DidResolutionResult() {
+        /**
+         * Backward compatibility: access resolution metadata as map.
+         */
+        val resolutionMetadataMap: Map<String, Any?> get() = resolutionMetadata.toMap()
+        
+        /**
+         * Constructor for backward compatibility with map-based metadata.
+         */
+        constructor(
+            document: DidDocument,
+            documentMetadata: DidDocumentMetadata,
+            resolutionMetadataMap: Map<String, Any?>
+        ) : this(
+            document = document,
+            documentMetadata = documentMetadata,
+            resolutionMetadata = DidResolutionMetadata.fromMap(resolutionMetadataMap)
+        )
+    }
 
     /**
      * DID resolution failed.
@@ -56,8 +74,26 @@ sealed class DidResolutionResult {
         data class NotFound(
             val did: Did,
             val reason: String? = null,
-            val resolutionMetadata: Map<String, Any?> = emptyMap()
-        ) : Failure()
+            val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata(
+                error = "notFound",
+                errorMessage = reason ?: "DID not found"
+            )
+        ) : Failure() {
+            /**
+             * Backward compatibility constructor.
+             */
+            constructor(
+                did: Did,
+                reason: String?,
+                resolutionMetadataMap: Map<String, Any?>
+            ) : this(
+                did = did,
+                reason = reason,
+                resolutionMetadata = DidResolutionMetadata.fromMap(resolutionMetadataMap)
+            )
+            
+            val resolutionMetadataMap: Map<String, Any?> get() = resolutionMetadata.toMap()
+        }
 
         /**
          * DID format is invalid.
@@ -69,8 +105,23 @@ sealed class DidResolutionResult {
         data class InvalidFormat(
             val did: String,
             val reason: String,
-            val resolutionMetadata: Map<String, Any?> = emptyMap()
-        ) : Failure()
+            val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata(
+                error = "invalidDid",
+                errorMessage = reason
+            )
+        ) : Failure() {
+            constructor(
+                did: String,
+                reason: String,
+                resolutionMetadataMap: Map<String, Any?>
+            ) : this(
+                did = did,
+                reason = reason,
+                resolutionMetadata = DidResolutionMetadata.fromMap(resolutionMetadataMap)
+            )
+            
+            val resolutionMetadataMap: Map<String, Any?> get() = resolutionMetadata.toMap()
+        }
 
         /**
          * DID method is not registered.
@@ -82,8 +133,23 @@ sealed class DidResolutionResult {
         data class MethodNotRegistered(
             val method: String,
             val availableMethods: List<String> = emptyList(),
-            val resolutionMetadata: Map<String, Any?> = emptyMap()
-        ) : Failure()
+            val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata(
+                error = "methodNotSupported",
+                errorMessage = "DID method '$method' is not registered"
+            )
+        ) : Failure() {
+            constructor(
+                method: String,
+                availableMethods: List<String>,
+                resolutionMetadataMap: Map<String, Any?>
+            ) : this(
+                method = method,
+                availableMethods = availableMethods,
+                resolutionMetadata = DidResolutionMetadata.fromMap(resolutionMetadataMap)
+            )
+            
+            val resolutionMetadataMap: Map<String, Any?> get() = resolutionMetadata.toMap()
+        }
 
         /**
          * Resolution failed due to an unexpected error.
@@ -97,8 +163,25 @@ sealed class DidResolutionResult {
             val did: Did,
             val reason: String,
             val cause: Throwable? = null,
-            val resolutionMetadata: Map<String, Any?> = emptyMap()
-        ) : Failure()
+            val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata(
+                error = "resolutionError",
+                errorMessage = reason
+            )
+        ) : Failure() {
+            constructor(
+                did: Did,
+                reason: String,
+                cause: Throwable?,
+                resolutionMetadataMap: Map<String, Any?>
+            ) : this(
+                did = did,
+                reason = reason,
+                cause = cause,
+                resolutionMetadata = DidResolutionMetadata.fromMap(resolutionMetadataMap)
+            )
+            
+            val resolutionMetadataMap: Map<String, Any?> get() = resolutionMetadata.toMap()
+        }
     }
 }
 

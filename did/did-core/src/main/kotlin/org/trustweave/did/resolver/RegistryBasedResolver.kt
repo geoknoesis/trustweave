@@ -69,29 +69,48 @@ class RegistryBasedResolver(
                 return DidResolutionResult.Failure.MethodNotRegistered(
                     method = did.method,
                     availableMethods = registry.getAllMethodNames(),
-                    resolutionMetadata = mapOf(
-                        "error" to "methodNotSupported",
-                        "errorMessage" to "DID method '${did.method}' is not registered",
-                        "did" to didString
+                    resolutionMetadata = DidResolutionMetadata(
+                        error = "methodNotSupported",
+                        errorMessage = "DID method '${did.method}' is not registered",
+                        properties = mapOf("did" to didString)
                     )
                 )
             }
 
             // Use type-safe resolveDid(Did) method
-            return method.resolveDid(did)
+            val result = method.resolveDid(did)
+            
+            // Convert map-based metadata to structured metadata if needed
+            return when (result) {
+                is DidResolutionResult.Success -> {
+                    if (result.resolutionMetadataMap.isNotEmpty() && 
+                        result.resolutionMetadata.contentType == "application/did+ld+json" &&
+                        result.resolutionMetadata.error == null) {
+                        // Convert from map if needed (backward compatibility)
+                        result.copy(
+                            resolutionMetadata = DidResolutionMetadata.fromMap(result.resolutionMetadataMap)
+                        )
+                    } else {
+                        result
+                    }
+                }
+                else -> result
+            }
         } catch (e: DidException) {
             // Convert DidException to resolution result
-            val errorMetadata = mutableMapOf<String, Any?>(
-                "error" to e.code,
-                "errorMessage" to (e.message ?: "Unknown error"),
+            val properties = mutableMapOf<String, String>(
                 "did" to didString
             )
-            errorMetadata.putAll(e.context.map { (k, v) -> k to v })
+            properties.putAll(e.context.mapValues { it.value?.toString() ?: "" })
             return DidResolutionResult.Failure.ResolutionError(
                 did = did,
                 reason = e.message ?: "Unknown error",
                 cause = e,
-                resolutionMetadata = errorMetadata
+                resolutionMetadata = DidResolutionMetadata(
+                    error = e.code,
+                    errorMessage = e.message ?: "Unknown error",
+                    properties = properties
+                )
             )
         } catch (e: Exception) {
             // Unexpected error
@@ -99,9 +118,9 @@ class RegistryBasedResolver(
                 did = did,
                 reason = e.message ?: "Unknown error during resolution",
                 cause = e,
-                resolutionMetadata = mapOf(
-                    "error" to "resolutionError",
-                    "errorMessage" to (e.message ?: "Unknown error during resolution")
+                resolutionMetadata = DidResolutionMetadata(
+                    error = "resolutionError",
+                    errorMessage = e.message ?: "Unknown error during resolution"
                 )
             )
         }

@@ -7,6 +7,7 @@ import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidResolutionMetadata
 import org.trustweave.kms.Algorithm
 import org.trustweave.kms.KeyManagementService
 import kotlinx.datetime.Instant
@@ -88,16 +89,21 @@ class DidKeyMockMethod(
                     created = now,
                     updated = now
                 ),
-                resolutionMetadata = mapOf(
-                    "method" to method,
-                    "mock" to true
+                resolutionMetadata = DidResolutionMetadata(
+                    pattern = method,
+                    properties = mapOf("mock" to "true")
                 )
             )
         } else {
             DidResolutionResult.Failure.NotFound(
                 did = did,
                 reason = "DID not found in mock registry",
-                resolutionMetadata = mapOf("method" to method, "mock" to true)
+                resolutionMetadata = DidResolutionMetadata(
+                    error = "notFound",
+                    errorMessage = "DID not found in mock registry",
+                    pattern = method,
+                    properties = mapOf("mock" to "true")
+                )
             )
         }
     }

@@ -9,6 +9,7 @@ import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.model.DidService
 import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidResolutionMetadata
 import org.trustweave.did.spi.DidMethodProvider
 import org.trustweave.kms.KeyManagementService
 import org.trustweave.kms.results.GenerateKeyResult
@@ -217,16 +218,21 @@ class WaltIdKeyMethod(
                         created = now,
                         updated = now
                     ),
-                    resolutionMetadata = mapOf(
-                        "method" to method,
-                        "provider" to "waltid"
+                    resolutionMetadata = DidResolutionMetadata(
+                        pattern = method,
+                        properties = mapOf("provider" to "waltid")
                     )
                 )
             } else {
                 DidResolutionResult.Failure.NotFound(
                     did = did,
                     reason = "DID not found in cache",
-                    resolutionMetadata = mapOf("method" to method, "provider" to "waltid")
+                    resolutionMetadata = DidResolutionMetadata(
+                        error = "notFound",
+                        errorMessage = "DID not found in cache",
+                        pattern = method,
+                        properties = mapOf("provider" to "waltid")
+                    )
                 )
             }
         } catch (e: Exception) {
@@ -324,16 +330,21 @@ class WaltIdWebMethod(
                         created = now,
                         updated = now
                     ),
-                    resolutionMetadata = mapOf(
-                        "method" to method,
-                        "provider" to "waltid"
+                    resolutionMetadata = DidResolutionMetadata(
+                        pattern = method,
+                        properties = mapOf("provider" to "waltid")
                     )
                 )
             } else {
                 DidResolutionResult.Failure.NotFound(
                     did = did,
                     reason = "DID not found in cache",
-                    resolutionMetadata = mapOf("method" to method, "provider" to "waltid")
+                    resolutionMetadata = DidResolutionMetadata(
+                        error = "notFound",
+                        errorMessage = "DID not found in cache",
+                        pattern = method,
+                        properties = mapOf("provider" to "waltid")
+                    )
                 )
             }
         } catch (e: Exception) {

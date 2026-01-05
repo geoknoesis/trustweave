@@ -54,7 +54,7 @@ class JwkDidMethodTest {
         assertTrue(result is DidResolutionResult.Success)
         val successResult = result as DidResolutionResult.Success
         assertEquals(document.id, successResult.document.id)
-        assertEquals("jwk", successResult.resolutionMetadata["method"])
+        assertEquals("jwk", successResult.resolutionMetadata.pattern)
     }
 
     @Test

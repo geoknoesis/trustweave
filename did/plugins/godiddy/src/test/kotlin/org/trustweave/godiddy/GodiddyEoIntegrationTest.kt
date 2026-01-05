@@ -3,6 +3,7 @@ package org.trustweave.godiddy
 import org.trustweave.anchor.DefaultBlockchainAnchorRegistry
 import org.trustweave.did.registry.DidMethodRegistry
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidResolutionMetadata
 import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.core.util.DigestUtils
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
@@ -105,7 +106,9 @@ class GodiddyEoIntegrationTest {
             org.trustweave.did.resolver.DidResolutionResult.Success(
                 document = issuerDoc,
                 documentMetadata = DidDocumentMetadata(),
-                resolutionMetadata = mapOf("provider" to "local")
+                resolutionMetadata = DidResolutionMetadata(
+                    properties = mapOf("provider" to "local")
+                )
             )
         }
 
@@ -114,7 +117,7 @@ class GodiddyEoIntegrationTest {
         assertEquals(issuerDid, successResult.document.id)
 
         // Verify metadata indicates GoDiddy provider (if available)
-        val provider = successResult.resolutionMetadata["provider"]
+        val provider = successResult.resolutionMetadata.properties["provider"]
         if (provider != null) {
             // Provider might be "godiddy" or the underlying method provider
             assertTrue(

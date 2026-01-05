@@ -7,6 +7,7 @@ import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.model.DidService
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidResolutionMetadata
 import org.trustweave.did.exception.DidException.InvalidDidFormat
 import org.junit.jupiter.api.Test
 import kotlin.test.*
@@ -173,23 +174,26 @@ class DidModelsBranchCoverageTest {
             documentMetadata = DidDocumentMetadata(
                 created = kotlinx.datetime.Instant.parse("2024-01-01T00:00:00Z")
             ),
-            resolutionMetadata = mapOf("duration" to 100)
+            resolutionMetadata = DidResolutionMetadata(duration = 100L)
         )
 
         assertNotNull(result.document)
         assertNotNull(result.documentMetadata.created)
-        assertEquals(1, result.resolutionMetadata.size)
+        assertEquals(100L, result.resolutionMetadata.duration)
     }
 
     @Test
     fun `test DidResolutionResult constructor without document`() {
         val result = DidResolutionResult.Failure.NotFound(
             did = Did("did:key:test"),
-            resolutionMetadata = mapOf("error" to "notFound")
+            resolutionMetadata = DidResolutionMetadata(
+                error = "notFound",
+                errorMessage = "notFound"
+            )
         )
 
         assertTrue(result is DidResolutionResult.Failure.NotFound)
-        assertEquals(1, result.resolutionMetadata.size)
+        assertEquals("notFound", result.resolutionMetadata.error)
     }
 
     @Test
@@ -199,7 +203,7 @@ class DidModelsBranchCoverageTest {
 
         assertNotNull(result.document)
         assertNull(result.documentMetadata.created)
-        assertTrue(result.resolutionMetadata.isEmpty())
+        assertNull(result.resolutionMetadata.error)
     }
 }
 

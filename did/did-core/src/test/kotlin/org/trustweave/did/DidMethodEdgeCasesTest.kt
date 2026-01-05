@@ -6,6 +6,7 @@ import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidResolutionMetadata
 import org.trustweave.did.registry.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 import org.trustweave.did.DidCreationOptions
@@ -168,7 +169,10 @@ class DidMethodEdgeCasesTest {
                     created = kotlinx.datetime.Instant.parse("2024-01-01T00:00:00Z"),
                     updated = kotlinx.datetime.Instant.parse("2024-01-02T00:00:00Z")
                 ),
-                resolutionMetadata = mapOf("duration" to 100L, "cached" to false)
+                resolutionMetadata = DidResolutionMetadata(
+                    duration = 100L,
+                    properties = mapOf("cached" to "false")
+                )
             )
 
             override suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument) = DidDocument(id = did)
@@ -183,7 +187,8 @@ class DidMethodEdgeCasesTest {
         assertNotNull(result.document)
         assertNotNull(result.documentMetadata.created)
         assertNotNull(result.documentMetadata.updated)
-        assertEquals(2, result.resolutionMetadata.size)
+        assertEquals(100L, result.resolutionMetadata.duration)
+        assertEquals("false", result.resolutionMetadata.properties["cached"])
     }
 
     @Test
@@ -196,7 +201,10 @@ class DidMethodEdgeCasesTest {
             override suspend fun resolveDid(did: Did) = DidResolutionResult.Failure.NotFound(
                 did = did,
                 reason = "notFound",
-                resolutionMetadata = mapOf("error" to "notFound")
+                resolutionMetadata = DidResolutionMetadata(
+                    error = "notFound",
+                    errorMessage = "notFound"
+                )
             )
 
             override suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument) = DidDocument(id = did)
@@ -208,7 +216,7 @@ class DidMethodEdgeCasesTest {
         val result = registry.resolve("did:test:nonexistent")
 
         assertTrue(result is DidResolutionResult.Failure.NotFound)
-        assertTrue(result.resolutionMetadata.containsKey("error"))
+        assertEquals("notFound", result.resolutionMetadata.error)
     }
 
     @Test

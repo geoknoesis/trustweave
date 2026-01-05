@@ -4,6 +4,7 @@ import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidResolutionMetadata
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -133,13 +134,15 @@ class DidDocumentMetadataComprehensiveTest {
         val result = DidResolutionResult.Success(
             document = doc,
             documentMetadata = metadata,
-            resolutionMetadata = mapOf("provider" to "test")
+            resolutionMetadata = DidResolutionMetadata(
+                properties = mapOf("provider" to "test")
+            )
         )
 
         assertNotNull(result.document)
         assertNotNull(result.documentMetadata)
         assertEquals("v1", result.documentMetadata.versionId)
-        assertEquals("test", result.resolutionMetadata["provider"])
+        assertEquals("test", result.resolutionMetadata.properties["provider"])
     }
 
     @Test
@@ -147,11 +150,14 @@ class DidDocumentMetadataComprehensiveTest {
         val result = DidResolutionResult.Failure.NotFound(
             did = Did("did:key:test"),
             reason = "notFound",
-            resolutionMetadata = mapOf("error" to "notFound")
+            resolutionMetadata = DidResolutionMetadata(
+                error = "notFound",
+                errorMessage = "DID not found"
+            )
         )
 
         assertTrue(result is DidResolutionResult.Failure.NotFound)
-        assertEquals("notFound", result.resolutionMetadata["error"])
+        assertEquals("notFound", result.resolutionMetadata.error)
     }
 }
 

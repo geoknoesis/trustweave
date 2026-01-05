@@ -9,6 +9,7 @@ import org.trustweave.did.model.DidService
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidResolutionMetadata
 import org.trustweave.kms.KeyHandle
 import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
@@ -192,9 +193,9 @@ object DidMethodUtils {
                 created = created ?: now,
                 updated = updated ?: now
             ),
-            resolutionMetadata = mapOf(
-                "method" to method,
-                "driver" to "TrustWeave"
+            resolutionMetadata = DidResolutionMetadata(
+                pattern = method,
+                properties = mapOf("driver" to "TrustWeave")
             )
         )
     }
@@ -214,15 +215,11 @@ object DidMethodUtils {
         method: String? = null,
         did: String? = null
     ): DidResolutionResult {
-        val metadata = buildMap<String, Any?> {
-            put("error", error)
-            if (message != null) {
-                put("errorMessage", message)
-            }
-            if (method != null) {
-                put("method", method)
-            }
-        }
+        val metadata = DidResolutionMetadata(
+            error = error,
+            errorMessage = message,
+            pattern = method
+        )
 
         return when (error.lowercase()) {
             "notfound", "did_not_found" -> DidResolutionResult.Failure.NotFound(

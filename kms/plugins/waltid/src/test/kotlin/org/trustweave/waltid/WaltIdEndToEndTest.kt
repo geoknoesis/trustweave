@@ -91,9 +91,9 @@ class WaltIdEndToEndTest {
         assertEquals(issuerDid, successResult.document.id)
 
         // 3. Verify metadata indicates walt.id provider
+        val provider = successResult.resolutionMetadata.properties["provider"]
         assertTrue(
-            successResult.resolutionMetadata["provider"] == "waltid" ||
-            successResult.resolutionMetadata.containsKey("provider"),
+            provider == "waltid" || provider != null,
             "Resolution metadata should indicate provider"
         )
     }

@@ -54,7 +54,7 @@ class KeyDidMethodTest {
         assertTrue(result is DidResolutionResult.Success)
         val successResult = result as DidResolutionResult.Success
         assertEquals(document.id, successResult.document.id)
-        assertEquals("key", successResult.resolutionMetadata["method"])
+        assertEquals("key", successResult.resolutionMetadata.pattern)
     }
 
     @Test

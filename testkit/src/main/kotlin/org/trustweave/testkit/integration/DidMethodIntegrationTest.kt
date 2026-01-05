@@ -7,6 +7,7 @@ import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.KeyAlgorithm
 import org.trustweave.did.didCreationOptions
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidResolutionMetadata
 import org.trustweave.testkit.BaseIntegrationTest
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -144,8 +145,7 @@ abstract class DidMethodIntegrationTest : BaseIntegrationTest() {
             is DidResolutionResult.Success -> resolution.document
             else -> null
         }
-        val isDeactivated = resolutionMetadata["deactivated"] == true ||
-                           resolutionMetadata["deactivated"] == "true" ||
+        val isDeactivated = resolutionMetadata.properties["deactivated"] == "true" ||
                            resolvedDocument == null
 
         kotlin.test.assertTrue(

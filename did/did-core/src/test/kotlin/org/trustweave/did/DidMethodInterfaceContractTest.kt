@@ -7,6 +7,7 @@ import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.model.DidService
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidResolutionMetadata
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.*
@@ -70,7 +71,7 @@ class DidMethodInterfaceContractTest {
         val result = method.resolveDid(did)
 
         assertTrue(result is DidResolutionResult.Failure.NotFound)
-        assertTrue(result.resolutionMetadata.containsKey("error"))
+        assertNotNull(result.resolutionMetadata.error)
     }
 
     @Test
@@ -185,7 +186,10 @@ class DidMethodInterfaceContractTest {
                     return DidResolutionResult.Failure.NotFound(
                         did = did,
                         reason = "deactivated",
-                        resolutionMetadata = mapOf("error" to "deactivated")
+                        resolutionMetadata = DidResolutionMetadata(
+                            error = "deactivated",
+                            errorMessage = "deactivated"
+                        )
                     )
                 }
 
@@ -194,13 +198,16 @@ class DidMethodInterfaceContractTest {
                     DidResolutionResult.Success(
                         document = doc,
                         documentMetadata = DidDocumentMetadata(),
-                        resolutionMetadata = emptyMap()
+                        resolutionMetadata = DidResolutionMetadata()
                     )
                 } else {
                     DidResolutionResult.Failure.NotFound(
                         did = did,
                         reason = "notFound",
-                        resolutionMetadata = mapOf("error" to "notFound")
+                        resolutionMetadata = DidResolutionMetadata(
+                            error = "notFound",
+                            errorMessage = "notFound"
+                        )
                     )
                 }
             }

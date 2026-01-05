@@ -7,6 +7,7 @@ import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.model.DidService
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidResolutionMetadata
 import kotlin.test.*
 import kotlinx.datetime.Instant
 
@@ -213,12 +214,12 @@ class DidModelsEdgeCasesTest {
         val result = DidResolutionResult.Success(
             document = doc,
             documentMetadata = DidDocumentMetadata(),
-            resolutionMetadata = emptyMap()
+            resolutionMetadata = DidResolutionMetadata()
         )
 
         assertNotNull(result.document)
         assertNull(result.documentMetadata.created)
-        assertTrue(result.resolutionMetadata.isEmpty())
+        assertNull(result.resolutionMetadata.error)
     }
 
     @Test
@@ -232,32 +233,35 @@ class DidModelsEdgeCasesTest {
                 versionId = "1",
                 nextUpdate = kotlinx.datetime.Instant.parse("2024-02-01T00:00:00Z")
             ),
-            resolutionMetadata = mapOf(
-                "duration" to 150L,
-                "cached" to true,
-                "cacheExpires" to "2024-01-01T01:00:00Z",
-                "resolver" to "did-resolver-v1"
+            resolutionMetadata = DidResolutionMetadata(
+                duration = 150L,
+                properties = mapOf(
+                    "cached" to "true",
+                    "cacheExpires" to "2024-01-01T01:00:00Z",
+                    "resolver" to "did-resolver-v1"
+                )
             )
         )
 
         assertNotNull(result.documentMetadata.created)
         assertNotNull(result.documentMetadata.updated)
         assertEquals("1", result.documentMetadata.versionId)
-        assertEquals(4, result.resolutionMetadata.size)
+        assertEquals(150L, result.resolutionMetadata.duration)
+        assertEquals(3, result.resolutionMetadata.properties.size)
     }
 
     @Test
     fun `test DidResolutionResult with null document and error metadata`() {
         val result = DidResolutionResult.Failure.NotFound(
             did = Did("did:key:test"),
-            resolutionMetadata = mapOf(
-                "error" to "notFound",
-                "errorMessage" to "DID not found in registry"
+            resolutionMetadata = DidResolutionMetadata(
+                error = "notFound",
+                errorMessage = "DID not found in registry"
             )
         )
 
         assertTrue(result is DidResolutionResult.Failure.NotFound)
-        assertEquals("notFound", result.resolutionMetadata["error"])
+        assertEquals("notFound", result.resolutionMetadata.error)
     }
 
     @Test

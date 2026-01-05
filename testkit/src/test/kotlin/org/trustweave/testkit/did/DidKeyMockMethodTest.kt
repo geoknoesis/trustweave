@@ -89,8 +89,8 @@ class DidKeyMockMethodTest {
         assertEquals(document, successResult.document)
         assertNotNull(successResult.documentMetadata.created)
         assertNotNull(successResult.documentMetadata.updated)
-        assertEquals("key", successResult.resolutionMetadata["method"])
-        assertEquals(true, successResult.resolutionMetadata["mock"])
+        assertEquals("key", successResult.resolutionMetadata.pattern)
+        assertEquals("true", successResult.resolutionMetadata.properties["mock"])
     }
 
     @Test

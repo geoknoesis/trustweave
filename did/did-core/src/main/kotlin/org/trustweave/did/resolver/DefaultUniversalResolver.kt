@@ -138,21 +138,24 @@ class DefaultUniversalResolver(
                 val documentMetadata = parseDidDocumentMetadata(
                     protocolAdapter.extractDocumentMetadata(jsonResponse)
                 )
-                val resolutionMetadata = parseResolutionMetadata(
+                val resolutionMetadataMap = parseResolutionMetadata(
                     protocolAdapter.extractResolutionMetadata(jsonResponse)
+                )
+                val resolutionMetadata = DidResolutionMetadata.fromMap(
+                    resolutionMetadataMap.plus("provider" to protocolAdapter.providerName)
                 )
 
                 if (document != null) {
                     DidResolutionResult.Success(
                         document = document,
                         documentMetadata = documentMetadata,
-                        resolutionMetadata = resolutionMetadata.plus("provider" to protocolAdapter.providerName)
+                        resolutionMetadata = resolutionMetadata
                     )
                 } else {
                     DidResolutionResult.Failure.NotFound(
                         did = Did(did),
                         reason = "DID document not found in response",
-                        resolutionMetadata = resolutionMetadata.plus("provider" to protocolAdapter.providerName)
+                        resolutionMetadata = resolutionMetadata
                     )
                 }
             }
@@ -160,9 +163,10 @@ class DefaultUniversalResolver(
                 DidResolutionResult.Failure.NotFound(
                     did = Did(did),
                     reason = "DID not found",
-                    resolutionMetadata = mapOf(
-                        "error" to "notFound",
-                        "provider" to protocolAdapter.providerName
+                    resolutionMetadata = DidResolutionMetadata(
+                        error = "notFound",
+                        errorMessage = "DID not found",
+                        properties = mapOf("provider" to protocolAdapter.providerName)
                     )
                 )
             }
@@ -173,9 +177,13 @@ class DefaultUniversalResolver(
                     did = Did(did),
                     reason = "HTTP ${response.statusCode()}",
                     cause = null,
-                    resolutionMetadata = mapOf(
-                        "statusCode" to response.statusCode(),
-                        "provider" to protocolAdapter.providerName
+                    resolutionMetadata = DidResolutionMetadata(
+                        error = "resolutionError",
+                        errorMessage = "HTTP ${response.statusCode()}",
+                        properties = mapOf(
+                            "statusCode" to response.statusCode().toString(),
+                            "provider" to protocolAdapter.providerName
+                        )
                     )
                 )
             }

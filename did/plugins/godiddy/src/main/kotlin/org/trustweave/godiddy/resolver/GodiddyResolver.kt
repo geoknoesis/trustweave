@@ -8,6 +8,7 @@ import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.model.DidService
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidResolutionMetadata
 import org.trustweave.did.resolver.UniversalResolver
 import org.trustweave.godiddy.GodiddyClient
 import org.trustweave.godiddy.models.GodiddyResolutionResponse
@@ -52,9 +53,10 @@ class GodiddyResolver(
                 return@withContext DidResolutionResult.Failure.NotFound(
                     did = Did(did),
                     reason = "notFound",
-                    resolutionMetadata = mapOf(
-                        "error" to "notFound",
-                        "provider" to "godiddy"
+                    resolutionMetadata = DidResolutionMetadata(
+                        error = "notFound",
+                        errorMessage = "notFound",
+                        properties = mapOf("provider" to "godiddy")
                     )
                 )
             }
@@ -83,8 +85,9 @@ class GodiddyResolver(
 
             val documentMetadata = convertToDidDocumentMetadata(didDocumentMetadata)
 
-            val resolutionMetadata = (didResolutionMetadata?.entries?.associate { it.key to convertJsonElement(it.value) } ?: emptyMap())
+            val resolutionMetadataMap = (didResolutionMetadata?.entries?.associate { it.key to convertJsonElement(it.value) } ?: emptyMap())
                 .plus("provider" to "godiddy")
+            val resolutionMetadata = DidResolutionMetadata.fromMap(resolutionMetadataMap)
 
             if (document != null) {
                 DidResolutionResult.Success(

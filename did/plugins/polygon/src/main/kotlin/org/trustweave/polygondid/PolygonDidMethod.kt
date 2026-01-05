@@ -5,6 +5,7 @@ import org.trustweave.did.*
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidResolutionMetadata
 import org.trustweave.did.base.AbstractBlockchainDidMethod
 import org.trustweave.did.base.DidMethodUtils
 import org.trustweave.core.exception.TrustWeaveException
@@ -146,21 +147,30 @@ class PolygonDidMethod(
                         DidResolutionResult.Failure.NotFound(
                             did = did,
                             reason = ethrResult.reason,
-                            resolutionMetadata = ethrResult.resolutionMetadata + mapOf("method" to method)
+                            resolutionMetadata = ethrResult.resolutionMetadata.copy(
+                                pattern = method,
+                                properties = ethrResult.resolutionMetadata.properties + mapOf("method" to method)
+                            )
                         )
                     }
                     is DidResolutionResult.Failure.InvalidFormat -> {
                         DidResolutionResult.Failure.InvalidFormat(
                             did = didString,
                             reason = ethrResult.reason,
-                            resolutionMetadata = ethrResult.resolutionMetadata + mapOf("method" to method)
+                            resolutionMetadata = ethrResult.resolutionMetadata.copy(
+                                pattern = method,
+                                properties = ethrResult.resolutionMetadata.properties + mapOf("method" to method)
+                            )
                         )
                     }
                     is DidResolutionResult.Failure.MethodNotRegistered -> {
                         DidResolutionResult.Failure.MethodNotRegistered(
                             method = method,
                             availableMethods = ethrResult.availableMethods,
-                            resolutionMetadata = ethrResult.resolutionMetadata + mapOf("method" to method)
+                            resolutionMetadata = ethrResult.resolutionMetadata.copy(
+                                pattern = method,
+                                properties = ethrResult.resolutionMetadata.properties + mapOf("method" to method)
+                            )
                         )
                     }
                     is DidResolutionResult.Failure.ResolutionError -> {
@@ -168,7 +178,10 @@ class PolygonDidMethod(
                             did = did,
                             reason = ethrResult.reason,
                             cause = ethrResult.cause,
-                            resolutionMetadata = ethrResult.resolutionMetadata + mapOf("method" to method)
+                            resolutionMetadata = ethrResult.resolutionMetadata.copy(
+                                pattern = method,
+                                properties = ethrResult.resolutionMetadata.properties + mapOf("method" to method)
+                            )
                         )
                     }
                 }

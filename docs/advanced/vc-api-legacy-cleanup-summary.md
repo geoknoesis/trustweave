@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # VC-Only API Migration - Legacy Code Cleanup Summary
 
 ## Phase 7: Legacy Code Removal - IN PROGRESS

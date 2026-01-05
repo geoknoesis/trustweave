@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Trust DSL Examples
 
 This document demonstrates the expressive trust DSL with infix operators and policy composition.

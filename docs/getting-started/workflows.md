@@ -13,38 +13,28 @@ This guide documents common workflows for using TrustWeave in real-world applica
 Complete workflow for issuing a verifiable credential:
 
 ```kotlin
-import org.trustweave.trust.TrustLayer
-import org.trustweave.core.TrustWeaveError
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.IssuanceResult
 import kotlinx.coroutines.runBlocking
 
 suspend fun issueCredentialWorkflow(
-    trustLayer: TrustLayer,
-    issuerDid: String,
-    holderDid: String,
+    trustWeave: TrustWeave,
+    issuerDid: org.trustweave.did.identifiers.Did,
+    holderDid: org.trustweave.did.identifiers.Did,
     claims: Map<String, Any>
-): Result<VerifiableCredential> {
+): Result<org.trustweave.credential.model.vc.VerifiableCredential> {
     return try {
-        // 1. Verify issuer DID is resolvable
-        val context = trustLayer.getDslContext()
-        val resolver = context.getDidResolver()
-        val issuerResolution = resolver?.resolve(issuerDid)
-
-        if (issuerResolution?.document == null) {
+        // 1. Verify issuer DID is resolvable (optional - issue() will resolve automatically)
+        val issuerResolution = trustWeave.resolveDid(issuerDid)
+        
+        if (issuerResolution !is org.trustweave.did.resolver.DidResolutionResult.Success) {
             return Result.failure(
-                TrustWeaveError.DidNotFound(
-                    did = issuerDid,
-                    availableMethods = emptyList()
-                )
+                IllegalStateException("Failed to resolve issuer DID: ${issuerResolution.errorMessage}")
             )
         }
 
-        // 2. Get issuer key ID
-        val issuerKeyId = "$issuerDid#key-1"
-
-        // 3. Issue credential
-        import org.trustweave.trust.types.IssuanceResult
-        
-        val issuanceResult = trustLayer.issue {
+        // 2. Issue credential (key ID will be auto-extracted from DID document)
+        val issuanceResult = trustWeave.issue {
             credential {
                 type("VerifiableCredential", "PersonCredential")
                 issuer(issuerDid)
@@ -58,16 +48,10 @@ suspend fun issueCredentialWorkflow(
             signedBy(issuerDid)
         }
         
-        import org.trustweave.trust.types.getOrThrow
-        
-        val credential = try {
-            issuanceResult.getOrThrow()
-        } catch (e: IllegalStateException) {
-            return Result.failure(e)
-        }
+        val credential = issuanceResult.getOrThrow()
 
         Result.success(credential)
-    } catch (error: TrustWeaveError) {
+    } catch (error: Exception) {
         Result.failure(error)
     }
 }
@@ -79,43 +63,45 @@ Complete workflow for verifying a verifiable credential:
 
 ```kotlin
 suspend fun verifyCredentialWorkflow(
-    trustLayer: TrustLayer,
-    credential: VerifiableCredential,
+    trustWeave: TrustWeave,
+    credential: org.trustweave.credential.model.vc.VerifiableCredential,
     checkTrust: Boolean = false
-): CredentialVerificationResult {
+): org.trustweave.trust.types.VerificationResult {
     return try {
-        val verification = trustLayer.verify {
+        val verification = trustWeave.verify {
             credential(credential)
-            checkExpiration(true)
-            checkRevocation(true)
+            checkExpiration()
+            checkRevocation()
             checkTrust(checkTrust)
         }
 
         // Log verification result
-        if (verification.valid) {
-            logger.info("Credential verified successfully", mapOf(
-                "credentialId" to credential.id,
-                "issuer" to credential.issuer
-            ))
-        } else {
-            logger.warn("Credential verification failed", mapOf(
-                "credentialId" to credential.id,
-                "errors" to verification.errors
-            ))
+        when (verification) {
+            is org.trustweave.trust.types.VerificationResult.Valid -> {
+                logger.info("Credential verified successfully", mapOf(
+                    "credentialId" to verification.credential.id,
+                    "issuer" to verification.credential.issuer
+                ))
+            }
+            is org.trustweave.trust.types.VerificationResult.Invalid -> {
+                logger.warn("Credential verification failed", mapOf(
+                    "credentialId" to credential.id,
+                    "reason" to when (verification) {
+                        is org.trustweave.trust.types.VerificationResult.Invalid.Expired -> "Expired: ${verification.expiredAt}"
+                        is org.trustweave.trust.types.VerificationResult.Invalid.Revoked -> "Revoked"
+                        is org.trustweave.trust.types.VerificationResult.Invalid.InvalidProof -> "Invalid proof: ${verification.reason}"
+                        is org.trustweave.trust.types.VerificationResult.Invalid.UntrustedIssuer -> "Untrusted issuer: ${verification.issuer}"
+                        is org.trustweave.trust.types.VerificationResult.Invalid.SchemaValidationFailed -> "Schema validation failed: ${verification.errors.joinToString()}"
+                        else -> "Unknown error"
+                    }
+                ))
+            }
         }
 
         verification
-    } catch (error: TrustWeaveError) {
+    } catch (error: Exception) {
         logger.error("Verification error", error)
-        CredentialVerificationResult(
-            valid = false,
-            proofValid = false,
-            issuerValid = false,
-            notExpired = false,
-            notRevoked = false,
-            errors = listOf(error.message ?: "Unknown error"),
-            warnings = emptyList()
-        )
+        throw error // Re-throw or handle as needed
     }
 }
 ```
@@ -169,55 +155,47 @@ Complete workflow for rotating keys in a DID document:
 
 ```kotlin
 suspend fun rotateKeyWorkflow(
-    trustLayer: TrustLayer,
+    trustWeave: TrustWeave,
     did: String,
     oldKeyId: String,
     newKeyId: String
 ): Result<DidDocument> {
     return try {
         // 1. Verify current DID document
-        val context = trustLayer.getDslContext()
+        val context = trustWeave.configuration
         val resolver = context.getDidResolver()
         val currentResolution = resolver?.resolve(did)
 
-        if (currentResolution?.document == null) {
+        if (currentResolution !is org.trustweave.did.resolver.DidResolutionResult.Success) {
             return Result.failure(
-                TrustWeaveError.DidNotFound(
-                    did = did,
-                    availableMethods = emptyList()
-                )
+                IllegalStateException("Failed to resolve DID: ${currentResolution.errorMessage}")
             )
         }
 
         // 2. Verify old key exists
         val oldKey = currentResolution.document.verificationMethod
-            .find { it.id == oldKeyId }
+            .find { it.id.value.contains(oldKeyId) }
 
         if (oldKey == null) {
             return Result.failure(
-                TrustWeaveError.ValidationFailed(
-                    field = "oldKeyId",
-                    reason = "Old key not found in DID document",
-                    value = oldKeyId
-                )
+                IllegalStateException("Old key not found in DID document: $oldKeyId")
             )
         }
 
-        // 3. Rotate key
-        val updated = trustLayer.rotateKey {
-            did(did)
-            oldKeyId(oldKeyId)
-            newKeyId(newKeyId)
+        // 3. Rotate key (returns DidDocument directly)
+        val updated = trustWeave.rotateKey {
+            did(did.value)
+            algorithm("Ed25519") // Algorithm required for key generation
         }
 
         logger.info("Key rotated successfully", mapOf(
-            "did" to did,
+            "did" to did.value,
             "oldKeyId" to oldKeyId,
             "newKeyId" to newKeyId
         ))
 
-        Result.success(updated as DidDocument)
-    } catch (error: TrustWeaveError) {
+        Result.success(updated)
+    } catch (error: Exception) {
         logger.error("Key rotation failed", error)
         Result.failure(error)
     }
@@ -230,45 +208,37 @@ Complete workflow for managing trust anchors:
 
 ```kotlin
 suspend fun manageTrustAnchorWorkflow(
-    trustLayer: TrustLayer,
-    anchorDid: String,
+    trustWeave: TrustWeave,
+    anchorDid: org.trustweave.did.identifiers.Did,
     credentialTypes: List<String>,
     description: String
 ): Result<Boolean> {
     return try {
         // 1. Verify anchor DID is resolvable
-        val context = trustLayer.getDslContext()
-        val resolver = context.getDidResolver()
-        val resolution = resolver?.resolve(anchorDid)
+        val resolution = trustWeave.resolveDid(anchorDid)
 
-        if (resolution?.document == null) {
+        if (resolution !is org.trustweave.did.resolver.DidResolutionResult.Success) {
             return Result.failure(
-                TrustWeaveError.DidNotFound(
-                    did = anchorDid,
-                    availableMethods = emptyList()
-                )
+                IllegalStateException("Failed to resolve DID: ${resolution.errorMessage}")
             )
         }
 
-        // 2. Add trust anchor
-        val added = trustLayer.addTrustAnchor(anchorDid) {
-            credentialTypes(*credentialTypes.toTypedArray())
-            description(description)
+        // 2. Add trust anchor using trust DSL
+        trustWeave.trust {
+            addAnchor(anchorDid) {
+                credentialTypes(*credentialTypes.toTypedArray())
+                description(description)
+            }
         }
+        val added = true
 
-        if (added) {
-            logger.info("Trust anchor added", mapOf(
-                "anchorDid" to anchorDid,
-                "credentialTypes" to credentialTypes
-            ))
-        } else {
-            logger.info("Trust anchor already exists", mapOf(
-                "anchorDid" to anchorDid
-            ))
-        }
+        logger.info("Trust anchor added", mapOf(
+            "anchorDid" to anchorDid.value,
+            "credentialTypes" to credentialTypes
+        ))
 
         Result.success(added)
-    } catch (error: TrustWeaveError) {
+    } catch (error: Exception) {
         logger.error("Failed to add trust anchor", error)
         Result.failure(error)
     }
@@ -281,23 +251,26 @@ Complete workflow for managing credentials in a wallet:
 
 ```kotlin
 suspend fun walletManagementWorkflow(
-    trustLayer: TrustLayer,
+    trustWeave: TrustWeave,
     holderDid: String
 ): Result<Wallet> {
     return try {
         // 1. Create or get wallet
         import org.trustweave.trust.types.getOrThrow
         
-        val wallet = trustLayer.wallet {
-            holder(holderDid)
+        val walletResult = trustWeave.wallet {
+            holder(org.trustweave.did.identifiers.Did(holderDid))
             enableOrganization()
             enablePresentation()
-        }.getOrThrow()
+        }
+        
+        val wallet = when (walletResult) {
+            is org.trustweave.trust.types.WalletCreationResult.Success -> walletResult.wallet
+            else -> return Result.failure(IllegalStateException("Wallet creation failed"))
+        }
 
         // 2. Store credential
-        import org.trustweave.trust.types.getOrThrow
-        
-        val credential = trustLayer.issue {
+        val credentialResult = trustWeave.issue {
             credential {
                 type("VerifiableCredential", "PersonCredential")
                 issuer("did:key:issuer")
@@ -306,8 +279,13 @@ suspend fun walletManagementWorkflow(
                     "name" to "Alice"
                 }
             }
-            signedBy(issuerDid = "did:key:issuer", keyId = "did:key:issuer#key-1")
-        }.getOrThrow()
+            signedBy(org.trustweave.did.identifiers.Did("did:key:issuer"))
+        }
+        
+        val credential = when (credentialResult) {
+            is org.trustweave.credential.results.IssuanceResult.Success -> credentialResult.credential
+            else -> return Result.failure(IllegalStateException("Credential issuance failed"))
+        }
 
         val credentialId = wallet.store(credential)
         logger.info("Credential stored", mapOf(
@@ -328,7 +306,7 @@ suspend fun walletManagementWorkflow(
         logger.info("Wallet contains ${allCredentials.size} credentials")
 
         Result.success(wallet)
-    } catch (error: TrustWeaveError) {
+    } catch (error: Exception) {
         logger.error("Wallet management failed", error)
         Result.failure(error)
     }
@@ -344,7 +322,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 
 suspend fun batchIssuanceWorkflow(
-    trustLayer: TrustLayer,
+    trustWeave: TrustWeave,
     requests: List<CredentialRequest>
 ): Result<List<VerifiableCredential>> {
     return try {
@@ -356,7 +334,7 @@ suspend fun batchIssuanceWorkflow(
         val credentials = requests.map { request ->
             async {
                 runCatching {
-                    trustLayer.issue {
+                    trustWeave.issue {
                         credential {
                             type("VerifiableCredential", request.type)
                             issuer(request.issuerDid)
@@ -386,7 +364,7 @@ suspend fun batchIssuanceWorkflow(
         ))
 
         Result.success(credentials)
-    } catch (error: TrustWeaveError) {
+    } catch (error: Exception) {
         logger.error("Batch issuance failed", error)
         Result.failure(error)
     }

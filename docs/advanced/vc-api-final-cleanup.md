@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # VC-Only API - Final Cleanup Summary
 
 ## ✅ All Old Code Removed

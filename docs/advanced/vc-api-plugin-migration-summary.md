@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # VC-Only API Plugin Migration Summary
 
 ## ✅ Plugin Protocol Implementations Complete

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Template Service VC-Only API Update
 
 ## ✅ Update Complete

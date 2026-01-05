@@ -66,6 +66,65 @@ flowchart LR
 4. **Verification**: Verifier checks the proof, validates issuer DID, and checks status
 5. **Revocation** (optional): Issuer can revoke credentials, which are checked during verification
 
+## Trust Flow
+
+The credential flow involves multiple actors working together to establish and verify trust:
+
+```mermaid
+flowchart LR
+    subgraph Issuer["Issuer"]
+        I1[Create DID<br/>Generate Keys]
+        I2[Issue Credential<br/>Sign with Key]
+        I3[Publish DID Document<br/>to Resolver]
+    end
+    
+    subgraph Holder["Holder"]
+        H1[Receive Credential<br/>Store in Wallet]
+        H2[Create Presentation<br/>Selective Disclosure]
+    end
+    
+    subgraph Verifier["Verifier"]
+        V1[Receive Presentation<br/>Request Verification]
+        V2[Verify Proof<br/>Check Issuer]
+        V3[Check Revocation<br/>Check Expiration]
+    end
+    
+    subgraph Resolver["DID Resolver"]
+        R1[Resolve Issuer DID<br/>Fetch DID Document]
+        R2[Provide Public Keys<br/>for Verification]
+    end
+    
+    I1 --> I2
+    I2 -->|Issue VC| H1
+    I1 -->|Publish| I3
+    I3 -->|Available| R1
+    
+    H1 --> H2
+    H2 -->|Present VP| V1
+    
+    V1 --> V2
+    V2 -->|Resolve DID| R1
+    R1 -->|Return Keys| R2
+    R2 -->|Verify Signature| V2
+    V2 -->|Check Status| V3
+    V3 -->|Valid| V4[Accept Credential]
+    V3 -->|Invalid| V5[Reject Credential]
+    
+    style Issuer fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style Holder fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style Verifier fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    style Resolver fill:#9c27b0,stroke:#6a1b9a,stroke-width:2px,color:#fff
+    style V4 fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style V5 fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+```
+
+**Key Interactions:**
+1. **Issuer → Resolver**: Issuer publishes their DID document (with public keys) to a DID resolver
+2. **Issuer → Holder**: Issuer creates and signs a credential, delivering it to the holder
+3. **Holder → Verifier**: Holder creates a presentation and presents it to the verifier
+4. **Verifier → Resolver**: Verifier resolves the issuer's DID to get public keys for verification
+5. **Verifier → Status Registry** (not shown): Verifier checks revocation status if configured
+
 ## How TrustWeave issues and verifies VCs
 
 | Component | Purpose |
@@ -194,7 +253,7 @@ All steps must pass for verification to succeed. Any failure returns detailed er
 - **SPI-level options** – drop down to `CredentialServiceRegistry` and supply `CredentialIssuanceOptions` when you need custom proof types, schema hints, or audiences.
 - **Anchoring** – store the credential digest with a `BlockchainAnchorClient` to prove freshness (see [Blockchain Anchoring](blockchain-anchoring.md)).
 - **Revocation** – integrate status endpoints by adding `credentialStatus` claims; custom verification policies can enforce them.
-- **Error handling** – credential operations throw `TrustWeaveError` exceptions directly. Use `try-catch` blocks for error handling. See [Error Handling](../advanced/error-handling.md).
+- **Error handling** – credential operations throw exceptions (e.g., `IllegalStateException`) on failure. Use `try-catch` blocks for error handling. See [Error Handling](../advanced/error-handling.md).
 - **Input validation** – TrustWeave automatically validates credential structure, issuer DID format, and method registration before issuance.
 
 ## Related How-To Guides
@@ -477,6 +536,6 @@ Some proof types (like BBS+) support zero-knowledge proofs, allowing you to prov
 - [Wallets](wallets.md) - Managing credentials
 - [Wallet API Tutorial](../tutorials/wallet-api-tutorial.md) - Hands-on wallet examples
 - [Credential Service API Reference](../api-reference/credential-service-api.md) - Complete API documentation
-- [Core API Reference](../api-reference/core-api.md) - TrustLayer API
+- [Core API Reference](../api-reference/core-api.md) - TrustWeave API
 
 

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # VC-Only API Migration - Phase 5 Progress
 
 ## ✅ Phase 5: Plugin Adapter Implementations - IN PROGRESS

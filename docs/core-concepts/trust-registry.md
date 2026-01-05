@@ -73,7 +73,7 @@ Trust scores range from 0.0 to 1.0, with higher scores indicating greater trust.
 ### Configuring Trust Registry
 
 ```kotlin
-val trustLayer = trustLayer {
+val trustWeave = trustWeave {
     keys {
         provider(IN_MEMORY)
         algorithm(KeyAlgorithms.ED25519)
@@ -100,7 +100,7 @@ val trustLayer = trustLayer {
 ### Adding Trust Anchors
 
 ```kotlin
-trustLayer.trust {
+trustWeave.trust {
     // Add university as trusted anchor for education credentials
     addAnchor("did:key:university") {
         credentialTypes("EducationCredential", "DegreeCredential")
@@ -126,7 +126,7 @@ trustLayer.trust {
 ### Checking Trust
 
 ```kotlin
-trustLayer.trust {
+trustWeave.trust {
     // Check if issuer is trusted for specific credential type
     val isTrusted = isTrusted("did:key:university", "EducationCredential")
     if (isTrusted) {
@@ -147,7 +147,7 @@ trustLayer.trust {
 ### Finding Trust Paths
 
 ```kotlin
-trustLayer.trust {
+trustWeave.trust {
     val path = getTrustPath("did:key:verifier", "did:key:issuer")
     if (path != null) {
         println("Trust path found:")
@@ -165,7 +165,7 @@ trustLayer.trust {
 ### Getting Trusted Issuers
 
 ```kotlin
-trustLayer.trust {
+trustWeave.trust {
     // Get all trusted issuers for a specific credential type
     val educationIssuers = getTrustedIssuers("EducationCredential")
     educationIssuers.forEach { println("Trusted education issuer: $it") }
@@ -181,7 +181,7 @@ trustLayer.trust {
 ### Removing Trust Anchors
 
 ```kotlin
-trustLayer.trust {
+trustWeave.trust {
     val removed = removeAnchor("did:key:university")
     if (removed) {
         println("Trust anchor removed")
@@ -212,7 +212,7 @@ The formula ensures that:
 Trust registry can be integrated into credential verification:
 
 ```kotlin
-val result = trustLayer.verify {
+val result = trustWeave.verify {
     credential(credential)
     checkTrustRegistry(true) // Enable trust registry checking
 }
@@ -229,7 +229,7 @@ if (result.trustRegistryValid) {
 ### Complete Verification Example
 
 ```kotlin
-val result = trustLayer.verify {
+val result = trustWeave.verify {
     credential(credential)
     checkTrustRegistry(true)
     checkExpiration(true)
@@ -251,7 +251,7 @@ println("  Schema Valid: ${result.schemaValid}")
 
 ```kotlin
 // Create a trust network with multiple anchors
-trustLayer.trust {
+trustWeave.trust {
     // Add multiple trust anchors
     addAnchor("did:key:university1") {
         credentialTypes("EducationCredential")
@@ -264,7 +264,7 @@ trustLayer.trust {
     }
 
     // Get registry to add trust relationships
-    val registry = trustLayer.dsl().getTrustRegistry() as? InMemoryTrustRegistry
+    val registry = trustWeave.dsl().getTrustRegistry() as? InMemoryTrustRegistry
     registry?.addTrustRelationship("did:key:university1", "did:key:university2")
 
     // Now find trust path between universities
@@ -275,7 +275,7 @@ trustLayer.trust {
 ### Trust Anchor Metadata
 
 ```kotlin
-trustLayer.trust {
+trustWeave.trust {
     addAnchor("did:key:issuer") {
         credentialTypes("CredentialType1", "CredentialType2")
         description("Detailed description of the trust anchor")

@@ -154,6 +154,74 @@ when (verification) {
 }
 ```
 
+## Verification Workflow
+
+The credential verification process involves multiple components working together:
+
+```mermaid
+sequenceDiagram
+    participant App as Application
+    participant TW as TrustWeave
+    participant Verifier as Credential Service
+    participant DR as DID Resolver
+    participant Issuer as Issuer DID
+    participant RevReg as Revocation Registry
+    participant Status as Status List
+    
+    Note over App,Status: Phase 1: Parse Credential
+    App->>TW: verify { credential(credential) }
+    TW->>Verifier: Verify credential
+    Verifier->>Verifier: Parse JSON structure
+    Verifier->>Verifier: Validate structure
+    
+    Note over App,Status: Phase 2: Resolve Issuer DID
+    Verifier->>TW: Extract issuer DID
+    TW->>DR: Resolve issuer DID
+    DR->>Issuer: Fetch DID document
+    Issuer-->>DR: DID document + public keys
+    DR-->>TW: DID document
+    TW-->>Verifier: Issuer public keys
+    
+    Note over App,Status: Phase 3: Verify Proof
+    Verifier->>Verifier: Extract proof from credential
+    Verifier->>Verifier: Canonicalize credential
+    Verifier->>Verifier: Compute digest
+    Verifier->>Verifier: Verify signature (public key vs. digest)
+    
+    Note over App,Status: Phase 4: Check Expiration
+    Verifier->>Verifier: Check issuance date
+    Verifier->>Verifier: Check expiration date (if present)
+    
+    Note over App,Status: Phase 5: Check Revocation
+    Verifier->>TW: Check revocation status
+    TW->>RevReg: Query revocation registry
+    RevReg->>Status: Check status list
+    Status-->>RevReg: Status (revoked/active)
+    RevReg-->>TW: Revocation status
+    TW-->>Verifier: Not revoked
+    
+    Note over App,Status: Phase 6: Return Result
+    Verifier->>Verifier: Compile verification result
+    Verifier-->>TW: VerificationResult
+    TW-->>App: VerificationResult (Valid/Invalid)
+    
+    style App fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
+    style TW fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+    style Verifier fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style DR fill:#9c27b0,stroke:#6a1b9a,stroke-width:2px,color:#fff
+    style Issuer fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style RevReg fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    style Status fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+```
+
+**Key Phases:**
+1. **Parse Credential**: Validate JSON structure and extract components
+2. **Resolve Issuer DID**: Fetch issuer's DID document to get public keys
+3. **Verify Proof**: Check cryptographic signature using issuer's public key
+4. **Check Expiration**: Validate issuance and expiration dates
+5. **Check Revocation**: Query revocation registry for credential status
+6. **Return Result**: Compile and return verification result
+
 ## Verification Checks Explained
 
 TrustWeave performs multiple checks during verification:

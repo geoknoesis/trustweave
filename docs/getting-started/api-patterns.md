@@ -162,7 +162,7 @@ val allCredentials = wallet.list()
 
 ✅ **Correct:**
 ```kotlin
-val trustWeave = TrustLayer.build {
+val trustWeave = TrustWeave.build {
     trust { provider(IN_MEMORY) }
 }
 
@@ -292,7 +292,7 @@ val did = when (didResult) {
 
 **Wrong:**
 ```kotlin
-val trustWeave = TrustLayer.build {
+val trustWeave = TrustWeave.build {
     // Missing KMS configuration!
 }
 val did = trustWeave.createDid { method(KEY) }
@@ -301,7 +301,7 @@ val did = trustWeave.createDid { method(KEY) }
 
 **Correct:**
 ```kotlin
-val trustWeave = TrustLayer.build {
+val trustWeave = TrustWeave.build {
     keys {
         provider(IN_MEMORY)
         algorithm(ED25519)
@@ -344,7 +344,7 @@ val credential = trustweave.credentials.issue(...)
 
 ### New Pattern
 ```kotlin
-val trustWeave = TrustLayer.build {
+val trustWeave = TrustWeave.build {
     keys { provider(IN_MEMORY); algorithm(ED25519) }
     did { method(KEY) { algorithm(ED25519) } }
 }
@@ -363,7 +363,7 @@ val credential = trustWeave.issue {
 Don't rely on defaults in production. Explicitly configure all components:
 
 ```kotlin
-val trustWeave = TrustLayer.build {
+val trustWeave = TrustWeave.build {
     keys {
         provider(AWS)  // Production KMS
         algorithm(ED25519)

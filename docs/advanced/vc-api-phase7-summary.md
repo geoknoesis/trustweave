@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # VC-Only API Migration - Phase 7 Summary
 
 ## ✅ Phase 7: Legacy Code Removal - COMPLETE

@@ -62,17 +62,19 @@ println("Anchored tx: ${anchorResult.ref.txHash}")
 // With error handling (wrap in try-catch)
 try {
     val anchor = trustWeave.blockchains.anchor(data, serializer, chainId)
-result.fold(
-    onSuccess = { anchor -> println("Anchored tx: ${anchor.ref.txHash}") },
-    onFailure = { error ->
-        when (error) {
-            is TrustWeaveError.ChainNotRegistered -> {
-                println("Chain not registered: ${error.chainId}")
+    println("Anchored tx: ${anchor.ref.txHash}")
+} catch (error: Exception) {
+    when (error) {
+        is IllegalStateException -> {
+            if (error.message?.contains("not registered") == true) {
+                println("Chain not registered: ${error.message}")
+            } else {
+                println("Anchoring error: ${error.message}")
             }
-            else -> println("Anchoring error: ${error.message}")
         }
+        else -> println("Anchoring error: ${error.message}")
     }
-)
+}
 ```
 
 ## Configuring clients

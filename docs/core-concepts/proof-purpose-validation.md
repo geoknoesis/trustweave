@@ -38,7 +38,7 @@ The proof's `verificationMethod` must be listed in the corresponding verificatio
 ### Basic Validation
 
 ```kotlin
-val result = trustLayer.verify {
+val result = trustWeave.verify {
     credential(credential)
     validateProofPurpose(true) // Enable proof purpose validation
 }
@@ -53,7 +53,7 @@ if (result.proofPurposeValid) {
 ### Complete Verification Example
 
 ```kotlin
-val result = trustLayer.verify {
+val result = trustWeave.verify {
     credential(credential)
     validateProofPurpose(true)
     checkTrustRegistry(true)
@@ -258,7 +258,7 @@ Common validation errors:
 Proof purpose validation is automatically performed when enabled in credential verification:
 
 ```kotlin
-val result = trustLayer.verify {
+val result = trustWeave.verify {
     credential(credential)
     validateProofPurpose(true) // Enable validation
     checkTrustRegistry(true)

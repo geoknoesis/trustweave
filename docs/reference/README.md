@@ -42,6 +42,11 @@ Reference materials are designed for **quick lookup** rather than learning. Use 
 
 - **[Migration Guides](../migration/README.md)** - Guides for upgrading between versions
 
+### Version & Compatibility
+
+- **[Version Compatibility Matrix](version-compatibility.md)** - Version requirements and compatibility information
+- **[Deprecation Policy](deprecation-policy.md)** - Deprecation lifecycle and policy
+
 ## When to Use Reference vs Concepts
 
 **Use Reference when you:**

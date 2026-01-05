@@ -1,6 +1,6 @@
 ---
 title: Core Concepts
-nav_order: 50
+nav_order: 20
 keywords:
   - core concepts
   - dids

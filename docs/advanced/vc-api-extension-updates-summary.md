@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # VC-Only API Migration - Extension Function Updates
 
 ## Extension Functions Updated ✅

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # VC-Only API Migration - Final Completion Summary
 
 ## ✅ All Core Migration Phases Complete

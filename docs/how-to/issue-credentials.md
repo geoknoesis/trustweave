@@ -87,6 +87,60 @@ fun main() = runBlocking {
    Subject: {"id":"did:key:holder-placeholder","name":"Alice Example","role":"Site Reliability Engineer"}
 ```
 
+## Issuance Workflow
+
+The credential issuance process involves multiple components working together:
+
+```mermaid
+sequenceDiagram
+    participant App as Application
+    participant TW as TrustWeave
+    participant DID as DID Service
+    participant KMS as KMS Provider
+    participant DR as DID Resolver
+    participant Issuer as Issuer DID
+    
+    Note over App,Issuer: Phase 1: Setup
+    App->>TW: TrustWeave.build { ... }
+    TW->>DID: Register DID methods
+    TW->>KMS: Register KMS provider
+    
+    Note over App,Issuer: Phase 2: Create Issuer DID
+    App->>TW: createDid { method(KEY) }
+    TW->>DID: Create DID
+    DID->>KMS: Generate key pair
+    KMS-->>DID: Key pair
+    DID->>DR: Publish DID document
+    DR-->>DID: DID document published
+    DID-->>TW: DID + Document
+    TW-->>App: Issuer DID
+    
+    Note over App,Issuer: Phase 3: Issue Credential
+    App->>TW: issue { credential { ... } signedBy(issuerDid) }
+    TW->>DR: Resolve issuer DID
+    DR-->>TW: DID document
+    TW->>TW: Build credential structure
+    TW->>TW: Canonicalize credential
+    TW->>TW: Compute digest
+    TW->>KMS: Sign digest (using key from DID)
+    KMS-->>TW: Signature
+    TW->>TW: Create proof
+    TW->>TW: Attach proof to credential
+    TW-->>App: VerifiableCredential
+    
+    style App fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
+    style TW fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+    style DID fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style KMS fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    style DR fill:#9c27b0,stroke:#6a1b9a,stroke-width:2px,color:#fff
+    style Issuer fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+```
+
+**Key Phases:**
+1. **Setup**: Configure TrustWeave with DID methods and KMS provider
+2. **Create Issuer DID**: Generate DID and key pair, publish DID document
+3. **Issue Credential**: Build credential, canonicalize, sign, and attach proof
+
 ## Step-by-Step Guide
 
 ### Step 1: Create Issuer DID and Key

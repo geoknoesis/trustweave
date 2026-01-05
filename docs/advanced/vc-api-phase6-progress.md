@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # VC-Only API Migration - Phase 6 Progress
 
 ## ✅ Phase 6: Exchange Protocol Core API Updates - COMPLETE

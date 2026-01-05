@@ -78,13 +78,14 @@ fun main() = runBlocking {
             }
             signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
         }
-    } catch (error: TrustWeaveError) {
+    } catch (error: Exception) {
         when (error) {
-            is TrustWeaveError.CredentialInvalid -> {
-                println("❌ Credential issuance failed: ${error.reason}")
-            }
-            is TrustWeaveError.InvalidDidFormat -> {
-                println("❌ Invalid issuer DID format: ${error.reason}")
+            is IllegalStateException -> {
+                if (error.message?.contains("not configured") == true) {
+                    println("❌ Credential issuance failed: ${error.message}")
+                } else {
+                    println("❌ Credential issuance failed: ${error.message}")
+                }
             }
             else -> {
                 println("❌ Failed to issue credential: ${error.message}")
@@ -580,7 +581,7 @@ fun main() = runBlocking {
             )
             println("✅ Anchored to $chainId: ${anchor.ref.txHash}")
             anchor
-        } catch (error: TrustWeaveError) {
+        } catch (error: Exception) {
             println("❌ Failed to anchor to $chainId: ${error.message}")
             null
         }

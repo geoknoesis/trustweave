@@ -17,7 +17,7 @@ Common issues and solutions when working with TrustWeave.
 
 **Error:**
 ```
-TrustWeaveError.DidMethodNotRegistered: Method 'web' is not registered
+IllegalStateException: DID method 'web' is not registered
 Available methods: [key]
 ```
 
@@ -42,7 +42,7 @@ val TrustWeave = TrustWeave.create {
 
 **Error:**
 ```
-TrustWeaveError.ChainNotRegistered: Chain 'algorand:testnet' is not registered
+IllegalStateException: Blockchain chain 'algorand:testnet' is not registered
 Available chains: []
 ```
 
@@ -496,7 +496,7 @@ See [Step 3: Validate Inputs Before Operations](#step-3-validate-inputs-before-o
 - Use local DID resolvers when possible
 
 ```kotlin
-import org.trustweave.trust.TrustLayer
+import org.trustweave.trust.TrustWeave
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import java.util.concurrent.TimeUnit
@@ -508,13 +508,15 @@ val didCache: Cache<String, DidDocument> = Caffeine.newBuilder()
     .build()
 
 suspend fun resolveDidCached(
-    trustLayer: TrustLayer,
+    trustWeave: TrustWeave,
     did: String
 ): DidDocument? {
     return didCache.get(did) {
-        val context = trustLayer.getDslContext()
-        val resolver = context.getDidResolver()
-        resolver?.resolve(did)?.document
+        val resolution = trustWeave.resolveDid(did)
+        when (resolution) {
+            is org.trustweave.did.resolver.DidResolutionResult.Success -> resolution.document
+            else -> null
+        }
     }
 }
 ```
@@ -530,7 +532,7 @@ suspend fun resolveDidCached(
 
 ```kotlin
 // Use persistent storage instead of in-memory
-val wallet = trustLayer.wallet {
+val wallet = trustWeave.wallet {
     holder(holderDid)
     // Use database storage
     storageProvider("database")
@@ -557,12 +559,12 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 
 suspend fun issueMultipleCredentials(
-    trustLayer: TrustLayer,
+    trustWeave: TrustWeave,
     requests: List<CredentialRequest>
 ): List<VerifiableCredential> {
     return requests.map { request ->
         async {
-            trustLayer.issue {
+            trustWeave.issue {
                 credential {
                     type(CredentialType.VerifiableCredential, CredentialType.fromString(request.type))
                     issuer(request.issuerDid)
@@ -637,7 +639,7 @@ import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.TimeoutCancellationException
 
 suspend fun operationWithTimeout(
-    trustLayer: TrustLayer,
+    trustWeave: TrustWeave,
     timeoutMillis: Long = 5000
 ) {
     try {
@@ -645,7 +647,7 @@ suspend fun operationWithTimeout(
             import org.trustweave.trust.types.getOrThrowDid
             
             val did = try {
-                trustLayer.createDid { method(KEY) }.getOrThrowDid()
+                trustWeave.createDid { method(KEY) }.getOrThrowDid()
             } catch (e: IllegalStateException) {
                 logger.error("DID creation failed: ${e.message}")
                 return@withTimeout

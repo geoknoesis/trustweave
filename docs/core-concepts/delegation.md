@@ -42,14 +42,14 @@ Each link in the chain must be verified to ensure the entire delegation is valid
 
 ```kotlin
 // Step 1: Update delegator DID document to include capability delegation
-trustLayer.updateDid {
+trustWeave.updateDid {
     did(delegatorDid)
     method(DidMethods.KEY)
     addCapabilityDelegation("$delegateDid#key-1")
 }
 
 // Step 2: Verify the delegation was set up correctly
-val delegationResult = trustLayer.delegate {
+val delegationResult = trustWeave.delegate {
     from(delegatorDid)
     to(delegateDid)
     verify()
@@ -63,7 +63,7 @@ if (delegationResult.valid) {
 ### Verifying Delegation Chain
 
 ```kotlin
-val result = trustLayer.delegate {
+val result = trustWeave.delegate {
     from(delegatorDid)
     to(delegateDid)
     capability("issueCredentials") // Optional: specify capability
@@ -83,20 +83,20 @@ if (result.valid) {
 
 ```kotlin
 // Set up multi-hop delegation chain
-trustLayer.updateDid {
+trustWeave.updateDid {
     did(ceoDid)
     method(DidMethods.KEY)
     addCapabilityDelegation("$directorDid#key-1")
 }
 
-trustLayer.updateDid {
+trustWeave.updateDid {
     did(directorDid)
     method(DidMethods.KEY)
     addCapabilityDelegation("$managerDid#key-1")
 }
 
 // Verify the entire chain
-val result = trustLayer.delegate {
+val result = trustWeave.delegate {
     capability("issueCredentials")
     verifyChain(listOf(ceoDid, directorDid, managerDid))
 }
@@ -112,7 +112,7 @@ When a credential is issued by a delegate, the verification can check the delega
 
 ```kotlin
 // Issue credential using delegated authority
-val credential = trustLayer.issue {
+val credential = trustWeave.issue {
     credential {
         id("https://company.com/credential-123")
         type("EmploymentCredential")
@@ -130,7 +130,7 @@ val credential = trustLayer.issue {
 }
 
 // Verify credential with delegation check
-val result = trustLayer.verify {
+val result = trustWeave.verify {
     credential(credential)
     verifyDelegation(true) // Enable delegation verification
     checkExpiration(true)
@@ -152,7 +152,7 @@ Used when a DID grants authority to another DID. The delegate can then use this 
 **Example**: A CEO delegates credential issuance to an HR Director.
 
 ```kotlin
-trustLayer.updateDid {
+trustWeave.updateDid {
     did(ceoDid)
     addCapabilityDelegation("$hrDirectorDid#key-1")
 }
@@ -165,7 +165,7 @@ Used when a DID invokes capabilities on its own behalf. This is typically used f
 **Example**: An employee signs a document using their capability invocation key.
 
 ```kotlin
-trustLayer.updateDid {
+trustWeave.updateDid {
     did(employeeDid)
     addCapabilityInvocation("$employeeDid#key-1")
 }
@@ -175,38 +175,43 @@ trustLayer.updateDid {
 
 ```kotlin
 // Step 1: Create DIDs for corporate hierarchy
-val ceoDid = trustLayer.createDid {
-    method(DidMethods.KEY)
-    algorithm(KeyAlgorithms.ED25519)
+val trustWeave = trustWeave {
+    keys { provider(IN_MEMORY); algorithm(ED25519) }
+    did { method(KEY) { algorithm(ED25519) } }
 }
 
-val hrDirectorDid = trustLayer.createDid {
-    method(DidMethods.KEY)
-    algorithm(KeyAlgorithms.ED25519)
+val ceoDid = trustWeave.createDid {
+    method(KEY)
+    algorithm(ED25519)
 }
 
-val hrManagerDid = trustLayer.createDid {
-    method(DidMethods.KEY)
-    algorithm(KeyAlgorithms.ED25519)
+val hrDirectorDid = trustWeave.createDid {
+    method(KEY)
+    algorithm(ED25519)
+}
+
+val hrManagerDid = trustWeave.createDid {
+    method(KEY)
+    algorithm(ED25519)
 }
 
 // Step 2: Set up delegation chain
 // CEO delegates to HR Director
-trustLayer.updateDid {
+trustWeave.updateDid {
     did(ceoDid)
     method(DidMethods.KEY)
     addCapabilityDelegation("$hrDirectorDid#key-1")
 }
 
 // HR Director delegates to HR Manager
-trustLayer.updateDid {
+trustWeave.updateDid {
     did(hrDirectorDid)
     method(DidMethods.KEY)
     addCapabilityDelegation("$hrManagerDid#key-1")
 }
 
 // Step 3: Verify the full chain
-val result = trustLayer.delegate {
+val result = trustWeave.delegate {
     capability("issueCredentials")
     verifyChain(listOf(ceoDid, hrDirectorDid, hrManagerDid))
 }
@@ -220,7 +225,7 @@ if (result.valid) {
 }
 
 // Step 4: Issue credential using delegated authority
-val credential = trustLayer.issue {
+val credential = trustWeave.issue {
     credential {
         id("https://company.com/credential-123")
         type("EmploymentCredential")
@@ -239,7 +244,7 @@ val credential = trustLayer.issue {
 }
 
 // Step 5: Verify credential with delegation check
-val verification = trustLayer.verify {
+val verification = trustWeave.verify {
     credential(credential)
     verifyDelegation(true)
     checkExpiration(true)
@@ -256,7 +261,7 @@ println("  Proof Valid: ${verification.proofValid}")
 ### Removing Delegation
 
 ```kotlin
-trustLayer.updateDid {
+trustWeave.updateDid {
     did(delegatorDid)
     method(DidMethods.KEY)
     removeCapabilityDelegation("$delegateDid#key-1")
@@ -268,7 +273,7 @@ trustLayer.updateDid {
 A delegator can delegate to multiple DIDs:
 
 ```kotlin
-trustLayer.updateDid {
+trustWeave.updateDid {
     did(ceoDid)
     method(DidMethods.KEY)
     addCapabilityDelegation("$hrDirectorDid#key-1")
@@ -282,7 +287,7 @@ trustLayer.updateDid {
 A DID can delegate to itself (useful for key rotation):
 
 ```kotlin
-trustLayer.updateDid {
+trustWeave.updateDid {
     did(did)
     method(DidMethods.KEY)
     addCapabilityDelegation("$did#key-2") // Delegate to new key

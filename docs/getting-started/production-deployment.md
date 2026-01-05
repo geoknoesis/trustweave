@@ -24,7 +24,7 @@ Production deployments require careful consideration of:
 Never use `inMemory` KMS in production. Use a production-grade key management service:
 
 ```kotlin
-val trustLayer = TrustLayer.build {
+val trustWeave = TrustWeave.build {
     keys {
         // ✅ Production: Use AWS KMS, Azure Key Vault, or HashiCorp Vault
         provider(AWS) {
@@ -53,7 +53,7 @@ val trustLayer = TrustLayer.build {
 Use persistent storage for wallets and trust registries:
 
 ```kotlin
-val trustLayer = TrustLayer.build {
+val trustWeave = TrustWeave.build {
     keys { ... }
     did { ... }
     trust {
@@ -66,7 +66,7 @@ val trustLayer = TrustLayer.build {
 }
 
 // Wallets should use persistent storage
-val wallet = trustLayer.wallet {
+val wallet = trustWeave.wallet {
     holder(holderDid)
     // Use database or S3 storage
     storageProvider("database")
@@ -84,7 +84,7 @@ val wallet = trustLayer.wallet {
 Use production blockchain networks:
 
 ```kotlin
-val trustLayer = TrustLayer.build {
+val trustWeave = TrustWeave.build {
     // ... other configuration
     anchor {
         // ✅ Production: Use mainnet or production testnets
@@ -116,7 +116,7 @@ val trustLayer = TrustLayer.build {
 Always enable trust registry in production:
 
 ```kotlin
-val trustLayer = TrustLayer.build {
+val trustWeave = TrustWeave.build {
     // ... other configuration
     trust {
         provider("database") {
@@ -128,7 +128,7 @@ val trustLayer = TrustLayer.build {
 }
 
 // Verify credentials with trust checking
-val verification = trustLayer.verify {
+val verification = trustWeave.verify {
     credential(credential)
     checkTrust(true)  // ✅ Always check trust in production
 }
@@ -147,13 +147,13 @@ import org.slf4j.LoggerFactory
 private val logger = LoggerFactory.getLogger(MyService::class.java)
 
 suspend fun issueCredential(
-    trustLayer: TrustLayer,
+    trustWeave: TrustWeave,
     issuerDid: String,
     holderDid: String,
     claims: Map<String, Any>
 ): Result<VerifiableCredential> {
     return try {
-        val credential = trustLayer.issue {
+        val credential = trustWeave.issue {
             credential {
                 type(CredentialType.VerifiableCredential, CredentialType.Person)
                 issuer(issuerDid)
@@ -294,12 +294,12 @@ import kotlinx.coroutines.awaitAll
 
 // Issue multiple credentials concurrently
 suspend fun issueMultipleCredentials(
-    trustLayer: TrustLayer,
+    trustWeave: TrustWeave,
     requests: List<CredentialRequest>
 ): List<VerifiableCredential> {
     return requests.map { request ->
         async {
-            trustLayer.issue {
+            trustWeave.issue {
                 credential {
                     type(CredentialType.VerifiableCredential, CredentialType.fromString(request.type))
                     issuer(request.issuerDid)
@@ -366,8 +366,8 @@ Implement rate limiting to prevent abuse:
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.Bucket4j
 
-class RateLimitedTrustLayer(
-    private val delegate: TrustLayer,
+class RateLimitedTrustWeave(
+    private val delegate: TrustWeave,
     private val bucket: Bucket
 ) {
     suspend fun issue(block: IssuanceBuilder.() -> Unit): VerifiableCredential {
@@ -411,7 +411,7 @@ suspend fun issueCredential(...) {
             "holderDid" to holderDid
         ))
 
-        val credential = trustLayer.issue { ... }
+        val credential = trustWeave.issue { ... }
 
         logger.info("Credential issued successfully", mapOf(
             "credentialId" to credential.id
@@ -437,8 +437,8 @@ Collect metrics for key operations:
 ```kotlin
 import io.micrometer.core.instrument.MeterRegistry
 
-class MetricsTrustLayer(
-    private val delegate: TrustLayer,
+class MetricsTrustWeave(
+    private val delegate: TrustWeave,
     private val registry: MeterRegistry
 ) {
     suspend fun issue(block: IssuanceBuilder.() -> Unit): VerifiableCredential {
@@ -465,15 +465,15 @@ Implement health checks:
 import org.springframework.boot.actuate.health.Health
 import org.springframework.boot.actuate.health.HealthIndicator
 
-class TrustLayerHealthIndicator(
-    private val trustLayer: TrustLayer
+class TrustWeaveHealthIndicator(
+    private val trustWeave: TrustWeave
 ) : HealthIndicator {
 
     override fun health(): Health {
         return try {
             runBlocking {
                 // Test DID creation
-                val testDid = trustLayer.createDid {
+                val testDid = trustWeave.createDid {
                     method(KEY)
                     algorithm(ED25519)
                 }

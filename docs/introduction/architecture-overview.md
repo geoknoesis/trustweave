@@ -73,41 +73,72 @@ val trustWeave = trustWeave {
 
 Understanding how components interact helps you debug and extend TrustWeave:
 
+```mermaid
+flowchart TB
+    subgraph Application["Application Layer"]
+        AppCode[Your Application<br/>Business Logic]
+    end
+    
+    subgraph Facade["TrustWeave Facade"]
+        TW[TrustWeave<br/>createDid()<br/>issue()<br/>verify()<br/>wallet()]
+    end
+    
+    subgraph Context["TrustWeaveConfig"]
+        Config[Configuration<br/>Service Registries<br/>Plugin Settings]
+    end
+    
+    subgraph Services["Service Interfaces"]
+        DIDService[DID Service<br/>DidMethod]
+        CredService[Credential Service<br/>CredentialService]
+        KMSInterface[KMS Interface<br/>KeyManagementService]
+        AnchorInterface[Anchor Interface<br/>BlockchainAnchorClient]
+        WalletService[Wallet Service<br/>WalletFactory]
+    end
+    
+    subgraph Registries["Service Registries"]
+        DIDReg[DidMethodRegistry<br/>Method Registration]
+        CredReg[CredentialServiceRegistry<br/>Service Registration]
+        AnchorReg[BlockchainAnchorRegistry<br/>Client Registration]
+    end
+    
+    subgraph Plugins["Plugin Implementations"]
+        DIDPlugins[DidKeyMethod<br/>DidWebMethod<br/>DidIonMethod]
+        KMSPlugins[InMemoryKMS<br/>AWS KMS<br/>Azure KMS]
+        AnchorPlugins[AlgorandClient<br/>PolygonClient<br/>EthereumClient]
+    end
+    
+    subgraph External["External Systems"]
+        Blockchains[Blockchains<br/>Algorand<br/>Ethereum<br/>Polygon]
+        KMSProviders[KMS Providers<br/>AWS<br/>Azure<br/>Google Cloud]
+        DIDResolvers[DID Resolvers<br/>Universal Resolver<br/>Method-Specific]
+    end
+    
+    AppCode -->|Calls| TW
+    TW -->|Uses| Config
+    Config -->|Manages| Registries
+    TW -->|Delegates to| Services
+    Services -->|Uses| Registries
+    Registries -->|Routes to| Plugins
+    Plugins -->|Connects to| External
+    
+    style Application fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#fff
+    style Facade fill:#c8e6c9,stroke:#388e3c,stroke-width:2px,color:#fff
+    style Context fill:#fff9c4,stroke:#f57f17,stroke-width:2px,color:#000
+    style Services fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#fff
+    style Registries fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#fff
+    style Plugins fill:#e0f2f1,stroke:#00796b,stroke-width:2px,color:#fff
+    style External fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#fff
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    User Application Code                     │
-└───────────────────────────┬─────────────────────────────────┘
-                             │
-                             ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    TrustWeave Facade                           │
-│              (TrustWeave.create())                             │
-└───────────────┬───────────────────────────────┬───────────────┘
-                │                               │
-                ▼                               ▼
-┌───────────────────────────┐    ┌───────────────────────────┐
-│   Service Interfaces      │    │   Service Registries      │
-│  - DidMethod              │    │  - DidMethodRegistry      │
-│  - KeyManagementService   │    │  - BlockchainAnchorRegistry│
-│  - BlockchainAnchorClient │    │  - CredentialServiceRegistry│
-└───────────────┬───────────┘    └───────────────┬───────────┘
-                │                               │
-                ▼                               ▼
-┌─────────────────────────────────────────────────────────────┐
-│              Plugin Implementations                          │
-│  - DidKeyMethod, DidWebMethod, etc.                          │
-│  - InMemoryKMS, AWSKMS, AzureKMS, etc.                      │
-│  - AlgorandClient, PolygonClient, etc.                       │
-└───────────────┬───────────────────────────────────────────────┘
-                │
-                ▼
-┌─────────────────────────────────────────────────────────────┐
-│              External Systems                                 │
-│  - Blockchains (Algorand, Ethereum, Polygon, etc.)          │
-│  - KMS Providers (AWS, Azure, Google Cloud, etc.)          │
-│  - DID Resolvers (Universal Resolver, etc.)                 │
-└─────────────────────────────────────────────────────────────┘
-```
+
+**Key Interactions:**
+
+1. **Application → Facade**: Your application code calls TrustWeave methods
+2. **Facade → Configuration**: TrustWeave uses configuration to access services
+3. **Configuration → Registries**: Configuration manages service registries
+4. **Facade → Services**: TrustWeave delegates operations to service interfaces
+5. **Services → Registries**: Services use registries to find implementations
+6. **Registries → Plugins**: Registries route requests to plugin implementations
+7. **Plugins → External**: Plugins connect to external systems (blockchains, KMS, etc.)
 
 ### Plugin Architecture
 

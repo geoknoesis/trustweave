@@ -1,6 +1,7 @@
 package org.trustweave.trust
 
 import org.trustweave.credential.model.CredentialType
+import org.trustweave.credential.trust.TrustPolicy as CredentialTrustPolicy
 import org.trustweave.did.identifiers.Did
 import org.trustweave.trust.types.IssuerIdentity
 import org.trustweave.trust.types.TrustPath
@@ -35,7 +36,7 @@ import kotlinx.datetime.Clock
  * val path = registry.getTrustPath("did:key:verifier", "did:key:issuer")
  * ```
  */
-interface TrustRegistry {
+interface TrustRegistry : CredentialTrustPolicy {
     /**
      * Checks if an issuer DID is trusted for a specific credential type.
      *
@@ -44,6 +45,13 @@ interface TrustRegistry {
      * @return true if the issuer is trusted, false otherwise
      */
     suspend fun isTrustedIssuer(issuerDid: String, credentialType: String?): Boolean
+    
+    /**
+     * Implementation of CredentialTrustPolicy - checks if issuer is trusted (any credential type).
+     */
+    override suspend fun isTrusted(issuer: Did): Boolean {
+        return isTrustedIssuer(issuer.value, null)
+    }
 
     /**
      * Checks if an issuer is trusted for a specific credential type (type-safe overload).

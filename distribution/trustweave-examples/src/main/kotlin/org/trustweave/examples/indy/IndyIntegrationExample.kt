@@ -228,7 +228,7 @@ fun main() = runBlocking {
         ignoreUnknownKeys = true
         encodeDefaults = true
     }
-    val credentialJson = json.encodeToJsonElement(VerifiableCredential.serializer(), credential)
+    val credentialJson = json.encodeToJsonElement(credential)
 
     val anchor = try {
         trustweave.blockchains.anchor(
@@ -274,7 +274,7 @@ fun main() = runBlocking {
     println("✓ Anchored data read successfully")
 
     // Deserialize the credential
-    val readCredential = json.decodeFromJsonElement(VerifiableCredential.serializer(), readJson)
+    val readCredential = json.decodeFromJsonElement<VerifiableCredential>(readJson)
     println("  - Read Credential ID: ${readCredential.id}")
     println("  - Read Credential Issuer: ${readCredential.issuer}")
     println("  - Read Credential Types: ${readCredential.type.joinToString(", ")}")
@@ -359,7 +359,7 @@ fun main() = runBlocking {
         chainId = chainId
     )
 
-    val digestJson = json.encodeToJsonElement(CredentialDigest.serializer(), digest)
+    val digestJson = json.encodeToJsonElement(digest)
     val digestAnchor = try {
         trustweave.blockchains.anchor(
             data = digestJson,
@@ -395,7 +395,7 @@ fun main() = runBlocking {
         return@runBlocking
     }
 
-    val readDigest = json.decodeFromJsonElement(CredentialDigest.serializer(), readDigestJson)
+    val readDigest = json.decodeFromJsonElement<CredentialDigest>(readDigestJson)
     println("✓ Custom data read successfully")
     println("  - VC ID: ${readDigest.vcId}")
     println("  - Digest: ${readDigest.digest}")

@@ -6,6 +6,7 @@ import org.trustweave.credential.schema.SchemaRegistrationResult
 import org.trustweave.credential.schema.SchemaValidationResult
 import org.trustweave.credential.model.SchemaFormat
 import org.trustweave.credential.identifiers.SchemaId
+import org.trustweave.trust.TrustWeave
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
@@ -146,8 +147,8 @@ class SchemaBuilder(
 /**
  * Extension function to access schema operations.
  */
-fun CredentialDslProvider.schema(schemaId: String? = null, block: SchemaBuilder.() -> Unit = {}): SchemaBuilder {
-    val schemaRegistry = getSchemaRegistry() as? SchemaRegistry
+fun TrustWeave.schema(schemaId: String? = null, block: SchemaBuilder.() -> Unit = {}): SchemaBuilder {
+    val schemaRegistry = getSchemaRegistry()
     val builder = SchemaBuilder(schemaRegistry)
     if (schemaId != null) {
         builder.id(schemaId)
@@ -159,7 +160,7 @@ fun CredentialDslProvider.schema(schemaId: String? = null, block: SchemaBuilder.
 /**
  * Extension function to register a schema.
  */
-suspend fun CredentialDslProvider.registerSchema(block: SchemaBuilder.() -> Unit): SchemaRegistrationResult {
+suspend fun TrustWeave.registerSchema(block: SchemaBuilder.() -> Unit): SchemaRegistrationResult {
     val schemaRegistry = getSchemaRegistry()
     val builder = SchemaBuilder(schemaRegistry)
     builder.block()

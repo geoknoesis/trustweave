@@ -425,7 +425,7 @@ fun main() = runBlocking {
         ignoreUnknownKeys = true
         encodeDefaults = true
     }
-    val credentialJson = anchorJson.encodeToJsonElement(VerifiableCredential.serializer(), credential)
+    val credentialJson = anchorJson.encodeToJsonElement(credential)
 
     // Add linksetDigest at top level for integrity verification
     // This must be done BEFORE computing the VC digest

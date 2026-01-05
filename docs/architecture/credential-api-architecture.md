@@ -132,6 +132,51 @@ Replace reflection with direct imports and method calls since nimbus-jose-jwt is
 
 ---
 
+### ADR-006: Elegant DSL API for Credential Transformations
+
+**Status:** Accepted  
+**Date:** 2025-01-XX
+
+**Context:**
+The `CredentialTransformer` API required creating instances and calling methods imperatively, which was inconsistent with TrustWeave's DSL patterns and less elegant than it could be.
+
+**Decision:**
+Introduce extension functions directly on `VerifiableCredential` and related types to provide a fluent, DSL-like API for format transformations.
+
+**Consequences:**
+- ✅ More elegant and idiomatic Kotlin API
+- ✅ Consistent with TrustWeave DSL patterns
+- ✅ Enables fluent chaining of transformations
+- ✅ Better discoverability through IDE autocomplete
+- ✅ Maintains backward compatibility with direct API
+
+**Implementation:**
+- Extension functions: `credential.toJwt()`, `credential.toJsonLd()`, `credential.toCbor()`
+- Reverse transformations: `jwtString.fromJwt()`, `jsonLdObject.toCredential()`, `cborBytes.fromCbor()`
+- Round-trip helpers: `credential.roundTripJwt()`, `credential.roundTripCbor()`
+- TrustWeave integration: `trustWeave.toJwt(credential)`, `trustWeave.toJsonLd(credential)`
+- DSL builder: `credential.transform { toJwt() }` for complex scenarios
+
+**Example Usage:**
+```kotlin
+// Elegant extension function API (recommended)
+val jwt = credential.toJwt()
+val jsonLd = credential.toJsonLd()
+val cbor = credential.toCbor()
+
+// Fluent chaining
+val roundTrip = credential
+    .toJwt()
+    .fromJwt()
+    .toCbor()
+    .fromCbor()
+
+// With TrustWeave integration
+val jwt = trustWeave.toJwt(credential)
+```
+
+---
+
 ## Design Patterns
 
 ### Strategy Pattern

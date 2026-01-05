@@ -135,68 +135,54 @@ internal class DefaultPluginRegistry : PluginRegistry {
     // Maps provider name -> set of plugin IDs from that provider
     private val providerIndex = ConcurrentHashMap<String, MutableSet<String>>()
 
-    // Synchronization lock for operations that need atomicity across multiple maps
-    private val lock = Any()
-
     override fun register(metadata: PluginMetadata, instance: Any) {
         if (metadata.id.isBlank()) {
             throw TrustWeaveException.BlankPluginId
         }
 
-        // Synchronization is required to ensure atomicity across both maps.
-        // While ConcurrentHashMap provides thread-safe individual operations,
-        // we need to ensure that both plugins and instances maps are updated
-        // atomically to prevent inconsistent state (e.g., metadata registered
-        // but instance missing, or vice versa).
-        synchronized(lock) {
-            // putIfAbsent returns the existing value if key exists, null otherwise.
-            // This provides atomic check-and-set semantics.
-            val existing = plugins.putIfAbsent(metadata.id, metadata)
-            if (existing != null) {
-                throw TrustWeaveException.PluginAlreadyRegistered(
-                    pluginId = metadata.id,
-                    existingPlugin = existing.name
-                )
-            }
-            // Only add to instances map if plugin registration succeeded.
-            // Since we're synchronized and instances is also a ConcurrentHashMap,
-            // this operation is safe and maintains consistency between both maps.
-            instances[metadata.id] = instance
-            // Store the runtime class for type-safe retrieval
-            instanceTypes[metadata.id] = instance.javaClass
-            
-            // Update capability index for O(1) lookups
-            metadata.capabilities.features.forEach { capability ->
-                capabilityIndex.computeIfAbsent(capability) { 
-                    ConcurrentHashMap.newKeySet() 
-                }.add(metadata.id)
-            }
-            
-            // Update provider index for O(1) lookups
-            providerIndex.computeIfAbsent(metadata.provider) { 
+        // putIfAbsent returns the existing value if key exists, null otherwise.
+        // This provides atomic check-and-set semantics.
+        val existing = plugins.putIfAbsent(metadata.id, metadata)
+        if (existing != null) {
+            throw TrustWeaveException.PluginAlreadyRegistered(
+                pluginId = metadata.id,
+                existingPlugin = existing.name
+            )
+        }
+        // Only add to instances map if plugin registration succeeded.
+        instances[metadata.id] = instance
+        // Store the runtime class for type-safe retrieval
+        instanceTypes[metadata.id] = instance.javaClass
+        
+        // Update capability index for O(1) lookups
+        metadata.capabilities.features.forEach { capability ->
+            capabilityIndex.computeIfAbsent(capability) { 
                 ConcurrentHashMap.newKeySet() 
             }.add(metadata.id)
         }
+        
+        // Update provider index for O(1) lookups
+        providerIndex.computeIfAbsent(metadata.provider) { 
+            ConcurrentHashMap.newKeySet() 
+        }.add(metadata.id)
     }
 
     override fun unregister(pluginId: String) {
         require(pluginId.isNotBlank()) { "Plugin ID cannot be blank" }
-        synchronized(lock) {
-            // Idempotent operation: silently return if plugin not found
-            val metadata = plugins[pluginId] ?: return
-            
-            plugins.remove(pluginId)
-            instances.remove(pluginId)
-            instanceTypes.remove(pluginId)
-            
-            // Remove from capability index
-            metadata.capabilities.features.forEach { capability ->
-                capabilityIndex[capability]?.remove(pluginId)
-            }
-            
-            // Remove from provider index
-            providerIndex[metadata.provider]?.remove(pluginId)
+        // Idempotent operation: silently return if plugin not found
+        val metadata = plugins[pluginId] ?: return
+        
+        plugins.remove(pluginId)
+        instances.remove(pluginId)
+        instanceTypes.remove(pluginId)
+        
+        // Remove from capability index
+        metadata.capabilities.features.forEach { capability ->
+            capabilityIndex[capability]?.remove(pluginId)
         }
+        
+        // Remove from provider index
+        providerIndex[metadata.provider]?.remove(pluginId)
     }
 
     override fun getMetadata(pluginId: String): PluginMetadata? {
@@ -267,13 +253,11 @@ internal class DefaultPluginRegistry : PluginRegistry {
     }
 
     override fun clear() {
-        synchronized(lock) {
-            plugins.clear()
-            instances.clear()
-            instanceTypes.clear()
-            capabilityIndex.clear()
-            providerIndex.clear()
-        }
+        plugins.clear()
+        instances.clear()
+        instanceTypes.clear()
+        capabilityIndex.clear()
+        providerIndex.clear()
     }
 
     override fun isRegistered(pluginId: String): Boolean {

@@ -55,7 +55,7 @@ object DigestUtils {
     var maxCacheSize: Int = 1000
         set(value) {
             require(value >= 0) { "Cache size must be non-negative" }
-            synchronized(cacheLock) {
+            synchronized(digestCache) {
                 field = value
                 // Trim cache if new size is smaller
                 if (digestCache.size > value) {
@@ -72,19 +72,12 @@ object DigestUtils {
         }
 
     /**
-     * Lock for synchronizing cache access.
-     * LinkedHashMap is not thread-safe, so all access must be synchronized.
-     */
-    private val cacheLock = Any()
-
-    /**
      * Cache for computed digests (optional, can be disabled for memory-constrained environments).
      * Key: canonical JSON string, Value: computed digest
      *
      * **Implementation:** Uses a size-limited cache with LRU eviction to prevent unbounded growth.
      * When the cache reaches maxCacheSize, the least recently used entries are evicted.
-     *
-     * **Thread Safety:** All access to this cache is synchronized via cacheLock.
+     * Access is synchronized for thread safety.
      */
     private val digestCache = object : LinkedHashMap<String, String>(16, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, String>?): Boolean {
@@ -92,6 +85,22 @@ object DigestUtils {
             // This is safe because maxCacheSize is @Volatile
             return size > this@DigestUtils.maxCacheSize
         }
+    }
+    
+    /**
+     * Synchronized wrapper for cache access to ensure thread safety.
+     */
+    @Synchronized
+    private fun getCachedDigest(canonical: String): String? {
+        return digestCache[canonical]
+    }
+    
+    /**
+     * Synchronized wrapper for cache storage to ensure thread safety.
+     */
+    @Synchronized
+    private fun putCachedDigest(canonical: String, digest: String) {
+        digestCache[canonical] = digest
     }
 
     /**
@@ -105,7 +114,7 @@ object DigestUtils {
         set(value) {
             field = value
             if (!value) {
-                synchronized(cacheLock) {
+                synchronized(digestCache) {
                     digestCache.clear()
                 }
             }
@@ -201,20 +210,13 @@ object DigestUtils {
         } catch (e: Exception) {
             // Not valid JSON or parsing failed, compute digest directly on original string
             val canonical = data
-            // Optimize: single synchronized block for cache check and store
+            // Check cache
             if (enableDigestCache && maxCacheSize > 0) {
-                synchronized(cacheLock) {
-                    digestCache[canonical]?.let { return it }
-                    // Compute digest outside synchronized block to reduce lock time
-                }
+                getCachedDigest(canonical)?.let { return it }
             }
             val digest = computeDigest(canonical)
             if (enableDigestCache && maxCacheSize > 0) {
-                synchronized(cacheLock) {
-                    // Double-check pattern: another thread might have computed it
-                    digestCache[canonical]?.let { return it }
-                    digestCache[canonical] = digest
-                }
+                putCachedDigest(canonical, digest)
             }
             digest
         }
@@ -233,24 +235,17 @@ object DigestUtils {
     fun sha256DigestMultibase(element: JsonElement): String {
         val canonical = canonicalizeJson(element)
 
-        // Optimize: single synchronized block with double-check pattern
+        // Check cache
         if (enableDigestCache && maxCacheSize > 0) {
-            synchronized(cacheLock) {
-                digestCache[canonical]?.let { return it }
-                // Compute digest outside synchronized block to reduce lock time
-            }
+            getCachedDigest(canonical)?.let { return it }
         }
 
         // Compute digest
         val digest = computeDigest(canonical)
 
-        // Cache if enabled with double-check pattern
+        // Cache if enabled
         if (enableDigestCache && maxCacheSize > 0) {
-            synchronized(cacheLock) {
-                // Double-check: another thread might have computed it while we were computing
-                digestCache[canonical]?.let { return it }
-                digestCache[canonical] = digest
-            }
+            putCachedDigest(canonical, digest)
         }
 
         return digest
@@ -340,16 +335,16 @@ object DigestUtils {
      * Clears the digest cache.
      * Useful for memory management or testing.
      */
+    @Synchronized
     fun clearCache() {
-        synchronized(cacheLock) {
-            digestCache.clear()
-        }
+        digestCache.clear()
     }
 
     /**
      * Gets the current cache size.
      * Useful for monitoring cache usage.
      */
-    fun getCacheSize(): Int = synchronized(cacheLock) { digestCache.size }
+    @Synchronized
+    fun getCacheSize(): Int = digestCache.size
 }
 

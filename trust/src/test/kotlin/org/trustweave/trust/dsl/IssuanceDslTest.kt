@@ -54,7 +54,7 @@ class IssuanceDslTest {
         }
         
         val didResolver = DidResolver { did ->
-            tempTrustWeave.getDslContext().getConfig().registries.didRegistry.resolve(did.value)
+            tempTrustWeave.configuration.didRegistry.resolve(did.value)
         }
         
         val credentialService = createTestCredentialService(kms = kmsRef, didResolver = didResolver)

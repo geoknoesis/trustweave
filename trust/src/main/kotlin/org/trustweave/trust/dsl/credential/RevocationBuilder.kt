@@ -1,5 +1,6 @@
 package org.trustweave.trust.dsl.credential
 
+import org.trustweave.trust.TrustWeave
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.revocation.RevocationStatus
 import org.trustweave.credential.revocation.StatusListMetadata
@@ -165,16 +166,16 @@ class RevocationBuilder(
 }
 
 /**
- * Extension function to access revocation operations using CredentialDslProvider.
+ * Extension function to access revocation operations using TrustWeave.
  */
-fun CredentialDslProvider.revocation(block: RevocationBuilder.() -> Unit): RevocationBuilder {
+fun TrustWeave.revocation(block: RevocationBuilder.() -> Unit): RevocationBuilder {
     return RevocationBuilder(getRevocationManager()).apply(block)
 }
 
 /**
- * Extension function to revoke a credential directly using CredentialDslProvider.
+ * Extension function to revoke a credential directly using TrustWeave.
  */
-suspend fun CredentialDslProvider.revoke(block: RevocationBuilder.() -> Unit): Boolean {
+suspend fun TrustWeave.revoke(block: RevocationBuilder.() -> Unit): Boolean {
     val builder = RevocationBuilder(getRevocationManager())
     builder.block()
     return builder.revoke()

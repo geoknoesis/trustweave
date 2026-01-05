@@ -2,7 +2,7 @@ package org.trustweave.trust.dsl.wallet
 
 import org.trustweave.trust.dsl.credential.SelectiveDisclosureBuilder
 import org.trustweave.trust.dsl.credential.PresentationBuilder
-import org.trustweave.trust.dsl.credential.CredentialDslProvider
+import org.trustweave.trust.TrustWeave
 import org.trustweave.credential.CredentialService
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.vc.VerifiablePresentation
@@ -169,7 +169,7 @@ class WalletPresentationBuilder(
 /**
  * Extension function to create a presentation from wallet credentials.
  */
-suspend fun CredentialDslProvider.presentationFromWallet(
+suspend fun TrustWeave.presentationFromWallet(
     wallet: Wallet,
     block: WalletPresentationBuilder.() -> Unit
 ): VerifiablePresentation {

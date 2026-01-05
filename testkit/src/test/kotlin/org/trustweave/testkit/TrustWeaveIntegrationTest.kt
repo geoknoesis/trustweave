@@ -10,6 +10,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
@@ -63,7 +64,7 @@ class TrustWeaveIntegrationTest {
             vcDigest = digest
         )
 
-        val payload = Json.encodeToJsonElement(VerifiableCredentialDigest.serializer(), digestObj)
+        val payload = Json.encodeToJsonElement(serializer(), digestObj)
         val anchorResult = anchorClient.writePayload(payload)
 
         assertNotNull(anchorResult.ref)
@@ -84,7 +85,7 @@ class TrustWeaveIntegrationTest {
         val original = VerifiableCredentialDigest("vc-999", "uXYZ789")
 
         val anchored = client.writePayload(
-            Json.encodeToJsonElement(VerifiableCredentialDigest.serializer(), original)
+            Json.encodeToJsonElement(serializer(), original)
         )
 
         val retrieved = Json.decodeFromJsonElement(

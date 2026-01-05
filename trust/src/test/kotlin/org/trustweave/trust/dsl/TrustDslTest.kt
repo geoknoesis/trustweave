@@ -43,7 +43,7 @@ class TrustDslTest {
             }
         }
 
-        val registry = trustWeave.getDslContext().getTrustRegistry()
+        val registry = trustWeave.configuration.trustRegistry
         assertNotNull(registry)
     }
 
@@ -114,7 +114,7 @@ class TrustDslTest {
             addAnchor(anchor2) {}
 
             // Get registry to add relationship
-            val registry = trustWeave.getDslContext().getTrustRegistry() as? InMemoryTrustRegistry
+            val registry = trustWeave.configuration.trustRegistry as? InMemoryTrustRegistry
             registry?.addTrustRelationship(anchor1, anchor2)
 
             val path = findTrustPath(

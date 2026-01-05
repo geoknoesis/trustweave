@@ -1,5 +1,6 @@
 package org.trustweave.trust.dsl.wallet
 
+import org.trustweave.trust.TrustWeave
 import org.trustweave.wallet.Wallet
 import org.trustweave.wallet.services.WalletCreationOptionsBuilder
 import org.trustweave.did.identifiers.Did
@@ -13,8 +14,7 @@ import kotlinx.coroutines.withContext
  *
  * **Example Usage**:
  * ```kotlin
- * val walletProvider: WalletDslProvider = ...
- * val wallet = walletProvider.wallet {
+ * val wallet = trustWeave.wallet {
  *     id("my-wallet")
  *     holder("did:key:holder")
  *     enableOrganization()
@@ -23,7 +23,7 @@ import kotlinx.coroutines.withContext
  * ```
  */
 class WalletBuilder(
-    private val dslProvider: WalletDslProvider
+    private val trustWeave: TrustWeave
 ) {
     private var walletId: String? = null
     private var holderDid: String? = null
@@ -126,7 +126,7 @@ class WalletBuilder(
         val finalOptions = optionsBuilder.build()
 
         // Use WalletFactory from provider
-        val walletFactory = dslProvider.getWalletFactory()
+        val walletFactory = trustWeave.getWalletFactory()
             ?: throw IllegalStateException(
                 "WalletFactory not available. " +
                 "Ensure TrustWeave-testkit is on classpath or provide a wallet factory via TrustWeaveConfig."
@@ -143,9 +143,9 @@ class WalletBuilder(
 }
 
 /**
- * Extension function to create a wallet using a wallet DSL provider.
+ * Extension function to create a wallet using TrustWeave.
  */
-suspend fun WalletDslProvider.wallet(block: WalletBuilder.() -> Unit): Wallet {
+suspend fun TrustWeave.wallet(block: WalletBuilder.() -> Unit): Wallet {
     val builder = WalletBuilder(this)
     builder.block()
     return builder.build()

@@ -1,0 +1,2087 @@
+﻿> Task :credentials:plugins:oidc4vp:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :trust:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :common:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :credentials:credential-api:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :kms:kms-core:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :did:did-core:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :wallet:wallet-core:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :anchors:anchor-core:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :testkit:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :trust:processResources NO-SOURCE
+> Task :contract:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :credentials:credential-api:processResources NO-SOURCE
+> Task :anchors:anchor-core:processResources NO-SOURCE
+> Task :credentials:plugins:status-list:database:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :wallet:wallet-core:processResources NO-SOURCE
+> Task :contract:processResources NO-SOURCE
+> Task :did:did-core:processResources UP-TO-DATE
+> Task :kms:kms-core:processResources NO-SOURCE
+> Task :credentials:plugins:status-list:database:processResources NO-SOURCE
+> Task :testkit:processResources UP-TO-DATE
+> Task :credentials:plugins:oidc4vp:processResources UP-TO-DATE
+> Task :common:compileKotlin UP-TO-DATE
+> Task :common:compileJava NO-SOURCE
+> Task :common:processResources NO-SOURCE
+> Task :common:classes UP-TO-DATE
+> Task :common:jar UP-TO-DATE
+> Task :anchors:anchor-core:compileKotlin UP-TO-DATE
+> Task :anchors:anchor-core:compileJava NO-SOURCE
+> Task :anchors:anchor-core:classes UP-TO-DATE
+> Task :kms:kms-core:compileKotlin UP-TO-DATE
+> Task :kms:kms-core:compileJava NO-SOURCE
+> Task :anchors:anchor-core:jar UP-TO-DATE
+> Task :kms:kms-core:classes UP-TO-DATE
+> Task :kms:kms-core:jar UP-TO-DATE
+> Task :did:did-core:compileKotlin UP-TO-DATE
+> Task :did:did-core:compileJava NO-SOURCE
+> Task :did:did-core:classes UP-TO-DATE
+> Task :did:did-core:jar UP-TO-DATE
+> Task :credentials:credential-api:compileKotlin UP-TO-DATE
+> Task :credentials:credential-api:compileJava NO-SOURCE
+> Task :credentials:credential-api:classes UP-TO-DATE
+> Task :credentials:credential-api:jar UP-TO-DATE
+> Task :contract:compileKotlin UP-TO-DATE
+> Task :contract:compileJava NO-SOURCE
+> Task :contract:classes UP-TO-DATE
+> Task :credentials:plugins:status-list:database:compileKotlin UP-TO-DATE
+> Task :credentials:plugins:status-list:database:compileJava NO-SOURCE
+> Task :contract:jar UP-TO-DATE
+> Task :credentials:plugins:status-list:database:classes UP-TO-DATE
+> Task :credentials:plugins:oidc4vp:compileKotlin UP-TO-DATE
+> Task :credentials:plugins:oidc4vp:compileJava NO-SOURCE
+> Task :credentials:plugins:oidc4vp:classes UP-TO-DATE
+> Task :credentials:plugins:status-list:database:jar UP-TO-DATE
+> Task :credentials:plugins:oidc4vp:jar UP-TO-DATE
+> Task :wallet:wallet-core:compileKotlin UP-TO-DATE
+> Task :wallet:wallet-core:compileJava NO-SOURCE
+> Task :wallet:wallet-core:classes UP-TO-DATE
+> Task :wallet:wallet-core:jar UP-TO-DATE
+> Task :trust:compileKotlin UP-TO-DATE
+> Task :trust:compileJava NO-SOURCE
+> Task :trust:classes UP-TO-DATE
+> Task :trust:jar UP-TO-DATE
+> Task :testkit:compileKotlin UP-TO-DATE
+> Task :testkit:compileJava NO-SOURCE
+> Task :testkit:classes UP-TO-DATE
+> Task :testkit:jar UP-TO-DATE
+
+> Task :trust:compileTestKotlin
+gradle : e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/tr
+ustweave/integration/InMemoryTrustLayerIntegrationTest.kt:142:46 Unresolved 
+reference 'getDslContext'.
+At line:1 char:1
++ gradle :trust:compileTestKotlin 2>&1 | Out-File -FilePath trust-test- ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (e: file:///C:/U...getDslContext'. 
+   :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+integration/InMemoryTrustLayerIntegrationTest.kt:254:46 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+integration/InMemoryTrustLayerIntegrationTest.kt:330:46 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+integration/InMemoryTrustLayerIntegrationTest.kt:356:33 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+integration/InMemoryTrustLayerIntegrationTest.kt:357:13 Unresolved reference 
+'id'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+integration/InMemoryTrustLayerIntegrationTest.kt:358:13 Unresolved reference 
+'holder'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+integration/InMemoryTrustLayerIntegrationTest.kt:359:13 Unresolved reference 
+'inMemory'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+integration/InMemoryTrustLayerIntegrationTest.kt:360:13 Unresolved reference 
+'enableOrganization'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+integration/InMemoryTrustLayerIntegrationTest.kt:361:13 Unresolved reference 
+'enablePresentation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+integration/InMemoryTrustLayerIntegrationTest.kt:404:46 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+integration/InMemoryTrustLayerIntegrationTest.kt:413:46 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+integration/InMemoryTrustLayerIntegrationTest.kt:463:39 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+integration/InMemoryTrustLayerIntegrationTest.kt:520:47 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+integration/InMemoryTrustLayerIntegrationTest.kt:587:46 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+integration/InMemoryTrustLayerIntegrationTest.kt:661:46 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+integration/WebOfTrustIntegrationTest.kt:88:46 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+integration/WebOfTrustIntegrationTest.kt:216:39 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:21:54 Cannot infer type for type 
+parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:28:34 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:30:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:31:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:35:13 Unresolved reference 'did'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:35:21 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:36:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:37:13 Unresolved reference 
+'addCapabilityInvocation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:37:44 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:40:9 Cannot infer type for type 
+parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:44:54 Cannot infer type for type 
+parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:51:34 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:53:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:54:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:58:13 Unresolved reference 'did'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:58:21 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:59:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:60:13 Unresolved reference 
+'addCapabilityDelegation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:60:44 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:63:9 Cannot infer type for type 
+parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:67:40 Cannot infer type for type 
+parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:74:34 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:76:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:77:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:81:13 Unresolved reference 'did'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:81:21 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:82:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:83:13 Cannot infer type for type 
+parameter 'R'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:83:13 To call contextual declarations, 
+specify the '-Xcontext-parameters' compiler option.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:83:53 Argument type mismatch: actual 
+type is 'String', but 'Function1<String, uninferred R (of fun <T, R> 
+context)>' was expected.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:86:9 Cannot infer type for type 
+parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:90:57 Cannot infer type for type 
+parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:97:30 Unresolved reference 'createDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:98:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:99:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:103:20 Unresolved reference 
+'updateDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:104:13 Unresolved reference 'did'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:104:21 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:105:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:106:13 Unresolved reference 
+'addCapabilityInvocation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:106:44 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:109:37 Unresolved reference 
+'updateDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:110:13 Unresolved reference 'did'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:110:21 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:111:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:112:13 Unresolved reference 
+'removeCapabilityInvocation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:112:47 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:115:9 Cannot infer type for type 
+parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:119:65 Cannot infer type for type 
+parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:126:34 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:128:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:129:13 Unresolved reference 
+'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:133:13 Unresolved reference 'did'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:133:21 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:134:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:135:13 Unresolved reference 'addKey'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:136:17 Unresolved reference 'type'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:138:13 Unresolved reference 
+'addCapabilityInvocation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:139:13 Unresolved reference 
+'addCapabilityDelegation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:139:44 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:140:13 None of the following 
+candidates is applicable:
+fun <T, R> context(with: T, block: context(T) () -> R): R
+fun <A, B, Result> context(a: A, b: B, block: context(A, B) () -> Result): 
+Result
+fun <A, B, C, Result> context(a: A, b: B, c: C, block: context(A, B, C) () -> 
+Result): Result
+fun <A, B, C, D, Result> context(a: A, b: B, c: C, d: D, block: context(A, B, 
+C, D) () -> Result): Result
+fun <A, B, C, D, E, Result> context(a: A, b: B, c: C, d: D, e: E, block: 
+context(A, B, C, D, E) () -> Result): Result
+fun <A, B, C, D, E, F, Result> context(a: A, b: B, c: C, d: D, e: E, f: F, 
+block: context(A, B, C, D, E, F) () -> Result): Result
+fun <A, B, C, D, E, F, G, Result> context(a: A, b: B, c: C, d: D, e: E, f: F, 
+g: G, block: context(A, B, C, D, E, F, G) () -> Result): Result
+fun <A, B, C, D, E, F, G, H, Result> context(a: A, b: B, c: C, d: D, e: E, f: 
+F, g: G, h: H, block: context(A, B, C, D, E, F, G, H) () -> Result): Result
+fun <A, B, C, D, E, F, G, H, I, Result> context(a: A, b: B, c: C, d: D, e: E, 
+f: F, g: G, h: H, i: I, block: context(A, B, C, D, E, F, G, H, I) () -> 
+Result): Result
+fun <A, B, C, D, E, F, G, H, I, J, Result> context(a: A, b: B, c: C, d: D, e: 
+E, f: F, g: G, h: H, i: I, j: J, block: context(A, B, C, D, E, F, G, H, I, J) 
+() -> Result): Result
+fun <A, B, C, D, E, F, G, H, I, J, K, Result> context(a: A, b: B, c: C, d: D, 
+e: E, f: F, g: G, h: H, i: I, j: J, k: K, block: context(A, B, C, D, E, F, G, 
+H, I, J, K) () -> Result): Result
+fun <A, B, C, D, E, F, G, H, I, J, K, L, Result> context(a: A, b: B, c: C, d: 
+D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, block: context(A, B, C, D, 
+E, F, G, H, I, J, K, L) () -> Result): Result
+fun <A, B, C, D, E, F, G, H, I, J, K, L, M, Result> context(a: A, b: B, c: C, 
+d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, block: context(A, 
+B, C, D, E, F, G, H, I, J, K, L, M) () -> Result): Result
+fun <A, B, C, D, E, F, G, H, I, J, K, L, M, N, Result> context(a: A, b: B, c: 
+C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, block: 
+context(A, B, C, D, E, F, G, H, I, J, K, L, M, N) () -> Result): Result
+fun <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Result> context(a: A, b: B, 
+c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, 
+block: context(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O) () -> Result): 
+Result
+fun <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Result> context(a: A, b: 
+B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: 
+O, p: P, block: context(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P) () -> 
+Result): Result
+fun <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Result> context(a: A, 
+b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, 
+o: O, p: P, q: Q, block: context(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, 
+P, Q) () -> Result): Result
+fun <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Result> context(a: 
+A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: 
+N, o: O, p: P, q: Q, r: R, block: context(A, B, C, D, E, F, G, H, I, J, K, L, 
+M, N, O, P, Q, R) () -> Result): Result
+fun <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Result> 
+context(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: 
+L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, block: context(A, B, C, D, E, F, 
+G, H, I, J, K, L, M, N, O, P, Q, R, S) () -> Result): Result
+fun <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Result> 
+context(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: 
+L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, block: context(A, B, C, D, 
+E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T) () -> Result): Result
+fun <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, Result> 
+context(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: 
+L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U, block: context(A, B, 
+C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U) () -> Result): Result
+fun <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, Result> 
+context(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: 
+L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U, v: V, block: 
+context(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V) () 
+-> Result): Result
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:141:13 Unresolved reference 
+'addService'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:142:17 Unresolved reference 'id'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:142:27 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:143:17 Unresolved reference 'type'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:144:17 Unresolved reference 'endpoint'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslExtendedTest.kt:148:9 Cannot infer type for type 
+parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:48:38 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:49:30 Unresolved reference 'createDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:50:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:51:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:59:37 Unresolved reference 'updateDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:60:13 Unresolved reference 'did'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:60:21 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:61:13 Unresolved reference 'addKey'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:62:17 Unresolved reference 'type'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:63:17 Unresolved reference 'publicKeyJwk'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:67:9 Cannot infer type for type parameter 'T'. 
+Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:71:42 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:72:30 Unresolved reference 'createDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:73:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:74:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:77:37 Unresolved reference 'updateDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:78:13 Unresolved reference 'did'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:78:21 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:79:13 Unresolved reference 'addService'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:80:17 Unresolved reference 'id'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:81:17 Unresolved reference 'type'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:82:17 Unresolved reference 'endpoint'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:86:9 Cannot infer type for type parameter 'T'. 
+Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:90:41 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:91:30 Unresolved reference 'createDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:92:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:93:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:96:37 Unresolved reference 'updateDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:97:13 Unresolved reference 'did'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:97:21 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:98:13 Unresolved reference 'removeKey'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:101:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:105:45 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:106:30 Unresolved reference 'createDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:107:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:108:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:112:20 Unresolved reference 'updateDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:113:13 Unresolved reference 'did'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:113:21 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:114:13 Unresolved reference 'addService'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:115:17 Unresolved reference 'id'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:116:17 Unresolved reference 'type'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:117:17 Unresolved reference 'endpoint'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:122:37 Unresolved reference 'updateDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:123:13 Unresolved reference 'did'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:123:21 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:124:13 Unresolved reference 'removeService'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:127:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:133:24 Unresolved reference 'updateDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:134:17 Unresolved reference 'addKey'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:135:21 Unresolved reference 'type'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:143:30 Unresolved reference 'createDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:144:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:145:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:149:24 Unresolved reference 'updateDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:150:17 Unresolved reference 'did'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:150:25 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:151:17 Unresolved reference 'addService'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:159:53 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:160:30 Unresolved reference 'createDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:161:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:162:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:165:37 Unresolved reference 'updateDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:166:13 Unresolved reference 'did'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:166:21 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:167:13 Unresolved reference 'addKey'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:168:17 Unresolved reference 'type'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:169:17 Unresolved reference 
+'publicKeyMultibase'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:173:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:177:61 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:178:30 Unresolved reference 'createDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:179:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:180:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:192:37 Unresolved reference 'updateDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:193:13 Unresolved reference 'did'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:193:21 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:194:13 Unresolved reference 'addKey'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:195:17 Unresolved reference 'type'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:196:17 Unresolved reference 'publicKeyJwk'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:198:13 Unresolved reference 'addKey'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:199:17 Unresolved reference 'type'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:200:17 Unresolved reference 'publicKeyJwk'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:202:13 Unresolved reference 'addService'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:203:17 Unresolved reference 'id'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:204:17 Unresolved reference 'type'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:205:17 Unresolved reference 'endpoint'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:207:13 Unresolved reference 'addService'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:208:17 Unresolved reference 'id'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:209:17 Unresolved reference 'type'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:210:17 Unresolved reference 'endpoint'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:214:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:218:59 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:219:30 Unresolved reference 'createDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:220:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:221:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:224:37 Unresolved reference 'updateDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:225:13 Unresolved reference 'did'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:225:21 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:227:13 Unresolved reference 'addService'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:228:17 Unresolved reference 'id'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:229:17 Unresolved reference 'type'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:230:17 Unresolved reference 'endpoint'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:234:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:238:52 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:239:30 Unresolved reference 'createDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:240:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:241:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:244:34 Unresolved reference 'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:246:13 Unresolved reference 'did'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:246:21 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:247:13 Unresolved reference 'addService'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:248:17 Unresolved reference 'id'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:249:17 Unresolved reference 'type'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:250:17 Unresolved reference 'endpoint'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDocumentDslTest.kt:254:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:56:56 Cannot infer type for type parameter 'T'. 
+Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:57:30 Unresolved reference 'createDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:58:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:59:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:62:24 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:63:9 Cannot infer type for type parameter 'T'. Specify 
+it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:69:24 Unresolved reference 'createDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:70:17 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:78:24 Unresolved reference 'createDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:79:17 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:80:17 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:87:30 Unresolved reference 'createDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:88:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:89:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:90:13 Unresolved reference 'option'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:93:9 Cannot infer type for type parameter 'T'. Specify 
+it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:94:24 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:99:34 Unresolved reference 'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:101:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:102:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:105:9 Cannot infer type for type parameter 'T'. 
+Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:106:24 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:111:31 Unresolved reference 'createDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:112:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:113:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:118:31 Unresolved reference 'createDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:119:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:120:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:123:9 Cannot infer type for type parameter 'T'. 
+Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:124:9 Cannot infer type for type parameter 'T'. 
+Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:130:30 Unresolved reference 'createDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:131:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:132:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:136:24 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/DidDslTest.kt:137:24 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/IssuanceBuilderBranchCoverageTest.kt:62:13 Return type mismatch: 
+expected 'DidResolutionResult', actual 'File'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/IssuanceBuilderBranchCoverageTest.kt:62:28 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/IssuanceDslTest.kt:57:13 Return type mismatch: expected 
+'DidResolutionResult', actual 'File'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/IssuanceDslTest.kt:57:28 Unresolved reference 'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:40:30 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:42:30 Unresolved reference 'createDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:43:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:44:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:48:37 Unresolved reference 'rotateKey'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:49:13 Unresolved reference 'did'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:49:21 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:50:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:53:9 Cannot infer type for type parameter 'T'. 
+Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:59:24 Unresolved reference 'rotateKey'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:60:17 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:66:48 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:67:30 Unresolved reference 'createDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:68:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:69:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:72:37 Unresolved reference 'rotateKey'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:73:13 Unresolved reference 'did'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:73:21 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:74:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:75:13 Unresolved reference 'removeOldKey'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:78:9 Cannot infer type for type parameter 'T'. 
+Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:82:59 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:83:30 Unresolved reference 'createDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:84:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:85:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:88:37 Unresolved reference 'rotateKey'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:89:13 Unresolved reference 'did'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:89:21 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:91:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:94:9 Cannot infer type for type parameter 'T'. 
+Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:99:30 Unresolved reference 'createDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:100:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:101:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:105:24 Unresolved reference 'rotateKey'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:106:17 Unresolved reference 'did'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:106:25 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:107:17 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:108:17 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:114:52 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:115:30 Unresolved reference 'createDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:116:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:117:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:120:34 Unresolved reference 'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:122:13 Unresolved reference 'did'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:122:21 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:123:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:126:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:130:53 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:131:30 Unresolved reference 'createDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:132:13 Unresolved reference 'method'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:133:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:136:37 Unresolved reference 'rotateKey'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:137:13 Unresolved reference 'did'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:137:21 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:138:13 Unresolved reference 'algorithm'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:139:13 Unresolved reference 'removeOldKey'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:140:13 Unresolved reference 'removeOldKey'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/KeyRotationDslTest.kt:143:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:88:13 Return type mismatch: 
+expected 'DidResolutionResult', actual 'File'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:88:28 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:119:46 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:135:13 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:135:29 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:135:46 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:151:28 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:151:28 Cannot infer type 
+for type parameter 'R'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:151:44 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:151:61 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:158:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:159:38 Unresolved reference 
+'verifiableCredential'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:167:28 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:167:28 Cannot infer type 
+for type parameter 'R'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:167:44 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:167:61 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:174:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:175:38 Unresolved reference 
+'verifiableCredential'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:185:28 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:185:28 Cannot infer type 
+for type parameter 'R'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:185:44 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:185:61 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:192:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:193:38 Unresolved reference 
+'verifiableCredential'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:203:13 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:203:29 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:203:46 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:216:28 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:216:28 Cannot infer type 
+for type parameter 'R'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:216:44 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:216:61 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:223:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:224:53 Unresolved reference 
+'holder'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:233:28 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:233:28 Cannot infer type 
+for type parameter 'R'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:233:44 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:233:61 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:241:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:242:33 Unresolved reference 
+'challenge'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:249:28 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:249:28 Cannot infer type 
+for type parameter 'R'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:249:44 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:249:61 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:257:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:258:65 Unresolved reference 
+'challenge'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:267:28 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:267:28 Cannot infer type 
+for type parameter 'R'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:267:44 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:267:61 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:275:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:276:33 Unresolved reference 
+'domain'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:283:28 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:283:28 Cannot infer type 
+for type parameter 'R'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:283:44 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:283:61 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:291:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:292:50 Unresolved reference 
+'domain'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:298:46 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:308:28 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:308:28 Cannot infer type 
+for type parameter 'R'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:308:44 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:308:61 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:316:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:320:45 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:330:28 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:330:28 Cannot infer type 
+for type parameter 'R'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:330:44 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:330:61 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:337:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:343:47 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:353:28 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:353:28 Cannot infer type 
+for type parameter 'R'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:353:44 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:353:61 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:361:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:365:43 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:368:28 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:368:28 Cannot infer type 
+for type parameter 'R'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:368:44 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:368:61 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:376:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:382:68 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:388:28 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:388:28 Cannot infer type 
+for type parameter 'R'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:388:44 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:388:61 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:396:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:400:68 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:406:28 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:406:28 Cannot infer type 
+for type parameter 'R'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:406:44 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:406:61 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:416:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:420:58 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:426:28 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:426:28 Cannot infer type 
+for type parameter 'R'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:426:44 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:426:61 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:432:21 Unresolved reference 
+'hide'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:437:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:449:28 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:449:28 Cannot infer type 
+for type parameter 'R'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:449:44 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:449:61 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:462:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:463:52 Unresolved reference 
+'challenge'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationBuilderBranchCoverageTest.kt:464:50 Unresolved reference 
+'domain'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:87:13 Return type mismatch: expected 
+'DidResolutionResult', actual 'File'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:87:28 Unresolved reference 'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:118:46 Unresolved reference 'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:136:28 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:136:28 Cannot infer type for type parameter 
+'R'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:136:44 Unresolved reference 'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:136:61 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:143:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:144:53 Unresolved reference 'holder'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:145:38 Unresolved reference 
+'verifiableCredential'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:146:33 Unresolved reference 'type'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:146:44 Unresolved reference 'it'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:161:28 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:161:28 Cannot infer type for type parameter 
+'R'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:161:44 Unresolved reference 'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:161:61 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:168:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:169:38 Unresolved reference 
+'verifiableCredential'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:176:28 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:176:28 Cannot infer type for type parameter 
+'R'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:176:44 Unresolved reference 'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:176:61 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:184:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:185:65 Unresolved reference 'challenge'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:192:28 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:192:28 Cannot infer type for type parameter 
+'R'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:192:44 Unresolved reference 'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:192:61 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:200:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:201:50 Unresolved reference 'domain'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:205:65 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:215:28 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:215:28 Cannot infer type for type parameter 
+'R'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:215:44 Unresolved reference 'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:215:61 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:222:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:229:13 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:229:29 Unresolved reference 'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:229:46 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:250:13 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:250:29 Unresolved reference 'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:250:46 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:260:59 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:273:28 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:273:28 Cannot infer type for type parameter 
+'R'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:273:44 Unresolved reference 'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:273:61 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:279:21 Unresolved reference 'hide'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/PresentationDslTest.kt:284:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:71:37 Unresolved reference 'revocation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:72:13 Unresolved reference 'forIssuer'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:73:13 Unresolved reference 'purpose'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:76:9 Cannot infer type for type parameter 'T'. 
+Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:78:35 Unresolved reference 'revocation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:79:13 Unresolved reference 'statusList'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:79:35 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:81:9 Cannot infer type for type parameter 'T'. 
+Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:82:43 Unresolved reference 'issuerDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:83:58 Unresolved reference 'purpose'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:89:24 Unresolved reference 'revocation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:90:17 Unresolved reference 'purpose'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:100:37 Unresolved reference 'revocation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:101:13 Unresolved reference 'forIssuer'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:102:13 Unresolved reference 'purpose'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:105:34 Unresolved reference 'revoke'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:106:13 Unresolved reference 'credential'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:107:13 Unresolved reference 'statusList'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:116:24 Unresolved reference 'revoke'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:117:17 Unresolved reference 'statusList'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:127:37 Unresolved reference 'revocation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:128:13 Unresolved reference 'forIssuer'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:129:13 Unresolved reference 'purpose'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:132:20 Unresolved reference 'revoke'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:133:13 Unresolved reference 'credential'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:134:13 Unresolved reference 'statusList'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:153:33 Unresolved reference 'revocation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:154:13 Unresolved reference 'statusList'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:165:37 Unresolved reference 'revocation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:166:13 Unresolved reference 'forIssuer'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:167:13 Unresolved reference 'purpose'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:170:36 Unresolved reference 'revocation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:171:13 Unresolved reference 'credential'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:172:13 Unresolved reference 'statusList'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:182:38 Unresolved reference 'revocation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:183:13 Unresolved reference 'forIssuer'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:184:13 Unresolved reference 'purpose'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:187:40 Unresolved reference 'revocation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:188:13 Unresolved reference 'statusList'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:191:9 Cannot infer type for type parameter 'T'. 
+Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:192:9 Cannot infer type for type parameter 'T'. 
+Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:192:50 Unresolved reference 'id'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:199:37 Unresolved reference 'revocation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:200:13 Unresolved reference 'forIssuer'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:201:13 Unresolved reference 'purpose'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:202:13 Unresolved reference 'size'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:205:9 Cannot infer type for type parameter 'T'. 
+Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:207:35 Unresolved reference 'revocation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:208:13 Unresolved reference 'statusList'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:208:35 Unresolved reference 'value'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:210:9 Cannot infer type for type parameter 'T'. 
+Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:211:43 Unresolved reference 'issuerDid'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:217:24 Unresolved reference 'revoke'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:218:17 Unresolved reference 'credential'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/RevocationDslTest.kt:226:24 Unresolved reference 'revocation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:48:17 Unresolved reference 'autoValidate'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:49:17 Unresolved reference 'defaultFormat'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:60:33 Unresolved reference 'registerSchema'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:61:13 Unresolved reference 'id'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:62:13 Unresolved reference 'jsonSchema'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:63:17 Unresolved reference. None of the following 
+candidates is applicable because of a receiver type mismatch:
+fun JsonObjectBuilder.put(key: String, value: Nothing?): JsonElement?
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:64:17 Unresolved reference. None of the following 
+candidates is applicable because of a receiver type mismatch:
+fun JsonObjectBuilder.put(key: String, value: Nothing?): JsonElement?
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:65:17 Unresolved reference. None of the following 
+candidates is applicable because of a receiver type mismatch:
+fun JsonObjectBuilder.put(key: String, value: Nothing?): JsonElement?
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:74:9 Cannot infer type for type parameter 'T'. 
+Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:82:33 Unresolved reference 'registerSchema'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:83:13 Unresolved reference 'id'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:84:13 Unresolved reference 'shacl'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:85:17 Unresolved reference. None of the following 
+candidates is applicable because of a receiver type mismatch:
+fun JsonObjectBuilder.put(key: String, value: Nothing?): JsonElement?
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:86:17 Unresolved reference. None of the following 
+candidates is applicable because of a receiver type mismatch:
+fun JsonObjectBuilder.put(key: String, value: Nothing?): JsonElement?
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:91:9 Cannot infer type for type parameter 'T'. 
+Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:98:24 Unresolved reference 'registerSchema'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:99:17 Unresolved reference 'jsonSchema'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:100:21 Unresolved reference. None of the following 
+candidates is applicable because of a receiver type mismatch:
+fun JsonObjectBuilder.put(key: String, value: Nothing?): JsonElement?
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:109:24 Unresolved reference 'registerSchema'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:110:17 Unresolved reference 'id'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:116:55 Cannot infer type for type parameter 'T'. 
+Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:120:20 Unresolved reference 'registerSchema'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:121:13 Unresolved reference 'id'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:122:13 Unresolved reference 'jsonSchema'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:123:17 Unresolved reference. None of the following 
+candidates is applicable because of a receiver type mismatch:
+fun JsonObjectBuilder.put(key: String, value: Nothing?): JsonElement?
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:124:17 Unresolved reference. None of the following 
+candidates is applicable because of a receiver type mismatch:
+fun JsonObjectBuilder.put(key: String, value: Nothing?): JsonElement?
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:125:17 Unresolved reference. None of the following 
+candidates is applicable because of a receiver type mismatch:
+fun JsonObjectBuilder.put(key: String, value: Nothing?): JsonElement?
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:146:33 Unresolved reference 'schema'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:147:9 Cannot infer type for type parameter 'T'. 
+Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:169:33 Unresolved reference 'registerSchema'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:170:13 Unresolved reference 'id'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:171:13 Unresolved reference 'format'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:172:13 Unresolved reference 'shacl'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:173:17 Unresolved reference. None of the following 
+candidates is applicable because of a receiver type mismatch:
+fun JsonObjectBuilder.put(key: String, value: Nothing?): JsonElement?
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:174:17 Unresolved reference. None of the following 
+candidates is applicable because of a receiver type mismatch:
+fun JsonObjectBuilder.put(key: String, value: Nothing?): JsonElement?
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:191:33 Unresolved reference 'registerSchema'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:192:13 Unresolved reference 'id'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:193:13 Unresolved reference 'definition'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/SchemaDslTest.kt:212:24 Unresolved reference 'schema'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustDslTest.kt:24:66 Cannot infer type for type parameter 'T'. 
+Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustDslTest.kt:46:35 Unresolved reference 'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustDslTest.kt:47:9 Cannot infer type for type parameter 'T'. 
+Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustDslTest.kt:117:39 Unresolved reference 'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerConfigTest.kt:198:70 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerConfigTest.kt:212:34 Unresolved reference 'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerConfigTest.kt:213:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerConfigTest.kt:214:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerConfigTest.kt:215:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerConfigTest.kt:216:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:60:13 Return type mismatch: expected 
+'DidResolutionResult', actual 'File'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:60:34 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:74:13 Return type mismatch: expected 
+'DidResolutionResult', actual 'File'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:74:59 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:107:37 Unresolved reference. None of the 
+following candidates is applicable because of a receiver type mismatch:
+suspend fun TrustWeave.createDidAndIssue(didBlock: DidBuilder.() -> Unit, 
+credentialBlock: suspend (String) -> IssuanceResult): IssuanceResult
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:114:44 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:123:24 Unresolved reference 'issue'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:124:17 Unresolved reference 'credential'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:125:21 Unresolved reference 'type'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:126:21 Unresolved reference 'issuer'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:127:21 Unresolved reference 'subject'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:128:25 Unresolved reference 'id'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:130:21 Unresolved reference 'issued'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:132:17 Unresolved reference 'signedBy'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:142:33 Unresolved reference. None of the 
+following candidates is applicable because of a receiver type mismatch:
+suspend fun TrustWeave.createDidIssueAndStore(didBlock: DidBuilder.() -> Unit, 
+credentialBlock: suspend (String) -> IssuanceResult, wallet: Wallet): 
+Result<VerifiableCredential>
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:149:48 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:158:28 Unresolved reference 'issue'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:159:21 Unresolved reference 'credential'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:160:25 Unresolved reference 'type'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:161:25 Unresolved reference 'issuer'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:162:25 Unresolved reference 'subject'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:163:29 Unresolved reference 'id'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:165:25 Unresolved reference 'issued'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:167:21 Unresolved reference 'signedBy'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:183:33 Unresolved reference. None of the 
+following candidates is applicable because of a receiver type mismatch:
+suspend fun TrustWeave.completeWorkflow(didBlock: DidBuilder.() -> Unit, 
+credentialBlock: suspend (String) -> IssuanceResult, wallet: Wallet, 
+organizeBlock: (suspend (VerifiableCredential) -> OrganizationResult)? = ...): 
+Result<WorkflowResult>
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:190:48 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:199:28 Unresolved reference 'issue'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:200:21 Unresolved reference 'credential'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:201:25 Unresolved reference 'type'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:202:25 Unresolved reference 'issuer'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:203:25 Unresolved reference 'subject'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:204:29 Unresolved reference 'id'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:206:25 Unresolved reference 'issued'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:208:21 Unresolved reference 'signedBy'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:231:33 Unresolved reference. None of the 
+following candidates is applicable because of a receiver type mismatch:
+suspend fun TrustWeave.completeWorkflow(didBlock: DidBuilder.() -> Unit, 
+credentialBlock: suspend (String) -> IssuanceResult, wallet: Wallet, 
+organizeBlock: (suspend (VerifiableCredential) -> OrganizationResult)? = ...): 
+Result<WorkflowResult>
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:238:48 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:247:28 Unresolved reference 'issue'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:248:21 Unresolved reference 'credential'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:249:25 Unresolved reference 'type'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:250:25 Unresolved reference 'issuer'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:251:25 Unresolved reference 'subject'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:252:29 Unresolved reference 'id'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:254:25 Unresolved reference 'issued'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:256:21 Unresolved reference 'signedBy'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:268:34 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:286:17 Unresolved reference 'credential'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:287:21 Unresolved reference 'type'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:288:21 Unresolved reference 'issuer'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:289:21 Unresolved reference 'subject'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:290:25 Unresolved reference 'id'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:292:21 Unresolved reference 'issued'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:294:17 Unresolved reference 'signedBy'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:304:34 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:322:21 Unresolved reference 'credential'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:323:25 Unresolved reference 'type'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:324:25 Unresolved reference 'issuer'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:325:25 Unresolved reference 'subject'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:326:29 Unresolved reference 'id'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:328:25 Unresolved reference 'issued'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustLayerExtensionsTest.kt:330:21 Unresolved reference 'signedBy'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustRegistryDslComprehensiveTest.kt:33:64 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustRegistryDslComprehensiveTest.kt:44:35 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustRegistryDslComprehensiveTest.kt:45:9 Cannot infer type for type 
+parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustRegistryDslComprehensiveTest.kt:120:39 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TrustRegistryDslComprehensiveTest.kt:278:46 Unresolved reference 
+'getDslContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TypeSafeHelpersTest.kt:16:45 Unresolved reference 'CredentialTypes'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TypeSafeHelpersTest.kt:17:46 Unresolved reference 'CredentialTypes'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TypeSafeHelpersTest.kt:18:49 Unresolved reference 'CredentialTypes'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TypeSafeHelpersTest.kt:19:42 Unresolved reference 'CredentialTypes'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TypeSafeHelpersTest.kt:20:42 Unresolved reference 'CredentialTypes'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TypeSafeHelpersTest.kt:21:46 Unresolved reference 'CredentialTypes'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TypeSafeHelpersTest.kt:26:46 Unresolved reference 'ProofTypes'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TypeSafeHelpersTest.kt:27:46 Unresolved reference 'ProofTypes'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TypeSafeHelpersTest.kt:28:45 Unresolved reference 'ProofTypes'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TypeSafeHelpersTest.kt:76:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TypeSafeHelpersTest.kt:76:23 Unresolved reference 'CredentialTypes'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TypeSafeHelpersTest.kt:77:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TypeSafeHelpersTest.kt:77:23 Unresolved reference 'ProofTypes'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TypeSafeHelpersTest.kt:122:30 Unresolved reference 'CredentialTypes'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TypeSafeHelpersTest.kt:123:25 Unresolved reference 'ProofTypes'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TypeSafeHelpersTest.kt:128:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/TypeSafeHelpersTest.kt:129:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:7:33 Unresolved reference 
+'TrustWeaveContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:26:38 Unresolved reference 
+'TrustWeaveContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:45:22 Unresolved reference 
+'TrustWeaveContext'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:53:24 Unresolved reference 
+'verify'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:55:17 Unresolved reference 
+'checkRevocation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:61:47 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:71:33 Unresolved reference 
+'verify'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:72:24 Argument type 
+mismatch: actual type is 'VerifiableCredential', but 
+'Function1<CredentialBuilder, Unit>' was expected.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:75:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:81:63 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:91:33 Unresolved reference 
+'verify'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:92:24 Argument type 
+mismatch: actual type is 'VerifiableCredential', but 
+'Function1<CredentialBuilder, Unit>' was expected.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:96:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:100:63 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:110:33 Unresolved reference 
+'verify'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:111:24 Argument type 
+mismatch: actual type is 'VerifiableCredential', but 
+'Function1<CredentialBuilder, Unit>' was expected.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:112:13 Unresolved reference 
+'checkRevocation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:115:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:119:53 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:129:33 Unresolved reference 
+'verify'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:130:24 Argument type 
+mismatch: actual type is 'VerifiableCredential', but 
+'Function1<CredentialBuilder, Unit>' was expected.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:131:13 Unresolved reference 
+'skipRevocation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:134:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:138:66 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:148:33 Unresolved reference 
+'verify'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:149:24 Argument type 
+mismatch: actual type is 'VerifiableCredential', but 
+'Function1<CredentialBuilder, Unit>' was expected.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:150:13 Unresolved reference 
+'checkRevocation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:151:13 Unresolved reference 
+'skipRevocation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:154:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:160:63 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:170:33 Unresolved reference 
+'verify'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:171:24 Argument type 
+mismatch: actual type is 'VerifiableCredential', but 
+'Function1<CredentialBuilder, Unit>' was expected.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:175:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:179:63 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:189:33 Unresolved reference 
+'verify'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:190:24 Argument type 
+mismatch: actual type is 'VerifiableCredential', but 
+'Function1<CredentialBuilder, Unit>' was expected.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:191:13 Unresolved reference 
+'checkExpiration'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:194:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:198:53 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:208:33 Unresolved reference 
+'verify'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:209:24 Argument type 
+mismatch: actual type is 'VerifiableCredential', but 
+'Function1<CredentialBuilder, Unit>' was expected.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:210:13 Unresolved reference 
+'skipExpiration'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:213:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:217:66 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:227:33 Unresolved reference 
+'verify'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:228:24 Argument type 
+mismatch: actual type is 'VerifiableCredential', but 
+'Function1<CredentialBuilder, Unit>' was expected.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:229:13 Unresolved reference 
+'checkExpiration'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:230:13 Unresolved reference 
+'skipExpiration'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:233:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:239:65 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:249:33 Unresolved reference 
+'verify'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:250:24 Argument type 
+mismatch: actual type is 'VerifiableCredential', but 
+'Function1<CredentialBuilder, Unit>' was expected.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:254:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:258:53 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:268:33 Unresolved reference 
+'verify'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:269:24 Argument type 
+mismatch: actual type is 'VerifiableCredential', but 
+'Function1<CredentialBuilder, Unit>' was expected.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:270:13 Unresolved reference 
+'validateSchema'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:273:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:277:68 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:287:33 Unresolved reference 
+'verify'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:288:24 Argument type 
+mismatch: actual type is 'VerifiableCredential', but 
+'Function1<CredentialBuilder, Unit>' was expected.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:289:13 Unresolved reference 
+'validateSchema'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:290:13 Unresolved reference 
+'skipSchema'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:293:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:297:60 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:307:33 Unresolved reference 
+'verify'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:308:24 Argument type 
+mismatch: actual type is 'VerifiableCredential', but 
+'Function1<CredentialBuilder, Unit>' was expected.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:309:13 Unresolved reference 
+'validateSchema'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:312:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:318:67 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:328:33 Unresolved reference 
+'verify'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:329:24 Argument type 
+mismatch: actual type is 'VerifiableCredential', but 
+'Function1<CredentialBuilder, Unit>' was expected.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:333:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:492:61 Cannot infer type 
+for type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:502:33 Unresolved reference 
+'verify'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:503:24 Argument type 
+mismatch: actual type is 'VerifiableCredential', but 
+'Function1<CredentialBuilder, Unit>' was expected.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:504:13 Unresolved reference 
+'skipRevocation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:505:13 Unresolved reference 
+'skipExpiration'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:506:13 Unresolved reference 
+'skipSchema'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationBuilderBranchCoverageTest.kt:510:9 Cannot infer type for 
+type parameter 'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:54:54 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:65:33 Unresolved reference 'verify'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:66:24 Argument type mismatch: actual type is 
+'VerifiableCredential', but 'Function1<CredentialBuilder, Unit>' was expected.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:69:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:74:63 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+
+> Task :trust:compileTestKotlin FAILED
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:84:33 Unresolved reference 'verify'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:85:24 Argument type mismatch: actual type is 
+'VerifiableCredential', but 'Function1<CredentialBuilder, Unit>' was expected.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:86:13 Unresolved reference 'checkRevocation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:89:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:94:64 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:104:33 Unresolved reference 'verify'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:105:24 Argument type mismatch: actual type is 
+'VerifiableCredential', but 'Function1<CredentialBuilder, Unit>' was expected.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:106:13 Unresolved reference 'skipRevocation'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:109:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:114:63 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:124:33 Unresolved reference 'verify'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:125:24 Argument type mismatch: actual type is 
+'VerifiableCredential', but 'Function1<CredentialBuilder, Unit>' was expected.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:126:13 Unresolved reference 'checkExpiration'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:129:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:134:64 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:144:33 Unresolved reference 'verify'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:145:24 Argument type mismatch: actual type is 
+'VerifiableCredential', but 'Function1<CredentialBuilder, Unit>' was expected.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:146:13 Unresolved reference 'skipExpiration'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:149:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:154:56 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:164:33 Unresolved reference 'verify'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:165:24 Argument type mismatch: actual type is 
+'VerifiableCredential', but 'Function1<CredentialBuilder, Unit>' was expected.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:166:13 Unresolved reference 'validateSchema'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:169:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:174:58 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:184:33 Unresolved reference 'verify'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:185:24 Argument type mismatch: actual type is 
+'VerifiableCredential', but 'Function1<CredentialBuilder, Unit>' was expected.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:189:9 Cannot infer type for type parameter 
+'T'. Specify it explicitly.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:196:24 Unresolved reference 'verify'.
+e: file:///C:/Users/steph/work/trustweave/trust/src/test/kotlin/org/trustweave/
+trust/dsl/VerificationDslTest.kt:198:17 Unresolved reference 'checkRevocation'.
+
+[Incubating] Problems report is available at: file:///C:/Users/steph/work/trustweave/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':trust:compileTestKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.Gradle
+CompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 11s
+26 actionable tasks: 1 executed, 25 up-to-date

@@ -1,0 +1,298 @@
+﻿> Task :distribution:examples:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :did:plugins:base:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :wallet:wallet-core:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :anchors:anchor-core:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :anchors:plugins:ganache:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :contract:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :anchors:plugins:indy:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :distribution:all:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :anchors:plugins:ethereum:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :kms:kms-core:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :did:did-core:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :common:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :credentials:credential-api:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :credentials:plugins:oidc4vp:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :anchors:plugins:arbitrum:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :did:plugins:jwk:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :anchors:plugins:base:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :credentials:plugins:status-list:database:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :trust:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :testkit:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :did:plugins:key:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :wallet:wallet-core:processResources NO-SOURCE
+> Task :distribution:all:processResources NO-SOURCE
+> Task :credentials:plugins:status-list:database:processResources NO-SOURCE
+> Task :trust:processResources NO-SOURCE
+> Task :contract:processResources NO-SOURCE
+> Task :did:plugins:base:processResources NO-SOURCE
+> Task :anchors:plugins:ganache:processResources NO-SOURCE
+> Task :anchors:anchor-core:processResources NO-SOURCE
+> Task :credentials:credential-api:processResources NO-SOURCE
+> Task :kms:kms-core:processResources NO-SOURCE
+> Task :did:plugins:jwk:processResources UP-TO-DATE
+> Task :credentials:plugins:oidc4vp:processResources UP-TO-DATE
+> Task :anchors:plugins:indy:processResources UP-TO-DATE
+> Task :did:plugins:key:processResources UP-TO-DATE
+> Task :anchors:plugins:base:processResources UP-TO-DATE
+> Task :anchors:plugins:ethereum:processResources UP-TO-DATE
+> Task :testkit:processResources UP-TO-DATE
+> Task :did:did-core:processResources UP-TO-DATE
+> Task :anchors:plugins:arbitrum:processResources UP-TO-DATE
+> Task :common:compileKotlin UP-TO-DATE
+> Task :common:compileJava NO-SOURCE
+> Task :common:processResources NO-SOURCE
+> Task :common:classes UP-TO-DATE
+> Task :common:jar UP-TO-DATE
+> Task :anchors:anchor-core:compileKotlin UP-TO-DATE
+> Task :anchors:anchor-core:compileJava NO-SOURCE
+> Task :anchors:anchor-core:classes UP-TO-DATE
+> Task :anchors:anchor-core:jar UP-TO-DATE
+> Task :kms:kms-core:compileKotlin UP-TO-DATE
+> Task :kms:kms-core:compileJava NO-SOURCE
+> Task :kms:kms-core:classes UP-TO-DATE
+> Task :kms:kms-core:jar UP-TO-DATE
+> Task :did:did-core:compileKotlin UP-TO-DATE
+> Task :did:did-core:compileJava NO-SOURCE
+> Task :did:did-core:classes UP-TO-DATE
+> Task :did:did-core:jar UP-TO-DATE
+> Task :credentials:credential-api:compileKotlin UP-TO-DATE
+> Task :credentials:credential-api:compileJava NO-SOURCE
+> Task :credentials:credential-api:classes UP-TO-DATE
+> Task :credentials:credential-api:jar UP-TO-DATE
+> Task :credentials:plugins:oidc4vp:compileKotlin UP-TO-DATE
+> Task :credentials:plugins:oidc4vp:compileJava NO-SOURCE
+> Task :credentials:plugins:oidc4vp:classes UP-TO-DATE
+> Task :credentials:plugins:oidc4vp:jar UP-TO-DATE
+> Task :credentials:plugins:status-list:database:compileKotlin UP-TO-DATE
+> Task :credentials:plugins:status-list:database:compileJava NO-SOURCE
+> Task :credentials:plugins:status-list:database:classes UP-TO-DATE
+> Task :credentials:plugins:status-list:database:jar UP-TO-DATE
+> Task :did:plugins:base:compileKotlin UP-TO-DATE
+> Task :did:plugins:base:compileJava NO-SOURCE
+> Task :did:plugins:base:classes UP-TO-DATE
+> Task :did:plugins:base:jar UP-TO-DATE
+> Task :contract:compileKotlin UP-TO-DATE
+> Task :contract:compileJava NO-SOURCE
+> Task :contract:classes UP-TO-DATE
+> Task :contract:jar UP-TO-DATE
+> Task :did:plugins:jwk:compileKotlin UP-TO-DATE
+> Task :wallet:wallet-core:compileKotlin UP-TO-DATE
+> Task :did:plugins:jwk:compileJava NO-SOURCE
+> Task :did:plugins:jwk:classes UP-TO-DATE
+> Task :anchors:plugins:ganache:compileKotlin UP-TO-DATE
+> Task :wallet:wallet-core:compileJava NO-SOURCE
+> Task :wallet:wallet-core:classes UP-TO-DATE
+> Task :anchors:plugins:base:compileKotlin UP-TO-DATE
+> Task :anchors:plugins:ganache:compileJava NO-SOURCE
+> Task :anchors:plugins:ganache:classes UP-TO-DATE
+> Task :anchors:plugins:ethereum:compileKotlin UP-TO-DATE
+> Task :anchors:plugins:ethereum:compileJava NO-SOURCE
+> Task :anchors:plugins:ethereum:classes UP-TO-DATE
+> Task :anchors:plugins:base:compileJava NO-SOURCE
+> Task :anchors:plugins:base:classes UP-TO-DATE
+> Task :anchors:plugins:ganache:jar UP-TO-DATE
+> Task :wallet:wallet-core:jar UP-TO-DATE
+> Task :did:plugins:jwk:jar UP-TO-DATE
+> Task :anchors:plugins:arbitrum:compileKotlin UP-TO-DATE
+> Task :anchors:plugins:ethereum:jar UP-TO-DATE
+> Task :anchors:plugins:base:jar UP-TO-DATE
+> Task :anchors:plugins:arbitrum:compileJava NO-SOURCE
+> Task :anchors:plugins:arbitrum:classes UP-TO-DATE
+> Task :anchors:plugins:indy:compileKotlin UP-TO-DATE
+> Task :did:plugins:key:compileKotlin UP-TO-DATE
+> Task :anchors:plugins:arbitrum:jar UP-TO-DATE
+> Task :did:plugins:key:compileJava NO-SOURCE
+> Task :anchors:plugins:indy:compileJava NO-SOURCE
+> Task :did:plugins:key:classes UP-TO-DATE
+> Task :anchors:plugins:indy:classes UP-TO-DATE
+> Task :did:plugins:key:jar UP-TO-DATE
+> Task :anchors:plugins:indy:jar UP-TO-DATE
+> Task :trust:compileKotlin UP-TO-DATE
+> Task :trust:compileJava NO-SOURCE
+> Task :trust:classes UP-TO-DATE
+> Task :trust:jar UP-TO-DATE
+> Task :testkit:compileKotlin UP-TO-DATE
+> Task :testkit:compileJava NO-SOURCE
+> Task :testkit:classes UP-TO-DATE
+> Task :testkit:jar UP-TO-DATE
+> Task :distribution:all:compileKotlin NO-SOURCE
+> Task :distribution:all:compileJava NO-SOURCE
+> Task :distribution:all:classes UP-TO-DATE
+> Task :distribution:all:jar UP-TO-DATE
+
+> Task :distribution:examples:compileKotlin FAILED
+gradle : e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/ma
+in/kotlin/org/trustweave/examples/comprehensive/ComprehensiveDslExample.kt:97:3
+0 Unresolved reference 'registerSchema'.
+At line:1 char:1
++ gradle :distribution:examples:compileKotlin 2>&1 | Out-File -FilePath ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (e: file:///C:/U...egisterSchema'. 
+   :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/comprehensive/ComprehensiveDslExample.kt:98:9 
+Unresolved reference 'id'.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/comprehensive/ComprehensiveDslExample.kt:99:9 
+Unresolved reference 'jsonSchema'.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/comprehensive/ComprehensiveDslExample.kt:100:13 
+Unresolved reference. None of the following candidates is applicable because 
+of a receiver type mismatch:
+fun JsonObjectBuilder.put(key: String, value: Nothing?): JsonElement?
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/comprehensive/ComprehensiveDslExample.kt:101:13 
+Unresolved reference. None of the following candidates is applicable because 
+of a receiver type mismatch:
+fun JsonObjectBuilder.put(key: String, value: Nothing?): JsonElement?
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/comprehensive/ComprehensiveDslExample.kt:102:13 
+Unresolved reference. None of the following candidates is applicable because 
+of a receiver type mismatch:
+fun JsonObjectBuilder.put(key: String, value: Nothing?): JsonElement?
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/comprehensive/ComprehensiveDslExample.kt:117:30 
+Unresolved reference 'registerSchema'.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/comprehensive/ComprehensiveDslExample.kt:118:9 
+Unresolved reference 'id'.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/comprehensive/ComprehensiveDslExample.kt:119:9 
+Unresolved reference 'shacl'.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/comprehensive/ComprehensiveDslExample.kt:120:13 
+Unresolved reference. None of the following candidates is applicable because 
+of a receiver type mismatch:
+fun JsonObjectBuilder.put(key: String, value: Nothing?): JsonElement?
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/comprehensive/ComprehensiveDslExample.kt:121:13 
+Unresolved reference. None of the following candidates is applicable because 
+of a receiver type mismatch:
+fun JsonObjectBuilder.put(key: String, value: Nothing?): JsonElement?
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/comprehensive/ComprehensiveDslExample.kt:122:13 
+Unresolved reference. None of the following candidates is applicable because 
+of a receiver type mismatch:
+fun JsonObjectBuilder.put(key: String, value: Nothing?): JsonElement?
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/comprehensive/ComprehensiveDslExample.kt:143:18 
+Unresolved reference 'CredentialType'.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/comprehensive/ComprehensiveDslExample.kt:143:44 
+Unresolved reference 'CredentialType'.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/comprehensive/ComprehensiveDslExample.kt:202:37 
+Unresolved reference 'CredentialType'.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/eo/EarthObservationExample.kt:124:34 Unresolved 
+reference 'registries'.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/indy/IndyIntegrationExample.kt:76:26 Unresolved 
+reference 'registries'.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/professional/ProfessionalIdentityExample.kt:15:33 
+Unresolved reference 'registerSchema'.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/professional/ProfessionalIdentityExample.kt:95:30 
+Unresolved reference 'registerSchema'.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/professional/ProfessionalIdentityExample.kt:96:9 
+Unresolved reference 'id'.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/professional/ProfessionalIdentityExample.kt:97:9 
+Unresolved reference 'jsonSchema'.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/professional/ProfessionalIdentityExample.kt:100:13 
+Expression 'properties' of type 'String' cannot be invoked as a function. 
+Function 'invoke()' is not found.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/professional/ProfessionalIdentityExample.kt:101:17 
+Expression 'degree' of type 'String' cannot be invoked as a function. Function 
+'invoke()' is not found.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/professional/ProfessionalIdentityExample.kt:103:21 
+Expression 'properties' of type 'String' cannot be invoked as a function. 
+Function 'invoke()' is not found.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/professional/ProfessionalIdentityExample.kt:104:25 
+Expression 'type' of type 'String' cannot be invoked as a function. Function 
+'invoke()' is not found.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/professional/ProfessionalIdentityExample.kt:105:25 
+Expression 'field' of type 'String' cannot be invoked as a function. Function 
+'invoke()' is not found.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/professional/ProfessionalIdentityExample.kt:106:25 
+Expression 'institution' of type 'String' cannot be invoked as a function. 
+Function 'invoke()' is not found.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/professional/ProfessionalIdentityExample.kt:107:25 
+Expression 'year' of type 'String' cannot be invoked as a function. Function 
+'invoke()' is not found.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/professional/ProfessionalIdentityExample.kt:115:30 
+Unresolved reference 'registerSchema'.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/professional/ProfessionalIdentityExample.kt:116:9 
+Unresolved reference 'id'.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/professional/ProfessionalIdentityExample.kt:117:9 
+Unresolved reference 'jsonSchema'.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/professional/ProfessionalIdentityExample.kt:120:13 
+Expression 'properties' of type 'String' cannot be invoked as a function. 
+Function 'invoke()' is not found.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/professional/ProfessionalIdentityExample.kt:121:17 
+Expression 'certification' of type 'String' cannot be invoked as a function. 
+Function 'invoke()' is not found.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/professional/ProfessionalIdentityExample.kt:123:21 
+Expression 'properties' of type 'String' cannot be invoked as a function. 
+Function 'invoke()' is not found.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/professional/ProfessionalIdentityExample.kt:124:25 
+Expression 'name' of type 'String' cannot be invoked as a function. Function 
+'invoke()' is not found.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/professional/ProfessionalIdentityExample.kt:125:25 
+Expression 'issuer' of type 'String' cannot be invoked as a function. Function 
+'invoke()' is not found.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/professional/ProfessionalIdentityExample.kt:126:25 
+Expression 'issueDate' of type 'String' cannot be invoked as a function. 
+Function 'invoke()' is not found.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/professional/ProfessionalIdentityExample.kt:127:25 
+Expression 'expirationDate' of type 'String' cannot be invoked as a function. 
+Function 'invoke()' is not found.
+e: file:///C:/Users/steph/work/trustweave/distribution/examples/src/main/kotlin
+/org/trustweave/examples/professional/ProfessionalIdentityExample.kt:155:60 
+Unresolved reference 'registries'.
+
+[Incubating] Problems report is available at: file:///C:/Users/steph/work/trustweave/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':distribution:examples:compileKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.Gradle
+CompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 29s
+49 actionable tasks: 1 executed, 48 up-to-date

@@ -84,7 +84,7 @@ class PresentationDslTest {
         }
         
         val didResolver = DidResolver { did ->
-            tempTrustWeave.getDslContext().getConfig().registries.didRegistry.resolve(did.value)
+            tempTrustWeave.configuration.didRegistry.resolve(did.value)
         }
         
         val credentialService = createTestCredentialService(kms = kms, didResolver = didResolver)
@@ -115,7 +115,7 @@ class PresentationDslTest {
         }.getOrFail()
         issuerDid = createdDid.value
         
-        val issuerDidResolution = trustWeave.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid)
+        val issuerDidResolution = trustWeave.configuration.didRegistry.resolve(issuerDid)
             ?: throw IllegalStateException("Failed to resolve issuer DID")
         val issuerDidDoc = when (issuerDidResolution) {
             is org.trustweave.did.resolver.DidResolutionResult.Success -> issuerDidResolution.document
@@ -133,11 +133,9 @@ class PresentationDslTest {
             claims = mapOf("name" to "John Doe")
         )
 
-        val presentation = with(trustWeave.getDslContext()) {
-            presentation {
+        val presentation = trustWeave.presentation {
                 credentials(credential)
                 holder("did:key:holder")
-            }
         }
 
         assertNotNull(presentation)
@@ -158,11 +156,9 @@ class PresentationDslTest {
             claims = mapOf("degree" to mapOf("type" to "BachelorDegree"))
         )
 
-        val presentation = with(trustWeave.getDslContext()) {
-            presentation {
+        val presentation = trustWeave.presentation {
                 credentials(credential1, credential2)
                 holder("did:key:holder")
-            }
         }
 
         assertNotNull(presentation)
@@ -173,12 +169,10 @@ class PresentationDslTest {
     fun `test presentation creation with challenge`() = runBlocking {
         val credential = issueTestCredential(type = "PersonCredential")
 
-        val presentation = with(trustWeave.getDslContext()) {
-            presentation {
+        val presentation = trustWeave.presentation {
                 credentials(credential)
                 holder("did:key:holder")
                 challenge("verification-challenge-123")
-            }
         }
 
         assertNotNull(presentation)
@@ -189,12 +183,10 @@ class PresentationDslTest {
     fun `test presentation creation with domain`() = runBlocking {
         val credential = issueTestCredential(type = "PersonCredential")
 
-        val presentation = with(trustWeave.getDslContext()) {
-            presentation {
+        val presentation = trustWeave.presentation {
                 credentials(credential)
                 holder("did:key:holder")
                 domain("example.com")
-            }
         }
 
         assertNotNull(presentation)
@@ -212,11 +204,9 @@ class PresentationDslTest {
             issued(Clock.System.now())
         }
 
-        val presentation = with(trustWeave.getDslContext()) {
-            presentation {
+        val presentation = trustWeave.presentation {
                 credentials(credential)
                 holder("did:key:holder")
-            }
         }
 
         assertNotNull(presentation)
@@ -226,11 +216,9 @@ class PresentationDslTest {
     @Test
     fun `test presentation creation requires credentials`() = runBlocking {
         assertFailsWith<IllegalStateException> {
-            with(trustWeave.getDslContext()) {
-                presentation {
+            trustWeave.presentation {
                     holder("did:key:holder")
                     // Missing credentials
-                }
             }
         }
     }
@@ -247,11 +235,9 @@ class PresentationDslTest {
         }
 
         assertFailsWith<IllegalStateException> {
-            with(trustWeave.getDslContext()) {
-                presentation {
+            trustWeave.presentation {
                     credentials(credential)
                     // Missing holder
-                }
             }
         }
     }
@@ -270,15 +256,13 @@ class PresentationDslTest {
             issued(Clock.System.now())
         }
 
-        val presentation = with(trustWeave.getDslContext()) {
-            presentation {
+        val presentation = trustWeave.presentation {
                 credentials(credential)
                 holder("did:key:holder")
                 selectiveDisclosure {
                     reveal("name", "email")
-                    hide("ssn")
+                    // hide() method removed - only reveal() is available
                 }
-            }
         }
 
         assertNotNull(presentation)

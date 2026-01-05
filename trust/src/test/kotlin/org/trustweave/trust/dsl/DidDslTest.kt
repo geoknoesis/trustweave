@@ -9,8 +9,7 @@ import org.trustweave.did.model.DidDocument
 import org.trustweave.kms.results.SignResult
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.trust.dsl.TrustWeaveConfig
-import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
 import org.trustweave.testkit.getOrFail
@@ -26,14 +25,14 @@ import kotlin.test.*
  */
 class DidDslTest {
 
-    private lateinit var trustWeave: TrustWeaveConfig
+    private lateinit var trustWeave: org.trustweave.trust.TrustWeave
     private lateinit var kms: InMemoryKeyManagementService
 
     @BeforeEach
     fun setup() = runBlocking {
         kms = InMemoryKeyManagementService()
         val kmsInstance = kms
-        trustWeave = trustWeave {
+        trustWeave = org.trustweave.trust.TrustWeave.build {
             // DID methods auto-discovered via SPI
             keys {
                 custom(kmsInstance)
@@ -96,8 +95,7 @@ class DidDslTest {
 
     @Test
     fun `test createDid via TrustWeaveContext`() = runBlocking {
-        val context = trustWeave.getDslContext()
-        val did = context.createDid {
+        val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
         }.getOrFail()

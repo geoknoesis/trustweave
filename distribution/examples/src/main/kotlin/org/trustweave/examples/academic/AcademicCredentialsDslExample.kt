@@ -42,41 +42,13 @@ fun main() = runBlocking {
     // Step 1: Configure Trust Layer
     println("Step 1: Configuring trust layer...")
     val trustWeave = TrustWeave.build {
-        keys {
-            provider(IN_MEMORY)
-            algorithm(KeyAlgorithms.ED25519)
-        }
-
-        did {
-            method(DidMethods.KEY) {
-                algorithm(KeyAlgorithms.ED25519)
-            }
-        }
-
-        anchor {
-            chain("algorand:testnet") {
-                inMemory()
-            }
-        }
-
-        credentials {
-            defaultProofType(ProofType.Ed25519Signature2020)
-            autoAnchor(false) // Set to true to auto-anchor credentials
-        }
-
-        revocation {
-            provider(IN_MEMORY)
-        }
-
-        schemas {
-            autoValidate(false)
-            defaultFormat(SchemaFormat.JSON_SCHEMA)
-        }
-
-        // Configure trust registry
-        trust {
-            provider(IN_MEMORY)
-        }
+        // Only configure what's needed - everything else uses defaults:
+        // - keys: defaults to inMemory provider, Ed25519 algorithm
+        // - did: defaults to key method, Ed25519 algorithm
+        // - credentials: defaults to Ed25519Signature2020 proof type, autoAnchor=false
+        // - schemas: defaults to autoValidate=false, JSON_SCHEMA format
+        
+        revocation(IN_MEMORY)  // Required for withRevocation() in Step 4
     }
     println("✓ Trust layer configured")
 

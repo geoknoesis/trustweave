@@ -25,7 +25,7 @@ fun VerifiableCredential.toJsonObject(): JsonObject {
         classDiscriminator = "@type" // Use @type instead of type to avoid conflict with LinkedDataProof.type
         useArrayPolymorphism = false
     }
-    return json.encodeToJsonElement(VerifiableCredential.serializer(), this) as JsonObject
+    return json.encodeToJsonElement(this) as JsonObject
 }
 
 /**
@@ -40,6 +40,6 @@ fun VerifiablePresentation.toJsonObject(): JsonObject {
         classDiscriminator = "@type" // Use @type instead of type to avoid conflict
         useArrayPolymorphism = false
     }
-    return json.encodeToJsonElement(VerifiablePresentation.serializer(), this) as JsonObject
+    return json.encodeToJsonElement(this) as JsonObject
 }
 

@@ -3,10 +3,7 @@ package org.trustweave.trust.dsl
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.dsl.TrustWeaveConfig
-import org.trustweave.trust.dsl.TrustWeaveContext
-import org.trustweave.trust.dsl.trustWeave
-import org.trustweave.trust.dsl.credential.credential
+import org.trustweave.trust.dsl.credential.credential as buildCredential
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
 import org.trustweave.credential.model.ProofType
@@ -23,16 +20,22 @@ import kotlin.test.*
  */
 class VerificationBuilderBranchCoverageTest {
 
-    private lateinit var trustWeave: TrustWeaveContext
+    private lateinit var trustWeave: TrustWeave
     private lateinit var kms: InMemoryKeyManagementService
 
     @BeforeEach
     fun setUp() = runBlocking {
         kms = InMemoryKeyManagementService()
         val kmsRef = kms
-        val config = trustWeave {
+        trustWeave = TrustWeave.build {
             keys {
                 custom(kmsRef)
+                signer { data, keyId ->
+                    when (val result = kmsRef.sign(org.trustweave.core.identifiers.KeyId(keyId), data)) {
+                        is org.trustweave.kms.results.SignResult.Success -> result.signature
+                        else -> throw IllegalStateException("Signing failed: $result")
+                    }
+                }
             }
             did {
                 method("key") {}
@@ -42,7 +45,6 @@ class VerificationBuilderBranchCoverageTest {
                 defaultChain("algorand:testnet")
             }
         }
-        trustWeave = TrustWeaveContext(config)
     }
 
     // ========== Credential Required Branches ==========
@@ -59,7 +61,7 @@ class VerificationBuilderBranchCoverageTest {
 
     @Test
     fun `test branch credential provided`() = runBlocking {
-        val credential = credential {
+        val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
             subject {
@@ -79,7 +81,7 @@ class VerificationBuilderBranchCoverageTest {
 
     @Test
     fun `test branch revocation check enabled by default`() = runBlocking {
-        val credential = credential {
+        val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
             subject {
@@ -98,7 +100,7 @@ class VerificationBuilderBranchCoverageTest {
 
     @Test
     fun `test branch revocation check explicitly enabled`() = runBlocking {
-        val credential = credential {
+        val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
             subject {
@@ -117,7 +119,7 @@ class VerificationBuilderBranchCoverageTest {
 
     @Test
     fun `test branch revocation check disabled`() = runBlocking {
-        val credential = credential {
+        val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
             subject {
@@ -136,7 +138,7 @@ class VerificationBuilderBranchCoverageTest {
 
     @Test
     fun `test branch revocation check toggle multiple times`() = runBlocking {
-        val credential = credential {
+        val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
             subject {
@@ -158,7 +160,7 @@ class VerificationBuilderBranchCoverageTest {
 
     @Test
     fun `test branch expiration check enabled by default`() = runBlocking {
-        val credential = credential {
+        val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
             subject {
@@ -177,7 +179,7 @@ class VerificationBuilderBranchCoverageTest {
 
     @Test
     fun `test branch expiration check explicitly enabled`() = runBlocking {
-        val credential = credential {
+        val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
             subject {
@@ -196,7 +198,7 @@ class VerificationBuilderBranchCoverageTest {
 
     @Test
     fun `test branch expiration check disabled`() = runBlocking {
-        val credential = credential {
+        val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
             subject {
@@ -215,7 +217,7 @@ class VerificationBuilderBranchCoverageTest {
 
     @Test
     fun `test branch expiration check toggle multiple times`() = runBlocking {
-        val credential = credential {
+        val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
             subject {
@@ -237,7 +239,7 @@ class VerificationBuilderBranchCoverageTest {
 
     @Test
     fun `test branch schema validation disabled by default`() = runBlocking {
-        val credential = credential {
+        val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
             subject {
@@ -256,7 +258,7 @@ class VerificationBuilderBranchCoverageTest {
 
     @Test
     fun `test branch schema validation enabled`() = runBlocking {
-        val credential = credential {
+        val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
             subject {
@@ -275,7 +277,7 @@ class VerificationBuilderBranchCoverageTest {
 
     @Test
     fun `test branch schema validation disabled after enabled`() = runBlocking {
-        val credential = credential {
+        val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
             subject {
@@ -295,7 +297,7 @@ class VerificationBuilderBranchCoverageTest {
 
     @Test
     fun `test branch schema validation with schema ID`() = runBlocking {
-        val credential = credential {
+        val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
             subject {
@@ -316,7 +318,7 @@ class VerificationBuilderBranchCoverageTest {
 
     @Test
     fun `test branch anchor verification disabled by default`() = runBlocking {
-        val credential = credential {
+        val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
             subject {
@@ -355,7 +357,7 @@ class VerificationBuilderBranchCoverageTest {
             }
         }
 
-        val credential = credential {
+        val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
             subject {
@@ -393,7 +395,7 @@ class VerificationBuilderBranchCoverageTest {
             }
         }
 
-        val credential = credential {
+        val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
             subject {
@@ -427,7 +429,7 @@ class VerificationBuilderBranchCoverageTest {
             }
         }
 
-        val credential = credential {
+        val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
             subject {
@@ -468,7 +470,7 @@ class VerificationBuilderBranchCoverageTest {
             }
         }
 
-        val credential = credential {
+        val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
             subject {
@@ -490,7 +492,7 @@ class VerificationBuilderBranchCoverageTest {
 
     @Test
     fun `test branch all verification options disabled`() = runBlocking {
-        val credential = credential {
+        val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
             subject {

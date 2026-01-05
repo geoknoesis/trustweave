@@ -9,7 +9,27 @@ import kotlinx.serialization.json.JsonObject
  * 
  * These extensions provide convenient access to credential format conversion
  * without requiring direct use of CredentialTransformer.
+ * 
+ * **Recommended Usage:**
+ * For the most elegant API, use extension functions directly on VerifiableCredential:
+ * ```kotlin
+ * // Recommended (most elegant)
+ * val jwt = credential.toJwt()
+ * val jsonLd = credential.toJsonLd()
+ * val cbor = credential.toCbor()
+ * 
+ * // Alternative (CredentialService extensions)
+ * val jwt = credentialService.toJwt(credential)
+ * val jsonLd = credentialService.toJsonLd(credential)
+ * ```
+ * 
+ * **See Also:**
+ * - [org.trustweave.credential.transform.CredentialTransformerExtensions] for extension functions on VerifiableCredential
+ * - [org.trustweave.credential.transform.CredentialTransformationBuilder] for DSL builder pattern
  */
+
+// Shared transformer instance for efficiency
+private val sharedTransformer = CredentialTransformer()
 
 /**
  * Convert credential to JWT format.
@@ -23,7 +43,7 @@ import kotlinx.serialization.json.JsonObject
  * ```
  */
 suspend fun CredentialService.toJwt(credential: VerifiableCredential): String {
-    return CredentialTransformer().toJwt(credential)
+    return sharedTransformer.toJwt(credential)
 }
 
 /**
@@ -38,7 +58,7 @@ suspend fun CredentialService.toJwt(credential: VerifiableCredential): String {
  * ```
  */
 suspend fun CredentialService.fromJwt(jwt: String): VerifiableCredential {
-    return CredentialTransformer().fromJwt(jwt)
+    return sharedTransformer.fromJwt(jwt)
 }
 
 /**
@@ -50,7 +70,7 @@ suspend fun CredentialService.fromJwt(jwt: String): VerifiableCredential {
  * ```
  */
 suspend fun CredentialService.toJsonLd(credential: VerifiableCredential): JsonObject {
-    return CredentialTransformer().toJsonLd(credential)
+    return sharedTransformer.toJsonLd(credential)
 }
 
 /**
@@ -62,7 +82,7 @@ suspend fun CredentialService.toJsonLd(credential: VerifiableCredential): JsonOb
  * ```
  */
 suspend fun CredentialService.fromJsonLd(json: JsonObject): VerifiableCredential {
-    return CredentialTransformer().fromJsonLd(json)
+    return sharedTransformer.fromJsonLd(json)
 }
 
 /**
@@ -76,7 +96,7 @@ suspend fun CredentialService.fromJsonLd(json: JsonObject): VerifiableCredential
  * ```
  */
 suspend fun CredentialService.toCbor(credential: VerifiableCredential): ByteArray {
-    return CredentialTransformer().toCbor(credential)
+    return sharedTransformer.toCbor(credential)
 }
 
 /**
@@ -90,5 +110,5 @@ suspend fun CredentialService.toCbor(credential: VerifiableCredential): ByteArra
  * ```
  */
 suspend fun CredentialService.fromCbor(bytes: ByteArray): VerifiableCredential {
-    return CredentialTransformer().fromCbor(bytes)
+    return sharedTransformer.fromCbor(bytes)
 }

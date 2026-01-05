@@ -1,5 +1,6 @@
 package org.trustweave.trust.dsl.credential
 
+import org.trustweave.trust.TrustWeave
 import org.trustweave.credential.CredentialService
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.vc.VerifiablePresentation
@@ -152,30 +153,13 @@ class SelectiveDisclosureBuilder {
         revealedFields.addAll(fields)
     }
 
-    /**
-     * Hide specific fields.
-     * 
-     * **Note:** Currently, selective disclosure is based on revealed fields only.
-     * Fields not in the reveal list are automatically hidden. This method is
-     * reserved for future implementation of explicit field hiding.
-     * 
-     * @param fields Fields to hide (not yet implemented)
-     */
-    @Deprecated(
-        message = "Not yet implemented. Use reveal() to specify visible fields. Fields not in reveal list are automatically hidden.",
-        level = DeprecationLevel.WARNING
-    )
-    fun hide(vararg fields: String) {
-        // For now, selective disclosure is based on revealed fields only
-        // Fields not in reveal list are automatically hidden
-        // TODO: Implement explicit field hiding
-    }
+    // hide() method removed - use reveal() to specify visible fields
 }
 
 /**
  * DSL function to create a presentation.
  */
-suspend fun CredentialDslProvider.presentation(block: PresentationBuilder.() -> Unit): VerifiablePresentation {
+suspend fun TrustWeave.presentation(block: PresentationBuilder.() -> Unit): VerifiablePresentation {
     val credentialService = getIssuer() as? CredentialService
         ?: throw IllegalStateException("CredentialService is not available. Configure it in TrustWeave.build { ... }")
     val builder = PresentationBuilder(credentialService)

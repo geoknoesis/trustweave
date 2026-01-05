@@ -2,6 +2,7 @@ package org.trustweave.trust.dsl
 
 import org.trustweave.trust.TrustAnchorMetadata
 import org.trustweave.trust.TrustRegistry
+import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.TrustPath
 import org.trustweave.trust.types.VerifierIdentity
 import org.trustweave.trust.types.IssuerIdentity
@@ -211,9 +212,9 @@ class TrustAnchorMetadataBuilder {
 }
 
 /**
- * Extension function to access trust registry via TrustWeave context.
+ * Extension function to access trust registry via TrustWeave.
  */
-suspend fun TrustWeaveContext.trust(block: suspend TrustBuilder.() -> Unit) {
+suspend fun TrustWeave.trust(block: suspend TrustBuilder.() -> Unit) {
     val registry = getTrustRegistry() ?: throw IllegalStateException(
         "Trust registry is not configured. Configure it in trustWeave { trust { provider(\"inMemory\") } }"
     )

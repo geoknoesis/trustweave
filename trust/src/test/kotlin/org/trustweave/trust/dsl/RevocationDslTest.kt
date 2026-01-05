@@ -1,5 +1,7 @@
 package org.trustweave.trust.dsl
 
+import org.trustweave.trust.dsl.credential.revocation
+
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.vc.CredentialSubject
@@ -14,8 +16,7 @@ import org.trustweave.kms.results.SignResult
 import kotlinx.datetime.Instant
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.testkit.services.TestkitStatusListRegistryFactory
-import org.trustweave.trust.dsl.TrustWeaveConfig
-import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
 import kotlinx.coroutines.runBlocking
@@ -30,13 +31,13 @@ import kotlin.test.*
  */
 class RevocationDslTest {
 
-    private lateinit var trustWeave: TrustWeaveConfig
+    private lateinit var trustWeave: TrustWeave
 
     @BeforeEach
     fun setup() = runBlocking {
         val kms = InMemoryKeyManagementService()
 
-        trustWeave = trustWeave {
+        trustWeave = TrustWeave.build {
             factories(
                 statusListRegistryFactory = TestkitStatusListRegistryFactory()
             )

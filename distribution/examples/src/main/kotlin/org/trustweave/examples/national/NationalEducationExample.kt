@@ -388,8 +388,8 @@ fun main() = runBlocking {
         classDiscriminator = "@type" // Use @type instead of type to avoid conflict with LinkedDataProof.type
     }
 
-    val enrollmentCredentialJson = anchorJson.encodeToJsonElement(VerifiableCredential.serializer(), enrollmentCredential)
-    val achievementCredentialJson = anchorJson.encodeToJsonElement(VerifiableCredential.serializer(), achievementCredential)
+    val enrollmentCredentialJson = anchorJson.encodeToJsonElement(enrollmentCredential)
+    val achievementCredentialJson = anchorJson.encodeToJsonElement(achievementCredential)
 
     // Compute digests
     val enrollmentDigest = DigestUtils.sha256DigestMultibase(enrollmentCredentialJson)

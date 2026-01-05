@@ -4,7 +4,10 @@ import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.CredentialSubject
 import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.credential.transform.CredentialTransformer
+import org.trustweave.credential.transform.toJsonLd
+import org.trustweave.credential.transform.toCredential
+import org.trustweave.credential.transform.toCbor
+import org.trustweave.credential.transform.fromCbor
 import org.trustweave.core.identifiers.Iri
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
@@ -21,10 +24,10 @@ import kotlin.test.assertTrue
  * 
  * **Note:** Actual performance benchmarking should be done with JMH or similar tools.
  * These tests serve as basic performance checks.
+ * 
+ * Uses the elegant extension function API for credential transformations.
  */
 class PerformanceBenchmarkTest {
-    
-    private val transformer = CredentialTransformer()
     
     private fun createTestCredential(): VerifiableCredential {
         return VerifiableCredential(
@@ -50,7 +53,7 @@ class PerformanceBenchmarkTest {
         
         val startTime = System.nanoTime()
         repeat(100) {
-            transformer.toJsonLd(credential)
+            credential.toJsonLd()
         }
         val endTime = System.nanoTime()
         
@@ -64,11 +67,11 @@ class PerformanceBenchmarkTest {
     @Test
     fun `test JSON deserialization performance`() = runBlocking {
         val credential = createTestCredential()
-        val jsonLd = transformer.toJsonLd(credential)
+        val jsonLd = credential.toJsonLd()
         
         val startTime = System.nanoTime()
         repeat(100) {
-            transformer.fromJsonLd(jsonLd)
+            jsonLd.toCredential()
         }
         val endTime = System.nanoTime()
         
@@ -85,7 +88,7 @@ class PerformanceBenchmarkTest {
         
         val startTime = System.nanoTime()
         repeat(100) {
-            transformer.toCbor(credential)
+            credential.toCbor()
         }
         val endTime = System.nanoTime()
         
@@ -99,11 +102,11 @@ class PerformanceBenchmarkTest {
     @Test
     fun `test CBOR decoding performance`() = runBlocking {
         val credential = createTestCredential()
-        val cborBytes = transformer.toCbor(credential)
+        val cborBytes = credential.toCbor()
         
         val startTime = System.nanoTime()
         repeat(100) {
-            transformer.fromCbor(cborBytes)
+            cborBytes.fromCbor()
         }
         val endTime = System.nanoTime()
         
@@ -120,8 +123,8 @@ class PerformanceBenchmarkTest {
         
         val startTime = System.nanoTime()
         repeat(100) {
-            val cborBytes = transformer.toCbor(credential)
-            transformer.fromCbor(cborBytes)
+            val cborBytes = credential.toCbor()
+            cborBytes.fromCbor()
         }
         val endTime = System.nanoTime()
         
@@ -136,8 +139,8 @@ class PerformanceBenchmarkTest {
     fun `test CBOR size efficiency`() = runBlocking {
         val credential = createTestCredential()
         
-        val jsonBytes = transformer.toJsonLd(credential).toString().toByteArray(Charsets.UTF_8)
-        val cborBytes = transformer.toCbor(credential)
+        val jsonBytes = credential.toJsonLd().toString().toByteArray(Charsets.UTF_8)
+        val cborBytes = credential.toCbor()
         
         // CBOR should generally be smaller or similar in size to JSON
         // (allowing some overhead for binary encoding)
@@ -168,7 +171,7 @@ class PerformanceBenchmarkTest {
         )
         
         val startTime = System.nanoTime()
-        transformer.toJsonLd(credential)
+        credential.toJsonLd()
         val endTime = System.nanoTime()
         
         val timeMs = (endTime - startTime) / 1_000_000.0
@@ -182,9 +185,9 @@ class PerformanceBenchmarkTest {
     fun `test memory efficiency of CBOR`() = runBlocking {
         val credential = createTestCredential()
         
-        val jsonLd = transformer.toJsonLd(credential)
+        val jsonLd = credential.toJsonLd()
         val jsonSize = jsonLd.toString().toByteArray(Charsets.UTF_8).size
-        val cborSize = transformer.toCbor(credential).size
+        val cborSize = credential.toCbor().size
         
         // Verify sizes are reasonable
         assertTrue(jsonSize > 0, "JSON size should be positive")

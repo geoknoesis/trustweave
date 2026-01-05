@@ -45,7 +45,7 @@ fun computeCredentialDigest(
     linksetDigest: String? = null
 ): String {
     val credentialJson = Json { ignoreUnknownKeys = true }
-        .encodeToJsonElement(VerifiableCredential.serializer(), credential)
+        .encodeToJsonElement(credential)
     val vcWithoutMetadata = buildJsonObject {
         credentialJson.jsonObject.entries.forEach { (key, value) ->
             if (key !in listOf("digestMultibase", "evidence", "credentialStatus")) {
@@ -111,7 +111,7 @@ suspend fun TrustWeave.verifyIntegrityChain(
 ): Boolean {
     val vcWithDigest = buildJsonObject {
         val credentialJson = Json { ignoreUnknownKeys = true }
-            .encodeToJsonElement(VerifiableCredential.serializer(), credential)
+            .encodeToJsonElement(credential)
         credentialJson.jsonObject.entries.forEach { put(it.key, it.value) }
         put("linksetDigest", linksetDigest)
         put("digestMultibase", credentialDigest)
@@ -121,7 +121,7 @@ suspend fun TrustWeave.verifyIntegrityChain(
         linkset = linkset,
         artifacts = artifacts,
         anchorRef = anchorRef,
-        registry = configuration.registries.blockchainRegistry
+        registry = this@verifyIntegrityChain.configuration.blockchainRegistry
     )
     return result.valid
 }

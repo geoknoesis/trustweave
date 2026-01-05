@@ -5,6 +5,8 @@ import org.trustweave.credential.model.vc.CredentialSubject
 import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.core.identifiers.Iri
+import org.trustweave.credential.transform.toJwt
+import org.trustweave.credential.transform.fromJwt
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.*
@@ -16,10 +18,10 @@ import kotlin.test.assertFailsWith
 
 /**
  * Comprehensive tests for CredentialTransformer JWT operations.
+ * 
+ * Uses the elegant extension function API for credential transformations.
  */
 class CredentialTransformerJwtTest {
-
-    private val transformer = CredentialTransformer()
 
     private fun createTestCredential(claims: Map<String, JsonElement> = emptyMap()): VerifiableCredential {
         return VerifiableCredential(
@@ -39,7 +41,7 @@ class CredentialTransformerJwtTest {
     fun `test toJwt creates valid JWT format`() = runBlocking {
         val credential = createTestCredential()
 
-        val jwt = transformer.toJwt(credential)
+        val jwt = credential.toJwt()
 
         assertNotNull(jwt, "JWT should be created")
         // JWT format: header.payload.signature (unsigned JWTs have empty signature)
@@ -57,8 +59,8 @@ class CredentialTransformerJwtTest {
             )
         )
 
-        val jwt = transformer.toJwt(originalCredential)
-        val recoveredCredential = transformer.fromJwt(jwt)
+        val jwt = originalCredential.toJwt()
+        val recoveredCredential = jwt.fromJwt()
 
         assertNotNull(recoveredCredential, "Credential should be recovered")
         assertEquals(originalCredential.type, recoveredCredential.type, "Type should match")
@@ -78,8 +80,8 @@ class CredentialTransformerJwtTest {
             )
         )
 
-        val jwt = transformer.toJwt(originalCredential)
-        val recoveredCredential = transformer.fromJwt(jwt)
+        val jwt = originalCredential.toJwt()
+        val recoveredCredential = jwt.fromJwt()
 
         val originalClaims = originalCredential.credentialSubject.claims
         val recoveredClaims = recoveredCredential.credentialSubject.claims
@@ -96,10 +98,10 @@ class CredentialTransformerJwtTest {
     fun `test toJwt handles empty claims`() = runBlocking {
         val credential = createTestCredential(claims = emptyMap())
 
-        val jwt = transformer.toJwt(credential)
+        val jwt = credential.toJwt()
 
         assertNotNull(jwt, "JWT should be created even with empty claims")
-        val recoveredCredential = transformer.fromJwt(jwt)
+        val recoveredCredential = jwt.fromJwt()
         assertEquals(0, recoveredCredential.credentialSubject.claims.size, "Recovered credential should have empty claims")
     }
 
@@ -120,8 +122,8 @@ class CredentialTransformerJwtTest {
             proof = null
         )
 
-        val jwt = transformer.toJwt(credential)
-        val recoveredCredential = transformer.fromJwt(jwt)
+        val jwt = credential.toJwt()
+        val recoveredCredential = jwt.fromJwt()
 
         assertEquals(credential.type.size, recoveredCredential.type.size, "Type count should match")
         assertTrue(recoveredCredential.type.any { it.value == "UniversityDegreeCredential" }, 
@@ -133,14 +135,14 @@ class CredentialTransformerJwtTest {
         val invalidJwt = "not.a.valid.jwt"
 
         assertFailsWith<IllegalArgumentException> {
-            transformer.fromJwt(invalidJwt)
+            invalidJwt.fromJwt()
         }
     }
 
     @Test
     fun `test fromJwt handles empty JWT`() = runBlocking {
         assertFailsWith<IllegalArgumentException> {
-            transformer.fromJwt("")
+            "".fromJwt()
         }
     }
 
@@ -150,7 +152,7 @@ class CredentialTransformerJwtTest {
         val invalidJwt = "eyJ0eXAiOiJKV1QifQ.invalid.payload"
 
         assertFailsWith<IllegalArgumentException> {
-            transformer.fromJwt(invalidJwt)
+            invalidJwt.fromJwt()
         }
     }
 
@@ -168,8 +170,8 @@ class CredentialTransformerJwtTest {
             proof = null
         )
 
-        val jwt = transformer.toJwt(credential)
-        val recoveredCredential = transformer.fromJwt(jwt)
+        val jwt = credential.toJwt()
+        val recoveredCredential = jwt.fromJwt()
 
         assertEquals(credential.issuer.id.value, recoveredCredential.issuer.id.value, "DID issuer should be preserved")
     }
@@ -193,8 +195,8 @@ class CredentialTransformerJwtTest {
             claims = mapOf("profile" to nestedClaims)
         )
 
-        val jwt = transformer.toJwt(credential)
-        val recoveredCredential = transformer.fromJwt(jwt)
+        val jwt = credential.toJwt()
+        val recoveredCredential = jwt.fromJwt()
 
         assertTrue(recoveredCredential.credentialSubject.claims.containsKey("profile"), 
             "Should contain nested profile claim")

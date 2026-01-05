@@ -67,7 +67,7 @@ fun main(): Unit = runBlocking {
     }
 
     runCatching {
-        val payload = Json.encodeToJsonElement(VerifiableCredential.serializer(), credential)
+        val payload = Json.encodeToJsonElement(credential)
         val anchorResult = anchorClient.writePayload(payload)
         println("Anchored credential on ${anchorResult.ref.chainId}: ${anchorResult.ref.txHash}")
     }.onFailure { error ->

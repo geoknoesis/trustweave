@@ -1,6 +1,8 @@
 package org.trustweave.trust.dsl
 
 import org.trustweave.trust.dsl.credential.*
+import org.trustweave.credential.model.CredentialTypes
+import org.trustweave.credential.model.ProofTypes
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 
@@ -23,9 +25,9 @@ class TypeSafeHelpersTest {
 
     @Test
     fun `test ProofTypes constants`() {
-        assertEquals("Ed25519Signature2020", ProofTypes.ED25519)
-        assertEquals("JsonWebSignature2020", ProofTypes.JWT)
-        assertEquals("BbsBlsSignature2020", ProofTypes.BBS_BLS)
+        assertEquals("Ed25519Signature2020", ProofTypes.Ed25519.identifier)
+        assertEquals("JsonWebSignature2020", ProofTypes.JWT.identifier)
+        assertEquals("BbsBlsSignature2020", ProofTypes.BBS.identifier)
     }
 
     @Test
@@ -120,7 +122,7 @@ class TypeSafeHelpersTest {
     fun `test constants can be used in DSL`() {
         // Verify constants can be used in actual DSL calls
         val credentialType = CredentialTypes.EDUCATION
-        val proofType = ProofTypes.ED25519
+        val proofType = ProofTypes.Ed25519
         val didMethod = DidMethods.KEY
         val kmsProvider = KmsProviders.IN_MEMORY
         val anchorProvider = AnchorProviders.ALGORAND

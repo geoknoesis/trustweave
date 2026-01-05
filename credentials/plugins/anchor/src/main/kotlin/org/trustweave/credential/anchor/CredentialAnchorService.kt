@@ -61,7 +61,7 @@ class CredentialAnchorService(
         }
 
         // Serialize credential to JSON
-        val credentialJson = json.encodeToJsonElement(VerifiableCredential.serializer(), credentialToAnchor)
+        val credentialJson = json.encodeToJsonElement(credentialToAnchor)
         
         // Compute digest
         val credentialJsonString = json.encodeToString(JsonElement.serializer(), credentialJson)
@@ -128,7 +128,7 @@ class CredentialAnchorService(
             val anchorResult = anchorClient.readPayload(anchorRef)
             
             // Verify digest matches
-            val credentialJson = json.encodeToJsonElement(VerifiableCredential.serializer(), credential)
+            val credentialJson = json.encodeToJsonElement(credential)
             val credentialJsonString = json.encodeToString(JsonElement.serializer(), credentialJson)
             val expectedDigest = DigestUtils.sha256DigestMultibase(credentialJsonString)
             val storedDigest = evidenceDoc["digest"]?.jsonPrimitive?.content

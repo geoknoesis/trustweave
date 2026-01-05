@@ -1,8 +1,7 @@
 package org.trustweave.trust.dsl
 
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.trust.dsl.TrustWeaveConfig
-import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
 import org.trustweave.testkit.getOrFail
@@ -16,7 +15,7 @@ import kotlin.test.*
  */
 class KeyRotationDslTest {
 
-    private lateinit var trustWeave: TrustWeaveConfig
+    private lateinit var trustWeave: org.trustweave.trust.TrustWeave
     private lateinit var kms: InMemoryKeyManagementService
 
     @BeforeEach
@@ -24,9 +23,15 @@ class KeyRotationDslTest {
         kms = InMemoryKeyManagementService()
 
         val kmsRef = kms
-        trustWeave = trustWeave {
+        trustWeave = org.trustweave.trust.TrustWeave.build {
             keys {
                 custom(kmsRef)
+                signer { data, keyId ->
+                    when (val result = kmsRef.sign(org.trustweave.core.identifiers.KeyId(keyId), data)) {
+                        is org.trustweave.kms.results.SignResult.Success -> result.signature
+                        else -> throw IllegalStateException("Signing failed: $result")
+                    }
+                }
             }
             did {
                 method("key") {
@@ -117,8 +122,7 @@ class KeyRotationDslTest {
             algorithm("Ed25519")
         }.getOrFail()
 
-        val context = trustWeave.getDslContext()
-        val updatedDoc = context.rotateKey {
+        val updatedDoc = trustWeave.rotateKey {
             did(did.value)
             algorithm("Ed25519")
         }

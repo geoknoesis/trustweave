@@ -6,7 +6,6 @@ import org.trustweave.trust.dsl.credential.KeyAlgorithms
 import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.credential.model.ProofType
 import org.trustweave.trust.types.*
-import org.trustweave.trust.dsl.credential.CredentialTypes
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.wallet.CredentialOrganization
@@ -55,18 +54,9 @@ fun main() = runBlocking {
             defaultProofType(ProofType.Ed25519Signature2020)
         }
 
-        revocation {
-            provider(IN_MEMORY)
-        }
-
-        schemas {
-            autoValidate(false)
-        }
-
-        // Configure trust registry
-        trust {
-            provider(IN_MEMORY)
-        }
+        revocation(IN_MEMORY)
+        // schemas() - using defaults (autoValidate=false, JSON_SCHEMA format)
+        trust(IN_MEMORY)
     }
     println("✓ Trust layer configured with trust registry\n")
 
@@ -152,7 +142,7 @@ fun main() = runBlocking {
     val degreeCredential = trustWeave.issue {
         credential {
             id("https://university.edu/credentials/degree-${studentDid.value.substringAfterLast(":")}")
-            type(CredentialTypes.EDUCATION, CredentialType.Custom("DegreeCredential"))
+            type(CredentialType.Education, CredentialType.Custom("DegreeCredential"))
             issuer(universityDid)
             subject {
                 id(studentDid)

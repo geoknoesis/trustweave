@@ -77,18 +77,32 @@ Full CBOR (Concise Binary Object Representation) support has been implemented fo
 
 ## Usage Example
 
+**Recommended (Elegant DSL API):**
 ```kotlin
-val transformer = CredentialTransformer()
-
-// Convert credential to CBOR
+// Use extension functions directly on VerifiableCredential
 val credential = // ... create credential
-val cborBytes = transformer.toCbor(credential)
+val cborBytes = credential.toCbor()
 
 // Store or transmit CBOR bytes
 // ...
 
 // Convert back from CBOR
+val recoveredCredential = cborBytes.fromCbor()
+
+// Round-trip transformation
+val recovered = credential.roundTripCbor()
+```
+
+**Alternative (Direct API):**
+```kotlin
+val transformer = CredentialTransformer()
+val cborBytes = transformer.toCbor(credential)
 val recoveredCredential = transformer.fromCbor(cborBytes)
+```
+
+**With TrustWeave Integration:**
+```kotlin
+val cbor = trustWeave.toCbor(credential)
 ```
 
 ## Build Status

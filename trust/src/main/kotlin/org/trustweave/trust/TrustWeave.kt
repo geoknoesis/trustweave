@@ -30,10 +30,22 @@ import org.trustweave.revocation.services.StatusListRegistryFactory
 import org.trustweave.trust.dsl.credential.RevocationBuilder
 import org.trustweave.trust.services.TrustRegistryFactory
 import org.trustweave.wallet.services.WalletFactory
+import org.trustweave.credential.CredentialService
+import org.trustweave.did.DidMethod
+import org.trustweave.did.registry.DidMethodRegistry
+import org.trustweave.anchor.BlockchainAnchorClient
+import org.trustweave.kms.KeyManagementService
+import org.trustweave.kms.services.KmsService
+import org.trustweave.credential.revocation.CredentialRevocationManager
+import org.trustweave.credential.schema.SchemaRegistry
+import org.trustweave.trust.TrustRegistry
+import org.trustweave.credential.model.ProofType
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.datetime.Clock
+import org.slf4j.LoggerFactory
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -106,14 +118,10 @@ import kotlin.time.Duration.Companion.seconds
  * ```
  */
 class TrustWeave private constructor(
-    private val config: TrustWeaveConfig,
-    private val context: TrustWeaveContext
+    private val config: TrustWeaveConfig
 ) : DidResolver {
-    /**
-     * Get the DSL context for advanced operations.
-     * Internal use only - prefer using TrustWeave facade methods.
-     */
-    internal fun getDslContext(): TrustWeaveContext = context
+    private val logger = LoggerFactory.getLogger(TrustWeave::class.java)
+    
     /**
      * The underlying configuration.
      *
@@ -142,7 +150,7 @@ class TrustWeave private constructor(
      * ```
      */
     val blockchains: BlockchainService by lazy {
-        BlockchainService(config.registries.blockchainRegistry)
+        BlockchainService(config.blockchainRegistry)
     }
 
     /**
@@ -164,9 +172,114 @@ class TrustWeave private constructor(
     val contracts: ContractService by lazy {
         ContractService(
             credentialService = null, // CredentialService from credential-api (set via TrustWeaveConfig)
-            blockchainRegistry = config.registries.blockchainRegistry
+            blockchainRegistry = config.blockchainRegistry
         )
     }
+
+    // ========== Internal Configuration Access Methods ==========
+    
+    /**
+     * Get a DID method by name.
+     */
+    internal fun getDidMethod(name: String): DidMethod? {
+        val method = config.didRegistry.get(name) as? DidMethod
+        logger.debug("Getting DID method: name={}, found={}", name, method != null)
+        return method
+    }
+
+    /**
+     * Get a DID resolver for delegation operations.
+     * This returns the native DID resolver interface used by did:core.
+     */
+    internal fun getDidResolver(): DidResolver {
+        return DidResolver { did ->
+            runCatching { config.didRegistry.resolve(did.value) }
+                .getOrElse { null } ?: DidResolutionResult.Failure.ResolutionError(
+                    did = did,
+                    reason = "DID resolution failed"
+                )
+        }
+    }
+
+    /**
+     * Get wallet factory.
+     */
+    internal fun getWalletFactory(): WalletFactory? {
+        return config.walletFactory
+    }
+
+    /**
+     * Get an anchor client by chain ID.
+     *
+     * @param chainId The blockchain chain identifier (e.g., "algorand:testnet")
+     * @return The blockchain anchor client, or null if not registered
+     */
+    internal fun getAnchorClient(chainId: String): BlockchainAnchorClient? {
+        return config.blockchainRegistry.get(chainId)
+    }
+
+    /**
+     * Get the credential issuer/service.
+     */
+    internal fun getIssuer() = config.issuer // CredentialService from credential-api
+
+    /**
+     * Get the revocation manager.
+     */
+    internal fun getRevocationManager(): CredentialRevocationManager? {
+        return config.revocationManager
+    }
+
+    /**
+     * Get the default proof type.
+     */
+    internal fun getDefaultProofType(): ProofType {
+        return config.credentialConfig.defaultProofType
+    }
+
+    /**
+     * Get the DID registry.
+     *
+     * @return The DID method registry
+     */
+    internal fun getDidRegistry(): DidMethodRegistry {
+        return config.didRegistry
+    }
+
+    /**
+     * Get the trust registry.
+     */
+    internal fun getTrustRegistry(): TrustRegistry? {
+        return config.trustRegistry
+    }
+
+    /**
+     * Get the KMS service adapter.
+     */
+    internal fun getKmsService(): KmsService? {
+        return config.kmsService
+    }
+
+    /**
+     * Get KMS from TrustWeave.
+     */
+    internal fun getKms(): KeyManagementService? {
+        return config.kms as? KeyManagementService
+    }
+
+    /**
+     * Get the schema registry.
+     */
+    internal fun getSchemaRegistry(): SchemaRegistry? {
+        return org.trustweave.credential.schema.SchemaRegistries.default()
+    }
+
+    /**
+     * Get the configured I/O dispatcher.
+     * 
+     * Returns the dispatcher configured in TrustWeaveConfig, or Dispatchers.IO as default.
+     */
+    private fun getIoDispatcher() = config.ioDispatcher
 
     // ========== Credential Operations ==========
 
@@ -205,7 +318,31 @@ class TrustWeave private constructor(
         block: IssuanceBuilder.() -> Unit
     ): IssuanceResult {
         return withTimeout(timeout) {
-            context.issue(block)
+            withContext(getIoDispatcher()) {
+                val issuerAny = getIssuer()
+                val credentialService = issuerAny as? CredentialService
+                    ?: return@withContext IssuanceResult.Failure.AdapterNotReady(
+                        format = org.trustweave.credential.format.ProofSuiteId.VC_LD,
+                        reason = "CredentialService is not available. Issuer must be a CredentialService instance."
+                    )
+                val didResolver = config.didResolver
+                val defaultProofType = getDefaultProofType()
+                val defaultProofSuite = when (defaultProofType) {
+                    is ProofType.Ed25519Signature2020 -> org.trustweave.credential.format.ProofSuiteId.VC_LD
+                    is ProofType.JsonWebSignature2020 -> org.trustweave.credential.format.ProofSuiteId.VC_JWT
+                    is ProofType.BbsBlsSignature2020 -> org.trustweave.credential.format.ProofSuiteId.SD_JWT_VC
+                    is ProofType.Custom -> org.trustweave.credential.format.ProofSuiteId.VC_LD
+                }
+                val builder = IssuanceBuilder(
+                    credentialService = credentialService,
+                    revocationManager = getRevocationManager() as? CredentialRevocationManager,
+                    defaultProofSuite = defaultProofSuite,
+                    ioDispatcher = getIoDispatcher(),
+                    didResolver = didResolver
+                )
+                builder.block()
+                builder.build()
+            }
         }
     }
 
@@ -234,7 +371,17 @@ class TrustWeave private constructor(
         block: VerificationBuilder.() -> Unit
     ): VerificationResult {
         return withTimeout(timeout) {
-            context.verify(block)
+            val dispatcher = getIoDispatcher()
+            val credentialService = getIssuer() as? CredentialService
+                ?: throw IllegalStateException("CredentialService is not available. Configure it in TrustWeave.build { ... }")
+            val builder = VerificationBuilder(
+                credentialService = credentialService,
+                ioDispatcher = dispatcher
+            )
+            builder.block()
+            val credential = builder.credential ?: throw IllegalStateException("Credential is required")
+            val result = builder.build()
+            VerificationResult.from(credential, result)
         }
     }
 
@@ -282,13 +429,14 @@ class TrustWeave private constructor(
         block: DidBuilder.() -> Unit = {}
     ): DidCreationResult {
         val resolvedMethod = method 
-            ?: context.getConfig().defaultDidMethod 
+            ?: config.defaultDidMethod 
             ?: "key"
         return withTimeout(timeout) {
-            context.createDid {
-                this.method(resolvedMethod)
-                block()
-            }
+            val dispatcher = getIoDispatcher()
+            val builder = DidBuilder(this@TrustWeave, dispatcher)
+            builder.method(resolvedMethod)
+            builder.block()
+            builder.build()
         }
     }
 
@@ -391,7 +539,7 @@ class TrustWeave private constructor(
         return withTimeout(timeout) {
             try {
                 // Use registry directly for non-nullable result
-                val result = config.registries.didRegistry.resolve(did)
+                val result = config.didRegistry.resolve(did)
                 
                 // Convert to sealed class if needed (registry returns sealed class already)
                 when (result) {
@@ -405,7 +553,7 @@ class TrustWeave private constructor(
                 } else {
                     did.substringBefore(":")
                 }
-                val availableMethods = config.registries.didRegistry.getAllMethodNames()
+                val availableMethods = config.didRegistry.getAllMethodNames()
                 DidResolutionResult.Failure.ResolutionError(
                     did = Did(did),
                     reason = e.message ?: "Unknown resolution error",
@@ -460,7 +608,9 @@ class TrustWeave private constructor(
         block: DidDocumentBuilder.() -> Unit
     ): DidDocument {
         return withTimeout(timeout) {
-            context.updateDid(block)
+            val builder = DidDocumentBuilder(this@TrustWeave)
+            builder.block()
+            builder.update()
         }
     }
 
@@ -476,7 +626,9 @@ class TrustWeave private constructor(
         block: suspend DelegationBuilder.() -> Unit
     ): DelegationChainResult {
         return withTimeout(timeout) {
-            context.delegate(block)
+            val builder = DelegationBuilder(this@TrustWeave)
+            builder.block()
+            builder.verify()
         }
     }
 
@@ -492,7 +644,15 @@ class TrustWeave private constructor(
         block: KeyRotationBuilder.() -> Unit
     ): DidDocument {
         return withTimeout(timeout) {
-            context.rotateKey(block)
+            val kms = getKms() ?: throw IllegalStateException(
+                "KMS is not configured. Configure it in TrustWeave.build { keys { provider(\"inMemory\") } }"
+            )
+            val kmsService = getKmsService() ?: throw IllegalStateException(
+                "KmsService is not configured. Configure it in TrustWeave.build { keys { provider(\"inMemory\") } }"
+            )
+            val builder = KeyRotationBuilder(this@TrustWeave, kms, kmsService, config.ioDispatcher)
+            builder.block()
+            builder.rotate()
         }
     }
 
@@ -505,7 +665,26 @@ class TrustWeave private constructor(
      * @return Sealed result type with success or detailed failure information
      */
     suspend fun wallet(block: WalletBuilder.() -> Unit): WalletCreationResult {
-        return context.wallet(block)
+        return try {
+            val builder = WalletBuilder(this)
+            builder.block()
+            val wallet = builder.build()
+            WalletCreationResult.Success(wallet)
+        } catch (e: IllegalStateException) {
+            when {
+                e.message?.contains("WalletFactory", ignoreCase = true) == true ->
+                    WalletCreationResult.Failure.FactoryNotConfigured(e.message ?: "Wallet factory not configured")
+                e.message?.contains("holder", ignoreCase = true) == true ->
+                    WalletCreationResult.Failure.InvalidHolderDid(
+                        holderDid = "",
+                        reason = e.message ?: "Invalid holder DID"
+                    )
+                else ->
+                    WalletCreationResult.Failure.Other(e.message ?: "Wallet creation failed", e)
+            }
+        } catch (e: Throwable) {
+            WalletCreationResult.Failure.Other(e.message ?: "Wallet creation failed", e)
+        }
     }
 
     // ========== Trust Operations ==========
@@ -571,7 +750,11 @@ class TrustWeave private constructor(
      * @throws IllegalStateException if trust registry is not configured
      */
     suspend fun trust(block: suspend TrustBuilder.() -> Unit) {
-        context.trust(block)
+        val registry = getTrustRegistry() ?: throw IllegalStateException(
+            "Trust registry is not configured. Configure it in trustWeave { trust { provider(\"inMemory\") } }"
+        )
+        val builder = TrustBuilder(registry)
+        builder.block()
     }
 
     /**
@@ -586,7 +769,12 @@ class TrustWeave private constructor(
         block: RevocationBuilder.() -> Unit
     ): Boolean {
         return withTimeout(timeout) {
-            context.revoke(block)
+            val revocationManager = getRevocationManager()
+            val builder = RevocationBuilder(revocationManager)
+            builder.block()
+            withContext(config.ioDispatcher) {
+                builder.revoke()
+            }
         }
     }
 
@@ -698,8 +886,7 @@ class TrustWeave private constructor(
             block: TrustWeaveConfig.Builder.() -> Unit
         ): TrustWeave {
             val config = trustWeave(name, block)
-            val context = TrustWeaveContext(config)
-            return TrustWeave(config, context)
+            return TrustWeave(config)
         }
 
         /**
@@ -712,8 +899,7 @@ class TrustWeave private constructor(
          * @return A TrustWeave instance wrapping the provided config
          */
         fun from(config: TrustWeaveConfig): TrustWeave {
-            val context = TrustWeaveContext(config)
-            return TrustWeave(config, context)
+            return TrustWeave(config)
         }
     }
 }

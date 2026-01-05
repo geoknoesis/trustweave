@@ -5,6 +5,7 @@ import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.credential.trust.TrustPolicy
 import org.trustweave.credential.requests.VerificationOptions
 import org.trustweave.trust.types.VerificationResult
+import org.trustweave.trust.TrustWeave
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.sync.Semaphore
@@ -117,7 +118,7 @@ class BatchVerificationBuilder {
  * @param block Configuration block for batch issuance
  * @return Flow of IssuanceResult for each request
  */
-suspend fun CredentialDslProvider.issueBatch(
+suspend fun TrustWeave.issueBatch(
     block: BatchIssuanceBuilder.() -> Unit
 ): Flow<IssuanceResult> = flow {
     val builder = BatchIssuanceBuilder()
@@ -130,10 +131,10 @@ suspend fun CredentialDslProvider.issueBatch(
     // Process requests with controlled concurrency
     val semaphore = Semaphore(builder.maxConcurrency)
     
-    builder.requests.forEach { request ->
+    builder.requests.forEach { requestBlock ->
         semaphore.acquire()
         try {
-            val result = issue(request)
+            val result = this@issueBatch.issue(block = requestBlock)
             emit(result)
         } finally {
             semaphore.release()
@@ -161,7 +162,7 @@ suspend fun CredentialDslProvider.issueBatch(
  * @param block Configuration block for batch verification
  * @return Flow of VerificationResult for each credential
  */
-suspend fun CredentialDslProvider.verifyBatch(
+suspend fun TrustWeave.verifyBatch(
     block: BatchVerificationBuilder.() -> Unit
 ): Flow<VerificationResult> = flow {
     val builder = BatchVerificationBuilder()
@@ -177,7 +178,7 @@ suspend fun CredentialDslProvider.verifyBatch(
     builder.credentials.forEach { credential ->
         semaphore.acquire()
         try {
-            val result = verify {
+            val result = this@verifyBatch.verify {
                 this.credential(credential)
                 builder.trustPolicy?.let { withTrustPolicy(it) }
                 // Apply options

@@ -4,7 +4,6 @@ import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
 import org.trustweave.credential.model.ProofType
-import org.trustweave.trust.dsl.credential.CredentialTypes
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.trust.dsl.credential.SchemaValidatorTypes
 import org.trustweave.trust.dsl.credential.ServiceTypes
@@ -13,7 +12,7 @@ import org.trustweave.trust.dsl.wallet.organize
 import org.trustweave.trust.dsl.wallet.query as dslQuery
 import org.trustweave.trust.dsl.wallet.QueryBuilder
 import org.trustweave.trust.dsl.wallet.presentationFromWallet
-import org.trustweave.trust.dsl.registerSchema
+import org.trustweave.trust.dsl.credential.registerSchema
 import org.trustweave.trust.dsl.credential.schema
 import org.trustweave.trust.dsl.storeIn
 import org.trustweave.credential.model.vc.VerifiableCredential
@@ -80,10 +79,7 @@ fun main() = runBlocking {
         }
         // CredentialService is auto-created with custom signer from keys{} block
 
-        schemas {
-            autoValidate(false)
-            defaultFormat(SchemaFormat.JSON_SCHEMA)
-        }
+        // schemas() - using defaults (autoValidate=false, JSON_SCHEMA format)
         // CredentialService is auto-created with custom signer from keys{} block
     }
 
@@ -96,7 +92,7 @@ fun main() = runBlocking {
 
     // Register schemas for credential validation
     println("\nStep 1.5: Registering credential schemas...")
-    trustWeave.configuration.registerSchema {
+    trustWeave.registerSchema {
         id("https://example.com/schemas/education")
         jsonSchema {
             "\$schema" to "http://json-schema.org/draft-07/schema#"
@@ -116,7 +112,7 @@ fun main() = runBlocking {
     }
     println("✓ Education schema registered")
 
-    trustWeave.configuration.registerSchema {
+    trustWeave.registerSchema {
         id("https://example.com/schemas/certification")
         jsonSchema {
             "\$schema" to "http://json-schema.org/draft-07/schema#"
@@ -156,7 +152,7 @@ fun main() = runBlocking {
     println("University DID: ${universityDid.value}")
     
     // Get the key ID from the university DID document
-    val universityDidResolution = trustWeave.configuration.registries.didRegistry.resolve(universityDid.value)
+    val universityDidResolution = trustWeave.configuration.didRegistry.resolve(universityDid.value)
         ?: throw IllegalStateException("Failed to resolve university DID")
     val universityDidDoc = when (universityDidResolution) {
         is org.trustweave.did.resolver.DidResolutionResult.Success -> universityDidResolution.document
@@ -171,7 +167,7 @@ fun main() = runBlocking {
     val bachelorDegree = trustWeave.issue {
         credential {
             id("https://example.edu/credentials/bachelor-${professionalDid.value.substringAfterLast(":")}")
-            type(CredentialTypes.EDUCATION, CredentialType.Custom("BachelorDegreeCredential"))
+            type(CredentialType.Education, CredentialType.Custom("BachelorDegreeCredential"))
             issuer(universityDid)
             subject(professionalDid) {
                 "degree" {
@@ -191,7 +187,7 @@ fun main() = runBlocking {
     val masterDegree = trustWeave.issue {
         credential {
             id("https://example.edu/credentials/master-${professionalDid.value.substringAfterLast(":")}")
-            type(CredentialTypes.EDUCATION, CredentialType.Custom("MasterDegreeCredential"))
+            type(CredentialType.Education, CredentialType.Custom("MasterDegreeCredential"))
             issuer(universityDid)
             subject(professionalDid) {
                 "degree" {

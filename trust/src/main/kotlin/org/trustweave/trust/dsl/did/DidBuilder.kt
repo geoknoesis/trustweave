@@ -7,7 +7,7 @@ import org.trustweave.did.KeyAlgorithm
 import org.trustweave.did.DidMethod
 import org.trustweave.did.exception.DidException
 import org.trustweave.did.identifiers.Did
-import org.trustweave.trust.dsl.TrustWeaveContext
+import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.DidCreationResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineDispatcher
@@ -20,14 +20,14 @@ import kotlinx.coroutines.withContext
  *
  * **Example Usage**:
  * ```kotlin
- * val professionalDid = didProvider.createDid {
+ * val professionalDid = trustWeave.createDid {
  *     method("key")
  *     algorithm("Ed25519")
  * }
  * ```
  */
 class DidBuilder(
-    private val provider: DidDslProvider,
+    private val trustWeave: TrustWeave,
     /**
      * Coroutine dispatcher for I/O-bound operations.
      * Defaults to [Dispatchers.IO] if not provided.
@@ -89,21 +89,16 @@ class DidBuilder(
     suspend fun build(): DidCreationResult = withContext(ioDispatcher) {
         // Use explicit method, or config's default, or first registered method
         val methodName = method 
-            ?: (provider as? TrustWeaveContext)?.getConfig()?.defaultDidMethod
+            ?: trustWeave.configuration.defaultDidMethod
             ?: return@withContext DidCreationResult.Failure.InvalidConfiguration(
                 reason = "DID method is required. Use method(\"key\") or configure a default in did { method(\"key\") { ... } }"
             )
 
-        val didMethod = provider.getDidMethod(methodName)
+        val didMethod = trustWeave.getDidMethod(methodName)
             ?: run {
-                // Try to get available methods from registry if provider is TrustWeaveContext
+                // Get available methods from registry
                 val availableMethods = try {
-                    (provider as? TrustWeaveContext)
-                        ?.getConfig()
-                        ?.registries
-                        ?.didRegistry
-                        ?.getAllMethodNames()
-                        ?: emptyList()
+                    trustWeave.getDidRegistry().getAllMethodNames()
                 } catch (e: Exception) {
                     emptyList()
                 }
@@ -148,19 +143,7 @@ class DidBuilder(
     }
 }
 
-/**
- * Extension function to create a DID using a DID DSL provider.
- *
- * Returns a sealed result type for exhaustive error handling.
- * 
- * Uses the default dispatcher ([Dispatchers.IO]) unless the provider
- * is a [TrustWeaveContext] with a custom dispatcher configured.
- */
-suspend fun DidDslProvider.createDid(block: DidBuilder.() -> Unit): DidCreationResult {
-    val dispatcher = (this as? TrustWeaveContext)?.getConfig()?.ioDispatcher
-        ?: Dispatchers.IO
-    val builder = DidBuilder(this, dispatcher)
-    builder.block()
-    return builder.build()
-}
+// Note: TrustWeave.createDid() is now a member function in TrustWeave class.
+// This extension function has been removed to avoid duplication.
+// Use trustWeave.createDid { ... } directly.
 

@@ -2,14 +2,15 @@ package org.trustweave.examples.comprehensive
 
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.*
+import org.trustweave.trust.dsl.credential.registerSchema
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
 import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
-import org.trustweave.trust.dsl.credential.CredentialTypes
 import org.trustweave.trust.dsl.credential.SchemaValidatorTypes
 import org.trustweave.trust.dsl.credential.ServiceTypes
 import org.trustweave.trust.dsl.credential.JsonObjectBuilder
 import org.trustweave.credential.model.ProofType
+import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.SchemaFormat
 import org.trustweave.wallet.CredentialOrganization
@@ -68,14 +69,8 @@ fun main() = runBlocking {
             autoAnchor(false)
         }
 
-        revocation {
-            provider(IN_MEMORY)
-        }
-
-        schemas {
-            autoValidate(false)
-            defaultFormat(SchemaFormat.JSON_SCHEMA)
-        }
+        revocation(IN_MEMORY)
+        // schemas() - using defaults (autoValidate=false, JSON_SCHEMA format)
     }
     println("✓ Trust layer configured with all features\n")
 
@@ -101,7 +96,7 @@ fun main() = runBlocking {
     println("Step 3: Registering schemas...")
 
     // Register JSON Schema
-    trustWeave.configuration.registerSchema {
+    trustWeave.registerSchema {
         id("https://example.com/schemas/degree")
         jsonSchema {
             put("\$schema", "http://json-schema.org/draft-07/schema#")
@@ -121,7 +116,7 @@ fun main() = runBlocking {
     println("✓ JSON Schema registered")
 
     // Register SHACL Schema
-    trustWeave.configuration.registerSchema {
+    trustWeave.registerSchema {
         id("https://example.com/schemas/degree-shacl")
         shacl {
             put("@context", "https://www.w3.org/ns/shacl#")
@@ -147,7 +142,7 @@ fun main() = runBlocking {
     val credential = trustWeave.issue {
         credential {
             id("https://example.edu/credentials/degree-123")
-            type(CredentialTypes.EDUCATION, CredentialTypes.DEGREE)
+            type(CredentialType.Education, CredentialType.Degree)
             issuer(issuerDid)
             subject {
                 id(holderDid)
@@ -206,7 +201,7 @@ fun main() = runBlocking {
     // ============================================
     println("Step 8: Querying credentials...")
     val educationCreds = wallet.query {
-        (this as QueryBuilder).type(CredentialTypes.EDUCATION.value)
+        (this as QueryBuilder).type(CredentialType.Education.value)
         (this as QueryBuilder).valid()
         (this as QueryBuilder).tag("education")
     }

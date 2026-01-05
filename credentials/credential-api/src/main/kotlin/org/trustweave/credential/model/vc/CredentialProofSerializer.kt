@@ -31,9 +31,9 @@ object CredentialProofSerializer : KSerializer<CredentialProof> {
         when (encoder) {
             is JsonEncoder -> {
                 val jsonElement = when (value) {
-                    is CredentialProof.LinkedDataProof -> json.encodeToJsonElement(CredentialProof.LinkedDataProof.serializer(), value)
-                    is CredentialProof.JwtProof -> json.encodeToJsonElement(CredentialProof.JwtProof.serializer(), value)
-                    is CredentialProof.SdJwtVcProof -> json.encodeToJsonElement(CredentialProof.SdJwtVcProof.serializer(), value)
+                    is CredentialProof.LinkedDataProof -> json.encodeToJsonElement(value)
+                    is CredentialProof.JwtProof -> json.encodeToJsonElement(value)
+                    is CredentialProof.SdJwtVcProof -> json.encodeToJsonElement(value)
                 }
                 // Add discriminator
                 val jsonObject = jsonElement.jsonObject.toMutableMap()
@@ -63,9 +63,9 @@ object CredentialProofSerializer : KSerializer<CredentialProof> {
                 val type = jsonObject["@type"]?.jsonPrimitive?.content
                     ?: throw kotlinx.serialization.SerializationException("Missing @type discriminator")
                 return when (type) {
-                    "LinkedDataProof" -> json.decodeFromJsonElement(CredentialProof.LinkedDataProof.serializer(), jsonElement)
-                    "JwtProof" -> json.decodeFromJsonElement(CredentialProof.JwtProof.serializer(), jsonElement)
-                    "SdJwtVcProof" -> json.decodeFromJsonElement(CredentialProof.SdJwtVcProof.serializer(), jsonElement)
+                    "LinkedDataProof" -> json.decodeFromJsonElement<CredentialProof.LinkedDataProof>(jsonElement)
+                    "JwtProof" -> json.decodeFromJsonElement<CredentialProof.JwtProof>(jsonElement)
+                    "SdJwtVcProof" -> json.decodeFromJsonElement<CredentialProof.SdJwtVcProof>(jsonElement)
                     else -> throw kotlinx.serialization.SerializationException("Unknown CredentialProof type: $type")
                 }
             }

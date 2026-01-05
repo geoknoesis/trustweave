@@ -1044,7 +1044,7 @@ fun anchorGeospatialDataset(
 ): AnchorResult {
     val credential = createGeospatialDatasetCredential(dataset, dataset.providerDid)
     val digest = DigestUtils.sha256DigestMultibase(
-        Json.encodeToJsonElement(VerifiableCredential.serializer(), credential)
+        Json.encodeToJsonElement(credential)
     )
 
     return blockchainRegistry.anchorTyped(

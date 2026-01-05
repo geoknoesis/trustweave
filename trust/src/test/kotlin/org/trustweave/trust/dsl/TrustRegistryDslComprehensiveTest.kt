@@ -41,7 +41,7 @@ class TrustRegistryDslComprehensiveTest {
             trust { provider("inMemory") }
         }
 
-        val registry = trustWeave.getDslContext().getTrustRegistry()
+        val registry = trustWeave.configuration.trustRegistry
         assertNotNull(registry)
     }
 
@@ -117,7 +117,7 @@ class TrustRegistryDslComprehensiveTest {
             addAnchor(anchor2.value) {}
             addAnchor(anchor3.value) {}
 
-            val registry = trustWeave.getDslContext().getTrustRegistry() as? org.trustweave.testkit.trust.InMemoryTrustRegistry
+            val registry = trustWeave.configuration.trustRegistry as? org.trustweave.testkit.trust.InMemoryTrustRegistry
             registry?.addTrustRelationship(anchor1.value, anchor2.value)
             registry?.addTrustRelationship(anchor2.value, anchor3.value)
 
@@ -275,7 +275,7 @@ class TrustRegistryDslComprehensiveTest {
 
         // Extract key ID from the DID document created during createDid()
         // This ensures the signing key matches what's in the DID document
-        val issuerDidResolution = trustWeave.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid.value)
+        val issuerDidResolution = trustWeave.configuration.didRegistry.resolve(issuerDid.value)
             ?: throw IllegalStateException("Failed to resolve issuer DID")
         val issuerDidDoc = when (issuerDidResolution) {
             is org.trustweave.did.resolver.DidResolutionResult.Success -> issuerDidResolution.document

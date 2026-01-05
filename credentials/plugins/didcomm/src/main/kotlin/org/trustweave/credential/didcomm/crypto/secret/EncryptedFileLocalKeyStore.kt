@@ -8,9 +8,6 @@ import org.didcommx.didcomm.secret.Secret
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermission
-import java.util.concurrent.locks.ReentrantReadWriteLock
-import kotlin.concurrent.read
-import kotlin.concurrent.write
 
 /**
  * Encrypted file-based local key store for production use.
@@ -47,7 +44,6 @@ class EncryptedFileLocalKeyStore(
     private val keyEncryption: KeyEncryption = KeyEncryption(masterKey)
 ) : LocalKeyStore {
 
-    private val lock = ReentrantReadWriteLock()
     private val json = Json {
         prettyPrint = false
         encodeDefaults = false
@@ -68,43 +64,35 @@ class EncryptedFileLocalKeyStore(
     }
 
     override suspend fun get(keyId: String): Secret? = withContext(Dispatchers.IO) {
-        lock.read {
-            try {
-                val keys = loadKeys()
-                keys[keyId]
-            } catch (e: Exception) {
-                null
-            }
+        try {
+            val keys = loadKeys()
+            keys[keyId]
+        } catch (e: Exception) {
+            null
         }
     }
 
     override suspend fun store(keyId: String, secret: Secret) = withContext(Dispatchers.IO) {
-        lock.write {
-            val keys = loadKeys().toMutableMap()
-            keys[keyId] = secret
-            saveKeys(keys)
-        }
+        val keys = loadKeys().toMutableMap()
+        keys[keyId] = secret
+        saveKeys(keys)
     }
 
     override suspend fun delete(keyId: String): Boolean = withContext(Dispatchers.IO) {
-        lock.write {
-            val keys = loadKeys().toMutableMap()
-            val removed = keys.remove(keyId) != null
-            if (removed) {
-                saveKeys(keys)
-            }
-            removed
+        val keys = loadKeys().toMutableMap()
+        val removed = keys.remove(keyId) != null
+        if (removed) {
+            saveKeys(keys)
         }
+        removed
     }
 
     override suspend fun list(): List<String> = withContext(Dispatchers.IO) {
-        lock.read {
-            try {
-                val keys = loadKeys()
-                keys.keys.toList()
-            } catch (e: Exception) {
-                emptyList()
-            }
+        try {
+            val keys = loadKeys()
+            keys.keys.toList()
+        } catch (e: Exception) {
+            emptyList()
         }
     }
 

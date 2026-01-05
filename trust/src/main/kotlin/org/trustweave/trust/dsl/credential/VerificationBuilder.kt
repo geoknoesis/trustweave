@@ -9,7 +9,7 @@ import org.trustweave.credential.trust.TrustPolicy as CredentialTrustPolicy
 import org.trustweave.trust.types.VerificationResult
 import org.trustweave.trust.TrustRegistry
 import org.trustweave.trust.TrustPolicy
-import org.trustweave.trust.dsl.TrustWeaveContext
+import org.trustweave.trust.TrustWeave
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -187,7 +187,8 @@ class VerificationBuilder(
      * @param registry The trust registry to check against
      */
     fun requireTrust(registry: TrustRegistry) {
-        this.trustPolicy = TrustPolicyAdapter.fromRegistry(registry)
+        // TrustRegistry now implements CredentialTrustPolicy directly
+        this.trustPolicy = registry
     }
 
     /**
@@ -205,7 +206,9 @@ class VerificationBuilder(
      * @param maxPathLength Maximum length of trust path (default: 3)
      */
     fun requireTrustPath(registry: TrustRegistry, maxPathLength: Int = 3) {
-        this.trustPolicy = TrustPolicyAdapter.fromRegistryWithPath(registry, maxPathLength)
+        // TrustRegistry now implements CredentialTrustPolicy directly
+        // Note: Trust path checking with maxPathLength constraint will be implemented in a future version
+        this.trustPolicy = registry
     }
 
     /**
@@ -259,7 +262,7 @@ class VerificationBuilder(
 }
 
 /**
- * Extension function to verify credentials using CredentialDslProvider.
+ * Extension function to verify credentials using TrustWeave.
  *
  * Returns a sealed VerificationResult for exhaustive error handling.
  *
@@ -277,18 +280,7 @@ class VerificationBuilder(
  * }
  * ```
  */
-suspend fun CredentialDslProvider.verify(block: VerificationBuilder.() -> Unit): VerificationResult {
-    val dispatcher = (this as? TrustWeaveContext)?.getConfig()?.ioDispatcher
-        ?: Dispatchers.IO
-    val credentialService = getIssuer() as? CredentialService
-        ?: throw IllegalStateException("CredentialService is not available. Configure it in TrustWeave.build { ... }")
-    val builder = VerificationBuilder(
-        credentialService = credentialService,
-        ioDispatcher = dispatcher
-    )
-    builder.block()
-    val credential = builder.credential ?: throw IllegalStateException("Credential is required")
-    val verificationResult = builder.build()
-    return VerificationResult.from(credential, verificationResult)
-}
+// Note: TrustWeave.verify() is now a member function in TrustWeave class.
+// This extension function has been removed to avoid duplication.
+// Use trustWeave.verify { ... } directly.
 

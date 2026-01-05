@@ -108,8 +108,8 @@ class DefaultSmartContractService(
             put("expirationDate", contract.expirationDate ?: "")
             put("contractData", contract.contractData)
             // Include execution model and terms in credential for tamper protection
-            put("executionModel", json.encodeToJsonElement(ExecutionModel.serializer(), executionModelWithHash))
-            put("terms", json.encodeToJsonElement(ContractTerms.serializer(), contract.terms))
+            put("executionModel", json.encodeToJsonElement(executionModelWithHash))
+            put("terms", json.encodeToJsonElement(contract.terms))
         }
 
         val credentialSubject = CredentialSubject.fromIri(

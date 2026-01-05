@@ -81,7 +81,7 @@ class IndyIntegrationScenarioTest {
             // CredentialService is auto-created with custom signer from keys{} block
             // Note: Chain is registered manually below, not via DSL
         }.also {
-            it.configuration.registries.blockchainRegistry.register(chainId, indyClient)
+            it.configuration.blockchainRegistry.register(chainId, indyClient)
         }
     }
 
@@ -162,7 +162,7 @@ class IndyIntegrationScenarioTest {
             encodeDefaults = true
             classDiscriminator = "@type" // Use @type instead of type to avoid conflict with LinkedDataProof.type
         }
-        val credentialJson = json.encodeToJsonElement(VerifiableCredential.serializer(), credential)
+        val credentialJson = json.encodeToJsonElement(credential)
         val anchor = trustweave.blockchains.anchor(
             data = credentialJson,
             serializer = JsonElement.serializer(),
@@ -183,7 +183,7 @@ class IndyIntegrationScenarioTest {
             ref = anchor.ref,
             serializer = JsonElement.serializer()
         )
-        val readCredential = json.decodeFromJsonElement(VerifiableCredential.serializer(), readJson)
+        val readCredential = json.decodeFromJsonElement<VerifiableCredential>(readJson)
         println("  ✓ Read Credential ID: ${readCredential.id}")
         println("  ✓ Read Credential Issuer: ${readCredential.issuer}")
         assertEquals(credential.id, readCredential.id, "Read credential ID should match")
@@ -267,7 +267,7 @@ class IndyIntegrationScenarioTest {
 
         // Anchor custom data
         println("Anchoring custom data type...")
-        val digestJson = Json.encodeToJsonElement(CredentialDigest.serializer(), digest)
+        val digestJson = Json.encodeToJsonElement(digest)
         val anchor = trustweave.blockchains.anchor(
             data = digestJson,
             serializer = JsonElement.serializer(),
@@ -281,7 +281,7 @@ class IndyIntegrationScenarioTest {
             ref = anchor.ref,
             serializer = JsonElement.serializer()
         )
-        val readDigest = Json.decodeFromJsonElement(CredentialDigest.serializer(), readJson)
+        val readDigest = Json.decodeFromJsonElement<CredentialDigest>(readJson)
         println("  ✓ Read VC ID: ${readDigest.vcId}")
         println("  ✓ Read Digest: ${readDigest.digest}")
         println("  ✓ Read Issuer: ${readDigest.issuer}")
@@ -350,7 +350,7 @@ class IndyIntegrationScenarioTest {
             classDiscriminator = "@type" // Use @type instead of type to avoid conflict with LinkedDataProof.type
         }
         val anchors = credentials.map { credential ->
-            val credentialJson = json.encodeToJsonElement(VerifiableCredential.serializer(), credential)
+            val credentialJson = json.encodeToJsonElement(credential)
             val anchor = trustweave.blockchains.anchor(
                 data = credentialJson,
                 serializer = JsonElement.serializer(),

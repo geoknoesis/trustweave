@@ -5,6 +5,8 @@ import org.trustweave.credential.model.vc.CredentialSubject
 import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.core.identifiers.Iri
+import org.trustweave.credential.transform.toJsonLd
+import org.trustweave.credential.transform.toCredential
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.*
@@ -15,10 +17,10 @@ import kotlin.test.assertEquals
 
 /**
  * Comprehensive tests for CredentialTransformer JSON-LD operations.
+ * 
+ * Uses the elegant extension function API for credential transformations.
  */
 class CredentialTransformerJsonLdTest {
-
-    private val transformer = CredentialTransformer()
 
     private fun createTestCredential(claims: Map<String, JsonElement> = emptyMap()): VerifiableCredential {
         return VerifiableCredential(
@@ -38,7 +40,7 @@ class CredentialTransformerJsonLdTest {
     fun `test toJsonLd creates valid JSON-LD structure`() = runBlocking {
         val credential = createTestCredential()
 
-        val jsonLd = transformer.toJsonLd(credential)
+        val jsonLd = credential.toJsonLd()
 
         assertNotNull(jsonLd, "JSON-LD should be created")
         // JSON-LD is a JsonObject, check it has content
@@ -54,8 +56,8 @@ class CredentialTransformerJsonLdTest {
             )
         )
 
-        val jsonLd = transformer.toJsonLd(originalCredential)
-        val recoveredCredential = transformer.fromJsonLd(jsonLd)
+        val jsonLd = originalCredential.toJsonLd()
+        val recoveredCredential = jsonLd.toCredential()
 
         assertNotNull(recoveredCredential, "Credential should be recovered")
         assertEquals(originalCredential.type, recoveredCredential.type, "Type should match")
@@ -75,8 +77,8 @@ class CredentialTransformerJsonLdTest {
             )
         )
 
-        val jsonLd = transformer.toJsonLd(originalCredential)
-        val recoveredCredential = transformer.fromJsonLd(jsonLd)
+        val jsonLd = originalCredential.toJsonLd()
+        val recoveredCredential = jsonLd.toCredential()
 
         val originalClaims = originalCredential.credentialSubject.claims
         val recoveredClaims = recoveredCredential.credentialSubject.claims
@@ -93,7 +95,7 @@ class CredentialTransformerJsonLdTest {
     fun `test toJsonLd includes context`() = runBlocking {
         val credential = createTestCredential()
 
-        val jsonLd = transformer.toJsonLd(credential)
+        val jsonLd = credential.toJsonLd()
 
         // JSON-LD structure is validated by checking it has content
         assertTrue(jsonLd.size > 0, "JSON-LD should have content")
@@ -103,7 +105,7 @@ class CredentialTransformerJsonLdTest {
     fun `test toJsonLd includes type as array`() = runBlocking {
         val credential = createTestCredential()
 
-        val jsonLd = transformer.toJsonLd(credential)
+        val jsonLd = credential.toJsonLd()
 
         val type = jsonLd["type"]
         assertNotNull(type, "type should be present")
@@ -114,8 +116,8 @@ class CredentialTransformerJsonLdTest {
     fun `test toJsonLd handles empty claims`() = runBlocking {
         val credential = createTestCredential(claims = emptyMap())
 
-        val jsonLd = transformer.toJsonLd(credential)
-        val recoveredCredential = transformer.fromJsonLd(jsonLd)
+        val jsonLd = credential.toJsonLd()
+        val recoveredCredential = jsonLd.toCredential()
 
         assertEquals(0, recoveredCredential.credentialSubject.claims.size, "Recovered credential should have empty claims")
     }
@@ -137,8 +139,8 @@ class CredentialTransformerJsonLdTest {
             proof = null
         )
 
-        val jsonLd = transformer.toJsonLd(credential)
-        val recoveredCredential = transformer.fromJsonLd(jsonLd)
+        val jsonLd = credential.toJsonLd()
+        val recoveredCredential = jsonLd.toCredential()
 
         assertEquals(credential.type.size, recoveredCredential.type.size, "Type count should match")
         assertTrue(recoveredCredential.type.any { it.value == "UniversityDegreeCredential" }, 
@@ -156,7 +158,7 @@ class CredentialTransformerJsonLdTest {
         // This should either throw an exception or handle gracefully
         // The actual behavior depends on the implementation
         try {
-            transformer.fromJsonLd(invalidJsonLd)
+            invalidJsonLd.toCredential()
             // If it doesn't throw, that's also acceptable behavior (graceful degradation)
         } catch (e: Exception) {
             // Expected exception is fine
@@ -179,8 +181,8 @@ class CredentialTransformerJsonLdTest {
             proof = null
         )
 
-        val jsonLd = transformer.toJsonLd(credential)
-        val recoveredCredential = transformer.fromJsonLd(jsonLd)
+        val jsonLd = credential.toJsonLd()
+        val recoveredCredential = jsonLd.toCredential()
 
         assertEquals(credential.issuer.id.value, recoveredCredential.issuer.id.value, "DID issuer should be preserved")
     }
@@ -204,8 +206,8 @@ class CredentialTransformerJsonLdTest {
             claims = mapOf("profile" to nestedClaims)
         )
 
-        val jsonLd = transformer.toJsonLd(credential)
-        val recoveredCredential = transformer.fromJsonLd(jsonLd)
+        val jsonLd = credential.toJsonLd()
+        val recoveredCredential = jsonLd.toCredential()
 
         assertTrue(recoveredCredential.credentialSubject.claims.containsKey("profile"), 
             "Should contain nested profile claim")
@@ -229,8 +231,8 @@ class CredentialTransformerJsonLdTest {
             proof = null
         )
 
-        val jsonLd = transformer.toJsonLd(credential)
-        val recoveredCredential = transformer.fromJsonLd(jsonLd)
+        val jsonLd = credential.toJsonLd()
+        val recoveredCredential = jsonLd.toCredential()
 
         assertEquals(issuanceDate, recoveredCredential.issuanceDate, "Issuance date should be preserved")
     }

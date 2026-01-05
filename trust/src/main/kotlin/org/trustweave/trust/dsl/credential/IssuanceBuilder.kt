@@ -18,7 +18,7 @@ import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.ProofType
-import org.trustweave.trust.dsl.TrustWeaveContext
+import org.trustweave.trust.TrustWeave
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -285,46 +285,7 @@ class IssuanceBuilder(
     }
 }
 
-/**
- * Extension function to issue credentials using CredentialDslProvider.
- * 
- * Uses the configured dispatcher if the provider is a TrustWeaveContext,
- * otherwise defaults to Dispatchers.IO.
- *
- * @return Sealed result type with success or detailed failure information
- */
-suspend fun CredentialDslProvider.issue(block: IssuanceBuilder.() -> Unit): IssuanceResult {
-    val dispatcher = (this as? TrustWeaveContext)?.getConfig()?.ioDispatcher
-        ?: Dispatchers.IO
-    
-    // Get CredentialService - try from getIssuer() or return error
-    val issuerAny = getIssuer()
-    val credentialService = issuerAny as? CredentialService
-        ?: return IssuanceResult.Failure.AdapterNotReady(
-            format = ProofSuiteId.VC_LD,
-            reason = "CredentialService is not available. Issuer must be a CredentialService instance."
-        )
-    
-    // Get DID resolver from TrustWeaveContext if available
-    val didResolver = (this as? TrustWeaveContext)?.getConfig()?.didResolver
-    
-    // Convert ProofType to ProofSuiteId
-    val defaultProofType = getDefaultProofType()
-    val defaultProofSuite = when (defaultProofType) {
-        is ProofType.Ed25519Signature2020 -> ProofSuiteId.VC_LD
-        is ProofType.JsonWebSignature2020 -> ProofSuiteId.VC_JWT
-        is ProofType.BbsBlsSignature2020 -> ProofSuiteId.SD_JWT_VC
-        is ProofType.Custom -> ProofSuiteId.VC_LD // Default fallback
-    }
-    
-    val builder = IssuanceBuilder(
-        credentialService = credentialService,
-        revocationManager = getRevocationManager() as? CredentialRevocationManager,
-        defaultProofSuite = defaultProofSuite,
-        ioDispatcher = dispatcher,
-        didResolver = didResolver
-    )
-    builder.block()
-    return builder.build()
-}
+// Note: TrustWeave.issue() is now a member function in TrustWeave class.
+// This extension function has been removed to avoid duplication.
+// Use trustWeave.issue { ... } directly.
 

@@ -4,6 +4,7 @@ import org.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.*
+import kotlinx.serialization.serializer
 import kotlinx.datetime.Instant as KotlinInstant
 import java.time.Instant as JavaInstant
 import com.nimbusds.jwt.JWTClaimsSet
@@ -22,16 +23,44 @@ import com.fasterxml.jackson.databind.JsonNode
  * - JWT (compact, widely supported)
  * - CBOR (binary, efficient - RFC 8949 compliant)
  *
- * **Example Usage**:
+ * **Recommended Usage (Elegant DSL API)**:
+ * ```kotlin
+ * // Use extension functions directly on VerifiableCredential (recommended)
+ * val jwt = credential.toJwt()
+ * val jsonLd = credential.toJsonLd()
+ * val cbor = credential.toCbor()
+ *
+ * // Convert from formats
+ * val credential = jwtString.fromJwt()
+ * val credential = jsonLdObject.toCredential()
+ * val credential = cborBytes.fromCbor()
+ *
+ * // Round-trip transformations
+ * val recovered = credential.roundTripJwt()
+ * ```
+ *
+ * **Alternative Usage (Direct API)**:
  * ```kotlin
  * val transformer = CredentialTransformer()
- *
- * // Convert to JWT
  * val jwt = transformer.toJwt(credential)
- *
- * // Convert from JWT
  * val credential = transformer.fromJwt(jwt)
  * ```
+ *
+ * **With TrustWeave Integration**:
+ * ```kotlin
+ * val jwt = trustWeave.toJwt(credential)
+ * val jsonLd = trustWeave.toJsonLd(credential)
+ * ```
+ *
+ * **With DSL Builder**:
+ * ```kotlin
+ * val jwt = credential.transform {
+ *     toJwt()
+ * }
+ * ```
+ *
+ * @see org.trustweave.credential.transform.CredentialTransformerExtensions For extension functions
+ * @see org.trustweave.credential.transform.CredentialTransformationBuilder For DSL builder
  */
 class CredentialTransformer {
     private val json = Json {
@@ -85,7 +114,7 @@ class CredentialTransformer {
             }
 
             // Add vc claim with credential
-            val credentialJson = json.encodeToJsonElement(VerifiableCredential.serializer(), credential)
+            val credentialJson = json.encodeToJsonElement(credential)
             val credentialMap = jsonElementToMap(credentialJson)
             builder.claim("vc", credentialMap)
 
@@ -99,7 +128,7 @@ class CredentialTransformer {
             return unsignedJwt.serialize()
         } catch (e: Exception) {
             // Fallback to JSON representation on any error
-            return json.encodeToString(VerifiableCredential.serializer(), credential)
+            return json.encodeToString(serializer(), credential)
         }
     }
 
@@ -147,8 +176,11 @@ class CredentialTransformer {
      * Parses a JWT and extracts the credential from the 'vc' claim.
      * Note: This does not verify the signature. Use CredentialService.verify() for verification.
      *
+     * **Recommended:** Use the extension function `jwtString.fromJwt()` instead for a more elegant API.
+     *
      * @param jwt JWT string
      * @return Verifiable credential
+     * @see org.trustweave.credential.transform.fromJwt Extension function
      */
     suspend fun fromJwt(jwt: String): VerifiableCredential {
         try {
@@ -177,10 +209,10 @@ class CredentialTransformer {
             val vcJson = mapToJsonObject(vcMap as Map<String, Any?>)
 
             // Parse as VerifiableCredential
-            return json.decodeFromJsonElement(VerifiableCredential.serializer(), vcJson)
+            return json.decodeFromJsonElement<VerifiableCredential>(vcJson)
         } catch (e: Exception) {
             // Fallback: try parsing as JSON
-            return json.decodeFromString(VerifiableCredential.serializer(), jwt)
+            return json.decodeFromString<VerifiableCredential>(jwt)
         }
     }
 
@@ -216,8 +248,11 @@ class CredentialTransformer {
     /**
      * Convert credential to JSON-LD format.
      *
+     * **Recommended:** Use the extension function `credential.toJsonLd()` instead for a more elegant API.
+     *
      * @param credential Credential to convert
      * @return JSON-LD object
+     * @see org.trustweave.credential.transform.toJsonLd Extension function
      */
     suspend fun toJsonLd(credential: VerifiableCredential): JsonObject {
         // Credential is already in JSON-LD format
@@ -229,11 +264,14 @@ class CredentialTransformer {
     /**
      * Convert JSON-LD to credential.
      *
+     * **Recommended:** Use the extension function `jsonLdObject.toCredential()` instead for a more elegant API.
+     *
      * @param json JSON-LD object
      * @return Verifiable credential
+     * @see org.trustweave.credential.transform.toCredential Extension function
      */
     suspend fun fromJsonLd(json: JsonObject): VerifiableCredential {
-        return this.json.decodeFromJsonElement(VerifiableCredential.serializer(), json)
+        return this.json.decodeFromJsonElement<VerifiableCredential>(json)
     }
 
     /**
@@ -254,9 +292,12 @@ class CredentialTransformer {
      * - Faster to parse than JSON in many cases
      * - Well-suited for binary storage and network transmission
      *
+     * **Recommended:** Use the extension function `credential.toCbor()` instead for a more elegant API.
+     *
      * @param credential Credential to convert
      * @return CBOR-encoded bytes
      * @see fromCbor For parsing CBOR-encoded credentials
+     * @see org.trustweave.credential.transform.toCbor Extension function
      */
     suspend fun toCbor(credential: VerifiableCredential): ByteArray {
         // Step 1: Serialize credential to JSON string using kotlinx.serialization
@@ -285,11 +326,14 @@ class CredentialTransformer {
      * - Throws IllegalArgumentException if CBOR bytes are invalid
      * - Throws SerializationException if credential structure is invalid
      *
+     * **Recommended:** Use the extension function `cborBytes.fromCbor()` instead for a more elegant API.
+     *
      * @param bytes CBOR-encoded bytes
      * @return Verifiable credential
      * @throws IllegalArgumentException if CBOR bytes cannot be parsed
      * @throws kotlinx.serialization.SerializationException if credential deserialization fails
      * @see toCbor For encoding credentials to CBOR
+     * @see org.trustweave.credential.transform.fromCbor Extension function
      */
     suspend fun fromCbor(bytes: ByteArray): VerifiableCredential {
         try {
@@ -300,7 +344,7 @@ class CredentialTransformer {
             val jsonString = jsonMapper.writeValueAsString(jsonNode)
             
             // Step 3: Deserialize JSON string to VerifiableCredential using kotlinx.serialization
-            return json.decodeFromString(VerifiableCredential.serializer(), jsonString)
+            return json.decodeFromString<VerifiableCredential>(jsonString)
         } catch (e: com.fasterxml.jackson.core.JsonProcessingException) {
             throw IllegalArgumentException("Invalid CBOR data: ${e.message}", e)
         } catch (e: java.io.IOException) {
@@ -308,4 +352,5 @@ class CredentialTransformer {
         }
     }
 }
+
 

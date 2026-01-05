@@ -236,7 +236,7 @@ class EncryptedFileLocalKeyStore(
             val keysJson = json.parseToJsonElement(jsonString).jsonObject
 
             return keysJson.entries.associate { (keyId, secretJson) ->
-                keyId to json.decodeFromJsonElement(Secret.serializer(), secretJson)
+                keyId to json.decodeFromJsonElement<Secret>(secretJson)
             }
         } catch (e: Exception) {
             throw IllegalStateException("Failed to load keys from encrypted file", e)
@@ -247,7 +247,7 @@ class EncryptedFileLocalKeyStore(
         try {
             val keysJson = buildJsonObject {
                 keys.forEach { (keyId, secret) ->
-                    put(keyId, json.encodeToJsonElement(Secret.serializer(), secret))
+                    put(keyId, json.encodeToJsonElement(secret))
                 }
             }
             val jsonString = json.encodeToString(JsonObject.serializer(), keysJson)

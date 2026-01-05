@@ -7,7 +7,7 @@ import org.trustweave.did.KeyAlgorithm
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
-import org.trustweave.trust.dsl.did.DidDslProvider
+import org.trustweave.trust.TrustWeave
 import org.trustweave.kms.services.KmsService
 import org.trustweave.kms.KeyManagementService
 import kotlinx.coroutines.Dispatchers
@@ -33,7 +33,7 @@ import kotlinx.coroutines.withContext
  * ```
  */
 class KeyRotationBuilder(
-    private val didProvider: DidDslProvider,
+    private val trustWeave: TrustWeave,
     private val kms: KeyManagementService,
     private val kmsService: KmsService,
     /**
@@ -120,7 +120,7 @@ class KeyRotationBuilder(
         )
 
         // Get DID method from provider
-        val didMethod = didProvider.getDidMethod(methodName) as? DidMethod
+        val didMethod = trustWeave.getDidMethod(methodName) as? DidMethod
             ?: throw IllegalStateException(
                 "DID method '$methodName' is not configured. " +
                 "Configure it in TrustWeave.build { did { method(\"$methodName\") { ... } } }"

@@ -85,7 +85,7 @@ class PresentationBuilderBranchCoverageTest {
         }
         
         val didResolver = DidResolver { did ->
-            tempTrustWeave.getDslContext().getConfig().registries.didRegistry.resolve(did.value)
+            tempTrustWeave.configuration.didRegistry.resolve(did.value)
         }
         
         val credentialService = createTestCredentialService(kms = kms, didResolver = didResolver)
@@ -116,7 +116,7 @@ class PresentationBuilderBranchCoverageTest {
         }.getOrFail()
         issuerDid = createdDid.value
         
-        val issuerDidResolution = trustWeave.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid)
+        val issuerDidResolution = trustWeave.configuration.didRegistry.resolve(issuerDid)
             ?: throw IllegalStateException("Failed to resolve issuer DID")
         val issuerDidDoc = when (issuerDidResolution) {
             is org.trustweave.did.resolver.DidResolutionResult.Success -> issuerDidResolution.document
@@ -132,12 +132,10 @@ class PresentationBuilderBranchCoverageTest {
     @Test
     fun `test branch credentials required error`() = runBlocking {
         assertFailsWith<IllegalStateException> {
-            with(trustWeave.getDslContext()) {
-                presentation {
+            trustWeave.presentation {
                     holder("did:key:holder")
                     // Missing credentials
                 }
-            }
         }
     }
 
@@ -148,11 +146,9 @@ class PresentationBuilderBranchCoverageTest {
             claims = mapOf("name" to "John Doe")
         )
 
-        val presentation = with(trustWeave.getDslContext()) {
-            presentation {
-                credentials(credential)
-                holder("did:key:holder")
-            }
+        val presentation = trustWeave.presentation {
+            credentials(credential)
+            holder("did:key:holder")
         }
 
         assertNotNull(presentation)
@@ -164,11 +160,9 @@ class PresentationBuilderBranchCoverageTest {
         val credential1 = issueTestCredential(type = "PersonCredential")
         val credential2 = issueTestCredential(type = "DegreeCredential")
 
-        val presentation = with(trustWeave.getDslContext()) {
-            presentation {
-                credentials(credential1, credential2)
-                holder("did:key:holder")
-            }
+        val presentation = trustWeave.presentation {
+            credentials(credential1, credential2)
+            holder("did:key:holder")
         }
 
         assertNotNull(presentation)
@@ -182,11 +176,9 @@ class PresentationBuilderBranchCoverageTest {
             issueTestCredential(type = "DegreeCredential")
         )
 
-        val presentation = with(trustWeave.getDslContext()) {
-            presentation {
-                credentials(credentials)
-                holder("did:key:holder")
-            }
+        val presentation = trustWeave.presentation {
+            credentials(credentials)
+            holder("did:key:holder")
         }
 
         assertNotNull(presentation)
@@ -200,12 +192,10 @@ class PresentationBuilderBranchCoverageTest {
         val credential = issueTestCredential(type = "PersonCredential")
 
         assertFailsWith<IllegalStateException> {
-            with(trustWeave.getDslContext()) {
-                presentation {
+            trustWeave.presentation {
                     credentials(credential)
                     // Missing holder
                 }
-            }
         }
     }
 
@@ -213,11 +203,9 @@ class PresentationBuilderBranchCoverageTest {
     fun `test branch holder DID provided`() = runBlocking {
         val credential = issueTestCredential(type = "PersonCredential")
 
-        val presentation = with(trustWeave.getDslContext()) {
-            presentation {
-                credentials(credential)
-                holder("did:key:holder")
-            }
+        val presentation = trustWeave.presentation {
+            credentials(credential)
+            holder("did:key:holder")
         }
 
         assertNotNull(presentation)
@@ -230,13 +218,11 @@ class PresentationBuilderBranchCoverageTest {
     fun `test branch challenge not provided`() = runBlocking {
         val credential = issueTestCredential(type = "PersonCredential")
 
-        val presentation = with(trustWeave.getDslContext()) {
-            presentation {
+        val presentation = trustWeave.presentation {
                 credentials(credential)
                 holder("did:key:holder")
                 // No challenge
             }
-        }
 
         assertNotNull(presentation)
         assertNull(presentation.challenge)
@@ -246,13 +232,11 @@ class PresentationBuilderBranchCoverageTest {
     fun `test branch challenge provided`() = runBlocking {
         val credential = issueTestCredential(type = "PersonCredential")
 
-        val presentation = with(trustWeave.getDslContext()) {
-            presentation {
+        val presentation = trustWeave.presentation {
                 credentials(credential)
                 holder("did:key:holder")
                 challenge("verification-challenge-123")
             }
-        }
 
         assertNotNull(presentation)
         assertEquals("verification-challenge-123", presentation.challenge)
@@ -264,13 +248,11 @@ class PresentationBuilderBranchCoverageTest {
     fun `test branch domain not provided`() = runBlocking {
         val credential = issueTestCredential(type = "PersonCredential")
 
-        val presentation = with(trustWeave.getDslContext()) {
-            presentation {
+        val presentation = trustWeave.presentation {
                 credentials(credential)
                 holder("did:key:holder")
                 // No domain
             }
-        }
 
         assertNotNull(presentation)
         assertNull(presentation.domain)
@@ -280,13 +262,11 @@ class PresentationBuilderBranchCoverageTest {
     fun `test branch domain provided`() = runBlocking {
         val credential = issueTestCredential(type = "PersonCredential")
 
-        val presentation = with(trustWeave.getDslContext()) {
-            presentation {
+        val presentation = trustWeave.presentation {
                 credentials(credential)
                 holder("did:key:holder")
                 domain("example.com")
             }
-        }
 
         assertNotNull(presentation)
         assertEquals("example.com", presentation.domain)
@@ -305,13 +285,11 @@ class PresentationBuilderBranchCoverageTest {
             issued(Clock.System.now())
         }
 
-        val presentation = with(trustWeave.getDslContext()) {
-            presentation {
+        val presentation = trustWeave.presentation {
                 credentials(credential)
                 holder("did:key:holder")
                 // Uses default proof type
             }
-        }
 
         assertNotNull(presentation)
     }
@@ -327,11 +305,9 @@ class PresentationBuilderBranchCoverageTest {
             issued(Clock.System.now())
         }
 
-        val presentation = with(trustWeave.getDslContext()) {
-            presentation {
-                credentials(credential)
-                holder("did:key:holder")
-            }
+        val presentation = trustWeave.presentation {
+            credentials(credential)
+            holder("did:key:holder")
         }
 
         assertNotNull(presentation)
@@ -350,13 +326,11 @@ class PresentationBuilderBranchCoverageTest {
             issued(Clock.System.now())
         }
 
-        val presentation = with(trustWeave.getDslContext()) {
-            presentation {
+        val presentation = trustWeave.presentation {
                 credentials(credential)
                 holder("did:key:holder")
                 // No keyId
             }
-        }
 
         assertNotNull(presentation)
     }
@@ -365,13 +339,11 @@ class PresentationBuilderBranchCoverageTest {
     fun `test branch key ID provided`() = runBlocking {
         val credential = issueTestCredential(type = "PersonCredential")
 
-        val presentation = with(trustWeave.getDslContext()) {
-            presentation {
+        val presentation = trustWeave.presentation {
                 credentials(credential)
                 holder("did:key:holder")
                 verificationMethod("did:key:holder#key-1")
             }
-        }
 
         assertNotNull(presentation)
     }
@@ -385,13 +357,11 @@ class PresentationBuilderBranchCoverageTest {
             claims = mapOf("name" to "John Doe", "email" to "john@example.com")
         )
 
-        val presentation = with(trustWeave.getDslContext()) {
-            presentation {
+        val presentation = trustWeave.presentation {
                 credentials(credential)
                 holder("did:key:holder")
                 // No selective disclosure
             }
-        }
 
         assertNotNull(presentation)
     }
@@ -403,14 +373,12 @@ class PresentationBuilderBranchCoverageTest {
             claims = mapOf("name" to "John Doe", "email" to "john@example.com", "ssn" to "123-45-6789")
         )
 
-        val presentation = with(trustWeave.getDslContext()) {
-            presentation {
+        val presentation = trustWeave.presentation {
                 credentials(credential)
                 holder("did:key:holder")
                 selectiveDisclosure {
                     reveal("name", "email")
                 }
-            }
         }
 
         assertNotNull(presentation)
@@ -423,15 +391,13 @@ class PresentationBuilderBranchCoverageTest {
             claims = mapOf("name" to "John Doe", "email" to "john@example.com", "ssn" to "123-45-6789")
         )
 
-        val presentation = with(trustWeave.getDslContext()) {
-            presentation {
+        val presentation = trustWeave.presentation {
                 credentials(credential)
                 holder("did:key:holder")
                 selectiveDisclosure {
                     reveal("name", "email")
-                    hide("ssn")
+                    // hide() method removed - only reveal() is available
                 }
-            }
         }
 
         assertNotNull(presentation)
@@ -446,8 +412,7 @@ class PresentationBuilderBranchCoverageTest {
             claims = mapOf("name" to "John Doe")
         )
 
-        val presentation = with(trustWeave.getDslContext()) {
-            presentation {
+        val presentation = trustWeave.presentation {
                 credentials(credential)
                 holder("did:key:holder")
                 challenge("challenge-123")
@@ -456,7 +421,6 @@ class PresentationBuilderBranchCoverageTest {
                 selectiveDisclosure {
                     reveal("name")
                 }
-            }
         }
 
         assertNotNull(presentation)
@@ -464,5 +428,4 @@ class PresentationBuilderBranchCoverageTest {
         assertEquals("example.com", presentation.domain)
     }
 }
-
 

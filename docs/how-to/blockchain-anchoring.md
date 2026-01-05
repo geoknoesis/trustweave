@@ -148,7 +148,7 @@ val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get("a
     ?: throw IllegalStateException("Blockchain client not found")
 
 // Serialize and anchor
-val json = Json.encodeToJsonElement(CredentialDigest.serializer(), digest)
+val json = Json.encodeToJsonElement(digest)
 val anchorResult = anchorClient.writePayload(json)
 ```
 
@@ -198,7 +198,7 @@ val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get("a
     ?: throw IllegalStateException("Blockchain client not found")
 
 // Serialize and anchor
-val json = Json.encodeToJsonElement(MyData.serializer(), data)
+val json = Json.encodeToJsonElement(data)
 val anchorResult = anchorClient.writePayload(json)
 ```
 
@@ -224,7 +224,7 @@ val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get("a
     as? BlockchainAnchorClient
     ?: throw IllegalStateException("Blockchain client not found")
 
-val json = Json.encodeToJsonElement(CredentialDigest.serializer(), digest)
+val json = Json.encodeToJsonElement(digest)
 val anchorResult = anchorClient.writePayload(json)
 ```
 
@@ -258,7 +258,7 @@ val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get(an
     ?: throw IllegalStateException("Blockchain client not found")
 
 val result = anchorClient.readPayload(anchorRef)
-val data = Json.decodeFromJsonElement(CredentialDigest.serializer(), result.payload)
+val data = Json.decodeFromJsonElement<CredentialDigest>(result.payload)
 ```
 
 ### Verify Integrity
@@ -274,7 +274,7 @@ try {
         ?: throw IllegalStateException("Blockchain client not found")
     
     val result = anchorClient.readPayload(anchorRef)
-    val data = Json.decodeFromJsonElement(CredentialDigest.serializer(), result.payload)
+    val data = Json.decodeFromJsonElement<CredentialDigest>(result.payload)
     
     // Verify digest matches
     val computedDigest = computeDigest(data)
@@ -308,7 +308,7 @@ val anchorResults = chains.mapNotNull { chainId ->
             as? BlockchainAnchorClient
             ?: throw IllegalStateException("Blockchain client not found for $chainId")
         
-        val json = Json.encodeToJsonElement(CredentialDigest.serializer(), digest)
+        val json = Json.encodeToJsonElement(digest)
         val anchor = anchorClient.writePayload(json)
         
         println("✅ Anchored to $chainId: ${anchor.ref.txHash}")
@@ -337,7 +337,7 @@ val anchorResults = chains.map { chainId ->
                 as? BlockchainAnchorClient
                 ?: throw IllegalStateException("Blockchain client not found for $chainId")
             
-            val json = Json.encodeToJsonElement(CredentialDigest.serializer(), digest)
+            val json = Json.encodeToJsonElement(digest)
             anchorClient.writePayload(json)
         } catch (error: Exception) {
             println("Failed to anchor to $chainId: ${error.message}")
@@ -378,7 +378,7 @@ suspend fun anchorWithRetry(
     
     repeat(maxRetries) { attempt ->
         try {
-            val json = Json.encodeToJsonElement(CredentialDigest.serializer(), data)
+            val json = Json.encodeToJsonElement(data)
             return anchorClient.writePayload(json)
         } catch (error: Exception) {
             if (attempt == maxRetries - 1) {
@@ -405,7 +405,7 @@ val anchorResult = withTimeout(30000) { // 30 second timeout
         as? BlockchainAnchorClient
         ?: throw IllegalStateException("Blockchain client not found")
     
-    val json = Json.encodeToJsonElement(CredentialDigest.serializer(), digest)
+    val json = Json.encodeToJsonElement(digest)
     anchorClient.writePayload(json)
 }
 ```
@@ -441,7 +441,7 @@ try {
         as? BlockchainAnchorClient
         ?: throw IllegalStateException("Blockchain client not found")
     
-    val json = Json.encodeToJsonElement(CredentialDigest.serializer(), digest)
+    val json = Json.encodeToJsonElement(digest)
     val anchorResult = anchorClient.writePayload(json)
     // Use anchor result
 } catch (error: BlockchainException) {

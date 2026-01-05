@@ -5,8 +5,9 @@ import org.trustweave.credential.schema.SchemaRegistry
 import org.trustweave.credential.model.SchemaFormat
 import org.trustweave.kms.results.SignResult
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.trust.dsl.TrustWeaveConfig
-import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.registerSchema
+import org.trustweave.trust.dsl.credential.schema
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
 import org.trustweave.trust.dsl.credential.SchemaValidatorTypes
@@ -23,12 +24,12 @@ import kotlin.test.*
  */
 class SchemaDslTest {
 
-    private lateinit var trustWeave: TrustWeaveConfig
+    private lateinit var trustWeave: TrustWeave
 
     @BeforeEach
     fun setup() = runBlocking {
         val kms = InMemoryKeyManagementService()
-        trustWeave = trustWeave {
+        trustWeave = TrustWeave.build {
             // DID methods auto-discovered via SPI
             keys {
                 custom(kms)
@@ -44,10 +45,7 @@ class SchemaDslTest {
                     algorithm("Ed25519")
                 }
             }
-            schemas {
-                autoValidate(false)
-                defaultFormat(SchemaFormat.JSON_SCHEMA)
-            }
+            // Schema configuration is reserved for future use
         }
 
         // Schema registry is managed by TrustWeave instance

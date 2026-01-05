@@ -5,6 +5,8 @@ import org.trustweave.credential.model.vc.CredentialSubject
 import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.core.identifiers.Iri
+import org.trustweave.credential.transform.toCbor
+import org.trustweave.credential.transform.fromCbor
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.*
@@ -16,10 +18,10 @@ import kotlin.test.assertTrue
 
 /**
  * Tests for CBOR conversion in CredentialTransformer.
+ * 
+ * Uses the elegant extension function API for credential transformations.
  */
 class CredentialTransformerCborTest {
-    
-    private val transformer = CredentialTransformer()
     
     private fun createTestCredential(): VerifiableCredential {
         return VerifiableCredential(
@@ -42,7 +44,7 @@ class CredentialTransformerCborTest {
     fun `test toCbor converts credential to CBOR bytes`() = runBlocking {
         val credential = createTestCredential()
         
-        val cborBytes = transformer.toCbor(credential)
+        val cborBytes = credential.toCbor()
         
         assertNotNull(cborBytes, "CBOR bytes should not be null")
         assertTrue(cborBytes.isNotEmpty(), "CBOR bytes should not be empty")
@@ -59,10 +61,10 @@ class CredentialTransformerCborTest {
         val originalCredential = createTestCredential()
         
         // Convert to CBOR
-        val cborBytes = transformer.toCbor(originalCredential)
+        val cborBytes = originalCredential.toCbor()
         
         // Convert back from CBOR
-        val recoveredCredential = transformer.fromCbor(cborBytes)
+        val recoveredCredential = cborBytes.fromCbor()
         
         // Verify all fields match
         assertEquals(originalCredential.type, recoveredCredential.type)
@@ -77,8 +79,8 @@ class CredentialTransformerCborTest {
         val originalCredential = createTestCredential()
         
         // Convert to CBOR and back
-        val cborBytes = transformer.toCbor(originalCredential)
-        val recoveredCredential = transformer.fromCbor(cborBytes)
+        val cborBytes = originalCredential.toCbor()
+        val recoveredCredential = cborBytes.fromCbor()
         
         // Verify credential subject claims
         val originalClaims = originalCredential.credentialSubject.claims
@@ -115,8 +117,8 @@ class CredentialTransformerCborTest {
     fun `test CBOR is more compact than JSON`() = runBlocking {
         val credential = createTestCredential()
         
-        val jsonBytes = transformer.toJsonLd(credential).toString().toByteArray(Charsets.UTF_8)
-        val cborBytes = transformer.toCbor(credential)
+        val jsonBytes = credential.toJsonLd().toString().toByteArray(Charsets.UTF_8)
+        val cborBytes = credential.toCbor()
         
         // CBOR should generally be smaller or equal to JSON
         // (though not always guaranteed for very small objects)
@@ -131,7 +133,7 @@ class CredentialTransformerCborTest {
         val invalidBytes = "not valid CBOR".toByteArray(Charsets.UTF_8)
         
         val exception = kotlin.test.assertFailsWith<IllegalArgumentException> {
-            transformer.fromCbor(invalidBytes)
+            invalidBytes.fromCbor()
         }
         
         assertTrue(exception.message?.contains("Invalid CBOR") == true || 
@@ -144,7 +146,7 @@ class CredentialTransformerCborTest {
         val emptyBytes = ByteArray(0)
         
         val exception = kotlin.test.assertFailsWith<IllegalArgumentException> {
-            transformer.fromCbor(emptyBytes)
+            emptyBytes.fromCbor()
         }
         
         assertNotNull(exception, "Should throw exception for empty CBOR bytes")
@@ -169,8 +171,8 @@ class CredentialTransformerCborTest {
             proof = null
         )
         
-        val cborBytes = transformer.toCbor(credential)
-        val recoveredCredential = transformer.fromCbor(cborBytes)
+        val cborBytes = credential.toCbor()
+        val recoveredCredential = cborBytes.fromCbor()
         
         // expirationDate is @Transient, so it won't be preserved in serialization
         // This is expected behavior - expiration is typically part of the proof/JWT
@@ -198,8 +200,8 @@ class CredentialTransformerCborTest {
             proof = null
         )
         
-        val cborBytes = transformer.toCbor(credential)
-        val recoveredCredential = transformer.fromCbor(cborBytes)
+        val cborBytes = credential.toCbor()
+        val recoveredCredential = cborBytes.fromCbor()
         
         val originalAddress = credential.credentialSubject.claims["address"] as? JsonObject
         val recoveredAddress = recoveredCredential.credentialSubject.claims["address"] as? JsonObject

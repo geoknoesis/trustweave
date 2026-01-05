@@ -1,44 +1,24 @@
 package org.trustweave.trust.dsl.credential
 
 import org.trustweave.credential.model.CredentialType
+import org.trustweave.credential.model.ProofType
 
 /**
  * Type-Safe Helpers.
  *
- * Provides type-safe constants and helpers to reduce string-based errors.
+ * Provides type-safe constants for string-based identifiers (DID methods, algorithms, providers).
+ * For credential and proof types, use CredentialType.* and ProofType.* directly.
  *
  * **Example Usage**:
  * ```kotlin
  * credential {
- *     type(CredentialTypes.EDUCATION)
- *     proofType(ProofTypes.ED25519)
+ *     type(CredentialType.Education)
+ *     // Use DidMethods.KEY, KeyAlgorithms.ED25519, etc. for string identifiers
  * }
  * ```
  */
 
-/**
- * Type-safe credential types.
- * 
- * Provides convenient access to CredentialType instances for use in credential builders.
- * For custom types, use CredentialType.Custom("YourType") or CredentialType.fromString("YourType").
- */
-object CredentialTypes {
-    val EDUCATION: CredentialType = CredentialType.Education
-    val EMPLOYMENT: CredentialType = CredentialType.Employment
-    val CERTIFICATION: CredentialType = CredentialType.Certification
-    val DEGREE: CredentialType = CredentialType.Degree
-    val PERSON: CredentialType = CredentialType.Person
-    val VERIFIABLE_CREDENTIAL: CredentialType = CredentialType.VerifiableCredential
-}
-
-/**
- * Type-safe proof types.
- */
-object ProofTypes {
-    const val ED25519 = "Ed25519Signature2020"
-    const val JWT = "JsonWebSignature2020"
-    const val BBS_BLS = "BbsBlsSignature2020"
-}
+// CredentialTypes and ProofTypes removed - use CredentialType.* and ProofType.* directly
 
 /**
  * Type-safe DID methods.

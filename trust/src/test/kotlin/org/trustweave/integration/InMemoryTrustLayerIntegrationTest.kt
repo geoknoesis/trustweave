@@ -139,7 +139,7 @@ class InMemoryTrustLayerIntegrationTest {
         // Step 4: Extract key ID from the issuer DID document
         // CRITICAL: The key used for signing MUST match what's in the DID document
         // This ensures proof verification succeeds because the DID document contains the correct verification method
-        val issuerDidResolution = trustWeave.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid.value)
+        val issuerDidResolution = trustWeave.configuration.didRegistry.resolve(issuerDid.value)
             ?: throw IllegalStateException("Failed to resolve issuer DID")
         val issuerDidDoc = when (issuerDidResolution) {
             is org.trustweave.did.resolver.DidResolutionResult.Success -> issuerDidResolution.document
@@ -251,7 +251,7 @@ class InMemoryTrustLayerIntegrationTest {
         }.getOrFail()
 
         // Extract key ID (same pattern)
-        val issuerDidResolution = trustWeave.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid.value)
+        val issuerDidResolution = trustWeave.configuration.didRegistry.resolve(issuerDid.value)
             ?: throw IllegalStateException("Failed to resolve issuer DID")
         val issuerDidDoc = when (issuerDidResolution) {
             is org.trustweave.did.resolver.DidResolutionResult.Success -> issuerDidResolution.document
@@ -327,7 +327,7 @@ class InMemoryTrustLayerIntegrationTest {
         }.getOrFail()
 
         // Extract key ID (same pattern)
-        val issuerDidResolution = trustWeave.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid.value)
+        val issuerDidResolution = trustWeave.configuration.didRegistry.resolve(issuerDid.value)
             ?: throw IllegalStateException("Failed to resolve issuer DID")
         val issuerDidDoc = when (issuerDidResolution) {
             is org.trustweave.did.resolver.DidResolutionResult.Success -> issuerDidResolution.document
@@ -353,7 +353,7 @@ class InMemoryTrustLayerIntegrationTest {
         }.getOrFail()
 
         // Create wallet for holder
-        val wallet = trustWeave.getDslContext().wallet {
+        val wallet = trustWeave.wallet {
             id("holder-wallet-1")
             holder(holderDid.value)
             inMemory()
@@ -401,7 +401,7 @@ class InMemoryTrustLayerIntegrationTest {
         }.getOrFail()
 
         // Extract key IDs (same pattern for both issuer and holder)
-        val issuerDidResolution = trustWeave.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid.value)
+        val issuerDidResolution = trustWeave.configuration.didRegistry.resolve(issuerDid.value)
             ?: throw IllegalStateException("Failed to resolve issuer DID")
         val issuerDidDoc = when (issuerDidResolution) {
             is org.trustweave.did.resolver.DidResolutionResult.Success -> issuerDidResolution.document
@@ -410,7 +410,7 @@ class InMemoryTrustLayerIntegrationTest {
         val issuerKeyId = issuerDidDoc.verificationMethod.firstOrNull()?.id?.value?.substringAfter("#")
             ?: throw IllegalStateException("No verification method in issuer DID")
 
-        val holderDidResolution = trustWeave.getDslContext().getConfig().registries.didRegistry.resolve(holderDid.value)
+        val holderDidResolution = trustWeave.configuration.didRegistry.resolve(holderDid.value)
             ?: throw IllegalStateException("Failed to resolve holder DID")
         val holderDidDoc = when (holderDidResolution) {
             is org.trustweave.did.resolver.DidResolutionResult.Success -> holderDidResolution.document
@@ -460,7 +460,7 @@ class InMemoryTrustLayerIntegrationTest {
         credential2.storeIn(wallet)
 
         // Create verifiable presentation using the DSL
-        val presentation = trustWeave.getDslContext().presentation {
+        val presentation = trustWeave.presentation {
             credentials(credential1, credential2)
             holder(holderDid.value)
             verificationMethod("${holderDid.value}#$holderKeyId")
@@ -517,7 +517,7 @@ class InMemoryTrustLayerIntegrationTest {
         }
 
         // Resolve updated DID
-        val updatedDidResolution = trustWeave.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid.value)
+        val updatedDidResolution = trustWeave.configuration.didRegistry.resolve(issuerDid.value)
             ?: throw IllegalStateException("Failed to resolve updated DID")
         val updatedDidDoc = when (updatedDidResolution) {
             is org.trustweave.did.resolver.DidResolutionResult.Success -> updatedDidResolution.document
@@ -584,7 +584,7 @@ class InMemoryTrustLayerIntegrationTest {
         }.getOrFail()
 
         // Extract key ID (same pattern)
-        val issuerDidResolution = trustWeave.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid.value)
+        val issuerDidResolution = trustWeave.configuration.didRegistry.resolve(issuerDid.value)
             ?: throw IllegalStateException("Failed to resolve issuer DID")
         val issuerDidDoc = when (issuerDidResolution) {
             is org.trustweave.did.resolver.DidResolutionResult.Success -> issuerDidResolution.document
@@ -658,7 +658,7 @@ class InMemoryTrustLayerIntegrationTest {
         }.getOrFail()
 
         // Extract key ID (same pattern)
-        val issuerDidResolution = trustWeave.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid.value)
+        val issuerDidResolution = trustWeave.configuration.didRegistry.resolve(issuerDid.value)
             ?: throw IllegalStateException("Failed to resolve issuer DID")
         val issuerDidDoc = when (issuerDidResolution) {
             is org.trustweave.did.resolver.DidResolutionResult.Success -> issuerDidResolution.document

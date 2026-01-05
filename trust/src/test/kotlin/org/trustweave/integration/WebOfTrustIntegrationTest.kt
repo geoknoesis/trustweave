@@ -85,7 +85,7 @@ class WebOfTrustIntegrationTest {
 
         // Extract key ID from the DID document created during createDid()
         // This ensures the signing key matches what's in the DID document
-        val issuerDidResolution = trustLayer.getDslContext().getConfig().registries.didRegistry.resolve(issuerDid.value)
+        val issuerDidResolution = trustLayer.configuration.didRegistry.resolve(issuerDid.value)
             ?: throw IllegalStateException("Failed to resolve issuer DID")
         val issuerDidDoc = when (issuerDidResolution) {
             is org.trustweave.did.resolver.DidResolutionResult.Success -> issuerDidResolution.document
@@ -213,7 +213,7 @@ class WebOfTrustIntegrationTest {
             addAnchor(anchor3.value) {}
 
             // Get registry to add relationships
-            val registry = trustLayer.getDslContext().getTrustRegistry() as? org.trustweave.testkit.trust.InMemoryTrustRegistry
+            val registry = trustLayer.configuration.trustRegistry as? org.trustweave.testkit.trust.InMemoryTrustRegistry
             registry?.addTrustRelationship(anchor1.value, anchor2.value)
             registry?.addTrustRelationship(anchor2.value, anchor3.value)
 

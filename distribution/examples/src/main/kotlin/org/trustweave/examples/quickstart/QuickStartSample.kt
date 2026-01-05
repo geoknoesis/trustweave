@@ -93,7 +93,7 @@ fun main(): Unit = runBlocking {
             encodeDefaults = false
             classDiscriminator = "@type" // Use @type instead of type to avoid conflict with LinkedDataProof.type
         }
-        val payload = json.encodeToJsonElement(VerifiableCredential.serializer(), credential)
+        val payload = json.encodeToJsonElement(credential)
         val anchorResult = anchorClient.writePayload(payload)
         println("Anchored credential on ${anchorResult.ref.chainId}: ${anchorResult.ref.txHash}")
     }.onFailure { error ->

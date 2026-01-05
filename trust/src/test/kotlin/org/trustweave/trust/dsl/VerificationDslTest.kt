@@ -2,8 +2,7 @@ package org.trustweave.trust.dsl
 
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.trust.dsl.TrustWeaveConfig
-import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
 import org.trustweave.trust.dsl.credential.credential
@@ -20,7 +19,7 @@ import kotlin.test.*
  */
 class VerificationDslTest {
 
-    private lateinit var trustWeave: TrustWeaveConfig
+    private lateinit var trustWeave: TrustWeave
     private lateinit var kms: InMemoryKeyManagementService
 
     @BeforeEach
@@ -30,7 +29,7 @@ class VerificationDslTest {
         // Capture KMS reference for closure
         val kmsRef = kms
 
-        trustWeave = trustWeave {
+        trustWeave = TrustWeave.build {
             keys {
                 custom(kmsRef)
                 // Provide signer function directly to avoid reflection

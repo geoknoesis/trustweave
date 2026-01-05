@@ -346,14 +346,10 @@ class SubjectBuilder {
         claims.forEach { (key, value) ->
             when (value) {
                 is Map<*, *> -> {
-                    // Nested object
+                    // Nested object - safely cast to String-keyed map
                     key {
-                        @Suppress("UNCHECKED_CAST")
-                        (value as? Map<String, Any>)?.forEach { (nestedKey, nestedValue) ->
-                            nestedKey to nestedValue
-                        } ?: run {
-                            // Fallback: convert to string if not a String-keyed map
-                            "value" to value.toString()
+                        value.entries.forEach { (nestedKey, nestedValue) ->
+                            nestedKey.toString() to (nestedValue ?: "")
                         }
                     }
                 }
@@ -449,16 +445,15 @@ class JsonObjectBuilder {
                         is Boolean -> JsonPrimitive(it)
                         is JsonObject -> it
                         is Map<*, *> -> {
-                            // Convert Map to JsonObject
+                            // Convert Map to JsonObject - safely handle any map type
                             buildJsonObject {
-                                @Suppress("UNCHECKED_CAST")
-                                (it as? Map<String, Any?>)?.forEach { (key, v) ->
-                                    put(key, when (v) {
+                                it.entries.forEach { (key, v) ->
+                                    put(key.toString(), when (v) {
                                         is String -> JsonPrimitive(v)
                                         is Number -> JsonPrimitive(v)
                                         is Boolean -> JsonPrimitive(v)
                                         is JsonElement -> v
-                                        else -> JsonPrimitive(v.toString())
+                                        else -> JsonPrimitive(v?.toString() ?: "")
                                     })
                                 }
                             }

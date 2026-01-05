@@ -6,6 +6,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
@@ -172,7 +173,7 @@ class KeyManagementServicesTest {
         val iterations = 100
         val executor = Executors.newFixedThreadPool(threadCount)
         val latch = CountDownLatch(threadCount)
-        val instances = mutableSetOf<KeyManagementService>()
+        val instances = ConcurrentHashMap.newKeySet<KeyManagementService>()
         val instanceCounter = AtomicInteger(0)
 
         try {
@@ -182,10 +183,8 @@ class KeyManagementServicesTest {
                     try {
                         repeat(iterations) {
                             val kms = KeyManagementServices.create(providerName, emptyMap())
-                            synchronized(instances) {
-                                instances.add(kms)
-                                instanceCounter.incrementAndGet()
-                            }
+                            instances.add(kms)
+                            instanceCounter.incrementAndGet()
                         }
                     } finally {
                         latch.countDown()
@@ -215,7 +214,7 @@ class KeyManagementServicesTest {
         val threadCount = 5
         val executor = Executors.newFixedThreadPool(threadCount)
         val latch = CountDownLatch(threadCount)
-        val instances = mutableSetOf<KeyManagementService>()
+        val instances = ConcurrentHashMap.newKeySet<KeyManagementService>()
 
         try {
             repeat(threadCount) { index ->
@@ -225,9 +224,7 @@ class KeyManagementServicesTest {
                             providerName,
                             mapOf("thread" to index)
                         )
-                        synchronized(instances) {
-                            instances.add(kms)
-                        }
+                        instances.add(kms)
                     } finally {
                         latch.countDown()
                     }

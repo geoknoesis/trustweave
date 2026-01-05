@@ -27,5 +27,31 @@ sealed class WalletException(
             "walletId" to walletId
         ).filterValues { it != null }
     )
+
+    /**
+     * Wallet factory not configured.
+     */
+    data class WalletFactoryNotConfigured(
+        val reason: String = "Wallet factory not configured. Ensure TrustWeave-testkit is on classpath or provide a wallet factory via TrustWeaveConfig."
+    ) : WalletException(
+        code = "WALLET_FACTORY_NOT_CONFIGURED",
+        message = reason,
+        context = mapOf("reason" to reason)
+    )
+
+    /**
+     * Invalid holder DID provided.
+     */
+    data class InvalidHolderDid(
+        val holderDid: String,
+        val reason: String
+    ) : WalletException(
+        code = "INVALID_HOLDER_DID",
+        message = "Invalid holder DID '$holderDid': $reason",
+        context = mapOf(
+            "holderDid" to holderDid,
+            "reason" to reason
+        )
+    )
 }
 

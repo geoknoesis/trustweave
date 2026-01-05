@@ -26,6 +26,8 @@ import org.trustweave.trust.types.VerifierIdentity
 import org.trustweave.trust.types.HolderIdentity
 import org.trustweave.trust.types.WalletCreationResult
 import org.trustweave.trust.types.TrustPath
+import org.trustweave.wallet.exception.WalletException
+import java.io.Closeable
 import org.trustweave.revocation.services.StatusListRegistryFactory
 import org.trustweave.trust.dsl.credential.RevocationBuilder
 import org.trustweave.trust.services.TrustRegistryFactory
@@ -119,7 +121,7 @@ import kotlin.time.Duration.Companion.seconds
  */
 class TrustWeave private constructor(
     private val config: TrustWeaveConfig
-) : DidResolver {
+) : DidResolver, Closeable {
     private val logger = LoggerFactory.getLogger(TrustWeave::class.java)
     
     /**
@@ -432,11 +434,12 @@ class TrustWeave private constructor(
             ?: config.defaultDidMethod 
             ?: "key"
         return withTimeout(timeout) {
-            val dispatcher = getIoDispatcher()
-            val builder = DidBuilder(this@TrustWeave, dispatcher)
-            builder.method(resolvedMethod)
-            builder.block()
-            builder.build()
+            withContext(getIoDispatcher()) {
+                val builder = DidBuilder(this@TrustWeave, getIoDispatcher())
+                builder.method(resolvedMethod)
+                builder.block()
+                builder.build()
+            }
         }
     }
 
@@ -462,14 +465,44 @@ class TrustWeave private constructor(
         timeout: Duration = 10.seconds,
         block: DidBuilder.() -> Unit = {}
     ): Result<Pair<Did, String>> {
-        return when (val result = createDid(method, timeout, block)) {
-            is DidCreationResult.Success -> {
-                val keyId = getKeyId(result.did)
-                Result.success(result.did to keyId)
+        return withContext(getIoDispatcher()) {
+            when (val result = createDid(method, timeout, block)) {
+                is DidCreationResult.Success -> {
+                    val keyId = getKeyId(result.did)
+                    Result.success(result.did to keyId)
+                }
+                is DidCreationResult.Failure.MethodNotRegistered -> {
+                    Result.failure(
+                        IllegalStateException(
+                            "DID method '${result.method}' not registered. " +
+                            "Available methods: ${result.availableMethods.joinToString()}"
+                        )
+                    )
+                }
+                is DidCreationResult.Failure.KeyGenerationFailed -> {
+                    Result.failure(
+                        IllegalStateException("Key generation failed: ${result.reason}")
+                    )
+                }
+                is DidCreationResult.Failure.DocumentCreationFailed -> {
+                    Result.failure(
+                        IllegalStateException("Document creation failed: ${result.reason}")
+                    )
+                }
+                is DidCreationResult.Failure.InvalidConfiguration -> {
+                    Result.failure(
+                        IllegalStateException("Invalid configuration: ${result.reason}")
+                    )
+                }
+                is DidCreationResult.Failure.Other -> {
+                    Result.failure(
+                        IllegalStateException(
+                            "DID creation failed: ${result.reason}",
+                            result.cause
+                        )
+                    )
+                }
             }
-            else -> Result.failure(
-                IllegalStateException("Failed to create DID: ${result.javaClass.simpleName}")
-            )
         }
     }
 
@@ -537,28 +570,30 @@ class TrustWeave private constructor(
         timeout: Duration = 30.seconds
     ): DidResolutionResult {
         return withTimeout(timeout) {
-            try {
-                // Use registry directly for non-nullable result
-                val result = config.didRegistry.resolve(did)
-                
-                // Convert to sealed class if needed (registry returns sealed class already)
-                when (result) {
-                    is DidResolutionResult.Success -> result
-                    is DidResolutionResult.Failure -> result
+            withContext(getIoDispatcher()) {
+                try {
+                    // Use registry directly for non-nullable result
+                    val result = config.didRegistry.resolve(did)
+                    
+                    // Convert to sealed class if needed (registry returns sealed class already)
+                    when (result) {
+                        is DidResolutionResult.Success -> result
+                        is DidResolutionResult.Failure -> result
+                    }
+                } catch (e: Exception) {
+                    // Handle exceptions from registry.resolve
+                    val methodName = if (did.startsWith("did:")) {
+                        did.substringAfter("did:").substringBefore(":")
+                    } else {
+                        did.substringBefore(":")
+                    }
+                    val availableMethods = config.didRegistry.getAllMethodNames()
+                    DidResolutionResult.Failure.ResolutionError(
+                        did = Did(did),
+                        reason = e.message ?: "Unknown resolution error",
+                        cause = e
+                    )
                 }
-            } catch (e: Exception) {
-                // Handle exceptions from registry.resolve
-                val methodName = if (did.startsWith("did:")) {
-                    did.substringAfter("did:").substringBefore(":")
-                } else {
-                    did.substringBefore(":")
-                }
-                val availableMethods = config.didRegistry.getAllMethodNames()
-                DidResolutionResult.Failure.ResolutionError(
-                    did = Did(did),
-                    reason = e.message ?: "Unknown resolution error",
-                    cause = e
-                )
             }
         }
     }
@@ -608,9 +643,11 @@ class TrustWeave private constructor(
         block: DidDocumentBuilder.() -> Unit
     ): DidDocument {
         return withTimeout(timeout) {
-            val builder = DidDocumentBuilder(this@TrustWeave)
-            builder.block()
-            builder.update()
+            withContext(getIoDispatcher()) {
+                val builder = DidDocumentBuilder(this@TrustWeave)
+                builder.block()
+                builder.update()
+            }
         }
     }
 
@@ -626,9 +663,11 @@ class TrustWeave private constructor(
         block: suspend DelegationBuilder.() -> Unit
     ): DelegationChainResult {
         return withTimeout(timeout) {
-            val builder = DelegationBuilder(this@TrustWeave)
-            builder.block()
-            builder.verify()
+            withContext(getIoDispatcher()) {
+                val builder = DelegationBuilder(this@TrustWeave)
+                builder.block()
+                builder.verify()
+            }
         }
     }
 
@@ -644,15 +683,17 @@ class TrustWeave private constructor(
         block: KeyRotationBuilder.() -> Unit
     ): DidDocument {
         return withTimeout(timeout) {
-            val kms = getKms() ?: throw IllegalStateException(
-                "KMS is not configured. Configure it in TrustWeave.build { keys { provider(\"inMemory\") } }"
-            )
-            val kmsService = getKmsService() ?: throw IllegalStateException(
-                "KmsService is not configured. Configure it in TrustWeave.build { keys { provider(\"inMemory\") } }"
-            )
-            val builder = KeyRotationBuilder(this@TrustWeave, kms, kmsService, config.ioDispatcher)
-            builder.block()
-            builder.rotate()
+            withContext(getIoDispatcher()) {
+                val kms = getKms() ?: throw IllegalStateException(
+                    "KMS is not configured. Configure it in TrustWeave.build { keys { provider(\"inMemory\") } }"
+                )
+                val kmsService = getKmsService() ?: throw IllegalStateException(
+                    "KmsService is not configured. Configure it in TrustWeave.build { keys { provider(\"inMemory\") } }"
+                )
+                val builder = KeyRotationBuilder(this@TrustWeave, kms, kmsService, config.ioDispatcher)
+                builder.block()
+                builder.rotate()
+            }
         }
     }
 
@@ -665,25 +706,30 @@ class TrustWeave private constructor(
      * @return Sealed result type with success or detailed failure information
      */
     suspend fun wallet(block: WalletBuilder.() -> Unit): WalletCreationResult {
-        return try {
-            val builder = WalletBuilder(this)
-            builder.block()
-            val wallet = builder.build()
-            WalletCreationResult.Success(wallet)
-        } catch (e: IllegalStateException) {
-            when {
-                e.message?.contains("WalletFactory", ignoreCase = true) == true ->
-                    WalletCreationResult.Failure.FactoryNotConfigured(e.message ?: "Wallet factory not configured")
-                e.message?.contains("holder", ignoreCase = true) == true ->
-                    WalletCreationResult.Failure.InvalidHolderDid(
-                        holderDid = "",
-                        reason = e.message ?: "Invalid holder DID"
-                    )
-                else ->
-                    WalletCreationResult.Failure.Other(e.message ?: "Wallet creation failed", e)
+        return withContext(getIoDispatcher()) {
+            try {
+                val builder = WalletBuilder(this@TrustWeave)
+                builder.block()
+                val wallet = builder.build()
+                WalletCreationResult.Success(wallet)
+            } catch (e: WalletException.WalletFactoryNotConfigured) {
+                WalletCreationResult.Failure.FactoryNotConfigured(e.reason)
+            } catch (e: WalletException.InvalidHolderDid) {
+                WalletCreationResult.Failure.InvalidHolderDid(
+                    holderDid = e.holderDid,
+                    reason = e.reason
+                )
+            } catch (e: WalletException.WalletCreationFailed) {
+                WalletCreationResult.Failure.Other(
+                    reason = e.reason,
+                    cause = e
+                )
+            } catch (e: Throwable) {
+                WalletCreationResult.Failure.Other(
+                    reason = e.message ?: "Wallet creation failed",
+                    cause = e
+                )
             }
-        } catch (e: Throwable) {
-            WalletCreationResult.Failure.Other(e.message ?: "Wallet creation failed", e)
         }
     }
 
@@ -901,6 +947,57 @@ class TrustWeave private constructor(
         fun from(config: TrustWeaveConfig): TrustWeave {
             return TrustWeave(config)
         }
+    }
+
+    /**
+     * Close and cleanup resources held by this TrustWeave instance.
+     *
+     * This method should be called when the TrustWeave instance is no longer needed
+     * to ensure proper cleanup of resources like KMS connections, blockchain clients, etc.
+     *
+     * **Example:**
+     * ```kotlin
+     * val trustWeave = TrustWeave.build { ... }
+     * try {
+     *     // Use trustWeave
+     * } finally {
+     *     trustWeave.close()
+     * }
+     * ```
+     */
+    override fun close() {
+        logger.debug("Closing TrustWeave instance: ${config.name}")
+        
+        // Close KMS if it implements Closeable
+        try {
+            (config.kms as? Closeable)?.close()
+        } catch (e: Exception) {
+            logger.warn("Error closing KMS: ${e.message}", e)
+        }
+        
+        // Close blockchain clients
+        try {
+            config.blockchainRegistry.getAllClients().values
+                .filterIsInstance<Closeable>()
+                .forEach { client ->
+                    try {
+                        client.close()
+                    } catch (e: Exception) {
+                        logger.warn("Error closing blockchain client: ${e.message}", e)
+                    }
+                }
+        } catch (e: Exception) {
+            logger.warn("Error closing blockchain clients: ${e.message}", e)
+        }
+        
+        // Close KMS service if it implements Closeable
+        try {
+            (config.kmsService as? Closeable)?.close()
+        } catch (e: Exception) {
+            logger.warn("Error closing KMS service: ${e.message}", e)
+        }
+        
+        logger.debug("TrustWeave instance closed: ${config.name}")
     }
 }
 

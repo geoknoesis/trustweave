@@ -23,11 +23,11 @@ Add the did:sol module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave.did:sol:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("org.trustweave.did:base:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:did-plugins-sol:0.6.0")
+    implementation("org.trustweave:did-did-core:0.6.0")
+    implementation("org.trustweave:did-plugins-base:0.6.0")
+    implementation("org.trustweave:anchors-anchor-core:0.6.0")
+    implementation("org.trustweave:common:0.6.0")
 
     // HTTP client for Solana RPC
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
@@ -223,32 +223,38 @@ val config = SolDidConfig.builder()
 ## Integration with TrustWeave
 
 ```kotlin
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.did.KeyAlgorithm
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.kms.InMemoryKeyManagementService
 import org.trustweave.soldid.*
-import org.trustweave.anchor.*
-import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 
 val config = SolDidConfig.devnet("https://api.devnet.solana.com")
-val anchorClient = InMemoryBlockchainAnchorClient("solana:devnet")
+val kms = InMemoryKeyManagementService()
 
-val TrustWeave = TrustWeave.create {
-    kms = InMemoryKeyManagementService()
-
-    blockchains {
-        register("solana:devnet", anchorClient)
+val trustWeave = TrustWeave.build {
+    customKms(kms)
+    anchor {
+        chain("solana:devnet") { inMemory() }
     }
-
-    didMethods {
-        + SolDidMethod(kms!!, anchorClient, config)
+    did {
+        method("sol") {
+            algorithm("Ed25519")
+            option("solConfig", config)
+        }
     }
 }
 
-// Use did:sol
-val did = TrustWeave.createDid("sol") {
-    algorithm = KeyAlgorithm.ED25519
-}.getOrThrow()
+val did = trustWeave.createDid {
+    method("sol")
+    algorithm(KeyAlgorithm.ED25519)
+}.getOrThrowDid()
 
-val resolved = TrustWeave.resolveDid(did.id).getOrThrow()
+when (val resolved = trustWeave.resolveDid(did)) {
+    is DidResolutionResult.Success -> println("Resolved: ${resolved.document.id}")
+    else -> println("Resolve failed: $resolved")
+}
 ```
 
 ## Error Handling
@@ -302,7 +308,7 @@ This implementation uses Solana JSON-RPC API:
 
 ## References
 
-- [Solana Documentation](https://docs.solana.com/)
-- [Solana JSON-RPC API](https://docs.solana.com/api/http)
-- [Solana Web3.js](https://solana-labs.github.io/solana-web3.js/)
+- Solana Documentation](https://docs.solana.com/)
+- Solana JSON-RPC API](https://docs.solana.com/api/http)
+- Solana Web3.js](https://solana-labs.github.io/solana-web3.js/)
 

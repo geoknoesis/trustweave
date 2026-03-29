@@ -4,23 +4,37 @@ import org.trustweave.did.identifiers.Did
 
 /**
  * Type-safe identity wrappers for trust operations.
- * 
- * These are simple type aliases for Did to provide semantic meaning
- * in trust-related operations.
+ *
+ * Value classes provide compile-time type safety without runtime overhead,
+ * preventing accidental confusion between issuer, verifier, and holder DIDs.
  */
 
 /**
  * Issuer identity - represents a credential issuer.
  */
-typealias IssuerIdentity = Did
+@JvmInline
+value class IssuerIdentity(val did: Did) {
+    companion object {
+        operator fun invoke(didString: String): IssuerIdentity = IssuerIdentity(Did(didString))
+    }
+}
 
 /**
  * Verifier identity - represents a credential verifier.
  */
-typealias VerifierIdentity = Did
+@JvmInline
+value class VerifierIdentity(val did: Did) {
+    companion object {
+        operator fun invoke(didString: String): VerifierIdentity = VerifierIdentity(Did(didString))
+    }
+}
 
 /**
  * Holder identity - represents a credential holder.
  */
-typealias HolderIdentity = Did
-
+@JvmInline
+value class HolderIdentity(val did: Did) {
+    companion object {
+        operator fun invoke(didString: String): HolderIdentity = HolderIdentity(Did(didString))
+    }
+}

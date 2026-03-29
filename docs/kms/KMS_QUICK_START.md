@@ -597,9 +597,9 @@ val badOptions = mapOf(
 
 ## Next Steps
 
-- [Complete Configuration Guide](KMS_PLUGINS_CONFIGURATION.md)
-- [Plugin Testing Guide](../../docs/internal/development/KMS_PLUGIN_TESTING_GUIDE.md)
-- [Result-Based API Documentation](../../docs/core-concepts/result-pattern.md)
+- Complete Configuration Guide](KMS_PLUGINS_CONFIGURATION.md)
+- Plugin Testing Guide](../../docs/internal/development/KMS_PLUGIN_TESTING_GUIDE.md)
+- Result-Based API Documentation](../../docs/core-concepts/result-pattern.md)
 
 ---
 

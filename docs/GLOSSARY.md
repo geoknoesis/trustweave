@@ -7,7 +7,7 @@ nav_exclude: true
 
 Standard terminology used throughout TrustWeave documentation.
 
-> **Version:** 1.0.0-SNAPSHOT
+> **Version:** 0.6.0
 
 ## Core Terms
 
@@ -16,8 +16,14 @@ The **TrustWeave** class is the main entry point (facade pattern). It provides a
 
 **Example:**
 ```kotlin
-val trustweave = TrustWeave.create()
-val did = trustweave.dids.create()
+import kotlinx.coroutines.runBlocking
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.getOrThrowDid
+
+fun main() = runBlocking {
+    val trustWeave = TrustWeave.quickStart()
+    val did = trustWeave.createDid { }.getOrThrowDid()
+}
 ```
 
 **Related:** [Core API Reference](api-reference/core-api.md)
@@ -31,7 +37,7 @@ Concrete implementations that perform operations:
 **Example:**
 ```kotlin
 class MyCredentialService : CredentialService {
-    override suspend fun issueCredential(...): VerifiableCredential
+    override suspend fun issue(request: IssuanceRequest): IssuanceResult = TODO()
 }
 ```
 
@@ -56,7 +62,7 @@ class MyWalletFactory : WalletFactory {
 Collections that manage multiple implementations:
 - **DidMethodRegistry**: Manages DID methods (did:key, did:web, etc.)
 - **BlockchainAnchorRegistry**: Manages blockchain clients
-- **CredentialServiceRegistry**: Manages credential services
+- **CredentialService** / **`CredentialServices`**: Default credential issuance and verification (`issue(IssuanceRequest)`, `verify(...)`, presentations); constructed explicitly or by **`TrustWeave.build`**
 
 **Example:**
 ```kotlin
@@ -239,37 +245,37 @@ interface PluginLifecycle {
 
 ## Error Terms
 
-### TrustWeaveError
-Sealed hierarchy of structured error types with context.
+### TrustWeaveException
+Base type for TrustWeave failures that are modeled as **exceptions**. Domain modules add sealed subclasses such as **`DidException`**, **`BlockchainException`**, **`WalletException`**, **`PluginException`**, **`ConfigException`**, and **`SerializationException`**.
 
 **Example:**
 ```kotlin
-TrustWeaveError.DidMethodNotRegistered(
+import org.trustweave.did.exception.DidException
+
+DidException.DidMethodNotRegistered(
     method = "web",
     availableMethods = listOf("key")
 )
 ```
 
-**Related:** [Error Handling](advanced/error-handling.md)
+**Related:** [Error handling](advanced/error-handling.md)
 
-### Result<T>
-Kotlin Result type used for all TrustWeave operations.
+### Result&lt;T&gt;
+Kotlin **`Result`** is used by some services (for example smart-contract helpers). The **`TrustWeave`** facade often returns **sealed result types** instead (`DidCreationResult`, `IssuanceResult`, `VerificationResult`, …).
 
 **Example:**
 ```kotlin
-try {
-    val did = trustweave.dids.create()
-    println("Created: ${did.id}")
-} catch (error: TrustWeaveError) {
-    println("Error: ${error.message}")
-}
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.testkit.services.*
+
+val did = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 ```
 
 **Related:** [Error Handling](advanced/error-handling.md)
 
 ## Related Documentation
 
-- [Core Concepts](core-concepts/README.md) - Detailed explanations
-- [API Reference](api-reference/README.md) - Complete API documentation
-- [Quick Start](getting-started/quick-start.md) - Getting started guide
+- Core Concepts](core-concepts/README.md) - Detailed explanations
+- API Reference](api-reference/README.md) - Complete API documentation
+- Quick Start](getting-started/quick-start.md) - Getting started guide
 

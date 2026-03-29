@@ -94,7 +94,9 @@ plugins {
     kotlin("plugin.serialization")
 }
 
+// Credential format plugins in this repo often use:
 group = "org.trustweave.credentials"
+// Core libraries (e.g. `common`, `credential-api`) use `org.trustweave` — match the Gradle `group` of the module you extend.
 
 dependencies {
     // Core API dependency
@@ -291,8 +293,7 @@ val registry = ProofRegistries.default()
 ProofAdapters.autoRegister(registry)
 
 val service = createCredentialService(
-    adapterRegistry = registry,
-    didResolver = didResolver
+    adapterRegistry = registry
 )
 ```
 

@@ -1,35 +1,34 @@
 package org.trustweave.credential
 
 import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.credential.trust.TrustPolicy
+import org.trustweave.credential.trust.TrustEvaluator
 import org.trustweave.credential.results.VerificationResult
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.resolver.DidResolver
 
 /**
- * Examples demonstrating trust policy usage in credential verification.
+ * Examples demonstrating trust evaluator usage in credential verification.
  */
 
 /**
- * Example: Verify with allowlist trust policy.
- * 
+ * Example: Verify with allowlist trust evaluator.
+ *
  * Only credentials from trusted issuers will be accepted.
  */
-suspend fun exampleAllowlistTrustPolicy(
+suspend fun exampleAllowlistTrustEvaluator(
     didResolver: DidResolver,
     credential: VerifiableCredential,
     trustedIssuers: Set<Did>
 ) {
     val service = credentialService(didResolver)
-    
-    // Create allowlist policy
-    val trustPolicy = TrustPolicy.allowlist(trustedIssuers = trustedIssuers)
-    
+
+    val evaluator = TrustEvaluator.allowlist(trustedIssuers = trustedIssuers)
+
     val result = service.verify(
         credential = credential,
-        trustPolicy = trustPolicy
+        trustPolicy = evaluator
     )
-    
+
     when (result) {
         is VerificationResult.Valid -> {
             println("✅ Credential is valid and issuer is trusted")
@@ -44,25 +43,24 @@ suspend fun exampleAllowlistTrustPolicy(
 }
 
 /**
- * Example: Verify with blocklist trust policy.
- * 
+ * Example: Verify with blocklist trust evaluator.
+ *
  * All issuers are accepted except those in the blocklist.
  */
-suspend fun exampleBlocklistTrustPolicy(
+suspend fun exampleBlocklistTrustEvaluator(
     didResolver: DidResolver,
     credential: VerifiableCredential,
     blockedIssuers: Set<Did>
 ) {
     val service = credentialService(didResolver)
-    
-    // Create blocklist policy
-    val trustPolicy = TrustPolicy.blocklist(blockedIssuers = blockedIssuers)
-    
+
+    val evaluator = TrustEvaluator.blocklist(blockedIssuers = blockedIssuers)
+
     val result = service.verify(
         credential = credential,
-        trustPolicy = trustPolicy
+        trustPolicy = evaluator
     )
-    
+
     when (result) {
         is VerificationResult.Valid -> {
             println("✅ Credential is valid and issuer is not blocked")
@@ -77,22 +75,21 @@ suspend fun exampleBlocklistTrustPolicy(
 }
 
 /**
- * Example: Verify without trust policy (default behavior).
- * 
+ * Example: Verify without trust evaluator (default behavior).
+ *
  * Only cryptographic validity is checked, not issuer trust.
  */
-suspend fun exampleNoTrustPolicy(
+suspend fun exampleNoTrustEvaluator(
     didResolver: DidResolver,
     credential: VerifiableCredential
 ) {
     val service = credentialService(didResolver)
-    
-    // No trust policy - only cryptographic validity checked
+
     val result = service.verify(
         credential = credential,
-        trustPolicy = null  // or TrustPolicy.acceptAll()
+        trustPolicy = null  // or TrustEvaluator.acceptAll()
     )
-    
+
     when (result) {
         is VerificationResult.Valid -> {
             println("✅ Credential is cryptographically valid")
@@ -105,24 +102,23 @@ suspend fun exampleNoTrustPolicy(
 }
 
 /**
- * Example: Verify with accept-all trust policy (explicit).
- * 
+ * Example: Verify with accept-all trust evaluator (explicit).
+ *
  * Same as no trust policy, but makes intent explicit.
  */
-suspend fun exampleAcceptAllTrustPolicy(
+suspend fun exampleAcceptAllTrustEvaluator(
     didResolver: DidResolver,
     credential: VerifiableCredential
 ) {
     val service = credentialService(didResolver)
-    
-    // Explicitly accept all issuers
-    val trustPolicy = TrustPolicy.acceptAll()
-    
+
+    val evaluator = TrustEvaluator.acceptAll()
+
     val result = service.verify(
         credential = credential,
-        trustPolicy = trustPolicy
+        trustPolicy = evaluator
     )
-    
+
     // Same behavior as no trust policy
     when (result) {
         is VerificationResult.Valid -> {
@@ -133,4 +129,3 @@ suspend fun exampleAcceptAllTrustPolicy(
         }
     }
 }
-

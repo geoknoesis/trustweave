@@ -12,12 +12,12 @@ This guide walks you through building a complete Earth Observation (EO) data int
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created a DID for a data provider
-- ✅ Generated metadata, provenance, and quality reports for EO datasets
-- ✅ Built a Linkset connecting all artifacts
-- ✅ Created a Verifiable Credential referencing the Linkset
-- ✅ Anchored the VC digest to a blockchain
-- ✅ Verified the complete integrity chain
+- Created a DID for a data provider
+- Generated metadata, provenance, and quality reports for EO datasets
+- Built a Linkset connecting all artifacts
+- Created a Verifiable Credential referencing the Linkset
+- Anchored the VC digest to a blockchain
+- Verified the complete integrity chain
 
 ## Big Picture & Significance
 
@@ -133,13 +133,13 @@ Add TrustWeave dependencies to your `build.gradle.kts`. This pulls in the core r
 dependencies {
     // Core TrustWeave modules
     // TrustWeave distribution (includes all modules)
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Test kit for in-memory implementations
-    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:0.6.0")
 
     // Optional: Algorand adapter for real blockchain anchoring
-    implementation("org.trustweave.chains:algorand:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:anchors-plugins-algorand:0.6.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -158,55 +158,60 @@ Here's the full Earth Observation data integrity workflow using the TrustWeave f
 ```kotlin
 package com.example.earth.observation
 
-import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.*
 import org.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.datetime.Clock
+import org.trustweave.testkit.services.*
+import org.trustweave.did.identifiers.extractKeyId
 
 fun main() = runBlocking {
     println("=".repeat(70))
     println("Earth Observation Data Integrity Scenario - Complete End-to-End Example")
     println("=".repeat(70))
 
-    trustWeave {
+    val trustWeave = TrustWeave.build {
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
         anchor { chain("inmemory:testnet") { provider(IN_MEMORY) } }
-    }.run {
-        println("\n✅ TrustWeave initialized")
+    }
+    
+    println("\n✅ TrustWeave initialized")
+    
+    trustWeave.createDid { method(KEY) }.getOrThrow().let { (did, doc) ->
+        val datasetId = "did:web:eo.example.com:collections:Sentinel2:items:L1C_T31UFS_20230615"
+        println("✅ Data Provider DID: ${did.value}")
         
-        createDid { method(KEY) }.getOrThrow().let { (did, doc) ->
-            val datasetId = "did:web:eo.example.com:collections:Sentinel2:items:L1C_T31UFS_20230615"
-            println("✅ Data Provider DID: ${did.value}")
-            
-            issue {
-                credential {
-                    type("VerifiableCredential", "EOCredential")
-                    issuer(did)
-                    subject {
-                        id(datasetId)
-                        "relatedResource" to listOf(
-                            resource("eo:Imagery", "https://storage.example.com/L1C_T31UFS.tif", "sha384-oqVuAfXR..."),
-                            resource("eo:Metadata", "https://catalog.example.com/L1C_T31UFS/metadata.json", "sha384-8fA2K1n..."),
-                            resource("eo:Provenance", "https://catalog.example.com/L1C_T31UFS/provenance.json", "sha384-Qx7vBnM..."),
-                            resource("eo:QualityReport", "https://catalog.example.com/L1C_T31UFS/quality.json", "sha384-mP9kLwR...")
-                        )
-                    }
-                    issued(Clock.System.now())
+        trustWeave.issue {
+            credential {
+                type("VerifiableCredential", "EOCredential")
+                issuer(did)
+                subject {
+                    id(datasetId)
+                    "relatedResource" to listOf(
+                        resource("eo:Imagery", "https://storage.example.com/L1C_T31UFS.tif", "sha384-oqVuAfXR..."),
+                        resource("eo:Metadata", "https://catalog.example.com/L1C_T31UFS/metadata.json", "sha384-8fA2K1n..."),
+                        resource("eo:Provenance", "https://catalog.example.com/L1C_T31UFS/provenance.json", "sha384-Qx7vBnM..."),
+                        resource("eo:QualityReport", "https://catalog.example.com/L1C_T31UFS/quality.json", "sha384-mP9kLwR...")
+                    )
                 }
-                signedBy(did, doc.verificationMethod.first().id.substringAfter("#"))
-            }.getOrThrow().also { cred ->
-                println("✅ Credential issued: ${cred.id}")
-                println("\n📄 Credential Structure:")
-                println(Json { prettyPrint = true }.encodeToString(VerifiableCredential.serializer(), cred))
-                
-                blockchains.anchor(cred, VerifiableCredential.serializer(), "inmemory:testnet").getOrThrow().ref.also { ref ->
-                    println("\n✅ Anchored: ${ref.chainId} / ${ref.txHash}")
-                    verify { credential(cred) }.getOrThrow()
-                    println("✅ Verified!")
-                }
+                issued(Clock.System.now())
             }
+            signedBy(did, doc.verificationMethod.firstOrNull()?.extractKeyId()
+                ?: error("No verification method on data provider DID document"))
+        }.getOrThrow().also { cred ->
+            println("✅ Credential issued: ${cred.id}")
+            println("\n📄 Credential Structure:")
+            println(Json { prettyPrint = true }.encodeToString(VerifiableCredential.serializer(), cred))
+            
+            trustWeave.blockchains.anchor(cred, VerifiableCredential.serializer(), "inmemory:testnet").ref.also { ref ->
+                println("\n✅ Anchored: ${ref.chainId} / ${ref.txHash}")
+                trustWeave.verify { credential(cred) }.getOrThrow()
+                println("✅ Verified!")
+            }
+        }
         }
     }
     println("\n${"=".repeat(70)}\n✅ Earth Observation Scenario Complete!\n${"=".repeat(70)}")
@@ -262,11 +267,11 @@ Earth Observation Data Integrity Scenario - Complete End-to-End Example
 3. Run with `./gradlew run` or execute in your IDE
 
 **What this demonstrates:**
-- ✅ W3C VC 2.0 compliant credential structure
-- ✅ `relatedResource` pattern with `digestSRI` for integrity
-- ✅ Clean DSL without intermediate variables
-- ✅ DID → Issue → Anchor → Verify in one fluent expression
-- ✅ Resources linked by URL with Subresource Integrity hashes
+- W3C VC 2.0 compliant credential structure
+- relatedResource` pattern with `digestSRI` for integrity
+- Clean DSL without intermediate variables
+- DID → Issue → Anchor → Verify in one fluent expression
+- Resources linked by URL with Subresource Integrity hashes
 
 ## Step 3: Step-by-Step Breakdown
 

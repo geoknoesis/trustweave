@@ -129,3 +129,11 @@ class InMemoryDocumentStorage : DidDocumentStorage {
     }
 }
 
+/**
+ * Canonical alias for [InMemoryDocumentStorage].
+ *
+ * Prefer this name when referencing the in-memory storage implementation by its full
+ * interface name (`InMemoryDidDocumentStorage` mirrors the `DidDocumentStorage` interface).
+ */
+typealias InMemoryDidDocumentStorage = InMemoryDocumentStorage
+

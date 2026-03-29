@@ -35,16 +35,17 @@ data class VerificationMethod(
  * Represents a service endpoint in a DID Document.
  *
  * Following W3C DID Core specification, services provide means of communication
- * or interaction with the DID subject.
+ * or interaction with the DID subject. Per DID 1.1 / CID, [type] may be a string
+ * or a set of strings; we model it as a non-empty list.
  *
  * @param id The service identifier (can be relative or absolute URI)
- * @param type The service type (e.g., "LinkedDomains", "DIDCommMessaging")
+ * @param type Service type(s) (e.g. ["LinkedDomains"], ["DIDCommMessaging"]); at least one required
  * @param serviceEndpoint The service endpoint (can be a URL, object, or array)
  */
 @Serializable
 data class DidService(
     val id: String,  // Service IDs are often relative URIs, so keeping as String
-    val type: String,
+    val type: List<String>,  // DID 1.1: string or set of strings
     @Contextual val serviceEndpoint: Any  // URL, object, or array
 )
 
@@ -53,7 +54,7 @@ data class DidService(
  *
  * @param id The DID identifier (typed)
  * @param context JSON-LD context(s) for the document (defaults to W3C DID Core context)
- * @param alsoKnownAs Alternative identifiers for this DID (typed)
+ * @param alsoKnownAs Alternative identifiers (DID or absolute URL per spec); see [DidOrUrl]
  * @param controller DIDs that control this DID (typed)
  * @param verificationMethod List of verification methods
  * @param authentication List of verification method references for authentication (typed)
@@ -67,7 +68,7 @@ data class DidService(
 data class DidDocument(
     val id: Did,
     val context: List<String> = listOf("https://www.w3.org/ns/did/v1"),
-    val alsoKnownAs: List<Did> = emptyList(),
+    val alsoKnownAs: List<DidOrUrl> = emptyList(),
     val controller: List<Did> = emptyList(),
     val verificationMethod: List<VerificationMethod> = emptyList(),
     val authentication: List<VerificationMethodId> = emptyList(),

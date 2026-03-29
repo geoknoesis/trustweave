@@ -66,15 +66,15 @@ object ProofTypes {
 ## Cloud KMS Compatibility Summary
 
 ### AWS KMS
-- ✅ **Fully Compatible:** secp256k1, P-256, P-384, P-521, RSA (all sizes), Ed25519 (Nov 2025+)
-- ⚠️ **Partial Compatibility:** BLS12-381 (not supported)
-- ✅ **FIPS 140-3 Level 3 Validated:** P-256, P-384, P-521, RSA (all sizes), secp256k1 (blockchain only) - [Certificate #4884](https://csrc.nist.gov/projects/cryptographic-module-validation-program/certificate/4884)
-- ⚠️ **FIPS Status:** Ed25519 not in current FIPS certificate (added Nov 2025, may use non-FIPS path)
+- Fully Compatible:** secp256k1, P-256, P-384, P-521, RSA (all sizes), Ed25519 (Nov 2025+)
+- Partial Compatibility:** BLS12-381 (not supported)
+- FIPS 140-3 Level 3 Validated:** P-256, P-384, P-521, RSA (all sizes), secp256k1 (blockchain only) - [Certificate #4884](https://csrc.nist.gov/projects/cryptographic-module-validation-program/certificate/4884)
+- FIPS Status:** Ed25519 not in current FIPS certificate (added Nov 2025, may use non-FIPS path)
 - **Best For:** Production deployments requiring FIPS 140-3 Level 3 compliance, Ed25519 support
 
 ### Azure Key Vault
-- ✅ **Fully Compatible:** secp256k1, P-256, P-384, P-521, RSA (all sizes)
-- ❌ **Not Compatible:** Ed25519, BLS12-381
+- Fully Compatible:** secp256k1, P-256, P-384, P-521, RSA (all sizes)
+- Not Compatible:** Ed25519, BLS12-381
 - **Best For:** Azure ecosystem deployments, NIST-compliant algorithms, JWK native format
 
 ## Recommendations
@@ -115,9 +115,9 @@ object ProofTypes {
 
 ## Related Documentation
 
-- [Key Management Guide](./key-management.md)
-- [Verifiable Credentials Guide](./verifiable-credentials.md)
-- [DID Guide](./dids.md)
-- [Architecture Overview](../introduction/architecture-overview.md)
+- Key Management Guide](./key-management.md)
+- Verifiable Credentials Guide](./verifiable-credentials.md)
+- DID Guide](./dids.md)
+- Architecture Overview](../introduction/architecture-overview.md)
 
 

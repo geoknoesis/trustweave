@@ -3,6 +3,23 @@ package org.trustweave.did.model
 import kotlinx.serialization.json.*
 
 /**
+ * Serialize service [type] (DID 1.1: string or set of strings) to JSON.
+ * Single type → string; multiple → array.
+ */
+fun List<String>.toServiceTypeJsonElement(): JsonElement =
+    if (size == 1) JsonPrimitive(this[0]) else JsonArray(map { JsonPrimitive(it) })
+
+/**
+ * Parse service type from JSON (string or array of strings) per DID 1.1 §5.4.
+ */
+fun parseServiceTypesFromJson(el: JsonElement?): List<String>? = when (el) {
+    null -> null
+    is JsonPrimitive -> el.content?.let { listOf(it) }
+    is JsonArray -> el.mapNotNull { (it as? JsonPrimitive)?.content }.takeIf { it.isNotEmpty() }
+    else -> null
+}
+
+/**
  * Type-safe extensions for [DidService.serviceEndpoint].
  *
  * The W3C DID Core spec allows serviceEndpoint to be:

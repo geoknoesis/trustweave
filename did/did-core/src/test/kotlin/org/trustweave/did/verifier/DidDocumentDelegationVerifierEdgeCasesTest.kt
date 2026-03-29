@@ -1,5 +1,3 @@
-@file:Suppress("DEPRECATION")
-
 package org.trustweave.did.verifier
 
 import org.trustweave.did.identifiers.Did
@@ -7,6 +5,7 @@ import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidResolver
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -40,7 +39,7 @@ class DidDocumentDelegationVerifierEdgeCasesTest {
             }
         }
 
-        val verifier = DidDocumentDelegationVerifier(resolveDid)
+        val verifier = DidDocumentDelegationVerifier(DidResolver { did -> resolveDid(did.value) ?: DidResolutionResult.Failure.NotFound(did = did, reason = "DID not found") })
         val result = verifier.verify(Did(delegatorDid), Did(delegateDid))
 
         assertFalse(result.valid)
@@ -83,7 +82,7 @@ class DidDocumentDelegationVerifierEdgeCasesTest {
             }
         }
 
-        val verifier = DidDocumentDelegationVerifier(resolveDid)
+        val verifier = DidDocumentDelegationVerifier(DidResolver { did -> resolveDid(did.value) ?: DidResolutionResult.Failure.NotFound(did = did, reason = "DID not found") })
         val result = verifier.verify(Did(delegatorDid), Did(delegateDid))
 
         assertTrue(result.valid)
@@ -109,7 +108,7 @@ class DidDocumentDelegationVerifierEdgeCasesTest {
             }
         }
 
-        val verifier = DidDocumentDelegationVerifier(resolveDid)
+        val verifier = DidDocumentDelegationVerifier(DidResolver { did -> resolveDid(did.value) ?: DidResolutionResult.Failure.NotFound(did = did, reason = "DID not found") })
         val result = verifier.verify(Did(delegatorDid), Did(delegateDid))
 
         // Relative reference may not match delegate DID
@@ -120,7 +119,7 @@ class DidDocumentDelegationVerifierEdgeCasesTest {
     fun `test verify multi-hop delegation with single DID`() = runBlocking {
         val resolveDid: suspend (String) -> DidResolutionResult? = { null }
 
-        val verifier = DidDocumentDelegationVerifier(resolveDid)
+        val verifier = DidDocumentDelegationVerifier(DidResolver { did -> resolveDid(did.value) ?: DidResolutionResult.Failure.NotFound(did = did, reason = "DID not found") })
         val result = verifier.verifyChain(listOf(Did("did:key:single")))
 
         assertFalse(result.valid)
@@ -131,7 +130,7 @@ class DidDocumentDelegationVerifierEdgeCasesTest {
     fun `test verify multi-hop delegation with empty chain`() = runBlocking {
         val resolveDid: suspend (String) -> DidResolutionResult? = { null }
 
-        val verifier = DidDocumentDelegationVerifier(resolveDid)
+        val verifier = DidDocumentDelegationVerifier(DidResolver { did -> resolveDid(did.value) ?: DidResolutionResult.Failure.NotFound(did = did, reason = "DID not found") })
         val result = verifier.verifyChain(emptyList())
 
         assertFalse(result.valid)
@@ -153,7 +152,7 @@ class DidDocumentDelegationVerifierEdgeCasesTest {
             } else null
         }
 
-        val verifier = DidDocumentDelegationVerifier(resolveDid)
+        val verifier = DidDocumentDelegationVerifier(DidResolver { did -> resolveDid(did.value) ?: DidResolutionResult.Failure.NotFound(did = did, reason = "DID not found") })
         val result = verifier.verify(Did(did), Did(did))
 
         // Self-delegation should be valid if in capabilityDelegation
@@ -189,7 +188,7 @@ class DidDocumentDelegationVerifierEdgeCasesTest {
     @Test
     fun `test verify delegation chain with boolean resolver returns invalid`() = runBlocking {
         val resolveDid: suspend (String) -> DidResolutionResult? = { _: String -> null }
-        val verifier = DidDocumentDelegationVerifier(resolveDid)
+        val verifier = DidDocumentDelegationVerifier(DidResolver { did -> resolveDid(did.value) ?: DidResolutionResult.Failure.NotFound(did = did, reason = "DID not found") })
         val result = verifier.verify(Did("did:key:delegator"), Did("did:key:delegate"))
 
         assertFalse(result.valid)

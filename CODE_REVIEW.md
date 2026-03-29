@@ -39,7 +39,7 @@ suspend fun TrustWeave.wallet(block: WalletBuilder.() -> Unit): Wallet {
 **Recommendation:**
 - Remove the extension function and use the member function consistently
 - Or rename the extension function to avoid shadowing
-- Update all call sites to use `wallet { }.getOrFail()` pattern
+- Update all call sites to use `wallet { }.getOrThrow()` pattern
 
 **Impact:** High - API inconsistency, potential runtime errors
 

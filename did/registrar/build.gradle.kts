@@ -14,7 +14,12 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)
 
+    compileOnly("org.slf4j:slf4j-api:2.0.9")
+
     // Test dependencies
     testImplementation(project(":testkit"))
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+    testImplementation(kotlin("test"))
+    testImplementation(libs.junit.platform.launcher)
 }
 

@@ -45,7 +45,7 @@ When you add a KMS plugin dependency to your project (e.g., `trustweave-kms-aws`
 **Example:** Adding AWS KMS plugin to your `build.gradle.kts`:
 ```kotlin
 dependencies {
-    implementation("org.trustweave.kms:aws:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:kms-plugins-aws:0.6.0")
 }
 ```
 
@@ -329,6 +329,7 @@ val kms = AwsKeyManagementService(config ?: throw IllegalStateException("AWS con
 
 ```kotlin
 import org.trustweave.kms.KmsOptionKeys
+import org.trustweave.testkit.services.*
 
 val kms = awsProvider.create(mapOf(
     KmsOptionKeys.REGION to "us-east-1",
@@ -992,9 +993,9 @@ val config = AwsKmsConfig.builder()
 
 ## Additional Resources
 
-- [KMS Core Concepts](../../docs/core-concepts/key-management.md)
-- [Plugin Testing Guide](../../docs/internal/development/KMS_PLUGIN_TESTING_GUIDE.md)
-- [Result-Based API Guide](../../docs/core-concepts/result-pattern.md)
+- KMS Core Concepts](../../docs/core-concepts/key-management.md)
+- Plugin Testing Guide](../../docs/internal/development/KMS_PLUGIN_TESTING_GUIDE.md)
+- Result-Based API Guide](../../docs/core-concepts/result-pattern.md)
 
 ---
 

@@ -10,7 +10,7 @@ import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.credential.results.VerificationResult
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.spi.proof.ProofEngineCapabilities
-import org.trustweave.credential.trust.TrustPolicy
+import org.trustweave.credential.trust.TrustEvaluator
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -90,7 +90,7 @@ interface CredentialService {
      */
     suspend fun verify(
         credential: VerifiableCredential,
-        trustPolicy: TrustPolicy? = null,
+        trustPolicy: TrustEvaluator? = null,
         options: VerificationOptions = VerificationOptions()
     ): VerificationResult
     
@@ -124,7 +124,7 @@ interface CredentialService {
      */
     suspend fun verify(
         credentials: List<VerifiableCredential>,
-        trustPolicy: TrustPolicy? = null,
+        trustPolicy: TrustEvaluator? = null,
         options: VerificationOptions = VerificationOptions()
     ): List<VerificationResult> = coroutineScope {
         credentials.map { async { verify(it, trustPolicy, options) } }.awaitAll()
@@ -196,7 +196,7 @@ interface CredentialService {
      */
     suspend fun verifyPresentation(
         presentation: VerifiablePresentation,
-        trustPolicy: TrustPolicy? = null,
+        trustPolicy: TrustEvaluator? = null,
         options: VerificationOptions = VerificationOptions()
     ): VerificationResult
     

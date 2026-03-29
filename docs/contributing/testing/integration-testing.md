@@ -160,6 +160,6 @@ export VERICORE_SKIP_INTEGRATION_TESTS=true
 
 ## Next Steps
 
-- [Test Setup Guide](test-setup-guide.md) - Environment setup
-- [Writing Tests](writing-tests.md) - Writing new tests
+- Test Setup Guide](test-setup-guide.md) - Environment setup
+- Writing Tests](writing-tests.md) - Writing new tests
 

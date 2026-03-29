@@ -19,19 +19,19 @@ This guide shows you how to anchor data to multiple blockchains for redundancy a
 
 Before you begin, ensure you have:
 
-- ✅ TrustWeave dependencies with anchor support
-- ✅ Understanding of blockchain anchoring basics
-- ✅ Knowledge of CAIP-2 chain identifiers
-- ✅ Access to blockchain clients (or test clients)
+- TrustWeave dependencies with anchor support
+- Understanding of blockchain anchoring basics
+- Knowledge of CAIP-2 chain identifiers
+- Access to blockchain clients (or test clients)
 
 ## Expected Outcome
 
 After completing this guide, you will have:
 
-- ✅ Anchored data to multiple blockchains
-- ✅ Implemented redundancy patterns
-- ✅ Selected chains dynamically
-- ✅ Handled multi-chain errors gracefully
+- Anchored data to multiple blockchains
+- Implemented redundancy patterns
+- Selected chains dynamically
+- Handled multi-chain errors gracefully
 
 ## Quick Example
 
@@ -119,9 +119,9 @@ anchorRegistry.register(
 ```
 
 **What this does:**
-- ✅ Registers multiple blockchain clients
-- ✅ Uses CAIP-2 chain identifiers (standard format)
-- ✅ Makes all chains available via unified API
+- Registers multiple blockchain clients
+- Uses CAIP-2 chain identifiers (standard format)
+- Makes all chains available via unified API
 
 **Expected Result:** Registry with multiple chains registered.
 
@@ -152,9 +152,9 @@ val payload = Json.encodeToJsonElement(digest)
 ```
 
 **What this does:**
-- ✅ Creates serializable data structure
-- ✅ Serializes to JSON
-- ✅ Prepares for anchoring
+- Creates serializable data structure
+- Serializes to JSON
+- Prepares for anchoring
 
 **Expected Result:** JSON payload ready for anchoring.
 
@@ -170,9 +170,9 @@ println("Anchored: ${result.ref.txHash}")
 ```
 
 **What this does:**
-- ✅ Anchors data to specified chain
-- ✅ Returns anchor reference with transaction hash
-- ✅ Uses unified API regardless of chain
+- Anchors data to specified chain
+- Returns anchor reference with transaction hash
+- Uses unified API regardless of chain
 
 **Expected Result:** Anchor result with transaction reference.
 
@@ -199,9 +199,9 @@ println("Successfully anchored to ${results.size} of ${chains.size} chains")
 ```
 
 **What this does:**
-- ✅ Tries each chain sequentially
-- ✅ Handles failures gracefully
-- ✅ Collects successful results
+- Tries each chain sequentially
+- Handles failures gracefully
+- Collects successful results
 
 **Expected Result:** List of successful anchor results.
 
@@ -233,9 +233,9 @@ println("Successfully anchored to ${results.size} of ${chains.size} chains")
 ```
 
 **What this does:**
-- ✅ Anchors to all chains concurrently
-- ✅ Faster than sequential anchoring
-- ✅ Handles failures independently
+- Anchors to all chains concurrently
+- Faster than sequential anchoring
+- Handles failures independently
 
 **Expected Result:** List of successful anchor results (faster).
 
@@ -415,10 +415,10 @@ when (chainId) {
 ```
 
 **Problems:**
-- ❌ Chain-specific code for each blockchain
-- ❌ Hard to add new chains
-- ❌ Code duplication
-- ❌ Difficult to maintain
+- Chain-specific code for each blockchain
+- Hard to add new chains
+- Code duplication
+- Difficult to maintain
 
 ### After (Unified API)
 
@@ -428,10 +428,10 @@ val result = anchorRegistry.anchor(chainId, payload)
 ```
 
 **Benefits:**
-- ✅ Chain-agnostic code
-- ✅ Easy to add new chains
-- ✅ No code duplication
-- ✅ Easy to maintain
+- Chain-agnostic code
+- Easy to add new chains
+- No code duplication
+- Easy to maintain
 
 ---
 

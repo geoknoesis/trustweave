@@ -102,41 +102,41 @@ See `credentials/plugins/proof/sdjwt/SdJwtProofAdapter.kt` for a working referen
 For each `ProofAdapter` implementation:
 
 ### ✅ Basic Structure
-- [ ] Implement `ProofAdapter` interface
-- [ ] Set correct `format`, `formatName`, `formatVersion`
-- [ ] Define `capabilities` accurately
+- Implement `ProofAdapter` interface
+- Set correct `format`, `formatName`, `formatVersion`
+- Define `capabilities` accurately
 
 ### ✅ Issue Method
-- [ ] Validate `request.format` matches adapter format
-- [ ] Convert `IssuanceRequest` to format-specific structure
-- [ ] Generate proof/signature using format-specific library
-- [ ] Convert back to `CredentialEnvelope` with proof in `proof.data`
-- [ ] Handle errors gracefully
+- Validate `request.format` matches adapter format
+- Convert `IssuanceRequest` to format-specific structure
+- Generate proof/signature using format-specific library
+- Convert back to `CredentialEnvelope` with proof in `proof.data`
+- Handle errors gracefully
 
 ### ✅ Verify Method
-- [ ] Validate `envelope.proof.format` matches adapter format
-- [ ] Extract proof data from `envelope.proof.data`
-- [ ] Parse format-specific proof structure
-- [ ] Verify cryptographic proof
-- [ ] Resolve issuer DID and verify key
-- [ ] Return appropriate `VerificationResult`
-- [ ] Handle all error cases
+- Validate `envelope.proof.format` matches adapter format
+- Extract proof data from `envelope.proof.data`
+- Parse format-specific proof structure
+- Verify cryptographic proof
+- Resolve issuer DID and verify key
+- Return appropriate `VerificationResult`
+- Handle all error cases
 
 ### ✅ Presentation Method (if supported)
-- [ ] Check `capabilities.selectiveDisclosure`
-- [ ] Extract `disclosedClaims` from `PresentationRequest`
-- [ ] Generate selective disclosure structure
-- [ ] Return presentation `CredentialEnvelope`
+- Check `capabilities.selectiveDisclosure`
+- Extract `disclosedClaims` from `PresentationRequest`
+- Generate selective disclosure structure
+- Return presentation `CredentialEnvelope`
 
 ### ✅ Lifecycle Methods
-- [ ] Implement `initialize()` for setup
-- [ ] Implement `close()` for cleanup
-- [ ] Implement `isReady()` check
+- Implement `initialize()` for setup
+- Implement `close()` for cleanup
+- Implement `isReady()` check
 
 ### ✅ SPI Registration
-- [ ] Create `ProofAdapterProvider` implementation
-- [ ] Register in `META-INF/services/org.trustweave.credential.proof.spi.ProofAdapterProvider`
-- [ ] Test auto-discovery
+- Create `ProofAdapterProvider` implementation
+- Register in `META-INF/services/org.trustweave.credential.proof.spi.ProofAdapterProvider`
+- Test auto-discovery
 
 ---
 

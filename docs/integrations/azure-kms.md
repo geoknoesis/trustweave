@@ -24,7 +24,7 @@ Add the Azure Key Vault module to your dependencies:
 ```kotlin
 dependencies {
     // Only need to add the Azure KMS plugin - core dependencies are included transitively
-    implementation("org.trustweave.kms:azure:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:kms-plugins-azure:0.6.0")
 }
 ```
 
@@ -378,11 +378,11 @@ az keyvault set-policy --name myvault \
 See the [Algorithm Compatibility Table](../core-concepts/algorithm-compatibility-table.md) for detailed comparison of algorithm support across DIDs, VCs, AWS KMS, Azure Key Vault, and Google Cloud KMS.
 
 **Key Points:**
-- ✅ secp256k1 supported for blockchain integration
-- ✅ All NIST curves (P-256/P-384/P-521) supported
-- ✅ RSA keys supported for legacy compatibility
-- ❌ Ed25519 not supported (use P-256, P-384, or P-521 as alternatives)
-- ❌ BLS12-381 not supported (requires specialized KMS)
+- secp256k1 supported for blockchain integration
+- All NIST curves (P-256/P-384/P-521) supported
+- RSA keys supported for legacy compatibility
+- Ed25519 not supported (use P-256, P-384, or P-521 as alternatives)
+- BLS12-381 not supported (requires specialized KMS)
 
 ## Best Practices
 
@@ -440,11 +440,13 @@ val kms = azureProvider?.create(mapOf(
 import org.trustweave.*
 import org.trustweave.azurekms.*
 
-val TrustWeave = TrustWeave.create {
-    kms = AzureKeyManagementService(
-        AzureKmsConfig.builder()
-            .vaultUrl("https://myvault.vault.azure.net")
-            .build()
+val TrustWeave = TrustWeave.build {
+    customKms(
+        AzureKeyManagementService(
+            AzureKmsConfig.builder()
+                .vaultUrl("https://myvault.vault.azure.net")
+                .build()
+        )
     )
 }
 ```
@@ -452,7 +454,7 @@ val TrustWeave = TrustWeave.create {
 ### With SPI Auto-Discovery
 
 ```kotlin
-val TrustWeave = TrustWeave.create {
+val TrustWeave = TrustWeave.build {
     // Azure Key Vault will be discovered automatically if on classpath
     // Configure via environment variables or system properties
 }
@@ -462,12 +464,14 @@ val TrustWeave = TrustWeave.create {
 
 ```kotlin
 // When running on Azure infrastructure, Managed Identity is used automatically
-val TrustWeave = TrustWeave.create {
-    kms = AzureKeyManagementService(
-        AzureKmsConfig.builder()
-            .vaultUrl("https://myvault.vault.azure.net")
-            // No credentials needed - uses Managed Identity
-            .build()
+val TrustWeave = TrustWeave.build {
+    customKms(
+        AzureKeyManagementService(
+            AzureKmsConfig.builder()
+                .vaultUrl("https://myvault.vault.azure.net")
+                // No credentials needed - uses Managed Identity
+                .build()
+        )
     )
 }
 ```
@@ -542,15 +546,15 @@ val key2Result = kms.generateKey(
 
 ## Related Documentation
 
-- [Key Management Guide](../core-concepts/key-management.md) - Core KMS concepts
-- [Algorithm Compatibility Table](../core-concepts/algorithm-compatibility-table.md) - Algorithm support comparison
-- [Key Rotation Guide](../advanced/key-rotation.md) - Key rotation strategies
-- [Creating Plugins Guide](../contributing/creating-plugins.md) - Custom KMS implementations
+- Key Management Guide](../core-concepts/key-management.md) - Core KMS concepts
+- Algorithm Compatibility Table](../core-concepts/algorithm-compatibility-table.md) - Algorithm support comparison
+- Key Rotation Guide](../advanced/key-rotation.md) - Key rotation strategies
+- Creating Plugins Guide](../contributing/creating-plugins.md) - Custom KMS implementations
 
 ## See Also
 
-- [Azure Key Vault Documentation](https://learn.microsoft.com/azure/key-vault/)
-- [Azure Key Vault Java SDK](https://github.com/Azure/azure-sdk-for-java/tree/main/sdk/keyvault)
-- [Azure Key Vault REST API Reference](https://learn.microsoft.com/rest/api/keyvault/)
-- [Azure Managed Identity Documentation](https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/)
+- Azure Key Vault Documentation](https://learn.microsoft.com/azure/key-vault/)
+- Azure Key Vault Java SDK](https://github.com/Azure/azure-sdk-for-java/tree/main/sdk/keyvault)
+- Azure Key Vault REST API Reference](https://learn.microsoft.com/rest/api/keyvault/)
+- Azure Managed Identity Documentation](https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/)
 

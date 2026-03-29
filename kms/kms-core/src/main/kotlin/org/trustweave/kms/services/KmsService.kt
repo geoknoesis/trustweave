@@ -1,52 +1,48 @@
 package org.trustweave.kms.services
 
-/**
- * Internal service abstraction for KMS creation.
- * 
- * This internal interface provides an abstraction layer for KMS instance creation
- * that is used by the [KeyManagementServices] factory. It allows for different
- * creation strategies and is used internally for service provider integration.
- * 
- * **Internal Use Only:**
- * This is an internal service interface and should not be implemented or used
- * directly by KMS plugins or consumers. Use [KeyManagementServices] factory
- * or implement [KeyManagementServiceProvider] SPI instead.
- */
+import org.trustweave.kms.KeyHandle
+import org.trustweave.kms.KeyManagementService
+import org.trustweave.kms.results.GenerateKeyResult
 
 /**
  * Service interface for Key Management Service operations.
  *
- * Provides a way to call KMS methods without direct dependency or reflection.
+ * Provides an abstraction layer around [KeyManagementService] for use by components
+ * that need to generate and inspect keys without depending on the full KMS API.
+ * Typically used by builders and DSL helpers in higher-level modules.
+ *
+ * **Internal Use:**
+ * This is an internal service interface. Prefer using [KeyManagementService] directly
+ * where possible.
  */
 interface KmsService {
     /**
      * Generates a new cryptographic key.
      *
-     * @param kms The KMS instance (as Any to avoid dependency)
-     * @param algorithm The algorithm to use (e.g., "Ed25519", "secp256k1")
-     * @param options Additional options for key generation
-     * @return A KeyHandle (as Any to avoid dependency)
+     * @param kms The KMS instance to use for key generation
+     * @param algorithm The algorithm name (e.g., "Ed25519", "secp256k1")
+     * @param options Additional provider-specific options for key generation
+     * @return [GenerateKeyResult] — inspect for [GenerateKeyResult.Success] or failure subtypes
      */
     suspend fun generateKey(
-        kms: Any, // KeyManagementService - using Any to avoid dependency
+        kms: KeyManagementService,
         algorithm: String,
         options: Map<String, Any?> = emptyMap()
-    ): Any // KeyHandle - using Any to avoid dependency
+    ): GenerateKeyResult
 
     /**
-     * Gets the ID from a KeyHandle.
+     * Extracts the key identifier from a [KeyHandle].
      *
-     * @param keyHandle The key handle (as Any to avoid dependency)
-     * @return The key ID
+     * @param keyHandle The key handle returned by a successful [generateKey] call
+     * @return The key ID string
      */
-    fun getKeyId(keyHandle: Any): String
+    fun getKeyId(keyHandle: KeyHandle): String
 
     /**
-     * Gets the public key JWK from a KeyHandle.
+     * Extracts the public key JWK from a [KeyHandle].
      *
-     * @param keyHandle The key handle (as Any to avoid dependency)
-     * @return The public key JWK map, or null if not available
+     * @param keyHandle The key handle returned by a successful [generateKey] call
+     * @return The public key as a JWK map, or null if not available
      */
-    fun getPublicKeyJwk(keyHandle: Any): Map<String, Any?>?
+    fun getPublicKeyJwk(keyHandle: KeyHandle): Map<String, Any?>?
 }
-

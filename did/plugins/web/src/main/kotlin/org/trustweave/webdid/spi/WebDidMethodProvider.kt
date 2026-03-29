@@ -2,48 +2,25 @@ package org.trustweave.webdid.spi
 
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.DidMethod
-import org.trustweave.did.spi.DidMethodProvider
-import org.trustweave.kms.KeyManagementService
+import org.trustweave.did.base.AbstractDidMethodProvider
 import org.trustweave.webdid.WebDidConfig
 import org.trustweave.webdid.WebDidMethod
 import okhttp3.OkHttpClient
-import java.util.ServiceLoader
 
 /**
  * SPI provider for did:web method.
  *
  * Automatically discovers did:web method when this module is on the classpath.
  */
-class WebDidMethodProvider : DidMethodProvider {
+class WebDidMethodProvider : AbstractDidMethodProvider() {
 
     override val name: String = "web"
 
     override val supportedMethods: List<String> = listOf("web")
 
     override fun create(methodName: String, options: DidCreationOptions): DidMethod? {
-        if (methodName.lowercase() != "web") {
-            return null
-        }
-
-        // Get KMS from options or discover via SPI
-        val kms = (options.additionalProperties["kms"] as? KeyManagementService)
-            ?: run {
-                val kmsProviders = ServiceLoader.load(
-                    org.trustweave.kms.spi.KeyManagementServiceProvider::class.java
-                )
-                kmsProviders.firstOrNull()?.create(options.additionalProperties)
-                    ?: throw IllegalStateException(
-                        "No KeyManagementService available. Provide 'kms' in options or ensure a KMS provider is registered."
-                    )
-            }
-
-        // Create HTTP client
-        val httpClient = createHttpClient(options)
-
-        // Create configuration from options
-        val config = createConfig(options)
-
-        return WebDidMethod(kms, httpClient, config)
+        if (methodName.lowercase() != "web") return null
+        return WebDidMethod(resolveKms(options), createHttpClient(options), createConfig(options))
     }
 
     /**

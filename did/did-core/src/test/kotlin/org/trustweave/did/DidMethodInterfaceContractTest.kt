@@ -84,7 +84,7 @@ class DidMethodInterfaceContractTest {
             doc.copy(
                 service = doc.service + DidService(
                     id = "${did.value}#service-1",
-                    type = "LinkedDomains",
+                    type = listOf("LinkedDomains"),
                     serviceEndpoint = "https://example.com"
                 )
             )

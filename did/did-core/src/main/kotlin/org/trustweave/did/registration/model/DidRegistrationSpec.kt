@@ -5,6 +5,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
+import org.trustweave.did.model.MethodCapabilities
 
 /**
  * Data model for DID Method Registration JSON specification.
@@ -126,32 +127,6 @@ data class DriverConfig(
      * Additional driver-specific configuration
      */
     val config: Map<String, String> = emptyMap()
-)
-
-/**
- * Capabilities supported by a DID method implementation.
- */
-@Serializable
-data class MethodCapabilities(
-    /**
-     * Whether this implementation supports creating new DIDs
-     */
-    val create: Boolean = false,
-
-    /**
-     * Whether this implementation supports resolving DIDs
-     */
-    val resolve: Boolean = true,
-
-    /**
-     * Whether this implementation supports updating DID documents
-     */
-    val update: Boolean = false,
-
-    /**
-     * Whether this implementation supports deactivating DIDs
-     */
-    val deactivate: Boolean = false
 )
 
 /**

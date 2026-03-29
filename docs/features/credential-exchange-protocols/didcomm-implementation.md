@@ -21,7 +21,7 @@ This document summarizes the DIDComm V2 implementation for TrustWeave.
 
 2. **Cryptography** (`crypto/`)
    - `DidCommCrypto`: ECDH-1PU key agreement and AES-256-GCM encryption
-   - ⚠️ **Note**: Uses placeholder implementations for ECDH-1PU. For production, integrate a full DIDComm library.
+   - Note**: Uses placeholder implementations for ECDH-1PU. For production, integrate a full DIDComm library.
 
 3. **Message Packing** (`packing/`)
    - `DidCommPacker`: Packs/unpacks messages (encryption/decryption)
@@ -86,31 +86,31 @@ credentials/plugins/didcomm/
 ## Supported Protocols
 
 ### Issue Credential Protocol
-- ✅ `offer-credential`: Credential offer message
-- ✅ `request-credential`: Credential request message
-- ✅ `issue-credential`: Credential issue message
-- ✅ `ack`: Acknowledgment message
+- offer-credential`: Credential offer message
+- request-credential`: Credential request message
+- issue-credential`: Credential issue message
+- ack`: Acknowledgment message
 
 ### Present Proof Protocol
-- ✅ `request-presentation`: Proof request message
-- ✅ `presentation`: Proof presentation message
-- ✅ `ack`: Acknowledgment message
+- request-presentation`: Proof request message
+- presentation`: Proof presentation message
+- ack`: Acknowledgment message
 
 ### Basic Message Protocol
-- ✅ `message`: Simple text messages
+- message`: Simple text messages
 
 ## Features
 
-- ✅ JWM (JSON Web Message) format support
-- ✅ Message encryption structure (ECDH-1PU placeholder)
-- ✅ AES-256-GCM content encryption
-- ✅ Message packing/unpacking
-- ✅ Protocol message builders
-- ✅ Message threading support
-- ✅ In-memory message storage
-- ✅ DID document utilities
-- ✅ Comprehensive exception handling
-- ✅ Usage examples and tests
+- JWM (JSON Web Message) format support
+- Message encryption structure (ECDH-1PU placeholder)
+- AES-256-GCM content encryption
+- Message packing/unpacking
+- Protocol message builders
+- Message threading support
+- In-memory message storage
+- DID document utilities
+- Comprehensive exception handling
+- Usage examples and tests
 
 ## Dependencies
 
@@ -216,8 +216,8 @@ didcomm.sendMessage(
 
 ## References
 
-- [DIDComm V2 Specification](https://didcomm.org/book/v2/)
-- [JWM Specification](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-jwsreq-26)
-- [Issue Credential Protocol](https://github.com/decentralized-identity/waci-presentation-exchange)
-- [Present Proof Protocol](https://github.com/decentralized-identity/presentation-exchange)
+- DIDComm V2 Specification](https://didcomm.org/book/v2/)
+- JWM Specification](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-jwsreq-26)
+- Issue Credential Protocol](https://github.com/decentralized-identity/waci-presentation-exchange)
+- Present Proof Protocol](https://github.com/decentralized-identity/presentation-exchange)
 

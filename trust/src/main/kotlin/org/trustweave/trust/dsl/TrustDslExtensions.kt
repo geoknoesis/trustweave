@@ -1,7 +1,7 @@
 package org.trustweave.trust.dsl
 
 import org.trustweave.credential.model.CredentialType
-import org.trustweave.credential.trust.TrustPolicy as CredentialTrustPolicy
+import org.trustweave.credential.trust.TrustEvaluator as CredentialTrustPolicy
 import org.trustweave.did.identifiers.Did
 import org.trustweave.trust.TrustRegistry
 import org.trustweave.trust.types.IssuerIdentity
@@ -127,30 +127,12 @@ class TrustAnchorConfig(
 )
 
 /**
- * Extension to add trust anchor using infix syntax.
- */
-suspend fun TrustBuilder.addAnchor(did: Did, config: TrustAnchorConfig): Boolean {
-    return addAnchor(did.value) {
-        config.metadataBuilder.credentialTypes?.let { types ->
-            credentialTypes(types)
-        }
-        config.metadataBuilder.description?.let { desc ->
-            description(desc)
-        }
-        config.metadataBuilder.addedAt?.let { instant ->
-            addedAt(instant)
-        }
-    }
-}
-
-/**
  * Extension function to find trust path within TrustBuilder context.
  */
 suspend fun TrustBuilder.findTrustPath(from: Did, to: Did): TrustPath {
-    // VerifierIdentity and IssuerIdentity are type aliases for Did, so we can pass directly
     return findTrustPath(
-        from = from as VerifierIdentity,
-        to = to as IssuerIdentity
+        from = VerifierIdentity(from),
+        to = IssuerIdentity(to)
     )
 }
 
@@ -197,33 +179,11 @@ class TrustPathFinder(
      * ```
      */
     suspend fun resolve(builder: TrustBuilder): TrustPath {
-        // VerifierIdentity and IssuerIdentity are type aliases for Did, so we can pass directly
         return builder.findTrustPath(
-            from = from as VerifierIdentity,
-            to = to as IssuerIdentity
+            from = VerifierIdentity(from),
+            to = IssuerIdentity(to)
         )
     }
-}
-
-/**
- * Extension to resolve trust path automatically within TrustBuilder context.
- * 
- * This allows the natural syntax: `val path = resolve(fromDid trustsPath toDid)`
- * when called within a TrustBuilder receiver scope.
- * 
- * **Example:**
- * ```kotlin
- * trustWeave.trust {
- *     val path = resolve(verifierDid trustsPath issuerDid)
- *     when (path) {
- *         is TrustPath.Verified -> println("Path found: ${path.length} hops")
- *         is TrustPath.NotFound -> println("No path found")
- *     }
- * }
- * ```
- */
-suspend fun TrustBuilder.resolve(pathFinder: TrustPathFinder): TrustPath {
-    return pathFinder.resolve(this)
 }
 
 /**

@@ -1,7 +1,8 @@
 package org.trustweave.trust.types
 
+import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.results.VerificationResult
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.wallet.Wallet
@@ -12,55 +13,6 @@ import org.trustweave.wallet.Wallet
  * These extensions allow extracting success values with contextual error messages,
  * making the API more pleasant to use while maintaining type safety.
  */
-
-/**
- * Extract the credential from a successful IssuanceResult, or throw with detailed error.
- * 
- * **Example:**
- * ```kotlin
- * val credential = trustWeave.issue { ... }.getOrThrow()
- * ```
- * 
- * @throws IllegalStateException with detailed error message if issuance failed
- */
-fun IssuanceResult.getOrThrow(): VerifiableCredential {
-    return when (this) {
-        is IssuanceResult.Success -> credential
-        is IssuanceResult.Failure.UnsupportedFormat -> {
-            val suggestion = if (supportedFormats.isNotEmpty()) {
-                " Use one of the supported formats: ${supportedFormats.joinToString(", ") { it.value }}"
-            } else {
-                " No credential formats are available. Configure credential format support in TrustWeave.build { credentials { ... } }"
-            }
-            throw IllegalStateException(
-                "Unsupported credential format '${format.value}'.$suggestion"
-            )
-        }
-        is IssuanceResult.Failure.AdapterNotReady -> {
-            throw IllegalStateException(
-                "Credential service adapter not ready: ${reason ?: "Unknown reason"}. " +
-                "Ensure the credential service is properly initialized and configured."
-            )
-        }
-        is IssuanceResult.Failure.InvalidRequest -> {
-            throw IllegalStateException(
-                "Invalid issuance request: field '${field}' - ${reason}. " +
-                "Check that all required fields are provided and valid."
-            )
-        }
-        is IssuanceResult.Failure.AdapterError -> {
-            throw IllegalStateException(
-                "Credential service error: ${reason}. " +
-                "This may indicate an issue with the credential service configuration or implementation."
-            )
-        }
-        is IssuanceResult.Failure.MultipleFailures -> {
-            throw IllegalStateException(
-                "Credential issuance failed with multiple errors: ${errors.joinToString("; ")}"
-            )
-        }
-    }
-}
 
 /**
  * Extract the credential from a successful VerificationResult, or throw with detailed error.
@@ -93,21 +45,36 @@ fun VerificationResult.getOrThrow(): VerifiableCredential {
                 "Errors: ${errors.joinToString("; ")}"
             )
         }
-        is VerificationResult.Invalid.IssuerResolutionFailed -> {
+        is VerificationResult.Invalid.InvalidIssuer -> {
             val suggestion = " Ensure the issuer DID is valid and the DID method is properly configured. " +
                 "If using a custom DID method, ensure it's registered in TrustWeave.build { did { method(\"...\") } }"
             throw IllegalStateException(
-                "Failed to resolve issuer DID ${issuer.value}: ${reason}. " +
+                "Failed to resolve issuer ${issuerIri.value}: ${reason}. " +
                 "Errors: ${errors.joinToString("; ")}.$suggestion"
             )
         }
         is VerificationResult.Invalid.UntrustedIssuer -> {
             val suggestion = " To trust this issuer, add it to the trust registry: " +
-                "trustWeave.trust { addAnchor(\"${issuer.value}\") { credentialTypes(\"${credentialType ?: "*"}\") } }"
+                "trustWeave.trust { addAnchor(\"${issuerDid.value}\") { ... } }"
             throw IllegalStateException(
-                "Issuer ${issuer.value} is not trusted${credentialType?.let { " for credential type '$it'" } ?: ""}. " +
+                "Issuer ${issuerDid.value} is not trusted. " +
                 "Errors: ${errors.joinToString("; ")}. $suggestion"
             )
+        }
+        is VerificationResult.Invalid.NotYetValid -> {
+            throw IllegalStateException(
+                "Credential is not yet valid (valid from: ${validFrom}). " +
+                "Errors: ${errors.joinToString("; ")}"
+            )
+        }
+        is VerificationResult.Invalid.UnsupportedFormat -> {
+            throw IllegalStateException(
+                "Credential format '${format.value}' is not supported. " +
+                "Errors: ${errors.joinToString("; ")}"
+            )
+        }
+        is VerificationResult.Invalid.AdapterNotReady -> {
+            throw IllegalStateException(errors.joinToString("; ").ifEmpty { reason ?: "Credential verification service is not available." })
         }
         is VerificationResult.Invalid.SchemaValidationFailed -> {
             val suggestion = " Ensure the credential schema is valid and matches the credential structure. " +
@@ -120,12 +87,6 @@ fun VerificationResult.getOrThrow(): VerifiableCredential {
         is VerificationResult.Invalid.MultipleFailures -> {
             throw IllegalStateException(
                 "Credential verification failed with multiple errors: ${errors.joinToString("; ")}"
-            )
-        }
-        is VerificationResult.Invalid.Other -> {
-            throw IllegalStateException(
-                "Credential verification failed: ${reason}. " +
-                "Errors: ${errors.joinToString("; ")}"
             )
         }
     }
@@ -247,3 +208,34 @@ fun WalletCreationResult.getOrThrow(): Wallet {
     }
 }
 
+/**
+ * Unwrap a successful presentation or throw [TrustWeaveException.InvalidState] with stable `code` values
+ * (`PRESENTATION_ADAPTER_NOT_READY`, `PRESENTATION_INVALID_REQUEST`, `PRESENTATION_ADAPTER_ERROR`).
+ */
+fun PresentationResult.getOrThrow(): org.trustweave.credential.model.vc.VerifiablePresentation {
+    return when (this) {
+        is PresentationResult.Success -> presentation
+        is PresentationResult.Failure.AdapterNotReady -> {
+            throw TrustWeaveException.InvalidState(
+                code = "PRESENTATION_ADAPTER_NOT_READY",
+                message = errors.joinToString("; "),
+                context = mapOf("errors" to errors),
+            )
+        }
+        is PresentationResult.Failure.InvalidRequest -> {
+            throw TrustWeaveException.InvalidState(
+                code = "PRESENTATION_INVALID_REQUEST",
+                message = errors.joinToString("; "),
+                context = mapOf("errors" to errors),
+            )
+        }
+        is PresentationResult.Failure.AdapterError -> {
+            throw TrustWeaveException.InvalidState(
+                code = "PRESENTATION_ADAPTER_ERROR",
+                message = errors.joinToString("; "),
+                context = mapOf("errors" to errors),
+                cause = cause,
+            )
+        }
+    }
+}

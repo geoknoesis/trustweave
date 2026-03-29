@@ -12,14 +12,14 @@ This guide demonstrates how to build a security clearance and access control sys
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created DIDs for security authority (issuer) and cleared personnel (holder)
-- ✅ Issued Verifiable Credentials for security clearances (Top Secret, Secret, Confidential)
-- ✅ Stored clearance credentials in wallet
-- ✅ Implemented multi-level access control
-- ✅ Created privacy-preserving clearance presentations
-- ✅ Verified clearances without revealing full identity
-- ✅ Implemented clearance expiration and revocation
-- ✅ Demonstrated selective disclosure for privacy
+- Created DIDs for security authority (issuer) and cleared personnel (holder)
+- Issued Verifiable Credentials for security clearances (Top Secret, Secret, Confidential)
+- Stored clearance credentials in wallet
+- Implemented multi-level access control
+- Created privacy-preserving clearance presentations
+- Verified clearances without revealing full identity
+- Implemented clearance expiration and revocation
+- Demonstrated selective disclosure for privacy
 
 ## Big Picture & Significance
 
@@ -140,7 +140,7 @@ Add TrustWeave dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -157,15 +157,23 @@ Here's the full security clearance and access control flow using the TrustWeave 
 ```kotlin
 package com.example.security.clearance
 
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
 import org.trustweave.core.*
-import org.trustweave.credential.PresentationOptions
-import org.trustweave.credential.wallet.Wallet
-import org.trustweave.spi.services.WalletCreationOptionsBuilder
+import org.trustweave.wallet.Wallet
+import org.trustweave.wallet.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
-import org.trustweave.credential.format.ProofSuiteId
+import org.trustweave.credential.model.ProofType
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.testkit.services.*
+import org.trustweave.credential.results.getOrThrow
 
 fun main() = runBlocking {
     println("=".repeat(70))
@@ -176,24 +184,17 @@ fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
-        credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
+        credentials { defaultProofType(ProofType.Ed25519Signature2020) }
     }
-    println("\n✅ TrustWeave initialized")
+    println("\n[OK] TrustWeave initialized")
 
     // Step 2: Create DIDs for security authority, personnel, and classified systems
-    import org.trustweave.trust.types.getOrThrowDid
-    import org.trustweave.trust.types.getOrThrow
-    import org.trustweave.did.resolver.DidResolutionResult
-    import org.trustweave.did.identifiers.extractKeyId
-    
-    // Helper extension for resolution results
-    fun DidResolutionResult.getOrThrow() = when (this) {
-        is DidResolutionResult.Success -> this.document
-        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
-    }
     
     val securityAuthorityDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
-    val securityAuthorityDoc = trustWeave.resolveDid(securityAuthorityDid).getOrThrow()
+    val securityAuthorityDoc = when (val res = trustWeave.resolveDid(securityAuthorityDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val securityAuthorityKeyId = securityAuthorityDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
@@ -203,15 +204,14 @@ fun main() = runBlocking {
     val secretSystemDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     val confidentialSystemDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 
-    println("✅ Security Authority DID: ${securityAuthorityDid.value}")
-    println("✅ Personnel 1 DID: ${personnel1Did.value}")
-    println("✅ Personnel 2 DID: ${personnel2Did.value}")
-    println("✅ Top Secret System DID: ${topSecretSystemDid.value}")
-    println("✅ Secret System DID: ${secretSystemDid.value}")
-    println("✅ Confidential System DID: ${confidentialSystemDid.value}")
+    println("[OK] Security Authority DID: ${securityAuthorityDid.value}")
+    println("[OK] Personnel 1 DID: ${personnel1Did.value}")
+    println("[OK] Personnel 2 DID: ${personnel2Did.value}")
+    println("[OK] Top Secret System DID: ${topSecretSystemDid.value}")
+    println("[OK] Secret System DID: ${secretSystemDid.value}")
+    println("[OK] Confidential System DID: ${confidentialSystemDid.value}")
 
     // Step 3: Issue Top Secret clearance for Personnel 1
-    import org.trustweave.trust.types.IssuanceResult
     
     val topSecretClearanceResult = trustWeave.issue {
         credential {
@@ -242,9 +242,9 @@ fun main() = runBlocking {
     
     val topSecretClearance = topSecretClearanceResult.getOrThrow()
 
-    println("\n✅ Top Secret clearance credential issued: ${topSecretClearance.id}")
+    println("\n[OK] Top Secret clearance credential issued: ${topSecretClearance.id}")
     println("   Clearance Level: Top Secret/SCI")
-    println("   Personnel: ${personnel1Did.take(20)}...")
+    println("   Personnel: ${personnel1Did.value.take(20)}...")
     println("   Note: Full identity NOT included for privacy")
 
     // Step 4: Issue Secret clearance for Personnel 2
@@ -276,12 +276,11 @@ fun main() = runBlocking {
     
     val secretClearance = secretClearanceResult.getOrThrow()
 
-    println("✅ Secret clearance credential issued: ${secretClearance.id}")
+    println("[OK] Secret clearance credential issued: ${secretClearance.id}")
     println("   Clearance Level: Secret")
-    println("   Personnel: ${personnel2Did.take(20)}...")
+    println("   Personnel: ${personnel2Did.value.take(20)}...")
 
     // Step 5: Create personnel wallets and store clearance credentials
-    import org.trustweave.trust.types.getOrThrow
     
     val personnel1Wallet = trustWeave.wallet {
         holder(personnel1Did.value)
@@ -298,113 +297,113 @@ fun main() = runBlocking {
     val topSecretCredentialId = personnel1Wallet.store(topSecretClearance)
     val secretCredentialId = personnel2Wallet.store(secretClearance)
 
-    println("\n✅ Clearance credentials stored in wallets")
+    println("\n[OK] Clearance credentials stored in wallets")
 
     // Step 6: Organize credentials
     personnel1Wallet.withOrganization { org ->
         val clearanceCollectionId = org.createCollection("Security Clearances", "Security clearance credentials")
         org.addToCollection(topSecretCredentialId, clearanceCollectionId)
         org.tagCredential(topSecretCredentialId, setOf("clearance", "top-secret", "ts-sci", "classified", "high-security"))
-        println("✅ Personnel 1 clearance organized")
+        println("[OK] Personnel 1 clearance organized")
     }
 
     personnel2Wallet.withOrganization { org ->
         val clearanceCollectionId = org.createCollection("Security Clearances", "Security clearance credentials")
         org.addToCollection(secretCredentialId, clearanceCollectionId)
         org.tagCredential(secretCredentialId, setOf("clearance", "secret", "classified", "security"))
-        println("✅ Personnel 2 clearance organized")
+        println("[OK] Personnel 2 clearance organized")
     }
 
     // Step 7: Top Secret system access control
-    println("\n🔐 Top Secret System Access Control:")
+    println("\n[verify] Top Secret System Access Control:")
 
     val topSecretVerification = trustWeave.verify { credential(topSecretClearance) }
 
-    if (topSecretVerification.valid) {
+    if (topSecretVerification is VerificationResult.Valid) {
         val credentialSubject = topSecretClearance.credentialSubject
         val securityClearance = credentialSubject.jsonObject["securityClearance"]?.jsonObject
         val clearanceLevel = securityClearance?.get("clearanceLevel")?.jsonPrimitive?.content
         val clearanceType = securityClearance?.get("clearanceType")?.jsonPrimitive?.content
         val needToKnow = securityClearance?.get("needToKnow")?.jsonPrimitive?.content?.toBoolean() ?: false
 
-        println("✅ Clearance Credential: VALID")
+        println("[OK] Clearance Credential: VALID")
         println("   Clearance Level: $clearanceLevel")
         println("   Clearance Type: $clearanceType")
         println("   Need to Know: $needToKnow")
 
         if (clearanceLevel == "Top Secret" && needToKnow) {
-            println("✅ Clearance requirement MET")
-            println("✅ Need to know verified")
-            println("✅ Access GRANTED to Top Secret system")
+            println("[OK] Clearance requirement MET")
+            println("[OK] Need to know verified")
+            println("[OK] Access GRANTED to Top Secret system")
         } else {
-            println("❌ Clearance requirement NOT MET")
-            println("❌ Access DENIED")
+            println("[FAIL] Clearance requirement NOT MET")
+            println("[FAIL] Access DENIED")
         }
     } else {
-        println("❌ Clearance Credential: INVALID")
-        println("❌ Access DENIED")
+        println("[FAIL] Clearance Credential: INVALID")
+        println("[FAIL] Access DENIED")
     }
 
     // Step 8: Secret system access control
-    println("\n🔐 Secret System Access Control:")
+    println("\n[verify] Secret System Access Control:")
 
     val secretVerification = trustWeave.verify { credential(secretClearance) }
 
-    if (secretVerification.valid) {
+    if (secretVerification is VerificationResult.Valid) {
         val credentialSubject = secretClearance.credentialSubject
         val securityClearance = credentialSubject.jsonObject["securityClearance"]?.jsonObject
         val clearanceLevel = securityClearance?.get("clearanceLevel")?.jsonPrimitive?.content
         val needToKnow = securityClearance?.get("needToKnow")?.jsonPrimitive?.content?.toBoolean() ?: false
 
-        println("✅ Clearance Credential: VALID")
+        println("[OK] Clearance Credential: VALID")
         println("   Clearance Level: $clearanceLevel")
         println("   Need to Know: $needToKnow")
 
         if ((clearanceLevel == "Secret" || clearanceLevel == "Top Secret") && needToKnow) {
-            println("✅ Clearance requirement MET")
-            println("✅ Access GRANTED to Secret system")
+            println("[OK] Clearance requirement MET")
+            println("[OK] Access GRANTED to Secret system")
         } else {
-            println("❌ Clearance requirement NOT MET")
-            println("❌ Access DENIED")
+            println("[FAIL] Clearance requirement NOT MET")
+            println("[FAIL] Access DENIED")
         }
     } else {
-        println("❌ Clearance Credential: INVALID")
-        println("❌ Access DENIED")
+        println("[FAIL] Clearance Credential: INVALID")
+        println("[FAIL] Access DENIED")
     }
 
     // Step 9: Confidential system access control
-    println("\n🔐 Confidential System Access Control:")
+    println("\n[verify] Confidential System Access Control:")
 
     // Personnel 2 attempts to access Confidential system (lower clearance)
     val confidentialVerification = trustWeave.verify { credential(secretClearance) }
 
-    if (confidentialVerification.valid) {
+    if (confidentialVerification is VerificationResult.Valid) {
         val credentialSubject = secretClearance.credentialSubject
         val securityClearance = credentialSubject.jsonObject["securityClearance"]?.jsonObject
         val clearanceLevel = securityClearance?.get("clearanceLevel")?.jsonPrimitive?.content
 
-        println("✅ Clearance Credential: VALID")
+        println("[OK] Clearance Credential: VALID")
         println("   Clearance Level: $clearanceLevel")
         println("   Required Level: Confidential (or higher)")
 
         // Secret clearance is higher than Confidential, so access is granted
         if (clearanceLevel == "Secret" || clearanceLevel == "Top Secret") {
-            println("✅ Clearance requirement MET (higher clearance accepted)")
-            println("✅ Access GRANTED to Confidential system")
+            println("[OK] Clearance requirement MET (higher clearance accepted)")
+            println("[OK] Access GRANTED to Confidential system")
         } else if (clearanceLevel == "Confidential") {
-            println("✅ Clearance requirement MET")
-            println("✅ Access GRANTED to Confidential system")
+            println("[OK] Clearance requirement MET")
+            println("[OK] Access GRANTED to Confidential system")
         } else {
-            println("❌ Clearance requirement NOT MET")
-            println("❌ Access DENIED")
+            println("[FAIL] Clearance requirement NOT MET")
+            println("[FAIL] Access DENIED")
         }
     } else {
-        println("❌ Clearance Credential: INVALID")
-        println("❌ Access DENIED")
+        println("[FAIL] Clearance Credential: INVALID")
+        println("[FAIL] Access DENIED")
     }
 
     // Step 10: Multi-level access control demonstration
-    println("\n🔐 Multi-Level Access Control Demonstration:")
+    println("\n[verify] Multi-Level Access Control Demonstration:")
 
     val clearanceLevels = mapOf(
         "Top Secret" to 4,
@@ -431,7 +430,7 @@ fun main() = runBlocking {
 
     testCases.forEach { (personnel, required, expected) ->
         val hasAccess = hasRequiredClearance(personnel, required)
-        val status = if (hasAccess == expected) "✅" else "❌"
+        val status = if (hasAccess == expected) "[OK]" else "[FAIL]"
         println("   $status Personnel: $personnel, Required: $required, Access: $hasAccess")
     }
 
@@ -440,20 +439,20 @@ fun main() = runBlocking {
         pres.createPresentation(
             credentialIds = listOf(topSecretCredentialId),
             holderDid = personnel1Did.value,
-            options = PresentationOptions(
-                holderDid = personnel1Did.value,
-                challenge = "clearance-verification-${System.currentTimeMillis()}"
-            )
+            options = mapOf(
+            "holderDid" to personnel1Did.value,
+            "challenge" to "clearance-verification-${System.currentTimeMillis()}"
+        )
         )
     } ?: error("Presentation capability not available")
 
-    println("\n✅ Privacy-preserving clearance presentation created")
+    println("\n[OK] Privacy-preserving clearance presentation created")
     println("   Holder: ${clearancePresentation.holder}")
     println("   Credentials: ${clearancePresentation.verifiableCredential.size}")
     println("   Note: Only clearance level shared, no personal details")
 
     // Step 12: Demonstrate privacy - verify no personal information is exposed
-    println("\n🔒 Privacy Verification:")
+    println("\n[privacy] Privacy Verification:")
     val presentationCredential = clearancePresentation.verifiableCredential.firstOrNull()
     if (presentationCredential != null) {
         val subject = presentationCredential.credentialSubject
@@ -462,24 +461,24 @@ fun main() = runBlocking {
         val hasAddress = subject.jsonObject.containsKey("address")
         val hasClearanceLevel = subject.jsonObject.containsKey("securityClearance")
 
-        println("   Full Name exposed: $hasFullName ❌")
-        println("   SSN exposed: $hasSSN ❌")
-        println("   Address exposed: $hasAddress ❌")
-        println("   Clearance level only: $hasClearanceLevel ✅")
-        println("✅ Privacy preserved - only clearance information shared")
+        println("   Full Name exposed: $hasFullName [FAIL]")
+        println("   SSN exposed: $hasSSN [FAIL]")
+        println("   Address exposed: $hasAddress [FAIL]")
+        println("   Clearance level only: $hasClearanceLevel [OK]")
+        println("[OK] Privacy preserved - only clearance information shared")
     }
 
     // Step 13: Display wallet statistics
     val stats1 = personnel1Wallet.getStatistics()
     val stats2 = personnel2Wallet.getStatistics()
 
-    println("\n📊 Personnel 1 Wallet Statistics:")
+    println("\n[stats] Personnel 1 Wallet Statistics:")
     println("   Total credentials: ${stats1.totalCredentials}")
     println("   Valid credentials: ${stats1.validCredentials}")
     println("   Collections: ${stats1.collectionsCount}")
     println("   Tags: ${stats1.tagsCount}")
 
-    println("\n📊 Personnel 2 Wallet Statistics:")
+    println("\n[stats] Personnel 2 Wallet Statistics:")
     println("   Total credentials: ${stats2.totalCredentials}")
     println("   Valid credentials: ${stats2.validCredentials}")
     println("   Collections: ${stats2.collectionsCount}")
@@ -487,7 +486,7 @@ fun main() = runBlocking {
 
     // Step 14: Summary
     println("\n" + "=".repeat(70))
-    println("✅ SECURITY CLEARANCE & ACCESS CONTROL SYSTEM COMPLETE")
+    println("[OK] SECURITY CLEARANCE & ACCESS CONTROL SYSTEM COMPLETE")
     println("   Clearance credentials issued and stored")
     println("   Multi-level access control implemented")
     println("   Privacy-preserving verification implemented")
@@ -503,81 +502,81 @@ fun main() = runBlocking {
 Security Clearance & Access Control Scenario - Complete End-to-End Example
 ======================================================================
 
-✅ TrustWeave initialized
-✅ Security Authority DID: did:key:z6Mk...
-✅ Personnel 1 DID: did:key:z6Mk...
-✅ Personnel 2 DID: did:key:z6Mk...
-✅ Top Secret System DID: did:key:z6Mk...
-✅ Secret System DID: did:key:z6Mk...
-✅ Confidential System DID: did:key:z6Mk...
+[OK] TrustWeave initialized
+[OK] Security Authority DID: did:key:z6Mk...
+[OK] Personnel 1 DID: did:key:z6Mk...
+[OK] Personnel 2 DID: did:key:z6Mk...
+[OK] Top Secret System DID: did:key:z6Mk...
+[OK] Secret System DID: did:key:z6Mk...
+[OK] Confidential System DID: did:key:z6Mk...
 
-✅ Top Secret clearance credential issued: urn:uuid:...
+[OK] Top Secret clearance credential issued: urn:uuid:...
    Clearance Level: Top Secret/SCI
    Personnel: did:key:z6Mk...
    Note: Full identity NOT included for privacy
-✅ Secret clearance credential issued: urn:uuid:...
+[OK] Secret clearance credential issued: urn:uuid:...
 
-✅ Clearance credentials stored in wallets
-✅ Personnel 1 clearance organized
-✅ Personnel 2 clearance organized
+[OK] Clearance credentials stored in wallets
+[OK] Personnel 1 clearance organized
+[OK] Personnel 2 clearance organized
 
-🔐 Top Secret System Access Control:
-✅ Clearance Credential: VALID
+[verify] Top Secret System Access Control:
+[OK] Clearance Credential: VALID
    Clearance Level: Top Secret
    Clearance Type: TS/SCI
    Need to Know: true
-✅ Clearance requirement MET
-✅ Need to know verified
-✅ Access GRANTED to Top Secret system
+[OK] Clearance requirement MET
+[OK] Need to know verified
+[OK] Access GRANTED to Top Secret system
 
-🔐 Secret System Access Control:
-✅ Clearance Credential: VALID
+[verify] Secret System Access Control:
+[OK] Clearance Credential: VALID
    Clearance Level: Secret
    Need to Know: true
-✅ Clearance requirement MET
-✅ Access GRANTED to Secret system
+[OK] Clearance requirement MET
+[OK] Access GRANTED to Secret system
 
-🔐 Confidential System Access Control:
-✅ Clearance Credential: VALID
+[verify] Confidential System Access Control:
+[OK] Clearance Credential: VALID
    Clearance Level: Secret
    Required Level: Confidential (or higher)
-✅ Clearance requirement MET (higher clearance accepted)
-✅ Access GRANTED to Confidential system
+[OK] Clearance requirement MET (higher clearance accepted)
+[OK] Access GRANTED to Confidential system
 
-🔐 Multi-Level Access Control Demonstration:
-   ✅ Personnel: Top Secret, Required: Top Secret, Access: true
-   ✅ Personnel: Top Secret, Required: Secret, Access: true
-   ✅ Personnel: Top Secret, Required: Confidential, Access: true
-   ✅ Personnel: Secret, Required: Secret, Access: true
-   ✅ Personnel: Secret, Required: Confidential, Access: true
-   ✅ Personnel: Secret, Required: Top Secret, Access: false
-   ✅ Personnel: Confidential, Required: Top Secret, Access: false
+[verify] Multi-Level Access Control Demonstration:
+   [OK] Personnel: Top Secret, Required: Top Secret, Access: true
+   [OK] Personnel: Top Secret, Required: Secret, Access: true
+   [OK] Personnel: Top Secret, Required: Confidential, Access: true
+   [OK] Personnel: Secret, Required: Secret, Access: true
+   [OK] Personnel: Secret, Required: Confidential, Access: true
+   [OK] Personnel: Secret, Required: Top Secret, Access: false
+   [OK] Personnel: Confidential, Required: Top Secret, Access: false
 
-✅ Privacy-preserving clearance presentation created
+[OK] Privacy-preserving clearance presentation created
    Holder: did:key:z6Mk...
    Credentials: 1
 
-🔒 Privacy Verification:
-   Full Name exposed: false ❌
-   SSN exposed: false ❌
-   Address exposed: false ❌
-   Clearance level only: true ✅
-✅ Privacy preserved - only clearance information shared
+[privacy] Privacy Verification:
+   Full Name exposed: false [FAIL]
+   SSN exposed: false [FAIL]
+   Address exposed: false [FAIL]
+   Clearance level only: true [OK]
+[OK] Privacy preserved - only clearance information shared
 
-📊 Personnel 1 Wallet Statistics:
+[stats] Personnel 1 Wallet Statistics:
    Total credentials: 1
    Valid credentials: 1
    Collections: 1
    Tags: 5
 
-📊 Personnel 2 Wallet Statistics:
+[stats] Personnel 2 Wallet Statistics:
    Total credentials: 1
    Valid credentials: 1
    Collections: 1
    Tags: 4
 
 ======================================================================
-✅ SECURITY CLEARANCE & ACCESS CONTROL SYSTEM COMPLETE
+[OK] SECURITY CLEARANCE & ACCESS CONTROL SYSTEM COMPLETE
    Clearance credentials issued and stored
    Multi-level access control implemented
    Privacy-preserving verification implemented
@@ -607,10 +606,10 @@ Security Clearance & Access Control Scenario - Complete End-to-End Example
 
 ## Related Documentation
 
-- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
-- [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
-- [API Reference](../api-reference/core-api.md) - Complete API documentation
-- [Zero Trust Continuous Authentication Scenario](zero-trust-authentication-scenario.md) - Related authentication scenario
-- [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+- Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
+- Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
+- API Reference](../api-reference/core-api.md) - Complete API documentation
+- Zero Trust Continuous Authentication Scenario](zero-trust-authentication-scenario.md) - Related authentication scenario
+- Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
 
 

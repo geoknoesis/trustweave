@@ -23,16 +23,18 @@ TrustWeave is designed for high performance with:
 TrustWeave operations are async by default:
 
 ```kotlin
-import kotlinx.coroutines.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import org.trustweave.trust.TrustWeave
 
 // Use coroutines for concurrent operations
-suspend fun processMultiple() = coroutineScope {
+suspend fun processMultiple(trustWeave: TrustWeave) = coroutineScope {
     val results = listOf(
-        async { TrustWeave.dids.create() },
-        async { TrustWeave.dids.create() },
-        async { TrustWeave.dids.create() }
+        async { trustWeave.createDid { } },
+        async { trustWeave.createDid { } },
+        async { trustWeave.createDid { } }
     )
-
     results.awaitAll()
 }
 ```
@@ -46,17 +48,27 @@ suspend fun processMultiple() = coroutineScope {
 Batch operations when possible:
 
 ```kotlin
-// Batch credential issuance
-val credentials = subjects.map { subject ->
-    TrustWeave.issueCredential(
-        issuerDid = issuerDid.id,
-        issuerKeyId = issuerKeyId,
-        credentialSubject = subject
-    )
-}
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 
-// Wait for all credentials
-val results = credentials.map { it.await() }
+// Batch credential issuance (concurrent) — each entry is IssuanceResult
+val issuanceResults = subjects.map { subject ->
+    async {
+        trustWeave.issue {
+            credential {
+                issuer(issuerDid)
+                subject {
+                    id("did:key:holder")
+                    // map fields from `subject` (your domain model) into claims here
+                }
+            }
+            signedBy(issuerDid, issuerKeyId)
+        }
+    }
+}.awaitAll()
+
+// Or collapse to credentials where failures should abort:
+// val credentials = issuanceResults.map { it.getOrThrow() }
 ```
 
 **Outcome:** Reduces overhead from repeated setup.
@@ -83,9 +95,12 @@ Cache frequently accessed data:
 // Cache DID documents
 val didCache = ConcurrentHashMap<String, DidDocument>()
 
-suspend fun resolveWithCache(did: String): DidDocument {
+suspend fun resolveWithCache(trustWeave: TrustWeave, did: String): DidDocument {
     return didCache.getOrPut(did) {
-        TrustWeave.dids.resolve(did).document!!
+        when (val res = trustWeave.resolveDid(did)) {
+            is DidResolutionResult.Success -> res.document
+            else -> error("DID not resolved: $did ($res)")
+        }
     }
 }
 ```
@@ -238,12 +253,23 @@ suspend fun getOrCreateKey(issuerDid: String): Key {
 Collect performance metrics:
 
 ```kotlin
-// Measure operation time
-val start = System.currentTimeMillis()
-val did = TrustWeave.dids.create()
-val duration = System.currentTimeMillis() - start
+import kotlinx.coroutines.runBlocking
+import org.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.*
+import org.trustweave.trust.types.getOrThrowDid
 
-println("DID creation took ${duration}ms")
+// Measure operation time
+runBlocking {
+    val trustWeave = TrustWeave.build {
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
+    }
+    val start = System.currentTimeMillis()
+    trustWeave.createDid { }.getOrThrowDid()
+    val duration = System.currentTimeMillis() - start
+    println("DID creation took ${duration}ms")
+}
 ```
 
 ### Profiling
@@ -262,8 +288,8 @@ Use profiling tools to identify bottlenecks:
 Design for horizontal scaling:
 
 ```kotlin
-// Stateless operations scale horizontally
-val TrustWeave = TrustWeave.create() // No shared state
+// Stateless operations scale horizontally — each instance holds only configuration + clients
+val trustWeave = TrustWeave.quickStart()
 ```
 
 **Outcome:** Enables horizontal scaling.
@@ -273,11 +299,11 @@ val TrustWeave = TrustWeave.create() // No shared state
 Use load balancing for services:
 
 ```kotlin
-// Multiple instances can share load
+// Multiple instances can share load (each with its own config / connection pools)
 val instances = listOf(
-    TrustWeave.create(),
-    TrustWeave.create(),
-    TrustWeave.create()
+    TrustWeave.quickStart(),
+    TrustWeave.quickStart(),
+    TrustWeave.quickStart()
 )
 ```
 
@@ -290,20 +316,29 @@ val instances = listOf(
 Create benchmarks for critical paths:
 
 ```kotlin
+import kotlinx.coroutines.runBlocking
+import org.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.*
+import org.trustweave.trust.types.getOrThrowDid
+import kotlin.test.Test
+import kotlin.test.assertTrue
+
 @Test
 fun benchmarkDidCreation() = runBlocking {
+    val trustWeave = TrustWeave.build {
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
+    }
     val iterations = 1000
     val start = System.currentTimeMillis()
-
     repeat(iterations) {
-        TrustWeave.dids.create()
+        trustWeave.createDid { }.getOrThrowDid()
     }
-
     val duration = System.currentTimeMillis() - start
     val avgTime = duration.toDouble() / iterations
-
     println("Average DID creation: ${avgTime}ms")
-    assert(avgTime < 100) // Should be under 100ms
+    assertTrue(avgTime < 100) // illustrative threshold
 }
 ```
 
@@ -316,8 +351,8 @@ fun benchmarkDidCreation() = runBlocking {
 
 ## References
 
-- [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html)
-- [Kotlinx Serialization](https://github.com/Kotlin/kotlinx.serialization)
-- [Error Handling](error-handling.md)
-- [Testing Strategies](testing-strategies.md)
+- Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html)
+- Kotlinx Serialization](https://github.com/Kotlin/kotlinx.serialization)
+- Error Handling](error-handling.md)
+- Testing Strategies](testing-strategies.md)
 

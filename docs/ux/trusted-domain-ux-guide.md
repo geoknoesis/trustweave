@@ -1410,7 +1410,7 @@ sequenceDiagram
     U->>UI: Click "Create Wallet"
     UI->>API: POST /api/v1/wallets
 
-    API->>WS: createWallet(walletData, capabilities)
+    API->>WS: provisionWallet(holderDid, provider, capabilities)
     WS->>KMS: Generate wallet key pair
     KMS-->>WS: Key pair
 

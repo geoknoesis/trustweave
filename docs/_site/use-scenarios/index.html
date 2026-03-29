@@ -497,8 +497,8 @@
     <!-- Site Header - Consistent across all pages -->
 <nav class="main-nav">
     <div class="nav-container">
-        <a href="/trustweave/" class="logo">
-            <img src="http://0.0.0.0:4000/trustweave/assets/images/trustweave-logo.jpg" alt="TrustWeave Logo" class="logo-img">
+        <a href="/" class="logo">
+            <img src="/assets/images/trustweave-logo.jpg" alt="TrustWeave Logo" class="logo-img">
         </a>
         <div class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
             <span></span>
@@ -506,12 +506,12 @@
             <span></span>
         </div>
         <div class="nav-links" id="navLinks">
-            <a href="/trustweave/" class="nav-link">Home</a>
-            <a href="/trustweave/#features" class="nav-link">Features</a>
-            <a href="/trustweave/use-scenarios/" class="nav-link">Use Scenarios</a>
-            <a href="/trustweave/getting-started/README/" class="nav-link">Docs</a>
-            <a href="/trustweave/partnership/" class="nav-link">Partners</a>
-            <a href="/trustweave/about/" class="nav-link">About</a>
+            <a href="/" class="nav-link">Home</a>
+            <a href="/#features" class="nav-link">Features</a>
+            <a href="/use-scenarios/" class="nav-link">Use Scenarios</a>
+            <a href="/getting-started/README/" class="nav-link">Docs</a>
+            <a href="/partnership/" class="nav-link">Partners</a>
+            <a href="/about/" class="nav-link">About</a>
             <a href="https://github.com/geoknoesis/TrustWeave" target="_blank" rel="noopener noreferrer" class="github-icon" title="View on GitHub" aria-label="GitHub Repository">
                 <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
@@ -558,7 +558,7 @@
             try {
                 const linkUrl = new URL(link.href, window.location.origin);
                 const linkPath = linkUrl.pathname;
-                const baseUrl = '/trustweave' || '';
+                const baseUrl = '' || '';
 
                 // Normalize paths
                 let cleanCurrentPath = currentPath.replace(baseUrl, '').replace(/\/$/, '') || '/';
@@ -604,35 +604,35 @@
 
             <div class="scenarios-grid">
                 <!-- Cybersecurity & Access Control -->
-                <a href="/trustweave/scenarios/zero-trust-authentication-scenario/" class="scenario-tile">
+                <a href="/scenarios/zero-trust-authentication-scenario/" class="scenario-tile">
                     <div class="scenario-icon">🔐</div>
                     <h3>Zero Trust Authentication</h3>
                     <p>Continuous authentication system without traditional sessions. Short-lived credentials and risk-based access control.</p>
                     <span class="scenario-category">Cybersecurity</span>
                 </a>
 
-                <a href="/trustweave/scenarios/security-clearance-access-control-scenario/" class="scenario-tile">
+                <a href="/scenarios/security-clearance-access-control-scenario/" class="scenario-tile">
                     <div class="scenario-icon">🛡️</div>
                     <h3>Security Clearance & Access Control</h3>
                     <p>Privacy-preserving security clearance verification for classified systems with multi-level access control.</p>
                     <span class="scenario-category">Cybersecurity</span>
                 </a>
 
-                <a href="/trustweave/scenarios/biometric-verification-scenario/" class="scenario-tile">
+                <a href="/scenarios/biometric-verification-scenario/" class="scenario-tile">
                     <div class="scenario-icon">👤</div>
                     <h3>Biometric Verification</h3>
                     <p>Complete biometric verification system with fingerprint, face, and voice. Privacy-preserving templates.</p>
                     <span class="scenario-category">Cybersecurity</span>
                 </a>
 
-                <a href="/trustweave/scenarios/security-training-certification-scenario/" class="scenario-tile">
+                <a href="/scenarios/security-training-certification-scenario/" class="scenario-tile">
                     <div class="scenario-icon">🎓</div>
                     <h3>Security Training & Certification</h3>
                     <p>Instant verification of security certifications (CISSP, CEH, Security+) with privacy-preserving verification.</p>
                     <span class="scenario-category">Cybersecurity</span>
                 </a>
 
-                <a href="/trustweave/scenarios/software-supply-chain-security-scenario/" class="scenario-tile">
+                <a href="/scenarios/software-supply-chain-security-scenario/" class="scenario-tile">
                     <div class="scenario-icon">🔒</div>
                     <h3>Software Supply Chain Security</h3>
                     <p>Software provenance, build attestation, and SBOM verification. Prevent supply chain attacks.</p>
@@ -640,28 +640,28 @@
                 </a>
 
                 <!-- Identity & Verification -->
-                <a href="/trustweave/scenarios/government-digital-identity-scenario/" class="scenario-tile">
+                <a href="/scenarios/government-digital-identity-scenario/" class="scenario-tile">
                     <div class="scenario-icon">🆔</div>
                     <h3>Government Digital Identity</h3>
                     <p>Citizens receive, store, and present official IDs. Complete workflow for government-issued digital identity.</p>
                     <span class="scenario-category">Identity</span>
                 </a>
 
-                <a href="/trustweave/scenarios/professional-identity-scenario/" class="scenario-tile">
+                <a href="/scenarios/professional-identity-scenario/" class="scenario-tile">
                     <div class="scenario-icon">💼</div>
                     <h3>Professional Identity</h3>
                     <p>Professional credential wallet management. Store and organize professional certifications and licenses.</p>
                     <span class="scenario-category">Identity</span>
                 </a>
 
-                <a href="/trustweave/scenarios/age-verification-scenario/" class="scenario-tile">
+                <a href="/scenarios/age-verification-scenario/" class="scenario-tile">
                     <div class="scenario-icon">🔞</div>
                     <h3>Age Verification</h3>
                     <p>Privacy-preserving age verification for age-restricted services. Verify age without revealing personal information.</p>
                     <span class="scenario-category">Identity</span>
                 </a>
 
-                <a href="/trustweave/scenarios/financial-services-kyc-scenario/" class="scenario-tile">
+                <a href="/scenarios/financial-services-kyc-scenario/" class="scenario-tile">
                     <div class="scenario-icon">💰</div>
                     <h3>Financial Services (KYC)</h3>
                     <p>Streamline onboarding and reuse credentials across institutions. KYC/AML compliance workflows.</p>
@@ -669,14 +669,14 @@
                 </a>
 
                 <!-- Education -->
-                <a href="/trustweave/scenarios/academic-credentials-scenario/" class="scenario-tile">
+                <a href="/scenarios/academic-credentials-scenario/" class="scenario-tile">
                     <div class="scenario-icon">🎓</div>
                     <h3>Academic Credentials</h3>
                     <p>University credential issuance and verification. Degree credentials, transcript management, and wallet organization.</p>
                     <span class="scenario-category">Education</span>
                 </a>
 
-                <a href="/trustweave/scenarios/national-education-credentials-algeria-scenario/" class="scenario-tile">
+                <a href="/scenarios/national-education-credentials-algeria-scenario/" class="scenario-tile">
                     <div class="scenario-icon">🌍</div>
                     <h3>National Education Credentials (Algeria)</h3>
                     <p>AlgeroPass national-level education credential system. Build a national credential infrastructure.</p>
@@ -684,7 +684,7 @@
                 </a>
 
                 <!-- Employment -->
-                <a href="/trustweave/scenarios/employee-onboarding-scenario/" class="scenario-tile">
+                <a href="/scenarios/employee-onboarding-scenario/" class="scenario-tile">
                     <div class="scenario-icon">👔</div>
                     <h3>Employee Onboarding</h3>
                     <p>Complete employee onboarding system with credential verification. Education, work history, and background checks.</p>
@@ -692,14 +692,14 @@
                 </a>
 
                 <!-- Healthcare -->
-                <a href="/trustweave/scenarios/healthcare-medical-records-scenario/" class="scenario-tile">
+                <a href="/scenarios/healthcare-medical-records-scenario/" class="scenario-tile">
                     <div class="scenario-icon">🏥</div>
                     <h3>Healthcare Medical Records</h3>
                     <p>Share consented medical data across providers with audit trails. Patient credential workflows and privacy-preserving sharing.</p>
                     <span class="scenario-category">Healthcare</span>
                 </a>
 
-                <a href="/trustweave/scenarios/vaccination-health-passport-scenario/" class="scenario-tile">
+                <a href="/scenarios/vaccination-health-passport-scenario/" class="scenario-tile">
                     <div class="scenario-icon">💉</div>
                     <h3>Vaccination & Health Passports</h3>
                     <p>Vaccination credential issuance and health passport verification. Privacy-preserving health credentials for travel.</p>
@@ -707,21 +707,21 @@
                 </a>
 
                 <!-- Supply Chain -->
-                <a href="/trustweave/scenarios/supply-chain-traceability-scenario/" class="scenario-tile">
+                <a href="/scenarios/supply-chain-traceability-scenario/" class="scenario-tile">
                     <div class="scenario-icon">📦</div>
                     <h3>Supply Chain Traceability</h3>
                     <p>Follow goods from origin to shelf with verifiable checkpoints. Complete supply chain provenance tracking.</p>
                     <span class="scenario-category">Supply Chain</span>
                 </a>
 
-                <a href="/trustweave/scenarios/supply-chain-eudr-compliance-scenario/" class="scenario-tile">
+                <a href="/scenarios/supply-chain-eudr-compliance-scenario/" class="scenario-tile">
                     <div class="scenario-icon">🌳</div>
                     <h3>Supply Chain & EUDR Compliance</h3>
                     <p>EU Deforestation Regulation compliance with EO data. Digital Product Passports using verifiable credentials.</p>
                     <span class="scenario-category">Supply Chain</span>
                 </a>
 
-                <a href="/trustweave/scenarios/digital-workflow-provenance-scenario/" class="scenario-tile">
+                <a href="/scenarios/digital-workflow-provenance-scenario/" class="scenario-tile">
                     <div class="scenario-icon">📋</div>
                     <h3>Digital Workflow & Provenance</h3>
                     <p>PROV-O workflow provenance tracking for digital information. Track information flow through complex workflows.</p>
@@ -729,21 +729,21 @@
                 </a>
 
                 <!-- Geospatial & Location -->
-                <a href="/trustweave/scenarios/proof-of-location-scenario/" class="scenario-tile">
+                <a href="/scenarios/proof-of-location-scenario/" class="scenario-tile">
                     <div class="scenario-icon">📍</div>
                     <h3>Proof of Location</h3>
                     <p>Capture sensor evidence, notarise location, and present proofs. Geospatial location proofs and verification.</p>
                     <span class="scenario-category">Geospatial</span>
                 </a>
 
-                <a href="/trustweave/scenarios/earth-observation-scenario/" class="scenario-tile">
+                <a href="/scenarios/earth-observation-scenario/" class="scenario-tile">
                     <div class="scenario-icon">🛰️</div>
                     <h3>Earth Observation</h3>
                     <p>Manage satellite imagery provenance with digest anchoring. Complete EO data integrity workflow with Linksets.</p>
                     <span class="scenario-category">Geospatial</span>
                 </a>
 
-                <a href="/trustweave/scenarios/spatial-web-authorization-scenario/" class="scenario-tile">
+                <a href="/scenarios/spatial-web-authorization-scenario/" class="scenario-tile">
                     <div class="scenario-icon">🌐</div>
                     <h3>Spatial Web Authorization</h3>
                     <p>Grant AR/VR permissions using verifiable policies. DID-based authorization for spatial entities.</p>
@@ -751,14 +751,14 @@
                 </a>
 
                 <!-- Earth Observation & Climate -->
-                <a href="/trustweave/scenarios/parametric-insurance-eo-scenario/" class="scenario-tile">
+                <a href="/scenarios/parametric-insurance-eo-scenario/" class="scenario-tile">
                     <div class="scenario-icon">🌍</div>
                     <h3>Parametric Insurance (EO)</h3>
                     <p>Build parametric insurance using EO data credentials. Accept data from any certified provider without custom integrations.</p>
                     <span class="scenario-category">Insurance</span>
                 </a>
 
-                <a href="/trustweave/scenarios/carbon-markets-dmrv-scenario/" class="scenario-tile">
+                <a href="/scenarios/carbon-markets-dmrv-scenario/" class="scenario-tile">
                     <div class="scenario-icon">🌱</div>
                     <h3>Carbon Markets & dMRV</h3>
                     <p>Digital Measurement, Reporting, and Verification for carbon markets. Prevent double counting with blockchain-anchored credentials.</p>
@@ -766,14 +766,14 @@
                 </a>
 
                 <!-- Media & Content -->
-                <a href="/trustweave/scenarios/news-industry-scenario/" class="scenario-tile">
+                <a href="/scenarios/news-industry-scenario/" class="scenario-tile">
                     <div class="scenario-icon">📰</div>
                     <h3>News Industry</h3>
                     <p>Content provenance and authenticity verification for news media. Anchor articles, trace updates, and verify sources.</p>
                     <span class="scenario-category">Media</span>
                 </a>
 
-                <a href="/trustweave/scenarios/event-ticketing-scenario/" class="scenario-tile">
+                <a href="/scenarios/event-ticketing-scenario/" class="scenario-tile">
                     <div class="scenario-icon">🎫</div>
                     <h3>Event Ticketing</h3>
                     <p>Verifiable event tickets with transfer control and access verification. Prevent fraud and scalping.</p>
@@ -781,7 +781,7 @@
                 </a>
 
                 <!-- Data Management -->
-                <a href="/trustweave/scenarios/data-catalog-dcat-scenario/" class="scenario-tile">
+                <a href="/scenarios/data-catalog-dcat-scenario/" class="scenario-tile">
                     <div class="scenario-icon">📊</div>
                     <h3>Data Catalog & DCAT</h3>
                     <p>Verifiable data catalog system using DCAT for government and enterprise. Metadata provenance and catalog management.</p>
@@ -789,28 +789,28 @@
                 </a>
 
                 <!-- IoT & Devices -->
-                <a href="/trustweave/scenarios/iot-device-identity-scenario/" class="scenario-tile">
+                <a href="/scenarios/iot-device-identity-scenario/" class="scenario-tile">
                     <div class="scenario-icon">🔌</div>
                     <h3>IoT Device Identity</h3>
                     <p>Connected device onboarding and identity management. Provision devices, rotate keys, and secure telemetry feeds.</p>
                     <span class="scenario-category">IoT</span>
                 </a>
 
-                <a href="/trustweave/scenarios/iot-sensor-data-provenance-scenario/" class="scenario-tile">
+                <a href="/scenarios/iot-sensor-data-provenance-scenario/" class="scenario-tile">
                     <div class="scenario-icon">📡</div>
                     <h3>IoT Sensor Data Provenance</h3>
                     <p>Verify sensor data authenticity and integrity. Sensor attestation, data provenance, and tamper detection.</p>
                     <span class="scenario-category">IoT</span>
                 </a>
 
-                <a href="/trustweave/scenarios/iot-firmware-update-verification-scenario/" class="scenario-tile">
+                <a href="/scenarios/iot-firmware-update-verification-scenario/" class="scenario-tile">
                     <div class="scenario-icon">⚙️</div>
                     <h3>IoT Firmware Update Verification</h3>
                     <p>Verify firmware authenticity and update authorization. Firmware attestation, update policies, and version control.</p>
                     <span class="scenario-category">IoT</span>
                 </a>
 
-                <a href="/trustweave/scenarios/iot-device-ownership-transfer-scenario/" class="scenario-tile">
+                <a href="/scenarios/iot-device-ownership-transfer-scenario/" class="scenario-tile">
                     <div class="scenario-icon">🔄</div>
                     <h3>IoT Device Ownership Transfer</h3>
                     <p>Secure device ownership transfer with complete audit trail. Transfer authorization and ownership history tracking.</p>
@@ -818,7 +818,7 @@
                 </a>
 
                 <!-- Trust & Reputation -->
-                <a href="/trustweave/scenarios/web-of-trust-scenario/" class="scenario-tile">
+                <a href="/scenarios/web-of-trust-scenario/" class="scenario-tile">
                     <div class="scenario-icon">🤝</div>
                     <h3>Web of Trust</h3>
                     <p>Build trust networks and reputation systems. Demonstrate how entities establish and verify trust relationships.</p>
@@ -826,21 +826,21 @@
                 </a>
 
                 <!-- Insurance & Claims -->
-                <a href="/trustweave/scenarios/insurance-claims-scenario/" class="scenario-tile">
+                <a href="/scenarios/insurance-claims-scenario/" class="scenario-tile">
                     <div class="scenario-icon">🛡️</div>
                     <h3>Insurance Claims</h3>
                     <p>Complete insurance claims verification system. Claim credentials, damage assessment, and fraud prevention.</p>
                     <span class="scenario-category">Insurance</span>
                 </a>
 
-                <a href="/trustweave/scenarios/parametric-insurance-travel-scenario/" class="scenario-tile">
+                <a href="/scenarios/parametric-insurance-travel-scenario/" class="scenario-tile">
                     <div class="scenario-icon">✈️</div>
                     <h3>Parametric Insurance (Travel)</h3>
                     <p>Build parametric travel insurance system. Automatic payouts for flight delays, weather guarantees, and baggage delays.</p>
                     <span class="scenario-category">Insurance</span>
                 </a>
 
-                <a href="/trustweave/scenarios/smart-contract-parametric-insurance-scenario/" class="scenario-tile">
+                <a href="/scenarios/smart-contract-parametric-insurance-scenario/" class="scenario-tile">
                     <div class="scenario-icon">📜</div>
                     <h3>Smart Contract: Parametric Insurance</h3>
                     <p>Parametric insurance using TrustWeave Smart Contracts. Automatic execution based on EO data triggers.</p>
@@ -848,7 +848,7 @@
                 </a>
 
                 <!-- Compliance & Security -->
-                <a href="/trustweave/scenarios/soc2-compliance-scenario/" class="scenario-tile">
+                <a href="/scenarios/soc2-compliance-scenario/" class="scenario-tile">
                     <div class="scenario-icon">✅</div>
                     <h3>SOC2 Compliance</h3>
                     <p>Build SOC2 Type II compliant systems. Immutable audit trails, access control, and automated compliance reporting.</p>
@@ -862,12 +862,12 @@
     <footer>
         <div class="footer-content">
             <div class="footer-links">
-                <a href="/trustweave/">Home</a>
-                <a href="/trustweave/use-scenarios/">Use Scenarios</a>
-                <a href="/trustweave/partnership/">Partners</a>
-                <a href="/trustweave/about/">About</a>
+                <a href="/">Home</a>
+                <a href="/use-scenarios/">Use Scenarios</a>
+                <a href="/partnership/">Partners</a>
+                <a href="/about/">About</a>
                 <a href="https://github.com/geoknoesis/TrustWeave" target="_blank">GitHub</a>
-                <a href="/trustweave/getting-started/README/">Documentation</a>
+                <a href="/getting-started/README/">Documentation</a>
                 <a href="https://github.com/geoknoesis/TrustWeave/blob/main/LICENSE" target="_blank">License</a>
                 <a href="https://www.geoknoesis.com" target="_blank">Geoknoesis LLC</a>
             </div>

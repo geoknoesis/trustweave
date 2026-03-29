@@ -38,35 +38,33 @@ The proof's `verificationMethod` must be listed in the corresponding verificatio
 ### Basic Validation
 
 ```kotlin
-val result = trustWeave.verify {
-    credential(credential)
-    validateProofPurpose(true) // Enable proof purpose validation
-}
+import org.trustweave.credential.results.VerificationResult
 
-if (result.proofPurposeValid) {
-    println("Proof purpose is valid")
-} else {
-    println("Proof purpose validation failed: ${result.errors}")
+when (val result = trustWeave.verify {
+    credential(credential)
+    validateProofPurpose()
+}) {
+    is VerificationResult.Valid -> println("Proof purpose and other checks passed")
+    is VerificationResult.Invalid.InvalidProof -> println("Proof issue: ${result.reason}")
+    else -> println(result.allErrors.joinToString())
 }
 ```
 
 ### Complete Verification Example
 
 ```kotlin
-val result = trustWeave.verify {
-    credential(credential)
-    validateProofPurpose(true)
-    checkTrustRegistry(true)
-    checkExpiration(true)
-    verifyDelegation(true)
-}
+import org.trustweave.credential.results.VerificationResult
 
-println("Verification Result:")
-println("  Valid: ${result.valid}")
-println("  Proof Purpose Valid: ${result.proofPurposeValid}")
-println("  Proof Valid: ${result.proofValid}")
-println("  Trust Registry Valid: ${result.trustRegistryValid}")
-println("  Delegation Valid: ${result.delegationValid}")
+val registry = trustWeave.configuration.trustRegistry
+when (val result = trustWeave.verify {
+    credential(credential)
+    validateProofPurpose()
+    checkExpiration()
+    registry?.let { requireTrust(it) }
+}) {
+    is VerificationResult.Valid -> println("Verification succeeded")
+    is VerificationResult.Invalid -> println(result.allErrors.joinToString())
+}
 ```
 
 ## Proof Purposes
@@ -205,7 +203,7 @@ val result = validator.validateProofPurpose(
     verificationMethod = "did:key:issuer#key-1",
     issuerDid = "did:key:issuer"
 )
-// result.valid == true
+// Validation succeeded
 ```
 
 ### Invalid Proof Purpose
@@ -233,8 +231,8 @@ val result = validator.validateProofPurpose(
     verificationMethod = "did:key:issuer#key-1",
     issuerDid = "did:key:issuer"
 )
-// result.valid == false
-// result.errors contains "Proof purpose 'capabilityInvocation' does not match verification relationship"
+// Validation failed
+// Error output explains that proof purpose 'capabilityInvocation' does not match verification relationships
 ```
 
 ## Best Practices
@@ -258,23 +256,26 @@ Common validation errors:
 Proof purpose validation is automatically performed when enabled in credential verification:
 
 ```kotlin
-val result = trustWeave.verify {
-    credential(credential)
-    validateProofPurpose(true) // Enable validation
-    checkTrustRegistry(true)
-    checkExpiration(true)
-}
+import org.trustweave.credential.results.VerificationResult
 
-if (!result.proofPurposeValid) {
-    println("Proof purpose validation failed:")
-    result.errors.forEach { println("  - $it") }
+when (val result = trustWeave.verify {
+    credential(credential)
+    validateProofPurpose()
+    checkExpiration()
+    trustWeave.configuration.trustRegistry?.let { requireTrust(it) }
+}) {
+    is VerificationResult.Valid -> { }
+    is VerificationResult.Invalid.InvalidProof -> {
+        println("Proof purpose or signature issue: ${result.reason}")
+    }
+    else -> result.allErrors.forEach { println("  - $it") }
 }
 ```
 
 ## See Also
 
-- [DID Documentation](dids.md)
-- [Delegation Documentation](delegation.md)
-- [Web of Trust Scenario](../scenarios/web-of-trust-scenario.md)
-- [W3C DID Core Specification](https://www.w3.org/TR/did-core/)
+- DID Documentation](dids.md)
+- Delegation Documentation](delegation.md)
+- Web of Trust Scenario](../scenarios/web-of-trust-scenario.md)
+- W3C DID Core Specification](https://www.w3.org/TR/did-core/)
 

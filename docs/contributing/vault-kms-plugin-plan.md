@@ -504,14 +504,14 @@ path "transit/keys/+/+" {
 
 ## Success Criteria
 
-- ✅ All TrustWeave algorithms supported (except BLS12-381)
-- ✅ Token and AppRole authentication working
-- ✅ Environment variable configuration supported
-- ✅ Proper error handling and exception mapping
-- ✅ Public keys converted to JWK format
-- ✅ Comprehensive test coverage
-- ✅ Complete documentation
-- ✅ Module compiles and integrates successfully
+- All TrustWeave algorithms supported (except BLS12-381)
+- Token and AppRole authentication working
+- Environment variable configuration supported
+- Proper error handling and exception mapping
+- Public keys converted to JWK format
+- Comprehensive test coverage
+- Complete documentation
+- Module compiles and integrates successfully
 
 ---
 
@@ -527,7 +527,7 @@ path "transit/keys/+/+" {
 
 ## References
 
-- [HashiCorp Vault Transit Engine Documentation](https://developer.hashicorp.com/vault/docs/secrets/transit)
-- [Vault API Reference](https://developer.hashicorp.com/vault/api-docs)
-- [Vault Java Client Libraries](https://github.com/hashicorp/vault-java-driver)
+- HashiCorp Vault Transit Engine Documentation](https://developer.hashicorp.com/vault/docs/secrets/transit)
+- Vault API Reference](https://developer.hashicorp.com/vault/api-docs)
+- Vault Java Client Libraries](https://github.com/hashicorp/vault-java-driver)
 

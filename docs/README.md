@@ -12,7 +12,7 @@ title: TrustWeave
 
 **A neutral, reusable trust and identity core** library designed to be domain-agnostic, chain-agnostic, Decentralized Identifier (DID)-method-agnostic, and Key Management Service (KMS)-agnostic.
 
-[![Version](https://img.shields.io/badge/version-1.0.0--SNAPSHOT-blue.svg)](https://github.com/geoknoesis/TrustWeave)
+[![Version](https://img.shields.io/badge/version-0.6.0-blue.svg)](https://github.com/geoknoesis/TrustWeave)
 [![License](https://img.shields.io/badge/license-Dual-green.svg)](LICENSE)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.2.0-orange.svg)](https://kotlinlang.org)
 
@@ -28,13 +28,13 @@ TrustWeave is a **production-ready Kotlin library** for building decentralized i
 
 ### ✨ Why TrustWeave?
 
-- 🎯 **Domain-Agnostic** - Works for any use case (education, healthcare, Internet of Things (IoT), supply chain, etc.)
-- 🔗 **Chain-Agnostic** - Supports any blockchain via pluggable adapters
-- 🆔 **DID-Method-Agnostic** - Works with any Decentralized Identifier (DID) method (did:key, did:web, did:ion, etc.)
-- 🔐 **KMS-Agnostic** - Supports any Key Management Service (KMS)
-- 🛡️ **Type-Safe** - Leverages Kotlin's type system for compile-time safety
-- ⚡ **Coroutine-Based** - Built for modern async/await patterns
-- 🧪 **Testable** - Comprehensive test utilities and in-memory implementations
+- Domain-Agnostic** - Works for any use case (education, healthcare, Internet of Things (IoT), supply chain, etc.)
+- Chain-Agnostic** - Supports any blockchain via pluggable adapters
+- DID-Method-Agnostic** - Works with any Decentralized Identifier (DID) method (did:key, did:web, did:ion, etc.)
+- KMS-Agnostic** - Supports any Key Management Service (KMS)
+- Type-Safe** - Leverages Kotlin's type system for compile-time safety
+- Coroutine-Based** - Built for modern async/await patterns
+- Testable** - Comprehensive test utilities and in-memory implementations
 
 ---
 
@@ -43,34 +43,20 @@ TrustWeave is a **production-ready Kotlin library** for building decentralized i
 Get started with TrustWeave in **30 seconds**:
 
 ```kotlin
-import org.trustweave.trust.TrustLayer
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.credential.results.VerificationResult
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 
 fun main() = runBlocking {
-    // Create TrustLayer instance
-    val trustLayer = TrustLayer.build {
-        keys {
-            provider(IN_MEMORY)
-            algorithm(ED25519)
-        }
-        did {
-            method(KEY) {
-                algorithm(ED25519)
-            }
-        }
-    }
+    val trustWeave = TrustWeave.quickStart()
 
-    // Create a Decentralized Identifier (DID)
-    val issuerDid = trustLayer.createDid {
-        method(KEY)
-        algorithm(ED25519)
-    }
-    println("Created DID: $issuerDid")
+    val issuerDid = trustWeave.createDid { method("key"); algorithm("Ed25519") }.getOrThrowDid()
+    println("Created DID: ${issuerDid.value}")
 
-    // Issue a verifiable credential
-    val credential = trustLayer.issue {
+    val credential = trustWeave.issue {
         credential {
             type("VerifiableCredential", "PersonCredential")
             issuer(issuerDid)
@@ -80,21 +66,14 @@ fun main() = runBlocking {
                 "email" to "alice@example.com"
             }
         }
-        signedBy(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
-    }
+        signedBy(issuerDid)
+    }.getOrThrow()
 
-    // Verify the credential
-    val verification = trustLayer.verify {
-        credential(credential)
+    val verification = trustWeave.verify(credential)
+    when (verification) {
+        is VerificationResult.Valid -> println("Credential valid: ✓")
+        is VerificationResult.Invalid -> println("Invalid: ${verification.allErrors.joinToString()}")
     }
-    println("Credential valid: ${verification.valid}")
-
-    // Create a wallet and store the credential
-    val wallet = trustLayer.wallet {
-        holder("did:example:alice")
-    }
-    val credentialId = wallet.store(credential)
-    println("✅ Stored credential: $credentialId")
 }
 ```
 
@@ -102,7 +81,7 @@ fun main() = runBlocking {
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 }
 ```
 
@@ -112,27 +91,27 @@ dependencies {
 
 ## 🎯 Core Features
 
-- 🛡️ W3C Compliant
+- W3C Compliant
 
 Full support for World Wide Web Consortium (W3C) Verifiable Credentials 1.1 and Decentralized Identifier (DID) Core 1.0 specifications
 
-- 🔑 Decentralized Identifiers
+- Decentralized Identifiers
 
 Create, resolve, and manage Decentralized Identifiers (DIDs) with any DID method via pluggable interfaces
 
-- 📜 Verifiable Credentials
+- Verifiable Credentials
 
 Issue, verify, and manage verifiable credentials with cryptographic proofs
 
-- 🔗 Blockchain Anchoring
+- Blockchain Anchoring
 
 Anchor data to any blockchain with chain-agnostic interfaces
 
-- 💼 Wallet Management
+- Wallet Management
 
 Store, organize, and present credentials with powerful wallet capabilities
 
-- 🔐 Key Management
+- Key Management
 
 Pluggable key management supporting multiple algorithms and backends
 
@@ -198,11 +177,11 @@ TrustWeave is built on a modular, pluggable architecture:
 
 Installation, quick start guide, and common patterns
 
-- [Quick Start](getting-started/quick-start.md) - Get up and running in 5 minutes
-- [API Patterns](getting-started/api-patterns.md) - Correct API usage patterns
-- [Mental Model](introduction/mental-model.md) - Understanding TrustWeave architecture
-- [Production Deployment](getting-started/production-deployment.md) - Production best practices
-- [Common Workflows](getting-started/workflows.md) - Real-world workflow examples
+- Quick Start](getting-started/quick-start.md) - Get up and running in 5 minutes
+- API Patterns](getting-started/api-patterns.md) - Correct API usage patterns
+- Mental Model](introduction/mental-model.md) - Understanding TrustWeave architecture
+- Production Deployment](getting-started/production-deployment.md) - Production best practices
+- Common Workflows](getting-started/workflows.md) - Real-world workflow examples
 
 ### 📖 [Core Concepts](core-concepts/README.md)
 
@@ -234,17 +213,17 @@ Common questions and answers
 
 Each scenario includes:
 
-- ✅ **Complete, runnable code** - Copy, paste, and run
-- ✅ **Industry context** - Real-world use cases and value propositions
-- ✅ **Best practices** - Production-ready patterns
-- ✅ **Visual diagrams** - Mermaid flowcharts showing the architecture
-- ✅ **Expected output** - See what success looks like
+- Complete, runnable code** - Copy, paste, and run
+- Industry context** - Real-world use cases and value propositions
+- Best practices** - Production-ready patterns
+- Visual diagrams** - Mermaid flowcharts showing the architecture
+- Expected output** - See what success looks like
 
 **Popular Examples:**
 
 ```kotlin
-// Academic Credentials
-val degree = trustLayer.issue {
+// Academic Credentials (universityDid / studentDid: Did)
+val degree = trustWeave.issue {
     credential {
         type("VerifiableCredential", "DegreeCredential")
         issuer(universityDid)
@@ -254,11 +233,11 @@ val degree = trustLayer.issue {
             "major" to "Computer Science"
         }
     }
-    signedBy(issuerDid = universityDid, keyId = "$universityDid#key-1")
+    signedBy(issuerDid = universityDid, keyId = "${universityDid.value}#key-1")
 }
 
 // Age Verification (Privacy-Preserving)
-val ageCredential = trustLayer.issue {
+val ageCredential = trustWeave.issue {
     credential {
         type("VerifiableCredential", "AgeVerificationCredential")
         issuer(identityProviderDid)
@@ -271,11 +250,11 @@ val ageCredential = trustLayer.issue {
             }
         }
     }
-    signedBy(issuerDid = identityProviderDid, keyId = "$identityProviderDid#key-1")
+    signedBy(issuerDid = identityProviderDid, keyId = "${identityProviderDid.value}#key-1")
 }
 
 // Internet of Things (IoT) Sensor Data Provenance
-val sensorData = trustLayer.issue {
+val sensorData = trustWeave.issue {
     credential {
         type("VerifiableCredential", "SensorDataCredential")
         issuer(sensorDid)
@@ -287,7 +266,7 @@ val sensorData = trustLayer.issue {
             }
         }
     }
-    signedBy(issuerDid = sensorDid, keyId = "$sensorDid#key-1")
+    signedBy(issuerDid = sensorDid, keyId = "${sensorDid.value}#key-1")
 }
 ```
 
@@ -302,45 +281,30 @@ TrustWeave is designed for developer happiness:
 ### Type-Safe Configuration
 
 ```kotlin
-val trustLayer = TrustLayer.build {
-    keys {
-        provider(IN_MEMORY)
-        algorithm(ED25519)
-    }
-    did {
-        method(KEY) {
-            algorithm(ED25519)
-        }
-    }
-}
+val trustWeave = TrustWeave.quickStart()
+// Or use TrustWeave.build { keys { ... }; did { ... } } for custom wiring
 ```
 
 ### Predictable Error Handling
 
 ```kotlin
-try {
-    val did = trustLayer.createDid {
-        method(KEY)
-        algorithm(ED25519)
-    }
-    println("Created: $did")
-} catch (error: Exception) {
-    when (error) {
-        is IllegalStateException ->
-            println("Error: ${error.message}")
-        else -> println("Error: ${error.message}")
-    }
+import org.trustweave.trust.types.DidCreationResult
+
+when (val didResult = trustWeave.createDid { method("key"); algorithm("Ed25519") }) {
+    is DidCreationResult.Success -> println("Created: ${didResult.did}")
+    is DidCreationResult.Failure -> println("Error: ${didResult}")
 }
 ```
 
 ### Composable DSLs
 
 ```kotlin
-val wallet = trustLayer.wallet {
+// Requires a WalletFactory (e.g. testkit) configured on TrustWeave
+val wallet = trustWeave.wallet {
     holder(userDid)
     enableOrganization()
     enablePresentation()
-}
+}.getOrThrow()
 ```
 
 ---
@@ -349,7 +313,7 @@ val wallet = trustLayer.wallet {
 
 - **Created by**: [Geoknoesis LLC](https://www.geoknoesis.com)
 - **License**: Dual license (Open source for non-commercial, Commercial for production)
-- **Version**: 1.0.0-SNAPSHOT
+- **Version**: 0.6.0
 - **GitHub**: [geoknoesis/TrustWeave](https://github.com/geoknoesis/TrustWeave)
 
 ---

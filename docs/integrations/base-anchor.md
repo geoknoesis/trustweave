@@ -22,10 +22,10 @@ Add the Base adapter module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave.chains:base:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-json:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:anchors-plugins-base:0.6.0")
+    implementation("org.trustweave:anchors-anchor-core:0.6.0")
+    implementation("org.trustweave:common:0.6.0")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Web3j for Base blockchain (EVM-compatible)
     implementation("org.web3j:core:5.0.1")
@@ -139,20 +139,30 @@ println("Anchored to Base: ${result.ref.txHash}")
 ## Integration with TrustWeave
 
 ```kotlin
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
 import org.trustweave.base.*
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
-val TrustWeave = TrustWeave.create {
-    blockchain {
-        register(
-            BaseBlockchainAnchorClient.MAINNET,
-            BaseBlockchainAnchorClient(
-                BaseBlockchainAnchorClient.MAINNET,
-                mapOf("rpcUrl" to "https://mainnet.base.org")
-            )
-        )
+val trustWeave = TrustWeave.build {
+    did { method("key") { algorithm("Ed25519") } }
+    anchor {
+        chain(BaseBlockchainAnchorClient.MAINNET) {
+            provider("base")
+            options { "rpcUrl" to "https://mainnet.base.org" }
+        }
     }
 }
+
+val digest = "uABC123..."
+val payload = buildJsonObject { put("digest", digest) }
+val result = trustWeave.blockchains.anchor(
+    data = payload,
+    serializer = JsonElement.serializer(),
+    chainId = BaseBlockchainAnchorClient.MAINNET
+)
+println("Anchored: ${result.ref.txHash}")
 ```
 
 ## Best Practices
@@ -170,7 +180,7 @@ val TrustWeave = TrustWeave.create {
 
 ## References
 
-- [Base Documentation](https://docs.base.org/)
-- [Base Network](https://base.org/)
-- [Coinbase Base](https://www.coinbase.com/base)
+- Base Documentation](https://docs.base.org/)
+- Base Network](https://base.org/)
+- Coinbase Base](https://www.coinbase.com/base)
 

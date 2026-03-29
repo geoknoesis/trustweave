@@ -1,5 +1,8 @@
 package org.trustweave.anchor.indy
 
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.trust.types.getOrThrow
 import org.trustweave.trust.TrustWeave
 import org.trustweave.anchor.AnchorRef
 import org.trustweave.anchor.exceptions.BlockchainException
@@ -7,11 +10,10 @@ import org.trustweave.core.*
 import org.trustweave.core.identifiers.KeyId
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.did.model.DidDocument
-import org.trustweave.trust.types.VerificationResult
+import org.trustweave.credential.results.VerificationResult
 import org.trustweave.wallet.Wallet
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.testkit.services.TestkitWalletFactory
-import org.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
@@ -92,10 +94,10 @@ class IndyIntegrationScenarioTest {
 
         // Step 1: Create DIDs for issuer and holder
         println("Step 1: Creating DIDs...")
-        val issuerDid = trustweave.createDid().getOrFail()
+        val issuerDid = trustweave.createDid().getOrThrowDid()
         println("  ✓ Issuer DID: ${issuerDid.value}")
 
-        val holderDid = trustweave.createDid().getOrFail()
+        val holderDid = trustweave.createDid().getOrThrowDid()
         println("  ✓ Holder DID: ${holderDid.value}")
 
         // Step 2: Get issuer key ID by resolving the DID
@@ -124,7 +126,7 @@ class IndyIntegrationScenarioTest {
                 issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
-        }.getOrFail()
+        }.getOrThrow()
         println("  ✓ Credential ID: ${credential.id}")
         println("  ✓ Credential Issuer: ${credential.issuer}")
         println("  ✓ Credential Types: ${credential.type}")
@@ -134,7 +136,7 @@ class IndyIntegrationScenarioTest {
         // Step 4: Verify the credential
         println("\nStep 3: Verifying credential...")
         val verification = trustweave.verify { credential(credential) }
-        val isValid = verification is org.trustweave.trust.types.VerificationResult.Valid
+        val isValid = verification is org.trustweave.credential.results.VerificationResult.Valid
         println("  ✓ Verification Valid: $isValid")
         assertTrue(isValid, "Credential should be valid")
 
@@ -142,7 +144,7 @@ class IndyIntegrationScenarioTest {
         println("\nStep 4: Creating wallet and storing credential...")
         val wallet = trustweave.wallet {
             holder(holderDid.value)
-        }.getOrFail()
+        }.getOrThrow()
         println("  ✓ Wallet ID: ${wallet.walletId}")
 
         wallet.store(credential)
@@ -192,7 +194,7 @@ class IndyIntegrationScenarioTest {
         // Step 9: Verify the read credential
         println("\nStep 7: Verifying read credential...")
         val readVerification = trustweave.verify { credential(readCredential) }
-        val readIsValid = readVerification is org.trustweave.trust.types.VerificationResult.Valid
+        val readIsValid = readVerification is org.trustweave.credential.results.VerificationResult.Valid
         println("  ✓ Read Verification Valid: $readIsValid")
         assertTrue(readIsValid, "Read credential should be valid")
 
@@ -298,8 +300,8 @@ class IndyIntegrationScenarioTest {
         println("\n=== Indy Integration with Multiple Credentials ===\n")
 
         // Create issuer and holder
-        val issuerDid = trustweave.createDid().getOrFail()
-        val holderDid = trustweave.createDid().getOrFail()
+        val issuerDid = trustweave.createDid().getOrThrowDid()
+        val holderDid = trustweave.createDid().getOrThrowDid()
         
         // Get issuer key ID by resolving the DID
         val issuerDidResolution = trustweave.resolveDid(issuerDid)
@@ -327,7 +329,7 @@ class IndyIntegrationScenarioTest {
                     issued(Clock.System.now())
                 }
                 signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
-            }.getOrFail()
+            }.getOrThrow()
 
             credentials.add(credential)
             println("  ✓ Issued credential $i: ${credential.id}")
@@ -337,7 +339,7 @@ class IndyIntegrationScenarioTest {
         println("\nVerifying all credentials...")
         credentials.forEachIndexed { index, credential ->
             val verification = trustweave.verify { credential(credential) }
-            val isValid = verification is org.trustweave.trust.types.VerificationResult.Valid
+            val isValid = verification is org.trustweave.credential.results.VerificationResult.Valid
             assertTrue(isValid, "Credential ${index + 1} should be valid")
             println("  ✓ Credential ${index + 1} verified")
         }

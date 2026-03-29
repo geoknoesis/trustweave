@@ -18,8 +18,6 @@ import org.trustweave.credential.model.ProofType
  * ```
  */
 
-// CredentialTypes and ProofTypes removed - use CredentialType.* and ProofType.* directly
-
 /**
  * Type-safe DID methods.
  */

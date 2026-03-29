@@ -59,11 +59,11 @@ Use the provided templates as starting points:
 - **KMS Plugins**: `docs/contributing/test-templates/KmsPluginTestTemplate.kt`
 - **Chain Plugins**: `docs/contributing/test-templates/ChainPluginTestTemplate.kt`
 
-### Trust Layer Integration Test Templates
+### TrustWeave integration test templates
 
-Comprehensive in-memory workflow templates for trust layer integration tests:
+Comprehensive in-memory workflow templates for TrustWeave integration tests:
 
-- **Location**: `trust/src/test/kotlin/org/trustweave/integration/InMemoryTrustLayerIntegrationTest.kt`
+- **Location**: `trust/src/test/kotlin/org/trustweave/integration/InMemoryTrustWeaveIntegrationTest.kt`
 - **Templates Available**:
   - Complete in-memory workflow
   - Credential revocation workflow
@@ -74,18 +74,18 @@ Comprehensive in-memory workflow templates for trust layer integration tests:
   - Smart contract workflow
   - External services template
 
-See [Trust Layer Test Templates](trust-layer-test-templates.md) for detailed documentation and examples.
+See [TrustWeave test templates](trustweave-test-templates.md) for detailed documentation and examples.
 
 ## Test Checklist
 
 For each plugin, ensure tests cover:
 
-- ✅ **Happy Path**: Successful operations
-- ✅ **Error Handling**: Invalid inputs, network errors
-- ✅ **Edge Cases**: Null values, empty collections, boundary values
-- ✅ **Algorithm Variations**: Different algorithms/configurations
-- ✅ **SPI Discovery**: Automatic plugin discovery (if applicable)
-- ✅ **Interface Compliance**: All interface methods tested
+- Happy Path**: Successful operations
+- Error Handling**: Invalid inputs, network errors
+- Edge Cases**: Null values, empty collections, boundary values
+- Algorithm Variations**: Different algorithms/configurations
+- SPI Discovery**: Automatic plugin discovery (if applicable)
+- Interface Compliance**: All interface methods tested
 
 ## Test Naming
 
@@ -151,8 +151,8 @@ class MyTest : BasePluginTest() {
 
 ## Next Steps
 
-- [Trust Layer Test Templates](trust-layer-test-templates.md) - Comprehensive workflow templates
-- [Test Patterns](test-patterns.md) - Common test patterns and examples
-- [Integration Testing](integration-testing.md) - Integration test best practices
-- [Plugin Credential Handling](plugin-credential-handling.md) - Handling external service credentials
+- TrustWeave test templates](trustweave-test-templates.md) - Comprehensive workflow templates
+- Test Patterns](test-patterns.md) - Common test patterns and examples
+- Integration Testing](integration-testing.md) - Integration test best practices
+- Plugin Credential Handling](plugin-credential-handling.md) - Handling external service credentials
 

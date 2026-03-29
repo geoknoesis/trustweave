@@ -1,6 +1,6 @@
 package org.trustweave.core.plugin
 
-import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.core.exception.ProviderException
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -57,7 +57,7 @@ class ProviderChainBranchCoverageTest {
         val provider2 = TestProvider("provider2", succeeds = false)
         val chain = ProviderChain(listOf(provider1, provider2))
 
-        assertFailsWith<TrustWeaveException.AllProvidersFailed> {
+        assertFailsWith<ProviderException.AllFailed> {
             chain.execute { it.operation() }
         }
     }
@@ -132,7 +132,7 @@ class ProviderChainBranchCoverageTest {
     @Test
     fun `test AllProvidersFailed contains last exception`() {
         val cause = RuntimeException("Test error")
-        val exception = TrustWeaveException.AllProvidersFailed(
+        val exception = ProviderException.AllFailed(
             attemptedProviders = listOf("provider-1"),
             providerErrors = emptyMap(),
             lastException = cause
@@ -145,7 +145,7 @@ class ProviderChainBranchCoverageTest {
 
     @Test
     fun `test AllProvidersFailed without cause`() {
-        val exception = TrustWeaveException.AllProvidersFailed(
+        val exception = ProviderException.AllFailed(
             attemptedProviders = listOf("provider-1"),
             providerErrors = emptyMap(),
             lastException = null
@@ -177,7 +177,7 @@ class ProviderChainBranchCoverageTest {
     fun `test createProviderChain throws NoProvidersFound when no providers found`() {
         registry = DefaultPluginRegistry() // Fresh registry with no plugins
 
-        assertFailsWith<TrustWeaveException.NoProvidersFound> {
+        assertFailsWith<ProviderException.NoneFound> {
             createProviderChain<TestProvider>(listOf("nonexistent"), registry)
         }
     }
@@ -195,7 +195,7 @@ class ProviderChainBranchCoverageTest {
         registry.register(metadata, provider1)
         // plugin2 not registered
 
-        assertFailsWith<TrustWeaveException.PartialProvidersFound> {
+        assertFailsWith<ProviderException.PartiallyFound> {
             createProviderChain<TestProvider>(listOf("plugin1", "plugin2"), registry)
         }
     }

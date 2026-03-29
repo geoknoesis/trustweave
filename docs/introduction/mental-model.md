@@ -6,7 +6,8 @@ keywords:
   - mental model
   - architecture
   - concepts
-  - trustlayer
+  - trustweave
+  - facade
   - dsl
   - plugins
   - services
@@ -18,7 +19,7 @@ Understanding how TrustWeave works at a conceptual level will help you use it ef
 
 ## Overview
 
-TrustWeave is built on a **layered architecture** with clear separation between:
+TrustWeave follows [Clean Architecture](architecture/CLEAN_ARCHITECTURE.md) principles (Uncle Bob) with clear separation between:
 - **Facade Layer** (`TrustWeave`) - High-level, developer-friendly API
 - **Service Layer** - Domain-specific services (DID, Credential, Wallet, etc.)
 - **Plugin Layer** - Pluggable implementations (DID methods, KMS, blockchains)
@@ -30,11 +31,11 @@ flowchart TB
     end
     
     subgraph Facade["TrustWeave (Facade)"]
-        FacadeAPI[createDid()<br/>issue()<br/>verify()<br/>trust {}]
+        FacadeAPI["createDid, issue, verify, trust"]
     end
     
-    subgraph Orchestrator["TrustWeaveContext (Orchestrator)"]
-        Context[Coordinates Services<br/>Manages DSL Builders]
+    subgraph Orchestrator["TrustWeave (internals)"]
+        Context[Uses config • registries<br/>domain services]
     end
     
     subgraph Services["Services (Domain Logic)"]
@@ -60,11 +61,11 @@ flowchart TB
     CredService --> KMSProviders
     CredService --> BlockchainClients
     
-    style Application fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-    style Facade fill:#c8e6c9,stroke:#388e3c,stroke-width:2px
-    style Orchestrator fill:#fff9c4,stroke:#f57f17,stroke-width:2px
-    style Services fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
-    style Plugins fill:#e0f2f1,stroke:#00796b,stroke-width:2px
+    style Application fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
+    style Facade fill:#c8e6c9,stroke:#388e3c,stroke-width:2px,color:#000
+    style Orchestrator fill:#fff9c4,stroke:#f57f17,stroke-width:2px,color:#000
+    style Services fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style Plugins fill:#e0f2f1,stroke:#00796b,stroke-width:2px,color:#000
 ```
 
 ## Core Components
@@ -73,38 +74,43 @@ flowchart TB
 
 `TrustWeave` is the **primary facade** for all operations. It provides:
 - Type-safe DSL builders for configuration and operations
-- Unified error handling (exceptions)
+- **Sealed results** for credential issuance, verification, and presentations (plus wallet/DID results where applicable)
 - Simplified API that hides complexity
 
 **Key Characteristics:**
-- All methods are **suspend functions** (coroutine-based)
-- All methods **throw exceptions** on failure (use try-catch)
-- Configuration is done via DSL builders
+- Public operations are **suspend functions** (coroutine-based).
+- **Credential pipeline:** `issue` returns `IssuanceResult`; `verify` returns `VerificationResult`; `presentationResult` / `presentationFromWalletResult` return `PresentationResult` (trust module). Use `when` for exhaustive handling. If `CredentialService` is not configured, you get `IssuanceResult.Failure.AdapterNotReady`, `VerificationResult.Invalid.AdapterNotReady`, or `PresentationResult.Failure.AdapterNotReady` instead of a successful value.
+- **DSL validation** (e.g. missing holder in a presentation builder) surfaces as `PresentationResult.Failure.InvalidRequest`. Unwrapping with **`PresentationResult.getOrThrow()`** throws **`TrustWeaveException.InvalidState`** (`PRESENTATION_*` codes).
+- **Extensions** such as `getOrThrow()` / `getOrThrowDid()` throw on failure—use only when that matches your error strategy.
+- Configuration is done via DSL builders.
 
 **Example:**
 ```kotlin
+import org.trustweave.testkit.services.*
 val trustWeave = TrustWeave.build {
     keys { provider(IN_MEMORY); algorithm(ED25519) }
     did { method(KEY) { algorithm(ED25519) } }
 }
 
-// All operations throw exceptions
-try {
-    val did = trustWeave.createDid { method(KEY) }
-    val credential = trustWeave.issue { ... }
-} catch (error: TrustWeaveException) {
-    // Handle error
+val did = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+
+when (val issued = trustWeave.issue { /* ... */ }) {
+    is IssuanceResult.Success -> { /* use issued.credential */ }
+    is IssuanceResult.Failure -> { /* handle issued.allErrors */ }
+}
+
+when (val v = trustWeave.verify(credential)) {
+    is VerificationResult.Valid -> { /* ... */ }
+    is VerificationResult.Invalid.AdapterNotReady -> { /* misconfigured service */ }
+    is VerificationResult.Invalid -> { /* ... */ }
 }
 ```
 
-### 2. TrustWeaveContext (Internal Orchestrator)
+See [Result types guide](../api-reference/result-types-guide.md) and [API patterns](../getting-started/api-patterns.md#api-contract-results-vs-exceptions).
 
-`TrustWeaveContext` coordinates between services. You rarely interact with it directly, but it:
-- Manages DSL builders
-- Routes operations to appropriate services
-- Handles service lifecycle
+### 2. Configuration (`TrustWeaveConfig`)
 
-**Access:** Use `trustWeave.getDslContext()` only when you need advanced operations.
+Runtime wiring lives in `trustWeave.configuration` (`TrustWeaveConfig`): KMS, DID registry, anchor clients, credential service, revocation manager, trust registry, and wallet factory. Prefer facade methods (`createDid`, `issue`, `verify`, `wallet`, `trust`, `revocation`, …) and use `configuration` when you need direct access to a registry or client.
 
 ### 3. Services (Domain Logic)
 
@@ -131,8 +137,8 @@ Plugins are **registered** during configuration and **selected** via provider na
 
 ```mermaid
 flowchart TD
-    A[Application calls<br/>trustWeave.issue { ... }] --> B[TrustWeave<br/>Delegates to Context]
-    B --> C[TrustWeaveContext<br/>Orchestrates]
+    A[Application calls<br/>trustWeave.issue] --> B[TrustWeave<br/>issuance pipeline]
+    B --> C[Compose services<br/>DID • KMS • Credential]
     C --> D[DID Service<br/>Resolve Issuer DID]
     C --> E[KMS Provider<br/>Get Signing Key]
     C --> F[Credential Service<br/>Build Credential + Proof]
@@ -155,7 +161,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Application calls<br/>trustWeave.verify { credential(...) }] --> B[TrustWeaveContext<br/>Orchestrates Verification]
+    A[Application calls<br/>trustWeave.verify] --> B[TrustWeave<br/>verification pipeline]
     B --> C[Credential Service<br/>Validate Structure]
     B --> D[DID Service<br/>Resolve Issuer DID]
     B --> E[Proof Verifier<br/>Verify Signature]
@@ -213,6 +219,7 @@ flowchart LR
 TrustWeave uses a **builder pattern** for configuration:
 
 ```kotlin
+import org.trustweave.testkit.services.*
 TrustWeave.build {
     // Configure KMS
     keys {
@@ -251,50 +258,33 @@ TrustWeave.build {
 
 ## Error Handling Model
 
-TrustWeave uses **two error handling patterns**:
+TrustWeave uses a **hybrid** model; the [API patterns — results vs exceptions](../getting-started/api-patterns.md#api-contract-results-vs-exceptions) table is the source of truth.
 
-### 1. Exception-Based (TrustWeave Methods)
+### 1. Sealed results (credential pipeline and many facade APIs)
 
-All `TrustWeave` methods throw exceptions:
+`issue`, `verify`, `presentationResult`, `issueBatch`, `verifyBatch`, and several DID operations return **sealed types** (`IssuanceResult`, `VerificationResult`, `PresentationResult`, `DidCreationResult`, …). Prefer exhaustive `when` branches so misconfiguration (`AdapterNotReady`) never becomes an uncaught exception.
+
+### 2. Throwing helpers and non-credential paths
+
+`getOrThrowDid()` and most credential **`getOrThrow()`** helpers convert failures to **`IllegalStateException`**. **`PresentationResult.getOrThrow()`** throws **`TrustWeaveException.InvalidState`**. Some wallet or integration surfaces may still throw other domain exceptions.
+
+### 3. Kotlin `Result` and lower-level services
+
+Some services expose `Result<T>` or functional APIs for composition.
 
 ```kotlin
-import org.trustweave.did.exception.DidException
-import org.trustweave.did.exception.DidException.DidMethodNotRegistered
-import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.testkit.services.*
 
-try {
-    val did = trustWeave.createDid { method(KEY) }
-} catch (error: DidException) {
-    when (error) {
-        is DidMethodNotRegistered -> {
-            // Handle method not registered
-        }
-        else -> {
-            // Handle other DID errors
-        }
+val didResult = trustWeave.createDid { method(KEY) }
+val did = when (didResult) {
+    is DidCreationResult.Success -> didResult.did
+    is DidCreationResult.Failure -> {
+        // Handle method not registered, resolution failure, etc.
+        return@runBlocking
     }
-} catch (error: TrustWeaveException) {
-    // Handle TrustWeave errors with error codes
-} catch (error: Exception) {
-    // Handle other errors
 }
 ```
-
-**Why exceptions?** Simpler API for common operations, familiar pattern for Kotlin developers.
-
-### 2. Result-Based (Lower-Level APIs)
-
-Some lower-level APIs return `Result<T>`:
-
-```kotlin
-val result = someService.operation()
-result.fold(
-    onSuccess = { value -> /* handle success */ },
-    onFailure = { error -> /* handle error */ }
-)
-```
-
-**Why Result?** More functional style, better for composition, explicit error handling.
 
 ## Key Design Principles
 
@@ -330,51 +320,50 @@ result.fold(
 // 1. Create and configure
 val trustWeave = TrustWeave.build { ... }
 
-// 2. Use
-val did = trustWeave.createDid { ... }
-val credential = trustWeave.issue { ... }
+// 2. Use (createDid / issue return sealed results—use when or getOrThrow*)
+val didResult = trustWeave.createDid { ... }
+val issuanceResult = trustWeave.issue { ... }
 ```
 
 ### Pattern 2: Error Handling
 
 ```kotlin
-import org.trustweave.did.exception.DidException
-import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.credential.results.VerificationResult
 
-try {
-    val result = trustWeave.operation { ... }
-    // Use result
-} catch (error: DidException) {
-    // Handle DID-specific errors
-} catch (error: TrustWeaveException) {
-    // Handle TrustWeave errors with error codes
-} catch (error: Exception) {
-    // Handle other errors
+val verification = trustWeave.verify(credential)
+when (verification) {
+    is VerificationResult.Valid -> { /* ... */ }
+    is VerificationResult.Invalid.AdapterNotReady -> { /* misconfigured service */ }
+    is VerificationResult.Invalid -> { /* other invalid cases */ }
 }
+
+// Or try-catch around getOrThrow() / wallet { } when you choose throwing APIs
 ```
 
 ### Pattern 3: Service Composition
 
 ```kotlin
-// Create DIDs
-val issuerDid = trustWeave.createDid { ... }
-val holderDid = trustWeave.createDid { ... }
+// Create DIDs (sealed results — unwrap explicitly)
+val issuerDid = trustWeave.createDid { ... }.getOrThrowDid()
+val holderDid = trustWeave.createDid { ... }.getOrThrowDid()
 
-// Issue credential
+// Issue credential (`IssuanceResult` — here via getOrThrow(); prefer `when` in production)
 val credential = trustWeave.issue {
     credential { issuer(issuerDid); subject { id(holderDid) } }
-    signedBy(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
-}
+    signedBy(issuerDid, "key-1")
+}.getOrThrow()
 
-// Store in wallet
-val wallet = trustWeave.wallet { holder(holderDid) }
-wallet.store(credential)
+// Store in wallet (`WalletCreationResult`)
+when (val w = trustWeave.wallet { holder(holderDid) }) {
+    is WalletCreationResult.Success -> w.wallet.store(credential)
+    is WalletCreationResult.Failure -> error("wallet: $w")
+}
 ```
 
 ## Next Steps
 
-- [Quick Start](../getting-started/quick-start.md) - Hands-on introduction
-- [Core Concepts](../core-concepts/README.md) - Deep dives into DIDs, VCs, etc.
-- [API Reference](../api-reference/core-api.md) - Complete API documentation
-- [Architecture Overview](architecture-overview.md) - Technical architecture details
+- Quick Start](../getting-started/quick-start.md) - Hands-on introduction
+- Core Concepts](../core-concepts/README.md) - Deep dives into DIDs, VCs, etc.
+- API Reference](../api-reference/core-api.md) - Complete API documentation
+- Architecture Overview](architecture-overview.md) - Technical architecture details
 

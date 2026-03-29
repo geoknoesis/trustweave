@@ -9,7 +9,7 @@ between credential workflows and registry/provider integrations.
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:trustweave-trust:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trust:0.6.0")
 }
 ```
 
@@ -18,7 +18,7 @@ dependencies {
 ## Responsibilities
 
 - Trust registry interfaces (`TrustRegistry`, `TrustAnchorMetadata`,
-  `TrustPathResult`).
+  sealed `TrustPath` for path discovery).
 - Support code for trust-layer DSLs (`trustweave-common` delegates to this module).
 - Shared contract for integration modules to expose trust anchors and trust
   resolution logic.

@@ -6,6 +6,9 @@ import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.model.DidService
+import org.trustweave.did.model.parseServiceTypesFromJson
+import org.trustweave.did.model.toServiceTypeJsonElement
+import org.trustweave.did.representation.DidDocumentJsonProducer
 import org.trustweave.did.registrar.DidRegistrar
 import org.trustweave.did.registrar.model.*
 import org.trustweave.godiddy.GodiddyClient
@@ -293,73 +296,10 @@ class GodiddyRegistrar(
     }
 
     /**
-     * Converts DidDocument to JsonObject.
+     * Converts DidDocument to JsonObject (DID 1.1 conforming producer).
      */
     private fun convertDidDocumentToJson(document: DidDocument): JsonObject {
-        return buildJsonObject {
-            // Add @context (JSON-LD context)
-            if (document.context.isNotEmpty()) {
-                if (document.context.size == 1) {
-                    put("@context", document.context[0])
-                } else {
-                    put("@context", buildJsonArray {
-                        document.context.forEach { add(it) }
-                    })
-                }
-            }
-
-            put("id", JsonPrimitive(document.id.value))
-
-            if (document.verificationMethod.isNotEmpty()) {
-                put("verificationMethod", buildJsonArray {
-                    document.verificationMethod.forEach { vm ->
-                        add(buildJsonObject {
-                            put("id", JsonPrimitive(vm.id.value))
-                            put("type", JsonPrimitive(vm.type))
-                            put("controller", JsonPrimitive(vm.controller.value))
-                            vm.publicKeyJwk?.let { put("publicKeyJwk", JsonObject(it.mapValues { convertToJsonElement(it.value) })) }
-                            vm.publicKeyMultibase?.let { put("publicKeyMultibase", it) }
-                        })
-                    }
-                })
-            }
-            if (document.authentication.isNotEmpty()) {
-                put("authentication", buildJsonArray {
-                    document.authentication.forEach { add(JsonPrimitive(it.value)) }
-                })
-            }
-            if (document.assertionMethod.isNotEmpty()) {
-                put("assertionMethod", buildJsonArray {
-                    document.assertionMethod.forEach { add(JsonPrimitive(it.value)) }
-                })
-            }
-            if (document.keyAgreement.isNotEmpty()) {
-                put("keyAgreement", buildJsonArray {
-                    document.keyAgreement.forEach { add(JsonPrimitive(it.value)) }
-                })
-            }
-            if (document.capabilityInvocation.isNotEmpty()) {
-                put("capabilityInvocation", buildJsonArray {
-                    document.capabilityInvocation.forEach { add(JsonPrimitive(it.value)) }
-                })
-            }
-            if (document.capabilityDelegation.isNotEmpty()) {
-                put("capabilityDelegation", buildJsonArray {
-                    document.capabilityDelegation.forEach { add(JsonPrimitive(it.value)) }
-                })
-            }
-            if (document.service.isNotEmpty()) {
-                put("service", buildJsonArray {
-                    document.service.forEach { s ->
-                        add(buildJsonObject {
-                            put("id", s.id)
-                            put("type", s.type)
-                            put("serviceEndpoint", convertToJsonElement(s.serviceEndpoint))
-                        })
-                    }
-                })
-            }
-        }
+        return DidDocumentJsonProducer.toJsonObject(document, useV1_1Context = true)
     }
 
     /**
@@ -425,23 +365,28 @@ class GodiddyRegistrar(
         val service = json["service"]?.jsonArray?.mapNotNull { sJson ->
             val sObj = sJson.jsonObject
             val sId = sObj["id"]?.jsonPrimitive?.content
-            val sType = sObj["type"]?.jsonPrimitive?.content
+            val sTypes = parseServiceTypesFromJson(sObj["type"])
             val sEndpoint = sObj["serviceEndpoint"]
 
-            if (sId != null && sType != null && sEndpoint != null) {
+            if (sId != null && sTypes != null && sEndpoint != null) {
                 val endpoint = convertJsonElement(sEndpoint) ?: return@mapNotNull null
                 DidService(
                     id = sId,
-                    type = sType,
+                    type = sTypes,
                     serviceEndpoint = endpoint
                 )
             } else null
+        } ?: emptyList()
+
+        val alsoKnownAs = json["alsoKnownAs"]?.jsonArray?.mapNotNull { el ->
+            (el as? JsonPrimitive)?.content?.let { org.trustweave.did.model.DidOrUrl.tryParse(it) }
         } ?: emptyList()
 
         val didObj = Did(id)
         return DidDocument(
             id = didObj,
             context = context,
+            alsoKnownAs = alsoKnownAs,
             verificationMethod = verificationMethod,
             authentication = authentication.map { VerificationMethodId.parse(it, didObj) },
             assertionMethod = assertionMethod.map { VerificationMethodId.parse(it, didObj) },

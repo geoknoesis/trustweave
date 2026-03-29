@@ -12,6 +12,8 @@ import java.util.Base64
 import java.util.BitSet
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
 
@@ -35,6 +37,9 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
     private val indexToCredential = ConcurrentHashMap<StatusListId, ConcurrentHashMap<Int, String>>()
     // Per-status-list next available index
     private val nextIndex = ConcurrentHashMap<StatusListId, Int>()
+
+    // Per-status-list mutex to serialize BitSet mutations and index allocation
+    private val listMutexes = ConcurrentHashMap<StatusListId, Mutex>()
 
     override suspend fun createStatusList(
         issuerDid: String,
@@ -64,6 +69,7 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
         credentialToIndex[id] = ConcurrentHashMap()
         indexToCredential[id] = ConcurrentHashMap()
         nextIndex[id] = 0
+        listMutexes[id] = Mutex()
 
         return id
     }
@@ -80,9 +86,11 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
         }
 
         val bitSet = revocationData[statusListId] ?: return false
-        val index = getOrAssignIndex(credentialId, statusListId)
-
-        bitSet.set(index, true)
+        val mutex = listMutexes.getOrPut(statusListId) { Mutex() }
+        mutex.withLock {
+            val index = getOrAssignIndex(credentialId, statusListId)
+            bitSet.set(index, true)
+        }
         updateMetadata(statusListId)
 
         return true
@@ -100,9 +108,11 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
         }
 
         val bitSet = suspensionData[statusListId] ?: return false
-        val index = getOrAssignIndex(credentialId, statusListId)
-
-        bitSet.set(index, true)
+        val mutex = listMutexes.getOrPut(statusListId) { Mutex() }
+        mutex.withLock {
+            val index = getOrAssignIndex(credentialId, statusListId)
+            bitSet.set(index, true)
+        }
         updateMetadata(statusListId)
 
         return true
@@ -119,9 +129,9 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
         }
 
         val bitSet = revocationData[statusListId] ?: return false
+        val mutex = listMutexes.getOrPut(statusListId) { Mutex() }
         val index = getCredentialIndex(credentialId, statusListId) ?: return false
-
-        bitSet.set(index, false)
+        mutex.withLock { bitSet.set(index, false) }
         updateMetadata(statusListId)
 
         return true
@@ -138,9 +148,9 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
         }
 
         val bitSet = suspensionData[statusListId] ?: return false
+        val mutex = listMutexes.getOrPut(statusListId) { Mutex() }
         val index = getCredentialIndex(credentialId, statusListId) ?: return false
-
-        bitSet.set(index, false)
+        mutex.withLock { bitSet.set(index, false) }
         updateMetadata(statusListId)
 
         return true
@@ -219,27 +229,29 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
     ): Int {
         val indices = credentialToIndex.getOrPut(statusListId) { ConcurrentHashMap() }
         val reverseIndices = indexToCredential.getOrPut(statusListId) { ConcurrentHashMap() }
+        val mutex = listMutexes.getOrPut(statusListId) { Mutex() }
 
-        if (index != null) {
-            // Check if index is already assigned
-            if (reverseIndices.containsKey(index)) {
-                throw IllegalArgumentException("Index $index is already assigned in status list ${statusListId.value}")
+        return mutex.withLock {
+            if (index != null) {
+                if (reverseIndices.containsKey(index)) {
+                    throw IllegalArgumentException(
+                        "Index $index is already assigned in status list ${statusListId.value}"
+                    )
+                }
+                indices[credentialId] = index
+                reverseIndices[index] = credentialId
+                index
+            } else {
+                val next = nextIndex.getOrPut(statusListId) { 0 }
+                var candidate = next
+                while (reverseIndices.containsKey(candidate)) {
+                    candidate++
+                }
+                indices[credentialId] = candidate
+                reverseIndices[candidate] = credentialId
+                nextIndex[statusListId] = candidate + 1
+                candidate
             }
-            indices[credentialId] = index
-            reverseIndices[index] = credentialId
-            return index
-        } else {
-            // Auto-assign next available index
-            val next = nextIndex.getOrPut(statusListId) { 0 }
-            var candidate = next
-            while (reverseIndices.containsKey(candidate)) {
-                candidate++
-            }
-            indices[credentialId] = candidate
-            reverseIndices[candidate] = credentialId
-            nextIndex[statusListId] = candidate + 1
-            updateMetadata(statusListId)
-            return candidate
         }
     }
 
@@ -254,11 +266,14 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
         }
 
         val bitSet = revocationData[statusListId] ?: return credentialIds.associateWith { false }
+        val mutex = listMutexes.getOrPut(statusListId) { Mutex() }
 
-        val results = credentialIds.associateWith { credentialId ->
-            val index = getOrAssignIndex(credentialId, statusListId)
-            bitSet.set(index, true)
-            true
+        val results = mutex.withLock {
+            credentialIds.associateWith { credentialId ->
+                val index = getOrAssignIndex(credentialId, statusListId)
+                bitSet.set(index, true)
+                true
+            }
         }
 
         updateMetadata(statusListId)
@@ -274,13 +289,16 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
 
         val revocationBitSet = revocationData[statusListId]
         val suspensionBitSet = suspensionData[statusListId]
+        val mutex = listMutexes.getOrPut(statusListId) { Mutex() }
 
-        for (update in updates) {
-            if (update.revoked != null && metadata.purpose == StatusPurpose.REVOCATION) {
-                revocationBitSet?.set(update.index, update.revoked)
-            }
-            if (update.suspended != null && metadata.purpose == StatusPurpose.SUSPENSION) {
-                suspensionBitSet?.set(update.index, update.suspended)
+        mutex.withLock {
+            for (update in updates) {
+                if (update.revoked != null && metadata.purpose == StatusPurpose.REVOCATION) {
+                    revocationBitSet?.set(update.index, update.revoked)
+                }
+                if (update.suspended != null && metadata.purpose == StatusPurpose.SUSPENSION) {
+                    suspensionBitSet?.set(update.index, update.suspended)
+                }
             }
         }
 

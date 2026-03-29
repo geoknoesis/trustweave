@@ -12,7 +12,7 @@ keywords:
 
 # What is TrustWeave?
 
-> **Version:** 1.0.0-SNAPSHOT
+> **Version:** 0.6.0
 > TrustWeave is created and supported by [Geoknoesis LLC](https://www.geoknoesis.com). The project reflects Geoknoesis' reference architecture for decentralized trust.
 
 TrustWeave is a **neutral, reusable trust and identity core** library for Kotlin, designed to be:
@@ -60,12 +60,12 @@ Traditional identity and trust systems are often tightly coupled to specific tec
 ## Next Steps
 
 **New to TrustWeave?**
-- [Key Features](key-features.md) - Explore the main capabilities
-- [Use Cases](use-cases.md) - See how TrustWeave is used in practice
-- [Architecture Overview](architecture-overview.md) - Understand the modular design
-- [Mental Model](mental-model.md) - Core concepts and how they fit together
+- Key Features](key-features.md) - Explore the main capabilities
+- Use Cases](use-cases.md) - See how TrustWeave is used in practice
+- Architecture Overview](architecture-overview.md) - Understand the modular design
+- Mental Model](mental-model.md) - Core concepts and how they fit together
 
 **Ready to get started?**
-- [Getting Started](../getting-started/README.md) - Installation and quick start
-- [Quick Start](../getting-started/quick-start.md) - Create your first credential in 5 minutes
+- Getting Started](../getting-started/README.md) - Installation and quick start
+- Quick Start](../getting-started/quick-start.md) - Create your first credential in 5 minutes
 

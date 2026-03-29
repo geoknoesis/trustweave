@@ -10,20 +10,20 @@ class TrustWeaveExceptionTest {
 
     @Test
     fun `test BlankPluginId exception as object`() {
-        val error = TrustWeaveException.BlankPluginId
+        val error = PluginException.BlankId
 
         assertEquals("BLANK_PLUGIN_ID", error.code)
         assertEquals("Plugin ID cannot be blank", error.message)
         assertTrue(error.context.isEmpty())
         
         // Verify it's a singleton object
-        val error2 = TrustWeaveException.BlankPluginId
+        val error2 = PluginException.BlankId
         assertSame(error, error2)
     }
 
     @Test
     fun `test PluginAlreadyRegistered exception`() {
-        val error = TrustWeaveException.PluginAlreadyRegistered(
+        val error = PluginException.AlreadyRegistered(
             pluginId = "test-plugin",
             existingPlugin = "Test Plugin"
         )
@@ -36,7 +36,7 @@ class TrustWeaveExceptionTest {
 
     @Test
     fun `test NoProvidersFound exception`() {
-        val error = TrustWeaveException.NoProvidersFound(
+        val error = ProviderException.NoneFound(
             pluginIds = listOf("plugin-1", "plugin-2"),
             availablePlugins = listOf("plugin-3", "plugin-4")
         )
@@ -50,7 +50,7 @@ class TrustWeaveExceptionTest {
 
     @Test
     fun `test PartialProvidersFound exception`() {
-        val error = TrustWeaveException.PartialProvidersFound(
+        val error = ProviderException.PartiallyFound(
             requestedIds = listOf("plugin-1", "plugin-2", "plugin-3"),
             foundIds = listOf("plugin-1"),
             missingIds = listOf("plugin-2", "plugin-3")
@@ -66,7 +66,7 @@ class TrustWeaveExceptionTest {
     @Test
     fun `test AllProvidersFailed exception`() {
         val lastException = RuntimeException("Last error")
-        val error = TrustWeaveException.AllProvidersFailed(
+        val error = ProviderException.AllFailed(
             attemptedProviders = listOf("provider-1", "provider-2"),
             providerErrors = mapOf(
                 "provider-1" to "Error 1",
@@ -83,7 +83,7 @@ class TrustWeaveExceptionTest {
 
     @Test
     fun `test ConfigNotFound exception`() {
-        val error = TrustWeaveException.ConfigNotFound(path = "/path/to/config.json")
+        val error = ConfigException.NotFound(path = "/path/to/config.json")
 
         assertEquals("CONFIG_NOT_FOUND", error.code)
         assertEquals("/path/to/config.json", error.path)
@@ -92,7 +92,7 @@ class TrustWeaveExceptionTest {
 
     @Test
     fun `test ConfigReadFailed exception`() {
-        val error = TrustWeaveException.ConfigReadFailed(
+        val error = ConfigException.ReadFailed(
             path = "/path/to/config.json",
             reason = "Permission denied"
         )
@@ -104,7 +104,7 @@ class TrustWeaveExceptionTest {
 
     @Test
     fun `test InvalidConfigFormat exception`() {
-        val error = TrustWeaveException.InvalidConfigFormat(
+        val error = ConfigException.InvalidFormat(
             jsonString = "{ invalid }",
             parseError = "Expected ',' or '}'",
             field = "plugins"
@@ -119,7 +119,7 @@ class TrustWeaveExceptionTest {
 
     @Test
     fun `test InvalidJson exception`() {
-        val error = TrustWeaveException.InvalidJson(
+        val error = SerializationException.InvalidJson(
             jsonString = "{ invalid }",
             parseError = "Expected ',' or '}'",
             position = "line 1, column 10"
@@ -134,7 +134,7 @@ class TrustWeaveExceptionTest {
 
     @Test
     fun `test JsonEncodeFailed exception`() {
-        val error = TrustWeaveException.JsonEncodeFailed(
+        val error = SerializationException.EncodeFailed(
             element = "{ large object }",
             reason = "Circular reference"
         )
@@ -297,7 +297,7 @@ class TrustWeaveExceptionTest {
 
     @Test
     fun `test PluginNotFound exception with pluginType`() {
-        val error = TrustWeaveException.PluginNotFound(
+        val error = PluginException.NotFound(
             pluginId = "test-plugin",
             pluginType = "KMS"
         )
@@ -313,7 +313,7 @@ class TrustWeaveExceptionTest {
 
     @Test
     fun `test PluginNotFound exception without pluginType`() {
-        val error = TrustWeaveException.PluginNotFound(
+        val error = PluginException.NotFound(
             pluginId = "test-plugin"
         )
 
@@ -328,7 +328,7 @@ class TrustWeaveExceptionTest {
 
     @Test
     fun `test PluginInitializationFailed exception`() {
-        val error = TrustWeaveException.PluginInitializationFailed(
+        val error = PluginException.InitializationFailed(
             pluginId = "test-plugin",
             reason = "Missing dependency"
         )
@@ -344,7 +344,7 @@ class TrustWeaveExceptionTest {
 
     @Test
     fun `test PluginAlreadyRegistered exception without existingPlugin`() {
-        val error = TrustWeaveException.PluginAlreadyRegistered(
+        val error = PluginException.AlreadyRegistered(
             pluginId = "test-plugin"
         )
 
@@ -361,7 +361,7 @@ class TrustWeaveExceptionTest {
 
     @Test
     fun `test NoProvidersFound exception with empty availablePlugins`() {
-        val error = TrustWeaveException.NoProvidersFound(
+        val error = ProviderException.NoneFound(
             pluginIds = listOf("plugin-1", "plugin-2"),
             availablePlugins = emptyList()
         )
@@ -373,7 +373,7 @@ class TrustWeaveExceptionTest {
 
     @Test
     fun `test PartialProvidersFound exception with all found`() {
-        val error = TrustWeaveException.PartialProvidersFound(
+        val error = ProviderException.PartiallyFound(
             requestedIds = listOf("plugin-1", "plugin-2"),
             foundIds = listOf("plugin-1", "plugin-2"),
             missingIds = emptyList()
@@ -387,7 +387,7 @@ class TrustWeaveExceptionTest {
 
     @Test
     fun `test AllProvidersFailed exception without providerErrors`() {
-        val error = TrustWeaveException.AllProvidersFailed(
+        val error = ProviderException.AllFailed(
             attemptedProviders = listOf("provider-1", "provider-2")
         )
 
@@ -399,7 +399,7 @@ class TrustWeaveExceptionTest {
 
     @Test
     fun `test AllProvidersFailed exception without lastException`() {
-        val error = TrustWeaveException.AllProvidersFailed(
+        val error = ProviderException.AllFailed(
             attemptedProviders = listOf("provider-1"),
             providerErrors = mapOf("provider-1" to "Error")
         )
@@ -414,7 +414,7 @@ class TrustWeaveExceptionTest {
 
     @Test
     fun `test InvalidConfigFormat exception without jsonString and field`() {
-        val error = TrustWeaveException.InvalidConfigFormat(
+        val error = ConfigException.InvalidFormat(
             parseError = "Expected ',' or '}'"
         )
 
@@ -428,7 +428,7 @@ class TrustWeaveExceptionTest {
 
     @Test
     fun `test InvalidConfigFormat exception with jsonString only`() {
-        val error = TrustWeaveException.InvalidConfigFormat(
+        val error = ConfigException.InvalidFormat(
             jsonString = "{ invalid }",
             parseError = "Expected ',' or '}'"
         )
@@ -444,7 +444,7 @@ class TrustWeaveExceptionTest {
 
     @Test
     fun `test InvalidJson exception without jsonString and position`() {
-        val error = TrustWeaveException.InvalidJson(
+        val error = SerializationException.InvalidJson(
             parseError = "Expected ',' or '}'"
         )
 
@@ -458,7 +458,7 @@ class TrustWeaveExceptionTest {
     @Test
     fun `test InvalidJson exception with long jsonString`() {
         val longJson = "a".repeat(1000)
-        val error = TrustWeaveException.InvalidJson(
+        val error = SerializationException.InvalidJson(
             jsonString = longJson,
             parseError = "Error"
         )
@@ -474,7 +474,7 @@ class TrustWeaveExceptionTest {
 
     @Test
     fun `test JsonEncodeFailed exception without element`() {
-        val error = TrustWeaveException.JsonEncodeFailed(
+        val error = SerializationException.EncodeFailed(
             reason = "Circular reference"
         )
 
@@ -673,56 +673,56 @@ class TrustWeaveExceptionTest {
 
     @Test
     fun `test isPluginException returns true for plugin exceptions`() {
-        assertTrue(TrustWeaveException.PluginNotFound("test").isPluginException())
-        assertTrue(TrustWeaveException.PluginInitializationFailed("test", "reason").isPluginException())
-        assertTrue(TrustWeaveException.BlankPluginId.isPluginException())
-        assertTrue(TrustWeaveException.PluginAlreadyRegistered("test").isPluginException())
+        assertTrue(PluginException.NotFound("test").isPluginException())
+        assertTrue(PluginException.InitializationFailed("test", "reason").isPluginException())
+        assertTrue(PluginException.BlankId.isPluginException())
+        assertTrue(PluginException.AlreadyRegistered("test").isPluginException())
     }
 
     @Test
     fun `test isPluginException returns false for non-plugin exceptions`() {
-        assertFalse(TrustWeaveException.ConfigNotFound("path").isPluginException())
+        assertFalse(ConfigException.NotFound("path").isPluginException())
         assertFalse(TrustWeaveException.ValidationFailed("field", "reason").isPluginException())
         assertFalse(TrustWeaveException.Unknown(message = "error").isPluginException())
     }
 
     @Test
     fun `test isProviderException returns true for provider exceptions`() {
-        assertTrue(TrustWeaveException.NoProvidersFound(listOf("test")).isProviderException())
-        assertTrue(TrustWeaveException.PartialProvidersFound(
+        assertTrue(ProviderException.NoneFound(listOf("test")).isProviderException())
+        assertTrue(ProviderException.PartiallyFound(
             listOf("1"), listOf("1"), emptyList()
         ).isProviderException())
-        assertTrue(TrustWeaveException.AllProvidersFailed(listOf("test")).isProviderException())
+        assertTrue(ProviderException.AllFailed(listOf("test")).isProviderException())
     }
 
     @Test
     fun `test isProviderException returns false for non-provider exceptions`() {
-        assertFalse(TrustWeaveException.PluginNotFound("test").isProviderException())
+        assertFalse(PluginException.NotFound("test").isProviderException())
         assertFalse(TrustWeaveException.ValidationFailed("field", "reason").isProviderException())
     }
 
     @Test
     fun `test isConfigException returns true for config exceptions`() {
-        assertTrue(TrustWeaveException.ConfigNotFound("path").isConfigException())
-        assertTrue(TrustWeaveException.ConfigReadFailed("path", "reason").isConfigException())
-        assertTrue(TrustWeaveException.InvalidConfigFormat(parseError = "error").isConfigException())
+        assertTrue(ConfigException.NotFound("path").isConfigException())
+        assertTrue(ConfigException.ReadFailed("path", "reason").isConfigException())
+        assertTrue(ConfigException.InvalidFormat(parseError = "error").isConfigException())
     }
 
     @Test
     fun `test isConfigException returns false for non-config exceptions`() {
-        assertFalse(TrustWeaveException.PluginNotFound("test").isConfigException())
+        assertFalse(PluginException.NotFound("test").isConfigException())
         assertFalse(TrustWeaveException.ValidationFailed("field", "reason").isConfigException())
     }
 
     @Test
     fun `test isJsonException returns true for JSON exceptions`() {
-        assertTrue(TrustWeaveException.InvalidJson(parseError = "error").isJsonException())
-        assertTrue(TrustWeaveException.JsonEncodeFailed(reason = "error").isJsonException())
+        assertTrue(SerializationException.InvalidJson(parseError = "error").isJsonException())
+        assertTrue(SerializationException.EncodeFailed(reason = "error").isJsonException())
     }
 
     @Test
     fun `test isJsonException returns false for non-JSON exceptions`() {
-        assertFalse(TrustWeaveException.PluginNotFound("test").isJsonException())
+        assertFalse(PluginException.NotFound("test").isJsonException())
         assertFalse(TrustWeaveException.ValidationFailed("field", "reason").isJsonException())
     }
 
@@ -733,8 +733,8 @@ class TrustWeaveExceptionTest {
 
     @Test
     fun `test isValidationException returns false for non-validation exceptions`() {
-        assertFalse(TrustWeaveException.PluginNotFound("test").isValidationException())
-        assertFalse(TrustWeaveException.ConfigNotFound("path").isValidationException())
+        assertFalse(PluginException.NotFound("test").isValidationException())
+        assertFalse(ConfigException.NotFound("path").isValidationException())
     }
 
     @Test
@@ -745,7 +745,7 @@ class TrustWeaveExceptionTest {
 
     @Test
     fun `test isEncodingException returns false for non-encoding exceptions`() {
-        assertFalse(TrustWeaveException.PluginNotFound("test").isEncodingException())
+        assertFalse(PluginException.NotFound("test").isEncodingException())
         assertFalse(TrustWeaveException.ValidationFailed("field", "reason").isEncodingException())
     }
 
@@ -777,9 +777,9 @@ class TrustWeaveExceptionTest {
 
     @Test
     fun `test exception equality and hashCode`() {
-        val error1 = TrustWeaveException.PluginNotFound("test", "KMS")
-        val error2 = TrustWeaveException.PluginNotFound("test", "KMS")
-        val error3 = TrustWeaveException.PluginNotFound("test", "DID")
+        val error1 = PluginException.NotFound("test", "KMS")
+        val error2 = PluginException.NotFound("test", "KMS")
+        val error3 = PluginException.NotFound("test", "DID")
 
         assertEquals(error1, error2)
         assertEquals(error1.hashCode(), error2.hashCode())
@@ -788,10 +788,10 @@ class TrustWeaveExceptionTest {
 
     @Test
     fun `test exception toString`() {
-        val error = TrustWeaveException.PluginNotFound("test-plugin")
+        val error = PluginException.NotFound("test-plugin")
         
         val toString = error.toString()
-        assertTrue(toString.contains("PluginNotFound"))
+        assertTrue(toString.contains("NotFound"))
         assertTrue(toString.contains("test-plugin"))
     }
 
@@ -831,7 +831,7 @@ class TrustWeaveExceptionTest {
 
     @Test
     fun `test InvalidConfigFormat with all optional fields`() {
-        val error = TrustWeaveException.InvalidConfigFormat(
+        val error = ConfigException.InvalidFormat(
             jsonString = "{ test }",
             parseError = "Error",
             field = "plugins"
@@ -844,5 +844,3 @@ class TrustWeaveExceptionTest {
         assertTrue(error.message.contains("Error"))
     }
 }
-
-

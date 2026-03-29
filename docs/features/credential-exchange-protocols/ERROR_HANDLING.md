@@ -121,9 +121,10 @@ when (offerResult) {
 
 1. **Register the protocol before use:**
    ```kotlin
-   import org.trustweave.credential.exchange.registry.ExchangeProtocolRegistries
-   import org.trustweave.credential.exchange.ExchangeServices
    
+import org.trustweave.credential.exchange.registry.ExchangeProtocolRegistries
+import org.trustweave.credential.exchange.ExchangeServices
+
    val registry = ExchangeProtocolRegistries.default()
    val didCommService = DidCommFactory.createInMemoryService(kms) { didStr ->
        DidDocument(id = Did(didStr), verificationMethod = emptyList())
@@ -132,8 +133,7 @@ when (offerResult) {
    
    val exchangeService = ExchangeServices.createExchangeService(
        protocolRegistry = registry,
-       credentialService = credentialService,
-       didResolver = didResolver
+       credentialService = credentialService
    )
 
    // Now safe to use
@@ -1364,8 +1364,7 @@ registry.register(DidCommExchangeProtocol(didCommService))
 
 val exchangeService = ExchangeServices.createExchangeService(
     protocolRegistry = registry,
-    credentialService = credentialService,
-    didResolver = didResolver
+    credentialService = credentialService
 )
 
 val offerResult = exchangeService.offer(

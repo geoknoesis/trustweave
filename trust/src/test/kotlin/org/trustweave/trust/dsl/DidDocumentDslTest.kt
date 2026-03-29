@@ -1,5 +1,6 @@
 package org.trustweave.trust.dsl
 
+import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.did.registry.DidMethodRegistry
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
@@ -7,7 +8,6 @@ import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
 import org.trustweave.trust.dsl.credential.ServiceTypes
-import org.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -54,7 +54,7 @@ class DidDocumentDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }.getOrFail()
+        }.getOrThrowDid()
 
         val keyHandle = when (val result = kms.generateKey("Ed25519")) {
             is org.trustweave.kms.results.GenerateKeyResult.Success -> result.keyHandle
@@ -77,7 +77,7 @@ class DidDocumentDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }.getOrFail()
+        }.getOrThrowDid()
 
         val updatedDoc = trustWeave.updateDid {
             did(did.value)
@@ -96,7 +96,7 @@ class DidDocumentDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }.getOrFail()
+        }.getOrThrowDid()
 
         val updatedDoc = trustWeave.updateDid {
             did(did.value)
@@ -111,7 +111,7 @@ class DidDocumentDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }.getOrFail()
+        }.getOrThrowDid()
 
         // First add a service
         trustWeave.updateDid {
@@ -148,7 +148,7 @@ class DidDocumentDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }.getOrFail()
+        }.getOrThrowDid()
 
         assertFailsWith<IllegalStateException> {
             trustWeave.updateDid {
@@ -165,7 +165,7 @@ class DidDocumentDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }.getOrFail()
+        }.getOrThrowDid()
 
         val updatedDoc = trustWeave.updateDid {
             did(did.value)
@@ -183,7 +183,7 @@ class DidDocumentDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }.getOrFail()
+        }.getOrThrowDid()
 
         val keyHandle1 = when (val result = kms.generateKey("Ed25519")) {
             is org.trustweave.kms.results.GenerateKeyResult.Success -> result.keyHandle
@@ -224,7 +224,7 @@ class DidDocumentDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }.getOrFail()
+        }.getOrThrowDid()
 
         val updatedDoc = trustWeave.updateDid {
             did(did.value)
@@ -244,7 +244,7 @@ class DidDocumentDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }.getOrFail()
+        }.getOrThrowDid()
 
         val updatedDoc = trustWeave.updateDid {
             did(did.value)

@@ -11,6 +11,7 @@ pluginManagement {
     plugins {
         kotlin("jvm") version "2.2.21"
         kotlin("plugin.serialization") version "2.2.21"
+        id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
     }
 }
 
@@ -48,6 +49,7 @@ include("did:plugins:orb")
 
 // Wallet domain
 include("wallet:wallet-core")
+include("wallet:wallet-services")
 include("wallet:plugins:database")
 include("wallet:plugins:file")
 include("wallet:plugins:cloud")

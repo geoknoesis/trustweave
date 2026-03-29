@@ -154,22 +154,22 @@ if (result.executed) {
 ## 🚀 Implementation Phases
 
 ### Phase 1: MVP (Weeks 1-6)
-- ✅ Setup TrustWeave with blockchain anchoring
-- ✅ Build SAR flood product
-- ✅ Create broker portal MVP
-- ✅ Implement trigger evaluation
+- Setup TrustWeave with blockchain anchoring
+- Build SAR flood product
+- Create broker portal MVP
+- Implement trigger evaluation
 
 ### Phase 2: Production (Months 2-12)
-- ✅ Add heatwave product
-- ✅ Add solar attenuation product
-- ✅ Multi-provider EO data acceptance
-- ✅ Regulatory compliance features
+- Add heatwave product
+- Add solar attenuation product
+- Multi-provider EO data acceptance
+- Regulatory compliance features
 
 ### Phase 3: Scale (Months 12-24)
-- ✅ Hurricane product
-- ✅ Drought/NDVI product
-- ✅ Enterprise licensing
-- ✅ Global expansion
+- Hurricane product
+- Drought/NDVI product
+- Enterprise licensing
+- Global expansion
 
 ## 📚 Documentation
 
@@ -179,17 +179,21 @@ if (result.executed) {
 3. **[EO Scenario](parametric-insurance-eo-scenario.md)** - EO data patterns
 
 ### TrustWeave Docs
-- [Quick Start](../getting-started/quick-start.md)
-- [API Reference](../api-reference/core-api.md)
-- [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md)
+- Quick Start](../getting-started/quick-start.md)
+- API Reference](../api-reference/core-api.md)
+- Blockchain Anchoring](../core-concepts/blockchain-anchoring.md)
 
 ## 💻 Code Snippets
 
 ### Initialize TrustWeave
 ```kotlin
-val TrustWeave = TrustWeave.create {
-    blockchains {
-        "algorand:mainnet" to AlgorandBlockchainAnchorClient(...)
+val trustWeave = TrustWeave.build {
+    did { method("key") { algorithm("Ed25519") } }
+    anchor {
+        chain("algorand:mainnet") {
+            provider("algorand")
+            options { /* Algorand client options (RPC, keys, …) */ }
+        }
     }
 }
 ```
@@ -296,16 +300,16 @@ val eoData = acceptEoDataCredential(dataCredential)
 ## 🎯 Key Differentiators
 
 ### vs. Traditional Insurance
-- ✅ **24-72 hour payouts** vs. months
-- ✅ **Objective triggers** vs. adjuster disputes
-- ✅ **No exclusions** vs. coverage gaps
-- ✅ **Automated** vs. manual processing
+- **24-72 hour payouts** vs. months
+- **Objective triggers** vs. adjuster disputes
+- **No exclusions** vs. coverage gaps
+- **Automated** vs. manual processing
 
 ### vs. Competitors
-- ✅ **EO-first design** vs. sensor-based
-- ✅ **Multi-provider support** vs. vendor lock-in
-- ✅ **Blockchain audit trail** vs. traditional records
-- ✅ **Standardized format** vs. custom integrations
+- **EO-first design** vs. sensor-based
+- **Multi-provider support** vs. vendor lock-in
+- **Blockchain audit trail** vs. traditional records
+- **Standardized format** vs. custom integrations
 
 ## 📊 Market Opportunity
 

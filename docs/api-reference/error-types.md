@@ -177,6 +177,7 @@ All wallet errors are part of the `WalletException` sealed class hierarchy (exte
 ```kotlin
 import org.trustweave.did.exception.DidException
 import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.testkit.services.*
 
 try {
     val did = trustWeave.createDid { method(KEY) }
@@ -201,96 +202,57 @@ try {
 
 ### Handling Credential Errors
 
-```kotlin
-import org.trustweave.credential.exception.CredentialException
-import org.trustweave.core.exception.TrustWeaveException
+Issuance returns **`IssuanceResult`**. Prefer **`when`**; use **`getOrThrow()`** only when you intentionally collapse failures to exceptions.
 
-try {
-    val credential = trustWeave.issue { ... }
-} catch (error: TrustWeaveException) {
-    when (error) {
-        is CredentialException.CredentialInvalid -> {
-            println("Credential invalid: ${error.reason}")
-            if (error.field != null) {
-                println("Field: ${error.field}")
-            }
-        }
-        is CredentialException.CredentialIssuanceFailed -> {
-            println("Issuance failed: ${error.reason}")
-        }
-        else -> {
-            println("Error: ${error.message}")
-        }
+```kotlin
+import org.trustweave.credential.results.IssuanceResult
+
+when (val issued = trustWeave.issue { ... }) {
+    is IssuanceResult.Success -> {
+        val credential = issued.credential
+        // use credential
+    }
+    is IssuanceResult.Failure.InvalidRequest -> {
+        println("Invalid request: ${issued.field} — ${issued.reason}")
+    }
+    is IssuanceResult.Failure.AdapterError -> {
+        println("Issuance failed: ${issued.reason}")
+    }
+    is IssuanceResult.Failure -> {
+        println("Issuance failed: ${issued.allErrors.joinToString()}")
     }
 }
+
+// Verification and other flows may still throw domain exceptions (e.g. CredentialException) where documented.
 ```
 
 ### Handling Blockchain Errors
 
 ```kotlin
 import org.trustweave.anchor.exceptions.BlockchainException
-import org.trustweave.core.exception.TrustWeaveException
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class MyData(val id: String, val value: String)
 
-// Example: Using Result-based API (TrustWeave facade)
-val result = trustweave.blockchains.anchor(
-    data = MyData("123", "test"),
-    serializer = MyData.serializer(),
-    chainId = "algorand:testnet"
-)
-result.fold(
-    onSuccess = { anchor ->
-        println("Anchored: ${anchor.ref.txHash}")
-    },
-    onFailure = { error ->
-        when (error) {
-            is BlockchainException.ChainNotRegistered -> {
-                println("Chain not registered: ${error.chainId}")
-                println("Available: ${error.availableChains}")
-            }
-            is BlockchainException.TransactionFailed -> {
-                println("Transaction failed: ${error.reason}")
-                if (error.txHash != null) {
-                    println("Transaction hash: ${error.txHash}")
-                }
-            }
-            is BlockchainException.ConnectionFailed -> {
-                println("Connection failed: ${error.reason}")
-            }
-            else -> {
-                println("Error: ${error.message}")
-            }
-        }
-    }
-)
-
-// Example: Using exception-based API (if available)
+// BlockchainService.anchor returns AnchorResult on success; chain/client problems throw BlockchainException
 try {
-    // Note: Check actual API documentation for exact method signature
-    // This shows the error handling pattern
-    val anchorResult = someBlockchainService.anchor(data, chainId)
-} catch (error: TrustWeaveException) {
-    when (error) {
-        is BlockchainException.ChainNotRegistered -> {
-            println("Chain not registered: ${error.chainId}")
-            println("Available: ${error.availableChains}")
-        }
-        is BlockchainException.TransactionFailed -> {
-            println("Transaction failed: ${error.reason}")
-            if (error.txHash != null) {
-                println("Transaction hash: ${error.txHash}")
-            }
-        }
-        is BlockchainException.ConnectionFailed -> {
-            println("Connection failed: ${error.reason}")
-        }
-        else -> {
-            println("Error: ${error.message}")
-        }
-    }
+    val anchor = trustWeave.blockchains.anchor(
+        data = MyData("123", "test"),
+        serializer = MyData.serializer(),
+        chainId = "algorand:testnet"
+    )
+    println("Anchored: ${anchor.ref.txHash}")
+} catch (error: BlockchainException.ChainNotRegistered) {
+    println("Chain not registered: ${error.chainId}")
+    println("Available: ${error.availableChains}")
+} catch (error: BlockchainException.TransactionFailed) {
+    println("Transaction failed: ${error.reason}")
+    error.txHash?.let { println("Transaction hash: $it") }
+} catch (error: BlockchainException.ConnectionFailed) {
+    println("Connection failed: ${error.reason}")
+} catch (error: Throwable) {
+    println("Error: ${error.message}")
 }
 ```
 

@@ -146,6 +146,28 @@ sealed class VerificationResult {
             override val errors: List<String> = emptyList(),
             override val warnings: List<String> = emptyList()
         ) : Invalid()
+
+        /**
+         * Credential service is not configured or not available (mirrors [IssuanceResult.Failure.AdapterNotReady]).
+         */
+        data class AdapterNotReady(
+            override val credential: VerifiableCredential,
+            val reason: String? = null,
+            override val errors: List<String> = emptyList(),
+            override val warnings: List<String> = emptyList()
+        ) : Invalid() {
+            constructor(
+                credential: VerifiableCredential,
+                reason: String? = null
+            ) : this(
+                credential = credential,
+                reason = reason,
+                errors = listOf(
+                    reason ?: "Credential service is not available. Configure it in TrustWeave.build { ... }"
+                ),
+                warnings = emptyList()
+            )
+        }
         
         /**
          * Schema validation failed.
@@ -192,6 +214,7 @@ sealed class VerificationResult {
             is Invalid.InvalidIssuer -> errors
             is Invalid.UntrustedIssuer -> errors
             is Invalid.UnsupportedFormat -> errors
+            is Invalid.AdapterNotReady -> errors
             is Invalid.SchemaValidationFailed -> errors + validationErrors
             is Invalid.MultipleFailures -> failures.flatMap { it.allErrors } + errors
         }

@@ -8,7 +8,7 @@ The `trustweave-testkit` module provides in-memory test implementations and util
 
 ```kotlin
 dependencies {
-    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:0.6.0")
 }
 ```
 
@@ -99,6 +99,7 @@ val anchorClient = fixture.getBlockchainClient("algorand:testnet")
 Reusable EO test scenarios with TestContainers support:
 
 ```kotlin
+import org.trustweave.credential.results.VerificationResult
 import org.trustweave.testkit.eo.BaseEoIntegrationTest
 
 class MyEoTest : BaseEoIntegrationTest() {
@@ -109,7 +110,7 @@ class MyEoTest : BaseEoIntegrationTest() {
     @Test
     fun testEoScenario() = runBlocking {
         val result = runEoTestScenario()
-        assertTrue(result.verificationResult.valid)
+        assertTrue(result.verificationResult is VerificationResult.Valid)
     }
 }
 ```
@@ -157,6 +158,7 @@ val fixture = TrustWeaveTestFixture.builder()
 ### Complete Test Environment
 
 ```kotlin
+import org.trustweave.testkit.services.*
 val fixture = TrustWeaveTestFixture.builder()
     .withKms(InMemoryKeyManagementService())
     .withDidmethod(KEY) { DidKeyMockMethod(it) }
@@ -188,11 +190,11 @@ val fixture = TrustWeaveTestFixture.builder()
 
 4. **Verify Integrity** – Use `IntegrityVerifier` to verify integrity chains in tests.
 
-## Trust Layer Test Templates
+## TrustWeave integration test templates
 
-Comprehensive in-memory test templates for trust layer integration tests are available in:
+Comprehensive in-memory test templates for TrustWeave integration tests are available in:
 ```
-trust/src/test/kotlin/org/trustweave/integration/InMemoryTrustLayerIntegrationTest.kt
+trust/src/test/kotlin/org/trustweave/integration/InMemoryTrustWeaveIntegrationTest.kt
 ```
 
 These templates provide complete, working examples of:
@@ -207,7 +209,7 @@ These templates provide complete, working examples of:
 
 **Key Pattern:** All templates follow the essential pattern of extracting key IDs from DID documents (not generating new keys) to ensure proof verification succeeds.
 
-See [Trust Layer Test Templates](../contributing/testing/trust-layer-test-templates.md) for detailed documentation.
+See [TrustWeave test templates](../contributing/testing/trustweave-test-templates.md) for detailed documentation.
 
 ## Plugin Credential Handling
 
@@ -222,7 +224,7 @@ See [Plugin Credential Handling](../contributing/testing/plugin-credential-handl
 ## Next Steps
 
 - Review [Testing Strategies](../advanced/testing-strategies.md) for advanced testing patterns
-- See [Trust Layer Test Templates](../contributing/testing/trust-layer-test-templates.md) for comprehensive workflow templates
+- See [TrustWeave test templates](../contributing/testing/trustweave-test-templates.md) for comprehensive workflow templates
 - Explore [Plugin Credential Handling](../contributing/testing/plugin-credential-handling.md) for external service testing
 - Explore [EO Test Integration README](../../testkit/src/main/kotlin/org/trustweave/testkit/eo/README.md) for detailed EO test utilities
 - See [Test Fixtures](../../testkit/src/main/kotlin/org/trustweave/testkit/TrustWeaveTestFixture.kt) for fixture builder documentation

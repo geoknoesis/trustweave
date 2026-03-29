@@ -3,31 +3,12 @@ package org.trustweave.wallet
 import org.trustweave.credential.model.vc.VerifiableCredential
 
 /**
- * Credential organization capabilities.
+ * Narrowed capability interface for wallets that support credential collections.
  *
- * Optional interface for wallets that support collections, tags, and metadata.
- *
- * **Example Usage**:
- * ```kotlin
- * val wallet: Wallet = createWallet()
- *
- * if (wallet is CredentialOrganization) {
- *     // Create collection
- *     val collectionId = wallet.createCollection("My Credentials", "Personal credentials")
- *
- *     // Add credential to collection
- *     wallet.addToCollection(credentialId, collectionId)
- *
- *     // Tag credential
- *     wallet.tagCredential(credentialId, setOf("important", "verified"))
- *
- *     // Add metadata
- *     wallet.addMetadata(credentialId, mapOf("source" to "issuer.com"))
- * }
- * ```
+ * Wallets may implement either [CredentialCollections], [CredentialTagging], or the combined
+ * [CredentialOrganization], giving callers the ability to depend only on the capability they need.
  */
-interface CredentialOrganization {
-    // Collections
+interface CredentialCollections {
     /**
      * Create a new credential collection.
      *
@@ -85,8 +66,15 @@ interface CredentialOrganization {
      * @return List of credentials in the collection
      */
     suspend fun getCredentialsInCollection(collectionId: String): List<VerifiableCredential>
+}
 
-    // Tags
+/**
+ * Narrowed capability interface for wallets that support credential tagging and metadata.
+ *
+ * Wallets may implement either [CredentialCollections], [CredentialTagging], or the combined
+ * [CredentialOrganization], giving callers the ability to depend only on the capability they need.
+ */
+interface CredentialTagging {
     /**
      * Add tags to a credential.
      *
@@ -128,7 +116,6 @@ interface CredentialOrganization {
      */
     suspend fun findByTag(tag: String): List<VerifiableCredential>
 
-    // Metadata
     /**
      * Add metadata to a credential.
      *
@@ -155,4 +142,34 @@ interface CredentialOrganization {
      */
     suspend fun updateNotes(credentialId: String, notes: String?): Boolean
 }
+
+/**
+ * Combined credential organization capabilities for wallets that support both collections and tagging.
+ *
+ * Extends [CredentialCollections] and [CredentialTagging] so wallets can implement a single
+ * interface to provide both capabilities. Code that only needs one capability should prefer
+ * the narrower interface.
+ *
+ * **Example Usage**:
+ * ```kotlin
+ * val wallet: Wallet = createWallet()
+ *
+ * // Use narrower interface when possible
+ * if (wallet is CredentialCollections) {
+ *     val collectionId = wallet.createCollection("My Credentials", "Personal credentials")
+ *     wallet.addToCollection(credentialId, collectionId)
+ * }
+ * if (wallet is CredentialTagging) {
+ *     wallet.tagCredential(credentialId, setOf("important", "verified"))
+ *     wallet.addMetadata(credentialId, mapOf("source" to "issuer.com"))
+ * }
+ *
+ * // Or use CredentialOrganization for full access
+ * if (wallet is CredentialOrganization) {
+ *     wallet.createCollection("My Credentials")
+ *     wallet.tagCredential(credentialId, setOf("important"))
+ * }
+ * ```
+ */
+interface CredentialOrganization : CredentialCollections, CredentialTagging
 

@@ -3,7 +3,6 @@ package org.trustweave.testkit.integration
 import org.trustweave.testkit.BaseIntegrationTest
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlinx.coroutines.runBlocking
 
 /**
  * Reusable test scenario for error handling and recovery.
@@ -32,14 +31,12 @@ class ErrorRecoveryScenario(
         var attemptCount = 0
         val maxAttempts = 3
 
-        val result = kotlinx.coroutines.runBlocking {
-            test.retry(maxAttempts = maxAttempts) {
-                attemptCount++
-                if (attemptCount < maxAttempts) {
-                    throw RuntimeException("Simulated network error")
-                }
-                "success"
+        val result = test.retry(maxAttempts = maxAttempts) {
+            attemptCount++
+            if (attemptCount < maxAttempts) {
+                throw RuntimeException("Simulated network error")
             }
+            "success"
         }
 
         kotlin.test.assertTrue(attemptCount == maxAttempts)
@@ -83,12 +80,10 @@ class ErrorRecoveryScenario(
     suspend fun testTimeoutHandling() {
         val timeoutSeconds = 2L
 
-        val result = kotlinx.coroutines.runBlocking {
-            test.waitFor(timeoutSeconds = timeoutSeconds) {
-                // Simulate a condition that takes time
-                kotlinx.coroutines.delay(3000) // Longer than timeout
-                false // Never becomes true
-            }
+        val result = test.waitFor(timeoutSeconds = timeoutSeconds) {
+            // Simulate a condition that takes time
+            kotlinx.coroutines.delay(3000) // Longer than timeout
+            false // Never becomes true
         }
 
         // Should return false due to timeout

@@ -7,11 +7,11 @@ import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.model.DidService
+import org.trustweave.did.model.parseServiceTypesFromJson
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.base.AbstractDidMethod
 import org.trustweave.did.base.DidMethodUtils
 import org.trustweave.kms.KeyManagementService
-import org.trustweave.kms.results.GenerateKeyResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -51,48 +51,25 @@ import java.net.URL
  */
 class IonDidMethod(
     kms: KeyManagementService,
-    private val config: IonDidConfig
+    private val config: IonDidConfig,
+    httpClient: OkHttpClient? = null
 ) : AbstractDidMethod("ion", kms) {
 
-    private val httpClient: OkHttpClient
-    private val sidetreeClient: SidetreeClient
+    private val httpClient: OkHttpClient = httpClient ?: OkHttpClient.Builder()
+        .connectTimeout(config.timeoutSeconds.toLong(), java.util.concurrent.TimeUnit.SECONDS)
+        .readTimeout(config.timeoutSeconds.toLong(), java.util.concurrent.TimeUnit.SECONDS)
+        .writeTimeout(config.timeoutSeconds.toLong(), java.util.concurrent.TimeUnit.SECONDS)
+        .build()
 
-    init {
-        // Create HTTP client with timeout
-        httpClient = OkHttpClient.Builder()
-            .connectTimeout(config.timeoutSeconds.toLong(), java.util.concurrent.TimeUnit.SECONDS)
-            .readTimeout(config.timeoutSeconds.toLong(), java.util.concurrent.TimeUnit.SECONDS)
-            .writeTimeout(config.timeoutSeconds.toLong(), java.util.concurrent.TimeUnit.SECONDS)
-            .build()
-
-        // Create Sidetree client
-        sidetreeClient = SidetreeClient(httpClient, config)
-    }
+    private val sidetreeClient: SidetreeClient = SidetreeClient(this.httpClient, config)
 
     override suspend fun createDid(options: DidCreationOptions): DidDocument = withContext(Dispatchers.IO) {
         try {
-            // Generate keys using KMS
             val algorithm = options.algorithm.algorithmName
-            val generateResult = kms.generateKey(algorithm, options.additionalProperties)
-            val keyHandle = when (generateResult) {
-                is GenerateKeyResult.Success -> generateResult.keyHandle
-                is GenerateKeyResult.Failure.UnsupportedAlgorithm -> throw TrustWeaveException.Unknown(
-                    code = "UNSUPPORTED_ALGORITHM",
-                    message = generateResult.reason ?: "Algorithm not supported"
-                )
-                is GenerateKeyResult.Failure.InvalidOptions -> throw TrustWeaveException.Unknown(
-                    code = "INVALID_OPTIONS",
-                    message = generateResult.reason
-                )
-                is GenerateKeyResult.Failure.Error -> throw TrustWeaveException.Unknown(
-                    code = "KEY_GENERATION_ERROR",
-                    message = generateResult.reason,
-                    cause = generateResult.cause
-                )
-            }
+            val keyHandle = generateKey(algorithm, options.additionalProperties)
 
-            // Create Sidetree create operation
-            val createOperation = sidetreeClient.createCreateOperation(
+            // Create Sidetree create operation (returns operation + long-form DID)
+            val (createOperation, localLongFormDid) = sidetreeClient.createCreateOperation(
                 publicKeyJwk = keyHandle.publicKeyJwk
                     ?: throw TrustWeaveException.Unknown(
                         code = "MISSING_JWK",
@@ -100,15 +77,11 @@ class IonDidMethod(
                     )
             )
 
-            // Submit operation to ION node
+            // Submit operation to ION node (best-effort; long-form DID is usable immediately)
             val operationResponse = sidetreeClient.submitOperation(createOperation)
 
-            // Extract DID from operation response
-            val longFormDid = operationResponse.longFormDid
-                ?: throw TrustWeaveException.Unknown(
-                    code = "CREATE_FAILED",
-                    message = "Failed to create did:ion: no DID in response"
-                )
+            // Prefer the DID returned by the ION node; fall back to locally derived long-form DID
+            val longFormDid = operationResponse.longFormDid ?: localLongFormDid
 
             // Create DID document from operation
             val document = buildIonDocument(
@@ -141,20 +114,17 @@ class IonDidMethod(
             // Resolve through ION node
             val resolutionResult = sidetreeClient.resolveDid(didString)
 
-            val document = when (resolutionResult) {
-                is DidResolutionResult.Success -> resolutionResult.document
-                else -> {
-                    return@withContext DidMethodUtils.createErrorResolutionResult(
-                        "notFound",
-                        "DID not found in ION network",
-                        method,
-                        didString
-                    )
-                }
+            if (!resolutionResult.success || resolutionResult.document == null) {
+                return@withContext DidMethodUtils.createErrorResolutionResult(
+                    "notFound",
+                    resolutionResult.error ?: "DID not found in ION network",
+                    method,
+                    didString
+                )
             }
 
             // Convert ION document to TrustWeave format
-            val convertedDocument = convertIonDocument(document)
+            val convertedDocument = convertIonDocument(resolutionResult.document)
 
             // Store locally for caching
             storeDocument(convertedDocument.id.value, convertedDocument)
@@ -317,9 +287,10 @@ class IonDidMethod(
 
         val service = ionDocJson["service"]?.jsonArray?.mapNotNull { s ->
             val sObj = s.jsonObject
+            val sTypes = parseServiceTypesFromJson(sObj["type"]) ?: return@mapNotNull null
             DidService(
                 id = sObj["id"]?.jsonPrimitive?.content ?: return@mapNotNull null,
-                type = sObj["type"]?.jsonPrimitive?.content ?: return@mapNotNull null,
+                type = sTypes,
                 serviceEndpoint = sObj["serviceEndpoint"]?.let {
                     when (it) {
                         is JsonPrimitive -> it.content

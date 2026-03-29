@@ -15,7 +15,7 @@ import org.trustweave.credential.spi.proof.ProofEngineCapabilities
 import org.trustweave.credential.spi.proof.ProofEngine
 import org.trustweave.credential.revocation.CredentialRevocationManager
 import org.trustweave.credential.schema.SchemaRegistry
-import org.trustweave.credential.trust.TrustPolicy
+import org.trustweave.credential.trust.TrustEvaluator
 // ProofEngineUtils is imported for DID resolution
 import org.trustweave.credential.proof.internal.engines.ProofEngineUtils
 import org.trustweave.core.identifiers.Iri
@@ -84,7 +84,7 @@ internal class DefaultCredentialService(
     
     override suspend fun verify(
         credential: VerifiableCredential,
-        trustPolicy: TrustPolicy?,
+        TrustEvaluator: TrustEvaluator?,
         options: VerificationOptions
     ): VerificationResult {
         // Input validation for security and stability
@@ -151,7 +151,7 @@ internal class DefaultCredentialService(
         }
         
         // Trust policy check (format-agnostic)
-        CredentialValidation.validateTrust(credential, trustPolicy)?.let { return it }
+        CredentialValidation.validateTrust(credential, TrustEvaluator)?.let { return it }
         
         // Delegate to proof engine for format-specific verification
         val engineResult = engine.verify(credential, options)
@@ -215,7 +215,7 @@ internal class DefaultCredentialService(
     
     override suspend fun verifyPresentation(
         presentation: VerifiablePresentation,
-        trustPolicy: TrustPolicy?,
+        TrustEvaluator: TrustEvaluator?,
         options: VerificationOptions
     ): VerificationResult {
         // Input validation for security and stability
@@ -261,7 +261,7 @@ internal class DefaultCredentialService(
         
         // Verify each credential in the presentation
         val credentialResults = presentation.verifiableCredential.map { credential ->
-            verify(credential, trustPolicy, options)
+            verify(credential, TrustEvaluator, options)
         }
         
         // If any credential is invalid, return failure

@@ -8,25 +8,25 @@ Version information, deprecation notices, and migration guides for credential ex
 
 ## Current Version
 
-- **API Version**: 1.0.0-SNAPSHOT
+- **API Version**: 0.6.0
 - **Protocol Support**: DIDComm V2, OIDC4VCI, CHAPI
 - **Kotlin Version**: 2.2.0+
 - **Java Version**: 21+
 
 ## Version History
 
-### 1.0.0-SNAPSHOT (Current)
+### 0.6.0 (Current)
 
 **Initial Release**
 
-- ✅ Protocol abstraction layer
-- ✅ DIDComm V2 support
-- ✅ OIDC4VCI support
-- ✅ CHAPI support
-- ✅ Protocol registry
-- ✅ Persistent message storage
-- ✅ Secret resolver
-- ✅ Advanced features (archiving, replication, encryption at rest)
+- Protocol abstraction layer
+- DIDComm V2 support
+- OIDC4VCI support
+- CHAPI support
+- Protocol registry
+- Persistent message storage
+- Secret resolver
+- Advanced features (archiving, replication, encryption at rest)
 
 **Breaking Changes:**
 - None (initial release)
@@ -83,8 +83,7 @@ registry.register(DidCommExchangeProtocol(didCommService))
 
 val exchangeService = ExchangeServices.createExchangeService(
     protocolRegistry = registry,
-    credentialService = credentialService,
-    didResolver = didResolver
+    credentialService = credentialService
 )
 
 val offerResult = exchangeService.offer(
@@ -289,15 +288,15 @@ val didCommService = DidCommFactory.createDatabaseService(
 | **CHAPI** | ❌ | ❌ | ✅ |
 
 **Legend:**
-- ✅ Fully compatible
-- ⚠️ Limited compatibility (some features may not work)
-- ❌ Not compatible
+- Fully compatible
+- Limited compatibility (some features may not work)
+- Not compatible
 
 ### API Compatibility
 
-| Version | 1.0.0-SNAPSHOT |
+| Version | 0.6.0 |
 |---------|----------------|
-| **1.0.0-SNAPSHOT** | ✅ Compatible |
+| **0.6.0** | ✅ Compatible |
 
 ---
 
@@ -309,13 +308,13 @@ val didCommService = DidCommFactory.createDatabaseService(
    ```kotlin
    // Check your current dependencies
    // In build.gradle.kts:
-   implementation("org.trustweave:credential-core:1.0.0-SNAPSHOT")
+   implementation("org.trustweave:credential-core:0.6.0")
    ```
 
 2. **Update dependencies:**
    ```kotlin
    // Update to latest version
-   implementation("org.trustweave:credential-core:1.0.0-SNAPSHOT")
+   implementation("org.trustweave:credential-core:0.6.0")
    ```
 
 3. **Review changelog:**

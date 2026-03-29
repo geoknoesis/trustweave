@@ -12,12 +12,12 @@ This guide demonstrates how to build a Digital Measurement, Reporting, and Verif
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created DIDs for carbon credit issuers, verifiers, and buyers
-- ✅ Issued verifiable credentials for carbon credits with EO data evidence
-- ✅ Implemented double-counting prevention using blockchain anchoring
-- ✅ Built carbon credit lifecycle tracking (issuance → sale → retirement)
-- ✅ Created automated verification workflows
-- ✅ Anchored carbon credit credentials to blockchain for immutable records
+- Created DIDs for carbon credit issuers, verifiers, and buyers
+- Issued verifiable credentials for carbon credits with EO data evidence
+- Implemented double-counting prevention using blockchain anchoring
+- Built carbon credit lifecycle tracking (issuance â†’ sale â†’ retirement)
+- Created automated verification workflows
+- Anchored carbon credit credentials to blockchain for immutable records
 
 ## Big Picture & Significance
 
@@ -43,7 +43,7 @@ Carbon markets are moving from manual PDF audits to "Digital Measurement, Report
 ### Real-World Examples
 
 **OpenClimate (Open Earth Foundation)** - Active Pilot with British Columbia Government:
-- Nested climate accounting system (Nation → City → Company) using DIDs and Verifiable Credentials
+- Nested climate accounting system (Nation â†’ City â†’ Company) using DIDs and Verifiable Credentials
 - Uses VCs to prevent "Double Counting"
 - Once a Carbon Credit VC is retired on the ledger, it cannot be re-sold
 - Aligns with **Qualified Relations** pattern to track lifecycle of the credit
@@ -109,13 +109,13 @@ Carbon markets need:
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Test kit for in-memory implementations
-    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:0.6.0")
 
     // Optional: Algorand adapter for real blockchain anchoring
-    implementation("org.trustweave.chains:algorand:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:anchors-plugins-algorand:0.6.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -132,13 +132,21 @@ Here's a complete carbon credit dMRV workflow:
 ```kotlin
 package com.example.carbon.markets
 
-import org.trustweave.TrustWeave
-import org.trustweave.core.*
-import org.trustweave.json.DigestUtils
+import org.trustweave.trust.TrustWeave
+import org.trustweave.credential.model.ProofType
+import org.trustweave.core.util.DigestUtils
+import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.credential.results.getOrThrow
 
 fun main() = runBlocking {
     println("=".repeat(70))
@@ -147,24 +155,18 @@ fun main() = runBlocking {
 
     // Step 1: Create TrustWeave instance with blockchain
     val trustWeave = TrustWeave.build {
-        factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
-        )
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
-        credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
+        credentials { defaultProofType(ProofType.Ed25519Signature2020) }
     }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for carbon credit issuer, verifier, and buyer
-    import org.trustweave.trust.types.DidCreationResult
     
     val issuerDidResult = trustWeave.createDid {
         method(KEY)
         algorithm(ED25519)
     }
-    import org.trustweave.trust.types.getOrThrowDid
     
     val issuerDid = trustWeave.createDid {
         method(KEY)
@@ -175,16 +177,6 @@ fun main() = runBlocking {
     val verifierDidResult = trustWeave.createDid {
         method(KEY)
         algorithm(ED25519)
-    }
-    import org.trustweave.trust.types.getOrThrowDid
-    import org.trustweave.trust.types.getOrThrow
-    import org.trustweave.did.resolver.DidResolutionResult
-    import org.trustweave.did.identifiers.extractKeyId
-    
-    // Helper extension for resolution results
-    fun DidResolutionResult.getOrThrow() = when (this) {
-        is DidResolutionResult.Success -> this.document
-        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
     }
     
     val verifierDid = trustWeave.createDid {
@@ -224,7 +216,10 @@ fun main() = runBlocking {
     val eoEvidenceDigest = DigestUtils.sha256DigestMultibase(eoEvidence)
 
     // Step 4: Verifier issues verification credential
-    val verifierDoc = trustWeave.resolveDid(verifierDid).getOrThrow()
+    val verifierDoc = when (val res = trustWeave.resolveDid(verifierDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val verifierKeyId = verifierDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
@@ -248,14 +243,16 @@ fun main() = runBlocking {
         signedBy(verifierDid)
     }
     
-    import org.trustweave.trust.types.getOrThrow
     
     val verificationCredential = verificationCredentialResult.getOrThrow()
 
     println("✅ Verification Credential issued: ${verificationCredential.id}")
 
     // Step 5: Issuer issues carbon credit credential
-    val issuerDoc = trustWeave.resolveDid(issuerDid).getOrThrow()
+    val issuerDoc = when (val res = trustWeave.resolveDid(issuerDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
@@ -263,7 +260,7 @@ fun main() = runBlocking {
         credential {
             id("urn:carbon:credit:CC-2024-001")
             type("VerifiableCredential", "CarbonCreditCredential")
-            issuer(issuerDid.value)
+            issuer(issuerDid)
             subject {
                 id("urn:carbon:credit:CC-2024-001")
                 "creditType" to "ForestCarbonSequestration"
@@ -273,7 +270,7 @@ fun main() = runBlocking {
                 "eoEvidenceDigest" to eoEvidenceDigest
                 "issuanceDate" to Instant.now().toString()
                 "vintage" to "2024"
-                "status" to "issued"  // issued → sold → retired
+                "status" to "issued"  // issued â†’ sold â†’ retired
                 "projectId" to "PROJ-12345"
                 "location" {
                     "latitude" to 45.5017
@@ -282,7 +279,7 @@ fun main() = runBlocking {
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+        signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
     }
     
     val carbonCredit = carbonCreditResult.getOrThrow()
@@ -302,7 +299,7 @@ fun main() = runBlocking {
             anchor
         },
         onFailure = { error ->
-            println("❌ Anchoring failed: ${error.message}")
+            println("[FAIL] Anchoring failed: ${error.message}")
             null
         }
     )
@@ -332,7 +329,7 @@ fun main() = runBlocking {
                 }
                 issued(Instant.now())
             }
-            signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+            signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
         }
         
         val saleCredential = saleCredentialResult.getOrThrow()
@@ -344,13 +341,16 @@ fun main() = runBlocking {
         // Step 8: Verify credit not already sold (double counting prevention)
         val creditStatus = checkCreditStatus(carbonCredit.id, anchorResult.ref)
         if (creditStatus == "sold") {
-            println("❌ ERROR: Credit already sold!")
+            println("[FAIL] ERROR: Credit already sold!")
             println("   Double counting prevented by blockchain anchor")
             return@runBlocking
         }
 
         // Step 9: Retire credit (final state)
-        val buyerDoc = trustWeave.resolveDid(buyerDid).getOrThrow()
+        val buyerDoc = when (val res = trustWeave.resolveDid(buyerDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
         val buyerKeyId = buyerDoc.verificationMethod.firstOrNull()?.extractKeyId()
             ?: throw IllegalStateException("No verification method found")
 
@@ -373,7 +373,7 @@ fun main() = runBlocking {
                 }
                 issued(Instant.now())
             }
-            signedBy(issuerDid = buyerDid.value, keyId = buyerKeyId)
+            signedBy(issuerDid = buyerDid, keyId = buyerKeyId)
         }
         
         val retirementCredential = retirementCredentialResult.getOrThrow()
@@ -384,7 +384,7 @@ fun main() = runBlocking {
     }
 
     // Step 10: Verify complete lifecycle
-    println("\n📊 Carbon Credit Lifecycle:")
+    println("\n[stats] Carbon Credit Lifecycle:")
     println("   1. Issued: ${carbonCredit.id}")
     println("   2. Verified: ${verificationCredential.id}")
     println("   3. Anchored: ${anchorResult?.ref?.txHash}")
@@ -400,7 +400,7 @@ fun main() = runBlocking {
 // Helper function to check credit status on blockchain
 suspend fun checkCreditStatus(
     creditId: String,
-    anchorRef: org.trustweave.anchor.AnchorRef
+    anchorRef: AnchorRef
 ): String {
     // In production, query blockchain for credit status
     // This prevents double counting by checking if credit was already sold/retired
@@ -430,7 +430,7 @@ Carbon Markets & Digital MRV - Complete Example
    Status: retired
    Credit cannot be re-sold (double counting prevented)
 
-📊 Carbon Credit Lifecycle:
+[stats] Carbon Credit Lifecycle:
    1. Issued: urn:uuid:...
    2. Verified: urn:uuid:...
    3. Anchored: tx_...
@@ -448,15 +448,17 @@ Carbon Markets & Digital MRV - Complete Example
 The key feature is preventing double counting:
 
 ```kotlin
+import org.trustweave.anchor.AnchorRef
+
 suspend fun preventDoubleCounting(
     creditId: String,
-    anchorRef: org.trustweave.anchor.AnchorRef
+    anchorRef: AnchorRef
 ): Boolean {
     // Check blockchain for credit status
     val status = queryBlockchainStatus(creditId, anchorRef)
 
     if (status == "retired" || status == "sold") {
-        println("❌ Credit already used: $status")
+        println("[FAIL] Credit already used: $status")
         println("   Double counting prevented!")
         return false
     }
@@ -467,7 +469,7 @@ suspend fun preventDoubleCounting(
 
 ## Step 4: Nested Climate Accounting (OpenClimate Pattern)
 
-For nested accounting (Nation → City → Company):
+For nested accounting (Nation â†’ City â†’ Company):
 
 ```kotlin
 // Nation level
@@ -520,8 +522,8 @@ val ttfToken = buildJsonObject {
 
 ## Related Documentation
 
-- [Earth Observation Scenario](earth-observation-scenario.md) - EO data integrity
-- [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
-- [API Reference](../api-reference/core-api.md) - Complete API documentation
+- Earth Observation Scenario](earth-observation-scenario.md) - EO data integrity
+- Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
+- API Reference](../api-reference/core-api.md) - Complete API documentation
 
 

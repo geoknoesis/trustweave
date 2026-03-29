@@ -13,7 +13,7 @@ class ServiceEndpointExtensionsTest {
     fun `test serviceEndpointTyped with URL string`() {
         val service = DidService(
             id = "service-1",
-            type = "LinkedDomains",
+            type = listOf("LinkedDomains"),
             serviceEndpoint = "https://example.com"
         )
 
@@ -31,7 +31,7 @@ class ServiceEndpointExtensionsTest {
         )
         val service = DidService(
             id = "service-1",
-            type = "DIDCommMessaging",
+            type = listOf("DIDCommMessaging"),
             serviceEndpoint = endpointMap
         )
 
@@ -50,7 +50,7 @@ class ServiceEndpointExtensionsTest {
         )
         val service = DidService(
             id = "service-1",
-            type = "LinkedDomains",
+            type = listOf("LinkedDomains"),
             serviceEndpoint = endpointArray
         )
 
@@ -70,7 +70,7 @@ class ServiceEndpointExtensionsTest {
         )
         val service = DidService(
             id = "service-1",
-            type = "CustomService",
+            type = listOf("CustomService"),
             serviceEndpoint = endpointArray
         )
 
@@ -86,7 +86,7 @@ class ServiceEndpointExtensionsTest {
     fun `test serviceEndpointAsUrl with URL string`() {
         val service = DidService(
             id = "service-1",
-            type = "LinkedDomains",
+            type = listOf("LinkedDomains"),
             serviceEndpoint = "https://example.com"
         )
 
@@ -99,7 +99,7 @@ class ServiceEndpointExtensionsTest {
     fun `test serviceEndpointAsUrl with object returns null`() {
         val service = DidService(
             id = "service-1",
-            type = "DIDCommMessaging",
+            type = listOf("DIDCommMessaging"),
             serviceEndpoint = mapOf("uri" to "https://example.com")
         )
 
@@ -115,7 +115,7 @@ class ServiceEndpointExtensionsTest {
         )
         val service = DidService(
             id = "service-1",
-            type = "DIDCommMessaging",
+            type = listOf("DIDCommMessaging"),
             serviceEndpoint = endpointMap
         )
 
@@ -129,7 +129,7 @@ class ServiceEndpointExtensionsTest {
     fun `test serviceEndpointAsObject with URL returns null`() {
         val service = DidService(
             id = "service-1",
-            type = "LinkedDomains",
+            type = listOf("LinkedDomains"),
             serviceEndpoint = "https://example.com"
         )
 
@@ -142,7 +142,7 @@ class ServiceEndpointExtensionsTest {
         val endpointArray = listOf("https://example.com/1", "https://example.com/2")
         val service = DidService(
             id = "service-1",
-            type = "LinkedDomains",
+            type = listOf("LinkedDomains"),
             serviceEndpoint = endpointArray
         )
 
@@ -157,7 +157,7 @@ class ServiceEndpointExtensionsTest {
     fun `test serviceEndpointAsArray with URL returns null`() {
         val service = DidService(
             id = "service-1",
-            type = "LinkedDomains",
+            type = listOf("LinkedDomains"),
             serviceEndpoint = "https://example.com"
         )
 
@@ -207,7 +207,7 @@ class ServiceEndpointExtensionsTest {
         // Using a number which is not a valid service endpoint type
         val service = DidService(
             id = "service-1",
-            type = "Test",
+            type = listOf("Test"),
             serviceEndpoint = 12345  // Invalid type
         )
 
@@ -223,7 +223,7 @@ class ServiceEndpointExtensionsTest {
         )
         val service = DidService(
             id = "service-1",
-            type = "Test",
+            type = listOf("Test"),
             serviceEndpoint = endpointArray
         )
 

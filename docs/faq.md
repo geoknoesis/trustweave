@@ -50,44 +50,44 @@ Use `TrustWeave-testkit`. It ships in-memory DID methods, KMS, and blockchain an
 
 ## Where can I find API signatures and parameters?
 
-- [Wallet API Reference](api-reference/wallet-api.md) — wallet capabilities, typed option builders, and extension helpers.
-- [Credential Service API Reference](api-reference/credential-service-api.md) — issuer/verifier SPI contracts and factory options.
+- Wallet API Reference](api-reference/wallet-api.md) — wallet capabilities, typed option builders, and extension helpers.
+- Credential Service API Reference](api-reference/credential-service-api.md) — issuer/verifier SPI contracts and factory options.
 - Module guides under `docs/modules/` summarise additional utilities exposed by each artifact.
 
 ## How do I enforce stricter verification policies?
 
-Configure `CredentialVerificationOptions` (see [Verification Policies](advanced/verification-policies.md)). You can enable expiration checks, proof-purpose enforcement, anchoring requirements, revocation lookups, and domain/audience validation—all while receiving a structured `CredentialVerificationResult`.
+Use **`trustWeave.verify { }`** with **`VerificationBuilder`** (and optional **`VerificationOptions`** when calling **`CredentialService.verify`** directly); see [Verification Policies](advanced/verification-policies.md). You can enable expiration checks, proof-purpose enforcement, schema validation, revocation lookups, and issuer trust via **`TrustEvaluator`** / **`TrustRegistry`**, and you receive a sealed **`VerificationResult`** (`org.trustweave.credential.results`).
 
 ## How do I handle errors in TrustWeave?
 
-All `TrustWeave` methods throw `TrustWeaveException` exceptions on failure. Always wrap operations in try-catch blocks:
+**Credential flows** (`issue`, `verify`, `presentationResult`, batches) return **sealed results**—handle them with **`when`** (e.g. **`IssuanceResult.Failure.AdapterNotReady`**). For **`VerificationResult.Invalid`**, **`IssuanceResult.Failure`**, and **`PresentationResult.Failure`**, use **`allErrors`** for a single list of messages (logging, APIs). **DID creation** returns **`DidCreationResult`**, not a bare DID. **Unwrapping:** **`getOrThrowDid()`** and most credential **`getOrThrow()`** throw **`IllegalStateException`**; **`PresentationResult.getOrThrow()`** throws **`TrustWeaveException.InvalidState`** (`PRESENTATION_*`). Prefer **`when`** on sealed results in production.
 
 ```kotlin
 import org.trustweave.trust.TrustWeave
-import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.testkit.services.*
 
 val trustWeave = TrustWeave.build {
     keys { provider(IN_MEMORY); algorithm(ED25519) }
     did { method(KEY) { algorithm(ED25519) } }
 }
 
-try {
-    val did = trustWeave.createDid { method(KEY) }
-    println("Created: $did")
-} catch (error: TrustWeaveException) {
-    when (error) {
-        is DidException.DidMethodNotRegistered -> {
-            println("Method not registered: ${error.method}")
-            println("Available methods: ${error.availableMethods}")
-        }
-        else -> println("Error: ${error.message}")
+when (val dr = trustWeave.createDid { method(KEY) }) {
+    is DidCreationResult.Success -> println("Created: ${dr.did}")
+    is DidCreationResult.Failure.MethodNotRegistered -> {
+        println("Method not registered: ${dr.method}")
+        println("Available: ${dr.availableMethods}")
     }
+    is DidCreationResult.Failure.InvalidConfiguration -> println("Invalid config: ${dr.reason}")
+    is DidCreationResult.Failure.KeyGenerationFailed -> println("Key generation: ${dr.reason}")
+    is DidCreationResult.Failure.DocumentCreationFailed -> println("Document: ${dr.reason}")
+    is DidCreationResult.Failure.Other -> println("Other: ${dr.reason}")
 }
 ```
 
-**Note:** Some lower-level APIs return `Result<T>` directly. Check the method signature for each operation.
+**Note:** Wallet and some other APIs may still throw **`TrustWeaveException`**. See the [API contract table](getting-started/api-patterns.md#api-contract-results-vs-exceptions).
 
-See [Error Handling](advanced/error-handling.md) for detailed error handling patterns and [API Patterns](getting-started/api-patterns.md) for correct API usage.
+See [Error Handling](advanced/error-handling.md) for detailed patterns and [API Patterns](getting-started/api-patterns.md).
 
 ## Where do I log issues or request features?
 

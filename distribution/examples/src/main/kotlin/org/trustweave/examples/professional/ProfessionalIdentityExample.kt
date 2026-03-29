@@ -1,5 +1,8 @@
 package org.trustweave.examples.professional
 
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.trust.types.getOrThrow
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
@@ -11,7 +14,6 @@ import org.trustweave.trust.dsl.credential.credential
 import org.trustweave.trust.dsl.wallet.organize
 import org.trustweave.trust.dsl.wallet.query as dslQuery
 import org.trustweave.trust.dsl.wallet.QueryBuilder
-import org.trustweave.trust.dsl.wallet.presentationFromWallet
 import org.trustweave.trust.dsl.credential.registerSchema
 import org.trustweave.trust.dsl.credential.schema
 import org.trustweave.trust.dsl.storeIn
@@ -29,7 +31,6 @@ import org.trustweave.wallet.CredentialOrganization
 import org.trustweave.wallet.Wallet
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.testkit.services.TestkitWalletFactory
-import org.trustweave.testkit.getOrFail
 import org.trustweave.did.identifiers.extractKeyId
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
@@ -38,7 +39,7 @@ import kotlinx.datetime.Clock
 fun main() = runBlocking {
     println("=== Professional Identity Wallet Scenario ===\n")
 
-    // Step 1: Configure Trust Layer with all features
+    // Step 1: Configure TrustWeave with all features
     println("Step 1: Setting up services...")
     // Create KMS first so we can use it for key generation and signing
     val kms = InMemoryKeyManagementService()
@@ -87,7 +88,7 @@ fun main() = runBlocking {
     val professionalDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }.getOrFail()
+    }.getOrThrowDid()
     println("Professional DID: ${professionalDid.value}")
 
     // Register schemas for credential validation
@@ -139,7 +140,7 @@ fun main() = runBlocking {
         holder(professionalDid)
         enableOrganization()
         enablePresentation()
-    }.getOrFail()
+    }.getOrThrow()
     println("Wallet created: ${wallet.walletId}")
 
     // Step 3: Store education credentials using DSL
@@ -148,7 +149,7 @@ fun main() = runBlocking {
     val universityDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }.getOrFail()
+    }.getOrThrowDid()
     println("University DID: ${universityDid.value}")
     
     // Get the key ID from the university DID document
@@ -180,7 +181,7 @@ fun main() = runBlocking {
             issued(Clock.System.now())
         }
         signedBy(issuerDid = universityDid, keyId = universityKeyId)
-    }.getOrFail()
+    }.getOrThrow()
     val bachelorStored = bachelorDegree.storeIn(wallet)
     val bachelorId = requireNotNull(bachelorStored.id) { "Credential must have an id" }
 
@@ -200,7 +201,7 @@ fun main() = runBlocking {
             issued(Clock.System.now())
         }
         signedBy(issuerDid = universityDid, keyId = universityKeyId)
-    }.getOrFail()
+    }.getOrThrow()
     val masterStored = masterDegree.storeIn(wallet)
     val masterId = requireNotNull(masterStored.id) { "Credential must have an id" }
 
@@ -329,7 +330,7 @@ fun main() = runBlocking {
         println("Cloud-related credentials: ${cloudCredentials.size}")
     }
 
-    // Step 8: Create targeted presentations using wallet presentation DSL
+    // Step 8: Create targeted presentations (holder-signed via CredentialService)
     println("\nStep 8: Creating targeted presentations...")
 
     // Generate a key for the professional/holder to sign presentations

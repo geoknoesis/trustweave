@@ -26,7 +26,7 @@ Revocation is essential for credential lifecycle management. It allows issuers t
 **Required imports:**
 ```kotlin
 import org.trustweave.trust.TrustWeave
-import org.trustweave.credential.models.VerifiableCredential
+import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.revocation.StatusPurpose
 import org.trustweave.credential.revocation.RevocationStatus
 import kotlinx.coroutines.runBlocking
@@ -50,6 +50,7 @@ Credential revocation uses **Status List 2021**—a compact, efficient method fo
 
 **How it fits in a workflow:**
 ```kotlin
+import org.trustweave.testkit.services.*
 // 1. Configure revocation
 val trustWeave = TrustWeave.build {
     revocation { provider(IN_MEMORY) }
@@ -68,7 +69,7 @@ trustWeave.revoke {
 }
 
 // 4. Check revocation status
-val status = trustWeave.getDslContext().revocation {
+val status = trustWeave.revocation {
     statusList(statusListId)
 }.check(credential)
 ```
@@ -82,6 +83,7 @@ val status = trustWeave.getDslContext().revocation {
 Enable revocation in your TrustWeave configuration:
 
 ```kotlin
+import org.trustweave.testkit.services.*
 val trustWeave = TrustWeave.build {
     keys {
         provider(IN_MEMORY)
@@ -114,7 +116,7 @@ val trustWeave = TrustWeave.build {
 Create a status list for tracking revoked credentials. Status lists are typically created automatically when issuing credentials with `withRevocation()`, but you can also create them explicitly:
 
 ```kotlin
-val statusList = trustWeave.getDslContext().revocation {
+val statusList = trustWeave.revocation {
     forIssuer(issuerDid.value)
     purpose(StatusPurpose.REVOCATION)
     size(131072)  // Optional: default is 131072 credentials
@@ -140,20 +142,23 @@ println("Status list created: ${statusList.id}")
 Issue a credential that includes a reference to the status list:
 
 ```kotlin
+import org.trustweave.did.identifiers.Did
+import kotlinx.datetime.Clock
+
 val credential = trustWeave.issue {
     credential {
         id("https://example.edu/credentials/degree-123")
         type("DegreeCredential")
         issuer(issuerDid)
         subject {
-            id(org.trustweave.did.identifiers.Did("did:key:student"))
+            id(Did("did:key:student"))
             "degree" {
                 "name" to "Bachelor of Science"
             }
         }
         issued(Clock.System.now())
     }
-    signedBy(issuerDid = issuerDid.value, keyId = keyId)
+    signedBy(issuerDid = issuerDid, keyId = keyId)
     withRevocation()  // Auto-creates status list if needed
 }
 ```
@@ -212,7 +217,7 @@ if (revoked) {
 Verify if a credential is revoked:
 
 ```kotlin
-val status = trustWeave.getDslContext().revocation {
+val status = trustWeave.revocation {
     statusList(statusList.id)
 }.check(credential)
 
@@ -244,8 +249,13 @@ Here's a complete, runnable example:
 
 ```kotlin
 import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.types.ProofType
+import org.trustweave.credential.model.ProofType
+import org.trustweave.testkit.services.*
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.credential.results.getOrThrow
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
+import org.trustweave.did.identifiers.extractKeyId
 import org.trustweave.credential.revocation.RevocationStatus
 import org.trustweave.credential.revocation.StatusPurpose
 import kotlinx.coroutines.runBlocking
@@ -272,19 +282,13 @@ fun main() = runBlocking {
     }
     
     // Step 2: Create issuer DID
-    val issuerDid = trustWeave.createDid { method(KEY) }
-    
+    val issuerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+
     // Step 3: Get key ID
-    import org.trustweave.did.resolver.DidResolutionResult
-    import org.trustweave.did.identifiers.extractKeyId
-    
-    // Helper extension for resolution results
-    fun DidResolutionResult.getOrThrow() = when (this) {
-        is DidResolutionResult.Success -> this.document
-        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
-    }
-    
-    val issuerDocument = trustWeave.resolveDid(issuerDid).getOrThrow()
+    val issuerDocument = when (val res = trustWeave.resolveDid(issuerDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val keyId = issuerDocument.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
     
@@ -303,7 +307,7 @@ fun main() = runBlocking {
             issued(Clock.System.now())
             expires((365 * 10).days)
         }
-        signedBy(issuerDid = issuerDid.value, keyId = keyId)
+        signedBy(issuerDid = issuerDid, keyId = keyId)
         withRevocation()  // Auto-creates status list
     }
     
@@ -314,7 +318,7 @@ fun main() = runBlocking {
     val statusListId = credential.credentialStatus?.statusListCredential
         ?: throw IllegalStateException("Credential has no status list")
     
-    val initialStatus = trustWeave.getDslContext().revocation {
+    val initialStatus = trustWeave.revocation {
         statusList(statusListId)
     }.check(credential)
     
@@ -334,7 +338,7 @@ fun main() = runBlocking {
     }
     
     // Step 7: Verify revocation
-    val revokedStatus = trustWeave.getDslContext().revocation {
+    val revokedStatus = trustWeave.revocation {
         statusList(statusListId)
     }.check(credential)
     
@@ -402,7 +406,7 @@ After revoking, verify the revocation status:
 
 ```kotlin
 // Quick verification
-val status = trustWeave.getDslContext().revocation {
+val status = trustWeave.revocation {
     statusList(statusListId)
 }.check(credential)
 
@@ -420,10 +424,10 @@ println("Credential is ${if (isRevoked) "revoked" else "active"}")
 ```
 
 **What to check:**
-- ✅ Credential has `credentialStatus` field
-- ✅ Status list ID is valid
-- ✅ Revocation operation returns `true`
-- ✅ Status check returns `RevocationStatus.Revoked`
+- Credential has `credentialStatus` field
+- Status list ID is valid
+- Revocation operation returns `true`
+- Status check returns `RevocationStatus.Revoked`
 
 ---
 
@@ -435,6 +439,7 @@ println("Credential is ${if (isRevoked) "revoked" else "active"}")
 
 **Solution:**
 ```kotlin
+import org.trustweave.testkit.services.*
 // ✅ Ensure revocation is configured
 val trustWeave = TrustWeave.build {
     revocation {
@@ -475,7 +480,7 @@ trustWeave.revoke {
 // ✅ Issue credential with revocation
 val credential = trustWeave.issue {
     credential { ... }
-    signedBy(issuerDid = issuerDid.value, keyId = keyId)
+    signedBy(issuerDid = issuerDid, keyId = keyId)
     withRevocation()  // Required for revocation support
 }
 ```
@@ -489,7 +494,7 @@ val credential = trustWeave.issue {
 **Solution:**
 ```kotlin
 // ✅ Verify status list exists
-val statusList = trustWeave.getDslContext().revocation {
+val statusList = trustWeave.revocation {
     statusList(statusListId)
 }.getStatusList()
 
@@ -514,7 +519,7 @@ if (credential.credentialStatus == null) {
 }
 
 // ✅ Verify status list is accessible
-val statusList = trustWeave.getDslContext().revocation {
+val statusList = trustWeave.revocation {
     statusList(statusListId)
 }.getStatusList()
 
@@ -557,13 +562,13 @@ Suspend a credential temporarily:
 
 ```kotlin
 // Create suspension status list
-val suspensionList = trustWeave.getDslContext().revocation {
+val suspensionList = trustWeave.revocation {
     forIssuer(issuerDid.value)
     purpose(StatusPurpose.SUSPENSION)  // Different purpose
 }.createStatusList()
 
 // Suspend credential
-trustWeave.getDslContext().revocation {
+trustWeave.revocation {
     credential(credential.id ?: throw IllegalStateException("Credential must have ID"))
     statusList(suspensionList.id)
 }.suspend()
@@ -584,7 +589,7 @@ val revoked = trustWeave.revoke {
 
 if (revoked) {
     // Immediately verify revocation
-    val status = trustWeave.getDslContext().revocation {
+    val status = trustWeave.revocation {
         statusList(statusListId)
     }.check(credential)
     
@@ -625,6 +630,7 @@ See: [How to Verify Credentials](./verify-credentials.md)
 Anchor status lists to blockchain for tamper evidence:
 
 ```kotlin
+import org.trustweave.testkit.services.*
 // Configure blockchain anchoring
 val trustWeave = TrustWeave.build {
     anchor {
@@ -674,7 +680,7 @@ Track revocation patterns:
 
 ```kotlin
 // Get status list statistics
-val statusList = trustWeave.getDslContext().revocation {
+val statusList = trustWeave.revocation {
     statusList(statusListId)
 }.getStatusList()
 

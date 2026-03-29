@@ -36,6 +36,7 @@ sealed class IssuanceResult {
 **Correct Usage:**
 ```kotlin
 import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.results.getOrThrow
 
 val result = trustWeave.issue { ... }
 
@@ -51,10 +52,9 @@ when (result) {
     }
 }
 
-// Or use testkit helper for tests/examples
-import org.trustweave.testkit.getOrFail
+// Or unwrap for tests/examples
 
-val credential = result.getOrFail() // Throws on failure
+val credential = result.getOrThrow() // Throws IllegalStateException on failure
 ```
 
 **Incorrect Usage:**
@@ -87,6 +87,7 @@ sealed class DidCreationResult {
 **Correct Usage:**
 ```kotlin
 import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.trust.types.getOrThrowDid
 
 val result = trustWeave.createDid { ... }
 
@@ -114,10 +115,9 @@ when (result) {
     }
 }
 
-// Or use testkit helper for tests/examples
-import org.trustweave.testkit.getOrFail
+// Or unwrap for tests/examples
 
-val did = result.getOrFail() // Throws on failure
+val did = result.getOrThrowDid() // Throws IllegalStateException on failure
 ```
 
 **Incorrect Usage:**
@@ -133,31 +133,67 @@ when (result) {
 }
 ```
 
+## DidCreationWithKeyResult
+
+**Package:** `org.trustweave.trust.types`
+
+Returned by `trustWeave.createDidWithKey { ... }`. Aligns with `DidCreationResult` for creation failures and adds key-id extraction outcomes.
+
+**Structure:**
+```kotlin
+sealed class DidCreationWithKeyResult {
+    data class Success(val did: Did, val keyId: String) : DidCreationWithKeyResult()
+    sealed class Failure : DidCreationWithKeyResult() {
+        data class FromCreation(val failure: DidCreationResult.Failure) : Failure()
+        data class KeyExtractionFailed(val did: Did, val reason: String, val cause: Throwable?) : Failure()
+    }
+}
+```
+
+**Correct usage:**
+```kotlin
+import org.trustweave.trust.types.DidCreationWithKeyResult
+import org.trustweave.trust.types.getOrThrow
+
+when (val r = trustWeave.createDidWithKey { method("key") }) {
+    is DidCreationWithKeyResult.Success -> println("${r.did.value} key=${r.keyId}")
+    is DidCreationWithKeyResult.Failure.FromCreation -> { /* handle DidCreationResult.Failure */ }
+    is DidCreationWithKeyResult.Failure.KeyExtractionFailed -> { /* document had no usable VM */ }
+}
+
+// Or throw on failure (examples/tests)
+val (did, keyId) = trustWeave.createDidWithKey { method("key") }.getOrThrow()
+```
+
 ## VerificationResult
 
-**Package:** `org.trustweave.trust.types.VerificationResult`
+**Package:** `org.trustweave.credential.results.VerificationResult`
 
 **Structure:**
 ```kotlin
 sealed class VerificationResult {
-    data class Valid(val credential: VerifiableCredential, val warnings: List<String>)
+    data class Valid(...)
     sealed class Invalid : VerificationResult() {
+        data class InvalidProof(...)
         data class Expired(...)
+        data class NotYetValid(...)
         data class Revoked(...)
-        data class InvalidProof(val reason: String, ...)
-        data class IssuerResolutionFailed(val reason: String, ...)
+        data class InvalidIssuer(...)
         data class UntrustedIssuer(...)
+        data class UnsupportedFormat(...)
+        data class AdapterNotReady(...) // CredentialService not configured (TrustWeave.verify)
         data class SchemaValidationFailed(...)
-        // ...
+        data class MultipleFailures(...)
     }
 }
 ```
 
 **Correct Usage:**
 ```kotlin
-import org.trustweave.trust.types.VerificationResult
+import org.trustweave.credential.results.VerificationResult
 
-val result = trustWeave.verify { credential(credential) }
+val result = trustWeave.verify(credential)
+// or: trustWeave.verify { credential(credential); checkRevocation() }
 
 when (result) {
     is VerificationResult.Valid -> {
@@ -165,6 +201,9 @@ when (result) {
         if (result.warnings.isNotEmpty()) {
             println("Warnings: ${result.warnings.joinToString()}")
         }
+    }
+    is VerificationResult.Invalid.AdapterNotReady -> {
+        println("❌ Credential service not configured: ${result.allErrors.joinToString()}")
     }
     is VerificationResult.Invalid.Expired -> {
         println("❌ Expired at ${result.expiredAt}")
@@ -175,11 +214,49 @@ when (result) {
     is VerificationResult.Invalid.InvalidProof -> {
         println("❌ Invalid proof: ${result.reason}")
     }
-    is VerificationResult.Invalid.IssuerResolutionFailed -> {
-        println("❌ Issuer resolution failed: ${result.reason}")
+    is VerificationResult.Invalid.InvalidIssuer -> {
+        println("❌ Issuer validation failed: ${result.reason}")
     }
-    // ... handle other types
+    // ... handle other Invalid subtypes (see source / IDE)
 }
+```
+
+## PresentationResult
+
+**Package:** `org.trustweave.trust.types.PresentationResult`
+
+Returned by `trustWeave.presentationResult { ... }` and `presentationFromWalletResult(wallet) { ... }`.
+
+For **wallet** flows: every ID passed to `fromWallet(...)` must exist in the wallet. If any ID is missing, you get **`InvalidRequest`** with a clear message (no silent partial resolution).
+
+**Structure:**
+```kotlin
+sealed class PresentationResult {
+    data class Success(val presentation: VerifiablePresentation)
+    sealed class Failure {
+        data class AdapterNotReady(val errors: List<String>, ...)
+        data class InvalidRequest(val errors: List<String>, ...)
+        data class AdapterError(val cause: Throwable?, val errors: List<String>, ...)
+    }
+}
+```
+
+**Correct usage:**
+```kotlin
+import org.trustweave.trust.dsl.credential.presentationResult
+import org.trustweave.trust.types.PresentationResult
+import org.trustweave.trust.types.getOrThrow
+
+when (val r = trustWeave.presentationResult { holder(holderDid); credentials(cred) }) {
+    is PresentationResult.Success -> use(r.presentation)
+    is PresentationResult.Failure.AdapterNotReady -> /* CredentialService missing */
+    is PresentationResult.Failure.InvalidRequest -> /* e.g. missing holder */
+    is PresentationResult.Failure.AdapterError -> /* service threw */
+}
+
+// Or throw on failure (tests / prototypes) — throws TrustWeaveException.InvalidState with codes
+// PRESENTATION_ADAPTER_NOT_READY | PRESENTATION_INVALID_REQUEST | PRESENTATION_ADAPTER_ERROR
+val vp = trustWeave.presentationResult { ... }.getOrThrow()
 ```
 
 ## WalletCreationResult
@@ -189,6 +266,7 @@ when (result) {
 **Correct Usage:**
 ```kotlin
 import org.trustweave.trust.types.WalletCreationResult
+import org.trustweave.trust.types.getOrThrow
 
 val result = trustWeave.wallet { holder("did:key:holder") }
 
@@ -213,23 +291,25 @@ when (result) {
     }
 }
 
-// Or use testkit helper
-import org.trustweave.testkit.getOrFail
+// Or unwrap for tests/examples
 
-val wallet = result.getOrFail() // Throws on failure
+val wallet = result.getOrThrow() // Throws IllegalStateException on failure
 ```
 
 ## Helper Functions
 
-For tests and examples, use the `getOrFail()` extension from testkit:
+For tests and examples, use the typed unwrappers (same functions the production code recommends for “fail fast” demos):
 
 ```kotlin
-import org.trustweave.testkit.getOrFail
+import org.trustweave.testkit.services.*
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.trust.types.getOrThrow
 
 // Throws IllegalStateException with detailed error message on failure
-val did = trustWeave.createDid { method(KEY) }.getOrFail()
-val credential = trustWeave.issue { ... }.getOrFail()
-val wallet = trustWeave.wallet { holder("did:key:holder") }.getOrFail()
+val did = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+val credential = trustWeave.issue { ... }.getOrThrow()
+val wallet = trustWeave.wallet { holder("did:key:holder") }.getOrThrow()
 ```
 
 ## Best Practices
@@ -237,6 +317,6 @@ val wallet = trustWeave.wallet { holder("did:key:holder") }.getOrFail()
 1. **Always handle all cases** - Use exhaustive `when` expressions
 2. **Use `allErrors` for IssuanceResult** - Don't use non-existent `reason` property
 3. **Handle specific failure types** - Each failure type has different properties
-4. **Use testkit helpers in tests** - `getOrFail()` simplifies test code
+4. **Use `getOrThrow*` in tests/demos when appropriate** - Prefer `getOrThrowDid()`, `getOrThrow()` (issuance/wallet/presentation), and `DidCreationWithKeyResult.getOrThrow()` over ad-hoc unwrapping
 5. **Provide user-friendly error messages** - Extract meaningful information from failure types
 

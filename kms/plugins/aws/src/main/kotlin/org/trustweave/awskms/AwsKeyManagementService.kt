@@ -10,6 +10,7 @@ import org.trustweave.kms.results.GenerateKeyResult
 import org.trustweave.kms.results.GetPublicKeyResult
 import org.trustweave.kms.results.SignResult
 import org.trustweave.kms.KmsOptionKeys
+import org.trustweave.awskms.AwsKmsOptionKeys
 import org.trustweave.kms.util.KmsInputValidator
 import org.trustweave.kms.util.CacheEntry
 import kotlinx.coroutines.Dispatchers
@@ -154,7 +155,7 @@ class AwsKeyManagementService(
             }
 
             // Add tags if provided
-            val tags = (options[KmsOptionKeys.TAGS] as? Map<*, *>)?.let { map ->
+            val tags = (options[AwsKmsOptionKeys.TAGS] as? Map<*, *>)?.let { map ->
                 map.entries.associate { (k, v) -> 
                     k.toString() to v.toString() 
                 }
@@ -171,7 +172,7 @@ class AwsKeyManagementService(
             val keyArn = createResponse.keyMetadata().arn()
 
             // Enable automatic rotation if requested
-            if (options[KmsOptionKeys.ENABLE_AUTOMATIC_ROTATION] == true) {
+            if (options[AwsKmsOptionKeys.ENABLE_AUTOMATIC_ROTATION] == true) {
                 try {
                     kmsClient.enableKeyRotation(
                         EnableKeyRotationRequest.builder()
@@ -187,7 +188,7 @@ class AwsKeyManagementService(
             }
 
             // Create alias if provided
-            val alias = options[KmsOptionKeys.ALIAS] as? String
+            val alias = options[AwsKmsOptionKeys.ALIAS] as? String
             alias?.let { aliasName ->
                 try {
                     val aliasValue = if (aliasName.startsWith("alias/")) aliasName else "alias/$aliasName"

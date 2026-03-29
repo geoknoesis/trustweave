@@ -203,7 +203,7 @@ class GodiddyRegistrarBranchCoverageTest {
             service = listOf(
                 DidService(
                     id = "did:key:123#service-1",
-                    type = "LinkedDomains",
+                    type = listOf("LinkedDomains"),
                     serviceEndpoint = "https://example.com"
                 )
             )

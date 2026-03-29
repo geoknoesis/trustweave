@@ -3,17 +3,15 @@ package org.trustweave.keydid
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.*
 import org.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
+import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.base.AbstractDidMethod
 import org.trustweave.did.base.DidMethodUtils
 import org.trustweave.kms.KeyManagementService
-import org.trustweave.kms.results.GenerateKeyResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.security.MessageDigest
-import java.math.BigInteger
-
 /**
  * Native implementation of did:key method.
  *
@@ -44,25 +42,8 @@ class KeyDidMethod(
 
     override suspend fun createDid(options: DidCreationOptions): DidDocument = withContext(Dispatchers.IO) {
         try {
-            // Generate key using KMS
             val algorithm = options.algorithm.algorithmName
-            val generateResult = kms.generateKey(algorithm, options.additionalProperties)
-            val keyHandle = when (generateResult) {
-                is GenerateKeyResult.Success -> generateResult.keyHandle
-                is GenerateKeyResult.Failure.UnsupportedAlgorithm -> throw TrustWeaveException.Unknown(
-                    code = "UNSUPPORTED_ALGORITHM",
-                    message = generateResult.reason ?: "Algorithm not supported"
-                )
-                is GenerateKeyResult.Failure.InvalidOptions -> throw TrustWeaveException.Unknown(
-                    code = "INVALID_OPTIONS",
-                    message = generateResult.reason
-                )
-                is GenerateKeyResult.Failure.Error -> throw TrustWeaveException.Unknown(
-                    code = "KEY_GENERATION_ERROR",
-                    message = generateResult.reason,
-                    cause = generateResult.cause
-                )
-            }
+            val keyHandle = generateKey(algorithm, options.additionalProperties)
 
             // Get public key bytes
             val publicKeyBytes = getPublicKeyBytes(keyHandle, algorithm)
@@ -141,7 +122,7 @@ class KeyDidMethod(
                     did.value
                 )
 
-            // Check local storage first (for keys we generated)
+            // Check local storage first (cache hit for keys this instance created)
             val stored = getStoredDocument(did)
             if (stored != null) {
                 return@withContext DidMethodUtils.createSuccessResolutionResult(
@@ -152,15 +133,33 @@ class KeyDidMethod(
                 )
             }
 
-            // For did:key, we derive the document from the public key
-            // In a full implementation, we'd reconstruct the KeyHandle from the public key bytes
-            // For now, return not found if not in storage (as we don't have the private key)
-            DidMethodUtils.createErrorResolutionResult(
-                "notFound",
-                "DID document not found. did:key documents are typically derived from public keys.",
-                method,
-                did.value
+            // did:key is self-certifying: reconstruct the document deterministically from
+            // the public key bytes encoded in the DID itself. No external registry required.
+            val vmType = DidMethodUtils.algorithmToVerificationMethodType(algorithm)
+            val didStr = did.value
+            val didObj = Did(didStr)
+            val vmIdStr = "$didStr#$multibaseEncoded"
+            val vmId = VerificationMethodId.parse(vmIdStr, didObj)
+
+            val verificationMethod = VerificationMethod(
+                id = vmId,
+                type = vmType,
+                controller = didObj,
+                publicKeyMultibase = multibaseEncoded,
+                publicKeyJwk = buildJwkFromBytes(algorithm, publicKeyBytes)
             )
+
+            val document = DidMethodUtils.buildDidDocument(
+                did = didStr,
+                verificationMethod = listOf(verificationMethod),
+                authentication = listOf(vmIdStr),
+                assertionMethod = listOf(vmIdStr)
+            )
+
+            // Cache the derived document
+            storeDocument(didStr, document)
+
+            DidMethodUtils.createSuccessResolutionResult(document, method)
         } catch (e: TrustWeaveException) {
             DidMethodUtils.createErrorResolutionResult(
                 "invalidDid",
@@ -244,124 +243,57 @@ class KeyDidMethod(
      *
      * See: https://github.com/multiformats/multicodec/blob/master/table.csv
      */
-    private fun getMulticodecPrefix(algorithm: String): ByteArray {
+    private fun getMulticodecPrefix(algorithm: String): ByteArray =
+        DidMethodUtils.getMulticodecPrefix(algorithm)
+
+    private fun parseMulticodecPrefixedKey(prefixedKey: ByteArray): Pair<String, ByteArray>? =
+        DidMethodUtils.parseMulticodecKey(prefixedKey)
+
+    /**
+     * Builds a JWK map from raw public key bytes and algorithm name.
+     * Returns null for unsupported algorithms (publicKeyMultibase is the primary representation).
+     */
+    private fun buildJwkFromBytes(algorithm: String, publicKeyBytes: ByteArray): Map<String, Any?>? {
+        val b64url = java.util.Base64.getUrlEncoder().withoutPadding()
         return when (algorithm.uppercase()) {
-            "ED25519" -> byteArrayOf(0xed.toByte(), 0x01) // 0xed01 = Ed25519 public key
-            "SECP256K1" -> byteArrayOf(0xe7.toByte(), 0x01) // 0xe701 = secp256k1 public key
-            "P-256" -> byteArrayOf(0x80.toByte(), 0x24) // 0x8024 = P-256 public key
-            "P-384" -> byteArrayOf(0x81.toByte(), 0x24) // 0x8124 = P-384 public key
-            "P-521" -> byteArrayOf(0x82.toByte(), 0x24) // 0x8224 = P-521 public key
-            else -> throw IllegalArgumentException("Unsupported algorithm for did:key: $algorithm")
+            "ED25519" -> mapOf(
+                "kty" to "OKP",
+                "crv" to "Ed25519",
+                "x" to b64url.encodeToString(publicKeyBytes)
+            )
+            "SECP256K1" -> {
+                // Expect uncompressed point: 0x04 || x(32) || y(32)
+                if (publicKeyBytes.size >= 65 && publicKeyBytes[0] == 0x04.toByte()) {
+                    mapOf(
+                        "kty" to "EC",
+                        "crv" to "secp256k1",
+                        "x" to b64url.encodeToString(publicKeyBytes.sliceArray(1..32)),
+                        "y" to b64url.encodeToString(publicKeyBytes.sliceArray(33..64))
+                    )
+                } else null
+            }
+            "P-256" -> {
+                if (publicKeyBytes.size >= 65 && publicKeyBytes[0] == 0x04.toByte()) {
+                    mapOf(
+                        "kty" to "EC",
+                        "crv" to "P-256",
+                        "x" to b64url.encodeToString(publicKeyBytes.sliceArray(1..32)),
+                        "y" to b64url.encodeToString(publicKeyBytes.sliceArray(33..64))
+                    )
+                } else null
+            }
+            else -> null
         }
     }
 
-    /**
-     * Parses multicodec-prefixed key to extract algorithm and public key bytes.
-     */
-    private fun parseMulticodecPrefixedKey(prefixedKey: ByteArray): Pair<String, ByteArray>? {
-        if (prefixedKey.size < 2) return null
+    private fun encodeMultibase(bytes: ByteArray): String = "z${DidMethodUtils.encodeBase58(bytes)}"
 
-        val prefixByte1 = prefixedKey[0].toInt() and 0xFF
-        val prefixByte2 = prefixedKey[1].toInt() and 0xFF
-
-        val algorithm = when {
-            prefixByte1 == 0xed && prefixByte2 == 0x01 -> "ED25519"
-            prefixByte1 == 0xe7 && prefixByte2 == 0x01 -> "SECP256K1"
-            prefixByte1 == 0x80 && prefixByte2 == 0x24 -> "P-256"
-            prefixByte1 == 0x81 && prefixByte2 == 0x24 -> "P-384"
-            prefixByte1 == 0x82 && prefixByte2 == 0x24 -> "P-521"
-            else -> return null
-        }
-
-        val publicKeyBytes = prefixedKey.sliceArray(2 until prefixedKey.size)
-        return algorithm to publicKeyBytes
-    }
-
-    /**
-     * Encodes bytes as multibase (base58btc with 'z' prefix).
-     */
-    private fun encodeMultibase(bytes: ByteArray): String {
-        val base58 = encodeBase58(bytes)
-        return "z$base58" // 'z' prefix indicates base58btc
-    }
-
-    /**
-     * Decodes multibase-encoded string to bytes.
-     */
     private fun decodeMultibase(encoded: String): ByteArray {
-        if (encoded.isEmpty()) {
-            throw IllegalArgumentException("Empty multibase string")
-        }
-
-        val prefix = encoded[0]
-        val data = encoded.substring(1)
-
-        return when (prefix) {
-            'z' -> decodeBase58(data) // base58btc
+        require(encoded.isNotEmpty()) { "Empty multibase string" }
+        return when (val prefix = encoded[0]) {
+            'z' -> DidMethodUtils.decodeBase58(encoded.substring(1))
             else -> throw IllegalArgumentException("Unsupported multibase prefix: $prefix")
         }
-    }
-
-    /**
-     * Encodes bytes as base58.
-     */
-    private fun encodeBase58(bytes: ByteArray): String {
-        val alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
-        var num = BigInteger(1, bytes)
-        val sb = StringBuilder()
-
-        while (num > BigInteger.ZERO) {
-            val remainder = num.mod(BigInteger.valueOf(58))
-            sb.append(alphabet[remainder.toInt()])
-            num = num.divide(BigInteger.valueOf(58))
-        }
-
-        // Add leading zeros
-        for (byte in bytes) {
-            if (byte.toInt() == 0) {
-                sb.append('1')
-            } else {
-                break
-            }
-        }
-
-        return sb.reverse().toString()
-    }
-
-    /**
-     * Decodes base58 string to bytes.
-     */
-    private fun decodeBase58(encoded: String): ByteArray {
-        val alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
-        var num = BigInteger.ZERO
-        var leadingZeros = 0
-
-        // Count leading zeros
-        for (char in encoded) {
-            if (char == '1') {
-                leadingZeros++
-            } else {
-                break
-            }
-        }
-
-        // Decode base58
-        for (char in encoded) {
-            val digit = alphabet.indexOf(char)
-            require(digit >= 0) { "Invalid base58 character: $char" }
-            num = num.multiply(BigInteger.valueOf(58)).add(BigInteger.valueOf(digit.toLong()))
-        }
-
-        // Convert to bytes
-        var bytes = num.toByteArray()
-
-        // Remove leading zero byte if it exists (BigInteger adds one)
-        if (bytes.isNotEmpty() && bytes[0].toInt() == 0) {
-            bytes = bytes.sliceArray(1 until bytes.size)
-        }
-
-        // Add leading zeros back
-        return ByteArray(leadingZeros) { 0 } + bytes
     }
 }
 

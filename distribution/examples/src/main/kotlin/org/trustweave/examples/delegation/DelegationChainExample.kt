@@ -1,13 +1,16 @@
 package org.trustweave.examples.delegation
 
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.trust.types.getOrThrow
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
 import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.credential.model.ProofType
 import org.trustweave.trust.types.*
+import org.trustweave.credential.results.VerificationResult
 import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
@@ -31,8 +34,8 @@ import kotlinx.serialization.json.JsonPrimitive
 fun main() = runBlocking {
     println("=== Delegation Chain Scenario ===\n")
 
-    // Step 1: Configure Trust Layer
-    println("Step 1: Setting up trust layer...")
+    // Step 1: Configure TrustWeave
+    println("Step 1: Setting up TrustWeave...")
     val trustWeave = TrustWeave.build {
         keys {
             provider(IN_MEMORY)
@@ -49,32 +52,32 @@ fun main() = runBlocking {
             defaultProofType(ProofType.Ed25519Signature2020)
         }
     }
-    println("✓ Trust layer configured\n")
+    println("✓ TrustWeave configured\n")
 
     // Step 2: Create DIDs for delegation chain
     println("Step 2: Creating DIDs for delegation chain...")
     val ceoDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }.getOrFail()
+    }.getOrThrowDid()
     println("CEO DID: $ceoDid")
 
     val hrDirectorDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }.getOrFail()
+    }.getOrThrowDid()
     println("HR Director DID: $hrDirectorDid")
 
     val hrManagerDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }.getOrFail()
+    }.getOrThrowDid()
     println("HR Manager DID: $hrManagerDid")
 
     val employeeDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }.getOrFail()
+    }.getOrThrowDid()
     println("Employee DID: $employeeDid\n")
 
     // Step 3: Set up delegation chain
@@ -150,7 +153,7 @@ fun main() = runBlocking {
             issued(Clock.System.now())
         }
         signedBy(hrManagerDid)
-    }.getOrFail()
+    }.getOrThrow()
     println("✓ Credential issued by HR Manager (delegated authority)\n")
 
     // Step 7: Verify credential with delegation check
@@ -162,11 +165,11 @@ fun main() = runBlocking {
     }
 
     println("Credential verification:")
-    println("  Valid: ${verification.valid}")
-    println("  Delegation Valid: ${verification.delegationValid}")
-    println("  Proof Valid: ${verification.proofValid}")
-    println("  Errors: ${if (verification.errors.isEmpty()) "None" else verification.errors.joinToString(", ")}")
-    println("  Warnings: ${if (verification.warnings.isEmpty()) "None" else verification.warnings.joinToString(", ")}")
+    println("  Valid: ${verification.isValid}")
+    println("  Delegation Valid: ${verification.allErrors.none { it.contains("delegation", ignoreCase = true) }}")
+    println("  Proof Valid: ${verification !is VerificationResult.Invalid.InvalidProof}")
+    println("  Errors: ${if (verification.allErrors.isEmpty()) "None" else verification.allErrors.joinToString(", ")}")
+    println("  Warnings: ${if (verification.allWarnings.isEmpty()) "None" else verification.allWarnings.joinToString(", ")}")
     println()
 
     // Step 8: Demonstrate capability invocation

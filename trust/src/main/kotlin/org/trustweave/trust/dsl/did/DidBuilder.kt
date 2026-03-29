@@ -7,7 +7,7 @@ import org.trustweave.did.KeyAlgorithm
 import org.trustweave.did.DidMethod
 import org.trustweave.did.exception.DidException
 import org.trustweave.did.identifiers.Did
-import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.context.DidDslContext
 import org.trustweave.trust.types.DidCreationResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineDispatcher
@@ -27,7 +27,7 @@ import kotlinx.coroutines.withContext
  * ```
  */
 class DidBuilder(
-    private val trustWeave: TrustWeave,
+    private val didContext: DidDslContext,
     /**
      * Coroutine dispatcher for I/O-bound operations.
      * Defaults to [Dispatchers.IO] if not provided.
@@ -89,16 +89,16 @@ class DidBuilder(
     suspend fun build(): DidCreationResult = withContext(ioDispatcher) {
         // Use explicit method, or config's default, or first registered method
         val methodName = method 
-            ?: trustWeave.configuration.defaultDidMethod
+            ?: didContext.configuration.defaultDidMethod
             ?: return@withContext DidCreationResult.Failure.InvalidConfiguration(
                 reason = "DID method is required. Use method(\"key\") or configure a default in did { method(\"key\") { ... } }"
             )
 
-        val didMethod = trustWeave.getDidMethod(methodName)
+        val didMethod = didContext.getDidMethod(methodName)
             ?: run {
                 // Get available methods from registry
                 val availableMethods = try {
-                    trustWeave.getDidRegistry().getAllMethodNames()
+                    didContext.getDidRegistry().getAllMethodNames()
                 } catch (e: Exception) {
                     emptyList()
                 }
@@ -142,8 +142,3 @@ class DidBuilder(
         }
     }
 }
-
-// Note: TrustWeave.createDid() is now a member function in TrustWeave class.
-// This extension function has been removed to avoid duplication.
-// Use trustWeave.createDid { ... } directly.
-

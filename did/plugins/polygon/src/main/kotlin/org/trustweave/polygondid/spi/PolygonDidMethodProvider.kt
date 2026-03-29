@@ -3,47 +3,25 @@ package org.trustweave.polygondid.spi
 import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.DidMethod
-import org.trustweave.did.spi.DidMethodProvider
+import org.trustweave.did.base.AbstractDidMethodProvider
 import org.trustweave.polygondid.PolygonDidConfig
 import org.trustweave.polygondid.PolygonDidMethod
-import org.trustweave.kms.KeyManagementService
-import java.util.ServiceLoader
 
 /**
  * SPI provider for did:polygon method.
  *
  * Automatically discovers did:polygon method when this module is on the classpath.
  */
-class PolygonDidMethodProvider : DidMethodProvider {
+class PolygonDidMethodProvider : AbstractDidMethodProvider() {
 
     override val name: String = "polygon"
 
     override val supportedMethods: List<String> = listOf("polygon")
 
     override fun create(methodName: String, options: DidCreationOptions): DidMethod? {
-        if (methodName.lowercase() != "polygon") {
-            return null
-        }
-
-        // Get KMS from options or discover via SPI
-        val kms = (options.additionalProperties["kms"] as? KeyManagementService)
-            ?: run {
-                val kmsProviders = ServiceLoader.load(
-                    org.trustweave.kms.spi.KeyManagementServiceProvider::class.java
-                )
-                kmsProviders.firstOrNull()?.create(options.additionalProperties)
-                    ?: throw IllegalStateException(
-                        "No KeyManagementService available. Provide 'kms' in options or ensure a KMS provider is registered."
-                    )
-            }
-
-        // Create configuration from options
+        if (methodName.lowercase() != "polygon") return null
         val config = createConfig(options)
-
-        // Get or create blockchain anchor client
-        val anchorClient = getOrCreateAnchorClient(options, config)
-
-        return PolygonDidMethod(kms, anchorClient, config)
+        return PolygonDidMethod(resolveKms(options), getOrCreateAnchorClient(options, config), config)
     }
 
     /**

@@ -188,14 +188,14 @@ class GodiddyResolver(
         val service = json["service"]?.jsonArray?.mapNotNull { sJson ->
             val sObj = sJson.jsonObject
             val sId = sObj["id"]?.jsonPrimitive?.content
-            val sType = sObj["type"]?.jsonPrimitive?.content
+            val sTypes = org.trustweave.did.model.parseServiceTypesFromJson(sObj["type"])
             val sEndpoint = sObj["serviceEndpoint"]
 
-            if (sId != null && sType != null && sEndpoint != null) {
+            if (sId != null && sTypes != null && sEndpoint != null) {
                 val endpoint = convertJsonElement(sEndpoint) ?: return@mapNotNull null
                 DidService(
                     id = sId,
-                    type = sType,
+                    type = sTypes,
                     serviceEndpoint = endpoint
                 )
             } else null

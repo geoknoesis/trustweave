@@ -1,10 +1,10 @@
 package org.trustweave.trust.dsl
 
+import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
-import org.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -47,7 +47,7 @@ class KeyRotationDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }.getOrFail()
+        }.getOrThrowDid()
 
         // Rotate key
         val updatedDoc = trustWeave.rotateKey {
@@ -72,7 +72,7 @@ class KeyRotationDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }.getOrFail()
+        }.getOrThrowDid()
 
         val updatedDoc = trustWeave.rotateKey {
             did(did.value)
@@ -88,7 +88,7 @@ class KeyRotationDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }.getOrFail()
+        }.getOrThrowDid()
 
         val updatedDoc = trustWeave.rotateKey {
             did(did.value)
@@ -104,7 +104,7 @@ class KeyRotationDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }.getOrFail()
+        }.getOrThrowDid()
 
         assertFailsWith<IllegalStateException> {
             trustWeave.rotateKey {
@@ -120,7 +120,7 @@ class KeyRotationDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }.getOrFail()
+        }.getOrThrowDid()
 
         val updatedDoc = trustWeave.rotateKey {
             did(did.value)
@@ -135,7 +135,7 @@ class KeyRotationDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }.getOrFail()
+        }.getOrThrowDid()
 
         val updatedDoc = trustWeave.rotateKey {
             did(did.value)

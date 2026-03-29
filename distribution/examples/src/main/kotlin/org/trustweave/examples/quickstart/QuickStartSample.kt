@@ -1,8 +1,12 @@
 package org.trustweave.examples.quickstart
 
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.trust.types.getOrThrow
 import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.types.VerificationResult
+import org.trustweave.credential.results.VerificationResult
 import org.trustweave.trust.types.*
+import org.trustweave.trust.dsl.credential.presentationResult
 import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
@@ -11,7 +15,6 @@ import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.ProofType
 import org.trustweave.core.util.DigestUtils
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import org.trustweave.testkit.getOrFail
 import org.trustweave.did.identifiers.extractKeyId
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -45,7 +48,7 @@ fun main(): Unit = runBlocking {
     val digest = DigestUtils.sha256DigestMultibase(credentialSubjectForDigest)
     println("Canonical credential-subject digest: $digest")
 
-    val issuerDid = trustweave.createDid().getOrFail()
+    val issuerDid = trustweave.createDid().getOrThrowDid()
     println("Issuer DID: ${issuerDid.value}")
 
     val holderDid = org.trustweave.did.identifiers.Did("did:key:holder-placeholder")
@@ -62,7 +65,7 @@ fun main(): Unit = runBlocking {
             issued(kotlinx.datetime.Clock.System.now())
         }
         signedBy(issuerDid)
-    }.getOrFail()
+    }.getOrThrow()
     println("Issued credential id: ${credential.id}")
 
     val verification = trustweave.verify {
@@ -78,6 +81,15 @@ fun main(): Unit = runBlocking {
         is VerificationResult.Invalid -> {
             println("Verification failed: ${verification.errors.joinToString()}")
         }
+    }
+
+    when (val pr = trustweave.presentationResult {
+        holder(holderDid)
+        credentials(credential)
+        challenge("quickstart-sample")
+    }) {
+        is PresentationResult.Success -> println("Presentation id: ${pr.presentation.id}")
+        is PresentationResult.Failure -> println("Presentation: ${pr.errors.joinToString()}")
     }
 
     val anchorRegistry = BlockchainAnchorRegistry().apply {

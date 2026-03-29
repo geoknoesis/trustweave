@@ -6,6 +6,7 @@ import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.base.AbstractDidMethod
+import org.trustweave.did.base.DidMethodUtils
 import org.trustweave.kms.KeyManagementService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -51,20 +52,24 @@ class ThreeBoxDidMethod(
     }
 
     override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
-        validateDidFormat(did)
-        
-        val didString = did.value
+        try {
+            validateDidFormat(did)
 
-        // TODO: Implement 3Box/Identity DID resolution
-        // 1. Extract IPFS hash from DID
-        // 2. Retrieve document from IPFS
-        // 3. Parse and return DID document
+            // TODO: Implement 3Box/Identity DID resolution
+            // 1. Extract IPFS hash from DID
+            // 2. Retrieve document from IPFS
+            // 3. Parse and return DID document
 
-        throw TrustWeaveException.Unknown(
-            code = "THREEBOX_NOT_IMPLEMENTED",
-            message = "3Box/Identity DID resolution requires IPFS integration. " +
-            "Structure is ready for implementation."
-        )
+            throw TrustWeaveException.Unknown(
+                code = "THREEBOX_NOT_IMPLEMENTED",
+                message = "3Box/Identity DID resolution requires IPFS integration. " +
+                "Structure is ready for implementation."
+            )
+        } catch (e: TrustWeaveException) {
+            DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
+        } catch (e: Exception) {
+            DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
+        }
     }
 }
 

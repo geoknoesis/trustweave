@@ -8,15 +8,17 @@ The `trustweave-did` module provides Decentralized Identifier (DID) and DID Docu
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:did-did-core:0.6.0")
+    implementation("org.trustweave:common:0.6.0")
+    implementation("org.trustweave:kms-kms-core:0.6.0")
 }
 ```
 
 **Result:** Gradle exposes the DID registry, DID method interfaces, DID Document models, DID resolution, and DID registration interfaces so you can create, resolve, update, and deactivate DIDs using any supported DID method.
 
 ## Overview
+
+**Standards note:** TrustWeave is documented around **W3C DID Core 1.0**. For **DID 1.1** (and gaps vs full conformance), see **[DID Core 1.0 vs 1.1 and TrustWeave gaps](../reference/did-core-1-1-compliance-and-gaps.md)**.
 
 The `trustweave-did` core module provides:
 
@@ -128,6 +130,9 @@ registry["new"] = NewDidMethod()  // Assignment
 
 ```kotlin
 import org.trustweave.did.identifiers.Did
+import org.trustweave.did.dsl.resolveOrDefault
+import org.trustweave.did.dsl.resolveOrNull
+import org.trustweave.did.dsl.resolveOrThrow
 import org.trustweave.did.resolver.RegistryBasedResolver
 import org.trustweave.did.resolver.DefaultUniversalResolver
 
@@ -143,8 +148,8 @@ val universalResolver = DefaultUniversalResolver(
 )
 val result2 = universalResolver.resolveDid(did.value)
 
-// Fluent API with extensions
-val document = did.resolveWith(resolver).getOrThrow()
+// Fluent API with extensions (did-core)
+val document = did.resolveOrThrow(resolver)
 val docOrNull = did.resolveOrNull(resolver)
 val docOrDefault = did.resolveOrDefault(resolver, defaultDocument)
 ```
@@ -189,9 +194,12 @@ The module includes W3C-compliant models for:
 
 ### JSON-Based DID Method Registration
 
-The module supports loading DID methods from JSON configuration files that follow the [DID Method Registry](https://identity.foundation/did-registration/) format:
+With the **`trustweave-did-registrar`** artifact on the classpath, you can load DID methods from JSON that follows the [DID Method Registry](https://identity.foundation/did-registration/) format:
 
 ```kotlin
+import org.trustweave.did.registrar.method.JsonDidMethodLoader
+import java.nio.file.Paths
+
 val loader = JsonDidMethodLoader()
 val method = loader.loadFromFile(Paths.get("did-methods/web.json"))
 registry.register(method)
@@ -255,31 +263,23 @@ graph LR
 ### Basic Usage
 
 ```kotlin
-import org.trustweave.TrustWeave
-import org.trustweave.did.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.runBlocking
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
-    // Create TrustWeave instance with DID methods
-    val trustweave = TrustWeave.create {
-        didMethods {
-            + DidKeyMethod(kms)  // Register did:key method
-        }
-    }
+    val trustWeave = TrustWeave.quickStart()
 
-    // Create DID with options
-    val didDoc = trustweave.dids.create("key") {
-        algorithm = KeyAlgorithm.Ed25519
-    }
+    val did = trustWeave.createDid { method(KEY); algorithm(ED25519) }.getOrThrowDid()
+    println("Created DID: ${did.value}")
 
-    println("Created DID: ${didDoc.id}")
-
-    // Resolve DID
-    val resolution = trustweave.dids.resolve(didDoc.id)
-    if (resolution.document != null) {
-        println("Resolved DID: ${resolution.document.id}")
-    } else {
-        println("DID not found: ${resolution.resolutionMetadata["error"]}")
+    when (val resolution = trustWeave.resolveDid(did)) {
+        is DidResolutionResult.Success -> println("Resolved DID: ${resolution.document.id}")
+        else -> println("DID not found: $resolution")
     }
 }
 ```
@@ -294,6 +294,10 @@ The module provides a fluent, idiomatic Kotlin API with builder DSLs, extension 
 
 ```kotlin
 import org.trustweave.did.identifiers.Did
+import org.trustweave.did.dsl.resolveOrNull
+import org.trustweave.did.dsl.resolveOrThrow
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
 import org.trustweave.did.resolver.universalResolver
 import org.trustweave.did.registry.didMethodRegistry
 import org.trustweave.did.resolver.RegistryBasedResolver
@@ -323,21 +327,16 @@ if ("key" in registry) {      // `in` operator
 }
 registry["new"] = NewDidMethod()  // Assignment
 
-// Fluent resolution with extensions
-val document = Did("did:key:123")
-    .resolveWith(resolver)
-    .getOrThrow()
+// Resolve to document or throw / null (did-core extensions)
+val document = Did("did:key:123").resolveOrThrow(resolver)
 
-// Or with safe access
-val doc = Did("did:key:123")
-    .resolveWith(resolver)
-    .getOrNull()
+val doc = Did("did:key:123").resolveOrNull(resolver)
 
-// Functional style with callbacks
-Did("did:key:123")
-    .resolveWith(resolver)
-    .onSuccess { println("Resolved: ${it.id}") }
-    .onFailure { println("Failed: ${it.reason}") }
+// Inspect the sealed result (extensions: errorMessage, isSuccess, …)
+when (val res = Did("did:key:123").resolveWith(resolver)) {
+    is DidResolutionResult.Success -> println("Resolved: ${res.document.id}")
+    is DidResolutionResult.Failure -> println("Failed: ${res.errorMessage}")
+}
 ```
 
 **What this does:** Provides a modern, fluent API that leverages Kotlin's language features for better developer experience.

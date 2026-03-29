@@ -23,10 +23,10 @@ Add the did:peer module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave.did:peer:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("org.trustweave.did:base:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:did-plugins-peer:0.6.0")
+    implementation("org.trustweave:did-did-core:0.6.0")
+    implementation("org.trustweave:did-plugins-base:0.6.0")
+    implementation("org.trustweave:common:0.6.0")
 }
 ```
 
@@ -207,25 +207,35 @@ val config = PeerDidConfig.builder()
 ## Integration with TrustWeave
 
 ```kotlin
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.did.KeyAlgorithm
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.kms.InMemoryKeyManagementService
 import org.trustweave.peerdid.*
 
 val config = PeerDidConfig.numalgo2()
+val kms = InMemoryKeyManagementService()
 
-val TrustWeave = TrustWeave.create {
-    kms = InMemoryKeyManagementService()
-
-    didMethods {
-        + PeerDidMethod(kms!!, config)
+val trustWeave = TrustWeave.build {
+    customKms(kms)
+    did {
+        method("peer") {
+            algorithm("Ed25519")
+            option("peerConfig", config)
+        }
     }
 }
 
-// Use did:peer
-val did = TrustWeave.dids.create("peer") {
-    algorithm = KeyAlgorithm.ED25519
-}
+val did = trustWeave.createDid {
+    method("peer")
+    algorithm(KeyAlgorithm.ED25519)
+}.getOrThrowDid()
 
-val resolved = TrustWeave.dids.resolve(did.id)
+when (val resolved = trustWeave.resolveDid(did)) {
+    is DidResolutionResult.Success -> println("Resolved: ${resolved.document.id}")
+    else -> println("Resolve failed: $resolved")
+}
 ```
 
 ## Error Handling
@@ -283,7 +293,7 @@ val result = method.resolveDid(document.id)
 
 ## References
 
-- [Peer DID Method Specification](https://identity.foundation/peer-did-method-spec/)
-- [DID Core Specification](https://www.w3.org/TR/did-core/)
-- [TrustWeave Core API](../api-reference/core-api.md)
+- Peer DID Method Specification](https://identity.foundation/peer-did-method-spec/)
+- DID Core Specification](https://www.w3.org/TR/did-core/)
+- TrustWeave Core API](../api-reference/core-api.md)
 

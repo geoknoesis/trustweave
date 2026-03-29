@@ -13,6 +13,10 @@ If you want to create custom plugins for TrustWeave (DID methods, blockchain cli
 
 - **[Creating Plugins](creating-plugins.md)** - Complete guide for implementing all plugin interfaces
 
+## Error and result handling
+
+- **[ERROR_HANDLING.md](ERROR_HANDLING.md)** — When to use sealed results vs exceptions, DID/KMS conventions, and `credential-api` package layout (`credential.transform`).
+
 ## Filing Issues
 
 - **Purpose:** Capture bugs, outdated snippets, or missing context.

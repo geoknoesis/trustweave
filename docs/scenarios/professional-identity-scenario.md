@@ -12,12 +12,12 @@ This guide demonstrates how professionals can build a comprehensive digital iden
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created a professional identity wallet
-- ✅ Stored multiple types of credentials (education, work, certifications)
-- ✅ Organized credentials with collections and tags
-- ✅ Created targeted presentations for different scenarios
-- ✅ Implemented selective disclosure for privacy
-- ✅ Built a credential verification system
+- Created a professional identity wallet
+- Stored multiple types of credentials (education, work, certifications)
+- Organized credentials with collections and tags
+- Created targeted presentations for different scenarios
+- Implemented selective disclosure for privacy
+- Built a credential verification system
 
 ## Big Picture & Significance
 
@@ -138,10 +138,10 @@ Add TrustWeave dependencies to your `build.gradle.kts`. These modules cover DID 
 dependencies {
     // Core TrustWeave modules
     // TrustWeave distribution (includes all modules)
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Test kit for in-memory implementations
-    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:0.6.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -161,17 +161,20 @@ Here’s the full professional identity wallet flow. Execute it once to see the 
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
-import org.trustweave.trust.types.ProofType
+import org.trustweave.credential.model.ProofType
 import org.trustweave.trust.dsl.credential.credential
 import org.trustweave.testkit.services.TestkitWalletFactory
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.core.identifiers.KeyId
 
 fun main() = runBlocking {
     println("=== Professional Identity Wallet Scenario ===\n")
 
-    // Step 1: Configure Trust Layer
+    // Step 1: Configure TrustWeave
     println("Step 1: Setting up services...")
     val kms = InMemoryKeyManagementService()
     val kmsRef = kms
@@ -184,7 +187,7 @@ fun main() = runBlocking {
         keys {
             custom(kmsRef)
             signer { data, keyId ->
-                kmsRef.sign(org.trustweave.core.types.KeyId(keyId), data)
+                kmsRef.sign(KeyId(keyId), data)
             }
         }
         did {
@@ -198,8 +201,6 @@ fun main() = runBlocking {
     }
 
     // Create professional DID using DSL
-    import org.trustweave.trust.types.getOrThrowDid
-    import org.trustweave.trust.types.getOrThrow
     
     val professionalDid = trustWeave.createDid {
         method(DidMethods.KEY)
@@ -386,10 +387,10 @@ fun main() = runBlocking {
             // GPA, salary, and other sensitive info NOT disclosed
         ),
         holderDid = professionalDid.value,
-        options = PresentationOptions(
-            holderDid = professionalDid.value,
-            proofType = "Ed25519Signature2020",
-            challenge = "job-application-${Instant.now().toEpochMilli()}"
+        options = mapOf(
+            "holderDid" to professionalDid.value,
+            "proofType" to "Ed25519Signature2020",
+            "challenge" to "job-application-${Instant.now().toEpochMilli()}"
         )
     )
     println("Job application presentation created with ${jobApplicationPresentation.verifiableCredential.size} credentials")
@@ -398,9 +399,9 @@ fun main() = runBlocking {
     val profilePresentation = wallet.createPresentation(
         credentialIds = listOf(masterId, job2Id, awsCertId, k8sCertId),
         holderDid = professionalDid.value,
-        options = PresentationOptions(
-            holderDid = professionalDid.value,
-            proofType = "Ed25519Signature2020"
+        options = mapOf(
+            "holderDid" to professionalDid.value,
+            "proofType" to "Ed25519Signature2020"
         )
     )
     println("Professional profile presentation created")
@@ -601,7 +602,7 @@ val presentation = wallet.createSelectiveDisclosure(
         // GPA, salary, etc. NOT disclosed
     ),
     holderDid = holderDid,
-    options = PresentationOptions(...)
+    options = emptyMap<String, Any?>()
 )
 ```
 
@@ -652,9 +653,9 @@ fun createJobApplicationPresentation(
             "certification.name"
         ),
         holderDid = wallet.holderDid,
-        options = PresentationOptions(
-            holderDid = wallet.holderDid,
-            challenge = "job-application-${UUID.randomUUID()}"
+        options = mapOf(
+            "holderDid" to wallet.holderDid,
+            "challenge" to "job-application-${UUID.randomUUID()}"
         )
     )
 }
@@ -674,9 +675,9 @@ fun createProfessionalProfile(wallet: Wallet): VerifiablePresentation {
     return wallet.createPresentation(
         credentialIds = publicCreds.mapNotNull { it.id },
         holderDid = wallet.holderDid,
-        options = PresentationOptions(
-            holderDid = wallet.holderDid,
-            proofType = "Ed25519Signature2020"
+        options = mapOf(
+            "holderDid" to wallet.holderDid,
+            "proofType" to "Ed25519Signature2020"
         )
     )
 }
@@ -693,9 +694,9 @@ fun createDetailedPresentation(wallet: Wallet): VerifiablePresentation {
     return wallet.createPresentation(
         credentialIds = allCreds.mapNotNull { it.id },
         holderDid = wallet.holderDid,
-        options = PresentationOptions(
-            holderDid = wallet.holderDid,
-            challenge = "contract-negotiation-${UUID.randomUUID()}"
+        options = mapOf(
+            "holderDid" to wallet.holderDid,
+            "challenge" to "contract-negotiation-${UUID.randomUUID()}"
         )
     )
 }

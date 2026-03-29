@@ -376,6 +376,18 @@ Before submitting documentation changes:
 ./gradlew :distribution:examples:runQuickStartSample
 ```
 
+For Kotlin snippet conventions and ripgrep audit patterns, see [Code Example Style Guide](docs/contributing/code-example-style-guide.md). Optional regression check (requires [ripgrep](https://github.com/BurntSushi/ripgrep) on `PATH`):
+
+```powershell
+pwsh -File scripts/check-doc-snippets.ps1
+```
+
+If `pwsh` is not installed (Windows PowerShell 5.x only), use:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-doc-snippets.ps1
+```
+
 For detailed guidelines, see the [Contributing to Documentation](docs/contributing/README.md).
 
 ## Reporting Issues

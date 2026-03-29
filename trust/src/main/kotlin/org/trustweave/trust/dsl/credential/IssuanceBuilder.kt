@@ -31,11 +31,13 @@ import kotlinx.coroutines.withContext
  *
  * **Example Usage**:
  * ```kotlin
- * val issuedCredential = issuer.issue {
+ * import org.trustweave.did.identifiers.Did
+ * val issuerDid = Did("did:key:university")
+ * val issuedCredential = trustWeave.issue {
  *     credential {
  *         id("https://example.edu/credentials/123")
  *         type("DegreeCredential")
- *         issuer("did:key:university")
+ *         issuer(issuerDid)
  *         subject {
  *             id("did:key:student")
  *             "degree" {
@@ -46,9 +48,9 @@ import kotlinx.coroutines.withContext
  *         issued(Clock.System.now())
  *         withRevocation() // Auto-creates status list if needed
  *     }
- *     signedBy("did:key:university", "key-1")
+ *     signedBy(issuerDid, "key-1")
  *     withProof(ProofType.Ed25519Signature2020)
- * }
+ * }.getOrThrow()
  * ```
  */
 class IssuanceBuilder(
@@ -98,7 +100,7 @@ class IssuanceBuilder(
      *
      * **Example:**
      * ```kotlin
-     * val issuerDid = trustWeave.createDid().getOrFail()
+     * val issuerDid = trustWeave.createDid { }.getOrThrowDid()
      * val credential = trustWeave.issue {
      *     credential { ... }
      *     signedBy(issuerDid)  // Key ID auto-extracted during build
@@ -120,7 +122,7 @@ class IssuanceBuilder(
      *
      * **Example:**
      * ```kotlin
-     * val issuerDid = trustWeave.createDid().getOrFail()
+     * val issuerDid = trustWeave.createDid { }.getOrThrowDid()
      * val credential = trustWeave.issue {
      *     credential { ... }
      *     signedBy(issuerDid, "key-1")  // Explicit key ID
@@ -284,8 +286,3 @@ class IssuanceBuilder(
         credentialService.issue(request)
     }
 }
-
-// Note: TrustWeave.issue() is now a member function in TrustWeave class.
-// This extension function has been removed to avoid duplication.
-// Use trustWeave.issue { ... } directly.
-

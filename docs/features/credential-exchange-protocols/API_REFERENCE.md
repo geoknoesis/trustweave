@@ -580,8 +580,7 @@ suspend fun offerCredential(
 ```kotlin
 val exchangeService = ExchangeServices.createExchangeService(
     protocolRegistry = registry,
-    credentialService = credentialService,
-    didResolver = didResolver
+    credentialService = credentialService
 )
 
 val offerResult = exchangeService.offer(

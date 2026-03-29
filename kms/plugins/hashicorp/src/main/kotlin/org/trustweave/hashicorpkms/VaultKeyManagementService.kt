@@ -11,6 +11,7 @@ import org.trustweave.kms.results.GenerateKeyResult
 import org.trustweave.kms.results.GetPublicKeyResult
 import org.trustweave.kms.results.SignResult
 import org.trustweave.kms.KmsOptionKeys
+import org.trustweave.hashicorpkms.HashiCorpKmsOptionKeys
 import org.trustweave.kms.util.KmsErrorHandler
 import org.trustweave.kms.util.KmsInputValidator
 import kotlinx.coroutines.Dispatchers
@@ -105,7 +106,7 @@ class VaultKeyManagementService(
             (options[KmsOptionKeys.EXPORTABLE] as? Boolean)?.let {
                 createParams["exportable"] = it
             }
-            (options[KmsOptionKeys.ALLOW_PLAINTEXT_BACKUP] as? Boolean)?.let {
+            (options[HashiCorpKmsOptionKeys.ALLOW_PLAINTEXT_BACKUP] as? Boolean)?.let {
                 createParams["allow_plaintext_backup"] = it
             }
 

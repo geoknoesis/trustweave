@@ -23,10 +23,9 @@ Add the Algorand module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave.chains:algorand:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-json:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:anchors-plugins-algorand:0.6.0")
+    implementation("org.trustweave:anchors-anchor-core:0.6.0")
+    implementation("org.trustweave:common:0.6.0")
 
     // Algorand SDK
     implementation("com.algorand:algosdk:2.7.0")
@@ -157,44 +156,38 @@ result.fold(
 ### Using with TrustWeave Facade
 
 ```kotlin
-import org.trustweave.TrustWeave
-import org.trustweave.algorand.*
+import org.trustweave.trust.TrustWeave
 import org.trustweave.anchor.options.AlgorandOptions
+import org.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.coroutines.runBlocking
 
 runBlocking {
-    // Setup Algorand client
     val options = AlgorandOptions(
         algodUrl = "https://testnet-api.algonode.cloud",
         privateKey = "..."
     )
-    val client = AlgorandBlockchainAnchorClient("algorand:testnet", options)
 
-    // Register with TrustWeave
-    val TrustWeave = TrustWeave.create()
-    // Register during TrustWeave.create { }
-    val TrustWeave = TrustWeave.create {
-        blockchains {
-            "algorand:testnet" to client
+    val trustWeave = TrustWeave.build {
+        anchor {
+            chain("algorand:testnet") {
+                provider("algorand")
+                options {
+                    for ((k, v) in options.toMap()) {
+                        if (v != null) k.to(v)
+                    }
+                }
+            }
         }
     }
 
-    // Anchor credential
-    val credential = /* your credential */
+    val credential: VerifiableCredential = /* your credential */
     val anchorResult = trustWeave.blockchains.anchor(
         data = credential,
         serializer = VerifiableCredential.serializer(),
         chainId = "algorand:testnet"
     )
 
-    anchorResult.fold(
-        onSuccess = { result ->
-            println("Anchored: ${result.anchorRef.transactionHash}")
-        },
-        onFailure = { error ->
-            println("Error: ${error.message}")
-        }
-    )
+    println("Anchored: ${anchorResult.ref.txHash}")
 }
 ```
 
@@ -211,10 +204,10 @@ val options = AlgorandOptions(
 ```
 
 **Benefits:**
-- ✅ Compile-time validation of required fields
-- ✅ Type-safe configuration
-- ✅ IDE autocomplete support
-- ✅ Clear error messages for missing fields
+- Compile-time validation of required fields
+- Type-safe configuration
+- IDE autocomplete support
+- Clear error messages for missing fields
 
 ## Error Handling
 
@@ -281,8 +274,8 @@ Algorand has very low transaction fees (typically 0.001 ALGO). The adapter autom
 
 ## References
 
-- [Algorand Documentation](https://developer.algorand.org/docs/)
-- [Algorand SDK](https://github.com/algorand/java-algorand-sdk)
-- [TrustWeave Anchor Module](../modules/trustweave-anchor.md)
-- [Blockchain Anchoring Guide](../core-concepts/blockchain-anchoring.md)
+- Algorand Documentation](https://developer.algorand.org/docs/)
+- Algorand SDK](https://github.com/algorand/java-algorand-sdk)
+- TrustWeave Anchor Module](../modules/trustweave-anchor.md)
+- Blockchain Anchoring Guide](../core-concepts/blockchain-anchoring.md)
 

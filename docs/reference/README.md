@@ -47,6 +47,10 @@ Reference materials are designed for **quick lookup** rather than learning. Use 
 - **[Version Compatibility Matrix](version-compatibility.md)** - Version requirements and compatibility information
 - **[Deprecation Policy](deprecation-policy.md)** - Deprecation lifecycle and policy
 
+### Standards compliance
+
+- **[DID Core 1.0 vs 1.1 and TrustWeave gaps](did-core-1-1-compliance-and-gaps.md)** - Spec differences (DID 1.1 vs 1.0, CID 1.0, DID Resolution) and what is missing for full conformance
+
 ## When to Use Reference vs Concepts
 
 **Use Reference when you:**
@@ -77,11 +81,11 @@ Reference materials are designed for **quick lookup** rather than learning. Use 
 ## Next Steps
 
 **Looking for specific information?**
-- [Glossary](../GLOSSARY.md) - Find term definitions
-- [FAQ](../faq.md) - Find answers to common questions
-- [Core Modules](../modules/core-modules.md) - Find module information
+- Glossary](../GLOSSARY.md) - Find term definitions
+- FAQ](../faq.md) - Find answers to common questions
+- Core Modules](../modules/core-modules.md) - Find module information
 
 **Want to learn more?**
-- [Concepts](../concepts/README.md) - Understand the fundamentals
-- [How-To Guides](../how-to/README.md) - Complete practical tasks
+- Concepts](../concepts/README.md) - Understand the fundamentals
+- How-To Guides](../how-to/README.md) - Complete practical tasks
 

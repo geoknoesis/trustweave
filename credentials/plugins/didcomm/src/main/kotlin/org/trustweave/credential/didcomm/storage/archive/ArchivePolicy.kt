@@ -5,6 +5,7 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Defines when messages should be archived.
@@ -56,15 +57,14 @@ class SizeBasedArchivePolicy(
     private val maxSizeBytes: Long = 1_000_000_000L // 1GB
 ) : ArchivePolicy {
 
-    private var currentSize: Long = 0
+    private val currentSize = AtomicLong(0L)
 
     override suspend fun shouldArchive(message: DidCommMessage): Boolean {
-        // This is a simplified check - in production, track actual storage size
-        return currentSize > maxSizeBytes
+        return currentSize.get() > maxSizeBytes
     }
 
     fun updateSize(size: Long) {
-        currentSize = size
+        currentSize.set(size)
     }
 }
 

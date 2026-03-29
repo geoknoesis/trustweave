@@ -7,6 +7,7 @@ import org.trustweave.kms.results.GetPublicKeyResult
 import org.didcommx.didcomm.secret.Secret
 import org.didcommx.didcomm.secret.SecretResolver
 import kotlinx.coroutines.runBlocking
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Custom SecretResolver that bridges KMS with didcomm-java library.
@@ -31,7 +32,7 @@ class KmsSecretResolver(
     private val localKeyStore: LocalKeyStore? = null // Optional local key store
 ) {
 
-    private val keyCache = mutableMapOf<String, Secret>()
+    private val keyCache = ConcurrentHashMap<String, Secret>()
 
     /**
      * Resolves a secret by key ID.

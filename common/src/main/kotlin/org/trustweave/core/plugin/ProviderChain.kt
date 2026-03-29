@@ -1,5 +1,6 @@
 package org.trustweave.core.plugin
 
+import org.trustweave.core.exception.ProviderException
 import org.trustweave.core.exception.TrustWeaveException
 
 /**
@@ -39,12 +40,12 @@ internal class ProviderChain<T>(
      * Execute an operation across the provider chain.
      *
      * Tries each provider in order until one succeeds.
-     * If all providers fail, throws a TrustWeaveException.AllProvidersFailed
+     * If all providers fail, throws a ProviderException.AllFailed
      * with details about all attempted providers and their errors.
      *
      * @param operation Operation to execute on each provider
      * @return Result from the first successful provider
-     * @throws TrustWeaveException.AllProvidersFailed if all providers fail
+     * @throws ProviderException.AllFailed if all providers fail
      * @throws TrustWeaveException.InvalidState if no providers are selected
      */
     suspend fun <R> execute(operation: suspend (T) -> R): R {
@@ -91,7 +92,7 @@ internal class ProviderChain<T>(
             )
         }
 
-        throw TrustWeaveException.AllProvidersFailed(
+        throw ProviderException.AllFailed(
             attemptedProviders = attemptedProviders,
             providerErrors = providerErrors,
             lastException = lastException
@@ -163,7 +164,7 @@ internal inline fun <reified T> createProviderChain(
     // Error handling: Fail fast if no providers found at all.
     // This prevents creating an invalid chain that would fail on first use.
     if (found.isEmpty()) {
-        throw TrustWeaveException.NoProvidersFound(
+        throw ProviderException.NoneFound(
             pluginIds = pluginIds,
             availablePlugins = registry.getAllPlugins().map { it.id }
         )
@@ -176,7 +177,7 @@ internal inline fun <reified T> createProviderChain(
     val missingIds = pluginIds.filterNot { it in foundIdsSet }
     
     if (missingIds.isNotEmpty()) {
-        throw TrustWeaveException.PartialProvidersFound(
+        throw ProviderException.PartiallyFound(
             requestedIds = pluginIds,
             foundIds = found.map { it.first },
             missingIds = missingIds

@@ -239,7 +239,7 @@ java -version  # Should show 21.x.x
 
 ## Next Steps
 
-- [Quick Start](quick-start.md) - Create your first application
-- [Your First Application](your-first-application.md) - Build a complete example
-- [Contributing](../contributing/README.md) - Contribute to TrustWeave
+- Quick Start](quick-start.md) - Create your first application
+- Your First Application](your-first-application.md) - Build a complete example
+- Contributing](../contributing/README.md) - Contribute to TrustWeave
 

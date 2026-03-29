@@ -5,7 +5,7 @@ import org.trustweave.wallet.Wallet
 import org.trustweave.trust.dsl.wallet.OrganizationResult
 import org.trustweave.trust.dsl.did.DidBuilder
 import org.trustweave.did.identifiers.Did
-import org.trustweave.trust.types.VerificationResult
+import org.trustweave.credential.results.VerificationResult
 import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.did.model.DidDocument
@@ -13,7 +13,6 @@ import org.trustweave.credential.schema.SchemaRegistrationResult
 import org.trustweave.trust.dsl.credential.*
 import org.trustweave.trust.dsl.did.DidDocumentBuilder
 import org.trustweave.trust.TrustWeave
-import kotlinx.serialization.json.JsonObject
 
 /**
  * Stored Credential type alias.
@@ -40,17 +39,12 @@ suspend fun VerifiableCredential.storeIn(wallet: Wallet): StoredCredential {
  *
  * **Example Usage**:
  * ```kotlin
- * // Complete workflow in one chain
- * val result = trustWeave
- *     .createDid { method("key") }
- *     .let { did ->
- *         trustWeave.issue {
- *             credential { issuer(did); subject { id(did) } }
- *             signedBy(issuerDid = did, keyId = "key-1")
- *         }
- *     }
- *     .storeIn(wallet)
- *     .verify(trustWeave)
+ * val did = trustWeave.createDid { method("key") }.getOrThrowDid()
+ * val issued = trustWeave.issue {
+ *     credential { issuer(did); subject { id(did) } }
+ *     signedBy(issuerDid = did, keyId = "key-1")
+ * }
+ * val result = issued.storeIn(wallet).verify(trustWeave)
  * ```
  */
 
@@ -196,17 +190,3 @@ data class WorkflowResult(
     val organizationResult: OrganizationResult? = null,
     val verificationResult: VerificationResult
 )
-
-// Note: These extension functions have been removed.
-// Use TrustWeave methods directly instead of TrustWeaveConfig extensions.
-// For example: trustWeave.createDid { ... } instead of config.createDid { ... }
-
-// ========== Credential Format Transformation ==========
-// 
-// Use extension functions directly on VerifiableCredential:
-// - credential.toJwt()
-// - credential.toJsonLd()
-// - credential.toCbor()
-// 
-// These are provided by credential-api's CredentialTransformerExtensions.
-

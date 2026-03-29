@@ -8,46 +8,27 @@ A **neutral, reusable trust and identity core** library for Kotlin, designed to 
 
 ```kotlin
 import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.types.*
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.credential.results.VerificationResult
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    // Build and configure TrustWeave
-    val trustWeave = TrustWeave.build {
-        keys {
-            provider("inMemory")
-            algorithm("Ed25519")
-        }
-        did {
-            method("key") {
-                algorithm("Ed25519")
-            }
-        }
-    }
+    val trustWeave = TrustWeave.quickStart()  // In-memory, did:key, ready to go
 
-    // Create a DID
-    val issuerDid = trustWeave.createDid {
-        method("key")
-    }.getOrThrowDid()
+    val issuerDid = trustWeave.createDid().getOrThrowDid()
 
-    // Issue a credential
     val credential = trustWeave.issue {
         credential {
             type("PersonCredential")
             issuer(issuerDid)
-            subject {
-                id("did:key:subject")
-                "name" to "Alice"
-            }
+            subject("did:key:subject") { "name" to "Alice" }
         }
-        signedBy(issuerDid = issuerDid, keyId = "key-1")
+        signedBy(issuerDid)  // Key ID auto-extracted
     }.getOrThrow()
 
-    // Verify the credential
-    val verification = trustWeave.verify {
-        credential(credential)
-    }
-    
+    val verification = trustWeave.verify(credential)  // Simple overload
+
     when (verification) {
         is VerificationResult.Valid -> println("Credential valid: ✓")
         is VerificationResult.Invalid -> println("Credential invalid: ${verification.errors.joinToString()}")
@@ -59,20 +40,24 @@ fun main() = runBlocking {
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
     // For testing, use testkit module
-    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:0.6.0")
 }
 ```
 
 ## Documentation
 
-- **[Getting Started](GETTING_STARTED.md)** - Installation, examples, and tutorials
-- **[API Guide](API_GUIDE.md)** - Which API to use and how
-- **[Architecture & Modules](ARCHITECTURE.md)** - Module details and design principles
-- **[Available Plugins](PLUGINS.md)** - DID methods, blockchain anchors, and KMS plugins
-- **[Third-Party Integrations](INTEGRATIONS.md)** - walt.id and godiddy integrations
-- **[Development Guide](DEVELOPMENT.md)** - Building, testing, and contributing
+- **[Getting Started](docs/getting-started/installation.md)** - Installation, examples, and tutorials
+- **[Quick Start](docs/getting-started/quick-start.md)** - Get up and running in 5 minutes
+- **[Create presentations](docs/how-to/create-presentations.md)** - `presentationFromWalletResult` / `PresentationResult`
+- **[Production integration checklist](docs/getting-started/production-integration-checklist.md)** - Logging, timeouts, result types
+- **[Module maturity matrix](docs/reference/module-maturity.md)** - Which modules are GA vs experimental
+- **[API Reference](docs/api-reference/)** - Detailed API documentation
+- **[Architecture & Modules](docs/introduction/architecture-overview.md)** - Module details and design principles
+- **[Available Plugins](docs/plugins.md)** - DID methods, blockchain anchors, and KMS plugins
+- **[Integrations](docs/integrations/)** - walt.id, godiddy, and third-party integrations
+- **[Contributing](CONTRIBUTING.md)** - Building, testing, and development guide
 
 ## Key Features
 
@@ -87,7 +72,7 @@ dependencies {
 
 Full documentation is available in the [`docs/`](docs/) directory:
 
-- **[Documentation Index](docs/DOCUMENTATION_INDEX.md)** - Complete documentation index
+- **[Documentation Index](docs/README.md)** - Complete documentation index
 - **[Core Concepts](docs/core-concepts/README.md)** - Introduction to DIDs, VCs, Wallets, and more
 - **[Use Case Scenarios](docs/scenarios/README.md)** - 25+ real-world scenarios with runnable code
 - **[API Reference](docs/api-reference/)** - Detailed API documentation

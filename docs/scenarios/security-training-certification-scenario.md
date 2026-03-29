@@ -12,14 +12,14 @@ This guide demonstrates how to build a security training and certification verif
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created DIDs for training providers (issuers) and professionals (holders)
-- ✅ Issued Verifiable Credentials for security training and certifications
-- ✅ Stored training and certification credentials in wallet
-- ✅ Implemented certification expiration tracking
-- ✅ Created privacy-preserving qualification presentations
-- ✅ Verified certifications without revealing full identity
-- ✅ Demonstrated multi-certification verification
-- ✅ Implemented skill-based credential organization
+- Created DIDs for training providers (issuers) and professionals (holders)
+- Issued Verifiable Credentials for security training and certifications
+- Stored training and certification credentials in wallet
+- Implemented certification expiration tracking
+- Created privacy-preserving qualification presentations
+- Verified certifications without revealing full identity
+- Demonstrated multi-certification verification
+- Implemented skill-based credential organization
 
 ## Big Picture & Significance
 
@@ -140,7 +140,7 @@ Add TrustWeave dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -157,15 +157,23 @@ Here's the full security training and certification verification flow using the 
 ```kotlin
 package com.example.security.training
 
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
 import org.trustweave.core.*
-import org.trustweave.credential.PresentationOptions
-import org.trustweave.credential.wallet.Wallet
-import org.trustweave.spi.services.WalletCreationOptionsBuilder
+import org.trustweave.wallet.Wallet
+import org.trustweave.wallet.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
-import org.trustweave.credential.format.ProofSuiteId
+import org.trustweave.credential.model.ProofType
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.testkit.services.*
+import org.trustweave.credential.results.getOrThrow
 
 fun main() = runBlocking {
     println("=".repeat(70))
@@ -176,48 +184,46 @@ fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
-        credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
+        credentials { defaultProofType(ProofType.Ed25519Signature2020) }
     }
-    println("\n✅ TrustWeave initialized")
+    println("\n[OK] TrustWeave initialized")
 
     // Step 2: Create DIDs for training providers, professionals, and employers
-    import org.trustweave.trust.types.getOrThrowDid
-    import org.trustweave.trust.types.getOrThrow
-    import org.trustweave.did.resolver.DidResolutionResult
-    import org.trustweave.did.identifiers.extractKeyId
-    
-    // Helper extension for resolution results
-    fun DidResolutionResult.getOrThrow() = when (this) {
-        is DidResolutionResult.Success -> this.document
-        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
-    }
     
     val isc2Did = trustWeave.createDid { method(KEY) }.getOrThrowDid()
-    val isc2Doc = trustWeave.resolveDid(isc2Did).getOrThrow()
+    val isc2Doc = when (val res = trustWeave.resolveDid(isc2Did)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val isc2KeyId = isc2Doc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     val ecCouncilDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
-    val ecCouncilDoc = trustWeave.resolveDid(ecCouncilDid).getOrThrow()
+    val ecCouncilDoc = when (val res = trustWeave.resolveDid(ecCouncilDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val ecCouncilKeyId = ecCouncilDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     val comptiaDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
-    val comptiaDoc = trustWeave.resolveDid(comptiaDid).getOrThrow()
+    val comptiaDoc = when (val res = trustWeave.resolveDid(comptiaDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val comptiaKeyId = comptiaDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     val professionalDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     val employerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 
-    println("✅ (ISC)² DID: ${isc2Did.value}")
-    println("✅ EC-Council DID: ${ecCouncilDid.value}")
-    println("✅ CompTIA DID: ${comptiaDid.value}")
-    println("✅ Professional DID: ${professionalDid.value}")
-    println("✅ Employer DID: ${employerDid.value}")
+    println("[OK] (ISC)² DID: ${isc2Did.value}")
+    println("[OK] EC-Council DID: ${ecCouncilDid.value}")
+    println("[OK] CompTIA DID: ${comptiaDid.value}")
+    println("[OK] Professional DID: ${professionalDid.value}")
+    println("[OK] Employer DID: ${employerDid.value}")
 
     // Step 3: Issue CISSP certification credential
-    import org.trustweave.trust.types.IssuanceResult
     
     val cisspCredentialResult = trustWeave.issue {
         credential {
@@ -260,7 +266,7 @@ fun main() = runBlocking {
     
     val cisspCredential = cisspCredentialResult.getOrThrow()
 
-    println("\n✅ CISSP certification credential issued: ${cisspCredential.id}")
+    println("\n[OK] CISSP certification credential issued: ${cisspCredential.id}")
 
     // Step 4: Issue CEH certification credential
     val cehCredentialResult = trustWeave.issue {
@@ -310,7 +316,7 @@ fun main() = runBlocking {
     
     val cehCredential = cehCredentialResult.getOrThrow()
 
-    println("✅ CEH certification credential issued: ${cehCredential.id}")
+    println("[OK] CEH certification credential issued: ${cehCredential.id}")
 
     // Step 5: Issue Security+ training credential
     val securityPlusTrainingCredentialResult = trustWeave.issue {
@@ -343,7 +349,7 @@ fun main() = runBlocking {
     
     val securityPlusTrainingCredential = securityPlusTrainingCredentialResult.getOrThrow()
 
-    println("✅ Security+ training credential issued: ${securityPlusTrainingCredential.id}")
+    println("[OK] Security+ training credential issued: ${securityPlusTrainingCredential.id}")
 
     // Step 6: Create professional wallet and store all credentials
     val professionalWallet = trustWeave.wallet {
@@ -356,7 +362,7 @@ fun main() = runBlocking {
     val cehCredentialId = professionalWallet.store(cehCredential)
     val trainingCredentialId = professionalWallet.store(securityPlusTrainingCredential)
 
-    println("\n✅ All credentials stored in wallet")
+    println("\n[OK] All credentials stored in wallet")
 
     // Step 7: Organize credentials by skill and type
     professionalWallet.withOrganization { org ->
@@ -371,13 +377,12 @@ fun main() = runBlocking {
         org.tagCredential(cehCredentialId, setOf("certification", "ceh", "security", "penetration-testing", "ethical-hacking"))
         org.tagCredential(trainingCredentialId, setOf("training", "security-plus", "security", "foundational"))
 
-        println("✅ Credentials organized by type and skill")
+        println("[OK] Credentials organized by type and skill")
     }
 
     // Step 8: Employer verification - CISSP required
-    println("\n🏢 Employer Verification - CISSP Required:")
+    println("\n[employer] Employer Verification - CISSP Required:")
 
-    import org.trustweave.trust.types.VerificationResult
     
     val cisspVerification = trustWeave.verify {
         credential(cisspCredential)
@@ -391,43 +396,43 @@ fun main() = runBlocking {
         val status = certification?.get("status")?.jsonPrimitive?.content
         val expirationDate = certification?.get("expirationDate")?.jsonPrimitive?.content
 
-        println("✅ Certification Credential: VALID")
+        println("[OK] Certification Credential: VALID")
         println("   Certification: $certificationName")
         println("   Status: $status")
         println("   Expiration: $expirationDate")
 
         if (certificationName == "CISSP" && status == "Active") {
-            println("✅ CISSP requirement MET")
-            println("✅ Certification is active")
-            println("✅ Qualification VERIFIED")
+            println("[OK] CISSP requirement MET")
+            println("[OK] Certification is active")
+            println("[OK] Qualification VERIFIED")
         } else {
-            println("❌ CISSP requirement NOT MET")
-            println("❌ Qualification NOT VERIFIED")
+            println("[FAIL] CISSP requirement NOT MET")
+            println("[FAIL] Qualification NOT VERIFIED")
         }
     } else {
-        println("❌ Certification Credential: INVALID")
-        println("❌ Qualification NOT VERIFIED")
+        println("[FAIL] Certification Credential: INVALID")
+        println("[FAIL] Qualification NOT VERIFIED")
     }
 
     // Step 9: Employer verification - Multiple certifications
-    println("\n🏢 Employer Verification - Multiple Certifications Required:")
+    println("\n[employer] Employer Verification - Multiple Certifications Required:")
 
     val cisspValid = trustWeave.verify { credential(cisspCredential) } is VerificationResult.Valid
     val cehValid = trustWeave.verify { credential(cehCredential) } is VerificationResult.Valid
 
     if (cisspValid && cehValid) {
-        println("✅ CISSP Certification: VALID")
-        println("✅ CEH Certification: VALID")
-        println("✅ Multiple certification requirement MET")
-        println("✅ Professional has both CISSP and CEH")
-        println("✅ Qualification VERIFIED")
+        println("[OK] CISSP Certification: VALID")
+        println("[OK] CEH Certification: VALID")
+        println("[OK] Multiple certification requirement MET")
+        println("[OK] Professional has both CISSP and CEH")
+        println("[OK] Qualification VERIFIED")
     } else {
-        println("❌ One or more certifications invalid")
-        println("❌ Qualification NOT VERIFIED")
+        println("[FAIL] One or more certifications invalid")
+        println("[FAIL] Qualification NOT VERIFIED")
     }
 
     // Step 10: Expired certification check
-    println("\n🏢 Expired Certification Check:")
+    println("\n[employer] Expired Certification Check:")
 
     // Create an expired certification
     val expiredCertCredentialResult = trustWeave.issue {
@@ -448,7 +453,6 @@ fun main() = runBlocking {
         signedBy(isc2Did)
     }
     
-    import org.trustweave.trust.types.getOrThrow
     
     val expiredCertCredential = expiredCertCredentialResult.getOrThrow()
 
@@ -462,10 +466,10 @@ fun main() = runBlocking {
             // Should not happen for expired credential
         }
         is VerificationResult.Invalid -> {
-        println("❌ Expired Certification: INVALID")
+        println("[FAIL] Expired Certification: INVALID")
         println("   Certification expired: YES")
         println("   Status: Expired")
-        println("❌ Qualification NOT VERIFIED")
+        println("[FAIL] Qualification NOT VERIFIED")
         println("   Note: Professional must renew certification")
     }
 
@@ -474,20 +478,20 @@ fun main() = runBlocking {
         pres.createPresentation(
             credentialIds = listOf(cisspCredentialId, cehCredentialId), // Only share certifications
             holderDid = professionalDid,
-            options = PresentationOptions(
-                holderDid = professionalDid,
-                challenge = "certification-verification-${System.currentTimeMillis()}"
-            )
+            options = mapOf(
+            "holderDid" to professionalDid,
+            "challenge" to "certification-verification-${System.currentTimeMillis()}"
+        )
         )
     } ?: error("Presentation capability not available")
 
-    println("\n✅ Privacy-preserving certification presentation created")
+    println("\n[OK] Privacy-preserving certification presentation created")
     println("   Holder: ${certificationPresentation.holder}")
     println("   Credentials: ${certificationPresentation.verifiableCredential.size}")
     println("   Note: Only certifications shared, no personal details")
 
     // Step 12: Demonstrate privacy - verify no personal information is exposed
-    println("\n🔒 Privacy Verification:")
+    println("\n[privacy] Privacy Verification:")
     val presentationCredential = certificationPresentation.verifiableCredential.firstOrNull()
     if (presentationCredential != null) {
         val subject = presentationCredential.credentialSubject
@@ -496,16 +500,16 @@ fun main() = runBlocking {
         val hasSSN = subject.jsonObject.containsKey("ssn")
         val hasCertification = subject.jsonObject.containsKey("certification")
 
-        println("   Full Name exposed: $hasFullName ❌")
-        println("   Email exposed: $hasEmail ❌")
-        println("   SSN exposed: $hasSSN ❌")
-        println("   Certification details: $hasCertification ✅")
-        println("✅ Privacy preserved - only certification information shared")
+        println("   Full Name exposed: $hasFullName [FAIL]")
+        println("   Email exposed: $hasEmail [FAIL]")
+        println("   SSN exposed: $hasSSN [FAIL]")
+        println("   Certification details: $hasCertification [OK]")
+        println("[OK] Privacy preserved - only certification information shared")
     }
 
     // Step 13: Display wallet statistics
     val stats = professionalWallet.getStatistics()
-    println("\n📊 Professional Wallet Statistics:")
+    println("\n[stats] Professional Wallet Statistics:")
     println("   Total credentials: ${stats.totalCredentials}")
     println("   Valid credentials: ${stats.validCredentials}")
     println("   Collections: ${stats.collectionsCount}")
@@ -513,7 +517,7 @@ fun main() = runBlocking {
 
     // Step 14: Summary
     println("\n" + "=".repeat(70))
-    println("✅ SECURITY TRAINING & CERTIFICATION VERIFICATION SYSTEM COMPLETE")
+    println("[OK] SECURITY TRAINING & CERTIFICATION VERIFICATION SYSTEM COMPLETE")
     println("   Training and certification credentials issued and stored")
     println("   Instant verification implemented")
     println("   Privacy-preserving verification implemented")
@@ -529,62 +533,62 @@ fun main() = runBlocking {
 Security Training & Certification Verification Scenario - Complete End-to-End Example
 ======================================================================
 
-✅ TrustWeave initialized
-✅ (ISC)² DID: did:key:z6Mk...
-✅ EC-Council DID: did:key:z6Mk...
-✅ CompTIA DID: did:key:z6Mk...
-✅ Professional DID: did:key:z6Mk...
-✅ Employer DID: did:key:z6Mk...
+[OK] TrustWeave initialized
+[OK] (ISC)² DID: did:key:z6Mk...
+[OK] EC-Council DID: did:key:z6Mk...
+[OK] CompTIA DID: did:key:z6Mk...
+[OK] Professional DID: did:key:z6Mk...
+[OK] Employer DID: did:key:z6Mk...
 
-✅ CISSP certification credential issued: urn:uuid:...
-✅ CEH certification credential issued: urn:uuid:...
-✅ Security+ training credential issued: urn:uuid:...
+[OK] CISSP certification credential issued: urn:uuid:...
+[OK] CEH certification credential issued: urn:uuid:...
+[OK] Security+ training credential issued: urn:uuid:...
 
-✅ All credentials stored in wallet
-✅ Credentials organized by type and skill
+[OK] All credentials stored in wallet
+[OK] Credentials organized by type and skill
 
-🏢 Employer Verification - CISSP Required:
-✅ Certification Credential: VALID
+[employer] Employer Verification - CISSP Required:
+[OK] Certification Credential: VALID
    Certification: CISSP
    Status: Active
    Expiration: 2026-11-18T...
-✅ CISSP requirement MET
-✅ Certification is active
-✅ Qualification VERIFIED
+[OK] CISSP requirement MET
+[OK] Certification is active
+[OK] Qualification VERIFIED
 
-🏢 Employer Verification - Multiple Certifications Required:
-✅ CISSP Certification: VALID
-✅ CEH Certification: VALID
-✅ Multiple certification requirement MET
-✅ Professional has both CISSP and CEH
-✅ Qualification VERIFIED
+[employer] Employer Verification - Multiple Certifications Required:
+[OK] CISSP Certification: VALID
+[OK] CEH Certification: VALID
+[OK] Multiple certification requirement MET
+[OK] Professional has both CISSP and CEH
+[OK] Qualification VERIFIED
 
-🏢 Expired Certification Check:
-❌ Expired Certification: INVALID
+[employer] Expired Certification Check:
+[FAIL] Expired Certification: INVALID
    Certification expired: YES
    Status: Expired
-❌ Qualification NOT VERIFIED
+[FAIL] Qualification NOT VERIFIED
    Note: Professional must renew certification
 
-✅ Privacy-preserving certification presentation created
+[OK] Privacy-preserving certification presentation created
    Holder: did:key:z6Mk...
    Credentials: 2
 
-🔒 Privacy Verification:
-   Full Name exposed: false ❌
-   Email exposed: false ❌
-   SSN exposed: false ❌
-   Certification details: true ✅
-✅ Privacy preserved - only certification information shared
+[privacy] Privacy Verification:
+   Full Name exposed: false [FAIL]
+   Email exposed: false [FAIL]
+   SSN exposed: false [FAIL]
+   Certification details: true [OK]
+[OK] Privacy preserved - only certification information shared
 
-📊 Professional Wallet Statistics:
+[stats] Professional Wallet Statistics:
    Total credentials: 3
    Valid credentials: 3
    Collections: 2
    Tags: 9
 
 ======================================================================
-✅ SECURITY TRAINING & CERTIFICATION VERIFICATION SYSTEM COMPLETE
+[OK] SECURITY TRAINING & CERTIFICATION VERIFICATION SYSTEM COMPLETE
    Training and certification credentials issued and stored
    Instant verification implemented
    Privacy-preserving verification implemented
@@ -614,10 +618,10 @@ Security Training & Certification Verification Scenario - Complete End-to-End Ex
 
 ## Related Documentation
 
-- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
-- [Employee Onboarding Scenario](employee-onboarding-scenario.md) - Related onboarding scenario
-- [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
-- [API Reference](../api-reference/core-api.md) - Complete API documentation
-- [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+- Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
+- Employee Onboarding Scenario](employee-onboarding-scenario.md) - Related onboarding scenario
+- Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
+- API Reference](../api-reference/core-api.md) - Complete API documentation
+- Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
 
 

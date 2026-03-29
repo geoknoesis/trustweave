@@ -6,6 +6,7 @@ import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.base.AbstractDidMethod
+import org.trustweave.did.base.DidMethodUtils
 import org.trustweave.kms.KeyManagementService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -50,22 +51,26 @@ class BtcrDidMethod(
     }
 
     override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
-        validateDidFormat(did)
-        
-        val didString = did.value
+        try {
+            validateDidFormat(did)
 
-        // TODO: Implement Bitcoin Reference DID resolution
-        // 1. Extract transaction index from DID
-        // 2. Get transaction from Bitcoin blockchain
-        // 3. Extract document hash from OP_RETURN
-        // 4. Resolve document from IPFS or other storage
-        // 5. Parse and return DID document
+            // TODO: Implement Bitcoin Reference DID resolution
+            // 1. Extract transaction index from DID
+            // 2. Get transaction from Bitcoin blockchain
+            // 3. Extract document hash from OP_RETURN
+            // 4. Resolve document from IPFS or other storage
+            // 5. Parse and return DID document
 
-        throw TrustWeaveException.Unknown(
-            code = "BTCR_NOT_IMPLEMENTED",
-            message = "Bitcoin Reference DID resolution requires Bitcoin node integration. " +
-            "Structure is ready for implementation."
-        )
+            throw TrustWeaveException.Unknown(
+                code = "BTCR_NOT_IMPLEMENTED",
+                message = "Bitcoin Reference DID resolution requires Bitcoin node integration. " +
+                "Structure is ready for implementation."
+            )
+        } catch (e: TrustWeaveException) {
+            DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
+        } catch (e: Exception) {
+            DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
+        }
     }
 }
 

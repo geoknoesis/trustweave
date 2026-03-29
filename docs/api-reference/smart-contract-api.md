@@ -424,7 +424,7 @@ result.fold(
 
 ## See Also
 
-- [Smart Contracts Core Concepts](../core-concepts/smart-contracts.md) for detailed concepts
-- [Parametric Insurance Scenario](../scenarios/smart-contract-parametric-insurance-scenario.md) for complete example
-- [Core API Reference](core-api.md) for TrustWeave facade API
+- Smart Contracts Core Concepts](../core-concepts/smart-contracts.md) for detailed concepts
+- Parametric Insurance Scenario](../scenarios/smart-contract-parametric-insurance-scenario.md) for complete example
+- Core API Reference](core-api.md) for TrustWeave facade API
 

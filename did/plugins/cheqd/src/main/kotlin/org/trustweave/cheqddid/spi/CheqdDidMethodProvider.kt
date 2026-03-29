@@ -3,47 +3,25 @@ package org.trustweave.cheqddid.spi
 import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.DidMethod
-import org.trustweave.did.spi.DidMethodProvider
+import org.trustweave.did.base.AbstractDidMethodProvider
 import org.trustweave.cheqddid.CheqdDidConfig
 import org.trustweave.cheqddid.CheqdDidMethod
-import org.trustweave.kms.KeyManagementService
-import java.util.ServiceLoader
 
 /**
  * SPI provider for did:cheqd method.
  *
  * Automatically discovers did:cheqd method when this module is on the classpath.
  */
-class CheqdDidMethodProvider : DidMethodProvider {
+class CheqdDidMethodProvider : AbstractDidMethodProvider() {
 
     override val name: String = "cheqd"
 
     override val supportedMethods: List<String> = listOf("cheqd")
 
     override fun create(methodName: String, options: DidCreationOptions): DidMethod? {
-        if (methodName.lowercase() != "cheqd") {
-            return null
-        }
-
-        // Get KMS from options or discover via SPI
-        val kms = (options.additionalProperties["kms"] as? KeyManagementService)
-            ?: run {
-                val kmsProviders = ServiceLoader.load(
-                    org.trustweave.kms.spi.KeyManagementServiceProvider::class.java
-                )
-                kmsProviders.firstOrNull()?.create(options.additionalProperties)
-                    ?: throw IllegalStateException(
-                        "No KeyManagementService available. Provide 'kms' in options or ensure a KMS provider is registered."
-                    )
-            }
-
-        // Create configuration from options
+        if (methodName.lowercase() != "cheqd") return null
         val config = createConfig(options)
-
-        // Get or create blockchain anchor client
-        val anchorClient = getOrCreateAnchorClient(options, config)
-
-        return CheqdDidMethod(kms, anchorClient, config)
+        return CheqdDidMethod(resolveKms(options), getOrCreateAnchorClient(options, config), config)
     }
 
     /**

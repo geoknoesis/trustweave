@@ -152,34 +152,28 @@ val identifier = multibase.encode(key.publicKey)
 
 ### Result Types
 
-Use `Result<T>` for operations that can fail:
+Use `Result<T>` for **your own** helpers when it fits. The **TrustWeave** facade and DID layer prefer **sealed types** (**`DidCreationResult`**, **`DidResolutionResult`**, **`IssuanceResult`**, **`VerificationResult`**, …)—handle those with **`when`**, not only **`Result`**.
 
 ```kotlin
 suspend fun createDid(): Result<DidDocument> {
     return try {
-        // Implementation
-        Result.success(didDocument)
+        val document: DidDocument = /* implementation */
+        Result.success(document)
     } catch (e: Exception) {
         Result.failure(
-            TrustWeaveError.DidCreationFailed(
-                reason = e.message ?: "Unknown error"
+            DidException.DidCreationFailed(
+                did = null,
+                reason = e.message ?: "Unknown error",
+                cause = e
             )
         )
     }
 }
 ```
 
-### Error Types
+### Error types
 
-Use structured error types:
-
-```kotlin
-sealed class TrustWeaveError : Exception() {
-    data class DidCreationFailed(val reason: String) : TrustWeaveError()
-    data class DidResolutionFailed(val reason: String) : TrustWeaveError()
-    // ...
-}
-```
+Prefer module **sealed exception hierarchies** (for example **`org.trustweave.did.exception.DidException`**, **`org.trustweave.anchor.exceptions.BlockchainException`**) and the shared base **`org.trustweave.core.exception.TrustWeaveException`** instead of ad-hoc error classes.
 
 ## Testing
 
@@ -245,13 +239,21 @@ data class DidDocument(
 Use Kotlin's null safety features:
 
 ```kotlin
-// Use nullable types when appropriate
-val didDocument: DidDocument? = resolveDid(did)
+// TrustWeave: resolveDid returns sealed DidResolutionResult — branch, then use document
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.model.DidDocument
+import org.trustweave.did.resolver.DidResolutionResult
+// val trustWeave: TrustWeave = …
 
-// Use safe calls
+val didDocument: DidDocument? = when (val r = trustWeave.resolveDid(Did("did:key:…"))) {
+    is DidResolutionResult.Success -> r.document
+    is DidResolutionResult.Failure -> null
+}
+
+// Safe calls on a nullable DidDocument from any layer
 didDocument?.verificationMethod?.first()
 
-// Use Elvis operator for defaults
+// Elvis for defaults
 val method = didDocument?.verificationMethod?.first() ?: throw NotFoundException()
 ```
 
@@ -288,13 +290,13 @@ val config = MyConfig().apply {
 
 Before submitting code for review:
 
-- [ ] Code is formatted (`./gradlew ktlintCheck`)
-- [ ] All tests pass (`./gradlew test`)
-- [ ] Public APIs are documented
-- [ ] Error handling is appropriate
-- [ ] Code follows naming conventions
-- [ ] No hardcoded values (use constants)
-- [ ] No commented-out code
+- Code is formatted (`./gradlew ktlintCheck`)
+- All tests pass (`./gradlew test`)
+- Public APIs are documented
+- Error handling is appropriate
+- Code follows naming conventions
+- No hardcoded values (use constants)
+- No commented-out code
 
 ### Review Feedback
 
@@ -314,8 +316,8 @@ When reviewing code:
 
 ## References
 
-- [Kotlin Style Guide](https://kotlinlang.org/docs/coding-conventions.html)
-- [ktlint Documentation](https://ktlint.github.io/)
-- [KDoc Reference](https://kotlinlang.org/docs/kotlin-doc.html)
+- Kotlin Style Guide](https://kotlinlang.org/docs/coding-conventions.html)
+- ktlint Documentation](https://ktlint.github.io/)
+- KDoc Reference](https://kotlinlang.org/docs/kotlin-doc.html)
 
 

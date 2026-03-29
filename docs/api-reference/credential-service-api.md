@@ -6,148 +6,100 @@ parent: API Reference
 
 # Credential Service API Reference
 
-This document describes the SPI surface that credential issuers/verifiers plug into and the typed options used to configure providers.
+This page describes the **`CredentialService`** API (`credentials/credential-api`), **`IssuanceRequest`** / **`VerificationOptions`**, and how instances are created for **`TrustWeave`**.
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:credentials-credential-api:0.6.0")
 }
 ```
 
-**Result:** Your project can implement and register custom credential providers using the SPI documented below. SPI interfaces are included in `distribution-all`.
+(Or depend on **`distribution-all`** / **`trust`** so the facade pulls credential APIs transitively.)
 
-## Core Interfaces
+## `CredentialService`
 
-### CredentialService
+Implementations issue and verify **W3C Verifiable Credentials** (VC-LD, SD-JWT-VC, etc.), create/verify presentations, and expose format capabilities.
 
-Implementations perform issuance, verification, and presentation operations.
+**Core operations (see source for full KDoc):**
 
 ```kotlin
 interface CredentialService {
-    val providerName: String
-    val supportedProofTypes: List<String>
-    val supportedSchemaFormats: List<SchemaFormat>
+    suspend fun issue(request: IssuanceRequest): IssuanceResult
 
-    suspend fun issueCredential(
+    suspend fun verify(
         credential: VerifiableCredential,
-        options: CredentialIssuanceOptions
-    ): VerifiableCredential
+        trustPolicy: TrustEvaluator? = null,
+        options: VerificationOptions = VerificationOptions()
+    ): VerificationResult
 
-    suspend fun verifyCredential(
-        credential: VerifiableCredential,
-        options: CredentialVerificationOptions
-    ): CredentialVerificationResult
+    suspend fun verify(
+        credentials: List<VerifiableCredential>,
+        trustPolicy: TrustEvaluator? = null,
+        options: VerificationOptions = VerificationOptions()
+    ): List<VerificationResult>
 
     suspend fun createPresentation(
         credentials: List<VerifiableCredential>,
-        options: PresentationOptions
+        request: PresentationRequest
     ): VerifiablePresentation
 
     suspend fun verifyPresentation(
         presentation: VerifiablePresentation,
-        options: PresentationVerificationOptions
-    ): PresentationVerificationResult
+        trustPolicy: TrustEvaluator? = null,
+        options: VerificationOptions = VerificationOptions()
+    ): VerificationResult
+
+    suspend fun status(credential: VerifiableCredential): CredentialStatusInfo
+
+    fun supports(format: ProofSuiteId): Boolean
+    fun supportedFormats(): List<ProofSuiteId>
+    fun supportsCapability(
+        format: ProofSuiteId,
+        capability: ProofEngineCapabilities.() -> Boolean
+    ): Boolean
 }
 ```
 
-#### Method summary
+| Operation | Returns | Notes |
+|-----------|---------|--------|
+| `issue` | `IssuanceResult` | Use `when` on success/failure; `getOrThrow()` lives in `org.trustweave.credential.results`. |
+| `verify` | `VerificationResult` | Optional **`TrustEvaluator`** for issuer trust; options control revocation, expiration, schema, etc. |
+| `createPresentation` / `verifyPresentation` | `VerifiablePresentation` / `VerificationResult` | Challenge/domain live in **`PresentationRequest`** / proof options. |
+| `status` | `CredentialStatusInfo` | Fast revocation/validity snapshot. |
 
-| Method | Purpose | Returns | Exceptions | Notes |
-|--------|---------|---------|------------|-------|
-| `issueCredential` | Canonicalise + sign a VC. | `VerifiableCredential` (with proof). | `IllegalArgumentException` for unsupported proof types or schemas. | Used by `trustWeave.issue { }` DSL. |
-| `verifyCredential` | Validate a VC's proof and optional policies. | `VerificationResult` | `IllegalStateException` if configuration missing (resolver, status service). | Returns `VerificationResult.Valid` or `VerificationResult.Invalid`. |
-| `createPresentation` | Assemble a verifiable presentation. | `VerifiablePresentation` | Depends on provider (unsupported -> `UnsupportedOperationException`). | Typically optional; many issuers delegate to wallet presentation services. |
-| `verifyPresentation` | Validate presentation proofs and challenges. | `PresentationVerificationResult` | `IllegalArgumentException` for invalid challenge/domain. | Verifiers should check `result.errors`. |
+## Building a `CredentialService`
 
-### CredentialServiceProvider
-
-Providers bridge ServiceLoader discovery and actual `CredentialService` instances.
+Use the factory helpers in **`org.trustweave.credential`** (not a separate “registry” class):
 
 ```kotlin
-interface CredentialServiceProvider {
-    val name: String
+import org.trustweave.credential.credentialService
+import org.trustweave.credential.CredentialServices
 
-    fun create(
-        options: CredentialServiceCreationOptions = CredentialServiceCreationOptions()
-    ): CredentialService?
-}
-```
+// Typical: resolver + optional schema/revocation
+val service = credentialService(
+    
+    schemaRegistry = null,
+    revocationManager = null,
+)
 
-| Method | Returns | Exceptions | Notes |
-|--------|---------|------------|-------|
-| `create` | `CredentialService?` | – | Return `null` to opt out (e.g., disabled). Called by `CredentialServiceRegistry`. |
-
-## CredentialServiceCreationOptions
-
-`CredentialServiceCreationOptions` replaces the old `Map<String, Any?>` pattern with a structured configuration object.
-
-```kotlin
-import org.trustweave.credential.CredentialServiceCreationOptionsBuilder
-
-val options = CredentialServiceCreationOptionsBuilder().apply {
-    enabled = true
-    priority = 10
-    endpoint = "https://issuer.example.com"
-    apiKey = System.getenv("ISSUER_API_KEY")
-    property("batchSize", 100)
-}.build()
-```
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `enabled` | `Boolean` | Master toggle so providers can return `null` when disabled. Defaults to `true`. |
-| `priority` | `Int?` | Optional load-order hint when multiple providers are registered. |
-| `endpoint` | `String?` | Base URL or connection identifier for remote services. |
-| `apiKey` | `String?` | Secret token or credential used during initialization. |
-| `additionalProperties` | `Map<String, Any?>` | Provider specific data injected via `property("name", value)`. |
-
-> Providers may throw `IllegalArgumentException` when required fields (endpoint, apiKey) are missing. Use typed builder setters to catch issues at compile time.
-
-Providers can still interoperate with code that expects maps through `toLegacyMap()`:
-
-```kotlin
-val legacy = options.toLegacyMap() // Useful when delegating to an adapter that still consumes Map<String, Any?>
-```
-
-## Provider Implementation Example
-
-```kotlin
-class HttpIssuerProvider : CredentialServiceProvider {
-    override val name: String = "httpIssuer"
-
-    override fun create(options: CredentialServiceCreationOptions): CredentialService? {
-        if (!options.enabled) return null
-
-        val endpoint = options.endpoint ?: return null
-        val apiKey = options.apiKey ?: error("apiKey is required for $name")
-        val batchSize = options.additionalProperties["batchSize"] as? Int ?: 50
-
-        return HttpCredentialIssuer(
-            httpClient = buildClient(endpoint, apiKey, batchSize)
-        )
-    }
-}
-```
-
-## Consumption from TrustWeave
-
-When the provider is on the classpath, `CredentialServiceRegistry` and the TrustWeave facade automatically hand it the typed options:
-
-```kotlin
-val registry = CredentialServiceRegistry.create()
-val credential = registry.issue(
-    credential = vc,
-    options = CredentialIssuanceOptions(
-        providerName = "httpIssuer",
-        additionalOptions = mapOf("audience" to "did:key:holder")
-    )
+// Or KMS-integrated (used by TrustWeave factory)
+val fromKms = CredentialServices.createCredentialService(
+    kms = kms
 )
 ```
 
-`additionalOptions` on the issuance/verification options remain a map because they carry per-call data, whereas the provider-level configuration is now strongly typed.
+`TrustWeave.build { … }` wires a **`CredentialService`** when KMS + DID resolution are available, unless you override with **`credentialService(...)`** in the DSL.
 
-## Related samples
+## Request types
 
-- [`QuickStartSample`](https://github.com/geoknoesis/TrustWeave/blob/main/distribution/TrustWeave-examples/src/main/kotlin/com/geoknoesis/TrustWeave/examples/quickstart/QuickStartSample.kt) demonstrates issuance, verification, and anchoring using the default in-memory provider chain.
-- Scenario examples in [`TrustWeave-examples`](https://github.com/geoknoesis/TrustWeave/tree/main/distribution/TrustWeave-examples) showcase custom providers (HTTP issuers, GoDiddy integrations).
+- **`IssuanceRequest`** — VC payload + **`ProofSuiteId`**, issuer key id, validity window, **`ProofOptions`**, schema, status, evidence.
+- **`VerificationOptions`** — revocation, expiration, schema validation, issuer resolution toggles.
+- **`PresentationRequest`** — credentials to include, selective disclosure, presentation **`ProofOptions`** (challenge, domain, etc.).
 
+Issuer trust at verification time uses **`org.trustweave.credential.trust.TrustEvaluator`** (allowlist/blocklist/custom), or trust-registry-backed evaluators from the **`trust`** module via the **`verify { }`** DSL.
+
+## Related
+
+- **[TrustWeave facade](core-api.md)** — `issue { }`, `verify { }`, `presentationResult { }`.
+- **[Result types](result-types-guide.md)** — `IssuanceResult`, `VerificationResult`, `PresentationResult`.
+- **`DefaultCredentialService`** — internal implementation combining built-in proof engines.

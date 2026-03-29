@@ -5,8 +5,7 @@ import org.trustweave.credential.requests.VerificationOptions
 import org.trustweave.credential.results.VerificationResult as CredentialVerificationResult
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.identifiers.SchemaId
-import org.trustweave.credential.trust.TrustPolicy as CredentialTrustPolicy
-import org.trustweave.trust.types.VerificationResult
+import org.trustweave.credential.trust.TrustEvaluator as CredentialTrustPolicy
 import org.trustweave.trust.TrustRegistry
 import org.trustweave.trust.TrustPolicy
 import org.trustweave.trust.TrustWeave
@@ -203,11 +202,10 @@ class VerificationBuilder(
      * ```
      * 
      * @param registry The trust registry to check against
-     * @param maxPathLength Maximum length of trust path (default: 3)
+     * @param maxPathLength Reserved for future trust-path depth limits (currently ignored)
      */
+    @Suppress("UNUSED_PARAMETER")
     fun requireTrustPath(registry: TrustRegistry, maxPathLength: Int = 3) {
-        // TrustRegistry now implements CredentialTrustPolicy directly
-        // Note: Trust path checking with maxPathLength constraint will be implemented in a future version
         this.trustPolicy = registry
     }
 
@@ -216,7 +214,7 @@ class VerificationBuilder(
      * 
      * **Example:**
      * ```kotlin
-     * val policy = TrustPolicy.allowlist(trustedIssuers)
+     * val policy = TrustEvaluator.allowlist(trustedIssuers)
      * trustWeave.verify {
      *     credential(credential)
      *     withTrustPolicy(policy)
@@ -260,27 +258,3 @@ class VerificationBuilder(
         credentialService.verify(cred, trustPolicy = trustPolicy, options = options)
     }
 }
-
-/**
- * Extension function to verify credentials using TrustWeave.
- *
- * Returns a sealed VerificationResult for exhaustive error handling.
- *
- * **Example:**
- * ```kotlin
- * val result = trustWeave.verify {
- *     credential(credential)
- *     checkRevocation()
- * }
- *
- * when (result) {
- *     is VerificationResult.Valid -> println("Valid!")
- *     is VerificationResult.Invalid.Expired -> println("Expired")
- *     // ... compiler ensures all cases handled
- * }
- * ```
- */
-// Note: TrustWeave.verify() is now a member function in TrustWeave class.
-// This extension function has been removed to avoid duplication.
-// Use trustWeave.verify { ... } directly.
-

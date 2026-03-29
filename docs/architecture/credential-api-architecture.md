@@ -18,10 +18,10 @@ The module needs to support multiple proof suite formats (VC-LD, VC-JWT, SD-JWT-
 We use a Service Provider Interface (SPI) pattern with a `ProofEngine` interface that encapsulates format-specific operations.
 
 **Consequences:**
-- ✅ Clean separation between format-agnostic service logic and format-specific proof operations
-- ✅ Easy to add new proof suite implementations
-- ✅ Testability: Each proof engine can be tested independently
-- ⚠️ SPI interfaces may evolve (documented in interface KDoc)
+- Clean separation between format-agnostic service logic and format-specific proof operations
+- Easy to add new proof suite implementations
+- Testability: Each proof engine can be tested independently
+- SPI interfaces may evolve (documented in interface KDoc)
 
 **Implementation:**
 - `ProofEngine` interface defines contract for issuance, verification, and presentation operations
@@ -45,10 +45,10 @@ Extract error handling into a centralized `ErrorHandling` utility object that pr
 - Proper cancellation handling for coroutines
 
 **Consequences:**
-- ✅ Reduced code duplication
-- ✅ Consistent error handling across all operations
-- ✅ Easier to maintain and update error handling logic
-- ✅ Better testability
+- Reduced code duplication
+- Consistent error handling across all operations
+- Easier to maintain and update error handling logic
+- Better testability
 
 **Implementation:**
 - `ErrorHandling.handleIssuanceErrors()` converts exceptions to `IssuanceResult.Failure` types
@@ -72,10 +72,10 @@ Use Kotlin sealed classes for `IssuanceResult` and `VerificationResult` to provi
 - Compile-time safety
 
 **Consequences:**
-- ✅ Compile-time exhaustiveness checking
-- ✅ Clear error types with specific fields
-- ✅ IDE support for pattern matching
-- ✅ Better API documentation through type hierarchy
+- Compile-time exhaustiveness checking
+- Clear error types with specific fields
+- IDE support for pattern matching
+- Better API documentation through type hierarchy
 
 **Implementation:**
 - `IssuanceResult` sealed class with `Success` and `Failure` subtypes
@@ -96,10 +96,10 @@ We need to prevent denial-of-service attacks by limiting input sizes and resourc
 Define security constants in `SecurityConstants` object with documented rationale for each limit.
 
 **Consequences:**
-- ✅ Centralized security configuration
-- ✅ Documented rationale for each limit
-- ✅ Easy to adjust limits if needed
-- ✅ Prevents resource exhaustion attacks
+- Centralized security configuration
+- Documented rationale for each limit
+- Easy to adjust limits if needed
+- Prevents resource exhaustion attacks
 
 **Implementation:**
 - `SecurityConstants` object with limits for credential size, claims count, DID length, etc.
@@ -120,10 +120,10 @@ Define security constants in `SecurityConstants` object with documented rational
 Replace reflection with direct imports and method calls since nimbus-jose-jwt is a required dependency.
 
 **Consequences:**
-- ✅ Better compile-time type checking
-- ✅ Improved IDE support and refactoring
-- ✅ Better performance (no reflection overhead)
-- ✅ Clearer code intent
+- Better compile-time type checking
+- Improved IDE support and refactoring
+- Better performance (no reflection overhead)
+- Clearer code intent
 
 **Implementation:**
 - Direct imports: `import com.nimbusds.jwt.JWTClaimsSet`
@@ -144,35 +144,23 @@ The `CredentialTransformer` API required creating instances and calling methods 
 Introduce extension functions directly on `VerifiableCredential` and related types to provide a fluent, DSL-like API for format transformations.
 
 **Consequences:**
-- ✅ More elegant and idiomatic Kotlin API
-- ✅ Consistent with TrustWeave DSL patterns
-- ✅ Enables fluent chaining of transformations
-- ✅ Better discoverability through IDE autocomplete
-- ✅ Maintains backward compatibility with direct API
+- More elegant and idiomatic Kotlin API
+- Consistent with TrustWeave DSL patterns
+- Enables fluent chaining of transformations
+- Better discoverability through IDE autocomplete
+- Maintains backward compatibility with direct API
 
-**Implementation:**
-- Extension functions: `credential.toJwt()`, `credential.toJsonLd()`, `credential.toCbor()`
-- Reverse transformations: `jwtString.fromJwt()`, `jsonLdObject.toCredential()`, `cborBytes.fromCbor()`
-- Round-trip helpers: `credential.roundTripJwt()`, `credential.roundTripCbor()`
-- TrustWeave integration: `trustWeave.toJwt(credential)`, `trustWeave.toJsonLd(credential)`
-- DSL builder: `credential.transform { toJwt() }` for complex scenarios
+**Implementation (current):**
+- **`CredentialTransformer`** (`org.trustweave.credential.transform`) performs JWT, JSON-LD, and CBOR conversion (Jackson/Nimbus).
+- **`CredentialServiceExtensions`** exposes **`credentialService.toJwt` / `toJsonLd` / `toCbor`** (suspend); extension functions on **`VerifiableCredential`** in the same package are available for tests and advanced use.
+- SPI: **`CredentialFormatConverter`** for alternate converters; TrustWeave can wire a default when a credential service is configured.
 
 **Example Usage:**
 ```kotlin
-// Elegant extension function API (recommended)
-val jwt = credential.toJwt()
-val jsonLd = credential.toJsonLd()
-val cbor = credential.toCbor()
-
-// Fluent chaining
-val roundTrip = credential
-    .toJwt()
-    .fromJwt()
-    .toCbor()
-    .fromCbor()
-
-// With TrustWeave integration
-val jwt = trustWeave.toJwt(credential)
+// Through CredentialService (suspend)
+val jwt = credentialService.toJwt(credential)
+val jsonLd = credentialService.toJsonLd(credential)
+val cbor = credentialService.toCbor(credential)
 ```
 
 ---

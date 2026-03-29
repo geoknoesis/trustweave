@@ -203,6 +203,7 @@ class MyKmsProvider : KeyManagementServiceProvider {
 ## Testing Your Plugin
 
 ```kotlin
+import org.trustweave.testkit.services.*
 // kms/plugins/myplugin/src/test/kotlin/MyKmsProviderTest.kt
 class MyKmsProviderTest {
 
@@ -222,7 +223,7 @@ class MyKmsProviderTest {
 
 ## See Also
 
-- [Testing Guidelines](testing-guidelines.md) - General testing best practices
-- [Integration Testing](integration-testing.md) - Integration test patterns
-- [Test Setup Guide](test-setup-guide.md) - Environment setup
+- Testing Guidelines](testing-guidelines.md) - General testing best practices
+- Integration Testing](integration-testing.md) - Integration test patterns
+- Test Setup Guide](test-setup-guide.md) - Environment setup
 

@@ -1,5 +1,8 @@
 package org.trustweave.examples.comprehensive
 
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.trust.types.getOrThrow
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.*
 import org.trustweave.trust.dsl.credential.registerSchema
@@ -20,10 +23,9 @@ import org.trustweave.trust.dsl.wallet.organize
 import org.trustweave.trust.dsl.wallet.query
 import org.trustweave.trust.dsl.wallet.QueryBuilder
 import org.trustweave.trust.types.*
-import org.trustweave.core.identifiers.Iri
-import org.trustweave.credential.identifiers.CredentialId
-import org.trustweave.credential.model.vc.VerifiablePresentation
-import org.trustweave.testkit.getOrFail
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.trust.dsl.credential.presentationResult
+import org.trustweave.trust.types.PresentationResult
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -35,7 +37,7 @@ import kotlinx.datetime.Clock
  * Comprehensive DSL Example.
  *
  * This example demonstrates ALL DSL features in a complete workflow:
- * 1. Trust Layer Configuration (with all features)
+ * 1. TrustWeave configuration (with all features)
  * 2. DID Creation & Management
  * 3. Schema Registration & Validation
  * 4. Credential Issuance with Revocation
@@ -49,9 +51,9 @@ fun main() = runBlocking {
     println("=== Comprehensive DSL Example ===\n")
 
     // ============================================
-    // STEP 1: Configure Complete Trust Layer
+    // STEP 1: Configure TrustWeave (full feature set)
     // ============================================
-    println("Step 1: Configuring complete trust layer...")
+    println("Step 1: Configuring TrustWeave (full feature set)...")
     val trustWeave = TrustWeave.build {
         keys {
             provider(IN_MEMORY)
@@ -72,7 +74,7 @@ fun main() = runBlocking {
         revocation(IN_MEMORY)
         // schemas() - using defaults (autoValidate=false, JSON_SCHEMA format)
     }
-    println("✓ Trust layer configured with all features\n")
+    println("✓ TrustWeave configured with all features\n")
 
     // ============================================
     // STEP 2: Create DIDs using DSL
@@ -81,13 +83,13 @@ fun main() = runBlocking {
     val issuerDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }.getOrFail()
+    }.getOrThrowDid()
     println("Issuer DID: $issuerDid")
 
     val holderDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }.getOrFail()
+    }.getOrThrowDid()
     println("Holder DID: $holderDid\n")
 
     // ============================================
@@ -158,7 +160,7 @@ fun main() = runBlocking {
         }
         signedBy(issuerDid)
         withRevocation() // Auto-creates status list
-    }.getOrFail()
+    }.getOrThrow()
     println("✓ Credential issued with ID: ${credential.id}")
     println("  Has revocation status: ${credential.credentialStatus != null}\n")
 
@@ -171,7 +173,7 @@ fun main() = runBlocking {
         holder(holderDid)
         enableOrganization()
         enablePresentation()
-    }.getOrFail()
+    }.getOrThrow()
 
     val stored = credential.storeIn(wallet)
     println("✓ Credential stored with ID: ${stored.id}\n")
@@ -213,15 +215,17 @@ fun main() = runBlocking {
     println("Step 9: Creating presentation...")
     val retrievedCredential = wallet.get(stored.id?.value ?: throw IllegalStateException("Credential must have ID"))
         ?: throw IllegalStateException("Credential not found in wallet")
-    val presentation = VerifiablePresentation(
-        id = CredentialId("urn:example:presentation:${System.currentTimeMillis()}"),
-        type = listOf(org.trustweave.credential.model.CredentialType.fromString("VerifiablePresentation")),
-        verifiableCredential = listOf(retrievedCredential),
-        holder = Iri(holderDid.value),
-        challenge = "presentation-challenge-123",
-        domain = "example.com"
-    )
-    println("✓ Presentation created with ${presentation.verifiableCredential.size} credential(s)\n")
+    when (val pr = trustWeave.presentationResult {
+        holder(holderDid)
+        credentials(retrievedCredential)
+        challenge("presentation-challenge-123")
+        domain("example.com")
+    }) {
+        is PresentationResult.Success ->
+            println("✓ Presentation created with ${pr.presentation.verifiableCredential.size} credential(s)\n")
+        is PresentationResult.Failure ->
+            println("⚠ Presentation skipped: ${pr.errors.joinToString()}\n")
+    }
 
     // ============================================
     // STEP 10: Verify Credential
@@ -311,7 +315,7 @@ fun main() = runBlocking {
 
     println("\n=== Comprehensive Example Complete ===")
     println("\nDSL Features Demonstrated:")
-    println("  ✓ Trust Layer Configuration")
+    println("  ✓ TrustWeave configuration")
     println("  ✓ DID Creation & Management")
     println("  ✓ Schema Registration (JSON Schema & SHACL)")
     println("  ✓ Credential Issuance with Auto-Revocation")

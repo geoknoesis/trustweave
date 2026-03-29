@@ -46,6 +46,8 @@ TrustWeave provides a comprehensive set of features for building verifiable cred
 All features can be used independently:
 
 ```kotlin
+import org.trustweave.metrics.*
+
 // Example: Using Audit Logging
 import org.trustweave.audit.*
 
@@ -53,7 +55,6 @@ val auditLogger = InMemoryAuditLogger()
 auditLogger.logEvent(AuditEvent(...))
 
 // Example: Using Metrics
-import org.trustweave.metrics.*
 
 val metrics = InMemoryMetricsCollector()
 metrics.increment("credentials.issued")

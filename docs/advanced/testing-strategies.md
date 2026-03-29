@@ -29,7 +29,7 @@ The `trustweave-testkit` module provides in-memory implementations:
 
 ```kotlin
 dependencies {
-    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:0.6.0")
 }
 ```
 
@@ -96,37 +96,38 @@ class KmsTest {
 ### Testing Credential Workflows
 
 ```kotlin
-import org.trustweave.testkit.*
-import org.trustweave.TrustWeave
-import org.trustweave.did.*
+import kotlinx.coroutines.runBlocking
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.*
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.trust.types.getOrThrowDid
 import kotlin.test.Test
+import kotlin.test.assertTrue
 
 class CredentialWorkflowTest {
     @Test
     fun testCredentialIssuanceAndVerification() = runBlocking {
-        val fixture = TrustWeaveTestFixture.builder()
-            .withInMemoryBlockchainClient("algorand:testnet")
-            .build()
-            .use { fixture ->
-                val TrustWeave = TrustWeave.create()
-
-                // Create issuer DID
-                val issuerDid = TrustWeave.dids.create()
-
-                // Issue credential
-                val credential = TrustWeave.issueCredential(
-                    issuerDid = issuerDid.id,
-                    issuerKeyId = issuerDid.document.verificationMethod.first().id,
-                    credentialSubject = buildJsonObject {
-                        put("id", "did:key:subject")
-                        put("name", "Alice")
-                    }
-                ).getOrThrow()
-
-                // Verify credential
-                val verificationResult = TrustWeave.verifyCredential(credential).getOrThrow()
-                assert(verificationResult.valid)
+        val trustWeave = TrustWeave.build {
+            keys { provider(IN_MEMORY); algorithm(ED25519) }
+            did { method(KEY) { algorithm(ED25519) } }
+        }
+        val issuerDid = trustWeave.createDid { }.getOrThrowDid()
+        val credential = trustWeave.issue {
+            credential {
+                type("VerifiableCredential", "PersonCredential")
+                issuer(issuerDid)
+                subject {
+                    id("did:key:subject")
+                    "name" to "Alice"
+                }
             }
+            signedBy(issuerDid, "key-1")
+        }.getOrThrow()
+        val verification = trustWeave.verify(credential)
+        assertTrue(verification is VerificationResult.Valid, verification.toString())
     }
 }
 ```
@@ -136,8 +137,9 @@ class CredentialWorkflowTest {
 ### Testing Blockchain Anchoring
 
 ```kotlin
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.JsonPrimitive
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import org.trustweave.anchor.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -145,12 +147,12 @@ class AnchoringTest {
     @Test
     fun testAnchorAndRead() = runBlocking {
         val client = InMemoryBlockchainAnchorClient("algorand:testnet")
+        val payload = JsonPrimitive("Hello, TrustWeave!")
 
-        val payload = "Hello, TrustWeave!".toByteArray()
-        val result = client.writePayload(payload).getOrThrow()
+        val anchored = client.writePayload(payload, "application/json")
+        val readBack = client.readPayload(anchored.ref)
 
-        val readData = client.readPayload(result.anchorRef).getOrThrow()
-        assertEquals(payload.toList(), readData.toList())
+        assertEquals(payload, readBack.payload)
     }
 }
 ```
@@ -162,6 +164,7 @@ class AnchoringTest {
 ### EO Integration Tests
 
 ```kotlin
+import org.trustweave.credential.results.VerificationResult
 import org.trustweave.testkit.eo.BaseEoIntegrationTest
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import org.trustweave.anchor.*
@@ -178,7 +181,7 @@ class MyEoIntegrationTest : BaseEoIntegrationTest() {
     @Test
     fun testEoScenario() = runBlocking {
         val result = runEoTestScenario()
-        assert(result.verificationResult.valid)
+        assert(result.verificationResult is VerificationResult.Valid)
     }
 }
 ```
@@ -192,6 +195,7 @@ class MyEoIntegrationTest : BaseEoIntegrationTest() {
 ```kotlin
 import org.trustweave.testkit.*
 import kotlin.test.Test
+import org.trustweave.testkit.services.*
 
 class FixtureTest {
     @Test
@@ -256,7 +260,7 @@ fun testErrorHandling() = runBlocking {
     result.fold(
         onSuccess = { fail("Expected error") },
         onFailure = { error ->
-            assert(error is TrustWeaveError.KeyNotFound)
+            assert(error is TrustWeaveException.NotFound)
         }
     )
 }
@@ -305,29 +309,31 @@ class MyCustomDidMethodTest {
 
         // Resolve DID
         val resolutionResult = method.resolveDid(did.id)
-        assertNotNull(resolutionResult.didDocument)
-        assertEquals(did.id, resolutionResult.didDocument?.id)
+        val resolved = when (resolutionResult) {
+            is DidResolutionResult.Success -> resolutionResult.document
+            else -> null
+        }
+        assertNotNull(resolved)
+        assertEquals(did.id, resolved?.id)
     }
 }
 ```
 
-### Testing Custom Blockchain Adapters
+### Testing custom blockchain adapters
 
 ```kotlin
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.JsonPrimitive
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import org.trustweave.anchor.*
 import kotlin.test.Test
+import kotlin.test.assertTrue
 
 class MyBlockchainAdapterTest {
     @Test
     fun testAnchor() = runBlocking {
-        val config = MyBlockchainConfig.testnet()
-        val client = MyBlockchainAnchorClient("myblockchain:testnet", config)
-
-        val payload = "test".toByteArray()
-        val result = client.writePayload(payload).getOrThrow()
-
-        assertNotNull(result.anchorRef.transactionHash)
+        val client = InMemoryBlockchainAnchorClient("myblockchain:testnet")
+        val anchored = client.writePayload(JsonPrimitive("test"), "application/json")
+        assertTrue(anchored.ref.txHash.isNotEmpty())
     }
 }
 ```
@@ -358,7 +364,7 @@ Aim for:
 
 ## References
 
-- [TrustWeave-testkit Module](../modules/trustweave-testkit.md)
-- [Error Handling](error-handling.md)
-- [Creating Plugins](../contributing/creating-plugins.md)
+- TrustWeave-testkit Module](../modules/trustweave-testkit.md)
+- Error Handling](error-handling.md)
+- Creating Plugins](../contributing/creating-plugins.md)
 

@@ -165,6 +165,6 @@ assertTrue(string.matches(Regex("pattern")))
 
 ## Next Steps
 
-- [Integration Testing](integration-testing.md) - Integration test best practices
-- [Test Setup Guide](test-setup-guide.md) - Environment setup
+- Integration Testing](integration-testing.md) - Integration test best practices
+- Test Setup Guide](test-setup-guide.md) - Environment setup
 

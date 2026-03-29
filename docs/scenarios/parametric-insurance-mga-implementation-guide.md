@@ -29,42 +29,29 @@ This comprehensive guide shows you how to build your parametric insurance MGA so
 
 ## Architecture Overview
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Atlas Parametric MGA Platform                │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                   │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌─────────────────┐  │
-│  │  EO Data        │  │  Pricing        │  │  Payout        │  │
-│  │  Ingestion      │  │  Engine         │  │  Automation    │  │
-│  │  (SAR, NDVI,    │  │  (Actuarial)    │  │  (Banking API) │  │
-│  │   AOD, LST)     │  │                 │  │                │  │
-│  └────────┬────────┘  └────────┬────────┘  └────────┬───────┘  │
-│           │                    │                     │          │
-│           └────────────────────┼─────────────────────┘          │
-│                                │                                 │
-│                    ┌───────────▼────────────┐                   │
-│                    │   TrustWeave Trust Layer │                   │
-│                    │  ┌──────────────────┐  │                   │
-│                    │  │ DID Management   │  │                   │
-│                    │  │ VC Issuance      │  │                   │
-│                    │  │ VC Verification │  │                   │
-│                    │  │ Blockchain Anchor│  │                   │
-│                    │  │ Data Integrity  │  │                   │
-│                    │  └──────────────────┘  │                   │
-│                    └───────────┬────────────┘                   │
-│                                │                                 │
-│  ┌──────────────────┐  ┌────────▼────────┐  ┌──────────────────┐  │
-│  │  Broker Portal  │  │  Trigger       │  │  Reinsurer      │  │
-│  │  (Distribution)  │  │  Engine        │  │  Dashboard      │  │
-│  └──────────────────┘  └────────────────┘  └──────────────────┘  │
-│                                                                   │
-└─────────────────────────────────────────────────────────────────┘
+```text
++---------------------------------------------------------------------+
+|              Atlas Parametric MGA Platform                          |
++---------------------------------------------------------------------+
+|  EO data ingestion   |  Pricing engine     |  Payout automation   |
+|  (SAR, NDVI, AOD,    |  (actuarial)        |  (banking API)       |
+|   LST, ...)          |                     |                      |
++----------+-----------+----------+----------+-----------+----------+
+                              |
+                              v
+                  +---------------------------+
+                  |    TrustWeave core        |
+                  |  DID, VC, anchor, integrity |
+                  +---------------------------+
++---------------------------------------------------------------------+
+|  Broker portal       |  Trigger engine     |  Reinsurer dashboard |
+|  (distribution)      |                     |                      |
++---------------------------------------------------------------------+
 ```
 
 ## Core Components
 
-### 1. TrustWeave Trust Layer
+### 1. TrustWeave core
 
 TrustWeave provides:
 - **DID Management**: Identity for insurers, EO providers, reinsurers, brokers
@@ -120,13 +107,19 @@ Automated payouts:
 ```kotlin
 package com.atlasparametric.products.flood
 
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
 import org.trustweave.contract.models.*
 import org.trustweave.core.*
-import org.trustweave.json.DigestUtils
+import org.trustweave.core.util.DigestUtils
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
+import org.trustweave.core.Did
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.credential.results.getOrThrow
 
 /**
  * SAR Flood Parametric Product using Smart Contracts
@@ -216,7 +209,7 @@ class SarFloodProduct(
             )
         ).getOrThrow()
 
-        println("✅ Flood contract draft created: ${contract.id}")
+        println("[OK] Flood contract draft created: ${contract.id}")
         return contract
     }
 
@@ -236,7 +229,7 @@ class SarFloodProduct(
             chainId = "algorand:mainnet"
         ).getOrThrow()
 
-        println("✅ Contract bound: ${bound.credentialId}, anchored: ${bound.anchorRef.txHash}")
+        println("[OK] Contract bound: ${bound.credentialId}, anchored: ${bound.anchorRef.txHash}")
         return bound
     }
 
@@ -279,20 +272,12 @@ class SarFloodProduct(
 
         // Step 3: Issue verifiable credential for EO data
         // Note: eoProviderDid is a String (DID value), so we need to create a Did object for resolveDid
-        import org.trustweave.core.Did
-        import org.trustweave.trust.types.getOrThrow
-        import org.trustweave.did.resolver.DidResolutionResult
-        import org.trustweave.did.identifiers.extractKeyId
         
-        // Helper extension for resolution results
-        fun DidResolutionResult.getOrThrow() = when (this) {
-            is DidResolutionResult.Success -> this.document
-            else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
-        }
-        
-        import org.trustweave.core.Did
         val eoProviderDidObj = Did(eoProviderDid)
-        val eoProviderDoc = trustWeave.resolveDid(eoProviderDidObj).getOrThrow()
+        val eoProviderDoc = when (val res = trustWeave.resolveDid(eoProviderDidObj)) {
+            is DidResolutionResult.Success -> res.document
+            else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+        }
         val eoProviderKeyId = eoProviderDoc.verificationMethod.firstOrNull()?.extractKeyId()
             ?: throw IllegalStateException("No verification method found")
 
@@ -317,20 +302,12 @@ class SarFloodProduct(
         val floodCredential = floodIssuanceResult.getOrThrow()
 
         // Step 4: Anchor to blockchain for tamper-proof record
-        val anchorResult = trustWeave.blockchains.anchor(
+        val anchored = trustWeave.blockchains.anchor(
             data = floodCredential,
             serializer = VerifiableCredential.serializer(),
             chainId = "algorand:mainnet"
         )
-        
-        anchorResult.fold(
-            onSuccess = { anchor ->
-                println("✅ SAR Flood Credential issued and anchored: ${anchor.ref.txHash}")
-            },
-            onFailure = { error ->
-                throw IllegalStateException("Failed to anchor credential: ${error.message}")
-            }
-        )
+        println("[OK] SAR Flood Credential issued and anchored: ${anchored.ref.txHash}")
 
         floodCredential
     }
@@ -367,7 +344,7 @@ class SarFloodProduct(
         ).getOrThrow()
 
         if (result.executed) {
-            println("✅ Contract executed! Payout triggered for flood depth: ${floodDepthCm}cm")
+            println("[OK] Contract executed! Payout triggered for flood depth: ${floodDepthCm}cm")
             result.outcomes.forEach { outcome ->
                 println("   Outcome: ${outcome.description}")
                 outcome.monetaryImpact?.let {
@@ -375,7 +352,7 @@ class SarFloodProduct(
                 }
             }
         } else {
-            println("⚠️  Contract conditions not met (flood depth: ${floodDepthCm}cm)")
+            println("[WARN]  Contract conditions not met (flood depth: ${floodDepthCm}cm)")
         }
 
         return result
@@ -404,7 +381,7 @@ data class SarFloodMeasurement(
 
 **Data Sources:** MODIS LST + ERA5
 **Markets:** GCC (Saudi Arabia, UAE)
-**Triggers:** > X°C for Y days
+**Triggers:** > XÃ‚ C for Y days
 **Clients:** Construction, energy, government
 
 #### Implementation
@@ -412,13 +389,14 @@ data class SarFloodMeasurement(
 ```kotlin
 package com.atlasparametric.products.heatwave
 
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
 import org.trustweave.core.*
-import org.trustweave.json.DigestUtils
+import org.trustweave.core.util.DigestUtils
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
 import java.time.Duration
+import org.trustweave.core.Did
 
 class HeatwaveProduct(
     private val TrustWeave: TrustWeave,
@@ -459,9 +437,11 @@ class HeatwaveProduct(
         val dataDigest = DigestUtils.sha256DigestMultibase(heatwaveData)
 
         // Resolve DID from string (eoProviderDid is a DID string)
-        import org.trustweave.core.Did
         val eoProviderDidObj = Did(eoProviderDid)
-        val eoProviderDoc = trustWeave.resolveDid(eoProviderDidObj).getOrThrow()
+        val eoProviderDoc = when (val res = trustWeave.resolveDid(eoProviderDidObj)) {
+            is DidResolutionResult.Success -> res.document
+            else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+        }
         val eoProviderKeyId = eoProviderDoc.verificationMethod.firstOrNull()?.extractKeyId()
             ?: throw IllegalStateException("No verification method found")
 
@@ -486,19 +466,10 @@ class HeatwaveProduct(
         val heatwaveCredential = heatwaveIssuanceResult.getOrThrow()
 
         // Anchor to blockchain
-        val anchorResult = trustWeave.blockchains.anchor(
+        trustWeave.blockchains.anchor(
             data = heatwaveCredential,
             serializer = VerifiableCredential.serializer(),
             chainId = "algorand:mainnet"
-        )
-        
-        anchorResult.fold(
-            onSuccess = { anchor ->
-                // Credential anchored successfully
-            },
-            onFailure = { error ->
-                throw IllegalStateException("Failed to anchor credential: ${error.message}")
-            }
         )
 
         heatwaveCredential
@@ -538,7 +509,7 @@ class HeatwaveProduct(
                     conditions = listOf(
                         ContractCondition(
                             id = "heatwave-threshold",
-                            description = "Temperature >= ${threshold.temperatureC}°C for ${threshold.minDays} days",
+                            description = "Temperature >= ${threshold.temperatureC}Ã‚ C for ${threshold.minDays} days",
                             conditionType = ConditionType.COMPOSITE,
                             expression = "$.consecutiveDays >= ${threshold.minDays} && $.maxTemperatureC >= ${threshold.temperatureC}"
                         )
@@ -651,12 +622,13 @@ data class HeatwavePolicy(
 ```kotlin
 package com.atlasparametric.products.solar
 
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
 import org.trustweave.core.*
-import org.trustweave.json.DigestUtils
+import org.trustweave.core.util.DigestUtils
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
+import org.trustweave.core.Did
 
 class SolarAttenuationProduct(
     private val TrustWeave: TrustWeave,
@@ -698,9 +670,11 @@ class SolarAttenuationProduct(
         val dataDigest = DigestUtils.sha256DigestMultibase(solarData)
 
         // Resolve DID from string (eoProviderDid is a DID string)
-        import org.trustweave.core.Did
         val eoProviderDidObj = Did(eoProviderDid)
-        val eoProviderDoc = trustWeave.resolveDid(eoProviderDidObj).getOrThrow()
+        val eoProviderDoc = when (val res = trustWeave.resolveDid(eoProviderDidObj)) {
+            is DidResolutionResult.Success -> res.document
+            else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+        }
         val eoProviderKeyId = eoProviderDoc.verificationMethod.firstOrNull()?.extractKeyId()
             ?: throw IllegalStateException("No verification method found")
 
@@ -724,20 +698,10 @@ class SolarAttenuationProduct(
         
         val solarCredential = solarIssuanceResult.getOrThrow()
 
-        // Anchor to blockchain
-        val anchorResult = trustWeave.blockchains.anchor(
+        trustWeave.blockchains.anchor(
             data = solarCredential,
             serializer = VerifiableCredential.serializer(),
             chainId = "algorand:mainnet"
-        )
-        
-        anchorResult.fold(
-            onSuccess = { anchor ->
-                // Credential anchored successfully
-            },
-            onFailure = { error ->
-                throw IllegalStateException("Failed to anchor credential: ${error.message}")
-            }
         )
 
         solarCredential
@@ -759,7 +723,10 @@ class SolarAttenuationProduct(
                 // Credential is valid, continue
             }
             is VerificationResult.Invalid -> {
-                return TriggerResult(triggered = false, reason = "Credential invalid: ${verification.reason}")
+                return TriggerResult(
+                    triggered = false,
+                    reason = "Credential invalid: ${verification.allErrors.joinToString()}"
+                )
             }
         }
 
@@ -820,42 +787,40 @@ data class SolarPolicy(
 ### Complete Flood Insurance Workflow with Smart Contracts
 
 ```kotlin
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.testkit.services.*
+import org.trustweave.credential.results.getOrThrow
+
 suspend fun completeFloodInsuranceWorkflow() {
     // Step 1: Initialize TrustWeave
     val trustWeave = TrustWeave.build {
-        factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
-        )
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
-        blockchains {
-            "algorand:mainnet" to algorandClient
+        anchor {
+            chain("algorand:mainnet") {
+                provider("algorand")
+                options { /* map from algorandClient / environment */ }
+            }
         }
     }
 
     // Step 2: Create DIDs for parties
-    import org.trustweave.trust.types.DidCreationResult
-    import org.trustweave.trust.types.DidResolutionResult
-    import org.trustweave.trust.types.IssuanceResult
-    import org.trustweave.trust.types.VerificationResult
     
-    import org.trustweave.trust.types.getOrThrowDid
-    import org.trustweave.trust.types.getOrThrow
-    import org.trustweave.did.resolver.DidResolutionResult
-    import org.trustweave.did.identifiers.extractKeyId
-    
-    // Helper extension for resolution results
-    fun DidResolutionResult.getOrThrow() = when (this) {
-        is DidResolutionResult.Success -> this.document
-        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
-    }
     
     val insurerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     val insuredDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     val eoProviderDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     
-    val insurerDoc = trustWeave.resolveDid(insurerDid).getOrThrow()
+    val insurerDoc = when (val res = trustWeave.resolveDid(insurerDid)) {
+        is DidResolutionResult.Success -> res.document
+        else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+    }
     val insurerKeyId = insurerDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No key found")
 
@@ -928,12 +893,15 @@ suspend fun completeFloodInsuranceWorkflow() {
 ```kotlin
 package com.atlasparametric
 
-import org.trustweave.TrustWeave
-import org.trustweave.chains.algorand.AlgorandBlockchainAnchorClient
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.types.getOrThrowDid
 import com.atlasparametric.products.flood.SarFloodProduct
 import com.atlasparametric.products.heatwave.HeatwaveProduct
 import com.atlasparametric.products.solar.SolarAttenuationProduct
 import kotlinx.coroutines.runBlocking
+import org.trustweave.testkit.services.*
 
 /**
  * Atlas Parametric MGA Platform
@@ -942,29 +910,28 @@ import kotlinx.coroutines.runBlocking
  */
 class AtlasParametricPlatform {
 
-    private val TrustWeave: TrustWeave
+    private val trustWeave: TrustWeave
     private val sarFloodProduct: SarFloodProduct
     private val heatwaveProduct: HeatwaveProduct
     private val solarProduct: SolarAttenuationProduct
 
     init {
-        // Initialize TrustWeave with blockchain anchoring
-        TrustWeave = TrustWeave.create {
-            blockchains {
-                "algorand:mainnet" to AlgorandBlockchainAnchorClient(
-                    chainId = "algorand:mainnet",
-                    apiKey = System.getenv("ALGORAND_API_KEY")
-                )
+        trustWeave = TrustWeave.build {
+            did { method(KEY) { algorithm(ED25519) } }
+            anchor {
+                chain("algorand:mainnet") {
+                    provider("algorand")
+                    options {
+                        "apiKey" to System.getenv("ALGORAND_API_KEY")
+                    }
+                }
             }
         }
 
-        // Create DIDs for EO providers
         val eoProviderDidResult = runBlocking {
-            trustWeave.createDid { method(KEY) }
+            trustWeave.createDid { method(KEY); algorithm(ED25519) }
         }
-        
-        import org.trustweave.trust.types.getOrThrowDid
-        
+
         val eoProviderDid = eoProviderDidResult.getOrThrowDid()
 
         // Initialize products
@@ -1116,7 +1083,7 @@ class MultiProviderEoDataService(
                 // Credential is valid, continue
             }
             is VerificationResult.Invalid -> {
-                error("Credential verification failed: ${verificationResult.errors}")
+                error("Credential verification failed: ${verificationResult.allErrors.joinToString()}")
             }
         }
 
@@ -1214,7 +1181,7 @@ class BrokerPortalController(
  * Audit Trail Service using TrustWeave blockchain anchoring
  */
 class AuditTrailService(
-    private val TrustWeave: TrustWeave
+    private val trustWeave: TrustWeave
 ) {
 
     /**
@@ -1235,15 +1202,15 @@ class AuditTrailService(
         }
 
         // Anchor to blockchain for immutability
-        val anchorResult = trustWeave.blockchains.anchor(
+        val anchored = trustWeave.blockchains.anchor(
             data = auditRecord,
             serializer = JsonObject.serializer(),
             chainId = "algorand:mainnet"
-        ).getOrThrow()
+        )
 
         return AuditRecord(
             eventId = event.id,
-            anchorRef = anchorResult.ref,
+            anchorRef = anchored.ref,
             timestamp = event.timestamp
         )
     }
@@ -1256,7 +1223,7 @@ class AuditTrailService(
     ): Boolean {
 
         // Read from blockchain
-        val client = TrustWeave.getBlockchainClient(record.anchorRef.chainId)
+        val client = trustWeave.configuration.anchorClients[record.anchorRef.chainId]
             ?: return false
 
         val anchorResult = client.readPayload(record.anchorRef)
@@ -1306,12 +1273,12 @@ class AuditTrailService(
 ## Next Steps
 
 1. **Review Existing Scenarios**:
-   - [Parametric Insurance with EO Data](parametric-insurance-eo-scenario.md)
-   - [Earth Observation Scenario](earth-observation-scenario.md)
+   - Parametric Insurance with EO Data](parametric-insurance-eo-scenario.md)
+   - Earth Observation Scenario](earth-observation-scenario.md)
 
 2. **Explore TrustWeave APIs**:
-   - [Core API Reference](../api-reference/core-api.md)
-   - [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md)
+   - Core API Reference](../api-reference/core-api.md)
+   - Blockchain Anchoring](../core-concepts/blockchain-anchoring.md)
 
 3. **Start Building**:
    - Clone TrustWeave repository
@@ -1320,9 +1287,9 @@ class AuditTrailService(
 
 ## Related Documentation
 
-- [Parametric Insurance with EO Data](parametric-insurance-eo-scenario.md) - EO data insurance patterns
-- [Earth Observation Scenario](earth-observation-scenario.md) - EO data integrity
-- [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
-- [API Reference](../api-reference/core-api.md) - Complete API documentation
+- Parametric Insurance with EO Data](parametric-insurance-eo-scenario.md) - EO data insurance patterns
+- Earth Observation Scenario](earth-observation-scenario.md) - EO data integrity
+- Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
+- API Reference](../api-reference/core-api.md) - Complete API documentation
 
 

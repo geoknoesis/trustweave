@@ -22,10 +22,10 @@ Add the Ethereum adapter module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave.chains:ethereum:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-json:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:anchors-plugins-ethereum:0.6.0")
+    implementation("org.trustweave:anchors-anchor-core:0.6.0")
+    implementation("org.trustweave:common:0.6.0")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Web3j for Ethereum blockchain
     implementation("org.web3j:core:5.0.1")
@@ -161,25 +161,29 @@ println("Retrieved: ${readResult.payload}")
 ## Integration with TrustWeave
 
 ```kotlin
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
 import org.trustweave.ethereum.*
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
-val TrustWeave = TrustWeave.create {
-    blockchain {
-        register(
-            EthereumBlockchainAnchorClient.MAINNET,
-            EthereumBlockchainAnchorClient(
-                EthereumBlockchainAnchorClient.MAINNET,
-                mapOf("rpcUrl" to "https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY")
-            )
-        )
+val trustWeave = TrustWeave.build {
+    did { method("key") { algorithm("Ed25519") } }
+    anchor {
+        chain(EthereumBlockchainAnchorClient.MAINNET) {
+            provider("ethereum")
+            options { "rpcUrl" to "https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY" }
+        }
     }
 }
 
-// Anchor a credential digest
 val digest = "uABC123..."
 val payload = buildJsonObject { put("digest", digest) }
-val result = TrustWeave.anchor(EthereumBlockchainAnchorClient.MAINNET, payload).getOrThrow()
+val result = trustWeave.blockchains.anchor(
+    data = payload,
+    serializer = JsonElement.serializer(),
+    chainId = EthereumBlockchainAnchorClient.MAINNET
+)
 println("Anchored: ${result.ref.txHash}")
 ```
 
@@ -222,7 +226,7 @@ println("Anchored: ${result.ref.txHash}")
 
 ## References
 
-- [Ethereum Documentation](https://ethereum.org/en/developers/docs/)
-- [Sepolia Testnet](https://sepolia.dev/)
-- [Web3j Documentation](https://docs.web3j.io/)
+- Ethereum Documentation](https://ethereum.org/en/developers/docs/)
+- Sepolia Testnet](https://sepolia.dev/)
+- Web3j Documentation](https://docs.web3j.io/)
 

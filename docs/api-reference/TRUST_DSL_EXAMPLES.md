@@ -4,7 +4,7 @@ nav_exclude: true
 
 # Trust DSL Examples
 
-This document demonstrates the expressive trust DSL with infix operators and policy composition.
+This document demonstrates the trust registry DSL and **issuer trust** composition during verification. Issuer allowlists/blocklists use `org.trustweave.credential.trust.TrustEvaluator`; infix `and`, `or`, and `not` for composing evaluators live in `org.trustweave.trust.dsl`.
 
 ## Infix Operators for Trust Relationships
 
@@ -46,7 +46,7 @@ trustWeave.trust {
 trustWeave.trust {
     val path = findTrustPath(
         from = VerifierIdentity(Did("did:key:verifier")),
-        to = IssuerIdentity.from("did:key:issuer", "key-1")
+        to = IssuerIdentity("did:key:issuer")
     )
 }
 ```
@@ -54,8 +54,6 @@ trustWeave.trust {
 **After (Infix DSL):**
 ```kotlin
 trustWeave.trust {
-    val path = resolve(verifierDid trustsPath issuerDid)
-    // OR
     val path = resolve(verifierDid trustsPath issuerDid)
     
     when (path) {
@@ -70,38 +68,57 @@ trustWeave.trust {
 }
 ```
 
-## Policy Composition
+## Issuer trust composition (`TrustEvaluator`)
 
-### Combining Policies with AND
+Import the credential API type and the DSL extensions:
 
 ```kotlin
-val policy = TrustPolicy.allowlist(trustedIssuers) and TrustPolicy.blocklist(blockedIssuers)
+import org.trustweave.credential.trust.TrustEvaluator
+import org.trustweave.trust.dsl.and
+import org.trustweave.trust.dsl.or
+import org.trustweave.trust.dsl.not
 ```
 
-### Combining Policies with OR
+### Combining evaluators with AND
 
 ```kotlin
-val policy = requireAnchor(caDid) or requirePath(maxLength = 3)
+val evaluator = TrustEvaluator.allowlist(trustedIssuers) and TrustEvaluator.blocklist(blockedIssuers)
 ```
 
-### Negating Policies
+### Combining evaluators with OR
+
+Either evaluator can accept the issuer:
 
 ```kotlin
-val policy = !TrustPolicy.blocklist(blockedIssuers)
+val evaluator = TrustEvaluator.allowlist(teamAIssuers) or TrustEvaluator.allowlist(teamBIssuers)
 ```
 
-### Complex Policy Composition
+### Negating an evaluator
 
 ```kotlin
-val policy = (
-    TrustPolicy.allowlist(trustedIssuers) 
-    and TrustPolicy.blocklist(blockedIssuers)
-) or requirePath(maxLength = 2)
+val evaluator = !TrustEvaluator.blocklist(blockedIssuers)
+```
+
+### Nested composition
+
+```kotlin
+val evaluator = (
+    TrustEvaluator.allowlist(trustedIssuers)
+        and TrustEvaluator.blocklist(blockedIssuers)
+    )
 ```
 
 ## Complete Example
 
 ```kotlin
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.credential.trust.TrustEvaluator
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.TrustPath
+import org.trustweave.trust.dsl.and
+import org.trustweave.trust.dsl.not
+import org.trustweave.testkit.services.*
+
 val trustWeave = TrustWeave.build {
     keys { provider(IN_MEMORY); algorithm(ED25519) }
     did { method(KEY) { algorithm(ED25519) } }
@@ -124,7 +141,6 @@ trustWeave.trust {
         description("Root CA")
     })
     
-    // Find trust path
     val path = resolve(verifierDid trustsPath issuerDid)
     when (path) {
         is TrustPath.Verified -> println("Path found: ${path.length} hops")
@@ -132,15 +148,19 @@ trustWeave.trust {
     }
 }
 
-// Use composed policy in verification
-val policy = (
-    TrustPolicy.allowlist(setOf(universityDid, caDid))
-    and !TrustPolicy.blocklist(emptySet())
-) or requirePath(maxLength = 3)
+// Issuer trust during credential verification (TrustEvaluator + composition)
+val trustEvaluator = (
+    TrustEvaluator.allowlist(setOf(universityDid, caDid))
+        and !TrustEvaluator.blocklist(emptySet())
+    )
 
 val verification = trustWeave.verify {
     credential(credential)
-    withTrustPolicy(policy)
-}.getOrThrow()
-```
+    withTrustPolicy(trustEvaluator)
+}
 
+when (verification) {
+    is VerificationResult.Valid -> println("OK")
+    is VerificationResult.Invalid -> println(verification.allErrors.joinToString())
+}
+```

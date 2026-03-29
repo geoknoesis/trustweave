@@ -1,7 +1,6 @@
 package org.trustweave.did.resolver
 
 import org.trustweave.did.model.DidDocument
-import org.trustweave.did.exception.DidException
 
 /**
  * Extension functions for [DidResolutionResult] to improve ergonomics.
@@ -54,3 +53,14 @@ val DidResolutionResult.errorMessage: String?
 val DidResolutionResult.isSuccess: Boolean
     get() = this is DidResolutionResult.Success
 
+/**
+ * Returns the resolved [DidDocument] or throws [IllegalStateException] with [errorMessage] context.
+ */
+fun DidResolutionResult.getOrThrow(): DidDocument {
+    return when (this) {
+        is DidResolutionResult.Success -> document
+        is DidResolutionResult.Failure -> throw IllegalStateException(
+            errorMessage ?: "DID resolution failed"
+        )
+    }
+}

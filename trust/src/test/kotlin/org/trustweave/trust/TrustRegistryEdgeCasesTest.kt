@@ -1,6 +1,10 @@
 package org.trustweave.trust
 
+import org.trustweave.did.identifiers.Did
 import org.trustweave.testkit.trust.InMemoryTrustRegistry
+import org.trustweave.trust.types.IssuerIdentity
+import org.trustweave.trust.types.TrustPath
+import org.trustweave.trust.types.VerifierIdentity
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -58,11 +62,11 @@ class TrustRegistryEdgeCasesTest {
         registry.addTrustRelationship("did:key:anchor2", "did:key:anchor1")
 
         val path = registry.findTrustPath(
-            org.trustweave.did.identifiers.Did("did:key:anchor1"),
-            org.trustweave.did.identifiers.Did("did:key:anchor2")
+            VerifierIdentity(Did("did:key:anchor1")),
+            IssuerIdentity(Did("did:key:anchor2"))
         )
 
-        assertTrue(path is org.trustweave.trust.types.TrustPath.Verified)
+        assertTrue(path is TrustPath.Verified)
         // Should handle circular references gracefully
     }
 
@@ -75,11 +79,11 @@ class TrustRegistryEdgeCasesTest {
         // No relationship between them
 
         val path = registry.findTrustPath(
-            org.trustweave.did.identifiers.Did("did:key:anchor1"),
-            org.trustweave.did.identifiers.Did("did:key:anchor2")
+            VerifierIdentity(Did("did:key:anchor1")),
+            IssuerIdentity(Did("did:key:anchor2"))
         )
 
-        assertTrue(path is org.trustweave.trust.types.TrustPath.NotFound)
+        assertTrue(path is TrustPath.NotFound)
     }
 
     @Test
@@ -96,27 +100,27 @@ class TrustRegistryEdgeCasesTest {
         registry.addTrustRelationship("did:key:a3", "did:key:a4")
 
         val path1 = registry.findTrustPath(
-            org.trustweave.did.identifiers.Did("did:key:a1"),
-            org.trustweave.did.identifiers.Did("did:key:a1")
+            VerifierIdentity(Did("did:key:a1")),
+            IssuerIdentity(Did("did:key:a1"))
         )
-        assertTrue(path1 is org.trustweave.trust.types.TrustPath.Verified)
-        val verified1 = path1 as org.trustweave.trust.types.TrustPath.Verified
+        assertTrue(path1 is TrustPath.Verified)
+        val verified1 = path1 as TrustPath.Verified
         assertEquals(1.0, verified1.trustScore)
 
         val path2 = registry.findTrustPath(
-            org.trustweave.did.identifiers.Did("did:key:a1"),
-            org.trustweave.did.identifiers.Did("did:key:a2")
+            VerifierIdentity(Did("did:key:a1")),
+            IssuerIdentity(Did("did:key:a2"))
         )
-        assertTrue(path2 is org.trustweave.trust.types.TrustPath.Verified)
-        val verified2 = path2 as org.trustweave.trust.types.TrustPath.Verified
+        assertTrue(path2 is TrustPath.Verified)
+        val verified2 = path2 as TrustPath.Verified
         assertTrue(verified2.trustScore in 0.0..1.0)
 
         val path3 = registry.findTrustPath(
-            org.trustweave.did.identifiers.Did("did:key:a1"),
-            org.trustweave.did.identifiers.Did("did:key:a4")
+            VerifierIdentity(Did("did:key:a1")),
+            IssuerIdentity(Did("did:key:a4"))
         )
-        assertTrue(path3 is org.trustweave.trust.types.TrustPath.Verified)
-        val verified3 = path3 as org.trustweave.trust.types.TrustPath.Verified
+        assertTrue(path3 is TrustPath.Verified)
+        val verified3 = path3 as TrustPath.Verified
         assertTrue(verified3.trustScore in 0.0..1.0)
         assertTrue(verified3.trustScore < verified2.trustScore) // Longer path = lower score
     }
@@ -159,22 +163,21 @@ class TrustRegistryEdgeCasesTest {
         registry.addTrustAnchor("did:key:a2", TrustAnchorMetadata())
         registry.addTrustRelationship("did:key:a1", "did:key:a2")
 
-        // Valid trust path
         val validPath = registry.findTrustPath(
-            org.trustweave.did.identifiers.Did("did:key:a1"),
-            org.trustweave.did.identifiers.Did("did:key:a2")
+            VerifierIdentity(Did("did:key:a1")),
+            IssuerIdentity(Did("did:key:a2"))
         )
-        assertTrue(validPath is org.trustweave.trust.types.TrustPath.Verified)
-        val verified = validPath as org.trustweave.trust.types.TrustPath.Verified
+        assertTrue(validPath is TrustPath.Verified)
+        val verified = validPath as TrustPath.Verified
         assertTrue(verified.trustScore in 0.0..1.0)
 
         // Invalid trust path (no relationship)
         registry.addTrustAnchor("did:key:a3", TrustAnchorMetadata())
         val invalidPath = registry.findTrustPath(
-            org.trustweave.did.identifiers.Did("did:key:a1"),
-            org.trustweave.did.identifiers.Did("did:key:a3")
+            VerifierIdentity(Did("did:key:a1")),
+            IssuerIdentity(Did("did:key:a3"))
         )
-        assertTrue(invalidPath is org.trustweave.trust.types.TrustPath.NotFound)
+        assertTrue(invalidPath is TrustPath.NotFound)
     }
 
     @Test
@@ -186,14 +189,12 @@ class TrustRegistryEdgeCasesTest {
         registry.addTrustRelationship("did:key:a1", "did:key:a2")
 
         val path = registry.findTrustPath(
-            org.trustweave.did.identifiers.Did("did:key:a1"),
-            org.trustweave.did.identifiers.Did("did:key:a2")
+            VerifierIdentity(Did("did:key:a1")),
+            IssuerIdentity(Did("did:key:a2"))
         )
         
-        assertTrue(path is org.trustweave.trust.types.TrustPath.Verified)
-        val verified = path as org.trustweave.trust.types.TrustPath.Verified
-        // Trust score should be validated by the TrustPath.Verified init block
+        assertTrue(path is TrustPath.Verified)
+        val verified = path as TrustPath.Verified
         assertTrue(verified.trustScore in 0.0..1.0)
     }
 }
-

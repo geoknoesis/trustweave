@@ -12,13 +12,13 @@ This guide demonstrates how to build a national-level education credential syste
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created DIDs for national education authority and educational institutions
-- ✅ Issued national-level education credentials (AlgeroPass credentials)
-- ✅ Built cross-institution credential verification system
-- ✅ Implemented credential portability across Algerian universities
-- ✅ Created student credential wallet for national credentials
-- ✅ Anchored critical credentials to blockchain for immutability
-- ✅ Built complete national education credential ecosystem
+- Created DIDs for national education authority and educational institutions
+- Issued national-level education credentials (AlgeroPass credentials)
+- Built cross-institution credential verification system
+- Implemented credential portability across Algerian universities
+- Created student credential wallet for national credentials
+- Anchored critical credentials to blockchain for immutability
+- Built complete national education credential ecosystem
 
 ## Big Picture & Significance
 
@@ -185,10 +185,10 @@ Add TrustWeave dependencies to your `build.gradle.kts`. These modules cover DID 
 dependencies {
     // Core TrustWeave modules
     // TrustWeave distribution (includes all modules)
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Test kit for in-memory implementations
-    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:0.6.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -215,7 +215,12 @@ dependencies {
 ```kotlin
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.did.DidMethodRegistry
+import org.trustweave.trust.TrustWeave
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.credential.model.ProofType
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -231,13 +236,18 @@ fun main() = runBlocking {
     val studentKms = InMemoryKeyManagementService() // For students
 
     val didMethod = DidKeyMockMethod(authorityKms)
-    val didRegistry = DidMethodRegistry().apply { register(didMethod) }
 
-    // Initialize TrustWeave
     val trustWeave = TrustWeave.build {
-        keyManagementService(authorityKms)
-        didMethodRegistry(didRegistry)
-        credentialService { CredentialService() }
+        keys {
+            custom(authorityKms)
+            algorithm(ED25519)
+        }
+        did {
+            method(KEY) {
+                algorithm(ED25519)
+            }
+        }
+        credentials { defaultProofType(ProofType.Ed25519Signature2020) }
     }
 
     println("Services initialized")
@@ -257,6 +267,8 @@ fun main() = runBlocking {
 - **Trust**: Students trust credentials from recognized institutions
 
 ```kotlin
+import java.time.Instant
+
     // Step 2: Create national authority and institution DIDs
     println("\nStep 2: Creating national authority and institution DIDs...")
 
@@ -275,8 +287,10 @@ fun main() = runBlocking {
     // Create institution registration credential
     // This proves the institution is recognized by the national authority
     val institutionRegistrationCredential = createInstitutionRegistrationCredential(
-        institutionDid = institutionDid.id,
-        authorityDid = authorityDid.id,
+        trustWeave = trustWeave,
+        institutionDid = institutionDid.id.value,
+        authorityDid = authorityDid.id.value,
+        issuerKeyId = authorityKms.generateKey("Ed25519").id.value,
         institutionName = "University of Algiers",
         institutionCode = "UA-001",
         recognitionDate = Instant.now().toString()
@@ -301,7 +315,8 @@ fun main() = runBlocking {
 - **Portability**: Enables student mobility
 
 ```kotlin
-import org.trustweave.credential.models.VerifiableCredential
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.results.IssuanceResult
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
@@ -318,10 +333,10 @@ import java.time.Instant
     // Create AlgeroPass enrollment credential
     // This is the national-level credential proving student enrollment
     // It references the institution but is issued by national authority
-    val authorityKeyId = authorityKms.generateKey("Ed25519").id
+    val authorityKeyId = authorityKms.generateKey("Ed25519").id.value
     val enrollmentResult = trustWeave.issue {
         credential {
-            id("https://algeropass.dz/credentials/${studentDid.id.substringAfterLast(":")}/enrollment")
+            id("https://algeropass.dz/credentials/${studentDid.id.value.substringAfterLast(":")}/enrollment")
             type("VerifiableCredential", "AlgeroPassCredential", "EnrollmentCredential", "EducationCredential")
             issuer(authorityDid.id) // National authority issues credential
             subject {
@@ -350,8 +365,8 @@ import java.time.Instant
         signedBy(issuerDid = authorityDid.id, keyId = authorityKeyId)
     }
     
-    val enrollmentCredential = when (enrollmentResult) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> enrollmentResult.credential
+    val issuedEnrollmentCredential = when (enrollmentResult) {
+        is IssuanceResult.Success -> enrollmentResult.credential
         else -> throw IllegalStateException("Failed to create enrollment credential: ${enrollmentResult.allErrors.joinToString()}")
     }
 
@@ -376,10 +391,10 @@ import java.time.Instant
 
 ```kotlin
     // Step 4: Credential is already issued via trustWeave.issue { } DSL above
-    // The credential (enrollmentCredential) already contains proof from DSL issuance
+    // The credential (issuedEnrollmentCredential) already contains proof from DSL issuance
 
     println("AlgeroPass enrollment credential issued:")
-    println("  - Proof: ${enrollmentCredential.proof != null}")
+    println("  - Proof: ${issuedEnrollmentCredential.proof != null}")
     println("  - Issuer: ${authorityDid.id}")
 ```
 
@@ -396,12 +411,15 @@ import java.time.Instant
 - **Verification**: Institutions can verify achievements
 
 ```kotlin
+import org.trustweave.credential.results.IssuanceResult
+import java.time.Instant
+
     // Step 5: Create academic achievement credential
     println("\nStep 5: Creating academic achievement credential...")
 
     // Academic achievement credential records student performance
     // This is issued by the institution but recognized nationally
-    val institutionKeyId = institutionKms.generateKey("Ed25519").id
+    val institutionKeyId = institutionKms.generateKey("Ed25519").id.value
     val achievementResult = trustWeave.issue {
         credential {
             type("VerifiableCredential", "AlgeroPassCredential", "AchievementCredential", "EducationCredential")
@@ -446,7 +464,7 @@ import java.time.Instant
     }
     
     val issuedAchievementCredential = when (achievementResult) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> achievementResult.credential
+        is IssuanceResult.Success -> achievementResult.credential
         else -> throw IllegalStateException("Failed to create achievement credential: ${achievementResult.allErrors.joinToString()}")
     }
 
@@ -477,8 +495,8 @@ import org.trustweave.testkit.credential.InMemoryWallet
     // Create student's national credential wallet
     // This wallet stores all AlgeroPass credentials
     val studentWallet = InMemoryWallet(
-        walletDid = studentDid.id,
-        holderDid = studentDid.id
+        walletDid = studentDid.id.value,
+        holderDid = studentDid.id.value
     )
 
     // Store enrollment credential
@@ -518,50 +536,45 @@ import org.trustweave.testkit.credential.InMemoryWallet
 - **Trust**: Builds trust in credential system
 
 ```kotlin
-import org.trustweave.credential.verifier.CredentialVerifier
-import org.trustweave.credential.CredentialVerificationOptions
+import org.trustweave.credential.results.VerificationResult
 
     // Step 7: Verify credentials
     println("\nStep 7: Verifying credentials...")
 
-    val verifier = CredentialVerifier(didResolver)
-
-    // Verify enrollment credential
-    val enrollmentVerification = verifier.verify(
-        credential = issuedEnrollmentCredential,
-        options = CredentialVerificationOptions(
-            checkRevocation = false,
-            checkExpiration = false,
-            didResolver = didResolver
-        )
-    )
-
-    if (enrollmentVerification.valid) {
-        println("✅ Enrollment credential verified")
-        println("  - Issuer: ${authorityDid.id}")
-        println("  - Student: ${studentDid.id}")
-    } else {
-        println("❌ Enrollment credential verification failed:")
-        enrollmentVerification.errors.forEach { println("  - $it") }
+    val enrollmentVerification = trustWeave.verify {
+        credential(issuedEnrollmentCredential)
+        skipRevocation()
+        skipExpiration()
     }
 
-    // Verify achievement credential
-    val achievementVerification = verifier.verify(
-        credential = issuedAchievementCredential,
-        options = CredentialVerificationOptions(
-            checkRevocation = false,
-            checkExpiration = false,
-            didResolver = didResolver
-        )
-    )
+    when (enrollmentVerification) {
+        is VerificationResult.Valid -> {
+            println("✅ Enrollment credential verified")
+            println("  - Issuer: ${authorityDid.id}")
+            println("  - Student: ${studentDid.id}")
+        }
+        is VerificationResult.Invalid -> {
+            println("❌ Enrollment credential verification failed:")
+            enrollmentVerification.allErrors.forEach { println("  - $it") }
+        }
+    }
 
-    if (achievementVerification.valid) {
-        println("✅ Achievement credential verified")
-        println("  - Issuer: ${institutionDid.id}")
-        println("  - Institution: University of Algiers")
-    } else {
-        println("❌ Achievement credential verification failed:")
-        achievementVerification.errors.forEach { println("  - $it") }
+    val achievementVerification = trustWeave.verify {
+        credential(issuedAchievementCredential)
+        skipRevocation()
+        skipExpiration()
+    }
+
+    when (achievementVerification) {
+        is VerificationResult.Valid -> {
+            println("✅ Achievement credential verified")
+            println("  - Issuer: ${institutionDid.id}")
+            println("  - Institution: University of Algiers")
+        }
+        is VerificationResult.Invalid -> {
+            println("❌ Achievement credential verification failed:")
+            achievementVerification.allErrors.forEach { println("  - $it") }
+        }
     }
 ```
 
@@ -578,6 +591,9 @@ import org.trustweave.credential.CredentialVerificationOptions
 - **National Recognition**: Transfer recognized nationally
 
 ```kotlin
+import org.trustweave.credential.results.IssuanceResult
+import java.time.Instant
+
     // Step 8: Create transfer credential
     println("\nStep 8: Creating transfer credential...")
 
@@ -615,7 +631,7 @@ import org.trustweave.credential.CredentialVerificationOptions
     }
     
     val issuedTransferCredential = when (transferResult) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> transferResult.credential
+        is IssuanceResult.Success -> transferResult.credential
         else -> throw IllegalStateException("Failed to create transfer credential: ${transferResult.allErrors.joinToString()}")
     }
 
@@ -643,11 +659,18 @@ import org.trustweave.credential.CredentialVerificationOptions
 - **Fraud Prevention**: Prevents credential forgery
 
 ```kotlin
+import org.trustweave.trust.TrustWeave
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.did.identifiers.Did
+import org.trustweave.core.util.DigestUtils
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import org.trustweave.anchor.BlockchainAnchorRegistry
 import org.trustweave.anchor.anchorTyped
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
+import java.time.Instant
 
 @Serializable
 data class AlgeroPassRecord(
@@ -668,7 +691,7 @@ data class AlgeroPassRecord(
     }
 
     // Compute digest of enrollment credential
-    val enrollmentDigest = org.trustweave.json.DigestUtils.sha256DigestMultibase(
+    val enrollmentDigest = DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(
             VerifiableCredential.serializer(),
             issuedEnrollmentCredential
@@ -677,10 +700,10 @@ data class AlgeroPassRecord(
 
     // Create AlgeroPass record
     val algeroPassRecord = AlgeroPassRecord(
-        studentDid = studentDid.id,
+        studentDid = studentDid.id.value,
         studentId = "STU-2024-001234",
         credentialType = "enrollment",
-        institutionDid = institutionDid.id,
+        institutionDid = institutionDid.id.value,
         credentialDigest = enrollmentDigest,
         timestamp = Instant.now().toString()
     )
@@ -722,11 +745,11 @@ suspend fun createInstitutionRegistrationCredential(
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = authorityDid, keyId = issuerKeyId)
+        signedBy(issuerDid = Did(authorityDid), keyId = issuerKeyId)
     }
     
     return when (result) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create institution registration credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -739,18 +762,17 @@ suspend fun createInstitutionRegistrationCredential(
 Enable automatic credit recognition:
 
 ```kotlin
-fun verifyCreditTransfer(
+suspend fun verifyCreditTransfer(
+    trustWeave: TrustWeave,
     sourceCredential: VerifiableCredential,
     targetInstitutionDid: String,
-    verifier: CredentialVerifier
 ): Boolean {
-    // Verify source credential
-    val verification = verifier.verify(
-        credential = sourceCredential,
-        options = CredentialVerificationOptions(checkRevocation = true)
-    )
+    val verification = trustWeave.verify {
+        credential(sourceCredential)
+        checkRevocation()
+    }
 
-    if (!verification.valid) return false
+    if (verification !is VerificationResult.Valid) return false
 
     // Check if target institution recognizes source institution
     // This would check against national registry

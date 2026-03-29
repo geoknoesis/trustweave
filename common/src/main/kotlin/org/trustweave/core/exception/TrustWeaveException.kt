@@ -4,8 +4,7 @@ package org.trustweave.core.exception
  * Base exception hierarchy for all TrustWeave operations.
  *
  * All TrustWeave exceptions provide structured error codes and context
- * for better error handling and debugging. Exceptions are organized by
- * naming convention (Plugin*, Provider*, Config*, etc.) for clarity.
+ * for better error handling and debugging.
  *
  * **Design Note:** This is an `open class` to allow domain-specific exception
  * hierarchies (DidException, WalletException, BlockchainException, etc.) in
@@ -13,9 +12,12 @@ package org.trustweave.core.exception
  * `sealed` for exhaustive handling within their respective domains.
  *
  * **Exception Hierarchy:**
- * - Core exceptions (in this class) - Plugin, Provider, Config, JSON, etc.
- * - Domain exceptions (in other modules) - DidException, WalletException, etc.
- * - Plugin exceptions (in plugin modules) - DidCommException, Oidc4VciException, etc.
+ * - [PluginException] — plugin lifecycle errors (not found, init failed, etc.)
+ * - [ProviderException] — provider chain errors (none found, partial, all failed)
+ * - [ConfigException] — configuration errors (not found, read failed, invalid format)
+ * - [SerializationException] — JSON / serialization errors
+ * - Core generic exceptions (in this class) — validation, encoding, digest, etc.
+ * - Domain exceptions (in other modules) — DidException, WalletException, etc.
  */
 open class TrustWeaveException(
     open val code: String,
@@ -32,183 +34,6 @@ open class TrustWeaveException(
     open val context: Map<String, Any?> = emptyMap(),
     override val cause: Throwable? = null
 ) : Exception(message, cause) {
-
-    // ============================================================================
-    // Plugin-related exceptions
-    // ============================================================================
-
-    data class PluginNotFound(
-        val pluginId: String,
-        val pluginType: String? = null
-    ) : TrustWeaveException(
-        code = "PLUGIN_NOT_FOUND",
-        message = pluginType?.let { "Plugin '$pluginId' of type '$it' not found" }
-            ?: "Plugin '$pluginId' not found",
-        context = mapOf(
-            "pluginId" to pluginId,
-            "pluginType" to pluginType
-        ).filterValues { it != null }
-    )
-
-    data class PluginInitializationFailed(
-        val pluginId: String,
-        val reason: String
-    ) : TrustWeaveException(
-        code = "PLUGIN_INITIALIZATION_FAILED",
-        message = "Plugin '$pluginId' failed to initialize: $reason",
-        context = mapOf(
-            "pluginId" to pluginId,
-            "reason" to reason
-        )
-    )
-
-    /**
-     * Exception thrown when a plugin ID is blank or empty.
-     *
-     * This is a singleton object since it has no state and represents
-     * a single, well-defined error condition.
-     */
-    object BlankPluginId : TrustWeaveException(
-        code = "BLANK_PLUGIN_ID",
-        message = "Plugin ID cannot be blank",
-        context = emptyMap()
-    )
-
-    data class PluginAlreadyRegistered(
-        val pluginId: String,
-        val existingPlugin: String? = null
-    ) : TrustWeaveException(
-        code = "PLUGIN_ALREADY_REGISTERED",
-        message = "Plugin with ID '$pluginId' is already registered",
-        context = mapOf(
-            "pluginId" to pluginId,
-            "existingPlugin" to existingPlugin
-        ).filterValues { it != null }
-    )
-
-    // ============================================================================
-    // Provider-related exceptions
-    // ============================================================================
-
-    data class NoProvidersFound(
-        val pluginIds: List<String>,
-        val availablePlugins: List<String> = emptyList()
-    ) : TrustWeaveException(
-        code = "NO_PROVIDERS_FOUND",
-        message = buildString {
-            append("No providers found for plugin IDs: ${pluginIds.joinToString(", ")}")
-            if (availablePlugins.isNotEmpty()) {
-                append(". Available plugins: ${availablePlugins.joinToString(", ")}")
-            } else {
-                append(". No plugins are registered. Register plugins in TrustWeave.build { ... }")
-            }
-        },
-        context = mapOf(
-            "pluginIds" to pluginIds,
-            "availablePlugins" to availablePlugins
-        )
-    )
-
-    data class PartialProvidersFound(
-        val requestedIds: List<String>,
-        val foundIds: List<String>,
-        val missingIds: List<String>
-    ) : TrustWeaveException(
-        code = "PARTIAL_PROVIDERS_FOUND",
-        message = "Only ${foundIds.size} of ${requestedIds.size} providers found. Missing: ${missingIds.joinToString(", ")}",
-        context = mapOf(
-            "requestedIds" to requestedIds,
-            "foundIds" to foundIds,
-            "missingIds" to missingIds
-        )
-    )
-
-    data class AllProvidersFailed(
-        val attemptedProviders: List<String>,
-        val providerErrors: Map<String, String> = emptyMap(),
-        val lastException: Throwable? = null
-    ) : TrustWeaveException(
-        code = "ALL_PROVIDERS_FAILED",
-        message = buildString {
-            append("All providers in chain failed. Attempted: ${attemptedProviders.joinToString(", ")}")
-            if (providerErrors.isNotEmpty()) {
-                append(". Errors: ${providerErrors.entries.joinToString("; ") { "${it.key}: ${it.value}" }}")
-            }
-            append(" Check provider configurations and ensure all required dependencies are available.")
-        },
-        context = mapOf(
-            "attemptedProviders" to attemptedProviders,
-            "providerErrors" to providerErrors
-        ),
-        cause = lastException
-    )
-
-    // ============================================================================
-    // Configuration exceptions
-    // ============================================================================
-
-    data class ConfigNotFound(
-        val path: String
-    ) : TrustWeaveException(
-        code = "CONFIG_NOT_FOUND",
-        message = "Configuration file not found: $path",
-        context = mapOf("path" to path)
-    )
-
-    data class ConfigReadFailed(
-        val path: String,
-        val reason: String
-    ) : TrustWeaveException(
-        code = "CONFIG_READ_FAILED",
-        message = "Failed to read configuration file '$path': $reason",
-        context = mapOf(
-            "path" to path,
-            "reason" to reason
-        )
-    )
-
-    data class InvalidConfigFormat(
-        val jsonString: String? = null,
-        val parseError: String,
-        val field: String? = null
-    ) : TrustWeaveException(
-        code = "INVALID_CONFIG_FORMAT",
-        message = field?.let { "Invalid configuration format in field '$it': $parseError" }
-            ?: "Invalid configuration format: $parseError",
-        context = mapOf(
-            "parseError" to parseError,
-            "field" to field
-        ).filterValues { it != null } + (jsonString?.let { mapOf("jsonString" to it) } ?: emptyMap())
-    )
-
-    // ============================================================================
-    // JSON-related exceptions
-    // ============================================================================
-
-    data class InvalidJson(
-        val jsonString: String? = null,
-        val parseError: String,
-        val position: String? = null
-    ) : TrustWeaveException(
-        code = "INVALID_JSON",
-        message = "Invalid JSON: $parseError${position?.let { " at $it" } ?: ""}",
-        context = mapOf(
-            "parseError" to parseError,
-            "position" to position
-        ).filterValues { it != null } + (jsonString?.let { mapOf("jsonString" to it.take(500)) } ?: emptyMap())
-    )
-
-    data class JsonEncodeFailed(
-        val element: String? = null,
-        val reason: String
-    ) : TrustWeaveException(
-        code = "JSON_ENCODE_FAILED",
-        message = "Failed to encode JSON: $reason",
-        context = mapOf(
-            "reason" to reason,
-            "element" to element
-        ).filterValues { it != null }
-    )
 
     // ============================================================================
     // Digest-related exceptions
@@ -364,77 +189,32 @@ fun trustWeaveException(message: String, cause: Throwable? = null): TrustWeaveEx
 }
 
 /**
- * Checks if the exception is plugin-related.
- *
- * Plugin exceptions include: PluginNotFound, PluginInitializationFailed,
- * BlankPluginId, and PluginAlreadyRegistered.
- *
- * **Note:** This only checks for core plugin exceptions. Domain-specific
- * exceptions (e.g., DidException, WalletException) are not considered
- * plugin exceptions even though they extend TrustWeaveException.
+ * Checks if the exception is plugin-related (i.e., an instance of [PluginException]).
  */
-fun TrustWeaveException.isPluginException(): Boolean = when (this) {
-    is TrustWeaveException.PluginNotFound,
-    is TrustWeaveException.PluginInitializationFailed,
-    is TrustWeaveException.BlankPluginId,
-    is TrustWeaveException.PluginAlreadyRegistered -> true
-    else -> false
-}
+fun TrustWeaveException.isPluginException(): Boolean = this is PluginException
 
 /**
- * Checks if the exception is provider-related.
- *
- * Provider exceptions include: NoProvidersFound, PartialProvidersFound,
- * and AllProvidersFailed.
+ * Checks if the exception is provider-related (i.e., an instance of [ProviderException]).
  */
-fun TrustWeaveException.isProviderException(): Boolean = when (this) {
-    is TrustWeaveException.NoProvidersFound,
-    is TrustWeaveException.PartialProvidersFound,
-    is TrustWeaveException.AllProvidersFailed -> true
-    else -> false
-}
+fun TrustWeaveException.isProviderException(): Boolean = this is ProviderException
 
 /**
- * Checks if the exception is configuration-related.
- *
- * Configuration exceptions include: ConfigNotFound, ConfigReadFailed,
- * and InvalidConfigFormat.
+ * Checks if the exception is configuration-related (i.e., an instance of [ConfigException]).
  */
-fun TrustWeaveException.isConfigException(): Boolean = when (this) {
-    is TrustWeaveException.ConfigNotFound,
-    is TrustWeaveException.ConfigReadFailed,
-    is TrustWeaveException.InvalidConfigFormat -> true
-    else -> false
-}
+fun TrustWeaveException.isConfigException(): Boolean = this is ConfigException
 
 /**
- * Checks if the exception is JSON-related.
- *
- * JSON exceptions include: InvalidJson and JsonEncodeFailed.
+ * Checks if the exception is serialization/JSON-related (i.e., an instance of [SerializationException]).
  */
-fun TrustWeaveException.isJsonException(): Boolean = when (this) {
-    is TrustWeaveException.InvalidJson,
-    is TrustWeaveException.JsonEncodeFailed -> true
-    else -> false
-}
+fun TrustWeaveException.isJsonException(): Boolean = this is SerializationException
 
 /**
  * Checks if the exception is validation-related.
- *
- * Validation exceptions include: ValidationFailed.
  */
-fun TrustWeaveException.isValidationException(): Boolean = when (this) {
-    is TrustWeaveException.ValidationFailed -> true
-    else -> false
-}
+fun TrustWeaveException.isValidationException(): Boolean = this is TrustWeaveException.ValidationFailed
 
 /**
  * Checks if the exception is encoding/digest-related.
- *
- * Encoding exceptions include: DigestFailed and EncodeFailed.
  */
-fun TrustWeaveException.isEncodingException(): Boolean = when (this) {
-    is TrustWeaveException.DigestFailed,
-    is TrustWeaveException.EncodeFailed -> true
-    else -> false
-}
+fun TrustWeaveException.isEncodingException(): Boolean =
+    this is TrustWeaveException.DigestFailed || this is TrustWeaveException.EncodeFailed

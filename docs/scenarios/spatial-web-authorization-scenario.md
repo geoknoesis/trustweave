@@ -12,13 +12,13 @@ This guide demonstrates how to build a decentralized Spatial Web system where en
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created DIDs for different entity types (agents, activities, things, spatial features)
-- ✅ Defined spatial domains with geographic boundaries
-- ✅ Issued activity authorization credentials
-- ✅ Verified agent permissions before allowing activities
-- ✅ Implemented domain-based access control
-- ✅ Anchored spatial entity relationships to blockchain
-- ✅ Built a complete authorization workflow
+- Created DIDs for different entity types (agents, activities, things, spatial features)
+- Defined spatial domains with geographic boundaries
+- Issued activity authorization credentials
+- Verified agent permissions before allowing activities
+- Implemented domain-based access control
+- Anchored spatial entity relationships to blockchain
+- Built a complete authorization workflow
 
 ## Big Picture & Significance
 
@@ -190,10 +190,10 @@ Add TrustWeave dependencies to your `build.gradle.kts`. These modules supply DID
 dependencies {
     // Core TrustWeave modules
     // TrustWeave distribution (includes all modules)
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Test kit for in-memory implementations
-    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:0.6.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -210,15 +210,14 @@ dependencies {
 Here’s the full spatial authorization workflow. Run it once to see identities, domain setup, credential issuance, verification, and anchoring working together end to end.
 
 ```kotlin
-import org.trustweave.credential.models.VerifiableCredential
-import org.trustweave.credential.models.VerifiablePresentation
-import org.trustweave.credential.CredentialIssuanceOptions
-import org.trustweave.credential.CredentialVerificationOptions
-import org.trustweave.credential.PresentationOptions
-import org.trustweave.credential.issuer.CredentialIssuer
-import org.trustweave.credential.verifier.CredentialVerifier
-import org.trustweave.credential.proof.Ed25519ProofGenerator
-import org.trustweave.credential.proof.ProofGeneratorRegistry
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.model.vc.VerifiablePresentation
+import org.trustweave.credential.model.ProofType
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import org.trustweave.testkit.credential.InMemoryWallet
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
@@ -232,6 +231,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.Json
+import org.trustweave.core.util.DigestUtils
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -274,11 +274,17 @@ fun main() = runBlocking {
     val didMethod = DidKeyMockMethod(domainAuthorityKms)
     val didRegistry = DidMethodRegistry().apply { register(didMethod) }
 
-    // Initialize TrustWeave
     val trustWeave = TrustWeave.build {
-        keyManagementService(domainAuthorityKms)
-        didMethodRegistry(didRegistry)
-        credentialService { CredentialService() }
+        keys {
+            custom(domainAuthorityKms)
+            algorithm(ED25519)
+        }
+        did {
+            method(KEY) {
+                algorithm(ED25519)
+            }
+        }
+        credentials { defaultProofType(ProofType.Ed25519Signature2020) }
     }
 
     // Setup blockchain for anchoring
@@ -337,10 +343,10 @@ fun main() = runBlocking {
 
     // Step 5: Create authorization credential
     println("\nStep 5: Creating activity authorization credential...")
-    val authorityKeyId = domainAuthorityKms.generateKey("Ed25519").id
+    val authorityKeyId = domainAuthorityKms.generateKey("Ed25519").id.value
     val authorizationResult = trustWeave.issue {
         credential {
-            id("https://example.com/authorizations/${droneAgentDid.id.substringAfterLast(":")}-${Instant.now().toEpochMilli()}")
+            id("https://example.com/authorizations/${droneAgentDid.id.value.substringAfterLast(":")}-${Instant.now().toEpochMilli()}")
             type("VerifiableCredential", "ActivityAuthorizationCredential", "SpatialWebCredential")
             issuer(domainAuthorityDid.id)
             subject {
@@ -369,7 +375,7 @@ fun main() = runBlocking {
     }
     
     val issuedCredential = when (authorizationResult) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> authorizationResult.credential
+        is IssuanceResult.Success -> authorizationResult.credential
         else -> throw IllegalStateException("Failed to create authorization credential: ${authorizationResult.allErrors.joinToString()}")
     }
 
@@ -381,9 +387,9 @@ fun main() = runBlocking {
 
     // Step 7: Anchor authorization to blockchain
     println("\nStep 7: Anchoring authorization to blockchain...")
-    val credentialDigest = org.trustweave.json.DigestUtils.sha256DigestMultibase(
+    val credentialDigest = DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(
-            org.trustweave.credential.models.VerifiableCredential.serializer(),
+            VerifiableCredential.serializer(),
             issuedCredential
         )
     )
@@ -422,28 +428,22 @@ fun main() = runBlocking {
 
     // Step 9: Verify authorization before activity
     println("\nStep 9: Verifying authorization before activity...")
-    val verifier = CredentialVerifier(
-    defaultDidResolver = didRegistry.resolveDid
-    )
+    val verificationResult = trustWeave.verify {
+        credential(issuedCredential)
+        skipRevocation()
+        checkExpiration()
+        validateSchema("https://example.com/schemas/activity-authorization.json")
+    }
 
-    val verificationResult = verifier.verify(
-        credential = issuedCredential,
-        options = CredentialVerificationOptions(
-        checkRevocation = false,
-        checkExpiration = true,
-        validateSchema = false,
-        didResolver = didRegistry.resolveDid
-        )
-    )
-
-    if (verificationResult.valid) {
-        println("✅ Authorization credential is valid!")
-        println("  - Proof valid: ${verificationResult.proofValid}")
-        println("  - Issuer valid: ${verificationResult.issuerValid}")
-        println("  - Not expired: ${verificationResult.notExpired}")
-    } else {
-        println("❌ Authorization verification failed:")
-        verificationResult.errors.forEach { println("  - $it") }
+    when (verificationResult) {
+        is VerificationResult.Valid -> {
+            println("✅ Authorization credential is valid!")
+            println("  - Issuer: ${verificationResult.issuerIri}")
+        }
+        is VerificationResult.Invalid -> {
+            println("❌ Authorization verification failed:")
+            verificationResult.allErrors.forEach { println("  - $it") }
+        }
     }
 
     // Step 10: Check domain authorization
@@ -467,10 +467,10 @@ fun main() = runBlocking {
     val activityPresentation = agentWallet.createPresentation(
         credentialIds = listOf(credentialId),
         holderDid = droneAgentDid.id,
-        options = PresentationOptions(
-            holderDid = droneAgentDid.id,
-            proofType = "Ed25519Signature2020",
-            challenge = "activity-request-${Instant.now().toEpochMilli()}"
+        options = mapOf(
+            "holderDid" to droneAgentDid.id,
+            "proofType" to "Ed25519Signature2020",
+            "challenge" to "activity-request-${Instant.now().toEpochMilli()}"
         )
     )
 
@@ -849,6 +849,12 @@ fun checkConstraints(
 Model relationships between entities:
 
 ```kotlin
+import org.trustweave.trust.TrustWeave
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.did.identifiers.Did
+import java.time.Instant
+
 suspend fun createEntityRelationshipCredential(
     trustWeave: TrustWeave,
     sourceEntityDid: String,
@@ -871,21 +877,23 @@ suspend fun createEntityRelationshipCredential(
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+        signedBy(issuerDid = Did(issuerDid), keyId = issuerKeyId)
     }
     
     return when (result) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create entity relationship credential: ${result.allErrors.joinToString()}")
     }
 }
 
-// Example: Associate agent with thing
+// Example: associate agent with thing (reuse trustWeave, authorityKeyId, and DIDs from earlier steps)
 val agentThingRelationship = createEntityRelationshipCredential(
-    sourceEntityDid = droneAgentDid.id,
-    targetEntityDid = sensorThingDid.id,
+    trustWeave = trustWeave,
+    sourceEntityDid = droneAgentDid.id.value,
+    targetEntityDid = sensorThingDid.id.value,
     relationshipType = "controls",
-    issuerDid = domainAuthorityDid.id
+    issuerDid = domainAuthorityDid.id.value,
+    issuerKeyId = authorityKeyId
 )
 ```
 
@@ -894,17 +902,23 @@ val agentThingRelationship = createEntityRelationshipCredential(
 Revoke authorizations when needed:
 
 ```kotlin
+import org.trustweave.credential.identifiers.StatusListId
+import org.trustweave.credential.model.StatusPurpose
+import org.trustweave.credential.model.vc.CredentialStatus
+import org.trustweave.credential.model.vc.VerifiableCredential
+
 fun revokeAuthorization(
+    credential: VerifiableCredential,
     credentialId: String,
     revocationReason: String,
     revokerDid: String
 ): VerifiableCredential {
     // Add revocation status to credential
     return credential.copy(
-        credentialStatus = org.trustweave.credential.models.CredentialStatus(
-            id = "https://example.com/revocation-list",
+        credentialStatus = CredentialStatus(
+            id = StatusListId("https://example.com/revocation-list"),
             type = "StatusList2021Entry",
-            statusPurpose = "revocation",
+            statusPurpose = StatusPurpose.REVOCATION,
             statusListIndex = credentialId
         )
     )
@@ -913,7 +927,7 @@ fun revokeAuthorization(
 // Check revocation status
 fun isRevoked(credential: VerifiableCredential): Boolean {
     return credential.credentialStatus != null &&
-            credential.credentialStatus?.statusPurpose == "revocation"
+            credential.credentialStatus?.statusPurpose == StatusPurpose.REVOCATION
 }
 ```
 
@@ -926,6 +940,9 @@ fun isRevoked(credential: VerifiableCredential): Boolean {
 **Implementation**:
 
 ```kotlin
+// Illustrative stubs — replace with TrustWeave.verify { credential(...) } (or your policy) in production.
+fun verifyOperatorCertification(operatorDid: String): Boolean = true
+
 fun authorizeDroneOperation(
     droneDid: String,
     operatorDid: String,
@@ -933,8 +950,7 @@ fun authorizeDroneOperation(
     flightPlan: FlightPlan
 ): VerifiableCredential {
     // Verify operator has required certifications
-    val operatorCert = verifyOperatorCertification(operatorDid)
-    if (!operatorCert.valid) {
+    if (!verifyOperatorCertification(operatorDid)) {
         throw IllegalArgumentException("Operator not certified")
     }
 
@@ -1039,6 +1055,9 @@ fun authorizeVehicleRoute(
 **Implementation**:
 
 ```kotlin
+// Illustrative stub — replace with TrustWeave verification in production.
+fun verifyResearcherCredentials(researcherDid: String): Boolean = true
+
 fun authorizeMonitoringActivities(
     organizationDid: String,
     researcherDid: String,
@@ -1046,8 +1065,7 @@ fun authorizeMonitoringActivities(
     activities: List<String>
 ): Map<String, VerifiableCredential> {
     // Verify researcher credentials
-    val researcherCreds = verifyResearcherCredentials(researcherDid)
-    if (!researcherCreds.valid) {
+    if (!verifyResearcherCredentials(researcherDid)) {
         throw IllegalArgumentException("Researcher not authorized")
     }
 

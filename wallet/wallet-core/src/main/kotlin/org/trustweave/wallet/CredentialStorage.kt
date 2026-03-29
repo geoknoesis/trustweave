@@ -105,21 +105,17 @@ data class CredentialFilter(
 class CredentialQueryBuilder {
     internal val filters = mutableListOf<(VerifiableCredential) -> Boolean>()
 
+    /** Tags requested via [byTag]. Wallet implementations must use these for tag-based filtering. */
+    val requestedTags: MutableSet<String> = mutableSetOf()
+
+    /** Collection IDs requested via [byCollection]. Wallet implementations must use these for collection-based filtering. */
+    val requestedCollections: MutableSet<String> = mutableSetOf()
+
     /**
      * Get the query predicate.
      * This is the public API for getting the predicate function.
      */
     public fun toPredicate(): (VerifiableCredential) -> Boolean {
-        return { credential ->
-            filters.all { it(credential) }
-        }
-    }
-
-    /**
-     * Create predicate function from filters (public method for cross-module access).
-     * This method is used by wallet implementations to get the query predicate.
-     */
-    public fun createPredicate(): (VerifiableCredential) -> Boolean {
         return { credential ->
             filters.all { it(credential) }
         }
@@ -180,65 +176,70 @@ class CredentialQueryBuilder {
 
     /**
      * Filter to only non-revoked credentials.
+     *
+     * **Revocation checking:** Credentials without [credentialStatus] are included (no revocation
+     * mechanism). Credentials with [credentialStatus] are excluded because revocation status cannot
+     * be determined without [CredentialRevocationManager.checkRevocationStatus]. Wallet implementations
+     * needing accurate filtering for credentials with status should integrate with CredentialRevocationManager.
      */
     fun notRevoked() {
         filters.add { credential ->
-            credential.credentialStatus == null // TODO: Check actual revocation status
+            credential.credentialStatus == null
         }
     }
 
     /**
      * Filter to only revoked credentials.
+     *
+     * **Limitation:** Accurate revocation status requires [CredentialRevocationManager.checkRevocationStatus].
+     * This filter cannot determine revocation from [credentialStatus] alone. Credentials with
+     * [credentialStatus] are excluded (we cannot confirm they are revoked without checking the list).
+     * Wallet implementations should use CredentialRevocationManager for accurate revocation filtering.
      */
     fun revoked() {
         filters.add { credential ->
-            credential.credentialStatus != null // TODO: Check actual revocation status
+            // Without CredentialRevocationManager, we cannot reliably identify revoked credentials.
+            // Exclude all - caller should use CredentialRevocationManager for accurate filtering.
+            false
         }
     }
 
     /**
      * Filter to only valid credentials (not expired, not revoked, has proof).
+     *
+     * **Revocation:** Same limitation as [notRevoked]—credentials with [credentialStatus] are
+     * included optimistically. Use [CredentialRevocationManager] for accurate revocation checks.
      */
     fun valid() {
         filters.add { credential ->
             credential.proof != null &&
-            (credential.expirationDate?.let { expirationDate ->
-                kotlinx.datetime.Clock.System.now() < expirationDate
-            } ?: true) &&
-            credential.credentialStatus == null // TODO: Check actual revocation
+                (credential.expirationDate?.let { expirationDate ->
+                    kotlinx.datetime.Clock.System.now() < expirationDate
+                } ?: true) &&
+                credential.credentialStatus == null
         }
     }
 
     /**
-     * Filter by tag (requires CredentialOrganization capability).
-     * Note: This filter will only work if the wallet supports CredentialOrganization.
-     * The actual filtering is done by the wallet implementation.
+     * Filter by tag (requires CredentialTagging capability).
+     *
+     * Tags are wallet-level metadata not embedded in the credential itself.
+     * Wallet implementations that support CredentialTagging must check
+     * [requestedTags] after applying the standard predicate.
      */
     fun byTag(tag: String) {
-        // Store tag filter - wallet implementation will handle this
-        filters.add { credential ->
-            // This is a placeholder - actual tag filtering is done by wallet
-            // Wallet implementations should check tags separately
-            true // Don't filter here, let wallet handle it
-        }
-        // Store tag in a way wallet can access it
-        // Note: This requires wallet to check tags separately
+        requestedTags.add(tag)
     }
 
     /**
-     * Filter by collection (requires CredentialOrganization capability).
-     * Note: This filter will only work if the wallet supports CredentialOrganization.
-     * The actual filtering is done by the wallet implementation.
+     * Filter by collection (requires CredentialCollections capability).
+     *
+     * Collections are wallet-level metadata not embedded in the credential itself.
+     * Wallet implementations that support CredentialCollections must check
+     * [requestedCollections] after applying the standard predicate.
      */
     fun byCollection(collectionId: String) {
-        // Store collection filter - wallet implementation will handle this
-        filters.add { credential ->
-            // This is a placeholder - actual collection filtering is done by wallet
-            // Wallet implementations should check collections separately
-            true // Don't filter here, let wallet handle it
-        }
-        // Store collection ID in a way wallet can access it
-        // Note: This requires wallet to check collections separately
+        requestedCollections.add(collectionId)
     }
 }
 

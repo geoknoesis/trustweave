@@ -16,6 +16,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.*
 import java.util.Base64
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * OIDC4VCI (OpenID Connect for Verifiable Credential Issuance) service.
@@ -49,10 +50,10 @@ class Oidc4VciService(
     private val kms: KeyManagementService,
     private val httpClient: OkHttpClient = OkHttpClient()
 ) {
-    private val offers = mutableMapOf<String, Oidc4VciOffer>()
-    private val requests = mutableMapOf<String, Oidc4VciCredentialRequest>()
-    private val accessTokens = mutableMapOf<String, String>() // requestId -> accessToken
-    private var metadata: CredentialIssuerMetadata? = null
+    private val offers = ConcurrentHashMap<String, Oidc4VciOffer>()
+    private val requests = ConcurrentHashMap<String, Oidc4VciCredentialRequest>()
+    private val accessTokens = ConcurrentHashMap<String, String>() // requestId -> accessToken
+    @Volatile private var metadata: CredentialIssuerMetadata? = null
 
     init {
         // Fetch metadata on initialization

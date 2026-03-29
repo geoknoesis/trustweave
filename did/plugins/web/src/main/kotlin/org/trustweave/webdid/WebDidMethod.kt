@@ -8,7 +8,6 @@ import org.trustweave.did.model.DidDocument
 import org.trustweave.did.base.AbstractWebDidMethod
 import org.trustweave.did.base.DidMethodUtils
 import org.trustweave.kms.KeyManagementService
-import org.trustweave.kms.results.GenerateKeyResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.*
@@ -131,25 +130,8 @@ class WebDidMethod(
             // Build DID identifier
             val did = DidMethodUtils.buildWebDid(normalizedDomain, path)
 
-            // Generate key using KMS
             val algorithm = options.algorithm.algorithmName
-            val generateResult = kms.generateKey(algorithm, options.additionalProperties)
-            val keyHandle = when (generateResult) {
-                is GenerateKeyResult.Success -> generateResult.keyHandle
-                is GenerateKeyResult.Failure.UnsupportedAlgorithm -> throw TrustWeaveException.Unknown(
-                    code = "UNSUPPORTED_ALGORITHM",
-                    message = generateResult.reason ?: "Algorithm not supported"
-                )
-                is GenerateKeyResult.Failure.InvalidOptions -> throw TrustWeaveException.Unknown(
-                    code = "INVALID_OPTIONS",
-                    message = generateResult.reason
-                )
-                is GenerateKeyResult.Failure.Error -> throw TrustWeaveException.Unknown(
-                    code = "KEY_GENERATION_ERROR",
-                    message = generateResult.reason,
-                    cause = generateResult.cause
-                )
-            }
+            val keyHandle = generateKey(algorithm, options.additionalProperties)
 
             // Create verification method
             val verificationMethod = DidMethodUtils.createVerificationMethod(
@@ -270,7 +252,6 @@ class WebDidMethod(
             )
 
             // Publish deactivated document
-            val url = getDocumentUrl(didString)
             deactivateDocumentOnHttp(didString, deactivatedDocument)
 
             true

@@ -12,14 +12,14 @@ This guide demonstrates how to build an IoT device ownership transfer system usi
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created DIDs for device manufacturers, current owners, and new owners
-- ✅ Issued device ownership credentials
-- ✅ Created ownership transfer credentials
-- ✅ Implemented transfer authorization verification
-- ✅ Demonstrated previous owner revocation
-- ✅ Created transfer history tracking
-- ✅ Implemented new owner authorization
-- ✅ Demonstrated secure ownership handoff
+- Created DIDs for device manufacturers, current owners, and new owners
+- Issued device ownership credentials
+- Created ownership transfer credentials
+- Implemented transfer authorization verification
+- Demonstrated previous owner revocation
+- Created transfer history tracking
+- Implemented new owner authorization
+- Demonstrated secure ownership handoff
 
 ## Big Picture & Significance
 
@@ -142,7 +142,7 @@ Add TrustWeave dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -159,15 +159,22 @@ Here's the full IoT device ownership transfer flow using the TrustWeave facade A
 ```kotlin
 package com.example.iot.ownership.transfer
 
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
 import org.trustweave.core.*
-import org.trustweave.credential.PresentationOptions
-import org.trustweave.credential.wallet.Wallet
-import org.trustweave.spi.services.WalletCreationOptionsBuilder
+import org.trustweave.wallet.Wallet
+import org.trustweave.wallet.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
-import org.trustweave.credential.format.ProofSuiteId
+import org.trustweave.credential.model.ProofType
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.testkit.services.*
+import org.trustweave.credential.results.getOrThrow
 
 fun main() = runBlocking {
     println("=".repeat(70))
@@ -178,34 +185,33 @@ fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
-        credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
+        credentials { defaultProofType(ProofType.Ed25519Signature2020) }
     }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for manufacturer, current owner, and new owner
-    import org.trustweave.trust.types.getOrThrowDid
-    import org.trustweave.trust.types.getOrThrow
-    import org.trustweave.did.resolver.DidResolutionResult
-    import org.trustweave.did.identifiers.extractKeyId
-    
-    // Helper extension for resolution results
-    fun DidResolutionResult.getOrThrow() = when (this) {
-        is DidResolutionResult.Success -> this.document
-        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
-    }
     
     val manufacturerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
-    val manufacturerDoc = trustWeave.resolveDid(manufacturerDid).getOrThrow()
+    val manufacturerDoc = when (val res = trustWeave.resolveDid(manufacturerDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val manufacturerKeyId = manufacturerDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     val currentOwnerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
-    val currentOwnerDoc = trustWeave.resolveDid(currentOwnerDid).getOrThrow()
+    val currentOwnerDoc = when (val res = trustWeave.resolveDid(currentOwnerDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val currentOwnerKeyId = currentOwnerDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     val newOwnerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
-    val newOwnerDoc = trustWeave.resolveDid(newOwnerDid).getOrThrow()
+    val newOwnerDoc = when (val res = trustWeave.resolveDid(newOwnerDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val newOwnerKeyId = newOwnerDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
@@ -279,9 +285,8 @@ fun main() = runBlocking {
     println("✅ Ownership transfer request credential issued: ${transferRequestCredential.id}")
 
     // Step 5: Verify transfer request
-    println("\n🔍 Transfer Request Verification:")
+    println("\n[verify] Transfer Request Verification:")
 
-    import org.trustweave.trust.types.VerificationResult
     
     val transferRequestVerification = trustWeave.verify {
         credential(transferRequestCredential)
@@ -304,13 +309,13 @@ fun main() = runBlocking {
             println("✅ Transfer request verified")
             println("✅ Current owner authorized transfer")
         } else {
-            println("❌ Transfer request not verified")
-            println("❌ Transfer not authorized")
+            println("[FAIL] Transfer request not verified")
+            println("[FAIL] Transfer not authorized")
         }
         }
         is VerificationResult.Invalid -> {
-            println("❌ Transfer Request Credential: INVALID")
-            println("❌ Transfer request not verified")
+            println("[FAIL] Transfer Request Credential: INVALID")
+            println("[FAIL] Transfer request not verified")
         }
     }
 
@@ -388,11 +393,11 @@ fun main() = runBlocking {
     }
 
     // Step 9: Verify new ownership
-    println("\n🔍 New Ownership Verification:")
+    println("\n[verify] New Ownership Verification:")
 
     val newOwnershipVerification = trustWeave.verify { credential(newOwnershipCredential) }
 
-    if (newOwnershipVerification.valid) {
+    if (newOwnershipVerification is VerificationResult.Valid) {
         val credentialSubject = newOwnershipCredential.credentialSubject
         val ownership = credentialSubject.jsonObject["deviceOwnership"]?.jsonObject
         val ownerDid = ownership?.get("ownerDid")?.jsonPrimitive?.content
@@ -408,20 +413,20 @@ fun main() = runBlocking {
             println("✅ New ownership verified")
             println("✅ New owner is authorized")
         } else {
-            println("❌ New ownership not verified")
-            println("❌ New owner is not authorized")
+            println("[FAIL] New ownership not verified")
+            println("[FAIL] New owner is not authorized")
         }
     } else {
-        println("❌ New Ownership Credential: INVALID")
-        println("❌ New ownership not verified")
+        println("[FAIL] New Ownership Credential: INVALID")
+        println("[FAIL] New ownership not verified")
     }
 
     // Step 10: Verify previous owner revocation
-    println("\n🔍 Previous Owner Revocation Verification:")
+    println("\n[verify] Previous Owner Revocation Verification:")
 
     val currentOwnershipVerification = trustWeave.verify { credential(currentOwnershipCredential) }
 
-    if (currentOwnershipVerification.valid) {
+    if (currentOwnershipVerification is VerificationResult.Valid) {
         val credentialSubject = currentOwnershipCredential.credentialSubject
         val ownership = credentialSubject.jsonObject["deviceOwnership"]?.jsonObject
         val ownerDid = ownership?.get("ownerDid")?.jsonPrimitive?.content
@@ -432,14 +437,14 @@ fun main() = runBlocking {
         // In production, this credential would be revoked
         // For this example, we check if owner matches current owner
         if (ownerDid == currentOwnerDid.value) {
-            println("⚠️  Previous owner credential still exists")
-            println("⚠️  Previous owner access should be revoked")
+            println("[WARN] Previous owner credential still exists")
+            println("[WARN] Previous owner access should be revoked")
             println("✅ Revocation process should be initiated")
         }
     }
 
     // Step 11: Ownership history tracking
-    println("\n📜 Ownership History Tracking:")
+    println("\n[history] Ownership History Tracking:")
 
     val newOwnership = newOwnershipCredential.credentialSubject.jsonObject["deviceOwnership"]?.jsonObject
     val ownershipHistory = newOwnership?.get("ownershipHistory")?.jsonObject
@@ -457,13 +462,13 @@ fun main() = runBlocking {
     val currentOwnerStats = currentOwnerWallet.getStatistics()
     val newOwnerStats = newOwnerWallet.getStatistics()
 
-    println("\n📊 Current Owner Wallet Statistics:")
+    println("\n[stats] Current Owner Wallet Statistics:")
     println("   Total credentials: ${currentOwnerStats.totalCredentials}")
     println("   Valid credentials: ${currentOwnerStats.validCredentials}")
     println("   Collections: ${currentOwnerStats.collectionsCount}")
     println("   Tags: ${currentOwnerStats.tagsCount}")
 
-    println("\n📊 New Owner Wallet Statistics:")
+    println("\n[stats] New Owner Wallet Statistics:")
     println("   Total credentials: ${newOwnerStats.totalCredentials}")
     println("   Valid credentials: ${newOwnerStats.validCredentials}")
     println("   Collections: ${newOwnerStats.collectionsCount}")
@@ -498,7 +503,7 @@ IoT Device Ownership Transfer Scenario - Complete End-to-End Example
    Ownership Date: 2023-11-18T...
 ✅ Ownership transfer request credential issued: urn:uuid:...
 
-🔍 Transfer Request Verification:
+[verify] Transfer Request Verification:
 ✅ Transfer Request Credential: VALID
    Current Owner: did:key:z6Mk...
    New Owner: did:key:z6Mk...
@@ -514,7 +519,7 @@ IoT Device Ownership Transfer Scenario - Complete End-to-End Example
 ✅ Current owner credentials organized
 ✅ New owner credentials organized
 
-🔍 New Ownership Verification:
+[verify] New Ownership Verification:
 ✅ New Ownership Credential: VALID
    Current Owner: did:key:z6Mk...
    Previous Owner: did:key:z6Mk...
@@ -522,26 +527,26 @@ IoT Device Ownership Transfer Scenario - Complete End-to-End Example
 ✅ New ownership verified
 ✅ New owner is authorized
 
-🔍 Previous Owner Revocation Verification:
+[verify] Previous Owner Revocation Verification:
 ✅ Previous Ownership Credential: VALID (structurally)
    Previous Owner: did:key:z6Mk...
-⚠️  Previous owner credential still exists
-⚠️  Previous owner access should be revoked
+âš ï¸  Previous owner credential still exists
+âš ï¸  Previous owner access should be revoked
 ✅ Revocation process should be initiated
 
-📜 Ownership History Tracking:
+[history] Ownership History Tracking:
    Transfer Count: 1
    Previous Owners: 1
      1. did:key:z6Mk...
 ✅ Complete ownership history tracked
 
-📊 Current Owner Wallet Statistics:
+[stats] Current Owner Wallet Statistics:
    Total credentials: 2
    Valid credentials: 2
    Collections: 1
    Tags: 4
 
-📊 New Owner Wallet Statistics:
+[stats] New Owner Wallet Statistics:
    Total credentials: 1
    Valid credentials: 1
    Collections: 1
@@ -578,10 +583,10 @@ IoT Device Ownership Transfer Scenario - Complete End-to-End Example
 
 ## Related Documentation
 
-- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
-- [IoT Device Identity Scenario](iot-device-identity-scenario.md) - Related device identity scenario
-- [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
-- [API Reference](../api-reference/core-api.md) - Complete API documentation
-- [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+- Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
+- IoT Device Identity Scenario](iot-device-identity-scenario.md) - Related device identity scenario
+- Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
+- API Reference](../api-reference/core-api.md) - Complete API documentation
+- Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
 
 

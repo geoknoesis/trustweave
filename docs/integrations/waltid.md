@@ -23,7 +23,7 @@ Add the walt.id module to your dependencies:
 ```kotlin
 dependencies {
     // Only need to add the walt.id plugin - core dependencies are included transitively
-    implementation("org.trustweave.kms:waltid:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:kms-plugins-waltid:0.6.0")
 }
 ```
 
@@ -105,6 +105,7 @@ println("Public key: ${publicKey.toHexString()}")
 ```kotlin
 import org.trustweave.waltid.*
 import org.trustweave.did.*
+import org.trustweave.did.resolver.DidResolutionResult
 
 val kms = WaltIdKeyManagementService()
 val keyMethod = WaltIdDidKeyMethod(kms)
@@ -119,28 +120,32 @@ println("Created DID: ${didDoc.id}")
 
 // Resolve DID
 val resolutionResult = keyMethod.resolveDid(didDoc.id)
-println("Resolved DID: ${resolutionResult.didDocument?.id}")
+when (resolutionResult) {
+    is DidResolutionResult.Success ->
+        println("Resolved DID: ${resolutionResult.document.id}")
+    is DidResolutionResult.Failure ->
+        println("Resolution failed")
+}
 ```
 
 ### Using TrustWeave Facade
 
 ```kotlin
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.waltid.WaltIdIntegration
 import kotlinx.coroutines.runBlocking
 
 runBlocking {
-    // Setup walt.id integration
     WaltIdIntegration.discoverAndRegister()
 
-    // Use TrustWeave facade with walt.id providers
-    val TrustWeave = TrustWeave.create()
-    val did = TrustWeave.dids.create()
-
-    didResult.fold(
-        onSuccess = { did -> println("Created: ${did.id}") },
-        onFailure = { error -> println("Error: ${error.message}") }
-    )
+    val trustWeave = TrustWeave.quickStart()
+    when (val didResult = trustWeave.createDid { }) {
+        is DidCreationResult.Success ->
+            println("Created: ${didResult.did}")
+        is DidCreationResult.Failure ->
+            println("Error: $didResult")
+    }
 }
 ```
 
@@ -148,15 +153,15 @@ runBlocking {
 
 ### KMS Features
 
-- ✅ Key generation (Ed25519, secp256k1, P-256/P-384/P-521, RSA)
-- ✅ Signing operations
-- ✅ Public key retrieval
-- ✅ Key deletion
+- Key generation (Ed25519, secp256k1, P-256/P-384/P-521, RSA)
+- Signing operations
+- Public key retrieval
+- Key deletion
 
 ### DID Methods
 
-- ✅ **did:key** – Native did:key implementation via walt.id
-- ✅ **did:web** – Web DID method via walt.id
+- **did:key** — Native did:key implementation via walt.id
+- **did:web** — Web DID method via walt.id
 
 ## SPI Auto-Discovery
 
@@ -196,14 +201,14 @@ See the [walt.id Testing Guide](../../kms/plugins/waltid/TESTING.md) for detaile
 The walt.id integration follows TrustWeave's error handling patterns:
 
 ```kotlin
-import org.trustweave.core.exception.TrustWeaveError
+import org.trustweave.core.exception.TrustWeaveException
 
 val result = kms.generateKey(Algorithm.Ed25519)
 result.fold(
     onSuccess = { key -> println("Key: ${key.id}") },
     onFailure = { error ->
         when (error) {
-            is TrustWeaveError.KeyGenerationFailed -> {
+            is TrustWeaveException.Unknown -> {
                 println("Key generation failed: ${error.reason}")
             }
             else -> println("Error: ${error.message}")
@@ -222,8 +227,8 @@ result.fold(
 
 ## References
 
-- [walt.id Documentation](https://walt.id/)
-- [walt.id GitHub](https://github.com/walt-id/waltid-ssikit)
-- [TrustWeave KMS Module](../modules/trustweave-kms.md)
-- [TrustWeave DID Module](../modules/trustweave-did.md)
+- walt.id Documentation](https://walt.id/)
+- walt.id GitHub](https://github.com/walt-id/waltid-ssikit)
+- TrustWeave KMS Module](../modules/trustweave-kms.md)
+- TrustWeave DID Module](../modules/trustweave-did.md)
 

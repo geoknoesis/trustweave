@@ -28,6 +28,8 @@ import org.trustweave.anchor.exceptions.BlockchainException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
+import org.trustweave.testkit.services.*
 
 @Serializable
 data class CredentialDigest(
@@ -64,7 +66,7 @@ fun main() = runBlocking {
             ?: throw IllegalStateException("Blockchain client not found")
         
         // Serialize and anchor data
-        val json = kotlinx.serialization.json.Json.encodeToJsonElement(
+        val json = Json.encodeToJsonElement(
             CredentialDigest.serializer(),
             digest
         )
@@ -100,6 +102,7 @@ fun main() = runBlocking {
 Register blockchain clients in TrustWeave:
 
 ```kotlin
+import org.trustweave.testkit.services.*
 val trustWeave = TrustWeave.build {
     keys {
         provider(IN_MEMORY)
@@ -477,7 +480,7 @@ For production use, see integration guides for specific blockchains:
 
 For complete API documentation, see:
 - **[Core API - anchor()](../api-reference/core-api.md#anchor)** - Complete parameter reference
-- **[Core API - readAnchor()](../api-reference/core-api.md#readanchor)** - Reading anchored data
+- **[Core API - blockchains.read](../api-reference/core-api.md#read-blockchainsread)** - Reading anchored data
 
 ## Related Concepts
 
@@ -492,10 +495,10 @@ For complete API documentation, see:
 ## Next Steps
 
 **Ready to integrate?**
-- [Algorand Integration](../integrations/algorand.md) - Set up Algorand anchoring
-- [Ethereum Integration](../integrations/ethereum-anchor.md) - Set up Ethereum anchoring
+- Algorand Integration](../integrations/algorand.md) - Set up Algorand anchoring
+- Ethereum Integration](../integrations/ethereum-anchor.md) - Set up Ethereum anchoring
 
 **Want to learn more?**
-- [Blockchain Anchoring Concept](../core-concepts/blockchain-anchoring.md) - Deep dive into anchoring
-- [Your First Application](../getting-started/your-first-application.md) - Complete anchoring example
+- Blockchain Anchoring Concept](../core-concepts/blockchain-anchoring.md) - Deep dive into anchoring
+- Your First Application](../getting-started/your-first-application.md) - Complete anchoring example
 

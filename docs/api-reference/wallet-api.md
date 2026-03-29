@@ -10,7 +10,7 @@ Complete API reference for TrustWeave's Wallet system.
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 }
 ```
 
@@ -128,23 +128,25 @@ interface CredentialPresentation {
     suspend fun createPresentation(
         credentialIds: List<String>,
         holderDid: String,
-        options: PresentationOptions
+        options: ProofOptions
     ): VerifiablePresentation
 
     suspend fun createSelectiveDisclosure(
         credentialIds: List<String>,
         disclosedFields: List<String>,
         holderDid: String,
-        options: PresentationOptions
+        options: ProofOptions
     ): VerifiablePresentation
 }
 ```
+
+(`ProofOptions` is `org.trustweave.credential.proof.ProofOptions`; use **`proofOptions { … }`** / **`proofOptionsForPresentation { … }`** builders where appropriate.)
 
 #### Method summary
 
 | Method | Purpose | Exceptions | Notes |
 |--------|---------|------------|-------|
-| `createPresentation` | Build a verifiable presentation from stored credential IDs. | `IllegalArgumentException` when required fields in `PresentationOptions` are missing. | Uses configured proof generator; ensure holder DID has signing keys. |
+| `createPresentation` | Build a verifiable presentation from stored credential IDs. | `IllegalArgumentException` when credential IDs are missing or unknown. | Uses configured proof generator; pass challenge/domain/proof suite via **`ProofOptions`**. |
 | `createSelectiveDisclosure` | Produce a filtered presentation revealing selected fields. | Same as above. | Default implementation delegates to `createPresentation`. |
 
 ### DidManagement
@@ -152,6 +154,9 @@ interface CredentialPresentation {
 Optional interface for DID management.
 
 ```kotlin
+import org.trustweave.did.DidCreationOptions
+import org.trustweave.did.model.DidDocument
+
 interface DidManagement {
     val walletDid: String
     val holderDid: String
@@ -160,7 +165,7 @@ interface DidManagement {
     suspend fun getDids(): List<String>
     suspend fun getPrimaryDid(): String
     suspend fun setPrimaryDid(did: String): Boolean
-    suspend fun resolveDid(did: String): Any? // DidDocument
+    suspend fun resolveDid(did: String): DidDocument?
 }
 ```
 
@@ -198,12 +203,15 @@ interface KeyManagement {
 Optional interface for credential issuance.
 
 ```kotlin
+// Wallet integrations often delegate to TrustWeave / CredentialService instead of defining a second issuer.
+// If you expose issuance from a wallet helper, take typed inputs (e.g. IssuanceRequest) or your own options DTO.
 interface CredentialIssuance {
-    suspend fun issueCredential(
+    /** Optional wallet-facing helper; production code often delegates to [org.trustweave.credential.CredentialService.issue]. */
+    suspend fun issue(
         subjectDid: String,
         credentialType: String,
         claims: Map<String, Any>,
-        options: CredentialIssuanceOptions
+        options: Map<String, Any?> = emptyMap()
     ): VerifiableCredential
 }
 ```
@@ -314,10 +322,10 @@ data class WalletStatistics(
 
 ### WalletCreationOptions
 
-`WalletCreationOptions` is shared by the TrustWeave facade, the Trust Layer DSL, and custom `WalletFactory` implementations. It removes the need for untyped configuration blobs while still allowing provider-specific extensions.
+`WalletCreationOptions` is shared by the TrustWeave facade, the `TrustWeave.build { wallet { ... } }` DSL, and custom `WalletFactory` implementations. It removes the need for untyped configuration blobs while still allowing provider-specific extensions.
 
 ```kotlin
-import org.trustweave.spi.services.WalletCreationOptionsBuilder
+import org.trustweave.wallet.services.WalletCreationOptionsBuilder
 
 val options = WalletCreationOptionsBuilder().apply {
     label = "Production Wallet"
@@ -387,7 +395,7 @@ directory.clear()
 
 ## WalletBuilder
 
-The Trust Layer DSL exposes a `wallet { ... }` builder backed by `WalletCreationOptionsBuilder`:
+The TrustWeave wallet DSL exposes a `wallet { ... }` builder backed by `WalletCreationOptionsBuilder`:
 
 ```kotlin
 val wallet = trustWeave.wallet {
@@ -445,7 +453,7 @@ See the [Wallet API Tutorial](../tutorials/wallet-api-tutorial.md) for comprehen
 
 ## Related Documentation
 
-- [Wallets Core Concept](../core-concepts/wallets.md)
-- [Wallet API Tutorial](../tutorials/wallet-api-tutorial.md)
-- [Verifiable Credentials](../core-concepts/verifiable-credentials.md)
+- Wallets Core Concept](../core-concepts/wallets.md)
+- Wallet API Tutorial](../tutorials/wallet-api-tutorial.md)
+- Verifiable Credentials](../core-concepts/verifiable-credentials.md)
 

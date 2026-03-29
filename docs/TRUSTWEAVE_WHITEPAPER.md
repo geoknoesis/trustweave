@@ -511,13 +511,13 @@ See [Section 9: Token Distribution](#9-token-distribution) for detailed allocati
 **Status:** Completed
 
 **Achievements:**
-- ✅ Core SDK development and open-source release
-- ✅ W3C Verifiable Credentials and DID Core compliance
-- ✅ Support for 20+ DID methods
-- ✅ Multiple blockchain adapters (Ethereum, Algorand, Polygon, Base, Arbitrum)
-- ✅ KMS integrations (AWS, Azure, Google, HashiCorp)
-- ✅ Comprehensive documentation and examples
-- ✅ Test utilities and in-memory implementations
+- Core SDK development and open-source release
+- W3C Verifiable Credentials and DID Core compliance
+- Support for 20+ DID methods
+- Multiple blockchain adapters (Ethereum, Algorand, Polygon, Base, Arbitrum)
+- KMS integrations (AWS, Azure, Google, HashiCorp)
+- Comprehensive documentation and examples
+- Test utilities and in-memory implementations
 
 ### 7.2 Phase 2: Token Launch & Governance (Q3 2025)
 
@@ -580,7 +580,7 @@ See [Section 9: Token Distribution](#9-token-distribution) for detailed allocati
 **Objectives:**
 - 1,000+ active projects
 - 10,000+ developers
-- $100M+ in token value locked
+- 100M+ in token value locked
 - Major enterprise customers
 - Global market presence
 
@@ -878,9 +878,9 @@ We invite developers, organizations, and investors to join us in building the fo
 ### 12.2 Resources
 
 **Documentation:**
-- [TrustWeave Documentation](https://github.com/geoknoesis/TrustWeave)
-- [API Reference](https://github.com/geoknoesis/TrustWeave/docs/api-reference)
-- [Use Case Scenarios](https://github.com/geoknoesis/TrustWeave/docs/scenarios)
+- TrustWeave Documentation](https://github.com/geoknoesis/TrustWeave)
+- API Reference](https://github.com/geoknoesis/TrustWeave/docs/api-reference)
+- Use Case Scenarios](https://github.com/geoknoesis/TrustWeave/docs/scenarios)
 
 **Community:**
 - GitHub: https://github.com/geoknoesis/TrustWeave

@@ -66,23 +66,26 @@ val wallet = InMemoryWallet(
 TrustWeave uses Kotlin's type system for **compile-time** capability checking:
 
 ```kotlin
-val wallet: Wallet = createWallet()
+import org.trustweave.credential.proof.proofOptions
+import org.trustweave.testkit.credential.InMemoryWallet
+import org.trustweave.wallet.*
 
-// Core operations (always available)
+// Or: trustWeave.wallet { holder(holderDid); provider("inMemory") }.getOrThrow()
+val wallet: Wallet = InMemoryWallet(walletDid = "did:key:wallet", holderDid = "did:key:holder")
+
 val id = wallet.store(credential)
-val credential = wallet.get(id)
+wallet.get(id)
 
-// Optional capabilities (type-safe check)
 if (wallet is CredentialOrganization) {
     wallet.createCollection("My Collection")
     wallet.tagCredential(id, setOf("important"))
 }
 
 if (wallet is CredentialPresentation) {
-    val presentation = wallet.createPresentation(
+    wallet.createPresentation(
         credentialIds = listOf(id),
         holderDid = wallet.holderDid,
-        options = PresentationOptions(...)
+        options = proofOptions { challenge = "nonce-from-verifier" }
     )
 }
 ```
@@ -94,6 +97,8 @@ if (wallet is CredentialPresentation) {
 TrustWeave provides extension functions for elegant capability access:
 
 ```kotlin
+import org.trustweave.credential.proof.proofOptions
+
 // Using extension functions
 wallet.withOrganization { org ->
     val collectionId = org.createCollection("Work Credentials")
@@ -106,10 +111,10 @@ wallet.withLifecycle { lifecycle ->
 }
 
 wallet.withPresentation { presentation ->
-    val vp = presentation.createPresentation(
+    presentation.createPresentation(
         credentialIds = listOf(credentialId),
         holderDid = "did:key:holder",
-        options = PresentationOptions(...)
+        options = proofOptions { challenge = "nonce-from-verifier" }
     )
 }
 ```
@@ -121,7 +126,7 @@ wallet.withPresentation { presentation ->
 For dynamic scenarios (e.g., UI), use runtime capability checking:
 
 ```kotlin
-val wallet: Wallet = createWallet()
+val wallet: Wallet = BasicWallet()
 
 // Check capabilities
 if (wallet.capabilities.collections) {
@@ -145,12 +150,12 @@ if (wallet.capabilities.supports("collections")) {
 Create your own directory when you need to manage multiple wallets:
 
 ```kotlin
-import org.trustweave.credential.wallet.WalletDirectory
+import org.trustweave.wallet.WalletDirectory
+import org.trustweave.testkit.credential.BasicWallet
 
 val directory = WalletDirectory()
 
-// Register wallets
-val wallet = createWallet()
+val wallet = BasicWallet()
 directory.register(wallet)
 
 // Get by ID
@@ -185,7 +190,7 @@ println("Tags: ${stats.tagsCount}")
 ### Storing Credentials
 
 ```kotlin
-val wallet: Wallet = createWallet()
+val wallet: Wallet = BasicWallet()
 
 // Store a credential
 val credentialId = wallet.store(credential)
@@ -246,10 +251,10 @@ if (wallet is CredentialPresentation) {
     val presentation = wallet.createPresentation(
         credentialIds = listOf(credentialId1, credentialId2),
         holderDid = holderDid,
-        options = PresentationOptions(
-            holderDid = holderDid,
-            proofType = "Ed25519Signature2020",
-            challenge = "random-challenge-string"
+        options = mapOf(
+            "holderDid" to holderDid,
+            "proofType" to "Ed25519Signature2020",
+            "challenge" to "random-challenge-string"
         )
     )
 
@@ -258,7 +263,7 @@ if (wallet is CredentialPresentation) {
         credentialIds = listOf(credentialId),
         disclosedFields = listOf("name", "email"),
         holderDid = holderDid,
-        options = PresentationOptions(...)
+        options = emptyMap<String, Any?>()
     )
 }
 
@@ -287,7 +292,7 @@ if (wallet is CredentialPresentation) {
 
 ## Next Steps
 
-- [Manage Wallets](../how-to/manage-wallets.md) - Step-by-step guide
+- Manage Wallets](../how-to/manage-wallets.md) - Step-by-step guide
 - Check out the [Wallet API Tutorial](../tutorials/wallet-api-tutorial.md) for hands-on examples
 - Explore the [Wallet API Reference](../api-reference/wallet-api.md)
 - Learn about [DIDs](dids.md) and [Verifiable Credentials](verifiable-credentials.md)
@@ -296,7 +301,7 @@ if (wallet is CredentialPresentation) {
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 }
 ```
 

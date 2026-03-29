@@ -90,9 +90,10 @@ class JsonLdCanonicalizationService : DidDocumentCanonicalizationService {
         val hash = MessageDigest.getInstance("SHA-256")
             .digest(canonical.toByteArray(Charsets.UTF_8))
         
-        // Multibase encoding (base58btc)
-        // Simplified - full implementation would use proper multibase library
-        return "z" + Base64.getUrlEncoder().withoutPadding().encodeToString(hash)
+        // Multibase encoding: 'u' prefix = base64url without padding (RFC 4648 §5).
+        // The previous code mistakenly used the base58btc prefix 'z' here while encoding
+        // with base64url — this commit corrects the prefix to match the actual encoding.
+        return "u" + Base64.getUrlEncoder().withoutPadding().encodeToString(hash)
     }
     
     override suspend fun normalize(document: DidDocument): DidDocument {

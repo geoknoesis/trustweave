@@ -14,10 +14,10 @@ All ProofAdapter plugins for major credential formats have been implemented with
 **Location**: `credentials/plugins/proof/vcld/`
 
 **Capabilities**:
-- ✅ Selective disclosure
-- ✅ Revocation (status lists)
-- ✅ Presentations
-- ✅ Predicates (JSON-LD)
+- Selective disclosure
+- Revocation (status lists)
+- Presentations
+- Predicates (JSON-LD)
 
 **Dependencies**:
 - `jsonld-java` for canonicalization
@@ -37,9 +37,9 @@ All ProofAdapter plugins for major credential formats have been implemented with
 **Location**: `credentials/plugins/proof/sdjwt/`
 
 **Capabilities**:
-- ✅ Selective disclosure (core feature)
-- ✅ Revocation
-- ✅ Presentations
+- Selective disclosure (core feature)
+- Revocation
+- Presentations
 
 **Dependencies**:
 - `nimbus-jose-jwt` for JWT handling
@@ -58,11 +58,11 @@ All ProofAdapter plugins for major credential formats have been implemented with
 **Location**: `credentials/plugins/proof/anoncreds/`
 
 **Capabilities**:
-- ✅ Selective disclosure
-- ✅ Zero-knowledge proofs
-- ✅ Revocation (revocation registry)
-- ✅ Presentations
-- ✅ Predicates
+- Selective disclosure
+- Zero-knowledge proofs
+- Revocation (revocation registry)
+- Presentations
+- Predicates
 
 **Dependencies**:
 - AnonCreds library (placeholder - to be added)
@@ -81,9 +81,9 @@ All ProofAdapter plugins for major credential formats have been implemented with
 **Location**: `credentials/plugins/proof/mdl/`
 
 **Capabilities**:
-- ✅ Selective disclosure
-- ✅ Revocation
-- ✅ Presentations
+- Selective disclosure
+- Revocation
+- Presentations
 
 **Dependencies**:
 - `jose4j` for COSE/CBOR
@@ -103,8 +103,8 @@ All ProofAdapter plugins for major credential formats have been implemented with
 **Location**: `credentials/plugins/proof/x509/`
 
 **Capabilities**:
-- ✅ Revocation (CRL/OCSP)
-- ✅ Presentations
+- Revocation (CRL/OCSP)
+- Presentations
 
 **Dependencies**:
 - `bouncycastle` for X.509 certificate handling
@@ -123,8 +123,8 @@ All ProofAdapter plugins for major credential formats have been implemented with
 **Location**: `credentials/plugins/proof/passkey/`
 
 **Capabilities**:
-- ✅ Revocation
-- ✅ Presentations (via WebAuthn assertions)
+- Revocation
+- Presentations (via WebAuthn assertions)
 
 **Dependencies**:
 - WebAuthn library (placeholder - to be added)
@@ -176,21 +176,21 @@ credentials/plugins/proof/
 ## Implementation Status
 
 ### ✅ Completed
-- [x] All plugin module structures created
-- [x] All `ProofAdapter` implementations (skeleton)
-- [x] All `ProofAdapterProvider` implementations
-- [x] All ServiceLoader registrations
-- [x] All build configurations
-- [x] Proper package organization
-- [x] Format-specific capabilities defined
+- x] All plugin module structures created
+- x] All `ProofAdapter` implementations (skeleton)
+- x] All `ProofAdapterProvider` implementations
+- x] All ServiceLoader registrations
+- x] All build configurations
+- x] Proper package organization
+- x] Format-specific capabilities defined
 
 ### 🔨 TODO: Full Implementation
 Each plugin needs full implementation of:
-- [ ] `issue()` - Convert `IssuanceRequest` to format and generate proof
-- [ ] `verify()` - Verify proof and return `VerificationResult`
-- [ ] `derivePresentation()` - Selective disclosure implementation (where supported)
-- [ ] Format-specific serialization/deserialization
-- [ ] Integration with format libraries
+- issue()` - Convert `IssuanceRequest` to format and generate proof
+- verify()` - Verify proof and return `VerificationResult`
+- derivePresentation()` - Selective disclosure implementation (where supported)
+- Format-specific serialization/deserialization
+- Integration with format libraries
 
 ---
 
@@ -208,8 +208,7 @@ val registry = ProofRegistries.default()
 ProofAdapters.autoRegister(registry)
 
 val service = createCredentialService(
-    adapterRegistry = registry,
-    didResolver = didResolver
+    adapterRegistry = registry
 )
 
 // Now service supports all discovered formats
@@ -250,8 +249,8 @@ All plugins follow the same pattern:
 5. **Capabilities** - Declared format features
 
 This ensures:
-- ✅ Consistent structure across all plugins
-- ✅ Auto-discovery works seamlessly
-- ✅ Easy to add new formats
-- ✅ Format isolation (no cross-plugin dependencies)
+- Consistent structure across all plugins
+- Auto-discovery works seamlessly
+- Easy to add new formats
+- Format isolation (no cross-plugin dependencies)
 

@@ -12,13 +12,13 @@ This guide demonstrates how to build a healthcare credential system using TrustW
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created DIDs for patients, healthcare providers, and medical institutions
-- ✅ Issued medical credentials (prescriptions, lab results, vaccination records)
-- ✅ Implemented selective disclosure for privacy-preserving data sharing
-- ✅ Built consent management system
-- ✅ Created cross-provider credential sharing workflow
-- ✅ Anchored critical medical records to blockchain
-- ✅ Verified medical credentials cryptographically
+- Created DIDs for patients, healthcare providers, and medical institutions
+- Issued medical credentials (prescriptions, lab results, vaccination records)
+- Implemented selective disclosure for privacy-preserving data sharing
+- Built consent management system
+- Created cross-provider credential sharing workflow
+- Anchored critical medical records to blockchain
+- Verified medical credentials cryptographically
 
 ## Big Picture & Significance
 
@@ -174,10 +174,10 @@ Add TrustWeave dependencies to your `build.gradle.kts`. These cover DID manageme
 dependencies {
     // Core TrustWeave modules
     // TrustWeave distribution (includes all modules)
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Test kit for in-memory implementations
-    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:0.6.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -194,15 +194,13 @@ dependencies {
 Here’s the full healthcare credential management flow. Execute it first to see the big picture, then read on for step-by-step explanations.
 
 ```kotlin
-import org.trustweave.credential.models.VerifiableCredential
-import org.trustweave.credential.models.VerifiablePresentation
-import org.trustweave.credential.CredentialIssuanceOptions
-import org.trustweave.credential.CredentialVerificationOptions
-import org.trustweave.credential.PresentationOptions
-import org.trustweave.credential.issuer.CredentialIssuer
-import org.trustweave.credential.verifier.CredentialVerifier
-import org.trustweave.credential.proof.Ed25519ProofGenerator
-import org.trustweave.credential.proof.ProofGeneratorRegistry
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.model.vc.VerifiablePresentation
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import org.trustweave.testkit.credential.InMemoryWallet
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
@@ -210,6 +208,8 @@ import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import org.trustweave.anchor.BlockchainAnchorRegistry
 import org.trustweave.anchor.anchorTyped
 import org.trustweave.did.DidMethodRegistry
+import org.trustweave.did.identifiers.Did
+import org.trustweave.core.util.DigestUtils
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
@@ -234,11 +234,21 @@ fun main() = runBlocking {
     // Step 1: Setup services
     println("Step 1: Setting up services...")
     val hospitalKms = InMemoryKeyManagementService()
-    val patientKms = InMemoryKeyManagementService()
-    val specialistKms = InMemoryKeyManagementService()
 
     val didMethod = DidKeyMockMethod(hospitalKms)
     val didRegistry = DidMethodRegistry().apply { register(didMethod) }
+
+    val trustWeave = TrustWeave.build {
+        keys {
+            custom(hospitalKms)
+            algorithm(ED25519)
+        }
+        did {
+            method(KEY) {
+                algorithm(ED25519)
+            }
+        }
+    }
 
     // Setup blockchain for anchoring critical records
     val anchorClient = InMemoryBlockchainAnchorClient("eip155:1", emptyMap())
@@ -260,41 +270,22 @@ fun main() = runBlocking {
     // Step 3: Create patient wallet
     println("\nStep 3: Creating patient wallet...")
     val patientWallet = InMemoryWallet(
-        walletDid = patientDid.id,
-        holderDid = patientDid.id
+        walletDid = patientDid.id.value,
+        holderDid = patientDid.id.value
     )
     println("Patient wallet created: ${patientWallet.walletId}")
 
     // Step 4: Issue prescription credential
     println("\nStep 4: Issuing prescription credential...")
-    val prescriptionCredential = createPrescriptionCredential(
-        patientDid = patientDid.id,
-        providerDid = hospitalDid.id,
+    val issuedPrescription = createPrescriptionCredential(
+        trustWeave = trustWeave,
+        patientDid = patientDid.id.value,
+        providerDid = hospitalDid.id.value,
         medication = "Lisinopril",
         dosage = "10mg",
         frequency = "Once daily",
         duration = "30 days",
         prescribingDoctor = "Dr. Smith"
-    )
-
-    val hospitalKey = hospitalKms.generateKey("Ed25519")
-    val proofGenerator = Ed25519ProofGenerator(
-        signer = { data, keyId -> hospitalKms.sign(keyId, data) },
-        getPublicKeyId = { keyId -> hospitalKey.id }
-    )
-    val proofRegistry = ProofGeneratorRegistry().apply { register(proofGenerator) }
-
-    val credentialIssuer = CredentialIssuer(
-        proofGenerator = proofGenerator,
-        resolveDid = { did -> didRegistry.resolve(did) != null },
-        proofRegistry = proofRegistry
-    )
-
-    val issuedPrescription = credentialIssuer.issue(
-        credential = prescriptionCredential,
-        issuerDid = hospitalDid.id,
-        keyId = hospitalKey.id,
-        options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
 
     println("Prescription credential issued:")
@@ -303,9 +294,10 @@ fun main() = runBlocking {
 
     // Step 5: Issue lab results credential
     println("\nStep 5: Issuing lab results credential...")
-    val labResultsCredential = createLabResultsCredential(
-        patientDid = patientDid.id,
-        providerDid = hospitalDid.id,
+    val issuedLabResults = createLabResultsCredential(
+        trustWeave = trustWeave,
+        patientDid = patientDid.id.value,
+        providerDid = hospitalDid.id.value,
         testName = "Complete Blood Count",
         results = mapOf(
             "WBC" to "7.2",
@@ -322,32 +314,19 @@ fun main() = runBlocking {
         labDate = Instant.now().toString()
     )
 
-    val issuedLabResults = credentialIssuer.issue(
-        credential = labResultsCredential,
-        issuerDid = hospitalDid.id,
-        keyId = hospitalKey.id,
-        options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
-    )
-
     println("Lab results credential issued")
 
     // Step 6: Issue vaccination credential
     println("\nStep 6: Issuing vaccination credential...")
-    val vaccinationCredential = createVaccinationCredential(
-        patientDid = patientDid.id,
-        providerDid = hospitalDid.id,
+    val issuedVaccination = createVaccinationCredential(
+        trustWeave = trustWeave,
+        patientDid = patientDid.id.value,
+        providerDid = hospitalDid.id.value,
         vaccineType = "COVID-19",
         manufacturer = "Pfizer-BioNTech",
         lotNumber = "EW0167",
         administrationDate = "2023-03-15",
         administeringProvider = "Dr. Johnson"
-    )
-
-    val issuedVaccination = credentialIssuer.issue(
-        credential = vaccinationCredential,
-        issuerDid = hospitalDid.id,
-        keyId = hospitalKey.id,
-        options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
 
     println("Vaccination credential issued")
@@ -388,19 +367,13 @@ fun main() = runBlocking {
 
     // Step 9: Create consent for data sharing
     println("\nStep 9: Creating consent credential...")
-    val consentCredential = createConsentCredential(
-        patientDid = patientDid.id,
-        providerDid = specialistDid.id,
+    val issuedConsent = createConsentCredential(
+        trustWeave = trustWeave,
+        patientDid = patientDid.id.value,
+        providerDid = specialistDid.id.value,
         authorizedDataTypes = listOf("lab-results", "diagnosis"),
         purpose = "Specialist consultation",
         expirationDate = Instant.now().plus(90, ChronoUnit.DAYS).toString()
-    )
-
-    val issuedConsent = credentialIssuer.issue(
-        credential = consentCredential,
-        issuerDid = patientDid.id, // Patient issues their own consent
-        keyId = patientKms.generateKey("Ed25519").id,
-        options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
 
     val consentId = patientWallet.store(issuedConsent)
@@ -418,11 +391,11 @@ fun main() = runBlocking {
             "results.Hemoglobin"
             // Platelets and reference ranges NOT disclosed
         ),
-        holderDid = patientDid.id,
-        options = PresentationOptions(
-            holderDid = patientDid.id,
-            proofType = "Ed25519Signature2020",
-            challenge = "specialist-consultation-${Instant.now().toEpochMilli()}"
+        holderDid = patientDid.id.value,
+        options = mapOf(
+            "holderDid" to patientDid.id.value,
+            "proofType" to "Ed25519Signature2020",
+            "challenge" to "specialist-consultation-${Instant.now().toEpochMilli()}"
         )
     )
 
@@ -432,40 +405,33 @@ fun main() = runBlocking {
 
     // Step 11: Verify credentials
     println("\nStep 11: Verifying medical credentials...")
-    val verifier = CredentialVerifier(
-        didResolver = CredentialDidResolver { did ->
-            didRegistry.resolve(did).toCredentialDidResolution()
+    val prescriptionVerification = trustWeave.verify {
+        credential(issuedPrescription)
+        checkRevocation()
+        checkExpiration()
+        validateSchema("https://example.com/schemas/prescription.json")
+    }
+
+    when (prescriptionVerification) {
+        is VerificationResult.Valid -> println("✅ Prescription credential is valid!")
+        is VerificationResult.Invalid -> {
+            println("❌ Prescription verification failed:")
+            prescriptionVerification.allErrors.forEach { println("  - $it") }
         }
-    )
-
-    val prescriptionVerification = verifier.verify(
-        credential = issuedPrescription,
-        options = CredentialVerificationOptions(
-            checkRevocation = true,
-            checkExpiration = true,
-            validateSchema = true
-        )
-    )
-
-    if (prescriptionVerification.valid) {
-        println("✅ Prescription credential is valid!")
-    } else {
-        println("❌ Prescription verification failed:")
-        prescriptionVerification.errors.forEach { println("  - $it") }
     }
 
     // Step 12: Anchor critical records to blockchain
     println("\nStep 12: Anchoring critical records to blockchain...")
-    val prescriptionDigest = org.trustweave.json.DigestUtils.sha256DigestMultibase(
+    val prescriptionDigest = DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(
-            org.trustweave.credential.models.VerifiableCredential.serializer(),
+            VerifiableCredential.serializer(),
             issuedPrescription
         )
     )
 
     val consentRecord = ConsentRecord(
-        patientDid = patientDid.id,
-        providerDid = specialistDid.id,
+        patientDid = patientDid.id.value,
+        providerDid = specialistDid.id.value,
         dataTypes = listOf("lab-results", "diagnosis"),
         purpose = "Specialist consultation",
         expirationDate = Instant.now().plus(90, ChronoUnit.DAYS).toString(),
@@ -508,14 +474,17 @@ fun main() = runBlocking {
 
     println("\n=== Scenario Complete ===")
 }
+```
 
 **Result:** The program prints each milestone—DID creation, issuance, wallet storage, verification, anchoring—ending with a success message. Use that console output as your baseline when customising the scenario.
+
+```kotlin
+import org.trustweave.did.identifiers.Did
 
 suspend fun createPrescriptionCredential(
     trustWeave: TrustWeave,
     patientDid: String,
     providerDid: String,
-    issuerKeyId: String,
     medication: String,
     dosage: String,
     frequency: String,
@@ -542,11 +511,11 @@ suspend fun createPrescriptionCredential(
             expires(30, ChronoUnit.DAYS)
             schema("https://example.com/schemas/prescription.json")
         }
-        signedBy(issuerDid = providerDid, keyId = issuerKeyId)
+        signedBy(Did(providerDid))
     }
     
     return when (result) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create prescription credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -555,7 +524,6 @@ suspend fun createLabResultsCredential(
     trustWeave: TrustWeave,
     patientDid: String,
     providerDid: String,
-    issuerKeyId: String,
     testName: String,
     results: Map<String, String>,
     referenceRanges: Map<String, String>,
@@ -587,11 +555,11 @@ suspend fun createLabResultsCredential(
             // Lab results don't expire - no expires() call
             schema("https://example.com/schemas/lab-results.json")
         }
-        signedBy(issuerDid = providerDid, keyId = issuerKeyId)
+        signedBy(Did(providerDid))
     }
     
     return when (result) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create lab results credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -600,7 +568,6 @@ suspend fun createVaccinationCredential(
     trustWeave: TrustWeave,
     patientDid: String,
     providerDid: String,
-    issuerKeyId: String,
     vaccineType: String,
     manufacturer: String,
     lotNumber: String,
@@ -626,11 +593,11 @@ suspend fun createVaccinationCredential(
             // Vaccination records don't expire - no expires() call
             schema("https://example.com/schemas/vaccination.json")
         }
-        signedBy(issuerDid = providerDid, keyId = issuerKeyId)
+        signedBy(Did(providerDid))
     }
     
     return when (result) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create vaccination credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -639,7 +606,6 @@ suspend fun createConsentCredential(
     trustWeave: TrustWeave,
     patientDid: String,
     providerDid: String,
-    issuerKeyId: String,
     authorizedDataTypes: List<String>,
     purpose: String,
     expirationDate: String
@@ -663,11 +629,11 @@ suspend fun createConsentCredential(
             expires(Instant.parse(expirationDate))
             schema("https://example.com/schemas/consent.json")
         }
-        signedBy(issuerDid = patientDid, keyId = issuerKeyId)
+        signedBy(Did(patientDid))
     }
     
     return when (result) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create consent credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -901,29 +867,38 @@ suspend fun createConsentCredential(
 Share medical credentials across different healthcare providers:
 
 ```kotlin
-fun shareMedicalDataWithProvider(
+import org.trustweave.trust.TrustWeave
+import org.trustweave.wallet.Wallet
+import org.trustweave.credential.model.vc.VerifiablePresentation
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+
+suspend fun shareMedicalDataWithProvider(
+    trustWeave: TrustWeave,
     patientWallet: Wallet,
     targetProviderDid: String,
     credentialIds: List<String>,
     purpose: String
 ): VerifiablePresentation {
-    // Create consent first
-    val consent = createConsentCredential(
+    // Create consent credential (store or anchor in production as required by policy)
+    val consentCredential = createConsentCredential(
+        trustWeave = trustWeave,
         patientDid = patientWallet.holderDid!!,
         providerDid = targetProviderDid,
         authorizedDataTypes = credentialIds.map { "medical-credential" },
         purpose = purpose,
         expirationDate = Instant.now().plus(30, ChronoUnit.DAYS).toString()
     )
+    println("Consent credential ready: ${consentCredential.id}")
 
     // Create presentation with consent
     return patientWallet.createPresentation(
         credentialIds = credentialIds,
         holderDid = patientWallet.holderDid!!,
-        options = PresentationOptions(
-            holderDid = patientWallet.holderDid!!,
-            proofType = "Ed25519Signature2020",
-            challenge = "provider-sharing-${Instant.now().toEpochMilli()}"
+        options = mapOf(
+            "holderDid" to patientWallet.holderDid!!,
+            "proofType" to "Ed25519Signature2020",
+            "challenge" to "provider-sharing-${Instant.now().toEpochMilli()}"
         )
     )
 }
@@ -934,11 +909,17 @@ fun shareMedicalDataWithProvider(
 Enable emergency access to critical medical information:
 
 ```kotlin
+import org.trustweave.trust.TrustWeave
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.did.identifiers.Did
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+
 suspend fun createEmergencyAccessCredential(
     trustWeave: TrustWeave,
     patientDid: String,
-    emergencyProviderDid: String,
-    issuerKeyId: String
+    emergencyProviderDid: String
 ): VerifiableCredential {
     val result = trustWeave.issue {
         credential {
@@ -956,11 +937,11 @@ suspend fun createEmergencyAccessCredential(
             issued(Instant.now())
             expires(24, ChronoUnit.HOURS)
         }
-        signedBy(issuerDid = patientDid, keyId = issuerKeyId)
+        signedBy(Did(patientDid))
     }
-    
+
     return when (result) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create emergency access credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -975,7 +956,6 @@ suspend fun createAdherenceCredential(
     trustWeave: TrustWeave,
     patientDid: String,
     prescriptionId: String,
-    issuerKeyId: String,
     adherenceData: Map<String, Boolean>
 ): VerifiableCredential {
     val result = trustWeave.issue {
@@ -993,11 +973,11 @@ suspend fun createAdherenceCredential(
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = patientDid, keyId = issuerKeyId)
+        signedBy(Did(patientDid))
     }
     
     return when (result) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create adherence credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -1038,10 +1018,10 @@ fun createEmergencyMedicalPresentation(
     return patientWallet.createPresentation(
         credentialIds = credentialIds,
         holderDid = patientWallet.holderDid!!,
-        options = PresentationOptions(
-            holderDid = patientWallet.holderDid!!,
-            proofType = "Ed25519Signature2020",
-            challenge = "emergency-care-${Instant.now().toEpochMilli()}"
+        options = mapOf(
+            "holderDid" to patientWallet.holderDid!!,
+            "proofType" to "Ed25519Signature2020",
+            "challenge" to "emergency-care-${Instant.now().toEpochMilli()}"
         )
     )
 }
@@ -1079,9 +1059,9 @@ fun shareRelevantMedicalHistory(
             // Treatment details NOT disclosed
         ),
         holderDid = patientWallet.holderDid!!,
-        options = PresentationOptions(
-            holderDid = patientWallet.holderDid!!,
-            challenge = "specialist-referral-${Instant.now().toEpochMilli()}"
+        options = mapOf(
+            "holderDid" to patientWallet.holderDid!!,
+            "challenge" to "specialist-referral-${Instant.now().toEpochMilli()}"
         )
     )
 }
@@ -1122,9 +1102,9 @@ fun createInsuranceClaimPresentation(
             // Detailed medical information NOT disclosed
         ),
         holderDid = patientWallet.holderDid!!,
-        options = PresentationOptions(
-            holderDid = patientWallet.holderDid!!,
-            challenge = "insurance-claim-${claimDetails.claimId}"
+        options = mapOf(
+            "holderDid" to patientWallet.holderDid!!,
+            "challenge" to "insurance-claim-${claimDetails.claimId}"
         )
     )
 }
@@ -1157,10 +1137,10 @@ fun authenticateForTelemedicine(
     return patientWallet.createPresentation(
         credentialIds = listOfNotNull(identityCredential?.id),
         holderDid = patientWallet.holderDid!!,
-        options = PresentationOptions(
-            holderDid = patientWallet.holderDid!!,
-            proofType = "Ed25519Signature2020",
-            challenge = "telemedicine-auth-${Instant.now().toEpochMilli()}"
+        options = mapOf(
+            "holderDid" to patientWallet.holderDid!!,
+            "proofType" to "Ed25519Signature2020",
+            "challenge" to "telemedicine-auth-${Instant.now().toEpochMilli()}"
         )
     )
 }

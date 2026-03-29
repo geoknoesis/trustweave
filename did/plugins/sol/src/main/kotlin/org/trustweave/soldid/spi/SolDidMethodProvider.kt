@@ -3,47 +3,25 @@ package org.trustweave.soldid.spi
 import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.DidMethod
-import org.trustweave.did.spi.DidMethodProvider
+import org.trustweave.did.base.AbstractDidMethodProvider
 import org.trustweave.soldid.SolDidConfig
 import org.trustweave.soldid.SolDidMethod
-import org.trustweave.kms.KeyManagementService
-import java.util.ServiceLoader
 
 /**
  * SPI provider for did:sol method.
  *
  * Automatically discovers did:sol method when this module is on the classpath.
  */
-class SolDidMethodProvider : DidMethodProvider {
+class SolDidMethodProvider : AbstractDidMethodProvider() {
 
     override val name: String = "sol"
 
     override val supportedMethods: List<String> = listOf("sol")
 
     override fun create(methodName: String, options: DidCreationOptions): DidMethod? {
-        if (methodName.lowercase() != "sol") {
-            return null
-        }
-
-        // Get KMS from options or discover via SPI
-        val kms = (options.additionalProperties["kms"] as? KeyManagementService)
-            ?: run {
-                val kmsProviders = ServiceLoader.load(
-                    org.trustweave.kms.spi.KeyManagementServiceProvider::class.java
-                )
-                kmsProviders.firstOrNull()?.create(options.additionalProperties)
-                    ?: throw IllegalStateException(
-                        "No KeyManagementService available. Provide 'kms' in options or ensure a KMS provider is registered."
-                    )
-            }
-
-        // Create configuration from options
+        if (methodName.lowercase() != "sol") return null
         val config = createConfig(options)
-
-        // Get or create blockchain anchor client
-        val anchorClient = getOrCreateAnchorClient(options, config)
-
-        return SolDidMethod(kms, anchorClient, config)
+        return SolDidMethod(resolveKms(options), getOrCreateAnchorClient(options, config), config)
     }
 
     /**

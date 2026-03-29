@@ -1,6 +1,6 @@
 package org.trustweave.core.util
 
-import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.core.exception.SerializationException
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
 import kotlin.test.*
@@ -14,7 +14,7 @@ class DigestUtilsErrorTest {
     fun `test canonicalizeJson throws InvalidJson for malformed JSON`() {
         val invalidJson = "{ invalid json }"
 
-        val exception = assertFailsWith<TrustWeaveException.InvalidJson> {
+        val exception = assertFailsWith<SerializationException.InvalidJson> {
             DigestUtils.canonicalizeJson(invalidJson)
         }
 
@@ -36,7 +36,7 @@ class DigestUtilsErrorTest {
     fun `test canonicalizeJson throws InvalidJson for incomplete JSON`() {
         val incompleteJson = """{"key": "value"""
 
-        val exception = assertFailsWith<TrustWeaveException.InvalidJson> {
+        val exception = assertFailsWith<SerializationException.InvalidJson> {
             DigestUtils.canonicalizeJson(incompleteJson)
         }
 
@@ -65,7 +65,7 @@ class DigestUtilsErrorTest {
         val digest = DigestUtils.sha256DigestMultibase(plainText)
 
         assertNotNull(digest)
-        assertTrue(digest.startsWith("u"))
+        assertTrue(digest.startsWith("z"))
     }
 
     @Test
@@ -112,7 +112,7 @@ class DigestUtilsErrorTest {
         val digest = DigestUtils.sha256DigestMultibase(largeJson)
 
         assertNotNull(digest)
-        assertTrue(digest.startsWith("u"))
+        assertTrue(digest.startsWith("z"))
     }
 
     @Test
@@ -122,7 +122,7 @@ class DigestUtilsErrorTest {
         val digest = DigestUtils.sha256DigestMultibase(unicodeJson)
 
         assertNotNull(digest)
-        assertTrue(digest.startsWith("u"))
+        assertTrue(digest.startsWith("z"))
     }
 
     @Test

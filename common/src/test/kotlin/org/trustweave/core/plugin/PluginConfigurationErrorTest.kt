@@ -1,6 +1,6 @@
 package org.trustweave.core.plugin
 
-import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.core.exception.ConfigException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import kotlin.test.*
@@ -13,7 +13,7 @@ class PluginConfigurationErrorTest {
 
     @Test
     fun `test loadFromFile throws InvalidConfigFormat for blank path`() {
-        val exception = assertFailsWith<TrustWeaveException.InvalidConfigFormat> {
+        val exception = assertFailsWith<ConfigException.InvalidFormat> {
             PluginConfigurationLoader.loadFromFile("")
         }
 
@@ -23,7 +23,7 @@ class PluginConfigurationErrorTest {
 
     @Test
     fun `test loadFromFile throws ConfigNotFound when file does not exist`() {
-        val exception = assertFailsWith<TrustWeaveException.ConfigNotFound> {
+        val exception = assertFailsWith<ConfigException.NotFound> {
             PluginConfigurationLoader.loadFromFile("/nonexistent/path/config.json")
         }
 
@@ -43,7 +43,7 @@ class PluginConfigurationErrorTest {
 
         // This should throw InvalidConfigFormat, not ConfigReadFailed
         // Let's test the actual scenario: file exists but cannot be parsed
-        val exception = assertFailsWith<TrustWeaveException.InvalidConfigFormat> {
+        val exception = assertFailsWith<ConfigException.InvalidFormat> {
             PluginConfigurationLoader.loadFromFile(file.absolutePath)
         }
 
@@ -55,7 +55,7 @@ class PluginConfigurationErrorTest {
         val file = File(tempDir, "config.json")
         file.writeText("{ invalid json }")
 
-        val exception = assertFailsWith<TrustWeaveException.InvalidConfigFormat> {
+        val exception = assertFailsWith<ConfigException.InvalidFormat> {
             PluginConfigurationLoader.loadFromFile(file.absolutePath)
         }
 
@@ -65,7 +65,7 @@ class PluginConfigurationErrorTest {
 
     @Test
     fun `test loadFromResource throws InvalidConfigFormat for blank resource`() {
-        val exception = assertFailsWith<TrustWeaveException.InvalidConfigFormat> {
+        val exception = assertFailsWith<ConfigException.InvalidFormat> {
             PluginConfigurationLoader.loadFromResource("")
         }
 
@@ -75,7 +75,7 @@ class PluginConfigurationErrorTest {
 
     @Test
     fun `test loadFromResource throws ConfigNotFound when resource does not exist`() {
-        val exception = assertFailsWith<TrustWeaveException.ConfigNotFound> {
+        val exception = assertFailsWith<ConfigException.NotFound> {
             PluginConfigurationLoader.loadFromResource("nonexistent-resource.json")
         }
 
@@ -87,7 +87,7 @@ class PluginConfigurationErrorTest {
     fun `test loadFromJson throws InvalidConfigFormat for invalid JSON`() {
         val invalidJson = "{ invalid json }"
 
-        val exception = assertFailsWith<TrustWeaveException.InvalidConfigFormat> {
+        val exception = assertFailsWith<ConfigException.InvalidFormat> {
             PluginConfigurationLoader.loadFromJson(invalidJson)
         }
 
@@ -100,7 +100,7 @@ class PluginConfigurationErrorTest {
     fun `test loadFromJson throws InvalidConfigFormat for incomplete JSON`() {
         val incompleteJson = """{"plugins": ["""
 
-        val exception = assertFailsWith<TrustWeaveException.InvalidConfigFormat> {
+        val exception = assertFailsWith<ConfigException.InvalidFormat> {
             PluginConfigurationLoader.loadFromJson(incompleteJson)
         }
 
@@ -111,7 +111,7 @@ class PluginConfigurationErrorTest {
     fun `test loadFromJson throws InvalidConfigFormat for wrong type`() {
         val wrongTypeJson = """{"plugins": "should be array"}"""
 
-        val exception = assertFailsWith<TrustWeaveException.InvalidConfigFormat> {
+        val exception = assertFailsWith<ConfigException.InvalidFormat> {
             PluginConfigurationLoader.loadFromJson(wrongTypeJson)
         }
 

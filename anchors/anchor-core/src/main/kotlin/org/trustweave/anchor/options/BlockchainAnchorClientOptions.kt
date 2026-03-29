@@ -1,6 +1,25 @@
 package org.trustweave.anchor.options
 
 /**
+ * Single-method parser contract for converting a raw map into typed [BlockchainAnchorClientOptions].
+ *
+ * Implement this interface (or use a lambda via SAM conversion) to add support for a new
+ * blockchain type without modifying [BlockchainAnchorClientOptions]:
+ *
+ * ```kotlin
+ * val myChainParser = BlockchainAnchorOptionsParser { chainId, map ->
+ *     if (chainId.startsWith("mychain:")) MyChainOptions.fromMap(map) else null
+ * }
+ * BlockchainAnchorClientOptions.registerParser(myChainParser)
+ * ```
+ *
+ * Return `null` if this parser does not handle the given [chainId].
+ */
+fun interface BlockchainAnchorOptionsParser {
+    fun parse(chainId: String, map: Map<String, Any?>): BlockchainAnchorClientOptions?
+}
+
+/**
  * Base sealed class for blockchain anchor client options.
  *
  * Provides type-safe configuration for blockchain adapters.
@@ -15,6 +34,9 @@ package org.trustweave.anchor.options
  * **Backward Compatibility**: Options can be converted to/from `Map<String, Any?>` for
  * compatibility with existing code and the SPI interface.
  *
+ * **Extensibility**: New blockchain types can be supported without modifying this class by
+ * calling [BlockchainAnchorClientOptions.registerParser] with a [BlockchainAnchorOptionsParser].
+ *
  * **Example Usage**:
  * ```
  * // Type-safe (recommended)
@@ -27,6 +49,11 @@ package org.trustweave.anchor.options
  * // From map (backward compatible)
  * val map = mapOf("algodUrl" to "https://testnet-api.algonode.cloud")
  * val options = BlockchainAnchorClientOptions.fromMap("algorand:testnet", map)
+ *
+ * // Extend for a new chain without modifying this class
+ * BlockchainAnchorClientOptions.registerParser { chainId, map ->
+ *     if (chainId.startsWith("mychain:")) MyChainOptions.fromMap(map) else null
+ * }
  * ```
  */
 sealed class BlockchainAnchorClientOptions {
@@ -42,26 +69,49 @@ sealed class BlockchainAnchorClientOptions {
     inline fun <reified T> get(key: String): T? = (toMap()[key] as? T)
 
     companion object {
+        private val parsers: MutableList<BlockchainAnchorOptionsParser> = mutableListOf(
+            // Built-in parsers for the known blockchain types shipped with the SDK
+            BlockchainAnchorOptionsParser { chainId, map ->
+                if (chainId.startsWith("algorand:")) AlgorandOptions.fromMap(map) else null
+            },
+            BlockchainAnchorOptionsParser { chainId, map ->
+                if (chainId.startsWith("eip155:")) {
+                    val chainNum = chainId.substringAfter(":").toIntOrNull()
+                    when (chainNum) {
+                        1337 -> GanacheOptions.fromMap(map)
+                        else -> PolygonOptions.fromMap(map)
+                    }
+                } else null
+            },
+            BlockchainAnchorOptionsParser { chainId, map ->
+                if (chainId.startsWith("indy:")) IndyOptions.fromMap(map) else null
+            }
+        )
+
         /**
-         * Creates options from a map (for backward compatibility).
-         * Attempts to detect the blockchain type and create appropriate options.
+         * Registers an additional [BlockchainAnchorOptionsParser].
+         *
+         * Registered parsers are tried in registration order after the built-in parsers.
+         * This is the extension point that keeps [fromMap] closed for modification
+         * (Open/Closed Principle).
+         */
+        @JvmStatic
+        fun registerParser(parser: BlockchainAnchorOptionsParser) {
+            parsers.add(parser)
+        }
+
+        /**
+         * Creates options from a map by delegating to registered parsers.
+         *
+         * @throws IllegalArgumentException if no registered parser handles [chainId]
          */
         @JvmStatic
         fun fromMap(chainId: String, map: Map<String, Any?>): BlockchainAnchorClientOptions {
-            return when {
-                chainId.startsWith("algorand:") -> AlgorandOptions.fromMap(map)
-                chainId.startsWith("eip155:") -> {
-                    // Determine if Polygon or Ganache based on chain ID
-                    val chainIdNum = chainId.substringAfter(":").toIntOrNull()
-                    when (chainIdNum) {
-                        137, 80001 -> PolygonOptions.fromMap(map)
-                        1337 -> GanacheOptions.fromMap(map)
-                        else -> PolygonOptions.fromMap(map) // Default to Polygon
-                    }
-                }
-                chainId.startsWith("indy:") -> IndyOptions.fromMap(map)
-                else -> throw IllegalArgumentException("Unsupported chain ID: $chainId")
-            }
+            return parsers.firstNotNullOfOrNull { it.parse(chainId, map) }
+                ?: throw IllegalArgumentException(
+                    "No parser registered for chain ID '$chainId'. " +
+                    "Register one via BlockchainAnchorClientOptions.registerParser(...)."
+                )
         }
     }
 }

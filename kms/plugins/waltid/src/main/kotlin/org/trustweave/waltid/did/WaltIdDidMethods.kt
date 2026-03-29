@@ -7,6 +7,7 @@ import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.model.DidService
+import org.trustweave.did.model.parseServiceTypesFromJson
 import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolutionMetadata
@@ -97,7 +98,7 @@ abstract class WaltIdDidMethodBase(
                 } ?: return@mapNotNull null
                 DidService(
                     id = sObj["id"]?.jsonPrimitive?.content ?: return@mapNotNull null,
-                    type = sObj["type"]?.jsonPrimitive?.content ?: return@mapNotNull null,
+                    type = parseServiceTypesFromJson(sObj["type"]) ?: return@mapNotNull null,
                     serviceEndpoint = serviceEndpoint
                 )
             } ?: emptyList()

@@ -23,17 +23,17 @@ Add the did:polygon module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave.did:polygon:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("org.trustweave.did:base:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:did-plugins-polygon:0.6.0")
+    implementation("org.trustweave:did-did-core:0.6.0")
+    implementation("org.trustweave:did-plugins-base:0.6.0")
+    implementation("org.trustweave:anchors-anchor-core:0.6.0")
+    implementation("org.trustweave:common:0.6.0")
 
     // Web3j for Polygon blockchain
     implementation("org.web3j:core:4.10.0")
 
     // Polygon anchor client
-    implementation("org.trustweave.chains:polygon:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:anchors-plugins-polygon:0.6.0")
 }
 ```
 
@@ -227,32 +227,42 @@ val config = PolygonDidConfig.builder()
 ## Integration with TrustWeave
 
 ```kotlin
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.did.KeyAlgorithm
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.kms.InMemoryKeyManagementService
 import org.trustweave.polygondid.*
-import org.trustweave.anchor.*
-import org.trustweave.polygon.PolygonBlockchainAnchorClient
 
 val config = PolygonDidConfig.mumbai("https://rpc-mumbai.maticvigil.com")
-val anchorClient = PolygonBlockchainAnchorClient(config.chainId, config.toMap())
+val kms = InMemoryKeyManagementService()
 
-val TrustWeave = TrustWeave.create {
-    kms = InMemoryKeyManagementService()
-
-    blockchain {
-        register(config.chainId, anchorClient)
+val trustWeave = TrustWeave.build {
+    customKms(kms)
+    anchor {
+        chain(config.chainId) {
+            provider("polygon")
+            options {
+                for ((k, v) in config.toMap()) {
+                    if (v != null) k.to(v)
+                }
+            }
+        }
     }
-
-    didMethods {
-        + PolygonDidMethod(kms!!, anchorClient, config)
+    did {
+        method("polygon") { algorithm("Secp256k1") }
     }
 }
 
-// Use did:polygon
-val did = TrustWeave.createDid("polygon") {
-    algorithm = KeyAlgorithm.SECP256K1
-}.getOrThrow()
+val did = trustWeave.createDid {
+    method("polygon")
+    algorithm(KeyAlgorithm.SECP256K1)
+}.getOrThrowDid()
 
-val resolved = TrustWeave.resolveDid(did.id).getOrThrow()
+when (val resolved = trustWeave.resolveDid(did)) {
+    is DidResolutionResult.Success -> println("Resolved: ${resolved.document.id}")
+    else -> println("Resolve failed: $resolved")
+}
 ```
 
 ## Error Handling
@@ -310,7 +320,7 @@ did:polygon is similar to did:ethr but optimized for Polygon:
 
 ## References
 
-- [Polygon Documentation](https://docs.polygon.technology/)
-- [Polygon Network](https://polygon.technology/)
-- [Ethereum DID Specification](https://github.com/decentralized-identity/ethr-did-resolver) (similar pattern)
+- Polygon Documentation](https://docs.polygon.technology/)
+- Polygon Network](https://polygon.technology/)
+- Ethereum DID Specification](https://github.com/decentralized-identity/ethr-did-resolver) (similar pattern)
 

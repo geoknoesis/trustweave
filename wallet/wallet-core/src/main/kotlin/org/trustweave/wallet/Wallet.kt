@@ -9,7 +9,7 @@ import kotlinx.datetime.Clock
  *
  * A wallet is a composition of capability interfaces. All wallets must implement
  * CredentialStorage. Other capabilities are optional and can be checked using
- * Kotlin's type system (e.g., `wallet is CredentialOrganization`).
+ * Kotlin's type system against the narrowest interface you need.
  *
  * **Example Usage**:
  * ```kotlin
@@ -19,9 +19,11 @@ import kotlinx.datetime.Clock
  * val id = wallet.store(credential)
  * val credential = wallet.get(id)
  *
- * // Optional capabilities (type-safe check)
- * if (wallet is CredentialOrganization) {
+ * // Optional capabilities — prefer the narrowest interface you actually need
+ * if (wallet is CredentialCollections) {
  *     wallet.createCollection("My Collection")
+ * }
+ * if (wallet is CredentialTagging) {
  *     wallet.tagCredential(id, setOf("important"))
  * }
  *
@@ -53,15 +55,16 @@ interface Wallet : CredentialStorage {
      * Wallet capabilities for runtime discovery.
      *
      * Useful for UI or dynamic feature detection.
-     * For compile-time type safety, use `wallet is CredentialOrganization` instead.
+     * For compile-time type safety, use `wallet is CredentialCollections` or
+     * `wallet is CredentialTagging` instead.
      */
     val capabilities: WalletCapabilities
         get() = WalletCapabilities(
             credentialStorage = true,
             credentialQuery = true,
-            collections = this is CredentialOrganization,
-            tags = this is CredentialOrganization,
-            metadata = this is CredentialOrganization,
+            collections = this is CredentialCollections,
+            tags = this is CredentialTagging,
+            metadata = this is CredentialTagging,
             archive = this is CredentialLifecycle,
             refresh = this is CredentialLifecycle,
             createPresentation = this is CredentialPresentation,
@@ -74,13 +77,14 @@ interface Wallet : CredentialStorage {
     /**
      * Check if wallet supports a capability.
      *
-     * **Note**: For compile-time type safety, prefer `wallet is CredentialOrganization` instead.
+     * **Note**: For compile-time type safety, prefer `wallet is CredentialCollections` or
+     * `wallet is CredentialTagging` instead.
      * For runtime discovery, use `wallet.capabilities.supports("collections")`.
      *
      * **Example**:
      * ```kotlin
      * // Compile-time type safety (preferred)
-     * if (wallet is CredentialOrganization) {
+     * if (wallet is CredentialCollections) {
      *     wallet.createCollection("My Collection")
      * }
      *
@@ -123,12 +127,12 @@ interface Wallet : CredentialStorage {
                 } ?: false
             },
             revokedCredentials = credentials.count { it.credentialStatus != null },
-            collectionsCount = if (this is CredentialOrganization) {
+            collectionsCount = if (this is CredentialCollections) {
                 listCollections().size
             } else {
                 0
             },
-            tagsCount = if (this is CredentialOrganization) {
+            tagsCount = if (this is CredentialTagging) {
                 getAllTags().size
             } else {
                 0
@@ -143,18 +147,34 @@ interface Wallet : CredentialStorage {
 }
 
 /**
- * Extension function for type-safe capability access.
+ * Extension function for type-safe access to the [CredentialCollections] capability.
  *
  * **Example**:
  * ```kotlin
- * wallet.withOrganization { org ->
- *     org.createCollection("My Collection")
- * }
+ * wallet.withCollections { it.createCollection("My Collection") }
  * ```
  */
-inline fun <T> Wallet.withOrganization(block: (CredentialOrganization) -> T): T? {
-    return (this as? CredentialOrganization)?.let(block)
-}
+inline fun <T> Wallet.withCollections(block: (CredentialCollections) -> T): T? =
+    (this as? CredentialCollections)?.let(block)
+
+/**
+ * Extension function for type-safe access to the [CredentialTagging] capability.
+ *
+ * **Example**:
+ * ```kotlin
+ * wallet.withTagging { it.tagCredential(id, setOf("important")) }
+ * ```
+ */
+inline fun <T> Wallet.withTagging(block: (CredentialTagging) -> T): T? =
+    (this as? CredentialTagging)?.let(block)
+
+/**
+ * Extension function for type-safe access to the combined [CredentialOrganization] capability.
+ *
+ * Prefer [withCollections] or [withTagging] when only one capability is needed.
+ */
+inline fun <T> Wallet.withOrganization(block: (CredentialOrganization) -> T): T? =
+    (this as? CredentialOrganization)?.let(block)
 
 /**
  * Extension function for type-safe capability access.

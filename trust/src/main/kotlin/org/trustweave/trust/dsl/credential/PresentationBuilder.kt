@@ -1,14 +1,15 @@
 package org.trustweave.trust.dsl.credential
 
 import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.PresentationResult
 import org.trustweave.credential.CredentialService
 import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.credential.model.vc.VerifiablePresentation
 import org.trustweave.credential.requests.PresentationRequest
 import org.trustweave.credential.proof.ProofOptions
 import org.trustweave.credential.proof.ProofPurpose
 import org.trustweave.credential.proof.proofOptionsForPresentation
 import org.trustweave.did.identifiers.Did
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -19,17 +20,17 @@ import kotlinx.coroutines.withContext
  *
  * **Example Usage**:
  * ```kotlin
- * val presentation = presentation {
+ * val pr = trustWeave.presentationResult {
  *     credentials(credential1, credential2, credential3)
  *     holder("did:key:holder")
  *     challenge("verification-challenge-123")
  *     domain("example.com")
- *     selectiveDisclosure {
- *         reveal("degree.name", "degree.university")
- *         hide("degree.gpa")
- *     }
+ *     selectiveDisclosure { reveal("degree.name", "degree.university") }
  * }
+ * // when (pr) { Success / Failure.* }
  * ```
+ *
+ * Published docs: `docs/api-reference/result-types-guide.md`, `docs/getting-started/api-patterns.md` (results vs exceptions).
  */
 class PresentationBuilder(
     private val credentialService: CredentialService
@@ -56,9 +57,11 @@ class PresentationBuilder(
     }
 
     /**
-     * Set holder DID.
+     * Set holder DID (must be non-blank and start with `did:` — same rules as [WalletPresentationBuilder.holder]).
      */
     fun holder(did: String) {
+        require(did.isNotBlank()) { "Holder DID cannot be blank" }
+        require(did.startsWith("did:")) { "Holder DID must start with 'did:'. Got: $did" }
         this.holderDid = Did(did)
     }
 
@@ -100,16 +103,22 @@ class PresentationBuilder(
     }
 
     /**
-     * Build the verifiable presentation.
+     * Build the verifiable presentation, returning a [PresentationResult] (no throw for validation or missing service).
      */
-    suspend fun build(): VerifiablePresentation = withContext(Dispatchers.IO) {
-        val holder = holderDid ?: throw IllegalStateException(
-            "Holder DID is required. Use holder(holderDid) to specify the credential holder."
-        )
+    suspend fun buildResult(): PresentationResult = withContext(Dispatchers.IO) {
+        if (holderDid == null) {
+            return@withContext PresentationResult.Failure.InvalidRequest(
+                listOf(
+                    "Holder DID is required. Use holder(holderDid) to specify the credential holder.",
+                ),
+            )
+        }
 
         if (credentials.isEmpty()) {
-            throw IllegalStateException(
-                "At least one credential is required. Use credential(credential) or credentials(vararg credentials) to add credentials to the presentation."
+            return@withContext PresentationResult.Failure.InvalidRequest(
+                listOf(
+                    "At least one credential is required. Use credentials(...) to add credentials to the presentation.",
+                ),
             )
         }
 
@@ -121,22 +130,33 @@ class PresentationBuilder(
                 proofOptionsForPresentation(
                     challenge = challengeValue,
                     domain = domain,
-                    verificationMethod = verificationMethod
+                    verificationMethod = verificationMethod,
                 )
             } else {
                 ProofOptions(
                     purpose = ProofPurpose.Authentication,
                     challenge = null,
                     domain = domain,
-                    verificationMethod = verificationMethod
+                    verificationMethod = verificationMethod,
                 )
-            }
+            },
         )
 
-        credentialService.createPresentation(
-            credentials = credentials,
-            request = request
-        )
+        try {
+            PresentationResult.Success(
+                credentialService.createPresentation(
+                    credentials = credentials,
+                    request = request,
+                ),
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            PresentationResult.Failure.AdapterError(
+                message = e.message ?: "Presentation creation failed",
+                cause = e,
+            )
+        }
     }
 }
 
@@ -152,18 +172,17 @@ class SelectiveDisclosureBuilder {
     fun reveal(vararg fields: String) {
         revealedFields.addAll(fields)
     }
-
-    // hide() method removed - use reveal() to specify visible fields
 }
 
 /**
- * DSL function to create a presentation.
+ * Create a verifiable presentation, returning [PresentationResult] for exhaustive error handling.
  */
-suspend fun TrustWeave.presentation(block: PresentationBuilder.() -> Unit): VerifiablePresentation {
-    val credentialService = getIssuer() as? CredentialService
-        ?: throw IllegalStateException("CredentialService is not available. Configure it in TrustWeave.build { ... }")
+suspend fun TrustWeave.presentationResult(block: PresentationBuilder.() -> Unit): PresentationResult {
+    val credentialService = getCredentialService()
+        ?: return PresentationResult.Failure.AdapterNotReady(
+            reason = "CredentialService is not available. Configure it in TrustWeave.build { ... }",
+        )
     val builder = PresentationBuilder(credentialService)
     builder.block()
-    return builder.build()
+    return builder.buildResult()
 }
-

@@ -12,12 +12,12 @@ This guide demonstrates how to implement proof of location credentials using Tru
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created DIDs for location providers and verifiers
-- ✅ Issued Verifiable Credentials proving location claims
-- ✅ Anchored location proofs to blockchain for immutability
-- ✅ Built a location verification system
-- ✅ Created location-based presentations with selective disclosure
-- ✅ Implemented geospatial data integrity verification
+- Created DIDs for location providers and verifiers
+- Issued Verifiable Credentials proving location claims
+- Anchored location proofs to blockchain for immutability
+- Built a location verification system
+- Created location-based presentations with selective disclosure
+- Implemented geospatial data integrity verification
 
 ## Big Picture & Significance
 
@@ -137,10 +137,10 @@ Add TrustWeave dependencies to your `build.gradle.kts`. These modules provide DI
 dependencies {
     // Core TrustWeave modules
     // TrustWeave distribution (includes all modules)
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Test kit for in-memory implementations
-    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:0.6.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -157,15 +157,14 @@ dependencies {
 Here’s the complete proof-of-location workflow. Execute it once to see the happy path (capture → issue → store → present → verify → anchor) before you inspect each step in detail.
 
 ```kotlin
-import org.trustweave.credential.models.VerifiableCredential
-import org.trustweave.credential.models.VerifiablePresentation
-import org.trustweave.credential.CredentialIssuanceOptions
-import org.trustweave.credential.CredentialVerificationOptions
-import org.trustweave.credential.PresentationOptions
-import org.trustweave.credential.issuer.CredentialIssuer
-import org.trustweave.credential.verifier.CredentialVerifier
-import org.trustweave.credential.proof.Ed25519ProofGenerator
-import org.trustweave.credential.proof.ProofGeneratorRegistry
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.model.vc.VerifiablePresentation
+import org.trustweave.credential.model.ProofType
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import org.trustweave.testkit.credential.InMemoryWallet
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
@@ -174,7 +173,12 @@ import org.trustweave.did.DidMethodRegistry
 import org.trustweave.anchor.BlockchainAnchorRegistry
 import org.trustweave.anchor.anchorTyped
 import org.trustweave.anchor.AnchorResult
+import org.trustweave.core.util.DigestUtils
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
+import java.time.Instant
 
 @Serializable
 data class LocationClaim(
@@ -200,16 +204,21 @@ fun main() = runBlocking {
     // Step 1: Setup services
     println("Step 1: Setting up services...")
     val locationProviderKms = InMemoryKeyManagementService()
-    val verifierKms = InMemoryKeyManagementService()
 
     val didMethod = DidKeyMockMethod(locationProviderKms)
     val didRegistry = DidMethodRegistry().apply { register(didMethod) }
 
-    // Initialize TrustWeave
     val trustWeave = TrustWeave.build {
-        keyManagementService(locationProviderKms)
-        didMethodRegistry(didRegistry)
-        credentialService { CredentialService() }
+        keys {
+            custom(locationProviderKms)
+            algorithm(ED25519)
+        }
+        did {
+            method(KEY) {
+                algorithm(ED25519)
+            }
+        }
+        credentials { defaultProofType(ProofType.Ed25519Signature2020) }
     }
 
     // Setup blockchain for anchoring
@@ -229,8 +238,8 @@ fun main() = runBlocking {
     // Step 3: Create location wallet
     println("\nStep 3: Creating location wallet...")
     val locationWallet = InMemoryWallet(
-        walletDid = deviceDid.id,
-        holderDid = deviceDid.id
+        walletDid = deviceDid.id.value,
+        holderDid = deviceDid.id.value
     )
     println("Location wallet created: ${locationWallet.walletId}")
 
@@ -242,7 +251,7 @@ fun main() = runBlocking {
         accuracy = 10.5, // 10.5 meters accuracy
         altitude = 52.0,
         timestamp = Instant.now().toString(),
-        deviceId = deviceDid.id,
+        deviceId = deviceDid.id.value,
         locationMethod = "GPS"
     )
     println("Location captured:")
@@ -252,14 +261,13 @@ fun main() = runBlocking {
 
     // Step 5: Create location credential
     println("\nStep 5: Creating location credential...")
-    val issuerKeyId = locationProviderKms.generateKey("Ed25519").id
     val locationResult = trustWeave.issue {
         credential {
-            id("https://example.com/location/${deviceDid.id.substringAfterLast(":")}-${Instant.now().toEpochMilli()}")
+            id("https://example.com/location/${deviceDid.id.value.substringAfterLast(":")}-${Instant.now().toEpochMilli()}")
             type("VerifiableCredential", "LocationCredential", "ProofOfLocation")
-            issuer(locationProviderDid.id)
+            issuer(locationProviderDid.id.value)
             subject {
-                id(deviceDid.id)
+                id(deviceDid.id.value)
                 "location" {
                     "latitude" to locationClaim.latitude
                     "longitude" to locationClaim.longitude
@@ -274,11 +282,11 @@ fun main() = runBlocking {
             // Location proofs typically don't expire - no expires() call
             schema("https://example.com/schemas/location.json")
         }
-        signedBy(issuerDid = locationProviderDid.id, keyId = issuerKeyId)
+        signedBy(locationProviderDid.id)
     }
     
     val issuedCredential = when (locationResult) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> locationResult.credential
+        is IssuanceResult.Success -> locationResult.credential
         else -> throw IllegalStateException("Failed to create location credential: ${locationResult.allErrors.joinToString()}")
     }
 
@@ -289,8 +297,8 @@ fun main() = runBlocking {
     // Step 7: Compute digest and anchor to blockchain
     println("\nStep 7: Anchoring location proof to blockchain...")
     val credentialDigest = DigestUtils.sha256DigestMultibase(
-        kotlinx.serialization.json.Json.encodeToJsonElement(
-            org.trustweave.credential.models.VerifiableCredential.serializer(),
+        Json.encodeToJsonElement(
+            VerifiableCredential.serializer(),
             issuedCredential
         )
     )
@@ -366,11 +374,11 @@ fun main() = runBlocking {
             "location.locationMethod"
             // Exact coordinates NOT disclosed for privacy
         ),
-        holderDid = deviceDid.id,
-        options = PresentationOptions(
-            holderDid = deviceDid.id,
-            proofType = "Ed25519Signature2020",
-            challenge = "location-verification-${Instant.now().toEpochMilli()}"
+        holderDid = deviceDid.id.value,
+        options = mapOf(
+            "holderDid" to deviceDid.id.value,
+            "proofType" to "Ed25519Signature2020",
+            "challenge" to "location-verification-${Instant.now().toEpochMilli()}"
         )
     )
     println("Approximate location presentation created (coordinates hidden)")
@@ -378,37 +386,33 @@ fun main() = runBlocking {
     // Full location presentation (for trusted verifiers)
     val fullPresentation = locationWallet.createPresentation(
         credentialIds = listOf(credentialId),
-        holderDid = deviceDid.id,
-        options = PresentationOptions(
-            holderDid = deviceDid.id,
-            proofType = "Ed25519Signature2020",
-            challenge = "full-location-verification"
+        holderDid = deviceDid.id.value,
+        options = mapOf(
+            "holderDid" to deviceDid.id.value,
+            "proofType" to "Ed25519Signature2020",
+            "challenge" to "full-location-verification"
         )
     )
     println("Full location presentation created")
 
     // Step 12: Verify location credential
     println("\nStep 12: Verifying location credential...")
-    val verifier = CredentialVerifier(didRegistry.resolve(deviceDid.id) ?: throw IllegalArgumentException("Device DID not found"))
+    val verificationResult = trustWeave.verify {
+        credential(issuedCredential)
+        skipRevocation()
+        skipExpiration()
+        validateSchema("https://example.com/schemas/location.json")
+    }
 
-    val verificationResult = verifier.verify(
-        credential = issuedCredential,
-        options = CredentialVerificationOptions(
-            checkRevocation = false,
-            checkExpiration = false, // Location proofs don't expire
-            validateSchema = false,
-            didResolver = { did -> didRegistry.resolve(did) != null }
-        )
-    )
-
-    if (verificationResult.valid) {
-        println("✅ Location credential is valid!")
-        println("  - Proof valid: ${verificationResult.proofValid}")
-        println("  - Issuer valid: ${verificationResult.issuerValid}")
-        println("  - Schema valid: ${verificationResult.schemaValid}")
-    } else {
-        println("❌ Location credential verification failed:")
-        verificationResult.errors.forEach { println("  - $it") }
+    when (verificationResult) {
+        is VerificationResult.Valid -> {
+            println("✅ Location credential is valid!")
+            println("  - Issuer: ${verificationResult.issuerIri}")
+        }
+        is VerificationResult.Invalid -> {
+            println("❌ Location credential verification failed:")
+            verificationResult.allErrors.forEach { println("  - $it") }
+        }
     }
 
     // Step 13: Verify blockchain anchor
@@ -467,46 +471,61 @@ val locationClaim = LocationClaim(
     latitude = 37.7749,
     longitude = -122.4194,
     accuracy = 10.5, // meters
+    altitude = 52.0,
     timestamp = Instant.now().toString(),
-    deviceId = deviceDid.id,
+    deviceId = deviceDid.id.value,
     locationMethod = "GPS"
 )
 ```
 
 ### Step 3: Create Location Credential
 
-Create a verifiable credential for the location:
+Issue a signed location credential with the TrustWeave DSL (continues the same `trustWeave`, DIDs, and `locationClaim` as the runnable example above).
 
 ```kotlin
-// Note: In actual usage, use trustWeave.issue { } DSL:
-// val locationResult = trustWeave.issue {
-//     credential {
-//         type("VerifiableCredential", "LocationCredential")
-//         issuer(locationProviderDid.id)
-//         subject {
-//             "location" {
-//                 "latitude" to locationClaim.latitude
-//                 "longitude" to locationClaim.longitude
-//                 "accuracy" to locationClaim.accuracy
-//                 "timestamp" to locationClaim.timestamp
-//             }
-//         }
-//         issued(Instant.now())
-//     }
-//     signedBy(issuerDid = locationProviderDid.id, keyId = issuerKeyId)
-// }
+import org.trustweave.credential.results.IssuanceResult
+
+val locationResult = trustWeave.issue {
+    credential {
+        id("https://example.com/location/${deviceDid.id.value.substringAfterLast(":")}-${Instant.now().toEpochMilli()}")
+        type("VerifiableCredential", "LocationCredential", "ProofOfLocation")
+        issuer(locationProviderDid.id.value)
+        subject {
+            id(deviceDid.id.value)
+            "location" {
+                "latitude" to locationClaim.latitude
+                "longitude" to locationClaim.longitude
+                "accuracy" to locationClaim.accuracy
+                locationClaim.altitude?.let { "altitude" to it }
+                "timestamp" to locationClaim.timestamp
+                "deviceId" to locationClaim.deviceId
+                "locationMethod" to locationClaim.locationMethod
+            }
+        }
+        issued(Instant.now())
+        schema("https://example.com/schemas/location.json")
+    }
+    signedBy(locationProviderDid.id)
+}
+
+val issuedCredential = when (locationResult) {
+    is IssuanceResult.Success -> locationResult.credential
+    else -> throw IllegalStateException(locationResult.allErrors.joinToString())
+}
 ```
 
 ### Step 4: Issue and Anchor
 
-Issues a location credential with typed geospatial claims plus metadata (accuracy, method, timestamp).
-- **Outcome:** `locationCredential` is ready to store, present, and anchor.
+Digest the issued VC canonically, wrap it in `LocationProof`, and anchor (same pattern as the full example).
 
 ```kotlin
-val issuedCredential = credentialIssuer.issue(...)
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.core.util.DigestUtils
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
 
 val credentialDigest = DigestUtils.sha256DigestMultibase(
-    Json.encodeToJsonElement(issuedCredential)
+    Json.encodeToJsonElement(VerifiableCredential.serializer(), issuedCredential)
 )
 
 val locationProof = LocationProof(
@@ -548,7 +567,7 @@ val approximatePresentation = locationWallet.createSelectiveDisclosure(
         // Coordinates hidden
     ),
     holderDid = deviceDid.id,
-    options = PresentationOptions(...)
+    options = emptyMap<String, Any?>()
 )
 ```
 
@@ -642,7 +661,7 @@ fun createPrivacyPreservingLocationPresentation(
             wallet.createPresentation(
                 credentialIds = listOf(credentialId),
                 holderDid = wallet.holderDid,
-                options = PresentationOptions(...)
+                options = emptyMap<String, Any?>()
             )
         }
         PrivacyLevel.APPROXIMATE -> {
@@ -655,7 +674,7 @@ fun createPrivacyPreservingLocationPresentation(
                     // Coordinates rounded/obfuscated
                 ),
                 holderDid = wallet.holderDid,
-                options = PresentationOptions(...)
+                options = emptyMap<String, Any?>()
             )
         }
         PrivacyLevel.REGION -> {
@@ -667,7 +686,7 @@ fun createPrivacyPreservingLocationPresentation(
                     // Only timestamp, no coordinates
                 ),
                 holderDid = wallet.holderDid,
-                options = PresentationOptions(...)
+                options = emptyMap<String, Any?>()
             )
         }
     }
@@ -680,13 +699,6 @@ enum class PrivacyLevel {
 }
 ```
 
-data class BoundingBox(
-    val minLat: Double,
-    val maxLat: Double,
-    val minLon: Double,
-    val maxLon: Double
-)
-
 ## Real-World Use Cases
 
 ### 1. Emergency Response (NG9-1-1)
@@ -694,6 +706,8 @@ data class BoundingBox(
 Verify caller location for emergency services:
 
 ```kotlin
+import org.trustweave.did.identifiers.Did
+
 suspend fun createEmergencyLocationCredential(
     trustWeave: TrustWeave,
     callerDid: String,
@@ -718,11 +732,11 @@ suspend fun createEmergencyLocationCredential(
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = emergencyServiceDid, keyId = issuerKeyId)
+        signedBy(issuerDid = Did(emergencyServiceDid), keyId = issuerKeyId)
     }
     
     return when (result) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create emergency location credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -733,6 +747,8 @@ suspend fun createEmergencyLocationCredential(
 Prevent Sybil attacks in VANETs using location proofs:
 
 ```kotlin
+import org.trustweave.did.identifiers.Did
+
 suspend fun createVehicleLocationProof(
     trustWeave: TrustWeave,
     vehicleDid: String,
@@ -755,11 +771,11 @@ suspend fun createVehicleLocationProof(
             }
             issued(Instant.parse(location.timestamp))
         }
-        signedBy(issuerDid = roadsideUnitDid, keyId = issuerKeyId)
+        signedBy(issuerDid = Did(roadsideUnitDid), keyId = issuerKeyId)
     }
     
     return when (result) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create vehicle location proof: ${result.allErrors.joinToString()}")
     }
 }
@@ -790,6 +806,8 @@ fun verifyVehicleTrajectory(
 Verify data is stored in authorized geographic locations:
 
 ```kotlin
+import org.trustweave.did.identifiers.Did
+
 suspend fun createDataLocationCredential(
     trustWeave: TrustWeave,
     dataHash: String,
@@ -812,11 +830,11 @@ suspend fun createDataLocationCredential(
             }
             issued(Instant.parse(storageLocation.timestamp))
         }
-        signedBy(issuerDid = dataCenterDid, keyId = issuerKeyId)
+        signedBy(issuerDid = Did(dataCenterDid), keyId = issuerKeyId)
     }
     
     return when (result) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create data location credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -843,6 +861,8 @@ fun verifyDataLocationCompliance(
 Verify location where media was captured (like ProofMode):
 
 ```kotlin
+import org.trustweave.did.identifiers.Did
+
 suspend fun createMediaLocationCredential(
     trustWeave: TrustWeave,
     mediaHash: String,
@@ -868,11 +888,11 @@ suspend fun createMediaLocationCredential(
             }
             issued(Instant.parse(captureLocation.timestamp))
         }
-        signedBy(issuerDid = deviceDid, keyId = issuerKeyId)
+        signedBy(issuerDid = Did(deviceDid), keyId = issuerKeyId)
     }
     
     return when (result) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create media location credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -907,6 +927,8 @@ fun verifyMediaLocation(
 Track products through supply chain with location proofs:
 
 ```kotlin
+import org.trustweave.did.identifiers.Did
+
 suspend fun createSupplyChainLocationProof(
     trustWeave: TrustWeave,
     productId: String,
@@ -931,11 +953,11 @@ suspend fun createSupplyChainLocationProof(
             }
             issued(Instant.parse(timestamp))
         }
-        signedBy(issuerDid = facilityDid, keyId = issuerKeyId)
+        signedBy(issuerDid = Did(facilityDid), keyId = issuerKeyId)
     }
     
     return when (result) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create supply chain location proof: ${result.allErrors.joinToString()}")
     }
 }
@@ -946,6 +968,8 @@ suspend fun createSupplyChainLocationProof(
 Track IoT device locations:
 
 ```kotlin
+import org.trustweave.did.identifiers.Did
+
 suspend fun createIoTLocationCredential(
     trustWeave: TrustWeave,
     deviceId: String,
@@ -971,11 +995,11 @@ suspend fun createIoTLocationCredential(
             }
             issued(Instant.parse(location.timestamp))
         }
-        signedBy(issuerDid = iotGatewayDid, keyId = issuerKeyId)
+        signedBy(issuerDid = Did(iotGatewayDid), keyId = issuerKeyId)
     }
     
     return when (result) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create IoT location credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -986,6 +1010,26 @@ suspend fun createIoTLocationCredential(
 Share geospatial datasets with verifiable provenance:
 
 ```kotlin
+import org.trustweave.trust.TrustWeave
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.did.identifiers.Did
+import org.trustweave.anchor.BlockchainAnchorRegistry
+import org.trustweave.anchor.AnchorResult
+import org.trustweave.core.util.DigestUtils
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
+import java.time.Instant
+
+@Serializable
+data class BoundingBox(
+    val minLat: Double,
+    val maxLat: Double,
+    val minLon: Double,
+    val maxLon: Double
+)
+
 @Serializable
 data class GeospatialDataset(
     val datasetId: String,
@@ -1027,29 +1071,42 @@ suspend fun createGeospatialDatasetCredential(
             }
             issued(Instant.parse(dataset.timestamp))
         }
-        signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+        signedBy(issuerDid = Did(issuerDid), keyId = issuerKeyId)
     }
     
     return when (result) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create geospatial dataset credential: ${result.allErrors.joinToString()}")
     }
 }
 
-// Anchor dataset metadata to blockchain
-fun anchorGeospatialDataset(
+@Serializable
+data class GeospatialDatasetAnchor(
+    val dataset: GeospatialDataset,
+    val credentialDigest: String
+)
+
+// Anchor dataset metadata to blockchain (issues VC, digests it, anchors structured record)
+suspend fun anchorGeospatialDataset(
+    trustWeave: TrustWeave,
     dataset: GeospatialDataset,
+    issuerKeyId: String,
     blockchainRegistry: BlockchainAnchorRegistry,
     chainId: String
 ): AnchorResult {
-    val credential = createGeospatialDatasetCredential(dataset, dataset.providerDid)
+    val credential = createGeospatialDatasetCredential(
+        trustWeave = trustWeave,
+        dataset = dataset,
+        issuerDid = dataset.providerDid,
+        issuerKeyId = issuerKeyId
+    )
     val digest = DigestUtils.sha256DigestMultibase(
-        Json.encodeToJsonElement(credential)
+        Json.encodeToJsonElement(VerifiableCredential.serializer(), credential)
     )
 
     return blockchainRegistry.anchorTyped(
-        value = LocationProof(dataset, digest),
-        serializer = LocationProof.serializer(),
+        value = GeospatialDatasetAnchor(dataset, digest),
+        serializer = GeospatialDatasetAnchor.serializer(),
         targetChainId = chainId
     )
 }
@@ -1060,6 +1117,8 @@ fun anchorGeospatialDataset(
 Verify location using multiple sources (GPS, WiFi, Cell Tower):
 
 ```kotlin
+import org.trustweave.did.identifiers.Did
+
 suspend fun createMultiSourceLocationCredential(
     trustWeave: TrustWeave,
     deviceDid: String,
@@ -1114,11 +1173,11 @@ suspend fun createMultiSourceLocationCredential(
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+        signedBy(issuerDid = Did(issuerDid), keyId = issuerKeyId)
     }
     
     return when (result) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create multi-source location credential: ${result.allErrors.joinToString()}")
     }
 }

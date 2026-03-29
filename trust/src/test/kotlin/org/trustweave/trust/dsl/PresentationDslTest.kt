@@ -1,15 +1,18 @@
 package org.trustweave.trust.dsl
 
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.credential.results.getOrThrow
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.resolver.DidResolver
 import org.trustweave.trust.TrustWeave
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.testkit.getOrFail
 import org.trustweave.kms.results.SignResult
 import org.trustweave.trust.dsl.credential.credential
-import org.trustweave.trust.dsl.credential.presentation
+import org.trustweave.trust.dsl.credential.presentationResult
 import org.trustweave.trust.dsl.createTestCredentialService
+import org.trustweave.trust.types.PresentationResult
+import org.trustweave.trust.types.getOrThrow
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -57,7 +60,7 @@ class PresentationDslTest {
                 issued(Clock.System.now())
             }
             signedBy(issuerDid = Did(issuerDid), keyId = keyId)
-        }.getOrFail()
+        }.getOrThrow()
     }
 
     @BeforeEach
@@ -105,14 +108,14 @@ class PresentationDslTest {
                 }
             }
             // Set CredentialService as issuer for presentation builder
-            issuer(credentialService)
+            credentialService(credentialService)
         }
         
         // Setup issuer DID and key ID for test credentials
         val createdDid = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }.getOrFail()
+        }.getOrThrowDid()
         issuerDid = createdDid.value
         
         val issuerDidResolution = trustWeave.configuration.didRegistry.resolve(issuerDid)
@@ -133,10 +136,10 @@ class PresentationDslTest {
             claims = mapOf("name" to "John Doe")
         )
 
-        val presentation = trustWeave.presentation {
+        val presentation = trustWeave.presentationResult {
                 credentials(credential)
                 holder("did:key:holder")
-        }
+        }.getOrThrow()
 
         assertNotNull(presentation)
         assertEquals("did:key:holder", presentation.holder.value)
@@ -156,10 +159,10 @@ class PresentationDslTest {
             claims = mapOf("degree" to mapOf("type" to "BachelorDegree"))
         )
 
-        val presentation = trustWeave.presentation {
+        val presentation = trustWeave.presentationResult {
                 credentials(credential1, credential2)
                 holder("did:key:holder")
-        }
+        }.getOrThrow()
 
         assertNotNull(presentation)
         assertEquals(2, presentation.verifiableCredential.size)
@@ -169,11 +172,11 @@ class PresentationDslTest {
     fun `test presentation creation with challenge`() = runBlocking {
         val credential = issueTestCredential(type = "PersonCredential")
 
-        val presentation = trustWeave.presentation {
+        val presentation = trustWeave.presentationResult {
                 credentials(credential)
                 holder("did:key:holder")
                 challenge("verification-challenge-123")
-        }
+        }.getOrThrow()
 
         assertNotNull(presentation)
         assertEquals("verification-challenge-123", presentation.challenge)
@@ -183,11 +186,11 @@ class PresentationDslTest {
     fun `test presentation creation with domain`() = runBlocking {
         val credential = issueTestCredential(type = "PersonCredential")
 
-        val presentation = trustWeave.presentation {
+        val presentation = trustWeave.presentationResult {
                 credentials(credential)
                 holder("did:key:holder")
                 domain("example.com")
-        }
+        }.getOrThrow()
 
         assertNotNull(presentation)
         assertEquals("example.com", presentation.domain)
@@ -204,23 +207,33 @@ class PresentationDslTest {
             issued(Clock.System.now())
         }
 
-        val presentation = trustWeave.presentation {
+        val presentation = trustWeave.presentationResult {
                 credentials(credential)
                 holder("did:key:holder")
-        }
+        }.getOrThrow()
 
         assertNotNull(presentation)
         // Proof type is used during presentation creation
     }
 
     @Test
-    fun `test presentation creation requires credentials`() = runBlocking {
-        assertFailsWith<IllegalStateException> {
-            trustWeave.presentation {
-                    holder("did:key:holder")
-                    // Missing credentials
+    fun `holder string must be a did colon prefix`() = runBlocking {
+        val credential = issueTestCredential(type = "PersonCredential")
+        assertFailsWith<IllegalArgumentException> {
+            trustWeave.presentationResult {
+                credentials(credential)
+                holder("not-a-did")
             }
         }
+    }
+
+    @Test
+    fun `test presentation creation requires credentials`() = runBlocking {
+        val r = trustWeave.presentationResult {
+            holder("did:key:holder")
+            // Missing credentials
+        }
+        assertIs<PresentationResult.Failure.InvalidRequest>(r)
     }
 
     @Test
@@ -234,12 +247,11 @@ class PresentationDslTest {
             issued(Clock.System.now())
         }
 
-        assertFailsWith<IllegalStateException> {
-            trustWeave.presentation {
-                    credentials(credential)
-                    // Missing holder
-            }
+        val r = trustWeave.presentationResult {
+            credentials(credential)
+            // Missing holder
         }
+        assertIs<PresentationResult.Failure.InvalidRequest>(r)
     }
 
     @Test
@@ -256,14 +268,13 @@ class PresentationDslTest {
             issued(Clock.System.now())
         }
 
-        val presentation = trustWeave.presentation {
+        val presentation = trustWeave.presentationResult {
                 credentials(credential)
                 holder("did:key:holder")
                 selectiveDisclosure {
                     reveal("name", "email")
-                    // hide() method removed - only reveal() is available
                 }
-        }
+        }.getOrThrow()
 
         assertNotNull(presentation)
         // Selective disclosure fields are configured

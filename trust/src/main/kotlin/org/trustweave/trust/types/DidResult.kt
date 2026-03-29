@@ -59,3 +59,53 @@ sealed class DidCreationResult {
     }
 }
 
+/**
+ * Result of creating a DID and extracting the first verification key id (convenience API).
+ */
+sealed class DidCreationWithKeyResult {
+    data class Success(
+        val did: Did,
+        val keyId: String
+    ) : DidCreationWithKeyResult()
+
+    sealed class Failure : DidCreationWithKeyResult() {
+        /**
+         * Underlying [DidCreationResult] did not succeed.
+         */
+        data class FromCreation(val failure: DidCreationResult.Failure) : Failure()
+
+        /**
+         * DID was created but key id could not be read from the document (e.g. resolution or VM shape).
+         */
+        data class KeyExtractionFailed(
+            val did: Did,
+            val reason: String,
+            val cause: Throwable? = null
+        ) : Failure()
+    }
+}
+
+/**
+ * Extract [Did] and key id or throw with contextual [IllegalStateException] (convenience for examples/tests).
+ */
+fun DidCreationWithKeyResult.getOrThrow(): Pair<Did, String> {
+    return when (this) {
+        is DidCreationWithKeyResult.Success -> did to keyId
+        is DidCreationWithKeyResult.Failure.FromCreation -> {
+            val f = failure
+            throw when (f) {
+                is DidCreationResult.Failure.MethodNotRegistered -> IllegalStateException(
+                    "DID method '${f.method}' not registered. Available: ${f.availableMethods.joinToString()}"
+                )
+                is DidCreationResult.Failure.KeyGenerationFailed -> IllegalStateException("Key generation failed: ${f.reason}")
+                is DidCreationResult.Failure.DocumentCreationFailed -> IllegalStateException("Document creation failed: ${f.reason}")
+                is DidCreationResult.Failure.InvalidConfiguration -> IllegalStateException("Invalid configuration: ${f.reason}")
+                is DidCreationResult.Failure.Other -> IllegalStateException("DID creation failed: ${f.reason}", f.cause)
+            }
+        }
+        is DidCreationWithKeyResult.Failure.KeyExtractionFailed -> {
+            throw IllegalStateException("Key extraction failed for ${did.value}: $reason", cause)
+        }
+    }
+}
+

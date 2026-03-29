@@ -309,33 +309,22 @@ class KmsBasedRegistrar(
         // Real implementations would need KMS support for exporting keys
         // or would work with KMS that supports key export in secure ways
 
-        // Note: KMS KeyHandle contains publicKeyJwk, but Secret.KeyMaterial expects privateKeyJwk
-        // In Internal Secret Mode with returnSecrets=true, we would need to export the private key
-        // from KMS, which is typically not supported for security reasons.
-        // For now, we return the key handle reference - real implementations would need
-        // KMS support for secure key export or use a different approach.
+        // KMS does not expose private keys for security reasons. Internal Secret Mode with
+        // returnSecrets=true is only fully supported when the KMS plugin provides key-export
+        // functionality. We return only the key handle reference so callers know which key
+        // was generated; privateKeyJwk is intentionally null.
         return Secret(
             keys = listOf(
                 KeyMaterial(
                     id = keyHandle.id.value,
                     type = keyHandle.algorithm,
-                    privateKeyJwk = keyHandle.publicKeyJwk?.let { jwk ->
-                        // Convert Map<String, Any?> to JsonObject
-                        buildJsonObject {
-                            jwk.forEach { entry ->
-                                val k = entry.key
-                                val v = entry.value
-                                put(k, when (v) {
-                                    is String -> JsonPrimitive(v)
-                                    is Number -> JsonPrimitive(v.toDouble())
-                                    is Boolean -> JsonPrimitive(v)
-                                    else -> JsonPrimitive(v.toString())
-                                })
-                            }
-                        }
-                    },
-                    privateKeyMultibase = keyHandle.publicKeyMultibase,
-                    additionalProperties = mapOf("keyHandleId" to keyHandle.id.value)
+                    privateKeyJwk = null, // Private key material is held by KMS and not exported
+                    privateKeyMultibase = null,
+                    additionalProperties = mapOf(
+                        "keyHandleId" to keyHandle.id.value,
+                        "publicKeyMultibase" to (keyHandle.publicKeyMultibase ?: ""),
+                        "note" to "Private key retained by KMS; use keyHandleId for signing operations"
+                    )
                 )
             )
         )

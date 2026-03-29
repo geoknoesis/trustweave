@@ -90,8 +90,9 @@ object DidCommUtils {
      */
     fun hasDidCommService(document: DidDocument): Boolean {
         return document.service.any { service ->
-            service.type == "DIDCommMessaging" ||
-            service.type.contains("DIDComm", ignoreCase = true)
+            service.type.any { t ->
+                t == "DIDCommMessaging" || t.contains("DIDComm", ignoreCase = true)
+            }
         }
     }
 
@@ -103,8 +104,9 @@ object DidCommUtils {
      */
     fun getDidCommServiceEndpoint(document: DidDocument): String? {
         val service = document.service.find { service ->
-            service.type == "DIDCommMessaging" ||
-            service.type.contains("DIDComm", ignoreCase = true)
+            service.type.any { t ->
+                t == "DIDCommMessaging" || t.contains("DIDComm", ignoreCase = true)
+            }
         }
 
         return when (val endpoint = service?.serviceEndpoint) {

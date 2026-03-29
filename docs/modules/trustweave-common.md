@@ -7,7 +7,7 @@ title: trustweave-common
 The `trustweave-common` module provides **domain-agnostic core infrastructure** for TrustWeave:
 
 - **Plugin Infrastructure** – Plugin registry, metadata, configuration, and provider chains
-- **Error Handling** – Structured error types with rich context (`TrustWeaveError` hierarchy)
+- **Error Handling** – Structured exceptions with rich context (`TrustWeaveException` and focused subclasses: `PluginException`, `ProviderException`, `ConfigException`, `SerializationException`, …)
 - **JSON Utilities** – JSON canonicalization and SHA-256 digest computation
 - **Result Utilities** – Extension functions for `Result<T>` error handling
 - **Validation Infrastructure** – Generic validation framework (domain-specific validators are in their respective modules)
@@ -25,13 +25,11 @@ The `trustweave-common` module provides **domain-agnostic core infrastructure** 
 - **`PluginLifecycle`** – Lifecycle interface for plugin initialization, startup, shutdown, and cleanup
 
 ### Error Handling (`org.trustweave.core.exception`)
-- **`TrustWeaveException`** – Base exception for TrustWeave operations
-- **`TrustWeaveError`** – Sealed hierarchy of structured errors with rich context:
-  - **Plugin Errors**: `BlankPluginId`, `PluginAlreadyRegistered`, `PluginNotFound`, `PluginInitializationFailed`
-  - **Provider Errors**: `NoProvidersFound`, `PartialProvidersFound`, `AllProvidersFailed`
-  - **Configuration Errors**: `ConfigNotFound`, `ConfigReadFailed`, `InvalidConfigFormat`
-  - **JSON/Digest Errors**: `InvalidJson`, `JsonEncodeFailed`, `DigestFailed`, `EncodeFailed`
-  - **Generic Errors**: `ValidationFailed`, `InvalidOperation`, `InvalidState`, `Unknown`
+- **`TrustWeaveException`** – Base exception for TrustWeave operations (includes nested types such as **`ValidationFailed`**, **`InvalidOperation`**, **`InvalidState`**, **`Unknown`**, **`DigestFailed`**, **`EncodeFailed`**)
+- **`PluginException`** – `BlankId`, `AlreadyRegistered`, `NotFound`, `InitializationFailed`
+- **`ProviderException`** – `NoProvidersFound`, `PartialProvidersFound`, `AllProvidersFailed`
+- **`ConfigException`** – `NotFound`, `ReadFailed`, `InvalidFormat`
+- **`SerializationException`** – `InvalidJson`, `EncodeFailed`
 
 ### Utilities (`org.trustweave.core.util`)
 - **`DigestUtils`** – JSON canonicalization and SHA-256 digest computation with multibase encoding (base58btc)
@@ -45,18 +43,18 @@ The `trustweave-common` module provides **domain-agnostic core infrastructure** 
 - **`Validation`** – Generic validation infrastructure (`ValidationResult` sealed class)
   - Type-safe validation results
   - Reusable validation patterns
-- **`TrustWeaveConstants`** – Common constants
 
 ### Identifiers (`org.trustweave.core.identifiers`)
 - **`Iri`** – RFC 3987 compliant Internationalized Resource Identifier
 - **`KeyId`** – Type-safe key identifier with fragment support
-- **`Did`**, **`VerificationMethodId`**, **`DidUrl`** – DID-related identifiers (in `trustweave-did` module)
 - Extension functions for safe parsing (`toIriOrNull`, `toKeyIdOrNull`, etc.)
 
+DID-scoped identifier **value classes** (**`Did`**, **`VerificationMethodId`**, **`DidUrl`**, …) live in **`trustweave-did`** (`org.trustweave.did.identifiers` and related packages), not in `trustweave-common`.
+
 ### Serialization (`org.trustweave.core.serialization`)
-- **Custom Serializers**: `IriSerializer`, `KeyIdSerializer`, `InstantSerializer`, `DidSerializer`, `VerificationMethodIdSerializer`, `DidUrlSerializer`
+- **Custom Serializers (common)**: e.g. `IriSerializer`, `KeyIdSerializer`, `InstantSerializer` (see module sources for the full set)
 - **SerializationModule**: Centralized serialization configuration
-- Optimized JSON serialization for TrustWeave types
+- DID-related serializers (**`DidSerializer`**, **`VerificationMethodIdSerializer`**, **`DidUrlSerializer`**, …) ship with **`trustweave-did`**, not this module
 
 **Note:** Domain-specific validators (DID, Chain ID) are in their respective domain modules:
 - DID validation → `org.trustweave.did.validation.DidValidator`
@@ -66,7 +64,7 @@ Add the module alongside any DID/KMS components you require:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:common:0.6.0")
 }
 ```
 
@@ -74,7 +72,9 @@ dependencies {
 
 ```kotlin
 import org.trustweave.core.plugin.*
-import org.trustweave.core.exception.TrustWeaveError
+import org.trustweave.core.exception.PluginException
+import org.trustweave.core.exception.SerializationException
+import org.trustweave.core.exception.ConfigException
 import org.trustweave.core.util.*
 
 // Register a plugin
@@ -89,9 +89,9 @@ val metadata = PluginMetadata(
 )
 try {
     PluginRegistry.register(metadata, pluginInstance)
-} catch (e: TrustWeaveError.BlankPluginId) {
+} catch (e: PluginException.BlankId) {
     println("Plugin ID cannot be blank")
-} catch (e: TrustWeaveError.PluginAlreadyRegistered) {
+} catch (e: PluginException.AlreadyRegistered) {
     println("Plugin already registered: ${e.pluginId}")
 }
 
@@ -104,10 +104,10 @@ result.fold(
     onSuccess = { value -> println("Success: $value") },
     onFailure = { error ->
         when (error) {
-            is TrustWeaveError.InvalidJson -> {
+            is SerializationException.InvalidJson -> {
                 println("Invalid JSON: ${error.parseError}")
             }
-            is TrustWeaveError.ConfigNotFound -> {
+            is ConfigException.NotFound -> {
                 println("Config not found: ${error.path}")
             }
             else -> println("Error: ${error.message}")
@@ -136,8 +136,8 @@ result.fold(
 The `trustweave-common` module is organized into logical packages:
 
 - **`org.trustweave.core.exception`** – Exception types and error handling
-  - `TrustWeaveException`, `NotFoundException`, `InvalidOperationException`
-  - `TrustWeaveError` (sealed class hierarchy with 13+ specific error types)
+  - `TrustWeaveException` (base; nested validation/unknown/digest types)
+  - `PluginException`, `ProviderException`, `ConfigException`, `SerializationException`
 
 - **`org.trustweave.core.plugin`** – Plugin infrastructure
   - `PluginRegistry` (thread-safe, capability-based discovery)
@@ -149,7 +149,6 @@ The `trustweave-common` module is organized into logical packages:
 - **`org.trustweave.core.util`** – General utilities
   - `DigestUtils` (JSON canonicalization and SHA-256 digest computation)
   - `ResultExtensions` (Result<T> extension functions)
-  - `TrustWeaveConstants`
   - `Validation` (generic validation infrastructure - `ValidationResult`)
 
 - **`org.trustweave.core.identifiers`** – Identifier types

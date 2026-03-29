@@ -30,7 +30,7 @@ Supported chain ID format: `indy:<network>:<pool-name>`
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:TrustWeave-indy:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:anchors-plugins-indy:0.6.0")
 }
 ```
 

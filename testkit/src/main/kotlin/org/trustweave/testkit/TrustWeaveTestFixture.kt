@@ -50,10 +50,9 @@ class TrustWeaveTestFixture private constructor(
     private val didMethod: DidMethod,
     private val didRegistry: DidMethodRegistry,
     private val blockchainRegistry: BlockchainAnchorRegistry,
-    // TODO: CredentialServiceRegistry removed - credential-api uses CredentialService directly
-    // private val credentialRegistry: CredentialServiceRegistry,
     private val blockchainClients: Map<String, BlockchainAnchorClient>
 ) : AutoCloseable {
+    // CredentialService is obtained from TrustWeave or CredentialService directly; fixture provides KMS, DID, and anchor setup.
 
     /**
      * Gets the Key Management Service.
@@ -81,9 +80,6 @@ class TrustWeaveTestFixture private constructor(
     }
 
     fun getBlockchainRegistry(): BlockchainAnchorRegistry = blockchainRegistry
-
-    // TODO: CredentialServiceRegistry removed - use CredentialService directly
-    // fun getCredentialRegistry(): CredentialServiceRegistry = credentialRegistry
 
     /**
      * Gets all registered blockchain clients.
@@ -137,8 +133,6 @@ class TrustWeaveTestFixture private constructor(
     override fun close() {
         didRegistry.clear()
         blockchainRegistry.clear()
-        // TODO: CredentialServiceRegistry removed - credential-api uses CredentialService directly
-        // credentialRegistry.clear()
     }
 
     /**
@@ -150,8 +144,6 @@ class TrustWeaveTestFixture private constructor(
         private val blockchainClients = mutableMapOf<String, BlockchainAnchorClient>()
         private var didRegistry: DidMethodRegistry? = null
         private var blockchainRegistry: BlockchainAnchorRegistry? = null
-        // TODO: CredentialServiceRegistry removed - credential-api uses CredentialService directly
-        // private var credentialRegistry: CredentialServiceRegistry? = null
 
         /**
          * Sets the Key Management Service.
@@ -367,15 +359,11 @@ class TrustWeaveTestFixture private constructor(
                     registry.register(chainId, client)
                 }
             }
-            // TODO: CredentialServiceRegistry removed - credential-api uses CredentialService directly
-            // val credentialRegistryInstance = credentialRegistry ?: CredentialServiceRegistry.create()
-
             return TrustWeaveTestFixture(
                 kms = kmsInstance,
                 didMethod = didMethodInstance,
                 didRegistry = didRegistryInstance,
                 blockchainRegistry = blockchainRegistryInstance,
-                // credentialRegistry = credentialRegistryInstance,
                 blockchainClients = blockchainClients.toMap()
             )
         }

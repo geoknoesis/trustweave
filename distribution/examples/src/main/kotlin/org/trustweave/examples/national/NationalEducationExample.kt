@@ -1,7 +1,10 @@
 package org.trustweave.examples.national
 
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.trust.types.getOrThrow
 import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.types.VerificationResult
+import org.trustweave.credential.results.VerificationResult
 import org.trustweave.trust.types.*
 import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
@@ -15,7 +18,6 @@ import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import org.trustweave.anchor.DefaultBlockchainAnchorRegistry
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.testkit.getOrFail
 import org.trustweave.did.identifiers.extractKeyId
 import org.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.runBlocking
@@ -104,7 +106,7 @@ fun main() = runBlocking {
     println("  Role: Trusted issuer of national-level education credentials")
     println("  Method: key (default)")
 
-    val authorityDid = trustweave.createDid().getOrFail()
+    val authorityDid = trustweave.createDid().getOrThrowDid()
     
     // Resolve authority DID to get document
     val authorityDidDoc = try {
@@ -136,7 +138,7 @@ fun main() = runBlocking {
     println("  Role: Recognized educational institution")
     println("  Institution: University of Algiers (UA-001)")
 
-    val institutionDid = trustweave.createDid().getOrFail()
+    val institutionDid = trustweave.createDid().getOrThrowDid()
     
     // Resolve institution DID
     val institutionDidDoc = try {
@@ -170,7 +172,7 @@ fun main() = runBlocking {
     println("  Student ID: STU-2024-001234")
     println("  National ID: 1234567890123")
 
-    val studentDid = trustweave.createDid().getOrFail()
+    val studentDid = trustweave.createDid().getOrThrowDid()
 
     println("\n📥 RESPONSE: Student DID Created Successfully")
     println("  ✓ DID: ${studentDid.value}")
@@ -222,7 +224,7 @@ fun main() = runBlocking {
             issued(Clock.System.now())
         }
         signedBy(authorityDid)
-    }.getOrFail()
+    }.getOrThrow()
 
     println("\n📥 RESPONSE: Enrollment Credential Issued Successfully")
     println("  ✓ Credential ID: ${enrollmentCredential.id}")
@@ -265,7 +267,7 @@ fun main() = runBlocking {
 
     println("\n📥 RESPONSE: Enrollment Credential Verification Result")
     when (enrollmentVerification) {
-        is org.trustweave.trust.types.VerificationResult.Valid -> {
+        is org.trustweave.credential.results.VerificationResult.Valid -> {
             println("  ✓ Overall Status: VALID")
             println("  ✓ Proof Valid: ${enrollmentVerification.proofValid}")
             println("  ✓ Issuer Valid: ${enrollmentVerification.issuerValid}")
@@ -278,7 +280,7 @@ fun main() = runBlocking {
                 }
             }
         }
-        is org.trustweave.trust.types.VerificationResult.Invalid -> {
+        is org.trustweave.credential.results.VerificationResult.Invalid -> {
             println("  ✗ Overall Status: INVALID")
             println("  ✗ Errors:")
             enrollmentVerification.allErrors.forEach { error ->
@@ -349,7 +351,7 @@ fun main() = runBlocking {
             issued(Clock.System.now())
         }
         signedBy(authorityDid)
-    }.getOrFail()
+    }.getOrThrow()
 
     println("\n📥 RESPONSE: Achievement Credential Issued Successfully")
     println("  ✓ Credential ID: ${achievementCredential.id}")

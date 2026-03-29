@@ -1,7 +1,10 @@
 package org.trustweave.examples.eo
 
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.trust.types.getOrThrow
 import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.types.VerificationResult
+import org.trustweave.credential.results.VerificationResult
 import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.credential.model.ProofType
 import org.trustweave.testkit.integrity.IntegrityVerifier
@@ -9,7 +12,6 @@ import org.trustweave.testkit.integrity.TestDataBuilders
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.core.util.DigestUtils
 import org.trustweave.did.identifiers.extractKeyId
-import org.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import kotlinx.datetime.Clock
@@ -17,24 +19,6 @@ import org.trustweave.did.identifiers.Did
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.testkit.integrity.models.Link
 import org.trustweave.anchor.AnchorRef
-
-/**
- * Extension functions for improved API ergonomics
- */
-
-/**
- * Get the first key ID from a DID document.
- * Simplifies the common pattern of resolving a DID and extracting its key ID.
- */
-suspend fun TrustWeave.getKeyId(did: Did): String {
-    val resolutionResult = resolveDid(did)
-    val document = when (resolutionResult) {
-        is org.trustweave.did.resolver.DidResolutionResult.Success -> resolutionResult.document
-        else -> throw IllegalStateException("Failed to resolve DID: ${did.value}")
-    }
-    return document.verificationMethod.firstOrNull()?.extractKeyId()
-        ?: throw IllegalStateException("No verification method found for DID: ${did.value}")
-}
 
 /**
  * Compute credential digest excluding metadata fields.
@@ -172,7 +156,7 @@ fun main() = runBlocking {
 
     // Step 2: Create DID (simplified API)
     println("Step 2: Creating DID...")
-    val issuerDid = trustweave.createDid().getOrFail()
+    val issuerDid = trustweave.createDid().getOrThrowDid()
     println("✓ DID created: ${issuerDid.value}\n")
 
     // Step 3: Create Artifacts
@@ -238,7 +222,7 @@ fun main() = runBlocking {
             issued(Clock.System.now())
         }
         signedBy(issuerDid)
-    }.getOrFail()
+    }.getOrThrow()
     println("✓ Credential issued: ${credential.id?.value}\n")
 
     // Step 6: Verify credential

@@ -23,9 +23,9 @@ Add the GoDiddy module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave.did:godiddy:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:did-plugins-godiddy:0.6.0")
+    implementation("org.trustweave:did-did-core:0.6.0")
+    implementation("org.trustweave:common:0.6.0")
 
     // HTTP client (OkHttp recommended)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
@@ -95,6 +95,7 @@ val method = godiddyProvider?.create("godiddy", options)
 
 ```kotlin
 import org.trustweave.godiddy.*
+import org.trustweave.did.resolver.DidResolutionResult
 
 val client = GodiddyClient(GodiddyConfig.default())
 val resolver = GodiddyResolver(client)
@@ -103,15 +104,15 @@ val resolver = GodiddyResolver(client)
 val did = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
 val resolutionResult = resolver.resolveDid(did)
 
-resolutionResult.fold(
-    onSuccess = { result ->
-        println("Resolved DID: ${result.didDocument?.id}")
-        println("Document: ${result.didDocument}")
-    },
-    onFailure = { error ->
-        println("Resolution failed: ${error.message}")
+when (resolutionResult) {
+    is DidResolutionResult.Success -> {
+        println("Resolved DID: ${resolutionResult.document.id}")
+        println("Document: ${resolutionResult.document}")
     }
-)
+    is DidResolutionResult.Failure -> {
+        println("Resolution failed: ${resolutionResult::class.simpleName}")
+    }
+}
 ```
 
 ### DID Registration
@@ -177,25 +178,22 @@ issuanceResult.fold(
 
 ```kotlin
 import org.trustweave.godiddy.*
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.JsonObject
 
 val client = GodiddyClient(GodiddyConfig.default())
 val verifier = GodiddyVerifier(client)
 
-// Verify credential via GoDiddy Verifier
-val verificationResult = verifier.verifyCredential(credential)
-
-verificationResult.fold(
-    onSuccess = { result ->
-        if (result.valid) {
-            println("Credential is valid")
-        } else {
-            println("Credential is invalid: ${result.reason}")
-        }
-    },
-    onFailure = { error ->
-        println("Verification failed: ${error.message}")
+// verifyCredential is suspend and expects the credential as JsonObject
+fun main() = runBlocking {
+    val credentialJson: JsonObject = /* build or parse VC JSON */
+    val verificationResult = verifier.verifyCredential(credentialJson)
+    if (verificationResult.verified) {
+        println("Credential is valid")
+    } else {
+        println("Credential is invalid: ${verificationResult.error}")
     }
-)
+}
 ```
 
 ## Supported DID Methods
@@ -219,17 +217,17 @@ See the [GoDiddy Documentation](https://godiddy.com/docs) for a complete list of
 The GoDiddy integration follows TrustWeave's error handling patterns:
 
 ```kotlin
-import org.trustweave.core.exception.TrustWeaveError
+import org.trustweave.core.exception.TrustWeaveException
 
 val result = resolver.resolveDid(did)
 result.fold(
     onSuccess = { result -> /* handle success */ },
     onFailure = { error ->
         when (error) {
-            is TrustWeaveError.DidResolutionFailed -> {
+            is DidException.DidResolutionFailed -> {
                 println("Resolution failed: ${error.reason}")
             }
-            is TrustWeaveError.NetworkError -> {
+            is TrustWeaveException.Unknown -> {
                 println("Network error: ${error.message}")
             }
             else -> println("Error: ${error.message}")
@@ -267,8 +265,8 @@ result.fold(
 
 ## References
 
-- [GoDiddy Documentation](https://godiddy.com/docs)
-- [Universal Resolver](https://dev.uniresolver.io/)
-- [TrustWeave DID Module](../modules/trustweave-did.md)
-- [TrustWeave Core API](../api-reference/core-api.md)
+- GoDiddy Documentation](https://godiddy.com/docs)
+- Universal Resolver](https://dev.uniresolver.io/)
+- TrustWeave DID Module](../modules/trustweave-did.md)
+- TrustWeave Core API](../api-reference/core-api.md)
 

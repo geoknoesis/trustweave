@@ -18,6 +18,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.net.URLDecoder
 import java.util.*
 import java.util.Base64
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * OIDC4VP (OpenID Connect for Verifiable Presentations) service.
@@ -61,8 +62,8 @@ class Oidc4VpService(
     private val kms: KeyManagementService,
     private val httpClient: OkHttpClient = OkHttpClient()
 ) {
-    private val permissionRequests = mutableMapOf<String, PermissionRequest>()
-    private var metadata: VerifierMetadata? = null
+    private val permissionRequests = ConcurrentHashMap<String, PermissionRequest>()
+    @Volatile private var metadata: VerifierMetadata? = null
 
     /**
      * Parses an OIDC4VP authorization URL and creates a PermissionRequest.

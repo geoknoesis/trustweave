@@ -30,7 +30,7 @@ class CloudHsmKeyManagementService(
         throw UnsupportedOperationException(
             "AWS CloudHSM KMS plugin is not yet implemented. " +
             "This plugin requires CloudHSM SDK and HSM cluster access. " +
-            "See https://github.org.trustweave/trustweave/issues for implementation status."
+            "See https://github.com/geoknoesis/trustweave/issues for implementation status."
         )
     }
 

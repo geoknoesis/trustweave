@@ -10,6 +10,7 @@ import org.trustweave.kms.results.GenerateKeyResult
 import org.trustweave.kms.results.GetPublicKeyResult
 import org.trustweave.kms.results.SignResult
 import org.trustweave.kms.KmsOptionKeys
+import org.trustweave.googlekms.GcpKmsOptionKeys
 import org.trustweave.kms.util.KmsInputValidator
 import org.trustweave.core.plugin.PluginLifecycle
 import com.google.api.gax.rpc.NotFoundException
@@ -164,7 +165,7 @@ class GoogleCloudKeyManagementService(
         }
 
         // Validate key ring name if provided
-        val keyRing = (options[KmsOptionKeys.KEY_RING] as? String) ?: config.keyRing
+        val keyRing = (options[GcpKmsOptionKeys.KEY_RING] as? String) ?: config.keyRing
         if (keyRing == null) {
             return@withContext GenerateKeyResult.Failure.InvalidOptions(
                 algorithm = algorithm,
@@ -191,7 +192,7 @@ class GoogleCloudKeyManagementService(
                 .setVersionTemplate(versionTemplate)
 
             // Add labels if provided
-            val labels = (options[KmsOptionKeys.LABELS] as? Map<*, *>)?.let { map ->
+            val labels = (options[GcpKmsOptionKeys.LABELS] as? Map<*, *>)?.let { map ->
                 map.entries.associate { (k, v) -> 
                     k.toString() to v.toString() 
                 }

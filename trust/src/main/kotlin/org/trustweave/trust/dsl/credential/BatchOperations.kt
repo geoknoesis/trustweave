@@ -2,9 +2,9 @@ package org.trustweave.trust.dsl.credential
 
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.results.IssuanceResult
-import org.trustweave.credential.trust.TrustPolicy
+import org.trustweave.credential.trust.TrustEvaluator
 import org.trustweave.credential.requests.VerificationOptions
-import org.trustweave.trust.types.VerificationResult
+import org.trustweave.credential.results.VerificationResult
 import org.trustweave.trust.TrustWeave
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -78,7 +78,7 @@ class BatchVerificationBuilder {
     /**
      * Optional trust policy to apply to all verifications.
      */
-    var trustPolicy: TrustPolicy? = null
+    var trustPolicy: TrustEvaluator? = null
     
     /**
      * Verification options to apply to all verifications.
@@ -116,7 +116,8 @@ class BatchVerificationBuilder {
  * ```
  * 
  * @param block Configuration block for batch issuance
- * @return Flow of IssuanceResult for each request
+ * @return Flow of [IssuanceResult] for each request. If [CredentialService] is not configured, each
+ *   emission is [IssuanceResult.Failure.AdapterNotReady] (same as single [issue]).
  */
 suspend fun TrustWeave.issueBatch(
     block: BatchIssuanceBuilder.() -> Unit
@@ -160,7 +161,8 @@ suspend fun TrustWeave.issueBatch(
  * ```
  * 
  * @param block Configuration block for batch verification
- * @return Flow of VerificationResult for each credential
+ * @return Flow of [VerificationResult] for each credential. If [CredentialService] is not configured,
+ *   each emission is [VerificationResult.Invalid.AdapterNotReady] (same as single [verify]).
  */
 suspend fun TrustWeave.verifyBatch(
     block: BatchVerificationBuilder.() -> Unit

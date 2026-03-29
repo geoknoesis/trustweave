@@ -61,7 +61,7 @@ class DigestUtilsPerformanceTest {
         val digest = DigestUtils.sha256DigestMultibase(veryLargeString)
         val duration = System.currentTimeMillis() - startTime
 
-        assertTrue(digest.startsWith("u"))
+        assertTrue(digest.startsWith("z"))
         // Should complete in reasonable time (< 500ms for 100KB)
         assertTrue(duration < 500, "Digest computation took too long: ${duration}ms")
     }

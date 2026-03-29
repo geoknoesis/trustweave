@@ -33,29 +33,17 @@
                                             │ Used to create
                                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│              HttpDidMethod (DidMethod impl)                  │
+│     HttpDidMethod (org.trustweave.did.registrar.method)       │
 │                                                               │
-│  class HttpDidMethod(                                         │
-│    registrationSpec: DidRegistrationSpec,                    │
-│    kms: KeyManagementService                                 │
-│  ) : AbstractDidMethod(                                      │
-│    registrationSpec.name  ←─── "web"                         │
-│  ) {                                                         │
+│  HttpDidMethod(                                               │
+│    registrationSpec: DidRegistrationSpec,                   │
+│    registrar: DidRegistrar? = null,                         │
+│    additionalAdapters: Map<...> = emptyMap()                │
+│  ) : DidMethod                                                │
 │                                                               │
-│    override val method = "web"                               │
-│                                                               │
-│    private val universalResolver =                           │
-│      DefaultUniversalResolver(                               │
-│        baseUrl = spec.driver.baseUrl,                       │
-│        protocolAdapter = createAdapter(...)                   │
-│      )                                                       │
-│                                                               │
-│    override suspend fun resolveDid(did: String) {            │
-│      if (capabilities.resolve) {                            │
-│        universalResolver.resolveDid(did)                     │
-│      }                                                       │
-│    }                                                         │
-│  }                                                           │
+│  - method == registrationSpec.name  (e.g. "web")            │
+│  - resolveDid(Did) → DefaultUniversalResolver (HTTP)        │
+│  - create/update/deactivate → registrar when configured     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -90,7 +78,7 @@ val spec = DidRegistrationSpecParser.parse(json)
 // → DidRegistrationSpec(name="web", driver=..., capabilities=...)
 
 // 3. Create DidMethod
-val method = HttpDidMethod(spec, kms)
+val method = HttpDidMethod(registrationSpec = spec)
 // → HttpDidMethod with method="web"
 
 // 4. Register
@@ -98,8 +86,8 @@ registry.register(method)
 
 // 5. Use
 registry.resolve("did:web:example.com")
-// → method.resolveDid("did:web:example.com")
-// → universalResolver.resolveDid("did:web:example.com")
+// → method.resolveDid(Did("did:web:example.com"))
+// → DefaultUniversalResolver (HTTP)
 // → HTTP GET https://.../1.0/identifiers/did:web:example.com
 ```
 
@@ -159,7 +147,7 @@ This creates a `DidMethod` that:
 
 ## See Also
 
-- [DID Method Registration Specification](did-method-registration-specification.md) - Detailed specification
-- [DID Method Registration Guide](did-method-registration-guide.md) - Usage guide
+- DID Method Registration Specification](did-method-registration-specification.md) - Detailed specification
+- DID Method Registration Guide](did-method-registration-guide.md) - Usage guide
 - Schema definition: `src/main/resources/did-methods/schema.json`
 

@@ -7,7 +7,7 @@ title: TrustWeave vs. Competitors - Complete Analysis
 > **Comprehensive comparison of TrustWeave with all relevant competitors and main players in the SSI/DID/VC ecosystem**
 
 **Last Updated:** 2025-01-15
-**TrustWeave Version:** 1.0.0-SNAPSHOT
+**TrustWeave Version:** 0.6.0
 
 ---
 
@@ -16,11 +16,11 @@ title: TrustWeave vs. Competitors - Complete Analysis
 TrustWeave competes in the Self-Sovereign Identity (SSI), Decentralized Identifier (DID), and Verifiable Credentials (VC) space against both open-source SDKs and commercial platforms. This document provides a comprehensive comparison across all major competitors.
 
 **Key Differentiators:**
-- ✅ **Only platform with built-in Smart Contract capabilities**
-- ✅ **Most comprehensive blockchain support** (6+ chains with CAIP-2)
-- ✅ **Most extensive KMS integration** (10+ enterprise providers)
-- ✅ **Unique Trust Domain SaaS concept** (no-code trust management)
-- ✅ **Most feature-rich SDK** (24+ features vs. competitors' 5-10)
+- **Only platform with built-in Smart Contract capabilities**
+- Most comprehensive blockchain support** (6+ chains with CAIP-2)
+- Most extensive KMS integration** (10+ enterprise providers)
+- Unique Trust Domain SaaS concept** (no-code trust management)
+- Most feature-rich SDK** (24+ features vs. competitors' 5-10)
 
 ---
 
@@ -55,9 +55,9 @@ TrustWeave competes in the Self-Sovereign Identity (SSI), Decentralized Identifi
 | **DIF Identity Hub** | Spec/Impl | TypeScript | Apache 2.0 | DIF | Decentralized storage spec | ✅ | ❌ | ❌ | ❌ | ⚠️ Limited | ❌ | ⚠️ Limited | ❌ |
 
 **Legend:**
-- ✅ = Full Support
-- ⚠️ = Partial/Limited Support
-- ❌ = Not Supported
+- Full Support
+- Partial/Limited Support
+- Not Supported
 
 ---
 
@@ -178,61 +178,61 @@ TrustWeave competes in the Self-Sovereign Identity (SSI), Decentralized Identifi
 
 #### TrustWeave
 **Strengths:**
-- ✅ Most comprehensive feature set (24+ features)
-- ✅ Only SDK with Smart Contract capabilities
-- ✅ Best blockchain support (6+ chains, CAIP-2)
-- ✅ Most extensive KMS integration (10+ providers)
-- ✅ Strong type safety (Kotlin)
-- ✅ Domain-agnostic design
+- Most comprehensive feature set (24+ features)
+- Only SDK with Smart Contract capabilities
+- Best blockchain support (6+ chains, CAIP-2)
+- Most extensive KMS integration (10+ providers)
+- Strong type safety (Kotlin)
+- Domain-agnostic design
 
 **Weaknesses:**
-- ❌ No DIDComm v2 support (yet)
-- ⚠️ Smaller community than Veramo
-- ⚠️ TypeScript SDK not yet available
+- No DIDComm v2 support (yet)
+- Smaller community than Veramo
+- TypeScript SDK not yet available
 
 **Best For:** Enterprise applications, blockchain integration, multi-chain deployments, smart contracts
 
 #### WaltId
 **Strengths:**
-- ✅ Wallet-first architecture
-- ✅ DIDComm support
-- ✅ Kotlin/Java ecosystem
-- ✅ Good SSI infrastructure tooling
+- Wallet-first architecture
+- DIDComm support
+- Kotlin/Java ecosystem
+- Good SSI infrastructure tooling
 
 **Weaknesses:**
-- ⚠️ Limited blockchain support
-- ⚠️ Limited KMS providers
-- ❌ No smart contracts
+- Limited blockchain support
+- Limited KMS providers
+- No smart contracts
 
 **Best For:** Wallet applications, SSI infrastructure, Kotlin/Java projects
 
 #### Veramo
 **Strengths:**
-- ✅ Large community
-- ✅ TypeScript/JavaScript ecosystem
-- ✅ DIDComm support
-- ✅ Modular plugin architecture
-- ✅ Good web support
+- Large community
+- TypeScript/JavaScript ecosystem
+- DIDComm support
+- Modular plugin architecture
+- Good web support
 
 **Weaknesses:**
-- ⚠️ Limited blockchain support
-- ⚠️ Limited KMS providers
-- ❌ No smart contracts
+- Limited blockchain support
+- Limited KMS providers
+- No smart contracts
 
 **Best For:** Web applications, Node.js projects, TypeScript/JavaScript ecosystems
 
 #### didkit (Spruce Systems)
 **Strengths:**
-- ✅ Rust performance
-- ✅ Memory safety
-- ✅ Cross-language bindings
-- ✅ Strong standards compliance
+- Rust performance
+- Memory safety
+- Cross-language bindings
+- Strong standards compliance
 
 **Weaknesses:**
-- ❌ No blockchain support
-- ❌ No KMS support
-- ❌ No wallet support
-- ❌ No DIDComm
+- No blockchain support
+- No KMS support
+- No wallet support
+- No DIDComm
 
 **Best For:** Performance-critical applications, Rust ecosystems, security-sensitive use cases
 
@@ -240,59 +240,59 @@ TrustWeave competes in the Self-Sovereign Identity (SSI), Decentralized Identifi
 
 #### Affinidi
 **Strengths:**
-- ✅ Mature SaaS platform
-- ✅ Enterprise features
-- ✅ Good compliance (SOC2, HIPAA)
-- ✅ Multiple DID methods
-- ✅ DIDComm support
+- Mature SaaS platform
+- Enterprise features
+- Good compliance (SOC2, HIPAA)
+- Multiple DID methods
+- DIDComm support
 
 **Weaknesses:**
-- ⚠️ Limited blockchain support
-- ❌ No smart contracts
-- ⚠️ Less flexible than open-source SDKs
+- Limited blockchain support
+- No smart contracts
+- Less flexible than open-source SDKs
 
 **Best For:** Enterprises needing managed service, compliance requirements
 
 #### Trinsic
 **Strengths:**
-- ✅ Mature SaaS platform
-- ✅ Enterprise features
-- ✅ Good compliance
-- ✅ Multiple DID methods
-- ✅ DIDComm support
+- Mature SaaS platform
+- Enterprise features
+- Good compliance
+- Multiple DID methods
+- DIDComm support
 
 **Weaknesses:**
-- ⚠️ Limited blockchain support
-- ❌ No smart contracts
-- ⚠️ Vendor lock-in concerns
+- Limited blockchain support
+- No smart contracts
+- Vendor lock-in concerns
 
 **Best For:** Enterprises needing managed service, quick deployment
 
 #### MATTR
 **Strengths:**
-- ✅ Enterprise-focused
-- ✅ Good compliance
-- ✅ Multiple DID methods
-- ✅ DIDComm support
+- Enterprise-focused
+- Good compliance
+- Multiple DID methods
+- DIDComm support
 
 **Weaknesses:**
-- ⚠️ Limited blockchain support
-- ❌ No smart contracts
-- ⚠️ Higher pricing
+- Limited blockchain support
+- No smart contracts
+- Higher pricing
 
 **Best For:** Large enterprises, government, regulated industries
 
 #### Evernym/Indicio
 **Strengths:**
-- ✅ Hyperledger Indy integration
-- ✅ DIDComm support
-- ✅ Enterprise features
-- ✅ On-premise option
+- Hyperledger Indy integration
+- DIDComm support
+- Enterprise features
+- On-premise option
 
 **Weaknesses:**
-- ⚠️ Tied to Indy ledger
-- ❌ No smart contracts
-- ⚠️ Limited blockchain support
+- Tied to Indy ledger
+- No smart contracts
+- Limited blockchain support
 
 **Best For:** Organizations committed to Hyperledger Indy ecosystem
 
@@ -300,28 +300,28 @@ TrustWeave competes in the Self-Sovereign Identity (SSI), Decentralized Identifi
 
 #### Polygon ID
 **Strengths:**
-- ✅ Zero-knowledge proofs
-- ✅ Polygon blockchain integration
-- ✅ Managed service available
-- ✅ Good for privacy-preserving credentials
+- Zero-knowledge proofs
+- Polygon blockchain integration
+- Managed service available
+- Good for privacy-preserving credentials
 
 **Weaknesses:**
-- ⚠️ Limited to Polygon ecosystem
-- ⚠️ Limited DID methods
-- ❌ No smart contracts (beyond ZK)
+- Limited to Polygon ecosystem
+- Limited DID methods
+- No smart contracts (beyond ZK)
 
 **Best For:** Privacy-focused applications, Polygon ecosystem
 
 #### Cheqd
 **Strengths:**
-- ✅ Payment-enabled identity
-- ✅ Cosmos blockchain
-- ✅ Open source
+- Payment-enabled identity
+- Cosmos blockchain
+- Open source
 
 **Weaknesses:**
-- ⚠️ Limited ecosystem
-- ⚠️ Limited features
-- ❌ No smart contracts
+- Limited ecosystem
+- Limited features
+- No smart contracts
 
 **Best For:** Payment-enabled identity use cases, Cosmos ecosystem
 
@@ -329,28 +329,28 @@ TrustWeave competes in the Self-Sovereign Identity (SSI), Decentralized Identifi
 
 #### Hyperledger Indy
 **Strengths:**
-- ✅ Mature network
-- ✅ Enterprise adoption
-- ✅ DIDComm support
-- ✅ Trust registry
+- Mature network
+- Enterprise adoption
+- DIDComm support
+- Trust registry
 
 **Weaknesses:**
-- ⚠️ Tied to Indy ledger
-- ❌ No smart contracts
-- ⚠️ Limited blockchain interoperability
+- Tied to Indy ledger
+- No smart contracts
+- Limited blockchain interoperability
 
 **Best For:** Organizations needing distributed ledger for identity
 
 #### Microsoft ION
 **Strengths:**
-- ✅ Bitcoin anchoring
-- ✅ Microsoft backing
-- ✅ Decentralized network
+- Bitcoin anchoring
+- Microsoft backing
+- Decentralized network
 
 **Weaknesses:**
-- ⚠️ Limited to did:ion
-- ❌ No wallet/credential management
-- ❌ No smart contracts
+- Limited to did:ion
+- No wallet/credential management
+- No smart contracts
 
 **Best For:** Applications needing Bitcoin-anchored DIDs
 

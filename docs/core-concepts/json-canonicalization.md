@@ -9,7 +9,7 @@ Canonicalization ensures that logically equivalent JSON payloads produce identic
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:common:0.6.0")
 }
 ```
 
@@ -52,7 +52,7 @@ The helper accepts either a `JsonElement` or raw JSON string. Use it whenever yo
 
 ## Further Reading
 
-- [Quick Start – Step 2](../getting-started/quick-start.md#step-2-bootstrap-TrustWeave-and-compute-a-digest)
-- [W3C JSON Canonicalization Scheme](https://www.rfc-editor.org/rfc/rfc8785)
-- [Digest Utilities API](../modules/trustweave-json.md) for more helpers.
+- Quick Start – Step 2](../getting-started/quick-start.md#step-2-bootstrap-TrustWeave-and-compute-a-digest)
+- W3C JSON Canonicalization Scheme](https://www.rfc-editor.org/rfc/rfc8785)
+- Digest Utilities API](../modules/trustweave-json.md) for more helpers.
 

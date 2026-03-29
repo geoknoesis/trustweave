@@ -8,9 +8,9 @@ The `trustweave-anchor` module provides blockchain anchoring abstraction with ch
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-json:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:anchors-anchor-core:0.6.0")
+    implementation("org.trustweave:common:0.6.0")
+    implementation("org.trustweave:common:0.6.0")
 }
 ```
 
@@ -132,7 +132,7 @@ val readData = result?.anchorRef?.let { client.readPayload(it) }
 
 TrustWeave provides adapters for:
 
-- **Algorand** (`org.trustweave.chains:algorand`) – Algorand mainnet and testnet. See [Algorand Integration Guide](../integrations/algorand.md).
+- **Algorand** (`org.trustweave:anchors-plugins-algorand`) – Algorand mainnet and testnet. See [Algorand Integration Guide](../integrations/algorand.md).
 - **Polygon** (`org.trustweave.chains:polygon`) – Polygon mainnet and Mumbai testnet. See [Polygon Anchor Integration Guide](../integrations/README.md#blockchain-anchor-integrations).
 - **Ethereum** (`org.trustweave.chains:ethereum`) – Ethereum mainnet and Sepolia testnet. See [Ethereum Anchor Integration Guide](../integrations/ethereum-anchor.md).
 - **Base** (`org.trustweave.chains:base`) – Base (Coinbase L2). See [Base Anchor Integration Guide](../integrations/base-anchor.md).

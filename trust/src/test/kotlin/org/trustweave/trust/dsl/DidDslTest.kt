@@ -1,5 +1,6 @@
 package org.trustweave.trust.dsl
 
+import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.revocation.CredentialRevocationManager
 import org.trustweave.credential.model.StatusPurpose
@@ -12,7 +13,6 @@ import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
-import org.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -56,7 +56,7 @@ class DidDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }.getOrFail()
+        }.getOrThrowDid()
 
         assertTrue(did.value.startsWith("did:key:"), "DID should start with did:key:")
         assertNotNull(did)
@@ -87,7 +87,7 @@ class DidDslTest {
             method("key")
             algorithm("Ed25519")
             option("custom", "value")
-        }.getOrFail()
+        }.getOrThrowDid()
 
         assertNotNull(did)
         assertTrue(did.value.startsWith("did:key:"))
@@ -98,7 +98,7 @@ class DidDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }.getOrFail()
+        }.getOrThrowDid()
 
         assertNotNull(did)
         assertTrue(did.value.startsWith("did:key:"))
@@ -109,14 +109,14 @@ class DidDslTest {
         val did1 = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }.getOrFail()
+        }.getOrThrowDid()
 
         // Create second DID - even with same algorithm, should produce different DID
         // since it generates a new key
         val did2 = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }.getOrFail()
+        }.getOrThrowDid()
 
         assertNotNull(did1)
         assertNotNull(did2)
@@ -128,7 +128,7 @@ class DidDslTest {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
-        }.getOrFail()
+        }.getOrThrowDid()
 
         // Verify DID format
         assertTrue(did.value.startsWith("did:key:"))

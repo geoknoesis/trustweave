@@ -21,52 +21,25 @@ Here's a complete example that issues a credential:
 
 ```kotlin
 import org.trustweave.trust.TrustWeave
-import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.trust.quickStart
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.trust.types.getOrThrow
-import org.trustweave.did.identifiers.extractKeyId
-import org.trustweave.testkit.services.*
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.did.identifiers.Did
 import kotlinx.coroutines.runBlocking
 
-// Helper extension for resolution results
-fun DidResolutionResult.getOrThrow() = when (this) {
-    is DidResolutionResult.Success -> this.document
-    else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
-}
-
 fun main() = runBlocking {
-    // Create TrustWeave instance
-    val trustWeave = TrustWeave.build {
-        keys {
-            provider(IN_MEMORY)  // Auto-discovered via SPI
-            algorithm(ED25519)
-        }
-        did {
-            method(KEY) {  // Auto-discovered via SPI
-                algorithm(ED25519)
-            }
-        }
-        // KMS, DID methods, and CredentialService all auto-created!
-    }
+    // Equivalent to inMemory(); use TrustWeave.build { } for custom KMS, DID methods, or anchors
+    val trustWeave = TrustWeave.quickStart()
 
-    // Create issuer DID
-    val issuerDid = trustWeave.createDid {
-        method(KEY)
-        algorithm(ED25519)
-    }.getOrThrowDid()
-    
-    // Get key ID from DID document
-    val issuerDocument = trustWeave.resolveDid(issuerDid).getOrThrow()
-    val issuerKeyId = issuerDocument.verificationMethod.firstOrNull()?.extractKeyId()
-        ?: throw IllegalStateException("No verification method found")
+    val issuerDid = trustWeave.createDid().getOrThrowDid()
 
-    // Issue credential
     val credential = trustWeave.issue {
         credential {
             type("VerifiableCredential", "PersonCredential")
             issuer(issuerDid)
             subject {
-                id(org.trustweave.did.identifiers.Did("did:key:holder-placeholder"))
+                id(Did("did:key:holder-placeholder"))
                 "name" to "Alice Example"
                 "role" to "Site Reliability Engineer"
             }
@@ -101,7 +74,7 @@ sequenceDiagram
     participant Issuer as Issuer DID
     
     Note over App,Issuer: Phase 1: Setup
-    App->>TW: TrustWeave.build { ... }
+    App->>TW: TrustWeave.quickStart() or build { ... }
     TW->>DID: Register DID methods
     TW->>KMS: Register KMS provider
     
@@ -148,21 +121,16 @@ sequenceDiagram
 First, create a DID for the issuer and extract the key ID:
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.quickStart
+import org.trustweave.trust.types.getOrThrowDid
+import kotlinx.coroutines.runBlocking
 
-val trustWeave = TrustWeave.build {
-    factories(
-    // KMS and DID methods auto-discovered via SPI
-    keys { provider(IN_MEMORY); algorithm(ED25519) }
-    did { method(KEY) { algorithm(ED25519) } }
-}
+val trustWeave = runBlocking { TrustWeave.quickStart() }
 
-val issuerDid = trustWeave.createDid {
-    method(KEY)
-    algorithm(ED25519)
-}.getOrFail()
+val issuerDid = trustWeave.createDid().getOrThrowDid()
 
-// Key ID is automatically extracted during signing - no manual extraction needed
+// Key ID is resolved from the issuer DID when you use signedBy(issuerDid)
 ```
 
 ### Step 2: Build Credential Subject
@@ -170,10 +138,12 @@ val issuerDid = trustWeave.createDid {
 Create the credential subject with claims using the DSL:
 
 ```kotlin
+import org.trustweave.did.identifiers.Did
+
 // Note: When using the DSL, you build the subject directly in the credential block
 // This example shows the DSL syntax (preferred):
 subject {
-    id(org.trustweave.did.identifiers.Did("did:key:holder"))
+    id(Did("did:key:holder"))
     "name" to "Alice"
     "email" to "alice@example.com"
     "role" to "Engineer"
@@ -181,7 +151,7 @@ subject {
 
 // For nested objects, use:
 subject {
-    id(org.trustweave.did.identifiers.Did("did:key:holder"))
+    id(Did("did:key:holder"))
     "address" {
         "street" to "123 Main St"
         "city" to "New York"
@@ -194,12 +164,14 @@ subject {
 Use the `issue` DSL to create and sign the credential:
 
 ```kotlin
+import org.trustweave.did.identifiers.Did
+
 val credential = trustWeave.issue {
     credential {
         type("VerifiableCredential", "PersonCredential")
         issuer(issuerDid)
         subject {
-            id(org.trustweave.did.identifiers.Did("did:key:holder"))
+            id(Did("did:key:holder"))
             "name" to "Alice"
             "email" to "alice@example.com"
         }
@@ -322,14 +294,11 @@ The proof type is automatically selected based on the key algorithm. For Ed25519
 Issue credentials for multiple subjects:
 
 ```kotlin
-import org.trustweave.trust.types.IssuerIdentity
-
+// issuerDid: Did (e.g. from createDid().getOrThrowDid()), issuerKeyId: String (verification method fragment or full id per your KMS)
 val subjects = listOf(
     mapOf("id" to "did:key:alice", "name" to "Alice", "role" to "Engineer"),
     mapOf("id" to "did:key:bob", "name" to "Bob", "role" to "Manager")
 )
-
-val issuerIdentity = IssuerIdentity.from(issuerDid, issuerKeyId)
 
 val credentials = subjects.map { subjectData ->
     trustWeave.issue {
@@ -343,7 +312,7 @@ val credentials = subjects.map { subjectData ->
                 }
             }
         }
-        signedBy(issuerIdentity)
+        signedBy(issuerDid, issuerKeyId)
     }
 }
 ```
@@ -353,10 +322,6 @@ val credentials = subjects.map { subjectData ->
 Handle errors gracefully:
 
 ```kotlin
-import org.trustweave.trust.types.IssuerIdentity
-
-val issuerIdentity = IssuerIdentity.from(issuerDid, issuerKeyId)
-
 val credential = try {
     trustWeave.issue {
         credential {
@@ -458,12 +423,12 @@ For complete API documentation, see:
 ## Next Steps
 
 **Ready to verify?**
-- [Verify Credentials](verify-credentials.md) - Verify your issued credentials
+- Verify Credentials](verify-credentials.md) - Verify your issued credentials
 
 **Want to store credentials?**
-- [Manage Wallets](manage-wallets.md) - Store credentials securely
+- Manage Wallets](manage-wallets.md) - Store credentials securely
 
 **Want to learn more?**
-- [Verifiable Credentials Concept](../core-concepts/verifiable-credentials.md) - Deep dive into credentials
-- [Credential Issuance Tutorial](../tutorials/credential-issuance-tutorial.md) - Comprehensive tutorial
+- Verifiable Credentials Concept](../core-concepts/verifiable-credentials.md) - Deep dive into credentials
+- Credential Issuance Tutorial](../tutorials/credential-issuance-tutorial.md) - Comprehensive tutorial
 

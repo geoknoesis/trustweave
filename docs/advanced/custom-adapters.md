@@ -21,9 +21,16 @@ TrustWeave's adapter architecture allows you to implement custom:
 
 ### Implementing DidMethod
 
+Implement **`org.trustweave.did.DidMethod`** with type-safe **`Did`**, **`VerificationMethod`**, **`VerificationMethodId`**, and sealed **`DidResolutionResult`**. For **`createDid`**, follow **`org.trustweave.testkit.did.DidKeyMockMethod`** (KMS **`GenerateKeyResult`**, document layout).
+
 ```kotlin
-import org.trustweave.did.*
-import org.trustweave.kms.*
+import org.trustweave.did.DidMethod
+import org.trustweave.did.DidCreationOptions
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.model.DidDocument
+import org.trustweave.did.resolver.DidResolutionMetadata
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.kms.KeyManagementService
 
 class MyCustomDidMethod(
     private val kms: KeyManagementService,
@@ -32,81 +39,36 @@ class MyCustomDidMethod(
     override val method: String = "mydid"
 
     override suspend fun createDid(options: DidCreationOptions): DidDocument {
-        // Generate key
-        val algorithm = options.algorithm ?: KeyAlgorithm.Ed25519
-        val key = kms.generateKey(algorithm.toAlgorithm())
-
-        // Create DID identifier
-        val identifier = generateDidIdentifier(key)
-        val did = "did:mydid:$identifier"
-
-        // Build DID document
-        return DidDocument(
-            id = did,
-            verificationMethod = listOf(
-                VerificationMethod(
-                    id = "$did#key-1",
-                    type = "Ed25519VerificationKey2020",
-                    controller = did,
-                    publicKeyJwk = key.publicKey
-                )
-            ),
-            authentication = listOf("$did#key-1")
-        )
+        TODO("See DidKeyMockMethod in testkit for a working createDid implementation")
     }
 
-    override suspend fun resolveDid(did: String): DidResolutionResult {
-        // Resolve DID from your backend
+    override suspend fun resolveDid(did: Did): DidResolutionResult {
         val document = resolveFromBackend(did)
-
-        return DidResolutionResult(
-            didDocument = document,
-            metadata = DidResolutionMetadata(
-                contentType = "application/did+json"
+        return if (document != null) {
+            DidResolutionResult.Success(
+                document = document,
+                resolutionMetadata = DidResolutionMetadata(contentType = "application/did+json")
             )
-        )
+        } else {
+            DidResolutionResult.Failure.NotFound(did = did)
+        }
     }
 
-    override suspend fun updateDid(
-        did: String,
-        updater: (DidDocument) -> DidDocument
-    ): DidDocument {
-        // Resolve current document
-        val current = resolveDid(did).didDocument ?: throw NotFoundException()
-
-        // Apply update
+    override suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument): DidDocument {
+        val current = when (val r = resolveDid(did)) {
+            is DidResolutionResult.Success -> r.document
+            else -> error("DID not found: ${did.value}")
+        }
         val updated = updater(current)
-
-        // Persist update
         persistToBackend(did, updated)
-
         return updated
     }
 
-    override suspend fun deactivateDid(did: String): Boolean {
-        // Deactivate DID in backend
-        return deactivateInBackend(did)
-    }
+    override suspend fun deactivateDid(did: Did): Boolean = deactivateInBackend(did)
 
-    private fun generateDidIdentifier(key: Key): String {
-        // Generate identifier from key
-        return /* implementation */
-    }
-
-    private suspend fun resolveFromBackend(did: String): DidDocument? {
-        // Resolve from your backend
-        return /* implementation */
-    }
-
-    private suspend fun persistToBackend(did: String, document: DidDocument) {
-        // Persist to your backend
-        /* implementation */
-    }
-
-    private suspend fun deactivateInBackend(did: String): Boolean {
-        // Deactivate in your backend
-        return /* implementation */
-    }
+    private suspend fun resolveFromBackend(did: Did): DidDocument? = null // your store
+    private suspend fun persistToBackend(did: Did, document: DidDocument) { /* … */ }
+    private suspend fun deactivateInBackend(did: Did): Boolean = false
 }
 ```
 
@@ -378,16 +340,16 @@ class MyBlockchainAdapterIntegrationTest {
 Use TrustWeave's error types:
 
 ```kotlin
-import org.trustweave.core.exception.TrustWeaveError
+import org.trustweave.core.exception.TrustWeaveException
 import kotlin.Result
 
 suspend fun createDid(options: DidCreationOptions): Result<DidDocument> {
     return try {
-        // Implementation
-        Result.success(didDocument)
+        val document: DidDocument = /* implementation */
+        Result.success(document)
     } catch (e: Exception) {
         Result.failure(
-            TrustWeaveError.DidCreationFailed(
+            DidException.DidCreationFailed(
                 reason = e.message ?: "Unknown error"
             )
         )
@@ -422,7 +384,7 @@ class MyDidConfig private constructor(
 Implement `PluginLifecycle` if needed:
 
 ```kotlin
-import org.trustweave.spi.PluginLifecycle
+import org.trustweave.core.plugin.PluginLifecycle
 
 class MyBlockchainAnchorClient(
     override val chainId: String,
@@ -460,8 +422,8 @@ class MyBlockchainAnchorClient(
 
 ## References
 
-- [Creating Plugins](../contributing/creating-plugins.md)
-- [Service Provider Interface](spi.md)
-- [Plugin Lifecycle](plugin-lifecycle.md)
-- [Service Provider Interface](spi.md)
+- Creating Plugins](../contributing/creating-plugins.md)
+- Service Provider Interface](spi.md)
+- Plugin Lifecycle](plugin-lifecycle.md)
+- Service Provider Interface](spi.md)
 

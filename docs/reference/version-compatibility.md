@@ -17,9 +17,9 @@ This document provides version compatibility information for TrustWeave SDK and 
 
 ## TrustWeave SDK Version
 
-**Current Version:** `1.0.0-SNAPSHOT`
+**Current Version:** `0.6.0`
 
-> **Note:** This is a snapshot version. Stable releases will follow semantic versioning (e.g., `1.0.0`, `1.1.0`, etc.).
+> **Note:** TrustWeave follows semantic versioning (e.g., `0.6.0`, `0.7.0`, `1.0.0`, etc.).
 
 ## Runtime Requirements
 
@@ -27,7 +27,7 @@ This document provides version compatibility information for TrustWeave SDK and 
 
 | TrustWeave Version | Java Version | Status |
 |-------------------|--------------|--------|
-| 1.0.0-SNAPSHOT    | 21+          | ✅ Required |
+| 0.6.0             | 21+          | ✅ Required |
 | Future            | 21+          | ✅ Required |
 
 **Why Java 21?**
@@ -39,7 +39,7 @@ This document provides version compatibility information for TrustWeave SDK and 
 
 | TrustWeave Version | Kotlin Version | Status |
 |-------------------|----------------|--------|
-| 1.0.0-SNAPSHOT    | 2.2.21+       | ✅ Required |
+| 0.6.0             | 2.2.21+       | ✅ Required |
 | Future            | 2.2.0+        | ✅ Required |
 
 **Why Kotlin 2.2.0+?**
@@ -68,21 +68,21 @@ This document provides version compatibility information for TrustWeave SDK and 
 
 | Dependency | Version | Purpose | Plugin |
 |------------|---------|---------|--------|
-| AWS SDK | 2.x | AWS KMS integration | `org.trustweave.kms:aws` |
-| Azure SDK | Latest | Azure Key Vault integration | `org.trustweave.kms:azure` |
-| Google Cloud SDK | Latest | Google Cloud KMS integration | `org.trustweave.kms:google` |
+| AWS SDK | 2.x | AWS KMS integration | `org.trustweave:kms-plugins-aws` |
+| Azure SDK | Latest | Azure Key Vault integration | `org.trustweave:kms-plugins-azure` |
+| Google Cloud SDK | Latest | Google Cloud KMS integration | `org.trustweave:kms-plugins-google` |
 
 ## Module Compatibility
 
 All TrustWeave modules share the same version number for consistency:
 
 ```
-org.trustweave:distribution-all:1.0.0-SNAPSHOT
-org.trustweave:trustweave-trust:1.0.0-SNAPSHOT
-org.trustweave:trustweave-did:1.0.0-SNAPSHOT
-org.trustweave:trustweave-kms:1.0.0-SNAPSHOT
-org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT
-org.trustweave:testkit:1.0.0-SNAPSHOT
+org.trustweave:distribution-all:0.6.0
+org.trustweave:trust:0.6.0
+org.trustweave:did-did-core:0.6.0
+org.trustweave:kms-kms-core:0.6.0
+org.trustweave:anchors-anchor-core:0.6.0
+org.trustweave:testkit:0.6.0
 ```
 
 **Recommendation:** Use the same version for all TrustWeave modules to avoid compatibility issues.
@@ -112,7 +112,7 @@ org.trustweave:testkit:1.0.0-SNAPSHOT
 
 | Version | Status | Breaking Changes |
 |---------|--------|------------------|
-| 1.0.0-SNAPSHOT | Current | None (initial version) |
+| 0.6.0 | Current | None (initial version) |
 | Future 1.0.0 | Planned | None expected |
 | Future 1.1.0 | Planned | TBD |
 
@@ -140,7 +140,7 @@ org.trustweave:testkit:1.0.0-SNAPSHOT
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 }
 
 // Check version at runtime
@@ -153,7 +153,7 @@ val version = TrustWeave::class.java.getPackage()?.implementationVersion
 <dependency>
     <groupId>org.trustweave</groupId>
     <artifactId>distribution-all</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>0.6.0</version>
 </dependency>
 ```
 
@@ -172,7 +172,7 @@ If you encounter version conflicts:
    ```kotlin
    configurations.all {
        resolutionStrategy {
-           force("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+           force("org.trustweave:common:0.6.0")
        }
    }
    ```
@@ -180,9 +180,9 @@ If you encounter version conflicts:
 3. **Use BOM** (when available):
    ```kotlin
    dependencies {
-       implementation(platform("org.trustweave:trustweave-bom:1.0.0-SNAPSHOT"))
-       implementation("org.trustweave:trustweave-trust")
-       implementation("org.trustweave:trustweave-did")
+       implementation(platform("org.trustweave:distribution-bom:0.6.0"))
+       implementation("org.trustweave:trust")
+       implementation("org.trustweave:did-did-core")
    }
    ```
 
@@ -197,11 +197,11 @@ When upgrading TrustWeave versions:
 
 ## Related Documentation
 
-- [Installation Guide](../getting-started/installation.md) - Setup instructions
-- [Migration Guides](../migration/README.md) - Upgrade instructions
-- [Module Overview](../modules/core-modules.md) - Module dependencies
+- Installation Guide](../getting-started/installation.md) - Setup instructions
+- Migration Guides](../migration/README.md) - Upgrade instructions
+- Module Overview](../modules/core-modules.md) - Module dependencies
 
 ---
 
 **Last Updated:** January 2025  
-**TrustWeave Version:** 1.0.0-SNAPSHOT
+**TrustWeave Version:** 0.6.0

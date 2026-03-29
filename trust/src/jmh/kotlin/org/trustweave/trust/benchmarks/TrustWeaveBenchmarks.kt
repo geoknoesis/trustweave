@@ -1,10 +1,14 @@
 package org.trustweave.trust.benchmarks
 
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.did.resolver.getOrThrow
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.*
+import org.trustweave.credential.results.VerificationResult
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.testkit.did.DidKeyMockMethod
-import org.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 // JMH imports - uncomment when JMH plugin is configured:
 // import org.openjdk.jmh.annotations.*
@@ -72,11 +76,11 @@ open class TrustWeaveBenchmarks {
         }
         
         // Create DIDs for benchmarking
-        issuerDid = trustWeave.createDid { method("key") }.getOrFail()
-        holderDid = trustWeave.createDid { method("key") }.getOrFail()
+        issuerDid = trustWeave.createDid { method("key") }.getOrThrowDid()
+        holderDid = trustWeave.createDid { method("key") }.getOrThrowDid()
         
         // Get issuer key ID
-        val issuerDoc = trustWeave.resolveDid(issuerDid).getOrFail()
+        val issuerDoc = trustWeave.resolveDid(issuerDid).getOrThrow()
         issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.value?.substringAfter("#")
             ?: error("No verification method found")
     }
@@ -86,7 +90,7 @@ open class TrustWeaveBenchmarks {
      */
     // @Benchmark  // Uncomment when JMH is configured
     fun benchmarkCreateDid(): Did = runBlocking {
-        trustWeave.createDid { method("key") }.getOrFail()
+        trustWeave.createDid { method("key") }.getOrThrowDid()
     }
     
     /**
@@ -104,7 +108,7 @@ open class TrustWeaveBenchmarks {
                 }
             }
             signedBy(issuerDid, issuerKeyId)
-        }.getOrFail()
+        }.getOrThrow()
     }
     
     /**
@@ -122,7 +126,7 @@ open class TrustWeaveBenchmarks {
                 }
             }
             signedBy(issuerDid, issuerKeyId)
-        }.getOrFail()
+        }.getOrThrow()
         
         trustWeave.verify {
             credential(credential)
@@ -134,7 +138,7 @@ open class TrustWeaveBenchmarks {
      */
     // @Benchmark  // Uncomment when JMH is configured
     fun benchmarkResolveDid(): DidDocument = runBlocking {
-        trustWeave.resolveDid(issuerDid).getOrFail()
+        trustWeave.resolveDid(issuerDid).getOrThrow()
     }
 }
 

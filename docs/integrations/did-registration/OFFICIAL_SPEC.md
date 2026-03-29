@@ -64,11 +64,15 @@ The `RegistryEntryMapper` automatically converts registry entries to TrustWeave 
 ### 3. Usage
 
 ```kotlin
+import org.trustweave.did.registrar.method.RegistryEntryMapper
+import org.trustweave.did.registration.model.DidMethodRegistryEntryParser
+
 // Load registry entry
 val entry = DidMethodRegistryEntryParser.parse(jsonString)
 
-// Map to DidMethod
-val method = RegistryEntryMapper.mapToDidMethod(entry, kms)
+// Map to DidMethod (HTTP-backed resolver/registrar from registry entry)
+val method = RegistryEntryMapper.mapToDidMethod(entry)
+    ?: error("No resolvable implementation with driverUrl for method ${entry.name}")
 
 // Register and use
 registry.register(method)
@@ -93,10 +97,10 @@ The protocol adapter is automatically determined:
 ## Capabilities
 
 Currently, JSON-registered methods support:
-- ✅ **Resolution**: Automatically enabled if `driverUrl` is provided
-- ❌ **Create**: Requires native implementation
-- ❌ **Update**: Requires native implementation
-- ❌ **Deactivate**: Requires native implementation
+- Resolution**: Automatically enabled if `driverUrl` is provided
+- Create**: Requires native implementation
+- Update**: Requires native implementation
+- Deactivate**: Requires native implementation
 
 ## Examples
 

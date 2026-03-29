@@ -23,8 +23,8 @@ Key management covers the generation, storage, rotation, and usage of cryptograp
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:common:0.6.0")
+    implementation("org.trustweave:kms-kms-core:0.6.0")
 }
 ```
 
@@ -147,14 +147,14 @@ when (keyResult) {
 
 ## See also
 
-- [Wallet API Reference – KeyManagement](../api-reference/wallet-api.md#keymanagement)
-- [KMS Integration Guides](../integrations/README.md#key-management-systems-kms) – Implementation guides for AWS KMS, Azure Key Vault, Google Cloud KMS, HashiCorp Vault, IBM Key Protect, and InMemory KMS
-- [KMS Quick Start Guide](../kms/KMS_QUICK_START.md) – Quick start examples for all KMS plugins
-- [KMS Configuration Guide](../kms/KMS_PLUGINS_CONFIGURATION.md) – Complete configuration reference
-- [DIDs](dids.md) for how keys feed DID documents.
-- [Credential Service API](../api-reference/credential-service-api.md) to see where keys sign credentials.
-- [Advanced – Key Rotation](../advanced/key-rotation.md) *(to be added in a later step of this plan).*
-- [Architecture Overview](../introduction/architecture-overview.md)
+- Wallet API Reference – KeyManagement](../api-reference/wallet-api.md#keymanagement)
+- KMS Integration Guides](../integrations/README.md#key-management-systems-kms) – Implementation guides for AWS KMS, Azure Key Vault, Google Cloud KMS, HashiCorp Vault, IBM Key Protect, and InMemory KMS
+- KMS Quick Start Guide](../kms/KMS_QUICK_START.md) – Quick start examples for all KMS plugins
+- KMS Configuration Guide](../kms/KMS_PLUGINS_CONFIGURATION.md) – Complete configuration reference
+- DIDs](dids.md) for how keys feed DID documents.
+- Credential Service API](../api-reference/credential-service-api.md) to see where keys sign credentials.
+- Advanced – Key Rotation](../advanced/key-rotation.md) *(to be added in a later step of this plan).*
+- Architecture Overview](../introduction/architecture-overview.md)
 
 ---
 
@@ -252,7 +252,7 @@ when (sign) {
 | `kms/plugins/waltid` | `WaltIdKeyManagementService` | Ed25519, secp256k1, P-256, P-384, P-521 | Uses walt.id crypto to generate and sign keys. |
 | Community | SPI implementations | Varies by provider | Register via `META-INF/services/org.trustweave.kms.spi.KeyManagementServiceProvider`. |
 
-To use a custom provider, include it on the classpath and TrustWeave will discover it automatically when building the facade (`TrustWeave.create { keys { provider("custom") } }`).
+To use a custom provider, include it on the classpath and TrustWeave will discover it automatically when building the facade (`TrustWeave.build { keys { provider("custom") { /* options */ } } }`).
 
 ### Algorithm Discovery
 
@@ -399,16 +399,16 @@ Add `META-INF/services/org.trustweave.kms.spi.KeyManagementServiceProvider` cont
 ## Next Steps
 
 **Ready to use Key Management?**
-- [Wallet API Reference – KeyManagement](../api-reference/wallet-api.md#keymanagement) - DSL hooks and typed options
-- [Algorithm Compatibility Table](algorithm-compatibility-table.md) - Algorithm support across DIDs, VCs, AWS KMS, and Azure Key Vault
-- [KMS Integrations](../integrations/README.md#key-management-systems-kms) - AWS KMS, Azure Key Vault, WaltID, and more
+- Wallet API Reference – KeyManagement](../api-reference/wallet-api.md#keymanagement) - DSL hooks and typed options
+- Algorithm Compatibility Table](algorithm-compatibility-table.md) - Algorithm support across DIDs, VCs, AWS KMS, and Azure Key Vault
+- KMS Integrations](../integrations/README.md#key-management-systems-kms) - AWS KMS, Azure Key Vault, WaltID, and more
 
 **Want to learn more?**
-- [DIDs](dids.md) - Understand how keys are used in DID documents
-- [Verifiable Credentials](verifiable-credentials.md) - Learn how keys sign credentials
-- [SPI Guide](../advanced/spi.md) - Build custom KMS providers
+- DIDs](dids.md) - Understand how keys are used in DID documents
+- Verifiable Credentials](verifiable-credentials.md) - Learn how keys sign credentials
+- SPI Guide](../advanced/spi.md) - Build custom KMS providers
 
 **Explore related concepts:**
-- [Testkit KMS](../modules/trustweave-common.md) - Testing helpers
-- [Security Best Practices](../security/README.md) - Security guidelines
+- Testkit KMS](../modules/trustweave-common.md) - Testing helpers
+- Security Best Practices](../security/README.md) - Security guidelines
 

@@ -17,7 +17,7 @@ keywords:
 
 # TrustWeave Use Case Scenarios
 
-> **Version:** 1.0.0-SNAPSHOT
+> **Version:** 0.6.0
 > Complete end-to-end workflows demonstrating TrustWeave in real-world applications.
 
 ## Overview
@@ -29,6 +29,8 @@ Each scenario provides a complete, runnable example showing how to use TrustWeav
 3. **Credential Operations** – Issue, store, and verify credentials
 4. **Advanced Features** – Wallet organization, presentations, blockchain anchoring
 5. **Verification** – Complete verification workflows
+
+Longer scenarios should use **`trustWeave.issue { }`** / **`trustWeave.verify { }`** and sealed **`IssuanceResult`** / **`VerificationResult`**; some narrative snippets still use **`mapOf(...)`** for wallet presentation options that **do not** match the published API one-to-one. Wallet **`CredentialPresentation`** in the SDK uses **`ProofOptions`** (`org.trustweave.credential.proof`). Prefer **[Quick Start](../getting-started/quick-start.md)**, **[API patterns](../getting-started/api-patterns.md)**, and **[Credential Service API](../api-reference/credential-service-api.md)** for copy-paste-accurate calls (`IssuanceRequest`, `PresentationRequest`, `presentationResult { }`).
 
 ## Popular Scenarios
 
@@ -226,6 +228,11 @@ Scenarios are organized by industry domain and use case. Each scenario includes 
 Each scenario follows this structure:
 
 ```kotlin
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.testkit.services.*
+import org.trustweave.credential.results.getOrThrow
+
 fun main() = runBlocking {
     // 1. Setup
     val trustWeave = TrustWeave.build {
@@ -234,8 +241,6 @@ fun main() = runBlocking {
     }
 
     // 2. Create DIDs
-    import org.trustweave.trust.types.getOrThrowDid
-    import org.trustweave.trust.types.getOrThrow
     
     val issuerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     val holderDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
@@ -272,11 +277,11 @@ fun main() = runBlocking {
 
 ## Related Documentation
 
-- [Quick Start](../getting-started/quick-start.md) – Get started with TrustWeave
-- [Common Patterns](../getting-started/common-patterns.md) – Reusable code patterns
-- [API Reference](../api-reference/core-api.md) – Complete API documentation
-- [Core Concepts](../core-concepts/README.md) – Fundamental concepts
-- [Troubleshooting](../getting-started/troubleshooting.md) – Common issues and solutions
+- Quick Start](../getting-started/quick-start.md) – Get started with TrustWeave
+- Common Patterns](../getting-started/common-patterns.md) – Reusable code patterns
+- API Reference](../api-reference/core-api.md) – Complete API documentation
+- Core Concepts](../core-concepts/README.md) – Fundamental concepts
+- Troubleshooting](../getting-started/troubleshooting.md) – Common issues and solutions
 
 ## Contributing Scenarios
 

@@ -69,7 +69,7 @@ Before diving in:
 ### For New Developers
 
 **Step 1: Complete Quick Start** (5 minutes)
-- [Quick Start Guide](../getting-started/quick-start.md) - Verify installation and run first example
+- Quick Start Guide](../getting-started/quick-start.md) - Verify installation and run first example
 
 **Step 2: Beginner Tutorial Series** (2+ hours)
 Start with [Beginner Tutorial Series](beginner-tutorial-series.md) and complete all 5 tutorials in order:
@@ -95,13 +95,13 @@ Start with [Beginner Tutorial Series](beginner-tutorial-series.md) and complete 
    - Read anchored data
 
 **Step 3: Build Real Applications**
-- [Common Patterns](../getting-started/common-patterns.md) - Production-ready patterns
-- [Your First Application](../getting-started/your-first-application.md) - Complete example
+- Common Patterns](../getting-started/common-patterns.md) - Production-ready patterns
+- Your First Application](../getting-started/your-first-application.md) - Complete example
 
 **Step 4: Deepen Knowledge**
-- [Core Concepts](../core-concepts/README.md) - Deep dives
-- [Advanced Tutorials](#advanced-tutorials) - Specific topics
-- [API Reference](../api-reference/core-api.md) - Complete API docs
+- Core Concepts](../core-concepts/README.md) - Deep dives
+- Advanced Tutorials](#advanced-tutorials) - Specific topics
+- API Reference](../api-reference/core-api.md) - Complete API docs
 
 ### For Experienced Developers
 
@@ -123,20 +123,20 @@ Start with [Beginner Tutorial Series](beginner-tutorial-series.md) and complete 
 **After completing tutorials:**
 
 **Ready to build?**
-- [Use Case Scenarios](../scenarios/README.md) - 25+ real-world examples with complete code
-- [Common Patterns](../getting-started/common-patterns.md) - Production-ready patterns
-- [Your First Application](../getting-started/your-first-application.md) - Complete example
+- Use Case Scenarios](../scenarios/README.md) - 25+ real-world examples with complete code
+- Common Patterns](../getting-started/common-patterns.md) - Production-ready patterns
+- Your First Application](../getting-started/your-first-application.md) - Complete example
 
 **Want to go deeper?**
-- [Core Concepts](../core-concepts/README.md) - Deep dives into DIDs, credentials, wallets
-- [API Reference](../api-reference/README.md) - Complete API documentation
-- [Advanced Topics](../advanced/README.md) - Key rotation, verification policies, custom adapters
+- Core Concepts](../core-concepts/README.md) - Deep dives into DIDs, credentials, wallets
+- API Reference](../api-reference/README.md) - Complete API documentation
+- Advanced Topics](../advanced/README.md) - Key rotation, verification policies, custom adapters
 
 **Need to complete a specific task?**
-- [How-To Guides](../how-to/README.md) - Task-oriented guides for common operations
+- How-To Guides](../how-to/README.md) - Task-oriented guides for common operations
 
 **Production deployment?**
-- [Production Deployment](../getting-started/production-deployment.md) - Best practices
-- [Error Handling](../advanced/error-handling.md) - Error handling patterns
-- [Verification Policies](../advanced/verification-policies.md) - Verification strategies
+- Production Deployment](../getting-started/production-deployment.md) - Best practices
+- Error Handling](../advanced/error-handling.md) - Error handling patterns
+- Verification Policies](../advanced/verification-policies.md) - Verification strategies
 

@@ -63,10 +63,11 @@ val bucket = Bucket.builder()
     .addLimit(Bandwidth.classic(100, Refill.intervally(100, Duration.ofMinutes(1))))
     .build()
 
-// Apply rate limiting in service layer
-suspend fun issueCredential(request: IssuanceRequest): IssuanceResult {
+// Apply rate limiting in your service layer (example shape)
+suspend fun issueWithRateLimit(request: IssuanceRequest): IssuanceResult {
     if (!bucket.tryConsume(1)) {
-        return IssuanceResult.Failure.RateLimited(
+        return IssuanceResult.Failure.InvalidRequest(
+            field = "client",
             reason = "Rate limit exceeded. Please try again later."
         )
     }

@@ -18,23 +18,25 @@ This guide helps you migrate from the service layer API (`dids`, `credentials`, 
 
 Phase 4 simplifies the TrustWeave API by removing the service layer indirection. Common operations are now available as direct methods on `TrustWeave`, making the API more intuitive and discoverable.
 
+**Snippet convention:** Blocks labeled **Before** still show the legacy service API (e.g. **`trustweave.credentials.verify`** and a boolean-style **`verification.valid`**). Prefer the **After** patterns: sealed **`VerificationResult`** (`is VerificationResult.Valid` / exhaustive **`when`**) and **`allErrors`** for messages—not the old **`valid`** flag.
+
 ### What Changed
 
 **Removed from Public API:**
-- ❌ `trustweave.dids` property
-- ❌ `trustweave.credentials` property  
-- ❌ `trustweave.wallets` property
+- `trustweave.dids` property
+- `trustweave.credentials` property  
+- `trustweave.wallets` property
 
 **New Direct Methods:**
-- ✅ `trustweave.createDid()` - Direct DID creation
-- ✅ `trustweave.resolveDid()` - Direct DID resolution
-- ✅ `trustweave.issueCredential()` - Direct credential issuance
-- ✅ `trustweave.verifyCredential()` - Direct credential verification
-- ✅ `trustweave.createWallet()` - Direct wallet creation
+- `trustWeave.createDid()` — DID creation (**`DidCreationResult`**)
+- `trustWeave.resolveDid()` — DID resolution (**`DidResolutionResult`**)
+- `trustWeave.issue { }` — Credential issuance (**`IssuanceResult`**)
+- `trustWeave.verify()` / `trustWeave.verify { }` — Credential verification (**`VerificationResult`**)
+- `trustWeave.wallet { }` — Wallet creation (**`WalletCreationResult`**)
 
-**Still Available (Complex Services):**
-- ✅ `trustweave.blockchains` - Complex blockchain operations
-- ✅ `trustweave.contracts` - Smart contract operations
+**Still Available (complex services):**
+- `trustWeave.blockchains` — Anchoring via **`BlockchainService`**
+- `trustWeave.contracts` — **`SmartContractService`**
 
 ## Migration Steps
 
@@ -42,7 +44,7 @@ Phase 4 simplifies the TrustWeave API by removing the service layer indirection.
 
 #### Before (Service Layer)
 ```kotlin
-val trustweave = TrustWeave.create()
+val trustweave = TrustWeave.quickStart()
 
 // Create DID
 val did = trustweave.dids.create()
@@ -53,7 +55,7 @@ val result = trustweave.dids.resolve("did:key:...")
 
 #### After (Direct Methods)
 ```kotlin
-val trustweave = TrustWeave.create()
+val trustweave = TrustWeave.quickStart()
 
 // Create DID - Direct method
 val did = trustweave.createDid()
@@ -101,42 +103,31 @@ if (verification.valid) {
 
 #### After (Direct Methods)
 ```kotlin
-// Issue credential - Simple overload
-val credential = trustweave.issueCredential(
-    issuer = issuerDid.id,
-    keyId = issuerKeyId,
-    subject = mapOf(
-        "id" to holderDid.id,
-        "name" to "Alice"
-    ),
-    credentialType = "UniversityDegreeCredential"
-)
+import org.trustweave.credential.results.getOrThrow
 
-// Or use advanced overload with JsonElement
-val credential = trustweave.issueCredential(
-    issuer = issuerDid.id,
-    subject = buildJsonObject {
-        put("id", holderDid.id)
-        put("name", "Alice")
-    },
-    config = IssuanceConfig(
-        proofType = ProofType.Ed25519Signature2020,
-        keyId = issuerKeyId,
-        issuerDid = issuerDid.id
-    ),
-    types = listOf("UniversityDegreeCredential")
-)
+// Issue credential — DSL returning IssuanceResult
+val credential = trustWeave.issue {
+    credential {
+        type("UniversityDegreeCredential")
+        issuer(issuerDid)
+        subject {
+            id(holderDid)
+            "name" to "Alice"
+        }
+    }
+    signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+}.getOrThrow()
 
-// Verify credential - Returns sealed class
-val verification = trustweave.verifyCredential(credential)
+// Verify credential — sealed VerificationResult
+val verification = trustWeave.verify(credential)
 when (verification) {
-    is CredentialVerificationResult.Valid -> {
+    is VerificationResult.Valid -> {
         println("Valid! ${verification.credential.id}")
     }
-    is CredentialVerificationResult.Invalid.Expired -> {
+    is VerificationResult.Invalid.Expired -> {
         println("Expired at ${verification.expiredAt}")
     }
-    is CredentialVerificationResult.Invalid.Revoked -> {
+    is VerificationResult.Invalid.Revoked -> {
         println("Revoked")
     }
     // ... handle other cases
@@ -160,14 +151,15 @@ wallet.store(credential)
 
 #### After (Direct Methods)
 ```kotlin
-// Create wallet - Direct method
-val wallet = trustweave.createWallet(
-    holderDid = holderDid.id,
-    walletId = "my-wallet-id",
-    type = WalletType.InMemory
-)
+import org.trustweave.trust.types.getOrThrow
 
-// Store credential - Same as before
+// Create wallet — WalletBuilder DSL + WalletCreationResult
+val wallet = trustWeave.wallet {
+    id("my-wallet-id")
+    holder(holderDid)
+    provider("inMemory")
+}.getOrThrow()
+
 wallet.store(credential)
 ```
 
@@ -175,7 +167,7 @@ wallet.store(credential)
 
 ### Before (Service Layer API)
 ```kotlin
-val trustweave = TrustWeave.create()
+val trustweave = TrustWeave.quickStart()
 
 // DIDs
 val issuerDid = trustweave.dids.create()
@@ -209,37 +201,45 @@ wallet.store(credential)
 
 ### After (Direct Methods API)
 ```kotlin
-val trustweave = TrustWeave.create()
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.trust.types.getOrThrow
 
-// DIDs - Direct methods
-val issuerDid = trustweave.createDid()
-val holderDid = trustweave.createDid()
-val issuerKeyId = issuerDid.verificationMethod.first().id
+val trustWeave = TrustWeave.quickStart()
 
-// Credentials - Direct methods
-val credential = trustweave.issueCredential(
-    issuer = issuerDid.id,
-    keyId = issuerKeyId,
-    subject = mapOf(
-        "id" to holderDid.id,
-        "name" to "Alice"
-    ),
-    credentialType = "PersonCredential"
-)
+// DIDs — sealed DidCreationWithKeyResult (unwrap for examples)
+val (issuerDid, issuerKeyId) = trustWeave.createDidWithKey().getOrThrow()
+val (holderDid, _) = trustWeave.createDidWithKey().getOrThrow()
 
-// Verification - Sealed result handling
-val verification = trustweave.verifyCredential(credential)
+// Credentials — issue { } + IssuanceResult
+val credential = trustWeave.issue {
+    credential {
+        type("PersonCredential")
+        issuer(issuerDid)
+        subject {
+            id(holderDid)
+            "name" to "Alice"
+        }
+    }
+    signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+}.getOrThrow()
+
+// Verification — VerificationResult
+val verification = trustWeave.verify(credential)
 when (verification) {
-    is CredentialVerificationResult.Valid -> {
+    is VerificationResult.Valid -> {
         // Credential is valid
     }
-    is CredentialVerificationResult.Invalid -> {
-        throw Exception("Invalid credential: ${verification.errors}")
+    is VerificationResult.Invalid -> {
+        throw Exception("Invalid credential: ${verification.allErrors.joinToString()}")
     }
 }
 
-// Wallets - Direct methods
-val wallet = trustweave.createWallet(holderDid = holderDid.id)
+// Wallets — WalletBuilder DSL
+val wallet = trustWeave.wallet {
+    holder(holderDid)
+    provider("inMemory")
+}.getOrThrow()
 wallet.store(credential)
 ```
 
@@ -283,26 +283,26 @@ val verification = trustweave.credentials.verify(credential)
 if (verification.valid) {
     // Success
 } else {
-    // Check verification.errors, verification.proofValid, etc.
+    // Check error details (e.g. allErrors) and trust-layer helpers (e.g. proofValid) as needed.
 }
 ```
 
 #### After
 ```kotlin
-val verification = trustweave.verifyCredential(credential)
+val verification = trustWeave.verify(credential)
 when (verification) {
-    is CredentialVerificationResult.Valid -> {
+    is VerificationResult.Valid -> {
         // Credential is valid
         println("Valid: ${verification.credential.id}")
         verification.warnings.forEach { println("Warning: $it") }
     }
-    is CredentialVerificationResult.Invalid.Expired -> {
+    is VerificationResult.Invalid.Expired -> {
         println("Expired at ${verification.expiredAt}")
     }
-    is CredentialVerificationResult.Invalid.Revoked -> {
+    is VerificationResult.Invalid.Revoked -> {
         println("Revoked at ${verification.revokedAt}")
     }
-    is CredentialVerificationResult.Invalid.InvalidProof -> {
+    is VerificationResult.Invalid.InvalidProof -> {
         println("Invalid proof: ${verification.reason}")
     }
     // ... handle all cases
@@ -321,8 +321,8 @@ when (verification) {
    ```kotlin
    // Obvious what these do
    trustweave.createDid()
-   trustweave.issueCredential(...)
-   trustweave.createWallet(...)
+   trustWeave.issue { ... }
+   trustWeave.wallet { holder(...); provider(...) }
    ```
 
 3. **Type Safety**: Sealed results provide exhaustive handling
@@ -349,14 +349,14 @@ when (verification) {
 
 ## Migration Checklist
 
-- [ ] Replace `trustweave.dids.create()` with `trustweave.createDid()`
-- [ ] Replace `trustweave.dids.resolve()` with `trustweave.resolveDid()` and update error handling
-- [ ] Replace `trustweave.credentials.issue()` with `trustweave.issueCredential()`
-- [ ] Replace `trustweave.credentials.verify()` with `trustweave.verifyCredential()` and use sealed class handling
-- [ ] Replace `trustweave.wallets.create()` with `trustweave.createWallet()`
-- [ ] Update error handling to use sealed result types
-- [ ] Test all changes thoroughly
-- [ ] Update any custom code that accesses service layer
+- Replace `trustweave.dids.create()` with `trustweave.createDid()`
+- Replace `trustweave.dids.resolve()` with `trustweave.resolveDid()` and update error handling
+- Replace `trustweave.credentials.issue()` with `trustWeave.issue { }` (handle **`IssuanceResult`**)
+- Replace `trustweave.credentials.verify()` with `trustWeave.verify()` and use sealed class handling
+- Replace `trustweave.wallets.create()` with `trustWeave.wallet { … }` (handle **`WalletCreationResult`**)
+- Update error handling to use sealed result types
+- Test all changes thoroughly
+- Update any custom code that accesses service layer
 
 ## Complex Services (Unchanged)
 
@@ -422,7 +422,7 @@ if (verification.valid) { ... }
 
 // After
 when (verification) {
-    is CredentialVerificationResult.Valid -> { ... }
+    is VerificationResult.Valid -> { ... }
     else -> { ... }
 }
 ```
@@ -469,10 +469,10 @@ If you encounter issues during migration:
 ## Summary
 
 Phase 4 API simplifies TrustWeave by:
-- ✅ Removing service layer indirection
-- ✅ Adding direct methods for common operations
-- ✅ Improving type safety with sealed results
-- ✅ Enhancing discoverability
+- Removing service layer indirection
+- Adding direct methods for common operations
+- Improving type safety with sealed results
+- Enhancing discoverability
 
 Migration is straightforward: replace service property calls with direct method calls and update error handling to use sealed result types.
 

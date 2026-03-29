@@ -8,14 +8,14 @@ parent: Getting Started
 
 ## Overview
 
-The TrustWeave DSL (Domain-Specific Language) provides a fluent, type-safe API for working with verifiable credentials, making it easier to configure trust layers, issue credentials, verify credentials, create presentations, and manage wallets.
+The TrustWeave DSL (Domain-Specific Language) provides a fluent, type-safe API for working with verifiable credentials, making it easier to configure TrustWeave, issue credentials, verify credentials, create presentations, and manage wallets.
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
     // Or use individual modules:
-    // implementation("org.trustweave:trust:1.0.0-SNAPSHOT")
-    // implementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
+    // implementation("org.trustweave:trust:0.6.0")
+    // implementation("org.trustweave:testkit:0.6.0")
 }
 ```
 
@@ -29,9 +29,9 @@ dependencies {
 - **Centralized Configuration**: Single place to configure entire trust layer
 - **Easier Onboarding**: More intuitive for new developers
 
-## Trust Layer Configuration
+## TrustWeave configuration
 
-The trust layer configuration is the foundation of the DSL. It centralizes the setup of cryptographic keys (KMS), Decentralized Identifiers (DIDs), and blockchain anchoring.
+`TrustWeave.build { }` is the foundation of the DSL. It centralizes the setup of cryptographic keys (KMS), Decentralized Identifiers (DIDs), and blockchain anchoring.
 
 ### Basic Configuration
 
@@ -39,6 +39,7 @@ The trust layer configuration is the foundation of the DSL. It centralizes the s
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.*
 import kotlinx.coroutines.runBlocking
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
@@ -72,11 +73,12 @@ fun main() = runBlocking {
 ```
 **Outcome:** Produces a fully configured `TrustWeave` instance with in-memory KMS, DID method, anchoring, and trust registry—ideal for local experiments or tests.
 
-### Multiple Trust Layers
+### Multiple environments
 
-You can create multiple trust layer configurations for different environments:
+You can create multiple `TrustWeave` instances for different environments:
 
 ```kotlin
+import org.trustweave.testkit.services.*
 // Production TrustWeave instance
 val productionTrustWeave = TrustWeave.build {
     keys { provider("hardware") }
@@ -100,13 +102,15 @@ Create verifiable credentials using a fluent builder:
 
 ```kotlin
 import org.trustweave.trust.dsl.credential.credential
+import org.trustweave.did.identifiers.Did
 import kotlinx.datetime.Clock
 import kotlin.time.Duration.Companion.years
 
+val issuerDid = Did("did:key:university")
 val credential = credential {
     id("https://example.edu/credentials/123")
     type("DegreeCredential", "BachelorDegreeCredential")
-    issuer("did:key:university")
+    issuer(issuerDid)
     subject {
         id("did:key:student")
         "degree" {
@@ -151,10 +155,11 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build { /* ... configuration ... */ }
     
+    val issuerDid = Did("did:key:university")
     val issuanceResult = trustWeave.issue {
         credential {
             type("DegreeCredential")
-            issuer("did:key:university")
+            issuer(issuerDid)
             subject {
                 id("did:key:student")
                 "degree" {
@@ -163,7 +168,7 @@ fun main() = runBlocking {
             }
             issued(Clock.System.now())
         }
-        signedBy(issuerDid = "did:key:university", keyId = "key-1")
+        signedBy(issuerDid = issuerDid, keyId = "key-1")
         withProof(ProofSuiteId.VC_LD)  // Use ProofSuiteId, not ProofType
         challenge("challenge-123")
         domain("example.com")
@@ -181,9 +186,8 @@ fun main() = runBlocking {
 
 - `credential { }`: Build credential inline using CredentialBuilder DSL
 - `credential(VerifiableCredential)`: Use a pre-built credential
-- `signedBy(issuerDid: String, keyId: String)`: Specify issuer DID and key ID (required)
-- `signedBy(issuerDid: Did, keyId: String)`: Specify issuer DID (Did object) and key ID
-- `signedBy(issuer: IssuerIdentity)`: Specify issuer identity object
+- `signedBy(issuerDid: Did)`: Specify issuer DID (key ID auto-extracted)
+- `signedBy(issuerDid: Did, keyId: String)`: Specify issuer DID (Did object) and explicit key ID
 - `withProof(ProofSuiteId)`: Set proof suite (e.g., `ProofSuiteId.VC_LD`, `ProofSuiteId.VC_JWT`)
 - `challenge(String)`: Set proof challenge for verification
 - `domain(String)`: Set proof domain for verification
@@ -200,10 +204,11 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build { /* ... configuration ... */ }
     
+    val issuerDid = Did("did:key:university")
     val issuanceResult = trustWeave.issue {
         credential {
             type("DegreeCredential")
-            issuer("did:key:university")
+            issuer(issuerDid)
             subject {
                 id("did:key:student")
                 "degree" {
@@ -214,7 +219,7 @@ fun main() = runBlocking {
             issued(Clock.System.now())
             // Note: withRevocation() is called in the issue block, not credential block
         }
-        signedBy(issuerDid = "did:key:university", keyId = "key-1")
+        signedBy(issuerDid = issuerDid, keyId = "key-1")
         withProof(ProofSuiteId.VC_LD)  // Use ProofSuiteId, not ProofType
         challenge("challenge-123")
         domain("example.com")
@@ -230,7 +235,7 @@ fun main() = runBlocking {
 Verify credentials with exhaustive error handling using sealed result types:
 
 ```kotlin
-import org.trustweave.trust.types.VerificationResult
+import org.trustweave.credential.results.VerificationResult
 
 val result = trustWeave.verify {
     credential(credential)
@@ -269,13 +274,14 @@ Create and manage wallets:
 
 ```kotlin
 import org.trustweave.trust.types.WalletCreationResult
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.credential.results.getOrThrow
 
 val walletResult = trustWeave.wallet {
     holder("did:key:holder")
     // Additional wallet configuration
 }
 
-import org.trustweave.trust.types.getOrThrow
 
 val wallet = walletResult.getOrThrow()
 
@@ -294,6 +300,9 @@ val credentials = wallet.query {
 Manage trust anchors:
 
 ```kotlin
+import org.trustweave.did.identifiers.Did
+import org.trustweave.trust.types.TrustPath
+
 trustWeave.trust {
     addAnchor("did:key:university") {
         credentialTypes("EducationCredential")
@@ -301,7 +310,10 @@ trustWeave.trust {
     }
 
     val isTrusted = isTrusted("did:key:university", "EducationCredential")
-    val path = getTrustPath("did:key:verifier", "did:key:issuer")
+    when (val path = findTrustPath(Did("did:key:verifier"), Did("did:key:issuer"))) {
+        is TrustPath.Verified -> { /* path.fullPath, path.trustScore */ }
+        is TrustPath.NotFound -> { /* no path */ }
+    }
 }
 ```
 
@@ -373,6 +385,9 @@ val result = trustWeave.createDid(method = "key") {
 ### Pattern 6: Batch Issuance
 
 ```kotlin
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.credential.results.getOrThrow
+
 trustWeave.issueBatch {
     requests = listOf(
         { credential { type("Cred1"); issuer(did1); subject { id(did1) } }; signedBy(did1, "key-1") },
@@ -380,7 +395,6 @@ trustWeave.issueBatch {
     )
     maxConcurrency = 5
 }.collect { result ->
-    import org.trustweave.trust.types.getOrThrow
     
     try {
         val credential = result.getOrThrow()
@@ -393,6 +407,6 @@ trustWeave.issueBatch {
 
 ## Next Steps
 
-- [Quick Start](quick-start.md) - Get started with a complete example
-- [API Reference](../api-reference/core-api.md) - Complete API documentation
-- [Core Concepts](../core-concepts/README.md) - Deep dives into DIDs, VCs, etc.
+- Quick Start](quick-start.md) - Get started with a complete example
+- API Reference](../api-reference/core-api.md) - Complete API documentation
+- Core Concepts](../core-concepts/README.md) - Deep dives into DIDs, VCs, etc.

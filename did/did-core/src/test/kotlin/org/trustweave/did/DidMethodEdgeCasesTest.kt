@@ -83,7 +83,7 @@ class DidMethodEdgeCasesTest {
         val originalDoc = DidDocument(id = Did("did:test:123"))
 
         val updated = method.updateDid(Did("did:test:123")) { doc ->
-            doc.copy(alsoKnownAs = listOf(Did("did:web:example.com")))
+            doc.copy(alsoKnownAs = listOf(org.trustweave.did.model.DidOrUrl.AsDid(Did("did:web:example.com"))))
         }
 
         assertNotNull(updated)

@@ -11,6 +11,8 @@ For commercial licensing inquiries, contact: licensing@geoknoesis.com
 
 Website: https://www.geoknoesis.com
 
+DID support in TrustWeave is implemented with the goal of alignment with [Decentralized Identifiers (DIDs) v1.1](https://www.w3.org/TR/did-1.1/) (W3C Candidate Recommendation). Conformance roles (consumer, producer, resolver) and gaps are documented in the project under `docs/reference/did-core-1-1-compliance-and-gaps.md`.
+
 ---
 
 ## Third-Party Dependencies

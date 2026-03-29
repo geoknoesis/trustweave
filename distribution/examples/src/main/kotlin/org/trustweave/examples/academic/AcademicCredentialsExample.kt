@@ -1,19 +1,20 @@
 package org.trustweave.examples.academic
 
-import org.trustweave.core.identifiers.Iri
-import org.trustweave.credential.identifiers.CredentialId
-import org.trustweave.credential.model.CredentialType
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.trust.types.getOrThrow
 import org.trustweave.credential.model.ProofType
 import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.credential.model.vc.VerifiablePresentation
-import org.trustweave.testkit.getOrFail
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.trust.dsl.credential.credential
+import org.trustweave.trust.dsl.credential.presentationResult
+import org.trustweave.trust.types.PresentationResult
 import org.trustweave.trust.dsl.wallet.QueryBuilder
 import org.trustweave.trust.dsl.wallet.organize
 import org.trustweave.trust.types.*
+import org.trustweave.credential.results.VerificationResult
 import org.trustweave.wallet.CredentialOrganization
 import org.trustweave.wallet.Wallet
 import kotlinx.coroutines.runBlocking
@@ -23,8 +24,8 @@ import kotlin.time.Duration.Companion.days
 fun main() = runBlocking {
     println("=== Academic Credentials Scenario ===\n")
 
-    // Step 1: Configure Trust Layer (simplified with smart defaults)
-    println("Step 1: Configuring trust layer...")
+    // Step 1: Configure TrustWeave (simplified with smart defaults)
+    println("Step 1: Configuring TrustWeave...")
     val kms = InMemoryKeyManagementService()
 
     val trustWeave = TrustWeave.build {
@@ -33,15 +34,15 @@ fun main() = runBlocking {
         anchor { chain("algorand:testnet") { inMemory() } }
         credentials { defaultProofType(ProofType.Ed25519Signature2020) }
     }
-    println("✓ Trust layer configured")
+    println("✓ TrustWeave configured")
 
     // Step 2: Create DIDs (simplified with auto key extraction)
     println("\nStep 2: Creating DIDs...")
-    val (universityDid, issuerKeyId) = trustWeave.createDidWithKey().getOrFail()
+    val (universityDid, issuerKeyId) = trustWeave.createDidWithKey().getOrThrow()
     println("University DID: ${universityDid.value}")
     println("✓ Key ID: $issuerKeyId")
 
-    val studentDid = trustWeave.createDid().getOrFail()
+    val studentDid = trustWeave.createDid().getOrThrowDid()
     println("Student DID: ${studentDid.value}")
 
     // Step 3: Create student wallet using DSL
@@ -51,7 +52,7 @@ fun main() = runBlocking {
         holder(studentDid.value)
         enableOrganization()
         enablePresentation()
-    }.getOrFail()
+    }.getOrThrow()
     println("Wallet created with ID: ${studentWallet.walletId}")
 
     // Step 4: University issues degree credential using DSL
@@ -80,7 +81,7 @@ fun main() = runBlocking {
             expires((365 * 10).days) // Valid for 10 years
         }
         signedBy(universityDid)  // Auto-extract key ID
-    }.getOrFail()
+    }.getOrThrow()
 
     println("Credential issued:")
     println("  - Type: ${issuedCredential.type}")
@@ -113,21 +114,24 @@ fun main() = runBlocking {
     }
     println("Found ${degrees.size} valid degree credentials")
 
-    // Step 8: Create presentation (for demonstration purposes)
-    // Note: In a real scenario, this would be signed with the holder's key
+    // Step 8: Build verifiable presentation via TrustWeave (sealed PresentationResult)
     println("\nStep 8: Creating presentation for job application...")
-    val presentation = VerifiablePresentation(
-        id = CredentialId("urn:example:presentation:${System.currentTimeMillis()}"),
-        type = listOf(CredentialType.fromString("VerifiablePresentation")),
-        verifiableCredential = listOf(issuedCredential),
-        holder = Iri(studentDid.value),
-        challenge = "job-application-12345"
-    )
-
-    println("Presentation created:")
-    println("  - Holder: ${presentation.holder}")
-    println("  - Credentials: ${presentation.verifiableCredential.size}")
-    println("  - Challenge: ${presentation.challenge}")
+    when (val pr = trustWeave.presentationResult {
+        holder(studentDid)
+        credentials(issuedCredential)
+        challenge("job-application-12345")
+    }) {
+        is PresentationResult.Success -> {
+            val presentation = pr.presentation
+            println("Presentation created:")
+            println("  - Holder: ${presentation.holder}")
+            println("  - Credentials: ${presentation.verifiableCredential.size}")
+            println("  - Challenge: ${presentation.challenge}")
+        }
+        is PresentationResult.Failure -> {
+            println("Presentation not created: ${pr.errors.joinToString()}")
+        }
+    }
 
     // Step 9: Verify credential using DSL
     println("\nStep 9: Verifying credential...")
@@ -145,7 +149,7 @@ fun main() = runBlocking {
             println("  - Not expired: true")
             println("  - Not revoked: true")
         }
-        is VerificationResult.Invalid -> {
+        else -> {
             println("❌ Credential verification failed: ${verificationResult.allErrors.joinToString("; ")}")
         }
     }

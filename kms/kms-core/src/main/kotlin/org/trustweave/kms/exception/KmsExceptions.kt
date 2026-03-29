@@ -25,5 +25,38 @@ sealed class KmsException(
             "keyType" to keyType
         ).filterValues { it != null }
     )
+
+    data class KeyGenerationFailed(
+        val algorithm: String,
+        val reason: String,
+        override val cause: Throwable? = null
+    ) : KmsException(
+        code = "KEY_GENERATION_FAILED",
+        message = "Key generation failed for algorithm '$algorithm': $reason",
+        context = mapOf("algorithm" to algorithm, "reason" to reason),
+        cause = cause
+    )
+
+    data class SigningFailed(
+        val keyId: String,
+        val reason: String,
+        override val cause: Throwable? = null
+    ) : KmsException(
+        code = "SIGNING_FAILED",
+        message = "Signing failed for key '$keyId': $reason",
+        context = mapOf("keyId" to keyId, "reason" to reason),
+        cause = cause
+    )
+
+    data class KeyDeletionFailed(
+        val keyId: String,
+        val reason: String,
+        override val cause: Throwable? = null
+    ) : KmsException(
+        code = "KEY_DELETION_FAILED",
+        message = "Key deletion failed for key '$keyId': $reason",
+        context = mapOf("keyId" to keyId, "reason" to reason),
+        cause = cause
+    )
 }
 

@@ -9,7 +9,6 @@ import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.base.AbstractBlockchainDidMethod
 import org.trustweave.did.base.DidMethodUtils
 import org.trustweave.kms.KeyManagementService
-import org.trustweave.kms.results.GenerateKeyResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -78,25 +77,8 @@ class CheqdDidMethod(
 
     override suspend fun createDid(options: DidCreationOptions): DidDocument = withContext(Dispatchers.IO) {
         try {
-            // Generate key using KMS
             val algorithm = options.algorithm.algorithmName
-            val generateResult = kms.generateKey(algorithm, options.additionalProperties)
-            val keyHandle = when (generateResult) {
-                is GenerateKeyResult.Success -> generateResult.keyHandle
-                is GenerateKeyResult.Failure.UnsupportedAlgorithm -> throw TrustWeaveException.Unknown(
-                    code = "UNSUPPORTED_ALGORITHM",
-                    message = generateResult.reason ?: "Algorithm not supported"
-                )
-                is GenerateKeyResult.Failure.InvalidOptions -> throw TrustWeaveException.Unknown(
-                    code = "INVALID_OPTIONS",
-                    message = generateResult.reason
-                )
-                is GenerateKeyResult.Failure.Error -> throw TrustWeaveException.Unknown(
-                    code = "KEY_GENERATION_ERROR",
-                    message = generateResult.reason,
-                    cause = generateResult.cause
-                )
-            }
+            val keyHandle = generateKey(algorithm, options.additionalProperties)
 
             // Create DID identifier
             val did = generateCheqdDid(keyHandle)

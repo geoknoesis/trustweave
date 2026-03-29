@@ -47,8 +47,8 @@ Deprecated APIs are marked with Kotlin's `@Deprecated` annotation:
     replaceWith = ReplaceWith("trustWeave.verify { credential(credential) }"),
     level = DeprecationLevel.WARNING
 )
-fun verifyCredential(credential: VerifiableCredential): VerificationResult {
-    // Deprecated implementation
+fun legacyVerifyCredential(credential: VerifiableCredential): VerificationResult {
+    // Deprecated implementation — callers should use trustWeave.verify(credential) or verify { … }
 }
 ```
 
@@ -160,8 +160,8 @@ Breaking changes only occur in major versions:
 Kotlin compiler shows deprecation warnings:
 
 ```kotlin
-// Warning: 'verifyCredential()' is deprecated
-val result = verifyCredential(credential)
+// Warning: 'legacyVerifyCredential()' is deprecated
+val result = legacyVerifyCredential(credential)
 ```
 
 ### Runtime Warnings
@@ -215,10 +215,10 @@ If you encounter issues with deprecated APIs:
 
 ## Related Documentation
 
-- [Version Compatibility Matrix](version-compatibility.md) - Version requirements
-- [Migration Guides](../migration/README.md) - Upgrade instructions
-- [API Reference](../api-reference/README.md) - Complete API documentation
-- [Release Notes](../CHANGELOG.md) - Version history and changes
+- Version Compatibility Matrix](version-compatibility.md) - Version requirements
+- Migration Guides](../migration/README.md) - Upgrade instructions
+- API Reference](../api-reference/README.md) - Complete API documentation
+- Release Notes](../CHANGELOG.md) - Version history and changes
 
 ---
 

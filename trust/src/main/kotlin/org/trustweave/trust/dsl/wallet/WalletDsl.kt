@@ -1,6 +1,6 @@
 package org.trustweave.trust.dsl.wallet
 
-import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.context.WalletDslContext
 import org.trustweave.wallet.Wallet
 import org.trustweave.wallet.services.WalletCreationOptionsBuilder
 import org.trustweave.wallet.exception.WalletException
@@ -24,7 +24,7 @@ import kotlinx.coroutines.withContext
  * ```
  */
 class WalletBuilder(
-    private val trustWeave: TrustWeave
+    private val walletContext: WalletDslContext
 ) {
     private var walletId: String? = null
     private var holderDid: String? = null
@@ -127,7 +127,7 @@ class WalletBuilder(
         val finalOptions = optionsBuilder.build()
 
         // Use WalletFactory from provider
-        val walletFactory = trustWeave.getWalletFactory()
+        val walletFactory = walletContext.getWalletFactory()
             ?: throw WalletException.WalletFactoryNotConfigured()
 
         return@withContext walletFactory.create(
@@ -139,8 +139,4 @@ class WalletBuilder(
         )
     }
 }
-
-// Extension function removed to avoid shadowing TrustWeave.wallet() member function
-// Use TrustWeave.wallet { ... }.getOrFail() instead
-
 

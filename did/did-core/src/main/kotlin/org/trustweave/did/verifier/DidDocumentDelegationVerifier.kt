@@ -33,17 +33,6 @@ class DidDocumentDelegationVerifier(
     private val didResolver: DidResolver
 ) {
 
-    constructor(
-        resolveDid: suspend (String) -> DidResolutionResult?
-    ) : this(
-        DidResolver { did: Did ->
-            resolveDid(did.value) ?: DidResolutionResult.Failure.NotFound(
-                did = did,
-                reason = "DID not found"
-            )
-        }
-    )
-
     /**
      * Verifies a DID document delegation relationship between a delegator and delegate.
      *
@@ -198,9 +187,10 @@ class DidDocumentDelegationVerifier(
      */
     private fun hasDelegationCredential(doc: DidDocument): Boolean {
         return doc.service.any { service ->
-            val serviceType = service.type
-            serviceType.contains("DelegationCredential", ignoreCase = true) ||
-            serviceType.contains("VerifiableCredential", ignoreCase = true)
+            service.type.any { t ->
+                t.contains("DelegationCredential", ignoreCase = true) ||
+                t.contains("VerifiableCredential", ignoreCase = true)
+            }
         }
     }
 
@@ -219,9 +209,10 @@ class DidDocumentDelegationVerifier(
         delegateDid: Did
     ): Boolean = withContext(Dispatchers.IO) {
         val delegationServices = delegatorDoc.service.filter { service ->
-            val serviceType = service.type
-            serviceType.contains("DelegationCredential", ignoreCase = true) ||
-            serviceType.contains("VerifiableCredential", ignoreCase = true)
+            service.type.any { t ->
+                t.contains("DelegationCredential", ignoreCase = true) ||
+                t.contains("VerifiableCredential", ignoreCase = true)
+            }
         }
 
         if (delegationServices.isEmpty()) {
@@ -231,20 +222,16 @@ class DidDocumentDelegationVerifier(
 
         // For each delegation credential service, verify it
         for (service in delegationServices) {
-            val serviceEndpoint = service.serviceEndpoint
-
             // If service endpoint is a VerifiableCredential, verify it
             // Note: This is a simplified check. Full verification requires CredentialVerifier
-            if (serviceEndpoint != null) {
-                val credentialValid = verifyDelegationCredentialContent(
-                    credential = serviceEndpoint,
-                    delegatorDid = delegatorDoc.id.value,
-                    delegateDid = delegateDid.value
-                )
+            val credentialValid = verifyDelegationCredentialContent(
+                credential = service.serviceEndpoint,
+                delegatorDid = delegatorDoc.id.value,
+                delegateDid = delegateDid.value
+            )
 
-                if (!credentialValid) {
-                    return@withContext false
-                }
+            if (!credentialValid) {
+                return@withContext false
             }
         }
 

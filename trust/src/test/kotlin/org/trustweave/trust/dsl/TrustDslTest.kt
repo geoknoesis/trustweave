@@ -21,7 +21,7 @@ import kotlin.test.assertTrue
 class TrustDslTest {
 
     @Test
-    fun `test trust layer configuration with trust registry`() = runBlocking {
+    fun `test TrustWeave configuration with trust registry`() = runBlocking {
         val trustWeave = TrustWeave.build {
             factories(
                 trustRegistryFactory = TestkitTrustRegistryFactory()

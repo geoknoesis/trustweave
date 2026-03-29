@@ -25,11 +25,11 @@ This document shows how **TrustWeave** serves as the trust and integrity foundat
 ### TrustWeave Solution
 
 **Standardized EO Data Oracle:**
-- ✅ Accept EO data from any certified provider using W3C Verifiable Credentials
-- ✅ Cryptographic proof of data integrity prevents tampering
-- ✅ Blockchain anchoring for tamper-proof audit trails
-- ✅ Multi-provider support without custom integrations
-- ✅ Automated trigger verification for instant payouts
+- Accept EO data from any certified provider using W3C Verifiable Credentials
+- Cryptographic proof of data integrity prevents tampering
+- Blockchain anchoring for tamper-proof audit trails
+- Multi-provider support without custom integrations
+- Automated trigger verification for instant payouts
 
 ## High-Level Architecture
 
@@ -50,7 +50,7 @@ This document shows how **TrustWeave** serves as the trust and integrity foundat
                     │ Issues VC                     │ Verifies VC
                     │                               │
         ┌───────────▼───────────────────────────────▼──────────┐
-        │         TrustWeave Trust Layer                         │
+        │              TrustWeave core                           │
         │  ┌──────────────────────────────────────────────┐    │
         │  │  DID Management                              │    │
         │  │  - EO Provider DIDs                         │    │
@@ -144,9 +144,13 @@ Automatic Payout
 
 **Purpose**: Identity for all participants
 ```kotlin
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.testkit.services.*
+
 // Create DIDs for EO providers, insurers, reinsurers
-val eoProviderDid = trustWeave.createDid { method(KEY) }
-val insuranceDid = trustWeave.createDid { method(KEY) }
+val eoProviderDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+val insuranceDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 ```
 
 ### 2. Smart Contracts
@@ -169,7 +173,7 @@ val contract = trustWeave.contracts.draft(
 // Bind contract (issues VC and anchors)
 val bound = trustWeave.contracts.bindContract(
     contractId = contract.id,
-    issuerDid = insurerDid,
+    issuerDid = insurerDid.value,
     issuerKeyId = insurerKeyId
 ).getOrThrow()
 
@@ -181,6 +185,8 @@ val active = trustWeave.contracts.activateContract(bound.contract.id).getOrThrow
 
 **Purpose**: Wrap EO data with cryptographic proof
 ```kotlin
+import org.trustweave.credential.results.getOrThrow
+
 // Issue EO data credential
 val floodCredential = trustWeave.issue {
     credential {
@@ -193,7 +199,7 @@ val floodCredential = trustWeave.issue {
         issued(Instant.now())
     }
     signedBy(issuerDid = eoProviderDid, keyId = eoProviderKeyId)
-}
+}.getOrThrow()
 ```
 
 ### 4. Contract Execution
@@ -239,11 +245,14 @@ when (verification) {
 
 **Purpose**: Tamper-proof audit trails
 ```kotlin
-// Anchor trigger to blockchain
+// Anchor trigger to blockchain (returns `AnchorResult` with chain reference)
+import org.trustweave.credential.model.vc.VerifiableCredential
+
 val anchorResult = trustWeave.blockchains.anchor(
     data = payoutCredential,
+    serializer = VerifiableCredential.serializer(),
     chainId = "algorand:mainnet"
-).getOrThrow()
+)
 ```
 
 ### 7. Multi-Provider Support
@@ -284,10 +293,10 @@ val eoData = acceptEoDataCredential(dataCredential)
 ### Phase 1: MVP (Weeks 1-6)
 
 **TrustWeave Setup:**
-- ✅ Initialize TrustWeave with blockchain anchoring
-- ✅ Create DIDs for EO providers
-- ✅ Build SAR flood credential issuance
-- ✅ Implement trigger verification
+- Initialize TrustWeave with blockchain anchoring
+- Create DIDs for EO providers
+- Build SAR flood credential issuance
+- Implement trigger verification
 
 **Deliverables:**
 - SAR flood product working
@@ -298,11 +307,11 @@ val eoData = acceptEoDataCredential(dataCredential)
 ### Phase 2: Production (Months 2-12)
 
 **TrustWeave Enhancements:**
-- ✅ Multi-provider EO data acceptance
-- ✅ Heatwave product with LST credentials
-- ✅ Solar attenuation product with AOD credentials
-- ✅ Regulatory compliance features
-- ✅ Reinsurer dashboard with VC verification
+- Multi-provider EO data acceptance
+- Heatwave product with LST credentials
+- Solar attenuation product with AOD credentials
+- Regulatory compliance features
+- Reinsurer dashboard with VC verification
 
 **Deliverables:**
 - 3 products live
@@ -313,10 +322,10 @@ val eoData = acceptEoDataCredential(dataCredential)
 ### Phase 3: Scale (Months 12-24)
 
 **TrustWeave Scale:**
-- ✅ Hurricane product
-- ✅ Drought/NDVI product
-- ✅ Enterprise licensing
-- ✅ Global expansion
+- Hurricane product
+- Drought/NDVI product
+- Enterprise licensing
+- Global expansion
 
 ## Competitive Advantage
 
@@ -369,43 +378,46 @@ See [Parametric Insurance MGA Implementation Guide](parametric-insurance-mga-imp
 
 ### 2. Explore TrustWeave
 
-- [Quick Start](../getting-started/quick-start.md)
-- [Parametric Insurance with EO Data](parametric-insurance-eo-scenario.md)
-- [Earth Observation Scenario](earth-observation-scenario.md)
+- Quick Start](../getting-started/quick-start.md)
+- Parametric Insurance with EO Data](parametric-insurance-eo-scenario.md)
+- Earth Observation Scenario](earth-observation-scenario.md)
 
 ### 3. Start Building
 
 ```kotlin
-// Initialize TrustWeave
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.testkit.services.*
+
+// Initialize TrustWeave (configure real KMS / anchor providers in production)
 val trustWeave = TrustWeave.build {
-    factories(
-        kmsFactory = TestkitKmsFactory(),
-        didMethodFactory = TestkitDidMethodFactory()
-    )
-    keys { provider(IN_MEMORY); algorithm(ED25519) }
-    did { method(KEY) { algorithm(ED25519) } }
-    blockchains {
-        "algorand:mainnet" to AlgorandBlockchainAnchorClient(...)
+    keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+    did { method(KEY) { algorithm(KeyAlgorithms.ED25519) } }
+    anchor {
+        chain("algorand:mainnet") {
+            provider("algorand")
+            options { /* Algorand client options for mainnet */ }
+        }
     }
 }
 
 // Create EO provider DID
-val eoProviderDid = trustWeave.createDid { method(KEY) }
+val eoProviderDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 
 // Resolve DID to get key ID
-import org.trustweave.trust.types.getOrThrow
-import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.did.identifiers.extractKeyId
-
-// Helper extension for resolution results
-fun DidResolutionResult.getOrThrow() = when (this) {
-    is DidResolutionResult.Success -> this.document
-    else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
+val issuerDoc = when (val res = trustWeave.resolveDid(eoProviderDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> error("Failed to resolve issuer DID")
 }
-
-val issuerDoc = trustWeave.resolveDid(eoProviderDid).getOrThrow()
 val eoProviderKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
-    ?: throw IllegalStateException("No verification method found")
+    ?: error("No verification method found")
 
 // Issue EO data credential
 val floodCredential = trustWeave.issue {
@@ -417,11 +429,11 @@ val floodCredential = trustWeave.issue {
         }
         issued(Instant.now())
     }
-    signedBy(eoProviderDid)
-).getOrThrow()
+    signedBy(issuerDid = eoProviderDid, keyId = eoProviderKeyId)
+}.getOrThrow()
 
 // Anchor to blockchain
-trustWeave.blockchains.anchor(
+val anchorRef = trustWeave.blockchains.anchor(
     data = floodCredential,
     serializer = VerifiableCredential.serializer(),
     chainId = "algorand:mainnet"

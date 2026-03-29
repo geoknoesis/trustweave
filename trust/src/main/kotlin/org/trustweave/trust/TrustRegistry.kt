@@ -1,7 +1,7 @@
 package org.trustweave.trust
 
 import org.trustweave.credential.model.CredentialType
-import org.trustweave.credential.trust.TrustPolicy as CredentialTrustPolicy
+import org.trustweave.credential.trust.TrustEvaluator as CredentialTrustPolicy
 import org.trustweave.did.identifiers.Did
 import org.trustweave.trust.types.IssuerIdentity
 import org.trustweave.trust.types.TrustPath
@@ -33,7 +33,10 @@ import kotlinx.datetime.Clock
  * val isTrusted = registry.isTrustedIssuer("did:key:trusted-issuer", "EducationCredential")
  *
  * // Find trust path
- * val path = registry.getTrustPath("did:key:verifier", "did:key:issuer")
+ * val path = registry.findTrustPath(
+ *     VerifierIdentity(Did("did:key:verifier")),
+ *     IssuerIdentity(Did("did:key:issuer"))
+ * )
  * ```
  */
 interface TrustRegistry : CredentialTrustPolicy {
@@ -61,7 +64,7 @@ interface TrustRegistry : CredentialTrustPolicy {
      * @return true if the issuer is trusted, false otherwise
      */
     suspend fun isTrustedIssuer(issuer: IssuerIdentity, credentialType: CredentialType?): Boolean {
-        return isTrustedIssuer(issuer.value, credentialType?.value)
+        return isTrustedIssuer(issuer.did.value, credentialType?.value)
     }
 
     /**

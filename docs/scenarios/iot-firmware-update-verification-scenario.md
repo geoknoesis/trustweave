@@ -12,14 +12,14 @@ This guide demonstrates how to build an IoT firmware update verification system 
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created DIDs for manufacturers, update servers, and IoT devices
-- ✅ Issued firmware attestation credentials
-- ✅ Created firmware update authorization credentials
-- ✅ Implemented firmware integrity verification
-- ✅ Verified update authorization
-- ✅ Demonstrated version control and rollback
-- ✅ Implemented update history tracking
-- ✅ Created tamper-proof firmware provenance
+- Created DIDs for manufacturers, update servers, and IoT devices
+- Issued firmware attestation credentials
+- Created firmware update authorization credentials
+- Implemented firmware integrity verification
+- Verified update authorization
+- Demonstrated version control and rollback
+- Implemented update history tracking
+- Created tamper-proof firmware provenance
 
 ## Big Picture & Significance
 
@@ -142,7 +142,7 @@ Add TrustWeave dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -159,17 +159,25 @@ Here's the full IoT firmware update verification flow using the TrustWeave facad
 ```kotlin
 package com.example.iot.firmware.update
 
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
 import org.trustweave.core.*
-import org.trustweave.credential.PresentationOptions
-import org.trustweave.credential.wallet.Wallet
-import org.trustweave.json.DigestUtils
-import org.trustweave.spi.services.WalletCreationOptionsBuilder
+import org.trustweave.wallet.Wallet
+import org.trustweave.core.util.DigestUtils
+import org.trustweave.wallet.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
-import org.trustweave.credential.format.ProofSuiteId
+import org.trustweave.credential.model.ProofType
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Base64
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.testkit.services.*
+import org.trustweave.credential.results.getOrThrow
 
 fun main() = runBlocking {
     println("=".repeat(70))
@@ -180,40 +188,36 @@ fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
-        credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
+        credentials { defaultProofType(ProofType.Ed25519Signature2020) }
     }
-    println("\n✅ TrustWeave initialized")
+    println("\n[OK] TrustWeave initialized")
 
     // Step 2: Create DIDs for manufacturer, update server, and IoT device
-    import org.trustweave.trust.types.getOrThrowDid
-    import org.trustweave.trust.types.getOrThrow
-    import org.trustweave.did.resolver.DidResolutionResult
-    import org.trustweave.did.identifiers.extractKeyId
-    
-    // Helper extension for resolution results
-    fun DidResolutionResult.getOrThrow() = when (this) {
-        is DidResolutionResult.Success -> this.document
-        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
-    }
     
     val manufacturerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
-    val manufacturerDoc = trustWeave.resolveDid(manufacturerDid).getOrThrow()
+    val manufacturerDoc = when (val res = trustWeave.resolveDid(manufacturerDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val manufacturerKeyId = manufacturerDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     val updateServerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
-    val updateServerDoc = trustWeave.resolveDid(updateServerDid).getOrThrow()
+    val updateServerDoc = when (val res = trustWeave.resolveDid(updateServerDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val updateServerKeyId = updateServerDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     val deviceDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 
-    println("✅ Manufacturer DID: ${manufacturerDid.value}")
-    println("✅ Update Server DID: ${updateServerDid.value}")
-    println("✅ IoT Device DID: ${deviceDid.value}")
+    println("[OK] Manufacturer DID: ${manufacturerDid.value}")
+    println("[OK] Update Server DID: ${updateServerDid.value}")
+    println("[OK] IoT Device DID: ${deviceDid.value}")
 
     // Step 3: Simulate firmware creation and compute digest
-    println("\n📦 Firmware Creation:")
+    println("\n[firmware] Firmware Creation:")
 
     val firmwareVersion = "2.1.0"
     val firmwareContent = """
@@ -232,7 +236,6 @@ fun main() = runBlocking {
     println("   Firmware Digest: ${firmwareDigest.take(20)}...")
 
     // Step 4: Issue firmware attestation credential
-    import org.trustweave.trust.types.IssuanceResult
     
     val firmwareAttestationResult = trustWeave.issue {
         credential {
@@ -270,14 +273,14 @@ fun main() = runBlocking {
     
     val firmwareAttestation = firmwareAttestationResult.getOrThrow()
 
-    println("\n✅ Firmware attestation credential issued: ${firmwareAttestation.id}")
+    println("\n[OK] Firmware attestation credential issued: ${firmwareAttestation.id}")
 
     // Step 5: Issue firmware update authorization credential
     val updateAuthorizationResult = trustWeave.issue {
         credential {
             id("urn:update-auth:device-model-2024:$firmwareVersion")
             type("VerifiableCredential", "FirmwareUpdateAuthorizationCredential", "UpdateCredential")
-            issuer(updateServerDid.value)
+            issuer(updateServerDid)
             subject {
                 id("urn:update-auth:device-model-2024:$firmwareVersion")
                 "updateAuthorization" {
@@ -305,12 +308,12 @@ fun main() = runBlocking {
             issued(Instant.now())
             expires(30, ChronoUnit.DAYS) // Authorization expires
         }
-        signedBy(issuerDid = updateServerDid.value, keyId = updateServerKeyId)
+        signedBy(issuerDid = updateServerDid, keyId = updateServerKeyId)
     }
     
     val updateAuthorization = updateAuthorizationResult.getOrThrow()
 
-    println("✅ Firmware update authorization credential issued: ${updateAuthorization.id}")
+    println("[OK] Firmware update authorization credential issued: ${updateAuthorization.id}")
 
     // Step 6: Create device wallet and store credentials
     val deviceWallet = trustWeave.wallet {
@@ -322,7 +325,7 @@ fun main() = runBlocking {
     val firmwareAttestationId = deviceWallet.store(firmwareAttestation)
     val updateAuthorizationId = deviceWallet.store(updateAuthorization)
 
-    println("\n✅ Firmware credentials stored in device wallet")
+    println("\n[OK] Firmware credentials stored in device wallet")
 
     // Step 7: Organize credentials
     deviceWallet.withOrganization { org ->
@@ -334,13 +337,12 @@ fun main() = runBlocking {
         org.tagCredential(firmwareAttestationId, setOf("firmware", "attestation", "security", "update"))
         org.tagCredential(updateAuthorizationId, setOf("firmware", "authorization", "update", "policy"))
 
-        println("✅ Firmware credentials organized")
+        println("[OK] Firmware credentials organized")
     }
 
     // Step 8: Device verification - Firmware attestation
-    println("\n🔍 Device Verification - Firmware Attestation:")
+    println("\n[consumer] Device Verification - Firmware Attestation:")
 
-    import org.trustweave.trust.types.VerificationResult
     
     val firmwareVerification = trustWeave.verify {
         credential(firmwareAttestation)
@@ -354,29 +356,29 @@ fun main() = runBlocking {
         val manufacturer = firmware?.get("manufacturer")?.jsonPrimitive?.content
         val firmwareDigestFromCredential = firmware?.get("firmwareDigest")?.jsonPrimitive?.content
 
-        println("✅ Firmware Attestation Credential: VALID")
+        println("[OK] Firmware Attestation Credential: VALID")
         println("   Version: $version")
         println("   Manufacturer: ${manufacturer?.take(20)}...")
         println("   Firmware Digest: ${firmwareDigestFromCredential?.take(20)}...")
 
         // Verify firmware digest matches actual firmware
         if (firmwareDigestFromCredential == firmwareDigest) {
-            println("✅ Firmware digest matches")
-            println("✅ Firmware authenticity VERIFIED")
+            println("[OK] Firmware digest matches")
+            println("[OK] Firmware authenticity VERIFIED")
         } else {
-            println("❌ Firmware digest mismatch")
-            println("❌ Firmware authenticity NOT VERIFIED")
-            println("❌ Firmware may have been tampered with")
+            println("[FAIL] Firmware digest mismatch")
+            println("[FAIL] Firmware authenticity NOT VERIFIED")
+            println("[FAIL] Firmware may have been tampered with")
         }
         }
         is VerificationResult.Invalid -> {
-            println("❌ Firmware Attestation Credential: INVALID")
-            println("❌ Firmware authenticity NOT VERIFIED")
+            println("[FAIL] Firmware Attestation Credential: INVALID")
+            println("[FAIL] Firmware authenticity NOT VERIFIED")
         }
     }
 
     // Step 9: Device verification - Update authorization
-    println("\n🔍 Device Verification - Update Authorization:")
+    println("\n[consumer] Device Verification - Update Authorization:")
 
     val authorizationVerification = trustWeave.verify {
         credential(updateAuthorization)
@@ -391,25 +393,25 @@ fun main() = runBlocking {
         val updateType = updatePolicy?.get("updateType")?.jsonPrimitive?.content
         val rollbackAllowed = updatePolicy?.get("rollbackAllowed")?.jsonPrimitive?.content?.toBoolean() ?: false
 
-        println("✅ Update Authorization Credential: VALID")
+        println("[OK] Update Authorization Credential: VALID")
         println("   Authorized: $authorized")
         println("   Update Type: $updateType")
         println("   Rollback Allowed: $rollbackAllowed")
 
         if (authorized) {
-            println("✅ Update authorization VERIFIED")
-            println("✅ Update is authorized for installation")
+            println("[OK] Update authorization VERIFIED")
+            println("[OK] Update is authorized for installation")
         } else {
-            println("❌ Update authorization NOT VERIFIED")
-            println("❌ Update is NOT authorized")
+            println("[FAIL] Update authorization NOT VERIFIED")
+            println("[FAIL] Update is NOT authorized")
         }
     } else {
-        println("❌ Update Authorization Credential: INVALID")
-        println("❌ Update authorization NOT VERIFIED")
+        println("[FAIL] Update Authorization Credential: INVALID")
+        println("[FAIL] Update authorization NOT VERIFIED")
     }
 
     // Step 10: Complete firmware update verification workflow
-    println("\n🔍 Complete Firmware Update Verification Workflow:")
+    println("\n[consumer] Complete Firmware Update Verification Workflow:")
 
     val firmwareValid = trustWeave.verify { credential(firmwareAttestation) } is VerificationResult.Valid
     val authorizationValid = trustWeave.verify { credential(updateAuthorization) } is VerificationResult.Valid
@@ -421,25 +423,25 @@ fun main() = runBlocking {
         val firmwareDigestFromCredential = firmware?.get("firmwareDigest")?.jsonPrimitive?.content
 
         if (firmwareDigestFromCredential == firmwareDigest) {
-            println("✅ Firmware Attestation: VERIFIED")
-            println("✅ Update Authorization: VERIFIED")
-            println("✅ Firmware Integrity: VERIFIED")
-            println("✅ All verifications passed")
-            println("✅ Firmware update is SAFE to install")
-            println("✅ Proceeding with firmware update installation")
+            println("[OK] Firmware Attestation: VERIFIED")
+            println("[OK] Update Authorization: VERIFIED")
+            println("[OK] Firmware Integrity: VERIFIED")
+            println("[OK] All verifications passed")
+            println("[OK] Firmware update is SAFE to install")
+            println("[OK] Proceeding with firmware update installation")
         } else {
-            println("❌ Firmware digest mismatch")
-            println("❌ Firmware update is NOT SAFE to install")
-            println("❌ Update installation BLOCKED")
+            println("[FAIL] Firmware digest mismatch")
+            println("[FAIL] Firmware update is NOT SAFE to install")
+            println("[FAIL] Update installation BLOCKED")
         }
     } else {
-        println("❌ One or more verifications failed")
-        println("❌ Firmware update is NOT SAFE to install")
-        println("❌ Update installation BLOCKED")
+        println("[FAIL] One or more verifications failed")
+        println("[FAIL] Firmware update is NOT SAFE to install")
+        println("[FAIL] Update installation BLOCKED")
     }
 
     // Step 11: Firmware rollback scenario
-    println("\n🔄 Firmware Rollback Scenario:")
+    println("\n[rollback] Firmware Rollback Scenario:")
 
     val currentFirmwareVersion = "2.0.0"
     val newFirmwareVersion = firmwareVersion
@@ -452,16 +454,16 @@ fun main() = runBlocking {
     val rollbackAllowed = updateAuth?.get("updatePolicy")?.jsonObject?.get("rollbackAllowed")?.jsonPrimitive?.content?.toBoolean() ?: false
 
     if (rollbackAllowed) {
-        println("✅ Rollback is allowed")
-        println("✅ Device can rollback to previous firmware version if needed")
+        println("[OK] Rollback is allowed")
+        println("[OK] Device can rollback to previous firmware version if needed")
     } else {
-        println("❌ Rollback is not allowed")
-        println("❌ Device cannot rollback to previous firmware version")
+        println("[FAIL] Rollback is not allowed")
+        println("[FAIL] Device cannot rollback to previous firmware version")
     }
 
     // Step 12: Display wallet statistics
     val stats = deviceWallet.getStatistics()
-    println("\n📊 Device Wallet Statistics:")
+    println("\n[stats] Device Wallet Statistics:")
     println("   Total credentials: ${stats.totalCredentials}")
     println("   Valid credentials: ${stats.validCredentials}")
     println("   Collections: ${stats.collectionsCount}")
@@ -469,7 +471,7 @@ fun main() = runBlocking {
 
     // Step 13: Summary
     println("\n" + "=".repeat(70))
-    println("✅ IoT FIRMWARE UPDATE VERIFICATION SYSTEM COMPLETE")
+    println("[OK] IoT FIRMWARE UPDATE VERIFICATION SYSTEM COMPLETE")
     println("   Firmware attestation credentials issued")
     println("   Update authorization implemented")
     println("   Firmware integrity verification enabled")
@@ -485,60 +487,60 @@ fun main() = runBlocking {
 IoT Firmware Update Verification Scenario - Complete End-to-End Example
 ======================================================================
 
-✅ TrustWeave initialized
-✅ Manufacturer DID: did:key:z6Mk...
-✅ Update Server DID: did:key:z6Mk...
-✅ IoT Device DID: did:key:z6Mk...
+[OK] TrustWeave initialized
+[OK] Manufacturer DID: did:key:z6Mk...
+[OK] Update Server DID: did:key:z6Mk...
+[OK] IoT Device DID: did:key:z6Mk...
 
-📦 Firmware Creation:
+[firmware] Firmware Creation:
    Firmware Version: 2.1.0
    Firmware Size: 234 bytes
    Firmware Digest: u5v...
 
-✅ Firmware attestation credential issued: urn:uuid:...
-✅ Firmware update authorization credential issued: urn:uuid:...
+[OK] Firmware attestation credential issued: urn:uuid:...
+[OK] Firmware update authorization credential issued: urn:uuid:...
 
-✅ Firmware credentials stored in device wallet
-✅ Firmware credentials organized
+[OK] Firmware credentials stored in device wallet
+[OK] Firmware credentials organized
 
-🔍 Device Verification - Firmware Attestation:
-✅ Firmware Attestation Credential: VALID
+[verify] Device Verification - Firmware Attestation:
+[OK] Firmware Attestation Credential: VALID
    Version: 2.1.0
    Manufacturer: did:key:z6Mk...
    Firmware Digest: u5v...
-✅ Firmware digest matches
-✅ Firmware authenticity VERIFIED
+[OK] Firmware digest matches
+[OK] Firmware authenticity VERIFIED
 
-🔍 Device Verification - Update Authorization:
-✅ Update Authorization Credential: VALID
+[verify] Device Verification - Update Authorization:
+[OK] Update Authorization Credential: VALID
    Authorized: true
    Update Type: Mandatory
    Rollback Allowed: true
-✅ Update authorization VERIFIED
-✅ Update is authorized for installation
+[OK] Update authorization VERIFIED
+[OK] Update is authorized for installation
 
-🔍 Complete Firmware Update Verification Workflow:
-✅ Firmware Attestation: VERIFIED
-✅ Update Authorization: VERIFIED
-✅ Firmware Integrity: VERIFIED
-✅ All verifications passed
-✅ Firmware update is SAFE to install
-✅ Proceeding with firmware update installation
+[verify] Complete Firmware Update Verification Workflow:
+[OK] Firmware Attestation: VERIFIED
+[OK] Update Authorization: VERIFIED
+[OK] Firmware Integrity: VERIFIED
+[OK] All verifications passed
+[OK] Firmware update is SAFE to install
+[OK] Proceeding with firmware update installation
 
-🔄 Firmware Rollback Scenario:
+[transfer] Firmware Rollback Scenario:
    Current Firmware: 2.0.0
    New Firmware: 2.1.0
-✅ Rollback is allowed
-✅ Device can rollback to previous firmware version if needed
+[OK] Rollback is allowed
+[OK] Device can rollback to previous firmware version if needed
 
-📊 Device Wallet Statistics:
+[stats] Device Wallet Statistics:
    Total credentials: 2
    Valid credentials: 2
    Collections: 1
    Tags: 4
 
 ======================================================================
-✅ IoT FIRMWARE UPDATE VERIFICATION SYSTEM COMPLETE
+[OK] IoT FIRMWARE UPDATE VERIFICATION SYSTEM COMPLETE
    Firmware attestation credentials issued
    Update authorization implemented
    Firmware integrity verification enabled
@@ -568,11 +570,11 @@ IoT Firmware Update Verification Scenario - Complete End-to-End Example
 
 ## Related Documentation
 
-- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
-- [IoT Device Identity Scenario](iot-device-identity-scenario.md) - Related device identity scenario
-- [Software Supply Chain Security Scenario](software-supply-chain-security-scenario.md) - Related software security scenario
-- [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
-- [API Reference](../api-reference/core-api.md) - Complete API documentation
-- [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+- Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
+- IoT Device Identity Scenario](iot-device-identity-scenario.md) - Related device identity scenario
+- Software Supply Chain Security Scenario](software-supply-chain-security-scenario.md) - Related software security scenario
+- Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
+- API Reference](../api-reference/core-api.md) - Complete API documentation
+- Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
 
 

@@ -22,11 +22,11 @@ Add the did:cheqd module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave.did:cheqd:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("org.trustweave.did:base:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:did-plugins-cheqd:0.6.0")
+    implementation("org.trustweave:did-did-core:0.6.0")
+    implementation("org.trustweave:did-plugins-base:0.6.0")
+    implementation("org.trustweave:anchors-anchor-core:0.6.0")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // HTTP client for Cheqd network integration
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
@@ -239,32 +239,38 @@ val config = CheqdDidConfig.builder()
 ## Integration with TrustWeave
 
 ```kotlin
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.did.KeyAlgorithm
+import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.cheqddid.*
-import org.trustweave.anchor.*
-import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.kms.InMemoryKeyManagementService
 
 val config = CheqdDidConfig.mainnet("https://api.cheqd.net")
-val anchorClient = InMemoryBlockchainAnchorClient("cheqd:mainnet")
+val kms = InMemoryKeyManagementService()
 
-val TrustWeave = TrustWeave.create {
-    kms = InMemoryKeyManagementService()
-
-    blockchain {
-        register("cheqd:mainnet", anchorClient)
+val trustWeave = TrustWeave.build {
+    customKms(kms)
+    anchor {
+        chain("cheqd:mainnet") { inMemory() }
     }
-
-    didMethods {
-        + CheqdDidMethod(kms!!, anchorClient, config)
+    did {
+        method("cheqd") {
+            algorithm("Ed25519")
+            option("cheqdConfig", config)
+        }
     }
 }
 
-// Use did:cheqd
-val did = TrustWeave.createDid("cheqd") {
-    algorithm = KeyAlgorithm.ED25519
-}.getOrThrow()
+val did = trustWeave.createDid {
+    method("cheqd")
+    algorithm(KeyAlgorithm.ED25519)
+}.getOrThrowDid()
 
-val resolved = TrustWeave.resolveDid(did.id).getOrThrow()
+when (val resolved = trustWeave.resolveDid(did)) {
+    is DidResolutionResult.Success -> println("Resolved: ${resolved.document.id}")
+    else -> println("Resolve failed: $resolved")
+}
 ```
 
 ## Payment-Enabled Operations
@@ -370,8 +376,8 @@ Cheqd is designed for verifiable credentials:
 
 ## References
 
-- [Cheqd Network Documentation](https://docs.cheqd.io/)
-- [Cheqd DID Method Specification](https://docs.cheqd.io/node/architecture/adr-list/adr-005-cheqd-did-method-specification)
-- [Cosmos SDK Documentation](https://docs.cosmos.network/)
-- [DID Core Specification](https://www.w3.org/TR/did-core/)
+- Cheqd Network Documentation](https://docs.cheqd.io/)
+- Cheqd DID Method Specification](https://docs.cheqd.io/node/architecture/adr-list/adr-005-cheqd-did-method-specification)
+- Cosmos SDK Documentation](https://docs.cosmos.network/)
+- DID Core Specification](https://www.w3.org/TR/did-core/)
 

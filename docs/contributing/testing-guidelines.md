@@ -117,36 +117,38 @@ class KmsTest {
 ### Testing Credential Workflows
 
 ```kotlin
-import org.trustweave.testkit.*
-import org.trustweave.TrustWeave
+import kotlinx.coroutines.runBlocking
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.*
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.trust.types.getOrThrowDid
 import kotlin.test.Test
+import kotlin.test.assertTrue
 
 class CredentialWorkflowTest {
     @Test
     fun testCredentialIssuanceAndVerification() = runBlocking {
-        val fixture = TrustWeaveTestFixture.builder()
-            .withInMemoryBlockchainClient("algorand:testnet")
-            .build()
-            .use { fixture ->
-                val TrustWeave = TrustWeave.create()
-
-                // Create issuer DID
-                val issuerDid = TrustWeave.createDid().getOrThrow()
-
-                // Issue credential
-                val credential = TrustWeave.issueCredential(
-                    issuerDid = issuerDid.id,
-                    issuerKeyId = issuerDid.document.verificationMethod.first().id,
-                    credentialSubject = buildJsonObject {
-                        put("id", "did:key:subject")
-                        put("name", "Alice")
-                    }
-                ).getOrThrow()
-
-                // Verify credential
-                val verificationResult = TrustWeave.verifyCredential(credential).getOrThrow()
-                assert(verificationResult.valid)
+        val trustWeave = TrustWeave.build {
+            keys { provider(IN_MEMORY); algorithm(ED25519) }
+            did { method(KEY) { algorithm(ED25519) } }
+        }
+        val issuerDid = trustWeave.createDid { }.getOrThrowDid()
+        val credential = trustWeave.issue {
+            credential {
+                type("VerifiableCredential", "PersonCredential")
+                issuer(issuerDid)
+                subject {
+                    id("did:key:subject")
+                    "name" to "Alice"
+                }
             }
+            signedBy(issuerDid, "key-1")
+        }.getOrThrow()
+        val verification = trustWeave.verify(credential)
+        assertTrue(verification is VerificationResult.Valid, verification.toString())
     }
 }
 ```
@@ -156,6 +158,7 @@ class CredentialWorkflowTest {
 ### EO Integration Tests
 
 ```kotlin
+import org.trustweave.credential.results.VerificationResult
 import org.trustweave.testkit.eo.BaseEoIntegrationTest
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import org.trustweave.anchor.*
@@ -172,7 +175,7 @@ class MyEoIntegrationTest : BaseEoIntegrationTest() {
     @Test
     fun testEoScenario() = runBlocking {
         val result = runEoTestScenario()
-        assert(result.verificationResult.valid)
+        assert(result.verificationResult is VerificationResult.Valid)
     }
 }
 ```
@@ -186,6 +189,7 @@ Use test fixtures for setup:
 ```kotlin
 import org.trustweave.testkit.*
 import kotlin.test.Test
+import org.trustweave.testkit.services.*
 
 class FixtureTest {
     @Test
@@ -218,7 +222,7 @@ fun testErrorHandling() = runBlocking {
     result.fold(
         onSuccess = { fail("Expected error") },
         onFailure = { error ->
-            assert(error is TrustWeaveError.KeyNotFound)
+            assert(error is TrustWeaveException.NotFound)
         }
     )
 }
@@ -235,7 +239,7 @@ fun testInvalidInput() = runBlocking {
     result.fold(
         onSuccess = { fail("Expected error") },
         onFailure = { error ->
-            assert(error is TrustWeaveError.DidResolutionFailed)
+            assert(error is DidException.DidResolutionFailed)
         }
     )
 }
@@ -328,8 +332,8 @@ Aim for:
 
 ## References
 
-- [trustweave-testkit Module](../modules/trustweave-testkit.md)
-- [Testing Strategies](../advanced/testing-strategies.md)
-- [Kotlin Test Documentation](https://kotlinlang.org/api/latest/kotlin.test/)
+- trustweave-testkit Module](../modules/trustweave-testkit.md)
+- Testing Strategies](../advanced/testing-strategies.md)
+- Kotlin Test Documentation](https://kotlinlang.org/api/latest/kotlin.test/)
 
 

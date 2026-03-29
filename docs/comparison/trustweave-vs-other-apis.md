@@ -154,13 +154,13 @@ This document provides a detailed comparison of TrustWeave with other decentrali
 ### TrustWeave
 
 **Strengths:**
-- ✅ **True Agnosticism**: Domain-agnostic, chain-agnostic, DID-method-agnostic, KMS-agnostic
-- ✅ **Blockchain Anchoring**: Comprehensive blockchain support with smart contract capabilities
-- ✅ **Type Safety**: Leverages Kotlin's strong type system
-- ✅ **Coroutines**: Modern async/await patterns
-- ✅ **Extensibility**: SPI-based plugin system
-- ✅ **Smart Contracts**: Built-in contract drafting, binding, and execution
-- ✅ **CAIP-2 Compliance**: Chain-agnostic blockchain identifiers
+- True Agnosticism**: Domain-agnostic, chain-agnostic, DID-method-agnostic, KMS-agnostic
+- Blockchain Anchoring**: Comprehensive blockchain support with smart contract capabilities
+- Type Safety**: Leverages Kotlin's strong type system
+- Coroutines**: Modern async/await patterns
+- Extensibility**: SPI-based plugin system
+- Smart Contracts**: Built-in contract drafting, binding, and execution
+- CAIP-2 Compliance**: Chain-agnostic blockchain identifiers
 
 **Best For:**
 - Applications requiring blockchain anchoring and smart contracts
@@ -172,10 +172,10 @@ This document provides a detailed comparison of TrustWeave with other decentrali
 ### WaltId
 
 **Strengths:**
-- ✅ **Wallet-First**: Strong wallet and credential management
-- ✅ **SSI Infrastructure**: Comprehensive SSI tooling
-- ✅ **DIDComm Support**: Messaging protocol support
-- ✅ **Kotlin/Java**: Strong type safety
+- Wallet-First**: Strong wallet and credential management
+- SSI Infrastructure**: Comprehensive SSI tooling
+- DIDComm Support**: Messaging protocol support
+- Kotlin/Java**: Strong type safety
 
 **Best For:**
 - Wallet applications
@@ -186,10 +186,10 @@ This document provides a detailed comparison of TrustWeave with other decentrali
 ### Veramo
 
 **Strengths:**
-- ✅ **Modular Architecture**: Plugin-based framework
-- ✅ **TypeScript/JavaScript**: Web-first development
-- ✅ **DIDComm Support**: Messaging protocol support
-- ✅ **Active Community**: Large ecosystem
+- Modular Architecture**: Plugin-based framework
+- TypeScript/JavaScript**: Web-first development
+- DIDComm Support**: Messaging protocol support
+- Active Community**: Large ecosystem
 
 **Best For:**
 - Web applications
@@ -200,10 +200,10 @@ This document provides a detailed comparison of TrustWeave with other decentrali
 ### didkit
 
 **Strengths:**
-- ✅ **Rust Performance**: Excellent performance and memory safety
-- ✅ **Standards Compliance**: Strong W3C compliance
-- ✅ **Multi-Language Bindings**: Python, JavaScript, etc.
-- ✅ **Security**: Memory-safe implementation
+- Rust Performance**: Excellent performance and memory safety
+- Standards Compliance**: Strong W3C compliance
+- Multi-Language Bindings**: Python, JavaScript, etc.
+- Security**: Memory-safe implementation
 
 **Best For:**
 - Performance-critical applications
@@ -214,9 +214,9 @@ This document provides a detailed comparison of TrustWeave with other decentrali
 ### did-jwt
 
 **Strengths:**
-- ✅ **JWT Focus**: Specialized for JWT-based credentials
-- ✅ **Lightweight**: Minimal dependencies
-- ✅ **Web-Friendly**: JavaScript/TypeScript
+- JWT Focus**: Specialized for JWT-based credentials
+- Lightweight**: Minimal dependencies
+- Web-Friendly**: JavaScript/TypeScript
 
 **Best For:**
 - JWT-based credential systems
@@ -274,5 +274,5 @@ This document provides a detailed comparison of TrustWeave with other decentrali
 ---
 
 *Last Updated: 2025-01-XX*
-*TrustWeave Version: 1.0.0-SNAPSHOT*
+*TrustWeave Version: 0.6.0*
 

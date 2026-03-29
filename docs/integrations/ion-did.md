@@ -22,10 +22,10 @@ Add the did:ion module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave.did:ion:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("org.trustweave.did:base:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:did-plugins-ion:0.6.0")
+    implementation("org.trustweave:did-did-core:0.6.0")
+    implementation("org.trustweave:did-plugins-base:0.6.0")
+    implementation("org.trustweave:common:0.6.0")
 }
 ```
 
@@ -220,25 +220,35 @@ val config = IonDidConfig.builder()
 ## Integration with TrustWeave
 
 ```kotlin
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.did.KeyAlgorithm
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.kms.InMemoryKeyManagementService
 import org.trustweave.iondid.*
 
 val config = IonDidConfig.testnet()
+val kms = InMemoryKeyManagementService()
 
-val TrustWeave = TrustWeave.create {
-    kms = InMemoryKeyManagementService()
-
-    didMethods {
-        + IonDidMethod(kms!!, config)
+val trustWeave = TrustWeave.build {
+    customKms(kms)
+    did {
+        method("ion") {
+            algorithm("Ed25519")
+            option("ionConfig", config)
+        }
     }
 }
 
-// Use did:ion
-val did = TrustWeave.createDid("ion") {
-    algorithm = KeyAlgorithm.ED25519
-}.getOrThrow()
+val did = trustWeave.createDid {
+    method("ion")
+    algorithm(KeyAlgorithm.ED25519)
+}.getOrThrowDid()
 
-val resolved = TrustWeave.resolveDid(did.id).getOrThrow()
+when (val resolved = trustWeave.resolveDid(did)) {
+    is DidResolutionResult.Success -> println("Resolved: ${resolved.document.id}")
+    else -> println("Resolve failed: $resolved")
+}
 ```
 
 ## Long-form vs Short-form DIDs
@@ -302,8 +312,8 @@ val document = method.createDid(options)
 
 ## References
 
-- [ION Specification](https://identity.foundation/ion/)
-- [Sidetree Protocol Specification](https://identity.foundation/sidetree/spec/)
-- [ION GitHub Repository](https://github.com/decentralized-identity/ion)
-- [ION Node Implementation](https://github.com/decentralized-identity/ion-sdk)
+- ION Specification](https://identity.foundation/ion/)
+- Sidetree Protocol Specification](https://identity.foundation/sidetree/spec/)
+- ION GitHub Repository](https://github.com/decentralized-identity/ion)
+- ION Node Implementation](https://github.com/decentralized-identity/ion-sdk)
 

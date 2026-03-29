@@ -209,14 +209,44 @@ inline fun <T> IssuanceResult.onFailure(action: (IssuanceResult.Failure) -> Unit
 }
 
 /**
- * Get value or throw exception.
+ * Get value or throw [IllegalStateException] with a contextual message for each failure case.
  */
 fun IssuanceResult.getOrThrow(): VerifiableCredential {
     return when (this) {
         is IssuanceResult.Success -> credential
-        is IssuanceResult.Failure -> throw IllegalArgumentException(
-            "Credential issuance failed: ${allErrors.joinToString("; ")}"
-        )
+        is IssuanceResult.Failure.UnsupportedFormat -> {
+            val suggestion = if (supportedFormats.isNotEmpty()) {
+                " Use one of the supported formats: ${supportedFormats.joinToString(", ") { it.value }}"
+            } else {
+                " No credential formats are available. Configure credential format support in TrustWeave.build { credentials { ... } }"
+            }
+            throw IllegalStateException(
+                "Unsupported credential format '${format.value}'.$suggestion"
+            )
+        }
+        is IssuanceResult.Failure.AdapterNotReady -> {
+            throw IllegalStateException(
+                "Credential service adapter not ready: ${reason ?: "Unknown reason"}. " +
+                    "Ensure the credential service is properly initialized and configured."
+            )
+        }
+        is IssuanceResult.Failure.InvalidRequest -> {
+            throw IllegalStateException(
+                "Invalid issuance request: field '${field}' - ${reason}. " +
+                    "Check that all required fields are provided and valid."
+            )
+        }
+        is IssuanceResult.Failure.AdapterError -> {
+            throw IllegalStateException(
+                "Credential service error: ${reason}. " +
+                    "This may indicate an issue with the credential service configuration or implementation."
+            )
+        }
+        is IssuanceResult.Failure.MultipleFailures -> {
+            throw IllegalStateException(
+                "Credential issuance failed with multiple errors: ${errors.joinToString("; ")}"
+            )
+        }
     }
 }
 

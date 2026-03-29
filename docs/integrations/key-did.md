@@ -30,11 +30,11 @@ Add the did:key module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave.did:key:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("org.trustweave.did:base:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:did-plugins-key:0.6.0")
+    implementation("org.trustweave:did-did-core:0.6.0")
+    implementation("org.trustweave:did-plugins-base:0.6.0")
+    implementation("org.trustweave:kms-kms-core:0.6.0")
+    implementation("org.trustweave:common:0.6.0")
 
     // Multibase encoding (included automatically)
     implementation("org.multiformats:multibase:1.1.2")
@@ -141,29 +141,34 @@ val p256Did = method.createDid(p256Options)
 ### Integration with TrustWeave
 
 ```kotlin
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.keydid.*
+import org.trustweave.did.KeyAlgorithm
+import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.kms.InMemoryKeyManagementService
 
 val kms = InMemoryKeyManagementService()
 
-val TrustWeave = TrustWeave.create {
-    this.kms = kms
-
-    didMethods {
-        + KeyDidMethod(kms)
+val trustWeave = TrustWeave.build {
+    customKms(kms)
+    did {
+        method("key") { algorithm("Ed25519") }
     }
 }
 
-// Use did:key
-val did = TrustWeave.createDid("key") {
-    algorithm = KeyAlgorithm.ED25519
-}.getOrThrow()
+// Use did:key (KeyDidMethod on classpath / SPI)
+val did = trustWeave.createDid {
+    method("key")
+    algorithm(KeyAlgorithm.ED25519)
+}.getOrThrowDid()
 
-println("Created DID: ${did.id}")
+println("Created DID: ${did.value}")
 
-val resolved = TrustWeave.resolveDid(did.id).getOrThrow()
-println("Resolved DID: ${resolved.document?.id}")
+when (val resolved = trustWeave.resolveDid(did)) {
+    is DidResolutionResult.Success -> println("Resolved DID: ${resolved.document.id}")
+    else -> println("Resolve failed: $resolved")
+}
 ```
 
 ## DID Format
@@ -254,8 +259,8 @@ did:key is the fastest DID method:
 
 ## References
 
-- [DID Key Method Specification](https://w3c-ccg.github.io/did-method-key/)
-- [Multibase Encoding](https://github.com/multiformats/multibase)
-- [Multicodec](https://github.com/multiformats/multicodec)
-- [TrustWeave Core API](../api-reference/core-api.md)
+- DID Key Method Specification](https://w3c-ccg.github.io/did-method-key/)
+- Multibase Encoding](https://github.com/multiformats/multibase)
+- Multicodec](https://github.com/multiformats/multicodec)
+- TrustWeave Core API](../api-reference/core-api.md)
 

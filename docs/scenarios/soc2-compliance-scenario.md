@@ -12,13 +12,13 @@ This guide demonstrates how to build a SOC2 Type II compliant system using Trust
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created DIDs for employees, administrators, and auditors
-- ✅ Issued verifiable credentials for access control (roles, permissions)
-- ✅ Built immutable audit trails using blockchain anchoring
-- ✅ Implemented key rotation with credential history preservation
-- ✅ Created change management credentials for system modifications
-- ✅ Built automated compliance reporting
-- ✅ Demonstrated incident response with verifiable evidence
+- Created DIDs for employees, administrators, and auditors
+- Issued verifiable credentials for access control (roles, permissions)
+- Built immutable audit trails using blockchain anchoring
+- Implemented key rotation with credential history preservation
+- Created change management credentials for system modifications
+- Built automated compliance reporting
+- Demonstrated incident response with verifiable evidence
 
 ## Big Picture & Significance
 
@@ -139,13 +139,13 @@ flowchart TD
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Test kit for in-memory implementations
-    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:0.6.0")
 
     // Optional: Algorand adapter for real blockchain anchoring
-    implementation("org.trustweave.chains:algorand:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:anchors-plugins-algorand:0.6.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -163,16 +163,20 @@ Here's a complete SOC2 compliance workflow:
 package com.example.soc2.compliance
 
 import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.types.VerificationResult
+import org.trustweave.credential.results.VerificationResult
 import org.trustweave.trust.types.DidCreationResult
-import org.trustweave.trust.types.IssuanceResult
+import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.did.resolver.errorMessage
 import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import kotlinx.datetime.Clock
 import kotlin.time.Duration.Companion.days
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.credential.results.getOrThrow
 
 fun main() = runBlocking {
     println("=".repeat(70))
@@ -183,22 +187,12 @@ fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
         keys { provider(IN_MEMORY); algorithm(ED25519) }  // Auto-discovered via SPI
         did { method(KEY) { algorithm(ED25519) } }  // Auto-discovered via SPI
-        credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
+        credentials { defaultProofType(ProofType.Ed25519Signature2020) }
         // KMS, DID methods, and CredentialService all auto-created!
     }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for organization, employees, and auditors
-    import org.trustweave.trust.types.getOrThrowDid
-    import org.trustweave.trust.types.getOrThrow
-    import org.trustweave.did.resolver.DidResolutionResult
-    import org.trustweave.did.identifiers.extractKeyId
-    
-    // Helper extension for resolution results
-    fun DidResolutionResult.getOrThrow() = when (this) {
-        is DidResolutionResult.Success -> this.document
-        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
-    }
     
     val organizationDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     println("✅ Created organization DID: ${organizationDid.value}")
@@ -213,12 +207,14 @@ fun main() = runBlocking {
     println("✅ Created auditor DID: ${auditorDid.value}")
 
     // Step 3: Issue access control credentials (CC6.1, CC6.2, CC6.3)
-    val orgDoc = trustWeave.resolveDid(organizationDid).getOrThrow()
+    val orgDoc = when (val res = trustWeave.resolveDid(organizationDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val orgKeyId = orgDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     // Admin access credential
-    import org.trustweave.trust.types.IssuanceResult
     
     val adminAccessCredentialResult = trustWeave.issue {
         credential {
@@ -245,7 +241,6 @@ fun main() = runBlocking {
         signedBy(organizationDid)
     }
     
-    import org.trustweave.trust.types.getOrThrow
     
     val adminAccessCredential = adminAccessCredentialResult.getOrThrow()
 
@@ -305,7 +300,7 @@ fun main() = runBlocking {
             anchor
         },
         onFailure = { error ->
-            println("⚠️ Audit log anchoring failed: ${error.message}")
+            println("âš ï¸ Audit log anchoring failed: ${error.message}")
             println("   (Continuing without anchor - in production, this should alert)")
             null
         }
@@ -326,7 +321,7 @@ fun main() = runBlocking {
             println("   Credential ID: ${adminVerificationResult.credential.id}")
         }
         is VerificationResult.Invalid -> {
-            println("❌ Admin credential verification failed: ${adminVerificationResult.allErrors.joinToString("; ")}")
+            println("[FAIL] Admin credential verification failed: ${adminVerificationResult.allErrors.joinToString("; ")}")
             return@runBlocking
         }
     }
@@ -335,11 +330,17 @@ fun main() = runBlocking {
     val newAdminDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     println("✅ Created new admin DID: ${newAdminDid.value}")
     
-    val newAdminDoc = trustWeave.resolveDid(newAdminDid).getOrThrow()
+    val newAdminDoc = when (val res = trustWeave.resolveDid(newAdminDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val newAdminKeyId = newAdminDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
     
-    val adminDoc = trustWeave.resolveDid(adminDid).getOrThrow()
+    val adminDoc = when (val res = trustWeave.resolveDid(adminDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val oldAdminKeyId = adminDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
@@ -379,7 +380,7 @@ fun main() = runBlocking {
             anchor
         },
         onFailure = { error ->
-            println("⚠️ Key rotation anchoring failed: ${error.message}")
+            println("âš ï¸ Key rotation anchoring failed: ${error.message}")
             null
         }
     )
@@ -488,12 +489,12 @@ fun main() = runBlocking {
             anchor
         },
         onFailure = { error ->
-            println("⚠️ Compliance report anchoring failed: ${error.message}")
+            println("âš ï¸ Compliance report anchoring failed: ${error.message}")
             null
         }
     )
 
-    println("\n📊 SOC2 Compliance Summary:")
+    println("\n[stats] SOC2 Compliance Summary:")
     println("   Access Control: ✅ Compliant")
     println("   Audit Logging: ✅ Compliant (${auditAnchorResult?.ref?.txHash?.take(20)}...)")
     println("   Key Management: ✅ Compliant (${keyRotationAnchor?.ref?.txHash?.take(20)}...)")
@@ -531,7 +532,7 @@ SOC2 Compliance Scenario - Complete Example
 ✅ Incident response credential issued: urn:uuid:...
 ✅ Compliance report anchored: tx_...
 
-📊 SOC2 Compliance Summary:
+[stats] SOC2 Compliance Summary:
    Access Control: ✅ Compliant
    Audit Logging: ✅ Compliant (tx_...)
    Key Management: ✅ Compliant (tx_...)
@@ -645,6 +646,9 @@ suspend fun logAuditEvent(
 Preserve credential verification history during key rotation:
 
 ```kotlin
+import org.trustweave.testkit.services.*
+import org.trustweave.did.identifiers.Did
+
 suspend fun rotateKeyWithHistory(
     issuerDid: String,
     oldKeyId: String
@@ -674,7 +678,7 @@ suspend fun rotateKeyWithHistory(
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = issuerDid, keyId = oldKeyId) // Use old key to sign rotation
+        signedBy(issuerDid = Did(issuerDid), keyId = oldKeyId) // Use old key to sign rotation
     }
     
     val rotationCredential = rotationCredentialResult.getOrThrow()
@@ -689,7 +693,7 @@ suspend fun rotateKeyWithHistory(
             println("✅ Key rotation anchored: ${anchor.ref.txHash}")
         },
         onFailure = { error ->
-            println("❌ Key rotation anchoring failed: ${error.message}")
+            println("[FAIL] Key rotation anchoring failed: ${error.message}")
         }
     )
 
@@ -757,7 +761,7 @@ suspend fun generateComplianceReport(
             println("✅ Compliance report anchored: ${anchor.ref.txHash}")
         },
         onFailure = { error ->
-            println("❌ Report anchoring failed: ${error.message}")
+            println("[FAIL] Report anchoring failed: ${error.message}")
         }
     )
 
@@ -801,10 +805,10 @@ suspend fun generateComplianceReport(
 
 ## Related Documentation
 
-- [Security Clearance Scenario](security-clearance-access-control-scenario.md) - Access control patterns
-- [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
-- [Key Management](../core-concepts/key-management.md) - Key management guide
-- [Security Best Practices](../security/README.md) - Comprehensive security guidance
-- [API Reference](../api-reference/core-api.md) - Complete API documentation
+- Security Clearance Scenario](security-clearance-access-control-scenario.md) - Access control patterns
+- Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
+- Key Management](../core-concepts/key-management.md) - Key management guide
+- Security Best Practices](../security/README.md) - Comprehensive security guidance
+- API Reference](../api-reference/core-api.md) - Complete API documentation
 
 

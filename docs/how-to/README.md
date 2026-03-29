@@ -101,12 +101,14 @@ Each how-to guide follows this structure:
 ## Next Steps
 
 **Ready to start?**
-- [Use TrustWeave Facade](use-trustweave-facade.md) - Quickest way to get started (3 lines!)
-- [Configure TrustWeave](configure-trustlayer.md) - Learn declarative configuration
-- [Create and Manage DIDs](create-dids.md) - Your first task
-- [Issue Credentials](issue-credentials.md) - Issue your first credential
+
+- **[Use TrustWeave Facade](use-trustweave-facade.md)** — quickest way to get started (minimal setup)
+- **[Configure TrustWeave](configure-trustlayer.md)** — declarative configuration (URL is historical; product is TrustWeave)
+- **[Create and Manage DIDs](create-dids.md)** — identities and documents
+- **[Issue Credentials](issue-credentials.md)** — issue your first credential
 
 **Want to learn more?**
-- [Tutorials](../tutorials/README.md) - Structured learning path
-- [Concepts](../concepts/README.md) - Deep dive into fundamentals
+
+- **[Tutorials](../tutorials/README.md)** — structured learning path
+- **[Concepts](../concepts/README.md)** — fundamentals
 

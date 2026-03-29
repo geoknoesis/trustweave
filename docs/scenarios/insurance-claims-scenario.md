@@ -12,13 +12,13 @@ This guide demonstrates how to build a complete insurance claims verification sy
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created DIDs for insurance company, policyholder, and service providers
-- ✅ Issued Verifiable Credentials for insurance claims
-- ✅ Created damage assessment and repair verification credentials
-- ✅ Built claim verification workflow
-- ✅ Implemented fraud prevention through credential chains
-- ✅ Created comprehensive claim presentations
-- ✅ Verified all claim-related credentials
+- Created DIDs for insurance company, policyholder, and service providers
+- Issued Verifiable Credentials for insurance claims
+- Created damage assessment and repair verification credentials
+- Built claim verification workflow
+- Implemented fraud prevention through credential chains
+- Created comprehensive claim presentations
+- Verified all claim-related credentials
 
 ## Big Picture & Significance
 
@@ -143,7 +143,7 @@ Add TrustWeave dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -160,15 +160,23 @@ Here's the full insurance claims verification flow using the TrustWeave facade A
 ```kotlin
 package com.example.insurance.claims
 
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
 import org.trustweave.core.*
-import org.trustweave.credential.PresentationOptions
-import org.trustweave.credential.wallet.Wallet
-import org.trustweave.spi.services.WalletCreationOptionsBuilder
+import org.trustweave.wallet.Wallet
+import org.trustweave.wallet.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
-import org.trustweave.credential.format.ProofSuiteId
+import org.trustweave.credential.model.ProofType
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.testkit.services.*
+import org.trustweave.credential.results.getOrThrow
 
 fun main() = runBlocking {
     println("=".repeat(70))
@@ -180,44 +188,42 @@ fun main() = runBlocking {
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
     }
-    println("\n✅ TrustWeave initialized")
+    println("\n[OK] TrustWeave initialized")
 
     // Step 2: Create DIDs for all parties
-    import org.trustweave.trust.types.getOrThrowDid
-    import org.trustweave.trust.types.getOrThrow
-    import org.trustweave.did.resolver.DidResolutionResult
-    import org.trustweave.did.identifiers.extractKeyId
-    
-    // Helper extension for resolution results
-    fun DidResolutionResult.getOrThrow() = when (this) {
-        is DidResolutionResult.Success -> this.document
-        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
-    }
     
     val insuranceCompanyDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
-    val insuranceCompanyDoc = trustWeave.resolveDid(insuranceCompanyDid).getOrThrow()
+    val insuranceCompanyDoc = when (val res = trustWeave.resolveDid(insuranceCompanyDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val insuranceCompanyKeyId = insuranceCompanyDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     val policyholderDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     
     val assessorDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
-    val assessorDoc = trustWeave.resolveDid(assessorDid).getOrThrow()
+    val assessorDoc = when (val res = trustWeave.resolveDid(assessorDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val assessorKeyId = assessorDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     val repairShopDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
-    val repairShopDoc = trustWeave.resolveDid(repairShopDid).getOrThrow()
+    val repairShopDoc = when (val res = trustWeave.resolveDid(repairShopDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val repairShopKeyId = repairShopDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
-    println("✅ Insurance Company DID: ${insuranceCompanyDid.value}")
-    println("✅ Policyholder DID: ${policyholderDid.value}")
-    println("✅ Damage Assessor DID: ${assessorDid.value}")
-    println("✅ Repair Shop DID: ${repairShopDid.value}")
+    println("[OK] Insurance Company DID: ${insuranceCompanyDid.value}")
+    println("[OK] Policyholder DID: ${policyholderDid.value}")
+    println("[OK] Damage Assessor DID: ${assessorDid.value}")
+    println("[OK] Repair Shop DID: ${repairShopDid.value}")
 
     // Step 3: Policyholder files claim - Insurance company issues claim credential
-    import org.trustweave.trust.types.IssuanceResult
     
     val claimCredentialResult = trustWeave.issue {
         credential {
@@ -246,7 +252,7 @@ fun main() = runBlocking {
     
     val claimCredential = claimCredentialResult.getOrThrow()
 
-    println("\n✅ Claim credential issued: ${claimCredential.id}")
+    println("\n[OK] Claim credential issued: ${claimCredential.id}")
     println("   Claim Number: CLM-2024-001234")
     println("   Claim Type: Auto Damage")
     println("   Status: Filed")
@@ -281,7 +287,7 @@ fun main() = runBlocking {
     
     val assessmentCredential = assessmentCredentialResult.getOrThrow()
 
-    println("✅ Damage assessment credential issued: ${assessmentCredential.id}")
+    println("[OK] Damage assessment credential issued: ${assessmentCredential.id}")
     println("   Estimated Repair Cost: $4,800.00")
     println("   Assessment Status: Completed")
 
@@ -323,7 +329,7 @@ fun main() = runBlocking {
     
     val repairCredential = repairCredentialResult.getOrThrow()
 
-    println("✅ Repair credential issued: ${repairCredential.id}")
+    println("[OK] Repair credential issued: ${repairCredential.id}")
     println("   Total Repair Cost: $4,262.50")
     println("   Repair Status: Completed")
 
@@ -338,7 +344,7 @@ fun main() = runBlocking {
     val assessmentCredentialId = policyholderWallet.store(assessmentCredential)
     val repairCredentialId = policyholderWallet.store(repairCredential)
 
-    println("\n✅ All claim credentials stored in policyholder wallet")
+    println("\n[OK] All claim credentials stored in policyholder wallet")
 
     // Step 7: Organize credentials
     policyholderWallet.withOrganization { org ->
@@ -352,23 +358,23 @@ fun main() = runBlocking {
         org.tagCredential(assessmentCredentialId, setOf("assessment", "damage", "verified"))
         org.tagCredential(repairCredentialId, setOf("repair", "completed", "verified"))
 
-        println("✅ Claim credentials organized")
+        println("[OK] Claim credentials organized")
     }
 
     // Step 8: Insurance company verifies all credentials
-    println("\n📋 Insurance Company Verification Process:")
+    println("\n[insurer] Insurance Company Verification Process:")
 
     val claimVerification = trustWeave.verify { credential(claimCredential) }
-    println("Claim Credential: ${if (claimVerification.valid) "✅ VALID" else "❌ INVALID"}")
+    println("Claim Credential: ${if (claimVerification is VerificationResult.Valid) "[OK] VALID" else "[FAIL] INVALID"}")
 
     val assessmentVerification = trustWeave.verify { credential(assessmentCredential) }
-    println("Assessment Credential: ${if (assessmentVerification.valid) "✅ VALID" else "❌ INVALID"}")
+    println("Assessment Credential: ${if (assessmentVerification is VerificationResult.Valid) "[OK] VALID" else "[FAIL] INVALID"}")
 
     val repairVerification = trustWeave.verify { credential(repairCredential) }
-    println("Repair Credential: ${if (repairVerification.valid) "✅ VALID" else "❌ INVALID"}")
+    println("Repair Credential: ${if (repairVerification is VerificationResult.Valid) "[OK] VALID" else "[FAIL] INVALID"}")
 
     // Step 9: Verify claim consistency and fraud prevention
-    println("\n🔍 Fraud Prevention Check:")
+    println("\n[consumer] Fraud Prevention Check:")
 
     val claimSubject = claimCredential.credentialSubject.jsonObject["claim"]?.jsonObject
     val assessmentSubject = assessmentCredential.credentialSubject.jsonObject["assessment"]?.jsonObject
@@ -381,9 +387,9 @@ fun main() = runBlocking {
     val claimNumbersMatch = claimNumber == assessmentClaimNumber && claimNumber == repairClaimNumber
 
     if (claimNumbersMatch) {
-        println("✅ Claim numbers match across all credentials")
+        println("[OK] Claim numbers match across all credentials")
     } else {
-        println("❌ Claim numbers do NOT match - Potential fraud detected")
+        println("[FAIL] Claim numbers do NOT match - Potential fraud detected")
     }
 
     // Verify cost consistency
@@ -396,9 +402,9 @@ fun main() = runBlocking {
     println("   Cost Variance: ${String.format("%.2f", costVariance)}%")
 
     if (costVariance <= 10.0) {
-        println("✅ Cost variance within acceptable range")
+        println("[OK] Cost variance within acceptable range")
     } else {
-        println("⚠️ Cost variance exceeds threshold - Review required")
+        println("[WARN] Cost variance exceeds threshold - Review required")
     }
 
     // Step 10: Create comprehensive claim presentation
@@ -406,25 +412,25 @@ fun main() = runBlocking {
         pres.createPresentation(
             credentialIds = listOf(claimCredentialId, assessmentCredentialId, repairCredentialId),
             holderDid = policyholderDid.value,
-            options = PresentationOptions(
-                holderDid = policyholderDid.value,
-                challenge = "claim-verification-${System.currentTimeMillis()}"
-            )
+            options = mapOf(
+            "holderDid" to policyholderDid.value,
+            "challenge" to "claim-verification-${System.currentTimeMillis()}"
+        )
         )
     } ?: error("Presentation capability not available")
 
-    println("\n✅ Comprehensive claim presentation created")
+    println("\n[OK] Comprehensive claim presentation created")
     println("   Holder: ${claimPresentation.holder}")
     println("   Credentials: ${claimPresentation.verifiableCredential.size}")
 
     // Step 11: Process claim payment (insurance company issues payment credential)
-    val allCredentialsValid = listOf(claimVerification, assessmentVerification, repairVerification).all { it.valid }
+    val allCredentialsValid = listOf(claimVerification, assessmentVerification, repairVerification).all { it is VerificationResult.Valid }
 
     if (allCredentialsValid && claimNumbersMatch && costVariance <= 10.0) {
         val paymentCredentialResult = trustWeave.issue {
             credential {
                 type("VerifiableCredential", "PaymentCredential", "InsurancePaymentCredential")
-                issuer(insuranceCompanyDid.value)
+                issuer(insuranceCompanyDid)
                 subject {
                     id(policyholderDid.value)
                     "payment" {
@@ -444,8 +450,6 @@ fun main() = runBlocking {
             signedBy(insuranceCompanyDid)
         }
         
-        import org.trustweave.trust.types.getOrThrow
-        
         val paymentCredential = paymentCredentialResult.getOrThrow()
 
         val paymentCredentialId = policyholderWallet.store(paymentCredential)
@@ -454,17 +458,17 @@ fun main() = runBlocking {
             org.tagCredential(paymentCredentialId, setOf("payment", "processed", "claim"))
         }
 
-        println("\n✅ Payment credential issued: ${paymentCredential.id}")
+        println("\n[OK] Payment credential issued: ${paymentCredential.id}")
         println("   Payment Amount: $4,262.50")
         println("   Payment Status: Processed")
         println("   Net Payment (after deductible): $3,762.50")
     } else {
-        println("\n❌ Claim processing failed - Verification issues detected")
+        println("\n[FAIL] Claim processing failed - Verification issues detected")
     }
 
     // Step 12: Display wallet statistics
     val stats = policyholderWallet.getStatistics()
-    println("\n📊 Policyholder Wallet Statistics:")
+    println("\n[stats] Policyholder Wallet Statistics:")
     println("   Total credentials: ${stats.totalCredentials}")
     println("   Valid credentials: ${stats.validCredentials}")
     println("   Collections: ${stats.collectionsCount}")
@@ -473,12 +477,12 @@ fun main() = runBlocking {
     // Step 13: Summary
     println("\n" + "=".repeat(70))
     if (allCredentialsValid && claimNumbersMatch) {
-        println("✅ INSURANCE CLAIM VERIFICATION COMPLETE")
+        println("[OK] INSURANCE CLAIM VERIFICATION COMPLETE")
         println("   All credentials verified successfully")
         println("   Claim processed and payment issued")
         println("   Fraud prevention checks passed")
     } else {
-        println("❌ CLAIM VERIFICATION FAILED")
+        println("[FAIL] CLAIM VERIFICATION FAILED")
         println("   Some credentials could not be verified")
         println("   Additional review required")
     }
@@ -492,55 +496,55 @@ fun main() = runBlocking {
 Insurance Claims and Verification Scenario - Complete End-to-End Example
 ======================================================================
 
-✅ TrustWeave initialized
-✅ Insurance Company DID: did:key:z6Mk...
-✅ Policyholder DID: did:key:z6Mk...
-✅ Damage Assessor DID: did:key:z6Mk...
-✅ Repair Shop DID: did:key:z6Mk...
+[OK] TrustWeave initialized
+[OK] Insurance Company DID: did:key:z6Mk...
+[OK] Policyholder DID: did:key:z6Mk...
+[OK] Damage Assessor DID: did:key:z6Mk...
+[OK] Repair Shop DID: did:key:z6Mk...
 
-✅ Claim credential issued: urn:uuid:...
+[OK] Claim credential issued: urn:uuid:...
    Claim Number: CLM-2024-001234
    Claim Type: Auto Damage
    Status: Filed
-✅ Damage assessment credential issued: urn:uuid:...
+[OK] Damage assessment credential issued: urn:uuid:...
    Estimated Repair Cost: $4,800.00
    Assessment Status: Completed
-✅ Repair credential issued: urn:uuid:...
+[OK] Repair credential issued: urn:uuid:...
    Total Repair Cost: $4,262.50
    Repair Status: Completed
 
-✅ All claim credentials stored in policyholder wallet
-✅ Claim credentials organized
+[OK] All claim credentials stored in policyholder wallet
+[OK] Claim credentials organized
 
-📋 Insurance Company Verification Process:
-Claim Credential: ✅ VALID
-Assessment Credential: ✅ VALID
-Repair Credential: ✅ VALID
+[insurer] Insurance Company Verification Process:
+Claim Credential: [OK] VALID
+Assessment Credential: [OK] VALID
+Repair Credential: [OK] VALID
 
-🔍 Fraud Prevention Check:
-✅ Claim numbers match across all credentials
+[verify] Fraud Prevention Check:
+[OK] Claim numbers match across all credentials
    Estimated Cost: $4800.0
    Actual Cost: $4262.5
    Cost Variance: -11.20%
-✅ Cost variance within acceptable range
+[OK] Cost variance within acceptable range
 
-✅ Comprehensive claim presentation created
+[OK] Comprehensive claim presentation created
    Holder: did:key:z6Mk...
    Credentials: 3
 
-✅ Payment credential issued: urn:uuid:...
+[OK] Payment credential issued: urn:uuid:...
    Payment Amount: $4,262.50
    Payment Status: Processed
    Net Payment (after deductible): $3,762.50
 
-📊 Policyholder Wallet Statistics:
+[stats] Policyholder Wallet Statistics:
    Total credentials: 4
    Valid credentials: 4
    Collections: 1
    Tags: 9
 
 ======================================================================
-✅ INSURANCE CLAIM VERIFICATION COMPLETE
+[OK] INSURANCE CLAIM VERIFICATION COMPLETE
    All credentials verified successfully
    Claim processed and payment issued
    Fraud prevention checks passed
@@ -567,10 +571,10 @@ Repair Credential: ✅ VALID
 
 ## Related Documentation
 
-- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
-- [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
-- [API Reference](../api-reference/core-api.md) - Complete API documentation
-- [Healthcare Medical Records Scenario](healthcare-medical-records-scenario.md) - Related healthcare scenario
-- [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+- Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
+- Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
+- API Reference](../api-reference/core-api.md) - Complete API documentation
+- Healthcare Medical Records Scenario](healthcare-medical-records-scenario.md) - Related healthcare scenario
+- Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
 
 

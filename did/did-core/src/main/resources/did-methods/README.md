@@ -70,7 +70,7 @@ The `implementations` array lists available resolver services for this DID metho
 2. **Automatic Mapping**: Trustweave automatically:
    - Extracts the resolver URL from `driverUrl`
    - Determines the protocol adapter (standard or godiddy)
-   - Creates an `HttpDidMethod` that uses the resolver for DID resolution
+   - Creates an `HttpDidMethod` (in `did-registrar`) that uses the resolver for DID resolution
 3. **Capabilities**: Resolution is automatically enabled if a `driverUrl` is provided. Other capabilities (create, update, deactivate) require native implementations.
 
 ## Loading Methods
@@ -78,7 +78,9 @@ The `implementations` array lists available resolver services for this DID metho
 Methods can be loaded programmatically:
 
 ```kotlin
-val loader = JsonDidMethodLoader(kms)
+import org.trustweave.did.registrar.method.JsonDidMethodLoader
+
+val loader = JsonDidMethodLoader()
 val methods = loader.loadFromClasspath("did-methods")
 methods.forEach { registry.register(it) }
 ```
@@ -86,7 +88,9 @@ methods.forEach { registry.register(it) }
 Or via the `JsonDidMethodProvider` SPI:
 
 ```kotlin
-val provider = JsonDidMethodProvider.fromClasspath(kms)
+import org.trustweave.did.registrar.method.JsonDidMethodProvider
+
+val provider = JsonDidMethodProvider.fromClasspath("did-methods")
 // Methods are automatically available via DidMethodProvider SPI
 ```
 

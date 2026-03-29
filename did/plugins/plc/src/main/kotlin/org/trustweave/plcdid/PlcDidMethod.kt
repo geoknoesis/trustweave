@@ -3,15 +3,12 @@ package org.trustweave.plcdid
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.*
 import org.trustweave.did.identifiers.Did
-import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
-import org.trustweave.did.model.VerificationMethod
-import org.trustweave.did.model.DidService
+import org.trustweave.did.model.toServiceTypeJsonElement
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.base.AbstractDidMethod
 import org.trustweave.did.base.DidMethodUtils
 import org.trustweave.kms.KeyManagementService
-import org.trustweave.kms.results.GenerateKeyResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -60,25 +57,8 @@ class PlcDidMethod(
 
     override suspend fun createDid(options: DidCreationOptions): DidDocument = withContext(Dispatchers.IO) {
         try {
-            // Generate key using KMS
             val algorithm = options.algorithm.algorithmName
-            val generateResult = kms.generateKey(algorithm, options.additionalProperties)
-            val keyHandle = when (generateResult) {
-                is GenerateKeyResult.Success -> generateResult.keyHandle
-                is GenerateKeyResult.Failure.UnsupportedAlgorithm -> throw TrustWeaveException.Unknown(
-                    code = "UNSUPPORTED_ALGORITHM",
-                    message = generateResult.reason ?: "Algorithm not supported"
-                )
-                is GenerateKeyResult.Failure.InvalidOptions -> throw TrustWeaveException.Unknown(
-                    code = "INVALID_OPTIONS",
-                    message = generateResult.reason
-                )
-                is GenerateKeyResult.Failure.Error -> throw TrustWeaveException.Unknown(
-                    code = "KEY_GENERATION_ERROR",
-                    message = generateResult.reason,
-                    cause = generateResult.cause
-                )
-            }
+            val keyHandle = generateKey(algorithm, options.additionalProperties)
 
             // Create DID identifier (PLC uses specific format)
             val did = generatePlcDid(keyHandle)
@@ -368,138 +348,5 @@ class PlcDidMethod(
         }
     }
 
-    /**
-     * Converts a DID document to JsonElement.
-     */
-    private fun documentToJsonElement(document: DidDocument): JsonElement {
-        return buildJsonObject {
-            put("@context", JsonArray(document.context.map { JsonPrimitive(it) }))
-            put("id", JsonPrimitive(document.id.value))
-
-            if (document.verificationMethod.isNotEmpty()) {
-                put("verificationMethod", JsonArray(document.verificationMethod.map { vmToJsonObject(it) }))
-            }
-            if (document.authentication.isNotEmpty()) {
-                put("authentication", JsonArray(document.authentication.map { JsonPrimitive(it.value) }))
-            }
-            if (document.assertionMethod.isNotEmpty()) {
-                put("assertionMethod", JsonArray(document.assertionMethod.map { JsonPrimitive(it.value) }))
-            }
-            if (document.service.isNotEmpty()) {
-                put("service", JsonArray(document.service.map { serviceToJsonObject(it) }))
-            }
-        }
-    }
-
-    /**
-     * Converts JsonElement to DidDocument.
-     */
-    private fun jsonElementToDocument(json: JsonElement): DidDocument {
-        val obj = json.jsonObject
-        val didString = obj["id"]?.jsonPrimitive?.content ?: throw IllegalArgumentException("Missing id")
-        val didObj = Did(didString)
-        return DidDocument(
-            id = didObj,
-            context = obj["@context"]?.let {
-                when (it) {
-                    is JsonPrimitive -> listOf(it.content)
-                    is JsonArray -> it.mapNotNull { (it as? JsonPrimitive)?.content }
-                    else -> listOf("https://www.w3.org/ns/did/v1")
-                }
-            } ?: listOf("https://www.w3.org/ns/did/v1"),
-            verificationMethod = obj["verificationMethod"]?.jsonArray?.mapNotNull { jsonToVerificationMethod(it, didObj) } ?: emptyList(),
-            authentication = obj["authentication"]?.jsonArray?.mapNotNull { 
-                (it as? JsonPrimitive)?.content?.let { idStr -> VerificationMethodId.parse(idStr, didObj) }
-            } ?: emptyList(),
-            assertionMethod = obj["assertionMethod"]?.jsonArray?.mapNotNull { 
-                (it as? JsonPrimitive)?.content?.let { idStr -> VerificationMethodId.parse(idStr, didObj) }
-            } ?: emptyList(),
-            service = obj["service"]?.jsonArray?.mapNotNull { jsonToService(it) } ?: emptyList()
-        )
-    }
-
-    private fun vmToJsonObject(vm: VerificationMethod): JsonObject {
-        return buildJsonObject {
-            put("id", JsonPrimitive(vm.id.value))
-            put("type", JsonPrimitive(vm.type))
-            put("controller", JsonPrimitive(vm.controller.value))
-            vm.publicKeyJwk?.let { jwk ->
-                put("publicKeyJwk", mapToJsonObject(jwk))
-            }
-        }
-    }
-
-    private fun serviceToJsonObject(service: DidService): JsonObject {
-        return buildJsonObject {
-            put("id", service.id)
-            put("type", service.type)
-            put("serviceEndpoint", when (val endpoint = service.serviceEndpoint) {
-                is String -> JsonPrimitive(endpoint)
-                else -> Json.parseToJsonElement(endpoint.toString())
-            })
-        }
-    }
-
-    private fun jsonToVerificationMethod(json: JsonElement, did: Did): VerificationMethod? {
-        val obj = json.jsonObject
-        val idString = obj["id"]?.jsonPrimitive?.content ?: return null
-        val typeString = obj["type"]?.jsonPrimitive?.content ?: return null
-        val controllerString = obj["controller"]?.jsonPrimitive?.content ?: return null
-        return VerificationMethod(
-            id = VerificationMethodId.parse(idString, did),
-            type = typeString,
-            controller = Did(controllerString),
-            publicKeyJwk = obj["publicKeyJwk"]?.jsonObject?.let { jsonObjectToMap(it) },
-            publicKeyMultibase = obj["publicKeyMultibase"]?.jsonPrimitive?.content
-        )
-    }
-
-    private fun jsonToService(json: JsonElement): DidService? {
-        val obj = json.jsonObject
-        return DidService(
-            id = obj["id"]?.jsonPrimitive?.content ?: return null,
-            type = obj["type"]?.jsonPrimitive?.content ?: return null,
-            serviceEndpoint = obj["serviceEndpoint"]?.let {
-                when (it) {
-                    is JsonPrimitive -> it.content
-                    else -> it.toString()
-                }
-            } ?: return null
-        )
-    }
-
-    private fun mapToJsonObject(map: Map<String, Any?>): JsonObject {
-        return buildJsonObject {
-            map.forEach { (key, value) ->
-                when (value) {
-                    null -> put(key, JsonNull)
-                    is String -> put(key, value)
-                    is Number -> put(key, value)
-                    is Boolean -> put(key, value)
-                    is Map<*, *> -> put(key, mapToJsonObject(value as Map<String, Any?>))
-                    is List<*> -> put(key, JsonArray(value.map {
-                        when (it) {
-                            is String -> JsonPrimitive(it)
-                            is Number -> JsonPrimitive(it)
-                            is Boolean -> JsonPrimitive(it)
-                            else -> JsonPrimitive(it.toString())
-                        }
-                    }))
-                    else -> put(key, value.toString())
-                }
-            }
-        }
-    }
-
-    private fun jsonObjectToMap(obj: JsonObject): Map<String, Any?> {
-        return obj.entries.associate { (key, value) ->
-            key to when (value) {
-                is JsonPrimitive -> value.contentOrNull ?: value.booleanOrNull ?: value.longOrNull ?: value.doubleOrNull ?: value.toString()
-                is JsonObject -> jsonObjectToMap(value)
-                is JsonArray -> value.map { (it as? JsonPrimitive)?.content ?: it.toString() }
-                else -> value.toString()
-            }
-        }
-    }
 }
 

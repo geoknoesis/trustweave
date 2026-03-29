@@ -1,7 +1,8 @@
 package org.trustweave.credential.proof.internal.engines
 
 import org.trustweave.credential.internal.CredentialConstants
-import org.trustweave.credential.internal.JsonLdUtils
+import org.trustweave.credential.internal.infrastructure.DefaultJsonLdCanonicalizationAdapter
+import org.trustweave.credential.internal.infrastructure.DefaultEd25519SignatureVerificationAdapter
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.model.vc.VerifiableCredential
@@ -9,41 +10,49 @@ import org.trustweave.credential.model.vc.VerifiablePresentation
 import org.trustweave.credential.model.vc.CredentialProof
 import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.CredentialType
+import org.trustweave.credential.spi.proof.JsonLdCanonicalizationPort
+import org.trustweave.credential.spi.proof.SignatureVerificationPort
 import org.trustweave.credential.spi.proof.ProofEngine
 import org.trustweave.credential.spi.proof.ProofEngineCapabilities
 import org.trustweave.credential.spi.proof.ProofEngineConfig
-// ProofEngineUtils is in the same package, no import needed
 import org.trustweave.credential.requests.IssuanceRequest
 import org.trustweave.credential.requests.PresentationRequest
 import org.trustweave.credential.requests.VerificationOptions
 import org.trustweave.credential.results.VerificationResult
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.core.identifiers.KeyId
-import org.trustweave.did.identifiers.Did
 import org.trustweave.kms.KeyManagementService
 import org.trustweave.kms.results.SignResult
 import org.trustweave.did.model.VerificationMethod
-import com.github.jsonldjava.core.JsonLdOptions
-import com.github.jsonldjava.core.JsonLdProcessor
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
-import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
 import java.util.*
 import java.util.Base64
-import java.security.KeyFactory
-import java.security.PublicKey
 import org.slf4j.LoggerFactory
 
 /**
  * VC-LD (Verifiable Credentials Linked Data) proof engine.
- * 
+ *
  * Supports W3C Verifiable Credentials 2.0 with Linked Data Proofs.
  * Uses JSON-LD canonicalization and various signature suites.
+ *
+ * Infrastructure concerns (JSON-LD library, java.security) are accessed through
+ * [JsonLdCanonicalizationPort] and [SignatureVerificationPort], keeping the engine
+ * independent of specific cryptographic libraries.
+ *
+ * Document building, DID verification method resolution, and selective disclosure
+ * are delegated to [JsonLdDocumentBuilder], [DidVerificationMethodResolver], and
+ * [SelectiveDisclosureFilter] respectively.
  */
 internal class VcLdProofEngine(
-    private val config: ProofEngineConfig = ProofEngineConfig()
+    private val config: ProofEngineConfig = ProofEngineConfig(),
+    private val canonicalizationPort: JsonLdCanonicalizationPort = DefaultJsonLdCanonicalizationAdapter(),
+    private val signatureVerificationPort: SignatureVerificationPort = DefaultEd25519SignatureVerificationAdapter()
 ) : ProofEngine {
+
+    private val vmResolver: DidVerificationMethodResolver by lazy {
+        DidVerificationMethodResolver(config.getDidResolver())
+    }
     
     private val logger = LoggerFactory.getLogger(VcLdProofEngine::class.java)
     
@@ -80,10 +89,10 @@ internal class VcLdProofEngine(
         val credentialId = request.id ?: CredentialId("urn:uuid:${UUID.randomUUID()}")
         
         // Build VC document for canonicalization (must use same ID that will be in the credential object)
-        val vcDocument = buildVcDocument(request, credentialId.value)
+        val vcDocument = JsonLdDocumentBuilder.build(request, credentialId.value)
         
         // Canonicalize document (without proof)
-        val canonicalDocument = canonicalizeDocument(vcDocument)
+        val canonicalDocument = canonicalizationPort.canonicalize(vcDocument)
         logger.debug("Canonicalized document for signing: length={}", canonicalDocument.length)
         
         // Generate signature using KMS
@@ -96,14 +105,10 @@ internal class VcLdProofEngine(
         val verificationMethodIdString = request.issuerKeyId?.value
             ?: throw IllegalArgumentException("issuerKeyId is required")
         
-        // Use the verification method ID directly if it's already a full ID, otherwise construct it
         val verificationMethod = if (verificationMethodIdString.contains("#") && verificationMethodIdString.startsWith("did:")) {
-            // Already a full verification method ID - use it directly
             verificationMethodIdString
         } else {
-            // Just a fragment - construct full ID
-            getVerificationMethod(issuerIri.value, verificationMethodIdString)
-                ?: throw IllegalArgumentException("Could not determine verification method")
+            vmResolver.buildVerificationMethodId(issuerIri.value, verificationMethodIdString)
         }
         
         // Create Linked Data Proof
@@ -159,11 +164,13 @@ internal class VcLdProofEngine(
             val issuerIri = extractIssuerIri(credential)
             
             // Resolve verification method
-            val verificationMethod = resolveVerificationMethod(issuerIri, proof.verificationMethod, credential)
+            val verificationMethod = vmResolver.resolve(issuerIri, proof.verificationMethod)
                 ?: return createInvalidIssuerResult(credential, issuerIri)
-            
+
             // Canonicalize document
-            val canonical = canonicalizeCredentialDocument(credential)
+            val canonical = canonicalizationPort.canonicalize(
+                JsonLdDocumentBuilder.buildWithoutProof(credential)
+            )
             logger.debug("Verifying VC-LD credential: canonicalLength={}, verificationMethod={}, publicKeyJwkPresent={}", 
                 canonical.length, proof.verificationMethod, verificationMethod.publicKeyJwk != null)
             
@@ -189,64 +196,15 @@ internal class VcLdProofEngine(
         }
     }
     
-    /**
-     * Validates that the credential has a LinkedDataProof.
-     * 
-     * @param credential The credential to validate
-     * @return The LinkedDataProof if valid, null otherwise
-     */
-    private fun validateProofType(credential: VerifiableCredential): CredentialProof.LinkedDataProof? {
-        return credential.proof as? CredentialProof.LinkedDataProof
-    }
-    
-    /**
-     * Extracts the issuer IRI from the credential.
-     * 
-     * @param credential The credential
-     * @return The issuer IRI
-     */
-    private fun extractIssuerIri(credential: VerifiableCredential): Iri {
-        return when (val issuer = credential.issuer) {
+    private fun validateProofType(credential: VerifiableCredential): CredentialProof.LinkedDataProof? =
+        credential.proof as? CredentialProof.LinkedDataProof
+
+    private fun extractIssuerIri(credential: VerifiableCredential): Iri =
+        when (val issuer = credential.issuer) {
             is Issuer.IriIssuer -> issuer.id
             is Issuer.ObjectIssuer -> issuer.id
         }
-    }
-    
-    /**
-     * Resolves the verification method from the issuer DID.
-     * 
-     * @param issuerIri The issuer IRI
-     * @param verificationMethodId The verification method ID from the proof
-     * @param credential The credential (for error reporting)
-     * @return The verification method, or null if resolution fails
-     */
-    private suspend fun resolveVerificationMethod(
-        issuerIri: Iri,
-        verificationMethodId: String,
-        credential: VerifiableCredential
-    ): VerificationMethod? {
-        return getVerificationMethodFromDid(issuerIri, verificationMethodId)
-    }
-    
-    /**
-     * Canonicalizes the credential document for signature verification.
-     * 
-     * @param credential The credential to canonicalize
-     * @return The canonicalized document string
-     */
-    private fun canonicalizeCredentialDocument(credential: VerifiableCredential): String {
-        val vcDocument = buildVcDocumentWithoutProof(credential)
-        return canonicalizeDocument(vcDocument)
-    }
-    
-    /**
-     * Verifies the credential signature.
-     * 
-     * @param canonical The canonicalized document
-     * @param proof The LinkedDataProof
-     * @param verificationMethod The verification method containing the public key
-     * @return True if signature is valid, false otherwise
-     */
+
     private fun verifyCredentialSignature(
         canonical: String,
         proof: CredentialProof.LinkedDataProof,
@@ -340,12 +298,10 @@ internal class VcLdProofEngine(
         
         // Handle selective disclosure if disclosedClaims is specified
         val credentialsToInclude = if (request.disclosedClaims != null && request.disclosedClaims.isNotEmpty()) {
-            // Apply selective disclosure - filter claims based on disclosedClaims
             credentials.map { credential ->
-                createSelectiveDisclosureCredential(credential, request.disclosedClaims)
+                SelectiveDisclosureFilter.filter(credential, request.disclosedClaims)
             }
         } else {
-            // Include all credentials as-is
             credentials
         }
         
@@ -364,42 +320,6 @@ internal class VcLdProofEngine(
         )
     }
     
-    /**
-     * Create a credential with only disclosed claims for selective disclosure.
-     * 
-     * This is a basic implementation that filters claims. For true zero-knowledge
-     * selective disclosure, BBS+ proofs would be required.
-     */
-    private fun createSelectiveDisclosureCredential(
-        credential: VerifiableCredential,
-        disclosedClaims: Set<String>
-    ): VerifiableCredential {
-        // If all claims should be disclosed, return as-is
-        if (disclosedClaims.isEmpty()) {
-            return credential
-        }
-        
-        // Filter credentialSubject claims based on disclosedClaims
-        val subject = credential.credentialSubject
-        val filteredClaims = if (subject.claims.isNotEmpty()) {
-            // Filter claims - support both "claimName" and "credentialSubject.claimName" formats
-            subject.claims.filterKeys { claimName ->
-                disclosedClaims.contains(claimName) || 
-                disclosedClaims.contains("credentialSubject.$claimName")
-            }
-        } else {
-            subject.claims
-        }
-        
-        // Create new credential with filtered claims
-        // Note: This creates a derived credential without proof - for production use,
-        // this would need to be re-signed or use zero-knowledge proofs
-        return credential.copy(
-            credentialSubject = subject.copy(claims = filteredClaims),
-            proof = null // Derived credential needs new proof for selective disclosure
-        )
-    }
-    
     override suspend fun initialize(config: ProofEngineConfig) {
         // Initialize JSON-LD processor, signature suites, etc.
     }
@@ -410,153 +330,6 @@ internal class VcLdProofEngine(
     
     override fun isReady(): Boolean = true
     
-    // Helper methods
-    
-    private fun buildVcDocument(request: IssuanceRequest, credentialIdValue: String): JsonObject {
-        val issuerIri = when (val issuer = request.issuer) {
-            is Issuer.IriIssuer -> issuer.id.value
-            is Issuer.ObjectIssuer -> issuer.id.value
-        }
-        
-        return buildJsonObject {
-            put("@context", buildJsonArray {
-                add(CredentialConstants.VcContexts.VC_1_1)
-                add(CredentialConstants.SecuritySuites.ED25519_2020_V1)
-            })
-            put("id", credentialIdValue)
-            put("type", buildJsonArray {
-                request.type.forEach { type ->
-                    add(type.value)
-                }
-            })
-            put("issuer", issuerIri)
-            put("issuanceDate", request.issuedAt.toString())
-            request.validFrom?.let { put("validFrom", it.toString()) }
-            request.validUntil?.let { put("expirationDate", it.toString()) }
-            put("credentialSubject", buildJsonObject {
-                put("id", request.credentialSubject.id.value)
-                request.credentialSubject.claims.entries.forEach { (key, value) ->
-                    put(key, value)
-                }
-            })
-            request.credentialStatus?.let { status ->
-                put("credentialStatus", buildJsonObject {
-                    put("id", status.id.value)
-                    put("type", status.type)
-                    put("statusPurpose", status.statusPurpose.name.lowercase())
-                    status.statusListIndex?.let { put("statusListIndex", it) }
-                    status.statusListCredential?.let { put("statusListCredential", it.value) }
-                    status.formatData?.let { formatData ->
-                        put("formatData", buildJsonObject {
-                            formatData.forEach { (key, value) ->
-                                put(key, value)
-                            }
-                        })
-                    }
-                })
-            }
-            request.credentialSchema?.let { schema ->
-                put("credentialSchema", buildJsonObject {
-                    put("id", schema.id.value)
-                    put("type", schema.type)
-                })
-            }
-            request.evidence?.let { evidenceList ->
-                put("evidence", buildJsonArray {
-                    evidenceList.forEach { evidence ->
-                        add(buildJsonObject {
-                            evidence.id?.let { put("id", it.value) }
-                            put("type", buildJsonArray {
-                                evidence.type.forEach { type ->
-                                    add(type)
-                                }
-                            })
-                            evidence.evidenceDocument?.let { put("evidenceDocument", it) }
-                            evidence.verifier?.let { put("verifier", it.value) }
-                            evidence.evidenceDate?.let { put("evidenceDate", it) }
-                        })
-                    }
-                })
-            }
-        }
-    }
-    
-    private fun buildVcDocumentWithoutProof(credential: VerifiableCredential): JsonObject {
-        val issuerIri = when (val issuer = credential.issuer) {
-            is Issuer.IriIssuer -> issuer.id.value
-            is Issuer.ObjectIssuer -> issuer.id.value
-        }
-        
-        return buildJsonObject {
-            put("@context", buildJsonArray {
-                credential.context.forEach { ctx ->
-                    add(ctx)
-                }
-            })
-            credential.id?.let { put("id", it.value) }
-            put("type", buildJsonArray {
-                credential.type.forEach { type ->
-                    add(type.value)
-                }
-            })
-            put("issuer", issuerIri)
-            put("issuanceDate", credential.issuanceDate.toString())  // ISO 8601 format
-            credential.validFrom?.let { put("validFrom", it.toString()) }  // ISO 8601 format
-            credential.expirationDate?.let { put("expirationDate", it.toString()) }  // ISO 8601 format
-            put("credentialSubject", buildJsonObject {
-                put("id", credential.credentialSubject.id.value)
-                credential.credentialSubject.claims.entries.forEach { (key, value) ->
-                    put(key, value)
-                }
-            })
-            credential.credentialStatus?.let { status ->
-                put("credentialStatus", buildJsonObject {
-                    put("id", status.id.value)
-                    put("type", status.type)
-                    put("statusPurpose", status.statusPurpose.name.lowercase())
-                    status.statusListIndex?.let { put("statusListIndex", it) }
-                    status.statusListCredential?.let { put("statusListCredential", it.value) }
-                    status.formatData?.let { formatData ->
-                        put("formatData", buildJsonObject {
-                            formatData.forEach { (key, value) ->
-                                put(key, value)
-                            }
-                        })
-                    }
-                })
-            }
-            credential.credentialSchema?.let { schema ->
-                put("credentialSchema", buildJsonObject {
-                    put("id", schema.id.value)
-                    put("type", schema.type)
-                })
-            }
-            credential.evidence?.let { evidenceList ->
-                put("evidence", buildJsonArray {
-                    evidenceList.forEach { evidence ->
-                        add(buildJsonObject {
-                            evidence.id?.let { put("id", it.value) }
-                            put("type", buildJsonArray {
-                                evidence.type.forEach { type ->
-                                    add(type)
-                                }
-                            })
-                            evidence.evidenceDocument?.let { put("evidenceDocument", it) }
-                            evidence.verifier?.let { put("verifier", it.value) }
-                            evidence.evidenceDate?.let { put("evidenceDate", it) }
-                        })
-                    }
-                })
-            }
-            // Explicitly exclude proof for canonicalization
-        }
-    }
-    
-    private fun canonicalizeDocument(document: JsonObject): String {
-        // Use shared JSON-LD canonicalization utility
-        val json = Json { serializersModule = org.trustweave.core.serialization.SerializationModule.default }
-        return JsonLdUtils.canonicalizeDocument(document, json)
-    }
     
     private suspend fun signDocument(canonical: String, keyId: String): String {
         logger.debug("Signing document: keyId={}, canonicalLength={}", keyId, canonical.length)
@@ -578,8 +351,8 @@ internal class VcLdProofEngine(
     }
     
     /**
-     * Verify Linked Data Proof signature.
-     * 
+     * Verify Linked Data Proof signature via [SignatureVerificationPort].
+     *
      * @param canonical The canonicalized document (without proof)
      * @param proofValue The base64url-encoded signature
      * @param verificationMethod The verification method from DID document
@@ -597,62 +370,18 @@ internal class VcLdProofEngine(
             logger.warn("Proof value is blank")
             return false
         }
-        
-        // Only support Ed25519Signature2020 for now
-        if (proofType != CredentialConstants.ProofTypes.ED25519_SIGNATURE_2020) {
-            logger.warn("Unsupported proof type: {}", proofType)
+
+        val signatureBytes = try {
+            Base64.getUrlDecoder().decode(proofValue)
+        } catch (e: Exception) {
+            logger.error("Failed to decode signature: error={}", e.message, e)
             return false
         }
-        
-        try {
-            // Extract public key from verification method
-            // Use the utility function which tries multiple methods
-            val publicKey = ProofEngineUtils.extractPublicKey(verificationMethod)
-            
-            if (publicKey == null) {
-                logger.warn("Failed to extract public key from verification method: verificationMethodId={}", verificationMethod.id.value)
-                return false
-            }
-            logger.debug("Extracted public key: algorithm={}, encodedLength={}", publicKey.algorithm, publicKey.encoded.size)
-            
-            // Decode signature (base64url)
-            val signatureBytes = try {
-                Base64.getUrlDecoder().decode(proofValue)
-            } catch (e: Exception) {
-                logger.error("Failed to decode signature: error={}", e.message, e)
-                return false
-            }
-            
-            // Get canonical document bytes
-            val documentBytes = canonical.toByteArray(Charsets.UTF_8)
-            logger.debug("Verifying signature: signatureLength={}, documentLength={}", signatureBytes.size, documentBytes.size)
-            
-            // Verify Ed25519 signature
-            val result = verifyEd25519Signature(documentBytes, signatureBytes, publicKey)
-            logger.debug("Ed25519 signature verification result: isValid={}", result)
-            return result
-        } catch (e: Exception) {
-            logger.error("Exception during signature verification: error={}", e.message, e)
-            return false
-        }
-    }
-    
-    /**
-     * Verify Ed25519 signature.
-     */
-    private fun verifyEd25519Signature(
-        documentBytes: ByteArray,
-        signatureBytes: ByteArray,
-        publicKey: java.security.PublicKey
-    ): Boolean {
-        return try {
-            val signature = java.security.Signature.getInstance("Ed25519")
-            signature.initVerify(publicKey)
-            signature.update(documentBytes)
-            signature.verify(signatureBytes)
-        } catch (e: Exception) {
-            false
-        }
+
+        val documentBytes = canonical.toByteArray(Charsets.UTF_8)
+        logger.debug("Verifying signature: signatureLength={}, documentLength={}", signatureBytes.size, documentBytes.size)
+
+        return signatureVerificationPort.verify(documentBytes, signatureBytes, verificationMethod, proofType)
     }
     
     private fun getKms(): KeyManagementService? {
@@ -682,36 +411,5 @@ internal class VcLdProofEngine(
         }
     }
     
-    /**
-     * Get verification method from DID document.
-     * 
-     * Resolves the issuer DID and extracts the verification method.
-     * 
-     * @param issuerIri The issuer IRI (must be a DID)
-     * @param verificationMethodId The verification method ID (can be full or fragment)
-     * @return VerificationMethod instance, or null if resolution fails
-     */
-    private suspend fun getVerificationMethodFromDid(
-        issuerIri: Iri,
-        verificationMethodId: String
-    ): VerificationMethod? {
-        if (!issuerIri.isDid) {
-            return null
-        }
-        
-        val didResolver = config.getDidResolver() ?: return null
-        
-        return ProofEngineUtils.resolveVerificationMethod(
-            issuerIri = issuerIri,
-            verificationMethodId = verificationMethodId,
-            didResolver = didResolver
-        )
-    }
-    
-    private fun getVerificationMethod(issuerIri: String, keyId: String?): String? {
-        // Construct verification method ID from issuer IRI and key ID
-        // This is used during issuance to construct the verification method reference
-        return keyId?.let { "$issuerIri#$it" } ?: "$issuerIri#key-1"
-    }
 }
 

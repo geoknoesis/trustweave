@@ -224,7 +224,7 @@ class TestDataBuildersTest {
         assertEquals("metadata-1", artifact["id"]?.jsonPrimitive?.content)
         assertEquals("Metadata", artifact["type"]?.jsonPrimitive?.content)
         assertNotNull(digest)
-        assertTrue(digest.startsWith("u"))
+        assertTrue(digest.startsWith("z"))
     }
 
     @Test

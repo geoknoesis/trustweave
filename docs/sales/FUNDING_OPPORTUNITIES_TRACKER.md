@@ -299,11 +299,11 @@ This document tracks funding opportunities from World Bank, UN agencies, and oth
 | [Proposal Name] | [Agency] | [Country] | $[X] | [Status] | [Date] | [Date] | [Notes] |
 
 ### Proposal Status Legend
-- 🔴 **Not Started** - Research phase, not yet started
-- 🟡 **In Progress** - Proposal being developed
-- 🟢 **Submitted** - Proposal submitted, awaiting decision
-- ✅ **Approved** - Funding approved
-- ❌ **Rejected** - Proposal rejected (note reason and lessons learned)
+- **Not Started** — Research phase, not yet started
+- **In Progress** — Proposal being developed
+- **Submitted** — Proposal submitted, awaiting decision
+- **Approved** — Funding approved
+- **Rejected** — Proposal rejected (note reason and lessons learned)
 
 ---
 
@@ -311,27 +311,27 @@ This document tracks funding opportunities from World Bank, UN agencies, and oth
 
 ### Immediate (This Week)
 
-- [ ] Research World Bank Education Global Practice programs
-- [ ] Identify UNESCO Digital Learning initiatives
-- [ ] Contact [Specific Contact Name] at [Agency]
-- [ ] Prepare concept note for [Specific Program]
-- [ ] Update funding tracker with new opportunities
+- Research World Bank Education Global Practice programs
+- Identify UNESCO Digital Learning initiatives
+- Contact [Specific Contact Name] at [Agency]
+- Prepare concept note for [Specific Program]
+- Update funding tracker with new opportunities
 
 ### Short-term (This Month)
 
-- [ ] Submit concept note to [Agency/Program]
-- [ ] Attend [Specific Event/Conference]
-- [ ] Build relationship with [Key Contact]
-- [ ] Develop full proposal for [Top Opportunity]
-- [ ] Secure letters of support from [Ministry/Partners]
+- Submit concept note to [Agency/Program]
+- Attend [Specific Event/Conference]
+- Build relationship with [Key Contact]
+- Develop full proposal for [Top Opportunity]
+- Secure letters of support from [Ministry/Partners]
 
 ### Long-term (Next 3-6 Months)
 
-- [ ] Secure first funding approval
-- [ ] Begin pilot project implementation
-- [ ] Build case studies from pilot
-- [ ] Scale to additional countries
-- [ ] Establish ongoing partnerships
+- Secure first funding approval
+- Begin pilot project implementation
+- Build case studies from pilot
+- Scale to additional countries
+- Establish ongoing partnerships
 
 ---
 
@@ -339,15 +339,15 @@ This document tracks funding opportunities from World Bank, UN agencies, and oth
 
 ### What Works
 
-- [Key success factor 1]
-- [Key success factor 2]
-- [Key success factor 3]
+- Key success factor 1]
+- Key success factor 2]
+- Key success factor 3]
 
 ### What Doesn't Work
 
-- [Challenge 1] - [How to avoid]
-- [Challenge 2] - [How to avoid]
-- [Challenge 3] - [How to avoid]
+- Challenge 1] - [How to avoid]
+- Challenge 2] - [How to avoid]
+- Challenge 3] - [How to avoid]
 
 ### Best Practices
 
@@ -407,11 +407,11 @@ This document tracks funding opportunities from World Bank, UN agencies, and oth
 ---
 
 **Status Legend:**
-- 🔴 Not Started
-- 🟡 In Progress
-- 🟢 Submitted
-- ✅ Approved
-- ❌ Rejected
+- Not Started
+- In Progress
+- Submitted
+- Approved
+- Rejected
 
 
 

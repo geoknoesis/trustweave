@@ -1,11 +1,11 @@
 package org.trustweave.trust.dsl
 
+import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
-import org.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertNotNull
@@ -35,7 +35,7 @@ class DidDocumentDslExtendedTest {
         val did = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }.getOrFail()
+        }.getOrThrowDid()
 
         val updatedDoc = trustWeave.updateDid {
             did(did.value)
@@ -65,7 +65,7 @@ class DidDocumentDslExtendedTest {
         val did = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }.getOrFail()
+        }.getOrThrowDid()
 
         val updatedDoc = trustWeave.updateDid {
             did(did.value)
@@ -95,7 +95,7 @@ class DidDocumentDslExtendedTest {
         val did = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }.getOrFail()
+        }.getOrThrowDid()
 
         val updatedDoc = trustWeave.updateDid {
             did(did.value)
@@ -125,7 +125,7 @@ class DidDocumentDslExtendedTest {
         val did = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }.getOrFail()
+        }.getOrThrowDid()
 
         // First add, then remove
         trustWeave.updateDid {
@@ -162,7 +162,7 @@ class DidDocumentDslExtendedTest {
         val did = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }.getOrFail()
+        }.getOrThrowDid()
 
         val updatedDoc = trustWeave.updateDid {
             did(did.value)

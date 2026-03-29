@@ -10,7 +10,7 @@ import org.trustweave.credential.requests.VerificationOptions
 import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.credential.results.VerificationResult
 import org.trustweave.credential.did.issueForDid
-import org.trustweave.credential.trust.TrustPolicy
+import org.trustweave.credential.trust.TrustEvaluator
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.resolver.DidResolver
 import kotlinx.serialization.json.JsonPrimitive
@@ -88,13 +88,13 @@ suspend fun exampleCredentialFlow(
     }
     
     // Step 4: Verify the credential with trust policy
-    val trustPolicy = TrustPolicy.allowlist(
+    val evaluator = TrustEvaluator.allowlist(
         trustedIssuers = setOf(issuerDid)
     )
     
     val verificationResult: VerificationResult = service.verify(
         credential = credential,
-        trustPolicy = trustPolicy,
+        trustPolicy = evaluator,
         options = VerificationOptions(
             checkRevocation = true,
             checkExpiration = true,
@@ -128,6 +128,9 @@ suspend fun exampleCredentialFlow(
         }
         is VerificationResult.Invalid.UnsupportedFormat -> {
             println("❌ Unsupported format: ${verificationResult.format}")
+        }
+        is VerificationResult.Invalid.AdapterNotReady -> {
+            println("❌ Credential service not ready: ${verificationResult.reason ?: verificationResult.errors.joinToString()}")
         }
         is VerificationResult.Invalid.SchemaValidationFailed -> {
             println("❌ Schema validation failed: ${verificationResult.validationErrors.joinToString()}")
@@ -194,12 +197,12 @@ suspend fun exampleBatchVerification(
     val service = credentialService(didResolver)
     
     // Create trust policy
-    val trustPolicy = TrustPolicy.allowlist(trustedIssuers = trustedIssuers)
+    val evaluator = TrustEvaluator.allowlist(trustedIssuers = trustedIssuers)
     
     // Verify multiple credentials in parallel
     val results = service.verify(
         credentials = credentials,
-        trustPolicy = trustPolicy,
+        trustPolicy = evaluator,
         options = VerificationOptions(
             checkRevocation = true,
             checkExpiration = true

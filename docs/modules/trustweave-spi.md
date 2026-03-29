@@ -13,33 +13,26 @@ other TrustWeave modules implement or consume. These interfaces are included in 
 
 ## Responsibilities
 
-- Adapter loading utilities (`AdapterLoader`) for discovering runtime providers
-  without hard dependencies.
-- Service interfaces for DID methods, KMS, wallet factories, and blockchain
-  registries.
-- Default stub implementations used in documentation snippets and low-footprint
-  environments.
-- Plugin registry infrastructure (metadata, configuration loader, provider chain).
+- **DID methods**: `DidMethodProvider` implementations can be discovered with `ServiceLoader` and registered on `DidMethodRegistry` (see `did-core`).
+- **Shared plugin helpers** in `trustweave-common`: metadata, configuration loading, provider chaining (`org.trustweave.core.plugin`).
+- **Factories** wired through `TrustWeave.build { factories(...) }` (for example `WalletFactory` in `org.trustweave.wallet.services`).
 
 ## Typical Usage
 
 ```kotlin
-import org.trustweave.spi.services.AdapterLoader
-import org.trustweave.spi.PluginRegistry
+import kotlinx.coroutines.runBlocking
+import org.trustweave.did.registry.DidMethodRegistry
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
 
-// Locate DID method service at runtime
-val didMethodService = AdapterLoader.didMethodService()
-
-// Register custom plugin
-PluginRegistry.register(
-    metadata = myPluginMetadata,
-    instance = myPlugin
-)
+// Register every DidMethodProvider on the classpath (META-INF/services)
+val registry = runBlocking {
+    DidMethodRegistry.autoRegister(kms = InMemoryKeyManagementService())
+}
 ```
 
-**What this does:** Loads a DID method provider discovered via the SPI and registers your own plugin instance programmatically.
+**What this does:** Uses `ServiceLoader` internally, calls each provider’s `create` for its `supportedMethods`, and registers the resulting `DidMethod` instances (skipping providers whose required environment variables are missing).
 
-**Outcome:** Your application can resolve custom adapters at runtime while keeping transitive dependencies clean.
+**Outcome:** DID method JARs with SPI metadata are picked up automatically; in apps you normally still obtain a registry through `TrustWeave.build { }` rather than constructing this by hand.
 
 ## Dependencies
 

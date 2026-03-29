@@ -25,16 +25,7 @@ TrustWeave supports the **official DID Method Registry format** from identity.fo
 }
 ```
 
-**Maps to:**
-```kotlin
-class HttpDidMethod(
-    val registrationSpec: DidRegistrationSpec,
-    kms: KeyManagementService
-) : AbstractDidMethod(registrationSpec.name, kms) {
-    // registrationSpec.name becomes the method identifier
-    override val method: String = "example"
-}
-```
+**Maps to:** an `org.trustweave.did.registrar.method.HttpDidMethod` constructed from a `DidRegistrationSpec` whose `name` is `"example"`. The class implements `DidMethod` and does not extend a shared `AbstractDidMethod` base type.
 
 The `name` field becomes the method identifier used in DID strings: `did:example:123`
 
@@ -101,23 +92,7 @@ The `capabilities` object maps directly to `DidMethod` interface methods:
 | `capabilities.update` | `updateDid(did, updater)` | Throws exception if `false`, otherwise delegates (not yet implemented) |
 | `capabilities.deactivate` | `deactivateDid(did)` | Throws exception if `false`, otherwise delegates (not yet implemented) |
 
-**Example Implementation:**
-```kotlin
-override suspend fun resolveDid(did: String): DidResolutionResult {
-    val capabilities = registrationSpec.capabilities
-    if (capabilities?.resolve != true) {
-        throw TrustWeaveException("DID method does not support resolution.")
-    }
-
-    // Validate DID format matches method name
-    require(did.startsWith("did:${registrationSpec.name}:")) {
-        "Invalid DID format for method '${registrationSpec.name}': $did"
-    }
-
-    // Delegate to Universal Resolver
-    return universalResolver.resolveDid(did)
-}
-```
+**Example (conceptual):** `resolveDid` takes a type-safe `Did`, checks `capabilities?.resolve`, validates the DID method prefix, then delegates to the configured `UniversalResolver`.
 
 ## Complete Flow: JSON → DidMethod
 
@@ -144,10 +119,10 @@ val spec = DidRegistrationSpecParser.parse(jsonString)
 ### Step 2: Create DidMethod Instance
 
 ```kotlin
-val method = HttpDidMethod(spec, kms)
+val method = HttpDidMethod(registrationSpec = spec)
 // Creates a DidMethod with:
 // - method = "web"
-// - universalResolver = DefaultUniversalResolver("https://dev.uniresolver.io")
+// - internal Universal Resolver client from driver.baseUrl / protocolAdapter
 // - capabilities = MethodCapabilities(resolve=true)
 ```
 
@@ -169,7 +144,7 @@ val result = registry.resolve("did:web:example.com")
 | Field | Type | Description | Maps To |
 |-------|------|-------------|---------|
 | `name` | string | DID method name | `DidMethod.method` property |
-| `driver` | object | Driver configuration | `HttpDidMethod.resolver` |
+| `driver` | object | Driver configuration | Internal `DefaultUniversalResolver` inside `HttpDidMethod` |
 
 ### Optional Fields
 
@@ -188,32 +163,17 @@ val result = registry.resolve("did:web:example.com")
 
 ### HttpDidMethod Class
 
-The `HttpDidMethod` class implements the `DidMethod` interface:
+`org.trustweave.did.registrar.method.HttpDidMethod` implements `DidMethod` for HTTP-backed Universal Resolver (and optional Universal Registrar) workflows:
 
 ```kotlin
 class HttpDidMethod(
     val registrationSpec: DidRegistrationSpec,
-    kms: KeyManagementService
-) : AbstractDidMethod(registrationSpec.name, kms) {
-
-    // Created from driver.baseUrl and driver.protocolAdapter
-    private val resolver: UniversalResolver = createResolver()
-
-    // Implements DidMethod.resolveDid() if capabilities.resolve == true
-    override suspend fun resolveDid(did: String): DidResolutionResult {
-        // Validates capabilities.resolve
-        // Validates DID format matches method name
-        // Delegates to resolver.resolveDid() (HTTP endpoint)
-    }
-
-    // Throws exception if capabilities.create == false
-    override suspend fun createDid(options: DidCreationOptions): DidDocument {
-        // Currently not implemented for JSON-registered methods
-    }
-
-    // Similar for updateDid() and deactivateDid()
-}
+    private val registrar: DidRegistrar? = null,
+    private val additionalAdapters: Map<String, UniversalResolverProtocolAdapter> = emptyMap(),
+) : DidMethod
 ```
+
+Resolution uses `DefaultUniversalResolver` built from `registrationSpec.driver`. When a registrar is available (injected or derived from `driver.registrarUrl` on registry entries), create/update/deactivate can delegate to that registrar instead of failing as “not implemented.”
 
 ### Protocol Adapters
 
@@ -229,11 +189,11 @@ The `driver.protocolAdapter` field determines which protocol adapter is used:
 
 ## Limitations
 
-1. **Resolution Only**: Currently, only `resolveDid()` is fully implemented. Other methods (`createDid`, `updateDid`, `deactivateDid`) require native implementations.
+1. **Driver surface**: Legacy JSON with a `driver` object is limited to `type = "universal-resolver"` when using `JsonDidMethodLoader` for full specs; other driver types need a native `DidMethod` / `DidMethodProvider`.
 
-2. **Universal Resolver Dependency**: JSON-registered methods require an external Universal Resolver instance that supports the method.
+2. **Universal Resolver dependency**: Resolver-backed methods need an HTTP endpoint (Universal Resolver or compatible) that supports the method.
 
-3. **Protocol Adapters**: Only "standard" and "godiddy" adapters are supported. Custom adapters require code.
+3. **Protocol adapters**: Built-in adapter keys include `"standard"` and `"godiddy"`; additional resolver protocols can be supplied via `HttpDidMethod`’s `additionalAdapters` map in code.
 
 ## Example: Complete JSON → DidMethod
 
@@ -270,12 +230,11 @@ val method = HttpDidMethod(
             timeout = 30
         ),
         capabilities = MethodCapabilities(resolve = true)
-    ),
-    kms = kms
+    )
 )
 
 // method.method == "ion"
-// method.resolveDid("did:ion:...") delegates to Universal Resolver
+// method.resolveDid(Did("did:ion:...")) delegates to Universal Resolver
 ```
 
 ## Validation

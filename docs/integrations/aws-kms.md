@@ -24,7 +24,7 @@ Add the AWS KMS module to your dependencies:
 ```kotlin
 dependencies {
     // Only need to add the AWS KMS plugin - core dependencies are included transitively
-    implementation("org.trustweave.kms:aws:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:kms-plugins-aws:0.6.0")
 }
 ```
 
@@ -64,11 +64,11 @@ val kms = KeyManagementServices.create("aws", mapOf(
 ```
 
 **Benefits of Typed Configuration:**
-- ✅ Compile-time type safety
-- ✅ IDE autocomplete for available options
-- ✅ Better documentation and discoverability
-- ✅ Validation at construction time
-- ✅ Easier refactoring
+- Compile-time type safety
+- IDE autocomplete for available options
+- Better documentation and discoverability
+- Validation at construction time
+- Easier refactoring
 
 ### Authentication
 
@@ -522,11 +522,11 @@ For production, restrict resources to specific key ARNs:
 See the [Algorithm Compatibility Table](../core-concepts/algorithm-compatibility-table.md) for detailed comparison of algorithm support across DIDs, VCs, AWS KMS, and Azure Key Vault.
 
 **Key Points:**
-- ✅ AWS KMS supports Ed25519 (as of Nov 2025)
-- ✅ All NIST curves (P-256/P-384/P-521) supported
-- ✅ secp256k1 supported for blockchain integration
-- ✅ RSA keys supported for legacy compatibility
-- ❌ BLS12-381 not supported (requires specialized KMS)
+- AWS KMS supports Ed25519 (as of Nov 2025)
+- All NIST curves (P-256/P-384/P-521) supported
+- secp256k1 supported for blockchain integration
+- RSA keys supported for legacy compatibility
+- BLS12-381 not supported (requires specialized KMS)
 
 ## Best Practices
 
@@ -583,16 +583,16 @@ docker run -d -p 4566:4566 localstack/localstack
 
 ## Related Documentation
 
-- [Key Management Guide](../core-concepts/key-management.md) - Core KMS concepts
-- [Algorithm Compatibility Table](../core-concepts/algorithm-compatibility-table.md) - Algorithm support comparison
-- [Key Rotation Guide](../advanced/key-rotation.md) - Key rotation strategies
-- [Creating Plugins Guide](../contributing/creating-plugins.md) - Custom KMS implementations
+- Key Management Guide](../core-concepts/key-management.md) - Core KMS concepts
+- Algorithm Compatibility Table](../core-concepts/algorithm-compatibility-table.md) - Algorithm support comparison
+- Key Rotation Guide](../advanced/key-rotation.md) - Key rotation strategies
+- Creating Plugins Guide](../contributing/creating-plugins.md) - Custom KMS implementations
 
 ## FIPS 140-3 Compliance
 
 AWS KMS uses FIPS 140-3 Level 3 validated hardware security modules. For details, see:
 
-- [NIST CMVP Certificate #4884](https://csrc.nist.gov/projects/cryptographic-module-validation-program/certificate/4884) - AWS Key Management Service HSM validation
+- NIST CMVP Certificate #4884](https://csrc.nist.gov/projects/cryptographic-module-validation-program/certificate/4884) - AWS Key Management Service HSM validation
 - Certificate Status: Active (Sunset: 11/17/2026)
 - Security Level: Level 3
 - Module Type: Hardware (Multi-Chip Stand Alone)
@@ -601,7 +601,7 @@ The validated module supports ECDSA (FIPS 186-4) on NIST curves, ECDSA secp256k1
 
 ## See Also
 
-- [AWS KMS Developer Guide](https://docs.aws.amazon.com/kms/latest/developerguide/)
-- [AWS KMS API Reference](https://docs.aws.amazon.com/kms/latest/APIReference/)
-- [NIST CMVP Certificate #4884](https://csrc.nist.gov/projects/cryptographic-module-validation-program/certificate/4884) - FIPS 140-3 validation details
+- AWS KMS Developer Guide](https://docs.aws.amazon.com/kms/latest/developerguide/)
+- AWS KMS API Reference](https://docs.aws.amazon.com/kms/latest/APIReference/)
+- NIST CMVP Certificate #4884](https://csrc.nist.gov/projects/cryptographic-module-validation-program/certificate/4884) - FIPS 140-3 validation details
 

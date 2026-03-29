@@ -12,12 +12,12 @@ This guide walks you through building a complete academic credential system usin
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created DIDs for a university (issuer) and a student (holder)
-- ✅ Issued a Verifiable Credential for a university degree
-- ✅ Stored the credential in a student's wallet
-- ✅ Organized credentials with collections and tags
-- ✅ Created a Verifiable Presentation for job applications
-- ✅ Verified the credential cryptographically
+- Created DIDs for a university (issuer) and a student (holder)
+- Issued a Verifiable Credential for a university degree
+- Stored the credential in a student's wallet
+- Organized credentials with collections and tags
+- Created a Verifiable Presentation for job applications
+- Verified the credential cryptographically
 
 ## Big Picture & Significance
 
@@ -132,10 +132,10 @@ Add TrustWeave dependencies to your `build.gradle.kts`. These modules cover DID 
 ```kotlin
 dependencies {
     // TrustWeave distribution (includes all modules)
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Test kit for in-memory implementations
-    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:0.6.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -154,10 +154,19 @@ Here's the full academic credential flow using the TrustWeave facade API. This c
 ```kotlin
 package com.example.academic.credentials
 
-import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.dsl.credential.*
-import org.trustweave.trust.types.VerificationResult
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.trust.types.proofValid
+import org.trustweave.trust.types.issuerValid
+import org.trustweave.trust.types.notRevoked
+import org.trustweave.credential.proof.proofOptions
 import org.trustweave.testkit.services.*
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.wallet.CredentialOrganization
+import org.trustweave.wallet.CredentialPresentation
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -168,9 +177,7 @@ fun main() = runBlocking {
     println("=".repeat(70))
 
     // Step 1: Create TrustWeave instance
-    val trustWeave = trustWeave {
-        factories(
-        // KMS and DID methods auto-discovered via SPI
+    val trustWeave = TrustWeave.build {
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
     }
@@ -178,7 +185,8 @@ fun main() = runBlocking {
 
     // Step 2: Create DIDs for university (issuer) and student (holder)
     val (universityDid, universityDoc) = trustWeave.createDid().getOrThrow()
-    val universityKeyId = universityDoc.verificationMethod.first().id.substringAfter("#")
+    val universityKeyId = universityDoc.verificationMethod.firstOrNull()?.extractKeyId()
+        ?: error("No verification method on university DID document")
 
     val (studentDid, _) = trustWeave.createDid().getOrThrow()
 
@@ -216,32 +224,29 @@ fun main() = runBlocking {
     // Step 4: Create student wallet and store credential
     val studentWallet = trustWeave.wallet {
         holder(studentDid)
-        organization { enabled = true }
-        presentation { enabled = true }
+        enableOrganization()
+        enablePresentation()
     }.getOrThrow()
 
     val credentialId = studentWallet.store(credential)
     println("✅ Credential stored in wallet: $credentialId")
 
     // Step 5: Organize credential with collections and tags
-    studentWallet.withOrganization { org ->
-        val collectionId = org.createCollection("Education", "Academic credentials")
-        org.addToCollection(credentialId, collectionId)
-        org.tagCredential(credentialId, setOf("degree", "computer-science", "bachelor", "verified"))
-        println("✅ Credential organized: collection=$collectionId, tags=${org.getTags(credentialId)}")
-    }
+    val studentOrg = studentWallet as? CredentialOrganization
+        ?: error("Wallet does not support organization")
+    val collectionId = studentOrg.createCollection("Education", "Academic credentials")
+    studentOrg.addToCollection(credentialId, collectionId)
+    studentOrg.tagCredential(credentialId, setOf("degree", "computer-science", "bachelor", "verified"))
+    println("✅ Credential organized: collection=$collectionId, tags=${studentOrg.getTags(credentialId)}")
 
     // Step 6: Create a verifiable presentation for job application
-    val presentation = studentWallet.withPresentation { pres ->
-        pres.createPresentation(
-            credentialIds = listOf(credentialId),
-            holderDid = studentDid.value,
-            options = PresentationOptions(
-                holderDid = studentDid.value,
-                challenge = "job-application-12345"
-            )
-        )
-    } ?: error("Presentation capability not available")
+    val studentPres = studentWallet as? CredentialPresentation
+        ?: error("Wallet does not support presentations")
+    val presentation = studentPres.createPresentation(
+        credentialIds = listOf(credentialId),
+        holderDid = studentDid.value,
+        options = proofOptions { challenge = "job-application-12345" }
+    )
 
     println("✅ Presentation created: ${presentation.id}")
     println("   Holder: ${presentation.holder}")
@@ -264,13 +269,13 @@ fun main() = runBlocking {
         }
         is VerificationResult.Invalid -> {
             println("\n❌ Credential Verification FAILED")
-            println("   Errors: ${verificationResult.errors}")
+            println("   Errors: ${verificationResult.allErrors.joinToString()}")
         }
     }
 
     // Step 8: Display wallet statistics
     val stats = studentWallet.getStatistics()
-    println("\n📊 Wallet Statistics:")
+    println("\n[stats] Wallet Statistics:")
     println("   Total credentials: ${stats.totalCredentials}")
     println("   Valid credentials: ${stats.validCredentials}")
     println("   Collections: ${stats.collectionsCount}")
@@ -306,7 +311,7 @@ Academic Credentials Scenario - Complete End-to-End Example
    Issuer valid: true
    Not revoked: true
 
-📊 Wallet Statistics:
+[stats] Wallet Statistics:
    Total credentials: 1
    Valid credentials: 1
    Collections: 1
@@ -323,13 +328,13 @@ Academic Credentials Scenario - Complete End-to-End Example
 3. Run with `./gradlew run` or execute in your IDE
 
 **What this demonstrates:**
-- ✅ Complete issuer → holder → verifier workflow
-- ✅ DID creation for multiple parties
-- ✅ Credential issuance with structured data
-- ✅ Wallet storage and organization
-- ✅ Presentation creation for selective disclosure
-- ✅ Cryptographic verification
-- ✅ Error handling with Result types
+- Complete issuer → holder → verifier workflow
+- DID creation for multiple parties
+- Credential issuance with structured data
+- Wallet storage and organization
+- Presentation creation for selective disclosure
+- Cryptographic verification
+- Error handling with Result types
 
 ## Step-by-Step Breakdown
 
@@ -340,35 +345,36 @@ This section breaks down the complete example above into individual steps with e
 Create a TrustWeave instance that provides access to all functionality:
 
 ```kotlin
-    val trustWeave = trustWeave {
-        factories(
-        // KMS and DID methods auto-discovered via SPI
-        keys { provider(IN_MEMORY); algorithm(ED25519) }
-        did { method(KEY) { algorithm(ED25519) } }
-        credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
-    }
+import org.trustweave.trust.TrustWeave
+import org.trustweave.credential.model.ProofType
+import org.trustweave.testkit.services.*
+
+val trustWeave = TrustWeave.build {
+    keys { provider(IN_MEMORY); algorithm(ED25519) }
+    did { method(KEY) { algorithm(ED25519) } }
+    credentials { defaultProofType(ProofType.Ed25519Signature2020) }
+}
 ```
 
-**What this does:** Initializes TrustWeave with default configuration, including in-memory KMS, DID methods, and wallet factories. For production, configure with specific providers.
+**What this does:** Initializes TrustWeave with in-memory KMS, a `did:key`-style method (via testkit constants), and the default VC proof type used by issuance. Use `TrustWeave.build { factories(walletFactory = ...) }` only when you supply custom wallet, trust-registry, or status-list factories.
 
 ### Step 2: Create DIDs
 
 Each party (university issuer and student holder) needs their own DID:
 
 ```kotlin
+import org.trustweave.testkit.services.*
 // Create university DID (issuer)
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
 import org.trustweave.did.identifiers.extractKeyId
 
-// Helper extension for resolution results
-fun DidResolutionResult.getOrThrow() = when (this) {
-    is DidResolutionResult.Success -> this.document
-    else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
-}
-
 val universityDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
-val universityDoc = trustWeave.resolveDid(universityDid).getOrThrow()
+val universityDoc = when (val res = trustWeave.resolveDid(universityDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
 val universityKeyId = universityDoc.verificationMethod.firstOrNull()?.extractKeyId()
     ?: throw IllegalStateException("No verification method found")
 
@@ -384,6 +390,7 @@ The university creates and issues a verifiable credential:
 
 ```kotlin
 import org.trustweave.trust.types.getOrThrow
+import org.trustweave.credential.results.getOrThrow
 
 val credential = trustWeave.issue {
     credential {
@@ -417,11 +424,12 @@ Students need a wallet to store their credentials:
 
 ```kotlin
 import org.trustweave.trust.types.getOrThrow
+import org.trustweave.credential.results.getOrThrow
 
 val studentWallet = trustWeave.wallet {
     holder(studentDid.value)
-    organization { enabled = true }  // Enable collections and tags
-    presentation { enabled = true }  // Enable presentation creation
+    enableOrganization()
+    enablePresentation()
 }.getOrThrow()
 ```
 
@@ -473,9 +481,9 @@ val presentation = studentWallet.withPresentation { pres ->
     pres.createPresentation(
         credentialIds = listOf(credentialId),
         holderDid = studentDid,
-        options = PresentationOptions(
-            holderDid = studentDid,
-            challenge = "job-application-12345"
+        options = mapOf(
+            "holderDid" to studentDid,
+            "challenge" to "job-application-12345"
         )
     )
 } ?: error("Presentation capability not available")
@@ -488,7 +496,7 @@ val presentation = studentWallet.withPresentation { pres ->
 Employers verify the credential cryptographically:
 
 ```kotlin
-import org.trustweave.trust.types.VerificationResult
+import org.trustweave.credential.results.VerificationResult
 
 val verificationResult = trustWeave.verify {
     credential(credential)
@@ -502,7 +510,7 @@ when (verificationResult) {
         println("Not revoked: ${verificationResult.notRevoked}")
     }
     is VerificationResult.Invalid -> {
-        println("Credential verification failed: ${verificationResult.errors}")
+        println("Credential verification failed: ${verificationResult.allErrors.joinToString()}")
     }
 }
 ```
@@ -521,9 +529,9 @@ val selectivePresentation = studentWallet.withPresentation { pres ->
     pres.createPresentation(
         credentialIds = listOf(credentialId),  // Only include this credential
         holderDid = studentDid,
-        options = PresentationOptions(
-            holderDid = studentDid,
-            challenge = "job-application-12345"
+        options = mapOf(
+            "holderDid" to studentDid,
+            "challenge" to "job-application-12345"
         )
     )
 }
@@ -618,7 +626,7 @@ Credentials can have expiration dates:
 //         // ...
 //         expires(10, ChronoUnit.YEARS)
 //     }
-//     signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+//     signedBy(issuerDid = Did(issuerDid), keyId = issuerKeyId) // issuerDid: String in this sketch
 // }
 ```
 
@@ -633,7 +641,7 @@ Use schemas to ensure credential structure:
 //         // ...
 //         schema("https://example.edu/schemas/degree.json")
 //     }
-//     signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+//     signedBy(issuerDid = Did(issuerDid), keyId = issuerKeyId) // issuerDid: String in this sketch
 // }
 ```
 

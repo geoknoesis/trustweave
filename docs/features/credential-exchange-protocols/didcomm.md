@@ -17,12 +17,12 @@ This plugin implements the DIDComm V2 protocol specification, enabling:
 
 ## Features
 
-- ✅ JWM (JSON Web Message) format support
-- ✅ Message packing and unpacking
-- ✅ Protocol message builders (Issue Credential, Present Proof, Basic Message)
-- ✅ In-memory message storage
-- ✅ Thread-based message organization
-- ⚠️ **Crypto Implementation**:
+- JWM (JSON Web Message) format support
+- Message packing and unpacking
+- Protocol message builders (Issue Credential, Present Proof, Basic Message)
+- In-memory message storage
+- Thread-based message organization
+- Crypto Implementation**:
   - Placeholder implementation included (for development)
   - Production implementation ready (requires `didcomm-java` library)
   - See [Integration Guide](./didcomm-integration-guide.md) for production setup
@@ -292,10 +292,10 @@ See [Integration Guide](./didcomm-integration-guide.md) for detailed instruction
 
 ## References
 
-- [DIDComm V2 Specification](https://didcomm.org/book/v2/)
-- [JWM Specification](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-jwsreq-26)
-- [Issue Credential Protocol](https://github.com/decentralized-identity/waci-presentation-exchange)
-- [Present Proof Protocol](https://github.com/decentralized-identity/presentation-exchange)
+- DIDComm V2 Specification](https://didcomm.org/book/v2/)
+- JWM Specification](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-jwsreq-26)
+- Issue Credential Protocol](https://github.com/decentralized-identity/waci-presentation-exchange)
+- Present Proof Protocol](https://github.com/decentralized-identity/presentation-exchange)
 
 ## License
 

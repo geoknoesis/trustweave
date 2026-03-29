@@ -44,8 +44,8 @@ Gets automatically converted into a `DidMethod` implementation that can resolve 
 
 ### Current Implementation Status
 
-- ✅ **Resolution**: Fully supported for JSON-registered methods
-- ❌ **Create, Update, Deactivate**: Not yet implemented for JSON-registered methods (require native implementations)
+- **Resolution**: Fully supported for JSON-registered methods
+- **Create, update, deactivate**: Depend on the method driver; Universal Resolver–backed methods use HTTP resolution, and registration flows are available when a registrar URL is configured on the implementation entry
 
 ### Difference from the DID Registration Specification
 
@@ -81,28 +81,22 @@ This format matches the official DID Method Registry structure from https://iden
 ### 2. Load and Register Methods
 
 ```kotlin
-import org.trustweave.did.registration.DidMethodRegistration
+import org.trustweave.did.registrar.method.DidMethodRegistration
 import org.trustweave.did.registry.DidMethodRegistry
-import org.trustweave.kms.InMemoryKeyManagementService
+import java.nio.file.Paths
 
-val kms = InMemoryKeyManagementService()
 val registry = DidMethodRegistry()
 
-// Load from classpath (default: "did-methods")
-val registeredMethods = DidMethodRegistration.registerFromClasspath(registry, kms)
+// Load from classpath (default resource path: "did-methods")
+val registeredMethods = DidMethodRegistration.registerFromClasspath(registry)
 println("Registered methods: $registeredMethods")
 
 // Or load from a directory
-val methods = DidMethodRegistration.registerFromDirectory(
-    registry,
-    kms,
-    Paths.get("my-did-methods")
-)
+DidMethodRegistration.registerFromDirectory(registry, Paths.get("my-did-methods"))
 
 // Or load a single file
 val methodName = DidMethodRegistration.registerFromFile(
     registry,
-    kms,
     Paths.get("did-methods/example.json")
 )
 ```
@@ -186,16 +180,17 @@ The `implementations` array specifies available resolver services:
 ### Using JsonDidMethodLoader Directly
 
 ```kotlin
-import org.trustweave.did.registration.JsonDidMethodLoader
+import org.trustweave.did.registrar.method.JsonDidMethodLoader
+import java.nio.file.Paths
 
-val loader = JsonDidMethodLoader(kms)
+val loader = JsonDidMethodLoader()
 
 // Load from various sources
 val method1 = loader.loadFromFile(Paths.get("example.json"))
 val method2 = loader.loadFromString(jsonString)
 val method3 = loader.loadFromInputStream(inputStream)
-val methods = loader.loadFromDirectory(Paths.get("did-methods"))
-val methods = loader.loadFromClasspath("did-methods")
+val fromDir = loader.loadFromDirectory(Paths.get("did-methods"))
+val fromClasspath = loader.loadFromClasspath("did-methods")
 ```
 
 ### Using JsonDidMethodProvider (SPI)
@@ -203,13 +198,15 @@ val methods = loader.loadFromClasspath("did-methods")
 The `JsonDidMethodProvider` can be registered via Java ServiceLoader:
 
 ```kotlin
-import org.trustweave.did.registration.JsonDidMethodProvider
+import org.trustweave.did.DidCreationOptions
+import org.trustweave.did.registrar.method.JsonDidMethodProvider
+import java.nio.file.Paths
 
 // Create provider from classpath
-val provider = JsonDidMethodProvider.fromClasspath(kms)
+val provider = JsonDidMethodProvider.fromClasspath("did-methods")
 
 // Or from directory
-val provider = JsonDidMethodProvider.fromDirectory(kms, Paths.get("did-methods"))
+val providerFromDir = JsonDidMethodProvider.fromDirectory(Paths.get("did-methods"))
 
 // Methods are available via provider
 val method = provider.create("example", DidCreationOptions())

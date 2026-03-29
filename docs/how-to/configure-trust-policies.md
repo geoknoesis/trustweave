@@ -20,22 +20,24 @@ This guide shows you how to configure trust policies for credential verification
 
 Before you begin, ensure you have:
 
-- ✅ TrustWeave dependencies added to your project
-- ✅ Basic understanding of credential verification
-- ✅ Understanding of trust registries (see [Configure Trust Registry](configure-trust-registry.md))
+- TrustWeave dependencies added to your project
+- Basic understanding of credential verification
+- Understanding of trust registries (see [Configure Trust Registry](configure-trust-registry.md))
 
 ## Expected Outcome
 
 After completing this guide, you will have:
 
-- ✅ Understood when to use trust policies
-- ✅ Configured allowlist, blocklist, and custom trust policies
-- ✅ Integrated trust policies into credential verification
-- ✅ Learned best practices for trust policy management
+- Understood when to use trust policies
+- Configured allowlist, blocklist, and custom trust policies
+- Integrated trust policies into credential verification
+- Learned best practices for trust policy management
 
 ## Overview
 
 Trust policies control **which issuers are trusted** during credential verification. By default, TrustWeave only checks cryptographic validity (signature, expiration, revocation) but doesn't check issuer trust. Trust policies add an additional layer of security by explicitly defining which issuers are acceptable.
+
+**Naming:** The verification DSL still uses `withTrustPolicy { … }`, but the value you pass is a **`TrustEvaluator`** (`org.trustweave.credential.trust`). That is separate from the sealed class **`org.trustweave.trust.TrustPolicy`**, which describes trust-registry–centric modes in other APIs.
 
 ### Trust Policy Types
 
@@ -53,18 +55,14 @@ Here's a simple example using an allowlist policy:
 
 ```kotlin
 import org.trustweave.trust.TrustWeave
-import org.trustweave.credential.trust.TrustPolicy
+import org.trustweave.credential.trust.TrustEvaluator
 import org.trustweave.did.identifiers.Did
-import org.trustweave.trust.types.VerificationResult
+import org.trustweave.credential.results.VerificationResult
 import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
-        factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
-        )
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
     }
@@ -74,7 +72,7 @@ fun main() = runBlocking {
         Did("did:key:university"),
         Did("did:key:government")
     )
-    val policy = TrustPolicy.allowlist(trustedIssuers)
+    val policy = TrustEvaluator.allowlist(trustedIssuers)
 
     // Verify credential with trust policy
     val result = trustWeave.verify {
@@ -84,7 +82,7 @@ fun main() = runBlocking {
 
     when (result) {
         is VerificationResult.Valid -> println("✓ Credential valid and issuer trusted")
-        is VerificationResult.Invalid -> println("✗ Verification failed: ${result.errors}")
+        is VerificationResult.Invalid -> println("✗ Verification failed: ${result.allErrors.joinToString()}")
     }
 }
 ```
@@ -102,7 +100,7 @@ val trustedIssuers = setOf(
     Did("did:web:government.gov")
 )
 
-val policy = TrustPolicy.allowlist(trustedIssuers)
+val policy = TrustEvaluator.allowlist(trustedIssuers)
 
 val result = trustWeave.verify {
     credential(credential)
@@ -125,7 +123,7 @@ val blockedIssuers = setOf(
     Did("did:key:z6Mk...")
 )
 
-val policy = TrustPolicy.blocklist(blockedIssuers)
+val policy = TrustEvaluator.blocklist(blockedIssuers)
 
 val result = trustWeave.verify {
     credential(credential)
@@ -143,7 +141,7 @@ val result = trustWeave.verify {
 No trust checking - accept all cryptographically valid credentials:
 
 ```kotlin
-val policy = TrustPolicy.acceptAll()
+val policy = TrustEvaluator.acceptAll()
 
 val result = trustWeave.verify {
     credential(credential)
@@ -167,11 +165,8 @@ val result = trustWeave.verify {
 Use trust registry to check for direct trust anchors or trust paths:
 
 ```kotlin
+import org.trustweave.testkit.services.*
 val trustWeave = TrustWeave.build {
-    factories(
-        kmsFactory = TestkitKmsFactory(),
-        didMethodFactory = TestkitDidMethodFactory()
-    )
     keys { provider(IN_MEMORY) }
     did { method(KEY) { algorithm(ED25519) } }
     trust { provider(IN_MEMORY) }
@@ -180,13 +175,13 @@ val trustWeave = TrustWeave.build {
 // Require issuer to be a direct trust anchor
 trustWeave.verify {
     credential(credential)
-    requireTrust(trustWeave.getDslContext().getTrustRegistry()!!)
+    requireTrust(trustWeave.configuration.trustRegistry!!)
 }
 
 // Require trust path (max length 3)
 trustWeave.verify {
     credential(credential)
-    requireTrustPath(trustWeave.getDslContext().getTrustRegistry()!!, maxLength = 3)
+    requireTrustPath(trustWeave.configuration.trustRegistry!!, maxLength = 3)
 }
 ```
 
@@ -200,7 +195,7 @@ trustWeave.verify {
 Implement your own trust logic:
 
 ```kotlin
-class CustomTrustPolicy : TrustPolicy {
+class CustomTrustEvaluator : TrustEvaluator {
     override suspend fun isTrusted(issuer: Did): Boolean {
         // Custom logic here
         return issuer.value.startsWith("did:web:trusted-") ||
@@ -208,7 +203,7 @@ class CustomTrustPolicy : TrustPolicy {
     }
 }
 
-val policy = CustomTrustPolicy()
+val policy = CustomTrustEvaluator()
 
 val result = trustWeave.verify {
     credential(credential)
@@ -236,7 +231,7 @@ trustWeave.verify {
     requireTrustPath(trustRegistry, maxLength = 3)
     
     // Option 3: Custom policy
-    val policy = TrustPolicy.allowlist(trustedIssuers)
+    val policy = TrustEvaluator.allowlist(trustedIssuers)
     withTrustPolicy(policy)
     
     // Option 4: Allow untrusted (default)
@@ -248,17 +243,17 @@ trustWeave.verify {
 
 ### 1. Start Permissive, Tighten Over Time
 
-For new applications, start with `TrustPolicy.acceptAll()` and gradually add restrictions:
+For new applications, start with `TrustEvaluator.acceptAll()` and gradually add restrictions:
 
 ```kotlin
 // Phase 1: Accept all
-val policy = TrustPolicy.acceptAll()
+val policy = TrustEvaluator.acceptAll()
 
 // Phase 2: Add blocklist for known bad actors
-val policy = TrustPolicy.blocklist(blockedIssuers)
+val policy = TrustEvaluator.blocklist(blockedIssuers)
 
 // Phase 3: Move to allowlist as you identify trusted issuers
-val policy = TrustPolicy.allowlist(trustedIssuers)
+val policy = TrustEvaluator.allowlist(trustedIssuers)
 ```
 
 ### 2. Combine with Trust Registry
@@ -274,7 +269,7 @@ trustWeave.trust {
 }
 
 // Policy for quick decisions or additional filtering
-val policy = TrustPolicy.blocklist(recentlyRevokedIssuers)
+val policy = TrustEvaluator.blocklist(recentlyRevokedIssuers)
 
 trustWeave.verify {
     credential(credential)
@@ -288,12 +283,12 @@ trustWeave.verify {
 Different credential types may need different trust policies:
 
 ```kotlin
-fun getPolicyForCredentialType(type: String): TrustPolicy {
+fun getPolicyForCredentialType(type: String): TrustEvaluator {
     return when (type) {
-        "GovernmentCredential" -> TrustPolicy.allowlist(governmentIssuers)
-        "EducationCredential" -> TrustPolicy.allowlist(educationIssuers)
-        "SocialCredential" -> TrustPolicy.acceptAll()
-        else -> TrustPolicy.blocklist(knownBadActors)
+        "GovernmentCredential" -> TrustEvaluator.allowlist(governmentIssuers)
+        "EducationCredential" -> TrustEvaluator.allowlist(educationIssuers)
+        "SocialCredential" -> TrustEvaluator.acceptAll()
+        else -> TrustEvaluator.blocklist(knownBadActors)
     }
 }
 
@@ -322,7 +317,7 @@ when (result) {
         processCredential(credential)
     }
     is VerificationResult.Invalid -> {
-        val untrustedError = result.errors.find { 
+        val untrustedError = result.allErrors.find { 
             it.contains("untrusted") || it.contains("not trusted")
         }
         if (untrustedError != null) {
@@ -339,7 +334,7 @@ when (result) {
 For performance, consider caching policy decisions:
 
 ```kotlin
-class CachedTrustPolicy(private val delegate: TrustPolicy) : TrustPolicy {
+class CachedTrustEvaluator(private val delegate: TrustEvaluator) : TrustEvaluator {
     private val cache = mutableMapOf<Did, Boolean>()
     
     override suspend fun isTrusted(issuer: Did): Boolean {
@@ -359,17 +354,17 @@ class CredentialVerificationEndpoint(
     private val trustWeave: TrustWeave,
     private val trustedIssuers: Set<Did>
 ) {
-    suspend fun verifyCredential(
+    suspend fun verifyFromJson(
         credentialJson: String
     ): VerificationResponse {
         val credential = Json.decodeFromString<VerifiableCredential>(credentialJson)
-        val policy = TrustPolicy.allowlist(trustedIssuers)
+        val policy = TrustEvaluator.allowlist(trustedIssuers)
         
         val result = trustWeave.verify {
             credential(credential)
             withTrustPolicy(policy)
-            checkRevocation(true)
-            checkExpiration(true)
+            checkRevocation()
+            checkExpiration()
         }
         
         return when (result) {
@@ -379,7 +374,7 @@ class CredentialVerificationEndpoint(
             )
             is VerificationResult.Invalid -> VerificationResponse(
                 valid = false,
-                errors = result.errors
+                errors = result.allErrors
             )
         }
     }
@@ -395,7 +390,7 @@ suspend fun verifyWithMultiplePolicies(
     blocklist: Set<Did>
 ): VerificationResult {
     // Combine allowlist and blocklist
-    val combinedPolicy = object : TrustPolicy {
+    val combinedPolicy = object : TrustEvaluator {
         override suspend fun isTrusted(issuer: Did): Boolean {
             // First check blocklist
             if (issuer in blocklist) return false

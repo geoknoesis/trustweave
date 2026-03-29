@@ -45,7 +45,7 @@ class WaltIdKeyMethodTest {
         val document = method.createDid()
 
         val updated = method.updateDid(document.id) { doc ->
-            doc.copy(alsoKnownAs = listOf(org.trustweave.did.identifiers.Did("did:web:example.com")))
+            doc.copy(alsoKnownAs = listOf(org.trustweave.did.model.DidOrUrl.AsDid(org.trustweave.did.identifiers.Did("did:web:example.com"))))
         }
 
         assertEquals(1, updated.alsoKnownAs.size)

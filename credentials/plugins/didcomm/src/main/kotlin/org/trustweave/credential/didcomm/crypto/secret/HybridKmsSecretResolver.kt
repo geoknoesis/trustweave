@@ -4,6 +4,7 @@ import org.trustweave.kms.KeyManagementService
 import org.didcommx.didcomm.secret.Secret
 import org.didcommx.didcomm.secret.SecretResolver
 import kotlinx.coroutines.runBlocking
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Hybrid SecretResolver that uses local keys for DIDComm operations.
@@ -38,7 +39,7 @@ class HybridKmsSecretResolver(
     private val cloudKms: KeyManagementService? = null // For other operations (optional)
 ) {
 
-    private val keyCache = mutableMapOf<String, Secret>()
+    private val keyCache = ConcurrentHashMap<String, Secret>()
 
     /**
      * Resolves a secret by key ID.

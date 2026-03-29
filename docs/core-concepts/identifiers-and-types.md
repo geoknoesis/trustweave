@@ -164,6 +164,7 @@ Verification Method IDs combine a DID with a key fragment:
 ```kotlin
 import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.core.identifiers.KeyId
+import org.trustweave.did.identifiers.extractKeyId
 
 val did = Did("did:key:z6Mk...")
 
@@ -188,7 +189,6 @@ val vmId4 = VerificationMethodId.parse("did:key:z6Mk...#key-1")
 val (didPart, keyIdPart) = vmId4.decompose()
 
 // ✅ Extract key ID fragment using type-safe extension function
-import org.trustweave.did.identifiers.extractKeyId
 
 val vmId = VerificationMethodId(did, KeyId("#key-1"))
 val keyId = vmId.extractKeyId()  // Returns "key-1" (without # prefix)
@@ -362,7 +362,7 @@ val schema = CredentialSchema(
 All identifier and type fields are now strongly typed:
 
 ```kotlin
-import org.trustweave.credential.models.VerifiableCredential
+import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.identifiers.IssuerId
 import org.trustweave.credential.types.CredentialType
@@ -389,25 +389,22 @@ println(credential.issuer.value)   // "did:key:z6Mk..."
 println(credential.type.first())   // CredentialType.VerifiableCredential
 ```
 
-### Proof
+### Proof (`CredentialProof`)
 
-Proofs use typed proof type and verification method ID:
+VC proofs are modeled as `org.trustweave.credential.model.vc.CredentialProof` (VC-LD, JWT, or SD-JWT-VC):
 
 ```kotlin
-import org.trustweave.credential.models.Proof
-import org.trustweave.credential.types.ProofType
+import org.trustweave.credential.model.vc.CredentialProof
 import org.trustweave.did.identifiers.Did
-import org.trustweave.did.identifiers.VerificationMethodId
+import kotlinx.datetime.Instant
 
 val did = Did("did:key:z6Mk...")
-val proof = Proof(
-    type = ProofType.Ed25519Signature2020,  // ✅ Typed
-    created = "2024-01-15T10:00:00Z",
-    verificationMethod = did with "key-1",  // ✅ Typed VerificationMethodId
+val proof = CredentialProof.LinkedDataProof(
+    type = "Ed25519Signature2020",
+    created = Instant.parse("2024-01-15T10:00:00Z"),
+    verificationMethod = "${did.value}#key-1",
     proofPurpose = "assertionMethod",
-    proofValue = "zQeVbY4oey5q2M3XKaxup3tmzN4DRFT...",
-    challenge = null,
-    domain = null
+    proofValue = "zQeVbY4oey5q2M3XKaxup3tmzN4DRFT..."
 )
 ```
 
@@ -682,9 +679,9 @@ val did = "did:key:z6Mk...".toDidOrNull() ?: return
 
 ## Related Documentation
 
-- [Identifier Design Specification](../advanced/identifier-design.md) - Comprehensive design document covering the architecture and implementation details
-- [Decentralized Identifiers (DIDs)](dids.md) - Learn about DIDs and DID documents
-- [Verifiable Credentials](verifiable-credentials.md) - Learn about credentials and their lifecycle
+- Identifier Design Specification](../advanced/identifier-design.md) - Comprehensive design document covering the architecture and implementation details
+- Decentralized Identifiers (DIDs)](dids.md) - Learn about DIDs and DID documents
+- Verifiable Credentials](verifiable-credentials.md) - Learn about credentials and their lifecycle
 
 ---
 

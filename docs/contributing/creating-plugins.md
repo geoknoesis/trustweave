@@ -29,10 +29,10 @@ Add the necessary dependencies to your project:
 ```kotlin
 dependencies {
     // Core interfaces
-    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:did-did-core:0.6.0")
+    implementation("org.trustweave:anchors-anchor-core:0.6.0")
+    implementation("org.trustweave:kms-kms-core:0.6.0")
+    implementation("org.trustweave:common:0.6.0")
 
     // SPI support (optional, for auto-discovery)
     // Note: Module paths have been renamed to avoid circular dependency issues:
@@ -41,7 +41,7 @@ dependencies {
     // - kms:core → kms:kms-core
     // - anchors:core → anchors:anchor-core
     // - wallet:core → wallet:wallet-core
-    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:common:0.6.0")
 }
 ```
 
@@ -51,143 +51,68 @@ The `DidMethod` interface allows you to implement custom DID methods.
 
 ### Interface Definition
 
-```kotlin
-interface DidMethod {
-    val method: String  // e.g., "web", "key", "ion"
+Implement **`org.trustweave.did.DidMethod`** in **`did-core`** (it extends **`DidMethodResolver`**). Resolution uses the type-safe **`Did`** identifier and returns sealed **`org.trustweave.did.resolver.DidResolutionResult`** — not a nullable document on a single data class.
 
-    suspend fun createDid(options: DidCreationOptions): DidDocument
-    suspend fun resolveDid(did: String): DidResolutionResult
-    suspend fun updateDid(did: String, updater: (DidDocument) -> DidDocument): DidDocument
-    suspend fun deactivateDid(did: String): Boolean
+```kotlin
+// Abbreviated — see did-core for full Javadoc
+interface DidMethod : DidMethodResolver {
+    val method: String
+    suspend fun createDid(options: DidCreationOptions = DidCreationOptions()): DidDocument
+    override suspend fun resolveDid(did: Did): DidResolutionResult
+    suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument): DidDocument
+    suspend fun deactivateDid(did: Did): Boolean
 }
 ```
 
 ### Example Implementation
 
+**Reference:** Copy from **`org.trustweave.testkit.did.DidKeyMockMethod`** — it shows **`GenerateKeyResult`**, **`VerificationMethodId`**, **`Did`**, **`kotlinx.datetime.Clock`**, and correct **`DidDocument`** construction.
+
+**Resolution** must return **`DidResolutionResult.Success`** or a **`Failure`** subtype (e.g. **`NotFound`**, **`InvalidFormat`**, **`MethodNotRegistered`**, **`ResolutionError`**):
+
 ```kotlin
-package com.example.TrustWeave.plugins
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.model.DidDocument
+import org.trustweave.did.model.DidDocumentMetadata
+import org.trustweave.did.resolver.DidResolutionMetadata
+import org.trustweave.did.resolver.DidResolutionResult
+import kotlinx.datetime.Clock
 
-import org.trustweave.did.*
-import org.trustweave.kms.KeyManagementService
-import java.time.Instant
-import java.util.UUID
+// private val documents: MutableMap<String, DidDocument> = ...
 
-/**
- * Example implementation of a custom DID method.
- * This creates simple did:example DIDs stored in memory.
- */
-class ExampleDidMethod(
-    private val kms: KeyManagementService
-) : DidMethod {
-
-    override val method = "example"
-
-    // In-memory storage (use a database in production)
-    private val documents = mutableMapOf<String, DidDocument>()
-
-    override suspend fun createDid(options: DidCreationOptions): DidDocument {
-        // Generate a key using the KMS
-        val algorithm = options.algorithm.algorithmName
-        val keyHandle = kms.generateKey(algorithm, options.additionalProperties)
-
-        // Create DID identifier
-        val didId = UUID.randomUUID().toString().replace("-", "")
-        val did = "did:$method:$didId"
-
-        // Create verification method
-        val verificationMethodId = "$did#${keyHandle.id}"
-        val verificationMethod = VerificationMethodRef(
-            id = verificationMethodId,
-            type = when (algorithm.uppercase()) {
-                "ED25519" -> "Ed25519VerificationKey2020"
-                "SECP256K1" -> "EcdsaSecp256k1VerificationKey2019"
-                else -> "JsonWebKey2020"
-            },
-            controller = did,
-            publicKeyJwk = keyHandle.publicKeyJwk,
-            publicKeyMultibase = keyHandle.publicKeyMultibase
+override suspend fun resolveDid(did: Did): DidResolutionResult {
+    val document = documents[did.value]
+    val now = Clock.System.now()
+    return if (document != null) {
+        DidResolutionResult.Success(
+            document = document,
+            documentMetadata = DidDocumentMetadata(created = now, updated = now),
+            resolutionMetadata = DidResolutionMetadata(pattern = method)
         )
-
-        // Build DID Document
-        val document = DidDocument(
-            id = did,
-            verificationMethod = listOf(verificationMethod),
-            authentication = listOf(verificationMethodId),
-            assertionMethod = if (options.purposes.contains(KeyPurpose.ASSERTION)) {
-                listOf(verificationMethodId)
-            } else emptyList()
-        )
-
-        // Store document
-        documents[did] = document
-        return document
-    }
-
-    override suspend fun resolveDid(did: String): DidResolutionResult {
-        // Validate DID format
-        if (!did.startsWith("did:$method:")) {
-            return DidResolutionResult(
-                document = null,
-                resolutionMetadata = mapOf("error" to "invalidDid")
-            )
-        }
-
-        val document = documents[did]
-        val now = Instant.now()
-
-        return if (document != null) {
-            DidResolutionResult(
-                document = document,
-                documentMetadata = DidDocumentMetadata(
-                    created = now,
-                    updated = now
-                ),
-                resolutionMetadata = emptyMap()
-            )
-        } else {
-            DidResolutionResult(
-                document = null,
-                resolutionMetadata = mapOf("error" to "notFound")
-            )
-        }
-    }
-
-    override suspend fun updateDid(
-        did: String,
-        updater: (DidDocument) -> DidDocument
-    ): DidDocument {
-        val current = documents[did]
-            ?: throw IllegalArgumentException("DID not found: $did")
-
-        val updated = updater(current)
-        documents[did] = updated
-        return updated
-    }
-
-    override suspend fun deactivateDid(did: String): Boolean {
-        return documents.remove(did) != null
+    } else {
+        DidResolutionResult.Failure.NotFound(did = did, reason = "DID not found")
     }
 }
 ```
+
+Wrong method prefix or malformed DID string should use **`DidResolutionResult.Failure.InvalidFormat`** (or validate earlier with **`DidValidator`**). Unregistered method names are **`Failure.MethodNotRegistered`** at the registry layer.
 
 ### Registration
 
-**Manual Registration:**
-```kotlin
-val TrustWeave = TrustWeave.create {
-    kms = InMemoryKeyManagementService()
+**Typical approach:** ship a **`DidMethodProvider`** (and `META-INF/services/org.trustweave.did.spi.DidMethodProvider` (see existing plugins under `did/plugins/`)) so **`TrustWeave.build { }`** can resolve your method when the JAR is on the classpath.
 
-    didMethods {
-        + ExampleDidMethod(kms!!)
-    }
+**Smoke test in a coroutine:**
+```kotlin
+import kotlinx.coroutines.runBlocking
+import org.trustweave.trust.TrustWeave
+
+fun main() = runBlocking {
+    val trustWeave = TrustWeave.quickStart()
+    // Exercise createDid { method("yourMethod") } once SPI + classpath are wired.
 }
 ```
 
-**Or via TrustWeave instance:**
-```kotlin
-val TrustWeave = TrustWeave.create()
-TrustWeave.registerDidMethod(ExampleDidMethod(kms))
-```
+There is **no** `TrustWeave.registerDidMethod(...)` on the facade; configuration is applied when the instance is built.
 
 ## 2. Implementing a Blockchain Anchor Client
 
@@ -311,18 +236,17 @@ class MyBlockchainClient(
 
 ### Registration
 
+Expose a **`BlockchainAnchorClientProvider`** (SPI) named for your adapter, then reference it from **`TrustWeave.build`**:
+
 ```kotlin
-val TrustWeave = TrustWeave.create {
-    blockchains {
-        "example:mainnet" to ExampleBlockchainAnchorClient("example:mainnet")
+val trustWeave = TrustWeave.build {
+    anchor {
+        chain("example:mainnet") {
+            provider("example")
+            options { /* passed to provider.create(chainId, options) */ }
+        }
     }
 }
-
-// Or after creation
-TrustWeave.registerBlockchainClient(
-    "example:mainnet",
-    ExampleBlockchainAnchorClient("example:mainnet")
-)
 ```
 
 ## 3. Implementing a Proof Generator
@@ -348,7 +272,7 @@ interface ProofGenerator {
 ```kotlin
 package com.example.TrustWeave.plugins
 
-import org.trustweave.credential.models.*
+import org.trustweave.credential.model.vc.*
 import org.trustweave.credential.proof.*
 import org.trustweave.core.util.normalizeKeyId
 
@@ -396,15 +320,7 @@ class ExampleProofGenerator(
 
 ### Registration
 
-```kotlin
-val TrustWeave = TrustWeave.create {
-    proofGenerators {
-        + ExampleProofGenerator { data, keyId ->
-            kms.sign(KeyId(keyId), data)
-        }
-    }
-}
-```
+Proof generators are not registered on a separate `proofGenerators { }` builder. They are typically bundled inside a custom **`CredentialService`** (see below) or the default service constructed from KMS + DID resolution.
 
 ## 4. Implementing a Key Management Service
 
@@ -511,183 +427,31 @@ class ExampleKeyManagementService : KeyManagementService {
 ### Registration
 
 ```kotlin
-val TrustWeave = TrustWeave.create {
-    kms = ExampleKeyManagementService()
+val trustWeave = TrustWeave.build {
+    customKms(ExampleKeyManagementService())
+    did { method("key") { algorithm("Ed25519") } }
 }
 ```
 
-## 5. Implementing a Credential Service
+## 5. Extending credential issuance / verification
 
-The `CredentialService` interface allows you to add credential issuance/verification providers.
+The public **`CredentialService`** API is **`issue(IssuanceRequest)`**, **`verify(...)`**, **`createPresentation`**, **`verifyPresentation`**, and format helpers (`supports`, `supportedFormats`). The default implementation composes built-in **proof engines** (VC-LD, SD-JWT-VC, etc.).
 
-### Interface Definition
+**Typical extensions (instead of reimplementing the whole service):**
+
+- Implement or configure **`ProofEngine`** / SPI types under `credentials/credential-api` (see `spi.proof` and internal engines).
+- Supply a custom **`credentialService(...)`** instance only if you truly replace orchestration; register it on the facade:
 
 ```kotlin
-interface CredentialService {
-    val providerName: String
-    val supportedProofTypes: List<String>
-    val supportedSchemaFormats: List<SchemaFormat>
-
-    suspend fun issueCredential(
-        credential: VerifiableCredential,
-        options: CredentialIssuanceOptions
-    ): VerifiableCredential
-
-    suspend fun verifyCredential(
-        credential: VerifiableCredential,
-        options: CredentialVerificationOptions
-    ): CredentialVerificationResult
-
-    suspend fun createPresentation(
-        credentials: List<VerifiableCredential>,
-        options: PresentationOptions
-    ): VerifiablePresentation
-
-    suspend fun verifyPresentation(
-        presentation: VerifiablePresentation,
-        options: PresentationVerificationOptions
-    ): PresentationVerificationResult
+import org.trustweave.testkit.services.*
+val trustWeave = TrustWeave.build {
+    keys { provider(IN_MEMORY); algorithm(ED25519) }
+    did { method(KEY) { algorithm(ED25519) } }
+    credentialService(myCustomCredentialService)
 }
 ```
 
-### Example Implementation
-
-```kotlin
-package com.example.TrustWeave.plugins
-
-import org.trustweave.credential.*
-import org.trustweave.credential.models.*
-import org.trustweave.credential.proof.*
-import org.trustweave.spi.SchemaFormat
-
-/**
- * Example credential service implementation.
- */
-class ExampleCredentialService(
-    private val proofGenerator: ProofGenerator
-) : CredentialService {
-
-    override val providerName = "example"
-    override val supportedProofTypes = listOf("Ed25519Signature2020")
-    override val supportedSchemaFormats = listOf(SchemaFormat.JSON_SCHEMA)
-
-    override suspend fun issueCredential(
-        credential: VerifiableCredential,
-        options: CredentialIssuanceOptions
-    ): VerifiableCredential {
-        // Generate proof
-        val proof = proofGenerator.generateProof(
-            credential = credential,
-            keyId = options.keyId ?: throw IllegalArgumentException("keyId required"),
-            options = ProofOptions(
-                proofPurpose = "assertionMethod",
-                challenge = options.challenge,
-                domain = options.domain
-            )
-        )
-
-        // Attach proof to credential
-        return credential.copy(proof = proof)
-    }
-
-    override suspend fun verifyCredential(
-        credential: VerifiableCredential,
-        options: CredentialVerificationOptions
-    ): CredentialVerificationResult {
-        val errors = mutableListOf<String>()
-        var proofValid = false
-        var notExpired = true
-        var notRevoked = true
-
-        // Verify proof
-        if (credential.proof == null) {
-            errors.add("Credential missing proof")
-        } else {
-            // Implement proof verification
-            proofValid = true // Simplified
-        }
-
-        // Check expiration
-        if (options.checkExpiration && credential.expirationDate != null) {
-            val expiration = java.time.Instant.parse(credential.expirationDate)
-            notExpired = expiration.isAfter(java.time.Instant.now())
-            if (!notExpired) {
-                errors.add("Credential expired")
-            }
-        }
-
-        // Check revocation (simplified)
-        if (options.checkRevocation) {
-            // Implement revocation check
-            notRevoked = true
-        }
-
-        return CredentialVerificationResult(
-            valid = errors.isEmpty() && proofValid && notExpired && notRevoked,
-            errors = errors,
-            proofValid = proofValid,
-            notExpired = notExpired,
-            notRevoked = notRevoked
-        )
-    }
-
-    override suspend fun createPresentation(
-        credentials: List<VerifiableCredential>,
-        options: PresentationOptions
-    ): VerifiablePresentation {
-        // Create presentation
-        val presentation = VerifiablePresentation(
-            id = "urn:uuid:${java.util.UUID.randomUUID()}",
-            type = listOf("VerifiablePresentation"),
-            holder = options.holderDid,
-            verifiableCredential = credentials
-        )
-
-        // Generate proof
-        val proof = proofGenerator.generateProof(
-            credential = VerifiableCredential(
-                id = presentation.id,
-                type = listOf("VerifiablePresentation"),
-                issuer = options.holderDid,
-                credentialSubject = kotlinx.serialization.json.buildJsonObject {
-                    // Presentation-specific subject
-                },
-                issuanceDate = java.time.Instant.now().toString()
-            ),
-            keyId = options.keyId ?: throw IllegalArgumentException("keyId required"),
-            options = ProofOptions(
-                proofPurpose = "authentication",
-                challenge = options.challenge,
-                domain = options.domain
-            )
-        )
-
-        return presentation.copy(proof = proof)
-    }
-
-    override suspend fun verifyPresentation(
-        presentation: VerifiablePresentation,
-        options: PresentationVerificationOptions
-    ): PresentationVerificationResult {
-        // Implement presentation verification
-        return PresentationVerificationResult(
-            valid = true,
-            presentationProofValid = true,
-            challengeValid = true
-        )
-    }
-}
-```
-
-### Registration
-
-```kotlin
-val TrustWeave = TrustWeave.create {
-    credentialServices {
-        + ExampleCredentialService(proofGenerator)
-    }
-}
-```
+See **[Credential Service API Reference](../api-reference/credential-service-api.md)** for the current method list and **`CredentialServices` / `credentialService` factories**.
 
 ## 6. Implementing a Wallet Factory
 
@@ -712,8 +476,10 @@ interface WalletFactory {
 ```kotlin
 package com.example.TrustWeave.plugins
 
-import org.trustweave.spi.services.*
-import org.trustweave.credential.wallet.Wallet
+import org.trustweave.testkit.credential.InMemoryWallet
+import org.trustweave.wallet.Wallet
+import org.trustweave.wallet.services.WalletCreationOptions
+import org.trustweave.wallet.services.WalletFactory
 
 /**
  * Example wallet factory implementation.
@@ -726,7 +492,7 @@ class ExampleWalletFactory : WalletFactory {
         walletDid: String?,
         holderDid: String?,
         options: WalletCreationOptions
-    ): Any {
+    ): Wallet {
         return when (providerName) {
             "inMemory" -> {
                 // Create in-memory wallet
@@ -736,12 +502,8 @@ class ExampleWalletFactory : WalletFactory {
                 )
             }
             "database" -> {
-                // Create database-backed wallet
-                DatabaseWallet(
-                    walletId = walletId ?: generateWalletId(),
-                    holderDid = holderDid ?: throw IllegalArgumentException("holderDid required"),
-                    connectionString = options.storagePath
-                        ?: throw IllegalArgumentException("storagePath required for database wallet")
+                throw UnsupportedOperationException(
+                    "Replace with your own Wallet implementation (e.g. JDBC-backed) wired to options.storagePath"
                 )
             }
             else -> throw IllegalArgumentException("Unknown provider: $providerName")
@@ -757,8 +519,14 @@ class ExampleWalletFactory : WalletFactory {
 ### Registration
 
 ```kotlin
-val TrustWeave = TrustWeave.create {
-    walletFactory = ExampleWalletFactory()
+import kotlinx.coroutines.runBlocking
+import org.trustweave.trust.TrustWeave
+
+val trustWeave = runBlocking {
+    TrustWeave.build {
+        factories(walletFactory = ExampleWalletFactory())
+        did { method("key") { algorithm("Ed25519") } }
+    }
 }
 ```
 
@@ -766,41 +534,36 @@ val TrustWeave = TrustWeave.create {
 
 ### Manual Registration
 
-Register plugins directly when creating TrustWeave:
+Configure plugins when **building** the facade (SPI-discovered providers are merged automatically):
 
 ```kotlin
-val TrustWeave = TrustWeave.create {
-    kms = MyKms()
-    walletFactory = MyWalletFactory()
+import kotlinx.coroutines.runBlocking
+import org.trustweave.trust.TrustWeave
 
-    didMethods {
-        + MyDidMethod(kms!!)
-    }
+val trustWeave = runBlocking {
+    TrustWeave.build {
+        customKms(MyKms())
+        factories(walletFactory = MyWalletFactory())
 
-    blockchains {
-        "myChain:mainnet" to MyBlockchainClient("myChain:mainnet")
-    }
+        did {
+            method("mymethod") { /* options consumed by your DidMethodProvider, if any */ }
+        }
 
-    proofGenerators {
-        + MyProofGenerator(signer)
-    }
+        anchor {
+            chain("myChain:mainnet") {
+                provider("myProvider") // BlockchainAnchorClientProvider name
+                options { /* passed to provider.create(chainId, options) */ }
+            }
+        }
 
-    credentialServices {
-        + MyCredentialService()
+        credentialService(MyCredentialService())
     }
 }
 ```
 
-### Runtime Registration
+### Runtime reconfiguration
 
-Register plugins after TrustWeave creation:
-
-```kotlin
-val TrustWeave = TrustWeave.create()
-
-TrustWeave.registerDidMethod(MyDidMethod(kms))
-TrustWeave.registerBlockchainClient("myChain:mainnet", MyBlockchainClient("myChain:mainnet"))
-```
+The **`TrustWeave`** facade does not support adding DID methods or anchor clients **after** construction. Build a new instance with an updated **`TrustWeave.build { }`** block (or manage long-lived clients yourself and call **`TrustWeave.from(config)`** only from code that can obtain a **`TrustWeaveConfig`** legally).
 
 ### SPI Auto-Discovery (Advanced)
 
@@ -829,7 +592,7 @@ com.example.MyDidMethodProvider
 Plugins can optionally implement `PluginLifecycle` for initialization and cleanup:
 
 ```kotlin
-import org.trustweave.spi.PluginLifecycle
+import org.trustweave.core.plugin.PluginLifecycle
 
 class MyBlockchainClient : BlockchainAnchorClient, PluginLifecycle {
 
@@ -854,27 +617,9 @@ class MyBlockchainClient : BlockchainAnchorClient, PluginLifecycle {
 }
 ```
 
-TrustWeave automatically manages lifecycle for all registered plugins:
+Call **`trustWeave.close()`** when you discard the facade so **`Closeable`** collaborators (KMS, anchor clients, etc.) can shut down. If **your** plugin implements **`PluginLifecycle`**, invoke those hooks from your own wiring; the facade does not expose **`initialize()`** / **`start()`** / **`stop()`**.
 
-```kotlin
-val TrustWeave = TrustWeave.create { ... }
-
-// Initialize all plugins
-TrustWeave.initialize().getOrThrow()
-
-// Start all plugins
-TrustWeave.start().getOrThrow()
-
-// ... use TrustWeave ...
-
-// Stop all plugins
-TrustWeave.stop().getOrThrow()
-
-// Cleanup
-TrustWeave.cleanup().getOrThrow()
-```
-
-See [Plugin Lifecycle](../advanced/plugin-lifecycle.md) for more details.
+See [Plugin lifecycle](../advanced/plugin-lifecycle.md) for patterns.
 
 ## Testing Your Plugin
 
@@ -918,15 +663,13 @@ class ExampleDidMethodTest {
 ```kotlin
 @Test
 fun `test plugin with TrustWeave`() = runTest {
-    val TrustWeave = TrustWeave.create {
-        kms = InMemoryKeyManagementService()
-        didMethods {
-            + ExampleDidMethod(kms!!)
-        }
+    val trustWeave = TrustWeave.build {
+        customKms(InMemoryKeyManagementService())
+        did { method("example") { algorithm("Ed25519") } }
     }
 
-    val did = TrustWeave.createDid("example").getOrThrow()
-    assertTrue(did.id.startsWith("did:example:"))
+    val did = trustWeave.createDid { method("example") }.getOrThrowDid()
+    assertTrue(did.value.startsWith("did:example:"))
 }
 ```
 
@@ -950,10 +693,10 @@ fun `test plugin with TrustWeave`() = runTest {
 
 ## Related Documentation
 
-- [Plugin Lifecycle Management](../advanced/plugin-lifecycle.md)
-- [Integration Modules](../integrations/README.md)
-- [Architecture Overview](../introduction/architecture-overview.md)
-- [Core API Reference](../api-reference/core-api.md)
-- [Credential Service API](../api-reference/credential-service-api.md)
+- Plugin Lifecycle Management](../advanced/plugin-lifecycle.md)
+- Integration Modules](../integrations/README.md)
+- Architecture Overview](../introduction/architecture-overview.md)
+- Core API Reference](../api-reference/core-api.md)
+- Credential Service API](../api-reference/credential-service-api.md)
 
 

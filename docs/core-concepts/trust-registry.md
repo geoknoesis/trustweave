@@ -11,13 +11,13 @@ A **Trust Registry** is a system for managing trust anchors and discovering trus
 
 The Trust Registry implements a **Web of Trust** model where trust is established through relationships between DIDs, rather than relying on a single central authority.
 
-## Trust Layer Setup Checklist
+## TrustWeave setup checklist
 
 The trust registry sits on top of the rest of the issuance/verification stack. Before you plug it in, confirm the supporting primitives below are configured—without them the registry cannot evaluate trust paths.
 
 ### DID resolution
 **Why it matters:** Trust checks must confirm that issuers resolve to valid DID documents.
-**What to wire:** Instantiate a `CredentialDidResolver` that routes lookups to your registered `DidMethod` implementations. When constructing `CredentialIssuer` or `CredentialVerifier`, pass `resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }` to satisfy the new constructor signature.
+**What to wire:** Configure DID methods and resolvers inside `TrustWeave.build { did { ... } }` (and optional custom KMS) so issuance and verification share one resolver graph. For verification, call `trustWeave.verify { credential(...); requireTrust(registry); ... }` instead of wiring a standalone verifier type.
 **Related docs:** [DIDs](dids.md), [Verification Policies](../advanced/verification-policies.md).
 
 ### Key management
@@ -27,7 +27,7 @@ The trust registry sits on top of the rest of the issuance/verification stack. B
 
 ### Proof generators
 **Why it matters:** The registry does not create proofs itself, but it relies on credentials and presentations having cryptographic evidence attached.
-**What to wire:** Register an `Ed25519ProofGenerator` (or your preferred suite) in the `ProofGeneratorRegistry`, or inject one into `CredentialIssuer`. TrustWeave's built-in verifier currently performs structural checks; add dedicated signature validation if your policies require it.
+**What to wire:** Use `trustWeave.issue { ... withProof(...) }` (or the default proof suite from `TrustWeave.build { credentials { ... } }`) so credentials carry proofs verifiers can check. For custom suites, register proof engines with the configured `CredentialService` / adapters rather than legacy standalone issuer helpers.
 **Related docs:** [Wallet API Reference – CredentialPresentation](../api-reference/wallet-api.md#credentialpresentation).
 
 ### Schema and status services
@@ -73,7 +73,8 @@ Trust scores range from 0.0 to 1.0, with higher scores indicating greater trust.
 ### Configuring Trust Registry
 
 ```kotlin
-val trustWeave = trustWeave {
+import org.trustweave.testkit.services.*
+val trustWeave = TrustWeave.build {
     keys {
         provider(IN_MEMORY)
         algorithm(KeyAlgorithms.ED25519)
@@ -95,7 +96,7 @@ val trustWeave = trustWeave {
 }
 ```
 
-**Outcome:** Creates a trust layer with in-memory providers so you can experiment with anchors and verification logic without external dependencies.
+**Outcome:** Creates a TrustWeave instance with in-memory providers so you can experiment with anchors and verification logic without external dependencies.
 
 ### Adding Trust Anchors
 
@@ -147,15 +148,25 @@ trustWeave.trust {
 ### Finding Trust Paths
 
 ```kotlin
+import org.trustweave.did.identifiers.Did
+import org.trustweave.trust.types.TrustPath
+
 trustWeave.trust {
-    val path = getTrustPath("did:key:verifier", "did:key:issuer")
-    if (path != null) {
-        println("Trust path found:")
-        println("  Path: ${path.path.joinToString(" -> ")}")
-        println("  Trust Score: ${path.trustScore}")
-        println("  Valid: ${path.valid}")
-    } else {
-        println("No trust path found")
+    when (
+        val path = findTrustPath(
+            Did("did:key:verifier"),
+            Did("did:key:issuer")
+        )
+    ) {
+        is TrustPath.Verified -> {
+            println("Trust path found:")
+            println("  Path: ${path.fullPath.joinToString(" -> ") { it.value }}")
+            println("  Trust Score: ${path.trustScore}")
+            println("  Verified: ${path.verified}")
+        }
+        is TrustPath.NotFound -> {
+            println("No trust path found${path.reason?.let { ": $it" } ?: ""}")
+        }
     }
 }
 ```
@@ -212,15 +223,15 @@ The formula ensures that:
 Trust registry can be integrated into credential verification:
 
 ```kotlin
-val result = trustWeave.verify {
-    credential(credential)
-    checkTrustRegistry(true) // Enable trust registry checking
-}
+import org.trustweave.credential.results.VerificationResult
 
-if (result.trustRegistryValid) {
-    println("Issuer is trusted")
-} else {
-    println("Issuer is not trusted: ${result.errors}")
+when (val result = trustWeave.verify {
+    credential(credential)
+    requireTrust(requireNotNull(trustWeave.configuration.trustRegistry))
+}) {
+    is VerificationResult.Valid -> println("Issuer is trusted (and checks passed)")
+    is VerificationResult.Invalid.UntrustedIssuer -> println("Issuer is not trusted")
+    else -> println(result.allErrors.joinToString())
 }
 ```
 
@@ -229,20 +240,18 @@ if (result.trustRegistryValid) {
 ### Complete Verification Example
 
 ```kotlin
-val result = trustWeave.verify {
-    credential(credential)
-    checkTrustRegistry(true)
-    checkExpiration(true)
-    validateSchema(true)
-    verifyDelegation(true) // Also check delegation if needed
-}
+import org.trustweave.credential.results.VerificationResult
 
-println("Verification Result:")
-println("  Valid: ${result.valid}")
-println("  Trust Registry Valid: ${result.trustRegistryValid}")
-println("  Proof Valid: ${result.proofValid}")
-println("  Not Expired: ${result.notExpired}")
-println("  Schema Valid: ${result.schemaValid}")
+val registry = requireNotNull(trustWeave.configuration.trustRegistry)
+when (val result = trustWeave.verify {
+    credential(credential)
+    requireTrust(registry)
+    checkExpiration()
+    validateSchema("https://example.org/schemas/credential.json")
+}) {
+    is VerificationResult.Valid -> println("Verification succeeded")
+    is VerificationResult.Invalid -> println(result.allErrors.joinToString())
+}
 ```
 
 ## Advanced Usage
@@ -250,9 +259,14 @@ println("  Schema Valid: ${result.schemaValid}")
 ### Building Trust Networks
 
 ```kotlin
+import org.trustweave.did.identifiers.Did
+import org.trustweave.testkit.trust.InMemoryTrustRegistry
+import org.trustweave.trust.types.IssuerIdentity
+import org.trustweave.trust.types.TrustPath
+import org.trustweave.trust.types.VerifierIdentity
+
 // Create a trust network with multiple anchors
 trustWeave.trust {
-    // Add multiple trust anchors
     addAnchor("did:key:university1") {
         credentialTypes("EducationCredential")
     }
@@ -262,13 +276,20 @@ trustWeave.trust {
     addAnchor("did:key:company1") {
         credentialTypes("EmploymentCredential")
     }
+}
 
-    // Get registry to add trust relationships
-    val registry = trustWeave.dsl().getTrustRegistry() as? InMemoryTrustRegistry
-    registry?.addTrustRelationship("did:key:university1", "did:key:university2")
+// Optional: wire relationships on an in-memory registry (tests / demos)
+val registry = trustWeave.configuration.trustRegistry as? InMemoryTrustRegistry
+registry?.addTrustRelationship("did:key:university1", "did:key:university2")
 
-    // Now find trust path between universities
-    val path = getTrustPath("did:key:university1", "did:key:university2")
+when (
+    val path = trustWeave.findTrustPath(
+        VerifierIdentity(Did("did:key:university1")),
+        IssuerIdentity(Did("did:key:university2"))
+    )
+) {
+    is TrustPath.Verified -> println("Path: ${path.fullPath.joinToString(" -> ") { it.value }}")
+    is TrustPath.NotFound -> println("No path")
 }
 ```
 
@@ -313,6 +334,6 @@ Future implementations may include:
 
 ## See Also
 
-- [Delegation Documentation](delegation.md)
-- [DID Documentation](dids.md)
-- [Web of Trust Scenario](../scenarios/web-of-trust-scenario.md)
+- Delegation Documentation](delegation.md)
+- DID Documentation](dids.md)
+- Web of Trust Scenario](../scenarios/web-of-trust-scenario.md)

@@ -10,6 +10,7 @@ import org.trustweave.trust.types.VerifierIdentity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * In-memory implementation of TrustRegistry for testing.
@@ -32,8 +33,8 @@ import kotlinx.datetime.Instant
  * ```
  */
 class InMemoryTrustRegistry : TrustRegistry {
-    private val trustAnchors = mutableMapOf<String, TrustAnchorMetadata>()
-    private val trustGraph = mutableMapOf<String, MutableSet<String>>() // DID -> Set of trusted DIDs
+    private val trustAnchors = ConcurrentHashMap<String, TrustAnchorMetadata>()
+    private val trustGraph = ConcurrentHashMap<String, MutableSet<String>>() // DID -> Set of trusted DIDs
 
     override suspend fun isTrustedIssuer(issuerDid: String, credentialType: String?): Boolean =
         withContext(Dispatchers.Default) {
@@ -59,7 +60,7 @@ class InMemoryTrustRegistry : TrustRegistry {
             trustAnchors[anchorDid] = metadata
 
             // Add to trust graph (self-trust)
-            trustGraph.getOrPut(anchorDid) { mutableSetOf() }.add(anchorDid)
+            trustGraph.getOrPut(anchorDid) { ConcurrentHashMap.newKeySet() }.add(anchorDid)
 
             true
         }
@@ -79,8 +80,8 @@ class InMemoryTrustRegistry : TrustRegistry {
         from: VerifierIdentity,
         to: IssuerIdentity
     ): TrustPath {
-        val fromDid = from  // VerifierIdentity is a typealias for Did
-        val toDid = to      // IssuerIdentity is a typealias for Did
+        val fromDid = from.did
+        val toDid = to.did
         val fromDidStr = fromDid.value
         val toDidStr = toDid.value
         
@@ -211,7 +212,7 @@ class InMemoryTrustRegistry : TrustRegistry {
      * This allows building a trust graph beyond just self-trust.
      */
     fun addTrustRelationship(fromDid: String, toDid: String) {
-        trustGraph.getOrPut(fromDid) { mutableSetOf() }.add(toDid)
+        trustGraph.getOrPut(fromDid) { ConcurrentHashMap.newKeySet() }.add(toDid)
     }
 
     /**

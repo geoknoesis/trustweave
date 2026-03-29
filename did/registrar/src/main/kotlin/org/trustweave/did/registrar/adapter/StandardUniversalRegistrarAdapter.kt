@@ -1,10 +1,11 @@
 package org.trustweave.did.registrar.adapter
 
+import org.trustweave.core.exception.SerializationException
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.model.DidDocument
-import org.trustweave.did.model.DidService
+import org.trustweave.did.parser.DidDocumentJsonParser
+import org.trustweave.did.representation.DidDocumentJsonProducer
 import org.trustweave.did.identifiers.Did
-import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.registrar.model.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -235,7 +236,7 @@ class StandardUniversalRegistrarAdapter : UniversalRegistrarProtocolAdapter {
 
         val jobId = jsonObject["jobId"]?.jsonPrimitive?.content
         val didStateJson = jsonObject["didState"]?.jsonObject
-            ?: throw org.trustweave.core.exception.TrustWeaveException.InvalidJson(
+            ?: throw SerializationException.InvalidJson(
                 parseError = "Missing didState in response",
                 jsonString = jsonString
             )
@@ -336,176 +337,12 @@ class StandardUniversalRegistrarAdapter : UniversalRegistrarProtocolAdapter {
     }
 
     private fun putDidDocument(builder: JsonObjectBuilder, document: DidDocument) {
-        if (document.context.isNotEmpty()) {
-            if (document.context.size == 1) {
-                builder.put("@context", JsonPrimitive(document.context[0]))
-            } else {
-                builder.put("@context", JsonArray(document.context.map { JsonPrimitive(it) }))
-            }
-        }
-        builder.put("id", JsonPrimitive(document.id.toString()))
-
-        if (document.verificationMethod.isNotEmpty()) {
-            builder.putJsonArray("verificationMethod") {
-                document.verificationMethod.forEach { vm ->
-                    add(buildJsonObject {
-                        put("id", JsonPrimitive(vm.id.toString()))
-                        put("type", JsonPrimitive(vm.type))
-                        put("controller", JsonPrimitive(vm.controller.toString()))
-                        vm.publicKeyJwk?.let { jwk ->
-                            putJsonObject("publicKeyJwk") {
-                                jwk.forEach { entry ->
-                                    put(entry.key, convertToJsonElement(entry.value))
-                                }
-                            }
-                        }
-                        vm.publicKeyMultibase?.let { put("publicKeyMultibase", it) }
-                    })
-                }
-            }
-        }
-
-        if (document.authentication.isNotEmpty()) {
-            builder.putJsonArray("authentication") {
-                document.authentication.forEach { add(JsonPrimitive(it.toString())) }
-            }
-        }
-
-        if (document.assertionMethod.isNotEmpty()) {
-            builder.putJsonArray("assertionMethod") {
-                document.assertionMethod.forEach { add(JsonPrimitive(it.toString())) }
-            }
-        }
-
-        if (document.keyAgreement.isNotEmpty()) {
-            builder.putJsonArray("keyAgreement") {
-                document.keyAgreement.forEach { add(JsonPrimitive(it.toString())) }
-            }
-        }
-
-        if (document.capabilityInvocation.isNotEmpty()) {
-            builder.putJsonArray("capabilityInvocation") {
-                document.capabilityInvocation.forEach { add(JsonPrimitive(it.toString())) }
-            }
-        }
-
-        if (document.capabilityDelegation.isNotEmpty()) {
-            builder.putJsonArray("capabilityDelegation") {
-                document.capabilityDelegation.forEach { add(JsonPrimitive(it.toString())) }
-            }
-        }
-
-        if (document.service.isNotEmpty()) {
-            builder.putJsonArray("service") {
-                document.service.forEach { s ->
-                    add(buildJsonObject {
-                        put("id", JsonPrimitive(s.id.toString()))
-                        put("type", JsonPrimitive(s.type))
-                        put("serviceEndpoint", convertToJsonElement(s.serviceEndpoint))
-                    })
-                }
-            }
-        }
+        val docJson = DidDocumentJsonProducer.toJsonObject(document, useV1_1Context = true)
+        docJson.forEach { (key, value) -> builder.put(key, value) }
     }
 
     private fun parseDidDocumentFromJson(json: JsonObject): DidDocument {
-        val idString = json["id"]?.jsonPrimitive?.content ?: throw org.trustweave.did.exception.DidException.InvalidDidFormat(
-            did = "did:unknown:unknown",
-            reason = "Missing DID id in document"
-        )
-        val id = Did(idString)
-
-        val context = when {
-            json["@context"] != null -> {
-                when (val ctx = json["@context"]) {
-                    is JsonPrimitive -> listOf(ctx.content)
-                    is JsonArray -> ctx.mapNotNull { it.jsonPrimitive?.content }
-                    else -> listOf("https://www.w3.org/ns/did/v1")
-                }
-            }
-            else -> listOf("https://www.w3.org/ns/did/v1")
-        }
-
-        val verificationMethod = json["verificationMethod"]?.jsonArray?.mapNotNull { vmJson ->
-            val vmObj = vmJson.jsonObject
-            val vmIdString = vmObj["id"]?.jsonPrimitive?.content
-            val vmType = vmObj["type"]?.jsonPrimitive?.content
-            val controllerString = vmObj["controller"]?.jsonPrimitive?.content ?: idString
-            val controller = Did(controllerString)
-            val publicKeyJwk = vmObj["publicKeyJwk"]?.jsonObject?.let { jwk ->
-                jwk.entries.associate { it.key to convertFromJsonElement(it.value) }
-            }
-            val publicKeyMultibase = vmObj["publicKeyMultibase"]?.jsonPrimitive?.content
-
-            if (vmIdString != null && vmType != null) {
-                val vmId = VerificationMethodId.parse(vmIdString, id)
-                org.trustweave.did.model.VerificationMethod(
-                    id = vmId,
-                    type = vmType,
-                    controller = controller,
-                    publicKeyJwk = publicKeyJwk,
-                    publicKeyMultibase = publicKeyMultibase
-                )
-            } else null
-        } ?: emptyList()
-
-        val authentication = json["authentication"]?.jsonArray?.mapNotNull { 
-            it.jsonPrimitive?.content?.let { vmIdString -> VerificationMethodId.parse(vmIdString, id) }
-        } ?: json["authentication"]?.jsonPrimitive?.content?.let { 
-            listOf(VerificationMethodId.parse(it, id))
-        } ?: emptyList()
-
-        val assertionMethod = json["assertionMethod"]?.jsonArray?.mapNotNull { 
-            it.jsonPrimitive?.content?.let { vmIdString -> VerificationMethodId.parse(vmIdString, id) }
-        } ?: json["assertionMethod"]?.jsonPrimitive?.content?.let { 
-            listOf(VerificationMethodId.parse(it, id))
-        } ?: emptyList()
-
-        val keyAgreement = json["keyAgreement"]?.jsonArray?.mapNotNull { 
-            it.jsonPrimitive?.content?.let { vmIdString -> VerificationMethodId.parse(vmIdString, id) }
-        } ?: json["keyAgreement"]?.jsonPrimitive?.content?.let { 
-            listOf(VerificationMethodId.parse(it, id))
-        } ?: emptyList()
-
-        val capabilityInvocation = json["capabilityInvocation"]?.jsonArray?.mapNotNull { 
-            it.jsonPrimitive?.content?.let { vmIdString -> VerificationMethodId.parse(vmIdString, id) }
-        } ?: json["capabilityInvocation"]?.jsonPrimitive?.content?.let { 
-            listOf(VerificationMethodId.parse(it, id))
-        } ?: emptyList()
-
-        val capabilityDelegation = json["capabilityDelegation"]?.jsonArray?.mapNotNull { 
-            it.jsonPrimitive?.content?.let { vmIdString -> VerificationMethodId.parse(vmIdString, id) }
-        } ?: json["capabilityDelegation"]?.jsonPrimitive?.content?.let { 
-            listOf(VerificationMethodId.parse(it, id))
-        } ?: emptyList()
-
-        val service = json["service"]?.jsonArray?.mapNotNull { sJson ->
-            val sObj = sJson.jsonObject
-            val sId = sObj["id"]?.jsonPrimitive?.content
-            val sType = sObj["type"]?.jsonPrimitive?.content
-            val sEndpoint = sObj["serviceEndpoint"]
-
-            if (sId != null && sType != null && sEndpoint != null) {
-                val endpoint = convertFromJsonElement(sEndpoint) ?: return@mapNotNull null
-                DidService(
-                    id = sId,
-                    type = sType,
-                    serviceEndpoint = endpoint
-                )
-            } else null
-        } ?: emptyList()
-
-        return DidDocument(
-            id = id,
-            context = context,
-            verificationMethod = verificationMethod,
-            authentication = authentication,
-            assertionMethod = assertionMethod,
-            keyAgreement = keyAgreement,
-            capabilityInvocation = capabilityInvocation,
-            capabilityDelegation = capabilityDelegation,
-            service = service
-        )
+        return DidDocumentJsonParser.parse(json)
     }
 
     private fun convertToJsonElement(value: Any?): JsonElement {
@@ -521,21 +358,5 @@ class StandardUniversalRegistrarAdapter : UniversalRegistrarProtocolAdapter {
         }
     }
 
-    private fun convertFromJsonElement(element: JsonElement): Any? {
-        return when (element) {
-            is JsonPrimitive -> {
-                when {
-                    element.isString -> element.content
-                    element.booleanOrNull != null -> element.boolean
-                    element.longOrNull != null -> element.long
-                    element.doubleOrNull != null -> element.double
-                    else -> element.content
-                }
-            }
-            is JsonArray -> element.map { convertFromJsonElement(it) }
-            is JsonObject -> element.entries.associate { it.key to convertFromJsonElement(it.value) }
-            is JsonNull -> null
-        }
-    }
 }
 

@@ -2,7 +2,7 @@
 
 Get started with credential exchange protocols in 5 minutes! This guide will walk you through creating your first credential exchange using the protocol abstraction layer.
 
-> **Version:** 1.0.0-SNAPSHOT
+> **Version:** 0.6.0
 > **Kotlin:** 2.2.0+ | **Java:** 21+
 > **Prerequisites:** See [Installation](../../getting-started/installation.md)
 
@@ -62,8 +62,7 @@ fun main() = runBlocking {
         // Step 3: Create ExchangeService
         val exchangeService = ExchangeServices.createExchangeService(
             protocolRegistry = registry,
-            credentialService = credentialService,
-            didResolver = didResolver
+            credentialService = credentialService
         )
 
         println("✅ Protocol registered: ${registry.getSupportedProtocols()}")

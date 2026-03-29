@@ -12,14 +12,14 @@ This guide demonstrates how to build a privacy-preserving age verification syste
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created DIDs for identity provider (issuer) and individual (holder)
-- ✅ Issued Verifiable Credentials for age verification with photo
-- ✅ Stored age credentials in wallet
-- ✅ Created privacy-preserving age presentations
-- ✅ Verified age without revealing identity
-- ✅ Verified photo integrity and face matching
-- ✅ Implemented age-restricted service access control
-- ✅ Demonstrated selective disclosure for privacy
+- Created DIDs for identity provider (issuer) and individual (holder)
+- Issued Verifiable Credentials for age verification with photo
+- Stored age credentials in wallet
+- Created privacy-preserving age presentations
+- Verified age without revealing identity
+- Verified photo integrity and face matching
+- Implemented age-restricted service access control
+- Demonstrated selective disclosure for privacy
 
 ## Big Picture & Significance
 
@@ -140,7 +140,7 @@ Add TrustWeave dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -157,10 +157,13 @@ Here's the full age verification flow with photo association using the TrustWeav
 ```kotlin
 package com.example.age.verification
 
-import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.dsl.credential.*
-import org.trustweave.trust.types.VerificationResult
+import org.trustweave.credential.results.VerificationResult
 import org.trustweave.testkit.services.*
+import org.trustweave.did.identifiers.extractKeyId
 import org.trustweave.core.util.DigestUtils
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
@@ -177,11 +180,7 @@ fun main() = runBlocking {
     println("=".repeat(70))
 
     // Step 1: Create TrustWeave instance
-    val trustWeave = trustWeave {
-        factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
-        )
+    val trustWeave = TrustWeave.build {
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
     }
@@ -189,7 +188,8 @@ fun main() = runBlocking {
 
     // Step 2: Create DIDs for identity provider, individual, and service providers
     val (identityProviderDid, identityProviderDoc) = trustWeave.createDid().getOrThrow()
-    val identityProviderKeyId = identityProviderDoc.verificationMethod.first().id.substringAfter("#")
+    val identityProviderKeyId = identityProviderDoc.verificationMethod.firstOrNull()?.extractKeyId()
+        ?: error("No verification method on identity provider DID document")
 
     val (individualDid, _) = trustWeave.createDid().getOrThrow()
     val (alcoholServiceDid, _) = trustWeave.createDid().getOrThrow()
@@ -346,7 +346,7 @@ fun main() = runBlocking {
         }
         is VerificationResult.Invalid -> {
             println("❌ Age Credential: INVALID")
-            println("   Errors: ${alcoholVerificationResult.errors}")
+            println("   Errors: ${alcoholVerificationResult.allErrors.joinToString()}")
             println("❌ Access DENIED")
         }
     }
@@ -380,7 +380,7 @@ fun main() = runBlocking {
         }
         is VerificationResult.Invalid -> {
             println("❌ Age Credential: INVALID")
-            println("   Errors: ${gamblingVerificationResult.errors}")
+            println("   Errors: ${gamblingVerificationResult.allErrors.joinToString()}")
             println("❌ Access DENIED")
         }
     }
@@ -413,7 +413,7 @@ fun main() = runBlocking {
         }
         is VerificationResult.Invalid -> {
             println("❌ Age Credential: INVALID")
-            println("   Errors: ${contentVerificationResult.errors}")
+            println("   Errors: ${contentVerificationResult.allErrors.joinToString()}")
             println("❌ Access DENIED")
         }
     }
@@ -423,10 +423,10 @@ fun main() = runBlocking {
         pres.createPresentation(
             credentialIds = listOf(ageCredentialId),
             holderDid = individualDid.value,
-            options = PresentationOptions(
-                holderDid = individualDid.value,
-                challenge = "age-verification-${System.currentTimeMillis()}"
-            )
+            options = mapOf(
+            "holderDid" to individualDid.value,
+            "challenge" to "age-verification-${System.currentTimeMillis()}"
+        )
         )
     } ?: error("Presentation capability not available")
 
@@ -436,7 +436,7 @@ fun main() = runBlocking {
     println("   Note: Only age information shared, no personal details")
 
     // Step 11: Demonstrate privacy - verify no personal information is exposed
-    println("\n🔒 Privacy Verification:")
+    println("\n[privacy] Privacy Verification:")
     val presentationCredential = agePresentation.verifiableCredential.firstOrNull()
     if (presentationCredential != null) {
         val subject = presentationCredential.credentialSubject
@@ -464,7 +464,7 @@ fun main() = runBlocking {
 
     // Step 13: Display wallet statistics
     val stats = individualWallet.getStatistics()
-    println("\n📊 Individual Wallet Statistics:")
+    println("\n[stats] Individual Wallet Statistics:")
     println("   Total credentials: ${stats.totalCredentials}")
     println("   Valid credentials: ${stats.validCredentials}")
     println("   Collections: ${stats.collectionsCount}")
@@ -543,7 +543,7 @@ Age Verification Scenario - Complete End-to-End Example with Photo
    Credentials: 1
    Note: Only age information shared, no personal details
 
-🔒 Privacy Verification:
+[privacy] Privacy Verification:
    Date of Birth exposed: false ❌
    Full Name exposed: false ❌
    Address exposed: false ❌
@@ -559,7 +559,7 @@ Age Verification Scenario - Complete End-to-End Example with Photo
    6. Perform face recognition (person matches photo)
    7. Grant/deny access based on age + photo verification
 
-📊 Individual Wallet Statistics:
+[stats] Individual Wallet Statistics:
    Total credentials: 1
    Valid credentials: 1
    Collections: 1
@@ -595,10 +595,10 @@ Age Verification Scenario - Complete End-to-End Example with Photo
 
 ## Related Documentation
 
-- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
-- [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
-- [API Reference](../api-reference/core-api.md) - Complete API documentation
-- [Government Digital Identity Scenario](government-digital-identity-scenario.md) - Related identity scenario
-- [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+- Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
+- Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
+- API Reference](../api-reference/core-api.md) - Complete API documentation
+- Government Digital Identity Scenario](government-digital-identity-scenario.md) - Related identity scenario
+- Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
 
 

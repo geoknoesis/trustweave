@@ -1,7 +1,7 @@
 package org.trustweave.awskms
 
 import org.trustweave.kms.KmsCreationOptions
-import org.trustweave.kms.KmsOptionKeys
+import org.trustweave.awskms.AwsKmsOptionKeys
 
 /**
  * Type-safe configuration builder for AWS KMS provider.
@@ -32,14 +32,14 @@ class AwsKmsOptionsBuilder {
         require(region != null) { "region is required for AWS KMS" }
         
         val properties = mutableMapOf<String, Any?>(
-            KmsOptionKeys.REGION to region
+            AwsKmsOptionKeys.REGION to region
         )
-        
-        accessKeyId?.let { properties[KmsOptionKeys.ACCESS_KEY_ID] = it }
-        secretAccessKey?.let { properties[KmsOptionKeys.SECRET_ACCESS_KEY] = it }
-        sessionToken?.let { properties[KmsOptionKeys.SESSION_TOKEN] = it }
-        endpointOverride?.let { properties[KmsOptionKeys.ENDPOINT_OVERRIDE] = it }
-        pendingWindowInDays?.let { properties[KmsOptionKeys.PENDING_WINDOW_IN_DAYS] = it }
+
+        accessKeyId?.let { properties[AwsKmsOptionKeys.ACCESS_KEY_ID] = it }
+        secretAccessKey?.let { properties[AwsKmsOptionKeys.SECRET_ACCESS_KEY] = it }
+        sessionToken?.let { properties[AwsKmsOptionKeys.SESSION_TOKEN] = it }
+        endpointOverride?.let { properties[AwsKmsOptionKeys.ENDPOINT_OVERRIDE] = it }
+        pendingWindowInDays?.let { properties[AwsKmsOptionKeys.PENDING_WINDOW_IN_DAYS] = it }
         cacheTtlSeconds?.let { properties["cacheTtlSeconds"] = it }
         
         return KmsCreationOptions(

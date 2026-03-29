@@ -6,8 +6,8 @@ TrustWeave provides security updates for the following versions:
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.0.x   | :white_check_mark: |
-| < 1.0   | :x:                |
+| 0.6.x   | :white_check_mark: |
+| < 0.6   | :x:                |
 
 We recommend using the latest stable release to ensure you receive security updates and bug fixes.
 

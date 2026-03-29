@@ -59,9 +59,9 @@ That's it. That's the high-level purpose. But when you're buried in blockchain t
 
 What if there was a way to work at the **right level of abstraction**? What if you could say:
 
-- "I want to issue a credential"
-- "I want to verify someone's identity"
-- "I want to anchor trust to a blockchain"
+- I want to issue a credential"
+- I want to verify someone's identity"
+- I want to anchor trust to a blockchain"
 
 ...and let the system figure out which specific technologies to use, based on your configuration?
 
@@ -101,7 +101,8 @@ val credential = trustWeave.issue {
         }
         type("VerifiableCredential", "UniversityDegree")
     }
-}
+    signedBy(issuerDid, "key-1")
+}.getOrThrow()
 ```
 
 That's it. No blockchain-specific code. No DID-method-specific code. No KMS-specific code. Just: "I want to issue this credential."
@@ -124,19 +125,29 @@ This changes everything.
 You can now **play** with different technologies:
 
 ```kotlin
-// Try Ethereum
-val trustWeave = TrustWeave.build {
-    blockchains { "ethereum:mainnet" to ethereumClient }
-    did { method(ETHR) }
+// Try Ethereum anchoring
+val trustWeaveEth = TrustWeave.build {
+    anchor {
+        chain("eip155:1") {
+            provider("ethereum")
+            options { /* RPC URL, credentials */ }
+        }
+    }
+    did { method("ethr") { } }
 }
 
-// Switch to Algorand? Just change the config
-val trustWeave = TrustWeave.build {
-    blockchains { "algorand:mainnet" to algorandClient }
-    did { method("algo") }
+// Switch to Algorand? Change the anchor (and DID method) in config
+val trustWeaveAlgo = TrustWeave.build {
+    anchor {
+        chain("algorand:mainnet") {
+            provider("algorand")
+            options { /* algod URL, signing material */ }
+        }
+    }
+    did { method("key") { algorithm("Ed25519") } }
 }
 
-// Your application code? It stays exactly the same.
+// Your application-facing calls (issue, verify, anchor) stay the same shape.
 ```
 
 No rewrites. No fear. Just experimentation.
@@ -218,8 +229,8 @@ If that sounds like you, welcome. Let's build trusted domains together.
 ---
 
 **Next Steps:**
-- [What is TrustWeave?](what-is-trustweave.md) - Learn about the technical details
-- [Key Features](key-features.md) - See what TrustWeave can do
-- [Quick Start](../getting-started/quick-start.md) - Start building in 5 minutes
-- [Use Cases](use-cases.md) - See how others are using TrustWeave
+- What is TrustWeave?](what-is-trustweave.md) - Learn about the technical details
+- Key Features](key-features.md) - See what TrustWeave can do
+- Quick Start](../getting-started/quick-start.md) - Start building in 5 minutes
+- Use Cases](use-cases.md) - See how others are using TrustWeave
 

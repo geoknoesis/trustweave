@@ -215,14 +215,14 @@ No conversion layers needed - data flows naturally from external sources through
 **Conclusion**
 
 `JsonElement` is the optimal choice because it:
-- ✅ Maintains architectural consistency
-- ✅ Matches real-world data formats
-- ✅ Provides type safety with flexibility
-- ✅ Enables integrity verification
-- ✅ Offers optimal performance
-- ✅ Improves developer experience
-- ✅ Supports extensibility
-- ✅ Integrates seamlessly with the framework
+- Maintains architectural consistency
+- Matches real-world data formats
+- Provides type safety with flexibility
+- Enables integrity verification
+- Offers optimal performance
+- Improves developer experience
+- Supports extensibility
+- Integrates seamlessly with the framework
 
 Using `Any` would reduce type safety, add conversion complexity, and break consistency with TrustWeave's JSON-first architecture.
 
@@ -658,8 +658,8 @@ Evaluation engine version mismatch. Expected: 1.0.0, Actual: 2.0.0
 
 ## See Also
 
-- [Smart Contracts](smart-contracts.md) for contract lifecycle and execution models
-- [Verifiable Credentials](verifiable-credentials.md) for credential issuance and verification
-- [Blockchain Anchoring](blockchain-anchoring.md) for anchoring concepts
-- [API Reference](../api-reference/contract-api.md) for complete API documentation
+- Smart Contracts](smart-contracts.md) for contract lifecycle and execution models
+- Verifiable Credentials](verifiable-credentials.md) for credential issuance and verification
+- Blockchain Anchoring](blockchain-anchoring.md) for anchoring concepts
+- API Reference](../api-reference/contract-api.md) for complete API documentation
 

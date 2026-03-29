@@ -12,13 +12,13 @@ This guide demonstrates how to build a complete employee onboarding system using
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created DIDs for employer, candidate, educational institutions, and background check provider
-- ✅ Issued Verifiable Credentials for education, certifications, and work history
-- ✅ Created background check verification credentials
-- ✅ Built candidate credential wallet with organized credentials
-- ✅ Created comprehensive presentation for employer verification
-- ✅ Verified all credentials cryptographically
-- ✅ Implemented selective disclosure for privacy
+- Created DIDs for employer, candidate, educational institutions, and background check provider
+- Issued Verifiable Credentials for education, certifications, and work history
+- Created background check verification credentials
+- Built candidate credential wallet with organized credentials
+- Created comprehensive presentation for employer verification
+- Verified all credentials cryptographically
+- Implemented selective disclosure for privacy
 
 ## Big Picture & Significance
 
@@ -143,7 +143,7 @@ Add TrustWeave dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -162,25 +162,21 @@ Here's the full employee onboarding flow using the TrustWeave facade API. This c
 ```kotlin
 package com.example.employee.onboarding
 
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
 import org.trustweave.core.*
-import org.trustweave.credential.PresentationOptions
-import org.trustweave.credential.wallet.Wallet
-import org.trustweave.credential.format.ProofSuiteId
+import org.trustweave.wallet.Wallet
+import org.trustweave.testkit.services.*
+import org.trustweave.credential.model.ProofType
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.trust.types.getOrThrow
-import org.trustweave.trust.types.VerificationResult
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.credential.results.VerificationResult
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
 import org.trustweave.did.identifiers.extractKeyId
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import java.time.temporal.ChronoUnit
-
-// Helper extension for resolution results
-fun DidResolutionResult.getOrThrow() = when (this) {
-    is DidResolutionResult.Success -> this.document
-    else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
-}
 
 fun main() = runBlocking {
     println("=".repeat(70))
@@ -191,28 +187,40 @@ fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
-        credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
+        credentials { defaultProofType(ProofType.Ed25519Signature2020) }
     }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for all parties
     val universityDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
-    val universityDoc = trustWeave.resolveDid(universityDid).getOrThrow()
+    val universityDoc = when (val res = trustWeave.resolveDid(universityDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val universityKeyId = universityDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     val previousEmployerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
-    val previousEmployerDoc = trustWeave.resolveDid(previousEmployerDid).getOrThrow()
+    val previousEmployerDoc = when (val res = trustWeave.resolveDid(previousEmployerDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val previousEmployerKeyId = previousEmployerDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     val certificationBodyDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
-    val certificationBodyDoc = trustWeave.resolveDid(certificationBodyDid).getOrThrow()
+    val certificationBodyDoc = when (val res = trustWeave.resolveDid(certificationBodyDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val certificationBodyKeyId = certificationBodyDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     val backgroundCheckProviderDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
-    val backgroundCheckProviderDoc = trustWeave.resolveDid(backgroundCheckProviderDid).getOrThrow()
+    val backgroundCheckProviderDoc = when (val res = trustWeave.resolveDid(backgroundCheckProviderDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val backgroundCheckProviderKeyId = backgroundCheckProviderDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
@@ -378,10 +386,10 @@ fun main() = runBlocking {
                 backgroundCheckCredentialId
             ),
             holderDid = candidateDid.value,
-            options = PresentationOptions(
-                holderDid = candidateDid.value,
-                challenge = "job-application-${System.currentTimeMillis()}"
-            )
+            options = mapOf(
+            "holderDid" to candidateDid.value,
+            "challenge" to "job-application-${System.currentTimeMillis()}"
+        )
         )
     } ?: error("Presentation capability not available")
 
@@ -390,31 +398,31 @@ fun main() = runBlocking {
     println("   Credentials: ${presentation.verifiableCredential.size}")
 
     // Step 10: Employer verifies all credentials
-    println("\n📋 Employer Verification Process:")
+    println("\n[employer] Verification Process:")
     
     val educationVerification = trustWeave.verify {
         credential(educationCredential)
     }
-    println("Education Credential: ${when (educationVerification) { is VerificationResult.Valid -> "✅ VALID"; else -> "❌ INVALID" }}")
+    println("Education Credential: ${when (educationVerification) { is VerificationResult.Valid -> "[OK] VALID"; else -> "[FAIL] INVALID" }}")
 
     val workHistoryVerification = trustWeave.verify {
         credential(workHistoryCredential)
     }
-    println("Work History Credential: ${when (workHistoryVerification) { is VerificationResult.Valid -> "✅ VALID"; else -> "❌ INVALID" }}")
+    println("Work History Credential: ${when (workHistoryVerification) { is VerificationResult.Valid -> "[OK] VALID"; else -> "[FAIL] INVALID" }}")
 
     val certificationVerification = trustWeave.verify {
         credential(certificationCredential)
     }
-    println("Certification Credential: ${when (certificationVerification) { is VerificationResult.Valid -> "✅ VALID"; else -> "❌ INVALID" }}")
+    println("Certification Credential: ${when (certificationVerification) { is VerificationResult.Valid -> "[OK] VALID"; else -> "[FAIL] INVALID" }}")
 
     val backgroundCheckVerification = trustWeave.verify {
         credential(backgroundCheckCredential)
     }
-    println("Background Check Credential: ${when (backgroundCheckVerification) { is VerificationResult.Valid -> "✅ VALID"; else -> "❌ INVALID" }}")
+    println("Background Check Credential: ${when (backgroundCheckVerification) { is VerificationResult.Valid -> "[OK] VALID"; else -> "[FAIL] INVALID" }}")
 
     // Step 11: Display wallet statistics
     val stats = candidateWallet.getStatistics()
-    println("\n📊 Candidate Wallet Statistics:")
+    println("\n[stats] Candidate Wallet Statistics:")
     println("   Total credentials: ${stats.totalCredentials}")
     println("   Valid credentials: ${stats.validCredentials}")
     println("   Collections: ${stats.collectionsCount}")
@@ -436,7 +444,7 @@ fun main() = runBlocking {
         println("=".repeat(70))
     } else {
         println("\n" + "=".repeat(70))
-        println("❌ VERIFICATION FAILED")
+        println("[FAIL] VERIFICATION FAILED")
         println("   Some credentials could not be verified")
         println("=".repeat(70))
     }
@@ -469,13 +477,13 @@ Employee Onboarding Scenario - Complete End-to-End Example
    Holder: did:key:z6Mk...
    Credentials: 4
 
-📋 Employer Verification Process:
+[employer] Verification Process:
 Education Credential: ✅ VALID
 Work History Credential: ✅ VALID
 Certification Credential: ✅ VALID
 Background Check Credential: ✅ VALID
 
-📊 Candidate Wallet Statistics:
+[stats] Candidate Wallet Statistics:
    Total credentials: 4
    Valid credentials: 4
    Collections: 4
@@ -579,10 +587,10 @@ Background Check Credential: ✅ VALID
 
 ## Related Documentation
 
-- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
-- [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
-- [API Reference](../api-reference/core-api.md) - Complete API documentation
-- [Wallet API](../api-reference/wallet-api.md) - Wallet operations reference
-- [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+- Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
+- Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
+- API Reference](../api-reference/core-api.md) - Complete API documentation
+- Wallet API](../api-reference/wallet-api.md) - Wallet operations reference
+- Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
 
 

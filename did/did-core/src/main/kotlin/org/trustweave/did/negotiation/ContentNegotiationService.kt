@@ -74,9 +74,10 @@ class DefaultContentNegotiationService : ContentNegotiationService {
         val SUPPORTED_TYPES = listOf(
             "application/did+ld+json",
             "application/did+json",
-            "application/did+cbor",
             "application/json"
         )
+        // CBOR (application/did+cbor) is not yet implemented. Add here once a CBOR
+        // serialization library (e.g. Jackson CBOR) is wired in.
     }
     
     override suspend fun negotiateContentType(
@@ -112,11 +113,6 @@ class DefaultContentNegotiationService : ContentNegotiationService {
                     document
                 ).toByteArray(Charsets.UTF_8)
             }
-            "application/did+cbor" -> {
-                // CBOR serialization would require a CBOR library
-                // For now, fall back to JSON
-                serializeDocument(document, "application/did+json")
-            }
             else -> {
                 throw UnsupportedContentTypeException(contentType)
             }
@@ -136,11 +132,6 @@ class DefaultContentNegotiationService : ContentNegotiationService {
                     data.toString(Charsets.UTF_8)
                 )
             }
-            "application/did+cbor" -> {
-                // CBOR deserialization would require a CBOR library
-                // For now, fall back to JSON
-                deserializeDocument(data, "application/did+json")
-            }
             else -> {
                 throw UnsupportedContentTypeException(contentType)
             }
@@ -151,11 +142,10 @@ class DefaultContentNegotiationService : ContentNegotiationService {
         return accept.split(',')
             .map { it.trim().split(';')[0].trim() }
             .sortedByDescending { type ->
-                // Prefer did+ld+json
                 when (type) {
                     "application/did+ld+json" -> 3
                     "application/did+json" -> 2
-                    "application/did+cbor" -> 1
+                    "application/json" -> 1
                     else -> 0
                 }
             }

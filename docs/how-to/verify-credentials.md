@@ -21,8 +21,9 @@ Here's a complete example that verifies a credential:
 
 ```kotlin
 import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.types.VerificationResult
+import org.trustweave.credential.results.VerificationResult
 import kotlinx.coroutines.runBlocking
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     try {
@@ -69,7 +70,7 @@ fun main() = runBlocking {
                 println("❌ Untrusted issuer: ${result.issuer}")
             }
             is VerificationResult.Invalid.SchemaValidationFailed -> {
-                println("❌ Schema validation failed: ${result.errors.joinToString()}")
+                println("❌ Schema validation failed: ${result.allErrors.joinToString()}")
             }
             else -> {
                 println("❌ Verification failed")
@@ -114,8 +115,8 @@ Examine the verification result using sealed type for exhaustive handling:
 when (verification) {
     is VerificationResult.Valid -> {
         println("✅ Credential is valid")
-        println("  - Proof valid: ${verification.proofValid}")
-        println("  - Issuer valid: ${verification.issuerValid}")
+        println("  - Issuer IRI: ${verification.issuerIri}")
+        println("  - Subject IRI: ${verification.subjectIri}")
     }
     is VerificationResult.Invalid.Expired -> {
         println("❌ Credential expired at ${verification.expiredAt}")
@@ -127,10 +128,10 @@ when (verification) {
         println("❌ Invalid proof: ${verification.reason}")
     }
     is VerificationResult.Invalid.UntrustedIssuer -> {
-        println("❌ Untrusted issuer: ${verification.issuer}")
+        println("❌ Untrusted issuer: ${verification.issuerDid.value}")
     }
     is VerificationResult.Invalid.SchemaValidationFailed -> {
-        println("❌ Schema validation failed: ${verification.errors.joinToString()}")
+        println("❌ Schema validation failed: ${verification.allErrors.joinToString()}")
     }
 }
 ```
@@ -233,9 +234,7 @@ Checks that the cryptographic proof (signature) is valid:
 ```kotlin
 when (verification) {
     is VerificationResult.Valid -> {
-        if (verification.proofValid) {
-            println("Proof signature is valid")
-        }
+        println("Proof and core checks passed for ${verification.credential.id}")
     }
     is VerificationResult.Invalid.InvalidProof -> {
         println("Proof signature is invalid: ${verification.reason}")
@@ -258,12 +257,13 @@ Checks that the issuer DID can be resolved:
 ```kotlin
 when (verification) {
     is VerificationResult.Valid -> {
-        if (verification.issuerValid) {
-            println("Issuer DID resolved successfully")
-        }
+        println("Issuer resolved: ${verification.issuerIri}")
+    }
+    is VerificationResult.Invalid.InvalidIssuer -> {
+        println("Issuer resolution problem: ${verification.reason}")
     }
     is VerificationResult.Invalid.UntrustedIssuer -> {
-        println("Issuer DID resolution failed or issuer not trusted: ${verification.issuer}")
+        println("Issuer not trusted: ${verification.issuerDid.value}")
     }
     else -> {
         // Other failure cases
@@ -346,7 +346,7 @@ val verification = trustWeave.verify {
     credential(credential)
     checkExpiration()          // Check expiration (default: enabled)
     checkRevocation()          // Check revocation (default: enabled)
-    checkTrust(false)          // Check trust registry (default: false)
+    allowUntrusted()           // Explicitly skip issuer-trust policy (default)
 }
 ```
 
@@ -379,13 +379,16 @@ val verification = trustWeave.verify {
 Verify that the issuer is in the trust registry:
 
 ```kotlin
+val trustRegistry = requireNotNull(trustWeave.configuration.trustRegistry) {
+    "Configure trust { provider(...) } on TrustWeave"
+}
 val verification = trustWeave.verify {
     credential(credential)
-    checkTrust(true)  // Verify issuer is trusted
+    requireTrust(trustRegistry)
 }
 ```
 
-**Note:** Requires trust registry to be configured in TrustWeave.
+**Note:** Requires a **`TrustRegistry`** on **`trustWeave.configuration.trustRegistry`** (configure via **`trust { … }`** when building **`TrustWeave`**).
 
 ## Common Patterns
 
@@ -400,9 +403,9 @@ val verification = trustWeave.verify {
 
 when (verification) {
     is VerificationResult.Valid -> {
-        println("✅ Overall valid: true")
-        println("  - Proof valid: ${verification.proofValid}")
-        println("  - Issuer valid: ${verification.issuerValid}")
+        println("✅ Valid credential: ${verification.credential.id}")
+        println("  - Issuer IRI: ${verification.issuerIri}")
+        println("  - Subject IRI: ${verification.subjectIri}")
         if (verification.warnings.isNotEmpty()) {
             println("  - Warnings:")
             verification.warnings.forEach { warning ->
@@ -412,13 +415,13 @@ when (verification) {
     }
     is VerificationResult.Invalid.Expired -> {
         println("❌ Credential expired at ${verification.expiredAt}")
-        verification.errors.forEach { error ->
+        verification.allErrors.forEach { error ->
             println("  - $error")
         }
     }
     is VerificationResult.Invalid.Revoked -> {
         println("❌ Credential revoked")
-        verification.errors.forEach { error ->
+        verification.allErrors.forEach { error ->
             println("  - $error")
         }
     }
@@ -426,11 +429,11 @@ when (verification) {
         println("❌ Invalid proof: ${verification.reason}")
     }
     is VerificationResult.Invalid.UntrustedIssuer -> {
-        println("❌ Untrusted issuer: ${verification.issuer}")
+        println("❌ Untrusted issuer: ${verification.issuerDid.value}")
     }
     is VerificationResult.Invalid.SchemaValidationFailed -> {
         println("❌ Schema validation failed:")
-        verification.errors.forEach { error ->
+        verification.allErrors.forEach { error ->
             println("  - $error")
         }
     }
@@ -464,7 +467,7 @@ println("Invalid: ${invalid.size}/${results.size}")
 invalid.forEach { (credId, verification) ->
     when (verification) {
         is VerificationResult.Invalid -> {
-            println("Credential $credId failed: ${verification.errors.joinToString()}")
+            println("Credential $credId failed: ${verification.allErrors.joinToString()}")
         }
         else -> {
             println("Credential $credId failed: Unknown error")
@@ -488,7 +491,7 @@ when (verification) {
         println("✅ Credential is valid")
     }
     is VerificationResult.Invalid -> {
-        println("❌ Credential invalid: ${verification.errors.joinToString()}")
+        println("❌ Credential invalid: ${verification.allErrors.joinToString()}")
     }
 }
 ```
@@ -498,25 +501,28 @@ when (verification) {
 Verify with different policies based on context:
 
 ```kotlin
-fun verifyCredential(
+fun verifyWithStrictness(
     credential: VerifiableCredential,
     strict: Boolean = false
 ): VerificationResult {
     return trustWeave.verify {
         credential(credential)
         if (strict) {
-            checkExpiration()      // Only check expiration if strict
-            checkRevocation()      // Only check revocation if strict
-            checkTrust(true)       // Only check trust if strict
+            checkExpiration()
+            checkRevocation()
+            // Add withTrustPolicy(...) or requireTrust(registry) when enforcing issuer trust
+        } else {
+            skipExpiration()
+            skipRevocation()
         }
     }
 }
 
 // For production: strict verification
-val productionResult = verifyCredential(credential, strict = true)
+val productionResult = verifyWithStrictness(credential, strict = true)
 
 // For testing: lenient verification
-val testResult = verifyCredential(credential, strict = false)
+val testResult = verifyWithStrictness(credential, strict = false)
 ```
 
 ## Error Handling
@@ -546,11 +552,11 @@ when (verification) {
         println("❌ Proof validation failed: ${verification.reason}")
     }
     is VerificationResult.Invalid.UntrustedIssuer -> {
-        println("❌ Issuer validation failed: ${verification.issuer}")
+        println("❌ Issuer validation failed: ${verification.issuerDid.value}")
     }
     is VerificationResult.Invalid.SchemaValidationFailed -> {
         println("❌ Schema validation failed")
-        verification.errors.forEach { error ->
+        verification.allErrors.forEach { error ->
             println("  - $error")
         }
     }
@@ -574,51 +580,14 @@ when (verification) {
     }
     is VerificationResult.Invalid -> {
         // Handle all invalid cases
-        println("Credential invalid: ${verification.errors.joinToString()}")
+        println("Credential invalid: ${verification.allErrors.joinToString()}")
     }
 }
 ```
 
 ## Verification Result Structure
 
-The `VerificationResult` is a sealed class for exhaustive error handling:
-
-```kotlin
-sealed class VerificationResult {
-    data class Valid(
-        val credential: VerifiableCredential,
-        val proofValid: Boolean,
-        val issuerValid: Boolean,
-        val warnings: List<String> = emptyList()
-    ) : VerificationResult()
-    
-    sealed class Invalid : VerificationResult() {
-        data class Expired(
-            val expiredAt: Instant,
-            val errors: List<String>
-        ) : Invalid()
-        
-        data class Revoked(
-            val revokedAt: Instant?,
-            val errors: List<String>
-        ) : Invalid()
-        
-        data class InvalidProof(
-            val reason: String,
-            val errors: List<String>
-        ) : Invalid()
-        
-        data class UntrustedIssuer(
-            val issuer: String,
-            val errors: List<String>
-        ) : Invalid()
-        
-        data class SchemaValidationFailed(
-            val errors: List<String>
-        ) : Invalid()
-    }
-}
-```
+`VerificationResult` is defined in **`org.trustweave.credential.results`**. Prefer the library source or [Credential Service API](../api-reference/credential-service-api.md) for the authoritative sealed hierarchy (`Valid`, `Invalid.*`, `allErrors`, …).
 
 ## API Reference
 
@@ -640,12 +609,12 @@ For complete API documentation, see:
 ## Next Steps
 
 **Ready to issue credentials?**
-- [Issue Credentials](issue-credentials.md) - Issue credentials that can be verified
+- Issue Credentials](issue-credentials.md) - Issue credentials that can be verified
 
 **Want to configure verification?**
-- [Verification Policies](../advanced/verification-policies.md) - Advanced verification configuration
+- Verification Policies](../advanced/verification-policies.md) - Advanced verification configuration
 
 **Want to learn more?**
-- [Verifiable Credentials Concept](../core-concepts/verifiable-credentials.md) - Deep dive into credentials
-- [Credential Issuance Tutorial](../tutorials/credential-issuance-tutorial.md) - Comprehensive tutorial
+- Verifiable Credentials Concept](../core-concepts/verifiable-credentials.md) - Deep dive into credentials
+- Credential Issuance Tutorial](../tutorials/credential-issuance-tutorial.md) - Comprehensive tutorial
 

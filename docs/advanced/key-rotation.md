@@ -24,48 +24,32 @@ Rotating signing keys keeps verifiable credential ecosystems resilient: compromi
 **Prerequisites:** Build your `TrustWeave` instance from a `TrustWeaveConfig` so you retain direct access to the underlying KMS and DID registry.
 
 ```kotlin
-import org.trustweave.TrustWeave
-import org.trustweave.TrustWeaveDefaults
 import kotlinx.coroutines.runBlocking
+import org.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.*
+import org.trustweave.trust.types.getOrThrow
 
 fun rotateIssuerDid() = runBlocking {
-    val config = TrustWeaveDefaults.inMemory()
-    val TrustWeave = TrustWeave.create(config)
-
-    val issuerDocument = TrustWeave.dids.create()
-    val issuerDid = issuerDocument.id
-
-    val newKey = config.kms.generateKey(
-        algorithm = "Ed25519",
-        options = mapOf("label" to "issuer-2025q1", "exportable" to false)
-    )
-
-    val didMethod = checkNotNull(config.didRegistry.get("key")) {
-        "Register the DID method you issued with before rotating keys."
+    val trustWeave = TrustWeave.build {
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
     }
+    val config = trustWeave.configuration
+    val (issuerDid, document) = trustWeave.createDid { }.getOrThrow()
 
-    val updatedDocument = didMethod.updateDid(issuerDid) { document ->
-        val existingVm = requireNotNull(document.verificationMethod.firstOrNull()) {
-            "The DID document must expose at least one verification method before rotation."
-        }
+    // 1. Generate a new key with `config.kms.generateKey(...)` (see KMS docs).
+    // 2. Obtain the `DidMethod` from `config.didRegistry` and call `updateDid` / method-specific APIs
+    //    to publish a document that adds the new verification method (keep old VMs until verifiers migrate).
+    // 3. Issue new credentials with `trustWeave.issue { ... signedBy(issuerDid, newKeyFragment) }`.
 
-        document.copy(
-            verificationMethod = document.verificationMethod + existingVm.copy(
-                id = "$issuerDid#${newKey.id}",
-                publicKeyMultibase = newKey.publicKeyMultibase
-            ),
-            assertionMethod = document.assertionMethod + "$issuerDid#${newKey.id}"
-        )
-    }
-
-    println("Issuer DID rotated: ${updatedDocument.id} now trusts ${newKey.id}")
+    println("Issuer DID: ${issuerDid.value}; starting document has ${document.verificationMethod.size} verification method(s)")
 }
 ```
 
 **What this does**
-- Reuses the same configuration that bootstrapped `TrustWeave` so the sample can call the KMS and DID registry directly.
-- Generates a labelled Ed25519 key and appends it to the DID’s assertion methods without removing prior verification material.
-- Prints the updated DID so you can verify the new fragment.
+- Shows the supported wiring: build a **`TrustWeave`**, read **`trustWeave.configuration`** for **`kms`** and **`didRegistry`**, and create the issuer DID. The exact **`updateDid`** / publication steps depend on your DID method (`did:key` vs hosted methods).
+- After the document lists the new verification method, use **`signedBy(issuerDid, newKeyFragment)`** so new credentials pick up the rotated key.
 
 **Result**
 `updatedDocument` contains both the old and the new verification method entries, ensuring existing credentials remain verifiable while future credentials rely on the new key.
@@ -89,40 +73,44 @@ After rotation update any issuance code to reference the new `keyId`:
 **Prerequisites:** The DID document has already been updated and published to whichever resolver your ecosystem relies on.
 
 ```kotlin
-val credential = TrustWeave.issueCredential(
-    issuerDid = issuerDid,
-    issuerKeyId = "$issuerDid#${newKey.id}",
-    credentialSubject = subjectJson,
-    types = listOf("VerifiableCredential", "EmployeeBadge")
-).getOrThrow()
+import org.trustweave.credential.results.getOrThrow
+
+val credential = trustWeave.issue {
+    credential {
+        type("VerifiableCredential", "EmployeeBadge")
+        issuer(issuerDid)
+        // … subject / claims from your model …
+    }
+    signedBy(issuerDid, newKey.id.value) // verification method fragment after rotation
+}.getOrThrow()
 ```
 
 **What this does**
-- Passes the rotated verification method fragment into `issueCredential`, so proofs reference the new key immediately.
-- Returns `Result<VerifiableCredential>`, letting you integrate error handling with Kotlin’s idiomatic `Result` APIs.
+- Passes the rotated verification method fragment into `signedBy`, so proofs reference the new key immediately.
+- `issue` returns **`IssuanceResult`**; **`getOrThrow()`** collapses failures to an exception when that matches your rollout strategy.
 
 **Result**
 A credential that is signed by the new key but still references the same issuer DID—verifiers will accept it once they consume the republished DID document.
 
 **Design significance**
-The facade’s `Result`-returning APIs make rollout safe: you can stage credentials with the new key, inspect warnings, and only switch traffic once downstream verifiers confirm availability.
+Prefer **`when (issued)`** on **`IssuanceResult`** in production so you can branch on **`AdapterNotReady`**, validation failures, and adapter errors without exceptions.
 
 Keep issuing with the old key until the updated DID is published and cached by verifiers; then decommission it using `config.kms.deleteKey(oldKeyId)`.
 
-> Need per-credential metadata (audience, schema IDs, previous key references)? Call `CredentialServiceRegistry.issue` directly with `CredentialIssuanceOptions` to supply those hints alongside the new key.
+> Need per-credential metadata (audience, schema IDs, previous key references)? Use **`CredentialService.issue(IssuanceRequest(...))`** with **`ProofOptions`** / **`IssuanceRequest` fields**, or extend the **`trustWeave.issue { }`** DSL inputs where supported.
 
 ## Checklist
 
-- [ ] Generate new key (`KeyManagementService`).
-- [ ] Update DID document / resolver entry.
-- [ ] Reconfigure issuers, wallets, and anchor clients with new `keyId`.
-- [ ] Communicate the rollout to verifiers (publish in FAQ or change log).
-- [ ] Remove the old key only after outstanding credentials expire or are re-issued.
+- Generate new key (`KeyManagementService`).
+- Update DID document / resolver entry.
+- Reconfigure issuers, wallets, and anchor clients with new `keyId`.
+- Communicate the rollout to verifiers (publish in FAQ or change log).
+- Remove the old key only after outstanding credentials expire or are re-issued.
 
 ## See also
 
-- [Key Management](../core-concepts/key-management.md) for the underlying abstractions.
-- [DIDs](../core-concepts/dids.md) for publication guidance.
-- [Verification Policies](verification-policies.md) to enforce that proofs are signed with an expected key set.
-- [Quick Start sample](../../distribution/TrustWeave-examples/src/main/kotlin/com/geoknoesis/TrustWeave/examples/quickstart/QuickStartSample.kt) for runnable issuance code.
+- Key Management](../core-concepts/key-management.md) for the underlying abstractions.
+- DIDs](../core-concepts/dids.md) for publication guidance.
+- Verification Policies](verification-policies.md) to enforce that proofs are signed with an expected key set.
+- Quick Start sample](../../distribution/TrustWeave-examples/src/main/kotlin/com/geoknoesis/TrustWeave/examples/quickstart/QuickStartSample.kt) for runnable issuance code.
 

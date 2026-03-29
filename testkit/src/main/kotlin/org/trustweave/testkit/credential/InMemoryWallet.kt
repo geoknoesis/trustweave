@@ -14,9 +14,12 @@ import org.trustweave.wallet.DidManagement
 import org.trustweave.wallet.Wallet
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.credential.proof.ProofOptions
+import org.trustweave.core.identifiers.KeyId
 import org.trustweave.did.model.DidDocument
-import org.trustweave.did.DidCreationOptions
+import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.VerificationMethodId
+import org.trustweave.did.DidCreationOptions
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.datetime.Instant
@@ -138,10 +141,7 @@ class InMemoryWallet(
     override suspend fun query(query: CredentialQueryBuilder.() -> Unit): List<VerifiableCredential> {
         val builder = CredentialQueryBuilder()
         builder.query()
-        // Use reflection to call createPredicate() to work around caching issues
-        val predicateMethod = builder::class.java.getMethod("createPredicate")
-        @Suppress("UNCHECKED_CAST")
-        val predicate = predicateMethod.invoke(builder) as (VerifiableCredential) -> Boolean
+        val predicate = builder.toPredicate()
         return credentials.values.filter(predicate)
     }
 
@@ -349,18 +349,25 @@ class InMemoryWallet(
     }
 
     override suspend fun resolveDid(did: String): DidDocument? {
-        // Simplified - return null for now, real implementation would resolve DID
-        return if (managedDids.contains(did)) {
-            // Return a minimal mock DID document
-            DidDocument(
-                id = Did(did),
-                verificationMethod = emptyList(),
-                authentication = emptyList(),
-                assertionMethod = emptyList()
-            )
-        } else {
-            null
-        }
+        if (!managedDids.contains(did)) return null
+
+        // Return a minimal DID document with at least one verification method so that
+        // callers relying on this wallet's DID document for verification do not fail for
+        // the wrong reason (empty VM list → no matching key).
+        val didObj = Did(did)
+        val vmId = VerificationMethodId(did = didObj, keyId = KeyId("key-1"))
+        val vm = VerificationMethod(
+            id = vmId,
+            type = "Ed25519VerificationKey2020",
+            controller = didObj,
+            publicKeyMultibase = "z6Mkf5rGMoatrSj1f4CyvuHBeXJELe9RPdzo2PKGNCKVtZxP"
+        )
+        return DidDocument(
+            id = didObj,
+            verificationMethod = listOf(vm),
+            authentication = listOf(vmId),
+            assertionMethod = listOf(vmId)
+        )
     }
 
     // Helper methods

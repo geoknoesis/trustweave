@@ -2,14 +2,21 @@ package org.trustweave.did.base
 
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.*
+import org.trustweave.did.exception.DidException
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
+import org.trustweave.did.parser.DidDocumentJsonParser
+import org.trustweave.did.representation.DidDocumentJsonProducer
+import org.trustweave.kms.KeyHandle
 import org.trustweave.kms.KeyManagementService
+import org.trustweave.kms.results.GenerateKeyResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.jsonObject
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -106,14 +113,20 @@ abstract class AbstractDidMethod(
      * Validates that the DID matches this method's format.
      *
      * @param did The DID to validate
-     * @throws IllegalArgumentException if the DID format is invalid
+     * @throws DidException.InvalidDidFormat if the DID format is invalid
      */
     protected fun validateDidFormat(did: Did) {
         if (!did.value.startsWith("did:$method:")) {
-            throw IllegalArgumentException("Invalid DID format for method $method: expected did:$method:*, got ${did.value}")
+            throw DidException.InvalidDidFormat(
+                did = did.value,
+                reason = "Expected did:$method:*, got ${did.value}"
+            )
         }
         if (did.method != method) {
-            throw IllegalArgumentException("DID method mismatch: expected $method, got ${did.method}")
+            throw DidException.InvalidDidFormat(
+                did = did.value,
+                reason = "Method mismatch: expected $method, got ${did.method}"
+            )
         }
     }
 
@@ -196,6 +209,54 @@ abstract class AbstractDidMethod(
                 put("errorMessage", message)
             }
             put("method", method)
+        }
+    }
+
+    /**
+     * Serialises a [DidDocument] to a JSON representation (DID 1.1, v1.1 @context).
+     *
+     * Single definition shared by all AbstractDidMethod subclasses.
+     * Delegates to [DidDocumentJsonProducer].
+     */
+    protected fun documentToJsonElement(document: DidDocument): JsonElement =
+        DidDocumentJsonProducer.toJsonObject(document, useV1_1Context = true)
+
+    /**
+     * Deserialises a [JsonElement] to a [DidDocument] using the canonical [DidDocumentJsonParser].
+     *
+     * Replaces the duplicated hand-rolled parsing that previously lived in
+     * [AbstractWebDidMethod] and [AbstractBlockchainDidMethod].
+     */
+    protected fun jsonElementToDocument(json: JsonElement): DidDocument =
+        DidDocumentJsonParser.parse(json.jsonObject)
+
+    /**
+     * Generates a key via the KMS and returns the [KeyHandle].
+     *
+     * Encapsulates the duplicated [GenerateKeyResult] when-expression that previously appeared in
+     * every DID method's createDid() implementation. Throws [TrustWeaveException.Unknown] for all
+     * failure cases so callers only need to handle the happy path.
+     *
+     * @param algorithm The key algorithm name (e.g. "Ed25519", "secp256k1").
+     * @param options   Additional properties forwarded to the KMS (e.g. from [DidCreationOptions.additionalProperties]).
+     * @return The [KeyHandle] for the generated key.
+     */
+    protected suspend fun generateKey(algorithm: String, options: Map<String, Any?> = emptyMap()): KeyHandle {
+        return when (val result = kms.generateKey(algorithm, options)) {
+            is GenerateKeyResult.Success -> result.keyHandle
+            is GenerateKeyResult.Failure.UnsupportedAlgorithm -> throw TrustWeaveException.Unknown(
+                code = "UNSUPPORTED_ALGORITHM",
+                message = result.reason ?: "Algorithm not supported: $algorithm"
+            )
+            is GenerateKeyResult.Failure.InvalidOptions -> throw TrustWeaveException.Unknown(
+                code = "INVALID_OPTIONS",
+                message = result.reason
+            )
+            is GenerateKeyResult.Failure.Error -> throw TrustWeaveException.Unknown(
+                code = "KEY_GENERATION_ERROR",
+                message = result.reason,
+                cause = result.cause
+            )
         }
     }
 }

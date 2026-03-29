@@ -22,10 +22,10 @@ Add the did:web module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave.did:web:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("org.trustweave.did:base:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:did-plugins-web:0.6.0")
+    implementation("org.trustweave:did-did-core:0.6.0")
+    implementation("org.trustweave:did-plugins-base:0.6.0")
+    implementation("org.trustweave:common:0.6.0")
 }
 ```
 
@@ -229,24 +229,21 @@ s3Client.putObject(
 ## Integration with TrustWeave
 
 ```kotlin
-import org.trustweave.TrustWeave
-import org.trustweave.webdid.WebDidMethod
-import org.trustweave.webdid.WebDidConfig
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.kms.InMemoryKeyManagementService
 
-val TrustWeave = TrustWeave.create {
-    kms = InMemoryKeyManagementService()
+val kms = InMemoryKeyManagementService()
 
-    didMethods {
-        + WebDidMethod.create(kms!!, OkHttpClient(), WebDidConfig.default())
+val trustWeave = TrustWeave.build {
+    customKms(kms)
+    did {
+        method("web") { domain("example.com") }
     }
 }
 
-// Use did:web
-val did = TrustWeave.dids.create("web") {
-    property("domain", "example.com")
-}
-
-val resolved = TrustWeave.dids.resolve(did.id)
+val did = trustWeave.createDid { method("web") }.getOrThrowDid()
+val resolved = trustWeave.resolveDid(did)
 ```
 
 ## Error Handling
@@ -279,12 +276,12 @@ val result = method.resolveDid(document.id)
 
 This implementation follows the [W3C did:web specification](https://w3c-ccg.github.io/did-method-web/):
 
-- ✅ HTTPS requirement enforcement
-- ✅ Standard document path (/.well-known/did.json)
-- ✅ Domain and path-based identifiers
-- ✅ DID document JSON-LD format
-- ✅ Resolution from HTTP endpoints
-- ✅ Update and deactivation support
+- HTTPS requirement enforcement
+- Standard document path (/.well-known/did.json)
+- Domain and path-based identifiers
+- DID document JSON-LD format
+- Resolution from HTTP endpoints
+- Update and deactivation support
 
 ## Best Practices
 
@@ -318,7 +315,7 @@ This implementation follows the [W3C did:web specification](https://w3c-ccg.gith
 
 ## References
 
-- [W3C did:web Specification](https://w3c-ccg.github.io/did-method-web/)
-- [DID Core Specification](https://www.w3.org/TR/did-core/)
-- [TrustWeave Core API](../api-reference/core-api.md)
+- W3C did:web Specification](https://w3c-ccg.github.io/did-method-web/)
+- DID Core Specification](https://www.w3.org/TR/did-core/)
+- TrustWeave Core API](../api-reference/core-api.md)
 

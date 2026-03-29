@@ -19,8 +19,8 @@ Anchoring creates an immutable audit trail for important events or payloads by w
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-json:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:anchors-anchor-core:0.6.0")
+    implementation("org.trustweave:common:0.6.0")
 }
 ```
 
@@ -44,12 +44,9 @@ Anchoring complements verifiable credentials: you can notarise VC digests, prese
 | 4. Verify | `readPayload` rehydrates the JSON, or recompute the digest locally and compare to the stored reference. |
 
 ```kotlin
-import org.trustweave.TrustWeave
-import org.trustweave.core.*
-import kotlinx.serialization.json.Json
-
-// Using TrustWeave facade (recommended)
 import org.trustweave.trust.TrustWeave
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.anchor.exceptions.BlockchainException
 
 val trustWeave = TrustWeave.build { ... }
 val anchorResult = trustWeave.blockchains.anchor(
@@ -59,21 +56,11 @@ val anchorResult = trustWeave.blockchains.anchor(
 )
 println("Anchored tx: ${anchorResult.ref.txHash}")
 
-// With error handling (wrap in try-catch)
 try {
     val anchor = trustWeave.blockchains.anchor(data, serializer, chainId)
     println("Anchored tx: ${anchor.ref.txHash}")
-} catch (error: Exception) {
-    when (error) {
-        is IllegalStateException -> {
-            if (error.message?.contains("not registered") == true) {
-                println("Chain not registered: ${error.message}")
-            } else {
-                println("Anchoring error: ${error.message}")
-            }
-        }
-        else -> println("Anchoring error: ${error.message}")
-    }
+} catch (e: BlockchainException.ChainNotRegistered) {
+    println("Chain not registered: ${e.chainId}; available: ${e.availableChains}")
 }
 ```
 
@@ -89,9 +76,9 @@ try {
 
 ```kotlin
 import org.trustweave.trust.TrustWeave
-import org.trustweave.core.*
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.anchor.exceptions.BlockchainException
 
-// Using TrustWeave facade (recommended)
 val trustWeave = TrustWeave.build { ... }
 val data = trustWeave.blockchains.read<VerifiableCredential>(
     ref = anchorRef,
@@ -99,26 +86,17 @@ val data = trustWeave.blockchains.read<VerifiableCredential>(
 )
 println("Read credential: ${data.id}")
 
-// With error handling (wrap in try-catch)
 try {
-    val data = trustWeave.blockchains.read<VerifiableCredential>(ref, serializer)
-result.fold(
-    onSuccess = { data -> println("Read: ${data.id}") },
-    onFailure = { error ->
-        when (error) {
-            is TrustWeaveError.ChainNotRegistered -> {
-                println("Chain not registered: ${error.chainId}")
-            }
-            else -> println("Read error: ${error.message}")
-        }
-    }
-)
+    val payload = trustWeave.blockchains.read<VerifiableCredential>(anchorRef, VerifiableCredential.serializer())
+    println("Read: ${payload.id}")
+} catch (e: BlockchainException.ChainNotRegistered) {
+    println("Chain not registered: ${e.chainId}")
+}
 ```
 
-- `readAnchor` returns `Result<T>` with the deserialized data.
+- `blockchains.read` returns the deserialized value or throws `BlockchainException` (for example if the chain is not registered).
 - For higher assurance, recompute the digest from the canonical payload and compare it to the data stored on chain.
 - Keep connection credentials (RPC tokens, private keys) in a secret store for production deployments.
-- All anchoring operations return `Result<T>` for consistent error handling.
 
 ## Practical usage tips
 
@@ -126,17 +104,17 @@ result.fold(
 - **Retry-friendly anchoring** – public chains may require exponential back-off; design idempotent submissions.
 - **Integrate with revocation** – anchor revocation lists or proofs to create audit trails for credential status changes.
 - **Testing** – use the in-memory client or spin up Ganache/Testnet clients for end-to-end tests.
-- **Error handling** – all anchoring operations return `Result<T>` with structured `TrustWeaveError` types. See [Error Handling](../advanced/error-handling.md).
+- **Error handling** – anchoring uses **`AnchorResult`** on success and throws **`BlockchainException`** on many failures. See [Error handling](../advanced/error-handling.md).
 - **Input validation** – TrustWeave automatically validates chain ID format and registration before anchoring.
 
 ## See also
 
-- [Blockchain Anchor Integration Guides](../integrations/README.md#blockchain-anchor-integrations) – Implementation guides for Algorand, Ethereum, Base, Arbitrum, Polygon, and Ganache
-- [Quick Start – Step 5](../getting-started/quick-start.md#step-5-verify-and-optionally-anchor) for an end-to-end example.
-- [Wallet API Reference – Anchoring helpers](../api-reference/wallet-api.md#anchors) for wallet-integrated flows.
-- [Architecture Overview](../introduction/architecture-overview.md) for the DID ➜ credential ➜ anchor flow.
-- [Verifiable Credentials](verifiable-credentials.md) to understand what you may want to anchor.
-- [Blockchain-Anchored Revocation](blockchain-anchored-revocation.md) for anchoring credential revocation status lists.
+- Blockchain Anchor Integration Guides](../integrations/README.md#blockchain-anchor-integrations) – Implementation guides for Algorand, Ethereum, Base, Arbitrum, Polygon, and Ganache
+- Quick Start – Step 5](../getting-started/quick-start.md#step-5-verify-and-optionally-anchor) for an end-to-end example.
+- Wallet API Reference – Anchoring helpers](../api-reference/wallet-api.md#anchors) for wallet-integrated flows.
+- Architecture Overview](../introduction/architecture-overview.md) for the DID ➜ credential ➜ anchor flow.
+- Verifiable Credentials](verifiable-credentials.md) to understand what you may want to anchor.
+- Blockchain-Anchored Revocation](blockchain-anchored-revocation.md) for anchoring credential revocation status lists.
 
 ---
 
@@ -196,20 +174,20 @@ println("Stored mediaType=${stored?.mediaType} payload=${stored?.payload}")
 ## Next Steps
 
 **Ready to use Blockchain Anchoring?**
-- [Quick Start – Step 5](../getting-started/quick-start.md#step-5-verify-and-optionally-anchor) - Anchor your first credential
-- [Core API Reference – Blockchain Operations](../api-reference/core-api.md#blockchain-anchoring) - Complete API documentation
-- [TrustWeave Anchor Module](../modules/trustweave-anchor.md) - Implementation details
+- Quick Start – Step 5](../getting-started/quick-start.md#step-5-verify-and-optionally-anchor) - Anchor your first credential
+- Core API Reference – Blockchain Operations](../api-reference/core-api.md#blockchain-anchoring) - Complete API documentation
+- TrustWeave Anchor Module](../modules/trustweave-anchor.md) - Implementation details
 
 **Want to learn more?**
-- [Verifiable Credentials](verifiable-credentials.md) - Issue and verify credentials
-- [Blockchain-Anchored Revocation](blockchain-anchored-revocation.md) - Revocation with blockchain anchoring
-- [Smart Contracts](smart-contracts.md) - Executable agreements with anchoring
+- Verifiable Credentials](verifiable-credentials.md) - Issue and verify credentials
+- Blockchain-Anchored Revocation](blockchain-anchored-revocation.md) - Revocation with blockchain anchoring
+- Smart Contracts](smart-contracts.md) - Executable agreements with anchoring
 
 ## Related How-To Guides
 
 - **[Anchor to Blockchain](../how-to/blockchain-anchoring.md)** - Step-by-step guide for anchoring data to blockchains
 
 **Explore integrations:**
-- [Blockchain Integrations](../integrations/README.md#blockchain-anchoring) - Algorand, Polygon, Ethereum, and more
-- [Use Case Scenarios](../scenarios/README.md) - Real-world anchoring examples
+- Blockchain Integrations](../integrations/README.md#blockchain-anchoring) - Algorand, Polygon, Ethereum, and more
+- Use Case Scenarios](../scenarios/README.md) - Real-world anchoring examples
 

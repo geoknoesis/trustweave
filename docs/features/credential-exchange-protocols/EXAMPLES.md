@@ -62,8 +62,7 @@ fun main() = runBlocking {
 
     val exchangeService = ExchangeServices.createExchangeService(
         protocolRegistry = registry,
-        credentialService = credentialService,
-        didResolver = didResolver
+        credentialService = credentialService
     )
 
     // Create offer
@@ -527,8 +526,7 @@ fun multipleProtocolsExample() = runBlocking {
 
     val exchangeService = ExchangeServices.createExchangeService(
         protocolRegistry = registry,
-        credentialService = credentialService,
-        didResolver = didResolver
+        credentialService = credentialService
     )
 
     println("Registered protocols: ${registry.getSupportedProtocols()}")
@@ -668,8 +666,7 @@ fun setupExchangeService(): ExchangeService {
 
     return ExchangeServices.createExchangeService(
         protocolRegistry = registry,
-        credentialService = credentialService,
-        didResolver = didResolver
+        credentialService = credentialService
     )
 }
 ```

@@ -1,7 +1,7 @@
 # CBOR Implementation Summary
 
 **Date:** 2025-12-28  
-**Status:** ✅ Complete and Tested
+**Status:** ✅ CBOR support lives in **`CredentialTransformer`** (`credential-api` `transform` package), exposed via **`CredentialService`** extensions (`toCbor` / `fromCbor`).
 
 ## Overview
 
@@ -68,41 +68,29 @@ Full CBOR (Concise Binary Object Representation) support has been implemented fo
 4. **Standards Compliant**: RFC 8949 compliant implementation
 5. **Well Tested**: Comprehensive test coverage ensures reliability
 
-## Files Modified
+## Files
 
 - `credentials/credential-api/src/main/kotlin/org/trustweave/credential/transform/CredentialTransformer.kt`
-- `credentials/credential-api/src/test/kotlin/org/trustweave/credential/transform/CredentialTransformerCborTest.kt` (new)
-- `gradle/libs.versions.toml`
-- `credentials/credential-api/build.gradle.kts`
+- `credentials/credential-api/src/main/kotlin/org/trustweave/credential/transform/CredentialTransformerExtensions.kt` — `VerifiableCredential.toCbor()` / `ByteArray.fromCbor()` helpers
+- `credentials/credential-api/src/main/kotlin/org/trustweave/credential/CredentialServiceExtensions.kt` — `CredentialService.toCbor` / `fromCbor`
+- `credentials/credential-api/src/test/kotlin/org/trustweave/credential/transform/CredentialTransformerCborTest.kt`
+- `gradle/libs.versions.toml`, `credentials/credential-api/build.gradle.kts`
 
 ## Usage Example
 
-**Recommended (Elegant DSL API):**
+**Extensions on `VerifiableCredential` / `ByteArray`:**
 ```kotlin
-// Use extension functions directly on VerifiableCredential
-val credential = // ... create credential
+import org.trustweave.credential.transform.toCbor
+import org.trustweave.credential.transform.fromCbor
+
 val cborBytes = credential.toCbor()
-
-// Store or transmit CBOR bytes
-// ...
-
-// Convert back from CBOR
-val recoveredCredential = cborBytes.fromCbor()
-
-// Round-trip transformation
-val recovered = credential.roundTripCbor()
+val recovered = cborBytes.fromCbor()
 ```
 
-**Alternative (Direct API):**
+**Via `CredentialService` (suspend):**
 ```kotlin
-val transformer = CredentialTransformer()
-val cborBytes = transformer.toCbor(credential)
-val recoveredCredential = transformer.fromCbor(cborBytes)
-```
-
-**With TrustWeave Integration:**
-```kotlin
-val cbor = trustWeave.toCbor(credential)
+val cborBytes = credentialService.toCbor(credential)
+val recovered = credentialService.fromCbor(cborBytes)
 ```
 
 ## Build Status

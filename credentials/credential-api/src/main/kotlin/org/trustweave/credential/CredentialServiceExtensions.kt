@@ -25,7 +25,6 @@ import kotlinx.serialization.json.JsonObject
  * 
  * **See Also:**
  * - [org.trustweave.credential.transform.CredentialTransformerExtensions] for extension functions on VerifiableCredential
- * - [org.trustweave.credential.transform.CredentialTransformationBuilder] for DSL builder pattern
  */
 
 // Shared transformer instance for efficiency

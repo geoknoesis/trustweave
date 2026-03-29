@@ -335,8 +335,8 @@ As we build the web of trust, we must remain committed to open standards, techno
 
 ## Next Steps
 
-- [What is TrustWeave?](what-is-TrustWeave.md) - Learn how TrustWeave implements the web of trust
-- [Trust Registry](../core-concepts/trust-registry.md) - Understand how trust registries work
-- [Delegation](../core-concepts/delegation.md) - Learn about delegation chains
-- [Web of Trust Scenario](../scenarios/web-of-trust-scenario.md) - See the web of trust in action
+- What is TrustWeave?](what-is-TrustWeave.md) - Learn how TrustWeave implements the web of trust
+- Trust Registry](../core-concepts/trust-registry.md) - Understand how trust registries work
+- Delegation](../core-concepts/delegation.md) - Learn about delegation chains
+- Web of Trust Scenario](../scenarios/web-of-trust-scenario.md) - See the web of trust in action
 

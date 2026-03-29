@@ -1,6 +1,6 @@
 package org.trustweave.core.plugin
 
-import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.core.exception.ProviderException
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -51,7 +51,7 @@ class ProviderChainErrorTest {
         )
         val chain = ProviderChain(providers)
 
-        val exception = assertFailsWith<TrustWeaveException.AllProvidersFailed> {
+        val exception = assertFailsWith<ProviderException.AllFailed> {
             chain.execute { it.operation() }
         }
 
@@ -71,7 +71,7 @@ class ProviderChainErrorTest {
         )
         val chain = ProviderChain(providers)
 
-        val exception = assertFailsWith<TrustWeaveException.AllProvidersFailed> {
+        val exception = assertFailsWith<ProviderException.AllFailed> {
             chain.execute { it.operation() }
         }
 
@@ -98,7 +98,7 @@ class ProviderChainErrorTest {
 
     @Test
     fun `test createProviderChain throws NoProvidersFound when no providers exist`() {
-        val exception = assertFailsWith<TrustWeaveException.NoProvidersFound> {
+        val exception = assertFailsWith<ProviderException.NoneFound> {
             createProviderChain<TestProvider>(listOf("nonexistent-1", "nonexistent-2"), registry)
         }
 
@@ -119,7 +119,7 @@ class ProviderChainErrorTest {
         )
         registry.register(metadata, TestProvider("provider-1"))
 
-        val exception = assertFailsWith<TrustWeaveException.PartialProvidersFound> {
+        val exception = assertFailsWith<ProviderException.PartiallyFound> {
             createProviderChain<TestProvider>(listOf("plugin-1", "plugin-2", "plugin-3"), registry)
         }
 

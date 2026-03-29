@@ -2,14 +2,11 @@ package org.trustweave.did.registrar.server.spring
 
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.registrar.model.DeactivateDidOptions
-import org.trustweave.did.registrar.model.DidRegistrationResponse
 import org.trustweave.did.registrar.model.UpdateDidOptions
 import org.trustweave.did.registrar.server.spring.dto.*
-import kotlinx.coroutines.runBlocking
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.util.*
 
 /**
  * Spring Boot REST controller for DID Registrar endpoints.
@@ -19,6 +16,9 @@ import java.util.*
  * - PUT /1.0/dids/{did} - Update DID
  * - DELETE /1.0/dids/{did} - Deactivate DID
  * - GET /1.0/jobs/{jobId} - Get job status
+ *
+ * Uses Spring WebFlux coroutine integration so controller methods are declared `suspend`
+ * and run on the reactor scheduler without blocking a thread.
  *
  * **Example Usage:**
  * ```kotlin
@@ -55,11 +55,9 @@ class DidRegistrarController(
      * ```
      */
     @PostMapping("/dids")
-    fun createDid(@RequestBody request: CreateDidRequest): ResponseEntity<Any> {
+    suspend fun createDid(@RequestBody request: CreateDidRequest): ResponseEntity<Any> {
         return try {
-            val response = runBlocking {
-                service.createDid(request.method, request.options)
-            }
+            val response = service.createDid(request.method, request.options)
             ResponseEntity.ok(response)
         } catch (e: TrustWeaveException) {
             ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -89,14 +87,12 @@ class DidRegistrarController(
      * ```
      */
     @PutMapping("/dids/{did}")
-    fun updateDid(
+    suspend fun updateDid(
         @PathVariable did: String,
         @RequestBody request: UpdateDidRequest
     ): ResponseEntity<Any> {
         return try {
-            val response = runBlocking {
-                service.updateDid(did, request.didDocument, request.options ?: UpdateDidOptions())
-            }
+            val response = service.updateDid(did, request.didDocument, request.options ?: UpdateDidOptions())
             ResponseEntity.ok(response)
         } catch (e: TrustWeaveException) {
             ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -122,14 +118,12 @@ class DidRegistrarController(
      * ```
      */
     @DeleteMapping("/dids/{did}")
-    fun deactivateDid(
+    suspend fun deactivateDid(
         @PathVariable did: String,
         @RequestBody request: DeactivateDidRequest? = null
     ): ResponseEntity<Any> {
         return try {
-            val response = runBlocking {
-                service.deactivateDid(did, request?.options ?: DeactivateDidOptions())
-            }
+            val response = service.deactivateDid(did, request?.options ?: DeactivateDidOptions())
             ResponseEntity.ok(response)
         } catch (e: TrustWeaveException) {
             ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -149,9 +143,7 @@ class DidRegistrarController(
     fun getJobStatus(@PathVariable jobId: String): ResponseEntity<Any> {
         return try {
             val response = service.getJobStatus(jobId)
-                ?: throw org.trustweave.core.exception.TrustWeaveException.NotFound(
-                    resource = "job:$jobId"
-                )
+                ?: throw TrustWeaveException.NotFound(resource = "job:$jobId")
             ResponseEntity.ok(response)
         } catch (e: TrustWeaveException) {
             ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -161,6 +153,4 @@ class DidRegistrarController(
                 .body(ErrorResponse.fromException(e, "INTERNAL_ERROR"))
         }
     }
-
 }
-

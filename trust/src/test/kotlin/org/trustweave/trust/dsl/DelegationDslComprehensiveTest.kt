@@ -4,152 +4,103 @@ import org.trustweave.did.model.DidDocument
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.testkit.kms.InMemoryKeyManagementService
+import org.trustweave.did.resolver.DidResolver
+import org.trustweave.did.verifier.DidDocumentDelegationVerifier
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 /**
- * Comprehensive tests for Delegation DSL integration.
+ * Multi-hop and edge cases for [DidDocumentDelegationVerifier] (same engine as [TrustWeave.delegate]).
  */
 class DelegationDslComprehensiveTest {
 
     @Test
-    fun `test delegation DSL with complete workflow`() = runBlocking {
-        val delegatorDid = "did:key:delegator"
-        val delegateDid = "did:key:delegate"
-
-        val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
-            when (did) {
-                delegatorDid -> DidResolutionResult.Success(
-                    document = DidDocument(
-                        id = Did(delegatorDid),
-                        capabilityDelegation = listOf(VerificationMethodId.parse("$delegateDid#key-1", Did(delegatorDid)))
-                    )
-                )
-                delegateDid -> DidResolutionResult.Success(
-                    document = DidDocument(id = Did(delegateDid))
-                )
-                else -> null
-            }
-        }
-
-        // TODO: DelegationService doesn't exist yet - test commented out
-        // Test delegation service directly (DSL would need resolveDid integration)
-        // val service = org.trustweave.did.delegation.DelegationService(resolveDid)
-        // val result = service.verifyDelegationChain(delegatorDid, delegateDid)
-        //
-        // assertTrue(result.valid)
-        // assertEquals(2, result.path.size)
-        // assertTrue(result.path.contains(delegatorDid))
-        // assertTrue(result.path.contains(delegateDid))
-
-        // Placeholder assertion to keep test structure
-        assertTrue(true)
-    }
-
-    @Test
-    fun `test delegation DSL with multi-hop chain`() = runBlocking {
+    fun `multi-hop delegation chain verifies`() = runBlocking {
         val chain = listOf("did:key:ceo", "did:key:director", "did:key:manager", "did:key:assistant")
 
         val ceoDid = Did("did:key:ceo")
         val directorDid = Did("did:key:director")
         val managerDid = Did("did:key:manager")
         val assistantDid = Did("did:key:assistant")
+
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
             when (did) {
                 "did:key:ceo" -> DidResolutionResult.Success(
                     document = DidDocument(
                         id = ceoDid,
-                        capabilityDelegation = listOf(VerificationMethodId.parse("did:key:director#key-1", directorDid))
-                    )
+                        capabilityDelegation = listOf(
+                            VerificationMethodId.parse("did:key:director#key-1", ceoDid),
+                        ),
+                    ),
                 )
                 "did:key:director" -> DidResolutionResult.Success(
                     document = DidDocument(
                         id = directorDid,
-                        capabilityDelegation = listOf(VerificationMethodId.parse("did:key:manager#key-1", managerDid))
-                    )
+                        capabilityDelegation = listOf(
+                            VerificationMethodId.parse("did:key:manager#key-1", directorDid),
+                        ),
+                    ),
                 )
                 "did:key:manager" -> DidResolutionResult.Success(
                     document = DidDocument(
                         id = managerDid,
-                        capabilityDelegation = listOf(VerificationMethodId.parse("did:key:assistant#key-1", assistantDid))
-                    )
+                        capabilityDelegation = listOf(
+                            VerificationMethodId.parse("did:key:assistant#key-1", managerDid),
+                        ),
+                    ),
                 )
                 "did:key:assistant" -> DidResolutionResult.Success(
-                    document = DidDocument(id = assistantDid)
+                    document = DidDocument(id = assistantDid),
                 )
                 else -> null
             }
         }
 
-        // TODO: DelegationService doesn't exist yet - test commented out
-        // val service = org.trustweave.did.delegation.DelegationService(resolveDid)
-        // val result = service.verifyDelegationChainMultiHop(chain)
-        //
-        // assertTrue(result.valid)
-        // assertEquals(4, result.path.size)
-        // assertEquals(chain, result.path)
+        val verifier = DidDocumentDelegationVerifier(DidResolver { did -> resolveDid(did.value) ?: DidResolutionResult.Failure.NotFound(did = did, reason = "DID not found") })
+        val result = verifier.verifyChain(chain.map { Did(it) })
 
-        // Placeholder assertion to keep test structure
-        assertTrue(true)
+        assertTrue(result.valid)
+        assertEquals(chain, result.path)
     }
 
     @Test
-    fun `test delegation DSL error handling`() = runBlocking {
+    fun `resolution failure yields invalid chain`() = runBlocking {
         val resolveDid: suspend (String) -> DidResolutionResult? = { null }
-
-        // TODO: DelegationService doesn't exist yet - test commented out
-        // val service = org.trustweave.did.delegation.DelegationService(resolveDid)
-        // val result = service.verifyDelegationChain("did:key:delegator", "did:key:delegate")
-        //
-        // assertFalse(result.valid)
-        // assertTrue(result.errors.isNotEmpty())
-        // assertTrue(result.errors.any { it.contains("Failed to resolve") })
-
-        // Placeholder assertion to keep test structure
-        assertTrue(true)
+        val verifier = DidDocumentDelegationVerifier(DidResolver { did -> resolveDid(did.value) ?: DidResolutionResult.Failure.NotFound(did = did, reason = "DID not found") })
+        val result = verifier.verify(Did("did:key:delegator"), Did("did:key:delegate"))
+        assertFalse(result.valid)
+        assertTrue(result.errors.any { it.contains("Failed to resolve", ignoreCase = true) })
     }
 
     @Test
-    fun `test delegation with capability parameter`() = runBlocking {
+    fun `single delegator delegate pair matches simple verifier`() = runBlocking {
         val delegatorDid = "did:key:delegator"
         val delegateDid = "did:key:delegate"
-        val delegatorDidObj3 = Did(delegatorDid)
-        val delegateDidObj3 = Did(delegateDid)
+        val delegator = Did(delegatorDid)
+        val delegate = Did(delegateDid)
 
         val resolveDid: suspend (String) -> DidResolutionResult? = { didStr ->
             when (didStr) {
                 delegatorDid -> DidResolutionResult.Success(
                     document = DidDocument(
-                        id = delegatorDidObj3,
-                        capabilityDelegation = listOf(VerificationMethodId.parse("$delegateDid#key-1", delegateDidObj3))
-                    )
+                        id = delegator,
+                        capabilityDelegation = listOf(
+                            VerificationMethodId.parse("$delegateDid#key-1", delegate),
+                        ),
+                    ),
                 )
                 delegateDid -> DidResolutionResult.Success(
-                    document = DidDocument(id = delegateDidObj3)
+                    document = DidDocument(id = delegate),
                 )
                 else -> null
             }
         }
 
-        // TODO: DelegationService doesn't exist yet - test commented out
-        // val service = org.trustweave.did.delegation.DelegationService(resolveDid)
-        //
-        // // Test with capability
-        // val result1 = service.verifyDelegationChain(delegatorDid, delegateDid, "issueCredentials")
-        // assertTrue(result1.valid)
-        //
-        // // Test without capability
-        // val result2 = service.verifyDelegationChain(delegatorDid, delegateDid, null)
-        // assertTrue(result2.valid)
-
-        // Placeholder assertion to keep test structure
-        assertTrue(true)
+        val verifier = DidDocumentDelegationVerifier(DidResolver { did -> resolveDid(did.value) ?: DidResolutionResult.Failure.NotFound(did = did, reason = "DID not found") })
+        val result = verifier.verify(delegator, delegate)
+        assertTrue(result.valid)
     }
 }
-
-

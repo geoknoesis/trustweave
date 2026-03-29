@@ -3,9 +3,9 @@ package org.trustweave.trust.dsl.wallet
 import org.trustweave.trust.dsl.credential.SelectiveDisclosureBuilder
 import org.trustweave.trust.dsl.credential.PresentationBuilder
 import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.PresentationResult
 import org.trustweave.credential.CredentialService
 import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.credential.model.vc.VerifiablePresentation
 import org.trustweave.trust.dsl.wallet.QueryBuilder
 import org.trustweave.wallet.Wallet
 import kotlinx.coroutines.Dispatchers
@@ -19,24 +19,15 @@ import kotlinx.coroutines.withContext
  *
  * **Example Usage**:
  * ```kotlin
- * // Create presentation from credential IDs
- * val presentation = wallet.presentation {
+ * val pr = trustWeave.presentationFromWalletResult(wallet) {
  *     fromWallet(masterId, job1Id, job2Id)
- *     holder(professionalDid.id)
- *     selectiveDisclosure {
- *         reveal("degree.field", "employment.company")
- *     }
+ *     holder(professionalDid.value)
+ *     selectiveDisclosure { reveal("degree.field", "employment.company") }
  * }
- *
- * // Create presentation from query
- * val presentation = wallet.presentation {
- *     fromQuery {
- *         type("CertificationCredential")
- *         notExpired()
- *     }
- *     holder(professionalDid.id)
- * }
+ * // when (pr) { Success / Failure.* }
  * ```
+ *
+ * Published docs: `docs/api-reference/result-types-guide.md`, `docs/how-to/create-presentations.md`.
  */
 class WalletPresentationBuilder(
     private val wallet: Wallet,
@@ -120,37 +111,29 @@ class WalletPresentationBuilder(
     }
 
     /**
-     * Build the verifiable presentation.
-     * 
-     * This operation performs I/O-bound work (credential retrieval, presentation creation)
-     * and is dispatched to I/O threads. It is non-blocking and can be cancelled.
-     *
-     * @return Verifiable presentation
+     * Build the verifiable presentation as a [PresentationResult].
      */
-    suspend fun build(): VerifiablePresentation = withContext(Dispatchers.IO) {
-        val holder = holderDid ?: throw IllegalStateException("Holder DID is required")
+    suspend fun buildResult(): PresentationResult = withContext(Dispatchers.IO) {
+        val holder = holderDid ?: return@withContext PresentationResult.Failure.InvalidRequest(
+            listOf("Holder DID is required"),
+        )
 
-        // Get credentials from wallet
         val credentials = mutableListOf<VerifiableCredential>()
-
-        // Add credentials from IDs
         for (credId in credentialIds) {
-            val cred = wallet.get(credId)
-            if (cred != null) {
-                credentials.add(cred)
-            }
+            val vc = wallet.get(credId)
+                ?: return@withContext PresentationResult.Failure.InvalidRequest(
+                    listOf("Credential not found in wallet: $credId"),
+                )
+            credentials.add(vc)
         }
-
-        // Add credentials from query
-        queryBuilder?.let { builder ->
-            credentials.addAll(builder.execute())
-        }
+        queryBuilder?.let { credentials.addAll(it.execute()) }
 
         if (credentials.isEmpty()) {
-            throw IllegalStateException("At least one credential is required")
+            return@withContext PresentationResult.Failure.InvalidRequest(
+                listOf("At least one credential is required"),
+            )
         }
 
-        // Use existing presentation builder
         val presentationBuilder = PresentationBuilder(credentialService)
         presentationBuilder.credentials(credentials)
         presentationBuilder.holder(holder)
@@ -162,22 +145,22 @@ class WalletPresentationBuilder(
                 reveal(*disclosedFields.toTypedArray())
             }
         }
-        presentationBuilder.build()
+        presentationBuilder.buildResult()
     }
 }
 
 /**
- * Extension function to create a presentation from wallet credentials.
+ * Create a presentation from wallet credentials, returning [PresentationResult].
  */
-suspend fun TrustWeave.presentationFromWallet(
+suspend fun TrustWeave.presentationFromWalletResult(
     wallet: Wallet,
-    block: WalletPresentationBuilder.() -> Unit
-): VerifiablePresentation {
-    val issuer = getIssuer()
-    val credentialService = issuer as? CredentialService
-        ?: throw IllegalStateException("CredentialService is not available. Configure it in TrustWeave.build { ... }")
+    block: WalletPresentationBuilder.() -> Unit,
+): PresentationResult {
+    val credentialService = getCredentialService()
+        ?: return PresentationResult.Failure.AdapterNotReady(
+            reason = "CredentialService is not available. Configure it in TrustWeave.build { ... }",
+        )
     val builder = WalletPresentationBuilder(wallet, credentialService)
     builder.block()
-    return builder.build()
+    return builder.buildResult()
 }
-

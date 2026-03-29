@@ -105,8 +105,7 @@ registry.register(DidCommExchangeProtocol(didCommService))
 // Create ExchangeService
 val exchangeService = ExchangeServices.createExchangeService(
     protocolRegistry = registry,
-    credentialService = credentialService,
-    didResolver = didResolver
+    credentialService = credentialService
 )
 ```
 
@@ -267,15 +266,16 @@ println("   Issue ID: ${issue.issueId}")
 ### Step 7: Verify Credential
 
 ```kotlin
+import org.trustweave.credential.results.VerificationResult
+
 // The issued credential can now be verified
-val verification = trustLayer.verify {
+val verification = trustWeave.verify {
     credential(issue.credential)
 }
 
-if (verification.valid) {
-    println("✅ Credential is valid")
-} else {
-    println("❌ Credential invalid: ${verification.errors}")
+when (verification) {
+    is VerificationResult.Valid -> println("✅ Credential is valid")
+    is VerificationResult.Invalid -> println("❌ Credential invalid: ${verification.allErrors.joinToString()}")
 }
 ```
 
@@ -379,17 +379,22 @@ println("✅ Proof presented: ${presentationResponse.presentationId}")
 ### Step 4: Verify Presentation
 
 ```kotlin
-val verification = trustLayer.verify {
+import org.trustweave.credential.results.VerificationResult
+
+val verification = trustWeave.verify {
     presentation(presentationResponse.presentation)
 }
 
-if (verification.valid) {
-    println("✅ Presentation is valid")
-    // Extract attributes
-    val name = extractAttribute(presentationResponse.presentation, "name")
-    println("Name: $name")
-} else {
-    println("❌ Presentation invalid: ${verification.errors}")
+when (verification) {
+    is VerificationResult.Valid -> {
+        println("✅ Presentation is valid")
+        // Extract attributes
+        val name = extractAttribute(presentationResponse.presentation, "name")
+        println("Name: $name")
+    }
+    is VerificationResult.Invalid -> {
+        println("❌ Presentation invalid: ${verification.allErrors.joinToString()}")
+    }
 }
 ```
 

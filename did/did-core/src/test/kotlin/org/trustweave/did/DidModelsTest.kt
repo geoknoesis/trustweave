@@ -4,6 +4,7 @@ import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
+import org.trustweave.did.model.DidOrUrl
 import org.trustweave.did.model.DidService
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidResolutionResult
@@ -57,12 +58,12 @@ class DidModelsTest {
     fun `test Service with URL endpoint`() {
         val service = DidService(
             id = "did:web:example.com#service-1",
-            type = "LinkedDomains",
+            type = listOf("LinkedDomains"),
             serviceEndpoint = "https://example.com"
         )
 
         assertEquals("did:web:example.com#service-1", service.id)
-        assertEquals("LinkedDomains", service.type)
+        assertEquals(listOf("LinkedDomains"), service.type)
         assertEquals("https://example.com", service.serviceEndpoint)
     }
 
@@ -71,7 +72,7 @@ class DidModelsTest {
         val endpoint = mapOf("uri" to "https://example.com", "routingKeys" to listOf("key1"))
         val service = DidService(
             id = "did:web:example.com#service-1",
-            type = "DIDCommMessaging",
+            type = listOf("DIDCommMessaging"),
             serviceEndpoint = endpoint
         )
 
@@ -89,13 +90,13 @@ class DidModelsTest {
         )
         val service = DidService(
             id = "did:key:issuer#service-1",
-            type = "LinkedDomains",
+            type = listOf("LinkedDomains"),
             serviceEndpoint = "https://example.com"
         )
 
         val doc = DidDocument(
             id = did,
-            alsoKnownAs = listOf(Did("did:web:example.com")),
+            alsoKnownAs = listOf(DidOrUrl.AsDid(Did("did:web:example.com"))),
             controller = listOf(Did("did:key:controller")),
             verificationMethod = listOf(vm),
             authentication = listOf(vmId),

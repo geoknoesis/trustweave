@@ -1,16 +1,18 @@
 package org.trustweave.integration
 
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.trust.types.getOrThrow
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.*
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
-import org.trustweave.trust.types.VerificationResult
+import org.trustweave.credential.results.VerificationResult
 import org.trustweave.trust.types.*
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.testkit.services.TestkitTrustRegistryFactory
-import org.trustweave.testkit.getOrFail
 import org.trustweave.kms.results.SignResult
 import org.trustweave.did.resolver.DidResolver
 import org.trustweave.credential.credentialService
@@ -64,20 +66,20 @@ class WebOfTrustIntegrationTest {
     fun `test complete trust registry workflow`() = runBlocking {
         val kms = InMemoryKeyManagementService()
         
-        val trustLayer = createTrustWeaveWithCredentialService(kms)
+        val trustWeave = createTrustWeaveWithCredentialService(kms)
 
-        val issuerDid = trustLayer.createDid {
+        val issuerDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }.getOrFail()
+        }.getOrThrowDid()
 
-        val holderDid = trustLayer.createDid {
+        val holderDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }.getOrFail()
+        }.getOrThrowDid()
 
         // Add trust anchor
-        trustLayer.trust {
+        trustWeave.trust {
             addAnchor(issuerDid.value) {
                 credentialTypes("TestCredential")
             }
@@ -85,7 +87,7 @@ class WebOfTrustIntegrationTest {
 
         // Extract key ID from the DID document created during createDid()
         // This ensures the signing key matches what's in the DID document
-        val issuerDidResolution = trustLayer.configuration.didRegistry.resolve(issuerDid.value)
+        val issuerDidResolution = trustWeave.configuration.didRegistry.resolve(issuerDid.value)
             ?: throw IllegalStateException("Failed to resolve issuer DID")
         val issuerDidDoc = when (issuerDidResolution) {
             is org.trustweave.did.resolver.DidResolutionResult.Success -> issuerDidResolution.document
@@ -100,7 +102,7 @@ class WebOfTrustIntegrationTest {
 
         // Issue credential using the key ID from the DID document
         // The IssuanceDsl will construct verificationMethodId as "$issuerDid#$keyId" which matches the DID document
-        val credential = trustLayer.issue {
+        val credential = trustWeave.issue {
             credential {
                 id("https://example.com/credential-1")
                 type("TestCredential")
@@ -112,11 +114,11 @@ class WebOfTrustIntegrationTest {
                 issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDid, keyId = keyId)
-        }.getOrFail()
+        }.getOrThrow()
 
         // Verify with trust registry
         // Note: Trust registry checking is handled by orchestration layer, not in VerificationBuilder
-        val result = trustLayer.verify {
+        val result = trustWeave.verify {
             credential(credential)
         }
 
@@ -126,36 +128,36 @@ class WebOfTrustIntegrationTest {
 
     @Test
     fun `test delegation chain with credential issuance`() = runBlocking {
-        val trustLayer = TrustWeave.build {
+        val trustWeave = TrustWeave.build {
             // DID methods auto-discovered via SPI
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
         }
 
-        val delegatorDid = trustLayer.createDid {
+        val delegatorDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }.getOrFail()
+        }.getOrThrowDid()
 
-        val delegateDid = trustLayer.createDid {
+        val delegateDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }.getOrFail()
+        }.getOrThrowDid()
 
-        val holderDid = trustLayer.createDid {
+        val holderDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }.getOrFail()
+        }.getOrThrowDid()
 
         // Set up delegation
-        trustLayer.updateDid {
+        trustWeave.updateDid {
             did(delegatorDid.value)
             method(DidMethods.KEY)
             addCapabilityDelegation("${delegateDid.value}#key-1")
         }
 
         // Verify delegation
-        val delegationResult = trustLayer.delegate {
+        val delegationResult = trustWeave.delegate {
             from(delegatorDid.value)
             to(delegateDid.value)
         }
@@ -163,7 +165,7 @@ class WebOfTrustIntegrationTest {
         assertTrue(delegationResult.valid)
 
         // Issue credential using delegated authority
-        val credential = trustLayer.issue {
+        val credential = trustWeave.issue {
             credential {
                 id("https://example.com/delegated-credential")
                 type("TestCredential")
@@ -175,14 +177,14 @@ class WebOfTrustIntegrationTest {
                 issued(Clock.System.now())
             }
             signedBy(issuerDid = delegateDid, keyId = "key-1")
-        }.getOrFail()
+        }.getOrThrow()
 
         assertNotNull(credential)
     }
 
     @Test
     fun `test trust path discovery with multiple anchors`() = runBlocking {
-        val trustLayer = TrustWeave.build {
+        val trustWeave = TrustWeave.build {
             factories(
                 trustRegistryFactory = TestkitTrustRegistryFactory()
             )
@@ -192,28 +194,28 @@ class WebOfTrustIntegrationTest {
             trust { provider("inMemory") }
         }
 
-        val anchor1 = trustLayer.createDid {
+        val anchor1 = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }.getOrFail()
+        }.getOrThrowDid()
 
-        val anchor2 = trustLayer.createDid {
+        val anchor2 = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }.getOrFail()
+        }.getOrThrowDid()
 
-        val anchor3 = trustLayer.createDid {
+        val anchor3 = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }.getOrFail()
+        }.getOrThrowDid()
 
-        trustLayer.trust {
+        trustWeave.trust {
             addAnchor(anchor1.value) {}
             addAnchor(anchor2.value) {}
             addAnchor(anchor3.value) {}
 
             // Get registry to add relationships
-            val registry = trustLayer.configuration.trustRegistry as? org.trustweave.testkit.trust.InMemoryTrustRegistry
+            val registry = trustWeave.configuration.trustRegistry as? org.trustweave.testkit.trust.InMemoryTrustRegistry
             registry?.addTrustRelationship(anchor1.value, anchor2.value)
             registry?.addTrustRelationship(anchor2.value, anchor3.value)
 
@@ -229,24 +231,24 @@ class WebOfTrustIntegrationTest {
 
     @Test
     fun `test proof purpose validation in credential verification`() = runBlocking {
-        val trustLayer = TrustWeave.build {
+        val trustWeave = TrustWeave.build {
             // DID methods auto-discovered via SPI
             keys { provider("inMemory") }
             did { method(DidMethods.KEY) {} }
         }
 
-        val issuerDid = trustLayer.createDid {
+        val issuerDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }.getOrFail()
+        }.getOrThrowDid()
 
-        val holderDid = trustLayer.createDid {
+        val holderDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }.getOrFail()
+        }.getOrThrowDid()
 
         // Update issuer DID to have assertionMethod
-        trustLayer.updateDid {
+        trustWeave.updateDid {
             did(issuerDid.value)
             method(DidMethods.KEY)
             addKey {
@@ -255,7 +257,7 @@ class WebOfTrustIntegrationTest {
         }
 
         // Issue credential
-        val credential = trustLayer.issue {
+        val credential = trustWeave.issue {
             credential {
                 id("https://example.com/credential-1")
                 type("TestCredential")
@@ -267,10 +269,10 @@ class WebOfTrustIntegrationTest {
                 issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDid, keyId = "key-1")
-        }.getOrFail()
+        }.getOrThrow()
 
         // Verify with proof purpose validation
-        val result = trustLayer.verify {
+        val result = trustWeave.verify {
             credential(credential)
             validateProofPurpose()
         }

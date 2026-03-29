@@ -113,5 +113,5 @@ Each feature should have:
 - Migration guide (if applicable)
 - Security considerations
 
-For detailed implementation plans, see [Advanced Features Implementation Plan](./ADVANCED_FEATURES_IMPLEMENTATION_PLAN.md).
+For how to extend protocols, see [Implementation Guide](./implementation-guide.md).
 

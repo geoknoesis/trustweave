@@ -1,5 +1,6 @@
 package org.trustweave.core.plugin
 
+import org.trustweave.core.exception.PluginException
 import org.trustweave.core.exception.TrustWeaveException
 import java.util.concurrent.ConcurrentHashMap
 
@@ -10,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap
  * - `DidMethodRegistry` for DID method registration
  * - `BlockchainAnchorRegistry` for blockchain anchor client registration
  * - `TrustRegistry` for trust anchor management
- * - `CredentialServiceRegistry` for credential service registration
+ * - `CredentialService` wiring (via `TrustWeave` / `CredentialServices`) for credential operations
  *
  * @suppress This is an internal API
  */
@@ -20,8 +21,8 @@ internal interface PluginRegistry {
      *
      * @param metadata Plugin metadata describing capabilities
      * @param instance Plugin instance
-     * @throws org.trustweave.core.exception.TrustWeaveException.BlankPluginId if plugin ID is blank
-     * @throws org.trustweave.core.exception.TrustWeaveException.PluginAlreadyRegistered if plugin is already registered
+     * @throws org.trustweave.core.exception.PluginException.BlankId if plugin ID is blank
+     * @throws org.trustweave.core.exception.PluginException.AlreadyRegistered if plugin is already registered
      */
     fun register(metadata: PluginMetadata, instance: Any)
 
@@ -137,14 +138,14 @@ internal class DefaultPluginRegistry : PluginRegistry {
 
     override fun register(metadata: PluginMetadata, instance: Any) {
         if (metadata.id.isBlank()) {
-            throw TrustWeaveException.BlankPluginId
+            throw PluginException.BlankId
         }
 
         // putIfAbsent returns the existing value if key exists, null otherwise.
         // This provides atomic check-and-set semantics.
         val existing = plugins.putIfAbsent(metadata.id, metadata)
         if (existing != null) {
-            throw TrustWeaveException.PluginAlreadyRegistered(
+            throw PluginException.AlreadyRegistered(
                 pluginId = metadata.id,
                 existingPlugin = existing.name
             )

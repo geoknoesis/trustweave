@@ -4,7 +4,7 @@
 title: TrustWeave Developer Documentation
 description: Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin
 author: GeoKnoesis
-version: 1.0.0-SNAPSHOT
+version: 0.6.0
 
 # GitHub Pages Configuration
 # baseurl is empty to serve at root path for custom domain (trustweave.org)
@@ -48,30 +48,6 @@ exclude:
   - book.json
   - SUMMARY.md
   - .internal
-  - DOCUMENTATION_REVIEW*.md
-  - DOCUMENTATION_REVIEW_2025_UPDATED.md
-  - DOCUMENTATION_IMPROVEMENTS*.md
-  - IMPLEMENTATION_SUMMARY.md
-  - NAVIGATION_GUIDE.md
-  - NAVIGATION_IMPROVEMENT_PLAN.md
-  - NAVIGATION_IMPROVEMENT_COMPLETE.md
-  - PHASE_3_COMPLETE_SUMMARY.md
-  - JEKYLL_IMPLEMENTATION_REVIEW.md
-  - TERMINOLOGY_AUDIT.md
-  - TERMINOLOGY_FIXES_APPLIED.md
-  - PHASE_*.md
-  - FINAL_IMPROVEMENTS_SUMMARY.md
-  - FINAL_STATUS_SUMMARY.md
-  - ALL_PHASES_COMPLETE_SUMMARY.md
-  - PROJECT_COMPLETION_REPORT.md
-  - QUICK_START_GUIDE.md
-  - FINAL_VERIFICATION_CHECKLIST.md
-  - README_DOCUMENTATION_IMPROVEMENTS.md
-  - PROJECT_SUMMARY_ONE_PAGER.md
-  - COMPLETION_CERTIFICATE.md
-  - README_IMPROVEMENTS.md
-  - STYLE_GUIDE.md
-  - RECOMMENDATIONS_IMPLEMENTATION_SUMMARY.md
 
 # Just the Docs Theme Configuration
 just_the_docs:

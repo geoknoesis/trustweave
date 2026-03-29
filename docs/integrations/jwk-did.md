@@ -30,12 +30,12 @@ Add the did:jwk module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave.did:jwk:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("org.trustweave.did:base:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-json:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:did-plugins-jwk:0.6.0")
+    implementation("org.trustweave:did-did-core:0.6.0")
+    implementation("org.trustweave:did-plugins-base:0.6.0")
+    implementation("org.trustweave:kms-kms-core:0.6.0")
+    implementation("org.trustweave:common:0.6.0")
+    implementation("org.trustweave:common:0.6.0")
 
     // JSON processing (included automatically)
     implementation("org.jose4j:jose4j:0.9.5")
@@ -143,29 +143,33 @@ val p256Did = method.createDid(p256Options)
 ### Integration with TrustWeave
 
 ```kotlin
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.did.KeyAlgorithm
+import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.jwkdid.*
 import org.trustweave.kms.InMemoryKeyManagementService
 
 val kms = InMemoryKeyManagementService()
 
-val TrustWeave = TrustWeave.create {
-    this.kms = kms
-
-    didMethods {
-        + JwkDidMethod(kms)
+val trustWeave = TrustWeave.build {
+    customKms(kms)
+    did {
+        method("jwk") { algorithm("Ed25519") }
     }
 }
 
-// Use did:jwk
-val did = TrustWeave.createDid("jwk") {
-    algorithm = KeyAlgorithm.ED25519
-}.getOrThrow()
+val did = trustWeave.createDid {
+    method("jwk")
+    algorithm(KeyAlgorithm.ED25519)
+}.getOrThrowDid()
 
-println("Created DID: ${did.id}")
+println("Created DID: ${did.value}")
 
-val resolved = TrustWeave.resolveDid(did.id).getOrThrow()
-println("Resolved DID: ${resolved.document?.id}")
+when (val resolved = trustWeave.resolveDid(did)) {
+    is DidResolutionResult.Success -> println("Resolved DID: ${resolved.document.id}")
+    else -> println("Resolve failed: $resolved")
+}
 ```
 
 ## DID Format
@@ -275,7 +279,7 @@ did:jwk is very fast:
 
 ## References
 
-- [DID JWK Method Specification](https://w3c-ccg.github.io/did-method-jwk/)
-- [JSON Web Key (JWK) RFC 7517](https://tools.ietf.org/html/rfc7517)
-- [TrustWeave Core API](../api-reference/core-api.md)
+- DID JWK Method Specification](https://w3c-ccg.github.io/did-method-jwk/)
+- JSON Web Key (JWK) RFC 7517](https://tools.ietf.org/html/rfc7517)
+- TrustWeave Core API](../api-reference/core-api.md)
 

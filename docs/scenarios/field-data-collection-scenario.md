@@ -12,12 +12,12 @@ This guide walks you through building a complete field data collection and verif
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created DIDs for an organization (issuer) and field workers (holders)
-- ✅ Issued Verifiable Credentials authorizing field workers
-- ✅ Created verifiable credentials for field data collection events
-- ✅ Anchored collection event digests to blockchain for tamper-proof records
-- ✅ Verified data integrity and worker authorization
-- ✅ Built a complete audit trail for field data
+- Created DIDs for an organization (issuer) and field workers (holders)
+- Issued Verifiable Credentials authorizing field workers
+- Created verifiable credentials for field data collection events
+- Anchored collection event digests to blockchain for tamper-proof records
+- Verified data integrity and worker authorization
+- Built a complete audit trail for field data
 
 ## Big Picture & Significance
 
@@ -144,13 +144,13 @@ Add TrustWeave dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // TrustWeave distribution (includes all modules)
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Test kit for in-memory implementations
-    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:0.6.0")
 
     // Optional: Blockchain adapters for real blockchain anchoring
-    implementation("org.trustweave.chains:algorand:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:anchors-plugins-algorand:0.6.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -230,6 +230,7 @@ Configure TrustWeave with blockchain anchoring support:
 import org.trustweave.trust.TrustWeave
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import kotlinx.coroutines.runBlocking
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     // Setup TrustWeave with blockchain support
@@ -246,12 +247,12 @@ fun main() = runBlocking {
                 algorithm(ED25519)
             }
         }
-        blockchains {
-            chainId to anchorClient
+        anchor {
+            chain(chainId) { inMemory() }
         }
     }
 
-    println("✓ TrustWeave configured")
+    println("TrustWeave configured")
     println("  - Chain: $chainId")
     println("  - Mode: In-memory (for testing)")
     println("  - Note: In production, use real blockchain clients")
@@ -263,10 +264,12 @@ fun main() = runBlocking {
 Create a DID for your organization (the issuer of credentials):
 
 ```kotlin
+import org.trustweave.testkit.services.*
 // Create organization DID
 import org.trustweave.trust.types.DidCreationResult
-import org.trustweave.trust.types.DidResolutionResult
-import org.trustweave.trust.types.IssuanceResult
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
+import org.trustweave.credential.results.IssuanceResult
 
 import org.trustweave.trust.types.getOrThrowDid
 
@@ -275,7 +278,7 @@ val organizationDid = trustWeave.createDid {
     algorithm(ED25519)
 }.getOrThrowDid()
 
-println("✓ Organization DID created: ${organizationDid.value}")
+println("[OK] Organization DID created: ${organizationDid.value}")
 println("  - This DID will issue credentials to field workers")
 println("  - This DID will issue credentials for collection events")
 ```
@@ -285,29 +288,29 @@ println("  - This DID will issue credentials for collection events")
 Create a DID for a field worker and issue an authorization credential:
 
 ```kotlin
-import org.trustweave.credential.models.VerifiableCredential
+import org.trustweave.credential.model.vc.VerifiableCredential
 import java.time.Instant
+import org.trustweave.testkit.services.*
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.identifiers.extractKeyId
 
 // Create field worker DID
+
 val workerDid = trustWeave.createDid {
     method(KEY)
     algorithm(ED25519)
 }.getOrThrowDid()
 
-println("✓ Field worker DID created: ${workerDid.value}")
+println("[OK] Field worker DID created: ${workerDid.value}")
 
 // Resolve organization DID to get key ID
-import org.trustweave.trust.types.getOrThrow
-import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.did.identifiers.extractKeyId
 
-// Helper extension for resolution results
-fun DidResolutionResult.getOrThrow() = when (this) {
-    is DidResolutionResult.Success -> this.document
-    else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
+val organizationDoc = when (val res = trustWeave.resolveDid(organizationDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
 }
-
-val organizationDoc = trustWeave.resolveDid(organizationDid).getOrThrow()
 val organizationKeyId = organizationDoc.verificationMethod.firstOrNull()?.extractKeyId()
     ?: throw IllegalStateException("No verification method found")
 
@@ -339,7 +342,7 @@ val workerIssuanceResult = trustWeave.issue {
 
 val workerCredential = workerIssuanceResult.getOrThrow()
 
-println("✓ Worker authorization credential issued")
+println("[OK] Worker authorization credential issued")
 println("  - Credential ID: ${workerCredential.id}")
 println("  - Role: Forest Surveyor")
 println("  - Project: project-forest-survey-2024")
@@ -402,7 +405,7 @@ val collectionEvent = FieldCollectionEvent(
     )
 )
 
-println("✓ Collection event created")
+println("[OK] Collection event created")
 println("  - Event ID: ${collectionEvent.id}")
 println("  - Features: ${collectionEvent.features.size}")
 println("  - Location: (${collectionEvent.location.latitude}, ${collectionEvent.location.longitude})")
@@ -415,12 +418,15 @@ Compute the data digest and issue a verifiable credential for the collection eve
 ```kotlin
 import org.trustweave.core.util.DigestUtils
 import kotlinx.serialization.json.*
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.credential.results.getOrThrow
 
 // Compute data digest
+
 val eventJson = Json.encodeToJsonElement(collectionEvent)
 val dataDigest = DigestUtils.sha256DigestMultibase(eventJson)
 
-println("✓ Data digest computed: $dataDigest")
+println("[OK] Data digest computed: $dataDigest")
 
 // Issue collection event credential
 val collectionIssuanceResult = trustWeave.issue {
@@ -450,11 +456,10 @@ val collectionIssuanceResult = trustWeave.issue {
     )
 }
 
-import org.trustweave.trust.types.getOrThrow
 
 val collectionCredential = collectionIssuanceResult.getOrThrow()
 
-println("✓ Collection event credential issued")
+println("[OK] Collection event credential issued")
 println("  - Credential ID: ${collectionCredential.id}")
 println("  - Data Digest: $dataDigest")
 ```
@@ -483,7 +488,7 @@ val anchorResult = trustWeave.blockchains.anchor(
     chainId = chainId
 )
 
-println("✓ Data anchored to blockchain")
+println("[OK] Data anchored to blockchain")
 println("  - Transaction Hash: ${anchorResult.ref.txHash}")
 println("  - Chain: ${anchorResult.ref.chainId}")
 println("  - Timestamp: ${anchorResult.timestamp}")
@@ -498,7 +503,7 @@ Verify that the data hasn't been tampered with:
 val currentDigest = DigestUtils.sha256DigestMultibase(eventJson)
 
 // Read anchored data
-val anchoredData = trustWeave.blockchains.readAnchor<FieldDataAnchor>(
+val anchoredData = trustWeave.blockchains.read<FieldDataAnchor>(
     anchorRef = anchorResult.ref
 )
 
@@ -506,11 +511,11 @@ val anchoredData = trustWeave.blockchains.readAnchor<FieldDataAnchor>(
 val isIntact = anchoredData.dataDigest == currentDigest
 
 if (isIntact) {
-    println("✓ Data integrity verified!")
+    println("[OK] Data integrity verified!")
     println("  - Data has not been tampered with")
     println("  - Digest matches: $currentDigest")
 } else {
-    println("✗ Data integrity check failed!")
+    println("[FAIL] Data integrity check failed!")
     println("  - Expected: ${anchoredData.dataDigest}")
     println("  - Actual: $currentDigest")
 }
@@ -524,18 +529,18 @@ Verify that the field worker is authorized to collect data:
 // Verify worker credential
 val workerVerification = trustWeave.verify {
     credential(workerCredential)
-    checkTrust(true)
+    requireTrust(requireNotNull(trustWeave.configuration.trustRegistry))
 }
 
 when (workerVerification) {
     is VerificationResult.Valid -> {
-        println("✓ Worker authorization verified")
+        println("[OK] Worker authorization verified")
         println("  - Worker is authorized for project: project-forest-survey-2024")
         println("  - Credential is valid and not expired")
     }
     is VerificationResult.Invalid -> {
-        println("✗ Worker authorization verification failed")
-        workerVerification.errors.forEach { error ->
+        println("[FAIL] Worker authorization verification failed")
+        workerVerification.allErrors.forEach { error ->
             println("  - Error: $error")
         }
     }
@@ -544,18 +549,18 @@ when (workerVerification) {
 // Verify collection event credential
 val collectionVerification = trustWeave.verify {
     credential(collectionCredential)
-    checkTrust(true)
+    requireTrust(requireNotNull(trustWeave.configuration.trustRegistry))
 }
 
 when (collectionVerification) {
     is VerificationResult.Valid -> {
-        println("✓ Collection event credential verified")
+        println("[OK] Collection event credential verified")
         println("  - Credential signature is valid")
         println("  - Issuer is trusted")
     }
     is VerificationResult.Invalid -> {
-        println("✗ Collection event credential verification failed")
-        collectionVerification.errors.forEach { error ->
+        println("[FAIL] Collection event credential verification failed")
+        collectionVerification.allErrors.forEach { error ->
             println("  - Error: $error")
         }
     }
@@ -572,10 +577,16 @@ package org.trustweave.examples.fielddata
 import org.trustweave.trust.TrustWeave
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import org.trustweave.core.util.DigestUtils
-import org.trustweave.trust.types.VerificationResult
+import org.trustweave.credential.results.VerificationResult
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import java.time.Instant
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.testkit.services.*
+import org.trustweave.credential.results.getOrThrow
 
 fun main() = runBlocking {
     println("=".repeat(70))
@@ -597,8 +608,8 @@ fun main() = runBlocking {
                 algorithm(ED25519)
             }
         }
-        blockchains {
-            chainId to anchorClient
+        anchor {
+            chain(chainId) { inMemory() }
         }
     }
 
@@ -607,16 +618,6 @@ fun main() = runBlocking {
     println()
 
     // Step 2: Create organization DID
-    import org.trustweave.trust.types.getOrThrowDid
-    import org.trustweave.trust.types.getOrThrow
-    import org.trustweave.did.resolver.DidResolutionResult
-    import org.trustweave.did.identifiers.extractKeyId
-    
-    // Helper extension for resolution results
-    fun DidResolutionResult.getOrThrow() = when (this) {
-        is DidResolutionResult.Success -> this.document
-        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
-    }
     
     val organizationDid = trustWeave.createDid {
         method(KEY)
@@ -626,7 +627,10 @@ fun main() = runBlocking {
     println()
 
     // Resolve organization DID to get key ID
-    val organizationDoc = trustWeave.resolveDid(organizationDid).getOrThrow()
+    val organizationDoc = when (val res = trustWeave.resolveDid(organizationDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val organizationKeyId = organizationDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
@@ -664,7 +668,6 @@ fun main() = runBlocking {
         )
     }
     
-    import org.trustweave.trust.types.getOrThrow
     
     val workerCredential = workerIssuanceResult.getOrThrow()
 
@@ -759,7 +762,7 @@ fun main() = runBlocking {
     println()
 
     // Step 8: Verify integrity
-    val anchoredData = trustWeave.blockchains.readAnchor<FieldDataAnchor>(
+    val anchoredData = trustWeave.blockchains.read<FieldDataAnchor>(
         anchorRef = anchorResult.ref
     )
     val currentDigest = DigestUtils.sha256DigestMultibase(eventJson)
@@ -767,31 +770,31 @@ fun main() = runBlocking {
 
     println("Step 8: Data integrity verification")
     if (isIntact) {
-        println("  ✓ Data integrity verified - no tampering detected")
+        println("  [OK] Data integrity verified - no tampering detected")
     } else {
-        println("  ✗ Data integrity check failed - possible tampering")
+        println("  [FAIL] Data integrity check failed - possible tampering")
     }
     println()
 
     // Step 9: Verify credentials
     val workerVerification = trustWeave.verify {
         credential(workerCredential)
-        checkTrust(true)
+        requireTrust(requireNotNull(trustWeave.configuration.trustRegistry))
     }
 
     val collectionVerification = trustWeave.verify {
         credential(collectionCredential)
-        checkTrust(true)
+        requireTrust(requireNotNull(trustWeave.configuration.trustRegistry))
     }
 
     println("Step 9: Credential verification")
     when (workerVerification) {
-        is VerificationResult.Valid -> println("  ✓ Worker credential verified")
-        is VerificationResult.Invalid -> println("  ✗ Worker credential invalid")
+        is VerificationResult.Valid -> println("  [OK] Worker credential verified")
+        is VerificationResult.Invalid -> println("  [FAIL] Worker credential invalid")
     }
     when (collectionVerification) {
-        is VerificationResult.Valid -> println("  ✓ Collection credential verified")
-        is VerificationResult.Invalid -> println("  ✗ Collection credential invalid")
+        is VerificationResult.Valid -> println("  [OK] Collection credential verified")
+        is VerificationResult.Invalid -> println("  [FAIL] Collection credential invalid")
     }
     println()
 
@@ -837,12 +840,12 @@ This scenario can be adapted for:
 
 You've learned how to:
 
-- ✅ Create DIDs for organizations and field workers
-- ✅ Issue verifiable credentials for worker authorization
-- ✅ Create verifiable credentials for field data collection events
-- ✅ Compute cryptographic digests for data integrity
-- ✅ Anchor data to blockchain for tamper-proof records
-- ✅ Verify data integrity and worker authorization
+- Create DIDs for organizations and field workers
+- Issue verifiable credentials for worker authorization
+- Create verifiable credentials for field data collection events
+- Compute cryptographic digests for data integrity
+- Anchor data to blockchain for tamper-proof records
+- Verify data integrity and worker authorization
 
 This creates a complete, verifiable field data collection system that ensures data integrity, verifies worker identity, and provides immutable audit trails for compliance and trust.
 

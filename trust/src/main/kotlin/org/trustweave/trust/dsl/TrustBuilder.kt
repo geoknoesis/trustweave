@@ -19,20 +19,20 @@ import kotlinx.datetime.Clock
  *
  * **Example Usage**:
  * ```kotlin
- * val trustLayer = trustLayer {
+ * val trustWeave = trustWeave {
  *     trust {
  *         provider("inMemory")
  *     }
  * }
  *
- * trustLayer.trust {
+ * trustWeave.trust {
  *     addAnchor("did:key:university") {
  *         credentialTypes("EducationCredential")
  *         description("Trusted university")
  *     }
  *
  *     val isTrusted = isTrusted("did:key:university", "EducationCredential")
- *     val path = getTrustPath("did:key:verifier", "did:key:issuer")
+ *     val path = findTrustPath(Did("did:key:verifier"), Did("did:key:issuer"))
  * }
  * ```
  */
@@ -93,27 +93,6 @@ class TrustBuilder(
      */
     suspend fun getTrustedIssuers(credentialType: String? = null): List<String> {
         return registry.getTrustedIssuers(credentialType)
-    }
-
-    /**
-     * Add trust anchor using infix syntax.
-     * 
-     * **Example:**
-     * ```kotlin
-     * trustWeave.trust {
-     *     addAnchor(universityDid trusts "EducationCredential" because {
-     *         description("Trusted university")
-     *     })
-     * }
-     * ```
-     */
-    suspend fun addAnchor(config: TrustAnchorConfig): Boolean {
-        // This will be called with the result of "did trusts type because { }"
-        // We need to extract the DID from the config
-        throw IllegalStateException(
-            "addAnchor with TrustAnchorConfig requires DID. " +
-            "Use: addAnchor(did, did trusts type because { ... })"
-        )
     }
 
     /**
@@ -210,16 +189,3 @@ class TrustAnchorMetadataBuilder {
         )
     }
 }
-
-/**
- * Extension function to access trust registry via TrustWeave.
- */
-suspend fun TrustWeave.trust(block: suspend TrustBuilder.() -> Unit) {
-    val registry = getTrustRegistry() ?: throw IllegalStateException(
-        "Trust registry is not configured. Configure it in trustWeave { trust { provider(\"inMemory\") } }"
-    )
-    val builder = TrustBuilder(registry)
-    builder.block()
-}
-
-

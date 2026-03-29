@@ -706,11 +706,11 @@ enum class SchemaFormat {
 **Key Design Decision**: Use direct constructors instead of factory methods like `parse()`.
 
 **Rationale**:
-- ✅ **Simpler API**: `Did("did:key:...")` is more concise than `Did.parse("did:key:...")`
-- ✅ **Validation in constructor**: All validation happens in `init` blocks, so constructor is sufficient
-- ✅ **Consistent with Kotlin idioms**: Direct constructors are the standard approach
-- ✅ **Matches existing codebase**: Current implementation uses direct constructors
-- ✅ **Less API surface**: Fewer methods to maintain and document
+- Simpler API**: `Did("did:key:...")` is more concise than `Did.parse("did:key:...")`
+- Validation in constructor**: All validation happens in `init` blocks, so constructor is sufficient
+- Consistent with Kotlin idioms**: Direct constructors are the standard approach
+- Matches existing codebase**: Current implementation uses direct constructors
+- Less API surface**: Fewer methods to maintain and document
 
 **For safe parsing** (when you need nullable results), use:
 ```kotlin
@@ -727,11 +727,11 @@ val did = "did:key:...".toDidOrNull()
 **Key Design Decision**: All IRI-based identifiers extend `Iri` (inheritance) rather than composing it.
 
 **Rationale**:
-- ✅ **True "IS-A" relationship**: These identifiers ARE IRIs semantically
-- ✅ **Polymorphism**: All identifier instances can be used wherever `Iri` is expected
-- ✅ **Shared behavior**: Inherit all `Iri` methods (fragment parsing, scheme detection, etc.)
-- ✅ **Type safety**: Compiler enforces the relationship
-- ✅ **Consistency**: Uniform approach across all IRI-based identifiers
+- True "IS-A" relationship**: These identifiers ARE IRIs semantically
+- Polymorphism**: All identifier instances can be used wherever `Iri` is expected
+- Shared behavior**: Inherit all `Iri` methods (fragment parsing, scheme detection, etc.)
+- Type safety**: Compiler enforces the relationship
+- Consistency**: Uniform approach across all IRI-based identifiers
 
 **Identifiers that extend Iri**:
 - `Did extends Iri` - A DID IS-A IRI (W3C DID Core spec)
@@ -1458,11 +1458,11 @@ val vmId = VerificationMethodId.build {
 
 ## References
 
-- [W3C DID Core Specification](https://www.w3.org/TR/did-core/)
-- [W3C Verifiable Credentials Data Model](https://www.w3.org/TR/vc-data-model/)
-- [RFC 3987 - Internationalized Resource Identifiers (IRIs)](https://tools.ietf.org/html/rfc3987)
-- [Kotlin Value Classes](https://kotlinlang.org/docs/inline-classes.html)
-- [Kotlinx Serialization](https://github.com/Kotlin/kotlinx.serialization)
+- W3C DID Core Specification](https://www.w3.org/TR/did-core/)
+- W3C Verifiable Credentials Data Model](https://www.w3.org/TR/vc-data-model/)
+- RFC 3987 - Internationalized Resource Identifiers (IRIs)](https://tools.ietf.org/html/rfc3987)
+- Kotlin Value Classes](https://kotlinlang.org/docs/inline-classes.html)
+- Kotlinx Serialization](https://github.com/Kotlin/kotlinx.serialization)
 
 ---
 

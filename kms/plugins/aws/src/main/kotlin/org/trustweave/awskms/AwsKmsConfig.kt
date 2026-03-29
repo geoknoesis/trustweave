@@ -1,6 +1,6 @@
 package org.trustweave.awskms
 
-import org.trustweave.kms.KmsOptionKeys
+import org.trustweave.awskms.AwsKmsOptionKeys
 
 /**
  * Configuration for AWS KMS client.
@@ -76,16 +76,16 @@ data class AwsKmsConfig(
          * @throws IllegalArgumentException if region is not provided
          */
         fun fromMap(options: Map<String, Any?>): AwsKmsConfig {
-            val region = options[KmsOptionKeys.REGION] as? String
+            val region = options[AwsKmsOptionKeys.REGION] as? String
                 ?: throw IllegalArgumentException("AWS region must be specified in options")
 
             return Builder()
                 .region(region)
-                .accessKeyId(options[KmsOptionKeys.ACCESS_KEY_ID] as? String)
-                .secretAccessKey(options[KmsOptionKeys.SECRET_ACCESS_KEY] as? String)
-                .sessionToken(options[KmsOptionKeys.SESSION_TOKEN] as? String)
-                .endpointOverride(options[KmsOptionKeys.ENDPOINT_OVERRIDE] as? String)
-                .pendingWindowInDays(options[KmsOptionKeys.PENDING_WINDOW_IN_DAYS] as? Int)
+                .accessKeyId(options[AwsKmsOptionKeys.ACCESS_KEY_ID] as? String)
+                .secretAccessKey(options[AwsKmsOptionKeys.SECRET_ACCESS_KEY] as? String)
+                .sessionToken(options[AwsKmsOptionKeys.SESSION_TOKEN] as? String)
+                .endpointOverride(options[AwsKmsOptionKeys.ENDPOINT_OVERRIDE] as? String)
+                .pendingWindowInDays(options[AwsKmsOptionKeys.PENDING_WINDOW_IN_DAYS] as? Int)
                 .cacheTtlSeconds((options["cacheTtlSeconds"] as? Number)?.toLong())
                 .build()
         }

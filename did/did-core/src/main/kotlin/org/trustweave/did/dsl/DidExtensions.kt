@@ -16,21 +16,17 @@ import org.trustweave.did.exception.DidException
  * ```kotlin
  * val resolver = RegistryBasedResolver(registry)
  * 
- * // Functional style
- * val document = Did("did:key:...")
- *     .resolveWith(resolver)
- *     .getOrThrow()
- * 
- * // Safe access
- * val doc = Did("did:key:...")
- *     .resolveWith(resolver)
- *     .getOrNull()
- * 
- * // With callbacks
- * Did("did:key:...")
- *     .resolveWith(resolver)
- *     .onSuccess { println("Resolved: ${it.id}") }
- *     .onFailure { println("Failed: ${it.reason}") }
+ * // Document or throw
+ * val document = Did("did:key:...").resolveOrThrow(resolver)
+ *
+ * // Document or null
+ * val doc = Did("did:key:...").resolveOrNull(resolver)
+ *
+ * // Sealed result + diagnostics (`errorMessage`, `errorCode`, …)
+ * when (val res = Did("did:key:...").resolveWith(resolver)) {
+ *     is DidResolutionResult.Success -> println("Resolved: ${res.document.id}")
+ *     is DidResolutionResult.Failure -> println("Failed: ${res.errorMessage}")
+ * }
  * ```
  */
 
@@ -114,7 +110,6 @@ suspend inline fun Did.resolveWith(
     block: (DidDocument) -> Unit
 ): DidResolutionResult {
     val result = resolveWith(resolver)
-    // Use onSuccess extension from DidResolutionResultExtensions
     if (result is DidResolutionResult.Success) {
         block(result.document)
     }

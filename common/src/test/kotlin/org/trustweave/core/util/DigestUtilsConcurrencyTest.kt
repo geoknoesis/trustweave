@@ -23,7 +23,7 @@ class DigestUtilsConcurrencyTest {
             async(Dispatchers.Default) {
                 repeat(iterations) {
                     val digest = DigestUtils.sha256DigestMultibase(json)
-                    assertTrue(digest.startsWith("u"))
+                    assertTrue(digest.startsWith("z"))
                 }
                 threadId
             }
@@ -49,7 +49,7 @@ class DigestUtilsConcurrencyTest {
                 repeat(inputsPerThread) { i ->
                     val json = """{"thread": $threadId, "iteration": $i}"""
                     val digest = DigestUtils.sha256DigestMultibase(json)
-                    assertTrue(digest.startsWith("u"))
+                    assertTrue(digest.startsWith("z"))
                 }
                 threadId
             }
@@ -116,7 +116,7 @@ class DigestUtilsConcurrencyTest {
             async(Dispatchers.Default) {
                 repeat(10) {
                     val digest = DigestUtils.sha256DigestMultibase(json)
-                    assertTrue(digest.startsWith("u"))
+                    assertTrue(digest.startsWith("z"))
                 }
             }
         }

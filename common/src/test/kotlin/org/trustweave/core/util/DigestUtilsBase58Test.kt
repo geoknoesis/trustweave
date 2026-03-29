@@ -15,7 +15,7 @@ class DigestUtilsBase58Test {
         val data = ""
         val digest = DigestUtils.sha256DigestMultibase(data)
         
-        assertTrue(digest.startsWith("u"))
+        assertTrue(digest.startsWith("z"))
         val base58Part = digest.substring(1)
         assertTrue(base58Part.isNotEmpty())
         // Base58 should only contain valid characters
@@ -28,7 +28,7 @@ class DigestUtilsBase58Test {
         val data = "a"
         val digest = DigestUtils.sha256DigestMultibase(data)
         
-        assertTrue(digest.startsWith("u"))
+        assertTrue(digest.startsWith("z"))
         assertTrue(digest.length > 1)
     }
 
@@ -37,7 +37,7 @@ class DigestUtilsBase58Test {
         val longData = "a".repeat(10000)
         val digest = DigestUtils.sha256DigestMultibase(longData)
         
-        assertTrue(digest.startsWith("u"))
+        assertTrue(digest.startsWith("z"))
         // Base58 encoding of 32-byte SHA-256 should be ~44 characters
         assertTrue(digest.length >= 40 && digest.length <= 50)
     }
@@ -56,7 +56,7 @@ class DigestUtilsBase58Test {
         val unicodeData = "Hello 世界 🌍"
         val digest = DigestUtils.sha256DigestMultibase(unicodeData)
         
-        assertTrue(digest.startsWith("u"))
+        assertTrue(digest.startsWith("z"))
         val base58Part = digest.substring(1)
         // Base58 should only contain ASCII characters
         assertTrue(base58Part.all { it.code < 128 })
@@ -67,7 +67,7 @@ class DigestUtilsBase58Test {
         val jsonWithSpecialChars = """{"key": "value with \"quotes\" and\nnewlines"}"""
         val digest = DigestUtils.sha256DigestMultibase(jsonWithSpecialChars)
         
-        assertTrue(digest.startsWith("u"))
+        assertTrue(digest.startsWith("z"))
     }
 
     @Test
@@ -76,7 +76,7 @@ class DigestUtilsBase58Test {
         val binaryLikeData = ByteArray(256) { it.toByte() }.toString(Charsets.ISO_8859_1)
         val digest = DigestUtils.sha256DigestMultibase(binaryLikeData)
         
-        assertTrue(digest.startsWith("u"))
+        assertTrue(digest.startsWith("z"))
     }
 
     @Test
@@ -112,7 +112,7 @@ class DigestUtilsBase58Test {
         
         testInputs.forEach { input ->
             val digest = DigestUtils.sha256DigestMultibase(input)
-            assertTrue(digest.startsWith("u"))
+            assertTrue(digest.startsWith("z"))
             val base58Part = digest.substring(1)
             assertTrue(base58Part.isNotEmpty())
             // Base58 should not contain invalid characters

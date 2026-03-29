@@ -51,11 +51,11 @@ This analysis helps prioritize UX development and ensures complete coverage of T
 
 ## Related Documentation
 
-- [Core Concepts: Trust Registry](../core-concepts/trust-registry.md) - Technical details on trust registries
-- [Core Concepts: Verifiable Credentials](../core-concepts/verifiable-credentials.md) - VC technical specifications
-- [Core Concepts: Wallets](../core-concepts/wallets.md) - Wallet capabilities and organization
-- [Core Concepts: Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring workflows
-- [Core Concepts: Smart Contracts](../core-concepts/smart-contracts.md) - Contract lifecycle
-- [Scenarios](../scenarios/README.md) - Real-world use case scenarios
-- [Getting Started Guide](../getting-started/quick-start.md) - Technical quick start
+- Core Concepts: Trust Registry](../core-concepts/trust-registry.md) - Technical details on trust registries
+- Core Concepts: Verifiable Credentials](../core-concepts/verifiable-credentials.md) - VC technical specifications
+- Core Concepts: Wallets](../core-concepts/wallets.md) - Wallet capabilities and organization
+- Core Concepts: Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring workflows
+- Core Concepts: Smart Contracts](../core-concepts/smart-contracts.md) - Contract lifecycle
+- Scenarios](../scenarios/README.md) - Real-world use case scenarios
+- Getting Started Guide](../getting-started/quick-start.md) - Technical quick start
 

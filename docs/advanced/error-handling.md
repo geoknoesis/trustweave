@@ -5,7 +5,7 @@ parent: Advanced Topics
 keywords:
   - error handling
   - exceptions
-  - trustweaveerror
+  - trustweaveexception
   - debugging
   - troubleshooting
 ---
@@ -16,33 +16,30 @@ TrustWeave provides structured error handling with rich context for better debug
 
 ## Overview
 
-**Important:** The `TrustWeave` facade methods throw exceptions on failure, not `Result<T>`. All `TrustWeave` methods are suspend functions that throw exceptions when operations fail.
+**Important:** The **`TrustWeave` facade is hybrid.** Credential operations **`issue`**, **`verify`**, **`presentationResult`**, and **batch** flows return **sealed result types**, not exceptions, for the primary failure modes (including **`AdapterNotReady`** when misconfigured). Many **DID** APIs return **`DidCreationResult`** and related sealed types.
 
-**Exception-Based Error Handling:**
-- All `TrustWeave` facade methods throw domain-specific exceptions
-- Use try-catch blocks for error handling
-- Domain-specific exceptions: `DidException`, `CredentialException`, `WalletException`, etc.
-- All exceptions extend `TrustWeaveException` with error codes and context
+**Sealed-result error handling (preferred for credentials):**
+- Use exhaustive **`when`** on **`IssuanceResult`**, **`VerificationResult`**, **`PresentationResult`**
+- See [API patterns — results vs exceptions](../getting-started/api-patterns.md#api-contract-results-vs-exceptions)
 
-**Result-Based Error Handling:**
-- Some lower-level service APIs may return `Result<T>` for functional composition
-- These are typically internal APIs or service interfaces
-- The `TrustWeave` facade converts these to exceptions for simpler usage
+**Exception-based error handling:**
+- **`getOrThrow()`** / **`getOrThrowDid()`** throw **`IllegalStateException`**
+- **Wallet**, some anchors/trust integration, and **`PresentationResult.getOrThrow()`** may throw **`TrustWeaveException`** and related domain exceptions
+
+**`Result<T>` and services:**
+- Lower-level or plugin APIs may return Kotlin **`Result<T>`**
 
 ## TrustWeave Facade Error Handling
 
-The `TrustWeave` facade methods throw exceptions on failure. Always use try-catch blocks:
+Use **`when`** on sealed results for credential and DID results; use **try-catch** around **`getOrThrow()`** or APIs documented as throwing:
 
 ```kotlin
 import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.types.IssuerIdentity
-import org.trustweave.core.exception.TrustWeaveException
-import org.trustweave.did.exception.DidException
-import org.trustweave.did.exception.DidException.DidMethodNotRegistered
-import org.trustweave.did.exception.DidException.DidNotFound
-import org.trustweave.credential.exception.CredentialException
-import org.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.trust.types.WalletCreationResult
+import org.trustweave.credential.results.IssuanceResult
 import kotlinx.coroutines.runBlocking
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
@@ -50,63 +47,41 @@ fun main() = runBlocking {
         did { method(KEY) { algorithm(ED25519) } }
     }
 
-    try {
-        val did = trustWeave.createDid {
-            method(KEY)
-            algorithm(ED25519)
+    val did = when (val dr = trustWeave.createDid { method(KEY); algorithm(ED25519) }) {
+        is DidCreationResult.Success -> dr.did
+        is DidCreationResult.Failure -> {
+            println("DID creation failed: ${dr.reason}")
+            return@runBlocking
         }
-        println("Created DID: $did")
+    }
+    println("Created DID: $did")
 
-        val credential = trustWeave.issue {
-            credential {
-                type("VerifiableCredential", "ExampleCredential")
-                issuer(did)
-                subject {
-                    id("did:key:holder")
-                    "name" to "Alice"
-                }
-            }
-            signedBy(IssuerIdentity.from(did, "$did#key-1"))
-        }
-        println("Issued credential: ${credential.id}")
-    } catch (error: DidException) {
-        when (error) {
-            is DidMethodNotRegistered -> {
-                println("❌ DID method not registered: ${error.method}")
-                println("Available methods: ${error.availableMethods}")
-            }
-            is DidNotFound -> {
-                println("❌ DID not found: ${error.did}")
-            }
-            else -> {
-                println("❌ DID error: ${error.message}")
+    when (val issued = trustWeave.issue {
+        credential {
+            type("VerifiableCredential", "ExampleCredential")
+            issuer(did)
+            subject {
+                id("did:key:holder")
+                "name" to "Alice"
             }
         }
-    } catch (error: CredentialException) {
-        when (error) {
-            is CredentialIssuanceFailed -> {
-                println("❌ Credential issuance failed: ${error.reason}")
-                error.issuerDid?.let { println("   Issuer DID: $it") }
-            }
-            else -> {
-                println("❌ Credential error: ${error.message}")
-            }
-        }
-    } catch (error: TrustWeaveException) {
-        // Handle other TrustWeave exceptions
-        println("❌ TrustWeave error [${error.code}]: ${error.message}")
-        if (error.context.isNotEmpty()) {
-            println("   Context: ${error.context}")
-        }
-    } catch (error: Exception) {
-        // Fallback for unexpected errors
-        println("❌ Unexpected error: ${error.message}")
-        error.printStackTrace()
+        signedBy(did) // or signedBy(did, "key-1") for an explicit verification method fragment
+    }) {
+        is IssuanceResult.Success -> println("Issued credential: ${issued.credential.id}")
+        is IssuanceResult.Failure.AdapterNotReady -> println("Configure CredentialService: ${issued.allErrors.joinToString()}")
+        is IssuanceResult.Failure -> println("Issuance failed: ${issued.allErrors.joinToString()}")
+    }
+
+    when (val w = trustWeave.wallet { holder(did) }) {
+        is WalletCreationResult.Success ->
+            println("Wallet: ${w.wallet.holderDid}")
+        is WalletCreationResult.Failure ->
+            println("Wallet creation failed: $w")
     }
 }
 ```
 
-**Domain-Specific Exception Types:**
+**Domain-Specific Exception Types (wallet and other throwing paths):**
 - `DidException`: DID-related errors (DidMethodNotRegistered, DidNotFound, InvalidDidFormat)
 - `CredentialException`: Credential-related errors (CredentialInvalid, CredentialIssuanceFailed)
 - `WalletException`: Wallet-related errors (WalletCreationFailed)
@@ -164,6 +139,7 @@ import org.trustweave.did.exception.DidException
 import org.trustweave.did.exception.DidException.DidMethodNotRegistered
 import org.trustweave.did.exception.DidException.DidNotFound
 import org.trustweave.did.exception.DidException.InvalidDidFormat
+import org.trustweave.testkit.services.*
 
 // Handle DID errors with short imports
 try {
@@ -236,73 +212,65 @@ BlockchainException.ConnectionFailed(
 )
 ```
 
-### Wallet-Related Errors (in `trustweave-wallet` module)
+### Wallet creation (`WalletCreationResult`)
+
+`trustWeave.wallet { }` returns **`WalletCreationResult`**. Prefer **`when`**; **`getOrThrow()`** throws **`IllegalStateException`** (not **`WalletException`**) with a detailed message.
 
 ```kotlin
-import org.trustweave.wallet.exception.WalletException
-import org.trustweave.wallet.exception.WalletException.WalletCreationFailed
+import org.trustweave.trust.types.WalletCreationResult
 
-// Handle wallet errors with short imports
-try {
-    val wallet = trustWeave.wallet { holder("did:key:holder") }
-} catch (error: WalletException) {
-    when (error) {
-        is WalletCreationFailed -> {
-            println("Wallet creation failed: ${error.reason}")
-            error.provider?.let { println("Provider: $it") }
-            error.walletId?.let { println("Wallet ID: $it") }
-        }
-    }
+when (val w = trustWeave.wallet { holder("did:key:holder") }) {
+    is WalletCreationResult.Success -> println("Wallet: ${w.wallet.holderDid}")
+    is WalletCreationResult.Failure.InvalidHolderDid -> println("Invalid holder: ${w.reason}")
+    is WalletCreationResult.Failure.FactoryNotConfigured -> println("No factory: ${w.reason}")
+    is WalletCreationResult.Failure.StorageFailed -> println("Storage: ${w.reason}")
+    is WalletCreationResult.Failure.Other -> println("Other: ${w.reason}")
 }
 ```
 
-### Plugin-Related Errors
+Lower-level wallet APIs may still throw **`WalletException`** subtypes where documented.
+
+### Plugin-related errors
 
 ```kotlin
-import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.core.exception.PluginException
 
-// Blank plugin ID
-TrustWeaveException.BlankPluginId()
+// Blank plugin id (singleton type)
+PluginException.BlankId
 
-// Plugin already registered
-TrustWeaveException.PluginAlreadyRegistered(
+PluginException.AlreadyRegistered(
     pluginId = "waltid-credential",
     existingPlugin = "walt.id Credential Service"
 )
 
-// Plugin not found
-TrustWeaveException.PluginNotFound(
+PluginException.NotFound(
     pluginId = "waltid-credential",
     pluginType = "credential-service"
 )
 
-// Plugin initialization failed
-TrustWeaveException.PluginInitializationFailed(
+PluginException.InitializationFailed(
     pluginId = "waltid-credential",
     reason = "Configuration missing"
 )
 ```
 
-### Provider Chain Errors
+### Provider chain errors
 
 ```kotlin
-import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.core.exception.ProviderException
 
-// No providers found
-TrustWeaveException.NoProvidersFound(
+ProviderException.NoneFound(
     pluginIds = listOf("provider1", "provider2"),
     availablePlugins = listOf("provider3", "provider4")
 )
 
-// Partial providers found
-TrustWeaveException.PartialProvidersFound(
+ProviderException.PartiallyFound(
     requestedIds = listOf("provider1", "provider2", "provider3"),
     foundIds = listOf("provider1", "provider2"),
     missingIds = listOf("provider3")
 )
 
-// All providers failed
-TrustWeaveException.AllProvidersFailed(
+ProviderException.AllFailed(
     attemptedProviders = listOf("provider1", "provider2"),
     providerErrors = mapOf(
         "provider1" to "Connection timeout",
@@ -312,55 +280,47 @@ TrustWeaveException.AllProvidersFailed(
 )
 ```
 
-### Configuration Errors
+### Configuration errors
 
 ```kotlin
-import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.core.exception.ConfigException
 
-// Configuration file not found
-TrustWeaveException.ConfigNotFound(
-    path = "/path/to/config.json"
-)
+ConfigException.NotFound(path = "/path/to/config.json")
 
-// Configuration read failed
-TrustWeaveException.ConfigReadFailed(
+ConfigException.ReadFailed(
     path = "/path/to/config.json",
     reason = "Permission denied"
 )
 
-// Invalid configuration format
-TrustWeaveException.InvalidConfigFormat(
+ConfigException.InvalidFormat(
     jsonString = "{ invalid json }",
     parseError = "Expected ',' or '}'",
     field = "plugins"
 )
 ```
 
-### JSON/Digest Errors
+### JSON / digest / encoding errors
 
 ```kotlin
+import org.trustweave.core.exception.SerializationException
 import org.trustweave.core.exception.TrustWeaveException
 
-// Invalid JSON
-TrustWeaveException.InvalidJson(
+SerializationException.InvalidJson(
     jsonString = "{ invalid }",
     parseError = "Expected ',' or '}'",
     position = "line 1, column 10"
 )
 
-// JSON encoding failed
-TrustWeaveException.JsonEncodeFailed(
+SerializationException.EncodeFailed(
     element = "{ large object }",
     reason = "Circular reference detected"
 )
 
-// Digest computation failed
 TrustWeaveException.DigestFailed(
     algorithm = "SHA-256",
     reason = "Algorithm not available"
 )
 
-// Encoding failed
 TrustWeaveException.EncodeFailed(
     operation = "base58-encoding",
     reason = "Invalid byte array"
@@ -425,11 +385,11 @@ Quick lookup table for common error codes and their solutions:
 | Code | Error Type | Common Causes | Solutions |
 |------|------------|---------------|-----------|
 | `DID_NOT_FOUND` | `DidNotFound` | DID not resolvable, method not registered, network issue | Check DID format, ensure method registered, verify network connectivity |
-| `DID_METHOD_NOT_REGISTERED` | `DidMethodNotRegistered` | Method not in registry | Register method via `registerDidMethod()` or use available method from `getAvailableDidMethods()` |
+| `DID_METHOD_NOT_REGISTERED` | `DidMethodNotRegistered` | Method not in registry | Register the method on `DidMethodRegistry` / `TrustWeave.build`, or list names via `trustWeave.configuration.didRegistry.getAllMethodNames()` |
 | `INVALID_DID_FORMAT` | `InvalidDidFormat` | DID doesn't match `did:<method>:<identifier>` format | Validate DID format before use, check for typos |
 | `CREDENTIAL_INVALID` | `CredentialInvalid` | Missing required fields, invalid structure, missing proof | Check credential structure, ensure all required fields present |
 | `CREDENTIAL_ISSUANCE_FAILED` | `CredentialIssuanceFailed` | Signing failed, key not found, DID resolution failed | Verify issuer DID is resolvable, check key exists in DID document |
-| `CHAIN_NOT_REGISTERED` | `ChainNotRegistered` | Chain not registered in registry | Register blockchain client via `registerBlockchainClient()` or use available chain from `getAvailableChains()` |
+| `CHAIN_NOT_REGISTERED` | `ChainNotRegistered` | Chain not registered in registry | Register a client on `BlockchainAnchorRegistry` / `TrustWeave.build { anchor { ... } }`, or list IDs via `trustWeave.configuration.blockchainRegistry.getAllChainIds()` |
 | `WALLET_CREATION_FAILED` | `WalletCreationFailed` | Provider not found, configuration invalid, storage unavailable | Check provider name, verify configuration, ensure storage accessible |
 | `BLANK_PLUGIN_ID` | `BlankPluginId` | Plugin ID is blank | Provide a non-blank plugin ID |
 | `PLUGIN_ALREADY_REGISTERED` | `PluginAlreadyRegistered` | Plugin already registered | Unregister existing plugin or use different ID |
@@ -451,36 +411,30 @@ Quick lookup table for common error codes and their solutions:
 
 ### Pitfall 1: Using getOrThrow() in Production
 
-❌ **Bad:**
+**Bad:**
 ```kotlin
-// Throws exception, crashes application
-val did = TrustWeave.dids.create()
+// Throws on failure — fine for scripts; risky in servers without a top-level handler
+val did = trustWeave.createDid { }.getOrThrowDid()
 ```
 
-✅ **Good:**
+**Good:**
 ```kotlin
-// Handle errors gracefully
-val did = TrustWeave.dids.create()
-// Note: dids.create() returns DidDocument directly, not Result
-// For error handling, wrap in try-catch
-result.fold(
-    onSuccess = { did ->
-        // Process DID
-        processDid(did)
-    },
-    onFailure = { error ->
-        // Handle error appropriately
-        logger.error("Failed to create DID", error)
-        // Show user-friendly message or retry
+when (val dr = trustWeave.createDid { }) {
+    is DidCreationResult.Success -> processDid(dr.did)
+    is DidCreationResult.Failure.MethodNotRegistered -> {
+        logger.warn("Method not registered: ${dr.method}; available: ${dr.availableMethods}")
     }
-)
+    is DidCreationResult.Failure -> {
+        logger.error("DID creation failed: $dr")
+    }
+}
 ```
 
-**Why:** `getOrThrow()` throws exceptions that can crash your application. Use `fold()` for production code.
+**Why:** `createDid` returns a **sealed `DidCreationResult`**. Prefer exhaustive **`when`** in production instead of **`getOrThrowDid()`**.
 
 ### Pitfall 2: Not Checking Error Context
 
-❌ **Bad:**
+**Bad:**
 ```kotlin
 result.fold(
     onFailure = { error ->
@@ -489,7 +443,7 @@ result.fold(
 )
 ```
 
-✅ **Good:**
+**Good:**
 ```kotlin
 result.fold(
     onFailure = { error ->
@@ -517,51 +471,40 @@ result.fold(
 
 ### Pitfall 3: Ignoring Warnings in Verification Results
 
-❌ **Bad:**
+**Bad:**
 ```kotlin
-val verification = TrustWeave.verifyCredential(credential).getOrThrow()
-if (verification.valid) {
-    // Use credential without checking warnings
-    processCredential(credential)
+when (val v = trustWeave.verify(credential)) {
+    is VerificationResult.Valid -> processCredential(credential) // ignores warnings on `v`
+    is VerificationResult.Invalid -> { }
 }
 ```
 
-✅ **Good:**
+**Good:**
 ```kotlin
-val verification = TrustWeave.verifyCredential(credential).getOrThrow()
-if (verification.valid) {
-    // Check warnings before using
-    if (verification.warnings.isNotEmpty()) {
-        logger.warn("Credential has warnings: ${verification.warnings}")
-        // Decide if warnings are acceptable for your use case
+when (val v = trustWeave.verify(credential)) {
+    is VerificationResult.Valid -> {
+        if (v.warnings.isNotEmpty()) {
+            logger.warn("Credential verified with warnings: ${v.warnings}")
+        }
+        processCredential(v.credential)
     }
-
-    // Check specific validation flags
-    if (!verification.proofValid) {
-        logger.error("Proof validation failed")
-        return
+    is VerificationResult.Invalid -> {
+        logger.error("Invalid: ${v.allErrors.joinToString()}")
     }
-
-    if (!verification.notRevoked) {
-        logger.warn("Credential may be revoked")
-        // Handle revocation appropriately
-    }
-
-    processCredential(credential)
 }
 ```
 
-**Why:** Warnings indicate potential issues that may affect credential validity in the future.
+**Why:** **`VerificationResult.Valid`** carries **warnings** you should log or policy-check before treating the credential as fully trusted.
 
 ### Pitfall 4: Not Validating Inputs Before Operations
 
-❌ **Bad:**
+**Bad:**
 ```kotlin
 // No validation, may fail with cryptic error
-val resolution = TrustWeave.dids.resolve(userInputDid)
+val resolution = trustWeave.resolveDid(userInputDid)
 ```
 
-✅ **Good:**
+**Good:**
 ```kotlin
 // Validate before operation
 val validation = DidValidator.validateFormat(userInputDid)
@@ -575,15 +518,18 @@ if (!validation.isValid()) {
     )
 }
 
-// Now safe to proceed
-val resolution = TrustWeave.dids.resolve(userInputDid)
+// Now safe to proceed — still handle Failure branches
+when (val resolution = trustWeave.resolveDid(userInputDid)) {
+    is DidResolutionResult.Success -> { /* use resolution.document */ }
+    is DidResolutionResult.Failure -> { /* NotFound, MethodNotRegistered, … */ }
+}
 ```
 
-**Why:** Early validation provides better error messages and prevents unnecessary operations.
+**Why:** Early validation improves messages; resolution returns a **sealed `DidResolutionResult`** you should handle explicitly.
 
 ### Pitfall 5: Not Handling Specific Error Types
 
-❌ **Bad:**
+**Bad:**
 ```kotlin
 result.fold(
     onFailure = { error ->
@@ -593,7 +539,7 @@ result.fold(
 )
 ```
 
-✅ **Good:**
+**Good:**
 ```kotlin
 result.fold(
     onFailure = { error ->
@@ -631,65 +577,46 @@ result.fold(
 ### Basic Error Handling
 
 ```kotlin
-import org.trustweave.TrustWeave
-import org.trustweave.core.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.DidCreationResult
 
-val TrustWeave = TrustWeave.create()
+val trustWeave = TrustWeave.quickStart()
 
-// Handle errors with fold
-val did = TrustWeave.dids.create()
-// Note: dids.create() returns DidDocument directly, not Result
-// For error handling, wrap in try-catch
-result.fold(
-    onSuccess = { did ->
-        println("Created DID: ${did.id}")
-    },
-    onFailure = { error ->
-        when (error) {
-            is DidException.DidMethodNotRegistered -> {
-                println("Method not registered: ${error.method}")
-                println("Available methods: ${error.availableMethods}")
-            }
-            else -> {
-                println("Error: ${error.message}")
-                error.context.forEach { (key, value) ->
-                    println("  $key: $value")
-                }
-            }
-        }
+when (val dr = trustWeave.createDid { }) {
+    is DidCreationResult.Success -> println("Created DID: ${dr.did.value}")
+    is DidCreationResult.Failure.MethodNotRegistered -> {
+        println("Method not registered: ${dr.method}")
+        println("Available methods: ${dr.availableMethods}")
     }
-)
+    is DidCreationResult.Failure -> println("DID creation failed: $dr")
+}
 ```
 
 ### Using getOrThrow for Simple Cases
 
 ```kotlin
-// For simple cases where you want to throw on error
-val did = TrustWeave.dids.create()
-
-// For better error messages, use getOrThrowError
-val did = TrustWeave.dids.create() // Throws TrustWeaveException on failure
+// Scripts / tests: collapse failures to an exception
+val did = trustWeave.createDid { }.getOrThrowDid()
 ```
 
 ### Error Context
 
-All errors include context information that can help with debugging:
+Blockchain anchoring via **`trustWeave.blockchains`** throws **`BlockchainException`** (e.g. **`ChainNotRegistered`**) on configuration errors; successful calls return **`AnchorResult`**.
 
 ```kotlin
-val result = TrustWeave.anchor(data, serializer, "ethereum:mainnet")
-result.fold(
-    onSuccess = { anchor -> println("Anchored: ${anchor.ref.txHash}") },
-    onFailure = { error ->
-        when (error) {
-            is BlockchainException.ChainNotRegistered -> {
-                println("Chain ID: ${error.chainId}")
-                println("Available chains: ${error.availableChains}")
-                println("Context: ${error.context}")
-            }
-            else -> println("Error: ${error.message}")
-        }
-    }
-)
+import org.trustweave.anchor.exceptions.BlockchainException
+
+try {
+    val anchor = trustWeave.blockchains.anchor(
+        data = payload,
+        serializer = MyPayload.serializer(),
+        chainId = "ethereum:mainnet"
+    )
+    println("Anchored: ${anchor.ref.txHash}")
+} catch (e: BlockchainException.ChainNotRegistered) {
+    println("Chain ID: ${e.chainId}")
+    println("Available chains: ${e.availableChains}")
+}
 ```
 
 ### Converting Exceptions to Errors
@@ -709,58 +636,48 @@ try {
 }
 ```
 
-## Result Utilities
+## Result utilities and batching
 
-TrustWeave provides extension functions for working with `Result<T>`:
+Lower-level APIs may return Kotlin **`Result<T>`**. The **`org.trustweave.core.util`** module provides helpers such as **`Result.mapError`** (see source / tests). For the **`TrustWeave`** facade, prefer **sealed results** (`DidCreationResult`, `IssuanceResult`, `DidResolutionResult`, …) and **`when`**.
 
-### mapError
-
-Transform errors in a Result:
+### Batching DID creation (coroutines)
 
 ```kotlin
-val did = TrustWeave.dids.create()
-// Note: dids.create() returns DidDocument directly, not Result
-// For error handling, wrap in try-catch
-    .mapError { it.toTrustWeaveException() }
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.DidCreationResult
+
+suspend fun createMany(trustWeave: TrustWeave) = coroutineScope {
+    val outcomes = listOf(
+        async { trustWeave.createDid { } },
+        async { trustWeave.createDid { } },
+        async { trustWeave.createDid { } },
+    ).awaitAll()
+    outcomes.forEach { dr ->
+        when (dr) {
+            is DidCreationResult.Success -> println(dr.did.value)
+            is DidCreationResult.Failure -> println("Failed: $dr")
+        }
+    }
+}
 ```
 
-### combine
-
-Combine multiple Results:
+### Batching DID resolution
 
 ```kotlin
-val results = listOf(
-    async { TrustWeave.dids.create() },
-    async { TrustWeave.dids.create() },
-    async { TrustWeave.dids.create() }
-)
-
-val combined = results.combine { dids ->
-    dids.map { it.id }
+suspend fun resolveMany(trustWeave: TrustWeave, dids: List<String>) = coroutineScope {
+    dids.map { did ->
+        async { trustWeave.resolveDid(did) }
+    }.awaitAll().forEach { res ->
+        when (res) {
+            is DidResolutionResult.Success -> println("Resolved: ${res.document.id}")
+            is DidResolutionResult.Failure -> println("Resolve failed: $res")
+        }
+    }
 }
-
-combined.fold(
-    onSuccess = { ids -> println("Created DIDs: $ids") },
-    onFailure = { error -> println("Error: ${error.message}") }
-)
-```
-
-### mapAsync
-
-Batch operations with async mapping:
-
-```kotlin
-val dids = listOf("did:key:1", "did:key:2", "did:key:3")
-val results = dids.mapAsync { did ->
-    TrustWeave.dids.resolve(did)
-}
-
-results.fold(
-    onSuccess = { resolutions ->
-        resolutions.forEach { println("Resolved: ${it.document?.id}") }
-    },
-    onFailure = { error -> println("Error: ${error.message}") }
-)
 ```
 
 ## Input Validation
@@ -792,7 +709,7 @@ if (!methodValidation.isValid()) {
 ### Credential Validation
 
 ```kotlin
-import org.trustweave.core.CredentialValidator
+import org.trustweave.credential.validation.CredentialValidator
 
 // Validate credential structure
 val validation = CredentialValidator.validateStructure(credential)
@@ -833,139 +750,87 @@ if (!registeredValidation.isValid()) {
 ### 1. Always Handle Errors
 
 ```kotlin
-// ❌ Bad: Ignoring errors
-val did = TrustWeave.dids.create()
+// Bad: ignoring the sealed result
+val dr = trustWeave.createDid { }
 
-// ✅ Good: Handling errors explicitly
-val did = TrustWeave.dids.create()
-// Note: dids.create() returns DidDocument directly, not Result
-// For error handling, wrap in try-catch
-result.fold(
-    onSuccess = { did -> /* handle success */ },
-    onFailure = { error -> /* handle error */ }
-)
+// Good: exhaustive handling (or getOrThrowDid() only where appropriate)
+when (val dr = trustWeave.createDid { }) {
+    is DidCreationResult.Success -> { /* use dr.did */ }
+    is DidCreationResult.Failure -> { /* log / map to client error */ }
+}
 ```
 
 ### 2. Use Error Context
 
 ```kotlin
-// ✅ Good: Use error context for debugging
-val result = TrustWeave.anchor(data, serializer, chainId)
-result.fold(
-    onSuccess = { /* success */ },
-    onFailure = { error ->
-        logger.error("Anchoring failed", error)
-        logger.debug("Error context: ${error.context}")
-        logger.debug("Error code: ${error.code}")
-    }
-)
+import org.trustweave.anchor.exceptions.BlockchainException
+
+try {
+    trustWeave.blockchains.anchor(data, serializer, chainId)
+} catch (e: BlockchainException.ChainNotRegistered) {
+    logger.error("Anchoring failed: ${e.message}")
+    logger.debug("Available chains: ${e.availableChains}")
+}
 ```
 
 ### 3. Check Error Types
 
 ```kotlin
-// ✅ Good: Handle specific error types
-val did = TrustWeave.dids.create(method = "web")
-result.fold(
-    onSuccess = { /* success */ },
-    onFailure = { error ->
-        when (error) {
-            is DidException.DidMethodNotRegistered -> {
-                // Suggest available methods
-                println("Method 'web' not available. Try: ${error.availableMethods}")
-            }
-            is DidException.InvalidDidFormat -> {
-                // Show format requirements
-                println("Invalid format: ${error.reason}")
-            }
-            else -> {
-                // Generic error handling
-                println("Error: ${error.message}")
-            }
-        }
+when (val dr = trustWeave.createDid { method(WEB) }) {
+    is DidCreationResult.Success -> { /* … */ }
+    is DidCreationResult.Failure.MethodNotRegistered -> {
+        println("Method 'web' not available. Try: ${dr.availableMethods}")
     }
-)
+    is DidCreationResult.Failure -> println("DID creation failed: $dr")
+}
 ```
 
 ### 4. Validate Inputs Early
 
 ```kotlin
-// ✅ Good: Validate before operation
 val did = "did:key:z6Mk..."
 val validation = DidValidator.validateFormat(did)
 if (!validation.isValid()) {
-    return Result.failure(DidException.InvalidDidFormat(did, validation.errorMessage() ?: ""))
+    return Result.failure(
+        DidException.InvalidDidFormat(did, validation.errorMessage() ?: "invalid")
+    )
 }
-
-val resolution = TrustWeave.dids.resolve(did)
+when (val r = trustWeave.resolveDid(did)) {
+    is DidResolutionResult.Success -> { /* … */ }
+    is DidResolutionResult.Failure -> { /* … */ }
+}
 ```
 
-### 5. Use Result Utilities
+### 5. Batch Explicitly
+
+For multiple resolutions, use coroutines (see [Result utilities and batching](#result-utilities-and-batching)) and handle each **`DidResolutionResult`**.
+
+## Plugin registry errors
+
+The **`TrustWeave`** facade does not expose **`initialize()` / `start()` / `stop()`** for plugins. Registration and SPI discovery use **`PluginRegistry`** and related APIs; failures surface as **`PluginException`** (for example **`InitializationFailed`**).
 
 ```kotlin
-// ✅ Good: Use combine for batch operations
-val dids = listOf("did:key:1", "did:key:2", "did:key:3")
-    val results = dids.map { TrustWeave.dids.resolve(it) }
+import org.trustweave.core.exception.PluginException
 
-val combined = results.combine { resolutions ->
-    resolutions.mapNotNull { it.document?.id }
+try {
+    // register or load a plugin-capable provider
+} catch (e: PluginException.InitializationFailed) {
+    println("Plugin ${e.pluginId} failed: ${e.reason}")
 }
-
-combined.fold(
-    onSuccess = { ids -> println("Resolved: $ids") },
-    onFailure = { error -> println("Error: ${error.message}") }
-)
 ```
 
-## Plugin Lifecycle Errors
-
-When managing plugin lifecycles, errors are handled automatically:
-
-```kotlin
-val TrustWeave = TrustWeave.create()
-
-// Initialize plugins
-TrustWeave.initialize().fold(
-    onSuccess = { println("Plugins initialized") },
-    onFailure = { error ->
-        when (error) {
-            is TrustWeaveException.PluginInitializationFailed -> {
-                println("Plugin ${error.pluginId} failed to initialize: ${error.reason}")
-            }
-            else -> println("Error: ${error.message}")
-        }
-    }
-)
-
-// Start plugins
-TrustWeave.start().fold(
-    onSuccess = { println("Plugins started") },
-    onFailure = { error -> println("Error starting plugins: ${error.message}") }
-)
-
-// Stop plugins
-TrustWeave.stop().fold(
-    onSuccess = { println("Plugins stopped") },
-    onFailure = { error -> println("Error stopping plugins: ${error.message}") }
-)
-
-// Cleanup plugins
-TrustWeave.cleanup().fold(
-    onSuccess = { println("Plugins cleaned up") },
-    onFailure = { error -> println("Error cleaning up: ${error.message}") }
-)
-```
+See [Plugin lifecycle](plugin-lifecycle.md) for registration patterns.
 
 ## Migration Guide
 
 If you're migrating from exception-based error handling to Result-based:
 
-### Before (Exception-based)
+### Before (Exception-only style)
 
 ```kotlin
 try {
-    val did = TrustWeave.dids.create()
-    val credential = TrustWeave.issueCredential(...)
+    val did = trustWeave.createDid { }.getOrThrowDid()
+    val credential = trustWeave.issue { /* ... */ }.getOrThrow()
 } catch (e: IllegalArgumentException) {
     println("Invalid argument: ${e.message}")
 } catch (e: Exception) {
@@ -973,349 +838,132 @@ try {
 }
 ```
 
-### After (Result-based)
+### After (Sealed results + domain exceptions)
 
 ```kotlin
-val did = TrustWeave.dids.create()
-didResult.fold(
-    onSuccess = { did ->
-        val credentialResult = TrustWeave.issueCredential(...)
-        credentialResult.fold(
-            onSuccess = { credential -> /* success */ },
-            onFailure = { error -> /* handle error */ }
-        )
-    },
-    onFailure = { error ->
-        when (error) {
-            is DidException.DidMethodNotRegistered -> {
-                println("Method not registered: ${error.method}")
-            }
-            else -> println("Error: ${error.message}")
+when (val dr = trustWeave.createDid { }) {
+    is DidCreationResult.Success -> {
+        when (val issued = trustWeave.issue { /* ... */ }) {
+            is IssuanceResult.Success -> { /* use issued.credential */ }
+            is IssuanceResult.Failure -> println("Issuance failed: ${issued.allErrors.joinToString()}")
         }
     }
-)
+    is DidCreationResult.Failure.MethodNotRegistered -> {
+        println("Method not registered: ${dr.method}")
+    }
+    is DidCreationResult.Failure -> {
+        println("DID creation failed: $dr")
+    }
+}
 ```
 
 ## Error Recovery Patterns
 
-### Retry with Exponential Backoff
+### Retry with backoff (sealed `DidResolutionResult`)
 
-For transient errors (network issues, temporary unavailability), implement retry logic:
+`resolveDid` returns a **sealed result**, not `Result<T>`. Retry only when failure might be transient (your policy may differ):
 
 ```kotlin
+import kotlin.math.min
 import kotlinx.coroutines.delay
-import kotlin.random.Random
-import org.trustweave.core.exception.TrustWeaveException
-import org.trustweave.did.exception.DidException
-import org.trustweave.credential.exception.CredentialException
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.trust.TrustWeave
 
-suspend fun <T> retryWithBackoff(
-    maxRetries: Int = 3,
-    initialDelay: Long = 1000,
-    maxDelay: Long = 10000,
-    multiplier: Double = 2.0,
-    operation: suspend () -> Result<T>
-): Result<T> {
-    var delay = initialDelay.toDouble()
-    var lastError: TrustWeaveException? = null
-
-    repeat(maxRetries) { attempt ->
-        val result = operation()
-
-        result.fold(
-            onSuccess = { return result },
-            onFailure = { error ->
-                lastError = error
-
-                // Don't retry on certain errors
-                when (error) {
-                    is DidException.InvalidDidFormat,
-                    is CredentialException.CredentialInvalid,
-                    is TrustWeaveException.ValidationFailed -> {
-                        return result // Don't retry validation errors
-                    }
-                    else -> {
-                        if (attempt < maxRetries - 1) {
-                            val jitter = Random.nextLong(0, (delay * 0.1).toLong())
-                            val actualDelay = minOf((delay + jitter).toLong(), maxDelay)
-                            delay(actualDelay)
-                            delay *= multiplier
-                        }
-                    }
-                }
-            }
-        )
-    }
-
-    return Result.failure(lastError ?: TrustWeaveException.Unknown(
-        code = "RETRY_EXHAUSTED",
-        message = "Operation failed after $maxRetries retries",
-        context = emptyMap(),
-        cause = null
-    ))
-}
-
-// Usage
-val result = retryWithBackoff {
-    TrustWeave.dids.resolve("did:web:example.com")
-}
-```
-
-### Fallback to Alternative Methods
-
-When a DID method fails, try alternative methods:
-
-```kotlin
-suspend fun resolveDidWithFallback(
-    did: String,
-    preferredMethods: List<String> = listOf("web", "key", "peer")
-): Result<DidResolutionResult> {
-    val method = did.substringAfter("did:").substringBefore(":")
-
-    // Try preferred method first
-    if (method in preferredMethods) {
-        val resolution = TrustWeave.dids.resolve(did)
-        if (result.isSuccess) return result
-    }
-
-    // Try fallback methods
-    for (fallbackMethod in preferredMethods) {
-        if (fallbackMethod == method) continue
-
-        val fallbackDid = did.replace("did:$method:", "did:$fallbackMethod:")
-        val resolution = TrustWeave.dids.resolve(fallbackDid)
-        if (result.isSuccess) {
-            return result
-        }
-    }
-
-    return Result.failure(DidException.DidNotFound(
-        did = did,
-        availableMethods = TrustWeave.getAvailableDidMethods()
-    ))
-}
-```
-
-### Automatic Method Registration
-
-Automatically register missing DID methods when available:
-
-```kotlin
-suspend fun createDidWithAutoRegistration(
-    method: String,
-    options: DidCreationOptions? = null
-): Result<DidDocument> {
-    val did = TrustWeave.dids.create(method, options)
-
-    return result.fold(
-        onSuccess = { did -> Result.success(did) },
-        onFailure = { error ->
-            when (error) {
-                is DidException.DidMethodNotRegistered -> {
-                    // Try to find and register the method
-                    val methodClass = findDidMethodClass(method)
-                    if (methodClass != null) {
-                        TrustWeave.registerDidMethod(methodClass)
-                        // Retry after registration
-                        TrustWeave.dids.create(method, options)
-                    } else {
-                        Result.failure(error)
-                    }
-                }
-                else -> Result.failure(error)
-            }
-        }
-    )
-}
-
-// Helper to find method class (implementation depends on your SPI setup)
-fun findDidMethodClass(method: String): DidMethod? {
-    // Use ServiceLoader or reflection to find available methods
-    return ServiceLoader.load(DidMethod::class.java)
-        .firstOrNull { it.methodName() == method }
-}
-```
-
-### Circuit Breaker Pattern
-
-Prevent cascading failures with a circuit breaker:
-
-```kotlin
-enum class CircuitState { CLOSED, OPEN, HALF_OPEN }
-
-class CircuitBreaker(
-    private val failureThreshold: Int = 5,
-    private val timeout: Long = 60000, // 1 minute
-    private val halfOpenMaxCalls: Int = 3
-) {
-    private var state = CircuitState.CLOSED
-    private var failureCount = 0
-    private var lastFailureTime = 0L
-    private var halfOpenSuccessCount = 0
-
-    suspend fun <T> execute(operation: suspend () -> Result<T>): Result<T> {
-        when (state) {
-            CircuitState.CLOSED -> {
-                val result = operation()
-                result.fold(
-                    onSuccess = {
-                        failureCount = 0
-                        return result
-                    },
-                    onFailure = {
-                        failureCount++
-                        if (failureCount >= failureThreshold) {
-                            state = CircuitState.OPEN
-                            lastFailureTime = System.currentTimeMillis()
-                        }
-                        return result
-                    }
-                )
-            }
-            CircuitState.OPEN -> {
-                if (System.currentTimeMillis() - lastFailureTime > timeout) {
-                    state = CircuitState.HALF_OPEN
-                    halfOpenSuccessCount = 0
-                } else {
-                    return Result.failure(TrustWeaveException.InvalidState(
-                        code = "CIRCUIT_OPEN",
-                        message = "Circuit breaker is open",
-                        context = mapOf("timeout" to timeout.toString()),
-                        cause = null
-                    ))
-                }
-            }
-            CircuitState.HALF_OPEN -> {
-                val result = operation()
-                result.fold(
-                    onSuccess = {
-                        halfOpenSuccessCount++
-                        if (halfOpenSuccessCount >= halfOpenMaxCalls) {
-                            state = CircuitState.CLOSED
-                            failureCount = 0
-                        }
-                        return result
-                    },
-                    onFailure = {
-                        state = CircuitState.OPEN
-                        lastFailureTime = System.currentTimeMillis()
-                        return result
-                    }
-                )
+suspend fun resolveWithRetry(trustWeave: TrustWeave, did: String): DidResolutionResult {
+    var waitMs = 500L
+    repeat(3) { attempt ->
+        when (val r = trustWeave.resolveDid(did)) {
+            is DidResolutionResult.Success -> return r
+            is DidResolutionResult.Failure.NotFound -> return r
+            is DidResolutionResult.Failure.MethodNotRegistered -> return r
+            else -> {
+                if (attempt == 2) return r
+                delay(waitMs)
+                waitMs = min(waitMs * 2, 5_000L)
             }
         }
     }
-}
-
-// Usage
-val circuitBreaker = CircuitBreaker()
-
-val result = circuitBreaker.execute {
-    TrustWeave.dids.resolve("did:web:example.com")
+    error("unreachable")
 }
 ```
 
-### Graceful Degradation
+### Fallback strategies
 
-Provide fallback behavior when operations fail:
+There is no generic “swap DID method in the string and re-resolve” API—fallbacks are **policy**: use another resolver, another endpoint, or a cached document. Prefer **`DidResolutionResult.Failure`** branches to drive that logic.
+
+### Configure methods before `createDid`
+
+Register DID methods in **`TrustWeave.build { did { ... } }`** (or on the underlying **`DidMethodRegistry`**) **before** calling **`createDid`**. Runtime “auto-registration” snippets are not part of the public facade.
+
+### Circuit breaker with `Result`
+
+If you wrap facade calls into **`Result`** for resilience libraries, keep the boundary explicit:
 
 ```kotlin
-suspend fun verifyCredentialWithFallback(
-    credential: VerifiableCredential,
-    strictMode: Boolean = false
-): CredentialVerificationResult {
-    val result = TrustWeave.verifyCredential(credential).getOrNull()
-
-    if (result != null && result.valid) {
-        return result
+fun didResolutionToResult(r: DidResolutionResult): Result<DidResolutionResult> =
+    when (r) {
+        is DidResolutionResult.Success -> Result.success(r)
+        is DidResolutionResult.Failure -> Result.failure(IllegalStateException(r.toString()))
     }
 
-    // Fallback: Basic validation without network calls
-    if (!strictMode) {
-        val basicValidation = CredentialValidator.validateStructure(credential)
-        if (basicValidation.isValid()) {
-            return CredentialVerificationResult(
-                valid = true,
-                proofValid = false, // Unknown without network
-                notExpired = credential.expirationDate?.let {
-                    Instant.parse(it).isAfter(Instant.now())
-                } ?: true,
-                notRevoked = null, // Unknown without network
-                warnings = listOf("Full verification unavailable, using basic validation"),
-                errors = emptyList()
-            )
+// circuitBreaker.execute { didResolutionToResult(trustWeave.resolveDid(did)) }
+```
+
+### Verification degradation
+
+Use **`VerificationResult`** from **`trustWeave.verify`**. A minimal degraded path is “structure-only” checks when the credential service is unavailable:
+
+```kotlin
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.credential.validation.CredentialValidator
+import org.trustweave.trust.TrustWeave
+
+suspend fun verifyWithDegrade(trustWeave: TrustWeave, credential: VerifiableCredential, strictMode: Boolean) {
+    when (val v = trustWeave.verify(credential)) {
+        is VerificationResult.Valid -> { /* use v.credential, inspect v.warnings */ }
+        is VerificationResult.Invalid.AdapterNotReady -> {
+            if (!strictMode && CredentialValidator.validateStructure(credential).isValid()) {
+                // Policy: accept structurally valid credentials when verification service is down
+            } else { /* reject */ }
         }
+        is VerificationResult.Invalid -> { /* handle v.allErrors */ }
     }
-
-    return result ?: CredentialVerificationResult(
-        valid = false,
-        errors = listOf("Verification failed and no fallback available")
-    )
 }
 ```
 
-### Error Aggregation
-
-Collect multiple errors before failing:
+### Batch resolution
 
 ```kotlin
-suspend fun batchResolveDids(
+suspend fun batchResolve(
+    trustWeave: TrustWeave,
     dids: List<String>
-): Result<Map<String, DidResolutionResult>> {
-    val results = mutableMapOf<String, DidResolutionResult>()
-    val errors = mutableListOf<TrustWeaveException>()
+): Map<String, DidResolutionResult> = dids.associateWith { trustWeave.resolveDid(it) }
+```
 
-    dids.forEach { did ->
-        val resolution = TrustWeave.dids.resolve(did)
-        result.fold(
-            onSuccess = { resolution -> results[did] = resolution },
-            onFailure = { error -> errors.add(error) }
+### Timeouts
+
+```kotlin
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.withTimeout
+import org.trustweave.core.exception.TrustWeaveException
+
+suspend fun <T> withTimeoutOrResult(timeoutMillis: Long, block: suspend () -> T): Result<T> =
+    try {
+        Result.success(withTimeout(timeoutMillis) { block() })
+    } catch (e: TimeoutCancellationException) {
+        Result.failure(
+            TrustWeaveException.Unknown(
+                message = "Operation timed out after ${timeoutMillis}ms",
+                cause = e
+            )
         )
     }
 
-    return if (errors.isEmpty() || results.isNotEmpty()) {
-        Result.success(results)
-    } else {
-        Result.failure(TrustWeaveException.Unknown(
-            code = "BATCH_FAILED",
-            message = "All operations failed: ${errors.size} errors",
-            context = mapOf("errors" to errors.map { it.code }.joinToString()),
-            cause = null
-        ))
-    }
-}
-```
-
-### Timeout Handling
-
-Add timeouts to prevent hanging operations:
-
-```kotlin
-import kotlinx.coroutines.withTimeout
-import kotlinx.coroutines.TimeoutCancellationException
-
-suspend fun <T> withTimeoutOrError(
-    timeoutMillis: Long,
-    operation: suspend () -> Result<T>
-): Result<T> {
-    return try {
-        withTimeout(timeoutMillis) {
-            operation()
-        }
-    } catch (e: TimeoutCancellationException) {
-        Result.failure(TrustWeaveException.Unknown(
-            code = "OPERATION_TIMEOUT",
-            message = "Operation timed out after ${timeoutMillis}ms",
-            context = mapOf("timeout" to timeoutMillis.toString()),
-            cause = e
-        ))
-    }
-}
-
-// Usage
-val result = withTimeoutOrError(5000) {
-    TrustWeave.dids.resolve("did:web:example.com")
-}
+// Usage: wrap a suspend call (here: resolution returns DidResolutionResult, not Result)
+val resolutionResult = withTimeoutOrResult(5_000) {
+    trustWeave.resolveDid("did:web:example.com")
+}.getOrThrow()
 ```
 
 ## Exception vs Sealed Result Patterns
@@ -1328,9 +976,9 @@ For a detailed explanation of when to use exceptions vs sealed results, see [Err
 
 ## Related Documentation
 
-- [Error Handling Patterns](error-handling-patterns.md) - Exceptions vs sealed results guide
-- [API Reference](../api-reference/)
-- [Verification Policies](verification-policies.md)
-- [Plugin Lifecycle](plugin-lifecycle.md)
-- [Troubleshooting](../getting-started/troubleshooting.md)
+- Error Handling Patterns](error-handling-patterns.md) - Exceptions vs sealed results guide
+- API Reference](../api-reference/)
+- Verification Policies](verification-policies.md)
+- Plugin Lifecycle](plugin-lifecycle.md)
+- Troubleshooting](../getting-started/troubleshooting.md)
 

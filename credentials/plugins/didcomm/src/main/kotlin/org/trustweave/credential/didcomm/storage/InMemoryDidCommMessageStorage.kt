@@ -2,6 +2,7 @@ package org.trustweave.credential.didcomm.storage
 
 import org.trustweave.credential.didcomm.models.DidCommMessage
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * In-memory implementation of DidCommMessageStorage.
@@ -11,23 +12,23 @@ import java.util.concurrent.ConcurrentHashMap
  */
 class InMemoryDidCommMessageStorage : DidCommMessageStorage {
     private val messages = ConcurrentHashMap<String, DidCommMessage>()
-    private val messagesByDid = ConcurrentHashMap<String, MutableList<String>>()
-    private val messagesByThread = ConcurrentHashMap<String, MutableList<String>>()
+    private val messagesByDid = ConcurrentHashMap<String, CopyOnWriteArrayList<String>>()
+    private val messagesByThread = ConcurrentHashMap<String, CopyOnWriteArrayList<String>>()
 
     override suspend fun store(message: DidCommMessage): String {
         messages[message.id] = message
 
         // Index by DID
         message.from?.let { from ->
-            messagesByDid.getOrPut(from) { mutableListOf() }.add(message.id)
+            messagesByDid.getOrPut(from) { CopyOnWriteArrayList() }.add(message.id)
         }
         message.to.forEach { to ->
-            messagesByDid.getOrPut(to) { mutableListOf() }.add(message.id)
+            messagesByDid.getOrPut(to) { CopyOnWriteArrayList() }.add(message.id)
         }
 
         // Index by thread
         message.thid?.let { thid ->
-            messagesByThread.getOrPut(thid) { mutableListOf() }.add(message.id)
+            messagesByThread.getOrPut(thid) { CopyOnWriteArrayList() }.add(message.id)
         }
 
         return message.id
@@ -111,8 +112,8 @@ class InMemoryDidCommMessageStorage : DidCommMessageStorage {
         // Encryption should be handled at database level
     }
 
-    private val archivedMessages = mutableSetOf<String>()
-    private val archiveIds = mutableMapOf<String, String>() // messageId -> archiveId
+    private val archivedMessages: MutableSet<String> = ConcurrentHashMap.newKeySet()
+    private val archiveIds = ConcurrentHashMap<String, String>() // messageId -> archiveId
 
     override suspend fun markAsArchived(messageIds: List<String>, archiveId: String) {
         messageIds.forEach { id ->

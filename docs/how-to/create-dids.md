@@ -21,14 +21,15 @@ This guide shows you how to create, resolve, update, and deactivate Decentralize
 Here's a complete example that creates a DID, extracts the key ID, and uses it:
 
 ```kotlin
-import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.getOrThrow
 import org.trustweave.trust.dsl.credential.*
 import org.trustweave.testkit.services.*
 import org.trustweave.did.identifiers.extractKeyId
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    trustWeave {
+    val trustWeave = TrustWeave.build {
         keys {
             provider(IN_MEMORY)  // Auto-discovered via SPI
             algorithm(ED25519)
@@ -39,17 +40,17 @@ fun main() = runBlocking {
             }
         }
         // KMS, DID methods, and CredentialService all auto-created!
-    }.run {
-        // Create a DID (returns DID and document directly)
-        val (issuerDid, issuerDoc) = createDid().getOrThrow()
-        
-        // Extract key ID from document using type-safe extension function
-        val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
-            ?: throw IllegalStateException("No verification method found")
-
-        println("Created DID: ${issuerDid.value}")
-        println("Key ID: $issuerKeyId")
     }
+    
+    // Create a DID (returns DID and document directly)
+    val (issuerDid, issuerDoc) = trustWeave.createDid().getOrThrow()
+    
+    // Extract key ID from document using type-safe extension function
+    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
+        ?: throw IllegalStateException("No verification method found")
+
+    println("Created DID: ${issuerDid.value}")
+    println("Key ID: $issuerKeyId")
 }
 ```
 
@@ -68,11 +69,12 @@ Key ID: key-1
 First, create a `TrustWeave` instance with DID method support:
 
 ```kotlin
-import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.getOrThrow
 import org.trustweave.trust.dsl.credential.*
 import org.trustweave.testkit.services.*
 
-val trustWeave = trustWeave {
+val trustWeave = TrustWeave.build {
     keys {
         provider(IN_MEMORY)  // Auto-discovered via SPI (for testing; use production KMS in production)
         algorithm(ED25519)
@@ -95,6 +97,7 @@ val trustWeave = trustWeave {
 Create a DID using the default method (did:key) or specify a method:
 
 ```kotlin
+import org.trustweave.testkit.services.*
 // Simple: Use defaults (did:key, ED25519)
 val did = trustWeave.createDid {
     method(KEY)
@@ -117,20 +120,19 @@ Extract the key ID from the DID for signing operations:
 
 ```kotlin
 import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.testkit.services.*
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
+import org.trustweave.trust.types.getOrThrowDid
 
-val did = trustWeave.createDid { method(KEY) }
+val did = trustWeave.createDid { method(KEY); algorithm(ED25519) }.getOrThrowDid()
 
 // Resolve DID to get verification method
-import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.did.identifiers.extractKeyId
 
-// Helper extension for resolution results
-fun DidResolutionResult.getOrThrow() = when (this) {
-    is DidResolutionResult.Success -> this.document
-    else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
+val document = when (val res = trustWeave.resolveDid(did)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
 }
-
-val document = trustWeave.resolveDid(did).getOrThrow()
 
 // Extract key ID from verification method using type-safe extension function
 val keyId = document.verificationMethod.firstOrNull()?.extractKeyId()
@@ -158,6 +160,7 @@ val credential = trustWeave.issue {
 Create DIDs for different roles (issuer, holder, verifier):
 
 ```kotlin
+import org.trustweave.testkit.services.*
 val issuerDid = trustWeave.createDid { method(KEY) }
 val holderDid = trustWeave.createDid { method(KEY) }
 val verifierDid = trustWeave.createDid { method(KEY) }
@@ -172,6 +175,7 @@ println("Verifier: $verifierDid")
 Handle errors gracefully:
 
 ```kotlin
+import org.trustweave.testkit.services.*
 val did = try {
     trustWeave.createDid {
         method(KEY)
@@ -277,6 +281,7 @@ DID operations now return sealed result types instead of throwing exceptions. Th
 
 ```kotlin
 import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.testkit.services.*
 
 val didResult = trustWeave.createDid { 
     method(KEY) 
@@ -293,7 +298,6 @@ when (didResult) {
     }
     is DidCreationResult.Failure.KeyGenerationFailed -> {
         println("Key generation failed: ${didResult.reason}")
-        didResult.cause?.printStackTrace()
     }
     is DidCreationResult.Failure.DocumentCreationFailed -> {
         println("Document creation failed: ${didResult.reason}")
@@ -308,14 +312,17 @@ when (didResult) {
 }
 ```
 
-**For tests and examples**, you can use the `getOrFail()` helper:
+**For tests and examples**, you can use `getOrThrowDid()`:
 
 ```kotlin
-import org.trustweave.testkit.getOrFail
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.testkit.services.*
 
-val did = trustWeave.createDid { method(KEY) }.getOrFail()
-// Throws AssertionError on failure (suitable for tests/examples only)
+val did = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+// Throws IllegalStateException on failure (suitable for tests/examples only)
 ```
+
+**`createDidWithKey`** returns [`DidCreationWithKeyResult`](../../trust/src/main/kotlin/org/trustweave/trust/types/DidResult.kt) (not `kotlin.Result`). For a quick `(Did, keyId)` pair in examples/tests, use `import org.trustweave.trust.types.getOrThrow` and `.getOrThrow()`.
 
 **Note:** All I/O operations (`createDid`, `issue`, `updateDid`, `rotateKey`, `wallet`, `revoke`) now return sealed result types for exhaustive error handling. `resolveDid()` also returns a sealed result type.
 
@@ -323,6 +330,7 @@ val did = trustWeave.createDid { method(KEY) }.getOrFail()
 
 For complete API documentation, see:
 - **[Core API - createDid()](../api-reference/core-api.md#create)** - Complete parameter reference
+- **[Core API - createDidWithKey()](../api-reference/core-api.md#createdidwithkey)** - DID + first key id
 - **[Core API - resolveDid()](../api-reference/core-api.md#resolve)** - Resolution details
 - **[Core API - updateDid()](../api-reference/core-api.md#update)** - Update operations
 - **[Core API - deactivateDid()](../api-reference/core-api.md#deactivate)** - Deactivation
@@ -348,9 +356,9 @@ For complete API documentation, see:
 ## Next Steps
 
 **Ready to issue credentials?**
-- [Issue Credentials](issue-credentials.md) - Use your DID to issue credentials
+- Issue Credentials](issue-credentials.md) - Use your DID to issue credentials
 
 **Want to learn more?**
-- [DIDs Concept](../core-concepts/dids.md) - Deep dive into DIDs
-- [DID Operations Tutorial](../tutorials/did-operations-tutorial.md) - Comprehensive tutorial
+- DIDs Concept](../core-concepts/dids.md) - Deep dive into DIDs
+- DID Operations Tutorial](../tutorials/did-operations-tutorial.md) - Comprehensive tutorial
 

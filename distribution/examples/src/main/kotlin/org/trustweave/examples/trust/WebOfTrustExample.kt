@@ -1,17 +1,20 @@
 package org.trustweave.examples.trust
 
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.trust.types.getOrThrow
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
 import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.credential.model.ProofType
 import org.trustweave.trust.types.*
+import org.trustweave.credential.results.VerificationResult
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.wallet.CredentialOrganization
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
@@ -36,8 +39,8 @@ import kotlinx.serialization.json.JsonPrimitive
 fun main() = runBlocking {
     println("=== Web of Trust Scenario ===\n")
 
-    // Step 1: Configure Trust Layer with Trust Registry
-    println("Step 1: Setting up trust layer with trust registry...")
+    // Step 1: Configure TrustWeave with trust registry
+    println("Step 1: Setting up TrustWeave with trust registry...")
     val trustWeave = TrustWeave.build {
         keys {
             provider(IN_MEMORY)
@@ -58,38 +61,38 @@ fun main() = runBlocking {
         // schemas() - using defaults (autoValidate=false, JSON_SCHEMA format)
         trust(IN_MEMORY)
     }
-    println("✓ Trust layer configured with trust registry\n")
+    println("✓ TrustWeave configured with trust registry\n")
 
     // Step 2: Create DIDs for different entities
     println("Step 2: Creating DIDs for entities...")
     val universityDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }.getOrFail()
+    }.getOrThrowDid()
     println("University DID: ${universityDid.value}")
 
     val companyDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }.getOrFail()
+    }.getOrThrowDid()
     println("Company DID: ${companyDid.value}")
 
     val hrDeptDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }.getOrFail()
+    }.getOrThrowDid()
     println("HR Department DID: ${hrDeptDid.value}")
 
     val studentDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }.getOrFail()
+    }.getOrThrowDid()
     println("Student DID: ${studentDid.value}")
 
     val verifierDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }.getOrFail()
+    }.getOrThrowDid()
     println("Verifier DID: ${verifierDid.value}\n")
 
     // Step 3: Set up trust anchors
@@ -156,7 +159,7 @@ fun main() = runBlocking {
             issued(Clock.System.now())
         }
         signedBy(universityDid)
-    }.getOrFail()
+    }.getOrThrow()
     println("✓ Issued degree credential from university")
 
     // Issue employment credential from HR department (delegated)
@@ -176,7 +179,7 @@ fun main() = runBlocking {
             issued(Clock.System.now())
         }
         signedBy(hrDeptDid)
-    }.getOrFail()
+    }.getOrThrow()
     println("✓ Issued employment credential from HR department (delegated)\n")
 
     // Step 6: Verify credentials with trust registry
@@ -243,8 +246,8 @@ fun main() = runBlocking {
     println("Step 7: Finding trust paths...")
     trustWeave.trust {
         val trustPath = findTrustPath(
-            verifierDid as org.trustweave.trust.types.VerifierIdentity,
-            universityDid as org.trustweave.trust.types.IssuerIdentity
+            org.trustweave.trust.types.VerifierIdentity(verifierDid),
+            org.trustweave.trust.types.IssuerIdentity(universityDid)
         )
         when (trustPath) {
             is org.trustweave.trust.types.TrustPath.Verified -> {
@@ -259,8 +262,8 @@ fun main() = runBlocking {
         }
 
         val trustPath2 = findTrustPath(
-            verifierDid as org.trustweave.trust.types.VerifierIdentity,
-            companyDid as org.trustweave.trust.types.IssuerIdentity
+            org.trustweave.trust.types.VerifierIdentity(verifierDid),
+            org.trustweave.trust.types.IssuerIdentity(companyDid)
         )
         when (trustPath2) {
             is org.trustweave.trust.types.TrustPath.Verified -> {

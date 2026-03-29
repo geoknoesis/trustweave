@@ -93,6 +93,30 @@ interface SmartContractService {
     ): Result<Boolean>
 }
 
+// ─── Convenience extension functions ────────────────────────────────────────
+
+/**
+ * Convenience alias for [SmartContractService.createDraft].
+ *
+ * Allows callers to write `service.draft(request)` instead of
+ * `service.createDraft(request)`.
+ */
+suspend fun SmartContractService.draft(
+    request: ContractDraftRequest
+): Result<SmartContract> = createDraft(request)
+
+/**
+ * Convenience alias for [SmartContractService.issueContractCredential].
+ *
+ * Allows callers to write `service.issueCredential(...)` instead of
+ * `service.issueContractCredential(...)`.
+ */
+suspend fun SmartContractService.issueCredential(
+    contract: SmartContract,
+    issuerDid: String,
+    issuerKeyId: String
+): Result<VerifiableCredential> = issueContractCredential(contract, issuerDid, issuerKeyId)
+
 /**
  * Contract draft request.
  */

@@ -23,7 +23,16 @@ Here's a complete example that creates a wallet, stores a credential, and organi
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
 import kotlinx.coroutines.runBlocking
+import org.trustweave.trust.types.WalletCreationResult
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.testkit.services.*
+import org.trustweave.credential.results.getOrThrow
 
 fun main() = runBlocking {
     // Create TrustWeave instance
@@ -40,24 +49,11 @@ fun main() = runBlocking {
     }
 
     // Create wallet
-    import org.trustweave.trust.types.WalletCreationResult
-    import org.trustweave.trust.types.DidCreationResult
-    import org.trustweave.trust.types.IssuanceResult
     
     val walletResult = trustWeave.wallet {
         holder("did:key:holder-placeholder")
     }
     
-    import org.trustweave.trust.types.getOrThrowDid
-    import org.trustweave.trust.types.getOrThrow
-    import org.trustweave.did.resolver.DidResolutionResult
-    import org.trustweave.did.identifiers.extractKeyId
-    
-    // Helper extension for resolution results
-    fun DidResolutionResult.getOrThrow() = when (this) {
-        is DidResolutionResult.Success -> this.document
-        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
-    }
     
     val wallet = trustWeave.wallet {
         holder("did:key:holder")
@@ -67,7 +63,10 @@ fun main() = runBlocking {
     val issuerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     
     // Get key ID for signing
-    val issuerDocument = trustWeave.resolveDid(issuerDid).getOrThrow()
+    val issuerDocument = when (val res = trustWeave.resolveDid(issuerDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val issuerKeyId = issuerDocument.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
     
@@ -101,6 +100,7 @@ Create a wallet for a holder:
 
 ```kotlin
 import org.trustweave.trust.types.getOrThrow
+import org.trustweave.credential.results.getOrThrow
 
 val wallet = trustWeave.wallet {
     holder("did:key:holder")
@@ -381,9 +381,9 @@ wallet.withPresentation { pres ->
     val presentation = pres.createPresentation(
         credentialIds = listOf(credentialId),
         holderDid = "did:key:holder",
-        options = PresentationOptions(
-            holderDid = "did:key:holder",
-            challenge = "job-application-${System.currentTimeMillis()}"
+        options = mapOf(
+            "holderDid" to "did:key:holder",
+            "challenge" to "job-application-${System.currentTimeMillis()}"
         )
     )
 
@@ -401,7 +401,7 @@ wallet.withPresentation { pres ->
         credentialIds = listOf(credentialId),
         disclosedFields = listOf("name", "email"),  // Only reveal these fields
         holderDid = "did:key:holder",
-        options = PresentationOptions(...)
+        options = emptyMap<String, Any?>()
     )
 }
 ```
@@ -542,12 +542,12 @@ For complete API documentation, see:
 ## Next Steps
 
 **Ready to issue credentials?**
-- [Issue Credentials](issue-credentials.md) - Issue credentials to store in wallet
+- Issue Credentials](issue-credentials.md) - Issue credentials to store in wallet
 
 **Want to create presentations?**
 - Enable presentation capability and use `withPresentation { }`
 
 **Want to learn more?**
-- [Wallets Concept](../core-concepts/wallets.md) - Deep dive into wallets
-- [Wallet API Tutorial](../tutorials/wallet-api-tutorial.md) - Comprehensive tutorial
+- Wallets Concept](../core-concepts/wallets.md) - Deep dive into wallets
+- Wallet API Tutorial](../tutorials/wallet-api-tutorial.md) - Comprehensive tutorial
 

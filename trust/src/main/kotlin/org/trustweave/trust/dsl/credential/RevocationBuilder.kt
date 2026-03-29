@@ -13,24 +13,24 @@ import kotlinx.coroutines.withContext
 /**
  * Revocation Builder DSL.
  *
- * Provides a fluent API for managing credential revocation using trust layer configuration.
+ * Provides a fluent API for managing credential revocation using TrustWeave configuration.
  *
  * **Example Usage**:
  * ```kotlin
  * // Create status list
- * val statusList = trustLayer.revocation {
+ * val statusList = trustWeave.revocation {
  *     forIssuer("did:key:university")
  *     purpose(StatusPurpose.REVOCATION)
  * }.createStatusList()
  *
  * // Revoke credential
- * trustLayer.revoke {
+ * trustWeave.revoke {
  *     credential("cred-123")
  *     statusList(statusList.id)
  * }
  *
  * // Check revocation status
- * val status = trustLayer.revocation {
+ * val status = trustWeave.revocation {
  *     statusList(statusList.id)
  * }.check(credential)
  * ```
@@ -171,14 +171,3 @@ class RevocationBuilder(
 fun TrustWeave.revocation(block: RevocationBuilder.() -> Unit): RevocationBuilder {
     return RevocationBuilder(getRevocationManager()).apply(block)
 }
-
-/**
- * Extension function to revoke a credential directly using TrustWeave.
- */
-suspend fun TrustWeave.revoke(block: RevocationBuilder.() -> Unit): Boolean {
-    val builder = RevocationBuilder(getRevocationManager())
-    builder.block()
-    return builder.revoke()
-}
-
-

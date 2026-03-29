@@ -55,7 +55,7 @@ class DigestUtilsTest {
 
         // After canonicalization, they should be the same
         assertEquals(digest1, digest2)
-        assertTrue(digest1.startsWith("u"), "Digest should start with multibase prefix 'u'")
+        assertTrue(digest1.startsWith("z"), "Digest should start with multibase prefix 'z' (base58btc)")
     }
 
     @Test
@@ -91,8 +91,8 @@ class DigestUtilsTest {
         val data = "test"
         val digest = DigestUtils.sha256DigestMultibase(data)
 
-        // Should start with 'u' (multibase prefix for base58btc)
-        assertTrue(digest.startsWith("u"), "Digest should start with multibase prefix 'u'")
+        // Should start with 'z' (multibase prefix for base58btc)
+        assertTrue(digest.startsWith("z"), "Digest should start with multibase prefix 'z' (base58btc)")
         // Should be base58 encoded (only contains base58 characters)
         val base58Chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
         val encodedPart = digest.substring(1)

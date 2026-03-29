@@ -1,12 +1,12 @@
 package org.trustweave.did.resolver
 
-import org.trustweave.core.identifiers.KeyId
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.model.DidService
 import org.trustweave.did.model.VerificationMethod
+import org.trustweave.did.parser.DidDocumentJsonParser
 import org.trustweave.did.exception.DidException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -46,17 +46,21 @@ import kotlinx.datetime.Instant
  * ```
  *
  * @param baseUrl Base URL of the Universal Resolver instance (e.g., "https://dev.uniresolver.io")
- * @param timeout Request timeout in seconds (default: 30)
+ * @param timeout Request timeout in seconds (default: 30). Ignored when [httpClient] is provided.
  * @param apiKey Optional API key for authentication (if required by the resolver)
  * @param protocolAdapter Protocol adapter for the specific Universal Resolver implementation
  *                        (defaults to [StandardUniversalResolverAdapter])
+ * @param httpClient Optional pre-configured [HttpClient] to use for HTTP requests. When `null`
+ *                   a default client with [timeout]-based connect timeout is created. Inject a
+ *                   shared client in production to allow connection-pool reuse and easier testing.
  */
 class DefaultUniversalResolver(
     override val baseUrl: String,
     private val timeout: Int = 30,
     private val apiKey: String? = null,
     private val protocolAdapter: UniversalResolverProtocolAdapter = StandardUniversalResolverAdapter(),
-    private val retryConfig: RetryConfig = RetryConfig.default()
+    private val retryConfig: RetryConfig = RetryConfig.default(),
+    httpClient: HttpClient? = null
 ) : UniversalResolver {
 
     init {
@@ -76,7 +80,7 @@ class DefaultUniversalResolver(
         }
     }
 
-    private val httpClient: HttpClient = HttpClient.newBuilder()
+    private val httpClient: HttpClient = httpClient ?: HttpClient.newBuilder()
         .connectTimeout(Duration.ofSeconds(timeout.toLong()))
         .build()
 
@@ -238,157 +242,14 @@ class DefaultUniversalResolver(
     }
 
     /**
-     * Parses a DID document from a JsonObject.
+     * Parses a DID document from a JsonObject using the shared conforming consumer.
      *
      * @param json JSON object containing the DID document
      * @return Parsed DidDocument
      * @throws DidException.InvalidDidFormat if the document is invalid
      */
     private fun parseDidDocumentFromJson(json: JsonObject): DidDocument {
-        val id = json["id"]?.jsonPrimitive?.content
-            ?: throw DidException.InvalidDidFormat(
-                did = "unknown",
-                reason = "DID document missing 'id' field"
-            )
-
-        val context = parseContext(json)
-        val parseVmId = createVmIdParser(id)
-        val verificationMethod = parseVerificationMethods(json, parseVmId, id)
-        val authentication = parseVerificationMethodReferences(json, "authentication", parseVmId)
-        val assertionMethod = parseVerificationMethodReferences(json, "assertionMethod", parseVmId)
-        val keyAgreement = parseVerificationMethodReferences(json, "keyAgreement", parseVmId)
-        val capabilityInvocation = parseVerificationMethodReferences(json, "capabilityInvocation", parseVmId)
-        val capabilityDelegation = parseVerificationMethodReferences(json, "capabilityDelegation", parseVmId)
-        val service = parseServices(json)
-
-        return DidDocument(
-            id = Did(id),
-            context = context,
-            verificationMethod = verificationMethod,
-            authentication = authentication,
-            assertionMethod = assertionMethod,
-            keyAgreement = keyAgreement,
-            capabilityInvocation = capabilityInvocation,
-            capabilityDelegation = capabilityDelegation,
-            service = service
-        )
-    }
-
-    /**
-     * Parses the @context field from a DID document JSON.
-     */
-    private fun parseContext(json: JsonObject): List<String> {
-        return when {
-            json["@context"] != null -> {
-                when (val ctx = json["@context"]) {
-                    is JsonPrimitive -> listOf(ctx.content)
-                    is JsonArray -> ctx.mapNotNull { it.jsonPrimitive?.content }
-                    else -> listOf("https://www.w3.org/ns/did/v1")
-                }
-            }
-            else -> listOf("https://www.w3.org/ns/did/v1")
-        }
-    }
-
-    /**
-     * Creates a parser function for verification method IDs.
-     */
-    private fun createVmIdParser(baseDid: String): (String) -> VerificationMethodId {
-        return { vmIdString: String ->
-            try {
-                VerificationMethodId.parse(vmIdString, Did(baseDid))
-            } catch (e: IllegalArgumentException) {
-                // If parsing fails, try manual parsing as fallback
-                // This handles edge cases where the format is slightly non-standard
-                val (didPart, keyPart) = if (vmIdString.contains("#")) {
-                    val parts = vmIdString.split("#", limit = 2)
-                    if (parts.size == 2 && parts[0].isNotBlank() && parts[1].isNotBlank()) {
-                        parts[0] to parts[1]
-                    } else {
-                        throw DidException.InvalidDidFormat(
-                            did = vmIdString,
-                            reason = "Invalid verification method ID format: missing DID or fragment"
-                        )
-                    }
-                } else {
-                    // Relative reference - use base DID
-                    baseDid to vmIdString
-                }
-                try {
-                    VerificationMethodId(Did(didPart), KeyId(keyPart))
-                } catch (e2: Exception) {
-                    throw DidException.InvalidDidFormat(
-                        did = vmIdString,
-                        reason = "Failed to parse verification method ID: ${e2.message}"
-                    )
-                }
-            }
-        }
-    }
-
-    /**
-     * Parses verification methods from a DID document JSON.
-     */
-    private fun parseVerificationMethods(
-        json: JsonObject,
-        parseVmId: (String) -> VerificationMethodId,
-        baseDid: String
-    ): List<VerificationMethod> {
-        return json["verificationMethod"]?.jsonArray?.mapNotNull { vmJson ->
-            val vmObj = vmJson.jsonObject
-            val vmId = vmObj["id"]?.jsonPrimitive?.content
-            val vmType = vmObj["type"]?.jsonPrimitive?.content
-            val controller = vmObj["controller"]?.jsonPrimitive?.content ?: baseDid
-            val publicKeyJwk = vmObj["publicKeyJwk"]?.jsonObject?.let { jwk ->
-                jwk.entries.associate { it.key to convertJsonElement(it.value) }
-            }
-            val publicKeyMultibase = vmObj["publicKeyMultibase"]?.jsonPrimitive?.content
-
-            if (vmId != null && vmType != null) {
-                val parsedVmId = parseVmId(vmId)
-                VerificationMethod(
-                    id = parsedVmId,
-                    type = vmType,
-                    controller = Did(controller),
-                    publicKeyJwk = publicKeyJwk,
-                    publicKeyMultibase = publicKeyMultibase
-                )
-            } else null
-        } ?: emptyList()
-    }
-
-    /**
-     * Parses verification method references (authentication, assertionMethod, etc.).
-     */
-    private fun parseVerificationMethodReferences(
-        json: JsonObject,
-        fieldName: String,
-        parseVmId: (String) -> VerificationMethodId
-    ): List<VerificationMethodId> {
-        return json[fieldName]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content?.let { parseVmId(it) } }
-            ?: json[fieldName]?.jsonPrimitive?.content?.let { listOf(parseVmId(it)) }
-            ?: emptyList()
-    }
-
-    /**
-     * Parses service endpoints from a DID document JSON.
-     */
-    private fun parseServices(json: JsonObject): List<DidService> {
-        return json["service"]?.jsonArray?.mapNotNull { sJson ->
-            val sObj = sJson.jsonObject
-            val sId = sObj["id"]?.jsonPrimitive?.content
-            val sType = sObj["type"]?.jsonPrimitive?.content
-            val sEndpoint = sObj["serviceEndpoint"]
-
-            if (sId != null && sType != null && sEndpoint != null) {
-                val endpoint = convertJsonElement(sEndpoint) ?: return@mapNotNull null
-                DidService(
-                    id = sId,
-                    type = sType,
-                    serviceEndpoint = endpoint
-                )
-            } else null
-        } ?: emptyList()
+        return DidDocumentJsonParser.parse(json)
     }
 
     /**

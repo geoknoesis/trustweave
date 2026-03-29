@@ -4,6 +4,7 @@ import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidResolver
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -37,7 +38,7 @@ class DidDocumentDelegationVerifierTest {
             }
         }
 
-        val verifier = DidDocumentDelegationVerifier(resolveDid)
+        val verifier = DidDocumentDelegationVerifier(DidResolver { did -> resolveDid(did.value) ?: DidResolutionResult.Failure.NotFound(did = did, reason = "DID not found") })
         val result = verifier.verify(Did(delegatorDid), Did(delegateDid))
 
         assertTrue(result.valid)
@@ -65,7 +66,7 @@ class DidDocumentDelegationVerifierTest {
             }
         }
 
-        val verifier = DidDocumentDelegationVerifier(resolveDid)
+        val verifier = DidDocumentDelegationVerifier(DidResolver { did -> resolveDid(did.value) ?: DidResolutionResult.Failure.NotFound(did = did, reason = "DID not found") })
         val result = verifier.verify(Did(delegatorDid), Did(delegateDid))
 
         assertFalse(result.valid)
@@ -76,7 +77,7 @@ class DidDocumentDelegationVerifierTest {
     fun `test verify delegation chain fails when delegator not resolved`() = runBlocking {
         val resolveDid: suspend (String) -> DidResolutionResult? = { null }
 
-        val verifier = DidDocumentDelegationVerifier(resolveDid)
+        val verifier = DidDocumentDelegationVerifier(DidResolver { did -> resolveDid(did.value) ?: DidResolutionResult.Failure.NotFound(did = did, reason = "DID not found") })
         val result = verifier.verify(Did("did:key:delegator"), Did("did:key:delegate"))
 
         assertFalse(result.valid)
@@ -108,7 +109,7 @@ class DidDocumentDelegationVerifierTest {
             }
         }
 
-        val verifier = DidDocumentDelegationVerifier(resolveDid)
+        val verifier = DidDocumentDelegationVerifier(DidResolver { did -> resolveDid(did.value) ?: DidResolutionResult.Failure.NotFound(did = did, reason = "DID not found") })
         val result = verifier.verifyChain(chain)
 
         assertTrue(result.valid)
@@ -140,7 +141,7 @@ class DidDocumentDelegationVerifierTest {
             }
         }
 
-        val verifier = DidDocumentDelegationVerifier(resolveDid)
+        val verifier = DidDocumentDelegationVerifier(DidResolver { did -> resolveDid(did.value) ?: DidResolutionResult.Failure.NotFound(did = did, reason = "DID not found") })
         val result = verifier.verifyChain(chain)
 
         assertFalse(result.valid)
@@ -167,7 +168,7 @@ class DidDocumentDelegationVerifierTest {
             }
         }
 
-        val verifier = DidDocumentDelegationVerifier(resolveDid)
+        val verifier = DidDocumentDelegationVerifier(DidResolver { did -> resolveDid(did.value) ?: DidResolutionResult.Failure.NotFound(did = did, reason = "DID not found") })
         val result = verifier.verify(Did(delegatorDid), Did(delegateDid))
 
         assertTrue(result.valid)

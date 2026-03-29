@@ -13,14 +13,14 @@ This guide explains how to integrate the production-ready `didcomm-java` library
 The DIDComm plugin has two crypto implementations:
 
 1. **Placeholder Implementation** (`DidCommCrypto.kt`)
-   - ✅ Structure is correct
-   - ❌ Returns dummy data (not real encryption)
-   - ⚠️ Suitable for development/testing only
+   - Structure is correct
+   - Returns dummy data (not real encryption)
+   - Suitable for development/testing only
 
 2. **Production Implementation** (`DidCommCryptoProduction.kt`)
-   - ✅ Uses `didcomm-java` library
-   - ✅ Full ECDH-1PU implementation
-   - ⚠️ Requires library dependency
+   - Uses `didcomm-java` library
+   - Full ECDH-1PU implementation
+   - Requires library dependency
 
 ## Step 1: Add didcomm-java Dependency
 
@@ -240,7 +240,7 @@ After integration, verify:
 
 ## References
 
-- [didcomm-java GitHub](https://github.com/sicpa-dlab/didcomm-java)
-- [DIDComm V2 Specification](https://didcomm.org/book/v2/)
-- [Maven Central - didcomm](https://mvnrepository.com/artifact/org.didcommx/didcomm)
+- didcomm-java GitHub](https://github.com/sicpa-dlab/didcomm-java)
+- DIDComm V2 Specification](https://didcomm.org/book/v2/)
+- Maven Central - didcomm](https://mvnrepository.com/artifact/org.didcommx/didcomm)
 

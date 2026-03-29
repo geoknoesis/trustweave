@@ -23,17 +23,17 @@ Add the did:ethr module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave.did:ethr:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("org.trustweave.did:base:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:did-plugins-ethr:0.6.0")
+    implementation("org.trustweave:did-did-core:0.6.0")
+    implementation("org.trustweave:did-plugins-base:0.6.0")
+    implementation("org.trustweave:anchors-anchor-core:0.6.0")
+    implementation("org.trustweave:common:0.6.0")
 
     // Web3j for Ethereum blockchain
     implementation("org.web3j:core:4.10.0")
 
     // Optional: Polygon client for EVM-compatible chains
-    implementation("org.trustweave.chains:polygon:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:anchors-plugins-polygon:0.6.0")
 }
 ```
 
@@ -224,32 +224,42 @@ val config = EthrDidConfig.builder()
 ## Integration with TrustWeave
 
 ```kotlin
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.did.KeyAlgorithm
+import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.ethrdid.*
-import org.trustweave.anchor.*
-import org.trustweave.polygon.PolygonBlockchainAnchorClient
+import org.trustweave.kms.InMemoryKeyManagementService
 
 val config = EthrDidConfig.sepolia("https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY")
-val anchorClient = PolygonBlockchainAnchorClient(config.chainId, config.toMap())
+val kms = InMemoryKeyManagementService()
 
-val TrustWeave = TrustWeave.create {
-    kms = InMemoryKeyManagementService()
-
-    blockchain {
-        register(config.chainId, anchorClient)
+val trustWeave = TrustWeave.build {
+    customKms(kms)
+    anchor {
+        chain(config.chainId) {
+            provider("polygon")
+            options {
+                for ((k, v) in config.toMap()) {
+                    if (v != null) k.to(v)
+                }
+            }
+        }
     }
-
-    didMethods {
-        + EthrDidMethod(kms!!, anchorClient, config)
+    did {
+        method("ethr") { algorithm("Secp256k1") }
     }
 }
 
-// Use did:ethr
-val did = TrustWeave.createDid("ethr") {
-    algorithm = KeyAlgorithm.SECP256K1
-}.getOrThrow()
+val did = trustWeave.createDid {
+    method("ethr")
+    algorithm(KeyAlgorithm.SECP256K1)
+}.getOrThrowDid()
 
-val resolved = TrustWeave.resolveDid(did.id).getOrThrow()
+when (val resolved = trustWeave.resolveDid(did)) {
+    is DidResolutionResult.Success -> println("Resolved: ${resolved.document.id}")
+    else -> println("Resolve failed: $resolved")
+}
 ```
 
 ## ERC1056 Compatibility
@@ -320,7 +330,7 @@ val result = method.resolveDid(document.id)
 
 ## References
 
-- [Ethereum DID Method Specification](https://github.com/decentralized-identity/ethr-did-resolver)
-- [ERC1056 Registry Contract](https://github.com/uport-project/ethr-did-registry)
-- [Ethereum DID Resolver](https://github.com/decentralized-identity/ethr-did-resolver)
+- Ethereum DID Method Specification](https://github.com/decentralized-identity/ethr-did-resolver)
+- ERC1056 Registry Contract](https://github.com/uport-project/ethr-did-registry)
+- Ethereum DID Resolver](https://github.com/decentralized-identity/ethr-did-resolver)
 

@@ -12,13 +12,13 @@ This guide demonstrates how to build a complete vaccination and health passport 
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created DIDs for healthcare provider (issuer) and individual (holder)
-- ✅ Issued Verifiable Credentials for vaccinations
-- ✅ Stored vaccination credentials in a health wallet
-- ✅ Organized multiple vaccination credentials
-- ✅ Created privacy-preserving health presentations
-- ✅ Verified vaccination status without revealing personal information
-- ✅ Implemented credential expiration and renewal
+- Created DIDs for healthcare provider (issuer) and individual (holder)
+- Issued Verifiable Credentials for vaccinations
+- Stored vaccination credentials in a health wallet
+- Organized multiple vaccination credentials
+- Created privacy-preserving health presentations
+- Verified vaccination status without revealing personal information
+- Implemented credential expiration and renewal
 
 ## Big Picture & Significance
 
@@ -137,7 +137,7 @@ Add TrustWeave dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -154,16 +154,24 @@ Here's the full vaccination and health passport flow using the TrustWeave facade
 ```kotlin
 package com.example.vaccination.healthpassport
 
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
 import org.trustweave.core.*
-import org.trustweave.credential.PresentationOptions
-import org.trustweave.credential.wallet.Wallet
-import org.trustweave.spi.services.WalletCreationOptionsBuilder
+import org.trustweave.wallet.Wallet
+import org.trustweave.wallet.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.testkit.services.*
+import org.trustweave.credential.results.getOrThrow
 
 fun main() = runBlocking {
     println("=".repeat(70))
@@ -172,41 +180,29 @@ fun main() = runBlocking {
 
     // Step 1: Create TrustWeave instance
     val trustWeave = TrustWeave.build {
-        factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
-        )
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
     }
-    println("\n✅ TrustWeave initialized")
+    println("\n[OK] TrustWeave initialized")
 
     // Step 2: Create DIDs for healthcare provider and individual
-    import org.trustweave.trust.types.getOrThrowDid
-    import org.trustweave.trust.types.getOrThrow
-    import org.trustweave.did.resolver.DidResolutionResult
-    import org.trustweave.did.identifiers.extractKeyId
-    
-    // Helper extension for resolution results
-    fun DidResolutionResult.getOrThrow() = when (this) {
-        is DidResolutionResult.Success -> this.document
-        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
-    }
     
     val healthcareProviderDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
-    val healthcareProviderDoc = trustWeave.resolveDid(healthcareProviderDid).getOrThrow()
+    val healthcareProviderDoc = when (val res = trustWeave.resolveDid(healthcareProviderDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val healthcareProviderKeyId = healthcareProviderDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     val individualDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     val airlineDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 
-    println("✅ Healthcare Provider DID: ${healthcareProviderDid.value}")
-    println("✅ Individual DID: ${individualDid.value}")
-    println("✅ Airline Verifier DID: ${airlineDid.value}")
+    println("[OK] Healthcare Provider DID: ${healthcareProviderDid.value}")
+    println("[OK] Individual DID: ${individualDid.value}")
+    println("[OK] Airline Verifier DID: ${airlineDid.value}")
 
     // Step 3: Issue first vaccination credential (COVID-19, Dose 1)
-    import org.trustweave.trust.types.IssuanceResult
     
     val vaccination1IssuanceResult = trustWeave.issue {
         credential {
@@ -236,7 +232,7 @@ fun main() = runBlocking {
     
     val vaccination1Credential = vaccination1IssuanceResult.getOrThrow()
 
-    println("\n✅ First vaccination credential issued: ${vaccination1Credential.id}")
+    println("\n[OK] First vaccination credential issued: ${vaccination1Credential.id}")
 
     // Step 4: Issue second vaccination credential (COVID-19, Dose 2)
     val vaccination2IssuanceResult = trustWeave.issue {
@@ -268,7 +264,7 @@ fun main() = runBlocking {
     
     val vaccination2Credential = vaccination2IssuanceResult.getOrThrow()
 
-    println("✅ Second vaccination credential issued: ${vaccination2Credential.id}")
+    println("[OK] Second vaccination credential issued: ${vaccination2Credential.id}")
 
     // Step 5: Issue booster vaccination credential
     val boosterIssuanceResult = trustWeave.issue {
@@ -300,20 +296,20 @@ fun main() = runBlocking {
     
     val boosterCredential = boosterIssuanceResult.getOrThrow()
 
-    println("✅ Booster vaccination credential issued: ${boosterCredential.id}")
+    println("[OK] Booster vaccination credential issued: ${boosterCredential.id}")
 
     // Step 6: Create health wallet and store all vaccination credentials
     val healthWallet = trustWeave.wallet {
         holder(individualDid)
-        organization { enabled = true }
-        presentation { enabled = true }
+        enableOrganization()
+        enablePresentation()
     }.getOrThrow()
 
     val vaccination1Id = healthWallet.store(vaccination1Credential)
     val vaccination2Id = healthWallet.store(vaccination2Credential)
     val boosterId = healthWallet.store(boosterCredential)
 
-    println("\n✅ All vaccination credentials stored in health wallet")
+    println("\n[OK] All vaccination credentials stored in health wallet")
 
     // Step 7: Organize credentials by vaccine type
     healthWallet.withOrganization { org ->
@@ -327,7 +323,7 @@ fun main() = runBlocking {
         org.tagCredential(vaccination2Id, setOf("covid19", "dose2", "pfizer", "fully-vaccinated", "vaccination"))
         org.tagCredential(boosterId, setOf("covid19", "booster", "pfizer", "fully-vaccinated", "vaccination"))
 
-        println("✅ Vaccination credentials organized")
+        println("[OK] Vaccination credentials organized")
     }
 
     // Step 8: Create privacy-preserving presentation for airline
@@ -336,33 +332,28 @@ fun main() = runBlocking {
         pres.createPresentation(
             credentialIds = listOf(boosterId), // Only share most recent/valid credential
             holderDid = individualDid,
-            options = PresentationOptions(
-                holderDid = individualDid,
-                challenge = "airline-check-${System.currentTimeMillis()}"
-            )
+            options = mapOf(
+            "holderDid" to individualDid,
+            "challenge" to "airline-check-${System.currentTimeMillis()}"
+        )
         )
     } ?: error("Presentation capability not available")
 
-    println("\n✅ Travel presentation created")
+    println("\n[OK] Travel presentation created")
     println("   Holder: ${travelPresentation.holder}")
     println("   Credentials: ${travelPresentation.verifiableCredential.size}")
 
     // Step 9: Airline verifies vaccination status
-    println("\n✈️ Airline Verification Process:")
+    println("\n[airline] Airline Verification Process:")
 
-    import org.trustweave.trust.types.VerificationResult
     
     val boosterVerificationResult = trustWeave.verify {
         credential(boosterCredential)
     }
-    
-    val boosterVerification = when (boosterVerificationResult) {
-        is VerificationResult.Valid -> boosterVerificationResult
-        is VerificationResult.Invalid -> boosterVerificationResult
-    }
 
-    if (boosterVerification.valid) {
-        println("✅ Vaccination Credential: VALID")
+    if (boosterVerificationResult is VerificationResult.Valid) {
+        val boosterVerification = boosterVerificationResult
+        println("[OK] Vaccination Credential: VALID")
         println("   Proof valid: ${boosterVerification.proofValid}")
         println("   Issuer valid: ${boosterVerification.issuerValid}")
         println("   Not expired: ${boosterCredential.expirationDate?.let {
@@ -375,20 +366,20 @@ fun main() = runBlocking {
         val fullyVaccinated = vaccination?.get("fullyVaccinated")?.jsonPrimitive?.content?.toBoolean() ?: false
 
         if (fullyVaccinated) {
-            println("✅ Individual is fully vaccinated")
-            println("✅ Boarding approved")
+            println("[OK] Individual is fully vaccinated")
+            println("[OK] Boarding approved")
         } else {
-            println("❌ Individual is not fully vaccinated")
-            println("❌ Boarding denied")
+            println("[FAIL] Individual is not fully vaccinated")
+            println("[FAIL] Boarding denied")
         }
     } else {
-        println("❌ Vaccination Credential: INVALID")
-        println("   Errors: ${boosterVerification.errors}")
-        println("❌ Boarding denied")
+        println("[FAIL] Vaccination Credential: INVALID")
+        println("   Errors: ${boosterVerificationResult.allErrors.joinToString()}")
+        println("[FAIL] Boarding denied")
     }
 
     // Step 10: Check credential expiration and renewal
-    println("\n📅 Credential Expiration Check:")
+    println("\n[expiry] Credential Expiration Check:")
 
     listOf(vaccination1Credential, vaccination2Credential, boosterCredential).forEach { cred ->
         val expirationDate = cred.expirationDate?.let { Instant.parse(it) }
@@ -397,14 +388,14 @@ fun main() = runBlocking {
             if (daysUntilExpiration > 0) {
                 println("   ${cred.id}: Expires in $daysUntilExpiration days")
             } else {
-                println("   ${cred.id}: ⚠️ EXPIRED - Renewal needed")
+                println("   ${cred.id}: [WARN] EXPIRED - Renewal needed")
             }
         }
     }
 
     // Step 11: Display wallet statistics
     val stats = healthWallet.getStatistics()
-    println("\n📊 Health Wallet Statistics:")
+    println("\n[stats] Health Wallet Statistics:")
     println("   Total credentials: ${stats.totalCredentials}")
     println("   Valid credentials: ${stats.validCredentials}")
     println("   Collections: ${stats.collectionsCount}")
@@ -412,7 +403,7 @@ fun main() = runBlocking {
 
     // Step 12: Summary
     println("\n" + "=".repeat(70))
-    println("✅ VACCINATION HEALTH PASSPORT SYSTEM COMPLETE")
+    println("[OK] VACCINATION HEALTH PASSPORT SYSTEM COMPLETE")
     println("   All vaccination credentials issued and stored")
     println("   Privacy-preserving verification implemented")
     println("   Credential expiration tracking enabled")
@@ -426,43 +417,43 @@ fun main() = runBlocking {
 Vaccination and Health Passport Scenario - Complete End-to-End Example
 ======================================================================
 
-✅ TrustWeave initialized
-✅ Healthcare Provider DID: did:key:z6Mk...
-✅ Individual DID: did:key:z6Mk...
-✅ Airline Verifier DID: did:key:z6Mk...
+[OK] TrustWeave initialized
+[OK] Healthcare Provider DID: did:key:z6Mk...
+[OK] Individual DID: did:key:z6Mk...
+[OK] Airline Verifier DID: did:key:z6Mk...
 
-✅ First vaccination credential issued: urn:uuid:...
-✅ Second vaccination credential issued: urn:uuid:...
-✅ Booster vaccination credential issued: urn:uuid:...
+[OK] First vaccination credential issued: urn:uuid:...
+[OK] Second vaccination credential issued: urn:uuid:...
+[OK] Booster vaccination credential issued: urn:uuid:...
 
-✅ All vaccination credentials stored in health wallet
-✅ Vaccination credentials organized
+[OK] All vaccination credentials stored in health wallet
+[OK] Vaccination credentials organized
 
-✅ Travel presentation created
+[OK] Travel presentation created
    Holder: did:key:z6Mk...
    Credentials: 1
 
-✈️ Airline Verification Process:
-✅ Vaccination Credential: VALID
+[airline] Airline Verification Process:
+[OK] Vaccination Credential: VALID
    Proof valid: true
    Issuer valid: true
    Not expired: true
-✅ Individual is fully vaccinated
-✅ Boarding approved
+[OK] Individual is fully vaccinated
+[OK] Boarding approved
 
-📅 Credential Expiration Check:
+[expiry] Credential Expiration Check:
    urn:uuid:...: Expires in 730 days
    urn:uuid:...: Expires in 730 days
    urn:uuid:...: Expires in 365 days
 
-📊 Health Wallet Statistics:
+[stats] Health Wallet Statistics:
    Total credentials: 3
    Valid credentials: 3
    Collections: 1
    Tags: 9
 
 ======================================================================
-✅ VACCINATION HEALTH PASSPORT SYSTEM COMPLETE
+[OK] VACCINATION HEALTH PASSPORT SYSTEM COMPLETE
    All vaccination credentials issued and stored
    Privacy-preserving verification implemented
    Credential expiration tracking enabled
@@ -489,10 +480,10 @@ Vaccination and Health Passport Scenario - Complete End-to-End Example
 
 ## Related Documentation
 
-- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
-- [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
-- [API Reference](../api-reference/core-api.md) - Complete API documentation
-- [Healthcare Medical Records Scenario](healthcare-medical-records-scenario.md) - Related healthcare scenario
-- [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+- Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
+- Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
+- API Reference](../api-reference/core-api.md) - Complete API documentation
+- Healthcare Medical Records Scenario](healthcare-medical-records-scenario.md) - Related healthcare scenario
+- Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
 
 

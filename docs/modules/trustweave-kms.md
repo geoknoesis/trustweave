@@ -8,8 +8,8 @@ The `trustweave-kms` module provides the key management service abstraction used
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:kms-kms-core:0.6.0")
+    implementation("org.trustweave:common:0.6.0")
 }
 ```
 
@@ -97,11 +97,11 @@ val signature = key?.let { kms.sign(it.id, data.toByteArray()) }
 TrustWeave provides several KMS implementations:
 
 - **In-Memory** (`org.trustweave:testkit`) – For testing and development. See [TestKit Documentation](trustweave-testkit.md).
-- **AWS KMS** (`org.trustweave.kms:aws`) – AWS Key Management Service integration. See [AWS KMS Integration Guide](../integrations/aws-kms.md).
-- **Azure Key Vault** (`org.trustweave.kms:azure`) – Azure Key Vault integration. See [Azure KMS Integration Guide](../integrations/azure-kms.md).
-- **Google Cloud KMS** (`org.trustweave.kms:google`) – Google Cloud KMS integration. See [Google KMS Integration Guide](../integrations/google-kms.md).
-- **HashiCorp Vault** (`org.trustweave.kms:hashicorp`) – HashiCorp Vault Transit engine integration. See [HashiCorp Vault KMS Integration Guide](../integrations/hashicorp-vault-kms.md).
-- **walt.id** (`org.trustweave.kms:waltid`) – walt.id KMS integration. See [walt.id Integration Guide](../integrations/waltid.md).
+- **AWS KMS** (`org.trustweave:kms-plugins-aws`) – AWS Key Management Service integration. See [AWS KMS Integration Guide](../integrations/aws-kms.md).
+- **Azure Key Vault** (`org.trustweave:kms-plugins-azure`) – Azure Key Vault integration. See [Azure KMS Integration Guide](../integrations/azure-kms.md).
+- **Google Cloud KMS** (`org.trustweave:kms-plugins-google`) – Google Cloud KMS integration. See [Google KMS Integration Guide](../integrations/google-kms.md).
+- **HashiCorp Vault** (`org.trustweave:kms-plugins-hashicorp`) – HashiCorp Vault Transit engine integration. See [HashiCorp Vault KMS Integration Guide](../integrations/hashicorp-vault-kms.md).
+- **walt.id** (`org.trustweave:kms-plugins-waltid`) – walt.id KMS integration. See [walt.id Integration Guide](../integrations/waltid.md).
 
 See the [Key Management](../core-concepts/key-management.md) guide for detailed information about each implementation.
 

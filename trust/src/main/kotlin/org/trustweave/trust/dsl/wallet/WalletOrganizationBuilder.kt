@@ -90,7 +90,7 @@ class WalletOrganizationBuilder(
         val orgWallet = wallet as? CredentialOrganization
             ?: throw IllegalStateException(
                 "Wallet does not support organization features. " +
-                "Create wallet with enableOrganization() in trustLayer.wallet { }"
+                "Create wallet with enableOrganization() in trustWeave.wallet { }"
             )
 
         val createdCollections = mutableListOf<String>()

@@ -12,14 +12,14 @@ This guide demonstrates how to build a software supply chain security system usi
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created DIDs for software publishers, build systems, and consumers
-- ✅ Issued Verifiable Credentials for software provenance and build attestation
-- ✅ Stored software credentials in wallets
-- ✅ Implemented software integrity verification
-- ✅ Created SBOM (Software Bill of Materials) credentials
-- ✅ Verified software authenticity before installation
-- ✅ Demonstrated dependency verification
-- ✅ Implemented tamper-proof software provenance
+- Created DIDs for software publishers, build systems, and consumers
+- Issued Verifiable Credentials for software provenance and build attestation
+- Stored software credentials in wallets
+- Implemented software integrity verification
+- Created SBOM (Software Bill of Materials) credentials
+- Verified software authenticity before installation
+- Demonstrated dependency verification
+- Implemented tamper-proof software provenance
 
 ## Big Picture & Significance
 
@@ -142,7 +142,7 @@ Add TrustWeave dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -159,12 +159,16 @@ Here's the full software supply chain security flow using the TrustWeave facade 
 ```kotlin
 package com.example.software.supplychain
 
-import org.trustweave.TrustWeave
-import org.trustweave.core.*
-import org.trustweave.credential.PresentationOptions
-import org.trustweave.credential.wallet.Wallet
-import org.trustweave.json.DigestUtils
-import org.trustweave.spi.services.WalletCreationOptionsBuilder
+import org.trustweave.trust.TrustWeave
+import org.trustweave.core.util.DigestUtils
+import org.trustweave.wallet.Wallet
+import org.trustweave.testkit.services.*
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.credential.results.VerificationResult
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -179,33 +183,25 @@ fun main() = runBlocking {
 
     // Step 1: Create TrustWeave instance
     val trustWeave = TrustWeave.build {
-        factories(
-        // KMS and DID methods auto-discovered via SPI
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
     }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for software publisher, build system, and consumer
-    import org.trustweave.trust.types.getOrThrowDid
-    import org.trustweave.trust.types.getOrThrow
-    import org.trustweave.did.resolver.DidResolutionResult
-    import org.trustweave.did.identifiers.extractKeyId
-    import org.trustweave.trust.types.VerificationResult
-    
-    // Helper extension for resolution results
-    fun DidResolutionResult.getOrThrow() = when (this) {
-        is DidResolutionResult.Success -> this.document
-        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
-    }
-    
     val publisherDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
-    val publisherDoc = trustWeave.resolveDid(publisherDid).getOrThrow()
+    val publisherDoc = when (val res = trustWeave.resolveDid(publisherDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val publisherKeyId = publisherDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     val buildSystemDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
-    val buildSystemDoc = trustWeave.resolveDid(buildSystemDid).getOrThrow()
+    val buildSystemDoc = when (val res = trustWeave.resolveDid(buildSystemDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val buildSystemKeyId = buildSystemDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
@@ -216,7 +212,7 @@ fun main() = runBlocking {
     println("✅ Consumer DID: ${consumerDid.value}")
 
     // Step 3: Simulate source code and compute digest
-    println("\n📦 Software Provenance:")
+    println("\n[provenance] Software Provenance:")
 
     val sourceCode = """
         package com.example.secureapp
@@ -255,15 +251,13 @@ fun main() = runBlocking {
         }
         by(issuerDid = publisherDid.value, keyId = publisherKeyId)
     }
-    
-    import org.trustweave.trust.types.getOrThrow
-    
+
     val provenanceCredential = provenanceIssuanceResult.getOrThrow()
 
     println("\n✅ Software provenance credential issued: ${provenanceCredential.id}")
 
     // Step 5: Simulate build process and create build attestation
-    println("\n🔨 Build Process:")
+    println("\n[build] Build Process:")
 
     val buildArtifact = "secureapp-1.0.0.jar".toByteArray()
     val buildArtifactDigest = DigestUtils.sha256DigestMultibase(buildArtifact)
@@ -309,7 +303,7 @@ fun main() = runBlocking {
     println("✅ Build attestation credential issued: ${buildAttestationCredential.id}")
 
     // Step 7: Create SBOM (Software Bill of Materials)
-    println("\n📋 Software Bill of Materials (SBOM):")
+    println("\n[sbom] of Materials (SBOM):")
 
     val dependencies = listOf(
         mapOf("name" to "kotlin-stdlib", "version" to "1.9.0", "digest" to "sha256:abc123..."),
@@ -354,8 +348,8 @@ fun main() = runBlocking {
     // Step 9: Create consumer wallet and store credentials
     val walletCreationResult = trustWeave.wallet {
         holder(consumerDid)
-        organization { enabled = true }
-        presentation { enabled = true }
+        enableOrganization()
+        enablePresentation()
     }
     
     val consumerWallet = walletCreationResult.getOrThrow()
@@ -382,7 +376,7 @@ fun main() = runBlocking {
     }
 
     // Step 11: Consumer verification - Software provenance
-    println("\n🔍 Consumer Verification - Software Provenance:")
+    println("\n[verify] Consumer Verification - Software Provenance:")
 
     val provenanceVerificationResult = trustWeave.verify {
         credential(provenanceCredential)
@@ -405,19 +399,19 @@ fun main() = runBlocking {
                 println("✅ Publisher verified")
                 println("✅ Provenance VERIFIED")
             } else {
-                println("❌ Publisher verification failed")
-                println("❌ Provenance NOT VERIFIED")
+                println("[FAIL] Publisher verification failed")
+                println("[FAIL] Provenance NOT VERIFIED")
             }
         }
         is VerificationResult.Invalid -> {
-            println("❌ Provenance Credential: INVALID")
-            println("   Errors: ${provenanceVerificationResult.errors}")
-            println("❌ Provenance NOT VERIFIED")
+            println("[FAIL] Provenance Credential: INVALID")
+            println("   Errors: ${provenanceVerificationResult.allErrors.joinToString()}")
+            println("[FAIL] Provenance NOT VERIFIED")
         }
     }
 
     // Step 12: Consumer verification - Build attestation
-    println("\n🔍 Consumer Verification - Build Attestation:")
+    println("\n[verify] Consumer Verification - Build Attestation:")
 
     val buildVerificationResult = trustWeave.verify {
         credential(buildAttestationCredential)
@@ -441,19 +435,19 @@ fun main() = runBlocking {
                 println("✅ Build environment verified")
                 println("✅ Build Attestation VERIFIED")
             } else {
-                println("❌ Build environment verification failed")
-                println("❌ Build Attestation NOT VERIFIED")
+                println("[FAIL] Build environment verification failed")
+                println("[FAIL] Build Attestation NOT VERIFIED")
             }
         }
         is VerificationResult.Invalid -> {
-            println("❌ Build Attestation Credential: INVALID")
-            println("   Errors: ${buildVerificationResult.errors}")
-            println("❌ Build Attestation NOT VERIFIED")
+            println("[FAIL] Build Attestation Credential: INVALID")
+            println("   Errors: ${buildVerificationResult.allErrors.joinToString()}")
+            println("[FAIL] Build Attestation NOT VERIFIED")
         }
     }
 
     // Step 13: Consumer verification - Dependency verification
-    println("\n🔍 Consumer Verification - Dependency Verification:")
+    println("\n[verify] Consumer Verification - Dependency Verification:")
 
     val sbomVerificationResult = trustWeave.verify {
         credential(sbomCredential)
@@ -483,19 +477,19 @@ fun main() = runBlocking {
                 println("✅ All dependencies verified")
                 println("✅ Dependency Verification PASSED")
             } else {
-                println("❌ Some dependencies failed verification")
-                println("❌ Dependency Verification FAILED")
+                println("[FAIL] Some dependencies failed verification")
+                println("[FAIL] Dependency Verification FAILED")
             }
         }
         is VerificationResult.Invalid -> {
-            println("❌ SBOM Credential: INVALID")
-            println("   Errors: ${sbomVerificationResult.errors}")
-            println("❌ Dependency Verification FAILED")
+            println("[FAIL] SBOM Credential: INVALID")
+            println("   Errors: ${sbomVerificationResult.allErrors.joinToString()}")
+            println("[FAIL] Dependency Verification FAILED")
         }
     }
 
     // Step 14: Complete software verification workflow
-    println("\n🔍 Complete Software Verification Workflow:")
+    println("\n[verify] Complete Software Verification Workflow:")
 
     val provenanceValid = when (val result = trustWeave.verify { credential(provenanceCredential) }) {
         is VerificationResult.Valid -> true
@@ -517,14 +511,14 @@ fun main() = runBlocking {
         println("✅ All verifications passed")
         println("✅ Software is SAFE to install")
     } else {
-        println("❌ One or more verifications failed")
-        println("❌ Software is NOT SAFE to install")
-        println("❌ Installation BLOCKED")
+        println("[FAIL] One or more verifications failed")
+        println("[FAIL] Software is NOT SAFE to install")
+        println("[FAIL] Installation BLOCKED")
     }
 
     // Step 15: Display wallet statistics
     val stats = consumerWallet.getStatistics()
-    println("\n📊 Consumer Wallet Statistics:")
+    println("\n[stats] Consumer Wallet Statistics:")
     println("   Total credentials: ${stats.totalCredentials}")
     println("   Valid credentials: ${stats.validCredentials}")
     println("   Collections: ${stats.collectionsCount}")
@@ -553,7 +547,7 @@ Software Supply Chain Security Scenario - Complete End-to-End Example
 ✅ Build System DID: did:key:z6Mk...
 ✅ Consumer DID: did:key:z6Mk...
 
-📦 Software Provenance:
+[provenance] Software Provenance:
    Source code digest: u5v...
    Source repository: https://github.com/example/secureapp
    Commit hash: abc123def456
@@ -561,7 +555,7 @@ Software Supply Chain Security Scenario - Complete End-to-End Example
 ✅ Software provenance credential issued: urn:uuid:...
 ✅ Build attestation credential issued: urn:uuid:...
 
-📋 Software Bill of Materials (SBOM):
+[sbom] of Materials (SBOM):
    Dependencies: 2
      - kotlin-stdlib v1.9.0
      - kotlinx-coroutines v1.7.3
@@ -570,7 +564,7 @@ Software Supply Chain Security Scenario - Complete End-to-End Example
 ✅ All software credentials stored in wallet
 ✅ Software credentials organized
 
-🔍 Consumer Verification - Software Provenance:
+[verify] Consumer Verification - Software Provenance:
 ✅ Provenance Credential: VALID
    Software: SecureApp
    Publisher: did:key:z6Mk...
@@ -578,7 +572,7 @@ Software Supply Chain Security Scenario - Complete End-to-End Example
 ✅ Publisher verified
 ✅ Provenance VERIFIED
 
-🔍 Consumer Verification - Build Attestation:
+[verify] Consumer Verification - Build Attestation:
 ✅ Build Attestation Credential: VALID
    Build System: GitHub Actions
    SLSA Level: L3
@@ -587,7 +581,7 @@ Software Supply Chain Security Scenario - Complete End-to-End Example
 ✅ Build environment verified
 ✅ Build Attestation VERIFIED
 
-🔍 Consumer Verification - Dependency Verification:
+[verify] Consumer Verification - Dependency Verification:
 ✅ SBOM Credential: VALID
    Dependencies: 2
      - kotlin-stdlib: sha256:abc123...
@@ -595,14 +589,14 @@ Software Supply Chain Security Scenario - Complete End-to-End Example
 ✅ All dependencies verified
 ✅ Dependency Verification PASSED
 
-🔍 Complete Software Verification Workflow:
+[verify] Complete Software Verification Workflow:
 ✅ Software Provenance: VERIFIED
 ✅ Build Attestation: VERIFIED
 ✅ Dependency Verification: VERIFIED
 ✅ All verifications passed
 ✅ Software is SAFE to install
 
-📊 Consumer Wallet Statistics:
+[stats] Consumer Wallet Statistics:
    Total credentials: 3
    Valid credentials: 3
    Collections: 1
@@ -639,10 +633,10 @@ Software Supply Chain Security Scenario - Complete End-to-End Example
 
 ## Related Documentation
 
-- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
-- [IoT Device Identity Scenario](iot-device-identity-scenario.md) - Related device attestation
-- [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
-- [API Reference](../api-reference/core-api.md) - Complete API documentation
-- [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+- Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
+- IoT Device Identity Scenario](iot-device-identity-scenario.md) - Related device attestation
+- Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
+- API Reference](../api-reference/core-api.md) - Complete API documentation
+- Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
 
 

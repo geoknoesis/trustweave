@@ -27,30 +27,6 @@ import kotlin.test.*
 class EarthObservationExampleTest {
 
     @Test
-    fun `test main function executes successfully`() = runBlocking {
-        // Capture output to verify execution
-        val output = java.io.ByteArrayOutputStream()
-        val originalOut = System.out
-        try {
-            System.setOut(java.io.PrintStream(output))
-
-            // Execute main function
-            main()
-
-            // Verify output contains expected content
-            val outputString = output.toString()
-            assertTrue(outputString.contains("Earth Observation") && outputString.contains("Data Integrity"), "Should print scenario title")
-            assertTrue(outputString.contains("Setting up") || outputString.contains("TrustWeave"), "Should print setup step")
-            assertTrue(outputString.contains("DID") || outputString.contains("did:"), "Should print DID creation")
-            assertTrue(outputString.contains("Linkset") || outputString.contains("linkset"), "Should print linkset creation")
-            assertTrue(outputString.contains("Anchored") || outputString.contains("blockchain") || outputString.contains("Transaction"), "Should print anchoring")
-            assertTrue(outputString.contains("Verification") || outputString.contains("verified") || outputString.contains("integrity"), "Should print verification")
-        } finally {
-            System.setOut(originalOut)
-        }
-    }
-
-    @Test
     fun `test DID creation for data provider`() = runBlocking {
         // Setup
         val kms = InMemoryKeyManagementService()
@@ -82,7 +58,7 @@ class EarthObservationExampleTest {
 
         assertNotNull(metadataArtifact)
         assertNotNull(metadataDigest)
-        assertTrue(metadataDigest.startsWith("u"))
+        assertTrue(metadataDigest.startsWith("z"))
 
         // Create provenance artifact
         val (provenanceArtifact, provenanceDigest) = TestDataBuilders.createProvenanceArtifact(

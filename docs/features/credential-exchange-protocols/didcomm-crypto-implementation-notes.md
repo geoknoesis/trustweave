@@ -111,10 +111,10 @@ val unpacked = didComm.unpack(
 ```
 
 **Benefits:**
-- ✅ Fully tested and compliant
-- ✅ Handles all edge cases
-- ✅ Interoperable with other DIDComm implementations
-- ✅ Actively maintained
+- Fully tested and compliant
+- Handles all edge cases
+- Interoperable with other DIDComm implementations
+- Actively maintained
 
 ### Option 2: Implement ECDH-1PU Manually
 
@@ -169,10 +169,10 @@ private fun deriveKeys(sharedSecret: ByteArray): Pair<ByteArray, ByteArray> {
 ```
 
 **Challenges:**
-- ❌ ECDH-1PU is complex and easy to get wrong
-- ❌ Need to handle multiple curve types
-- ❌ Requires extensive testing
-- ❌ Must ensure interoperability
+- ECDH-1PU is complex and easy to get wrong
+- Need to handle multiple curve types
+- Requires extensive testing
+- Must ensure interoperability
 
 ## Recommendation
 

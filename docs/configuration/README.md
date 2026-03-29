@@ -5,279 +5,201 @@ nav_exclude: true
 
 # Configuration Reference
 
-Complete reference for configuring TrustWeave.
+How to configure TrustWeave for development, tests, and production. For what you get out of the box, see [Default configuration](defaults.md).
 
-## Configuration Methods
+## Configuration entry points
 
-TrustWeave supports three configuration methods:
+1. **`TrustWeave.quickStart()`** (suspend) — In-memory KMS, `did:key`, test-friendly defaults. Same as **`TrustWeave.inMemory()`**; use whichever reads better.
+2. **`TrustWeave.build { }`** (suspend) — Primary way to set KMS, DID methods, anchors, factories, and credential defaults.
+3. **`TrustWeave.from(config)`** — Wrap an existing **`TrustWeaveConfig`**. The config type has an **`internal`** constructor; application code should obtain it only via **`TrustWeave.build`** (or test utilities), not by calling the constructor directly.
 
-1. **Defaults**: `TrustWeave.create()` - Uses testkit defaults
-2. **Builder DSL**: `TrustWeave.create { }` - Recommended for most cases
-3. **Config Object**: `TrustWeave.create(config)` - For programmatic configuration
+All **`build`** / **`quickStart`** examples assume a **`suspend`** context or **`runBlocking { ... }`**.
 
-## Configuration Components
-
-### Key Management Service (KMS)
-
-**Purpose:** Manages cryptographic keys for signing and verification.
-
-**Default:** `InMemoryKeyManagementService` (testing only)
-
-**Production Options:**
-- AWS KMS: `AwsKeyManagementService`
-- Azure Key Vault: `AzureKeyManagementService`
-- Google Cloud KMS: `GoogleKeyManagementService`
-- HashiCorp Vault: `HashiCorpKeyManagementService`
-
-**Configuration:**
 ```kotlin
-val TrustWeave = TrustWeave.create {
-    kms = AwsKeyManagementService(
-        region = "us-east-1",
-        credentials = awsCredentials
-    )
+import kotlinx.coroutines.runBlocking
+import org.trustweave.trust.TrustWeave
+
+fun main() = runBlocking {
+    val trustWeave = TrustWeave.quickStart()
+    // or: val trustWeave = TrustWeave.build { /* ... */ }
 }
 ```
 
-**See Also:**
-- [KMS Integration Guides](../integrations/README.md#key-management-service-kms-integrations)
-- [Key Management](../core-concepts/key-management.md)
+## Configuration components
 
-### DID Methods
+### Key management (KMS)
 
-**Purpose:** DID creation and resolution methods.
+**Purpose:** Signing keys for DIDs and credentials.
 
-**Default:** `did:key` (DidKeyMockMethod) - testing only
+**Default:** In-memory KMS (testing only).
 
-**Available Methods:**
-- `did:key` - Native implementation
-- `did:web` - Web-based resolution
-- `did:ion` - Microsoft ION
-- `did:ethr` - Ethereum-based
-- And more... (see [DID Methods](../plugins.md#did-method-plugins))
+**Production:** Prefer a KMS provider your **`keys { provider("…") { … } }`** block can resolve, or pass an instance with **`customKms(kms)`**.
 
-**Configuration:**
 ```kotlin
-val TrustWeave = TrustWeave.create {
-    didMethods {
-        + DidKeyMethod(kms)
-        + DidWebMethod(kms) { domain = "example.com" }
-        + DidIonMethod(kms)
+TrustWeave.build {
+    customKms(awsKms) // or keys { provider("awsKms") { /* provider-specific options */ } }
+    did { method("key") { algorithm("Ed25519") } }
+}
+```
+
+**See also:** [KMS integrations](../integrations/README.md#key-management-service-kms-integrations), [Key management](../core-concepts/key-management.md).
+
+### DID methods
+
+**Purpose:** Create and resolve DIDs.
+
+**Default:** `did:key` when you do not declare other methods.
+
+**Configuration:** Declare methods in the **`did { }`** block. Additional methods are also picked up from classpath **SPI** when registered by plugins.
+
+```kotlin
+TrustWeave.build {
+    did {
+        method("web") { domain("example.com") }
+        method("key") { algorithm("Ed25519") }
     }
 }
 ```
 
-**See Also:**
-- [DID Integration Guides](../integrations/README.md#did-method-integrations)
-- [DIDs](../core-concepts/dids.md)
+**See also:** [DID integrations](../integrations/README.md#did-method-integrations), [DIDs](../core-concepts/dids.md), [DID method plugins](../plugins.md#did-method-plugins).
 
-### Blockchain Clients
+### Blockchain anchoring
 
-**Purpose:** Blockchain anchoring for tamper-proof timestamps.
+**Purpose:** Anchor payloads to chains (CAIP-2 chain IDs).
 
-**Default:** None registered (must be added)
-
-**Available Clients:**
-- Algorand: `AlgorandBlockchainAnchorClient`
-- Ethereum: `EthereumBlockchainAnchorClient`
-- Polygon: `PolygonBlockchainAnchorClient`
-- Base: `BaseBlockchainAnchorClient`
-- Arbitrum: `ArbitrumBlockchainAnchorClient`
-- And more... (see [Blockchain Plugins](../plugins.md#blockchain-anchor-plugins))
-
-**Configuration:**
-```kotlin
-val TrustWeave = TrustWeave.create {
-    blockchains {
-        "algorand:testnet" to AlgorandBlockchainAnchorClient(
-            chainId = "algorand:testnet",
-            options = AlgorandOptions(...)
-        )
-        "ethereum:mainnet" to EthereumBlockchainAnchorClient(...)
-    }
-}
-```
-
-**See Also:**
-- [Blockchain Integration Guides](../integrations/README.md#blockchain-anchor-integrations)
-- [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md)
-
-### Wallet Factory
-
-**Purpose:** Creates wallet instances for credential storage.
-
-**Default:** `TestkitWalletFactory` (in-memory, testing only)
-
-**Available Factories:**
-- In-Memory: `TestkitWalletFactory` (testing)
-- Database: `DatabaseWalletFactory` (production)
-- File: `FileWalletFactory` (production)
-- Cloud: `CloudWalletFactory` (production)
-
-**Configuration:**
-```kotlin
-val TrustWeave = TrustWeave.create {
-    walletFactory = DatabaseWalletFactory(
-        dataSource = dataSource,
-        enableOrganization = true,
-        enablePresentation = true
-    )
-}
-```
-
-**See Also:**
-- [Wallet API](../api-reference/wallet-api.md)
-- [Wallets](../core-concepts/wallets.md)
-
-### Credential Services
-
-**Purpose:** Credential issuance and verification services.
-
-**Default:** `CredentialServiceRegistry.create()` (default service)
-
-**Configuration:**
-```kotlin
-val TrustWeave = TrustWeave.create {
-    credentialServices {
-        + MyCustomCredentialService()
-        + HttpCredentialService(endpoint = "https://issuer.example.com")
-    }
-}
-```
-
-**See Also:**
-- [Credential Service API](../api-reference/credential-service-api.md)
-
-### Proof Generators
-
-**Purpose:** Generate cryptographic proofs for credentials.
-
-**Default:** `Ed25519ProofGenerator`
-
-**Available Generators:**
-- Ed25519: `Ed25519ProofGenerator` (default)
-- JWT: `JwtProofGenerator`
-- BBS+: `BbsProofGenerator`
-- LD-Proof: `LdProofGenerator`
-
-**Configuration:**
-```kotlin
-val TrustWeave = TrustWeave.create {
-    // Proof generators configured via CredentialServiceRegistry
-    // Default Ed25519ProofGenerator is registered automatically
-}
-```
-
-**See Also:**
-- [Verifiable Credentials](../core-concepts/verifiable-credentials.md)
-
-## Configuration Validation
-
-TrustWeave validates configuration during creation:
-
-### Validation Rules
-
-1. **KMS Required**: KMS must be provided (defaults to in-memory)
-2. **DID Method Required**: At least one DID method must be registered
-3. **Wallet Factory Required**: Wallet factory must be provided (defaults to testkit)
-4. **Chain ID Format**: Blockchain chain IDs must match CAIP-2 format
-5. **DID Method Format**: DID method names must be valid identifiers
-
-### Validation Errors
-
-Configuration validation errors are returned as `TrustWeaveError.ValidationFailed`:
+**Default:** No chains until you add them.
 
 ```kotlin
-val result = runCatching {
-    TrustWeave.create {
-        // Invalid configuration
-    }
-}
+import org.trustweave.trust.dsl.credential.AnchorProviders
 
-result.fold(
-    onSuccess = { TrustWeave -> /* success */ },
-    onFailure = { error ->
-        when (error) {
-            is TrustWeaveError.ValidationFailed -> {
-                println("Configuration invalid: ${error.reason}")
-                println("Field: ${error.field}")
-                println("Value: ${error.value}")
-            }
-            else -> println("Error: ${error.message}")
+TrustWeave.build {
+    anchor {
+        chain("algorand:testnet") {
+            provider(AnchorProviders.ALGORAND)
+            options { /* e.g. "algodUrl" to "…", "privateKey" to "…" */ }
+        }
+        chain("ethereum:mainnet") {
+            provider(AnchorProviders.ETHEREUM)
+            options { /* RPC URL, credentials, etc. */ }
         }
     }
-)
-```
-
-## Environment-Specific Configuration
-
-### Development Configuration
-
-```kotlin
-val devVericore = TrustWeave.create {
-    // Use testkit defaults
-    // No additional configuration needed
 }
 ```
 
-### Testing Configuration
+For local tests, **`inMemory()`** inside **`chain("…") { }`** is available (see [Default configuration](defaults.md)).
+
+**See also:** [Blockchain integrations](../integrations/README.md#blockchain-anchor-integrations), [Blockchain anchoring](../core-concepts/blockchain-anchoring.md), [Blockchain plugins](../plugins.md#blockchain-anchor-plugins).
+
+### Wallet factory
+
+**Purpose:** Create holder wallets.
+
+**Default:** In-memory / testkit-oriented factory unless you override.
 
 ```kotlin
-val testVericore = TrustWeave.create {
-    kms = InMemoryKeyManagementService()
-    didMethods {
-        + DidKeyMockMethod(kms)
-    }
-    blockchains {
-        "inmemory:test" to InMemoryBlockchainAnchorClient("inmemory:test")
-    }
+TrustWeave.build {
+    factories(walletFactory = databaseWalletFactory)
+    did { method("key") { algorithm("Ed25519") } }
 }
 ```
 
-### Production Configuration
+**See also:** [Wallet API](../api-reference/wallet-api.md), [Wallets](../core-concepts/wallets.md).
+
+### Credential service and proof defaults
+
+**Purpose:** Issuance/verification pipeline and defaults (proof type, auto-anchor, default chain).
+
+The builder wires a default credential service from KMS + DID resolution unless you set **`credentialService(...)`**.
 
 ```kotlin
-val prodVericore = TrustWeave.create {
-    kms = AwsKeyManagementService(
-        region = System.getenv("AWS_REGION"),
-        credentials = awsCredentials
-    )
-
-    didMethods {
-        + DidWebMethod(kms) { domain = "yourcompany.com" }
-        + DidIonMethod(kms)
+TrustWeave.build {
+    credentialService(myCredentialService) // optional override
+    credentials {
+        defaultProofType("Ed25519Signature2020")
+        autoAnchor(true)
+        defaultChain("algorand:testnet")
     }
-
-    blockchains {
-        "algorand:mainnet" to AlgorandBlockchainAnchorClient(
-            chainId = "algorand:mainnet",
-            options = AlgorandOptions(
-                algodUrl = System.getenv("ALGOD_URL"),
-                privateKey = System.getenv("ALGORAND_PRIVATE_KEY")
-            )
-        )
-    }
-
-    walletFactory = DatabaseWalletFactory(
-        dataSource = dataSource,
-        enableOrganization = true,
-        enablePresentation = true
-    )
+    did { method("key") { algorithm("Ed25519") } }
 }
 ```
 
-## Configuration Best Practices
+**See also:** [Credential service API](../api-reference/credential-service-api.md), [Verifiable credentials](../core-concepts/verifiable-credentials.md).
 
-1. **Use Environment Variables**: Store sensitive configuration in environment variables
-2. **Validate Early**: Validate configuration at startup, not at runtime
-3. **Use Type-Safe Options**: Prefer typed options over maps
-4. **Document Configuration**: Document your configuration choices
-5. **Test Configuration**: Test configuration in staging before production
+## Validation
 
-## Related Documentation
+Configuration is resolved when **`TrustWeave.build`** runs. Failures surface as **`IllegalStateException`** or other domain exceptions (e.g. unknown provider). Handle them at application startup:
 
-- [Default Configuration](defaults.md) - What defaults are used
-- [Architecture Overview](../introduction/architecture-overview.md) - Component architecture
-- [Production Deployment](../deployment/production-checklist.md) - Production setup
-- [Installation](../getting-started/installation.md) - Initial setup
+```kotlin
+import org.trustweave.trust.TrustWeave
+import kotlinx.coroutines.runBlocking
 
+val result = runCatching {
+    runBlocking {
+        TrustWeave.build {
+            anchor {
+                chain("unknown:chain") { provider("no-such-provider") }
+            }
+        }
+    }
+}
+
+result.onFailure { error ->
+    println("Configuration failed: ${error.message}")
+}
+```
+
+For **`TrustWeaveException.ValidationFailed`** and other error types, see [Error handling](../advanced/error-handling.md).
+
+## Environment-oriented examples
+
+### Development
+
+```kotlin
+val trustWeave = TrustWeave.quickStart()
+```
+
+### Integration tests (in-memory anchor chains)
+
+```kotlin
+TrustWeave.build {
+    anchor {
+        chain("inmemory:test-a") { inMemory() }
+        chain("inmemory:test-b") { inMemory() }
+    }
+    did { method("key") { algorithm("Ed25519") } }
+}
+```
+
+### Production-shaped sketch
+
+```kotlin
+TrustWeave.build {
+    customKms(awsKms)
+    did {
+        method("web") { domain("yourcompany.com") }
+    }
+    anchor {
+        chain("algorand:mainnet") {
+            provider("algorand")
+            options {
+                "algodUrl" to System.getenv("ALGOD_URL")
+                "privateKey" to System.getenv("ALGORAND_PRIVATE_KEY")
+            }
+        }
+    }
+    factories(walletFactory = DatabaseWalletFactory(dataSource))
+}
+```
+
+## Best practices
+
+1. **Secrets:** Load URLs and keys from the environment or a secret manager, not source control.
+2. **Fail fast:** Build **`TrustWeave`** at startup so misconfiguration is obvious.
+3. **Close resources:** Call **`trustWeave.close()`** when shutting down (KMS and clients may hold connections). For plugin-specific lifecycle, see [Plugin lifecycle](../advanced/plugin-lifecycle.md).
+
+## Related documentation
+
+- [Default configuration](defaults.md)
+- [Architecture overview](../introduction/architecture-overview.md)
+- [Production checklist](../deployment/production-checklist.md)
+- [Installation](../getting-started/installation.md)

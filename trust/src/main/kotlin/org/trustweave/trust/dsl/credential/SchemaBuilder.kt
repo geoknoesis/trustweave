@@ -23,7 +23,7 @@ import org.trustweave.trust.dsl.credential.JsonObjectBuilder
  * **Example Usage**:
  * ```kotlin
  * // Register JSON Schema
- * trustLayer.registerSchema {
+ * trustWeave.registerSchema {
  *     id("https://example.edu/schemas/degree")
  *     type("JsonSchemaValidator2018")
  *     jsonSchema {
@@ -42,7 +42,7 @@ import org.trustweave.trust.dsl.credential.JsonObjectBuilder
  * }
  *
  * // Register SHACL
- * trustLayer.registerSchema {
+ * trustWeave.registerSchema {
  *     id("https://example.edu/schemas/degree-shacl")
  *     type("ShaclValidator2020")
  *     shacl {
@@ -53,7 +53,7 @@ import org.trustweave.trust.dsl.credential.JsonObjectBuilder
  * }
  *
  * // Validate credential
- * val result = trustLayer.schema("https://example.edu/schemas/degree")
+ * val result = trustWeave.schema("https://example.edu/schemas/degree")
  *     .validate(credential)
  * ```
  */

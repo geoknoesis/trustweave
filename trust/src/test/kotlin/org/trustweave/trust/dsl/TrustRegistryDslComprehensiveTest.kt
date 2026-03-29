@@ -1,5 +1,8 @@
 package org.trustweave.trust.dsl
 
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.trust.types.getOrThrow
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.resolver.DidResolutionResult
@@ -13,9 +16,8 @@ import org.trustweave.testkit.services.TestkitTrustRegistryFactory
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
-import org.trustweave.trust.types.VerificationResult
+import org.trustweave.credential.results.VerificationResult
 import org.trustweave.trust.types.*
-import org.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -30,7 +32,7 @@ import kotlinx.datetime.Clock
 class TrustRegistryDslComprehensiveTest {
 
     @Test
-    fun `test trust registry configuration in trust layer`() = runBlocking {
+    fun `test trust registry configuration in TrustWeave`() = runBlocking {
         val trustWeave = TrustWeave.build {
             factories(
                 trustRegistryFactory = TestkitTrustRegistryFactory()
@@ -60,12 +62,12 @@ class TrustRegistryDslComprehensiveTest {
         val universityDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }.getOrFail()
+        }.getOrThrowDid()
 
         val companyDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }.getOrFail()
+        }.getOrThrowDid()
 
         trustWeave.trust {
             addAnchor(universityDid.value) {
@@ -100,17 +102,17 @@ class TrustRegistryDslComprehensiveTest {
         val anchor1 = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }.getOrFail()
+        }.getOrThrowDid()
 
         val anchor2 = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }.getOrFail()
+        }.getOrThrowDid()
 
         val anchor3 = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }.getOrFail()
+        }.getOrThrowDid()
 
         trustWeave.trust {
             addAnchor(anchor1.value) {}
@@ -148,17 +150,17 @@ class TrustRegistryDslComprehensiveTest {
         val eduIssuer1 = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }.getOrFail()
+        }.getOrThrowDid()
 
         val eduIssuer2 = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }.getOrFail()
+        }.getOrThrowDid()
 
         val empIssuer = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }.getOrFail()
+        }.getOrThrowDid()
 
         trustWeave.trust {
             addAnchor(eduIssuer1.value) {
@@ -202,7 +204,7 @@ class TrustRegistryDslComprehensiveTest {
         val issuerDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }.getOrFail()
+        }.getOrThrowDid()
 
         trustWeave.trust {
             addAnchor(issuerDid.value) {
@@ -260,12 +262,12 @@ class TrustRegistryDslComprehensiveTest {
         val issuerDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }.getOrFail()
+        }.getOrThrowDid()
 
         val holderDid = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }.getOrFail()
+        }.getOrThrowDid()
 
         trustWeave.trust {
             addAnchor(issuerDid.value) {
@@ -303,7 +305,7 @@ class TrustRegistryDslComprehensiveTest {
                 issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDid, keyId = keyId)
-        }.getOrFail()
+        }.getOrThrow()
 
         val result = trustWeave.verify {
             credential(credential)
@@ -311,9 +313,7 @@ class TrustRegistryDslComprehensiveTest {
             // Trust checking is handled by the orchestration layer
         }
 
-        // Use VerificationResult extension properties (imported from VerificationResults.kt)
-        assertTrue(result.trustRegistryValid, "Issuer should be trusted in trust registry")
-        assertTrue(result.valid, "Credential should be valid. Errors: ${result.errors}, Warnings: ${result.warnings}")
+        assertTrue(result.isValid, "Credential should be valid. Errors: ${result.allErrors}, Warnings: ${result.allWarnings}")
     }
 }
 

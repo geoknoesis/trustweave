@@ -9,15 +9,15 @@ This tutorial provides a comprehensive guide to using TrustWeave's Wallet API. Y
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-trust:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:common:0.6.0")
+    implementation("org.trustweave:trust:0.6.0")
+    implementation("org.trustweave:testkit:0.6.0")
 }
 ```
 
-**Result:** Gives you the wallet DSL, trust layer builders, and in-memory implementations used throughout this tutorial.
+**Result:** Wallet APIs, **`TrustWeave`**, and testkit factories used in this tutorial.
 
-> Tip: The runnable quick-start sample (`./gradlew :TrustWeave-examples:runQuickStartSample`) mirrors the core flows below. Clone it as a starting point before wiring more advanced wallet logic.
+> Tip: Run **`./gradlew :distribution:examples:runQuickStartSample`** (or follow [Quick start](../getting-started/quick-start.md)) for runnable samples aligned with the snippets below.
 
 ## Prerequisites
 
@@ -50,14 +50,11 @@ import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
 import org.trustweave.wallet.WalletCreationOptions
 import org.trustweave.testkit.services.*
+import org.trustweave.core.exception.TrustWeaveException
 
 fun main() = runBlocking {
     // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
-        factories(
-            kmsFactory = TestkitKmsFactory(),  // Test-only factory
-            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
-        )
         keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
@@ -66,49 +63,22 @@ fun main() = runBlocking {
         val wallet = trustWeave.wallet {
             holder("did:key:holder")
             type("inMemory")
-            // Organization features can be configured here
             enablePresentation()
-        }
+        }.getOrThrow()
 
         println("Wallet ID: ${wallet.walletId}")
         println("Holder: ${wallet.holderDid}")
-    } catch (error: TrustWeaveError) {
+    } catch (error: TrustWeaveException) {
         println("Wallet creation failed: ${error.message}")
     }
 }
 ```
 
-**Outcome:** Creates a production-style wallet via the TrustWeave service API, complete with organization/presentation capabilities.
+**Outcome:** Creates a wallet via **`TrustWeave.wallet { }`** and unwraps **`WalletCreationResult`** with **`getOrThrow()`** (see [result types](../api-reference/result-types-guide.md)).
 
-### Trust Layer DSL
+### Same pattern with `TrustWeave.build`
 
-```kotlin
-// Kotlin stdlib
-import kotlinx.coroutines.runBlocking
-
-// TrustWeave core
-import org.trustweave.trust.dsl.trustLayer
-import org.trustweave.trust.dsl.credential.DidMethods
-
-fun main() = runBlocking {
-    val trustLayer = trustLayer {
-        keys { provider(IN_MEMORY) }
-        did { method(DidMethods.KEY) }
-    }
-
-    val wallet = trustLayer.wallet {
-        id("team-wallet")
-        holder("did:key:team-holder")
-        enableOrganization()
-        enablePresentation()
-        option("connectionString", "jdbc:postgresql://localhost/wallets")
-    }
-
-    println("Wallet DID: ${wallet.walletId}")
-}
-```
-
-**Outcome:** Builds a wallet from the trust-layer DSL, handy when you need more control over KMS/DID configuration.
+Use **`TrustWeave.build { keys { ... }; did { ... }; factories(walletFactory = ...) }`** when you need explicit KMS/DID/wallet factory wiring instead of defaults-only demos.
 
 ### Testkit Wallets
 
@@ -129,7 +99,7 @@ val inMemory = InMemoryWallet(holderDid = "did:key:test-holder")
 ### Basic Storage
 
 ```kotlin
-import org.trustweave.credential.models.VerifiableCredential
+import org.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -190,7 +160,7 @@ println("Total credentials: ${allCredentials.size}")
 ### List with Filter
 
 ```kotlin
-import org.trustweave.credential.wallet.CredentialFilter
+import org.trustweave.wallet.CredentialFilter
 
 val workCredentials = wallet.list(
     filter = CredentialFilter(
@@ -331,16 +301,11 @@ val specific = wallet.query {
 ### Basic Presentation
 
 ```kotlin
-import org.trustweave.credential.PresentationOptions
-
 if (wallet is CredentialPresentation) {
     val presentation = wallet.createPresentation(
         credentialIds = listOf(credentialId1, credentialId2),
         holderDid = "did:key:holder",
-        options = PresentationOptions(
-            holderDid = "did:key:holder",
-            proofType = "Ed25519Signature2020",
-            challenge = "random-challenge-123",
+        options = mapOf("holderDid" to "did:key:holder", "proofType" to "Ed25519Signature2020", "challenge" to "random-challenge-123",
             domain = "example.com"
         )
     )
@@ -363,7 +328,7 @@ if (wallet is CredentialPresentation) {
             "credentialSubject.degree.name"
         ),
         holderDid = "did:key:holder",
-        options = PresentationOptions(...)
+        options = emptyMap<String, Any?>()
     )
 }
 ```
@@ -466,7 +431,7 @@ wallet.withPresentation { presentation ->
 Manage multiple wallets with an instance-scoped directory:
 
 ```kotlin
-import org.trustweave.credential.wallet.WalletDirectory
+import org.trustweave.wallet.WalletDirectory
 
 val directory = WalletDirectory()
 
@@ -499,8 +464,7 @@ import kotlinx.serialization.json.put
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
-import org.trustweave.credential.models.VerifiableCredential
-import org.trustweave.credential.PresentationOptions
+import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.testkit.credential.InMemoryWallet
 import org.trustweave.testkit.services.*
 
@@ -508,10 +472,6 @@ fun main() = runBlocking {
     // Create wallet using TrustWeave service API
     // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
-        factories(
-            kmsFactory = TestkitKmsFactory(),  // Test-only factory
-            didMethodFactory = TestkitDidMethodFactory()  // Test-only factory
-        )
         keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
@@ -542,9 +502,9 @@ fun main() = runBlocking {
     val presentation = wallet.createPresentation(
         credentialIds = listOf(id1),
         holderDid = wallet.holderDid,
-        options = PresentationOptions(
-            holderDid = wallet.holderDid,
-            proofType = "Ed25519Signature2020"
+        options = mapOf(
+            "holderDid" to wallet.holderDid,
+            "proofType" to "Ed25519Signature2020"
         )
     )
 

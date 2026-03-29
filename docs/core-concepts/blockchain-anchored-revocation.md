@@ -84,10 +84,10 @@ Determines when status lists should be anchored to blockchain.
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
+    implementation("org.trustweave:anchors-anchor-core:0.6.0")
     // Add blockchain anchor client for your chain
-    implementation("org.trustweave:trustweave-anchor-algorand:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:anchors-plugins-algorand:0.6.0")
 }
 ```
 
@@ -203,7 +203,7 @@ println("Status List Purpose: ${statusList.credentialSubject.statusPurpose}")
 When issuing a credential, include the status list reference:
 
 ```kotlin
-import org.trustweave.credential.models.*
+import org.trustweave.credential.model.vc.*
 
 val credential = VerifiableCredential(
     id = "cred-123",
@@ -467,7 +467,7 @@ if (stats != null) {
 
 ## Related Documentation
 
-- [Blockchain Anchoring](./blockchain-anchoring.md) - General blockchain anchoring guide
-- [Verifiable Credentials](./verifiable-credentials.md) - Credential management
-- [Status List Manager API](../api-reference/core-api.md#status-list-manager) - API reference
+- Blockchain Anchoring](./blockchain-anchoring.md) - General blockchain anchoring guide
+- Verifiable Credentials](./verifiable-credentials.md) - Credential management
+- Status List Manager API](../api-reference/core-api.md#status-list-manager) - API reference
 

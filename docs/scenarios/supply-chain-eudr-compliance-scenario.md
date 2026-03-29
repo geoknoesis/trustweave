@@ -12,12 +12,12 @@ This guide demonstrates how to build a supply chain compliance system for the EU
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created DIDs for importers, exporters, and verifiers
-- ✅ Issued verifiable credentials for geospatial non-deforestation proof
-- ✅ Built Digital Product Passport (DPP) using VCs
-- ✅ Implemented automated compliance verification
-- ✅ Created EO data evidence for deforestation monitoring
-- ✅ Anchored compliance credentials to blockchain for audit trails
+- Created DIDs for importers, exporters, and verifiers
+- Issued verifiable credentials for geospatial non-deforestation proof
+- Built Digital Product Passport (DPP) using VCs
+- Implemented automated compliance verification
+- Created EO data evidence for deforestation monitoring
+- Anchored compliance credentials to blockchain for audit trails
 
 ## Big Picture & Significance
 
@@ -109,13 +109,13 @@ EUDR compliance needs:
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Test kit for in-memory implementations
-    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:0.6.0")
 
     // Optional: Algorand adapter for real blockchain anchoring
-    implementation("org.trustweave.chains:algorand:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:anchors-plugins-algorand:0.6.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -132,12 +132,21 @@ Here's a complete EUDR compliance workflow:
 ```kotlin
 package com.example.eudr.compliance
 
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
 import org.trustweave.core.*
-import org.trustweave.json.DigestUtils
+import org.trustweave.core.util.DigestUtils
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import java.time.Instant
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.testkit.services.*
+import org.trustweave.credential.results.getOrThrow
 
 fun main() = runBlocking {
     println("=".repeat(70))
@@ -146,20 +155,14 @@ fun main() = runBlocking {
 
     // Step 1: Create TrustWeave instance
     val trustWeave = TrustWeave.build {
-        factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
-        )
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
-        credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
+        credentials { defaultProofType(ProofType.Ed25519Signature2020) }
     }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for exporter, importer, and verifier
-    import org.trustweave.trust.types.DidCreationResult
     
-    import org.trustweave.trust.types.getOrThrowDid
     
     val exporterDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     println("✅ Exporter DID: ${exporterDid.value}")
@@ -168,16 +171,6 @@ fun main() = runBlocking {
     println("✅ Importer DID: ${importerDid.value}")
     
     val verifierDidResult = trustWeave.createDid { method(KEY) }
-    import org.trustweave.trust.types.getOrThrowDid
-    import org.trustweave.trust.types.getOrThrow
-    import org.trustweave.did.resolver.DidResolutionResult
-    import org.trustweave.did.identifiers.extractKeyId
-    
-    // Helper extension for resolution results
-    fun DidResolutionResult.getOrThrow() = when (this) {
-        is DidResolutionResult.Success -> this.document
-        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
-    }
     
     val verifierDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     println("✅ Verifier DID: ${verifierDid.value}")
@@ -221,7 +214,10 @@ fun main() = runBlocking {
     val eoProofDigest = DigestUtils.sha256DigestMultibase(eoDeforestationProof)
 
     // Step 5: Verifier issues compliance credential
-    val verifierDoc = trustWeave.resolveDid(verifierDid).getOrThrow()
+    val verifierDoc = when (val res = trustWeave.resolveDid(verifierDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val verifierKeyId = verifierDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
@@ -255,7 +251,6 @@ fun main() = runBlocking {
         signedBy(verifierDid)
     }
     
-    import org.trustweave.trust.types.getOrThrow
     
     val complianceCredential = complianceCredentialResult.getOrThrow()
 
@@ -264,7 +259,10 @@ fun main() = runBlocking {
     println("   Farm: ${farmDid.id}")
 
     // Step 6: Create Digital Product Passport (DPP)
-    val exporterDoc = trustWeave.resolveDid(exporterDid).getOrThrow()
+    val exporterDoc = when (val res = trustWeave.resolveDid(exporterDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val exporterKeyId = exporterDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
@@ -299,7 +297,6 @@ fun main() = runBlocking {
     println("   Quantity: 10,000 kg")
 
     // Step 7: Importer verifies compliance before import
-    import org.trustweave.trust.types.VerificationResult
     
     val dppVerification = trustWeave.verify {
         credential(dppCredential)
@@ -307,7 +304,7 @@ fun main() = runBlocking {
 
     when (dppVerification) {
         is VerificationResult.Invalid -> {
-            println("❌ DPP verification failed: ${dppVerification.allErrors.joinToString()}")
+            println("[FAIL] DPP verification failed: ${dppVerification.allErrors.joinToString()}")
             return@runBlocking
         }
         is VerificationResult.Valid -> {
@@ -324,7 +321,7 @@ fun main() = runBlocking {
 
     when (complianceVerification) {
         is VerificationResult.Invalid -> {
-            println("❌ Compliance verification failed: ${complianceVerification.allErrors.joinToString()}")
+            println("[FAIL] Compliance verification failed: ${complianceVerification.allErrors.joinToString()}")
             return@runBlocking
         }
         is VerificationResult.Valid -> {
@@ -343,7 +340,7 @@ fun main() = runBlocking {
         println("✅ EO Evidence integrity verified")
         println("   No tampering detected")
     } else {
-        println("❌ EO Evidence integrity FAILED")
+        println("[FAIL] EO Evidence integrity FAILED")
         println("   Evidence may have been tampered with")
         return@runBlocking
     }
@@ -361,7 +358,7 @@ fun main() = runBlocking {
         println("✅ Verified against Climate TRACE")
         println("   Global verification confirms compliance")
     } else {
-        println("⚠️ Climate TRACE verification inconclusive")
+        println("âš ï¸ Climate TRACE verification inconclusive")
     }
 
     // Step 11: Anchor to blockchain for audit trail
@@ -375,12 +372,12 @@ fun main() = runBlocking {
             anchor
         },
         onFailure = { error ->
-            println("❌ Anchoring failed: ${error.message}")
+            println("[FAIL] Anchoring failed: ${error.message}")
             null
         }
     )
 
-    println("\n📊 EUDR Compliance Summary:")
+    println("\n[stats] EUDR Compliance Summary:")
     println("   Farm: ${farmDid.id}")
     println("   Compliance Status: compliant")
     println("   EO Evidence: verified")
@@ -430,7 +427,7 @@ EUDR Compliance with EO Data - Complete Example
    Global verification confirms compliance
 ✅ DPP anchored: tx_...
 
-📊 EUDR Compliance Summary:
+[stats] EUDR Compliance Summary:
    Farm: did:key:z6Mk...
    Compliance Status: compliant
    EO Evidence: verified
@@ -567,9 +564,9 @@ suspend fun verifyAgainstClimateTrace(
 
 ## Related Documentation
 
-- [Supply Chain Traceability Scenario](supply-chain-traceability-scenario.md) - Supply chain workflows
-- [Earth Observation Scenario](earth-observation-scenario.md) - EO data integrity
-- [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
-- [API Reference](../api-reference/core-api.md) - Complete API documentation
+- Supply Chain Traceability Scenario](supply-chain-traceability-scenario.md) - Supply chain workflows
+- Earth Observation Scenario](earth-observation-scenario.md) - EO data integrity
+- Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
+- API Reference](../api-reference/core-api.md) - Complete API documentation
 
 

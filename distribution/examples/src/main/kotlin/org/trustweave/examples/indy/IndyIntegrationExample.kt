@@ -1,7 +1,10 @@
 package org.trustweave.examples.indy
 
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.trust.types.getOrThrow
 import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.types.VerificationResult
+import org.trustweave.credential.results.VerificationResult
 import org.trustweave.trust.types.*
 import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
@@ -15,7 +18,6 @@ import org.trustweave.anchor.exceptions.BlockchainException
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.anchor.indy.IndyBlockchainAnchorClient
 import org.trustweave.anchor.indy.IndyIntegration
-import org.trustweave.testkit.getOrFail
 import org.trustweave.did.identifiers.extractKeyId
 import org.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.runBlocking
@@ -81,10 +83,10 @@ fun main() = runBlocking {
 
     // Step 2: Create DIDs for issuer and holder
     println("Step 2: Creating DIDs...")
-    val issuerDid = trustweave.createDid().getOrFail()
+    val issuerDid = trustweave.createDid().getOrThrowDid()
     println("✓ Issuer DID created: ${issuerDid.value}")
 
-    val holderDid = trustweave.createDid().getOrFail()
+    val holderDid = trustweave.createDid().getOrThrowDid()
     println("✓ Holder DID created: ${holderDid.value}")
 
     // Resolve issuer DID to get key ID
@@ -140,7 +142,7 @@ fun main() = runBlocking {
             issued(kotlinx.datetime.Clock.System.now())
         }
         signedBy(issuerDid)
-    }.getOrFail()
+    }.getOrThrow()
     println("✓ Credential issued successfully")
     println("  - Credential ID: ${credential.id?.value}")
     println("  - Issuer: ${credential.issuer}")
@@ -173,7 +175,7 @@ fun main() = runBlocking {
     println("Step 5: Creating wallet and storing credential...")
     val wallet = trustweave.wallet {
         holder(holderDid)
-    }.getOrFail()
+    }.getOrThrow()
     println("✓ Wallet created successfully")
     println("  - Wallet ID: ${wallet.walletId}")
 
@@ -272,13 +274,13 @@ fun main() = runBlocking {
     }
 
     when (readVerification) {
-        is org.trustweave.trust.types.VerificationResult.Valid -> {
+        is org.trustweave.credential.results.VerificationResult.Valid -> {
             println("✓ Read credential verified successfully")
             println("  - Valid: true")
             println("  - Proof valid: ${readVerification.proofValid}")
             println("  - Issuer valid: ${readVerification.issuerValid}")
         }
-        is org.trustweave.trust.types.VerificationResult.Invalid -> {
+        is org.trustweave.credential.results.VerificationResult.Invalid -> {
             println("✗ Read credential verification failed")
             println("  - Errors: ${readVerification.allErrors.joinToString(", ")}")
         }
@@ -303,7 +305,7 @@ fun main() = runBlocking {
                     issued(kotlinx.datetime.Clock.System.now())
                 }
                 signedBy(issuerDid)
-            }.getOrFail()
+            }.getOrThrow()
 
             additionalCredentials.add(additionalCredential)
             wallet.store(additionalCredential)
@@ -447,8 +449,8 @@ fun main() = runBlocking {
     println("✓ Credential issued: ${credential.id}")
     println("  - Types: ${credential.type.joinToString(", ")}")
     println("  - Has proof: ${credential.proof != null}")
-    println("✓ Credential verified: ${verification.valid}")
-    println("  - Proof valid: ${verification.proofValid}")
+    println("✓ Credential verified: ${verification.isValid}")
+    println("  - Proof valid: ${verification !is VerificationResult.Invalid.InvalidProof}")
     println("  - Issuer valid: ${verification.issuerValid}")
     println("✓ Wallet created: ${wallet.walletId}")
     println("  - Total credentials: ${wallet.getStatistics().totalCredentials}")
@@ -457,7 +459,7 @@ fun main() = runBlocking {
     println("  - Network: ${anchor.ref.extra["network"]}")
     println("  - Pool: ${anchor.ref.extra["pool"]}")
     println("✓ Data integrity verified: Credential matches anchored data")
-    println("✓ Read credential verified: ${readVerification.valid}")
+    println("✓ Read credential verified: ${readVerification.isValid}")
     println("✓ Additional credentials issued: ${additionalCredentials.size}")
     println("✓ Indy integration: ${integrationResult.registeredChains.size} chains registered")
     println()

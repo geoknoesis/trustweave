@@ -295,16 +295,16 @@ Each protocol may require protocol-specific options in the `options` map:
 ## Protocol Implementation
 
 For detailed information on implementing new protocols, see:
-- [Protocol Implementation Guide](../features/credential-exchange-protocols/implementation-guide.md)
+- Protocol Implementation Guide](../features/credential-exchange-protocols/implementation-guide.md)
 
 ## Future Enhancements
 
-- [x] Auto-discovery via SPI
-- [ ] Protocol capability negotiation
-- [ ] Protocol fallback/retry
-- [ ] Protocol-specific validation
-- [ ] Metrics and observability per protocol
-- [ ] OIDC4VP implementation
-- [ ] SIOPv2 implementation
-- [ ] WACI implementation
+- x] Auto-discovery via SPI
+- Protocol capability negotiation
+- Protocol fallback/retry
+- Protocol-specific validation
+- Metrics and observability per protocol
+- OIDC4VP implementation
+- SIOPv2 implementation
+- WACI implementation
 

@@ -5,11 +5,13 @@ nav_exclude: true
 
 # Plugin Lifecycle Management
 
-TrustWeave provides lifecycle management for plugins that implement the `PluginLifecycle` interface.
+TrustWeave lets **your own integrations** implement **`PluginLifecycle`** when they need explicit startup/shutdown hooks (connections, background work, etc.).
+
+> **Important:** The **`TrustWeave`** facade does **not** expose **`initialize()` / `start()` / `stop()` / `cleanup()`**. Normal apps use **`TrustWeave.build { }`** / **`TrustWeave.quickStart()`** and handle errors via **sealed results** and **domain exceptions**. The sections below describe **`PluginLifecycle` on custom components**, not methods on **`TrustWeave`**.
 
 ## Overview
 
-Plugins that implement `PluginLifecycle` can be initialized, started, stopped, and cleaned up through the TrustWeave facade. This is useful for plugins that need to:
+Plugins that implement `PluginLifecycle` can be initialized, started, stopped, and cleaned up **by your application** (or a host container). This is useful for components that need to:
 
 - Initialize connections or resources
 - Start background processes
@@ -19,18 +21,18 @@ Plugins that implement `PluginLifecycle` can be initialized, started, stopped, a
 ## When Do You Need Lifecycle Methods?
 
 **You typically DON'T need lifecycle methods for:**
-- ✅ In-memory implementations (`InMemoryKeyManagementService`, `InMemoryWallet`, etc.)
-- ✅ Simple test scenarios
-- ✅ Quick start examples
-- ✅ Most default TrustWeave configurations
+
+- In-memory implementations (`InMemoryKeyManagementService`, in-memory wallets, etc.)
+- Simple test scenarios and quick starts
+- Most default `TrustWeave.quickStart()` / `TrustWeave.build` setups
 
 **You DO need lifecycle methods when:**
-- 🔧 Using database-backed services (need connection initialization)
-- 🔧 Using remote services (need connection establishment)
-- 🔧 Using file-based storage (need directory creation)
-- 🔧 Using blockchain clients (need network connection setup)
-- 🔧 Any plugin that requires external resources
-- 🔧 Production deployments with persistent storage
+
+- Database-backed services (connection pools, migrations)
+- Remote services (opening clients before first use)
+- File-based storage (creating directories, locks)
+- Long-lived blockchain or KMS adapters that need explicit connect/disconnect
+- Any component that must release resources on shutdown
 
 **Example - When Lifecycle is Needed:**
 ```kotlin
@@ -65,10 +67,9 @@ class DatabaseWalletFactory : WalletFactory, PluginLifecycle {
 
 **Example - When Lifecycle is NOT Needed:**
 ```kotlin
-// In-memory implementations don't need lifecycle
-val TrustWeave = TrustWeave.create() // Uses InMemoryKeyManagementService
-// No need to call initialize() or start()
-val did = TrustWeave.dids.create() // Works immediately
+// In-memory TrustWeave — no PluginLifecycle calls required
+val trustWeave = TrustWeave.quickStart()
+val did = trustWeave.createDid { }.getOrThrowDid()
 ```
 
 ## Plugin Lifecycle Interface
@@ -84,13 +85,11 @@ interface PluginLifecycle {
 
 ## Lifecycle Methods
 
-### Initialize
+### Initialize (on your `PluginLifecycle` component)
 
-Initialize plugins with configuration:
+Call **`initialize`** on **your** plugin instance (wallet factory, remote adapter, etc.), not on **`TrustWeave`**:
 
 ```kotlin
-val TrustWeave = TrustWeave.create()
-
 val config = mapOf(
     "database" to mapOf(
         "url" to "jdbc:postgresql://localhost/TrustWeave",
@@ -103,105 +102,38 @@ val config = mapOf(
     )
 )
 
-TrustWeave.initialize(config).fold(
-    onSuccess = {
-        println("All plugins initialized successfully")
-    },
-    onFailure = { error ->
-        when (error) {
-            is TrustWeaveError.PluginInitializationFailed -> {
-                println("Plugin ${error.pluginId} failed to initialize: ${error.reason}")
-            }
-            else -> {
-                println("Initialization error: ${error.message}")
-            }
-        }
-    }
-)
+if (!myDatabaseBackedPlugin.initialize(config)) {
+    error("Plugin failed to initialize")
+}
 ```
 
-### Start
+### Start / stop / cleanup
 
-Start plugins after initialization:
+Likewise, invoke **`start()`**, **`stop()`**, and **`cleanup()`** on implementations that need them (e.g. long-lived connections). The stock **`TrustWeave`** facade has no global **`TrustWeave.start()`** API.
 
-```kotlin
-TrustWeave.start().fold(
-    onSuccess = {
-        println("All plugins started successfully")
-    },
-    onFailure = { error ->
-        println("Error starting plugins: ${error.message}")
-    }
-)
-```
-
-### Stop
-
-Stop plugins before shutdown:
+## Complete lifecycle example (custom plugin + facade)
 
 ```kotlin
-TrustWeave.stop().fold(
-    onSuccess = {
-        println("All plugins stopped successfully")
-    },
-    onFailure = { error ->
-        println("Error stopping plugins: ${error.message}")
-    }
-)
-```
-
-### Cleanup
-
-Clean up plugin resources:
-
-```kotlin
-TrustWeave.cleanup().fold(
-    onSuccess = {
-        println("All plugins cleaned up successfully")
-    },
-    onFailure = { error ->
-        println("Error cleaning up plugins: ${error.message}")
-    }
-)
-```
-
-## Complete Lifecycle Example
-
-```kotlin
-import org.trustweave.TrustWeave
-import org.trustweave.core.*
+import org.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.*
+import org.trustweave.trust.types.getOrThrowDid
 
 suspend fun main() {
-    // Create TrustWeave instance
-    val TrustWeave = TrustWeave.create {
-        // Configure plugins
-        registerDidMethod(MyDidMethod())
-        registerBlockchainClient("algorand:testnet", myClient)
-    }
+    val dbPlugin = MyDatabaseBackedPlugin() // implements PluginLifecycle
+    dbPlugin.initialize(mapOf("databaseUrl" to "jdbc:postgresql://localhost/app"))
+    dbPlugin.start()
 
     try {
-        // Initialize plugins
-        TrustWeave.initialize().getOrThrow()
-        println("Plugins initialized")
-
-        // Start plugins
-        TrustWeave.start().getOrThrow()
-        println("Plugins started")
-
-        // Use TrustWeave
-        val did = TrustWeave.dids.create()
-        println("Created DID: ${did.id}")
-
-        // ... use TrustWeave ...
-
+        val trustWeave = TrustWeave.build {
+            keys { provider(IN_MEMORY); algorithm(ED25519) }
+            did { method(KEY) { algorithm(ED25519) } }
+        }
+        val did = trustWeave.createDid { }.getOrThrowDid()
+        println("Created DID: ${did.value}")
     } finally {
-        // Stop plugins
-        TrustWeave.stop().getOrThrow()
-        println("Plugins stopped")
-
-        // Cleanup plugins
-        TrustWeave.cleanup().getOrThrow()
-        println("Plugins cleaned up")
+        dbPlugin.stop()
+        dbPlugin.cleanup()
     }
 }
 ```
@@ -211,7 +143,7 @@ suspend fun main() {
 To implement lifecycle management in your plugin:
 
 ```kotlin
-import org.trustweave.spi.PluginLifecycle
+import org.trustweave.core.plugin.PluginLifecycle
 
 class MyBlockchainClient : BlockchainAnchorClient, PluginLifecycle {
     private var initialized = false
@@ -284,7 +216,7 @@ result.fold(
     },
     onFailure = { error ->
         when (error) {
-            is TrustWeaveError.PluginInitializationFailed -> {
+            is PluginException.InitializationFailed -> {
                 println("Plugin ${error.pluginId} failed: ${error.reason}")
                 // Handle specific plugin failure
             }
@@ -298,53 +230,36 @@ result.fold(
 
 ## Best Practices
 
-### 1. Always Initialize Before Use
+### 1. Initialize your `PluginLifecycle` components before use
 
 ```kotlin
-// ✅ Good: Initialize before use
-val TrustWeave = TrustWeave.create()
-TrustWeave.initialize().getOrThrow()
-TrustWeave.start().getOrThrow()
-
-// Use TrustWeave
-val did = TrustWeave.createDid().getOrThrow()
+val plugin = MyRemoteAnchorClient()
+check(plugin.initialize(configMap)) { "plugin init failed" }
+plugin.start()
 ```
 
-### 2. Use Try-Finally for Cleanup
+### 2. Use try/finally for cleanup
 
 ```kotlin
-// ✅ Good: Always cleanup
-val TrustWeave = TrustWeave.create()
+val plugin = MyRemoteAnchorClient()
+plugin.initialize(emptyMap())
+plugin.start()
 try {
-    TrustWeave.initialize().getOrThrow()
-    TrustWeave.start().getOrThrow()
-
-    // Use TrustWeave
+    val trustWeave = TrustWeave.build { /* uses plugin via registry if registered */ }
     // ...
 } finally {
-    TrustWeave.stop().getOrThrow()
-    TrustWeave.cleanup().getOrThrow()
+    plugin.stop()
+    plugin.cleanup()
 }
 ```
 
-### 3. Handle Initialization Errors
+### 3. Surface failures clearly
+
+Return **`false`** or throw **`PluginException.InitializationFailed`** from registration paths so callers do not proceed with half-initialized dependencies.
+
+### 4. Implement lifecycle methods safely
 
 ```kotlin
-// ✅ Good: Handle initialization errors
-val result = TrustWeave.initialize()
-if (result.isFailure) {
-    println("Initialization failed: ${result.exceptionOrNull()?.message}")
-    // Handle error or exit
-    return
-}
-
-TrustWeave.start().getOrThrow()
-```
-
-### 4. Implement Lifecycle Methods Properly
-
-```kotlin
-// ✅ Good: Proper lifecycle implementation
 override suspend fun initialize(config: Map<String, Any?>): Boolean {
     return try {
         // Initialize resources
@@ -375,7 +290,7 @@ override suspend fun cleanup() {
 
 ## Related Documentation
 
-- [Error Handling](error-handling.md)
-- [Service Provider Interface](spi.md)
-- [API Reference](../api-reference/)
+- Error Handling](error-handling.md)
+- Service Provider Interface](spi.md)
+- API Reference](../api-reference/)
 

@@ -146,11 +146,11 @@ git checkout -b feature/my-feature
 
 Before submitting a pull request:
 
-- [ ] All tests pass (`./gradlew test`)
-- [ ] Code is formatted (`./gradlew ktlintCheck`)
-- [ ] Build succeeds (`./gradlew build`)
-- [ ] Documentation updated (if applicable)
-- [ ] Commit messages follow conventions
+- All tests pass (`./gradlew test`)
+- Code is formatted (`./gradlew ktlintCheck`)
+- Build succeeds (`./gradlew build`)
+- Documentation updated (if applicable)
+- Commit messages follow conventions
 
 ## Troubleshooting
 
@@ -199,7 +199,7 @@ If dependencies fail to resolve:
 
 ## References
 
-- [Gradle Documentation](https://docs.gradle.org/)
-- [Kotlin Documentation](https://kotlinlang.org/docs/home.html)
-- [ktlint Documentation](https://ktlint.github.io/)
+- Gradle Documentation](https://docs.gradle.org/)
+- Kotlin Documentation](https://kotlinlang.org/docs/home.html)
+- ktlint Documentation](https://ktlint.github.io/)
 

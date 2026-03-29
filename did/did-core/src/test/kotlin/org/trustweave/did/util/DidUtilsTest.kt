@@ -156,9 +156,9 @@ class DidUtilsTest {
     @Test
     fun `test getServicesByType`() {
         val did = Did("did:test:123")
-        val service1 = DidService("service-1", "LinkedDomains", "https://example.com")
-        val service2 = DidService("service-2", "DIDCommMessaging", mapOf("uri" to "https://messaging.com"))
-        val service3 = DidService("service-3", "LinkedDomains", "https://another.com")
+        val service1 = DidService("service-1", listOf("LinkedDomains"), "https://example.com")
+        val service2 = DidService("service-2", listOf("DIDCommMessaging"), mapOf("uri" to "https://messaging.com"))
+        val service3 = DidService("service-3", listOf("LinkedDomains"), "https://another.com")
         
         val document = DidDocument(
             id = did,
@@ -186,7 +186,7 @@ class DidUtilsTest {
         val document = DidDocument(
             id = did,
             service = listOf(
-                DidService("service-1", "LinkedDomains", "https://example.com")
+                DidService("service-1", listOf("LinkedDomains"), "https://example.com")
             )
         )
 

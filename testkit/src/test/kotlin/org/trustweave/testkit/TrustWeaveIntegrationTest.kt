@@ -55,7 +55,7 @@ class TrustWeaveIntegrationTest {
         // Step 3: Compute digest
         val digest = DigestUtils.sha256DigestMultibase(vcPayload)
         assertNotNull(digest)
-        assert(digest.startsWith("u"))
+        assert(digest.startsWith("z"))
         println("Computed digest: $digest")
 
         // Step 4: Create digest object and anchor it

@@ -1,6 +1,6 @@
 package org.trustweave.core.plugin
 
-import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.core.exception.PluginException
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.*
@@ -29,7 +29,7 @@ class PluginRegistryErrorTest {
             capabilities = PluginCapabilities()
         )
 
-        val exception = assertFailsWith<TrustWeaveException.BlankPluginId> {
+        val exception = assertFailsWith<PluginException.BlankId> {
             registry.register(metadata, Any())
         }
 
@@ -46,7 +46,7 @@ class PluginRegistryErrorTest {
             capabilities = PluginCapabilities()
         )
 
-        val exception = assertFailsWith<TrustWeaveException.BlankPluginId> {
+        val exception = assertFailsWith<PluginException.BlankId> {
             registry.register(metadata, Any())
         }
 
@@ -65,7 +65,7 @@ class PluginRegistryErrorTest {
 
         registry.register(metadata, Any())
 
-        val exception = assertFailsWith<TrustWeaveException.PluginAlreadyRegistered> {
+        val exception = assertFailsWith<PluginException.AlreadyRegistered> {
             registry.register(metadata, Any())
         }
 

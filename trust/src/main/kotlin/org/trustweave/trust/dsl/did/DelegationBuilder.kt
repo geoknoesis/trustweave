@@ -1,6 +1,6 @@
 package org.trustweave.trust.dsl.did
 
-import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.context.DidDslContext
 import org.trustweave.did.verifier.DidDocumentDelegationVerifier
 import org.trustweave.did.verifier.DelegationChainResult
 import org.trustweave.did.identifiers.Did
@@ -14,7 +14,7 @@ import kotlinx.coroutines.withContext
  *
  * **Example Usage**:
  * ```kotlin
- * val trustWeave: TrustWeave = ...
+ * val didContext: DidDslContext = ... // e.g. [org.trustweave.trust.TrustWeave]
  *
  * val result = didProvider.delegate {
  *     from("did:key:delegator")
@@ -27,8 +27,8 @@ import kotlinx.coroutines.withContext
  * }
  * ```
  */
-class DelegationBuilder(private val trustWeave: TrustWeave) {
-    private val didResolver = trustWeave.getDidResolver()
+class DelegationBuilder(private val didContext: DidDslContext) {
+    private val didResolver = didContext.getDidResolver()
 
     private val verifier: DidDocumentDelegationVerifier = DidDocumentDelegationVerifier(didResolver)
 
@@ -61,18 +61,9 @@ class DelegationBuilder(private val trustWeave: TrustWeave) {
 }
 
 /**
- * Extension function to delegate using TrustWeave.
+ * Extension function to get a delegation builder (any [DidDslContext], including [org.trustweave.trust.TrustWeave]).
  */
-suspend fun TrustWeave.delegate(block: suspend DelegationBuilder.() -> Unit): DelegationChainResult {
-    val builder = DelegationBuilder(this)
-    builder.block()
-    return builder.verify()
-}
-
-/**
- * Extension function to get a delegation builder.
- */
-suspend fun TrustWeave.delegation(block: DelegationBuilder.() -> Unit): DelegationBuilder {
+suspend fun DidDslContext.delegation(block: DelegationBuilder.() -> Unit): DelegationBuilder {
     val builder = DelegationBuilder(this)
     builder.block()
     return builder

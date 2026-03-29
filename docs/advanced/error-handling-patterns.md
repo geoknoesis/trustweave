@@ -45,46 +45,45 @@ try {
 }
 ```
 
-### Credential Issuance (`issueCredential()`)
+### Credential Issuance (`trustWeave.issue { }`)
 
-**Why Exceptions?** Credential issuance should succeed if:
-- Issuer DID is valid and resolvable
-- Key exists and is accessible
-- Configuration is correct
+**Why a sealed result?** Issuance can fail for resolver, KMS, schema, or adapter reasons—handle them with **`when`** (or **`getOrThrow()`** only in tests).
 
 ```kotlin
-try {
-    val credential = trustweave.issueCredential(
-        issuer = issuerDid.id,
-        keyId = issuerKeyId,
-        subject = mapOf("name" to "Alice"),
-        credentialType = "PersonCredential"
-    )
-    // Success
-} catch (error: CredentialException.CredentialIssuanceFailed) {
-    // Programming error: Configuration issue
-    println("Issuance failed: ${error.reason}")
-} catch (error: DidException) {
-    // DID resolution failed (configuration issue)
-    println("DID error: ${error.message}")
+import org.trustweave.credential.results.IssuanceResult
+
+// issuerDid: Did, issuerKeyId: String (e.g. from verificationMethod.extractKeyId())
+when (val issued = trustWeave.issue {
+    credential {
+        type("PersonCredential")
+        issuer(issuerDid)
+        subject { "name" to "Alice" }
+    }
+    signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+}) {
+    is IssuanceResult.Success -> {
+        val credential = issued.credential
+        // …
+    }
+    is IssuanceResult.Failure.UnsupportedFormat -> println(issued.allErrors.joinToString())
+    is IssuanceResult.Failure.AdapterNotReady -> println(issued.allErrors.joinToString())
+    is IssuanceResult.Failure.InvalidRequest -> println("Invalid field '${issued.field}': ${issued.reason}")
+    is IssuanceResult.Failure.AdapterError -> println("Adapter error: ${issued.reason}")
+    is IssuanceResult.Failure.MultipleFailures -> println(issued.allErrors.joinToString())
 }
 ```
 
-### Wallet Creation (`createWallet()`)
+### Wallet Creation (`trustWeave.wallet { }`)
 
-**Why Exceptions?** Wallet creation should succeed if:
-- Holder DID is valid
-- Provider is configured correctly
-- Storage is available
+**Why a sealed result?** Misconfigured factories, invalid holder DIDs, or storage errors surface as **`WalletCreationResult.Failure`**—handle with **`when`** or **`getOrThrow()`** in tests.
 
 ```kotlin
-try {
-    val wallet = trustweave.createWallet(holderDid = holderDid.id)
-    // Success
-} catch (error: WalletException.WalletCreationFailed) {
-    // Configuration error
-    println("Wallet creation failed: ${error.reason}")
-}
+import org.trustweave.trust.types.getOrThrow
+
+val wallet = trustWeave.wallet {
+    holder(holderDid)
+    provider("inMemory")
+}.getOrThrow()
 ```
 
 ## Sealed Result-Based Operations
@@ -99,27 +98,26 @@ Operations that return sealed results are those where failure is **expected and 
 - Method not available (expected - methods are optional)
 
 ```kotlin
-when (val result = trustweave.resolveDid("did:key:z6Mk...")) {
+when (val result = trustWeave.resolveDid("did:key:z6Mk...")) {
     is DidResolutionResult.Success -> {
         println("Resolved: ${result.document.id}")
     }
     is DidResolutionResult.Failure.NotFound -> {
-        // Expected: DID doesn't exist yet
         println("DID not found - may be created later")
     }
-    is DidResolutionResult.Failure.NetworkError -> {
-        // Expected: Network may be temporarily unavailable
-        println("Network error - retry later")
+    is DidResolutionResult.Failure.InvalidFormat -> {
+        println("Invalid DID: ${result.reason}")
     }
     is DidResolutionResult.Failure.MethodNotRegistered -> {
-        // Expected: Method may not be available
         println("Method not available: ${result.method}")
     }
-    // Compiler ensures all cases handled
+    is DidResolutionResult.Failure.ResolutionError -> {
+        println("Resolution error - retry later")
+    }
 }
 ```
 
-### Credential Verification (`verifyCredential()`)
+### Credential Verification (`trustWeave.verify`)
 
 **Why Sealed Result?** Verification can fail for expected reasons:
 - Credential expired (normal lifecycle)
@@ -128,28 +126,30 @@ when (val result = trustweave.resolveDid("did:key:z6Mk...")) {
 - Issuer not trusted (policy decision)
 
 ```kotlin
-when (val result = trustweave.verifyCredential(credential)) {
-    is CredentialVerificationResult.Valid -> {
+when (val result = trustWeave.verify(credential)) {
+    is VerificationResult.Valid -> {
         println("✅ Valid: ${result.credential.id}")
         result.warnings.forEach { println("⚠️ Warning: $it") }
     }
-    is CredentialVerificationResult.Invalid.Expired -> {
+    is VerificationResult.Invalid.Expired -> {
         // Expected: Credentials expire
         println("❌ Expired at ${result.expiredAt}")
     }
-    is CredentialVerificationResult.Invalid.Revoked -> {
+    is VerificationResult.Invalid.Revoked -> {
         // Expected: Credentials can be revoked
         println("❌ Revoked at ${result.revokedAt}")
     }
-    is CredentialVerificationResult.Invalid.InvalidProof -> {
+    is VerificationResult.Invalid.InvalidProof -> {
         // Expected: Proof may be invalid
         println("❌ Invalid proof: ${result.reason}")
     }
-    is CredentialVerificationResult.Invalid.UntrustedIssuer -> {
+    is VerificationResult.Invalid.UntrustedIssuer -> {
         // Expected: Policy decision
-        println("❌ Issuer not trusted: ${result.issuer}")
+        println("❌ Issuer not trusted: ${result.issuerDid.value}")
     }
-    // Compiler ensures all cases handled
+    is VerificationResult.Invalid -> {
+        println("❌ Verification failed: ${result.allErrors.joinToString()}")
+    }
 }
 ```
 
@@ -159,9 +159,9 @@ Use this table to determine which pattern to use:
 
 | Operation Type | Pattern | Reason |
 |---------------|---------|--------|
-| **Creation** (createDid, issueCredential, createWallet) | Exception | Should succeed if configured correctly |
+| **Creation** (`createDid`, `issue { }`, `wallet { }`) | Sealed results (`DidCreationResult`, `IssuanceResult`, `WalletCreationResult`) | Handle with `when` / `getOrThrow` in tests |
 | **Resolution** (resolveDid) | Sealed Result | May fail for expected reasons |
-| **Verification** (verifyCredential) | Sealed Result | May fail for expected reasons |
+| **Verification** (`trustWeave.verify`) | Sealed Result | May fail for expected reasons |
 | **Read Operations** (read anchored data) | Sealed Result | Data may not exist |
 | **Configuration Errors** | Exception | Programming error |
 | **Expected Failures** | Sealed Result | Part of normal operation |
@@ -275,10 +275,9 @@ when (val resolution = trustweave.resolveDid(did)) {
         val alternativeDid = deriveAlternativeDid(did)
         trustweave.resolveDid(alternativeDid)
     }
-    is DidResolutionResult.Failure.NetworkError -> {
-        // Expected: Retry with backoff
+    is DidResolutionResult.Failure.ResolutionError -> {
         delay(1000)
-        trustweave.resolveDid(did)  // Retry
+        trustweave.resolveDid(did) // Retry
     }
 }
 ```
@@ -298,13 +297,13 @@ try {
 }
 
 // ✅ Good: Handle sealed results for expected failures
-when (val verification = trustweave.verifyCredential(credential)) {
-    is CredentialVerificationResult.Valid -> {
+when (val verification = trustWeave.verify(credential)) {
+    is VerificationResult.Valid -> {
         // Proceed
     }
-    is CredentialVerificationResult.Invalid -> {
+    is VerificationResult.Invalid -> {
         // Handle expected failure gracefully
-        logger.warn("Credential invalid: ${verification.errors}")
+        logger.warn("Credential invalid: ${verification.allErrors.joinToString()}")
         // Show user-friendly message
     }
 }
@@ -332,12 +331,11 @@ when (val resolution = trustweave.resolveDid("did:unknown:test")) {
 
 ```kotlin
 // ✅ Good: Compiler ensures all cases handled
-when (val result = trustweave.resolveDid(did)) {
+when (val result = trustWeave.resolveDid(did)) {
     is DidResolutionResult.Success -> { ... }
     is DidResolutionResult.Failure.NotFound -> { ... }
     is DidResolutionResult.Failure.MethodNotRegistered -> { ... }
     is DidResolutionResult.Failure.InvalidFormat -> { ... }
-    is DidResolutionResult.Failure.NetworkError -> { ... }
     is DidResolutionResult.Failure.ResolutionError -> { ... }
     // Compiler error if case missing
 }
@@ -347,13 +345,13 @@ when (val result = trustweave.resolveDid(did)) {
 
 | Operation | Pattern | Return Type | Example |
 |-----------|---------|-------------|---------|
-| `createDid()` | Exception | `DidDocument` | `try { ... } catch { ... }` |
-| `resolveDid()` | Sealed Result | `DidResolutionResult` | `when (result) { ... }` |
-| `issueCredential()` | Exception | `VerifiableCredential` | `try { ... } catch { ... }` |
-| `verifyCredential()` | Sealed Result | `CredentialVerificationResult` | `when (result) { ... }` |
-| `createWallet()` | Exception | `Wallet` | `try { ... } catch { ... }` |
-| `blockchains.anchor()` | Exception | `AnchoredData` | `try { ... } catch { ... }` |
-| `blockchains.read()` | Exception | `T` | `try { ... } catch { ... }` |
+| `createDid()` | Sealed result | `DidCreationResult` | `when (result) { ... }` / `getOrThrowDid()` |
+| `resolveDid()` | Sealed result | `DidResolutionResult` | `when (result) { ... }` |
+| `issue { }` | Sealed result | `IssuanceResult` | `when (result) { ... }` / `getOrThrow()` |
+| `verify(...)` / `verify { }` | Sealed result | `VerificationResult` | `when (result) { ... }` |
+| `wallet { }` | Sealed result | `WalletCreationResult` | `when (result) { ... }` / `getOrThrow()` |
+| `blockchains.anchor()` | Success value + throws | `AnchorResult` | `try { ... } catch (e: BlockchainException) { ... }` |
+| `blockchains.read()` | Throws on failure | `T` | `try { ... } catch (e: BlockchainException) { ... }` |
 
 ## Summary
 
@@ -361,13 +359,13 @@ when (val result = trustweave.resolveDid(did)) {
 - **Sealed Results** = Expected failures, business logic decisions (handle gracefully)
 
 This hybrid approach provides:
-- ✅ Clear error types for debugging (exceptions)
-- ✅ Exhaustive handling for business logic (sealed results)
-- ✅ Best of both worlds
+- Clear error types for debugging (exceptions)
+- Exhaustive handling for business logic (sealed results)
+- Best of both worlds
 
 ## Related Documentation
 
-- [Error Handling Guide](./error-handling.md) - Complete error handling reference
-- [API Reference](../api-reference/core-api.md) - Method signatures and return types
-- [Best Practices](../getting-started/common-patterns.md) - Common patterns
+- Error Handling Guide](./error-handling.md) - Complete error handling reference
+- API Reference](../api-reference/core-api.md) - Method signatures and return types
+- Best Practices](../getting-started/common-patterns.md) - Common patterns
 

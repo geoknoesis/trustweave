@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * CHAPI (Credential Handler API) service.
@@ -39,8 +40,8 @@ import java.util.*
  * ```
  */
 class ChapiService {
-    private val offers = mutableMapOf<String, ChapiOffer>()
-    private val proofRequests = mutableMapOf<String, ChapiProofRequest>()
+    private val offers = ConcurrentHashMap<String, ChapiOffer>()
+    private val proofRequests = ConcurrentHashMap<String, ChapiProofRequest>()
 
     /**
      * Creates a CHAPI credential offer.

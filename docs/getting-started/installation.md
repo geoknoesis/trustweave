@@ -29,7 +29,7 @@ Before installing TrustWeave, ensure you have:
 
 ### Optional Prerequisites
 
-- **Docker** (optional): Required for `org.trustweave.chains:ganache` tests using TestContainers
+- **Docker** (optional): Required for `org.trustweave:anchors-plugins-ganache` tests using TestContainers
 - **IDE**: IntelliJ IDEA or VS Code with Kotlin support (recommended for better developer experience)
 
 ### Verify Your Setup
@@ -38,6 +38,7 @@ After installation, verify your setup by running a simple test:
 
 ```kotlin
 import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.getOrThrow // Pair<Did, DidDocument> from DidCreationResult
 import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
@@ -68,16 +69,16 @@ Add TrustWeave dependencies to your `build.gradle.kts`. This brings in the core 
 ```kotlin
 dependencies {
     // Recommended: Use distribution-all for getting started
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
     
     // Test kit (for testing)
-    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:0.6.0")
 
     // Optional: Integration modules (using hierarchical group IDs)
-    implementation("org.trustweave.kms:waltid:1.0.0-SNAPSHOT")
-    implementation("org.trustweave.did:godiddy:1.0.0-SNAPSHOT")
-    implementation("org.trustweave.chains:algorand:1.0.0-SNAPSHOT")
-    implementation("org.trustweave.chains:polygon:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:kms-plugins-waltid:0.6.0")
+    implementation("org.trustweave:did-plugins-godiddy:0.6.0")
+    implementation("org.trustweave:anchors-plugins-algorand:0.6.0")
+    implementation("org.trustweave:anchors-plugins-polygon:0.6.0")
 }
 ```
 
@@ -92,16 +93,16 @@ Add TrustWeave dependencies to your `build.gradle`. Use this variant if your pro
 ```groovy
 dependencies {
     // Recommended: Use distribution-all for getting started
-    implementation 'org.trustweave:distribution-all:1.0.0-SNAPSHOT'
+    implementation 'org.trustweave:distribution-all:0.6.0'
     
     // Test kit (for testing)
-    testImplementation 'org.trustweave:testkit:1.0.0-SNAPSHOT'
+    testImplementation 'org.trustweave:testkit:0.6.0'
 
-    // Optional: Integration modules (using hierarchical group IDs)
-    implementation 'org.trustweave.kms:waltid:1.0.0-SNAPSHOT'
-    implementation 'org.trustweave.did:godiddy:1.0.0-SNAPSHOT'
-    implementation 'org.trustweave.chains:algorand:1.0.0-SNAPSHOT'
-    implementation 'org.trustweave.chains:polygon:1.0.0-SNAPSHOT'
+    // Optional: Integration modules
+    implementation 'org.trustweave:kms-plugins-waltid:0.6.0'
+    implementation 'org.trustweave:did-plugins-godiddy:0.6.0'
+    implementation 'org.trustweave:anchors-plugins-algorand:0.6.0'
+    implementation 'org.trustweave:anchors-plugins-polygon:0.6.0'
 }
 ```
 
@@ -117,14 +118,14 @@ Add TrustWeave dependencies to your `pom.xml`. The snippet lists the minimum set
     <dependency>
         <groupId>org.trustweave</groupId>
         <artifactId>distribution-all</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>0.6.0</version>
     </dependency>
 
     <!-- Test kit (for testing) -->
     <dependency>
         <groupId>org.trustweave</groupId>
         <artifactId>testkit</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>0.6.0</version>
         <scope>test</scope>
     </dependency>
 </dependencies>
@@ -139,15 +140,15 @@ For production deployments, you may want to use individual modules instead of `d
 ```kotlin
 dependencies {
     // Core modules (required)
-    implementation("org.trustweave:trustweave-trust:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:credentials-credential-api:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-anchor:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:trust:0.6.0")
+    implementation("org.trustweave:credentials-credential-api:0.6.0")
+    implementation("org.trustweave:did-did-core:0.6.0")
+    implementation("org.trustweave:kms-kms-core:0.6.0")
+    implementation("org.trustweave:anchors-anchor-core:0.6.0")
+    implementation("org.trustweave:common:0.6.0")
 
     // Test kit (for testing)
-    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:0.6.0")
 }
 ```
 
@@ -173,13 +174,13 @@ repositories {
 
 ## Version Information
 
-- **Current Version**: 1.0.0-SNAPSHOT
+- **Current Version**: 0.6.0
 - **Kotlin Version**: 2.2.21+
 - **Java Version**: 21+
 - **Gradle Version**: 8.5+
 
 ## Next Steps
 
-- [Quick Start](quick-start.md) - Create your first TrustWeave application
-- [Your First Application](your-first-application.md) - Build a complete example
+- Quick Start](quick-start.md) - Create your first TrustWeave application
+- Your First Application](your-first-application.md) - Build a complete example
 

@@ -3,6 +3,7 @@ plugins {
     // We use 'apply false' because we're configuring Kotlin tasks in subprojects, not applying the plugin to the root.
     // The plugin version is resolved from settings.gradle.kts where it's already declared.
     kotlin("jvm") apply false
+    id("org.jlleitschuh.gradle.ktlint")
 }
 
 // Configure common settings for all projects (root + all subprojects).
@@ -12,7 +13,7 @@ allprojects {
         mavenCentral()
     }
     group = "org.trustweave"
-    version = "1.0.0-SNAPSHOT"
+    version = "0.6.0"
 }
 
 subprojects {
@@ -20,7 +21,23 @@ subprojects {
     // Configure all subprojects to build into the root project's build directory.
     // This centralizes all build outputs under the project root for easier cleanup and organization.
     // Each subproject's build output will be in build/<project-path>/ (e.g., build/did/core/)
-    buildDir = file("${rootProject.buildDir}/${project.path.replace(":", "/")}")
+    layout.buildDirectory.set(rootProject.layout.buildDirectory.dir(project.path.removePrefix(":").replace(":", "/")))
+
+    // Windows: IDE/antivirus often lock JARs under build/; Gradle fails on "Unable to delete file".
+    // Rename stale JAR before pack so the task can write a new file (orphan .jar.*.bak in libs/ is harmless).
+    tasks.withType<Jar>().configureEach {
+        doFirst {
+            val out = archiveFile.get().asFile
+            if (out.exists() && !out.delete()) {
+                val bak = File(out.parentFile, "${out.name}.${System.nanoTime()}.bak")
+                if (!out.renameTo(bak)) {
+                    throw GradleException(
+                        "Cannot replace locked JAR: ${out.absolutePath}. Close Cursor/IDE or delete this file, then rebuild.",
+                    )
+                }
+            }
+        }
+    }
 
     // Force consistent Kotlin stdlib version across all modules to avoid binary compatibility issues
     configurations.all {
@@ -41,9 +58,10 @@ subprojects {
         // (provided by Java plugin, which is applied by Kotlin JVM plugin)
         // Skip projects that use java-platform plugin (like distribution:bom)
         if (!plugins.hasPlugin("java-platform")) {
-            val artifactName = project.path
-                .removePrefix(":")  // Remove leading colon
-                .replace(":", "-")   // Replace colons with hyphens
+            val artifactName =
+                project.path
+                    .removePrefix(":") // Remove leading colon
+                    .replace(":", "-") // Replace colons with hyphens
 
             // Set archivesName on BasePluginExtension (affects all archive tasks)
             extensions.findByType<org.gradle.api.plugins.BasePluginExtension>()?.let {
@@ -83,7 +101,10 @@ subprojects {
         // leading to inconsistent build results across different environments.
         extensions.findByType<org.gradle.api.plugins.JavaPluginExtension>()?.apply {
             toolchain {
-                languageVersion.set(org.gradle.jvm.toolchain.JavaLanguageVersion.of(21))
+                languageVersion.set(
+                    org.gradle.jvm.toolchain.JavaLanguageVersion
+                        .of(21),
+                )
             }
         }
 
@@ -95,37 +116,42 @@ subprojects {
 
         // Apply maven-publish plugin and configure publishing for all subprojects that produce JAR files
         // Skip java-platform projects (like BOM) as they configure their own publishing
-        if ((plugins.hasPlugin("org.jetbrains.kotlin.jvm") || plugins.hasPlugin("java")) 
-            && !plugins.hasPlugin("java-platform")) {
+        if ((plugins.hasPlugin("org.jetbrains.kotlin.jvm") || plugins.hasPlugin("java")) &&
+            !plugins.hasPlugin("java-platform")
+        ) {
             // Apply maven-publish plugin if not already applied
             if (!plugins.hasPlugin("maven-publish")) {
                 apply(plugin = "maven-publish")
             }
-            
+
             // Configure Maven publishing
             configure<org.gradle.api.publish.PublishingExtension> {
                 publications {
                     create<org.gradle.api.publish.maven.MavenPublication>("maven") {
                         from(components["java"])
-                        
+
                         // Set artifact ID based on project path (matches archivesName configuration)
-                        val artifactName = project.path
-                            .removePrefix(":")
-                            .replace(":", "-")
+                        val artifactName =
+                            project.path
+                                .removePrefix(":")
+                                .replace(":", "-")
                         artifactId = artifactName
-                        
+
                         pom {
                             name.set(project.name)
-                            description.set(project.description ?: "TrustWeave ${project.name} module")
+                            description.set(
+                                project.description
+                                    ?: "TrustWeave ${project.name} module. See docs/reference/module-maturity.md for GA vs experimental guidance.",
+                            )
                             url.set("https://github.com/geoknoesis/trustweave")
-                            
+
                             licenses {
                                 license {
                                     name.set("AGPL-3.0")
                                     url.set("https://www.gnu.org/licenses/agpl-3.0.txt")
                                 }
                             }
-                            
+
                             developers {
                                 developer {
                                     id.set("trustweave-team")

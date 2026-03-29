@@ -23,7 +23,7 @@ Add the Google Cloud KMS module to your dependencies:
 ```kotlin
 dependencies {
     // Only need to add the Google Cloud KMS plugin - core dependencies are included transitively
-    implementation("org.trustweave.kms:google:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:kms-plugins-google:0.6.0")
 }
 ```
 
@@ -377,12 +377,12 @@ gcloud kms keyrings add-iam-policy-binding my-key-ring \
 See the [Algorithm Compatibility Table](../core-concepts/algorithm-compatibility-table.md) for detailed comparison of algorithm support across DIDs, VCs, AWS KMS, Azure Key Vault, and Google Cloud KMS.
 
 **Key Points:**
-- ✅ secp256k1 supported for blockchain integration
-- ✅ All NIST curves (P-256/P-384) supported
-- ✅ RSA keys supported for legacy compatibility
-- ⚠️ Ed25519 support varies by Google Cloud KMS version
-- ⚠️ P-521 support varies by Google Cloud KMS version
-- ❌ BLS12-381 not supported (requires specialized KMS)
+- secp256k1 supported for blockchain integration
+- All NIST curves (P-256/P-384) supported
+- RSA keys supported for legacy compatibility
+- Ed25519 support varies by Google Cloud KMS version
+- P-521 support varies by Google Cloud KMS version
+- BLS12-381 not supported (requires specialized KMS)
 
 ## Best Practices
 
@@ -427,13 +427,15 @@ val kms = googleProvider?.create(mapOf(
 import org.trustweave.*
 import org.trustweave.googlekms.*
 
-val TrustWeave = TrustWeave.create {
-    kms = GoogleCloudKeyManagementService(
-        GoogleKmsConfig.builder()
-            .projectId("my-project")
-            .location("us-east1")
-            .keyRing("TrustWeave-keys")
-            .build()
+val TrustWeave = TrustWeave.build {
+    customKms(
+        GoogleCloudKeyManagementService(
+            GoogleKmsConfig.builder()
+                .projectId("my-project")
+                .location("us-east1")
+                .keyRing("TrustWeave-keys")
+                .build()
+        )
     )
 }
 ```
@@ -441,7 +443,7 @@ val TrustWeave = TrustWeave.create {
 ### With SPI Auto-Discovery
 
 ```kotlin
-val TrustWeave = TrustWeave.create {
+val TrustWeave = TrustWeave.build {
     // Google Cloud KMS will be discovered automatically if on classpath
     // Configure via environment variables or system properties
 }
@@ -449,14 +451,14 @@ val TrustWeave = TrustWeave.create {
 
 ## Related Documentation
 
-- [Key Management Guide](../core-concepts/key-management.md) - Core KMS concepts
-- [Algorithm Compatibility Table](../core-concepts/algorithm-compatibility-table.md) - Algorithm support comparison
-- [Key Rotation Guide](../advanced/key-rotation.md) - Key rotation strategies
-- [Creating Plugins Guide](../contributing/creating-plugins.md) - Custom KMS implementations
+- Key Management Guide](../core-concepts/key-management.md) - Core KMS concepts
+- Algorithm Compatibility Table](../core-concepts/algorithm-compatibility-table.md) - Algorithm support comparison
+- Key Rotation Guide](../advanced/key-rotation.md) - Key rotation strategies
+- Creating Plugins Guide](../contributing/creating-plugins.md) - Custom KMS implementations
 
 ## See Also
 
-- [Google Cloud KMS Documentation](https://cloud.google.com/kms/docs)
-- [Google Cloud KMS Java Client](https://github.com/googleapis/java-kms)
-- [Google Cloud KMS API Reference](https://cloud.google.com/kms/docs/reference/rest)
+- Google Cloud KMS Documentation](https://cloud.google.com/kms/docs)
+- Google Cloud KMS Java Client](https://github.com/googleapis/java-kms)
+- Google Cloud KMS API Reference](https://cloud.google.com/kms/docs/reference/rest)
 

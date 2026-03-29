@@ -32,7 +32,7 @@ This format matches the official DID Method Registry structure from https://iden
 ### 2. Load and Register the Method
 
 ```kotlin
-import org.trustweave.did.registration.loader.JsonDidMethodLoader
+import org.trustweave.did.registrar.method.JsonDidMethodLoader
 import org.trustweave.did.registry.DidMethodRegistry
 import java.nio.file.Paths
 
@@ -43,9 +43,8 @@ val registry = DidMethodRegistry()
 val method = loader.loadFromFile(Paths.get("src/main/resources/did-methods/example.json"))
 registry.register(method)
 
-// Or load from classpath resource
-val method2 = loader.loadFromResource("did-methods/example.json")
-registry.register(method2)
+// Or load every JSON file under a classpath resource folder (e.g. resources/did-methods/)
+loader.loadFromClasspath("did-methods").forEach { registry.register(it) }
 ```
 
 ### 3. Use the Registered Method

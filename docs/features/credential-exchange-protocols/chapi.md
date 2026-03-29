@@ -12,12 +12,12 @@ CHAPI is a browser-based API that enables credential wallet interactions through
 
 ## Features
 
-- ✅ Credential offer creation
-- ✅ Credential storage
-- ✅ Proof request creation
-- ✅ Proof presentation
-- ✅ Browser-compatible message format
-- ✅ Integration with protocol abstraction layer
+- Credential offer creation
+- Credential storage
+- Proof request creation
+- Proof presentation
+- Browser-compatible message format
+- Integration with protocol abstraction layer
 
 ## Architecture
 
@@ -45,20 +45,19 @@ CHAPI is a browser-based API that enables credential wallet interactions through
 import org.trustweave.credential.chapi.ChapiService
 import org.trustweave.credential.chapi.exchange.ChapiExchangeProtocol
 import org.trustweave.credential.exchange.*
+import org.trustweave.credential.exchange.registry.ExchangeProtocolRegistries
+import org.trustweave.credential.exchange.ExchangeServices
 
 val chapiService = ChapiService()
 val protocol = ChapiExchangeProtocol(chapiService)
 
-import org.trustweave.credential.exchange.registry.ExchangeProtocolRegistries
-import org.trustweave.credential.exchange.ExchangeServices
 
 val registry = ExchangeProtocolRegistries.default()
 registry.register(protocol)
 
 val exchangeService = ExchangeServices.createExchangeService(
     protocolRegistry = registry,
-    credentialService = credentialService,
-    didResolver = didResolver
+    credentialService = credentialService
 )
 ```
 
@@ -297,6 +296,6 @@ CHAPI requires a browser that supports the Credential Handler API. Check compati
 
 ## References
 
-- [Credential Handler API Specification](https://w3c.github.io/webappsec-credential-management/)
-- [Credential Handler API Polyfill](https://github.com/digitalbazaar/credential-handler-polyfill)
+- Credential Handler API Specification](https://w3c.github.io/webappsec-credential-management/)
+- Credential Handler API Polyfill](https://github.com/digitalbazaar/credential-handler-polyfill)
 

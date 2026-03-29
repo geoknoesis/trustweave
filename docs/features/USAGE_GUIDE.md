@@ -62,31 +62,19 @@ val latency = metrics.getMetric("credential.issue")
 println("Issued: ${counter?.value}, Avg latency: ${latency?.average}ms")
 ```
 
-## 3. QR Code Generation
+## 3. QR / deep-link content (OIDC4VCI)
 
-Generate QR codes for credential sharing.
+TrustWeave does not ship a generic QR image API in core. The **OIDC4VCI plugin** builds **credential-offer and authorization URLs** you can encode with any QR library (ZXing, etc.):
 
 ```kotlin
-import org.trustweave.qrcode.QrCodeGenerator
-import org.trustweave.qrcode.ZxingQrCodeGenerator
-import org.trustweave.qrcode.QrCodeFormat
+import org.trustweave.credential.oidc4vci.qr.QrCodeGenerator
 
-val qrGenerator: QrCodeGenerator = ZxingQrCodeGenerator()
-
-// Generate QR code data for credential
-val qrData = qrGenerator.generateForCredential(
-    credential = credential,
-    format = QrCodeFormat.JSON
+// URL string to turn into a QR image in your app
+val offerUrl = QrCodeGenerator.generateCredentialOfferUrl(
+    credentialIssuer = "https://issuer.example.com",
+    credentialConfigurationIds = listOf("PersonCredential")
 )
-
-// Generate QR code image (PNG bytes)
-val qrImage = qrGenerator.generateQrCode(qrData, 300, 300)
-
-// Generate deep link
-val deepLink = qrGenerator.generateDeepLink(
-    baseUrl = "https://example.com/verify",
-    credential = credential
-)
+// Encode `offerUrl` with ZXing or another QR library for PNG/SVG bytes
 ```
 
 ## 4. Notifications
@@ -348,12 +336,16 @@ Here's how to integrate multiple features together:
 
 ```kotlin
 import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.types.IssuanceResult
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.oidc4vci.qr.QrCodeGenerator
 import org.trustweave.audit.*
 import org.trustweave.metrics.*
-import org.trustweave.qrcode.*
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.did.identifiers.Did
 import kotlinx.datetime.Clock
 import java.time.Instant
+import org.trustweave.testkit.services.*
 
 val trustWeave = TrustWeave.build {
     // Configure TrustWeave instance
@@ -362,7 +354,6 @@ val trustWeave = TrustWeave.build {
 }
 val auditLogger = InMemoryAuditLogger()
 val metrics = InMemoryMetricsCollector()
-val qrGenerator = ZxingQrCodeGenerator()
 
 // Issue credential with audit logging and metrics
 suspend fun issueCredentialWithTracking(
@@ -380,11 +371,9 @@ suspend fun issueCredentialWithTracking(
                 // credential data
             }
         }
-        signedBy(issuerDid = issuerDid, keyId = "key-1")
+        signedBy(issuerDid = Did(issuerDid), keyId = "key-1")
     }
-    
-    import org.trustweave.trust.types.getOrThrow
-    
+
     val credential = issuanceResult.getOrThrow()
 
     // Track metrics
@@ -403,8 +392,11 @@ suspend fun issueCredentialWithTracking(
         )
     )
 
-    // Generate QR code
-    val qrData = qrGenerator.generateForCredential(credential, QrCodeFormat.JSON)
+    // Example: OIDC4VCI offer URL string (encode with your QR library)
+    val offerUrl = QrCodeGenerator.generateCredentialOfferUrl(
+        credentialIssuer = "https://issuer.example.com",
+        credentialConfigurationIds = listOf("PersonCredential")
+    )
 
     return credential
 }
@@ -414,9 +406,9 @@ suspend fun issueCredentialWithTracking(
 
 For production use, you'll want to create database-backed implementations. Each feature has an interface that you can implement:
 
-- `AuditLogger` → `DatabaseAuditLogger`
-- `MetricsCollector` → `DatabaseMetricsCollector`
-- `CredentialVersioning` → `DatabaseCredentialVersioning`
+- `AuditLogger` â†’ `DatabaseAuditLogger`
+- `MetricsCollector` â†’ `DatabaseMetricsCollector`
+- `CredentialVersioning` â†’ `DatabaseCredentialVersioning`
 - etc.
 
 These can use your preferred database (PostgreSQL, MySQL, MongoDB, etc.) and follow the same interface contracts.

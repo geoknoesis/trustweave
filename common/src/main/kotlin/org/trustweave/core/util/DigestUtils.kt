@@ -110,6 +110,7 @@ object DigestUtils {
      * **Memory Consideration:** When enabled, the cache is limited to [maxCacheSize] entries
      * with LRU eviction, preventing unbounded growth in long-running applications.
      */
+    @Volatile
     var enableDigestCache: Boolean = true
         set(value) {
             field = value
@@ -125,7 +126,7 @@ object DigestUtils {
      *
      * @param jsonString The JSON string to canonicalize
      * @return The canonical JSON string
-     * @throws TrustWeaveException.InvalidJson if the input is not valid JSON
+     * @throws org.trustweave.core.exception.SerializationException.InvalidJson if the input is not valid JSON
      */
     fun canonicalizeJson(jsonString: String): String {
         require(jsonString.isNotBlank()) { "JSON string cannot be blank" }
@@ -133,14 +134,14 @@ object DigestUtils {
             val element = Json.parseToJsonElement(jsonString)
             canonicalizeJson(element)
         } catch (e: SerializationException) {
-            throw TrustWeaveException.InvalidJson(
+            throw org.trustweave.core.exception.SerializationException.InvalidJson(
                 jsonString = jsonString,
                 parseError = e.message ?: "Parse error",
                 position = null
             )
         } catch (e: Exception) {
             // Catch any other unexpected exceptions (e.g., OutOfMemoryError, etc.)
-            throw TrustWeaveException.InvalidJson(
+            throw org.trustweave.core.exception.SerializationException.InvalidJson(
                 jsonString = jsonString,
                 parseError = e.message ?: "Unknown error: ${e::class.simpleName}",
                 position = null
@@ -164,7 +165,7 @@ object DigestUtils {
         return try {
             json.encodeToString(JsonElement.serializer(), sorted)
         } catch (e: Exception) {
-            throw TrustWeaveException.JsonEncodeFailed(
+            throw org.trustweave.core.exception.SerializationException.EncodeFailed(
                 element = element.toString().take(200),
                 reason = e.message ?: "Unknown encoding error"
             )
@@ -268,11 +269,11 @@ object DigestUtils {
             // in the same thread without manual reset() call.
             val digestBytes = messageDigest.digest(bytes)
 
-            // Multibase encoding: base58btc uses prefix 'u' per multibase specification.
-            // The prefix indicates the encoding format, allowing decoders to automatically
-            // detect and use the correct decoding algorithm.
+            // Multibase encoding: base58btc uses prefix 'z' per multibase specification
+            // (https://github.com/multiformats/multibase). The prefix 'u' is base64url —
+            // using 'z' here is correct because encodeBase58() produces base58btc output.
             val base58 = encodeBase58(digestBytes)
-            "u$base58"
+            "z$base58"
         } catch (e: java.security.NoSuchAlgorithmException) {
             // SHA-256 should always be available in standard JVMs, but handle gracefully
             // for environments with restricted security providers.

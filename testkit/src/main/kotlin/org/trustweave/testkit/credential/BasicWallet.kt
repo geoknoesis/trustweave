@@ -80,11 +80,7 @@ class BasicWallet(
     override suspend fun query(query: CredentialQueryBuilder.() -> Unit): List<VerifiableCredential> {
         val builder = CredentialQueryBuilder()
         builder.query()
-        // Use reflection to call createPredicate() to work around caching issues
-        val predicateMethod = builder::class.java.getMethod("createPredicate")
-        @Suppress("UNCHECKED_CAST")
-        val predicate = predicateMethod.invoke(builder) as (VerifiableCredential) -> Boolean
-
+        val predicate = builder.toPredicate()
         return credentials.values.filter(predicate)
     }
 

@@ -12,18 +12,23 @@ The `trustweave-common` module is organized into logical packages for better cod
 org.trustweave.core/
 ├── exception/              # Exception types and error handling
 │   ├── TrustWeaveException.kt
-│   └── TrustWeaveErrors.kt
+│   ├── PluginException.kt
+│   ├── ProviderException.kt
+│   ├── ConfigException.kt
+│   └── SerializationException.kt
 │
 ├── plugin/                 # Plugin infrastructure
 │   ├── PluginRegistry.kt
 │   ├── PluginMetadata.kt
 │   ├── PluginConfiguration.kt
+│   ├── PluginConfigurationLoader.kt
+│   ├── PluginLifecycle.kt
+│   ├── PluginType.kt
 │   └── ProviderChain.kt
 │
 └── util/                   # General utilities
     ├── DigestUtils.kt      # JSON canonicalization and digest computation
     ├── ResultExtensions.kt # Result<T> extension functions
-    ├── TrustWeaveConstants.kt
     └── Validation.kt       # Generic validation infrastructure (ValidationResult)
 ```
 
@@ -33,29 +38,23 @@ org.trustweave.core/
 
 Exception types and error handling:
 
-- **`TrustWeaveException`** – Base exception for TrustWeave operations
-- **`NotFoundException`** – Exception thrown when a requested resource is not found
-- **`InvalidOperationException`** – Exception thrown when an operation is invalid
-- **`TrustWeaveError`** – Sealed class hierarchy for structured API errors with context
-
-**Error Types in `TrustWeaveError`:**
-- **Plugin Errors**: `BlankPluginId`, `PluginAlreadyRegistered`, `PluginNotFound`, `PluginInitializationFailed`
-- **Provider Errors**: `NoProvidersFound`, `PartialProvidersFound`, `AllProvidersFailed`
-- **Configuration Errors**: `ConfigNotFound`, `ConfigReadFailed`, `InvalidConfigFormat`
-- **JSON/Digest Errors**: `InvalidJson`, `JsonEncodeFailed`, `DigestFailed`, `EncodeFailed`
-- **Generic Errors**: `ValidationFailed`, `InvalidOperation`, `InvalidState`, `Unknown`, `UnsupportedAlgorithm`
+- **`TrustWeaveException`** – Base type; nested types include **`ValidationFailed`**, **`InvalidOperation`**, **`InvalidState`**, **`Unknown`**, **`DigestFailed`**, **`EncodeFailed`**, **`NotFound`**
+- **`PluginException`** – `BlankId`, `AlreadyRegistered`, `NotFound`, `InitializationFailed`
+- **`ProviderException`** – Provider chain failures
+- **`ConfigException`** – `NotFound`, `ReadFailed`, `InvalidFormat`
+- **`SerializationException`** – `InvalidJson`, `EncodeFailed`
 
 **Example:**
 ```kotlin
-import org.trustweave.core.exception.TrustWeaveError
-import org.trustweave.core.exception.NotFoundException
+import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.core.exception.PluginException
 
 try {
     // operation
-} catch (e: NotFoundException) {
-    // handle not found
-} catch (e: TrustWeaveError) {
-    // handle structured error
+} catch (e: PluginException.NotFound) {
+    // handle missing plugin
+} catch (e: TrustWeaveException) {
+    // handle other structured errors
 }
 ```
 
@@ -86,7 +85,6 @@ General utilities used across TrustWeave:
 
 - **`DigestUtils`** – JSON canonicalization and SHA-256 digest computation with multibase encoding (base58btc)
 - **`ResultExtensions`** – Extension functions for `Result<T>` (mapError, combine, mapSequential, onSuccess, onFailure, etc.)
-- **`TrustWeaveConstants`** – Common constants
 - **`Validation`** – Generic validation infrastructure (`ValidationResult` sealed class)
 
 **Example:**
@@ -119,9 +117,8 @@ Domain-specific functionality is located in their respective modules:
 - **Schema Format** → `org.trustweave.credential.SchemaFormat` (in `trustweave-credentials`)
 - **DID Validation** → `org.trustweave.did.validation.DidValidator` (in `trustweave-did`)
 - **Chain ID Validation** → `org.trustweave.anchor.validation.ChainIdValidator` (in `trustweave-anchor`)
-- **Credential Errors** → `org.trustweave.credential.exception.CredentialError` (in `trustweave-credentials`)
-- **DID Errors** → `org.trustweave.did.exception.DidError` (in `trustweave-did`)
-- **Blockchain Errors** → `org.trustweave.anchor.exceptions.BlockchainError` (in `trustweave-anchor`)
+- **DID errors** → `org.trustweave.did.exception.DidException` (in `trustweave-did`)
+- **Blockchain errors** → `org.trustweave.anchor.exceptions.BlockchainException` (in `trustweave-anchor`)
 
 ## Migration Notes
 
@@ -129,8 +126,8 @@ If you're migrating from an older version:
 
 - **`org.trustweave.json.DigestUtils`** → **`org.trustweave.core.util.DigestUtils`**
 - **`org.trustweave.core.TrustWeaveException`** → **`org.trustweave.core.exception.TrustWeaveException`**
-- **`org.trustweave.core.TrustWeaveError`** → **`org.trustweave.core.exception.TrustWeaveError`**
-- **`org.trustweave.core.types.ProofType`** → **`org.trustweave.credential.proof.ProofType`** (in `trustweave-credentials`)
+- **Legacy docs referring to `TrustWeaveError`** → use **`TrustWeaveException`** and domain types (`DidException`, `BlockchainException`, `PluginException`, …)
+- **`org.trustweave.core.types.ProofType`** → **`org.trustweave.credential.model.ProofType`** (in `trustweave-credentials`)
 - **`org.trustweave.core.DidValidator`** → **`org.trustweave.did.validation.DidValidator`** (in `trustweave-did`)
 - **`org.trustweave.core.ChainIdValidator`** → **`org.trustweave.anchor.validation.ChainIdValidator`** (in `trustweave-anchor`)
 - **`org.trustweave.core.ValidationResult`** → **`org.trustweave.core.util.ValidationResult`** (still in common, but validators moved)

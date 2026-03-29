@@ -18,53 +18,53 @@ This guide shows you how to use TrustWeave's simple facade API for rapid prototy
 
 Before you begin, ensure you have:
 
-- ✅ TrustWeave dependencies added to your project
-- ✅ Basic understanding of DIDs and verifiable credentials
-- ✅ Kotlin coroutines knowledge
+- TrustWeave dependencies added to your project
+- Basic understanding of DIDs and verifiable credentials
+- Kotlin coroutines knowledge
 
 ## Expected Outcome
 
 After completing this guide, you will have:
 
-- ✅ Created a TrustWeave instance with one line
-- ✅ Issued your first credential with minimal code
-- ✅ Understood when to use the facade vs. full configuration
-- ✅ Learned how to customize facade defaults
+- Created a TrustWeave instance with one line
+- Issued your first credential with minimal code
+- Understood when to use the facade vs. full configuration
+- Learned how to customize facade defaults
 
 ## Quick Example
 
 Here's a complete example showing the simplicity of the facade API:
 
 ```kotlin
-import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.quickStart
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.dsl.credential.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    trustWeave {
-        keys { provider(IN_MEMORY); algorithm(ED25519) }
-        did { method(KEY) { algorithm(ED25519) } }
-    }.run {
-        // Create DID (uses default method from config)
-        val (issuerDid, issuerDoc) = createDid().getOrThrow()
-        
-        // Issue credential using DSL
-        val credential = issue {
-            credential {
-                type("EmployeeCredential")
-                issuer(issuerDid)
-                subject {
-                    id("did:key:holder")
-                    "name" to "Alice"
-                    "role" to "Engineer"
-                }
-            }
-            signedBy(issuerDid, issuerDoc.verificationMethod.first().id.substringAfter("#"))
-        }.getOrThrow()
+    // Same defaults as TrustWeave.inMemory(); use build { } when you need custom KMS/DID/anchors
+    val trustWeave = TrustWeave.quickStart()
 
-        println("✅ Created DID: ${issuerDid.value}")
-        println("✅ Issued credential: ${credential.id}")
-    }
+    val issuerDid = trustWeave.createDid().getOrThrowDid()
+
+    val credential = trustWeave.issue {
+        credential {
+            type("EmployeeCredential")
+            issuer(issuerDid)
+            subject {
+                id("did:key:holder")
+                "name" to "Alice"
+                "role" to "Engineer"
+            }
+        }
+        signedBy(issuerDid)
+    }.getOrThrow()
+
+    println("✅ Created DID: ${issuerDid.value}")
+    println("✅ Issued credential: ${credential.id}")
 }
 ```
 
@@ -81,20 +81,18 @@ fun main() = runBlocking {
 Configure TrustWeave with minimal setup:
 
 ```kotlin
-import org.trustweave.trust.dsl.trustWeave
-import org.trustweave.trust.dsl.credential.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.quickStart
+import kotlinx.coroutines.runBlocking
 
-val tw = trustWeave {
-    keys { provider(IN_MEMORY); algorithm(ED25519) }
-    did { method(KEY) { algorithm(ED25519) } }
-}
+val tw = runBlocking { TrustWeave.quickStart() }
 ```
 
 **What this does:**
-- ✅ Configures in-memory key management (Ed25519)
-- ✅ Registers `did:key` method
-- ✅ Sets up default proof types
-- ✅ Initializes all required services
+- Configures in-memory key management (Ed25519) and `did:key`
+- Sets up default proof types and services (same as `TrustWeave.inMemory()`)
+
+Use `TrustWeave.build { ... }` when you need non-default providers, anchors, or trust registry wiring.
 
 **Expected Result:** A fully functional TrustWeave instance ready to use.
 
@@ -105,14 +103,16 @@ val tw = trustWeave {
 Create a DID with automatic defaults:
 
 ```kotlin
+import org.trustweave.trust.types.getOrThrow
+
 val (issuerDid, issuerDoc) = tw.createDid().getOrThrow()  // Uses default from config
 ```
 
 **What this does:**
-- ✅ Uses `did:key` method
-- ✅ Generates Ed25519 key pair
-- ✅ Creates verification method
-- ✅ Returns `Did` + `DidDocument` (no separate resolution needed!)
+- Uses `did:key` method
+- Generates Ed25519 key pair
+- Creates verification method
+- Returns `Did` + `DidDocument` (no separate resolution needed!)
 
 **Expected Result:** A `Did` object with value like `did:key:z6Mk...` and its document.
 
@@ -123,6 +123,10 @@ val (issuerDid, issuerDoc) = tw.createDid().getOrThrow()  // Uses default from c
 Issue a credential using the DSL:
 
 ```kotlin
+import org.trustweave.did.identifiers.extractKeyId
+
+val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
+    ?: error("No verification method on issuer DID document")
 val credential = tw.issue {
     credential {
         type("EmployeeCredential")
@@ -133,15 +137,15 @@ val credential = tw.issue {
             "role" to "Engineer"
         }
     }
-    signedBy(issuerDid, issuerDoc.verificationMethod.first().id.substringAfter("#"))
+    signedBy(issuerDid, issuerKeyId)
 }.getOrThrow()
 ```
 
 **What this does:**
-- ✅ Creates credential structure via DSL
-- ✅ Generates proof automatically
-- ✅ Signs with issuer's key
-- ✅ Returns signed credential
+- Creates credential structure via DSL
+- Generates proof automatically
+- Signs with issuer's key
+- Returns signed credential
 
 **Expected Result:** A verifiable credential with proof.
 
@@ -152,6 +156,8 @@ val credential = tw.issue {
 Verify the credential you just issued:
 
 ```kotlin
+import org.trustweave.credential.results.getOrThrow
+
 tw.verify { credential(credential) }.getOrThrow()
 println("✅ Credential is valid")
 ```
@@ -165,16 +171,24 @@ println("✅ Credential is valid")
 ### Minimal Setup
 
 ```kotlin
-trustWeave {
+import org.trustweave.trust.TrustWeave
+import org.trustweave.testkit.services.*
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.did.identifiers.extractKeyId
+
+val trustWeave = TrustWeave.build {
     keys { provider(IN_MEMORY); algorithm(ED25519) }
     did { method(KEY) { algorithm(ED25519) } }
-}.run {
-    val (did, doc) = createDid().getOrThrow()  // Uses default
-    val cred = issue {
-        credential { type("MyCredential"); issuer(did); subject { "claim" to "value" } }
-        signedBy(did, doc.verificationMethod.first().id.substringAfter("#"))
-    }.getOrThrow()
 }
+
+val (did, doc) = trustWeave.createDid().getOrThrow()  // Uses default
+val keyId = doc.verificationMethod.firstOrNull()?.extractKeyId()
+    ?: error("No verification method on DID document")
+val cred = trustWeave.issue {
+    credential { type("MyCredential"); issuer(did); subject { "claim" to "value" } }
+    signedBy(did, keyId)
+}.getOrThrow()
 ```
 
 **Best for:** Prototyping, examples, learning, simple use cases.
@@ -182,20 +196,25 @@ trustWeave {
 ### Full Configuration
 
 ```kotlin
-trustWeave {
+import org.trustweave.testkit.services.*
+import org.trustweave.did.identifiers.extractKeyId
+val trustWeave = TrustWeave.build {
     keys { provider(IN_MEMORY); algorithm(ED25519) }
     did { method(KEY) { algorithm(ED25519) }; method(WEB) { domain("example.com") } }
     anchor { chain("algorand:testnet") { provider(ALGORAND) } }
-}.run {
-    val (did, doc) = createDid().getOrThrow()  // Uses default "key"
-    val cred = issue {
-        credential { type("MyCredential"); issuer(did); subject { "claim" to "value" } }
-        signedBy(did, doc.verificationMethod.first().id.substringAfter("#"))
-    }.getOrThrow()
-    
-    // Anchor to blockchain
-    blockchains.anchor(cred, VerifiableCredential.serializer(), "algorand:testnet").getOrThrow()
 }
+
+val (did, doc) = trustWeave.createDid().getOrThrow()  // Uses default "key"
+val keyId = doc.verificationMethod.firstOrNull()?.extractKeyId()
+    ?: error("No verification method on DID document")
+val cred = trustWeave.issue {
+    credential { type("MyCredential"); issuer(did); subject { "claim" to "value" } }
+    signedBy(did, keyId)
+}.getOrThrow()
+
+// Anchor to blockchain (returns AnchorResult; throws if chain not registered)
+val anchored = trustWeave.blockchains.anchor(cred, VerifiableCredential.serializer(), "algorand:testnet")
+println("Anchored at ${anchored.ref.txHash}")
 ```
 
 **Best for:** Production, multiple DID methods, blockchain anchoring, advanced features.
@@ -207,7 +226,8 @@ trustWeave {
 ### Adding DID Methods and Blockchain Anchoring
 
 ```kotlin
-trustWeave {
+import org.trustweave.testkit.services.*
+val trustWeave = TrustWeave.build {
     keys { provider(IN_MEMORY); algorithm(ED25519) }
     did {
         method(KEY) { algorithm(ED25519) }
@@ -218,9 +238,9 @@ trustWeave {
 ```
 
 **What this does:**
-- ✅ Registers multiple DID methods (`did:key`, `did:web`)
-- ✅ Configures blockchain anchoring
-- ✅ All with minimal, readable DSL syntax
+- Registers multiple DID methods (`did:key`, `did:web`)
+- Configures blockchain anchoring
+- All with minimal, readable DSL syntax
 
 ---
 
@@ -231,49 +251,62 @@ trustWeave {
 For rapid prototyping and testing:
 
 ```kotlin
+import org.trustweave.trust.TrustWeave
+import org.trustweave.testkit.services.*
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.did.identifiers.extractKeyId
+import kotlinx.coroutines.runBlocking
+
 fun main() = runBlocking {
-    trustWeave {
+    val trustWeave = TrustWeave.build {
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }  // First method becomes default
-    }.run {
-        val (issuerDid, issuerDoc) = createDid().getOrThrow()  // Uses default "key"
-        val (holderDid, _) = createDid().getOrThrow()
-        
-        val credential = issue {
-            credential {
-                type("PersonCredential")
-                issuer(issuerDid)
-                subject { id(holderDid.value); "name" to "Alice" }
-            }
-            signedBy(issuerDid, issuerDoc.verificationMethod.first().id.substringAfter("#"))
-        }.getOrThrow()
-
-        verify { credential(credential) }.getOrThrow()
-        println("✅ Valid credential issued and verified")
     }
+    
+    val (issuerDid, issuerDoc) = trustWeave.createDid().getOrThrow()  // Uses default "key"
+    val (holderDid, _) = trustWeave.createDid().getOrThrow()
+    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
+        ?: error("No verification method on issuer DID document")
+    
+    val credential = trustWeave.issue {
+        credential {
+            type("PersonCredential")
+            issuer(issuerDid)
+            subject { id(holderDid.value); "name" to "Alice" }
+        }
+        signedBy(issuerDid, issuerKeyId)
+    }.getOrThrow()
+
+    trustWeave.verify { credential(credential) }.getOrThrow()
+    println("✅ Valid credential issued and verified")
 }
 ```
 
 ### Pattern 2: Production with Blockchain Anchoring
 
 ```kotlin
+import org.trustweave.testkit.services.*
+import org.trustweave.did.identifiers.extractKeyId
 fun main() = runBlocking {
-    trustWeave {
+    val trustWeave = TrustWeave.build {
         keys { provider(AWS); algorithm(ED25519) }  // Production KMS
         did { method(KEY) { algorithm(ED25519) }; method(WEB) { domain("yourdomain.com") } }
         anchor { chain("algorand:mainnet") { provider(ALGORAND) } }
-    }.run {
-        val (issuerDid, issuerDoc) = createDid().getOrThrow()  // Uses default "key"
-        
-        val credential = issue {
-            credential { type("EmployeeCredential"); issuer(issuerDid); subject { "name" to "Alice" } }
-            signedBy(issuerDid, issuerDoc.verificationMethod.first().id.substringAfter("#"))
-        }.getOrThrow()
-
-        // Anchor to blockchain for tamper-evidence
-        blockchains.anchor(credential, VerifiableCredential.serializer(), "algorand:mainnet").getOrThrow()
-        println("✅ Credential issued and anchored")
     }
+    
+    val (issuerDid, issuerDoc) = trustWeave.createDid().getOrThrow()  // Uses default "key"
+    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
+        ?: error("No verification method on issuer DID document")
+    
+    val credential = trustWeave.issue {
+        credential { type("EmployeeCredential"); issuer(issuerDid); subject { "name" to "Alice" } }
+        signedBy(issuerDid, issuerKeyId)
+    }.getOrThrow()
+
+    // Anchor to blockchain for tamper-evidence
+    trustWeave.blockchains.anchor(credential, VerifiableCredential.serializer(), "algorand:mainnet")
+    println("✅ Credential issued and anchored")
 }
 ```
 
@@ -282,33 +315,42 @@ fun main() = runBlocking {
 End-to-end workflow with verification:
 
 ```kotlin
+import org.trustweave.trust.TrustWeave
+import org.trustweave.testkit.services.*
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.did.identifiers.extractKeyId
+import kotlinx.coroutines.runBlocking
+
 fun main() = runBlocking {
-    trustWeave {
+    val trustWeave = TrustWeave.build {
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
-    }.run {
-        // Create issuer and holder (uses default "key" method)
-        val (issuerDid, issuerDoc) = createDid().getOrThrow()
-        val (holderDid, _) = createDid().getOrThrow()
-
-        // Issue credential
-        val credential = issue {
-            credential {
-                type("EducationCredential")
-                issuer(issuerDid)
-                subject {
-                    id(holderDid.value)
-                    "degree" to "Bachelor of Science"
-                    "university" to "Example University"
-                }
-            }
-            signedBy(issuerDid, issuerDoc.verificationMethod.first().id.substringAfter("#"))
-        }.getOrThrow()
-
-        // Verify
-        verify { credential(credential) }.getOrThrow()
-        println("✅ Credential verified successfully")
     }
+    
+    // Create issuer and holder (uses default "key" method)
+    val (issuerDid, issuerDoc) = trustWeave.createDid().getOrThrow()
+    val (holderDid, _) = trustWeave.createDid().getOrThrow()
+    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
+        ?: error("No verification method on issuer DID document")
+
+    // Issue credential
+    val credential = trustWeave.issue {
+        credential {
+            type("EducationCredential")
+            issuer(issuerDid)
+            subject {
+                id(holderDid.value)
+                "degree" to "Bachelor of Science"
+                "university" to "Example University"
+            }
+        }
+        signedBy(issuerDid, issuerKeyId)
+    }.getOrThrow()
+
+    // Verify
+    trustWeave.verify { credential(credential) }.getOrThrow()
+    println("✅ Credential verified successfully")
 }
 ```
 
@@ -319,25 +361,35 @@ fun main() = runBlocking {
 Handle errors using Result pattern or try-catch:
 
 ```kotlin
-// Option 1: Using getOrThrow() - throws on error
-trustWeave { ... }.run {
-    val (did, doc) = createDid().getOrThrow()  // Throws if fails
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.trust.types.getOrThrow
+
+val trustWeave = TrustWeave.build { /* keys { }; did { } */ }
+
+// Option 1: Using getOrThrow() — throws IllegalStateException on failure
+val (did, doc) = trustWeave.createDid().getOrThrow()
+
+// Option 2: Exhaustive when on DidCreationResult (preferred in production)
+when (val result = trustWeave.createDid()) {
+    is DidCreationResult.Success -> println("Created: ${result.did.value}")
+    is DidCreationResult.Failure.MethodNotRegistered ->
+        println("Method not registered: ${result.method}")
+    is DidCreationResult.Failure.KeyGenerationFailed ->
+        println("Key generation failed: ${result.reason}")
+    is DidCreationResult.Failure.DocumentCreationFailed ->
+        println("Document creation failed: ${result.reason}")
+    is DidCreationResult.Failure.InvalidConfiguration ->
+        println("Invalid configuration: ${result.reason}")
+    is DidCreationResult.Failure.Other ->
+        println("DID creation failed: ${result.reason}")
 }
 
-// Option 2: Using fold() - handle success and failure
-trustWeave { ... }.run {
-    createDid().fold(
-        onSuccess = { (did, doc) -> println("Created: ${did.value}") },
-        onFailure = { error -> println("Failed: ${error.message}") }
-    )
-}
-
-// Option 3: Using getOrElse() - provide default
-trustWeave { ... }.run {
-    val result = createDid().getOrElse { 
-        println("Error: ${it.message}")
-        return@run
-    }
+// Option 3: try-catch around getOrThrow() at a boundary
+try {
+    val (did, doc) = trustWeave.createDid().getOrThrow()
+} catch (error: IllegalStateException) {
+    println("Error: ${error.message}")
 }
 ```
 
@@ -347,7 +399,7 @@ trustWeave { ... }.run {
 
 | Use Case | Configuration |
 |----------|---------------|
-| Prototypes, demos, learning | Minimal: `trustWeave { keys {...}; did {...} }` |
+| Prototypes, demos, learning | Minimal: `TrustWeave.build { keys {...}; did {...} }` |
 | Production, blockchain, multi-DID | Full: Add `anchor {...}`, custom KMS |
 
 ---

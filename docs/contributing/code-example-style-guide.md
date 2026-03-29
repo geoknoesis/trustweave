@@ -14,6 +14,31 @@ This guide establishes standards for code examples in TrustWeave documentation t
 4. **Contextual**: Show appropriate error handling for the context
 5. **Clear**: Use descriptive variable names and comments
 
+## Canonical Kotlin snippet contract (TrustWeave API)
+
+Use this checklist for every ` ```kotlin ` fence so examples match the real public APIs (see `trust/.../IssuanceBuilder.kt`, `did/did-core/.../DidIdentifiers.kt` in the repo).
+
+| Topic | Rule |
+|--------|------|
+| **Signing credentials** | `signedBy(issuerDid: Did)` or `signedBy(issuerDid, keyId)` where `keyId: String`. If you only have a DID string, wrap with `Did(didString)`. Never pass `issuerDid.value` (a `String`) as the first argument to `signedBy`. |
+| **Key id from DID document** | Use `verificationMethod.firstOrNull()?.extractKeyId()` and `import org.trustweave.did.identifiers.extractKeyId`. Do not use `verificationMethod.first().id.substringAfter("#")` on `VerificationMethodId`. |
+| **KMS key handles** | `KeyHandle.id` is a `KeyId`. When a `String` is required (e.g. `signedBy`’s `keyId`, or string parameters), use `generateKey(...).id.value`. |
+| **`DidDocument.id`** | Type is `Did`. For APIs expecting `String`, use `document.id.value`. For `signedBy`, pass `document.id` (a `Did`) directly. |
+| **DID creation results** | Quick examples: `createDid { ... }.getOrThrowDid()`. Production-oriented pages: exhaustive `when` on `DidCreationResult`. |
+| **String templates** | Prefer `"${did.value}..."` when building URIs or key id strings; do not rely on implicit `toString()` unless the doc states it. |
+| **Fence shape** | Each snippet is either **self-contained** (imports at top, valid top-level/`main` structure) or a **continuation fragment** with a first-line comment such as `// Continuation: assumes trustWeave, issuerDid from above`. Do not place `import` after indented body code. |
+
+Intentional **wrong** examples (anti-patterns) must be inside a clearly labeled **Wrong** or **Anti-pattern** block, with a **Correct** block beside them.
+
+### Mechanical audit (ripgrep)
+
+Before large documentation PRs, search under `docs/**/*.md` (allowlist intentional hits in *this* file only):
+
+- Legacy VM key extraction: `rg 'verificationMethod\..*substringAfter\("#"\)' docs --glob '*.md'`
+- Non-existent API: `rg 'IssuerIdentity\.from' docs --glob '*.md'`
+
+Or run `pwsh -File scripts/check-doc-snippets.ps1` from the repo root (requires [ripgrep](https://github.com/BurntSushi/ripgrep) on `PATH`).
+
 ## Error Handling Patterns
 
 ### Pattern 1: Quick Start / Prototypes (getOrThrow)
@@ -28,19 +53,19 @@ This guide establishes standards for code examples in TrustWeave documentation t
 **Example:**
 ```kotlin
 // Quick start pattern
-val did = TrustWeave.createDid().getOrThrow()
-val credential = TrustWeave.issueCredential(...).getOrThrow()
+val did = trustWeave.createDid { }.getOrThrowDid()
+val credential = trustWeave.issue { /* credential { }; signedBy(did, "key-1") */ }.getOrThrow()
 ```
 
 **Marking:**
 Add comment when using this pattern:
 ```kotlin
-// Quick start: using getOrThrow() for simplicity
-// In production, use fold() for proper error handling
-val did = TrustWeave.createDid().getOrThrow()
+// Quick start: using getOrThrow() / getOrThrowDid() for simplicity
+// In production, prefer exhaustive `when` on DidCreationResult / IssuanceResult
+val did = trustWeave.createDid { }.getOrThrowDid()
 ```
 
-### Pattern 2: Production Code (fold)
+### Pattern 2: Production Code (sealed results)
 
 **When to use:**
 - Production code examples
@@ -50,34 +75,34 @@ val did = TrustWeave.createDid().getOrThrow()
 
 **Example:**
 ```kotlin
-// Production pattern: explicit error handling
-val result = TrustWeave.createDid()
-result.fold(
-    onSuccess = { did ->
-        processDid(did)
-    },
-    onFailure = { error ->
-        handleError(error)
-    }
-)
+// Production pattern: explicit handling
+when (val dr = trustWeave.createDid { }) {
+    is DidCreationResult.Success -> processDid(dr.did)
+    is DidCreationResult.Failure -> handleDidFailure(dr)
+}
 ```
 
-### Pattern 3: Result Chaining (map/flatMap)
+### Pattern 3: Chaining issuance after DID success
 
 **When to use:**
-- Chaining multiple operations
+- Chaining multiple facade operations
 - Functional style examples
 - When demonstrating result transformation
 
 **Example:**
 ```kotlin
-// Chaining pattern
-val credential = TrustWeave.createDid()
-    .map { did ->
-        TrustWeave.issueCredential(issuerDid = did.id, ...)
+val credential = when (val dr = trustWeave.createDid { }) {
+    is DidCreationResult.Success -> when (
+        val issued = trustWeave.issue {
+            credential { issuer(dr.did); subject { id("did:key:holder") } }
+            signedBy(dr.did, "key-1")
+        }
+    ) {
+        is IssuanceResult.Success -> issued.credential
+        is IssuanceResult.Failure -> throw IllegalStateException(issued.allErrors.joinToString())
     }
-    .flatMap { it }  // Unwrap nested Result
-    .getOrThrow()
+    is DidCreationResult.Failure -> throw IllegalStateException("DID creation failed: $dr")
+}
 ```
 
 ## Import Statements
@@ -88,10 +113,10 @@ Always include complete imports at the top of examples:
 
 ```kotlin
 // TrustWeave imports
-import org.trustweave.TrustWeave
-import org.trustweave.core.*
-import org.trustweave.did.*
-import org.trustweave.credential.models.VerifiableCredential
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.model.vc.VerifiableCredential
 
 // Kotlinx imports
 import kotlinx.coroutines.runBlocking
@@ -147,16 +172,16 @@ val jsonPayload = buildJsonObject {
 
 ```kotlin
 // Good: Explains why
-// Using getOrThrow() for quick start - in production use fold()
-val did = TrustWeave.createDid().getOrThrow()
+// Using getOrThrowDid() for quick start — in production use `when` on DidCreationResult
+val did = trustWeave.createDid { }.getOrThrowDid()
 
 // Good: Clarifies behavior
 // This creates an in-memory wallet (testing only)
-val wallet = TrustWeave.createWallet(holderDid).getOrThrow()
+val wallet = trustWeave.wallet { holder(holderDid) }.getOrThrow()
 
 // Bad: States the obvious
 // Create a DID
-val did = TrustWeave.createDid().getOrThrow()
+val did = trustWeave.createDid { }.getOrThrowDid()
 ```
 
 ## Variable Naming
@@ -219,7 +244,7 @@ fun main() = runBlocking {
 ### Format
 
 ```markdown
-> **Version:** 1.0.0-SNAPSHOT
+> **Version:** 0.6.0
 > **API:** TrustWeave Facade
 
 This example uses the TrustWeave facade API available in 1.0.0+.
@@ -232,18 +257,19 @@ This example uses the TrustWeave facade API available in 1.0.0+.
 Add context indicators to examples:
 
 ```kotlin
-// Quick start example
-val did = TrustWeave.createDid().getOrThrow()
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 
-// Production example
-val result = TrustWeave.createDid()
-result.fold(
-    onSuccess = { did -> /* handle */ },
-    onFailure = { error -> /* handle */ }
-)
+// Quick start / tests — facade instance + extension (import org.trustweave.trust.types.getOrThrow / getOrThrowDid)
+val trustWeave = TrustWeave.build { /* keys { }; did { } */ }
+val (did, document) = trustWeave.createDid().getOrThrow()
+val didOnly = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 
-// Testing example
-val testDid = TrustWeave.createDid().getOrThrow()
+// Production — sealed DidCreationResult (no kotlin.Result)
+val created = trustWeave.createDid { method(KEY) }
+when (created) {
+    is DidCreationResult.Success -> { /* use created.did, created.document */ }
+    is DidCreationResult.Failure -> { /* handle created */ }
+}
 ```
 
 ## Complete Example Template
@@ -252,9 +278,10 @@ val testDid = TrustWeave.createDid().getOrThrow()
 package com.example.TrustWeave.example
 
 // TrustWeave imports
-import org.trustweave.TrustWeave
-import org.trustweave.core.*
-import org.trustweave.did.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
 
 // Kotlinx imports
 import kotlinx.coroutines.runBlocking
@@ -270,32 +297,23 @@ import kotlinx.serialization.json.put
  * - Error handling patterns
  */
 fun main() = runBlocking {
-    // Create TrustWeave instance
-    val TrustWeave = TrustWeave.create()
+    val trustWeave = TrustWeave.quickStart()
 
-    // Create DID with error handling
-    val didResult = TrustWeave.createDid()
-    didResult.fold(
-        onSuccess = { did ->
-            println("Created DID: ${did.id}")
-
-            // Resolve the DID
-            val resolution = TrustWeave.resolveDid(did.id).getOrThrow()
-            if (resolution.document != null) {
-                println("Resolved DID document")
-            }
-        },
-        onFailure = { error ->
-            when (error) {
-                is TrustWeaveError.DidMethodNotRegistered -> {
-                    println("Method not registered: ${error.method}")
-                }
-                else -> {
-                    println("Error: ${error.message}")
-                }
+    when (val dr = trustWeave.createDid { }) {
+        is DidCreationResult.Success -> {
+            println("Created DID: ${dr.did.value}")
+            when (val res = trustWeave.resolveDid(dr.did)) {
+                is DidResolutionResult.Success ->
+                    println("Resolved document: ${res.document.id}")
+                else ->
+                    println("Resolve failed: ${res.errorMessage ?: res}")
             }
         }
-    )
+        is DidCreationResult.Failure.MethodNotRegistered ->
+            println("Method not registered: ${dr.method}")
+        is DidCreationResult.Failure ->
+            println("DID creation failed: $dr")
+    }
 }
 ```
 
@@ -311,16 +329,19 @@ fun main() = runBlocking {
 
 ## Anti-Patterns to Avoid
 
-1. ❌ **Missing imports** - Examples won't compile
-2. ❌ **Inconsistent error handling** - Confuses readers
-3. ❌ **Unclear variable names** - Hard to understand
-4. ❌ **Missing context** - Readers don't know when to use pattern
-5. ❌ **Incomplete examples** - Can't run as-is
-6. ❌ **Version-specific code without tags** - May not work in all versions
+1. **Avoid missing imports** — examples won't compile
+2. **Avoid inconsistent error handling** — confuses readers
+3. **Avoid unclear variable names** — hard to understand
+4. **Avoid missing context** — readers don't know when to use a pattern
+5. **Avoid incomplete examples** — can't run as-is
+6. **Avoid version-specific code without tags** — may not work in all versions
+7. **Avoid wrong types for `signedBy`** — first parameter must be `Did`, not `String` or `issuerDid.value`
+8. **Avoid `substringAfter("#")` for key ids** — use `extractKeyId()` from the DID document
+9. **Avoid non-existent helpers** — e.g. `IssuerIdentity.from(did, keyId)` is not an issuance API; use `signedBy(issuerDid, issuerKeyId)` with `issuerDid: Did`
 
 ## Related Documentation
 
-- [Quick Start](../getting-started/quick-start.md) - Examples using these patterns
-- [Error Handling](../advanced/error-handling.md) - Error handling patterns
-- [Code Style](../contributing/code-style.md) - General code style guidelines
+- [Quick Start](../getting-started/quick-start.md) — examples using these patterns
+- [Error Handling](../advanced/error-handling.md) — error handling patterns
+- [Code Style](code-style.md) — general code style guidelines
 

@@ -24,12 +24,12 @@ The pull request process ensures code quality and consistency:
 
 Before submitting a pull request:
 
-- [ ] All tests pass (`./gradlew test`)
-- [ ] Code is formatted (`./gradlew ktlintCheck`)
-- [ ] Build succeeds (`./gradlew build`)
-- [ ] Documentation updated (if applicable)
-- [ ] Commit messages follow conventions
-- [ ] Branch is up to date with main
+- All tests pass (`./gradlew test`)
+- Code is formatted (`./gradlew ktlintCheck`)
+- Build succeeds (`./gradlew build`)
+- Documentation updated (if applicable)
+- Commit messages follow conventions
+- Branch is up to date with main
 
 ### Pull Request Title
 
@@ -77,12 +77,12 @@ Fixes #123
 
 Reviewers check:
 
-- [ ] Code follows style guidelines
-- [ ] Tests are included and pass
-- [ ] Documentation is updated
-- [ ] Error handling is appropriate
-- [ ] Performance considerations addressed
-- [ ] No security issues
+- Code follows style guidelines
+- Tests are included and pass
+- Documentation is updated
+- Error handling is appropriate
+- Performance considerations addressed
+- No security issues
 
 ### Responding to Feedback
 
@@ -152,10 +152,10 @@ Fixes #456
 
 Before merging:
 
-- [ ] At least one approval
-- [ ] All CI checks pass
-- [ ] No merge conflicts
-- [ ] Branch is up to date
+- At least one approval
+- All CI checks pass
+- No merge conflicts
+- Branch is up to date
 
 ### Merge Methods
 
@@ -228,8 +228,8 @@ After merge:
 
 ## References
 
-- [Conventional Commits](https://www.conventionalcommits.org/)
-- [Git Flow](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow)
-- [Code Review Best Practices](https://github.com/google/eng-practices/blob/master/review/)
+- Conventional Commits](https://www.conventionalcommits.org/)
+- Git Flow](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow)
+- Code Review Best Practices](https://github.com/google/eng-practices/blob/master/review/)
 
 

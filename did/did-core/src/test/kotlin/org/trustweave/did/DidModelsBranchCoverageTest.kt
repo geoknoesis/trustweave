@@ -4,6 +4,7 @@ import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
+import org.trustweave.did.model.DidOrUrl
 import org.trustweave.did.model.DidService
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidResolutionResult
@@ -92,7 +93,7 @@ class DidModelsBranchCoverageTest {
     fun `test Service constructor with string endpoint`() {
         val service = DidService(
             id = "did:key:123#service-1",
-            type = "LinkedDomains",
+            type = listOf("LinkedDomains"),
             serviceEndpoint = "https://example.com"
         )
 
@@ -104,7 +105,7 @@ class DidModelsBranchCoverageTest {
         val endpoint = mapOf("uri" to "https://example.com", "routingKeys" to listOf("key1"))
         val service = DidService(
             id = "did:key:123#service-1",
-            type = "DIDCommMessaging",
+            type = listOf("DIDCommMessaging"),
             serviceEndpoint = endpoint
         )
 
@@ -116,7 +117,7 @@ class DidModelsBranchCoverageTest {
         val endpoint = listOf("https://example.com", "https://backup.com")
         val service = DidService(
             id = "did:key:123#service-1",
-            type = "LinkedDomains",
+            type = listOf("LinkedDomains"),
             serviceEndpoint = endpoint
         )
 
@@ -129,7 +130,7 @@ class DidModelsBranchCoverageTest {
         val vmId = VerificationMethodId.parse("did:key:123#key-1")
         val doc = DidDocument(
             id = did,
-            alsoKnownAs = listOf(Did("did:web:example.com")),
+            alsoKnownAs = listOf(DidOrUrl.AsDid(Did("did:web:example.com"))),
             controller = listOf(Did("did:key:controller")),
             verificationMethod = listOf(
                 VerificationMethod(
@@ -144,7 +145,7 @@ class DidModelsBranchCoverageTest {
             service = listOf(
                 DidService(
                     id = "did:key:123#service-1",
-                    type = "LinkedDomains",
+                    type = listOf("LinkedDomains"),
                     serviceEndpoint = "https://example.com"
                 )
             )

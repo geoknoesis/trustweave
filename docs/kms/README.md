@@ -27,14 +27,14 @@ TrustWeave Key Management Service (KMS) provides a unified, type-safe interface 
 
 ## Key Features
 
-- ✅ **Type-Safe API**: Result-based error handling with sealed classes
-- ✅ **Simple Factory API**: `KeyManagementServices` factory hides ServiceLoader complexity
-- ✅ **Instance Caching**: Automatic caching of KMS instances for optimal performance
-- ✅ **Multiple Providers**: AWS, Azure, Google, HashiCorp, IBM, InMemory, and more
-- ✅ **SPI Auto-Discovery**: Automatic plugin discovery via Java ServiceLoader
-- ✅ **Thread-Safe**: All implementations are thread-safe
-- ✅ **Comprehensive Testing**: Contract tests, edge case tests, performance tests
-- ✅ **Production-Ready**: FIPS 140-3 Level 3 validated options available
+- Type-Safe API**: Result-based error handling with sealed classes
+- Simple Factory API**: `KeyManagementServices` factory hides ServiceLoader complexity
+- Instance Caching**: Automatic caching of KMS instances for optimal performance
+- Multiple Providers**: AWS, Azure, Google, HashiCorp, IBM, InMemory, and more
+- SPI Auto-Discovery**: Automatic plugin discovery via Java ServiceLoader
+- Thread-Safe**: All implementations are thread-safe
+- Comprehensive Testing**: Contract tests, edge case tests, performance tests
+- Production-Ready**: FIPS 140-3 Level 3 validated options available
 
 ---
 

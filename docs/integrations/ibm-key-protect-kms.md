@@ -24,7 +24,7 @@ Add the IBM Key Protect module to your dependencies:
 ```kotlin
 dependencies {
     // Only need to add the IBM Key Protect KMS plugin - core dependencies are included transitively
-    implementation("org.trustweave.kms:ibm:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:kms-plugins-ibm:0.6.0")
 }
 ```
 
@@ -188,11 +188,11 @@ Configure via IBM Cloud IAM.
 
 ## Related Documentation
 
-- [Key Management Concepts](../core-concepts/key-management.md)
-- [IBM Key Protect Documentation](https://cloud.ibm.com/docs/key-protect)
+- Key Management Concepts](../core-concepts/key-management.md)
+- IBM Key Protect Documentation](https://cloud.ibm.com/docs/key-protect)
 
 ## See Also
 
-- [IBM Key Protect Documentation](https://cloud.ibm.com/docs/key-protect)
-- [IBM Cloud IAM Documentation](https://cloud.ibm.com/docs/iam)
+- IBM Key Protect Documentation](https://cloud.ibm.com/docs/key-protect)
+- IBM Cloud IAM Documentation](https://cloud.ibm.com/docs/iam)
 

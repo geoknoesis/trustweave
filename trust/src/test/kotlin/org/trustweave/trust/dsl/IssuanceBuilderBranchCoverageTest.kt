@@ -1,5 +1,7 @@
 package org.trustweave.trust.dsl
 
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.trust.types.getOrThrow
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
@@ -15,7 +17,6 @@ import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
 import org.trustweave.trust.dsl.credential.credential
 import org.trustweave.credential.model.ProofType
-import org.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -83,7 +84,7 @@ class IssuanceBuilderBranchCoverageTest {
                 autoAnchor(false)
             }
             // Set CredentialService as issuer for issuance builder
-            issuer(credentialService)
+            credentialService(credentialService)
         }
     }
 
@@ -118,7 +119,7 @@ class IssuanceBuilderBranchCoverageTest {
                 issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
-        }.getOrFail()
+        }.getOrThrow()
 
         assertNotNull(issuedCredential)
     }
@@ -144,7 +145,7 @@ class IssuanceBuilderBranchCoverageTest {
         val issuedCredential = trustWeave.issue {
             credential(preBuiltCredential)
             signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
-        }.getOrFail()
+        }.getOrThrow()
 
         assertNotNull(issuedCredential)
     }
@@ -187,7 +188,7 @@ class IssuanceBuilderBranchCoverageTest {
                 issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
-        }.getOrFail()
+        }.getOrThrow()
 
         assertNotNull(issuedCredential)
     }
@@ -236,7 +237,7 @@ class IssuanceBuilderBranchCoverageTest {
             }
             signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
             // No proof type - uses default
-        }.getOrFail()
+        }.getOrThrow()
 
         assertNotNull(issuedCredential.proof)
         assertTrue(issuedCredential.proof is org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof)
@@ -264,7 +265,7 @@ class IssuanceBuilderBranchCoverageTest {
             }
             signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
             withProof(org.trustweave.credential.format.ProofSuiteId.VC_LD) // Use supported proof suite
-        }.getOrFail()
+        }.getOrThrow()
 
         assertNotNull(issuedCredential.proof)
         assertTrue(issuedCredential.proof is org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof)
@@ -294,7 +295,7 @@ class IssuanceBuilderBranchCoverageTest {
             }
             signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
             challenge("challenge-123")
-        }.getOrFail()
+        }.getOrThrow()
 
         assertNotNull(issuedCredential.proof)
         assertTrue(issuedCredential.proof is org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof)
@@ -322,7 +323,7 @@ class IssuanceBuilderBranchCoverageTest {
             }
             signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
             domain("example.com")
-        }.getOrFail()
+        }.getOrThrow()
 
         assertNotNull(issuedCredential.proof)
         assertTrue(issuedCredential.proof is org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof)
@@ -351,7 +352,7 @@ class IssuanceBuilderBranchCoverageTest {
             signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
             challenge("challenge-123")
             domain("example.com")
-        }.getOrFail()
+        }.getOrThrow()
 
         assertNotNull(issuedCredential.proof)
         assertTrue(issuedCredential.proof is org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof)
@@ -382,7 +383,7 @@ class IssuanceBuilderBranchCoverageTest {
             }
             signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
             // autoAnchor is false in config
-        }.getOrFail()
+        }.getOrThrow()
 
         assertNotNull(issuedCredential)
         // Credential should be issued but not anchored
@@ -391,7 +392,7 @@ class IssuanceBuilderBranchCoverageTest {
     @Test
     fun `test branch auto-anchor enabled in config`() = runBlocking {
         val kmsRef = kms
-        val trustLayerWithAutoAnchor = TrustWeave.build {
+        val trustWeaveWithAutoAnchor = TrustWeave.build {
             // DID methods auto-discovered via SPI
             keys {
                 custom(kmsRef)
@@ -418,7 +419,7 @@ class IssuanceBuilderBranchCoverageTest {
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
 
-        val issuedCredential = trustLayerWithAutoAnchor.issue {
+        val issuedCredential = trustWeaveWithAutoAnchor.issue {
             credential {
                 type("PersonCredential")
                 issuer(issuerDidDoc.id)
@@ -428,7 +429,7 @@ class IssuanceBuilderBranchCoverageTest {
                 issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
-        }.getOrFail()
+        }.getOrThrow()
 
         assertNotNull(issuedCredential)
         // Anchoring may fail silently, but credential is issued
@@ -437,7 +438,7 @@ class IssuanceBuilderBranchCoverageTest {
     @Test
     fun `test branch explicit anchor call`() = runBlocking {
         val kmsRef = kms
-        val trustLayerWithAnchor = TrustWeave.build {
+        val trustWeaveWithAnchor = TrustWeave.build {
             keys {
                 custom(kmsRef)
             }
@@ -462,7 +463,7 @@ class IssuanceBuilderBranchCoverageTest {
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
 
-        val issuedCredential = trustLayerWithAnchor.issue {
+        val issuedCredential = trustWeaveWithAnchor.issue {
             credential {
                 type("PersonCredential")
                 issuer(issuerDidDoc.id)
@@ -473,7 +474,7 @@ class IssuanceBuilderBranchCoverageTest {
             }
             signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
             // Note: anchor() function not available in current DSL
-        }.getOrFail()
+        }.getOrThrow()
 
         assertNotNull(issuedCredential)
     }
@@ -481,7 +482,7 @@ class IssuanceBuilderBranchCoverageTest {
     @Test
     fun `test branch anchor error when chain ID missing`() = runBlocking {
         val kmsRef = kms
-        val trustLayerWithAutoAnchor = TrustWeave.build {
+        val trustWeaveWithAutoAnchor = TrustWeave.build {
             // DID methods auto-discovered via SPI
             keys {
                 custom(kmsRef)
@@ -505,7 +506,7 @@ class IssuanceBuilderBranchCoverageTest {
 
         // Should fail when trying to anchor without chain ID
         assertFailsWith<IllegalStateException> {
-            trustLayerWithAutoAnchor.issue {
+            trustWeaveWithAutoAnchor.issue {
                 credential {
                     type("PersonCredential")
                     issuer(issuerDidDoc.id)
@@ -523,7 +524,7 @@ class IssuanceBuilderBranchCoverageTest {
     @Test
     fun `test branch anchor error when anchor client not found`() = runBlocking {
         val kmsRef = kms
-        val trustLayerWithAutoAnchor = TrustWeave.build {
+        val trustWeaveWithAutoAnchor = TrustWeave.build {
             // DID methods auto-discovered via SPI
             keys {
                 custom(kmsRef)
@@ -546,7 +547,7 @@ class IssuanceBuilderBranchCoverageTest {
         val issuerDidDoc: DidDocument = didMethod.createDid()
 
         assertFailsWith<IllegalStateException> {
-            trustLayerWithAutoAnchor.issue {
+            trustWeaveWithAutoAnchor.issue {
                 credential {
                     type("PersonCredential")
                     issuer(issuerDidDoc.id)
@@ -565,7 +566,7 @@ class IssuanceBuilderBranchCoverageTest {
         // This tests the exception handling when anchoring fails
         // The credential should still be issued even if anchoring fails
         val kmsRef = kms
-        val trustLayerWithAutoAnchor = TrustWeave.build {
+        val trustWeaveWithAutoAnchor = TrustWeave.build {
             // DID methods auto-discovered via SPI
             keys {
                 custom(kmsRef)
@@ -593,7 +594,7 @@ class IssuanceBuilderBranchCoverageTest {
         val issuerDidDoc: DidDocument = didMethod.createDid()
 
         // Anchoring may fail, but credential should still be issued
-        val issuedCredential = trustLayerWithAutoAnchor.issue {
+        val issuedCredential = trustWeaveWithAutoAnchor.issue {
             credential {
                 type("PersonCredential")
                 issuer(issuerDidDoc.id)
@@ -603,7 +604,7 @@ class IssuanceBuilderBranchCoverageTest {
                 issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
-        }.getOrFail()
+        }.getOrThrow()
 
         assertNotNull(issuedCredential)
     }

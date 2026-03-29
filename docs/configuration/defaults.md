@@ -4,14 +4,16 @@ title: Default Configuration
 
 # Default Configuration
 
-This document explains the default configuration used by `TrustWeave.create()` and how to customize it.
+This document explains the **default configuration** you get from **`TrustWeave.quickStart()`** / **`TrustWeave.build { }`** and how to customize it.
 
 ## Default Configuration Overview
 
-When you call `TrustWeave.create()` without any configuration, TrustWeave uses the following defaults:
+**`TrustWeave.quickStart()`** wires an in-memory KMS, **`did:key`**, and credential services suitable for demos. **`TrustWeave.build { }`** uses the same style of defaults for any block you omit (see factory behavior in source / [Installation](../getting-started/installation.md)).
 
 ```kotlin
-val TrustWeave = TrustWeave.create()  // Uses defaults below
+import org.trustweave.trust.TrustWeave
+
+val trustWeave = TrustWeave.quickStart() // in-memory did:key — see quick start
 ```
 
 ### Default Components
@@ -22,8 +24,8 @@ val TrustWeave = TrustWeave.create()  // Uses defaults below
 | **DID Method** | `DidKeyMockMethod` (did:key) | DID creation and resolution | ❌ Testing only |
 | **Wallet Factory** | `TestkitWalletFactory` | Wallet creation | ❌ Testing only |
 | **Blockchain Clients** | `BlockchainAnchorRegistry()` (empty) | Blockchain anchoring | ⚠️ Must be configured |
-| **Credential Services** | `CredentialServiceRegistry.create()` | Credential issuance/verification | ✅ Default service |
-| **Proof Generator** | `Ed25519ProofGenerator` | Cryptographic proofs | ✅ Production ready |
+| **Credential service** | `CredentialServices.createCredentialService(...)` / `credentialService(...)` (wired by `TrustWeave` factory) | Issuance / verification | ✅ Default in-memory chain for demos |
+| **Proof engines** | Built-in VC-LD / SD-JWT (see `credential-api`) | Cryptographic proofs | ✅ Configure via `IssuanceRequest` / trust DSL |
 
 ## What Gets Configured Automatically
 
@@ -53,36 +55,27 @@ val TrustWeave = TrustWeave.create()  // Uses defaults below
 ### Not Included by Default
 
 1. **Blockchain Clients**
-   - No blockchain clients registered
-   - Must be added manually for anchoring
-   - Example: `TrustWeave.create { blockchains { "algorand:testnet" to client } }`
+   - No blockchain clients registered until you add them
+   - Register clients inside **`TrustWeave.build { anchor { chain("algorand:testnet") { provider(ALGORAND) { ... } } } }`**
 
 2. **Additional DID Methods**
-   - Only `did:key` is registered
-   - Other methods must be added manually
-   - Example: `TrustWeave.create { didMethods { + DidWebMethod() } }`
+   - Only `did:key` unless you register more
+   - Add methods in **`did { method(WEB) { ... } }`** (or SPI-discovered plugins)
 
 3. **Production KMS**
    - In-memory KMS is for testing only
-   - Production KMS must be configured
-   - Example: `TrustWeave.create { kms = AwsKeyManagementService(...) }`
+   - Configure **`keys { provider("awsKms") { ... } }`** (or **`customKms(...)`**) for production
 
 ## Default Behavior Details
 
 ### DID Creation Defaults
 
 ```kotlin
-// Default behavior
-val did = TrustWeave.dids.create()
+import org.trustweave.testkit.services.*
+// Default behavior (configured `did:key` + Ed25519 from TrustWeave.build)
+val did = trustWeave.createDid { }.getOrThrowDid()
 
-// Equivalent to:
-val did = TrustWeave.dids.create(
-    method = "key",  // Default method
-    options = DidCreationOptions(
-        algorithm = KeyAlgorithm.ED25519,  // Default algorithm
-        purposes = emptyList()  // Default purposes
-    )
-)
+// Equivalent options are expressed in the `createDid { }` builder, e.g. method(KEY); algorithm(ED25519)
 ```
 
 **Defaults:**
@@ -93,13 +86,14 @@ val did = TrustWeave.dids.create(
 ### Credential Issuance Defaults
 
 ```kotlin
-// Default behavior
-val credential = TrustWeave.issueCredential(
-    issuerDid = issuerDid,
-    issuerKeyId = issuerKeyId,
-    credentialSubject = subject,
-    types = listOf("VerifiableCredential")  // Default type
-).getOrThrow()
+// Default behavior (DSL adds VerifiableCredential type where applicable)
+val credential = trustWeave.issue {
+    credential {
+        issuer(issuerDid)
+        subject { /* claims */ }
+    }
+    signedBy(issuerDid, issuerKeyId)
+}.getOrThrow()
 ```
 
 **Defaults:**
@@ -111,15 +105,7 @@ val credential = TrustWeave.issueCredential(
 
 ```kotlin
 // Default behavior
-val wallet = TrustWeave.createWallet(holderDid = "did:key:holder").getOrThrow()
-
-// Equivalent to:
-val wallet = TrustWeave.createWallet(
-    holderDid = "did:key:holder",
-    walletId = UUID.randomUUID().toString(),  // Auto-generated
-    provider = WalletProvider.InMemory,  // Default provider
-    options = WalletCreationOptions()  // Default options
-).getOrThrow()
+val wallet = trustWeave.wallet { holder("did:key:holder") }.getOrThrow()
 ```
 
 **Defaults:**
@@ -134,47 +120,35 @@ val wallet = TrustWeave.createWallet(
 ### Option 1: Builder DSL (Recommended)
 
 ```kotlin
-val TrustWeave = TrustWeave.create {
-    // Override KMS
-    kms = AwsKeyManagementService(
-        region = "us-east-1",
-        credentials = awsCredentials
-    )
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.AnchorProviders
 
-    // Add DID methods
-    didMethods {
-        + DidKeyMethod(kms)
-        + DidWebMethod(kms) { domain = "example.com" }
+// TrustWeave.build is suspend — call from runBlocking { } or another suspend entry point
+val trustWeave = TrustWeave.build {
+    customKms(awsKms) // or keys { provider("awsKms") { region("us-east-1"); ... } }
+
+    did {
+        method("web") { domain("example.com") }
     }
 
-    // Add blockchain clients
-    blockchains {
-        "algorand:testnet" to algorandClient
-        "ethereum:mainnet" to ethereumClient
+    anchor {
+        chain("algorand:testnet") {
+            provider(AnchorProviders.ALGORAND)
+            options { /* chain-specific options */ }
+        }
+        chain("ethereum:mainnet") {
+            provider(AnchorProviders.ETHEREUM)
+            options { /* chain-specific options */ }
+        }
     }
 
-    // Override wallet factory
-    walletFactory = DatabaseWalletFactory(dataSource)
+    factories(walletFactory = DatabaseWalletFactory(dataSource))
 }
 ```
 
-### Option 2: Configuration Object
+### Option 2: Advanced / tests only
 
-```kotlin
-val config = TrustWeaveConfig(
-    kms = AwsKeyManagementService(...),
-    walletFactory = DatabaseWalletFactory(...),
-    didRegistry = DidMethodRegistry().apply {
-        register(DidKeyMethod(kms))
-        register(DidWebMethod(kms))
-    },
-    blockchainRegistry = BlockchainAnchorRegistry().apply {
-        register("algorand:testnet", algorandClient)
-    }
-)
-
-val TrustWeave = TrustWeave.create(config)
-```
+`TrustWeaveConfig` is built internally by **`TrustWeave.build`** / **`TrustWeaveFactory`**. Application code should use the **`TrustWeave.build { }`** DSL; avoid constructing **`TrustWeaveConfig`** directly unless you are extending TrustWeave internals.
 
 ## Production Configuration
 
@@ -182,26 +156,28 @@ val TrustWeave = TrustWeave.create(config)
 
 1. **Replace In-Memory KMS**
    ```kotlin
-   kms = AwsKeyManagementService(...)  // or Azure, Google Cloud, etc.
+   keys { provider("awsKms") { /* … */ } } // or customKms(yourKms)
    ```
 
 2. **Use Production DID Methods**
    ```kotlin
-   didMethods {
-       + DidWebMethod(kms) { domain = "yourcompany.com" }
-       + DidIonMethod(kms)  // For production use
+   did {
+       method("web") { domain("yourcompany.com") }
    }
    ```
 
 3. **Use Persistent Wallet Storage**
    ```kotlin
-   walletFactory = DatabaseWalletFactory(dataSource)
+   factories(walletFactory = DatabaseWalletFactory(dataSource))
    ```
 
 4. **Configure Blockchain Clients**
    ```kotlin
-   blockchain {
-       "algorand:mainnet" to algorandClient
+   anchor {
+       chain("algorand:mainnet") {
+           provider(AnchorProviders.ALGORAND)
+           options { /* … */ }
+       }
    }
    ```
 
@@ -211,15 +187,15 @@ val TrustWeave = TrustWeave.create(config)
 
 ```kotlin
 // Check registered DID methods
-val methods = TrustWeave.getAvailableDidMethods()
+val methods = trustWeave.configuration.didRegistry.getAllMethodNames()
 println("Available DID methods: $methods")
 
 // Check registered blockchain chains
-val chains = TrustWeave.getAvailableChains()
+val chains = trustWeave.configuration.blockchainRegistry.getAllChainIds()
 println("Available chains: $chains")
 
 // Check wallet capabilities
-val wallet = TrustWeave.createWallet("did:key:holder").getOrThrow()
+val wallet = trustWeave.wallet { holder("did:key:holder") }.getOrThrow()
 println("Wallet capabilities: ${wallet.capabilities}")
 ```
 
@@ -229,8 +205,8 @@ See [Production Deployment Guide](../deployment/production-checklist.md) for ste
 
 ## Related Documentation
 
-- [Configuration Reference](README.md) - Complete configuration options
-- [Architecture Overview](../introduction/architecture-overview.md) - Component architecture
-- [Installation](../getting-started/installation.md) - Setup instructions
-- [Production Deployment](../deployment/production-checklist.md) - Production configuration
+- [Configuration reference](README.md) — Complete configuration options
+- [Architecture overview](../introduction/architecture-overview.md) — Component architecture
+- [Installation](../getting-started/installation.md) — Setup instructions
+- [Production deployment](../deployment/production-checklist.md) — Production configuration
 

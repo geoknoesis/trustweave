@@ -14,73 +14,59 @@ This guide demonstrates how to build a parametric insurance system using TrustWe
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created a parametric insurance contract using SmartContract
-- ✅ Bound the contract with verifiable credentials
-- ✅ Anchored the contract to blockchain
-- ✅ Executed the contract based on EO data triggers
-- ✅ Generated automatic payouts when conditions are met
+- Created a parametric insurance contract using SmartContract
+- Bound the contract with verifiable credentials
+- Anchored the contract to blockchain
+- Executed the contract based on EO data triggers
+- Generated automatic payouts when conditions are met
 
 ## Architecture Overview
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│              Parametric Insurance Contract                  │
-├─────────────────────────────────────────────────────────────┤
-│                                                               │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
-│  │ EO Provider │  │  Insurance   │  │  Blockchain  │       │
-│  │   (DID)     │  │   (DID)     │  │   Anchor     │       │
-│  └──────┬───────┘  └──────┬──────┘  └──────┬───────┘       │
-│         │                 │                 │                │
-│         │ Issues VC       │ Issues VC       │ Anchors        │
-│         │                 │                 │                │
-│  ┌──────▼─────────────────▼─────────────────▼──────┐       │
-│  │         TrustWeave Smart Contract Service          │       │
-│  │  ┌──────────────────────────────────────────┐   │       │
-│  │  │  Contract Lifecycle Management            │   │       │
-│  │  │  - Create Draft                           │   │       │
-│  │  │  - Bind (Issue VC + Anchor)               │   │       │
-│  │  │  - Activate                               │   │       │
-│  │  │  - Execute (Evaluate Conditions)          │   │       │
-│  │  └──────────────────────────────────────────┘   │       │
-│  │  ┌──────────────────────────────────────────┐   │       │
-│  │  │  Condition Evaluation                     │   │       │
-│  │  │  - Parametric Triggers                    │   │       │
-│  │  │  - Threshold Checks                       │   │       │
-│  │  │  - Payout Calculation                    │   │       │
-│  │  └──────────────────────────────────────────┘   │       │
-│  └──────────────────────────────────────────────────┘       │
-│                                                               │
-└─────────────────────────────────────────────────────────────┘
+```text
++-------------------------------------------------------------------+
+|            Parametric Insurance Contract                          |
++-------------------------------------------------------------------+
+|  EO Provider (DID)  |  Insurance (DID)  |  Blockchain Anchor    |
+|  Issues VC          |  Issues VC          |  Anchors contract    |
++---------------------+-------------------+-----------------------+
+| TrustWeave SmartContractService                                   |
+|  Lifecycle: draft -> bind (VC + anchor) -> activate             |
+|  Execute: parametric triggers, threshold checks, payout calc.     |
++-------------------------------------------------------------------+
 ```
 
 ## Step 1: Setup TrustWeave
 
 ```kotlin
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import org.trustweave.contract.models.*
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
+import org.trustweave.testkit.services.*
 
-// Initialize TrustWeave with blockchain anchoring
-val TrustWeave = TrustWeave.create {
-    blockchains {
-        "algorand:mainnet" to algorandClient
+val trustWeave = TrustWeave.build {
+    did { method(KEY) { algorithm(ED25519) } }
+    anchor {
+        chain("algorand:mainnet") {
+            provider("algorand")
+            options { /* configure from your Algorand client / environment */ }
+        }
     }
 }
 
-// Create DIDs for parties
-val insurerDid = trustWeave.createDid { method(KEY) }
-val insuredDid = trustWeave.createDid { method(KEY) }
-val eoProviderDid = trustWeave.createDid { method(KEY) }
+val insurerDid = trustWeave.createDid { method(KEY); algorithm(ED25519) }
+val insuredDid = trustWeave.createDid { method(KEY); algorithm(ED25519) }
+val eoProviderDid = trustWeave.createDid { method(KEY); algorithm(ED25519) }
 ```
 
 ## Step 2: Create Contract Draft
 
 ```kotlin
 suspend fun createFloodInsuranceContract(
-    TrustWeave: TrustWeave,
+    trustWeave: TrustWeave,
     insurerDid: String,
     insuredDid: String,
     coverageAmount: Double,
@@ -157,7 +143,7 @@ suspend fun createFloodInsuranceContract(
         )
     ).getOrThrow()
 
-    println("✅ Contract draft created: ${contract.id}")
+    println("[OK] Contract draft created: ${contract.id}")
     println("   Contract Number: ${contract.contractNumber}")
     println("   Status: ${contract.status}")
 
@@ -178,7 +164,7 @@ Binding issues a verifiable credential and anchors to blockchain:
 
 ```kotlin
 suspend fun bindInsuranceContract(
-    TrustWeave: TrustWeave,
+    trustWeave: TrustWeave,
     contract: SmartContract,
     insurerDid: String,
     insurerKeyId: String
@@ -191,7 +177,7 @@ suspend fun bindInsuranceContract(
         chainId = "algorand:mainnet"
     ).getOrThrow()
 
-    println("✅ Contract bound:")
+    println("[OK] Contract bound:")
     println("   Credential ID: ${bound.credentialId}")
     println("   Anchor TX: ${bound.anchorRef.txHash}")
     println("   Chain: ${bound.anchorRef.chainId}")
@@ -205,13 +191,13 @@ suspend fun bindInsuranceContract(
 
 ```kotlin
 suspend fun activateContract(
-    TrustWeave: TrustWeave,
+    trustWeave: TrustWeave,
     contractId: String
 ): SmartContract {
 
     val active = trustWeave.contracts.activateContract(contractId).getOrThrow()
 
-    println("✅ Contract activated: ${active.id}")
+    println("[OK] Contract activated: ${active.id}")
     println("   Status: ${active.status}")
     println("   Effective: ${active.effectiveDate}")
     println("   Expires: ${active.expirationDate}")
@@ -226,7 +212,7 @@ When EO data arrives (e.g., SAR flood data), process it and execute the contract
 
 ```kotlin
 suspend fun processFloodDataAndExecute(
-    TrustWeave: TrustWeave,
+    trustWeave: TrustWeave,
     contract: SmartContract,
     floodDepthCm: Double,
     eoDataCredential: VerifiableCredential
@@ -248,7 +234,7 @@ suspend fun processFloodDataAndExecute(
     ).getOrThrow()
 
     if (result.executed) {
-        println("✅ Contract executed!")
+        println("Contract executed")
         println("   Execution Type: ${result.executionType}")
         println("   Outcomes: ${result.outcomes.size}")
 
@@ -259,7 +245,7 @@ suspend fun processFloodDataAndExecute(
             }
         }
     } else {
-        println("⚠️  Contract conditions not met")
+        println("Contract conditions not met")
         result.outcomes.forEach { outcome ->
             println("   - ${outcome.description}")
         }
@@ -272,34 +258,43 @@ suspend fun processFloodDataAndExecute(
 ## Step 6: Complete Workflow
 
 ```kotlin
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.testkit.services.*
+import org.trustweave.credential.results.getOrThrow
+
 suspend fun completeParametricInsuranceWorkflow() {
-    val TrustWeave = TrustWeave.create {
-        blockchains {
-            "algorand:mainnet" to algorandClient
+    val trustWeave = TrustWeave.build {
+        did { method(KEY) { algorithm(ED25519) } }
+        anchor {
+            chain("algorand:mainnet") {
+                provider("algorand")
+                options { /* configure from your Algorand client / environment */ }
+            }
         }
     }
 
     // Step 1: Create DIDs
-    import org.trustweave.trust.types.getOrThrowDid
-    import org.trustweave.trust.types.getOrThrow
-    import org.trustweave.did.resolver.DidResolutionResult
-    import org.trustweave.did.identifiers.extractKeyId
-    
-    // Helper extension for resolution results
-    fun DidResolutionResult.getOrThrow() = when (this) {
-        is DidResolutionResult.Success -> this.document
-        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
-    }
     
     val insurerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     val insuredDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     val eoProviderDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     
-    val insurerDoc = trustWeave.resolveDid(insurerDid).getOrThrow()
+    val insurerDoc = when (val res = trustWeave.resolveDid(insurerDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val insurerKeyId = insurerDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No key found")
     
-    val eoProviderDoc = trustWeave.resolveDid(eoProviderDid).getOrThrow()
+    val eoProviderDoc = when (val res = trustWeave.resolveDid(eoProviderDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val eoProviderKeyId = eoProviderDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No key found")
 
@@ -333,7 +328,6 @@ suspend fun completeParametricInsuranceWorkflow() {
     val floodDepth = 75.0 // cm
 
     // Issue EO data credential (simplified - in production, EO provider issues this)
-    import org.trustweave.trust.types.IssuanceResult
     
     val eoDataIssuanceResult = trustWeave.issue {
         credential {
@@ -348,7 +342,6 @@ suspend fun completeParametricInsuranceWorkflow() {
         signedBy(eoProviderDid)
     }
     
-    import org.trustweave.trust.types.getOrThrow
     
     val eoDataCredential = eoDataIssuanceResult.getOrThrow()
 

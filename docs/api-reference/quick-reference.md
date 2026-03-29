@@ -12,200 +12,181 @@ keywords:
 
 # API Quick Reference
 
-Quick lookup table of all TrustWeave API methods organized by category.
+Quick lookup for common **TrustWeave** (`trustWeave`) operations. For full signatures and edge cases, see **[Core API](core-api.md)**.
 
 ## DIDs
 
 | Method | Description | Link |
 |--------|-------------|------|
-| `createDid { }` | Create a new DID | [createDid()](core-api.md#create) |
-| `resolveDid(did)` | Resolve a DID to get its document | [resolveDid()](core-api.md#resolve) |
-| `updateDid { }` | Update a DID document | [updateDid()](core-api.md#update) |
-| `deactivateDid(did)` | Deactivate a DID | [deactivateDid()](core-api.md#deactivate) |
+| `createDid { }` | Create a new DID (returns `DidCreationResult`) | [createDid()](core-api.md#create) |
+| `resolveDid(did)` | Resolve a DID (`String` or `Did`) → `DidResolutionResult` | [resolveDid()](core-api.md#resolve) |
+| `updateDid { }` | Update a DID document → `DidDocument` | [updateDid()](core-api.md#update) |
+| `createDidWithKey { }` | Create DID and expose key id → `DidCreationWithKeyResult` | [core-api.md](core-api.md) |
 
 ## Credentials
 
 | Method | Description | Link |
 |--------|-------------|------|
-| `issue { }` | Issue a verifiable credential | [issue()](core-api.md#issue) |
-| `verify { }` | Verify a verifiable credential | [verify()](core-api.md#verify) |
+| `issue { }` | Issue a VC → `IssuanceResult` | [issue()](core-api.md#issue) |
+| `verify(credential)` | Verify with defaults → `VerificationResult` | [verify()](core-api.md#verify) |
+| `verify { }` | Verify with DSL (revocation, schema, trust policy, …) | [verify()](core-api.md#verify) |
+| `presentationResult { }` | Build a VP → `PresentationResult` | [create-presentations.md](../how-to/create-presentations.md) |
 
 ## Wallets
 
 | Method | Description | Link |
 |--------|-------------|------|
-| `wallet { }` | Create a wallet | [wallet()](core-api.md#wallet) |
-| `wallet.store(credential)` | Store a credential in wallet | [Wallet API](wallet-api.md#credentialstorage) |
-| `wallet.get(credentialId)` | Get credential by ID | [Wallet API](wallet-api.md#credentialstorage) |
-| `wallet.list()` | List all credentials | [Wallet API](wallet-api.md#credentialstorage) |
-| `wallet.query { }` | Query credentials with filters | [Wallet API](wallet-api.md#credentialstorage) |
+| `wallet { }` | Create a wallet → `WalletCreationResult` | [wallet()](core-api.md#wallet) |
 
-## Blockchain Anchoring
+Wallet storage/query live on the **`Wallet`** instance after a successful result (see [Wallet API](wallet-api.md)).
 
-| Method | Description | Link |
-|--------|-------------|------|
-| `anchor { }` | Anchor data to blockchain | [anchor()](core-api.md#anchor) |
-| `readAnchor { }` | Read anchored data | [readAnchor()](core-api.md#readanchor) |
+## Blockchain
 
-## Delegation
+Use **`trustWeave.blockchains`** (e.g. `anchor`, `read`) — not a top-level `anchor { }` on the facade. See [Core API — Blockchain](core-api.md) and [quick start](../getting-started/quick-start.md).
 
-| Method | Description | Link |
-|--------|-------------|------|
-| `delegate { }` | Delegate authority between DIDs | [delegate()](core-api.md#delegate) |
+## Trust registry
 
-## Key Management
+| Method | Description |
+|--------|-------------|
+| `trust { }` | Trust DSL: `addAnchor`, `isTrusted`, `findTrustPath`, `getTrustedIssuers`, … |
 
-| Method | Description | Link |
-|--------|-------------|------|
-| `rotateKey { }` | Rotate keys in DID documents | [rotateKey()](core-api.md#rotatekey) |
+Requires `trust { provider(...) }` (or an explicit trust registry factory) in **`TrustWeave.build { }`**.
 
-## Methods by Category
+## Delegation & keys
 
-### DID Operations
+| Method | Description |
+|--------|-------------|
+| `delegate { }` | Delegation chain check → `DelegationChainResult` |
+| `rotateKey { }` | Key rotation → `DidDocument` |
+| `revoke(timeout) { }` | Revocation DSL |
 
-**Create DID:**
+---
+
+## Snippets (current API)
+
+### Create DID
+
 ```kotlin
-import org.trustweave.trust.types.Did
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.getOrThrowDid
 
-val did: Did = trustWeave.createDid {
-    method(KEY)
-    algorithm(ED25519)
-}
-// Access DID string value: did.value
+val trustWeave: TrustWeave = // TrustWeave.build { ... } or quickStart()
+val issuerDid = trustWeave.createDid {
+    method("key")
+    algorithm("Ed25519")
+}.getOrThrowDid()
 ```
 
-**Resolve DID:**
+### Resolve DID
+
 ```kotlin
 import org.trustweave.did.identifiers.Did
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
 
-val did = Did("did:key:example")
-val document = trustWeave.context.resolveDid(did)
-```
-
-**Update DID:**
-```kotlin
-import org.trustweave.did.identifiers.Did
-
-val did = Did("did:key:example")
-val updated = trustLayer.updateDid {
-    did(did.value)  // DSL builder accepts string for convenience
-    addService { ... }
+when (val res = trustWeave.resolveDid(Did("did:key:example"))) {
+    is DidResolutionResult.Success -> println(res.document.id)
+    is DidResolutionResult.Failure -> println(res.errorMessage)
 }
 ```
 
-**Deactivate DID:**
-```kotlin
-import org.trustweave.did.identifiers.Did
+### Update DID
 
-val did = Did("did:key:example")
-val deactivated = trustLayer.deactivateDid(did)
+```kotlin
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.testkit.services.*
+
+trustWeave.updateDid {
+    did("did:key:example")
+    method(DidMethods.KEY)
+    addService { /* ... */ }
+}
 ```
 
-### Credential Operations
+### Issue credential
 
-**Issue Credential:**
 ```kotlin
-import org.trustweave.trust.types.IssuerIdentity
-
-val issuerIdentity = IssuerIdentity.from(issuerDid, keyId)
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.credential.results.getOrThrow
+import kotlinx.datetime.Clock
 
 val credential = trustWeave.issue {
     credential {
-        type("VerifiableCredential", "PersonCredential")
+        type("PersonCredential")
         issuer(issuerDid)
-        subject {
-            id("did:key:holder")
-            "name" to "Alice"
-        }
+        subject { id("did:key:holder"); "name" to "Alice" }
+        issued(Clock.System.now())
     }
-    signedBy(issuerIdentity)
-}
+    signedBy(issuerDid) // key id derived when configured
+}.getOrThrow()
 ```
 
-**Verify Credential:**
-```kotlin
-import org.trustweave.trust.types.VerificationResult
+### Verify credential
 
-val result: VerificationResult = trustWeave.verify {
-    credential(credential)
-}
+```kotlin
+import org.trustweave.credential.results.VerificationResult
+
+val result = trustWeave.verify(credential)
 
 when (result) {
-    is VerificationResult.Valid -> println("Valid!")
-    is VerificationResult.Invalid.Expired -> println("Expired")
-    // ... exhaustive error handling
+    is VerificationResult.Valid -> println("Valid")
+    is VerificationResult.Invalid -> println(result.allErrors.joinToString())
 }
 ```
 
-### Wallet Operations
+Optional: **`import org.trustweave.trust.types.*`** for ergonomic helpers (**`result.valid`**, **`result.trustRegistryValid`**, **`result.errors`** as an alias of **`allErrors`**, etc.) on **`VerificationResult`**.
 
-**Create Wallet:**
+### Wallet
+
 ```kotlin
-val wallet = trustLayer.wallet {
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.credential.results.getOrThrow
+
+val wallet = trustWeave.wallet {
     holder("did:key:holder")
     enableOrganization()
     enablePresentation()
+}.getOrThrow()
+```
+
+Requires a **`WalletFactory`** on the **`TrustWeave`** configuration (e.g. testkit in tests).
+
+### Trust anchors
+
+```kotlin
+trustWeave.trust {
+    addAnchor(issuerDid.value) {
+        credentialTypes("EducationCredential")
+        description("Trusted university")
+    }
+    val ok = isTrusted(issuerDid.value, "EducationCredential")
 }
 ```
 
-**Store Credential:**
-```kotlin
-val credentialId = wallet.store(credential)
-```
+### Delegation
 
-**Query Credentials:**
 ```kotlin
-val results = wallet.query {
-    byIssuer("did:key:issuer")
-    notExpired()
-    byType("PersonCredential")
+val chain = trustWeave.delegate {
+    from(delegatorDid.value)
+    to(delegateDid.value)
 }
 ```
 
-### Blockchain Operations
+### Key rotation
 
-**Anchor Data:**
 ```kotlin
-val anchorResult = trustLayer.anchor {
-    data(digest)
-    chain("algorand:testnet")
-}
-```
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
 
-**Read Anchored Data:**
-```kotlin
-val data = trustLayer.readAnchor<MyData> {
-    ref(anchorRef)
-}
-```
-
-### Delegation Operations
-
-**Delegate Authority:**
-```kotlin
-val delegation = trustLayer.delegate {
-    from("did:key:delegator")
-    to("did:key:delegatee")
-    capability("issue")
-}
-```
-
-### Key Rotation
-
-**Rotate Key:**
-```kotlin
-val updated = trustLayer.rotateKey {
+trustWeave.rotateKey {
     did("did:key:example")
     oldKeyId("did:key:example#key-1")
-    newalgorithm(ED25519)
+    newAlgorithm(KeyAlgorithms.ED25519)
 }
 ```
 
-## Related Documentation
+## Related documentation
 
-- **[Core API](core-api.md)** - Complete API reference with parameters
-- **[Wallet API](wallet-api.md)** - Complete wallet API reference
-- **[Credential Service API](credential-service-api.md)** - Lower-level credential API
-- **[Error Types](error-types.md)** - Complete error type reference
-- **[Data Types](data-types.md)** - Complete data type reference
-
+- **[Core API](core-api.md)**
+- **[Wallet API](wallet-api.md)**
+- **[Result types](result-types-guide.md)**
+- **[Error handling](../advanced/error-handling.md)**

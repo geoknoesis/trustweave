@@ -12,13 +12,13 @@ This guide demonstrates how to build an IoT device identity system using TrustWe
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created DIDs for IoT devices and device manufacturers
-- ✅ Issued device attestation credentials
-- ✅ Built secure device-to-device communication
-- ✅ Implemented device capability proofs
-- ✅ Created network authorization system
-- ✅ Anchored device identity to blockchain
-- ✅ Built device lifecycle management
+- Created DIDs for IoT devices and device manufacturers
+- Issued device attestation credentials
+- Built secure device-to-device communication
+- Implemented device capability proofs
+- Created network authorization system
+- Anchored device identity to blockchain
+- Built device lifecycle management
 
 ## Big Picture & Significance
 
@@ -175,10 +175,10 @@ Add TrustWeave dependencies to your `build.gradle.kts`. These provide DID/creden
 dependencies {
     // Core TrustWeave modules
     // TrustWeave distribution (includes all modules)
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Test kit for in-memory implementations
-    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:0.6.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -204,7 +204,11 @@ dependencies {
 ```kotlin
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.did.DidMethodRegistry
+import org.trustweave.trust.TrustWeave
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.model.ProofType
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -227,13 +231,18 @@ fun main() = runBlocking {
     // Register DID method for creating device identities
     // In production, use a real DID method like did:key or did:web
     val didMethod = DidKeyMockMethod(manufacturerKms)
-    val didRegistry = DidMethodRegistry().apply { register(didMethod) }
 
-    // Initialize TrustWeave
     val trustWeave = TrustWeave.build {
-        keyManagementService(manufacturerKms)
-        didMethodRegistry(didRegistry)
-        credentialService { CredentialService() }
+        keys {
+            custom(manufacturerKms)
+            algorithm(ED25519)
+        }
+        did {
+            method(KEY) {
+                algorithm(ED25519)
+            }
+        }
+        credentials { defaultProofType(ProofType.Ed25519Signature2020) }
     }
 
     println("Services initialized")
@@ -297,10 +306,10 @@ fun main() = runBlocking {
 
     // Device attestation proves device is authentic and from manufacturer
     // This credential will be used to verify device authenticity throughout its lifecycle
-    val manufacturerKeyId = manufacturerKms.generateKey("Ed25519").id
+    val manufacturerKeyId = manufacturerKms.generateKey("Ed25519").id.value
     val deviceAttestationResult = trustWeave.issue {
         credential {
-            id("https://manufacturer.example.com/devices/${deviceDid.id.substringAfterLast(":")}/attestation")
+            id("https://manufacturer.example.com/devices/${deviceDid.id.value.substringAfterLast(":")}/attestation")
             type("VerifiableCredential", "DeviceAttestationCredential", "IoTCredential")
             issuer(manufacturerDid.id)
             subject {
@@ -321,7 +330,7 @@ fun main() = runBlocking {
     }
     
     val deviceAttestation = when (deviceAttestationResult) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> deviceAttestationResult.credential
+        is IssuanceResult.Success -> deviceAttestationResult.credential
         else -> throw IllegalStateException("Failed to create device attestation: ${deviceAttestationResult.allErrors.joinToString()}")
     }
 
@@ -344,47 +353,8 @@ fun main() = runBlocking {
 - **Verification**: Anyone can verify the credential came from manufacturer
 
 ```kotlin
-    // Step 6: Issue device attestation credential
-    println("\nStep 6: Issuing device attestation credential...")
-
-    // Generate manufacturer's signing key
-    // In production, this key would be stored in a hardware security module (HSM)
-    // The key must be kept secure - if compromised, all device attestations are at risk
-    val manufacturerKey = manufacturerKms.generateKey("Ed25519")
-
-    // Create proof generator that uses manufacturer's KMS for signing
-    // Ed25519 is chosen for its security and efficiency
-    // The signer function wraps the KMS sign operation
-    val manufacturerProofGenerator = Ed25519ProofGenerator(
-        signer = { data, keyId ->
-            // Sign the credential data with manufacturer's key
-            // This creates cryptographic proof that manufacturer issued this credential
-            manufacturerKms.sign(keyId, data)
-        },
-        getPublicKeyId = { keyId -> manufacturerKey.id }
-    )
-
-    // Register proof generator in a local registry
-    val manufacturerProofRegistry = ProofGeneratorRegistry().apply {
-        register(manufacturerProofGenerator)
-    }
-
-    // Create credential issuer that uses the proof generator
-    // The resolveDid function checks if DIDs are valid (simplified for example)
-    val manufacturerIssuer = CredentialIssuer(
-        proofGenerator = manufacturerProofGenerator,
-        resolveDid = { did -> didRegistry.resolve(did) != null },
-        proofRegistry = manufacturerProofRegistry
-    )
-
-    // Issue the credential with cryptographic proof
-    // The proof is attached to the credential and can be verified by anyone
-    val issuedAttestation = manufacturerIssuer.issue(
-        credential = deviceAttestation,
-        issuerDid = manufacturerDid.id,
-        keyId = manufacturerKey.id,
-        options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
-    )
+    // Step 6: Device attestation was already issued with proof in Step 5 (trustWeave.issue).
+    val issuedAttestation = deviceAttestation
 
     println("Device attestation credential issued:")
     println("  - Has proof: ${issuedAttestation.proof != null}")
@@ -413,7 +383,7 @@ fun main() = runBlocking {
     // Without this, systems would need to query device directly
     val capabilityResult = trustWeave.issue {
         credential {
-            id("https://manufacturer.example.com/devices/${deviceDid.id.substringAfterLast(":")}/capabilities")
+            id("https://manufacturer.example.com/devices/${deviceDid.id.value.substringAfterLast(":")}/capabilities")
             type("VerifiableCredential", "DeviceCapabilityCredential", "IoTCredential")
             issuer(manufacturerDid.id)
             subject {
@@ -461,7 +431,7 @@ fun main() = runBlocking {
     }
     
     val issuedCapability = when (capabilityResult) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> capabilityResult.credential
+        is IssuanceResult.Success -> capabilityResult.credential
         else -> throw IllegalStateException("Failed to create capability credential: ${capabilityResult.allErrors.joinToString()}")
     }
 
@@ -489,10 +459,10 @@ fun main() = runBlocking {
     // Network authorization grants device permission to join network
     // This is issued by network gateway, not manufacturer
     // Gateway verifies device attestation before issuing authorization
-    val gatewayKeyId = gatewayKms.generateKey("Ed25519").id
+    val gatewayKeyId = gatewayKms.generateKey("Ed25519").id.value
     val networkAuthorizationResult = trustWeave.issue {
         credential {
-            id("https://gateway.example.com/authorizations/${deviceDid.id.substringAfterLast(":")}")
+            id("https://gateway.example.com/authorizations/${deviceDid.id.value.substringAfterLast(":")}")
             type("VerifiableCredential", "NetworkAuthorizationCredential", "IoTCredential")
             issuer(gatewayDid.id)
             subject {
@@ -519,7 +489,7 @@ fun main() = runBlocking {
     }
     
     val networkAuthorization = when (networkAuthorizationResult) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> networkAuthorizationResult.credential
+        is IssuanceResult.Success -> networkAuthorizationResult.credential
         else -> throw IllegalStateException("Failed to create network authorization: ${networkAuthorizationResult.allErrors.joinToString()}")
     }
 
@@ -546,54 +516,43 @@ fun main() = runBlocking {
 - **Revocation Check**: Ensures credentials haven't been revoked
 
 ```kotlin
-import org.trustweave.credential.verifier.CredentialVerifier
-import org.trustweave.credential.CredentialVerificationOptions
+import org.trustweave.credential.results.VerificationResult
 
     // Step 9: Verify device before network access
     println("\nStep 9: Verifying device before network access...")
 
-    // Create verifier to check device credentials
-    // This verifier will check cryptographic proofs and credential validity
-    val verifier = CredentialVerifier(
-        didResolver = CredentialDidResolver { did ->
-            didRegistry.resolve(did).toCredentialDidResolution()
+    val attestationVerification = trustWeave.verify {
+        credential(issuedAttestation)
+        checkRevocation()
+        skipExpiration()
+        validateSchema("https://example.com/schemas/device-attestation.json")
+    }
+
+    when (attestationVerification) {
+        is VerificationResult.Invalid -> {
+            println("❌ Device attestation verification failed:")
+            attestationVerification.allErrors.forEach { println("  - $it") }
+            return@runBlocking
         }
-    )
-
-    // First, verify device attestation
-    // This proves device is authentic and from legitimate manufacturer
-    val attestationVerification = verifier.verify(
-        credential = issuedAttestation,
-        options = CredentialVerificationOptions(
-            checkRevocation = true,
-            checkExpiration = false, // Attestation doesn't expire
-            validateSchema = true
-        )
-    )
-
-    if (!attestationVerification.valid) {
-        println("❌ Device attestation verification failed:")
-        attestationVerification.errors.forEach { println("  - $it") }
-        return@runBlocking
+        is VerificationResult.Valid -> Unit
     }
 
     println("✅ Device attestation verified")
 
-    // Second, verify network authorization
-    // This proves device has permission to join network
-    val authorizationVerification = verifier.verify(
-        credential = issuedNetworkAuth,
-        options = CredentialVerificationOptions(
-            checkRevocation = true,
-            checkExpiration = true,
-            validateSchema = true
-        )
-    )
+    val authorizationVerification = trustWeave.verify {
+        credential(issuedNetworkAuth)
+        checkRevocation()
+        checkExpiration()
+        skipSchema()
+    }
 
-    if (!authorizationVerification.valid) {
-        println("❌ Network authorization verification failed:")
-        authorizationVerification.errors.forEach { println("  - $it") }
-        return@runBlocking
+    when (authorizationVerification) {
+        is VerificationResult.Invalid -> {
+            println("❌ Network authorization verification failed:")
+            authorizationVerification.allErrors.forEach { println("  - $it") }
+            return@runBlocking
+        }
+        is VerificationResult.Valid -> Unit
     }
 
     println("✅ Network authorization verified")
@@ -613,6 +572,8 @@ import org.trustweave.credential.CredentialVerificationOptions
 - **Trust Verification**: Devices verify each other's capabilities
 
 ```kotlin
+import org.trustweave.credential.results.VerificationResult
+
     // Step 10: Device-to-device communication
     println("\nStep 10: Setting up device-to-device communication...")
 
@@ -640,23 +601,30 @@ import org.trustweave.credential.CredentialVerificationOptions
     }
     
     val device2Attestation = when (device2AttestationResult) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> device2AttestationResult.credential
+        is IssuanceResult.Success -> device2AttestationResult.credential
         else -> throw IllegalStateException("Failed to create device 2 attestation: ${device2AttestationResult.allErrors.joinToString()}")
     }
 
     // Device 2 attestation is already issued via trustWeave.issue { } DSL above
     val issuedDevice2Attestation = device2Attestation
 
-    // Verify Device 2's attestation
-    val device2Verification = verifier.verify(
-        credential = issuedDevice2Attestation,
-        options = CredentialVerificationOptions(checkRevocation = true)
-    )
+    val device2Verification = trustWeave.verify {
+        credential(issuedDevice2Attestation)
+        checkRevocation()
+        skipExpiration()
+        skipSchema()
+    }
 
-    if (device2Verification.valid) {
-        println("✅ Device 2 verified - secure communication can proceed")
-        println("  - Device 1 can trust Device 2")
-        println("  - Communication can be encrypted using device keys")
+    when (device2Verification) {
+        is VerificationResult.Valid -> {
+            println("✅ Device 2 verified - secure communication can proceed")
+            println("  - Device 1 can trust Device 2")
+            println("  - Communication can be encrypted using device keys")
+        }
+        is VerificationResult.Invalid -> {
+            println("❌ Device 2 attestation verification failed:")
+            device2Verification.allErrors.forEach { println("  - $it") }
+        }
     }
 ```
 
@@ -677,10 +645,14 @@ import org.trustweave.credential.CredentialVerificationOptions
 - **Verification**: Anyone can verify device identity from blockchain
 
 ```kotlin
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.core.util.DigestUtils
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import org.trustweave.anchor.BlockchainAnchorRegistry
 import org.trustweave.anchor.anchorTyped
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
 
 @Serializable
 data class DeviceIdentityRecord(
@@ -702,9 +674,9 @@ data class DeviceIdentityRecord(
 
     // Compute digest of device attestation credential
     // This digest uniquely identifies the credential
-    val attestationDigest = org.trustweave.json.DigestUtils.sha256DigestMultibase(
+    val attestationDigest = DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(
-            org.trustweave.credential.models.VerifiableCredential.serializer(),
+            VerifiableCredential.serializer(),
             issuedAttestation
         )
     )
@@ -961,6 +933,8 @@ data class DeviceIdentityRecord(
 Verify device booted securely:
 
 ```kotlin
+import org.trustweave.did.identifiers.Did
+
 suspend fun createSecureBootCredential(
     trustWeave: TrustWeave,
     deviceDid: String,
@@ -985,11 +959,11 @@ suspend fun createSecureBootCredential(
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+        signedBy(issuerDid = Did(issuerDid), keyId = issuerKeyId)
     }
     
     return when (result) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create secure boot credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -1023,11 +997,11 @@ suspend fun createLifecycleCredential(
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+        signedBy(issuerDid = Did(issuerDid), keyId = issuerKeyId)
     }
     
     return when (result) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create lifecycle credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -1063,11 +1037,11 @@ suspend fun createUpdateCredential(
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+        signedBy(issuerDid = Did(issuerDid), keyId = issuerKeyId)
     }
     
     return when (result) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create update credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -1082,25 +1056,23 @@ suspend fun createUpdateCredential(
 **Implementation**:
 
 ```kotlin
-fun authenticateSmartHomeDevice(
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.trust.TrustWeave
+
+suspend fun authenticateSmartHomeDevice(
+    trustWeave: TrustWeave,
     deviceAttestation: VerifiableCredential,
     hubDid: String
 ): Boolean {
-    // Verify device attestation
-    val verifier = CredentialVerifier(
-        didResolver = CredentialDidResolver { did ->
-            didRegistry.resolve(did).toCredentialDidResolution()
-        }
-    )
+    val verification = trustWeave.verify {
+        credential(deviceAttestation)
+        checkRevocation()
+        checkExpiration()
+        validateSchema("https://example.com/schemas/device-attestation.json")
+    }
 
-    val verification = verifier.verify(
-        credential = deviceAttestation,
-        options = CredentialVerificationOptions(checkRevocation = true)
-    )
+    if (verification !is VerificationResult.Valid) return false
 
-    if (!verification.valid) return false
-
-    // Check if device is from trusted manufacturer
     val manufacturerDid = deviceAttestation.issuer
     val trustedManufacturers = listOf(
         "did:example:manufacturer1",
@@ -1141,31 +1113,31 @@ fun verifyDeviceCapabilities(
 **Implementation**:
 
 ```kotlin
-fun establishVehicleCommunication(
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.trust.TrustWeave
+
+suspend fun establishVehicleCommunication(
+    trustWeave: TrustWeave,
     vehicle1Did: String,
     vehicle2Did: String,
     vehicle1Attestation: VerifiableCredential,
     vehicle2Attestation: VerifiableCredential
 ): Boolean {
-    val verifier = CredentialVerifier(
-        didResolver = CredentialDidResolver { did ->
-            didRegistry.resolve(did).toCredentialDidResolution()
-        }
-    )
+    val v1Verification = trustWeave.verify {
+        credential(vehicle1Attestation)
+        checkRevocation()
+        checkExpiration()
+        validateSchema("https://example.com/schemas/device-attestation.json")
+    }
 
-    // Verify both vehicle attestations
-    val v1Verification = verifier.verify(
-        credential = vehicle1Attestation,
-        options = CredentialVerificationOptions(checkRevocation = true)
-    )
+    val v2Verification = trustWeave.verify {
+        credential(vehicle2Attestation)
+        checkRevocation()
+        checkExpiration()
+        validateSchema("https://example.com/schemas/device-attestation.json")
+    }
 
-    val v2Verification = verifier.verify(
-        credential = vehicle2Attestation,
-        options = CredentialVerificationOptions(checkRevocation = true)
-    )
-
-    // Both vehicles must be verified
-    return v1Verification.valid && v2Verification.valid
+    return v1Verification is VerificationResult.Valid && v2Verification is VerificationResult.Valid
 }
 ```
 

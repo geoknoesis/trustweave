@@ -17,6 +17,8 @@ dependencies {
     testImplementation(project(":testkit"))
     testImplementation(project(":did:did-core"))
     testImplementation(project(":kms:kms-core"))
+    testImplementation(libs.kotlin.test)
+    testImplementation(libs.kotlinx.coroutines.test)
 }
 
 

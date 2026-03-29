@@ -6,7 +6,7 @@ parent: Core Concepts
 
 # Verifiable Credentials (VCs)
 
-> TrustWeave expansions in this guide are authored by [Geoknoesis LLC](https://www.geoknoesis.com). They reflect Geoknoesis’ recommended patterns for W3C Verifiable Credentials on the JVM.
+> TrustWeave expansions in this guide are authored by [Geoknoesis LLC](https://www.geoknoesis.com). They reflect Geoknoesis' recommended patterns for W3C Verifiable Credentials on the JVM.
 
 ## What is a Verifiable Credential?
 
@@ -14,7 +14,7 @@ A **Verifiable Credential** is a tamper-evident attestation following the W3C VC
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:common:0.6.0")
 }
 ```
 
@@ -129,23 +129,21 @@ flowchart LR
 
 | Component | Purpose |
 |-----------|---------|
-| `CredentialServiceRegistry` | Discovers issuer/verifier services (in-memory or SPI). |
+| `CredentialService` / `CredentialServices` / `credentialService(...)` | Core issuance, verification, and presentation APIs (`IssuanceRequest`, `VerificationOptions`). |
 | `trustWeave.issue { }` | High-level DSL performing canonicalisation, signing, and proof attachment. |
 | `trustWeave.verify { }` | Rebuilds canonical form, resolves DIDs, validates proofs, and returns `VerificationResult`. |
-| `CredentialIssuanceOptions` | Lower-level SPI options (validity window, schema hints) when using `CredentialServiceRegistry`. |
+| `IssuanceRequest` / `ProofOptions` | Lower-level request objects when calling `CredentialService.issue` directly. |
 
 Detailed API signatures live in the [Credential Service API reference](../api-reference/credential-service-api.md).
 
 ### Example: issuing a credential
 
 ```kotlin
-import org.trustweave.TrustWeave
-import org.trustweave.credential.IssuanceConfig
-import org.trustweave.credential.ProofType
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.trustweave.trust.TrustWeave
+import org.trustweave.did.identifiers.Did
+import kotlinx.datetime.Clock
 
-suspend fun issueEmployeeBadge(trustWeave: TrustWeave, issuerDid: String, issuerKeyId: String) =
+suspend fun issueEmployeeBadge(trustWeave: TrustWeave, issuerDid: Did, issuerKeyId: String) =
     trustWeave.issue {
         credential {
             type("EmploymentCredential")
@@ -155,12 +153,12 @@ suspend fun issueEmployeeBadge(trustWeave: TrustWeave, issuerDid: String, issuer
                 "role" to "Site Reliability Engineer"
                 "level" to "L5"
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
         signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
     }
 
-**Outcome:** Issues a signed credential using typed issuance options, returning a `VerifiableCredential` that downstream wallets or verifiers can consume.
+**Outcome:** Issues a signed credential, returning **`IssuanceResult`** (use `when` or `getOrThrow()` from `org.trustweave.credential.results`).
 
 TrustWeave automatically:
 
@@ -172,25 +170,21 @@ TrustWeave automatically:
 ### Example: verifying a credential
 
 ```kotlin
-import org.trustweave.TrustWeave
-import org.trustweave.credential.models.VerifiableCredential
+import org.trustweave.trust.TrustWeave
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.results.VerificationResult
 
 suspend fun verifyBadge(trustWeave: TrustWeave, credential: VerifiableCredential) {
     val result = trustWeave.verify {
         credential(credential)
     }
-    // Note: verify() returns VerificationResult sealed type
     when (result) {
-        is VerificationResult.Valid -> {
-            println("Credential verified successfully")
-        }
-        is VerificationResult.Invalid -> {
-            println("Verification failed: ${result.reason}")
-        }
+        is VerificationResult.Valid -> println("Credential verified successfully")
+        is VerificationResult.Invalid -> println("Verification failed: ${result.allErrors.joinToString()}")
     }
 }
 
-**Outcome:** Surfaces verification success or failure reasons, letting you guard business logic with `result.valid` and log granular errors.
+**Outcome:** Surfaces verification success or failure via the **`VerificationResult`** hierarchy (`Valid` vs typed `Invalid.*`).
 
 ### Verification Pipeline
 
@@ -250,7 +244,7 @@ All steps must pass for verification to succeed. Any failure returns detailed er
 
 ## Practical usage tips
 
-- **SPI-level options** – drop down to `CredentialServiceRegistry` and supply `CredentialIssuanceOptions` when you need custom proof types, schema hints, or audiences.
+- **Service-level control** – call **`CredentialService.issue(IssuanceRequest(...))`** when you need explicit **`ProofSuiteId`**, **`ProofOptions`**, schema, or validity windows outside the DSL.
 - **Anchoring** – store the credential digest with a `BlockchainAnchorClient` to prove freshness (see [Blockchain Anchoring](blockchain-anchoring.md)).
 - **Revocation** – integrate status endpoints by adding `credentialStatus` claims; custom verification policies can enforce them.
 - **Error handling** – credential operations throw exceptions (e.g., `IllegalStateException`) on failure. Use `try-catch` blocks for error handling. See [Error Handling](../advanced/error-handling.md).
@@ -311,37 +305,42 @@ A Verifiable Credential contains:
 A credential is **issued** by an issuer to a subject:
 
 ```kotlin
-import org.trustweave.credential.models.VerifiableCredential
-import org.trustweave.credential.CredentialIssuanceOptions
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.model.CredentialType
+import org.trustweave.credential.model.ProofType
+import org.trustweave.testkit.services.*
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.trust.TrustWeave
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.extractKeyId
+import kotlinx.datetime.Clock
 
 // Issue credential using TrustWeave DSL API
+
 val trustWeave = TrustWeave.build {
-    factories(
-    // KMS and DID methods auto-discovered via SPI
     keys { provider(IN_MEMORY); algorithm(ED25519) }
     did { method(KEY) { algorithm(ED25519) } }
     credentials { defaultProofType(ProofType.Ed25519Signature2020) }
 }
 
-import org.trustweave.trust.types.getOrThrowDid
-import org.trustweave.trust.types.getOrThrow
-import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.did.identifiers.extractKeyId
-
-// Helper extension for resolution results
-fun DidResolutionResult.getOrThrow() = when (this) {
-    is DidResolutionResult.Success -> this.document
-    else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
-}
 
 val issuerDid = trustWeave.createDid {
     method(KEY)
     algorithm(ED25519)
 }.getOrThrowDid()
 
-val issuerDoc = trustWeave.resolveDid(issuerDid).getOrThrow()
+val issuerDoc = when (val res = trustWeave.resolveDid(issuerDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
 val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
     ?: throw IllegalStateException("No verification method found")
+
+val subjectDid = Did("did:key:subject")
 
 val issuedCredential = trustWeave.issue {
     credential {
@@ -352,10 +351,11 @@ val issuedCredential = trustWeave.issue {
             "name" to "Alice"
             "email" to "alice@example.com"
         }
-        issued(Instant.now())
+        issued(Clock.System.now())
     }
     signedBy(issuerDid)
 }.getOrThrow()
+```
 
 **Outcome:** Produces a signed credential ready for distribution, anchored to the specific proof type and key you configured.
 
@@ -368,39 +368,38 @@ import org.trustweave.testkit.credential.BasicWallet
 
 val wallet = BasicWallet()
 val credentialId = wallet.store(issuedCredential)
+```
 
 **Outcome:** Persists the credential in a wallet so it can be queried, organized, and presented later.
-```
 
 ### 3. Presentation
 
-Create a **Verifiable Presentation** to share credentials:
+Create a **Verifiable Presentation** via the service or TrustWeave DSL (holder proof + challenge/domain live in **`PresentationRequest.proofOptions`**):
 
 ```kotlin
-import org.trustweave.credential.models.VerifiablePresentation
-import org.trustweave.credential.PresentationOptions
+import org.trustweave.credential.requests.PresentationRequest
+import org.trustweave.credential.proof.ProofOptions
 
-val presentation = VerifiablePresentation(
-    type = listOf("VerifiablePresentation"),
-    verifiableCredential = listOf(issuedCredential),
-    holder = subjectDid,
-    proof = // ... proof of presentation
+val request = PresentationRequest(
+    disclosedClaims = setOf("name", "email"),
+    proofOptions = ProofOptions(challenge = "verifier-nonce", domain = "verifier.example.com")
 )
+// val presentation = credentialService.createPresentation(listOf(issuedCredential), request)
+// or: trustWeave.presentationResult { ... }
+```
 
 **Outcome:** Wraps one or more credentials in a holder-signed presentation, enabling selective disclosure downstream.
-```
 
 ### 4. Verification
 
 Verify a credential or presentation:
 
 ```kotlin
-import org.trustweave.TrustWeave
-import org.trustweave.credential.VerificationConfig
+import org.trustweave.trust.TrustWeave
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.testkit.services.*
 
 val trustWeave = TrustWeave.build {
-    factories(
-    // KMS and DID methods auto-discovered via SPI
     keys { provider(IN_MEMORY); algorithm(ED25519) }
     did { method(KEY) { algorithm(ED25519) } }
 }
@@ -411,15 +410,13 @@ val result = trustWeave.verify {
     // checkRevocation() requires status list integration
 }
 
-if (result.valid) {
-    println("Credential passed structural checks.")
-    println("Proof valid: ${result.proofValid}, Issuer valid: ${result.issuerValid}")
-} else {
-    println("Verification errors: ${result.errors.joinToString()}")
+when (result) {
+    is VerificationResult.Valid -> println("Credential verified")
+    is VerificationResult.Invalid -> println("Verification errors: ${result.allErrors.joinToString()}")
 }
-
-**Outcome:** Indicates whether the credential satisfied structural checks (expiration, DID resolution, optional revocation) and surfaces diagnostics for debugging.
 ```
+
+**Outcome:** **`VerificationResult`** tells you whether the credential satisfied cryptographic checks, expiration, revocation (when configured), and optional schema/trust rules.
 
 > **Important:** The built-in verifier performs structural checks today (proof fields, expiration, DID resolution). Integrate a dedicated cryptographic proof validator and revocation resolver for production deployments.
 
@@ -490,12 +487,12 @@ val credential = VerifiableCredential(
 Reveal only specific fields from a credential:
 
 ```kotlin
-val presentation = wallet.createSelectiveDisclosure(
-    credentialIds = listOf(credentialId),
-    disclosedFields = listOf("name", "email"), // Only reveal name and email
-    holderDid = holderDid,
-    options = PresentationOptions(...)
-)
+// Prefer TrustWeave / wallet APIs that accept PresentationRequest + disclosedClaims.
+// Illustrative:
+// wallet.present(
+//     credentialIds = listOf(credentialId),
+//     request = PresentationRequest(disclosedClaims = setOf("name", "email"), proofOptions = ProofOptions(...))
+// )
 ```
 
 ### Zero-Knowledge Proofs
@@ -520,22 +517,22 @@ Some proof types (like BBS+) support zero-knowledge proofs, allowing you to prov
 
 ## See also
 
-- [Credential Service API](../api-reference/credential-service-api.md) for parameter details and SPI guidance
-- [Quick Start – Step 4 & 5](../getting-started/quick-start.md#step-4-issue-a-credential-and-store-it) for a runnable walkthrough
-- [Wallets](wallets.md) for storage and presentation
-- [Architecture Overview](../introduction/architecture-overview.md) for the credential flow diagram
+- Credential Service API](../api-reference/credential-service-api.md) for parameter details and SPI guidance
+- Quick Start – Step 4 & 5](../getting-started/quick-start.md#step-4-issue-a-credential-and-store-it) for a runnable walkthrough
+- Wallets](wallets.md) for storage and presentation
+- Architecture Overview](../introduction/architecture-overview.md) for the credential flow diagram
 
 ## Next Steps
 
 **Ready to use credentials?**
-- [Issue Credentials](../how-to/issue-credentials.md) - Step-by-step guide
-- [Verify Credentials](../how-to/verify-credentials.md) - Step-by-step guide
-- [Quick Start – Step 4 & 5](../getting-started/quick-start.md#step-4-issue-a-credential-and-store-it) - Create your first credential
+- Issue Credentials](../how-to/issue-credentials.md) - Step-by-step guide
+- Verify Credentials](../how-to/verify-credentials.md) - Step-by-step guide
+- Quick Start – Step 4 & 5](../getting-started/quick-start.md#step-4-issue-a-credential-and-store-it) - Create your first credential
 
 **Want to learn more?**
-- [Wallets](wallets.md) - Managing credentials
-- [Wallet API Tutorial](../tutorials/wallet-api-tutorial.md) - Hands-on wallet examples
-- [Credential Service API Reference](../api-reference/credential-service-api.md) - Complete API documentation
-- [Core API Reference](../api-reference/core-api.md) - TrustWeave API
+- Wallets](wallets.md) - Managing credentials
+- Wallet API Tutorial](../tutorials/wallet-api-tutorial.md) - Hands-on wallet examples
+- Credential Service API Reference](../api-reference/credential-service-api.md) - Complete API documentation
+- Core API Reference](../api-reference/core-api.md) - TrustWeave API
 
 

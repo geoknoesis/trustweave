@@ -5,18 +5,11 @@ import org.trustweave.core.util.ValidationResult
 /**
  * DID format and method validation utilities.
  *
- * Provides validation functions following the W3C DID Core specification.
- * This validator checks DID format compliance and method availability.
- *
- * **Validation Rules:**
- * - DIDs must start with "did:"
- * - Method name must be lowercase alphanumeric
- * - Method-specific identifier can contain various characters (per W3C spec)
- * - Method must be registered if method validation is performed
- *
- * **Note:** The regex pattern is a simplified validation. For full W3C compliance,
- * a proper ABNF parser would be more accurate, but this pattern covers the
- * majority of valid DIDs in practice.
+ * Validates DIDs per **DID 1.1 §3.1 ABNF**:
+ * - `did = "did:" method-name ":" method-specific-id`
+ * - `method-name = 1*method-char` with `method-char = %x61-7A / DIGIT` (lowercase a-z, 0-9)
+ * - `method-specific-id = *( *idchar ":" ) 1*idchar` with `idchar = ALPHA / DIGIT / "." / "-" / "_" / pct-encoded`
+ * - `pct-encoded = "%" HEXDIG HEXDIG`
  *
  * **Example Usage:**
  * ```kotlin
@@ -58,22 +51,15 @@ object DidValidator {
         const val UNSUPPORTED_DID_METHOD = "UNSUPPORTED_DID_METHOD"
     }
 
+    /** Method name: 1+ method-char (lowercase a-z, digit) per ABNF. */
+    private val METHOD_NAME_PATTERN = Regex("^[a-z0-9]+\$")
+
     /**
-     * DID pattern matching the DID specification.
-     * 
-     * Format: `did:<method>:<method-specific-id>`
-     * 
-     * **Pattern Details:**
-     * - `did:` - Required prefix
-     * - `[a-z0-9]+` - Method name (lowercase alphanumeric, one or more)
-     * - `:` - Separator
-     * - `[a-zA-Z0-9._:%-]+` - Method-specific identifier (various allowed characters)
-     * 
-     * **Note:** This is a simplified regex. The W3C spec allows more characters
-     * in method-specific-ids, but this pattern covers the majority of valid DIDs.
-     * For full compliance, consider using an ABNF parser.
+     * Method-specific-id per DID 1.1 §3.1: *( *idchar ":" ) 1*idchar.
+     * idchar = ALPHA / DIGIT / "." / "-" / "_" / pct-encoded; pct-encoded = "%" HEXDIG HEXDIG.
+     * Implemented as one or more segments of ([A-Za-z0-9._-]|%[0-9A-Fa-f]{2})+ separated by ":".
      */
-    private val DID_PATTERN = Regex("^did:[a-z0-9]+:[a-zA-Z0-9._:%-]+$")
+    private val METHOD_SPECIFIC_ID_PATTERN = Regex("^([A-Za-z0-9._-]|%[0-9A-Fa-f]{2})+(:([A-Za-z0-9._-]|%[0-9A-Fa-f]{2})+)*\$")
 
     /**
      * Validates DID format.
@@ -91,10 +77,51 @@ object DidValidator {
             )
         }
 
-        if (!DID_PATTERN.matches(did)) {
+        if (!did.startsWith("did:")) {
             return ValidationResult.Invalid(
                 code = ErrorCodes.INVALID_DID_FORMAT,
-                message = "DID must match format: did:<method>:<method-specific-id>",
+                message = "DID must start with 'did:'",
+                field = "did",
+                value = did
+            )
+        }
+
+        val afterScheme = did.removePrefix("did:")
+        val firstColon = afterScheme.indexOf(':')
+        if (firstColon < 0) {
+            return ValidationResult.Invalid(
+                code = ErrorCodes.INVALID_DID_FORMAT,
+                message = "DID must have method and method-specific-id: did:<method>:<method-specific-id>",
+                field = "did",
+                value = did
+            )
+        }
+
+        val methodName = afterScheme.substring(0, firstColon)
+        val methodSpecificId = afterScheme.substring(firstColon + 1)
+
+        if (!METHOD_NAME_PATTERN.matches(methodName)) {
+            return ValidationResult.Invalid(
+                code = ErrorCodes.INVALID_DID_FORMAT,
+                message = "DID method name must be one or more lowercase letters or digits (a-z, 0-9)",
+                field = "did.method",
+                value = did
+            )
+        }
+
+        if (methodSpecificId.isEmpty()) {
+            return ValidationResult.Invalid(
+                code = ErrorCodes.INVALID_DID_FORMAT,
+                message = "DID method-specific-id cannot be empty",
+                field = "did",
+                value = did
+            )
+        }
+
+        if (!METHOD_SPECIFIC_ID_PATTERN.matches(methodSpecificId)) {
+            return ValidationResult.Invalid(
+                code = ErrorCodes.INVALID_DID_FORMAT,
+                message = "DID method-specific-id must match ABNF: idchar = ALPHA/DIGIT/'.'/'-'/'_'/pct-encoded; segments separated by ':'",
                 field = "did",
                 value = did
             )

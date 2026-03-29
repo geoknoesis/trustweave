@@ -6,7 +6,7 @@ import org.trustweave.did.model.DidService
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
-import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.context.DidDslContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -37,7 +37,7 @@ import kotlinx.coroutines.withContext
  * ```
  */
 class DidDocumentBuilder(
-    private val trustWeave: TrustWeave
+    private val didContext: DidDslContext
 ) {
     private var did: String? = null
     private var method: String? = null
@@ -153,10 +153,10 @@ class DidDocumentBuilder(
         )
 
         // Get DID method from provider
-        val didMethod = trustWeave.getDidMethod(methodName) as? DidMethod
+        val didMethod = didContext.getDidMethod(methodName) as? DidMethod
             ?: throw IllegalStateException(
                 "DID method '$methodName' is not configured. " +
-                "Configure it in trustLayer { did { method(\"$methodName\") { ... } } }"
+                "Configure it in TrustWeave.build { did { method(\"$methodName\") { ... } } }"
             )
 
         // Update DID document using proper types
@@ -197,7 +197,7 @@ class DidDocumentBuilder(
         val newServiceObjects = newServices.map { serviceData ->
             DidService(
                 id = serviceData.id,
-                type = serviceData.type,
+                type = listOf(serviceData.type),
                 serviceEndpoint = serviceData.endpoint
             )
         }
@@ -366,14 +366,5 @@ class DidDocumentBuilder(
         val type: String,
         val endpoint: Any
     )
-}
-
-/**
- * Extension function to update a DID document using TrustWeave.
- */
-suspend fun TrustWeave.updateDid(block: DidDocumentBuilder.() -> Unit): DidDocument {
-    val builder = DidDocumentBuilder(this)
-    builder.block()
-    return builder.update()
 }
 

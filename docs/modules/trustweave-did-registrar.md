@@ -8,9 +8,9 @@ The `trustweave-did-registrar` module provides implementations of the `DidRegist
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:trustweave-did-registrar:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:did-registrar:0.6.0")
+    implementation("org.trustweave:did-did-core:0.6.0")
+    implementation("org.trustweave:kms-kms-core:0.6.0")
 }
 ```
 
@@ -337,9 +337,12 @@ if (response.didState.secret != null) {
 ### Integrating with DidMethod
 
 ```kotlin
-import org.trustweave.did.*
-import org.trustweave.did.registrar.client.*
-import org.trustweave.did.registration.impl.*
+import org.trustweave.did.DidCreationOptions
+import org.trustweave.did.registration.model.DidRegistrationSpec
+import org.trustweave.did.registration.model.DriverConfig
+import org.trustweave.did.model.MethodCapabilities
+import org.trustweave.did.registrar.client.DefaultUniversalRegistrar
+import org.trustweave.did.registrar.method.HttpDidMethod
 
 // Create registrar
 val registrar = DefaultUniversalRegistrar("https://dev.uniregistrar.io")
@@ -359,7 +362,7 @@ val spec = DidRegistrationSpec(
     )
 )
 
-val method = HttpDidMethod(spec, registrar)
+val method = HttpDidMethod(registrationSpec = spec, registrar = registrar)
 
 // Use the method
 val didDoc = method.createDid(DidCreationOptions())

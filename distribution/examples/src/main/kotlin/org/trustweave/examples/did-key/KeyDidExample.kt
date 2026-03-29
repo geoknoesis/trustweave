@@ -1,5 +1,6 @@
 package org.trustweave.examples.did_key
 
+import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
@@ -9,7 +10,6 @@ import org.trustweave.did.KeyAlgorithm
 import org.trustweave.did.KeyPurpose
 import org.trustweave.keydid.KeyDidMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -47,7 +47,7 @@ fun main() = runBlocking {
     val ed25519Did = trustweave.createDid {
         method(KEY)
         algorithm(ED25519)
-    }.getOrFail()
+    }.getOrThrowDid()
 
     println("Created Ed25519 DID: ${ed25519Did.value}")
 
@@ -71,14 +71,14 @@ fun main() = runBlocking {
     val secp256k1Did = trustweave.createDid {
         method(KEY)
         algorithm("secp256k1")
-    }.getOrFail()
+    }.getOrThrowDid()
     println("Created secp256k1 DID: ${secp256k1Did.value}")
 
     // P-256 (NIST)
     val p256Did = trustweave.createDid {
         method(KEY)
         algorithm("P-256")
-    }.getOrFail()
+    }.getOrThrowDid()
     println("Created P-256 DID: ${p256Did.value}")
 
     println("\n" + "=".repeat(70))

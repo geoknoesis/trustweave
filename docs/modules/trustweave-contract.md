@@ -4,7 +4,7 @@ title: trustweave-contract Module
 
 # trustweave-contract Module
 
-> **Version:** 1.0.0-SNAPSHOT
+> **Version:** 0.6.0
 > Domain-agnostic Smart Contract abstraction with verifiable credentials and blockchain anchoring
 
 ## Overview
@@ -36,7 +36,7 @@ Add this module when you need:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:trustweave-contract:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:contract:0.6.0")
 }
 ```
 
@@ -71,7 +71,7 @@ trustweave-contract
 
 ### Integration
 
-- **`ContractService`**: Service wrapper exposed via `trustWeave.contracts` property
+- **`trustWeave.contracts`**: `SmartContractService` entry point on `TrustWeave` (defaults to `DefaultSmartContractService` when none is configured in `TrustWeave.build`)
 
 ## Usage Example
 
@@ -158,9 +158,9 @@ For production use, implement `SmartContractService` with persistent storage (da
 
 ## See Also
 
-- [Smart Contracts Core Concepts](../core-concepts/smart-contracts.md) for detailed concepts
-- [Smart Contract API Reference](../api-reference/smart-contract-api.md) for complete API documentation
-- [Parametric Insurance Scenario](../scenarios/smart-contract-parametric-insurance-scenario.md) for complete example
-- [Verifiable Credentials](../core-concepts/verifiable-credentials.md) for credential concepts
-- [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) for anchoring concepts
+- Smart Contracts Core Concepts](../core-concepts/smart-contracts.md) for detailed concepts
+- Smart Contract API Reference](../api-reference/smart-contract-api.md) for complete API documentation
+- Parametric Insurance Scenario](../scenarios/smart-contract-parametric-insurance-scenario.md) for complete example
+- Verifiable Credentials](../core-concepts/verifiable-credentials.md) for credential concepts
+- Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) for anchoring concepts
 

@@ -265,6 +265,7 @@ class CredentialLifecycleIntegrationTest {
                         is VerificationResult.Invalid.Revoked -> "Revoked at: ${result.revokedAt}, reason: ${result.revocationReason}"
                         is VerificationResult.Invalid.NotYetValid -> "Not yet valid, valid from: ${result.validFrom}"
                         is VerificationResult.Invalid.UnsupportedFormat -> "Unsupported format: ${result.format.value}"
+                        is VerificationResult.Invalid.AdapterNotReady -> result.reason ?: result.errors.joinToString()
                         is VerificationResult.Invalid.UntrustedIssuer -> "Untrusted issuer: ${result.issuerDid.value}"
                         is VerificationResult.Invalid.SchemaValidationFailed -> "Schema validation failed: ${result.validationErrors.joinToString()}"
                         is VerificationResult.Invalid.MultipleFailures -> result.errors.joinToString()

@@ -2023,7 +2023,7 @@ Ce Guide UX du Domaine Éducation fournit :
 
 Le guide garantit que les institutions éducatives peuvent :
 - Créer et configurer facilement des domaines de confiance spécifiques à l'éducation
-- Émettre et gérer des justificatifs académiques (diplômes, relevés de notes, certificats)
+- mettre et gérer des justificatifs académiques (diplômes, relevés de notes, certificats)
 - Gérer le cycle de vie des justificatifs (créer, mettre à jour, révoquer) avec des protections de confidentialité étudiantes
 - Créer des DIDs étudiants et leur attribuer des justificatifs
 - Gérer les portefeuilles étudiants et organiser les justificatifs académiques

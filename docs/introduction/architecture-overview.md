@@ -13,21 +13,27 @@ keywords:
 
 # Architecture Overview
 
-TrustWeave follows a modular, pluggable architecture that enables flexibility and extensibility. This page ties the high-level mental model—DIDs, credentials, proofs, anchoring—into the modules you will touch as you build a trust layer.
+TrustWeave follows a modular, pluggable architecture that enables flexibility and extensibility. This page ties the high-level mental model—DIDs, credentials, proofs, anchoring—into the modules you will touch as you build on TrustWeave.
 
 ## TrustWeave Mental Model
 
 TrustWeave operates on three abstraction layers that provide different levels of control and simplicity:
 
-### 1. Facade Layer (`TrustWeave.create()`) - Simplest API
+### 1. Facade Layer - Simplest API
 
-The facade provides a unified, high-level API with sensible defaults. Use this when you want the simplest integration:
+The facade provides a unified, high-level API with sensible defaults. For the quickest start:
 
 ```kotlin
-val TrustWeave = TrustWeave.create()
-val did = TrustWeave.createDid().getOrThrow()
-val credential = TrustWeave.issueCredential(...).getOrThrow()
+val trustWeave = TrustWeave.quickStart()  // In-memory, did:key
+val did = trustWeave.createDid().getOrThrowDid()
+val credential = trustWeave.issue {
+    credential { type("Person"); issuer(did); subject("did:key:holder") { "name" to "Alice" } }
+    signedBy(did)  // Key ID auto-extracted
+}.getOrThrow()
+val result = trustWeave.verify(credential)  // Simple overload
 ```
+
+For custom configuration, use `TrustWeave.build { ... }` with `keys`, `did`, and other blocks.
 
 **When to use:**
 - Quick prototypes and demos
@@ -55,17 +61,20 @@ val document = didMethod.createDid(options)
 Use the DSL for declarative, readable configuration:
 
 ```kotlin
-val trustWeave = trustWeave {
-    keys { provider(IN_MEMORY) }
-    did { method(KEY) }
-    blockchains {
-        "algorand:testnet" to algorandClient
+val trustWeave = TrustWeave.build {
+    keys { provider("inMemory"); algorithm("Ed25519") }
+    did { method("key") { algorithm("Ed25519") } }
+    anchor {
+        chain("algorand:testnet") {
+            provider("algorand")
+            options { /* RPC / credentials for your environment */ }
+        }
     }
 }
 ```
 
 **When to use:**
-- Complex trust layer configurations
+- Complex TrustWeave configurations
 - When you prefer declarative style
 - Building reusable trust configurations
 
@@ -80,7 +89,7 @@ flowchart TB
     end
     
     subgraph Facade["TrustWeave Facade"]
-        TW[TrustWeave<br/>createDid()<br/>issue()<br/>verify()<br/>wallet()]
+        TW["TrustWeave: createDid, issue, verify, wallet"]
     end
     
     subgraph Context["TrustWeaveConfig"]
@@ -97,7 +106,7 @@ flowchart TB
     
     subgraph Registries["Service Registries"]
         DIDReg[DidMethodRegistry<br/>Method Registration]
-        CredReg[CredentialServiceRegistry<br/>Service Registration]
+        CredReg[CredentialService<br/>+ CredentialServices factory]
         AnchorReg[BlockchainAnchorRegistry<br/>Client Registration]
     end
     
@@ -121,13 +130,13 @@ flowchart TB
     Registries -->|Routes to| Plugins
     Plugins -->|Connects to| External
     
-    style Application fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#fff
-    style Facade fill:#c8e6c9,stroke:#388e3c,stroke-width:2px,color:#fff
+    style Application fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
+    style Facade fill:#c8e6c9,stroke:#388e3c,stroke-width:2px,color:#000
     style Context fill:#fff9c4,stroke:#f57f17,stroke-width:2px,color:#000
-    style Services fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#fff
-    style Registries fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#fff
-    style Plugins fill:#e0f2f1,stroke:#00796b,stroke-width:2px,color:#fff
-    style External fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#fff
+    style Services fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style Registries fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000
+    style Plugins fill:#e0f2f1,stroke:#00796b,stroke-width:2px,color:#000
+    style External fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000
 ```
 
 **Key Interactions:**
@@ -164,24 +173,25 @@ val didRegistry = DidMethodRegistry().apply {
 The **Trust Layer** is TrustWeave's configuration DSL that lets you declaratively configure all services:
 
 ```kotlin
-val trustWeave = trustWeave {
+val trustWeave = TrustWeave.build {
     keys {
-        provider(IN_MEMORY)  // KMS configuration
+        provider("inMemory")
+        algorithm("Ed25519")
     }
     did {
-        method(KEY)          // DID method configuration
+        method("key") { algorithm("Ed25519") }
     }
-    blockchains {
-        "algorand:testnet" to algorandClient  // Blockchain configuration
+    anchor {
+        chain("algorand:testnet") {
+            provider("algorand")
+            options { /* blockchain client options */ }
+        }
     }
-    wallet {
-        enableOrganization()
-        enablePresentation()
-    }
+    // Optional: factories(walletFactory = yourWalletFactory)
 }
 ```
 
-**When to use the Trust Layer:**
+**When to use the DSL:**
 - Complex multi-service configurations
 - Reusable trust configurations across applications
 - When you want a single source of truth for configuration
@@ -193,25 +203,25 @@ sequenceDiagram
     participant App as Application / SDK Client
     participant DID as DidMethodRegistry<br/>+ DidMethod
     participant KMS as KeyManagementService
-    participant VC as CredentialServiceRegistry<br/>+ Issuer
+    participant VC as CredentialService<br/>+ TrustWeave.issue
     participant Anchor as BlockchainAnchorClient
 
     App->>DID: request method(KEY)
     DID->>KMS: generateKey(algorithm)
     KMS-->>DID: KeyHandle
     DID-->>App: DidDocument
-    App->>VC: issueCredential(did, claims)
+    App->>VC: issue(IssuanceRequest) / trustWeave.issue { }
     VC->>KMS: sign(canonicalCredential)
     VC-->>App: VerifiableCredential (+ proof)
     App->>Anchor: writePayload(credentialDigest)
     Anchor-->>App: AnchorResult (AnchorRef)
-    note over App,Anchor: Store DID, VC, AnchorRef<br/>Verify later via TrustWeave.verifyCredential()
+    note over App,Anchor: Store DID, VC, AnchorRef<br/>Verify later via trustWeave.verify()
 ```
 
 **Roles and relationships**
 
 - **DID creation**: `DidMethodRegistry` resolves a method implementation, which collaborates with `KeyManagementService` to mint keys and returns a W3C-compliant `DidDocument`.
-- **Credential issuance**: The `CredentialServiceRegistry` hands off to an issuer that canonicalises the payload, signs it through the same KMS, and produces a `VerifiableCredential` with a proof.
+- **Credential issuance**: **`CredentialService.issue(IssuanceRequest)`** (usually wired by **`TrustWeave`**) canonicalises the payload, signs through the KMS, and produces a **`VerifiableCredential`** with a proof.
 - **Anchoring**: The credential digest (or any payload) flows through `BlockchainAnchorClient`, yielding an `AnchorRef` teams can persist for tamper evidence.
 - **Verification**: When verifying, TrustWeave pulls the DID document, replays canonicalisation + signature validation, and optionally checks the anchor reference.
 
@@ -226,7 +236,7 @@ TrustWeave/
 ├── common/                         # Common module
 │   └── trustweave-common/             # Base types, exceptions, JSON utilities, plugin infrastructure (includes SPI interfaces)
 ├── trust/                          # Trust module
-│   └── trustweave-trust/            # Trust registry and trust layer
+│   └── trustweave-trust/            # Trust registry and trust APIs
 ├── testkit/                        # Test utilities
 │   └── trustweave-testkit/          # Test utilities and mocks
 │
@@ -295,61 +305,69 @@ TrustWeave/
 
 #### Cloud KMS Providers
 
-- **AWS KMS** (`org.trustweave.kms:aws`) – AWS Key Management Service. See [AWS KMS Integration Guide](../integrations/aws-kms.md).
-- **AWS CloudHSM** (`org.trustweave.kms:cloudhsm`) – AWS CloudHSM for dedicated hardware security modules. Documentation coming soon.
-- **Azure Key Vault** (`org.trustweave.kms:azure`) – Azure Key Vault integration. See [Azure KMS Integration Guide](../integrations/azure-kms.md).
-- **Google Cloud KMS** (`org.trustweave.kms:google`) – Google Cloud KMS integration. See [Google KMS Integration Guide](../integrations/google-kms.md).
-- **IBM Key Protect** (`org.trustweave.kms:ibm`) – IBM Cloud Key Protect integration. Documentation coming soon.
+- **AWS KMS** (`org.trustweave:kms-plugins-aws`) – AWS Key Management Service. See [AWS KMS Integration Guide](../integrations/aws-kms.md).
+- **AWS CloudHSM** (`org.trustweave:kms-plugins-cloudhsm`) – AWS CloudHSM for dedicated hardware security modules. Documentation coming soon.
+- **Azure Key Vault** (`org.trustweave:kms-plugins-azure`) – Azure Key Vault integration. See [Azure KMS Integration Guide](../integrations/azure-kms.md).
+- **Google Cloud KMS** (`org.trustweave:kms-plugins-google`) – Google Cloud KMS integration. See [Google KMS Integration Guide](../integrations/google-kms.md).
+- **IBM Key Protect** (`org.trustweave:kms-plugins-ibm`) – IBM Cloud Key Protect integration. Documentation coming soon.
 
 #### Self-Hosted KMS Providers
 
-- **HashiCorp Vault** (`org.trustweave.kms:hashicorp`) – HashiCorp Vault Transit engine. See [HashiCorp Vault KMS Integration Guide](../integrations/hashicorp-vault-kms.md).
-- **Thales CipherTrust** (`org.trustweave.kms:thales`) – Thales CipherTrust Manager integration. Documentation coming soon.
-- **Thales Luna** (`org.trustweave.kms:thales-luna`) – Thales Luna HSM integration. Documentation coming soon.
-- **CyberArk Conjur** (`org.trustweave.kms:cyberark`) – CyberArk Conjur secrets management integration. Documentation coming soon.
-- **Fortanix DSM** (`org.trustweave.kms:fortanix`) – Fortanix Data Security Manager multi-cloud key management. Documentation coming soon.
-- **Entrust** (`org.trustweave.kms:entrust`) – Entrust key management integration. Documentation coming soon.
-- **Utimaco** (`org.trustweave.kms:utimaco`) – Utimaco HSM integration. Documentation coming soon.
+- **HashiCorp Vault** (`org.trustweave:kms-plugins-hashicorp`) – HashiCorp Vault Transit engine. See [HashiCorp Vault KMS Integration Guide](../integrations/hashicorp-vault-kms.md).
+- **Thales CipherTrust** (`org.trustweave:kms-plugins-thales`) – Thales CipherTrust Manager integration. Documentation coming soon.
+- **Thales Luna** (`org.trustweave:kms-plugins-thales-luna`) – Thales Luna HSM integration. Documentation coming soon.
+- **CyberArk Conjur** (`org.trustweave:kms-plugins-cyberark`) – CyberArk Conjur secrets management integration. Documentation coming soon.
+- **Fortanix DSM** (`org.trustweave:kms-plugins-fortanix`) – Fortanix Data Security Manager multi-cloud key management. Documentation coming soon.
+- **Entrust** (`org.trustweave:kms-plugins-entrust`) – Entrust key management integration. Documentation coming soon.
+- **Utimaco** (`org.trustweave:kms-plugins-utimaco`) – Utimaco HSM integration. Documentation coming soon.
 
 #### Other KMS Integrations
 
-- **walt.id** (`org.trustweave.kms:waltid`) – walt.id-based KMS and DID methods. See [walt.id Integration Guide](../integrations/waltid.md).
+- **walt.id** (`org.trustweave:kms-plugins-waltid`) – walt.id-based KMS and DID methods. See [walt.id Integration Guide](../integrations/waltid.md).
 
 ### DID Method Plugins
 
-- **GoDiddy** (`org.trustweave.did:godiddy`) – HTTP integration with GoDiddy services. Universal Resolver, Registrar, Issuer, Verifier. Supports 20+ DID methods. See [GoDiddy Integration Guide](../integrations/godiddy.md).
-- **did:key** (`org.trustweave.did:key`) – Native did:key implementation. See [Key DID Integration Guide](../integrations/key-did.md).
-- **did:web** (`org.trustweave.did:web`) – Web DID method. See [Web DID Integration Guide](../integrations/web-did.md).
-- **did:ion** (`org.trustweave.did:ion`) – Microsoft ION DID method. See [ION DID Integration Guide](../integrations/ion-did.md).
+- **GoDiddy** (`org.trustweave:did-plugins-godiddy`) – HTTP integration with GoDiddy services. Universal Resolver, Registrar, Issuer, Verifier. Supports 20+ DID methods. See [GoDiddy Integration Guide](../integrations/godiddy.md).
+- **did:key** (`org.trustweave:did-plugins-key`) – Native did:key implementation. See [Key DID Integration Guide](../integrations/key-did.md).
+- **did:web** (`org.trustweave:did-plugins-web`) – Web DID method. See [Web DID Integration Guide](../integrations/web-did.md).
+- **did:ion** (`org.trustweave:did-plugins-ion`) – Microsoft ION DID method. See [ION DID Integration Guide](../integrations/ion-did.md).
 - See [Integration Modules](../integrations/README.md) for all DID method implementations.
 
 ### Blockchain Anchor Plugins
 
-- **Algorand** (`org.trustweave.chains:algorand`) – Algorand blockchain adapter. Mainnet and testnet support. See [Algorand Integration Guide](../integrations/algorand.md).
-- **Polygon** (`org.trustweave.chains:polygon`) – Polygon blockchain adapter. See [Integration Modules](../integrations/README.md#blockchain-anchor-integrations).
-- **Ethereum** (`org.trustweave.chains:ethereum`) – Ethereum blockchain adapter. See [Ethereum Anchor Integration Guide](../integrations/ethereum-anchor.md).
-- **Base** (`org.trustweave.chains:base`) – Base (Coinbase L2) adapter. See [Base Anchor Integration Guide](../integrations/base-anchor.md).
-- **Arbitrum** (`org.trustweave.chains:arbitrum`) – Arbitrum adapter. See [Arbitrum Anchor Integration Guide](../integrations/arbitrum-anchor.md).
+- **Algorand** (`org.trustweave:anchors-plugins-algorand`) – Algorand blockchain adapter. Mainnet and testnet support. See [Algorand Integration Guide](../integrations/algorand.md).
+- **Polygon** (`org.trustweave:anchors-plugins-polygon`) – Polygon blockchain adapter. See [Integration Modules](../integrations/README.md#blockchain-anchor-integrations).
+- **Ethereum** (`org.trustweave:anchors-plugins-ethereum`) – Ethereum blockchain adapter. See [Ethereum Anchor Integration Guide](../integrations/ethereum-anchor.md).
+- **Base** (`org.trustweave:anchors-plugins-base`) – Base (Coinbase L2) adapter. See [Base Anchor Integration Guide](../integrations/base-anchor.md).
+- **Arbitrum** (`org.trustweave:anchors-plugins-arbitrum`) – Arbitrum adapter. See [Arbitrum Anchor Integration Guide](../integrations/arbitrum-anchor.md).
 - See [Integration Modules](../integrations/README.md) for all blockchain adapters.
 
 ## Design Patterns
 
 ### Scoped Registry Pattern
 
-Registries are owned by the application context rather than global singletons:
+Registries are owned by the application context rather than global singletons. Application code normally does **not** construct **`TrustWeaveConfig`** directly (its constructor is **`internal`**). The **`TrustWeave.build { }`** factory wires KMS, DID methods, anchor clients, and registries for you (`build` is **`suspend`**):
 
 ```kotlin
-val didRegistry = DidMethodRegistry().apply { register(didMethod) }
-val blockchainRegistry = BlockchainAnchorRegistry().apply { register(chainId, client) }
+import kotlinx.coroutines.runBlocking
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.AnchorProviders
 
-val config = TrustWeaveConfig(
-    kms = kms,
-    walletFactory = walletFactory,
-    didRegistry = didRegistry,
-    blockchainRegistry = blockchainRegistry,
-    credentialRegistry = CredentialServiceRegistry.create()
-)
-val TrustWeave = TrustWeave.create(config)
+fun main() = runBlocking {
+    val trustWeave = TrustWeave.build {
+        customKms(kms)
+        did {
+            method("web") { domain("example.com") }
+        }
+        anchor {
+            chain("algorand:testnet") {
+                provider(AnchorProviders.ALGORAND)
+                options { /* provider options */ }
+            }
+        }
+        factories(walletFactory = walletFactory)
+    }
+}
 ```
 
 ### Service Provider Interface (SPI)
@@ -376,13 +394,13 @@ All external dependencies are abstracted through interfaces:
 ```
 Application
     ↓
-TrustWeaveContext.getDidmethod(KEY)
+trustWeave.createDid { … }  (uses DidManagementService + DidMethodRegistry)
     ↓
 DidMethod.createDid()
     ↓
 KeyManagementService.generateKey()
     ↓
-DidDocument (returned)
+DidCreationResult / DidDocument (per API)
 ```
 
 ### Blockchain Anchoring Flow
@@ -390,7 +408,7 @@ DidDocument (returned)
 ```
 Application
     ↓
-TrustWeaveContext.getBlockchainClient("algorand:mainnet")
+trustWeave.blockchains.anchor(…, chainId = "algorand:mainnet")
     ↓
 BlockchainAnchorClient.writePayload()
     ↓
@@ -439,18 +457,18 @@ trustweave-testkit
 ### Integration Module Dependencies
 
 ```
-KMS Plugins (org.trustweave.kms:*)
+KMS Plugins (org.trustweave:kms-plugins-*)
     → trustweave-common
     → trustweave-kms
     See: [KMS Integration Guides](../integrations/README.md#other-did--kms-integrations)
 
-DID Plugins (org.trustweave.did:*)
+DID Plugins (org.trustweave:did-plugins-*)
     → trustweave-common
     → trustweave-did
     → trustweave-kms
     See: [DID Integration Guides](../integrations/README.md#did-method-integrations)
 
-Chain Plugins (org.trustweave.chains:*)
+Chain Plugins (org.trustweave:anchors-plugins-*)
     → trustweave-common
     → trustweave-anchor
     See: [Blockchain Integration Guides](../integrations/README.md#blockchain-anchor-integrations)
@@ -480,5 +498,5 @@ Chain Plugins (org.trustweave.chains:*)
 
 - Learn about [Core Modules](../modules/core-modules.md)
 - Explore [Integration Modules](../integrations/README.md)
-- Review the [Trust Layer Setup Checklist](../core-concepts/trust-registry.md#trust-layer-setup-checklist) before wiring issuance or verification flows
+- Review the [TrustWeave setup checklist](../core-concepts/trust-registry.md#trustweave-setup-checklist) before wiring issuance or verification flows
 

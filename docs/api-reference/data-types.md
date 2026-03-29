@@ -116,73 +116,62 @@ data class VerifiablePresentation(
 
 ### DidResolutionResult
 
-Result of DID resolution.
+Sealed result of DID resolution (`org.trustweave.did.resolver.DidResolutionResult`). Use an exhaustive **`when`**—there is no single nullable **`document`** on one flat type.
+
+- **`Success`** — **`document`** (**`DidDocument`**, always present), **`documentMetadata`**, **`resolutionMetadata`**
+- **`Failure`** (sealed) — **`NotFound`** (**`did`**, optional **`reason`**), **`InvalidFormat`** (invalid DID string, **`reason`**), **`MethodNotRegistered`** (**`method`**, **`availableMethods`**), **`ResolutionError`** (**`did`**, **`reason`**, optional **`cause`**)
 
 ```kotlin
-data class DidResolutionResult(
-    val document: DidDocument?,              // Resolved DID document
-    val metadata: DidResolutionMetadata      // Resolution metadata
-)
-```
+import org.trustweave.did.resolver.DidResolutionResult
 
-**Properties:**
-- `document`: Resolved DID document (null if not found)
-- `metadata`: Resolution metadata (method, error, etc.)
+when (val result = trustWeave.resolveDid(did)) {
+    is DidResolutionResult.Success -> result.document
+    is DidResolutionResult.Failure.NotFound -> { /* … */ result }
+    is DidResolutionResult.Failure.InvalidFormat -> { /* … */ result }
+    is DidResolutionResult.Failure.MethodNotRegistered -> { /* … */ result }
+    is DidResolutionResult.Failure.ResolutionError -> { /* … */ result }
+}
+```
 
 ### DidResolutionMetadata
 
-Metadata about DID resolution.
-
-```kotlin
-data class DidResolutionMetadata(
-    val method: String,                      // DID method used
-    val error: String? = null                // Error message if resolution failed
-)
-```
+Structured resolution metadata (`org.trustweave.did.resolver.DidResolutionMetadata`): **`contentType`**, optional W3C-style **`error`** / **`errorMessage`**, **`pattern`**, **`driverUrl`**, **`duration`**, **`retrieved`**, **`canonicalId`**, **`equivalentId`**, **`nextUpdate`**, **`nextVersionId`**, and extensible string **`properties`**. Success and failure results carry metadata on the corresponding **`DidResolutionResult`** subtype.
 
 ### DidCreationOptions
 
-Options for creating DIDs.
+Options for creating DIDs (`org.trustweave.did.DidCreationOptions`).
 
 ```kotlin
 data class DidCreationOptions(
     val algorithm: KeyAlgorithm = KeyAlgorithm.ED25519,
-    val purposes: List<KeyPurpose> = listOf(KeyPurpose.AUTHENTICATION, KeyPurpose.ASSERTION_METHOD),
-    val additionalProperties: Map<String, Any> = emptyMap()
+    val purposes: List<KeyPurpose> = listOf(KeyPurpose.AUTHENTICATION),
+    val additionalProperties: Map<String, Any?> = emptyMap()
 )
 ```
 
 **Properties:**
-- `algorithm`: Key algorithm (ED25519, SECP256K1, RSA)
-- `purposes`: List of key purposes
-- `additionalProperties`: Method-specific options
+- **`algorithm`**: Key algorithm (e.g. **`ED25519`**, **`SECP256K1`**)
+- **`purposes`**: **`KeyPurpose`** entries (e.g. **`AUTHENTICATION`**, **`ASSERTION`** maps to the spec’s assertionMethod relationship)
+- **`additionalProperties`**: Method-specific options
 
 ## Credential Types
 
-### CredentialVerificationResult
+### VerificationResult
 
-Result of credential verification.
+Sealed result of credential (or presentation) verification (`org.trustweave.credential.results.VerificationResult`).
 
-```kotlin
-data class CredentialVerificationResult(
-    val valid: Boolean,                      // Overall validity
-    val proofValid: Boolean,                 // Proof signature is valid
-    val issuerValid: Boolean,                // Issuer DID resolved successfully
-    val notExpired: Boolean,                 // Credential has not expired
-    val notRevoked: Boolean,                 // Credential is not revoked
-    val errors: List<String>,               // List of error messages
-    val warnings: List<String>             // List of warnings
-)
-```
+- **`Valid`** — Cryptographic and configured checks passed; includes **`credential`**, issuer/subject IRIs, issuance and optional expiration instants, **`warnings`**, and optional format metadata.
+- **`Invalid`** — Sealed failure hierarchy, including **`InvalidProof`**, **`Expired`**, **`NotYetValid`**, **`Revoked`**, **`InvalidIssuer`**, **`UntrustedIssuer`**, **`UnsupportedFormat`**, **`AdapterNotReady`**, **`SchemaValidationFailed`**, **`MultipleFailures`**, and others.
 
-**Properties:**
-- `valid`: Overall validity (all checks passed)
-- `proofValid`: Proof signature is valid
-- `issuerValid`: Issuer DID resolved successfully
-- `notExpired`: Credential has not expired
-- `notRevoked`: Credential is not revoked
-- `errors`: List of error messages if verification failed
-- `warnings`: List of warnings (e.g., expiring soon)
+Use **`result.isValid`** or an exhaustive **`when`**; aggregate messages with **`result.allErrors`** on invalid branches.
+
+### IssuanceResult
+
+Sealed result of **`trustWeave.issue { … }`** (`org.trustweave.credential.results.IssuanceResult`). **`Success`** exposes the issued **`VerifiableCredential`**; **`Failure`** includes **`UnsupportedFormat`**, **`AdapterNotReady`**, **`InvalidRequest`**, **`AdapterError`**, **`MultipleFailures`**, and other variants. Use **`result.isSuccess`** / exhaustive **`when`**; on any **`Failure`**, use **`result.allErrors`** for a single list of human-readable messages (logging, APIs).
+
+### PresentationResult
+
+Sealed result of the TrustWeave presentation flow (`org.trustweave.trust.types.PresentationResult`), e.g. **`presentationFromWalletResult`**. **`Success`** carries the **`VerifiablePresentation`**; **`Failure`** includes **`AdapterNotReady`**, **`InvalidRequest`**, and **`AdapterError`**. Use **`when`**; on failure, use **`result.allErrors`**.
 
 ### CredentialStatus
 

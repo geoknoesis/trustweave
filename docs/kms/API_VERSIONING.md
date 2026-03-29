@@ -147,10 +147,10 @@ interface KeyManagementService {
 ### Guarantees
 
 Within a major version (e.g., `1.x.x`), the API guarantees:
-- ✅ No breaking changes
-- ✅ Additive changes only (new methods, new result subtypes)
-- ✅ Bug fixes that don't change behavior
-- ✅ Performance improvements
+- No breaking changes
+- Additive changes only (new methods, new result subtypes)
+- Bug fixes that don't change behavior
+- Performance improvements
 
 ### Additive Changes (Non-Breaking)
 
@@ -319,7 +319,7 @@ If you have questions about API versioning or encounter issues:
 
 ## References
 
-- [Semantic Versioning](https://semver.org/)
-- [Kotlin API Design Guidelines](https://kotlinlang.org/docs/coding-conventions.html)
-- [TrustWeave Versioning Policy](../architecture/versioning-policy.md) (if exists)
+- Semantic Versioning](https://semver.org/)
+- Kotlin API Design Guidelines](https://kotlinlang.org/docs/coding-conventions.html)
+- TrustWeave Versioning Policy](../architecture/versioning-policy.md) (if exists)
 

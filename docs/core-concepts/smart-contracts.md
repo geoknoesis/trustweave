@@ -21,8 +21,8 @@ A **Smart Contract** in TrustWeave is an executable agreement between parties th
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:trustweave-contract:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:contract:0.6.0")
+    implementation("org.trustweave:distribution-all:0.6.0")
 }
 ```
 
@@ -46,7 +46,7 @@ dependencies {
 Smart Contracts follow a clear lifecycle:
 
 ```
-DRAFT → PENDING → ACTIVE → EXECUTED/EXPIRED/CANCELLED/TERMINATED
+DRAFT â†’ PENDING â†’ ACTIVE â†’ EXECUTED/EXPIRED/CANCELLED/TERMINATED
 ```
 
 | Status | Description |
@@ -163,7 +163,7 @@ ExecutionModel.Manual
 ## Example: Creating a Contract
 
 ```kotlin
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
 import org.trustweave.contract.models.*
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -304,13 +304,8 @@ val trustweave = TrustWeave.build { ... }
 try {
     val contract = trustweave.contracts.draft(request).getOrThrow()
     println("Contract created: ${contract.id}")
-} catch (error: TrustWeaveError) {
-    when (error) {
-        is TrustWeaveError.ValidationFailed -> {
-            println("Validation failed: ${error.reason}")
-        }
-        else -> println("Error: ${error.message}")
-    }
+} catch (e: Exception) {
+    println("Error: ${e.message}")
 }
 ```
 
@@ -318,10 +313,10 @@ try {
 
 Valid state transitions are enforced:
 
-- `DRAFT` → `PENDING`, `CANCELLED`
-- `PENDING` → `ACTIVE`, `CANCELLED`
-- `ACTIVE` → `EXECUTED`, `SUSPENDED`, `EXPIRED`, `TERMINATED`, `CANCELLED`
-- `SUSPENDED` → `ACTIVE`, `TERMINATED`, `CANCELLED`
+- `DRAFT` â†’ `PENDING`, `CANCELLED`
+- `PENDING` â†’ `ACTIVE`, `CANCELLED`
+- `ACTIVE` â†’ `EXECUTED`, `SUSPENDED`, `EXPIRED`, `TERMINATED`, `CANCELLED`
+- `SUSPENDED` â†’ `ACTIVE`, `TERMINATED`, `CANCELLED`
 - Terminal states (`EXECUTED`, `EXPIRED`, `CANCELLED`, `TERMINATED`) cannot transition
 
 ```kotlin
@@ -332,8 +327,8 @@ try {
         contractId = contract.id,
         newStatus = ContractStatus.EXECUTED // Must be ACTIVE first
     ).getOrThrow()
-} catch (error: TrustWeaveError) {
-    println("State transition failed: ${error.message}")
+} catch (e: Exception) {
+    println("State transition failed: ${e.message}")
 }
 ```
 
@@ -386,24 +381,24 @@ ContractParties(
 - **Validation**: Contract operations return `Result<T>` - use `fold()` or `getOrThrow()` for error handling
 - **State Management**: Use `updateStatus()` for explicit state transitions
 - **Expiration**: Check expiration before executing contracts
-- **Error Handling**: All operations return `Result<T>` with structured `TrustWeaveError` types
+- **Error Handling**: Operations return `Result<T>`; use `fold` / `getOrThrow` and handle failures as `Throwable`
 - **Storage**: `DefaultSmartContractService` is in-memory; use persistent storage for production
 - **Condition Evaluation**: Condition evaluation is extensible; implement custom evaluators for production
 
 ## Next Steps
 
 **Ready to use Smart Contracts?**
-- [Smart Contract API Reference](../api-reference/smart-contract-api.md) - Complete API documentation
-- [Parametric Insurance Scenario](../scenarios/smart-contract-parametric-insurance-scenario.md) - Complete parametric insurance example
-- [Parametric Insurance MGA Implementation Guide](../scenarios/parametric-insurance-mga-implementation-guide.md) - Advanced implementation guide
+- Smart Contract API Reference](../api-reference/smart-contract-api.md) - Complete API documentation
+- Parametric Insurance Scenario](../scenarios/smart-contract-parametric-insurance-scenario.md) - Complete parametric insurance example
+- Parametric Insurance MGA Implementation Guide](../scenarios/parametric-insurance-mga-implementation-guide.md) - Advanced implementation guide
 
 **Want to learn more?**
-- [Verifiable Credentials](verifiable-credentials.md) - Understand credential issuance and verification
-- [Blockchain Anchoring](blockchain-anchoring.md) - Learn about anchoring concepts
-- [DIDs](dids.md) - Understand DID management
-- [Evaluation Engines](evaluation-engines.md) - Pluggable condition evaluation with tamper protection
+- Verifiable Credentials](verifiable-credentials.md) - Understand credential issuance and verification
+- Blockchain Anchoring](blockchain-anchoring.md) - Learn about anchoring concepts
+- DIDs](dids.md) - Understand DID management
+- Evaluation Engines](evaluation-engines.md) - Pluggable condition evaluation with tamper protection
 
 **Explore related concepts:**
-- [Core API Reference](../api-reference/core-api.md) - Complete API documentation
-- [Use Case Scenarios](../scenarios/README.md) - More real-world examples
+- Core API Reference](../api-reference/core-api.md) - Complete API documentation
+- Use Case Scenarios](../scenarios/README.md) - More real-world examples
 

@@ -12,12 +12,12 @@ This guide demonstrates how to build a parametric travel insurance system using 
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created DIDs for travel insurance companies, airlines, weather services, and baggage tracking providers
-- ✅ Issued verifiable credentials for travel disruption data (flight delays, weather events, baggage status)
-- ✅ Built a standardized data oracle system using VCs that accepts data from multiple providers
-- ✅ Implemented parametric trigger verification for automatic payouts
-- ✅ Created multi-provider data acceptance workflows
-- ✅ Anchored travel data credentials to blockchain for tamper-proof triggers
+- Created DIDs for travel insurance companies, airlines, weather services, and baggage tracking providers
+- Issued verifiable credentials for travel disruption data (flight delays, weather events, baggage status)
+- Built a standardized data oracle system using VCs that accepts data from multiple providers
+- Implemented parametric trigger verification for automatic payouts
+- Created multi-provider data acceptance workflows
+- Anchored travel data credentials to blockchain for tamper-proof triggers
 
 ## Big Picture & Significance
 
@@ -110,13 +110,13 @@ Travel parametric insurance needs:
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Test kit for in-memory implementations
-    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:0.6.0")
 
     // Optional: Algorand adapter for real blockchain anchoring
-    implementation("org.trustweave.chains:algorand:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:anchors-plugins-algorand:0.6.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -133,14 +133,24 @@ Here's a complete travel parametric insurance workflow covering flight delays, w
 ```kotlin
 package com.example.travel.insurance
 
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
 import org.trustweave.core.*
-import org.trustweave.json.DigestUtils
+import org.trustweave.core.util.DigestUtils
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
 import java.time.Duration
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.testkit.services.*
+import org.trustweave.credential.results.getOrThrow
 
 fun main() = runBlocking {
     println("=".repeat(70))
@@ -149,43 +159,25 @@ fun main() = runBlocking {
 
     // Step 1: Create TrustWeave instance
     val trustWeave = TrustWeave.build {
-        factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
-        )
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
     }
-    println("\n✅ TrustWeave initialized")
+    println("\n[OK] TrustWeave initialized")
 
     // Step 2: Create DIDs for insurance company, airline, weather service, and baggage system
-    import org.trustweave.trust.types.DidCreationResult
-    import org.trustweave.trust.types.DidResolutionResult
-    import org.trustweave.trust.types.IssuanceResult
-    import org.trustweave.trust.types.VerificationResult
     
     val insuranceDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     val airlineDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     
     val weatherServiceDidResult = trustWeave.createDid { method(KEY) }
-    import org.trustweave.trust.types.getOrThrowDid
-    import org.trustweave.trust.types.getOrThrow
-    import org.trustweave.did.resolver.DidResolutionResult
-    import org.trustweave.did.identifiers.extractKeyId
-    
-    // Helper extension for resolution results
-    fun DidResolutionResult.getOrThrow() = when (this) {
-        is DidResolutionResult.Success -> this.document
-        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
-    }
     
     val weatherServiceDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     val baggageSystemDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 
-    println("✅ Insurance Company DID: ${insuranceDid.value}")
-    println("✅ Airline DID: ${airlineDid.value}")
-    println("✅ Weather Service DID: ${weatherServiceDid.value}")
-    println("✅ Baggage System DID: ${baggageSystemDid.value}")
+    println("[OK] Insurance Company DID: ${insuranceDid.value}")
+    println("[OK] Airline DID: ${airlineDid.value}")
+    println("[OK] Weather Service DID: ${weatherServiceDid.value}")
+    println("[OK] Baggage System DID: ${baggageSystemDid.value}")
 
     // ============================================
     // Scenario 1: Flight Delay Automatic Payout
@@ -194,7 +186,10 @@ fun main() = runBlocking {
     println("Scenario 1: Flight Delay Automatic Payout")
     println("-".repeat(70))
 
-    val airlineDoc = trustWeave.resolveDid(airlineDid).getOrThrow()
+    val airlineDoc = when (val res = trustWeave.resolveDid(airlineDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val airlineKeyId = airlineDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: error("No verification method found")
 
@@ -242,11 +237,10 @@ fun main() = runBlocking {
         signedBy(airlineDid)
     }
     
-    import org.trustweave.trust.types.getOrThrow
     
     val flightDelayCredential = flightDelayIssuanceResult.getOrThrow()
 
-    println("✅ Flight Delay Credential issued: ${flightDelayCredential.id}")
+    println("[OK] Flight Delay Credential issued: ${flightDelayCredential.id}")
 
     // Verify credential
     val delayVerificationResult = trustWeave.verify {
@@ -255,10 +249,10 @@ fun main() = runBlocking {
     
     when (delayVerificationResult) {
         is VerificationResult.Valid -> {
-            println("✅ Flight Delay Credential verified")
+            println("[OK] Flight Delay Credential verified")
         }
         is VerificationResult.Invalid -> {
-            println("❌ Flight delay credential invalid")
+            println("[FAIL] Flight delay credential invalid")
             return@runBlocking
         }
     }
@@ -271,15 +265,18 @@ fun main() = runBlocking {
     val delayThresholdMinutes = 180  // 3 hours
     val shouldPayoutDelay = delayMinutes > delayThresholdMinutes
 
-    println("\n📊 Flight Delay Trigger Check:")
+    println("\n[stats] Flight Delay Trigger Check:")
     println("   Delay: $delayMinutes minutes (${delayMinutes / 60.0} hours)")
     println("   Threshold: $delayThresholdMinutes minutes")
 
     if (shouldPayoutDelay) {
-        println("   ✅ TRIGGER MET: Delay exceeds threshold")
-        println("   💰 Automatic payout should be triggered")
+        println("   [OK] TRIGGER MET: Delay exceeds threshold")
+        println("   [payout] Automatic payout should be triggered")
 
-        val insuranceDoc = trustWeave.resolveDid(insuranceDid).getOrThrow()
+        val insuranceDoc = when (val res = trustWeave.resolveDid(insuranceDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
         val insuranceKeyId = insuranceDoc.verificationMethod.firstOrNull()?.extractKeyId()
             ?: error("No verification method found")
 
@@ -306,10 +303,10 @@ fun main() = runBlocking {
         
         val delayPayoutCredential = delayPayoutIssuanceResult.getOrThrow()
 
-        println("✅ Delay Payout Credential issued: ${delayPayoutCredential.id}")
+        println("[OK] Delay Payout Credential issued: ${delayPayoutCredential.id}")
         println("   Payout amount: $250 USD via virtual card")
     } else {
-        println("   ❌ TRIGGER NOT MET: Delay below threshold")
+        println("   [FAIL] TRIGGER NOT MET: Delay below threshold")
     }
 
     // ============================================
@@ -319,7 +316,10 @@ fun main() = runBlocking {
     println("Scenario 2: Weather Guarantee Automatic Payout")
     println("-".repeat(70))
 
-    val weatherDoc = trustWeave.resolveDid(weatherServiceDid).getOrThrow()
+    val weatherDoc = when (val res = trustWeave.resolveDid(weatherServiceDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val weatherKeyId = weatherDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: error("No verification method found")
 
@@ -360,7 +360,7 @@ fun main() = runBlocking {
         credential {
             id("urn:travel:weather-event:LHR-2024-10-08")
             type("VerifiableCredential", "WeatherEventCredential", "TravelOracleCredential")
-            issuer(weatherServiceDid.value)
+            issuer(weatherServiceDid)
             subject {
                 id("urn:travel:weather-event:LHR-2024-10-08")
                 "dataType" to "WeatherEvent"
@@ -375,7 +375,7 @@ fun main() = runBlocking {
     
     val weatherCredential = weatherIssuanceResult.getOrThrow()
 
-    println("✅ Weather Event Credential issued: ${weatherCredential.id}")
+    println("[OK] Weather Event Credential issued: ${weatherCredential.id}")
 
     // Verify credential
     val weatherVerificationResult = trustWeave.verify {
@@ -384,10 +384,10 @@ fun main() = runBlocking {
     
     when (weatherVerificationResult) {
         is VerificationResult.Valid -> {
-            println("✅ Weather Event Credential verified")
+            println("[OK] Weather Event Credential verified")
         }
         is VerificationResult.Invalid -> {
-            println("❌ Weather credential invalid")
+            println("[FAIL] Weather credential invalid")
             return@runBlocking
         }
     }
@@ -403,13 +403,13 @@ fun main() = runBlocking {
 
     val shouldPayoutWeather = isSevereWeather && causesTravelDisruption
 
-    println("\n📊 Weather Guarantee Trigger Check:")
+    println("\n[stats] Weather Guarantee Trigger Check:")
     println("   Severity: High")
     println("   Travel Disruption: $causesTravelDisruption")
 
     if (shouldPayoutWeather) {
-        println("   ✅ TRIGGER MET: Severe weather causes travel disruption")
-        println("   💰 Automatic payout should be triggered")
+        println("   [OK] TRIGGER MET: Severe weather causes travel disruption")
+        println("   [payout] Automatic payout should be triggered")
 
         val weatherPayoutIssuanceResult = trustWeave.issue {
             credential {
@@ -434,10 +434,10 @@ fun main() = runBlocking {
         
         val weatherPayoutCredential = weatherPayoutIssuanceResult.getOrThrow()
 
-        println("✅ Weather Payout Credential issued: ${weatherPayoutCredential.id}")
+        println("[OK] Weather Payout Credential issued: ${weatherPayoutCredential.id}")
         println("   Payout amount: $500 USD in airline miles")
     } else {
-        println("   ❌ TRIGGER NOT MET: Weather conditions don't meet criteria")
+        println("   [FAIL] TRIGGER NOT MET: Weather conditions don't meet criteria")
     }
 
     // ============================================
@@ -447,7 +447,10 @@ fun main() = runBlocking {
     println("Scenario 3: Baggage Delay Automatic Payout")
     println("-".repeat(70))
 
-    val baggageDoc = trustWeave.resolveDid(baggageSystemDid).getOrThrow()
+    val baggageDoc = when (val res = trustWeave.resolveDid(baggageSystemDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val baggageKeyId = baggageDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: error("No verification method found")
 
@@ -479,7 +482,7 @@ fun main() = runBlocking {
         credential {
             id("urn:travel:baggage-delay:ABC123-2024-10-08")
             type("VerifiableCredential", "BaggageDelayCredential", "TravelOracleCredential")
-            issuer(baggageSystemDid.value)
+            issuer(baggageSystemDid)
             subject {
                 id("urn:travel:baggage-delay:ABC123-2024-10-08")
                 "dataType" to "BaggageDelay"
@@ -494,7 +497,7 @@ fun main() = runBlocking {
     
     val baggageCredential = baggageIssuanceResult.getOrThrow()
 
-    println("✅ Baggage Delay Credential issued: ${baggageCredential.id}")
+    println("[OK] Baggage Delay Credential issued: ${baggageCredential.id}")
 
     // Verify credential
     val baggageVerificationResult = trustWeave.verify {
@@ -503,10 +506,10 @@ fun main() = runBlocking {
     
     when (baggageVerificationResult) {
         is VerificationResult.Valid -> {
-            println("✅ Baggage Delay Credential verified")
+            println("[OK] Baggage Delay Credential verified")
         }
         is VerificationResult.Invalid -> {
-            println("❌ Baggage credential invalid")
+            println("[FAIL] Baggage credential invalid")
             return@runBlocking
         }
     }
@@ -519,13 +522,13 @@ fun main() = runBlocking {
     val baggageThresholdHours = 24
     val shouldPayoutBaggage = delayHours > baggageThresholdHours
 
-    println("\n📊 Baggage Delay Trigger Check:")
+    println("\n[stats] Baggage Delay Trigger Check:")
     println("   Delay: $delayHours hours")
     println("   Threshold: $baggageThresholdHours hours")
 
     if (shouldPayoutBaggage) {
-        println("   ✅ TRIGGER MET: Baggage delay exceeds threshold")
-        println("   💰 Automatic payout should be triggered")
+        println("   [OK] TRIGGER MET: Baggage delay exceeds threshold")
+        println("   [payout] Automatic payout should be triggered")
 
         val baggagePayoutIssuanceResult = trustWeave.issue {
             credential {
@@ -550,10 +553,10 @@ fun main() = runBlocking {
         
         val baggagePayoutCredential = baggagePayoutIssuanceResult.getOrThrow()
 
-        println("✅ Baggage Payout Credential issued: ${baggagePayoutCredential.id}")
+        println("[OK] Baggage Payout Credential issued: ${baggagePayoutCredential.id}")
         println("   Payout amount: $200 USD via e-voucher")
     } else {
-        println("   ❌ TRIGGER NOT MET: Baggage delay below threshold")
+        println("   [FAIL] TRIGGER NOT MET: Baggage delay below threshold")
     }
 
     // ============================================
@@ -569,9 +572,9 @@ fun main() = runBlocking {
         ?.jsonPrimitive?.content ?: ""
 
     if (currentDelayDigest == credentialDelayDigest) {
-        println("✅ Flight Delay Data Integrity Verified")
+        println("[OK] Flight Delay Data Integrity Verified")
     } else {
-        println("❌ Flight Delay Data Integrity FAILED")
+        println("[FAIL] Flight Delay Data Integrity FAILED")
     }
 
     // Verify weather data integrity
@@ -580,9 +583,9 @@ fun main() = runBlocking {
         ?.jsonPrimitive?.content ?: ""
 
     if (currentWeatherDigest == credentialWeatherDigest) {
-        println("✅ Weather Data Integrity Verified")
+        println("[OK] Weather Data Integrity Verified")
     } else {
-        println("❌ Weather Data Integrity FAILED")
+        println("[FAIL] Weather Data Integrity FAILED")
     }
 
     // Verify baggage data integrity
@@ -591,13 +594,13 @@ fun main() = runBlocking {
         ?.jsonPrimitive?.content ?: ""
 
     if (currentBaggageDigest == credentialBaggageDigest) {
-        println("✅ Baggage Data Integrity Verified")
+        println("[OK] Baggage Data Integrity Verified")
     } else {
-        println("❌ Baggage Data Integrity FAILED")
+        println("[FAIL] Baggage Data Integrity FAILED")
     }
 
     println("\n" + "=".repeat(70))
-    println("✅ Parametric Travel Insurance Scenario Complete!")
+    println("[OK] Parametric Travel Insurance Scenario Complete!")
     println("=".repeat(70))
 }
 ```
@@ -608,63 +611,63 @@ fun main() = runBlocking {
 Parametric Travel Insurance - Complete Example
 ======================================================================
 
-✅ TrustWeave initialized
-✅ Insurance Company DID: did:key:z6Mk...
-✅ Airline DID: did:key:z6Mk...
-✅ Weather Service DID: did:key:z6Mk...
-✅ Baggage System DID: did:key:z6Mk...
+[OK] TrustWeave initialized
+[OK] Insurance Company DID: did:key:z6Mk...
+[OK] Airline DID: did:key:z6Mk...
+[OK] Weather Service DID: did:key:z6Mk...
+[OK] Baggage System DID: did:key:z6Mk...
 
 ----------------------------------------------------------------------
 Scenario 1: Flight Delay Automatic Payout
 ----------------------------------------------------------------------
-✅ Flight Delay Credential issued: urn:uuid:...
-✅ Flight Delay Credential verified
+[OK] Flight Delay Credential issued: urn:uuid:...
+[OK] Flight Delay Credential verified
 
-📊 Flight Delay Trigger Check:
+[stats] Flight Delay Trigger Check:
    Delay: 210 minutes (3.5 hours)
    Threshold: 180 minutes
-   ✅ TRIGGER MET: Delay exceeds threshold
-   💰 Automatic payout should be triggered
-✅ Delay Payout Credential issued: urn:uuid:...
+   [OK] TRIGGER MET: Delay exceeds threshold
+   [payout] Automatic payout should be triggered
+[OK] Delay Payout Credential issued: urn:uuid:...
    Payout amount: $250 USD via virtual card
 
 ----------------------------------------------------------------------
 Scenario 2: Weather Guarantee Automatic Payout
 ----------------------------------------------------------------------
-✅ Weather Event Credential issued: urn:uuid:...
-✅ Weather Event Credential verified
+[OK] Weather Event Credential issued: urn:uuid:...
+[OK] Weather Event Credential verified
 
-📊 Weather Guarantee Trigger Check:
+[stats] Weather Guarantee Trigger Check:
    Severity: High
    Travel Disruption: true
-   ✅ TRIGGER MET: Severe weather causes travel disruption
-   💰 Automatic payout should be triggered
-✅ Weather Payout Credential issued: urn:uuid:...
+   [OK] TRIGGER MET: Severe weather causes travel disruption
+   [payout] Automatic payout should be triggered
+[OK] Weather Payout Credential issued: urn:uuid:...
    Payout amount: $500 USD in airline miles
 
 ----------------------------------------------------------------------
 Scenario 3: Baggage Delay Automatic Payout
 ----------------------------------------------------------------------
-✅ Baggage Delay Credential issued: urn:uuid:...
-✅ Baggage Delay Credential verified
+[OK] Baggage Delay Credential issued: urn:uuid:...
+[OK] Baggage Delay Credential verified
 
-📊 Baggage Delay Trigger Check:
+[stats] Baggage Delay Trigger Check:
    Delay: 25 hours
    Threshold: 24 hours
-   ✅ TRIGGER MET: Baggage delay exceeds threshold
-   💰 Automatic payout should be triggered
-✅ Baggage Payout Credential issued: urn:uuid:...
+   [OK] TRIGGER MET: Baggage delay exceeds threshold
+   [payout] Automatic payout should be triggered
+[OK] Baggage Payout Credential issued: urn:uuid:...
    Payout amount: $200 USD via e-voucher
 
 ----------------------------------------------------------------------
 Data Integrity Verification
 ----------------------------------------------------------------------
-✅ Flight Delay Data Integrity Verified
-✅ Weather Data Integrity Verified
-✅ Baggage Data Integrity Verified
+[OK] Flight Delay Data Integrity Verified
+[OK] Weather Data Integrity Verified
+[OK] Baggage Data Integrity Verified
 
 ======================================================================
-✅ Parametric Travel Insurance Scenario Complete!
+[OK] Parametric Travel Insurance Scenario Complete!
 ======================================================================
 ```
 
@@ -829,11 +832,11 @@ val anchorResult = trustWeave.blockchains.anchor(
     chainId = "algorand:testnet"
 ).fold(
     onSuccess = { anchor ->
-        println("✅ Credential anchored: ${anchor.ref.txHash}")
+        println("[OK] Credential anchored: ${anchor.ref.txHash}")
         anchor
     },
     onFailure = { error ->
-        println("❌ Anchoring failed: ${error.message}")
+        println("[FAIL] Anchoring failed: ${error.message}")
         null
     }
 )
@@ -880,8 +883,8 @@ if (anchorResult != null) {
 
 ## Related Documentation
 
-- [Parametric Insurance with Earth Observation](parametric-insurance-eo-scenario.md) - EO data insurance
-- [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
-- [API Reference](../api-reference/core-api.md) - Complete API documentation
+- Parametric Insurance with Earth Observation](parametric-insurance-eo-scenario.md) - EO data insurance
+- Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
+- API Reference](../api-reference/core-api.md) - Complete API documentation
 
 

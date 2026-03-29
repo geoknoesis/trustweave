@@ -17,12 +17,12 @@ Version 1.0.0 introduces several improvements:
 
 ## Migration Checklist
 
-- [ ] Update dependencies to 1.0.0-SNAPSHOT
-- [ ] Migrate to type-safe options
-- [ ] Update error handling to use `Result<T>`
-- [ ] Update plugin lifecycle calls
-- [ ] Test thoroughly
-- [ ] Update documentation references
+- Update dependencies to 0.6.0
+- Migrate to type-safe options
+- Update error handling to use `Result<T>`
+- Update plugin lifecycle calls
+- Test thoroughly
+- Update documentation references
 
 ## 1. Migrating to Type-Safe Options
 
@@ -80,7 +80,7 @@ result.fold(
     },
     onFailure = { error ->
         when (error) {
-            is TrustWeaveError.ChainNotRegistered -> {
+            is BlockchainException.ChainNotRegistered -> {
                 println("Chain not registered: ${error.chainId}")
                 println("Available chains: ${error.availableChains}")
             }
@@ -119,11 +119,11 @@ result.fold(
     },
     onFailure = { error ->
         when (error) {
-            is TrustWeaveError.DidMethodNotRegistered -> {
+            is DidException.DidMethodNotRegistered -> {
                 println("Method not registered: ${error.method}")
                 println("Available methods: ${error.availableMethods}")
             }
-            is TrustWeaveError.InvalidDidFormat -> {
+            is DidException.InvalidDidFormat -> {
                 println("Invalid format: ${error.reason}")
             }
             else -> {
@@ -143,38 +143,27 @@ result.fold(
 
 ```kotlin
 // No explicit lifecycle management
-val TrustWeave = TrustWeave.create()
-// Use immediately
+val trustWeave = TrustWeave.quickStart()
+// Use immediately; resources released when GC’d (not ideal for production)
 ```
 
 ### After
 
 ```kotlin
-val TrustWeave = TrustWeave.create()
+import kotlinx.coroutines.runBlocking
+import org.trustweave.trust.TrustWeave
 
-// Initialize plugins
-TrustWeave.initialize().fold(
-    onSuccess = { println("Plugins initialized") },
-    onFailure = { error ->
-        println("Initialization error: ${error.message}")
+fun main() = runBlocking {
+    val trustWeave = TrustWeave.quickStart()
+    try {
+        // Use trustWeave
+    } finally {
+        trustWeave.close()
     }
-)
-
-// Start plugins
-TrustWeave.start().fold(
-    onSuccess = { println("Plugins started") },
-    onFailure = { error -> println("Start error: ${error.message}") }
-)
-
-// Use TrustWeave
-// ...
-
-// Stop plugins (cleanup)
-TrustWeave.stop().fold(
-    onSuccess = { println("Plugins stopped") },
-    onFailure = { error -> println("Stop error: ${error.message}") }
-)
+}
 ```
+
+If your own adapters implement **`PluginLifecycle`**, call your hooks from the same composition root (see [Plugin lifecycle](../advanced/plugin-lifecycle.md)). The **`TrustWeave`** facade does not expose **`initialize()`** / **`start()`** / **`stop()`**.
 
 ## 5. Migrating Type-Safe Chain IDs
 

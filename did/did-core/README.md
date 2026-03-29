@@ -68,6 +68,11 @@ The module provides a fluent, idiomatic Kotlin API with DSL builders and extensi
 
 ```kotlin
 import org.trustweave.did.identifiers.Did
+import org.trustweave.did.dsl.resolveOrNull
+import org.trustweave.did.dsl.resolveOrThrow
+import org.trustweave.did.dsl.resolveWith
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
 import org.trustweave.did.resolver.universalResolver
 import org.trustweave.did.registry.didMethodRegistry
 import org.trustweave.did.resolver.RegistryBasedResolver
@@ -95,27 +100,15 @@ if ("key" in registry) {      // `in` operator
 }
 registry["new"] = NewDidMethod()  // Assignment
 
-// Fluent resolution with extensions
-val document = Did("did:key:123")
-    .resolveWith(resolver)
-    .getOrThrow()
+// Resolve to document (throws DidException on failure) or null
+val document = Did("did:key:123").resolveOrThrow(resolver)
+val doc = Did("did:key:123").resolveOrNull(resolver)
 
-// Or with safe access
-val doc = Did("did:key:123")
-    .resolveWith(resolver)
-    .getOrNull()
-
-// Functional style with callbacks
-Did("did:key:123")
-    .resolveWith(resolver)
-    .onSuccess { println("Resolved: ${it.id}") }
-    .onFailure { println("Failed: ${it.reason}") }
-
-// Fold for transformation
-val message = result.fold(
-    onSuccess = { "Resolved: ${it.id.value}" },
-    onFailure = { "Failed: ${it.reason}" }
-)
+// Sealed DidResolutionResult + diagnostics (errorMessage, errorCode, …)
+when (val res = Did("did:key:123").resolveWith(resolver)) {
+    is DidResolutionResult.Success -> println("Resolved: ${res.document.id}")
+    is DidResolutionResult.Failure -> println("Failed: ${res.errorMessage}")
+}
 ```
 
 ### DID Method Registration
@@ -196,8 +189,11 @@ try {
 ### DID Extensions
 
 ```kotlin
-// Resolve with fluent API
-val document = did.resolveWith(resolver).getOrThrow()
+import org.trustweave.did.dsl.resolveOrNull
+import org.trustweave.did.dsl.resolveOrThrow
+
+// Resolve with extensions
+val document = did.resolveOrThrow(resolver)
 val documentOrNull = did.resolveOrNull(resolver)
 
 // Check method

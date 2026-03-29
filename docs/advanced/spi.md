@@ -135,7 +135,7 @@ Plugins can be added or removed without modifying application code:
 ```kotlin
 // Add chains/plugins/algorand dependency to enable Algorand adapter
 dependencies {
-    implementation("org.trustweave:chains/plugins/algorand:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:anchors-plugins-algorand:0.6.0")
 }
 ```
 
@@ -232,7 +232,7 @@ override fun create(
 
 ## References
 
-- [Java Service Provider Interface](https://docs.oracle.com/javase/tutorial/ext/basics/spi.html)
-- [Core Modules](../modules/core-modules.md)
-- [Creating Plugins](../contributing/creating-plugins.md)
+- Java Service Provider Interface](https://docs.oracle.com/javase/tutorial/ext/basics/spi.html)
+- Core Modules](../modules/core-modules.md)
+- Creating Plugins](../contributing/creating-plugins.md)
 

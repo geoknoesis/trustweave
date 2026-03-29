@@ -12,14 +12,14 @@ This guide demonstrates how to build a complete biometric verification system us
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created DIDs for identity provider (issuer) and individual (holder)
-- ✅ Issued Verifiable Credentials for biometric data (fingerprint, face, voice)
-- ✅ Stored biometric credentials in wallet
-- ✅ Implemented biometric template matching
-- ✅ Created privacy-preserving biometric presentations
-- ✅ Verified biometric data without revealing raw biometrics
-- ✅ Implemented multi-modal biometric verification
-- ✅ Demonstrated biometric liveness detection
+- Created DIDs for identity provider (issuer) and individual (holder)
+- Issued Verifiable Credentials for biometric data (fingerprint, face, voice)
+- Stored biometric credentials in wallet
+- Implemented biometric template matching
+- Created privacy-preserving biometric presentations
+- Verified biometric data without revealing raw biometrics
+- Implemented multi-modal biometric verification
+- Demonstrated biometric liveness detection
 
 ## Big Picture & Significance
 
@@ -141,7 +141,7 @@ Add TrustWeave dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -158,17 +158,26 @@ Here's the full biometric verification flow using the TrustWeave facade API:
 ```kotlin
 package com.example.biometric.verification
 
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
 import org.trustweave.core.*
-import org.trustweave.credential.PresentationOptions
-import org.trustweave.credential.wallet.Wallet
-import org.trustweave.json.DigestUtils
-import org.trustweave.spi.services.WalletCreationOptionsBuilder
+import org.trustweave.wallet.Wallet
+import org.trustweave.core.util.DigestUtils
+import org.trustweave.wallet.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
-import org.trustweave.credential.format.ProofSuiteId
+import org.trustweave.credential.model.ProofType
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Base64
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.testkit.services.*
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.credential.results.VerificationResult
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 fun main() = runBlocking {
     println("=".repeat(70))
@@ -179,24 +188,17 @@ fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
-        credentials { defaultProofSuite(ProofSuiteId.VC_LD) }
+        credentials { defaultProofType(ProofType.Ed25519Signature2020) }
     }
     println("\n✅ TrustWeave initialized")
 
     // Step 2: Create DIDs for identity provider, individual, and service providers
-    import org.trustweave.trust.types.getOrThrowDid
-    import org.trustweave.trust.types.getOrThrow
-    import org.trustweave.did.resolver.DidResolutionResult
-    import org.trustweave.did.identifiers.extractKeyId
-    
-    // Helper extension for resolution results
-    fun DidResolutionResult.getOrThrow() = when (this) {
-        is DidResolutionResult.Success -> this.document
-        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
-    }
     
     val identityProviderDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
-    val identityProviderDoc = trustWeave.resolveDid(identityProviderDid).getOrThrow()
+    val identityProviderDoc = when (val res = trustWeave.resolveDid(identityProviderDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val identityProviderKeyId = identityProviderDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
@@ -211,7 +213,7 @@ fun main() = runBlocking {
 
     // Step 3: Simulate biometric capture and template creation
     // In production, this would use actual biometric capture devices
-    println("\n🔐 Biometric Template Creation:")
+    println("\n[auth] Biometric Template Creation:")
 
     // Simulate fingerprint template (in production, use fingerprint SDK)
     val fingerprintTemplate = "fingerprint-template-data-${individualDid}".toByteArray()
@@ -389,11 +391,11 @@ fun main() = runBlocking {
     }
 
     // Step 9: Bank service - Fingerprint authentication
-    println("\n🏦 Bank Service - Fingerprint Authentication:")
+    println("\n[bank] Bank Service - Fingerprint Authentication:")
 
     val fingerprintVerification = trustWeave.verify { credential(fingerprintCredential) }
 
-    if (fingerprintVerification.valid) {
+    if (fingerprintVerification is VerificationResult.Valid) {
         println("✅ Fingerprint Credential: VALID")
 
         val subject = fingerprintCredential.credentialSubject.jsonObject
@@ -416,20 +418,20 @@ fun main() = runBlocking {
             println("✅ Liveness check passed")
             println("✅ Authentication SUCCESS - Access granted to bank account")
         } else {
-            println("❌ Fingerprint match failed or liveness check failed")
-            println("❌ Authentication FAILED")
+            println("[FAIL] Fingerprint match failed or liveness check failed")
+            println("[FAIL] Authentication FAILED")
         }
     } else {
-        println("❌ Fingerprint Credential: INVALID")
-        println("❌ Authentication FAILED")
+        println("[FAIL] Fingerprint Credential: INVALID")
+        println("[FAIL] Authentication FAILED")
     }
 
     // Step 10: Building access - Face recognition
-    println("\n🏢 Building Access - Face Recognition:")
+    println("\n[building] Building Access - Face Recognition:")
 
     val faceVerification = trustWeave.verify { credential(faceCredential) }
 
-    if (faceVerification.valid) {
+    if (faceVerification is VerificationResult.Valid) {
         println("✅ Face Credential: VALID")
 
         val subject = faceCredential.credentialSubject.jsonObject
@@ -454,19 +456,19 @@ fun main() = runBlocking {
             println("✅ Liveness check passed")
             println("✅ Access GRANTED to building")
         } else {
-            println("❌ Face match failed or liveness check failed")
-            println("❌ Access DENIED")
+            println("[FAIL] Face match failed or liveness check failed")
+            println("[FAIL] Access DENIED")
         }
     } else {
-        println("❌ Face Credential: INVALID")
-        println("❌ Access DENIED")
+        println("[FAIL] Face Credential: INVALID")
+        println("[FAIL] Access DENIED")
     }
 
     // Step 11: Multi-modal biometric verification (fingerprint + face)
-    println("\n🔐 Multi-Modal Biometric Verification (Fingerprint + Face):")
+    println("\n[auth] Multi-Modal Biometric Verification (Fingerprint + Face):")
 
-    val fingerprintValid = trustWeave.verify { credential(fingerprintCredential) }.valid
-    val faceValid = trustWeave.verify { credential(faceCredential) }.valid
+    val fingerprintValid = trustWeave.verify { credential(fingerprintCredential) } is VerificationResult.Valid
+    val faceValid = trustWeave.verify { credential(faceCredential) } is VerificationResult.Valid
 
     if (fingerprintValid && faceValid) {
         println("✅ Both biometric credentials are valid")
@@ -485,12 +487,12 @@ fun main() = runBlocking {
             println("✅ Multi-modal verification: SUCCESS")
             println("✅ High-security access GRANTED")
         } else {
-            println("❌ One or more biometric matches failed")
-            println("❌ High-security access DENIED")
+            println("[FAIL] One or more biometric matches failed")
+            println("[FAIL] High-security access DENIED")
         }
     } else {
-        println("❌ One or more biometric credentials invalid")
-        println("❌ High-security access DENIED")
+        println("[FAIL] One or more biometric credentials invalid")
+        println("[FAIL] High-security access DENIED")
     }
 
     // Step 12: Create privacy-preserving biometric presentation
@@ -498,10 +500,10 @@ fun main() = runBlocking {
         pres.createPresentation(
             credentialIds = listOf(faceCredentialId), // Only share face for building access
             holderDid = individualDid,
-            options = PresentationOptions(
-                holderDid = individualDid,
-                challenge = "biometric-verification-${System.currentTimeMillis()}"
-            )
+            options = mapOf(
+            "holderDid" to individualDid,
+            "challenge" to "biometric-verification-${System.currentTimeMillis()}"
+        )
         )
     } ?: error("Presentation capability not available")
 
@@ -511,7 +513,7 @@ fun main() = runBlocking {
     println("   Note: Only selected biometric shared, not all biometrics")
 
     // Step 13: Demonstrate privacy - verify no raw biometrics exposed
-    println("\n🔒 Privacy Verification:")
+    println("\n[privacy] Privacy Verification:")
     val presentationCredential = biometricPresentation.verifiableCredential.firstOrNull()
     if (presentationCredential != null) {
         val subject = presentationCredential.credentialSubject
@@ -521,15 +523,15 @@ fun main() = runBlocking {
         val hasTemplate = biometric?.containsKey("template") ?: false
         val hasTemplateDigest = biometric?.containsKey("templateDigest") ?: true
 
-        println("   Raw biometric data exposed: $hasRawBiometric ❌")
-        println("   Biometric template exposed: $hasTemplate ❌")
+        println("   Raw biometric data exposed: $hasRawBiometric âŒ")
+        println("   Biometric template exposed: $hasTemplate âŒ")
         println("   Template digest only: $hasTemplateDigest ✅")
         println("✅ Privacy preserved - only template digest, not raw biometrics")
     }
 
     // Step 14: Display wallet statistics
     val stats = individualWallet.getStatistics()
-    println("\n📊 Individual Wallet Statistics:")
+    println("\n[stats] Individual Wallet Statistics:")
     println("   Total credentials: ${stats.totalCredentials}")
     println("   Valid credentials: ${stats.validCredentials}")
     println("   Collections: ${stats.collectionsCount}")
@@ -559,7 +561,7 @@ Biometric Verification Scenario - Complete End-to-End Example
 ✅ Bank Service DID: did:key:z6Mk...
 ✅ Building Access DID: did:key:z6Mk...
 
-🔐 Biometric Template Creation:
+[auth] Biometric Template Creation:
    Fingerprint template created: u5v...
    Face template created: u5v...
    Voice template created: u5v...
@@ -572,7 +574,7 @@ Biometric Verification Scenario - Complete End-to-End Example
 ✅ All biometric credentials stored in wallet
 ✅ Biometric credentials organized
 
-🏦 Bank Service - Fingerprint Authentication:
+[bank] Bank Service - Fingerprint Authentication:
 ✅ Fingerprint Credential: VALID
    Template Digest: u5v...
    Liveness Verified: true
@@ -580,7 +582,7 @@ Biometric Verification Scenario - Complete End-to-End Example
 ✅ Liveness check passed
 ✅ Authentication SUCCESS - Access granted to bank account
 
-🏢 Building Access - Face Recognition:
+[building] Building Access - Face Recognition:
 ✅ Face Credential: VALID
    Template Digest: u5v...
    Liveness Detected: true
@@ -589,7 +591,7 @@ Biometric Verification Scenario - Complete End-to-End Example
 ✅ Liveness check passed
 ✅ Access GRANTED to building
 
-🔐 Multi-Modal Biometric Verification (Fingerprint + Face):
+[auth] Multi-Modal Biometric Verification (Fingerprint + Face):
 ✅ Both biometric credentials are valid
 ✅ Fingerprint match: SUCCESS
 ✅ Face match: SUCCESS
@@ -600,13 +602,13 @@ Biometric Verification Scenario - Complete End-to-End Example
    Holder: did:key:z6Mk...
    Credentials: 1
 
-🔒 Privacy Verification:
-   Raw biometric data exposed: false ❌
-   Biometric template exposed: false ❌
+[privacy] Privacy Verification:
+   Raw biometric data exposed: false âŒ
+   Biometric template exposed: false âŒ
    Template digest only: true ✅
 ✅ Privacy preserved - only template digest, not raw biometrics
 
-📊 Individual Wallet Statistics:
+[stats] Individual Wallet Statistics:
    Total credentials: 3
    Valid credentials: 3
    Collections: 1
@@ -642,10 +644,10 @@ Biometric Verification Scenario - Complete End-to-End Example
 
 ## Related Documentation
 
-- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
-- [Age Verification Scenario](age-verification-scenario.md) - Related age verification with photo
-- [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
-- [API Reference](../api-reference/core-api.md) - Complete API documentation
-- [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+- Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
+- Age Verification Scenario](age-verification-scenario.md) - Related age verification with photo
+- Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
+- API Reference](../api-reference/core-api.md) - Complete API documentation
+- Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
 
 

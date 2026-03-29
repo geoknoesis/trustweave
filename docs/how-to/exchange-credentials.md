@@ -19,19 +19,19 @@ This guide shows you how to use TrustWeave's unified API to exchange credentials
 
 Before you begin, ensure you have:
 
-- ✅ TrustWeave dependencies added to your project
-- ✅ Understanding of credential issuance and verification
-- ✅ Basic knowledge of credential exchange protocols
-- ✅ Protocol-specific dependencies (optional, for specific protocols)
+- TrustWeave dependencies added to your project
+- Understanding of credential issuance and verification
+- Basic knowledge of credential exchange protocols
+- Protocol-specific dependencies (optional, for specific protocols)
 
 ## Expected Outcome
 
 After completing this guide, you will have:
 
-- ✅ Registered multiple credential exchange protocols
-- ✅ Exchanged credentials using different protocols with the same API
-- ✅ Understood when to use each protocol
-- ✅ Implemented protocol switching at runtime
+- Registered multiple credential exchange protocols
+- Exchanged credentials using different protocols with the same API
+- Understood when to use each protocol
+- Implemented protocol switching at runtime
 
 ## Credential Exchange Flow
 
@@ -146,9 +146,9 @@ val chapiService = ChapiService(...)
 ```
 
 **What this does:**
-- ✅ Sets up key management for encryption/signing
-- ✅ Configures DID resolution
-- ✅ Creates protocol-specific services
+- Sets up key management for encryption/signing
+- Configures DID resolution
+- Creates protocol-specific services
 
 **Expected Result:** Protocol services ready for registration.
 
@@ -177,9 +177,9 @@ registry.register(ChapiExchangeProtocol(chapiService))
 ```
 
 **What this does:**
-- ✅ Creates a unified registry
-- ✅ Registers all available protocols
-- ✅ Makes protocols available via unified API
+- Creates a unified registry
+- Registers all available protocols
+- Makes protocols available via unified API
 
 **Expected Result:** Registry with all protocols registered.
 
@@ -207,9 +207,9 @@ val request = CredentialOfferRequest(
 ```
 
 **What this does:**
-- ✅ Defines issuer and holder DIDs
-- ✅ Creates credential preview
-- ✅ Works with all protocols
+- Defines issuer and holder DIDs
+- Creates credential preview
+- Works with all protocols
 
 **Expected Result:** A request object ready for any protocol.
 
@@ -231,9 +231,9 @@ val chapiOffer = registry.offerCredential("chapi", request)
 ```
 
 **What this does:**
-- ✅ Creates offers using different protocols
-- ✅ Uses identical API for all
-- ✅ Returns protocol-specific responses
+- Creates offers using different protocols
+- Uses identical API for all
+- Returns protocol-specific responses
 
 **Expected Result:** Credential offers created with all protocols.
 
@@ -485,10 +485,10 @@ val chapiOffer = chapiHandler.createOfferMessage(
 ```
 
 **Problems:**
-- ❌ Different APIs for each protocol
-- ❌ Hard to switch protocols
-- ❌ Code duplication
-- ❌ Difficult to maintain
+- Different APIs for each protocol
+- Hard to switch protocols
+- Code duplication
+- Difficult to maintain
 
 ### After (With TrustWeave)
 
@@ -500,10 +500,10 @@ val chapiOffer = registry.offerCredential("chapi", request)
 ```
 
 **Benefits:**
-- ✅ Same API for all protocols
-- ✅ Easy protocol switching
-- ✅ No code duplication
-- ✅ Easy to maintain
+- Same API for all protocols
+- Easy protocol switching
+- No code duplication
+- Easy to maintain
 
 ---
 

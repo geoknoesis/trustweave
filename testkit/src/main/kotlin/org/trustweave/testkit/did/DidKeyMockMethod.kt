@@ -13,6 +13,7 @@ import org.trustweave.kms.KeyManagementService
 import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Mock DID method implementation for testing.
@@ -24,7 +25,7 @@ class DidKeyMockMethod(
 
     override val method = "key"
 
-    private val documents = mutableMapOf<String, DidDocument>()
+    private val documents = ConcurrentHashMap<String, DidDocument>()
 
     override suspend fun createDid(options: DidCreationOptions): DidDocument {
         // Convert KeyAlgorithm to Algorithm

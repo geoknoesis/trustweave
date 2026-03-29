@@ -12,13 +12,13 @@ This guide demonstrates how to build a financial services identity verification 
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created DIDs for financial institutions and customers
-- ✅ Issued KYC credentials with identity verification
-- ✅ Built reusable identity proof system
-- ✅ Implemented compliance verification (AML, sanctions screening)
-- ✅ Created cross-institution credential sharing
-- ✅ Anchored KYC records to blockchain for regulatory compliance
-- ✅ Built customer identity wallet
+- Created DIDs for financial institutions and customers
+- Issued KYC credentials with identity verification
+- Built reusable identity proof system
+- Implemented compliance verification (AML, sanctions screening)
+- Created cross-institution credential sharing
+- Anchored KYC records to blockchain for regulatory compliance
+- Built customer identity wallet
 
 ## Big Picture & Significance
 
@@ -179,10 +179,10 @@ Add TrustWeave dependencies to your `build.gradle.kts`. These libraries cover DI
 dependencies {
     // Core TrustWeave modules
     // TrustWeave distribution (includes all modules)
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Test kit for in-memory implementations
-    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:0.6.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -199,14 +199,13 @@ dependencies {
 Here’s the full KYC credential management workflow. Run it once to observe the happy path, then use the breakdowns that follow to understand each step in detail.
 
 ```kotlin
-import org.trustweave.credential.models.VerifiableCredential
-import org.trustweave.credential.models.VerifiablePresentation
-import org.trustweave.credential.CredentialIssuanceOptions
-import org.trustweave.credential.CredentialVerificationOptions
-import org.trustweave.credential.PresentationOptions
-import org.trustweave.credential.issuer.CredentialIssuer
-import org.trustweave.credential.verifier.CredentialVerifier
-import org.trustweave.credential.proof.Ed25519ProofGenerator
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.model.vc.VerifiablePresentation
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import org.trustweave.testkit.credential.InMemoryWallet
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
@@ -214,6 +213,11 @@ import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import org.trustweave.anchor.BlockchainAnchorRegistry
 import org.trustweave.anchor.anchorTyped
 import org.trustweave.did.DidMethodRegistry
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.did.identifiers.Did
+import org.trustweave.core.util.DigestUtils
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
@@ -243,6 +247,18 @@ fun main() = runBlocking {
 
     val didMethod = DidKeyMockMethod(kycProviderKms)
     val didRegistry = DidMethodRegistry().apply { register(didMethod) }
+
+    val trustWeave = TrustWeave.build {
+        keys {
+            custom(kycProviderKms)
+            algorithm(ED25519)
+        }
+        did {
+            method(KEY) {
+                algorithm(ED25519)
+            }
+        }
+    }
 
     // Setup blockchain for anchoring
     val anchorClient = InMemoryBlockchainAnchorClient("eip155:1", emptyMap())
@@ -295,36 +311,24 @@ fun main() = runBlocking {
     println("  - Verification Level: ${kycVerificationResult.verificationLevel}")
     println("  - AML Status: ${kycVerificationResult.amlStatus}")
 
+    val kycProviderDoc = when (val res = trustWeave.resolveDid(kycProviderDid.id)) {
+        is DidResolutionResult.Success -> res.document
+        else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve KYC provider DID")
+    }
+    val kycProviderKeyId = kycProviderDoc.verificationMethod.firstOrNull()?.extractKeyId()
+        ?: throw IllegalStateException("No verification method found for KYC provider")
+
     // Step 5: Issue KYC credential
     println("\nStep 5: Issuing KYC credential...")
-    val kycCredential = createKYCCredential(
+    val issuedKYCCredential = createKYCCredential(
+        trustWeave = trustWeave,
         customerDid = customerDid.id,
         issuerDid = kycProviderDid.id,
+        issuerKeyId = kycProviderKeyId,
         identityData = identityData,
         verificationLevel = kycVerificationResult.verificationLevel,
         amlStatus = kycVerificationResult.amlStatus,
         riskRating = kycVerificationResult.riskRating
-    )
-
-    val kycProviderKey = kycProviderKms.generateKey("Ed25519")
-    val kycProofGenerator = Ed25519ProofGenerator(
-        signer = { data, keyId -> kycProviderKms.sign(keyId, data) },
-        getPublicKeyId = { keyId -> kycProviderKey.id }
-    )
-val didResolver = CredentialDidResolver { did ->
-    didRegistry.resolve(did).toCredentialDidResolution()
-}
-
-    val kycIssuer = CredentialIssuer(
-        proofGenerator = kycProofGenerator,
-        resolveDid = { did -> didResolver.resolve(did)?.isResolvable == true }
-    )
-
-    val issuedKYCCredential = kycIssuer.issue(
-        credential = kycCredential,
-        issuerDid = kycProviderDid.id,
-        keyId = kycProviderKey.id,
-        options = CredentialIssuanceOptions(proofType = "Ed25519Signature2020")
     )
 
     println("KYC credential issued:")
@@ -339,9 +343,9 @@ val didResolver = CredentialDidResolver { did ->
 
     // Step 7: Anchor KYC record to blockchain
     println("\nStep 7: Anchoring KYC record to blockchain...")
-    val kycDigest = org.trustweave.json.DigestUtils.sha256DigestMultibase(
+    val kycDigest = DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(
-            org.trustweave.credential.models.VerifiableCredential.serializer(),
+            VerifiableCredential.serializer(),
             issuedKYCCredential
         )
     )
@@ -366,34 +370,32 @@ val didResolver = CredentialDidResolver { did ->
 
     // Step 8: Bank verifies KYC credential
     println("\nStep 8: Bank verifies KYC credential for account opening...")
-    val bankVerifier = CredentialVerifier(didResolver)
+    val bankVerification = trustWeave.verify {
+        credential(issuedKYCCredential)
+        skipRevocation()
+        checkExpiration()
+        skipSchema()
+    }
 
-    val bankVerification = bankVerifier.verify(
-        credential = issuedKYCCredential,
-        options = CredentialVerificationOptions(
-            checkRevocation = false,
-            checkExpiration = true,
-            validateSchema = false,
-            didResolver = didResolver
-        )
-    )
+    when (bankVerification) {
+        is VerificationResult.Valid -> {
+            println("✅ KYC credential verified by bank!")
+            println("  - Issuer: ${bankVerification.issuerIri}")
 
-    if (bankVerification.valid) {
-        println("✅ KYC credential verified by bank!")
-        println("  - Proof valid: ${bankVerification.proofValid}")
-        println("  - Issuer valid: ${bankVerification.issuerValid}")
-        println("  - Not expired: ${bankVerification.notExpired}")
+            val meetsBankRequirements = checkComplianceRequirements(
+                credential = issuedKYCCredential,
+                requiredLevel = "Standard",
+                requiredAMLStatus = "clear"
+            )
 
-        // Check compliance requirements
-        val meetsBankRequirements = checkComplianceRequirements(
-            credential = issuedKYCCredential,
-            requiredLevel = "Standard",
-            requiredAMLStatus = "clear"
-        )
-
-        if (meetsBankRequirements) {
-            println("✅ Meets bank compliance requirements")
-            println("  - Account can be opened")
+            if (meetsBankRequirements) {
+                println("✅ Meets bank compliance requirements")
+                println("  - Account can be opened")
+            }
+        }
+        is VerificationResult.Invalid -> {
+            println("❌ KYC verification failed:")
+            bankVerification.allErrors.forEach { println("  - $it") }
         }
     }
 
@@ -410,10 +412,10 @@ val didResolver = CredentialDidResolver { did ->
             // Address and document numbers NOT disclosed
         ),
         holderDid = customerDid.id,
-        options = PresentationOptions(
-            holderDid = customerDid.id,
-            proofType = "Ed25519Signature2020",
-            challenge = "bank-account-opening-${Instant.now().toEpochMilli()}"
+        options = mapOf(
+            "holderDid" to customerDid.id,
+            "proofType" to "Ed25519Signature2020",
+            "challenge" to "bank-account-opening-${Instant.now().toEpochMilli()}"
         )
     )
 
@@ -421,19 +423,22 @@ val didResolver = CredentialDidResolver { did ->
 
     // Step 10: Crypto exchange verifies same KYC credential
     println("\nStep 10: Crypto exchange verifies KYC credential...")
-    val exchangeVerification = bankVerifier.verify(
-        credential = issuedKYCCredential,
-        options = CredentialVerificationOptions(
-            checkRevocation = false,
-            checkExpiration = true,
-            didResolver = didResolver
-        )
-    )
+    val exchangeVerification = trustWeave.verify {
+        credential(issuedKYCCredential)
+        skipRevocation()
+        checkExpiration()
+    }
 
-    if (exchangeVerification.valid) {
-        println("✅ KYC credential verified by crypto exchange!")
-        println("  - Same credential reused - no need for new KYC")
-        println("  - Account can be opened instantly")
+    when (exchangeVerification) {
+        is VerificationResult.Valid -> {
+            println("✅ KYC credential verified by crypto exchange!")
+            println("  - Same credential reused - no need for new KYC")
+            println("  - Account can be opened instantly")
+        }
+        is VerificationResult.Invalid -> {
+            println("❌ Exchange verification failed:")
+            exchangeVerification.allErrors.forEach { println("  - $it") }
+        }
     }
 
     // Step 11: Create exchange account opening presentation
@@ -447,10 +452,10 @@ val didResolver = CredentialDidResolver { did ->
             // Minimal information for exchange
         ),
         holderDid = customerDid.id,
-        options = PresentationOptions(
-            holderDid = customerDid.id,
-            proofType = "Ed25519Signature2020",
-            challenge = "crypto-exchange-opening-${Instant.now().toEpochMilli()}"
+        options = mapOf(
+            "holderDid" to customerDid.id,
+            "proofType" to "Ed25519Signature2020",
+            "challenge" to "crypto-exchange-opening-${Instant.now().toEpochMilli()}"
         )
     )
 
@@ -529,11 +534,11 @@ suspend fun createKYCCredential(
             expires(1, ChronoUnit.YEARS)
             schema("https://example.com/schemas/kyc-credential.json")
         }
-        signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+        signedBy(issuerDid = Did(issuerDid), keyId = issuerKeyId)
     }
     
     return when (result) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create KYC credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -766,6 +771,8 @@ fun checkComplianceRequirements(
 Add source of funds and occupation verification:
 
 ```kotlin
+import org.trustweave.did.identifiers.Did
+
 suspend fun createEnhancedKYCCredential(
     trustWeave: TrustWeave,
     customerDid: String,
@@ -796,11 +803,11 @@ suspend fun createEnhancedKYCCredential(
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+        signedBy(issuerDid = Did(issuerDid), keyId = issuerKeyId)
     }
     
     return when (result) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create enhanced KYC credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -811,6 +818,8 @@ suspend fun createEnhancedKYCCredential(
 Monitor customer for changes:
 
 ```kotlin
+import org.trustweave.did.identifiers.Did
+
 suspend fun createMonitoringCredential(
     trustWeave: TrustWeave,
     customerDid: String,
@@ -833,11 +842,11 @@ suspend fun createMonitoringCredential(
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = monitoringProviderDid, keyId = issuerKeyId)
+        signedBy(issuerDid = Did(monitoringProviderDid), keyId = issuerKeyId)
     }
     
     return when (result) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create monitoring credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -848,28 +857,19 @@ suspend fun createMonitoringCredential(
 Enable international KYC recognition:
 
 ```kotlin
-fun verifyCrossBorderKYC(
+suspend fun verifyCrossBorderKYC(
+    trustWeave: TrustWeave,
     kycCredential: VerifiableCredential,
     verifyingCountryDid: String
 ): Boolean {
-    // Verify credential is valid
-    val verifier = CredentialVerifier(
-        didResolver = CredentialDidResolver { did ->
-            didRegistry.resolve(did).toCredentialDidResolution()
-        }
-    )
+    val verification = trustWeave.verify {
+        credential(kycCredential)
+        checkRevocation()
+        checkExpiration()
+    }
 
-    val verification = verifier.verify(
-        credential = kycCredential,
-        options = CredentialVerificationOptions(
-            checkRevocation = true,
-            checkExpiration = true
-        )
-    )
+    if (verification !is VerificationResult.Valid) return false
 
-    if (!verification.valid) return false
-
-    // Check if KYC provider is recognized in verifying country
     val kycProviderDid = kycCredential.issuer
     // In production, check against list of recognized KYC providers
     return true // Simplified for example
@@ -917,9 +917,9 @@ fun openBankAccountWithKYC(
             "amlStatus"
         ),
         holderDid = customerWallet.holderDid!!,
-        options = PresentationOptions(
-            holderDid = customerWallet.holderDid!!,
-            challenge = "bank-account-opening-$accountType"
+        options = mapOf(
+            "holderDid" to customerWallet.holderDid!!,
+            "challenge" to "bank-account-opening-$accountType"
         )
     )
 }
@@ -951,9 +951,9 @@ fun openCryptoExchangeAccount(
             // Minimal information for crypto exchange
         ),
         holderDid = customerWallet.holderDid!!,
-        options = PresentationOptions(
-            holderDid = customerWallet.holderDid!!,
-            challenge = "crypto-exchange-opening"
+        options = mapOf(
+            "holderDid" to customerWallet.holderDid!!,
+            "challenge" to "crypto-exchange-opening"
         )
     )
 }
@@ -993,9 +993,9 @@ fun applyForLoan(
             "verificationLevel"
         ),
         holderDid = customerWallet.holderDid!!,
-        options = PresentationOptions(
-            holderDid = customerWallet.holderDid!!,
-            challenge = "loan-application-$loanAmount"
+        options = mapOf(
+            "holderDid" to customerWallet.holderDid!!,
+            "challenge" to "loan-application-$loanAmount"
         )
     )
 }

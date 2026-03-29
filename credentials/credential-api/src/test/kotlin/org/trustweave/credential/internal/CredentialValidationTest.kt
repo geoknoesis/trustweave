@@ -7,7 +7,7 @@ import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.CredentialProof
 import org.trustweave.credential.requests.VerificationOptions
 import org.trustweave.credential.results.VerificationResult
-import org.trustweave.credential.trust.TrustPolicy
+import org.trustweave.credential.trust.TrustEvaluator
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.did.identifiers.Did
 import kotlinx.datetime.Clock
@@ -215,8 +215,8 @@ class CredentialValidationTest {
     fun `test validateTrust with trusted issuer`() = runBlocking {
         val issuerDid = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
         val credential = createTestCredential(issuer = Issuer.IriIssuer(issuerDid))
-        val trustPolicy = TrustPolicy.allowlist(setOf(issuerDid))
-        val result = CredentialValidation.validateTrust(credential, trustPolicy)
+        val TrustEvaluator = TrustEvaluator.allowlist(setOf(issuerDid))
+        val result = CredentialValidation.validateTrust(credential, TrustEvaluator)
         assertNull(result, "Trusted issuer should pass validation")
     }
     
@@ -225,8 +225,8 @@ class CredentialValidationTest {
         val issuerDid = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
         val untrustedDid = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK2")
         val credential = createTestCredential(issuer = Issuer.IriIssuer(untrustedDid))
-        val trustPolicy = TrustPolicy.allowlist(setOf(issuerDid))
-        val result = CredentialValidation.validateTrust(credential, trustPolicy)
+        val TrustEvaluator = TrustEvaluator.allowlist(setOf(issuerDid))
+        val result = CredentialValidation.validateTrust(credential, TrustEvaluator)
         assertNotNull(result, "Untrusted issuer should return error")
         assertTrue(result is VerificationResult.Invalid.UntrustedIssuer)
     }
@@ -235,8 +235,8 @@ class CredentialValidationTest {
     fun `test validateTrust with non-DID issuer`() = runBlocking {
         val issuerIri = Iri("https://example.com/issuer")
         val credential = createTestCredential(issuer = Issuer.IriIssuer(issuerIri))
-        val trustPolicy = TrustPolicy.allowlist(setOf(Did("did:key:test")))
-        val result = CredentialValidation.validateTrust(credential, trustPolicy)
+        val TrustEvaluator = TrustEvaluator.allowlist(setOf(Did("did:key:test")))
+        val result = CredentialValidation.validateTrust(credential, TrustEvaluator)
         assertNull(result, "Non-DID issuer should skip trust validation")
     }
     

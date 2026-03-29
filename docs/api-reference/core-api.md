@@ -5,7 +5,7 @@ parent: API Reference
 keywords:
   - api
   - core api
-  - trustlayer
+  - trustweave
   - dids
   - credentials
   - wallets
@@ -17,7 +17,7 @@ keywords:
 
 Complete API reference for TrustWeave's TrustWeave API.
 
-> **Version:** 1.0.0-SNAPSHOT
+> **Version:** 0.6.0
 > **Kotlin:** 2.2.21+ | **Java:** 21+
 > See [CHANGELOG.md](../../CHANGELOG.md) for version history and migration guides.
 >
@@ -25,7 +25,7 @@ Complete API reference for TrustWeave's TrustWeave API.
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 }
 ```
 
@@ -36,8 +36,7 @@ The TrustWeave provides a unified, DSL-based API for decentralized identity and 
 **Key Concepts:**
 - **TrustWeave**: The main entry point for trust and identity operations
 - **DSL Builders**: Fluent builders for configuring and performing operations (e.g., `issue { }`, `createDid { }`)
-- **Configuration**: Configure KMS, DID methods, anchors, and more using the `TrustWeave.build { }` DSL
-- **Context**: The `TrustWeaveContext` provides access to underlying services when needed
+- **Configuration**: Use `TrustWeave.build { }` for KMS, DID methods, anchors, and trust; use `trustWeave.configuration` when you need registries and clients directly
 
 **Main Operations:**
 - **`issue { }`**: Issue verifiable credentials using DSL
@@ -53,22 +52,22 @@ The TrustWeave provides a unified, DSL-based API for decentralized identity and 
 | Operation | Method | Returns |
 |-----------|--------|---------|
 | Create TrustWeave | `TrustWeave.build { }` | `TrustWeave` |
-| Create DID | `trustWeave.createDid { }` | `String` (DID) |
+| Create DID | `trustWeave.createDid { }` | `DidCreationResult` |
+| Resolve DID | `trustWeave.resolveDid(did)` | `DidResolutionResult` |
 | Update DID | `trustWeave.updateDid { }` | `DidDocument` |
 | Delegate DID | `trustWeave.delegate { }` | `DelegationChainResult` |
-| Rotate Key | `trustWeave.rotateKey { }` | `Any` |
-| Issue Credential | `trustWeave.issue { }` | `VerifiableCredential` |
-| Verify Credential | `trustWeave.verify { }` | `CredentialVerificationResult` |
-| Create Wallet | `trustWeave.wallet { }` | `Wallet` |
-| Trust Operations (DSL) | `trustWeave.trust { }` | `Unit` |
-| Add Trust Anchor | `trustWeave.addTrustAnchor(did) { }` | `Boolean` |
-| Remove Trust Anchor | `trustWeave.removeTrustAnchor(did)` | `Boolean` |
-| Is Trusted Issuer | `trustWeave.isTrustedIssuer(did, type?)` | `Boolean` |
-| Get Trust Path | `trustWeave.getTrustPath(fromDid, toDid)` | `TrustPathResult?` |
-| Get Trusted Issuers | `trustWeave.getTrustedIssuers(type?)` | `List<String>` |
-| Get DSL Context | `trustWeave.getDslContext()` | `TrustWeaveContext` |
+| Rotate Key | `trustWeave.rotateKey { }` | `DidDocument` |
+| Issue Credential | `trustWeave.issue { }` | `IssuanceResult` |
+| Verify Credential | `trustWeave.verify { }` / `verify(credential)` | `VerificationResult` |
+| Create Wallet | `trustWeave.wallet { }` | `WalletCreationResult` |
+| Trust operations | `trustWeave.trust { }` (anchors, paths, queries inside DSL) | `Unit` |
+| Trust path (typed) | `trustWeave.findTrustPath(verifier, issuer)` | `TrustPath` |
+| Revoke credential | `trustWeave.revoke { }` | `Boolean` |
+| Revocation DSL | `trustWeave.revocation { }` | `RevocationBuilder` (status lists, checks) |
 | Get Configuration | `trustWeave.configuration` | `TrustWeaveConfig` |
 | Create from Config | `TrustWeave.from(config)` | `TrustWeave` |
+
+**Throwing helpers (imports):** `DidCreationResult.getOrThrow()` / `getOrThrowDid()` / `getOrThrowDocument()` are extensions in **`org.trustweave.trust.types`**. `IssuanceResult.getOrThrow()` and related credential helpers are in **`org.trustweave.credential.results`**. These are **not** `kotlin.Result`—prefer exhaustive **`when`** in production; use **`getOrThrow`** only at deliberate boundaries.
 
 ## TrustWeave Class
 
@@ -77,6 +76,7 @@ The TrustWeave provides a unified, DSL-based API for decentralized identity and 
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import kotlinx.coroutines.runBlocking
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     // Create with defaults (in-memory KMS, did:key method)
@@ -93,7 +93,7 @@ fun main() = runBlocking {
     }
 
     // Create with custom configuration
-    val trustWeave = TrustWeave.build {
+    val trustWeave2 = TrustWeave.build {
         keys {
             provider(IN_MEMORY)
             algorithm(ED25519)
@@ -129,14 +129,11 @@ The TrustWeave provides DSL-based operations:
 - **`delegate { }`**: Delegate authority between DIDs
 - **`rotateKey { }`**: Rotate keys in DID documents
 - **`wallet { }`**: Create wallets
-- **`trust { }`**: Manage trust anchors (DSL style)
-- **`addTrustAnchor()`**: Add trust anchor (direct method)
-- **`removeTrustAnchor()`**: Remove trust anchor (direct method)
-- **`isTrustedIssuer()`**: Check if issuer is trusted
-- **`getTrustPath()`**: Find trust path between DIDs
-- **`getTrustedIssuers()`**: Get all trusted issuers
-- **`getDslContext()`**: Access underlying DSL context (advanced)
-- **`configuration`**: Access configuration (advanced)
+- **`trust { }`**: Manage trust anchors and queries (DSL)
+- **`findTrustPath()`**: Find a typed trust path between verifier and issuer identities
+- **`revoke { }`**: Revoke a credential (boolean success)
+- **`revocation { }`**: Status lists, suspension, revocation checks
+- **`configuration`**: `TrustWeaveConfig` (registries, KMS, services)
 
 **Example:**
 ```kotlin
@@ -144,6 +141,7 @@ import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.credential.results.IssuanceResult
 import kotlinx.coroutines.runBlocking
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build { ... }
@@ -162,7 +160,7 @@ fun main() = runBlocking {
     // Issue credential
     val issuanceResult = trustWeave.issue {
         credential { ... }
-        signedBy(issuerDid = issuerDid.value, keyId = "key-1")
+        signedBy(issuerDid = issuerDid, keyId = "key-1")
     }
     
     val credential = when (issuanceResult) {
@@ -172,8 +170,12 @@ fun main() = runBlocking {
 }
 
 // Create wallet
-val wallet = trustWeave.wallet {
+val walletResult = trustWeave.wallet {
     holder("did:key:holder")
+}
+val wallet = when (walletResult) {
+    is WalletCreationResult.Success -> walletResult.wallet
+    else -> throw IllegalStateException("Failed to create wallet")
 }
 ```
 
@@ -241,10 +243,10 @@ suspend fun createDid(block: DidBuilder.() -> Unit): DidCreationResult
 - Adds key to `authentication` and `assertionMethod` arrays
 
 **Edge Cases:**
-- If method not registered → `TrustWeaveError.DidMethodNotRegistered` with available methods list
-- If algorithm not supported by method → `TrustWeaveError.ValidationFailed` with reason
-- If KMS fails to generate key → `TrustWeaveError.InvalidOperation` with context
-- If method-specific validation fails → `TrustWeaveError.ValidationFailed` with field details
+- If method not registered → `DidException.DidMethodNotRegistered` with available methods list
+- If algorithm not supported by method → `TrustWeaveException.ValidationFailed` with reason
+- If KMS fails to generate key → `TrustWeaveException.InvalidOperation` with context
+- If method-specific validation fails → `TrustWeaveException.ValidationFailed` with field details
 
 **Performance:**
 - Time complexity: O(1) for key generation (if cached)
@@ -253,7 +255,11 @@ suspend fun createDid(block: DidBuilder.() -> Unit): DidCreationResult
 
 **Example:**
 ```kotlin
+import org.trustweave.testkit.services.*
+import org.trustweave.trust.types.getOrThrowDid
+
 // Simple usage (uses defaults: did:key, ED25519)
+
 val didResult = trustWeave.createDid {
     method(KEY)
     algorithm(ED25519)
@@ -270,7 +276,6 @@ when (didResult) {
     }
     is DidCreationResult.Failure.KeyGenerationFailed -> {
         println("Key generation failed: ${didResult.reason}")
-        didResult.cause?.printStackTrace()
     }
     is DidCreationResult.Failure.DocumentCreationFailed -> {
         println("Document creation failed: ${didResult.reason}")
@@ -284,13 +289,12 @@ when (didResult) {
     }
 }
 
-// For tests and examples, use getOrFail() helper
-import org.trustweave.testkit.getOrFail
+// For tests and examples, use getOrThrowDid()
 
 val did = trustWeave.createDid {
     method(KEY)
     algorithm(ED25519)
-}.getOrFail() // Throws AssertionError on failure
+}.getOrThrowDid() // Requires `import org.trustweave.trust.types.getOrThrowDid`; throws IllegalStateException on failure
 
 // With custom method
 val webDidResult = trustWeave.createDid {
@@ -299,183 +303,94 @@ val webDidResult = trustWeave.createDid {
 }
 when (webDidResult) {
     is DidCreationResult.Success -> println("Created: ${webDidResult.did.value}")
-    else -> println("Error: ${webDidResult.reason}")
+    is DidCreationResult.Failure -> println("Error creating DID")
 }
 ```
 
 **Error Types:**
 - `DidCreationResult.Failure.MethodNotRegistered` - Method is not registered (includes available methods)
-- `DidCreationResult.Failure.KeyGenerationFailed` - Key generation failed (includes reason and optional cause)
-- `DidCreationResult.Failure.DocumentCreationFailed` - Document creation failed (includes reason and optional cause)
+- `DidCreationResult.Failure.KeyGenerationFailed` - Key generation failed (includes reason)
+- `DidCreationResult.Failure.DocumentCreationFailed` - Document creation failed (includes reason)
 - `DidCreationResult.Failure.InvalidConfiguration` - Configuration validation failed (includes reason and details)
 - `DidCreationResult.Failure.Other` - Other error (includes reason and optional cause)
 
-#### resolve
+#### createDidWithKey
+
+Creates a DID and returns the first verification **key id** in one step (same DSL as `createDid`).
+
+```kotlin
+suspend fun createDidWithKey(
+    method: String? = null,
+    timeout: Duration = 10.seconds,
+    block: DidBuilder.() -> Unit = {}
+): DidCreationWithKeyResult
+```
+
+**Access via:** `trustWeave.createDidWithKey { }`
+
+**Returns:** [`DidCreationWithKeyResult`](../../trust/src/main/kotlin/org/trustweave/trust/types/DidResult.kt) — `Success(did, keyId)` or `Failure` (either wraps `DidCreationResult.Failure` or describes key extraction failure).
+
+**Tests / examples:** use exhaustive `when` or `import org.trustweave.trust.types.getOrThrow` and call `.getOrThrow()` for a `Pair<Did, String>` (throws on failure).
+
+#### resolveDid / resolve
 
 Resolves a DID to its document.
 
 ```kotlin
-suspend fun resolve(did: String): DidResolutionResult
+suspend fun resolveDid(did: String, timeout: Duration = 30.seconds): DidResolutionResult
+suspend fun resolveDid(did: Did, timeout: Duration = 30.seconds): DidResolutionResult
 ```
 
-**Access via:** `trustWeave.getDslContext().resolveDid(did)` or use DID resolver directly
+**Access via:** `trustWeave.resolveDid(...)` (implements `DidResolver.resolve` for `Did`).
 
-**Parameters:**
-
-- **`did`** (String, required): The DID string to resolve
-  - **Format**: Must match `did:<method>:<identifier>` pattern
-  - **Example**: `"did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"`
-  - **Validation**: Automatically validated before resolution
-  - **Requirements**: Method must be registered in TrustWeave instance
-
-**Returns:** `DidResolutionResult` directly (not wrapped in Result)
-
-**DidResolutionResult Structure:**
-```kotlin
-data class DidResolutionResult(
-    val document: DidDocument?,  // null if DID not found
-    val metadata: DidResolutionMetadata
-)
-
-data class DidResolutionMetadata(
-    val method: String,           // DID method used for resolution
-    val resolvedAt: Instant,      // Resolution timestamp
-    val resolverVersion: String?, // Resolver version (if available)
-    val error: String?            // Error message if resolution failed
-)
-```
-
-**Properties:**
-- `document`: The DID document if found, `null` if not found
-- `metadata.method`: The DID method that was resolved
-- `metadata.resolvedAt`: When the resolution occurred
-- `metadata.resolverVersion`: Version of resolver used (if available)
-- `metadata.error`: Error message if resolution failed (document will be null)
-
-**Failure Case:**
-- Throws `TrustWeaveError` exception with specific error type
-- For error handling, wrap in try-catch or use extension functions
-
-**Edge Cases:**
-- If DID format invalid → `TrustWeaveError.InvalidDidFormat` with reason
-- If method not registered → `TrustWeaveError.DidMethodNotRegistered` with available methods
-- If DID not found → `TrustWeaveError.DidNotFound` with DID and available methods
-- If resolution service unavailable → `TrustWeaveError.InvalidOperation` with context
-
-**Performance:**
-- Time complexity: O(1) for local methods (did:key), O(n) for network methods where n = network latency
-- Network calls: 0 for did:key (local), 1+ for network-based methods (did:web, did:ion)
-- Thread-safe: ✅ Yes (suspend function)
+**Returns:** Sealed `DidResolutionResult` — use `DidResolutionResult.Success` for the `DidDocument` and metadata; failures are separate variants (not a nullable `document`).
 
 **Example:**
 ```kotlin
-import org.trustweave.did.identifiers.Did
+import org.trustweave.did.resolver.DidResolutionResult
 
-// Simple usage - access resolver via DSL context
-val context = trustWeave.getDslContext()
-val resolver = context.getDidResolver()
-val did = Did("did:key:z6Mk...")
-val result = resolver?.resolve(did)
-if (result?.document != null) {
-    println("DID resolved: ${result.document.id}")
-} else {
-    println("DID not found")
+when (val res = trustWeave.resolveDid("did:key:z6Mk...")) {
+    is DidResolutionResult.Success -> println("Resolved: ${res.document.id}")
+    is DidResolutionResult.Failure -> println("Resolution failed")
 }
 ```
 
-**Errors:**
-- `TrustWeaveError.InvalidDidFormat` - Invalid DID format (includes reason)
-- `TrustWeaveError.DidMethodNotRegistered` - Method is not registered (includes available methods)
-- `TrustWeaveError.DidNotFound` - DID not found (includes DID and available methods)
+#### updateDid
 
-#### update
-
-Updates a DID document by applying a transformation function.
+Updates a DID document via the `DidDocument` DSL.
 
 ```kotlin
-suspend fun updateDid(block: DidUpdateBuilder.() -> Unit): DidUpdateResult
+suspend fun updateDid(
+    timeout: Duration = 30.seconds,
+    block: DidDocumentBuilder.() -> Unit
+): DidDocument
 ```
 
 **Access via:** `trustWeave.updateDid { }`
 
-**Parameters:**
-- **`did`** (String, required): The DID to update (via DSL builder)
-- **`addKey { }`**, **`addService { }`**, etc.: DSL methods for updating the document
+**Parameters:** Builder methods such as **`did(...)`**, **`addService { }`**, **`addVerificationMethod { }`**, etc., depending on your DID method.
 
-**Returns:** `DidUpdateResult` - Sealed result type containing:
-- **Success**: `DidUpdateResult.Success` with `document`: The updated DID document
-- **Failure**: Various failure types (DidNotFound, AuthorizationFailed, UpdateFailed, Other)
-
-**Edge Cases:**
-- If DID format invalid → `TrustWeaveError.InvalidDidFormat`
-- If method not registered → `TrustWeaveError.DidMethodNotRegistered`
-- If update operation fails → `TrustWeaveError.InvalidOperation`
+**Returns:** The updated `DidDocument`. Failures are thrown as `TrustWeaveException` / `DidException` from the underlying DID method.
 
 **Example:**
 ```kotlin
 import org.trustweave.did.identifiers.Did
 
 val did = Did("did:key:example")
-val updateResult = trustWeave.updateDid {
-    did(did.value)  // DSL builder accepts string for convenience
+val updated = trustWeave.updateDid {
+    did(did.value)
     addService {
         id("${did.value}#service-1")
         type("LinkedDomains")
         endpoint("https://example.com/service")
     }
 }
-
-when (updateResult) {
-    is DidUpdateResult.Success -> {
-        println("Updated DID document: ${updateResult.document.id}")
-    }
-    is DidUpdateResult.Failure.DidNotFound -> {
-        println("DID not found: ${updateResult.did.value}")
-    }
-    is DidUpdateResult.Failure.AuthorizationFailed -> {
-        println("Authorization failed: ${updateResult.reason}")
-    }
-    is DidUpdateResult.Failure.UpdateFailed -> {
-        println("Update failed: ${updateResult.reason}")
-    }
-    is DidUpdateResult.Failure.Other -> {
-        println("Error: ${updateResult.reason}")
-    }
-}
+println("Updated: ${updated.id}")
 ```
 
-#### deactivate
+#### DID deactivation
 
-Deactivates a DID, marking it as no longer active.
-
-```kotlin
-suspend fun deactivateDid(did: Did): Boolean
-```
-
-**Access via:** `trustWeave.getDslContext().deactivateDid(did)` or use DID method directly
-
-**Parameters:**
-- **`did`** (Did, required): Type-safe DID identifier to deactivate
-
-**Returns:** `Boolean` - `true` if deactivated successfully, `false` otherwise
-
-**Edge Cases:**
-- If DID format invalid → `TrustWeaveError.InvalidDidFormat`
-- If method not registered → `TrustWeaveError.DidMethodNotRegistered`
-- If DID already deactivated → Returns `false`
-
-**Example:**
-```kotlin
-import org.trustweave.did.identifiers.Did
-
-// Access via DSL context
-val context = trustWeave.getDslContext()
-val did = Did("did:key:example")
-val deactivated = context.deactivateDid(did)
-if (deactivated) {
-    println("DID deactivated successfully")
-}
-```
+There is no `TrustWeave.deactivateDid` API. Deactivation is **method-specific** (e.g. registrar or `DidMethod` implementation). Use your DID method’s documented lifecycle operations.
 
 #### availableMethods
 
@@ -519,9 +434,13 @@ The DSL builder provides a fluent API for configuring the credential:
   - `schema(String)`: Set credential schema
   - `status { }`: Configure revocation status
 
-- **`signedBy(issuerDid: String, keyId: String)`**: Specify issuer and key for signing
-  - **`issuerDid`**: The DID of the credential issuer
-  - **`keyId`**: The key ID from issuer's DID document (e.g., `"$issuerDid#key-1"`)
+- **`signedBy(issuerDid: Did)`**: Specify issuer DID (key ID auto-extracted)
+  - **`issuerDid`**: The DID of the credential issuer (type-safe `Did` object)
+  - Key ID will be automatically extracted from the DID document during build
+  
+- **`signedBy(issuerDid: Did, keyId: String)`**: Specify issuer and explicit key ID for signing
+  - **`issuerDid`**: The DID of the credential issuer (type-safe `Did` object)
+  - **`keyId`**: The key ID fragment (e.g., `"key-1"`, not the full `"$issuerDid#key-1"`)
 
 **Returns:** `IssuanceResult` - Sealed result type containing:
 
@@ -535,36 +454,21 @@ The DSL builder provides a fluent API for configuring the credential:
     - `type`: Credential types
     - `proof`: Cryptographic proof (signature)
 
-**Failure Cases:**
-- `IssuanceResult.Failure.IssuerResolutionFailed` - Issuer DID resolution failed
-- `IssuanceResult.Failure.KeyNotFound` - Key not found in issuer DID document
-- `IssuanceResult.Failure.SigningFailed` - Signing operation failed
-- `IssuanceResult.Failure.ProofGenerationFailed` - Proof generation failed
-- `IssuanceResult.Failure.InvalidCredential` - Credential validation failed
-- `IssuanceResult.Failure.SchemaValidationFailed` - Schema validation failed
-- `IssuanceResult.Failure.Other` - Other error with reason and optional cause
+**Failure cases** (see `org.trustweave.credential.results.IssuanceResult`):
 
-**Edge Cases:**
+- **`IssuanceResult.Failure.UnsupportedFormat`** — No proof adapter for the requested proof suite (lists supported suites when known).
+- **`IssuanceResult.Failure.AdapterNotReady`** — Credential service / format adapter not initialized.
+- **`IssuanceResult.Failure.InvalidRequest`** — Invalid or incomplete issuance input (`field`, `reason`).
+- **`IssuanceResult.Failure.AdapterError`** — Underlying adapter failure while issuing (`format`, `reason`, optional `cause`).
+- **`IssuanceResult.Failure.MultipleFailures`** — Several failures aggregated.
 
-- **If `issuerKeyId` doesn't exist in DID document**:
-  - Returns: `TrustWeaveError.InvalidDidFormat` with reason indicating key not found
-  - Solution: Verify key exists using `didDocument.verificationMethod.find { it.id == issuerKeyId }`
+Use **`issuanceResult.allErrors`** for a single string list, or **`getOrThrow()`** to unwrap success in tests.
 
-- **If `credentialSubject` missing `"id"` field**:
-  - Returns: `TrustWeaveError.CredentialInvalid` with `field = "credentialSubject.id"`
-  - Solution: Always include `"id"` field in credential subject
+**Edge cases (typical outcomes):**
 
-- **If issuer DID method not registered**:
-  - Returns: `TrustWeaveError.DidMethodNotRegistered` with available methods list
-  - Solution: Register DID method or use available method
-
-- **If issuer DID not resolvable**:
-  - Returns: `TrustWeaveError.DidNotFound` with available methods
-  - Solution: Ensure DID is valid and method is registered
-
-- **If `expirationDate` is invalid format**:
-  - Returns: `TrustWeaveError.ValidationFailed` with reason
-  - Solution: Use ISO 8601 format (e.g., `"2025-12-31T23:59:59Z"`)
+- Missing signing key, resolver, or misconfigured DID method → often surfaces as **`AdapterError`** or **`InvalidRequest`** (check **`allErrors`**).
+- Misconfigured **`TrustWeave.build { … }`** (no credential service) → **`AdapterNotReady`** from **`trustWeave.issue { }`**.
+- Thrown exceptions (**`DidException`**, **`TrustWeaveException.ValidationFailed`**, …) can still occur from DID/KMS layers during the issuance pipeline; handle **`IssuanceResult`** for expected issuance failures and use **`try`/`catch`** where the stack may throw.
 
 **Performance Characteristics:**
 
@@ -576,64 +480,56 @@ The DSL builder provides a fluent API for configuring the credential:
   - 1 call for DID resolution (unless cached)
   - 0 calls for signing (uses local KMS)
 - **Thread Safety**:
-  - ✅ Thread-safe (all operations are suspend functions)
-  - ✅ Safe for concurrent use
+  - Thread-safe (all operations are suspend functions)
+  - Safe for concurrent use
 - **Resource Usage**:
   - Memory: O(n) where n = credential size
   - CPU: Moderate (cryptographic operations)
 
 **Example:**
 ```kotlin
+import org.trustweave.did.identifiers.Did
+import org.trustweave.credential.results.getOrThrow
+
 // Simple usage with error handling
+
+val issuerDid = Did("did:key:issuer")
 val issuanceResult = trustWeave.issue {
     credential {
         type("VerifiableCredential", "PersonCredential")
-        issuer("did:key:issuer")
+        issuer(issuerDid)
         subject {
             id("did:key:subject")
             "name" to "Alice"
         }
     }
-    signedBy(issuerDid = "did:key:issuer", keyId = "did:key:issuer#key-1")
+    signedBy(issuerDid = issuerDid, keyId = "key-1")
 }
 
 when (issuanceResult) {
     is IssuanceResult.Success -> {
         println("Issued credential: ${issuanceResult.credential.id}")
     }
-    is IssuanceResult.Failure.IssuerResolutionFailed -> {
-        println("Issuer DID resolution failed: ${issuanceResult.issuerDid}")
-        println("Reason: ${issuanceResult.reason}")
+    is IssuanceResult.Failure.UnsupportedFormat -> {
+        println("Unsupported format: ${issuanceResult.format.value}")
+        println("Supported: ${issuanceResult.supportedFormats.joinToString { it.value }}")
     }
-    is IssuanceResult.Failure.KeyNotFound -> {
-        println("Key not found: ${issuanceResult.keyId}")
-        println("Reason: ${issuanceResult.reason}")
+    is IssuanceResult.Failure.AdapterNotReady -> {
+        println("Adapter not ready (${issuanceResult.format.value}): ${issuanceResult.reason}")
     }
-    is IssuanceResult.Failure.SigningFailed -> {
-        println("Signing failed: ${issuanceResult.reason}")
+    is IssuanceResult.Failure.InvalidRequest -> {
+        println("Invalid request: field '${issuanceResult.field}' — ${issuanceResult.reason}")
+    }
+    is IssuanceResult.Failure.AdapterError -> {
+        println("Adapter error (${issuanceResult.format.value}): ${issuanceResult.reason}")
         issuanceResult.cause?.printStackTrace()
     }
-    is IssuanceResult.Failure.ProofGenerationFailed -> {
-        println("Proof generation failed: ${issuanceResult.reason}")
-    }
-    is IssuanceResult.Failure.InvalidCredential -> {
-        println("Invalid credential: ${issuanceResult.reason}")
-        if (issuanceResult.errors.isNotEmpty()) {
-            println("Errors: ${issuanceResult.errors.joinToString()}")
-        }
-    }
-    is IssuanceResult.Failure.SchemaValidationFailed -> {
-        println("Schema validation failed: ${issuanceResult.reason}")
-        println("Errors: ${issuanceResult.errors.joinToString()}")
-    }
-    is IssuanceResult.Failure.Other -> {
-        println("Error: ${issuanceResult.reason}")
-        issuanceResult.cause?.printStackTrace()
+    is IssuanceResult.Failure.MultipleFailures -> {
+        println("Multiple failures: ${issuanceResult.allErrors.joinToString("; ")}")
     }
 }
 
-// For tests and examples, use getOrFail() helper
-import org.trustweave.testkit.getOrFail
+// For tests and examples, use getOrThrow()
 
 val credential = trustWeave.issue {
     credential {
@@ -644,111 +540,87 @@ val credential = trustWeave.issue {
             "name" to "Alice"
         }
     }
-    signedBy(issuerDid = issuerDid, keyId = "$issuerDid#key-1")
-}.getOrFail() // Throws AssertionError on failure
+    signedBy(issuerDid = issuerDid, keyId = "key-1")
+}.getOrThrow() // Requires `import org.trustweave.credential.results.getOrThrow`; throws IllegalStateException on failure
 ```
 
-**Error Types:**
-- `IssuanceResult.Failure.IssuerResolutionFailed` - Issuer DID resolution failed
-- `IssuanceResult.Failure.KeyNotFound` - Key not found in issuer DID document
-- `IssuanceResult.Failure.SigningFailed` - Signing operation failed (includes reason and optional cause)
-- `IssuanceResult.Failure.ProofGenerationFailed` - Proof generation failed (includes reason and optional cause)
-- `IssuanceResult.Failure.InvalidCredential` - Credential validation failed (includes reason and errors list)
-- `IssuanceResult.Failure.SchemaValidationFailed` - Schema validation failed (includes reason and errors list)
-- `IssuanceResult.Failure.Other` - Other error (includes reason and optional cause)
+**Error types:** `UnsupportedFormat`, `AdapterNotReady`, `InvalidRequest`, `AdapterError`, `MultipleFailures` (see **`IssuanceResult`**).
 
 #### verify
 
-Verifies a verifiable credential by checking proof, issuer DID resolution, expiration, and revocation status.
+Verifies a verifiable credential by checking proof, issuer resolution, expiration, revocation, and optional trust or schema rules.
+
+**Access via:** `trustWeave.verify(credential, …)` or `trustWeave.verify { … }`
 
 ```kotlin
-suspend fun verify(block: VerificationBuilder.() -> Unit): CredentialVerificationResult
+suspend fun verify(
+    credential: VerifiableCredential,
+    checkRevocation: Boolean = true,
+    checkExpiration: Boolean = true,
+    timeout: Duration = 10.seconds
+): VerificationResult
+
+suspend fun verify(
+    timeout: Duration = 10.seconds,
+    block: VerificationBuilder.() -> Unit
+): VerificationResult
 ```
 
-**Access via:** `trustWeave.verify { }`
+**Package:** `org.trustweave.credential.results.VerificationResult` (sealed hierarchy).
 
-**Parameters:**
+**DSL builder highlights (`VerificationBuilder`):**
 
-The DSL builder provides a fluent API for configuring verification:
+- **`credential(VerifiableCredential)`** — credential to verify (required in DSL overload)
+- **`checkRevocation()` / `skipRevocation()`** — revocation checks (on by default)
+- **`checkExpiration()` / `skipExpiration()`** — expiration checks (on by default)
+- **`validateSchema(schemaId)` / `skipSchema()`** — optional JSON Schema / SHACL validation
+- **`validateProofPurpose()`** — optional proof-purpose checks
+- **`requireTrust(registry)` / `withTrustPolicy(policy)` / `allowUntrusted()`** — issuer trust via `TrustRegistry` or `TrustEvaluator`
 
-- **`credential(VerifiableCredential)`**: The credential to verify (required)
-- **`checkExpiration(Boolean)`**: Check if credential has expired (default: `true`)
-- **`checkRevocation(Boolean)`**: Check revocation status (default: `true`)
-- **`checkTrust(Boolean)`**: Verify issuer is trusted (default: `false`)
-- **`expectedAudience(String?)`**: Expected audience DID (default: `null`)
+**Returns:** A **`VerificationResult`**: use **`result.isValid`** or an exhaustive **`when`** on **`VerificationResult.Valid`** vs **`VerificationResult.Invalid`** (and its subclasses such as **`Invalid.Expired`**, **`Invalid.Revoked`**, **`Invalid.InvalidProof`**, **`Invalid.UntrustedIssuer`**, …). Successful results expose issuer/subject IRIs, issuance and expiry instants, and optional warnings.
 
-**Returns:** `CredentialVerificationResult` containing:
-- `valid`: Overall validity (all checks passed)
-- `proofValid`: Proof signature is valid
-- `issuerValid`: Issuer DID resolved successfully
-- `notExpired`: Credential has not expired (if expiration checked)
-- `notRevoked`: Credential is not revoked (if revocation checked)
-- `errors`: List of error messages if verification failed
-- `warnings`: List of warnings (e.g., expiring soon, missing optional fields)
+**Performance characteristics:** Similar to before—cryptographic verification is O(1) per check; DID resolution may hit the network unless cached; revocation checks may fetch status lists.
 
-**Performance Characteristics:**
-- **Time Complexity:**
-  - O(1) for proof verification (cryptographic operation)
-  - O(1) for DID resolution (if cached), O(N) for network-based methods
-  - O(1) for expiration check
-  - O(1) for revocation check (if status list cached)
-- **Network Calls:**
-  - 1 call for issuer DID resolution (unless cached)
-  - 0-1 calls for revocation status check (if enabled and not cached)
-- **Thread Safety:** ✅ Thread-safe, can be called concurrently
-- **Resource Usage:**
-  - Memory: O(N) where N = credential size
-  - CPU: Moderate (cryptographic operations)
+**Edge cases (typical outcomes):**
 
-**Edge Cases:**
-- If credential has no proof → `proofValid = false`, `valid = false`
-- If issuer DID cannot be resolved → `issuerValid = false`, `valid = false`
-- If credential expired and `checkExpiration = true` → `notExpired = false`, `valid = false`
-- If credential revoked and `enforceStatus = true` → `notRevoked = false`, `valid = false`
-- If proof signature invalid → `proofValid = false`, `valid = false`
-- If issuer DID method not registered → Returns `TrustWeaveError.DidMethodNotRegistered`
-- If credential structure invalid → Returns `TrustWeaveError.CredentialInvalid`
+- Malformed credential, unsupported proof suite, or adapter not configured → **`VerificationResult.Invalid.*`** or **`AdapterNotReady`**
+- Expired / not-yet-valid / revoked / untrusted issuer → corresponding **`Invalid`** subtype
+- Optional schema or trust failures → **`Invalid.SchemaValidationFailed`**, **`Invalid.UntrustedIssuer`**, etc.
 
 **Example:**
 ```kotlin
-// Simple usage
-val result = trustWeave.verify {
-    credential(credential)
-}
-if (result.valid) {
-    println("Credential is valid")
-} else {
-    println("Errors: ${result.errors}")
-}
+import org.trustweave.credential.results.VerificationResult
 
-// With custom verification configuration
-val result = trustWeave.verify {
-    credential(credential)
-    checkExpiration(true)
-    checkRevocation(true)
-    checkTrust(true) // Verify issuer is trusted
-}
-
-if (result.valid) {
-    println("✅ Credential is valid")
-    println("   Proof valid: ${result.proofValid}")
-    println("   Issuer valid: ${result.issuerValid}")
-    println("   Not expired: ${result.notExpired}")
-    println("   Not revoked: ${result.notRevoked}")
-
-    if (result.warnings.isNotEmpty()) {
-        println("   Warnings: ${result.warnings.joinToString()}")
+// Convenience overload (default expiration + revocation checks)
+when (val result = trustWeave.verify(credential)) {
+    is VerificationResult.Valid -> {
+        println("Valid: ${result.credential.id}")
+        result.warnings.forEach { println("Warning: $it") }
     }
-} else {
-    println("❌ Credential invalid")
-    println("   Errors: ${result.errors.joinToString()}")
+    is VerificationResult.Invalid -> {
+        println("Invalid: ${result.allErrors.joinToString()}")
+    }
+}
+
+// DSL overload (custom checks, trust policy, timeout)
+when (
+    val result = trustWeave.verify(timeout = 30.seconds) {
+        credential(credential)
+        checkRevocation()
+        checkExpiration()
+    }
+) {
+    is VerificationResult.Valid -> { /* … */ }
+    is VerificationResult.Invalid.Expired -> { /* … */ }
+    is VerificationResult.Invalid.Revoked -> { /* … */ }
+    // … exhaustive handling
 }
 ```
 
 **Errors:**
-- `TrustWeaveError.CredentialInvalid` - Credential validation failed (missing fields, invalid structure)
-- `TrustWeaveError.DidMethodNotRegistered` - Issuer DID method not registered
-- `TrustWeaveError.DidNotFound` - Issuer DID cannot be resolved
+- `TrustWeaveException.ValidationFailed` - Credential validation failed (missing fields, invalid structure)
+- `DidException.DidMethodNotRegistered` - Issuer DID method not registered
+- `DidException.DidNotFound` - Issuer DID cannot be resolved
 
 ### Revocation and Status List Management
 
@@ -804,7 +676,7 @@ val statusList = TrustWeave.createStatusList(
     },
     onFailure = { error ->
         when (error) {
-            is TrustWeaveError.DidNotFound -> {
+            is DidException.DidNotFound -> {
                 println("Issuer DID not found: ${error.did}")
             }
             else -> println("Error: ${error.message}")
@@ -814,9 +686,9 @@ val statusList = TrustWeave.createStatusList(
 ```
 
 **Errors:**
-- `TrustWeaveError.DidNotFound` - Issuer DID cannot be resolved
-- `TrustWeaveError.InvalidDidFormat` - Invalid issuer DID format
-- `TrustWeaveError.ValidationFailed` - Invalid size or purpose value
+- `DidException.DidNotFound` - Issuer DID cannot be resolved
+- `DidException.InvalidDidFormat` - Invalid issuer DID format
+- `TrustWeaveException.ValidationFailed` - Invalid size or purpose value
 
 #### revokeCredential
 
@@ -862,7 +734,7 @@ val revoked = TrustWeave.revokeCredential(
     },
     onFailure = { error ->
         when (error) {
-            is TrustWeaveError.ValidationFailed -> {
+            is TrustWeaveException.ValidationFailed -> {
                 println("Invalid credential ID or status list ID")
             }
             else -> println("Revocation error: ${error.message}")
@@ -872,8 +744,8 @@ val revoked = TrustWeave.revokeCredential(
 ```
 
 **Errors:**
-- `TrustWeaveError.ValidationFailed` - Invalid credential ID or status list ID format
-- `TrustWeaveError.InvalidState` - Status list not found or full
+- `TrustWeaveException.ValidationFailed` - Invalid credential ID or status list ID format
+- `TrustWeaveException.InvalidState` - Status list not found or full
 
 #### suspendCredential
 
@@ -919,10 +791,10 @@ val suspended = TrustWeave.suspendCredential(
     },
     onFailure = { error ->
         when (error) {
-            is TrustWeaveError.ValidationFailed -> {
+            is TrustWeaveException.ValidationFailed -> {
                 println("❌ Invalid credential ID or status list ID")
             }
-            is TrustWeaveError.InvalidState -> {
+            is TrustWeaveException.InvalidState -> {
                 println("❌ Status list not found or full")
             }
             else -> {
@@ -934,8 +806,8 @@ val suspended = TrustWeave.suspendCredential(
 ```
 
 **Errors:**
-- `TrustWeaveError.ValidationFailed` - Invalid credential ID or status list ID format
-- `TrustWeaveError.InvalidState` - Status list not found or full
+- `TrustWeaveException.ValidationFailed` - Invalid credential ID or status list ID format
+- `TrustWeaveException.InvalidState` - Status list not found or full
 
 #### checkRevocationStatus
 
@@ -964,9 +836,9 @@ suspend fun checkRevocationStatus(
 
 **Edge Cases:**
 - If credential has no `credentialStatus` field → Returns `revoked = false`, `suspended = false`
-- If status list not found → Returns `TrustWeaveError.InvalidState`
+- If status list not found → Returns `TrustWeaveException.InvalidState`
 - If credential ID hash collision → Extremely rare (1 in 2^64), may return incorrect status
-- If status list not accessible → Returns `TrustWeaveError.InvalidOperation`
+- If status list not accessible → Returns `TrustWeaveException.InvalidOperation`
 
 **Example:**
 ```kotlin
@@ -989,10 +861,10 @@ val status = TrustWeave.checkRevocationStatus(credential).fold(
     },
     onFailure = { error ->
         when (error) {
-            is TrustWeaveError.InvalidState -> {
+            is TrustWeaveException.InvalidState -> {
                 println("❌ Status list not found")
             }
-            is TrustWeaveError.InvalidOperation -> {
+            is TrustWeaveException.InvalidOperation -> {
                 println("❌ Cannot access status list: ${error.message}")
             }
             else -> {
@@ -1004,9 +876,9 @@ val status = TrustWeave.checkRevocationStatus(credential).fold(
 ```
 
 **Errors:**
-- `TrustWeaveError.InvalidState` - Status list not found or not accessible
-- `TrustWeaveError.InvalidOperation` - Cannot access status list (network error, etc.)
-- `TrustWeaveError.CredentialInvalid` - Credential structure invalid (missing required fields)
+- `TrustWeaveException.InvalidState` - Status list not found or not accessible
+- `TrustWeaveException.InvalidOperation` - Cannot access status list (network error, etc.)
+- `TrustWeaveException.ValidationFailed` - Credential structure invalid (missing required fields)
 
 #### Using BlockchainRevocationRegistry
 
@@ -1100,7 +972,7 @@ The DSL builder provides a fluent API for trust operations:
 - **`addAnchor(String) { }`**: Add a trust anchor with metadata
 - **`removeAnchor(String)`**: Remove a trust anchor
 - **`isTrusted(String, String?)`**: Check if an issuer is trusted
-- **`getTrustPath(String, String)`**: Find trust path between DIDs
+- **`findTrustPath(Did, Did)`** (extension in `trust` DSL): Find a sealed **`TrustPath`** between two DIDs
 - **`getTrustedIssuers(String?)`**: Get all trusted issuers
 
 **Returns:** `Unit`
@@ -1112,11 +984,14 @@ The DSL builder provides a fluent API for trust operations:
 
 **Example:**
 ```kotlin
+import org.trustweave.did.identifiers.Did
+import org.trustweave.testkit.services.*
+import org.trustweave.trust.types.TrustPath
+
 val trustWeave = TrustWeave.build {
     trust { provider(IN_MEMORY) }
 }
 
-// Using DSL
 trustWeave.trust {
     addAnchor("did:key:university") {
         credentialTypes("EducationCredential")
@@ -1124,7 +999,10 @@ trustWeave.trust {
     }
 
     val isTrusted = isTrusted("did:key:university", "EducationCredential")
-    val path = getTrustPath("did:key:verifier", "did:key:issuer")
+    when (val path = findTrustPath(Did("did:key:verifier"), Did("did:key:issuer"))) {
+        is TrustPath.Verified -> println("Path: ${path.fullPath.joinToString(" -> ") { it.value }}")
+        is TrustPath.NotFound -> println("No path")
+    }
 }
 ```
 
@@ -1230,33 +1108,35 @@ if (isTrusted) {
 **Errors:**
 - `IllegalStateException` - Trust registry is not configured
 
-#### getTrustPath
+#### findTrustPath
 
-Finds a trust path between two DIDs.
+Finds a trust path between verifier and issuer identities. Returns the sealed type **`TrustPath`** (**`Verified`** or **`NotFound`**).
 
 ```kotlin
-suspend fun getTrustPath(fromDid: String, toDid: String): TrustPathResult?
+suspend fun findTrustPath(
+    verifier: VerifierIdentity,
+    issuer: IssuerIdentity,
+    timeout: Duration = 10.seconds
+): TrustPath
 ```
 
-**Access via:** `trustWeave.getTrustPath(fromDid, toDid)`
-
-**Parameters:**
-- **`fromDid`** (String, required): The starting DID (typically the verifier)
-- **`toDid`** (String, required): The target DID (typically the issuer)
-
-**Returns:** `TrustPathResult?` - Trust path if one exists, `null` otherwise
+**Access via:** `trustWeave.findTrustPath(verifier, issuer)` or, inside **`trustWeave.trust { }`**, **`findTrustPath(Did, Did)`** (extension).
 
 **Example:**
 ```kotlin
-val path = trustWeave.getTrustPath(
-    fromDid = "did:key:verifier",
-    toDid = "did:key:issuer"
-)
+import org.trustweave.did.identifiers.Did
+import org.trustweave.trust.types.IssuerIdentity
+import org.trustweave.trust.types.TrustPath
+import org.trustweave.trust.types.VerifierIdentity
 
-if (path != null) {
-    println("Trust path found: ${path.path}")
-} else {
-    println("No trust path found")
+when (
+    val path = trustWeave.findTrustPath(
+        VerifierIdentity(Did("did:key:verifier")),
+        IssuerIdentity(Did("did:key:issuer"))
+    )
+) {
+    is TrustPath.Verified -> println("Trust path: ${path.fullPath.joinToString(" -> ") { it.value }}")
+    is TrustPath.NotFound -> println("No trust path found")
 }
 ```
 
@@ -1355,37 +1235,28 @@ val allCredentials = wallet.list()
 ```
 
 **Errors:**
-- `TrustWeaveError.WalletCreationFailed` - Wallet creation failed (provider not found, configuration invalid, storage unavailable, duplicate wallet ID)
-- `TrustWeaveError.InvalidDidFormat` - Invalid holder DID format
-- `TrustWeaveError.ValidationFailed` - Invalid wallet options or configuration
+- `WalletException.WalletCreationFailed` - Wallet creation failed (provider not found, configuration invalid, storage unavailable, duplicate wallet ID)
+- `DidException.InvalidDidFormat` - Invalid holder DID format
+- `TrustWeaveException.ValidationFailed` - Invalid wallet options or configuration
 
 ### Advanced TrustWeave Methods
 
-#### getDslContext
+#### Lower-level access (no `getDslContext`)
 
-Gets the DSL context for advanced operations. Use this only when you need to access lower-level services or perform operations not exposed by the TrustWeave facade.
-
-```kotlin
-fun getDslContext(): TrustWeaveContext
-```
-
-**Access via:** `trustWeave.getDslContext()`
-
-**Returns:** `TrustWeaveContext` - The DSL context providing access to underlying services
-
-**When to use:**
-- Accessing lower-level DID resolver directly
-- Performing advanced operations not in the facade
-- Custom service integration
+The facade does not expose `getDslContext()`. For registries and clients, use **`trustWeave.configuration`** and facade helpers such as **`resolveDid`**, **`revocation { }`**, and **`revoke { }`**.
 
 **Example:**
 ```kotlin
-val context = trustWeave.getDslContext()
-val resolver = context.getDidResolver()
-val result = resolver?.resolve("did:key:example")
-```
+import org.trustweave.did.resolver.DidResolutionResult
 
-**Note:** Most operations should be done through `TrustWeave` methods. Only use this for advanced use cases.
+val registry = trustWeave.configuration.didRegistry
+val methods = registry.getAllMethodNames()
+
+when (val res = trustWeave.resolveDid("did:key:example")) {
+    is DidResolutionResult.Success -> println(res.document.id)
+    is DidResolutionResult.Failure -> println("Failed")
+}
+```
 
 #### configuration
 
@@ -1435,16 +1306,18 @@ fun from(config: TrustWeaveConfig): TrustWeave
 
 **Example:**
 ```kotlin
-// Create config once (using suspend function)
+import kotlinx.coroutines.runBlocking
+import org.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import org.trustweave.trust.dsl.trustWeave
 
-val config = trustWeave("my-instance") {
-    factories(
-        kmsFactory = TestkitKmsFactory(),
-        didMethodFactory = TestkitDidMethodFactory()
-    )
-    keys { provider(IN_MEMORY); algorithm(ED25519) }
-    did { method(KEY) { algorithm(ED25519) } }
+val config = runBlocking {
+    trustWeave("my-instance") {
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        did { method(KEY) { algorithm(ED25519) } }
+    }
 }
 
 // Create multiple TrustWeave instances from the same config
@@ -1463,11 +1336,12 @@ val trustWeave2 = TrustWeave.from(config)
 Anchors data to a blockchain for tamper evidence and timestamping. The data is serialized to JSON, canonicalized, and only the digest is stored on-chain (not the full data).
 
 ```kotlin
+// TrustWeave.blockchains: BlockchainService
 suspend fun <T : Any> anchor(
     data: T,
     serializer: KSerializer<T>,
     chainId: String
-): Result<AnchorResult>
+): AnchorResult
 ```
 
 **Parameters:**
@@ -1475,12 +1349,7 @@ suspend fun <T : Any> anchor(
 - `serializer`: Kotlinx Serialization serializer for the data type (required)
 - `chainId`: Chain ID in CAIP-2 format (e.g., `"algorand:testnet"`, `"polygon:mainnet"`)
 
-**Returns:** `Result<AnchorResult>` containing:
-- `ref`: `AnchorRef` with:
-  - `chainId`: The blockchain chain identifier
-  - `txHash`: Transaction hash of the anchor
-  - `blockNumber`: Block number where anchored (if available)
-- `timestamp`: When the data was anchored (ISO 8601 format)
+**Returns:** `AnchorResult` (see `org.trustweave.anchor.AnchorResult`) with chain reference and payload metadata. On failure, throws `org.trustweave.anchor.exceptions.BlockchainException` (e.g. `ChainNotRegistered`).
 
 **Performance Characteristics:**
 - **Time Complexity:** O(N) for serialization where N is data size, O(1) for blockchain write
@@ -1495,68 +1364,41 @@ suspend fun <T : Any> anchor(
 - If blockchain transaction fails (network issue, insufficient funds), returns `Unknown` error with cause
 - Large data (>1MB) may require chunking or off-chain storage (implementation-dependent)
 
-**Note:** The full data is NOT stored on-chain. Only a cryptographic digest (hash) is stored. To retrieve the original data, you must store it separately and use `readAnchor()` with the stored data.
+**Note:** The full data is NOT stored on-chain. Only a cryptographic digest (hash) is stored. To retrieve the original payload, use `trustWeave.blockchains.read()` with the `AnchorRef` returned from anchoring (behavior depends on the anchor client implementation).
 
 **Example:**
 ```kotlin
-// Simple usage
+import org.trustweave.anchor.exceptions.BlockchainException
+
 val myData = MyData(id = "123", value = "test")
 try {
-    val anchor = trustweave.blockchains.anchor(
+    val anchor = trustWeave.blockchains.anchor(
         data = myData,
         serializer = MyData.serializer(),
         chainId = "algorand:testnet"
     )
     println("Anchored at: ${anchor.ref.txHash}")
-    println("Block: ${anchor.ref.blockNumber}")
-    println("Timestamp: ${anchor.timestamp}")
-    // Store anchorRef for later retrieval
-    saveAnchorRef(anchor.ref)
-} catch (error: TrustWeaveError) {
-    when (error) {
-        is TrustWeaveError.ChainNotRegistered -> {
-            println("Chain not registered: ${error.chainId}")
-            println("Available chains: ${error.availableChains}")
-        }
-        else -> {
-            println("Anchoring error: ${error.message}")
-        }
-    }
-}
-
-// With timeout handling
-import kotlinx.coroutines.withTimeout
-
-val anchor = withTimeout(30000) { // 30 second timeout
-    trustweave.blockchains.anchor(
-        data = data,
-        serializer = serializer,
-        chainId = chainId
-    )
+} catch (e: BlockchainException.ChainNotRegistered) {
+    println("Chain not registered: ${e.chainId}; available: ${e.availableChains}")
 }
 ```
 
-**Errors:**
-- `TrustWeaveError.ChainNotRegistered` - Chain ID not registered in registry
-- `TrustWeaveError.ValidationFailed` - Invalid chain ID format or data serialization failure
-- `TrustWeaveError.Unknown` - Blockchain transaction failed (network error, insufficient funds, etc.)
+#### read (`blockchains.read`)
 
-#### readAnchor
-
-Reads anchored data from a blockchain using the anchor reference. This retrieves the data that was stored during `anchor()` and verifies it matches the on-chain digest.
+Reads anchored data from a blockchain using the anchor reference.
 
 ```kotlin
-suspend fun <T : Any> readAnchor(
+suspend fun <T : Any> read(
     ref: AnchorRef,
     serializer: KSerializer<T>
-): Result<T>
+): T
 ```
 
 **Parameters:**
 - `ref`: `AnchorRef` containing chain ID and transaction hash (required, must be valid)
 - `serializer`: Kotlinx Serialization serializer for the data type (required, must match original type)
 
-**Returns:** `Result<T>` containing the deserialized data matching the serializer type
+**Returns:** Deserialized `T`, or throws `BlockchainException` if the chain is not registered or read fails.
 
 **Performance Characteristics:**
 - **Time Complexity:** O(N) for deserialization where N is data size, O(1) for blockchain read
@@ -1587,13 +1429,13 @@ try {
     )
     println("Read data: $data")
     println("Verified against on-chain digest")
-} catch (error: TrustWeaveError) {
+} catch (error: TrustWeaveException) {
     when (error) {
-        is TrustWeaveError.ChainNotRegistered -> {
+        is BlockchainException.ChainNotRegistered -> {
             println("Chain not registered: ${error.chainId}")
             println("Available chains: ${error.availableChains}")
         }
-        is TrustWeaveError.ValidationFailed -> {
+        is TrustWeaveException.ValidationFailed -> {
             println("Data verification failed - possible tampering!")
             println("Reason: ${error.reason}")
         }
@@ -1605,9 +1447,9 @@ try {
 ```
 
 **Errors:**
-- `TrustWeaveError.ChainNotRegistered` - Chain ID not registered in registry
-- `TrustWeaveError.ValidationFailed` - Data digest doesn't match on-chain digest (tamper detected) or deserialization failed
-- `TrustWeaveError.Unknown` - Transaction not found or data retrieval failed
+- `BlockchainException.ChainNotRegistered` - Chain ID not registered in registry
+- `TrustWeaveException.ValidationFailed` - Data digest doesn't match on-chain digest (tamper detected) or deserialization failed
+- `TrustWeaveException.Unknown` - Transaction not found or data retrieval failed
 
 #### availableChains
 
@@ -1623,7 +1465,7 @@ fun availableChains(): List<String>
 
 **Example:**
 ```kotlin
-val chains = trustweave.blockchains.availableChains()
+val chains = trustWeave.blockchains.availableChains()
 println("Available chains: $chains") // ["algorand:testnet", "polygon:mainnet"]
 ```
 
@@ -1694,7 +1536,7 @@ suspend fun executeContract(
 
 #### Other Contract Methods
 
-- **`issueCredential(contract, issuerDid, issuerKeyId)`**: Issues a verifiable credential for a contract
+- **`issueContractCredential(...)`** (on **`SmartContractService`**): Issues a verifiable credential bound to a contract workflow
 - **`anchorContract(contract, credential, chainId)`**: Anchors a contract to a blockchain
 - **`activateContract(contractId)`**: Activates a contract (moves from PENDING to ACTIVE)
 - **`evaluateConditions(contract, inputData)`**: Evaluates contract conditions
@@ -1704,174 +1546,87 @@ suspend fun executeContract(
 
 See [Smart Contract API](smart-contract-api.md) for detailed documentation.
 
-### Plugin Lifecycle Management
+### Resource cleanup (`close`)
 
-#### initialize
-
-Initializes all plugins that implement `PluginLifecycle`.
+The **`TrustWeave`** facade implements **`Closeable`**. Call **`close()`** when an instance is discarded so KMS connections, anchor clients, and other **`Closeable`** collaborators can release resources.
 
 ```kotlin
-suspend fun initialize(config: Map<String, Any?> = emptyMap()): Result<Unit>
-```
-
-**Example:**
-```kotlin
-val trustweave = TrustWeave.create()
-
-val config = mapOf(
-    "database" to mapOf("url" to "jdbc:postgresql://localhost/TrustWeave")
-)
-
+val trustWeave = runBlocking { TrustWeave.quickStart() }
 try {
-    trustweave.initialize(config)
-    println("Plugins initialized")
-} catch (error: TrustWeaveError) {
-    println("Initialization error: ${error.message}")
+    // use trustWeave
+} finally {
+    trustWeave.close()
 }
 ```
 
-#### start
-
-Starts all plugins that implement `PluginLifecycle`.
-
-```kotlin
-suspend fun start(): Result<Unit>
-```
-
-**Example:**
-```kotlin
-try {
-    trustweave.start()
-    println("Plugins started")
-} catch (error: TrustWeaveError) {
-    println("Start error: ${error.message}")
-}
-```
-
-#### stop
-
-Stops all plugins that implement `PluginLifecycle`.
-
-```kotlin
-suspend fun stop(): Result<Unit>
-```
-
-**Example:**
-```kotlin
-try {
-    trustweave.stop()
-    println("Plugins stopped")
-} catch (error: TrustWeaveError) {
-    println("Stop error: ${error.message}")
-}
-```
-
-#### cleanup
-
-Cleans up all plugins that implement `PluginLifecycle`.
-
-```kotlin
-suspend fun cleanup(): Result<Unit>
-```
-
-**Example:**
-```kotlin
-try {
-    trustweave.cleanup()
-    println("Plugins cleaned up")
-} catch (error: TrustWeaveError) {
-    println("Cleanup error: ${error.message}")
-}
-```
+If you implement **`PluginLifecycle`** on your own adapters, **you** invoke those hooks from your composition root; the facade does not expose **`initialize()`** / **`start()`** / **`stop()`** methods. See [Plugin lifecycle](../advanced/plugin-lifecycle.md).
 
 ## Error Types
 
-All operations can return errors of type `TrustWeaveError`. See [Error Handling](../advanced/error-handling.md) for complete error type documentation.
+Facade methods return **sealed results** (`IssuanceResult`, `VerificationResult`, `DidCreationResult`, …) or **throw** domain exceptions extending **`TrustWeaveException`** (`DidException`, `BlockchainException`, `PluginException`, …). See [Error handling](../advanced/error-handling.md).
 
 ### Common Error Types
 
-- `TrustWeaveError.DidMethodNotRegistered` - DID method not registered
-- `TrustWeaveError.InvalidDidFormat` - Invalid DID format
-- `TrustWeaveError.CredentialInvalid` - Credential validation failed
-- `TrustWeaveError.ChainNotRegistered` - Chain ID not registered
-- `TrustWeaveError.WalletCreationFailed` - Wallet creation failed
-- `TrustWeaveError.PluginInitializationFailed` - Plugin initialization failed
+- `DidException.DidMethodNotRegistered` - DID method not registered
+- `DidException.InvalidDidFormat` - Invalid DID format
+- `TrustWeaveException.ValidationFailed` - Credential validation failed
+- `BlockchainException.ChainNotRegistered` - Chain ID not registered
+- `WalletException.WalletCreationFailed` - Wallet creation failed
+- `PluginException.InitializationFailed` - Plugin initialization failed
 
 ## Error Handling
 
-### Exception-Based Error Handling (TrustWeave Methods)
+### Sealed results (credential pipeline and many facade APIs)
 
-**All `TrustWeave` methods throw exceptions on failure.** This includes:
-- `createDid()`, `updateDid()`, `delegate()`, `rotateKey()`
-- `issue()`, `verify()`
-- `wallet()`
-- Trust operations (`addTrustAnchor()`, `removeTrustAnchor()`, etc.)
+**`issue`**, **`verify`**, **`presentationResult`**, and **batch** flows return sealed types (`IssuanceResult`, `VerificationResult`, `PresentationResult`). **`createDid`** and several DID lifecycle APIs return **`DidCreationResult`** / related sealed types—use `when` (or test-only `getOrThrowDid()`), not a blanket try-catch, for those failures.
 
-**Example:**
+See [API patterns — results vs exceptions](../getting-started/api-patterns.md#api-contract-results-vs-exceptions) and [Result types guide](result-types-guide.md).
+
+**Example (credential + DID results):**
 ```kotlin
+import kotlinx.coroutines.runBlocking
 import org.trustweave.trust.TrustWeave
-import org.trustweave.core.TrustWeaveError
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.testkit.services.*
 
-try {
-    val trustWeave = TrustWeave.build { ... }
-    val did = trustWeave.createDid {
-        method(KEY)
-        algorithm(ED25519)
+fun main() = runBlocking {
+    val trustWeave = TrustWeave.quickStart()
+
+    val did = when (val dr = trustWeave.createDid { method(KEY); algorithm(ED25519) }) {
+        is DidCreationResult.Success -> dr.did
+        is DidCreationResult.Failure -> return@runBlocking
     }
-    val credential = trustWeave.issue {
-        credential { ... }
-        signedBy(issuerDid = did, keyId = "$did#key-1")
+
+    val issued = trustWeave.issue {
+        credential { /* ... */ }
+        signedBy(did)
     }
-    val wallet = trustWeave.wallet {
-        holder(did)
+    val credential = when (issued) {
+        is IssuanceResult.Success -> issued.credential
+        is IssuanceResult.Failure -> return@runBlocking
     }
-} catch (error: TrustWeaveError) {
-    when (error) {
-        is TrustWeaveError.DidMethodNotRegistered -> {
-            println("Method not registered: ${error.method}")
-            println("Available methods: ${error.availableMethods}")
-        }
-        is TrustWeaveError.ChainNotRegistered -> {
-            println("Chain not registered: ${error.chainId}")
-            println("Available chains: ${error.availableChains}")
-        }
-        else -> println("Error: ${error.message}")
+
+    val verification = trustWeave.verify(credential)
+    when (verification) {
+        is VerificationResult.Valid -> { /* ... */ }
+        is VerificationResult.Invalid -> { /* exhaustive branches */ }
     }
 }
 ```
 
-### Result-Based Error Handling (Lower-Level APIs)
+### Exceptions and unwrapping helpers
 
-**Some lower-level APIs return `Result<T>` directly.** This includes:
-- Contract operations (when accessed via lower-level APIs)
-- Some plugin lifecycle methods
-- Custom service implementations
+- **`getOrThrow()`** / **`getOrThrowDid()`** throw **`IllegalStateException`** on failure—wrap call sites if you use them in production.
+- **`wallet { }`** and some integration paths may throw **`TrustWeaveException`** subclasses (see [Error handling](../advanced/error-handling.md)).
+### `Result<T>` and lower-level APIs
 
-**Example:**
-```kotlin
-val result = someService.operation()
-result.fold(
-    onSuccess = { value ->
-        // Handle success
-        println("Success: $value")
-    },
-    onFailure = { error ->
-        // Handle error
-        when (error) {
-            is TrustWeaveError.ValidationFailed -> {
-                println("Validation failed: ${error.reason}")
-            }
-            else -> println("Error: ${error.message}")
-        }
-    }
-)
-```
+Some services return **`Result<T>`** for composition (plugins, custom implementations). Handle with `fold` or `getOrElse`.
 
-**When to use which pattern:**
-- **Exception-based (TrustWeave)**: Use for all `TrustWeave` facade methods. Wrap in try-catch for production code.
-- **Result-based**: Use when working with lower-level service APIs that explicitly return `Result<T>`.
-
-**Best Practice:** Always handle errors explicitly. Never ignore exceptions or Result failures in production code.
+**Best Practice:** Handle sealed results with exhaustive `when`; never treat **`AdapterNotReady`** results as success, and never log placeholder credentials from misconfigured **`verify { }`** as real holder data (see [Production checklist](../getting-started/production-integration-checklist.md)).
 
 ## Configuration
 
@@ -1881,6 +1636,7 @@ DID methods are registered during `TrustWeave` creation using the DSL:
 
 ```kotlin
 import org.trustweave.trust.TrustWeave
+import org.trustweave.testkit.services.*
 
 val trustWeave = TrustWeave.build {
     keys {
@@ -1926,6 +1682,7 @@ val trustWeave = TrustWeave.build {
 Trust registry is configured during `TrustWeave` creation:
 
 ```kotlin
+import org.trustweave.testkit.services.*
 val trustWeave = TrustWeave.build {
     keys { ... }
     did { ... }
@@ -1940,11 +1697,11 @@ val trustWeave = TrustWeave.build {
 
 ## Related Documentation
 
-- [Error Handling](../advanced/error-handling.md) - Detailed error handling patterns
-- [Plugin Lifecycle](../advanced/plugin-lifecycle.md) - Plugin lifecycle management
-- [Wallet API](wallet-api.md) - Wallet operations reference
-- [Credential Service API](credential-service-api.md) - Credential service SPI
-- [DIDs Core Concept](../core-concepts/dids.md) - DID concepts and usage
-- [Verifiable Credentials Core Concept](../core-concepts/verifiable-credentials.md) - Credential concepts
-- [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+- Error Handling](../advanced/error-handling.md) - Detailed error handling patterns
+- Plugin Lifecycle](../advanced/plugin-lifecycle.md) - Plugin lifecycle management
+- Wallet API](wallet-api.md) - Wallet operations reference
+- Credential Service API](credential-service-api.md) - Credential service SPI
+- DIDs Core Concept](../core-concepts/dids.md) - DID concepts and usage
+- Verifiable Credentials Core Concept](../core-concepts/verifiable-credentials.md) - Credential concepts
+- Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
 

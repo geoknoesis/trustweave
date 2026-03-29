@@ -3,39 +3,23 @@ package org.trustweave.ensdid.spi
 import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.DidMethod
-import org.trustweave.did.spi.DidMethodProvider
+import org.trustweave.did.base.AbstractDidMethodProvider
 import org.trustweave.ensdid.EnsDidConfig
 import org.trustweave.ensdid.EnsDidMethod
-import org.trustweave.kms.KeyManagementService
-import java.util.ServiceLoader
 
 /**
  * SPI provider for did:ens method.
  */
-class EnsDidMethodProvider : DidMethodProvider {
+class EnsDidMethodProvider : AbstractDidMethodProvider() {
 
     override val name: String = "ens"
 
     override val supportedMethods: List<String> = listOf("ens")
 
     override fun create(methodName: String, options: DidCreationOptions): DidMethod? {
-        if (methodName.lowercase() != "ens") {
-            return null
-        }
-
-        val kms = (options.additionalProperties["kms"] as? KeyManagementService)
-            ?: run {
-                val kmsProviders = ServiceLoader.load(
-                    org.trustweave.kms.spi.KeyManagementServiceProvider::class.java
-                )
-                kmsProviders.firstOrNull()?.create(options.additionalProperties)
-                    ?: throw IllegalStateException("No KeyManagementService available")
-            }
-
+        if (methodName.lowercase() != "ens") return null
         val config = createConfig(options)
-        val anchorClient = getOrCreateAnchorClient(options, config)
-
-        return EnsDidMethod(kms, anchorClient, config)
+        return EnsDidMethod(resolveKms(options), getOrCreateAnchorClient(options, config), config)
     }
 
     private fun createConfig(options: DidCreationOptions): EnsDidConfig {

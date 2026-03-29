@@ -3,49 +3,25 @@ package org.trustweave.ethrdid.spi
 import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.DidMethod
-import org.trustweave.did.spi.DidMethodProvider
+import org.trustweave.did.base.AbstractDidMethodProvider
 import org.trustweave.ethrdid.EthrDidConfig
 import org.trustweave.ethrdid.EthrDidMethod
-import org.trustweave.kms.KeyManagementService
-import java.util.ServiceLoader
-import org.web3j.protocol.Web3j
-import org.web3j.protocol.http.HttpService
 
 /**
  * SPI provider for did:ethr method.
  *
  * Automatically discovers did:ethr method when this module is on the classpath.
  */
-class EthrDidMethodProvider : DidMethodProvider {
+class EthrDidMethodProvider : AbstractDidMethodProvider() {
 
     override val name: String = "ethr"
 
     override val supportedMethods: List<String> = listOf("ethr")
 
     override fun create(methodName: String, options: DidCreationOptions): DidMethod? {
-        if (methodName.lowercase() != "ethr") {
-            return null
-        }
-
-        // Get KMS from options or discover via SPI
-        val kms = (options.additionalProperties["kms"] as? KeyManagementService)
-            ?: run {
-                val kmsProviders = ServiceLoader.load(
-                    org.trustweave.kms.spi.KeyManagementServiceProvider::class.java
-                )
-                kmsProviders.firstOrNull()?.create(options.additionalProperties)
-                    ?: throw IllegalStateException(
-                        "No KeyManagementService available. Provide 'kms' in options or ensure a KMS provider is registered."
-                    )
-            }
-
-        // Create configuration from options
+        if (methodName.lowercase() != "ethr") return null
         val config = createConfig(options)
-
-        // Get or create blockchain anchor client
-        val anchorClient = getOrCreateAnchorClient(options, config)
-
-        return EthrDidMethod(kms, anchorClient, config)
+        return EthrDidMethod(resolveKms(options), getOrCreateAnchorClient(options, config), config)
     }
 
     /**

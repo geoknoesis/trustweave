@@ -133,6 +133,6 @@ DIDs
 - Explore [Architecture Overview](../introduction/architecture-overview.md)
 
 **Ready to build?**
-- [How-To Guides](../how-to/README.md) - Practical guides for tasks
-- [Tutorials](../tutorials/README.md) - Hands-on learning
+- How-To Guides](../how-to/README.md) - Practical guides for tasks
+- Tutorials](../tutorials/README.md) - Hands-on learning
 

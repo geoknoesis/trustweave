@@ -8,7 +8,7 @@ parent: Getting Started
 
 Common issues and solutions when working with TrustWeave.
 
-> **Version:** 1.0.0-SNAPSHOT
+> **Version:** 0.6.0
 > If you encounter issues not covered here, please [file an issue](https://github.com/your-org/TrustWeave/issues) or check the [FAQ](../faq.md).
 
 ## Common Issues
@@ -25,16 +25,15 @@ Available methods: [key]
 Register the DID method before using it:
 
 ```kotlin
-val TrustWeave = TrustWeave.create {
-    didMethods {
-        + DidKeyMethod()  // Already included by default
-        + DidWebMethod()  // Add this for did:web support
+val trustWeave = TrustWeave.build {
+    did {
+        method("web") { domain("yourdomain.com") }
     }
 }
 ```
 
 **Prevention:**
-- Check available methods via configuration: `trustWeave.configuration.registries.didRegistry.getAllMethodNames()`
+- Check available methods via configuration: `trustWeave.configuration.didRegistry.getAllMethodNames()`
 - Use `did:key` for testing (included by default)
 - Register methods during TrustWeave initialization
 
@@ -50,16 +49,22 @@ Available chains: []
 Register the blockchain client before anchoring:
 
 ```kotlin
-val TrustWeave = TrustWeave.create {
-    blockchains {
-        "algorand:testnet" to algorandClient
-        "polygon:mainnet" to polygonClient
+val trustWeave = TrustWeave.build {
+    anchor {
+        chain("algorand:testnet") {
+            provider("algorand")
+            options { /* map from your Algorand client / env */ }
+        }
+        chain("polygon:mainnet") {
+            provider("polygon")
+            options { /* RPC URL, credentials, etc. */ }
+        }
     }
 }
 ```
 
 **Prevention:**
-- Check available chains via configuration: `trustWeave.configuration.registries.blockchainRegistry.getAllChainIds()`
+- Check available chains via configuration: `trustWeave.configuration.blockchainRegistry.getAllChainIds()`
 - Use `InMemoryBlockchainAnchorClient` for testing
 - Register clients during TrustWeave initialization
 
@@ -67,17 +72,19 @@ val TrustWeave = TrustWeave.create {
 
 **Error:**
 ```
-CredentialVerificationResult(valid=false, errors=[Proof verification failed])
+VerificationResult.Invalid.InvalidProof(..., errors=[Proof verification failed])
 ```
 
 **Common Causes:**
 
 1. **Issuer DID not resolvable**
    ```kotlin
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.testkit.services.*
+
    // Ensure issuer DID is created and resolvable
-   import org.trustweave.trust.types.DidCreationResult
    
-   import org.trustweave.trust.types.getOrThrowDid
    
    val issuerDid = trustWeave.createDid {
        method(KEY)
@@ -88,20 +95,21 @@ CredentialVerificationResult(valid=false, errors=[Proof verification failed])
 
 2. **Key ID mismatch**
    ```kotlin
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.testkit.services.*
+
    // Get the correct key ID from the DID document
-   import org.trustweave.trust.types.getOrThrowDid
-   import org.trustweave.trust.types.getOrThrow
-   import org.trustweave.did.resolver.DidResolutionResult
-   import org.trustweave.did.identifiers.extractKeyId
-   
-   // Helper extension for resolution results
-   fun DidResolutionResult.getOrThrow() = when (this) {
-       is DidResolutionResult.Success -> this.document
-       else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
-   }
+import org.trustweave.credential.results.getOrThrow
    
    val issuerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
-   val issuerDoc = trustWeave.resolveDid(issuerDid).getOrThrow()
+   val issuerDoc = when (val res = trustWeave.resolveDid(issuerDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
        ?: throw IllegalStateException("No verification method found")
    ```
@@ -127,7 +135,7 @@ CredentialVerificationResult(valid=false, errors=[Proof verification failed])
 
 **Error:**
 ```
-TrustWeaveError.WalletCreationFailed: Provider 'database' not found
+WalletException.WalletCreationFailed: Provider 'database' not found
 ```
 
 **Solution:**
@@ -139,6 +147,7 @@ TrustWeaveError.WalletCreationFailed: Provider 'database' not found
 import org.trustweave.trust.types.WalletCreationResult
 
 import org.trustweave.trust.types.getOrThrow
+import org.trustweave.credential.results.getOrThrow
 
 val wallet = trustWeave.wallet {
     id("holder-wallet")
@@ -152,7 +161,7 @@ val wallet = trustWeave.wallet {
 
 **Error:**
 ```
-TrustWeaveError.PluginInitializationFailed: Configuration missing
+PluginException.InitializationFailed: Configuration missing
 ```
 
 **Solution:**
@@ -169,7 +178,7 @@ val config = mapOf(
 try {
     trustweave.initialize(config)
     println("Plugins initialized")
-} catch (error: TrustWeaveError) {
+} catch (error: TrustWeaveException) {
     println("Initialization failed: ${error.message}")
 }
 ```
@@ -210,28 +219,28 @@ dependencies {
 Check all registries and available services:
 
 ```kotlin
-fun debugSystemState(trustweave: TrustWeave) {
+import org.trustweave.trust.dsl.credential.KEY
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.testkit.services.*
+
+fun debugSystemState(trustWeave: TrustWeave) {
     println("=== TrustWeave System State ===")
 
-    // Check registered DID methods
-    val methods = trustweave.dids.availableMethods()
+    // Registered DID methods (from the facade configuration)
+    val methods = trustWeave.configuration.didMethods.keys.sorted()
     println("Available DID methods: $methods")
     if (methods.isEmpty()) {
         println("⚠️  WARNING: No DID methods registered!")
     }
 
-    // Check registered blockchain chains
-    val chains = trustweave.blockchains.availableChains()
-    println("Available chains: $chains")
+    // Registered anchor chain IDs
+    val chains = trustWeave.configuration.blockchainRegistry.getAllChainIds().sorted()
+    println("Available blockchain chain IDs: $chains")
 
-    // Check plugin status
     println("\n=== Plugin Status ===")
     // Add plugin status checks if available
 
-    // Test basic operations
     println("\n=== Basic Operation Tests ===")
-    import org.trustweave.trust.types.getOrThrowDid
-    
     try {
         val did = trustWeave.createDid { method(KEY) }.getOrThrowDid()
         println("✅ DID creation works: ${did.value}")
@@ -263,7 +272,7 @@ fun validateBeforeOperation(did: String, credential: VerifiableCredential? = nul
     // Validate DID method is available
     val method = did.substringAfter("did:").substringBefore(":")
     // Note: This requires a TrustWeave instance - pass it as parameter
-    // val availableMethods = trustweave.dids.availableMethods()
+    // val availableMethods = trustWeave.configuration.didMethods.keys
     // if (method !in availableMethods) {
     //     println("❌ DID method '$method' not available")
     //     println("   Available methods: $availableMethods")
@@ -311,7 +320,7 @@ suspend fun traceDidResolution(did: String) {
     // Step 3: Method availability
     println("\n[Step 3] Checking method availability...")
     // Note: This requires a TrustWeave instance - pass it as parameter
-    // val availableMethods = trustweave.dids.availableMethods()
+    // val availableMethods = trustWeave.configuration.didMethods.keys
     // println("Available methods: $availableMethods")
     // if (method !in availableMethods) {
     //     println("❌ Method not available")
@@ -342,16 +351,15 @@ suspend fun traceDidResolution(did: String) {
 Create a minimal reproducible example:
 
 ```kotlin
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.testkit.services.*
+
 suspend fun minimalReproducibleExample() {
     println("=== Minimal Reproducible Example ===")
 
     // Step 1: Create TrustWeave instance
     println("\n[1] Creating TrustWeave instance...")
     val trustWeave = TrustWeave.build {
-        factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
-        )
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
     }
@@ -359,7 +367,6 @@ suspend fun minimalReproducibleExample() {
 
     // Step 2: Create a DID
     println("\n[2] Creating DID...")
-    import org.trustweave.trust.types.getOrThrowDid
     
     val did = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     println("✅ DID created: ${did.value}")
@@ -392,7 +399,7 @@ suspend fun minimalReproducibleExample() {
 Always examine error context for debugging clues:
 
 ```kotlin
-fun analyzeError(error: TrustWeaveError) {
+fun analyzeError(error: TrustWeaveException) {
     println("=== Error Analysis ===")
     println("Code: ${error.code}")
     println("Message: ${error.message}")
@@ -403,17 +410,17 @@ fun analyzeError(error: TrustWeaveError) {
 
     // Check for specific error types
     when (error) {
-        is TrustWeaveError.DidMethodNotRegistered -> {
+        is DidException.DidMethodNotRegistered -> {
             println("\n💡 Suggestions:")
-            println("  - Register the method during TrustWeave.create { didMethods { + DidMethod() } }")
+            println("  - Register the method in TrustWeave.build { did { method(\"web\") { domain(...) } } } (or via SPI)")
             println("  - Use an available method: ${error.availableMethods}")
         }
-        is TrustWeaveError.ChainNotRegistered -> {
+        is BlockchainException.ChainNotRegistered -> {
             println("\n💡 Suggestions:")
-            println("  - Register the chain during TrustWeave.create { blockchains { \"chainId\" to client } }")
+            println("  - Register the chain in TrustWeave.build { anchor { chain(\"chainId\") { provider(...) } } }")
             println("  - Use an available chain: ${error.availableChains}")
         }
-        is TrustWeaveError.InvalidDidFormat -> {
+        is DidException.InvalidDidFormat -> {
             println("\n💡 Suggestions:")
             println("  - Check DID format: did:<method>:<identifier>")
             println("  - Validate before use: DidValidator.validateFormat(...)")
@@ -456,7 +463,7 @@ suspend fun checkNetworkConnectivity() {
         },
         onFailure = { error ->
             when (error) {
-                is TrustWeaveError.DidNotFound -> {
+                is DidException.DidNotFound -> {
                     println("⚠️  Network accessible but DID not found")
                 }
                 else -> {
@@ -514,7 +521,7 @@ suspend fun resolveDidCached(
     return didCache.get(did) {
         val resolution = trustWeave.resolveDid(did)
         when (resolution) {
-            is org.trustweave.did.resolver.DidResolutionResult.Success -> resolution.document
+            is DidResolutionResult.Success -> resolution.document
             else -> null
         }
     }
@@ -557,6 +564,7 @@ val credentials = wallet.list(offset = 0, limit = 100)
 // Batch credential issuance
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import org.trustweave.did.identifiers.Did
 
 suspend fun issueMultipleCredentials(
     trustWeave: TrustWeave,
@@ -575,7 +583,7 @@ suspend fun issueMultipleCredentials(
                         }
                     }
                 }
-                signedBy(issuerDid = request.issuerDid, keyId = request.keyId)
+                signedBy(issuerDid = Did(request.issuerDid), keyId = request.keyId)
             }
         }
     }.awaitAll()
@@ -637,6 +645,8 @@ class ThreadSafeCredentialStore {
 ```kotlin
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.TimeoutCancellationException
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.testkit.services.*
 
 suspend fun operationWithTimeout(
     trustWeave: TrustWeave,
@@ -644,7 +654,6 @@ suspend fun operationWithTimeout(
 ) {
     try {
         withTimeout(timeoutMillis) {
-            import org.trustweave.trust.types.getOrThrowDid
             
             val did = try {
                 trustWeave.createDid { method(KEY) }.getOrThrowDid()
@@ -656,7 +665,7 @@ suspend fun operationWithTimeout(
         }
     } catch (e: TimeoutCancellationException) {
         logger.error("Operation timed out after ${timeoutMillis}ms")
-        throw TrustWeaveError.Unknown(
+        throw TrustWeaveException.Unknown(
             code = "OPERATION_TIMEOUT",
             message = "Operation timed out",
             context = emptyMap(),
@@ -758,8 +767,8 @@ If you're still experiencing issues:
 
 ## Related Documentation
 
-- [Error Handling](../advanced/error-handling.md) - Detailed error handling patterns
-- [Installation](installation.md) - Setup and configuration
-- [Quick Start](quick-start.md) - Getting started guide
-- [API Reference](../api-reference/core-api.md) - Complete API documentation
+- Error Handling](../advanced/error-handling.md) - Detailed error handling patterns
+- Installation](installation.md) - Setup and configuration
+- Quick Start](quick-start.md) - Getting started guide
+- API Reference](../api-reference/core-api.md) - Complete API documentation
 

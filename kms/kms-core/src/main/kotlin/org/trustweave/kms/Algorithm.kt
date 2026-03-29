@@ -100,16 +100,9 @@ sealed class Algorithm(val name: String) {
 
         companion object {
             /**
-             * RSA-2048 is considered legacy due to security concerns.
-             * Use RSA-3072 or RSA-4096 for new deployments.
-             * 
-             * @deprecated RSA-2048 is considered legacy. Use RSA-3072 or RSA-4096 instead.
+             * RSA-2048. Supported for interoperability with legacy systems.
+             * Prefer RSA_3072 or RSA_4096 for new deployments.
              */
-            @Deprecated(
-                message = "RSA-2048 is considered legacy. Use RSA-3072 or RSA-4096 for better security.",
-                level = DeprecationLevel.WARNING,
-                replaceWith = ReplaceWith("RSA.RSA_3072")
-            )
             val RSA_2048 = RSA(2048)
             
             val RSA_3072 = RSA(3072)

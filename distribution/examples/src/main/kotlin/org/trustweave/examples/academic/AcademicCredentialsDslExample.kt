@@ -1,23 +1,23 @@
 package org.trustweave.examples.academic
 
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.trust.types.getOrThrow
 import org.trustweave.credential.model.SchemaFormat
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
 import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.presentationResult
 import org.trustweave.trust.dsl.storeIn
 import org.trustweave.trust.dsl.wallet.QueryBuilder
 import org.trustweave.trust.dsl.wallet.organize
 import org.trustweave.trust.dsl.credential.credential
 import org.trustweave.trust.types.*
-import org.trustweave.core.identifiers.Iri
-import org.trustweave.credential.identifiers.CredentialId
-import org.trustweave.credential.model.CredentialType
-import org.trustweave.credential.model.vc.VerifiablePresentation
+import org.trustweave.credential.results.VerificationResult
 import org.trustweave.wallet.CredentialOrganization
 import org.trustweave.wallet.Wallet
-import org.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
@@ -30,7 +30,7 @@ import kotlinx.serialization.json.JsonPrimitive
  * Academic Credentials Example using DSL.
  *
  * This example demonstrates how to use the Credential DSL API to:
- * 1. Configure a trust layer
+ * 1. Configure TrustWeave
  * 2. Create credentials using the fluent DSL
  * 3. Issue credentials with automatic proof generation
  * 4. Verify credentials
@@ -39,8 +39,8 @@ import kotlinx.serialization.json.JsonPrimitive
 fun main() = runBlocking {
     println("=== Academic Credentials Scenario (DSL) ===\n")
 
-    // Step 1: Configure Trust Layer
-    println("Step 1: Configuring trust layer...")
+    // Step 1: Configure TrustWeave
+    println("Step 1: Configuring TrustWeave...")
     val trustWeave = TrustWeave.build {
         // Only configure what's needed - everything else uses defaults:
         // - keys: defaults to inMemory provider, Ed25519 algorithm
@@ -50,20 +50,20 @@ fun main() = runBlocking {
         
         revocation(IN_MEMORY)  // Required for withRevocation() in Step 4
     }
-    println("✓ Trust layer configured")
+    println("✓ TrustWeave configured")
 
     // Step 2: Create DIDs using new DSL
     println("\nStep 2: Creating DIDs...")
     val universityDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }.getOrFail()
+    }.getOrThrowDid()
     println("University DID: $universityDid")
 
     val studentDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
-    }.getOrFail()
+    }.getOrThrowDid()
     println("Student DID: $studentDid")
 
     // Step 3: Create student wallet using DSL
@@ -73,7 +73,7 @@ fun main() = runBlocking {
         holder(studentDid)
         enableOrganization()
         enablePresentation()
-    }.getOrFail()
+    }.getOrThrow()
     println("Wallet created with ID: ${studentWallet.walletId}")
 
     // Step 4: University issues degree credential using DSL
@@ -106,7 +106,7 @@ fun main() = runBlocking {
         }
         signedBy(universityDid)
         withRevocation() // Auto-create status list
-    }.getOrFail()
+    }.getOrThrow()
 
     println("Credential issued:")
     println("  - Type: ${issuedCredential.type.map { it.value }}")
@@ -153,24 +153,26 @@ fun main() = runBlocking {
     }
     println("Found ${degrees.size} valid degree credentials")
 
-    // Step 8: Create presentation using presentation DSL
-    println("\nStep 8: Creating presentation using presentation DSL...")
+    // Step 8: Create presentation using TrustWeave.presentationResult
+    println("\nStep 8: Creating presentation using presentationResult DSL...")
     val retrievedCredential = studentWallet.get(stored.id?.value ?: throw IllegalStateException("Credential must have ID"))
         ?: throw IllegalStateException("Credential not found in wallet")
-    // Note: Presentation creation requires a PresentationService which is typically configured in TrustWeave
-    // For this example, we'll create a simple presentation without proof
-    val presentation = VerifiablePresentation(
-        id = CredentialId("urn:example:presentation:${System.currentTimeMillis()}"),
-        type = listOf(CredentialType.fromString("VerifiablePresentation")),
-        verifiableCredential = listOf(retrievedCredential),
-        holder = Iri(studentDid.value),
-        challenge = "job-application-12345"
-    )
-
-    println("Presentation created:")
-    println("  - Holder: ${presentation.holder}")
-    println("  - Credentials: ${presentation.verifiableCredential.size}")
-    println("  - Challenge: ${presentation.challenge}")
+    when (val pr = trustWeave.presentationResult {
+        holder(studentDid)
+        credentials(retrievedCredential)
+        challenge("job-application-12345")
+    }) {
+        is PresentationResult.Success -> {
+            val presentation = pr.presentation
+            println("Presentation created:")
+            println("  - Holder: ${presentation.holder}")
+            println("  - Credentials: ${presentation.verifiableCredential.size}")
+            println("  - Challenge: ${presentation.challenge}")
+        }
+        is PresentationResult.Failure -> {
+            println("Presentation not created: ${pr.errors.joinToString()}")
+        }
+    }
 
     // Step 9: Verify credential using lifecycle DSL
     println("\nStep 9: Verifying credential using lifecycle DSL...")
@@ -188,7 +190,7 @@ fun main() = runBlocking {
             println("  - Not expired: true")
             println("  - Not revoked: true")
         }
-        is VerificationResult.Invalid -> {
+        else -> {
             println("❌ Credential verification failed: ${verificationResult.allErrors.joinToString("; ")}")
         }
     }
@@ -234,7 +236,7 @@ fun main() = runBlocking {
 
     println("\n=== Scenario Complete ===")
     println("\nKey Benefits of DSL:")
-    println("  ✓ Single trust layer configuration")
+    println("  ✓ Single TrustWeave configuration")
     println("  ✓ Fluent credential creation (no manual buildJsonObject)")
     println("  ✓ Automatic proof generation")
     println("  ✓ Simplified issuance and verification")

@@ -9,10 +9,10 @@ This tutorial provides a comprehensive guide to performing DID operations with T
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-kms:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:did-did-core:0.6.0")
+    implementation("org.trustweave:kms-kms-core:0.6.0")
+    implementation("org.trustweave:common:0.6.0")
+    implementation("org.trustweave:testkit:0.6.0")
 }
 ```
 
@@ -62,6 +62,9 @@ interface DidMethod {
 ### Using TrustWeave DSL (Recommended)
 
 ```kotlin
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.testkit.services.*
+
 // Kotlin stdlib
 import kotlinx.coroutines.runBlocking
 
@@ -84,7 +87,6 @@ fun main() = runBlocking {
     }
 
     // Create DID using did:key method (returns sealed result)
-    import org.trustweave.trust.types.DidCreationResult
     
     val didResult = trustWeave.createDid {
         method(DidMethods.KEY)
@@ -95,8 +97,16 @@ fun main() = runBlocking {
         is DidCreationResult.Success -> {
             println("Created DID: ${didResult.did.value}")
         }
-        else -> {
-            println("DID creation failed: ${didResult.reason}")
+        is DidCreationResult.Failure -> {
+            val msg = when (didResult) {
+                is DidCreationResult.Failure.MethodNotRegistered ->
+                    "method ${didResult.method} not registered; available: ${didResult.availableMethods.joinToString()}"
+                is DidCreationResult.Failure.KeyGenerationFailed -> didResult.reason
+                is DidCreationResult.Failure.DocumentCreationFailed -> didResult.reason
+                is DidCreationResult.Failure.InvalidConfiguration -> didResult.reason
+                is DidCreationResult.Failure.Other -> didResult.reason
+            }
+            println("DID creation failed: $msg")
         }
     }
 }
@@ -107,6 +117,8 @@ fun main() = runBlocking {
 ### Creating DIDs with Specific Methods
 
 ```kotlin
+import org.trustweave.trust.types.getOrThrowDid
+
 // Kotlin stdlib
 import kotlinx.coroutines.runBlocking
 
@@ -121,7 +133,6 @@ import org.trustweave.testkit.services.*
 fun main() = runBlocking {
     // Build TrustWeave instance with testkit factories (for tutorials)
     val trustWeave = TrustWeave.build {
-        factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
         keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did {
             method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) }
@@ -130,7 +141,6 @@ fun main() = runBlocking {
     }
 
     // Create DID with did:key method
-    import org.trustweave.trust.types.getOrThrowDid
     
     val keyDid = trustWeave.createDid {
         method(DidMethods.KEY)
@@ -196,27 +206,23 @@ import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
 import org.trustweave.trust.types.Did
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
 import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
+import org.trustweave.trust.types.getOrThrow
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
-        factories(didMethodFactory = TestkitDidMethodFactory())
         keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
-    import org.trustweave.trust.types.getOrThrow
-    import org.trustweave.did.resolver.DidResolutionResult
-    
-    // Helper extension for resolution results
-    fun DidResolutionResult.getOrThrow() = when (this) {
-        is DidResolutionResult.Success -> this.document
-        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
-    }
     
     val did = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
-    val document = trustWeave.resolveDid(did).getOrThrow()
+    val document = when (val res = trustWeave.resolveDid(did)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     
     println("Resolved DID: ${document.id}")
     println("Document: ${document}")
@@ -234,22 +240,21 @@ import kotlinx.coroutines.runBlocking
 
 // TrustWeave core
 import org.trustweave.did.*
+import org.trustweave.did.resolver.DidResolutionResult
 
 fun main() = runBlocking {
     val registry = DidMethodRegistry()
     // ... register methods ...
 
     val didString = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
-    val resolutionResult = registry.resolve(didString)  // Registry convenience method accepts String
+    val resolutionResult = registry.resolve(didString) // String overload returns sealed DidResolutionResult
 
-    resolutionResult.fold(
-        onSuccess = { result ->
-            println("Resolved: ${result.didDocument?.id}")
-        },
-        onFailure = { error ->
-            println("Resolution failed: ${error.message}")
-        }
-    )
+    when (resolutionResult) {
+        is DidResolutionResult.Success ->
+            println("Resolved: ${resolutionResult.document.id}")
+        is DidResolutionResult.Failure ->
+            println("Resolution failed: ${resolutionResult::class.simpleName}")
+    }
 }
 ```
 
@@ -272,7 +277,6 @@ import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
-        factories(didMethodFactory = TestkitDidMethodFactory())
         keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
@@ -317,7 +321,6 @@ import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
-        factories(didMethodFactory = TestkitDidMethodFactory())
         keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
@@ -401,7 +404,6 @@ import org.trustweave.testkit.services.*
 fun main() = runBlocking {
     // Build TrustWeave instance with testkit factories (for tutorials)
     val trustWeave = TrustWeave.build {
-        factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
         keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
@@ -448,13 +450,12 @@ import kotlinx.coroutines.runBlocking
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
-import org.trustweave.core.exception.TrustWeaveError
+import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     // Build TrustWeave instance with testkit factories (for tutorials)
     val trustWeave = TrustWeave.build {
-        factories(didMethodFactory = TestkitDidMethodFactory())  // Test-only factory
         keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
@@ -477,7 +478,7 @@ fun main() = runBlocking {
             else -> {
                 println("Error: ${error.message}")
             }
-            is TrustWeaveError.DidNotFound -> {
+            is DidException.DidNotFound -> {
                 println("DID not found: ${error.did}")
             }
             else -> println("Error: ${error.message}")
@@ -497,7 +498,7 @@ fun main() = runBlocking {
 
 ## References
 
-- [W3C DID Core Specification](https://www.w3.org/TR/did-core/)
-- [TrustWeave DID Module](../modules/trustweave-did.md)
-- [TrustWeave Core API](../api-reference/core-api.md)
+- W3C DID Core Specification](https://www.w3.org/TR/did-core/)
+- TrustWeave DID Module](../modules/trustweave-did.md)
+- TrustWeave Core API](../api-reference/core-api.md)
 

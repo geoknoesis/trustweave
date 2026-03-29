@@ -26,14 +26,21 @@ data class TrustAnchor(
  *
  * **Example Usage:**
  * ```kotlin
+ * import org.trustweave.did.identifiers.Did
+ * import org.trustweave.trust.types.TrustPath
+ * import org.trustweave.trust.types.IssuerIdentity
+ * import org.trustweave.trust.types.VerifierIdentity
+ *
+ * val verifier = VerifierIdentity(Did("did:key:verifier"))
+ * val issuer = IssuerIdentity(Did("did:key:issuer"))
  * when (val path = trustWeave.findTrustPath(verifier, issuer)) {
  *     is TrustPath.Verified -> {
  *         println("Trusted via path: ${path.anchors.map { it.did }}")
- *         println("Path length: ${path.anchors.size}")
+ *         println("Path length: ${path.length}")
  *         println("Verified at: ${path.verifiedAt}")
  *     }
  *     is TrustPath.NotFound -> {
- *         println("No trust path found")
+ *         println("No trust path found: ${path.reason}")
  *     }
  * }
  * ```
@@ -65,7 +72,7 @@ sealed class TrustPath {
          * Get the full path including endpoints.
          */
         val fullPath: List<Did>
-            get() = listOf(from) + anchors.map { anchor -> anchor.did } + listOf(to)
+            get() = listOf(from.did) + anchors.map { anchor -> anchor.did } + listOf(to.did)
 
         /**
          * Get the path length (number of hops).

@@ -6,6 +6,7 @@ import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.base.AbstractDidMethod
+import org.trustweave.did.base.DidMethodUtils
 import org.trustweave.kms.KeyManagementService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -42,21 +43,24 @@ class OrbDidMethod(
     }
 
     override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
-        validateDidFormat(did)
-        
-        val didString = did.value
+        try {
+            validateDidFormat(did)
 
-        // TODO: Implement Orb DID resolution
-        // 1. Extract anchor origin and suffix from DID
-        // 2. Resolve from Orb/ION network
-        // 3. Parse and return DID document
+            // TODO: Implement Orb DID resolution
+            // 1. Extract anchor origin and suffix from DID
+            // 2. Resolve from Orb/ION network
+            // 3. Parse and return DID document
 
-        throw TrustWeaveException.Unknown(
-            code = "ORB_NOT_IMPLEMENTED",
-            message =
-            "Orb DID resolution requires Orb SDK integration. " +
-            "Structure is ready for implementation."
-        )
+            throw TrustWeaveException.Unknown(
+                code = "ORB_NOT_IMPLEMENTED",
+                message = "Orb DID resolution requires Orb SDK integration. " +
+                "Structure is ready for implementation."
+            )
+        } catch (e: TrustWeaveException) {
+            DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
+        } catch (e: Exception) {
+            DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
+        }
     }
 }
 

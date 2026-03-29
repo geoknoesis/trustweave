@@ -22,10 +22,10 @@ Add the did:plc module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave.did:plc:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-did:1.0.0-SNAPSHOT")
-    implementation("org.trustweave.did:base:1.0.0-SNAPSHOT")
-    implementation("org.trustweave:trustweave-common:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:did-plugins-plc:0.6.0")
+    implementation("org.trustweave:did-did-core:0.6.0")
+    implementation("org.trustweave:did-plugins-base:0.6.0")
+    implementation("org.trustweave:common:0.6.0")
 
     // HTTP client for AT Protocol integration
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
@@ -193,25 +193,35 @@ val config = PlcDidConfig.builder()
 ## Integration with TrustWeave
 
 ```kotlin
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.did.KeyAlgorithm
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.kms.InMemoryKeyManagementService
 import org.trustweave.plcdid.*
 
 val config = PlcDidConfig.default()
+val kms = InMemoryKeyManagementService()
 
-val TrustWeave = TrustWeave.create {
-    kms = InMemoryKeyManagementService()
-
-    didMethods {
-        + PlcDidMethod(kms!!, config)
+val trustWeave = TrustWeave.build {
+    customKms(kms)
+    did {
+        method("plc") {
+            algorithm("Ed25519")
+            option("plcConfig", config)
+        }
     }
 }
 
-// Use did:plc
-val did = TrustWeave.createDid("plc") {
-    algorithm = KeyAlgorithm.ED25519
-}.getOrThrow()
+val did = trustWeave.createDid {
+    method("plc")
+    algorithm(KeyAlgorithm.ED25519)
+}.getOrThrowDid()
 
-val resolved = TrustWeave.resolveDid(did.id).getOrThrow()
+when (val resolved = trustWeave.resolveDid(did)) {
+    is DidResolutionResult.Success -> println("Resolved: ${resolved.document.id}")
+    else -> println("Resolve failed: $resolved")
+}
 ```
 
 ## AT Protocol Integration
@@ -334,8 +344,8 @@ PLC DIDs support distributed identity systems:
 
 ## References
 
-- [AT Protocol Documentation](https://atproto.com/)
-- [PLC DID Method Specification](https://atproto.com/specs/did)
-- [PLC Registry](https://plc.directory)
-- [DID Core Specification](https://www.w3.org/TR/did-core/)
+- AT Protocol Documentation](https://atproto.com/)
+- PLC DID Method Specification](https://atproto.com/specs/did)
+- PLC Registry](https://plc.directory)
+- DID Core Specification](https://www.w3.org/TR/did-core/)
 

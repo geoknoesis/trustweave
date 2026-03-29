@@ -12,13 +12,13 @@ This guide demonstrates how to build a verifiable data catalog system using Trus
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created DIDs for data catalog publishers and datasets
-- ✅ Built DCAT-compliant dataset descriptions
-- ✅ Issued verifiable credentials for dataset metadata
-- ✅ Created data catalog with dataset discovery
-- ✅ Tracked dataset lineage and provenance
-- ✅ Anchored catalog records to blockchain
-- ✅ Built complete verifiable data catalog system
+- Created DIDs for data catalog publishers and datasets
+- Built DCAT-compliant dataset descriptions
+- Issued verifiable credentials for dataset metadata
+- Created data catalog with dataset discovery
+- Tracked dataset lineage and provenance
+- Anchored catalog records to blockchain
+- Built complete verifiable data catalog system
 
 ## Big Picture & Significance
 
@@ -171,10 +171,10 @@ Add TrustWeave dependencies to your `build.gradle.kts`. These modules deliver DI
 dependencies {
     // Core TrustWeave modules
     // TrustWeave distribution (includes all modules)
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Test kit for in-memory implementations
-    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:0.6.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -201,7 +201,11 @@ dependencies {
 ```kotlin
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.did.DidMethodRegistry
+import org.trustweave.trust.TrustWeave
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.model.ProofType
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -216,13 +220,18 @@ fun main() = runBlocking {
     val catalogKms = InMemoryKeyManagementService()   // For catalog managers
 
     val didMethod = DidKeyMockMethod(publisherKms)
-    val didRegistry = DidMethodRegistry().apply { register(didMethod) }
 
-    // Initialize TrustWeave
     val trustWeave = TrustWeave.build {
-        keyManagementService(publisherKms)
-        didMethodRegistry(didRegistry)
-        credentialService { CredentialService() }
+        keys {
+            custom(publisherKms)
+            algorithm(ED25519)
+        }
+        did {
+            method(KEY) {
+                algorithm(ED25519)
+            }
+        }
+        credentials { defaultProofType(ProofType.Ed25519Signature2020) }
     }
 
     println("Services initialized")
@@ -242,7 +251,7 @@ fun main() = runBlocking {
 - **Verification**: Consumers can verify dataset credentials
 
 ```kotlin
-import org.trustweave.credential.models.VerifiableCredential
+import org.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
@@ -350,20 +359,24 @@ import java.time.Instant
 - **Trust**: Builds trust in dataset descriptions
 
 ```kotlin
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
+import org.trustweave.core.util.DigestUtils
+
     // Step 4: Create dataset credential
     println("\nStep 4: Creating dataset credential...")
 
     // Compute digest of DCAT dataset description
     // This provides integrity check for the dataset metadata
-    val datasetDigest = org.trustweave.json.DigestUtils.sha256DigestMultibase(
-        org.trustweave.json.Json.encodeToJsonElement(dcatDataset)
+    val datasetDigest = DigestUtils.sha256DigestMultibase(
+        Json.encodeToJsonElement(dcatDataset)
     )
 
     // Dataset credential wraps DCAT description with verifiable proof
-    val publisherKeyId = publisherKms.generateKey("Ed25519").id
+    val publisherKeyId = publisherKms.generateKey("Ed25519").id.value
     val datasetResult = trustWeave.issue {
         credential {
-            id("https://catalog.example.com/datasets/${datasetDid.id.substringAfterLast(":")}")
+            id("https://catalog.example.com/datasets/${datasetDid.id.value.substringAfterLast(":")}")
             type("VerifiableCredential", "DatasetCredential", "DCATCredential")
             issuer(publisherDid.id) // Publisher issues credential about dataset
             subject {
@@ -382,7 +395,7 @@ import java.time.Instant
     }
     
     val datasetCredential = when (datasetResult) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> datasetResult.credential
+        is IssuanceResult.Success -> datasetResult.credential
         else -> throw IllegalStateException("Failed to create dataset credential: ${datasetResult.allErrors.joinToString()}")
     }
 
@@ -477,11 +490,14 @@ import java.time.Instant
 - **Trust**: Builds trust in catalog contents
 
 ```kotlin
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
+
     // Step 7: Create catalog record credential
     println("\nStep 7: Creating catalog record credential...")
 
     // Catalog record credential proves dataset is registered
-    val catalogKeyId = catalogKms.generateKey("Ed25519").id
+    val catalogKeyId = catalogKms.generateKey("Ed25519").id.value
     val catalogRecordResult = trustWeave.issue {
         credential {
             type("VerifiableCredential", "CatalogRecordCredential", "DCATCredential")
@@ -493,8 +509,8 @@ import java.time.Instant
                     "datasetTitle" to datasetTitle
                     "registrationDate" to Instant.now().toString()
                     "status" to "published"
-                    "catalogDigest" to org.trustweave.json.DigestUtils.sha256DigestMultibase(
-                        org.trustweave.json.Json.encodeToJsonElement(dcatCatalog)
+                    "catalogDigest" to DigestUtils.sha256DigestMultibase(
+                        Json.encodeToJsonElement(dcatCatalog)
                     )
                 }
             }
@@ -504,18 +520,10 @@ import java.time.Instant
     }
     
     val catalogRecordCredential = when (catalogRecordResult) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> catalogRecordResult.credential
+        is IssuanceResult.Success -> catalogRecordResult.credential
         else -> throw IllegalStateException("Failed to create catalog record credential: ${catalogRecordResult.allErrors.joinToString()}")
     }
 
-    // Catalog record credential is already issued via trustWeave.issue { } DSL above
-    // Old CredentialIssuer setup removed - using DSL instead
-    val catalogIssuer = null // Not needed with DSL
-        resolveDid = { did -> didRegistry.resolve(did) != null },
-        proofRegistry = catalogProofRegistry
-    )
-
-    // Catalog record credential is already issued via trustWeave.issue { } DSL above
     val issuedCatalogRecord = catalogRecordCredential
 
     println("Catalog record credential created:")
@@ -537,52 +545,45 @@ import java.time.Instant
 - **Trust**: Builds trust in dataset descriptions
 
 ```kotlin
-import org.trustweave.credential.verifier.CredentialVerifier
-import org.trustweave.credential.CredentialVerificationOptions
+import org.trustweave.credential.results.VerificationResult
 
     // Step 8: Verify dataset credentials
     println("\nStep 8: Verifying dataset credentials...")
 
-    val verifier = CredentialVerifier(
-        didResolver = CredentialDidResolver { did ->
-            didRegistry.resolve(did).toCredentialDidResolution()
-        }
-    )
-
-    // Verify dataset credential
-    val datasetVerification = verifier.verify(
-        credential = issuedDatasetCredential,
-        options = CredentialVerificationOptions(
-            checkRevocation = true,
-            checkExpiration = false
-        )
-    )
-
-    if (datasetVerification.valid) {
-        println("✅ Dataset credential verified")
-        println("  - Publisher: ${publisherDid.id}")
-        println("  - Dataset: $datasetTitle")
-    } else {
-        println("❌ Dataset credential verification failed:")
-        datasetVerification.errors.forEach { println("  - $it") }
+    val datasetVerification = trustWeave.verify {
+        credential(issuedDatasetCredential)
+        checkRevocation()
+        skipExpiration()
     }
 
-    // Verify catalog record credential
-    val catalogVerification = verifier.verify(
-        credential = issuedCatalogRecord,
-        options = CredentialVerificationOptions(
-            checkRevocation = true,
-            checkExpiration = false
-        )
-    )
+    when (datasetVerification) {
+        is VerificationResult.Valid -> {
+            println("✅ Dataset credential verified")
+            println("  - Publisher: ${publisherDid.id}")
+            println("  - Dataset: $datasetTitle")
+        }
+        is VerificationResult.Invalid -> {
+            println("❌ Dataset credential verification failed:")
+            datasetVerification.allErrors.forEach { println("  - $it") }
+        }
+    }
 
-    if (catalogVerification.valid) {
-        println("✅ Catalog record credential verified")
-        println("  - Catalog: https://catalog.example.com")
-        println("  - Dataset: $datasetTitle")
-    } else {
-        println("❌ Catalog record verification failed:")
-        catalogVerification.errors.forEach { println("  - $it") }
+    val catalogVerification = trustWeave.verify {
+        credential(issuedCatalogRecord)
+        checkRevocation()
+        skipExpiration()
+    }
+
+    when (catalogVerification) {
+        is VerificationResult.Valid -> {
+            println("✅ Catalog record credential verified")
+            println("  - Catalog: https://catalog.example.com")
+            println("  - Dataset: $datasetTitle")
+        }
+        is VerificationResult.Invalid -> {
+            println("❌ Catalog record verification failed:")
+            catalogVerification.allErrors.forEach { println("  - $it") }
+        }
     }
 ```
 
@@ -599,11 +600,15 @@ import org.trustweave.credential.CredentialVerificationOptions
 - **Integrity**: Prevents catalog tampering
 
 ```kotlin
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.core.util.DigestUtils
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import org.trustweave.anchor.BlockchainAnchorRegistry
 import org.trustweave.anchor.anchorTyped
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
+import java.time.Instant
 
 @Serializable
 data class CatalogRecord(
@@ -624,7 +629,7 @@ data class CatalogRecord(
     }
 
     // Create catalog record
-    val catalogDigest = org.trustweave.json.DigestUtils.sha256DigestMultibase(
+    val catalogDigest = DigestUtils.sha256DigestMultibase(
         Json.encodeToJsonElement(
             VerifiableCredential.serializer(),
             issuedCatalogRecord
@@ -734,6 +739,8 @@ data class CatalogRecord(
 Enable federation across multiple catalogs:
 
 ```kotlin
+import org.trustweave.did.identifiers.Did
+
 suspend fun federateCatalogs(
     trustWeave: TrustWeave,
     catalog1Did: String,
@@ -755,11 +762,11 @@ suspend fun federateCatalogs(
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = catalog1Did, keyId = issuerKeyId)
+        signedBy(issuerDid = Did(catalog1Did), keyId = issuerKeyId)
     }
     
     return when (result) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create federation credential: ${result.allErrors.joinToString()}")
     }
 }
@@ -791,11 +798,11 @@ suspend fun createQualityCredential(
             }
             issued(Instant.now())
         }
-        signedBy(issuerDid = publisherDid, keyId = issuerKeyId)
+        signedBy(issuerDid = Did(publisherDid), keyId = issuerKeyId)
     }
     
     return when (result) {
-        is org.trustweave.credential.results.IssuanceResult.Success -> result.credential
+        is IssuanceResult.Success -> result.credential
         else -> throw IllegalStateException("Failed to create quality credential: ${result.allErrors.joinToString()}")
     }
 }

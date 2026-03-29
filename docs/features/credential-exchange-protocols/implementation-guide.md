@@ -268,8 +268,7 @@ fun `test complete exchange flow`() = runTest {
     
     val exchangeService = ExchangeServices.createExchangeService(
         protocolRegistry = registry,
-        credentialService = credentialService,
-        didResolver = didResolver
+        credentialService = credentialService
     )
 
     // Test full flow
@@ -383,8 +382,8 @@ Potential protocols to implement:
 
 ## References
 
-- [Protocol Abstraction Documentation](../../core-concepts/credential-exchange-protocols.md)
-- [DIDComm Implementation](./didcomm.md)
-- [OIDC4VCI Implementation](./oidc4vci.md)
-- [CHAPI Implementation](./chapi.md)
+- Protocol Abstraction Documentation](../../core-concepts/credential-exchange-protocols.md)
+- DIDComm Implementation](./didcomm.md)
+- OIDC4VCI Implementation](./oidc4vci.md)
+- CHAPI Implementation](./chapi.md)
 

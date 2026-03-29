@@ -7,9 +7,10 @@ import org.trustweave.did.KeyAlgorithm
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
-import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.context.DidDslContext
 import org.trustweave.kms.services.KmsService
 import org.trustweave.kms.KeyManagementService
+import org.trustweave.kms.results.GenerateKeyResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -33,7 +34,7 @@ import kotlinx.coroutines.withContext
  * ```
  */
 class KeyRotationBuilder(
-    private val trustWeave: TrustWeave,
+    private val didContext: DidDslContext,
     private val kms: KeyManagementService,
     private val kmsService: KmsService,
     /**
@@ -120,14 +121,22 @@ class KeyRotationBuilder(
         )
 
         // Get DID method from provider
-        val didMethod = trustWeave.getDidMethod(methodName) as? DidMethod
+        val didMethod = didContext.getDidMethod(methodName) as? DidMethod
             ?: throw IllegalStateException(
                 "DID method '$methodName' is not configured. " +
                 "Configure it in TrustWeave.build { did { method(\"$methodName\") { ... } } }"
             )
 
         // Generate new key using KMS
-        val newKeyHandle = kmsService.generateKey(kms, algorithm, emptyMap())
+        val newKeyHandle = when (val result = kmsService.generateKey(kms, algorithm, emptyMap())) {
+            is GenerateKeyResult.Success -> result.keyHandle
+            is GenerateKeyResult.Failure.UnsupportedAlgorithm ->
+                throw IllegalArgumentException("Algorithm not supported: ${result.algorithm}")
+            is GenerateKeyResult.Failure.InvalidOptions ->
+                throw IllegalArgumentException("Invalid key generation options: ${result.reason}")
+            is GenerateKeyResult.Failure.Error ->
+                throw IllegalStateException("Failed to generate key: ${result.reason}", result.cause)
+        }
         val publicKeyJwk = kmsService.getPublicKeyJwk(newKeyHandle)
         val keyId = kmsService.getKeyId(newKeyHandle)
 

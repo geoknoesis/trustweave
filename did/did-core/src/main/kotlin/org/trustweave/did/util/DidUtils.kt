@@ -169,7 +169,7 @@ fun getServicesByType(
     document: DidDocument,
     serviceType: String
 ): List<org.trustweave.did.model.DidService> {
-    return document.service.filter { it.type == serviceType }
+    return document.service.filter { serviceType in it.type }
 }
 
 /**
@@ -190,6 +190,6 @@ fun hasServiceType(
     document: DidDocument,
     serviceType: String
 ): Boolean {
-    return document.service.any { it.type == serviceType }
+    return document.service.any { serviceType in it.type }
 }
 

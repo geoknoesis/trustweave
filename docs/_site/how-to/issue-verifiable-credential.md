@@ -17,22 +17,25 @@ Verifiable Credentials enable trust without intermediaries. They're tamper-proof
 
 ## Prerequisites
 
-- **Kotlin**: 2.2.0 or higher
+- **Kotlin**: 2.2.21+ or higher
 - **Java**: 21 or higher
 - **TrustWeave SDK**: Latest version
 - **Dependencies**: `distribution-all` and `testkit` (for in-memory KMS)
 
 **Required imports:**
 ```kotlin
-import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.types.ProofType
-import org.trustweave.trust.types.VerificationResult
-import org.trustweave.trust.types.DidCreationResult
-import org.trustweave.trust.types.IssuanceResult
+import org.trustweave.credential.model.ProofType
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.results.VerificationResult
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.credential.results.getOrThrow
 import kotlinx.coroutines.runBlocking
-import java.time.Instant
-import java.time.temporal.ChronoUnit
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.days
 ```
 
 **Configuration needed:**
@@ -57,12 +60,12 @@ A Verifiable Credential is a tamper-proof document that proves something about a
 val trustWeave = TrustWeave.build { ... }
 
 // 2. Create issuer DID
-val issuerDid = trustWeave.createDid { ... }
+val (issuerDid, issuerDoc) = trustWeave.createDid { ... }.getOrThrow()
 
-// 3. Issue credential
-val credential = trustWeave.issue { ... }
+// 3. Issue credential (IssuanceResult)
+val credential = trustWeave.issue { ... }.getOrThrow()
 
-// 4. Verify credential
+// 4. Verify credential (VerificationResult)
 val result = trustWeave.verify { ... }
 ```
 
@@ -75,7 +78,13 @@ val result = trustWeave.verify { ... }
 Set up TrustWeave with a Key Management Service and DID method. For development, use the in-memory KMS.
 
 ```kotlin
+import org.trustweave.credential.model.ProofType
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.*
+import org.trustweave.testkit.services.*
+
 val trustWeave = TrustWeave.build {
+    // KMS and DID methods auto-discovered via SPI
     keys {
         provider(IN_MEMORY)
         algorithm(ED25519)
@@ -107,22 +116,9 @@ val trustWeave = TrustWeave.build {
 Create a DID (Decentralized Identifier) for the credential issuer. This identity will sign the credential.
 
 ```kotlin
-import org.trustweave.trust.types.DidCreationResult
-
-val didResult = trustWeave.createDid {
-    method(KEY)
-    algorithm(ED25519)
-}
-
-val issuerDid = when (didResult) {
-    is DidCreationResult.Success -> {
-        println("Issuer DID: ${didResult.did.value}")
-        didResult.did
-    }
-    else -> {
-        throw IllegalStateException("Failed to create DID: ${didResult.reason}")
-    }
-}
+// Create issuer DID (uses default method from config)
+val (issuerDid, issuerDoc) = trustWeave.createDid().getOrThrow()
+println("Issuer DID: ${issuerDid.value}")
 ```
 
 **What this does:**
@@ -139,28 +135,18 @@ The DID document includes verification methods that prove ownership of the signi
 Retrieve the key ID from the issuer's DID document. This key will be used to sign the credential.
 
 ```kotlin
-// Resolve the DID to get the verification method
-val resolutionResult = trustWeave.resolveDid(issuerDid)
-val issuerDocument = when (resolutionResult) {
-    is DidResolutionResult.Success -> resolutionResult.document
-    else -> throw IllegalStateException("Failed to resolve issuer DID: ${resolutionResult}")
-}
+import org.trustweave.did.identifiers.extractKeyId
 
-// Get the first verification method key ID
-val verificationMethod = issuerDocument.verificationMethod.firstOrNull()
+// Extract key ID from DID document (already available from createDid().getOrThrow())
+val keyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
     ?: throw IllegalStateException("No verification method found")
-
-// Extract key ID from verification method (e.g., "did:key:xxx#key-1" -> "key-1")
-val keyId = verificationMethod.id.substringAfter("#")
-
 println("Signing key ID: $keyId")
 ```
 
 **What this does:**
-- Resolves the issuer DID using `resolveDid()` which returns a sealed result type
-- Extracts the DID document from the success result
 - Gets the verification method (public key) that will be used for signing
-- Extracts the key ID fragment (the part after `#`) which references the private key stored in the KMS
+- Extracts the key ID fragment using the type-safe `extractKeyId()` extension function
+- Returns the key ID string (e.g., "key-1") which references the private key stored in the KMS
 
 > **Tip:** In production, you might store the key ID separately or derive it from your key management workflow.
 
@@ -171,15 +157,15 @@ println("Signing key ID: $keyId")
 Define the credential content using the DSL builder. Specify the subject, types, and metadata.
 
 ```kotlin
-import org.trustweave.trust.types.IssuanceResult
+import org.trustweave.credential.results.IssuanceResult
 
-val issuanceResult = trustWeave.issue {
+val credential = trustWeave.issue {
     credential {
         id("https://example.edu/credentials/degree-123")
         type("DegreeCredential", "BachelorDegreeCredential")
-        issuer(issuerDid.value)
+        issuer(issuerDid)
         subject {
-            id("did:key:student-456")
+            id(org.trustweave.did.identifiers.Did("did:key:student-456"))
             "degree" {
                 "type" to "BachelorDegree"
                 "name" to "Bachelor of Science in Computer Science"
@@ -188,16 +174,11 @@ val issuanceResult = trustWeave.issue {
                 "gpa" to "3.8"
             }
         }
-        issued(Instant.now())
-        expires(365 * 10, ChronoUnit.DAYS) // Valid for 10 years
+        issued(Clock.System.now())
+        expires((365 * 10).days) // Valid for 10 years
     }
-    signedBy(issuerDid = issuerDid.value, keyId = keyId)
-}
-
-val credential = when (issuanceResult) {
-    is IssuanceResult.Success -> issuanceResult.credential
-    else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
-}
+    signedBy(issuerDid)
+}.getOrThrow()
 ```
 
 **What this does:**
@@ -221,18 +202,13 @@ val credential = when (issuanceResult) {
 The `issue { }` block automatically generates a cryptographic proof and attaches it to the credential.
 
 ```kotlin
-val issuanceResult = trustWeave.issue {
+val issuedCredential = trustWeave.issue {
     credential {
         // ... credential definition from Step 4
     }
-    signedBy(issuerDid = issuerDid.value, keyId = keyId)
-    withProof(ProofType.Ed25519Signature2020)
-}
-
-val issuedCredential = when (issuanceResult) {
-    is IssuanceResult.Success -> issuanceResult.credential
-    else -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.reason}")
-}
+    signedBy(issuerDid)
+    withProof(ED25519_SIGNATURE_2020)
+}.getOrThrow()
 ```
 
 **What happens internally:**
@@ -252,6 +228,10 @@ The credential now contains a `proof` property that anyone can verify without co
 Verify the credential to confirm the proof is valid and the credential hasn't been tampered with.
 
 ```kotlin
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.trust.types.issuerValid
+import org.trustweave.trust.types.proofValid
+
 val verificationResult = trustWeave.verify {
     credential(issuedCredential)
     checkExpiration()
@@ -261,17 +241,10 @@ when (verificationResult) {
     is VerificationResult.Valid -> {
         println("✅ Credential is valid!")
         println("  - Proof valid: ${verificationResult.proofValid}")
-        println("  - Issuer valid: ${verificationResult.issuerValid}")
+        println("  - Issuer resolved: ${verificationResult.issuerValid}")
     }
-    is VerificationResult.Invalid.Expired -> {
-        println("❌ Credential expired at ${verificationResult.expiredAt}")
-    }
-    is VerificationResult.Invalid.InvalidProof -> {
-        println("❌ Invalid proof: ${verificationResult.reason}")
-    }
-    else -> {
-        println("❌ Verification failed")
-        verificationResult.errors.forEach { println("  - $it") }
+    is VerificationResult.Invalid -> {
+        println("❌ Verification failed: ${verificationResult.allErrors.joinToString("; ")}")
     }
 }
 ```
@@ -290,11 +263,17 @@ Here's a complete, runnable example that brings all steps together:
 
 ```kotlin
 import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.types.ProofType
-import org.trustweave.trust.types.VerificationResult
+import org.trustweave.credential.model.ProofType
+import org.trustweave.credential.results.VerificationResult
 import kotlinx.coroutines.runBlocking
-import java.time.Instant
-import java.time.temporal.ChronoUnit
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.days
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.testkit.services.*
+import org.trustweave.credential.results.getOrThrow
 
 fun main() = runBlocking {
     // Step 1: Configure TrustWeave
@@ -316,36 +295,29 @@ fun main() = runBlocking {
     }
     
     // Step 2: Create issuer DID
-    val didResult = trustWeave.createDid {
+    
+    val issuerDid = trustWeave.createDid {
         method(KEY)
-    }
-    val issuerDid = when (didResult) {
-        is DidCreationResult.Success -> {
-            println("Issuer DID: ${didResult.did.value}")
-            didResult.did
-        }
-        else -> {
-            println("Failed to create DID: ${didResult.reason}")
-            return@runBlocking
-        }
-    }
+    }.getOrThrowDid()
+    println("Issuer DID: ${issuerDid.value}")
     
     // Step 3: Get signing key
-    val resolutionResult = trustWeave.resolveDid(issuerDid)
-    val issuerDocument = when (resolutionResult) {
-        is DidResolutionResult.Success -> resolutionResult.document
-        else -> throw IllegalStateException("Failed to resolve issuer DID: ${resolutionResult}")
-    }
+    val issuerDocument = when (val res = trustWeave.resolveDid(issuerDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val verificationMethod = issuerDocument.verificationMethod.firstOrNull()
         ?: throw IllegalStateException("No verification method found")
-    val keyId = verificationMethod.id.substringAfter("#")
+    val keyId = verificationMethod.extractKeyId()
+        ?: throw IllegalStateException("Failed to extract key ID")
     
     // Step 4 & 5: Issue credential
-    val issuanceResult = trustWeave.issue {
+    
+    val issuedCredential = trustWeave.issue {
         credential {
             id("https://example.edu/credentials/degree-123")
             type("DegreeCredential")
-            issuer(issuerDid.value)
+            issuer(issuerDid)
             subject {
                 id("did:key:student-456")
                 "degree" {
@@ -353,19 +325,11 @@ fun main() = runBlocking {
                     "university" to "Example University"
                 }
             }
-            issued(Instant.now())
-            expires(365 * 10, ChronoUnit.DAYS)
+            issued(Clock.System.now())
+            expires((365 * 10).days)
         }
         signedBy(issuerDid = issuerDid.value, keyId = keyId)
-    }
-    
-    val issuedCredential = when (issuanceResult) {
-        is IssuanceResult.Success -> issuanceResult.credential
-        else -> {
-            println("Failed to issue credential: ${issuanceResult.reason}")
-            return@runBlocking
-        }
-    }
+    }.getOrThrow()
     
     println("Credential issued:")
     println("  - ID: ${issuedCredential.id}")
@@ -380,7 +344,7 @@ fun main() = runBlocking {
     
     when (result) {
         is VerificationResult.Valid -> println("✅ Credential verified successfully")
-        else -> println("❌ Verification failed: ${result.errors}")
+        else -> println("[FAIL] Verification failed: ${result.allErrors.joinToString()}")
     }
 }
 ```
@@ -389,52 +353,25 @@ fun main() = runBlocking {
 
 ## Visual Flow Diagram
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Credential Issuance Flow                 │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A[Step 1: Configure TrustWeave<br/>- KMS Provider<br/>- DID Method<br/>- Proof Type] --> B[Step 2: Create Issuer Identity<br/>- Generate key pair<br/>- Create DID document<br/>- Store keys in KMS]
+    B --> C[Step 3: Get Signing Key<br/>- Resolve DID document<br/>- Get verification method<br/>- Reference private key]
+    C --> D[Step 4: Build Credential<br/>- Define subject & claims<br/>- Set types & metadata<br/>- Specify issuer & validity]
+    D --> E[Step 5: Sign & Issue<br/>- Canonicalize JSON (JCS)<br/>- Compute digest<br/>- Sign with private key<br/>- Attach proof]
+    E --> F[Step 6: Verify Credential<br/>- Resolve issuer DID<br/>- Get public key<br/>- Verify signature<br/>- Check expiration]
+    F --> G{Valid?}
+    G -->|Yes| H["[OK] Valid"]
+    G -->|No| I["[FAIL] Invalid"]
 
-┌──────────────┐
-│   Step 1     │  Configure TrustWeave
-│  Configure   │  • KMS Provider (inMemory/AWS/CyberArk)
-└──────┬───────┘  • DID Method (key/web/ion)
-       │          • Proof Type (Ed25519Signature2020)
-       ▼
-┌──────────────┐
-│   Step 2     │  Create Issuer Identity
-│ Create DID   │  • Generate key pair
-└──────┬───────┘  • Create DID document
-       │          • Store keys in KMS
-       ▼
-┌──────────────┐
-│   Step 3     │  Get Signing Key
-│ Extract Key  │  • Resolve DID document
-└──────┬───────┘  • Get verification method
-       │          • Reference private key in KMS
-       ▼
-┌──────────────┐
-│   Step 4     │  Build Credential
-│ Build VC     │  • Define subject & claims
-└──────┬───────┘  • Set types & metadata
-       │          • Specify issuer & validity
-       ▼
-┌──────────────┐
-│   Step 5     │  Issue Credential
-│ Sign & Issue │  • Canonicalize JSON (JCS)
-└──────┬───────┘  • Compute digest
-       │          • Sign with private key
-       │          • Attach proof
-       ▼
-┌──────────────┐
-│   Step 6      │  Verify Credential
-│  Verify VC   │  • Resolve issuer DID
-└──────┬───────┘  • Get public key
-       │          • Verify signature
-       │          • Check expiration
-       ▼
-    ✅ Valid
-    or
-    ❌ Invalid
+    style A fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
+    style B fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+    style C fill:#f57c00,stroke:#e65100,stroke-width:2px,color:#fff
+    style D fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#fff
+    style E fill:#c2185b,stroke:#880e4f,stroke-width:2px,color:#fff
+    style F fill:#00796b,stroke:#004d40,stroke-width:2px,color:#fff
+    style H fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style I fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
 ```
 
 ---
@@ -467,10 +404,10 @@ Credential issued:
 ```
 
 **What to check:**
-- ✅ Credential has a `proof` property
-- ✅ Proof type matches (e.g., `Ed25519Signature2020`)
-- ✅ Verification returns `VerificationResult.Valid`
-- ✅ No errors in verification result
+- Credential has a `proof` property
+- Proof type matches (e.g., `Ed25519Signature2020`)
+- Verification returns `VerificationResult.Valid`
+- No errors in verification result
 
 ---
 
@@ -482,7 +419,7 @@ Credential issued:
 
 **Solution:**
 ```kotlin
-// ❌ Missing issuer identity
+// âŒ Missing issuer identity
 trustWeave.issue {
     credential { ... }
     // Missing: signedBy(issuerDid = ..., keyId = ...)
@@ -503,8 +440,10 @@ trustWeave.issue {
 
 **Solution:**
 ```kotlin
+import org.trustweave.testkit.services.*
 // ✅ Ensure KMS is configured
 val trustWeave = TrustWeave.build {
+    // KMS and DID methods auto-discovered via SPI
     keys {
         provider(IN_MEMORY)  // or your KMS provider
         algorithm(ED25519)
@@ -521,14 +460,15 @@ val trustWeave = TrustWeave.build {
 
 **Solution:**
 ```kotlin
+import org.trustweave.testkit.services.*
 // ✅ Register DID method
 val trustWeave = TrustWeave.build {
+    keys { provider(IN_MEMORY); algorithm(ED25519) }
     did {
-        method(KEY) {  // Register the method
+        method(KEY) {
             algorithm(ED25519)
         }
     }
-    // ... rest of config
 }
 ```
 
@@ -540,17 +480,24 @@ val trustWeave = TrustWeave.build {
 
 **Solution:**
 ```kotlin
-// ✅ Ensure DID is created and resolved
-val issuerDid = trustWeave.createDid {
-    method(KEY)
-    algorithm(ED25519)
+import org.trustweave.did.resolver.DidResolutionResult
+
+// ✅ Prefer createDid: you get the document immediately (no extra resolve)
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.credential.results.getOrThrow
+
+val (issuerDid, issuerDoc) = trustWeave.createDid { /* method/algorithm if needed */ }.getOrThrow()
+val keyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
+    ?: throw IllegalStateException("No verification method found")
+
+// If you must resolve later, use the sealed result (not a nullable document)
+
+val issuerDocument = when (val res = trustWeave.resolveDid(issuerDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException("DID not found or not resolvable")
 }
-
-// Wait a moment for DID to be available, then resolve
-val issuerDocument = trustWeave.getDslContext().resolveDid(issuerDid)
-    ?: throw IllegalStateException("DID not found")
-
-val keyId = issuerDocument.verificationMethod.firstOrNull()?.id
+val keyIdFromResolve = issuerDocument.verificationMethod.firstOrNull()?.extractKeyId()
     ?: throw IllegalStateException("No verification method")
 ```
 
@@ -592,10 +539,10 @@ when (result) {
 // ✅ Set appropriate expiration
 credential {
     // ...
-    issued(Instant.now())
-    expires(365 * 10, ChronoUnit.DAYS)  // 10 years
+    issued(Clock.System.now())
+    expires((365 * 10).days)  // 10 years
     // or
-    expires(Instant.now().plus(365, ChronoUnit.DAYS))  // 1 year from now
+    expires(Clock.System.now().plus(365.days))  // 1 year from now
 }
 ```
 
@@ -643,11 +590,15 @@ See: [How to Manage Credentials in Wallets](./manage-wallet-credentials.md)
 Allow holders to present credentials selectively:
 
 ```kotlin
-val presentation = wallet.presentation {
+import org.trustweave.trust.dsl.wallet.presentationFromWalletResult
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.credential.results.getOrThrow
+
+val presentation = trustWeave.presentationFromWalletResult(wallet) {
     fromWallet(credentialId)
     holder(holderDid.value)
     challenge("job-application-123")
-}
+}.getOrThrow()
 ```
 
 See: [How to Create Verifiable Presentations](./create-presentations.md)

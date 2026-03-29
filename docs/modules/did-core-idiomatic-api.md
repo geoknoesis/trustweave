@@ -62,40 +62,38 @@ registry["new"] = NewDidMethod()
 
 ## Extension Functions
 
-### DidResolutionResult Extensions
+### DidResolutionResult extensions
+
+`DidResolutionResult` is a **sealed class** (not `Result<T>`). Use **`when`**, **`resolveOrNull` / `resolveOrThrow`** on **`Did`**, or the small **`did-core`** helpers below.
 
 ```kotlin
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorCode
+import org.trustweave.did.resolver.errorMessage
+import org.trustweave.did.resolver.hasError
+import org.trustweave.did.resolver.isNotFound
+import org.trustweave.did.resolver.isSuccess
 
-val result: DidResolutionResult = // ... resolution result
+val result: DidResolutionResult = // ... from resolver.resolve(did)
 
-// Safe access
-val document = result.getOrNull()
-val doc = result.getOrThrow()
-val defaultDoc = result.getOrDefault(defaultDocument)
+// Diagnostics
+if (result.isSuccess) { /* ... */ }
+if (result.hasError) {
+    println(result.errorMessage)
+    println(result.errorCode)
+}
+if (result.isNotFound) { /* ... */ }
 
-// Callbacks
-result.onSuccess { document ->
-    println("Resolved: ${document.id}")
+// Document extraction
+val documentOrNull: DidDocument? = when (result) {
+    is DidResolutionResult.Success -> result.document
+    else -> null
 }
 
-result.onFailure { failure ->
-    println("Failed: ${failure.reason}")
+val message = when (result) {
+    is DidResolutionResult.Success -> "Success: ${result.document.id}"
+    is DidResolutionResult.Failure -> "Failed: ${result.errorMessage}"
 }
-
-// Functional transformation
-val mapped = result.map { doc -> doc.copy(id = otherDid) }
-
-// Fold for complete transformation
-val message = result.fold(
-    onSuccess = { "Success: ${it.id.value}" },
-    onFailure = { "Failed: ${it.reason}" }
-)
-
-// Properties
-if (result.isSuccessResult) { /* ... */ }
-if (result.isFailureResult) { /* ... */ }
-val failure = result.failureOrNull()
 ```
 
 ### Did Extensions
@@ -110,8 +108,8 @@ import org.trustweave.did.dsl.resolveOrDefault
 val did = Did("did:key:123")
 val resolver: DidResolver = // ... resolver
 
-// Fluent resolution
-val document = did.resolveWith(resolver).getOrThrow()
+// Resolve to document (throws DidException on failure)
+val document = did.resolveOrThrow(resolver)
 val doc = did.resolveOrNull(resolver)
 val docOrDefault = did.resolveOrDefault(resolver, defaultDocument)
 
@@ -212,16 +210,14 @@ val resolver = universalResolver("https://dev.uniresolver.io") {
     timeout = 60
     retry { maxRetries = 3 }
 }
-val document = Did("did:key:123")
-    .resolveWith(resolver)
-    .getOrNull()  // Extension function
+val document = Did("did:key:123").resolveOrNull(resolver)
 ```
 
 ## Best Practices
 
 1. **Use builder DSLs** for complex configurations
-2. **Use extension functions** for fluent, readable code
+2. **Use extension functions** for fluent, readable code (`resolveOrThrow`, `resolveOrNull`, `resolveOrDefault`)
 3. **Use operator overloads** for intuitive API usage
 4. **Configure retry logic** for production environments
-5. **Use safe access patterns** (`getOrNull`, `getOrDefault`) when appropriate
+5. **Handle the sealed `DidResolutionResult`** with `when` when you need per-failure behaviour
 

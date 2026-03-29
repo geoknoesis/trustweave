@@ -12,12 +12,12 @@ This guide demonstrates how to build a parametric insurance system using TrustWe
 
 By the end of this tutorial, you'll have:
 
-- ✅ Created DIDs for insurance companies and EO data providers
-- ✅ Issued verifiable credentials for EO data (rainfall, temperature, spectral analysis)
-- ✅ Built a standardized data oracle system using VCs
-- ✅ Implemented parametric trigger verification
-- ✅ Created multi-provider data acceptance workflows
-- ✅ Anchored EO data credentials to blockchain for tamper-proof triggers
+- Created DIDs for insurance companies and EO data providers
+- Issued verifiable credentials for EO data (rainfall, temperature, spectral analysis)
+- Built a standardized data oracle system using VCs
+- Implemented parametric trigger verification
+- Created multi-provider data acceptance workflows
+- Anchored EO data credentials to blockchain for tamper-proof triggers
 
 ## Big Picture & Significance
 
@@ -109,13 +109,13 @@ Parametric insurance needs:
 ```kotlin
 dependencies {
     // Core TrustWeave modules
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
 
     // Test kit for in-memory implementations
-    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
+    testImplementation("org.trustweave:testkit:0.6.0")
 
     // Optional: Algorand adapter for real blockchain anchoring
-    implementation("org.trustweave.chains:algorand:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:anchors-plugins-algorand:0.6.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -132,13 +132,21 @@ Here's a complete parametric insurance workflow using EO data credentials:
 ```kotlin
 package com.example.parametric.insurance
 
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
 import org.trustweave.core.*
-import org.trustweave.json.DigestUtils
+import org.trustweave.core.util.DigestUtils
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.testkit.services.*
+import org.trustweave.credential.results.getOrThrow
 
 fun main() = runBlocking {
     println("=".repeat(70))
@@ -147,54 +155,34 @@ fun main() = runBlocking {
 
     // Step 1: Create TrustWeave instance
     val trustWeave = TrustWeave.build {
-        factories(
-            kmsFactory = TestkitKmsFactory(),
-            didMethodFactory = TestkitDidMethodFactory()
-        )
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
     }
-    println("\n✅ TrustWeave initialized")
+    println("\n[OK] TrustWeave initialized")
 
     // Step 2: Create DIDs for insurance company and EO data provider
-    import org.trustweave.trust.types.DidCreationResult
-    import org.trustweave.trust.types.IssuanceResult
-    
-    val insuranceDidResult = trustWeave.createDid {
-        method(KEY)
-        algorithm(ED25519)
-    }
-    import org.trustweave.trust.types.getOrThrowDid
-    
     val insuranceDid = trustWeave.createDid {
         method(KEY)
         algorithm(ED25519)
     }.getOrThrowDid()
-    println("✅ Created insurance DID: ${insuranceDid.value}")
+    println("[OK] Created insurance DID: ${insuranceDid.value}")
     
     // Continue with EO provider DID creation
-    import org.trustweave.trust.types.getOrThrowDid
-    import org.trustweave.trust.types.getOrThrow
-    import org.trustweave.did.resolver.DidResolutionResult
-    import org.trustweave.did.identifiers.extractKeyId
-    
-    // Helper extension for resolution results
-    fun DidResolutionResult.getOrThrow() = when (this) {
-        is DidResolutionResult.Success -> this.document
-        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
-    }
     
     val eoProviderDid = trustWeave.createDid {
         method(KEY)
         algorithm(ED25519)
     }.getOrThrowDid()
-    println("✅ Created EO provider DID: ${eoProviderDid.value}")
+    println("[OK] Created EO provider DID: ${eoProviderDid.value}")
 
-    println("✅ Insurance Company DID: ${insuranceDid.value}")
-    println("✅ EO Data Provider DID: ${eoProviderDid.value}")
+    println("[OK] Insurance Company DID: ${insuranceDid.value}")
+    println("[OK] EO Data Provider DID: ${eoProviderDid.value}")
 
     // Step 3: EO Data Provider issues credential for rainfall data
-    val eoProviderDoc = trustWeave.resolveDid(eoProviderDid).getOrThrow()
+    val eoProviderDoc = when (val res = trustWeave.resolveDid(eoProviderDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
     val eoProviderKeyId = eoProviderDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
@@ -241,34 +229,23 @@ fun main() = runBlocking {
         signedBy(eoProviderDid)
     }
     
-    import org.trustweave.trust.types.getOrThrow
     
     val eoDataCredential = eoDataIssuanceResult.getOrThrow()
-    println("✅ EO Data Credential issued: ${eoDataCredential.id}")
+    println("[OK] EO Data Credential issued: ${eoDataCredential.id}")
     println("   Data digest: $dataDigest")
 
     // Step 4: Verify EO data credential (insurance company verifies before using)
-    val verification = trustWeave.verify {
-        credential(eoDataCredential)
-    }
-    when (verification) {
+    when (val verification = trustWeave.verify { credential(eoDataCredential) }) {
         is VerificationResult.Valid -> {
-            // Credential is valid, continue
+            println("[OK] EO Data Credential verified")
+            println("   Proof valid: ${verification.proofValid}")
+            println("   Issuer valid: ${verification.issuerValid}")
         }
         is VerificationResult.Invalid -> {
-            println("❌ Verification failed: ${verification.reason}")
+            println("[FAIL] Verification failed: ${verification.allErrors.joinToString()}")
             return@runBlocking
         }
     }
-
-    if (!verification.valid) {
-        println("❌ EO data credential invalid: ${verification.errors}")
-        return@runBlocking
-    }
-
-    println("✅ EO Data Credential verified")
-    println("   Proof valid: ${verification.proofValid}")
-    println("   Issuer valid: ${verification.issuerValid}")
 
     // Step 5: Extract data and check parametric trigger
     val credentialSubject = eoDataCredential.credentialSubject
@@ -278,7 +255,7 @@ fun main() = runBlocking {
         ?.jsonPrimitive?.content?.toDouble()
         ?: error("Rainfall value not found")
 
-    println("\n📊 Parametric Trigger Check:")
+    println("\n[stats] Parametric Trigger Check:")
     println("   Rainfall value: $rainfallValue inches")
 
     // Insurance policy: Payout if rainfall < 1.0 inches
@@ -286,18 +263,21 @@ fun main() = runBlocking {
     val shouldPayout = rainfallValue < triggerThreshold
 
     if (shouldPayout) {
-        println("   ✅ TRIGGER MET: Rainfall below threshold ($triggerThreshold inches)")
-        println("   💰 Insurance payout should be triggered")
+        println("   [OK] TRIGGER MET: Rainfall below threshold ($triggerThreshold inches)")
+        println("   [payout] Insurance payout should be triggered")
 
         // Step 6: Create payout credential (insurance company issues)
-        val insuranceDoc = trustWeave.resolveDid(insuranceDid).getOrThrow()
+        val insuranceDoc = when (val res = trustWeave.resolveDid(insuranceDid)) {
+    is DidResolutionResult.Success -> res.document
+    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+}
         val insuranceKeyId = insuranceDoc.verificationMethod.firstOrNull()?.extractKeyId()
             ?: throw IllegalStateException("No verification method found")
 
         val payoutIssuanceResult = trustWeave.issue {
             credential {
                 type("InsurancePayoutCredential")
-                issuer(insuranceDid.value)
+                issuer(insuranceDid)
                 subject {
                     id("urn:insurance:payout:2024-06-15")
                     "policyId" to "POL-12345"
@@ -312,15 +292,15 @@ fun main() = runBlocking {
                 }
                 issued(Instant.now())
             }
-            signedBy(issuerDid = insuranceDid.value, keyId = insuranceKeyId)
+            signedBy(issuerDid = insuranceDid, keyId = insuranceKeyId)
         }
         
         val payoutCredential = payoutIssuanceResult.getOrThrow()
-        println("✅ Payout Credential issued: ${payoutCredential.id}")
+        println("[OK] Payout Credential issued: ${payoutCredential.id}")
         println("   Payout amount: $50,000 USD")
         println("   Data credential: ${eoDataCredential.id}")
     } else {
-        println("   ❌ TRIGGER NOT MET: Rainfall above threshold")
+        println("   [FAIL] TRIGGER NOT MET: Rainfall above threshold")
         println("   No payout triggered")
     }
 
@@ -330,17 +310,17 @@ fun main() = runBlocking {
         ?.jsonPrimitive?.content ?: ""
 
     if (currentDataDigest == credentialDataDigest) {
-        println("\n✅ Data Integrity Verified")
+        println("\n[OK] Data Integrity Verified")
         println("   Data digest matches credential")
         println("   No tampering detected")
     } else {
-        println("\n❌ Data Integrity FAILED")
+        println("\n[FAIL] Data Integrity FAILED")
         println("   Data may have been tampered with")
         println("   DO NOT TRUST THIS DATA")
     }
 
     println("\n" + "=".repeat(70))
-    println("✅ Parametric Insurance Scenario Complete!")
+    println("[OK] Parametric Insurance Scenario Complete!")
     println("=".repeat(70))
 }
 ```
@@ -351,29 +331,29 @@ fun main() = runBlocking {
 Parametric Insurance with EO Data - Complete Example
 ======================================================================
 
-✅ TrustWeave initialized
-✅ Insurance Company DID: did:key:z6Mk...
-✅ EO Data Provider DID: did:key:z6Mk...
-✅ EO Data Credential issued: urn:uuid:...
+[OK] TrustWeave initialized
+[OK] Insurance Company DID: did:key:z6Mk...
+[OK] EO Data Provider DID: did:key:z6Mk...
+[OK] EO Data Credential issued: urn:uuid:...
    Data digest: u5v...
-✅ EO Data Credential verified
+[OK] EO Data Credential verified
    Proof valid: true
    Issuer valid: true
 
-📊 Parametric Trigger Check:
+[stats] Parametric Trigger Check:
    Rainfall value: 0.5 inches
-   ✅ TRIGGER MET: Rainfall below threshold (1.0 inches)
-   💰 Insurance payout should be triggered
-✅ Payout Credential issued: urn:uuid:...
+   [OK] TRIGGER MET: Rainfall below threshold (1.0 inches)
+   [payout] Insurance payout should be triggered
+[OK] Payout Credential issued: urn:uuid:...
    Payout amount: $50,000 USD
    Data credential: urn:uuid:...
 
-✅ Data Integrity Verified
+[OK] Data Integrity Verified
    Data digest matches credential
    No tampering detected
 
 ======================================================================
-✅ Parametric Insurance Scenario Complete!
+[OK] Parametric Insurance Scenario Complete!
 ======================================================================
 ```
 
@@ -382,6 +362,8 @@ Parametric Insurance with EO Data - Complete Example
 The key advantage of using VCs is accepting data from multiple providers:
 
 ```kotlin
+import org.trustweave.credential.results.VerificationResult
+
 // Accept data from any certified provider
 val providers = listOf("ESA", "Planet", "NASA", "NOAA")
 
@@ -454,7 +436,7 @@ val spectralIssuanceResult = trustWeave.issue {
         }
         issued(Instant.now())
     }
-    signedBy(issuerDid = eoProviderDid.value, keyId = eoProviderKeyId)
+    signedBy(issuerDid = eoProviderDid, keyId = eoProviderKeyId)
 }
 
 // Verify spectral fingerprint matches underwriting model
@@ -462,7 +444,7 @@ val modelFingerprint = getUnderwritingModelFingerprint()
 val matchesModel = verifySpectralMatch(spectralData, modelFingerprint)
 
 if (matchesModel) {
-    println("✅ Spectral fingerprint matches underwriting model")
+    println("[OK] Spectral fingerprint matches underwriting model")
     println("   Data used for payout is the exact data that was modeled")
     println("   No replay attack or data corruption possible")
 }
@@ -480,11 +462,11 @@ val anchorResult = trustWeave.blockchains.anchor(
     chainId = "algorand:testnet"
 ).fold(
     onSuccess = { anchor ->
-        println("✅ Credential anchored: ${anchor.ref.txHash}")
+        println("[OK] Credential anchored: ${anchor.ref.txHash}")
         anchor
     },
     onFailure = { error ->
-        println("❌ Anchoring failed: ${error.message}")
+        println("[FAIL] Anchoring failed: ${error.message}")
         null
     }
 )
@@ -528,8 +510,8 @@ if (anchorResult != null) {
 
 ## Related Documentation
 
-- [Earth Observation Scenario](earth-observation-scenario.md) - EO data integrity workflow
-- [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
-- [API Reference](../api-reference/core-api.md) - Complete API documentation
+- Earth Observation Scenario](earth-observation-scenario.md) - EO data integrity workflow
+- Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
+- API Reference](../api-reference/core-api.md) - Complete API documentation
 
 

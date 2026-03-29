@@ -41,6 +41,7 @@ Each link in the chain must be verified to ensure the entire delegation is valid
 ### Setting Up Delegation
 
 ```kotlin
+import org.trustweave.testkit.services.*
 // Step 1: Update delegator DID document to include capability delegation
 trustWeave.updateDid {
     did(delegatorDid)
@@ -82,6 +83,7 @@ if (result.valid) {
 ### Multi-Hop Delegation
 
 ```kotlin
+import org.trustweave.testkit.services.*
 // Set up multi-hop delegation chain
 trustWeave.updateDid {
     did(ceoDid)
@@ -111,12 +113,15 @@ if (result.valid) {
 When a credential is issued by a delegate, the verification can check the delegation chain:
 
 ```kotlin
-// Issue credential using delegated authority
+import org.trustweave.trust.types.delegationValid
+import org.trustweave.did.identifiers.Did
+
+// Issue credential using delegated authority (delegateDid / employeeDid: String DIDs from your setup)
 val credential = trustWeave.issue {
     credential {
         id("https://company.com/credential-123")
         type("EmploymentCredential")
-        issuer(delegateDid) // Delegate issues on behalf of delegator
+        issuer(delegateDid)
         subject {
             id(employeeDid)
             "employment" {
@@ -126,20 +131,20 @@ val credential = trustWeave.issue {
         }
         issued(Instant.now())
     }
-    signedBy(issuerDid = delegateDid, keyId = "key-1")
+    signedBy(issuerDid = Did(delegateDid), keyId = "key-1")
 }
 
 // Verify credential with delegation check
 val result = trustWeave.verify {
     credential(credential)
     verifyDelegation(true) // Enable delegation verification
-    checkExpiration(true)
+    checkExpiration()
 }
 
 if (result.delegationValid) {
     println("Delegation chain is valid")
 } else {
-    println("Delegation verification failed: ${result.errors}")
+    println("Delegation verification failed: ${result.allErrors.joinToString()}")
 }
 ```
 
@@ -174,8 +179,13 @@ trustWeave.updateDid {
 ## Example: Corporate Hierarchy
 
 ```kotlin
+import org.trustweave.testkit.services.*
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.trust.types.delegationValid
+import org.trustweave.trust.types.proofValid
+import org.trustweave.trust.types.getOrThrowDid
 // Step 1: Create DIDs for corporate hierarchy
-val trustWeave = trustWeave {
+val trustWeave = TrustWeave.build {
     keys { provider(IN_MEMORY); algorithm(ED25519) }
     did { method(KEY) { algorithm(ED25519) } }
 }
@@ -183,17 +193,17 @@ val trustWeave = trustWeave {
 val ceoDid = trustWeave.createDid {
     method(KEY)
     algorithm(ED25519)
-}
+}.getOrThrowDid()
 
 val hrDirectorDid = trustWeave.createDid {
     method(KEY)
     algorithm(ED25519)
-}
+}.getOrThrowDid()
 
 val hrManagerDid = trustWeave.createDid {
     method(KEY)
     algorithm(ED25519)
-}
+}.getOrThrowDid()
 
 // Step 2: Set up delegation chain
 // CEO delegates to HR Director
@@ -247,13 +257,13 @@ val credential = trustWeave.issue {
 val verification = trustWeave.verify {
     credential(credential)
     verifyDelegation(true)
-    checkExpiration(true)
+    checkExpiration()
 }
 
 println("Credential Verification:")
-println("  Valid: ${verification.valid}")
-println("  Delegation Valid: ${verification.delegationValid}")
-println("  Proof Valid: ${verification.proofValid}")
+println("  Valid: ${verification is VerificationResult.Valid}")
+println("  Delegation valid: ${verification.delegationValid}")
+println("  Proof valid: ${verification.proofValid}")
 ```
 
 ## Advanced Usage
@@ -261,6 +271,7 @@ println("  Proof Valid: ${verification.proofValid}")
 ### Removing Delegation
 
 ```kotlin
+import org.trustweave.testkit.services.*
 trustWeave.updateDid {
     did(delegatorDid)
     method(DidMethods.KEY)
@@ -273,6 +284,7 @@ trustWeave.updateDid {
 A delegator can delegate to multiple DIDs:
 
 ```kotlin
+import org.trustweave.testkit.services.*
 trustWeave.updateDid {
     did(ceoDid)
     method(DidMethods.KEY)
@@ -287,6 +299,7 @@ trustWeave.updateDid {
 A DID can delegate to itself (useful for key rotation):
 
 ```kotlin
+import org.trustweave.testkit.services.*
 trustWeave.updateDid {
     did(did)
     method(DidMethods.KEY)
@@ -331,7 +344,7 @@ Common delegation verification errors:
 
 ## See Also
 
-- [Trust Registry Documentation](trust-registry.md)
-- [DID Documentation](dids.md)
-- [Delegation Chain Example](../../distribution/TrustWeave-examples/src/main/kotlin/com/geoknoesis/TrustWeave/examples/delegation/DelegationChainExample.kt)
-- [Web of Trust Scenario](../scenarios/web-of-trust-scenario.md)
+- Trust Registry Documentation](trust-registry.md)
+- DID Documentation](dids.md)
+- Delegation Chain Example](../../distribution/TrustWeave-examples/src/main/kotlin/com/geoknoesis/TrustWeave/examples/delegation/DelegationChainExample.kt)
+- Web of Trust Scenario](../scenarios/web-of-trust-scenario.md)

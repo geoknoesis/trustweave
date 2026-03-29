@@ -11,10 +11,9 @@ This style guide ensures consistent terminology, formatting, and patterns across
 - Use `TrustWeave` when showing class usage in documentation text
 - Example: "The `TrustWeave` class provides a unified interface for all operations."
 
-**DSL Function Names (camelCase)**
-- Use `trustWeave { }` when referring to the DSL builder function
-- Use `trustWeave { }` when showing DSL usage in code examples
-- Example: "Use `trustWeave { }` to configure TrustWeave."
+**Configuration entrypoint**
+- Use `TrustWeave.build { }` in examples; it is a suspend function that returns a `TrustWeave` facade.
+- The internal config builder `trustWeave(name) { }` (lowercase) builds a `TrustWeaveConfig` only—prefer `TrustWeave.build { }` in documentation unless you are discussing config objects explicitly.
 
 **Variable Names (camelCase)**
 - Use `trustWeave` (lowercase) for variable instances
@@ -22,13 +21,14 @@ This style guide ensures consistent terminology, formatting, and patterns across
 
 ### Do NOT Use
 
-- ❌ "TrustLayer" (deprecated/incorrect)
-- ❌ "trustlayer" (lowercase class name)
-- ❌ Mixed case inconsistencies
+- `TrustLayer` or “trust layer” as a product/API name (deprecated; use **TrustWeave**)
+- `trustlayer` as a pseudo class name
+- Mixed capitalization (`Trustweave`, `TRUSTWEAVE`, etc.) in prose
 
 ### Correct Usage Examples
 
 ```kotlin
+import org.trustweave.testkit.services.*
 // ✅ Correct: Class name capitalized
 import org.trustweave.trust.TrustWeave
 
@@ -38,8 +38,8 @@ val trustWeave = TrustWeave.build {
     did { method(KEY) { algorithm(ED25519) } }
 }
 
-// ✅ Correct: DSL function camelCase
-trustWeave {
+// ✅ Correct: same DSL block via TrustWeave.build (suspend)
+val trustWeave = TrustWeave.build {
     keys { provider(IN_MEMORY); algorithm(ED25519) }
     did { method(KEY) { algorithm(ED25519) } }
 }
@@ -53,8 +53,7 @@ Always include necessary imports at the top of code examples:
 
 ```kotlin
 import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.dsl.trustWeave
-import org.trustweave.trust.types.VerificationResult
+import org.trustweave.credential.results.VerificationResult
 import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 ```
@@ -64,9 +63,10 @@ import kotlinx.coroutines.runBlocking
 Always show error handling in production examples:
 
 ```kotlin
+import org.trustweave.testkit.services.*
 // ✅ Correct: Show error handling
 try {
-    val did = trustWeave.createDid { method(KEY) }
+    val did = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 } catch (error: Exception) {
     println("Error: ${error.message}")
 }
@@ -75,9 +75,11 @@ try {
 when (result) {
     is VerificationResult.Valid -> println("Valid")
     is VerificationResult.Invalid.Expired -> println("Expired")
-    // ... handle all cases
+    is VerificationResult.Invalid -> println(result.allErrors.joinToString())
 }
 ```
+
+For **`VerificationResult.Invalid`**, **`IssuanceResult.Failure`**, and **`PresentationResult.Failure`**, prefer **`allErrors`** for user-facing or log messages unless you need a specific subtype’s fields.
 
 ### Variable Naming
 
@@ -109,10 +111,10 @@ when (result) {
 
 ### Code Example Placement
 
-- ✅ Place code examples immediately after introducing a concept
-- ✅ Include complete, runnable examples
-- ✅ Show expected output after examples
-- ❌ Don't dump all code at the end of the page
+- Place code examples immediately after introducing a concept
+- Include complete, runnable examples
+- Show expected output after examples
+- Don't dump all code at the end of the page
 
 ### Diagram Standards
 
@@ -165,7 +167,7 @@ when (result) {
 ### Version References
 
 - Always include version in quick start guides
-- Format: `**Version:** 1.0.0-SNAPSHOT`
+- Format: `**Version:** 0.6.0`
 - Include Kotlin/Java version requirements
 
 ### Deprecation
@@ -214,16 +216,16 @@ when (result) {
 
 Before publishing documentation, ensure:
 
-- [ ] Terminology follows style guide
-- [ ] Code examples are complete and runnable
-- [ ] Error handling is shown for production code
-- [ ] Diagrams are present for complex concepts
-- [ ] Links are correct (internal and external)
-- [ ] Version information is current
-- [ ] Navigation order is correct
-- [ ] Front matter is complete
-- [ ] Next steps are provided
-- [ ] Spelling and grammar are correct
+- Terminology follows style guide
+- Code examples are complete and runnable
+- Error handling is shown for production code
+- Diagrams are present for complex concepts
+- Links are correct (internal and external)
+- Version information is current
+- Navigation order is correct
+- Front matter is complete
+- Next steps are provided
+- Spelling and grammar are correct
 
 ---
 

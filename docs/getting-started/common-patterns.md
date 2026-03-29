@@ -12,12 +12,12 @@ keywords:
 
 # Common Patterns
 
-> **Version:** 1.0.0-SNAPSHOT
+> **Version:** 0.6.0
 > Learn common usage patterns and best practices for TrustWeave.
 
 ## Table of Contents
 
-1. [Issuer → Holder → Verifier Workflow](#issuer--holder--verifier-workflow)
+1. [Issuer → Holder → Verifier workflow](#issuer--holder--verifier-workflow)
 2. [Batch Operations](#batch-operations)
 3. [Error Recovery with Fallbacks](#error-recovery-with-fallbacks)
 4. [Credential Lifecycle Management](#credential-lifecycle-management)
@@ -26,47 +26,32 @@ keywords:
 
 ---
 
-## Issuer → Holder → Verifier Workflow
+## Issuer → Holder → Verifier workflow {#issuer--holder--verifier-workflow}
 
 Complete workflow showing all three parties in a credential ecosystem. This example uses production-ready error handling patterns with `fold()`.
 
 ```kotlin
 package com.example.patterns.workflow
 
-import org.trustweave.TrustWeave
-import org.trustweave.core.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.WalletCreationResult
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.results.VerificationResult
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
-    val trustweave = TrustWeave.create()
+    val trustWeave = TrustWeave.quickStart()
 
-    // ============================================
-    // 1. ISSUER: Create DID and issue credential
-    // ============================================
-    val issuerDidDoc = try {
-        trustWeave.createDid { method(KEY) }
-    } catch (error: Exception) {
-        when (error) {
-            is IllegalStateException -> {
-                if (error.message?.contains("not configured") == true) {
-                println("❌ DID method not registered: ${error.method}")
-                println("   Available methods: ${error.availableMethods}")
-            }
-            else -> {
-                println("❌ Failed to create issuer DID: ${error.message}")
-            }
-        }
-        return@runBlocking
-    }
+    // 1. ISSUER
+    val issuerDid = trustWeave.createDid { method(KEY); algorithm(ED25519) }.getOrThrowDid()
 
-    val issuerDid = issuerDidDoc.id
-    val issuerKeyId = issuerDidDoc.verificationMethod.firstOrNull()?.id
-        ?: error("No verification method found")
-
-    val credential = try {
-        trustWeave.issue {
+    val credential = when (
+        val issued = trustWeave.issue {
             credential {
                 type("VerifiableCredential", "DegreeCredential")
                 issuer(issuerDid)
@@ -76,86 +61,35 @@ fun main() = runBlocking {
                     "degree" to "Bachelor of Science"
                 }
             }
-            signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+            signedBy(issuerDid)
         }
-    } catch (error: Exception) {
-        when (error) {
-            is IllegalStateException -> {
-                if (error.message?.contains("not configured") == true) {
-                    println("❌ Credential issuance failed: ${error.message}")
-                } else {
-                    println("❌ Credential issuance failed: ${error.message}")
-                }
-            }
-            else -> {
-                println("❌ Failed to issue credential: ${error.message}")
-            }
+    ) {
+        is IssuanceResult.Success -> issued.credential
+        is IssuanceResult.Failure -> {
+            println("Issue failed: ${issued.allErrors.joinToString()}")
+            return@runBlocking
         }
-        return@runBlocking
     }
+    println("Issuer created credential: ${credential.id}")
 
-    println("✅ Issuer created credential: ${credential.id}")
+    // 2. HOLDER
+    val holderDid = trustWeave.createDid { method(KEY); algorithm(ED25519) }.getOrThrowDid()
 
-    // ============================================
-    // 2. HOLDER: Store credential in wallet
-    // ============================================
-    val holderDid = try {
-        trustWeave.createDid { method(KEY) }
-    } catch (error: Exception) {
-        println("❌ Failed to create holder DID: ${error.message}")
-        return@runBlocking
-    }
-
-    val wallet = try {
-        trustweave.wallets.create(holderDid = holderDid)
-    } catch (error: TrustWeaveError) {
-        when (error) {
-            is TrustWeaveError.WalletCreationFailed -> {
-                println("❌ Wallet creation failed: ${error.reason}")
-                println("   Provider: ${error.provider}")
-            }
-            else -> {
-                println("❌ Failed to create wallet: ${error.message}")
-            }
+    val wallet = when (val w = trustWeave.wallet { holder(holderDid) }) {
+        is WalletCreationResult.Success -> w.wallet
+        is WalletCreationResult.Failure -> {
+            println("Wallet creation failed: $w")
+            return@runBlocking
         }
-        return@runBlocking
     }
 
     val credentialId = wallet.store(credential)
-    println("✅ Holder stored credential: $credentialId")
+    println("Holder stored credential: $credentialId")
 
-    // ============================================
-    // 3. VERIFIER: Verify credential
-    // ============================================
-    val verification = try {
-        trustWeave.verify {
-            credential(credential)
-        }
-    } catch (error: Exception) {
-        when (error) {
-            is IllegalStateException -> {
-                println("❌ Credential validation failed: ${error.reason}")
-                println("   Field: ${error.field}")
-            }
-            else -> {
-                println("❌ Verification failed: ${error.message}")
-            }
-        }
-        return@runBlocking
-    }
-
-    if (verification.valid) {
-        println("✅ Verifier confirmed credential is valid")
-        println("   Proof valid: ${verification.proofValid}")
-        println("   Issuer valid: ${verification.issuerValid}")
-        println("   Not revoked: ${verification.notRevoked}")
-
-        if (verification.warnings.isNotEmpty()) {
-            println("   Warnings: ${verification.warnings.joinToString()}")
-        }
-    } else {
-        println("❌ Verifier rejected credential")
-        println("   Errors: ${verification.errors.joinToString()}")
+    // 3. VERIFIER
+    when (val v = trustWeave.verify(credential)) {
+        is VerificationResult.Valid -> println("Verifier accepted credential")
+        is VerificationResult.Invalid -> println("Verification failed: ${v.allErrors.joinToString()}")
     }
 }
 ```
@@ -180,7 +114,7 @@ sequenceDiagram
     VC-->>I: DidDocument
 
     Note over I: 2. Credential Issuance
-    I->>VC: issueCredential(issuerDid, claims)
+    I->>VC: trustWeave.issue { ... }
     VC->>VC: Resolve issuer DID
     VC->>VC: Sign credential with issuer key
     VC-->>I: VerifiableCredential (with proof)
@@ -189,7 +123,7 @@ sequenceDiagram
     I->>H: Send VerifiableCredential
 
     Note over H: 4. Holder Storage
-    H->>VC: createWallet(holderDid)
+    H->>VC: trustWeave.wallet { holder(...) }
     VC-->>H: Wallet
     H->>VC: wallet.store(credential)
     VC-->>H: credentialId
@@ -198,11 +132,11 @@ sequenceDiagram
     H->>V: Present VerifiableCredential
 
     Note over V: 6. Verification
-    V->>VC: verifyCredential(credential)
+    V->>VC: trustWeave.verify(credential)
     VC->>VC: Resolve issuer DID
     VC->>VC: Verify proof signature
     VC->>VC: Check expiration/revocation
-    VC-->>V: CredentialVerificationResult
+    VC-->>V: VerificationResult
 
     alt Credential Valid
         V->>V: Accept credential
@@ -220,56 +154,47 @@ Process multiple DIDs or credentials efficiently using coroutines.
 ```kotlin
 package com.example.patterns.batch
 
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.identifiers.extractKeyId
 import org.trustweave.core.*
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Instant
+import org.trustweave.testkit.services.*
+import org.trustweave.did.resolver.errorMessage
 
 fun main() = runBlocking {
-    val trustweave = TrustWeave.create()
+    val trustWeave = TrustWeave.quickStart()
 
-    // Batch DID resolution
     val dids = listOf(
         "did:key:z6Mk...",
         "did:key:z6Mk...",
         "did:key:z6Mk..."
     )
 
-    val results = dids.mapAsync { did ->
-        runCatching {
-            trustWeave.resolveDid(did)
+    val results = dids.mapAsync { did -> trustWeave.resolveDid(did) }
+
+    results.forEachIndexed { index, resolution ->
+        when (resolution) {
+            is DidResolutionResult.Success ->
+                println("DID ${index + 1} resolved: ${resolution.document.id}")
+            else ->
+                println("DID ${index + 1} failed: ${resolution.errorMessage ?: "unknown error"}")
         }
     }
 
-    results.forEachIndexed { index, result ->
-        result.fold(
-            onSuccess = { resolution ->
-                println("✅ DID ${index + 1} resolved: ${resolution.document?.id}")
-            },
-            onFailure = { error ->
-                println("❌ DID ${index + 1} failed: ${error.message}")
-            }
-        )
-    }
-
-    // Batch credential creation
-    import org.trustweave.trust.types.getOrThrowDid
-    import org.trustweave.trust.types.getOrThrow
-    import org.trustweave.did.resolver.DidResolutionResult
-    import org.trustweave.did.identifiers.extractKeyId
-    
-    // Helper extension for resolution results
-    fun DidResolutionResult.getOrThrow() = when (this) {
-        is DidResolutionResult.Success -> this.document
-        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
-    }
-    
     val credentials = (1..10).mapAsync { index ->
         runCatching {
             val issuerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
-            val issuerDoc = trustWeave.resolveDid(issuerDid).getOrThrow()
+            val issuerDoc = when (val res = trustWeave.resolveDid(issuerDid)) {
+                is DidResolutionResult.Success -> res.document
+                else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+            }
             val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
                 ?: throw IllegalStateException("No verification method found")
-            
+
             trustWeave.issue {
                 credential {
                     issuer(issuerDid)
@@ -279,7 +204,7 @@ fun main() = runBlocking {
                     }
                     issued(Instant.now())
                 }
-                signedBy(issuerDid)
+                signedBy(issuerDid, issuerKeyId)
             }.getOrThrow()
         }
     }
@@ -293,9 +218,7 @@ fun main() = runBlocking {
         failed.forEach { result ->
             result.fold(
                 onSuccess = { },
-                onFailure = { error ->
-                    println("  Error: ${error.message}")
-                }
+                onFailure = { error -> println("  Error: ${error.message}") }
             )
         }
     }
@@ -316,16 +239,17 @@ Handle errors gracefully with fallback strategies.
 ```kotlin
 package com.example.patterns.recovery
 
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
 import org.trustweave.core.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val TrustWeave = TrustWeave.create()
+    val trustWeave = TrustWeave.quickStart()
 
-    // Pattern: Try multiple DID methods with fallback
-    import org.trustweave.trust.types.DidCreationResult
-    
     suspend fun createDidWithFallback(methods: List<String>): Did? {
         for (method in methods) {
             val didResult = trustWeave.createDid { method(method) }
@@ -333,11 +257,9 @@ fun main() = runBlocking {
                 is DidCreationResult.Success -> return didResult.did
                 is DidCreationResult.Failure.MethodNotRegistered -> {
                     println("Method '$method' not available, trying next...")
-                    // Continue to next method
                 }
                 else -> {
-                    println("Unexpected error with method '$method': ${didResult.reason}")
-                    // Try next method anyway
+                    println("Unexpected error with method '$method': $didResult")
                 }
             }
         }
@@ -347,28 +269,27 @@ fun main() = runBlocking {
     val did = createDidWithFallback(listOf("web", "ion", "key"))
         ?: error("All DID methods failed")
 
-    println("✅ Created DID: ${did.id}")
+    println("Created DID: ${did.value}")
 
-    // Pattern: Retry with exponential backoff
     suspend fun resolveDidWithRetry(did: String, maxRetries: Int = 3): DidResolutionResult? {
-        var lastError: Throwable? = null
+        var lastReason: String? = null
 
         for (attempt in 1..maxRetries) {
             val resolution = trustWeave.resolveDid(did)
             when (resolution) {
                 is DidResolutionResult.Success -> return resolution
                 is DidResolutionResult.Failure -> {
-                    lastError = Exception(resolution.reason)
+                    lastReason = resolution.errorMessage
                     if (attempt < maxRetries) {
-                        val delay = (attempt * attempt * 100).toLong() // Exponential backoff
+                        val delay = (attempt * attempt * 100).toLong()
                         kotlinx.coroutines.delay(delay)
                         println("Retry $attempt/$maxRetries after ${delay}ms...")
                     }
                 }
-            )
+            }
         }
 
-        println("Failed after $maxRetries attempts: ${lastError?.message}")
+        println("Failed after $maxRetries attempts: $lastReason")
         return null
     }
 }
@@ -389,43 +310,35 @@ Manage credentials through their entire lifecycle: issuance, storage, presentati
 ```kotlin
 package com.example.patterns.lifecycle
 
-import org.trustweave.TrustWeave
-import org.trustweave.core.*
-import org.trustweave.credential.PresentationOptions
-import org.trustweave.spi.services.WalletCreationOptionsBuilder
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.credential.results.VerificationResult
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
-    val TrustWeave = TrustWeave.create()
+    val trustWeave = TrustWeave.quickStart()
 
-    // Create issuer and holder
-    import org.trustweave.trust.types.getOrThrowDid
-    import org.trustweave.trust.types.getOrThrow
-    import org.trustweave.did.resolver.DidResolutionResult
-    import org.trustweave.did.identifiers.extractKeyId
-    
-    // Helper extension for resolution results
-    fun DidResolutionResult.getOrThrow() = when (this) {
-        is DidResolutionResult.Success -> this.document
-        else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
-    }
-    
     val issuerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     val holderDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 
-    // Issue credential with expiration
     val expirationDate = Instant.now().plus(1, ChronoUnit.YEARS)
-    val issuerDoc = trustWeave.resolveDid(issuerDid).getOrThrow()
+    val issuerDoc = when (val res = trustWeave.resolveDid(issuerDid)) {
+        is DidResolutionResult.Success -> res.document
+        else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+    }
     val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
-    
+
     val credential = trustWeave.issue {
         credential {
-            issuer(issuerDid.value)
+            issuer(issuerDid)
             subject {
                 id(holderDid.value)
                 "name" to "Alice"
@@ -433,69 +346,62 @@ fun main() = runBlocking {
             issued(Instant.now())
             expires(expirationDate)
         }
-        signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
+        signedBy(issuerDid, issuerKeyId)
     }.getOrThrow()
 
-    // Store in wallet with lifecycle support
     val wallet = trustWeave.wallet {
-        holder(holderDid.value)
+        holder(holderDid)
         enableOrganization()
         enablePresentation()
     }.getOrThrow()
 
     val credentialId = wallet.store(credential)
 
-    // Organize credential
     wallet.withOrganization { org ->
         val collectionId = org.createCollection("Education", "Academic credentials")
         org.addToCollection(credentialId, collectionId)
         org.tagCredential(credentialId, setOf("degree", "verified"))
     }
 
-    // Create presentation when needed
-    val presentation = wallet.withPresentation { pres ->
+    wallet.withPresentation { pres ->
         pres.createPresentation(
             credentialIds = listOf(credentialId),
-            holderDid = holderDid.id,
-            options = PresentationOptions(
-                holderDid = holderDid.id,
-                challenge = "job-application-${System.currentTimeMillis()}"
-            )
+            holderDid = holderDid.value,
+            options = mapOf(
+            "holderDid" to holderDid.value,
+            "challenge" to "job-application-${System.currentTimeMillis()}"
+        )
         )
     }
 
-    // Verify before using
     val verification = try {
         trustWeave.verify {
             credential(credential)
         }
     } catch (error: Exception) {
-        println("❌ Verification failed: ${error.message}")
+        println("Verification failed: ${error.message}")
         return@runBlocking
     }
 
     when (verification) {
-        is VerificationResult.Valid -> {
-            // Credential is valid, continue
-        }
+        is VerificationResult.Valid -> { /* continue */ }
         is VerificationResult.Invalid -> {
-        println("⚠️ Credential invalid: ${verification.errors.joinToString()}")
-        return@runBlocking
+            println("Credential invalid: ${verification.allErrors.joinToString()}")
+            return@runBlocking
+        }
     }
 
-    // Check expiration
     if (credential.expirationDate != null) {
         val expiration = Instant.parse(credential.expirationDate)
         if (expiration.isBefore(Instant.now())) {
-            println("⚠️ Credential expired on ${credential.expirationDate}")
-            // Archive expired credential
+            println("Credential expired on ${credential.expirationDate}")
             wallet.withLifecycle { lifecycle ->
                 lifecycle.archive(credentialId)
             }
         }
     }
 
-    println("✅ Credential lifecycle managed successfully")
+    println("Credential lifecycle managed successfully")
 }
 ```
 
@@ -515,83 +421,80 @@ Anchor the same credential to multiple blockchains for redundancy and interopera
 ```kotlin
 package com.example.patterns.multichain
 
-import org.trustweave.TrustWeave
-import org.trustweave.anchor.BlockchainAnchorRegistry
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.identifiers.extractKeyId
 import org.trustweave.core.*
-import org.trustweave.credential.models.VerifiableCredential
-import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.datetime.Instant
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
-    val TrustWeave = TrustWeave.create {
-        blockchains {
-            "algorand:testnet" to InMemoryBlockchainAnchorClient("algorand:testnet")
-            "polygon:testnet" to InMemoryBlockchainAnchorClient("polygon:testnet")
+    val trustWeave = TrustWeave.build {
+        anchor {
+            chain("algorand:testnet") { inMemory() }
+            chain("polygon:testnet") { inMemory() }
         }
+        did { method("key") { algorithm("Ed25519") } }
     }
 
-    // Issue credential
-    val issuerDidResult = trustWeave.createDid { method(KEY) }
-    val issuerDid = when (issuerDidResult) {
+    val issuerDid = when (val issuerDidResult = trustWeave.createDid { method(KEY) }) {
         is DidCreationResult.Success -> issuerDidResult.did
-        else -> {
-            println("❌ Failed to create issuer DID: ${issuerDidResult.reason}")
+        is DidCreationResult.Failure -> {
+            println("Failed to create issuer DID: $issuerDidResult")
             return@runBlocking
         }
     }
 
-    val issuerResolution = trustWeave.resolveDid(issuerDid)
-    val issuerDoc = when (issuerResolution) {
+    val issuerDoc = when (val issuerResolution = trustWeave.resolveDid(issuerDid)) {
         is DidResolutionResult.Success -> issuerResolution.document
         else -> throw IllegalStateException("Failed to resolve issuer DID")
     }
-    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
-    val issuanceResult = trustWeave.issue {
-        credential {
-            issuer(issuerDid.value)
-            subject {
-                id("did:key:holder")
-                "data" to "important-data"
+    val credential = when (
+        val issuanceResult = trustWeave.issue {
+            credential {
+                issuer(issuerDid)
+                subject {
+                    id("did:key:holder")
+                    "data" to "important-data"
+                }
+                issued(Instant.now())
             }
-            issued(Instant.now())
+            signedBy(issuerDid, issuerKeyId)
         }
-        signedBy(issuerDid = issuerDid.value, keyId = issuerKeyId)
-    }
-    
-    val credential = when (issuanceResult) {
+    ) {
         is IssuanceResult.Success -> issuanceResult.credential
-        else -> {
-            println("❌ Failed to issue credential: ${issuanceResult.reason}")
+        is IssuanceResult.Failure -> {
+            println("Failed to issue credential: ${issuanceResult.allErrors.joinToString()}")
             return@runBlocking
         }
     }
 
-    // Anchor to multiple chains
     val chains = listOf("algorand:testnet", "polygon:testnet")
     val anchorResults = chains.mapNotNull { chainId ->
         try {
-            val anchor = trustweave.blockchains.anchor(
+            val anchor = trustWeave.blockchains.anchor(
                 data = credential,
                 serializer = VerifiableCredential.serializer(),
                 chainId = chainId
             )
-            println("✅ Anchored to $chainId: ${anchor.ref.txHash}")
+            println("Anchored to $chainId: ${anchor.ref.txHash}")
             anchor
         } catch (error: Exception) {
-            println("❌ Failed to anchor to $chainId: ${error.message}")
+            println("Failed to anchor to $chainId: ${error.message}")
             null
         }
     }
 
     println("Anchored to ${anchorResults.size} out of ${chains.size} chains")
-
-    // Store all anchor references
     val anchorRefs = anchorResults.map { it.ref }
-    // In production, store these in a database for later verification
 }
 ```
 
@@ -610,47 +513,55 @@ Organize credentials efficiently using collections, tags, and metadata.
 ```kotlin
 package com.example.patterns.organization
 
-import org.trustweave.TrustWeave
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.types.WalletCreationResult
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.core.*
-import org.trustweave.spi.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
-    val trustweave = TrustWeave.create()
+    val trustWeave = TrustWeave.quickStart()
 
-    val holderDid = try {
-        trustWeave.createDid { method(KEY) }
-    } catch (error: Exception) {
-        println("❌ Failed to create holder DID: ${error.message}")
-        return@runBlocking
+    val holderDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+
+    val walletResult = trustWeave.wallet {
+        holder(holderDid)
+        provider("inMemory")
     }
 
-    val wallet = try {
-        trustWeave.wallet {
-            holder(holderDid.value)
-            type("inMemory")
+    val wallet = when (walletResult) {
+        is WalletCreationResult.Success -> walletResult.wallet
+        is WalletCreationResult.Failure.InvalidHolderDid -> {
+            println("Failed to create wallet: invalid holder DID '${walletResult.holderDid}': ${walletResult.reason}")
+            return@runBlocking
         }
-    } catch (error: Exception) {
-        println("❌ Failed to create wallet: ${error.message}")
-        return@runBlocking
+        is WalletCreationResult.Failure.FactoryNotConfigured -> {
+            println("Failed to create wallet: factory not configured: ${walletResult.reason}")
+            return@runBlocking
+        }
+        is WalletCreationResult.Failure.StorageFailed -> {
+            println("Failed to create wallet: storage failed: ${walletResult.reason}")
+            return@runBlocking
+        }
+        is WalletCreationResult.Failure.Other -> {
+            println("Failed to create wallet: ${walletResult.reason}")
+            return@runBlocking
+        }
     }
 
-    // Issue multiple credentials
-    val issuerDid = try {
-        trustWeave.createDid { method(KEY) }
-    } catch (error: Exception) {
-        println("❌ Failed to create issuer DID: ${error.message}")
-        return@runBlocking
-    }
+    val issuerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 
     val issuerResolution = trustWeave.resolveDid(issuerDid)
     val issuerDoc = when (issuerResolution) {
         is DidResolutionResult.Success -> issuerResolution.document
         else -> throw IllegalStateException("Failed to resolve issuer DID")
     }
-    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.id?.substringAfter("#")
+    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
     val credentials = listOf(
@@ -660,24 +571,23 @@ fun main() = runBlocking {
     )
 
     val credentialIds = credentials.mapNotNull { (name, category) ->
-        val credential = try {
-            trustWeave.issue {
-                credential {
-                    issuer(issuerDid)
-                    subject {
-                        id(holderDid.value)
-                        "credentialName" to name
-                    }
-                    issued(Instant.now())
+        val issuanceResult = trustWeave.issue {
+            credential {
+                issuer(issuerDid)
+                subject {
+                    id(holderDid.value)
+                    "credentialName" to name
                 }
-                signedBy(issuerDid)
+                issued(Instant.now())
+                type("VerifiableCredential", "${category}Credential")
             }
-                    issuerDid = issuerDid.id
-                ),
-                types = listOf("VerifiableCredential", "${category}Credential")
-            )
-        } catch (error: TrustWeaveError) {
-            println("❌ Failed to issue credential '$name': ${error.message}")
+            signedBy(issuerDid)
+        }
+        
+        val credential = try {
+            issuanceResult.getOrThrow()
+        } catch (error: IllegalStateException) {
+            println("Failed to issue credential '$name': ${error.message}")
             return@mapNotNull null
         }
 
@@ -687,7 +597,7 @@ fun main() = runBlocking {
         wallet.withOrganization { org ->
             // Create collection by category
             val collectionId = org.createCollection(
-                name = category.capitalize(),
+                name = category.replaceFirstChar { it.titlecase() },
                 description = "$category credentials"
             )
             org.addToCollection(credentialId, collectionId)

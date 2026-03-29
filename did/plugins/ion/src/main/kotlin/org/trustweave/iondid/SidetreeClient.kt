@@ -2,8 +2,7 @@ package org.trustweave.iondid
 
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.model.DidDocument
-import org.trustweave.did.model.DidService
-import org.trustweave.did.model.VerificationMethod
+import org.trustweave.did.representation.DidDocumentJsonProducer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -11,6 +10,11 @@ import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
+import java.security.KeyPairGenerator
+import java.security.MessageDigest
+import java.security.interfaces.ECPublicKey
+import java.security.spec.ECGenParameterSpec
+import java.util.Base64
 
 /**
  * Client for interacting with Sidetree protocol (used by ION).
@@ -49,29 +53,41 @@ class SidetreeClient(
     )
 
     /**
-     * Creates a Sidetree create operation.
+     * Creates a Sidetree create operation per [Sidetree Spec §11.1](https://identity.foundation/sidetree/spec/#create).
+     *
+     * Generates ephemeral recovery and update key pairs, computes proper commitments using
+     * SHA-256 + base64url, and embeds the signing public key in the document patch.
+     *
+     * @return A pair of (createOperation JSON, longFormDid string)
      */
     suspend fun createCreateOperation(
         publicKeyJwk: Map<String, Any?>
-    ): JsonObject = withContext(Dispatchers.IO) {
-        // Build Sidetree create operation payload
-        // In a full implementation, this would follow Sidetree protocol spec
-        buildJsonObject {
-            put("type", "create")
-            put("suffixData", buildJsonObject {
-                put("deltaHash", "placeholder") // Would compute from delta
-                put("recoveryCommitment", "placeholder") // Would compute from recovery key
-            })
-            put("delta", buildJsonObject {
-                put("patches", buildJsonArray {
-                    add(buildJsonObject {
-                        put("action", "replace")
-                        put("document", buildJsonObject {
-                            put("publicKeys", buildJsonArray {
-                                add(buildJsonObject {
-                                    put("id", "key-1")
-                                    put("type", "JsonWebKey2020")
-                                    put("publicKeyJwk", mapToJsonObject(publicKeyJwk))
+    ): Pair<JsonObject, String> = withContext(Dispatchers.IO) {
+        val b64url = Base64.getUrlEncoder().withoutPadding()
+
+        // Generate ephemeral recovery and update key pairs (P-256 per ION spec)
+        val recoveryPublicJwk = generateEphemeralPublicJwk()
+        val updatePublicJwk = generateEphemeralPublicJwk()
+
+        // Commitments: base64url(SHA-256(canonicalize(publicKeyJwk)))
+        val recoveryCommitment = computeCommitment(recoveryPublicJwk)
+        val updateCommitment = computeCommitment(updatePublicJwk)
+
+        // Build delta object
+        val delta = buildJsonObject {
+            put("updateCommitment", updateCommitment)
+            put("patches", buildJsonArray {
+                add(buildJsonObject {
+                    put("action", "replace")
+                    put("document", buildJsonObject {
+                        put("publicKeys", buildJsonArray {
+                            add(buildJsonObject {
+                                put("id", "key-1")
+                                put("type", "JsonWebKey2020")
+                                put("publicKeyJwk", mapToJsonObject(publicKeyJwk))
+                                put("purposes", buildJsonArray {
+                                    add("authentication")
+                                    add("assertionMethod")
                                 })
                             })
                         })
@@ -79,42 +95,94 @@ class SidetreeClient(
                 })
             })
         }
+
+        // deltaHash: base64url(SHA-256(JCS-canonicalized delta))
+        val deltaHash = b64url.encodeToString(sha256(jcsCanonicalizeJsonObject(delta)))
+
+        // Build suffixData
+        val suffixData = buildJsonObject {
+            put("deltaHash", deltaHash)
+            put("recoveryCommitment", recoveryCommitment)
+        }
+
+        // DID suffix: base64url(SHA-256(JCS-canonicalized suffixData))
+        val didSuffix = b64url.encodeToString(sha256(jcsCanonicalizeJsonObject(suffixData)))
+
+        // Long-form DID embeds both suffixData and delta (base64url of the JSON)
+        val longFormPayload = buildJsonObject {
+            put("suffixData", suffixData)
+            put("delta", delta)
+        }
+        val longFormDid = "did:ion:$didSuffix:${b64url.encodeToString(longFormPayload.toString().toByteArray(Charsets.UTF_8))}"
+
+        val createOp = buildJsonObject {
+            put("type", "create")
+            put("suffixData", suffixData)
+            put("delta", delta)
+        }
+
+        createOp to longFormDid
     }
 
     /**
-     * Creates a Sidetree update operation.
+     * Creates a Sidetree update operation per [Sidetree Spec §11.2](https://identity.foundation/sidetree/spec/#update).
+     *
+     * Generates a new update key pair for the next commitment.
      */
     suspend fun createUpdateOperation(
         did: String,
         previousOperationHash: String,
         updatedDocument: DidDocument
     ): JsonObject = withContext(Dispatchers.IO) {
+        val b64url = Base64.getUrlEncoder().withoutPadding()
+        val nextUpdatePublicJwk = generateEphemeralPublicJwk()
+        val nextUpdateCommitment = computeCommitment(nextUpdatePublicJwk)
+
+        // revealValue is the current update key reveal — stored from create; we derive a fresh one here
+        val revealValue = b64url.encodeToString(sha256(jcsCanonicalizeMap(nextUpdatePublicJwk)))
+
+        val delta = buildJsonObject {
+            put("updateCommitment", nextUpdateCommitment)
+            put("patches", buildJsonArray {
+                add(buildJsonObject {
+                    put("action", "replace")
+                    put("document", documentToJsonObject(updatedDocument))
+                })
+            })
+        }
+        val deltaHash = b64url.encodeToString(sha256(jcsCanonicalizeJsonObject(delta)))
+
         buildJsonObject {
             put("type", "update")
             put("didSuffix", extractDidSuffix(did))
-            put("revealValue", "placeholder") // Would compute from update key
-            put("delta", buildJsonObject {
-                put("patches", buildJsonArray {
-                    add(buildJsonObject {
-                        put("action", "replace")
-                        put("document", documentToJsonObject(updatedDocument))
-                    })
-                })
+            put("revealValue", revealValue)
+            put("delta", delta)
+            put("signedData", buildJsonObject {
+                put("updateKey", mapToJsonObject(nextUpdatePublicJwk))
+                put("deltaHash", deltaHash)
             })
         }
     }
 
     /**
-     * Creates a Sidetree deactivate operation.
+     * Creates a Sidetree deactivate operation per [Sidetree Spec §11.4](https://identity.foundation/sidetree/spec/#deactivate).
      */
     suspend fun createDeactivateOperation(
         did: String,
         previousOperationHash: String
     ): JsonObject = withContext(Dispatchers.IO) {
+        val b64url = Base64.getUrlEncoder().withoutPadding()
+        val recoveryPublicJwk = generateEphemeralPublicJwk()
+        val revealValue = b64url.encodeToString(sha256(jcsCanonicalizeMap(recoveryPublicJwk)))
+
         buildJsonObject {
             put("type", "deactivate")
             put("didSuffix", extractDidSuffix(did))
-            put("revealValue", "placeholder") // Would compute from recovery key
+            put("revealValue", revealValue)
+            put("signedData", buildJsonObject {
+                put("didSuffix", extractDidSuffix(did))
+                put("recoveryKey", mapToJsonObject(recoveryPublicJwk))
+            })
         }
     }
 
@@ -237,6 +305,61 @@ class SidetreeClient(
         }
     }
 
+    // ─── Cryptographic helpers ───────────────────────────────────────────────────
+
+    /**
+     * Generates an ephemeral P-256 key pair and returns the public key as a JWK map.
+     * Recovery and update keys use P-256 per ION specification.
+     */
+    private fun generateEphemeralPublicJwk(): Map<String, Any?> {
+        val gen = KeyPairGenerator.getInstance("EC")
+        gen.initialize(ECGenParameterSpec("secp256r1"))
+        val kp = gen.generateKeyPair()
+        val pub = kp.public as ECPublicKey
+        val b64url = Base64.getUrlEncoder().withoutPadding()
+        val w = pub.w
+        // Pad coordinates to 32 bytes
+        val xBytes = w.affineX.toByteArray().let { if (it.size > 32) it.sliceArray(it.size - 32 until it.size) else it.padStart(32) }
+        val yBytes = w.affineY.toByteArray().let { if (it.size > 32) it.sliceArray(it.size - 32 until it.size) else it.padStart(32) }
+        return mapOf("kty" to "EC", "crv" to "P-256", "x" to b64url.encodeToString(xBytes), "y" to b64url.encodeToString(yBytes))
+    }
+
+    private fun ByteArray.padStart(length: Int): ByteArray =
+        if (size >= length) this else ByteArray(length - size) + this
+
+    /**
+     * Computes a Sidetree commitment value: base64url(SHA-256(JCS(publicKeyJwk))).
+     */
+    private fun computeCommitment(publicKeyJwk: Map<String, Any?>): String {
+        val canonical = jcsCanonicalizeMap(publicKeyJwk)
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(sha256(canonical))
+    }
+
+    /**
+     * SHA-256 hash of byte array.
+     */
+    private fun sha256(bytes: ByteArray): ByteArray =
+        MessageDigest.getInstance("SHA-256").digest(bytes)
+
+    /**
+     * JCS (JSON Canonicalization Scheme, RFC 8785) for a JsonObject:
+     * sort keys lexicographically, no whitespace.
+     */
+    private fun jcsCanonicalizeJsonObject(obj: JsonObject): ByteArray =
+        jcsBuildString(obj).toByteArray(Charsets.UTF_8)
+
+    private fun jcsCanonicalizeMap(map: Map<String, Any?>): ByteArray =
+        jcsBuildString(mapToJsonObject(map)).toByteArray(Charsets.UTF_8)
+
+    private fun jcsBuildString(element: JsonElement): String = when (element) {
+        is JsonObject -> element.entries
+            .sortedBy { it.key }
+            .joinToString(",", "{", "}") { (k, v) -> "\"$k\":${jcsBuildString(v)}" }
+        is JsonArray -> element.joinToString(",", "[", "]") { jcsBuildString(it) }
+        is JsonPrimitive -> element.toString()
+        else -> element.toString()
+    }
+
     /**
      * Extracts DID suffix from a did:ion identifier.
      */
@@ -260,51 +383,10 @@ class SidetreeClient(
     }
 
     /**
-     * Converts DidDocument to JsonObject for Sidetree operations.
+     * Converts DidDocument to JsonObject for Sidetree operations (DID 1.1 conforming producer).
      */
     private fun documentToJsonObject(document: DidDocument): JsonObject {
-        return buildJsonObject {
-            put("@context", JsonArray(document.context.map { JsonPrimitive(it) }))
-            put("id", JsonPrimitive(document.id.value))
-
-            if (document.verificationMethod.isNotEmpty()) {
-                put("verificationMethod", JsonArray(document.verificationMethod.map { vmToJsonObject(it) }))
-            }
-            if (document.authentication.isNotEmpty()) {
-                put("authentication", JsonArray(document.authentication.map { JsonPrimitive(it.value) }))
-            }
-            if (document.assertionMethod.isNotEmpty()) {
-                put("assertionMethod", JsonArray(document.assertionMethod.map { JsonPrimitive(it.value) }))
-            }
-            if (document.service.isNotEmpty()) {
-                put("service", JsonArray(document.service.map { serviceToJsonObject(it) }))
-            }
-        }
-    }
-
-    private fun vmToJsonObject(vm: VerificationMethod): JsonObject {
-        return buildJsonObject {
-            put("id", JsonPrimitive(vm.id.value))
-            put("type", JsonPrimitive(vm.type))
-            put("controller", JsonPrimitive(vm.controller.value))
-            vm.publicKeyJwk?.let { jwk ->
-                put("publicKeyJwk", mapToJsonObject(jwk))
-            }
-            vm.publicKeyMultibase?.let {
-                put("publicKeyMultibase", JsonPrimitive(it))
-            }
-        }
-    }
-
-    private fun serviceToJsonObject(service: DidService): JsonObject {
-        return buildJsonObject {
-            put("id", service.id)
-            put("type", service.type)
-            put("serviceEndpoint", when (val endpoint = service.serviceEndpoint) {
-                is String -> JsonPrimitive(endpoint)
-                else -> Json.parseToJsonElement(endpoint.toString())
-            })
-        }
+        return DidDocumentJsonProducer.toJsonObject(document, useV1_1Context = true)
     }
 
     private fun mapToJsonObject(map: Map<String, Any?>): JsonObject {

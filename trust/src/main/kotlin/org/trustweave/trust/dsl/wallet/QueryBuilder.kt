@@ -135,7 +135,7 @@ class QueryBuilder(
      * @return List of matching credentials
      */
     suspend fun execute(): List<VerifiableCredential> = withContext(Dispatchers.IO) {
-        val predicate = queryBuilder.createPredicate()
+        val predicate = queryBuilder.toPredicate()
         val allCredentials = wallet.list()
 
         // Apply base predicate filter

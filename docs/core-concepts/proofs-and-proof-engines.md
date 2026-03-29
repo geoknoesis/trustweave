@@ -347,8 +347,8 @@ val withDomain = baseOptions.withDomain("example.com")
 
 ## Related Documentation
 
-- [Proof Purpose Validation](./proof-purpose-validation.md) - Detailed explanation of proof purposes
-- [Verifiable Credentials](./verifiable-credentials.md) - W3C VC data model
-- [Key Management](./key-management.md) - Key management for signing
-- [Credential Service API](../api-reference/credential-service-api.md) - Complete API reference
+- Proof Purpose Validation](./proof-purpose-validation.md) - Detailed explanation of proof purposes
+- Verifiable Credentials](./verifiable-credentials.md) - W3C VC data model
+- Key Management](./key-management.md) - Key management for signing
+- Credential Service API](../api-reference/credential-service-api.md) - Complete API reference
 

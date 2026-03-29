@@ -4,7 +4,8 @@ package org.trustweave.wallet
  * Wallet capabilities for runtime discovery.
  *
  * Useful for UI that needs to show/hide features dynamically.
- * For compile-time type safety, use `wallet is CredentialOrganization` instead.
+ * For compile-time type safety, prefer `wallet is CredentialCollections` or
+ * `wallet is CredentialTagging` over `wallet is CredentialOrganization`.
  *
  * **Example Usage**:
  * ```kotlin
@@ -15,8 +16,8 @@ package org.trustweave.wallet
  *     // Show collection UI
  * }
  *
- * // Compile-time type safety (preferred)
- * if (wallet is CredentialOrganization) {
+ * // Compile-time type safety (preferred — use narrowest interface needed)
+ * if (wallet is CredentialCollections) {
  *     wallet.createCollection("My Collection")
  * }
  * ```
@@ -36,25 +37,40 @@ data class WalletCapabilities(
     val credentialIssuance: Boolean = false
 ) {
     /**
+     * Lookup table derived from property values.
+     *
+     * Adding a new capability property only requires updating this map — [supports] itself
+     * never needs to change (OCP). Multiple aliases per feature are supported.
+     */
+    private val featureIndex: Map<String, Boolean>
+        get() = mapOf(
+            "credentials" to credentialStorage,
+            "credentialstorage" to credentialStorage,
+            "query" to credentialQuery,
+            "credentialquery" to credentialQuery,
+            "collections" to collections,
+            "tags" to tags,
+            "metadata" to metadata,
+            "archive" to archive,
+            "refresh" to refresh,
+            "createpresentation" to createPresentation,
+            "presentation" to createPresentation,
+            "selectivedisclosure" to selectiveDisclosure,
+            "selective-disclosure" to selectiveDisclosure,
+            "didmanagement" to didManagement,
+            "did-management" to didManagement,
+            "keymanagement" to keyManagement,
+            "key-management" to keyManagement,
+            "credentialissuance" to credentialIssuance,
+            "credential-issuance" to credentialIssuance,
+        )
+
+    /**
      * Check if a capability is supported by feature name.
      *
      * @param feature Feature name (e.g., "collections", "tags")
      * @return true if supported
      */
-    fun supports(feature: String): Boolean {
-        return when (feature.lowercase()) {
-            "collections" -> collections
-            "tags" -> tags
-            "metadata" -> metadata
-            "archive" -> archive
-            "refresh" -> refresh
-            "createpresentation", "presentation" -> createPresentation
-            "selectivedisclosure", "selective-disclosure" -> selectiveDisclosure
-            "didmanagement", "did-management" -> didManagement
-            "keymanagement", "key-management" -> keyManagement
-            "credentialissuance", "credential-issuance" -> credentialIssuance
-            else -> false
-        }
-    }
+    fun supports(feature: String): Boolean = featureIndex[feature.lowercase()] ?: false
 }
 

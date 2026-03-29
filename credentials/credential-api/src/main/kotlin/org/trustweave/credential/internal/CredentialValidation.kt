@@ -249,7 +249,7 @@ internal object CredentialValidation {
      */
     suspend fun validateTrust(
         credential: VerifiableCredential,
-        trustPolicy: org.trustweave.credential.trust.TrustPolicy?
+        trustPolicy: org.trustweave.credential.trust.TrustEvaluator?
     ): VerificationResult.Invalid.UntrustedIssuer? {
         if (trustPolicy == null) {
             // No trust policy configured - skip trust validation (fail-open)

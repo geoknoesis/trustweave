@@ -35,6 +35,7 @@ bin/
 compile-error*.txt
 test-*.txt
 *-output*.txt
+*-errors.txt
 
 # GitBook
 _book/

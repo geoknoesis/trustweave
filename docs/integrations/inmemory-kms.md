@@ -25,7 +25,7 @@ Add the InMemory KMS module to your dependencies:
 ```kotlin
 dependencies {
     // Only need to add the InMemory KMS plugin - core dependencies are included transitively
-    implementation("org.trustweave.kms:inmemory:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:kms-plugins-inmemory:0.6.0")
 }
 ```
 
@@ -226,14 +226,14 @@ val kms = InMemoryKeyManagementService()
 
 ## Related Documentation
 
-- [Key Management Concepts](../core-concepts/key-management.md)
-- [KMS Quick Start Guide](../kms/KMS_QUICK_START.md)
-- [KMS Plugins Configuration](../kms/KMS_PLUGINS_CONFIGURATION.md)
+- Key Management Concepts](../core-concepts/key-management.md)
+- KMS Quick Start Guide](../kms/KMS_QUICK_START.md)
+- KMS Plugins Configuration](../kms/KMS_PLUGINS_CONFIGURATION.md)
 
 ## See Also
 
-- [AWS KMS Integration](./aws-kms.md) - Production-ready cloud KMS
-- [Azure Key Vault Integration](./azure-kms.md) - Production-ready cloud KMS
-- [Google Cloud KMS Integration](./google-kms.md) - Production-ready cloud KMS
-- [HashiCorp Vault Integration](./hashicorp-vault-kms.md) - On-premises or cloud KMS
+- AWS KMS Integration](./aws-kms.md) - Production-ready cloud KMS
+- Azure Key Vault Integration](./azure-kms.md) - Production-ready cloud KMS
+- Google Cloud KMS Integration](./google-kms.md) - Production-ready cloud KMS
+- HashiCorp Vault Integration](./hashicorp-vault-kms.md) - On-premises or cloud KMS
 

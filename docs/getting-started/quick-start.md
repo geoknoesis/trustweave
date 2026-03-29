@@ -17,7 +17,7 @@ keywords:
 
 Get started with TrustWeave in 5 minutes! This guide will walk you through creating your first TrustWeave application.
 
-> **Version:** 1.0.0-SNAPSHOT
+> **Version:** 0.6.0
 > **Kotlin:** 2.2.21+ | **Java:** 21+
 > See [Installation](installation.md) for setup details.
 
@@ -26,42 +26,32 @@ Get started with TrustWeave in 5 minutes! This guide will walk you through creat
 Here's the absolute minimum to get your first credential working. Copy, paste, run:
 
 ```kotlin
-import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.*
-import org.trustweave.trust.types.VerificationResult
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.credential.results.VerificationResult
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    trustWeave {
-        keys { provider(IN_MEMORY); algorithm(ED25519) }  // Auto-discovered via SPI
-        did { method(KEY) { algorithm(ED25519) } }  // Auto-discovered via SPI
-        // KMS, DID methods, and CredentialService all auto-created!
-    }.run {
-        // Create issuer DID (uses default method from config)
-        val (issuerDid, issuerDoc) = createDid().getOrThrow()
-        val keyId = issuerDoc.verificationMethod.first().id.substringAfter("#")
-        println("✅ Created DID: ${issuerDid.value}")
+    val trustWeave = TrustWeave.quickStart()  // In-memory, did:key — ready to go
 
-        // Issue credential
-        val credential = issue {
-            credential {
-                type("HelloCredential")
-                issuer(issuerDid)
-                subject {
-                    id(org.trustweave.did.identifiers.Did("did:key:holder"))
-                    "message" to "Hello TrustWeave!"
-                }
-            }
-            signedBy(issuerDid)
-        }.getOrThrow()
+    val issuerDid = trustWeave.createDid().getOrThrowDid()
+    println("✅ Created DID: ${issuerDid.value}")
 
-        // Verify credential
-        val result = verify { credential(credential) }
-        when (result) {
-            is VerificationResult.Valid -> println("✅ Credential verified!")
-            else -> println("❌ Verification failed")
+    val credential = trustWeave.issue {
+        credential {
+            type("HelloCredential")
+            issuer(issuerDid)
+            subject("did:key:holder") { "message" to "Hello TrustWeave!" }
         }
+        signedBy(issuerDid)  // Key ID auto-extracted
+    }.getOrThrow()
+
+    val result = trustWeave.verify(credential)  // Simple overload
+    when (result) {
+        is VerificationResult.Valid -> println("✅ Credential verified!")
+        else -> println("❌ Verification failed")
     }
 }
 ```
@@ -71,6 +61,21 @@ fun main() = runBlocking {
 ✅ Created DID: did:key:z6Mk...
 ✅ Credential verified!
 ```
+
+### Elegant API Patterns
+
+TrustWeave offers several convenience APIs for common use cases:
+
+| Pattern | Usage |
+|---------|-------|
+| `TrustWeave.quickStart()` | In-memory setup with did:key — one call, ready to go |
+| `signedBy(issuerDid)` | Key ID auto-extracted from DID — no manual key lookup |
+| `subject("did:key:holder") { "name" to "Alice" }` | Subject shorthand — ID as first argument |
+| `verify(credential)` | Direct overload — no DSL block for simple verification |
+
+For advanced verification (schema validation, trust policies, skip revocation), use the DSL: `verify { credential(cred); skipRevocation(); validateSchema("...") }`.
+
+> **Misconfigured credential service:** If `CredentialService` is not wired, `issue` returns `IssuanceResult.Failure.AdapterNotReady`, and `verify` returns `VerificationResult.Invalid.AdapterNotReady`. For the **DSL** form `verify { }` in that situation, the error result may reference an **internal placeholder credential**—handle `AdapterNotReady` first and never treat that object as end-user data. See [API patterns — results vs exceptions](api-patterns.md#api-contract-results-vs-exceptions).
 
 **What just happened?**
 1. ✅ Created a decentralized identity (DID) for the issuer
@@ -108,16 +113,19 @@ flowchart TD
 
 ## Complete Runnable Example
 
-Here's a complete, copy-paste ready example that demonstrates the full TrustWeave workflow with proper error handling. This example uses try-catch blocks for error handling, which is the recommended pattern for all TrustWeave operations.
+Here's a complete, copy-paste ready example that demonstrates the full TrustWeave workflow with proper error handling.
 
-> **Note:** All `TrustWeave` methods throw domain-specific exceptions on failure (e.g., `DidException`, `CredentialException`, `WalletException`). These extend `TrustWeaveException` and provide structured error codes and context. Always wrap operations in try-catch blocks for production code. Verification methods return sealed `VerificationResult` types for exhaustive error handling. See [Error Handling Patterns](#error-handling-patterns) below for details.
+> **Note:** **Credential flows** (`issue`, `verify`, `presentationResult`) return **sealed result types**—use `when` for exhaustive handling (`AdapterNotReady`, `Invalid.*`, etc.). **`PresentationResult.getOrThrow()`** throws **`TrustWeaveException.InvalidState`** (codes `PRESENTATION_*`). Other **`getOrThrow()`** helpers often throw **`IllegalStateException`**. Some **DID/wallet** paths throw domain exceptions. See [API patterns — results vs exceptions](api-patterns.md#api-contract-results-vs-exceptions) and [Production integration checklist](production-integration-checklist.md).
 
 ```kotlin
 package com.example.TrustWeave.quickstart
 
-import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.*
-import org.trustweave.trust.types.VerificationResult
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.credential.results.VerificationResult
 import org.trustweave.core.util.DigestUtils
 import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
@@ -125,8 +133,8 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 fun main() = runBlocking {
-    trustWeave {
-        factories(
+    val trustWeave = TrustWeave.build {
+      
         // KMS and DID methods auto-discovered via SPI
         keys {
             provider(IN_MEMORY)
@@ -137,7 +145,8 @@ fun main() = runBlocking {
                 algorithm(ED25519)
             }
         }
-    }.run {
+    }
+    
         // Step 1: Compute a digest (demonstrates canonicalization)
         val credentialSubject = buildJsonObject {
             put("id", "did:key:holder-placeholder")
@@ -148,16 +157,16 @@ fun main() = runBlocking {
         println("Canonical credential-subject digest: $digest")
 
         // Step 2: Create issuer DID (uses default method from config)
-        val issuerDid = createDid().getOrThrow()
+        val issuerDid = trustWeave.createDid().getOrThrowDid()
         println("Issuer DID: ${issuerDid.value}")
 
         // Step 3: Issue credential
-        val credential = issue {
+        val credential = trustWeave.issue {
             credential {
                 type("QuickStartCredential")
                 issuer(issuerDid)
                 subject {
-                    id(org.trustweave.did.identifiers.Did("did:key:holder-placeholder"))
+                    id(Did("did:key:holder-placeholder"))
                     "name" to "Alice Example"
                     "role" to "Site Reliability Engineer"
                 }
@@ -167,7 +176,7 @@ fun main() = runBlocking {
         println("Issued credential id: ${credential.id}")
 
         // Step 4: Verify credential
-        val verification = verify {
+        val verification = trustWeave.verify {
             credential(credential)
             checkRevocation()
             checkExpiration()
@@ -189,11 +198,14 @@ fun main() = runBlocking {
             is VerificationResult.Invalid.InvalidProof -> {
                 println("❌ Invalid proof: ${verification.reason}")
             }
+            is VerificationResult.Invalid.AdapterNotReady -> {
+                println("❌ Credential service not configured: ${verification.allErrors.joinToString()}")
+            }
             is VerificationResult.Invalid.UntrustedIssuer -> {
-                println("❌ Untrusted issuer: ${verification.issuer}")
+                println("❌ Untrusted issuer: ${verification.issuerDid.value}")
             }
             is VerificationResult.Invalid.SchemaValidationFailed -> {
-                println("❌ Schema validation failed: ${verification.errors.joinToString()}")
+                println("❌ Schema validation failed: ${verification.allErrors.joinToString()}")
             }
             else -> {
                 println("❌ Verification failed: ${verification}")
@@ -201,7 +213,7 @@ fun main() = runBlocking {
         }
 
         // Step 5: Create wallet and store credential
-        val wallet = wallet {
+        val wallet = trustWeave.wallet {
             holder("did:key:holder-placeholder")
         }.getOrThrow()
         
@@ -213,44 +225,44 @@ fun main() = runBlocking {
 
 ### Simplified Example (Testing Only)
 
-For quick testing and prototypes, you can use a simplified version without detailed error handling. **Do not use this in production:**
+For quick testing and prototypes, use `TrustWeave.quickStart()`:
 
 ```kotlin
-import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.*
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.credential.results.getOrThrow
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    trustWeave {
-        keys { provider(IN_MEMORY); algorithm(ED25519) }  // Auto-discovered via SPI
-        did { method(KEY) { algorithm(ED25519) } }  // Auto-discovered via SPI
-        // KMS, DID methods, and CredentialService all auto-created!
-    }.run {
-        // Operations will throw exceptions on failure
-        val (did, _) = createDid().getOrThrow()
-        val credential = issue { ... }.getOrThrow()
-        // ... rest of code
-    }
+    val trustWeave = TrustWeave.quickStart()
+
+    val did = trustWeave.createDid().getOrThrowDid()
+    val credential = trustWeave.issue {
+        credential { type("Test"); issuer(did); subject("did:key:holder") { "name" to "Alice" } }
+        signedBy(did)
+    }.getOrThrow()
+    val result = trustWeave.verify(credential)
 }
 ```
 
-**Why not in production?** Exceptions will crash your application. Always use try-catch in production code.
+**Why not in production?** `getOrThrow()` throws on failure; prefer `when` on `IssuanceResult` / `VerificationResult` in user-facing flows. Use try-catch only around unwrapping helpers if you keep this style.
 
 ### Production Pattern with Error Handling
 
 The example above already shows the production pattern. Here's an enhanced version with more detailed error handling:
 
 ```kotlin
-import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.*
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.credential.results.getOrThrow
 import org.trustweave.testkit.services.*
+import org.trustweave.did.identifiers.Did
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    trustWeave {
-        factories(
-        // KMS and DID methods auto-discovered via SPI
+    val trustWeave = TrustWeave.build {
         keys {
             provider(IN_MEMORY)
             algorithm(ED25519)
@@ -260,24 +272,23 @@ fun main() = runBlocking {
                 algorithm(ED25519)
             }
         }
-    }.run {
-        // Production pattern: Use getOrThrow() for concise error handling
-        val issuerDid = createDid().getOrThrow()
-
-        val credential = issue {
-            credential {
-                type("QuickStartCredential")
-                issuer(issuerDid)
-                subject {
-                    id(org.trustweave.did.identifiers.Did("did:key:holder"))
-                    "name" to "Alice"
-                }
-            }
-            signedBy(issuerDid)
-        }.getOrThrow()
-
-        println("✅ Credential issued: ${credential.id}")
     }
+
+    val issuerDid = trustWeave.createDid().getOrThrowDid()
+
+    val credential = trustWeave.issue {
+        credential {
+            type("QuickStartCredential")
+            issuer(issuerDid)
+            subject {
+                id(Did("did:key:holder"))
+                "name" to "Alice"
+            }
+        }
+        signedBy(issuerDid)
+    }.getOrThrow()
+
+    println("✅ Credential issued: ${credential.id}")
 }
 ```
 
@@ -311,8 +322,8 @@ The sections below explain each step in detail.
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
-    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
+    testImplementation("org.trustweave:testkit:0.6.0")
 }
 ```
 
@@ -330,7 +341,7 @@ TrustWeave promotes a “batteries included” experience for newcomers. The mon
 **How simple:** One helper call, no manual canonicalisation.
 
 ```kotlin
-import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.*
 import org.trustweave.core.util.DigestUtils
 import org.trustweave.testkit.services.*
@@ -339,9 +350,10 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 fun main() = runBlocking {
-    trustWeave {
-        factories(
-        // KMS and DID methods auto-discovered via SPI
+    // Option 1: Using build (recommended for production)
+    val trustWeave = TrustWeave.build {
+        // factories() is optional - only needed for Wallet, TrustRegistry, or StatusListRegistry
+        // KMS and DID methods are auto-discovered via SPI
         keys {
             provider(IN_MEMORY)
             algorithm(ED25519)
@@ -351,18 +363,21 @@ fun main() = runBlocking {
                 algorithm(ED25519)
             }
         }
-    }.run {
-        // Build credential subject payload
-        val credentialSubject = buildJsonObject {
-            put("id", "did:key:holder-placeholder")
-            put("name", "Alice Example")
-            put("role", "Site Reliability Engineer")
-        }
-
-        // Compute deterministic digest (canonicalizes JSON first)
-        val digest = DigestUtils.sha256DigestMultibase(credentialSubject)
-        println("Digest: $digest")
     }
+    
+    // Option 2: Using inMemory() for simple testing (avoids build)
+    // val trustWeave = TrustWeave.inMemory()
+    
+    // Build credential subject payload
+    val credentialSubject = buildJsonObject {
+        put("id", "did:key:holder-placeholder")
+        put("name", "Alice Example")
+        put("role", "Site Reliability Engineer")
+    }
+
+    // Compute deterministic digest (canonicalizes JSON first)
+    val digest = DigestUtils.sha256DigestMultibase(credentialSubject)
+    println("Digest: $digest")
 }
 ```
 
@@ -386,10 +401,18 @@ Everything in TrustWeave assumes deterministic canonicalization, so the very fir
 **How simple:** Configure only what you need using a fluent builder—defaults cover the rest.
 
 ```kotlin
+import org.trustweave.testkit.services.*
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.did.identifiers.extractKeyId
 // Simple: use defaults (did:key method, ED25519 algorithm from config)
 val (issuerDid, issuerDoc) = trustWeave.createDid().getOrThrow()
-val issuerKeyId = issuerDoc.verificationMethod.first().id.substringAfter("#")
+val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
+    ?: error("No verification method on issuer DID document")
 println("Issuer DID: ${issuerDid.value} (keyId=$issuerKeyId)")
+
+// Or use getOrThrowDid() if you only need the DID
+val issuerDid2 = trustWeave.createDid().getOrThrowDid()
 
 // Advanced: specify method explicitly
 val (customDid, customDoc) = trustWeave.createDid {
@@ -416,13 +439,15 @@ Typed builders (`DidCreationOptions`) are a core design choice: they prevent mis
 **How simple:** Provide the issuer DID/key and credential subject JSON; the API handles proof generation and validation.
 
 ```kotlin
+import org.trustweave.did.identifiers.Did
+
 // Issue credential using the issuer DID and key ID from Step 3
 val credential = trustWeave.issue {
     credential {
         type("QuickStartCredential")
         issuer(issuerDid)
         subject {
-            id(org.trustweave.did.identifiers.Did("did:key:holder-placeholder"))
+            id(Did("did:key:holder-placeholder"))
             "name" to "Alice Example"
             "role" to "Site Reliability Engineer"
         }
@@ -451,7 +476,7 @@ The type-safe `IssuerIdentity` ensures that issuer DID and key ID are properly v
 ## Step 5: Verify the credential
 
 **Why:** Consumers must trust the credential; verification validates proofs and checks revocation.
-**How it works:** `verifyCredential` rebuilds proofs, resolves issuer DIDs, and performs validity checks.
+**How it works:** `trustWeave.verify { … }` (or `trustWeave.verify(credential)`) checks proofs, resolves issuer IRIs, and applies expiration, revocation, and optional trust/schema rules—returning a sealed **`VerificationResult`**.
 **How simple:** One call returns a structured result with validation details.
 
 ```kotlin
@@ -483,6 +508,35 @@ when (verification) {
 **Result**
 You get a `VerificationResult` sealed class that can be `Valid` or one of several `Invalid` subtypes, each providing specific error information. This enables exhaustive when-expressions for type-safe error handling.
 
+## Step 5.5: Build a verifiable presentation (optional)
+
+**Why:** Holders package one or more credentials into a **verifiable presentation** (often with a challenge) for authentication or selective disclosure.
+
+**How it works:** `presentationResult { }` returns a sealed **`PresentationResult`**—same idea as `issue` / `verify`: configuration problems surface as **`Failure.AdapterNotReady`**, validation as **`Failure.InvalidRequest`**.
+
+```kotlin
+import org.trustweave.trust.dsl.credential.presentationResult
+import org.trustweave.trust.types.PresentationResult
+
+// After issuing `credential`, use the same holder DID as the credential subject
+when (val pr = trustWeave.presentationResult {
+    holder("did:key:holder-placeholder")
+    credentials(credential)
+    challenge("quick-start-challenge")
+}) {
+    is PresentationResult.Success ->
+        println("✅ Presentation built: ${pr.presentation.id}")
+    is PresentationResult.Failure.AdapterNotReady ->
+        println("❌ Credential service not configured: ${pr.allErrors.joinToString()}")
+    is PresentationResult.Failure.InvalidRequest ->
+        println("❌ Invalid request: ${pr.allErrors.joinToString()}")
+    is PresentationResult.Failure.AdapterError ->
+        println("❌ Adapter error: ${pr.allErrors.joinToString()}")
+}
+```
+
+> From a **wallet**, prefer **`presentationFromWalletResult(wallet) { … }`** (see [API patterns — results vs exceptions](api-patterns.md#api-contract-results-vs-exceptions)).
+
 ## Step 6: Anchor to blockchain (optional)
 
 **Why:** Anchoring provides tamper evidence and timestamping on a blockchain.
@@ -512,19 +566,22 @@ Anchoring is abstracted behind the same interface regardless of provider. The sa
 
 ## Error Handling Patterns
 
-TrustWeave methods throw exceptions on failure. Understanding error handling patterns is important for production code.
+**Credential flows** return **sealed results** (`IssuanceResult`, `VerificationResult`, `PresentationResult`); handle them with `when`. **`PresentationResult.getOrThrow()`** throws **`TrustWeaveException.InvalidState`**; other **`getOrThrow()`** helpers often throw **`IllegalStateException`**. See [API patterns — results vs exceptions](api-patterns.md#api-contract-results-vs-exceptions).
 
-> **Best Practice:** Always use try-catch blocks for production code. Only skip error handling in quick prototypes and tests.
+> **Best Practice:** Model credential errors with `when` on sealed types; use try-catch where you call `getOrThrow()` or APIs that still throw. Only skip handling in quick prototypes and tests.
 
 ### When to Skip Error Handling (Testing/Prototyping Only)
 
 Skip error handling **only** for:
-- ✅ Quick start examples and prototypes
-- ✅ Simple scripts where you can let errors bubble up
-- ✅ Test code where exceptions are acceptable
-- ✅ Learning and experimentation
+- Quick start examples and prototypes
+- Simple scripts where you can let errors bubble up
+- Test code where exceptions are acceptable
+- Learning and experimentation
 
 ```kotlin
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.credential.results.getOrThrow
+
 // ⚠️ Simple usage (exceptions will propagate) - Testing/Prototyping Only
 // For production, always use try-catch instead
 val (did, _) = trustWeave.createDid().getOrThrow()
@@ -536,14 +593,15 @@ val credential = trustWeave.issue { ... }.getOrThrow()
 ### When to Use Try-Catch (Production Pattern)
 
 Use try-catch blocks **always** for:
-- ✅ Production code
-- ✅ When you need to handle specific error types
-- ✅ When you want to provide user-friendly error messages
-- ✅ When you need to log errors before handling
-- ✅ When you need to recover from errors
+- Production code
+- When you need to handle specific error types
+- When you want to provide user-friendly error messages
+- When you need to log errors before handling
+- When you need to recover from errors
 
 ```kotlin
 import org.trustweave.trust.dsl.credential.*
+import org.trustweave.trust.types.getOrThrow
 
 // ✅ Production pattern with getOrThrow() for concise error handling
 try {
@@ -563,51 +621,48 @@ try {
 
 ## Handling errors and verification failures
 
-TrustWeave methods throw exceptions on failure. Always use try-catch blocks for error handling:
+`verify` returns **`VerificationResult`**—use a `when` (no outer try-catch required for the verify call itself). Below, try-catch is optional unless you also call throwing helpers in the same block.
 
 ```kotlin
 // Verify credential with exhaustive error handling
-try {
-    val verification = trustWeave.verify {
-        credential(credential)
-        checkRevocation()
-        checkExpiration()
-    }
+val verification = trustWeave.verify {
+    credential(credential)
+    checkRevocation()
+    checkExpiration()
+}
 
-    when (verification) {
-        is VerificationResult.Valid -> {
-            println("✅ Credential is valid: ${verification.credential.id}")
-            if (verification.warnings.isNotEmpty()) {
-                verification.warnings.forEach { println("Warning: $it") }
-            }
+when (verification) {
+    is VerificationResult.Valid -> {
+        println("✅ Credential is valid: ${verification.credential.id}")
+        if (verification.warnings.isNotEmpty()) {
+            verification.warnings.forEach { println("Warning: $it") }
         }
-        is VerificationResult.Invalid.Expired -> {
-            println("❌ Credential expired at ${verification.expiredAt}")
-        }
-        is VerificationResult.Invalid.Revoked -> {
-            println("❌ Credential revoked")
-        }
-        is VerificationResult.Invalid.InvalidProof -> {
-            println("❌ Invalid proof: ${verification.reason}")
-        }
-        is VerificationResult.Invalid.UntrustedIssuer -> {
-            println("❌ Untrusted issuer: ${verification.issuer}")
-        }
-        is VerificationResult.Invalid.SchemaValidationFailed -> {
-            println("❌ Schema validation failed: ${verification.errors.joinToString()}")
-        }
-        // Compiler ensures all cases are handled
     }
-} catch (error: CredentialException) {
-    println("❌ Credential error: ${error.message}")
-} catch (error: TrustWeaveException) {
-    println("❌ TrustWeave error [${error.code}]: ${error.message}")
-} catch (error: Exception) {
-    println("❌ Unexpected error: ${error.message}")
+    is VerificationResult.Invalid.Expired -> {
+        println("❌ Credential expired at ${verification.expiredAt}")
+    }
+    is VerificationResult.Invalid.Revoked -> {
+        println("❌ Credential revoked")
+    }
+    is VerificationResult.Invalid.InvalidProof -> {
+        println("❌ Invalid proof: ${verification.reason}")
+    }
+    is VerificationResult.Invalid.AdapterNotReady -> {
+        println("❌ Credential service not configured: ${verification.allErrors.joinToString()}")
+    }
+    is VerificationResult.Invalid.UntrustedIssuer -> {
+        println("❌ Untrusted issuer: ${verification.issuerDid.value}")
+    }
+    is VerificationResult.Invalid.SchemaValidationFailed -> {
+        println("❌ Schema validation failed: ${verification.allErrors.joinToString()}")
+    }
+    else -> {
+        println("❌ Other verification issue: ${verification.allErrors.joinToString()}")
+    }
 }
 ```
 
-**Best Practice:** Always use exhaustive `when` expressions to handle all `VerificationResult` cases. This ensures type-safe error handling and prevents missing error cases. Use try-catch blocks for exceptions thrown by the verification method itself.
+**Best Practice:** Use an exhaustive `when` on `VerificationResult` so every invalid case is handled; reserve try-catch for `getOrThrow()` or other throwing APIs in the same scope.
 
 See [Error Handling](../advanced/error-handling.md) for more details on error handling patterns.
 
@@ -618,16 +673,16 @@ Ready to explore real-world workflows? Each guide below walks through an end-to-
 - **[View All Scenarios](../scenarios/README.md)** – Complete list of all available scenarios
 
 **Popular Scenarios:**
-- [Academic Credentials](../scenarios/academic-credentials-scenario.md) – issue diplomas, validate transcripts, and manage revocation.
-- [Employee Onboarding](../scenarios/employee-onboarding-scenario.md) – complete onboarding with education, work history, and background checks.
-- [Vaccination Health Passports](../scenarios/vaccination-health-passport-scenario.md) – privacy-preserving health credentials for travel and access.
-- [Event Ticketing](../scenarios/event-ticketing-scenario.md) – verifiable tickets with transfer control and fraud prevention.
-- [Age Verification](../scenarios/age-verification-scenario.md) – verify age without revealing personal information.
-- [Insurance Claims](../scenarios/insurance-claims-scenario.md) – complete claims verification with fraud prevention.
-- [Financial Services (KYC)](../scenarios/financial-services-kyc-scenario.md) – streamline onboarding and reuse credentials across institutions.
-- [Government Digital Identity](../scenarios/government-digital-identity-scenario.md) – citizens receive, store, and present official IDs.
-- [Healthcare Records](../scenarios/healthcare-medical-records-scenario.md) – share consented medical data across providers with audit trails.
-- [Supply Chain Traceability](../scenarios/supply-chain-traceability-scenario.md) – follow goods from origin to shelf with verifiable checkpoints.
+- Academic Credentials](../scenarios/academic-credentials-scenario.md) – issue diplomas, validate transcripts, and manage revocation.
+- Employee Onboarding](../scenarios/employee-onboarding-scenario.md) – complete onboarding with education, work history, and background checks.
+- Vaccination Health Passports](../scenarios/vaccination-health-passport-scenario.md) – privacy-preserving health credentials for travel and access.
+- Event Ticketing](../scenarios/event-ticketing-scenario.md) – verifiable tickets with transfer control and fraud prevention.
+- Age Verification](../scenarios/age-verification-scenario.md) – verify age without revealing personal information.
+- Insurance Claims](../scenarios/insurance-claims-scenario.md) – complete claims verification with fraud prevention.
+- Financial Services (KYC)](../scenarios/financial-services-kyc-scenario.md) – streamline onboarding and reuse credentials across institutions.
+- Government Digital Identity](../scenarios/government-digital-identity-scenario.md) – citizens receive, store, and present official IDs.
+- Healthcare Records](../scenarios/healthcare-medical-records-scenario.md) – share consented medical data across providers with audit trails.
+- Supply Chain Traceability](../scenarios/supply-chain-traceability-scenario.md) – follow goods from origin to shelf with verifiable checkpoints.
 
 ## Troubleshooting
 
@@ -641,9 +696,9 @@ If you encounter issues:
 Follow this structured path to master TrustWeave:
 
 ### 1. Get Started (You are here!)
-- ✅ Complete this Quick Start guide
-- ✅ Run the example code
-- ✅ Understand basic concepts
+- Complete this Quick Start guide
+- Run the example code
+- Understand basic concepts
 
 ### 2. Learn the Fundamentals
 - **[Beginner Tutorial Series](../tutorials/beginner-tutorial-series.md)** - Structured 5-tutorial series (2+ hours)
@@ -687,9 +742,9 @@ Follow this structured path to master TrustWeave:
 
 ## Additional Resources
 
-- [Core Concepts](../core-concepts/README.md) - Learn the fundamentals
-- [API Reference](../api-reference/core-api.md) - Complete API documentation
-- [Troubleshooting](troubleshooting.md) - Common issues and solutions
-- [Error Handling Guide](../advanced/error-handling.md) - Detailed error handling patterns
-- [FAQ](../faq.md) - Frequently asked questions
+- Core Concepts](../core-concepts/README.md) - Learn the fundamentals
+- API Reference](../api-reference/core-api.md) - Complete API documentation
+- Troubleshooting](troubleshooting.md) - Common issues and solutions
+- Error Handling Guide](../advanced/error-handling.md) - Detailed error handling patterns
+- FAQ](../faq.md) - Frequently asked questions
 

@@ -139,12 +139,7 @@ abstract class CloudWallet(
         val builder = CredentialQueryBuilder()
         builder.query()
 
-        // Use reflection to call createPredicate()
-        val predicateMethod = builder::class.java.getMethod("createPredicate")
-        @Suppress("UNCHECKED_CAST")
-        val predicate = predicateMethod.invoke(builder) as (VerifiableCredential) -> Boolean
-
-        // Get all credentials and filter
+        val predicate = builder.toPredicate()
         val allCredentials = list(null)
         allCredentials.filter(predicate)
     }

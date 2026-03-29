@@ -21,7 +21,8 @@ dependencies {
 
     // Spring Boot dependencies
     implementation(platform(libs.spring.boot.dependencies))
-    implementation(libs.spring.boot.starter.web)
+    implementation(libs.spring.boot.starter.webflux)
+    implementation(libs.kotlinx.coroutines.reactor)
 
     // Test dependencies
     testImplementation(project(":testkit"))

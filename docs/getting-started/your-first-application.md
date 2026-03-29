@@ -47,7 +47,7 @@ The block below wires together in-memory services so you can run the whole workf
 ```kotlin
 import org.trustweave.anchor.*
 import org.trustweave.did.*
-import org.trustweave.json.DigestUtils
+import org.trustweave.core.util.DigestUtils
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
@@ -140,10 +140,10 @@ Verification successful!
 ```
 
 This confirms:
-- ✅ DID was successfully created
-- ✅ Digest was computed correctly
-- ✅ Data was anchored to the blockchain
-- ✅ Retrieval and verification succeeded
+- DID was successfully created
+- Digest was computed correctly
+- Data was anchored to the blockchain
+- Retrieval and verification succeeded
 
 ## Running the Example
 

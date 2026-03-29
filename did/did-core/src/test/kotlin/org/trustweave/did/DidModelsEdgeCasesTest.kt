@@ -4,6 +4,7 @@ import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
+import org.trustweave.did.model.DidOrUrl
 import org.trustweave.did.model.DidService
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidResolutionResult
@@ -79,7 +80,7 @@ class DidModelsEdgeCasesTest {
         val endpoints = listOf("https://example.com", "https://backup.example.com")
         val service = DidService(
             id = "did:web:example.com#service-1",
-            type = "LinkedDomains",
+            type = listOf("LinkedDomains"),
             serviceEndpoint = endpoints
         )
 
@@ -95,7 +96,7 @@ class DidModelsEdgeCasesTest {
         )
         val service = DidService(
             id = "did:web:example.com#service-1",
-            type = "DIDCommMessaging",
+            type = listOf("DIDCommMessaging"),
             serviceEndpoint = endpoint
         )
 
@@ -128,12 +129,12 @@ class DidModelsEdgeCasesTest {
     fun `test DidDocument with multiple services`() {
         val service1 = DidService(
             id = "did:key:issuer#service-1",
-            type = "LinkedDomains",
+            type = listOf("LinkedDomains"),
             serviceEndpoint = "https://example.com"
         )
         val service2 = DidService(
             id = "did:key:issuer#service-2",
-            type = "DIDCommMessaging",
+            type = listOf("DIDCommMessaging"),
             serviceEndpoint = mapOf("uri" to "https://messaging.example.com")
         )
 
@@ -160,13 +161,13 @@ class DidModelsEdgeCasesTest {
         val doc = DidDocument(
             id = Did("did:key:issuer"),
             alsoKnownAs = listOf(
-                Did("did:web:example.com"),
-                Did("did:ion:example")
-                // Note: "https://example.com/identity" is not a DID, so it can't be in alsoKnownAs
+                DidOrUrl.AsDid(Did("did:web:example.com")),
+                DidOrUrl.AsDid(Did("did:ion:example")),
+                DidOrUrl.AsUrl("https://example.com/identity")
             )
         )
 
-        assertEquals(2, doc.alsoKnownAs.size)
+        assertEquals(3, doc.alsoKnownAs.size)
     }
 
     @Test
@@ -293,12 +294,12 @@ class DidModelsEdgeCasesTest {
     fun `test Service equality`() {
         val service1 = DidService(
             id = "did:web:example.com#service-1",
-            type = "LinkedDomains",
+            type = listOf("LinkedDomains"),
             serviceEndpoint = "https://example.com"
         )
         val service2 = DidService(
             id = "did:web:example.com#service-1",
-            type = "LinkedDomains",
+            type = listOf("LinkedDomains"),
             serviceEndpoint = "https://example.com"
         )
 

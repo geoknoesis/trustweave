@@ -142,6 +142,9 @@ suspend fun exampleBasicCredentialFlow(
             println("✗ Proof suite not supported: ${result.format}")
             println("  Supported proof suites: ${service.supportedFormats()}")
         }
+        is VerificationResult.Invalid.AdapterNotReady -> {
+            println("✗ Credential service not configured: ${result.reason ?: result.errors.joinToString()}")
+        }
         is VerificationResult.Invalid.NotYetValid -> {
             println("✗ Credential not yet valid until ${result.validFrom}")
         }

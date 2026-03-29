@@ -137,8 +137,8 @@ object IntegrityVerifier {
         val linksetValid = if (linksetRef != null) {
             linksetDigest == linksetRef
         } else {
-            // Linkset digest is valid if it's properly computed (starts with 'u')
-            linksetDigest.startsWith("u")
+            // Linkset digest is valid if it's a properly computed multibase digest (starts with 'z' for base58btc)
+            linksetDigest.startsWith("z")
         }
         results.add(VerificationStep("Linkset Digest", linksetValid, linksetDigest))
 

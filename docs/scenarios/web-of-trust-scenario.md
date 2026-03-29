@@ -6,551 +6,162 @@ nav_order: 18
 
 # Web of Trust Scenario
 
-This document provides a complete walkthrough of using TrustWeave's web of trust features, including trust registries, delegation chains, and proof purpose validation.
+This walkthrough explains how TrustWeave supports **trust registries**, **delegation**, **issuance**, and **verification** in a web-of-trust style workflow.
+
+**Runnable reference:** [`WebOfTrustExample.kt`](../../distribution/examples/src/main/kotlin/org/trustweave/examples/trust/WebOfTrustExample.kt) in **`distribution/examples`** — keep that file as the source of truth; the snippets below are abbreviated.
 
 ```kotlin
 dependencies {
-    // TrustWeave distribution (includes all modules)
-    implementation("org.trustweave:distribution-all:1.0.0-SNAPSHOT")
-
-    // Test kit for in-memory implementations
-    testImplementation("org.trustweave:testkit:1.0.0-SNAPSHOT")
+    implementation("org.trustweave:distribution-all:0.6.0")
+    testImplementation("org.trustweave:testkit:0.6.0")
 }
 ```
 
-**Result:** These modules give you the trust-layer DSLs, registries, and in-memory mocks used throughout the walkthrough.
+## What you will do
 
-## Overview
+1. Build **`TrustWeave`** with in-memory KMS, **`did:key`**, credential defaults, and a **trust registry**.
+2. Create DIDs for issuers, holders, and verifiers.
+3. Register **trust anchors** (`trustWeave.trust { addAnchor(...) }`).
+4. Optionally model **delegation** with **`updateDid { addCapabilityDelegation(...) }`** and verify with **`trustWeave.delegate { from(...); to(...) }`**.
+5. **Issue** credentials (`issue { ... }.getOrThrow()` from **`org.trustweave.credential.results`**).
+6. **Verify** credentials with **`trustWeave.verify { credential(...); ... }`** and handle **`VerificationResult`** with **`when`** (or use extensions like **`valid`** / **`trustRegistryValid`** from **`org.trustweave.trust.types`**).
+7. Explore **trust paths** with **`trustWeave.trust { findTrustPath(VerifierIdentity(...), IssuerIdentity(...)) }`** and list trusted issuers with **`getTrustedIssuers`**.
 
-The web of trust scenario demonstrates how to:
-1. Set up trust anchors
-2. Issue trusted credentials
-3. Verify trust paths
-4. Delegate capabilities
-5. Verify delegation chains
-6. Use proof purpose validation
-7. Integrate all features together
-
-## Step-by-Step Walkthrough
-
-### Step 1: Configure Trust Layer with Trust Registry
+## 1. Configure `TrustWeave`
 
 ```kotlin
-import org.trustweave.trust.dsl.*
-import java.time.Instant
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.credential.model.ProofType
 import kotlinx.coroutines.runBlocking
+import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
-    val trustLayer = trustLayer {
+    val trustWeave = TrustWeave.build {
         keys {
             provider(IN_MEMORY)
-            algorithm(ED25519)
+            algorithm(KeyAlgorithms.ED25519)
         }
-
         did {
-            method(KEY) {
-                algorithm(ED25519)
+            method(DidMethods.KEY) {
+                algorithm(KeyAlgorithms.ED25519)
             }
         }
-
         credentials {
-            defaultProofType(ProofTypes.ED25519)
+            defaultProofType(ProofType.Ed25519Signature2020)
         }
-
-        trust {
-            provider(IN_MEMORY)
-        }
+        revocation(IN_MEMORY)
+        trust(IN_MEMORY)
     }
+    // ...
 }
-
 ```
 
-**What this does:** Builds a `trustLayer` instance with in-memory KMS, DID method, credential defaults, and trust registry providers—perfect for local demos.
-
-**Outcome:** Returns a configured trust layer you reuse in subsequent steps to create DIDs, issue credentials, and resolve trust anchors.
-
-### Step 2: Create DIDs for Entities
+## 2. Create DIDs
 
 ```kotlin
+import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.testkit.services.*
 
-val universityDid = trustLayer.createDid {
-    method(DidMethods.KEY)
-    algorithm(KeyAlgorithms.ED25519)
-}.getOrThrowDid()
-
-val companyDid = trustLayer.createDid {
-    method(DidMethods.KEY)
-    algorithm(KeyAlgorithms.ED25519)
-}.getOrThrowDid()
-
-val studentDid = trustLayer.createDid {
-    method(DidMethods.KEY)
-    algorithm(KeyAlgorithms.ED25519)
-}.getOrThrowDid()
-
-val hrDeptDid = trustLayer.createDid {
+val universityDid = trustWeave.createDid {
     method(DidMethods.KEY)
     algorithm(KeyAlgorithms.ED25519)
 }.getOrThrowDid()
 ```
 
-**What this does:** Issues four DIDs—university, company, student, and HR department—using the configured DID method.
+In application code, prefer **`getOrThrowDid()`** from **`org.trustweave.trust.types`** for DID creation results.
 
-**Outcome:** Each actor has a resolvable identifier that upcoming trust and delegation steps can reference.
-
-### Step 3: Set Up Trust Anchors
+## 3. Trust anchors
 
 ```kotlin
-trustLayer.trust {
-    // Add university as trusted anchor for education credentials
-    addAnchor(universityDid) {
+trustWeave.trust {
+    addAnchor(universityDid.value) {
         credentialTypes("EducationCredential", "DegreeCredential")
-        description("Trusted university for education credentials")
+        description("Trusted university")
     }
-
-    // Add company as trusted anchor for employment credentials
-    addAnchor(companyDid) {
-        credentialTypes("EmploymentCredential")
-        description("Trusted company for employment credentials")
-    }
-
-    // Verify trust anchors were added
-    val isUniversityTrusted = isTrusted(universityDid, "EducationCredential")
-    println("University trusted for EducationCredential: $isUniversityTrusted")
+    val ok = isTrusted(universityDid.value, "EducationCredential")
 }
-
 ```
 
-**What this does:** Seeds the trust registry with anchors for the university and company, then confirms the university anchor is active for education credentials.
-
-**Outcome:** Subsequent verifications can rely on trust registry lookups instead of hard-coded issuer lists.
-
-### Step 4: Issue Credentials with Trust Verification
+## 4. Delegation (optional)
 
 ```kotlin
-// Issue degree credential from university
-import org.trustweave.trust.types.IssuanceResult
-
-import org.trustweave.trust.types.getOrThrow
-import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.did.identifiers.extractKeyId
-
-// Helper extension for resolution results
-fun DidResolutionResult.getOrThrow() = when (this) {
-    is DidResolutionResult.Success -> this.document
-    else -> throw IllegalStateException("Failed to resolve DID: ${this.errorMessage ?: "Unknown error"}")
+import org.trustweave.testkit.services.*
+trustWeave.updateDid {
+    did(companyDid.value)
+    method(DidMethods.KEY)
+    addCapabilityDelegation("${hrDeptDid.value}#key-1")
 }
 
-// First, resolve university DID to get key ID
-val universityDoc = trustLayer.resolveDid(universityDid).getOrThrow()
-val universityKeyId = universityDoc.verificationMethod.firstOrNull()?.extractKeyId()
-    ?: throw IllegalStateException("No verification method found")
+val delegation = trustWeave.delegate {
+    from(companyDid.value)
+    to(hrDeptDid.value)
+}
+// delegation.valid, delegation.path, delegation.errors
+```
 
-val degreeCredential = trustLayer.issue {
+## 5. Issue and verify
+
+```kotlin
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.credential.results.getOrThrow
+import kotlinx.datetime.Clock
+
+val credential = trustWeave.issue {
     credential {
-        id("https://university.edu/credentials/degree-123")
-        type(CredentialType.Education, CredentialType.Degree)
+        type("EducationCredential")
         issuer(universityDid)
-        subject {
-            id(studentDid)
-            "degree" {
-                "type" to "Bachelor"
-                "field" to "Computer Science"
-                "university" to "Example University"
-            }
-        }
-        issued(Instant.now())
-        expires(Instant.now().plusSeconds(31536000)) // 1 year
+        subject { id(studentDid); "degree" { "field" to "CS" } }
+        issued(Clock.System.now())
     }
     signedBy(universityDid)
 }.getOrThrow()
 
-// Verify with trust registry
-val verification = trustLayer.verify {
-    credential(degreeCredential)
-    checkTrustRegistry(true)
-    checkExpiration(true)
+val result = trustWeave.verify {
+    credential(credential)
+    checkExpiration()
 }
 
-println("Verification Results:")
-println("  Valid: ${verification.valid}")
-println("  Trust Registry Valid: ${verification.trustRegistryValid}")
-println("  Proof Valid: ${verification.proofValid}")
-println("  Not Expired: ${verification.notExpired}")
-
-if (verification.trustRegistryValid) {
-    println("✅ Issuer is trusted!")
-} else {
-    println("❌ Issuer is not trusted")
+when (result) {
+    is VerificationResult.Valid -> { /* accepted */ }
+    is VerificationResult.Invalid -> { /* inspect result.allErrors */ }
 }
 ```
 
-**What this does:** Issues a degree credential and verifies it with trust registry and expiration checks enabled.
+Trust-registry alignment is reflected on **`VerificationResult`** (e.g. **`UntrustedIssuer`**) and the **`trustRegistryValid`** extension when you import **`org.trustweave.trust.types`**. You can also query the registry explicitly inside **`trustWeave.trust { }`** (see the runnable example).
 
-**Outcome:** A positive result confirms both the issuer’s trust anchor and the credential’s validity window are satisfied.
-
-### Step 5: Set Up Delegation
+## 6. Trust paths
 
 ```kotlin
-// Company delegates credential issuance to HR department
-trustLayer.updateDid {
-    did(companyDid)
-    method(DidMethods.KEY)
-    addCapabilityDelegation("$hrDeptDid#key-1")
-}
+import org.trustweave.trust.types.VerifierIdentity
+import org.trustweave.trust.types.IssuerIdentity
+import org.trustweave.trust.types.TrustPath
 
-// Verify delegation chain
-val delegationResult = trustLayer.delegation {
-    verifyChain(delegatorDid = companyDid, delegateDid = hrDeptDid)
-}
-
-if (delegationResult.valid) {
-    println("✅ Delegation verified:")
-    println("   Path: ${delegationResult.path.joinToString(" -> ")}")
-} else {
-    println("❌ Delegation failed:")
-    delegationResult.errors.forEach { println("   - $it") }
-}
-```
-
-**What this does:** Adds capability delegation from the company to its HR department and validates the resulting delegation path.
-
-**Outcome:** A `valid` result proves the HR department may act on behalf of the company when issuing credentials.
-
-### Step 6: Issue Credential Using Delegated Authority
-
-```kotlin
-// HR department issues credential using delegated authority
-// First resolve HR DID to get key ID
-val hrDoc = trustLayer.resolveDid(hrDeptDid).getOrThrow()
-val hrKeyId = hrDoc.verificationMethod.firstOrNull()?.extractKeyId()
-    ?: throw IllegalStateException("No verification method found")
-
-import org.trustweave.trust.types.getOrThrow
-
-val employmentIssuanceResult = trustLayer.issue {
-    credential {
-        id("https://company.com/credentials/employment-456")
-        type("EmploymentCredential")
-        issuer(hrDeptDid) // HR issues on behalf of company
-        subject {
-            id(studentDid)
-            "employment" {
-                "company" to "Tech Corp"
-                "role" to "Software Engineer"
-                "startDate" to "2024-01-01"
-            }
-        }
-        issued(Instant.now())
-    }
-    signedBy(hrDeptDid)
-}
-
-val employmentCredential = employmentIssuanceResult.getOrThrow()
-
-// Verify credential with delegation check
-val employmentVerification = trustLayer.verify {
-    credential(employmentCredential)
-    checkTrustRegistry(true)
-    verifyDelegation(true)
-    checkExpiration(true)
-}
-
-println("Employment Credential Verification:")
-println("  Valid: ${employmentVerification.valid}")
-println("  Trust Registry Valid: ${employmentVerification.trustRegistryValid}")
-println("  Delegation Valid: ${employmentVerification.delegationValid}")
-```
-
-**What this does:** Issues an employment credential from the delegated HR DID and verifies it with both trust registry and delegation checks enabled.
-
-**Outcome:** Successful verification confirms the delegation chain and trust anchors are respected before the credential is accepted.
-
-### Step 7: Find Trust Paths
-
-```kotlin
-trustLayer.trust {
-    // Get all trusted issuers for a credential type
-    val educationIssuers = getTrustedIssuers("EducationCredential")
-    println("Trusted education issuers: ${educationIssuers.joinToString(", ")}")
-
-    // Find trust path between two DIDs (if trust relationships exist)
-    val trustPath = getTrustPath(universityDid, companyDid)
-    if (trustPath != null) {
-        println("Trust path found:")
-        println("  Path: ${trustPath.path.joinToString(" -> ")}")
-        println("  Trust Score: ${trustPath.trustScore}")
-        println("  Valid: ${trustPath.valid}")
-    } else {
-        println("No trust path found between university and company")
+trustWeave.trust {
+    when (
+        val path = findTrustPath(
+            VerifierIdentity(verifierDid),
+            IssuerIdentity(universityDid),
+        )
+    ) {
+        is TrustPath.Verified -> println(path.fullPath.joinToString { it.value })
+        is TrustPath.NotFound -> println(path.reason)
     }
 }
 ```
 
-**What this does:** Lists all trusted issuers for education credentials and attempts to compute a trust path between the university and company anchors.
+## Tests and templates
 
-**Outcome:** If a path exists you receive the ordered DIDs and trust score, helping you diagnose trust relationships before accepting credentials.
+- Integration tests: **`InMemoryTrustWeaveIntegrationTest`**, **`WebOfTrustIntegrationTest`** under **`trust/src/test/kotlin/org/trustweave/integration/`**.
+- Contributor templates: **[TrustWeave test templates](../contributing/testing/trustweave-test-templates.md)**.
 
-### Step 8: Update DID Documents with New Fields
+## See also
 
-```kotlin
-trustLayer.updateDid {
-    did(studentDid)
-    method(DidMethods.KEY)
-
-    // Add capability invocation for signing documents
-    addCapabilityInvocation("$studentDid#key-1")
-
-    // Add capability delegation for delegating to assistants
-    addCapabilityDelegation("$studentDid#key-2")
-
-    // Set JSON-LD context
-    context("https://www.w3.org/ns/did/v1", "https://example.com/context/v1")
-}
-
-println("✅ DID document updated with capability relationships and context")
-```
-
-**What this does:** Augments the student DID document with capability invocation/delegation relationships and an expanded JSON-LD context.
-
-**Outcome:** The student can now sign documents and delegate capabilities while verifiers understand the DID document structure.
-
-### Step 9: Use Proof Purpose Validation
-
-```kotlin
-// Update issuer DID to have assertionMethod relationship
-trustLayer.updateDid {
-    did(universityDid)
-    method(DidMethods.KEY)
-    addAssertionMethod("$universityDid#key-1")
-}
-
-// Issue credential with assertionMethod proof purpose
-import org.trustweave.trust.types.getOrThrow
-
-val validatedIssuanceResult = trustLayer.issue {
-    credential {
-        id("https://university.edu/credentials/validated-789")
-        type("EducationCredential")
-        issuer(universityDid)
-        subject {
-            id(studentDid)
-            "certification" {
-                "name" to "Certified Developer"
-                "level" to "Advanced"
-            }
-        }
-        issued(Instant.now())
-    }
-    signedBy(universityDid)
-    proofPurpose(ProofPurposes.ASSERTION_METHOD)
-}
-
-val validatedCredential = validatedIssuanceResult.getOrThrow()
-
-// Verify with proof purpose validation
-val proofPurposeVerification = trustLayer.verify {
-    credential(validatedCredential)
-    validateProofPurpose(true)
-    checkTrustRegistry(true)
-}
-
-println("Proof Purpose Validation:")
-println("  Valid: ${proofPurposeVerification.valid}")
-println("  Proof Purpose Valid: ${proofPurposeVerification.proofPurposeValid}")
-println("  Trust Registry Valid: ${proofPurposeVerification.trustRegistryValid}")
-
-**What this does:** Ensures the issuer’s DID advertises `assertionMethod`, issues a credential with that proof purpose, and validates the proof purpose alongside trust and expiration checks.
-
-**Outcome:** A `proofPurposeValid` flag of `true` confirms the credential’s proof aligns with the declared purpose, preventing misuse in other contexts.
-
-### Step 10: Complete Integration Example
-
-```kotlin
-// Complete workflow combining all features
-fun completeWebOfTrustWorkflow() = runBlocking {
-    val trustLayer = trustLayer {
-        keys { provider(IN_MEMORY) }
-        did { method(DidMethods.KEY) }
-        trust { provider(IN_MEMORY) }
-    }
-
-    // 1. Create DIDs
-    import org.trustweave.trust.types.getOrThrowDid
-    
-    val issuerDid = trustLayer.createDid { method(DidMethods.KEY) }.getOrThrowDid()
-    val holderDid = trustLayer.createDid { method(DidMethods.KEY) }.getOrThrowDid()
-
-    // 2. Set up trust anchor
-    trustLayer.trust {
-        addAnchor(issuerDid.value) {
-            credentialTypes("TestCredential")
-        }
-    }
-
-    // 3. Update issuer DID with assertionMethod
-    val updateResult = trustLayer.updateDid {
-        did(issuerDid.value)
-        method(DidMethods.KEY)
-        addAssertionMethod("${issuerDid.value}#key-1")
-    }
-    when (updateResult) {
-        is DidUpdateResult.Success -> { /* Success */ }
-        else -> throw IllegalStateException("Failed to update DID: ${updateResult.reason}")
-    }
-
-    // 4. Resolve issuer DID to get key ID
-    val issuerDoc = trustLayer.resolveDid(issuerDid).getOrThrow()
-    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
-        ?: throw IllegalStateException("No verification method found")
-
-    // 5. Issue credential
-    import org.trustweave.trust.types.getOrThrow
-    
-    val credential = trustLayer.issue {
-        credential {
-            id("https://example.com/credential-1")
-            type("TestCredential")
-            issuer(issuerDid)
-            subject {
-                id(holderDid.value)
-                "test" to "value"
-            }
-            issued(Instant.now())
-        }
-        signedBy(issuerDid)
-        proofPurpose(ProofPurposes.ASSERTION_METHOD)
-    }.getOrThrow()
-
-    // 6. Verify with all checks enabled
-    val result = trustLayer.verify {
-        credential(credential)
-        checkTrustRegistry(true)
-        validateProofPurpose(true)
-        checkExpiration(true)
-    }
-
-    // 7. Check results
-    println("Complete Verification Results:")
-    println("  Valid: ${result.valid}")
-    println("  Trust Registry Valid: ${result.trustRegistryValid}")
-    println("  Proof Purpose Valid: ${result.proofPurposeValid}")
-    println("  Proof Valid: ${result.proofValid}")
-    println("  Not Expired: ${result.notExpired}")
-
-    if (result.valid && result.trustRegistryValid && result.proofPurposeValid) {
-        println("✅ Credential verified successfully with all checks!")
-    }
-}
-```
-
-**What this does:** Demonstrates the full trust workflow in miniature—build a trust layer, establish anchors, issue a credential with proof purpose, and verify it with all checks enabled.
-
-**Outcome:** Use this function as a regression test to ensure future changes preserve the trust-layer guarantees.
-
-## Real-World Use Cases
-
-### University Credential Verification
-
-Universities can be added as trust anchors, allowing verifiers to automatically trust credentials issued by recognized institutions.
-
-```kotlin
-trustLayer.trust {
-    addAnchor(universityDid) {
-        credentialTypes("EducationCredential", "DegreeCredential", "CertificateCredential")
-        description("Accredited university")
-    }
-}
-```
-
-**Outcome:** Any verifier consulting the trust registry now recognises the university’s credentials automatically, reducing ad-hoc whitelists across institutions.
-
-### Corporate Delegation
-
-Companies can delegate credential issuance to HR departments, creating a hierarchical authority structure while maintaining centralized trust.
-
-```kotlin
-// CEO delegates to HR Director
-trustLayer.updateDid {
-    did(ceoDid)
-    addCapabilityDelegation("$hrDirectorDid#key-1")
-}
-
-// HR Director delegates to HR Manager
-trustLayer.updateDid {
-    did(hrDirectorDid)
-    addCapabilityDelegation("$hrManagerDid#key-1")
-}
-```
-
-**Outcome:** A delegation ladder forms so HR staff can issue credentials while the executive team retains ultimate control over capability revocation.
-
-### Multi-Party Trust Networks
-
-Multiple organizations can form trust networks where credentials issued by one trusted party are automatically trusted by others in the network.
-
-```kotlin
-// Create trust network
-trustLayer.trust {
-    addAnchor(organization1Did) {
-        credentialTypes("PartnershipCredential")
-    }
-    addAnchor(organization2Did) {
-        credentialTypes("PartnershipCredential")
-    }
-    addAnchor(organization3Did) {
-        credentialTypes("PartnershipCredential")
-    }
-
-    // Get all trusted partners
-    val partners = getTrustedIssuers("PartnershipCredential")
-    println("Trusted partners: ${partners.joinToString(", ")}")
-}
-```
-
-**Outcome:** A single query returns every organisation trusted for partnership credentials, making it easy to surface network relationships to auditors or dashboards.
-
-## Best Practices
-
-1. **Use Credential Type Filtering**: Specify credential types when adding trust anchors to limit trust scope
-2. **Verify Delegation Chains**: Always verify delegation chains when accepting delegated credentials
-3. **Check Trust Paths**: Verify trust paths before accepting credentials from unknown issuers
-4. **Update DID Documents**: Keep DID documents up-to-date with capability relationships
-5. **Use Proof Purpose Validation**: Enable proof purpose validation to ensure proofs are used correctly
-6. **Monitor Trust Scores**: Use trust scores to make informed decisions about credential acceptance
-7. **Regular Audits**: Periodically review and update trust anchors and delegation relationships
-
-## Error Handling
-
-```kotlin
-try {
-    val result = trustLayer.verify {
-        credential(credential)
-        checkTrustRegistry(true)
-        validateProofPurpose(true)
-        verifyDelegation(true)
-    }
-
-    if (!result.valid) {
-        println("Verification failed:")
-        result.errors.forEach { println("  - $it") }
-        result.warnings.forEach { println("  Warning: $it") }
-    }
-} catch (e: Exception) {
-    println("Verification error: ${e.message}")
-}
-```
-
-**Outcome:** Errors and warnings are surfaced explicitly so you can distinguish hard failures (invalid proofs, missing trust anchors) from advisory messages during troubleshooting.
-
-## See Also
-
-- [Trust Registry Documentation](../core-concepts/trust-registry.md)
-- [Delegation Documentation](../core-concepts/delegation.md)
-- [Proof Purpose Validation Documentation](../core-concepts/proof-purpose-validation.md)
-- [DID Documentation](../core-concepts/dids.md)
-- [Web of Trust Example](../../distribution/TrustWeave-examples/src/main/kotlin/com/geoknoesis/TrustWeave/examples/trust/WebOfTrustExample.kt)
-- [Delegation Chain Example](../../distribution/TrustWeave-examples/src/main/kotlin/com/geoknoesis/TrustWeave/examples/delegation/DelegationChainExample.kt)
-
-
+- Trust registry](../core-concepts/trust-registry.md)
+- Delegation](../core-concepts/delegation.md)
+- Proof purpose validation](../core-concepts/proof-purpose-validation.md)
+- DIDs](../core-concepts/dids.md)
+- API patterns — results vs exceptions](../getting-started/api-patterns.md)

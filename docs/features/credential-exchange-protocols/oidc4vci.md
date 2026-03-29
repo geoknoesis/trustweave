@@ -12,11 +12,11 @@ OIDC4VCI is a protocol that enables credential issuance using OpenID Connect flo
 
 ## Features
 
-- ✅ Credential offer creation
-- ✅ Credential request handling
-- ✅ Credential issuance
-- ✅ Credential issuer metadata discovery
-- ✅ Integration with protocol abstraction layer
+- Credential offer creation
+- Credential request handling
+- Credential issuance
+- Credential issuer metadata discovery
+- Integration with protocol abstraction layer
 
 ## Architecture
 
@@ -44,6 +44,8 @@ import org.trustweave.credential.oidc4vci.Oidc4VciService
 import org.trustweave.credential.oidc4vci.exchange.Oidc4VciExchangeProtocol
 import org.trustweave.credential.exchange.*
 import okhttp3.OkHttpClient
+import org.trustweave.credential.exchange.registry.ExchangeProtocolRegistries
+import org.trustweave.credential.exchange.ExchangeServices
 
 val kms = // Your KMS instance
 val httpClient = OkHttpClient()
@@ -56,16 +58,13 @@ val oidc4vciService = Oidc4VciService(
 
 val protocol = Oidc4VciExchangeProtocol(oidc4vciService)
 
-import org.trustweave.credential.exchange.registry.ExchangeProtocolRegistries
-import org.trustweave.credential.exchange.ExchangeServices
 
 val registry = ExchangeProtocolRegistries.default()
 registry.register(protocol)
 
 val exchangeService = ExchangeServices.createExchangeService(
     protocolRegistry = registry,
-    credentialService = credentialService,
-    didResolver = didResolver
+    credentialService = credentialService
 )
 ```
 
@@ -225,6 +224,6 @@ This implementation is designed to work with walt.id's `waltid-openid4vc` librar
 
 ## References
 
-- [OIDC4VCI Specification](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html)
-- [walt.id OpenID4VC Library](https://github.com/walt-id/waltid-openid4vc)
+- OIDC4VCI Specification](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html)
+- walt.id OpenID4VC Library](https://github.com/walt-id/waltid-openid4vc)
 

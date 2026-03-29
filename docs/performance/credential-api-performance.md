@@ -157,9 +157,9 @@ This document describes the performance characteristics of key operations in the
 ### Horizontal Scaling
 
 **Stateless Operations:**
-- ✅ Credential issuance: Fully stateless, scales horizontally
-- ✅ Credential verification: Fully stateless, scales horizontally
-- ✅ Presentation creation: Fully stateless, scales horizontally
+- Credential issuance: Fully stateless, scales horizontally
+- Credential verification: Fully stateless, scales horizontally
+- Presentation creation: Fully stateless, scales horizontally
 
 **Stateful Considerations:**
 - DID resolution cache (if shared)

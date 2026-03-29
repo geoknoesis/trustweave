@@ -11,7 +11,7 @@ This section provides migration guides for upgrading between TrustWeave versions
 
 | TrustWeave Version | Kotlin | Java | Gradle | Status |
 |------------------|--------|------|--------|--------|
-| 1.0.0-SNAPSHOT | 2.2.0+ | 21+ | 8.5+ | Current |
+| 0.6.0 | 2.2.0+ | 21+ | 8.5+ | Current |
 
 ## Deprecation Policy
 

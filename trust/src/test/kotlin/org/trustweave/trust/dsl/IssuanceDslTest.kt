@@ -1,5 +1,7 @@
 package org.trustweave.trust.dsl
 
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.trust.types.getOrThrow
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.resolver.DidResolver
@@ -11,7 +13,6 @@ import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.createTestCredentialService
 import org.trustweave.trust.dsl.credential.credential
 import org.trustweave.credential.model.ProofType
-import org.trustweave.testkit.getOrFail
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -30,7 +31,7 @@ class IssuanceDslTest {
     @BeforeEach
     fun setUp() = runBlocking {
         kms = InMemoryKeyManagementService()
-        assertNotNull(kms) { "KMS must be initialized before creating trust layer" }
+        assertNotNull(kms) { "KMS must be initialized before creating TrustWeave" }
 
         // Capture KMS reference for closure
         val kmsRef = kms
@@ -81,7 +82,7 @@ class IssuanceDslTest {
                 defaultProofType(ProofType.Ed25519Signature2020)
             }
             // Set CredentialService as issuer for issuance builder
-            issuer(credentialService)
+            credentialService(credentialService)
         }
     }
 
@@ -106,7 +107,7 @@ class IssuanceDslTest {
                 issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDidId, keyId = issuerKey.id.value)
-        }.getOrFail()
+        }.getOrThrow()
 
         assertNotNull(issuedCredential)
         assertTrue(issuedCredential.type.any { it.value == "PersonCredential" })
@@ -140,7 +141,7 @@ class IssuanceDslTest {
         val issuedCredential = trustWeave.issue {
             credential(credential)
             signedBy(issuerDid = issuerDidId, keyId = issuerKey.id.value)
-        }.getOrFail()
+        }.getOrThrow()
 
         assertNotNull(issuedCredential)
         assertNotNull(issuedCredential.proof)
@@ -167,7 +168,7 @@ class IssuanceDslTest {
             }
             signedBy(issuerDid = issuerDidId, keyId = issuerKey.id.value)
             withProof(org.trustweave.credential.format.ProofSuiteId.VC_LD)
-        }.getOrFail()
+        }.getOrThrow()
 
         assertNotNull(issuedCredential.proof)
         assertTrue(issuedCredential.proof is org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof)
@@ -197,7 +198,7 @@ class IssuanceDslTest {
             signedBy(issuerDid = issuerDidId, keyId = issuerKey.id.value)
             challenge("challenge-123")
             domain("example.com")
-        }.getOrFail()
+        }.getOrThrow()
 
         assertNotNull(issuedCredential.proof)
         assertTrue(issuedCredential.proof is org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof)

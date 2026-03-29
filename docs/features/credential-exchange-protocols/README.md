@@ -24,8 +24,7 @@ registry.register(DidCommExchangeProtocol(didCommService))
 
 val exchangeService = ExchangeServices.createExchangeService(
     protocolRegistry = registry,
-    credentialService = credentialService,
-    didResolver = didResolver
+    credentialService = credentialService
 )
 
 // Use any protocol with the same API
@@ -101,10 +100,7 @@ val offer = when (offerResult) {
 - **[Implementation Guide](./implementation-guide.md)** - How to implement new protocols
 
 ### Advanced Topics
-- **[Production Readiness](./PRODUCTION_READINESS.md)** - Production deployment guide
-- **[Final Evaluation](./FINAL_EVALUATION.md)** - Complete production readiness assessment
 - **[Storage & Secret Resolver](./STORAGE_AND_SECRET_RESOLVER.md)** - Persistent storage and SecretResolver
-- **[Advanced Features Plan](./ADVANCED_FEATURES_IMPLEMENTATION_PLAN.md)** - Implementation plan for advanced features
 - **[Reusable Components](./REUSABLE_COMPONENTS.md)** - Components reusable across protocols
 
 ## Protocol Comparison
@@ -122,13 +118,11 @@ val offer = when (offerResult) {
 ## Production Status
 
 **All plugins are production-ready** with:
-- ✅ Production-grade implementations
-- ✅ No placeholder/mock code in production paths
-- ✅ Integration with mature libraries
-- ✅ Proper error handling
-- ✅ Complete documentation
-
-See [Production Readiness](./PRODUCTION_READINESS.md) and [Final Evaluation](./FINAL_EVALUATION.md) for detailed assessments.
+- Production-grade implementations
+- No placeholder/mock code in production paths
+- Integration with mature libraries
+- Proper error handling
+- Complete documentation
 
 ## Getting Started
 

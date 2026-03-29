@@ -471,23 +471,22 @@ val engines = mapOf(
 )
 
 val service = DefaultCredentialService(
-    engines = engines + createBuiltInEngines(),
-    didResolver = didResolver
+    engines = engines + createBuiltInEngines()
 )
 
 // Or via provider discovery
 val service = credentialService(
-    didResolver = didResolver,
+    
     // Custom engines discovered via ServiceLoader
 )
 ```
 
 ## Related Documentation
 
-- [Proofs and Proof Engines](../core-concepts/proofs-and-proof-engines.md) - User-facing proof documentation
-- [SPI Documentation](./spi.md) - Service Provider Interface details
-- [Key Management](../core-concepts/key-management.md) - Key management for signing
-- [Verifiable Credentials](../core-concepts/verifiable-credentials.md) - VC data model
+- Proofs and Proof Engines](../core-concepts/proofs-and-proof-engines.md) - User-facing proof documentation
+- SPI Documentation](./spi.md) - Service Provider Interface details
+- Key Management](../core-concepts/key-management.md) - Key management for signing
+- Verifiable Credentials](../core-concepts/verifiable-credentials.md) - VC data model
 
 
 

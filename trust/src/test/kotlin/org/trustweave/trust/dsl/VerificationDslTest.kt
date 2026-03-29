@@ -198,6 +198,21 @@ class VerificationDslTest {
             }
         }
     }
+
+    @Test
+    fun `test verify credential direct overload`() = runBlocking {
+        val credential = credential {
+            type("PersonCredential")
+            issuer("did:key:issuer")
+            subject {
+                id("did:key:subject")
+            }
+            issued(Clock.System.now())
+        }
+
+        val result = trustWeave.verify(credential)
+        assertNotNull(result)
+    }
 }
 
 

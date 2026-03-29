@@ -48,6 +48,11 @@ package-lock.json
 # Ruby/Jekyll
 Gemfile.lock
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
 # Gradle Node Plugin downloads
 build/nodejs/
 build/npm/

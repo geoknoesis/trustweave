@@ -10,7 +10,7 @@ dependencies {
 
 
     // Microsoft Graph API client
-    implementation("com.microsoft.graph:microsoft-graph:5.62.0")
+    implementation("com.microsoft.graph:microsoft-graph:6.63.0")
 
     // Azure Identity for authentication
     implementation("com.azure:azure-identity:1.10.0")

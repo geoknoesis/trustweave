@@ -18,7 +18,7 @@ dependencies {
 
 
     // Web3j for Ethereum blockchain interaction
-    implementation("org.web3j:core:4.10.0")
+    implementation("org.web3j:core:5.0.2")
 
     // Test dependencies
     testImplementation(project(":testkit"))

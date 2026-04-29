@@ -14,7 +14,7 @@ dependencies {
 
 
     // AWS S3
-    implementation(platform("software.amazon.awssdk:bom:2.20.0"))
+    implementation(platform("software.amazon.awssdk:bom:2.43.0"))
     implementation("software.amazon.awssdk:s3")
 
     // Azure Blob Storage

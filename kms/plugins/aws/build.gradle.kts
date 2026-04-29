@@ -14,7 +14,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
 
     // AWS SDK v2 for KMS
-    implementation(platform("software.amazon.awssdk:bom:2.20.0"))
+    implementation(platform("software.amazon.awssdk:bom:2.43.0"))
     implementation("software.amazon.awssdk:kms")
     implementation("software.amazon.awssdk:auth")
 

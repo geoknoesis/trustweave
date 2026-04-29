@@ -102,7 +102,7 @@ registry.register(keyDidMethod)
 registry.register(webDidMethod)
 
 // Auto-register from SPI providers
-val registry = DidMethodRegistry.autoRegister(kms)
+val registry = DidMethodRegistry.autoRegister(kms).registry
 
 // Access methods
 val method = registry["key"]  // Using bracket notation

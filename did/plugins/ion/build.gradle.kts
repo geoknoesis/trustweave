@@ -16,7 +16,7 @@ dependencies {
 
 
     // HTTP client for ION node communication
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation(libs.okhttp)
 
     // JSON processing
     implementation("com.google.code.gson:gson:2.10.1")

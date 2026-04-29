@@ -32,7 +32,8 @@ import java.util.ServiceLoader
  * registry.register(KeyDidMethod(kms))
  * 
  * // Auto-register from SPI providers
- * val registry = DidMethodRegistry.autoRegister(kms)
+ * val auto = DidMethodRegistry.autoRegister(kms)
+ * val registry = auto.registry
  * 
  * // Use operators
  * val method = registry["key"]
@@ -160,23 +161,25 @@ class DidMethodRegistry {
          * @param kms Optional KMS to use for methods that require it. If null, methods
          *   will attempt to discover KMS via SPI or fail if required.
          * @param options Optional creation options to pass to providers
-         * @return A registry with all discovered methods registered
+         * @return Registry plus structured [DidMethodRegistryAutoRegisterResult.failures] for SPI/discovery issues
          *
          * **Example:**
          * ```kotlin
          * val kms = InMemoryKeyManagementService()
-         * val registry = DidMethodRegistry.autoRegister(kms)
-         * // All SPI-discovered methods are now registered
+         * val result = DidMethodRegistry.autoRegister(kms)
+         * val registry = result.registry
+         * // Inspect result.failures if expected methods are missing
          * ```
          */
         suspend fun autoRegister(
             kms: KeyManagementService? = null,
             options: DidCreationOptions = DidCreationOptions()
-        ): DidMethodRegistry {
+        ): DidMethodRegistryAutoRegisterResult {
             val registry = DidMethodRegistry()
+            val failures = mutableListOf<DidMethodAutoRegisterFailure>()
 
             try {
-                val providers = ServiceLoader.load(DidMethodProvider::class.java)
+                val providers = ServiceLoader.load(DidMethodProvider::class.java).toList()
                 val creationOptions = if (kms != null) {
                     options.copy(
                         additionalProperties = options.additionalProperties + ("kms" to kms)
@@ -185,32 +188,64 @@ class DidMethodRegistry {
                     options
                 }
 
-                // Collect all unique method names from all providers
                 val methodsToRegister = mutableSetOf<String>()
                 providers.forEach { provider ->
                     methodsToRegister.addAll(provider.supportedMethods)
                 }
 
-                // Create and register each method
                 for (methodName in methodsToRegister) {
-                    // Find first provider that supports this method
                     val provider = providers.find { methodName in it.supportedMethods }
-                    if (provider != null) {
-                        // Check if environment variables are available (optional)
-                        if (provider.hasRequiredEnvironmentVariables()) {
-                            val method = provider.create(methodName, creationOptions)
-                            if (method != null) {
-                                registry.register(method)
-                            }
+                    if (provider == null) {
+                        failures.add(
+                            DidMethodAutoRegisterFailure(
+                                phase = "resolve_provider",
+                                message = "No DidMethodProvider found for method '$methodName'",
+                            )
+                        )
+                        continue
+                    }
+                    if (!provider.hasRequiredEnvironmentVariables()) {
+                        failures.add(
+                            DidMethodAutoRegisterFailure(
+                                phase = "environment",
+                                message = "Skipped method '$methodName': provider ${provider::class.java.name} missing required environment variables",
+                            )
+                        )
+                        continue
+                    }
+                    try {
+                        val method = provider.create(methodName, creationOptions)
+                        if (method != null) {
+                            registry.register(method)
+                        } else {
+                            failures.add(
+                                DidMethodAutoRegisterFailure(
+                                    phase = "create",
+                                    message = "Provider ${provider::class.java.name} returned null for method '$methodName'",
+                                )
+                            )
                         }
+                    } catch (e: Exception) {
+                        failures.add(
+                            DidMethodAutoRegisterFailure(
+                                phase = "create",
+                                message = "Provider ${provider::class.java.name} failed for method '$methodName': ${e.message ?: e::class.java.simpleName}",
+                                cause = e,
+                            )
+                        )
                     }
                 }
             } catch (e: Exception) {
-                // SPI classes not available or error during discovery
-                // Continue with empty registry - user can register manually
+                failures.add(
+                    DidMethodAutoRegisterFailure(
+                        phase = "discovery",
+                        message = "DID method SPI discovery failed: ${e.message ?: e::class.java.simpleName}",
+                        cause = e,
+                    )
+                )
             }
 
-            return registry
+            return DidMethodRegistryAutoRegisterResult(registry = registry, failures = failures.toList())
         }
 
         /**

@@ -54,7 +54,7 @@ fun main() = runBlocking {
     val credentialService: CredentialService = credentialService(didResolver = didResolver)
 
     val registry = ExchangeProtocolRegistries.default()
-    val didCommService = DidCommFactory.createInMemoryService(kms) { didStr ->
+    val didCommService = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms) { didStr ->
         val did = Did(didStr)
         DidDocument(id = did, verificationMethod = emptyList())
     }
@@ -508,7 +508,7 @@ fun multipleProtocolsExample() = runBlocking {
     val credentialService = credentialService(didResolver = didResolver)
 
     // DIDComm
-    val didCommService = DidCommFactory.createInMemoryService(kms) { didStr ->
+    val didCommService = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms) { didStr ->
         DidDocument(id = Did(didStr), verificationMethod = emptyList())
     }
     registry.register(DidCommExchangeProtocol(didCommService))
@@ -659,7 +659,7 @@ fun setupExchangeService(): ExchangeService {
     val credentialService: CredentialService = credentialService(didResolver = didResolver)
 
     val registry = ExchangeProtocolRegistries.default()
-    val didCommService = DidCommFactory.createInMemoryService(kms) { didStr ->
+    val didCommService = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms) { didStr ->
         DidDocument(id = Did(didStr), verificationMethod = emptyList())
     }
     registry.register(DidCommExchangeProtocol(didCommService))

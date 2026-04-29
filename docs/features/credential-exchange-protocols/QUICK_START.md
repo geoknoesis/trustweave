@@ -53,7 +53,7 @@ fun main() = runBlocking {
 
         // Step 2: Create registry and register protocol
         val registry = ExchangeProtocolRegistries.default()
-        val didCommService = DidCommFactory.createInMemoryService(kms) { didStr ->
+        val didCommService = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms) { didStr ->
             val did = Did(didStr)
             DidDocument(id = did, verificationMethod = emptyList())
         }
@@ -274,7 +274,7 @@ val resolveDid: suspend (String) -> DidDocument? = { did ->
 val registry = ExchangeProtocolRegistries.default()
 
 // Create and register DIDComm protocol
-val didCommService = DidCommFactory.createInMemoryService(kms, resolveDid)
+val didCommService = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms, resolveDid)
 registry.register(DidCommExchangeProtocol(didCommService))
 
 // Verify registration

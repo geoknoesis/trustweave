@@ -17,7 +17,7 @@ dependencies {
     implementation("org.bitcoinj:bitcoinj-core:0.16.2")
 
     // HTTP client
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation(libs.okhttp)
 
     // Test dependencies
     testImplementation(project(":testkit"))

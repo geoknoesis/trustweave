@@ -7,11 +7,11 @@ pluginManagement {
     }
 
     // Declare plugin versions here so subprojects can use them without specifying versions.
-    // For example, subprojects can use kotlin("jvm") and Gradle will automatically use version 2.2.21.
+    // For example, subprojects can use kotlin("jvm") and Gradle will automatically use version 2.3.21.
     plugins {
-        kotlin("jvm") version "2.2.21"
-        kotlin("plugin.serialization") version "2.2.21"
-        id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
+        kotlin("jvm") version "2.3.21"
+        kotlin("plugin.serialization") version "2.3.21"
+        id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
     }
 }
 

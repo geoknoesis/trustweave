@@ -96,7 +96,7 @@ val credentialService: CredentialService = credentialService(didResolver = didRe
 val registry = ExchangeProtocolRegistries.default()
 
 // Register protocol
-val didCommService = DidCommFactory.createInMemoryService(kms) { didStr ->
+val didCommService = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms) { didStr ->
     val did = Did(didStr)
     DidDocument(id = did, verificationMethod = emptyList())
 }

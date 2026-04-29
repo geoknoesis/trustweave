@@ -22,10 +22,10 @@ This plugin implements the DIDComm V2 protocol specification, enabling:
 - Protocol message builders (Issue Credential, Present Proof, Basic Message)
 - In-memory message storage
 - Thread-based message organization
-- Crypto Implementation**:
-  - Placeholder implementation included (for development)
-  - Production implementation ready (requires `didcomm-java` library)
-  - See [Integration Guide](./didcomm-integration-guide.md) for production setup
+- **Crypto**:
+  - **Default path**: `DidCommCryptoDidcomm` uses [didcomm-java](https://github.com/sicpa-dlab/didcomm-java) (`org.didcommx:didcomm`) for pack/unpack (AuthCrypt / ECDH-1PU per library defaults; `forward(false)` in the integration layer).
+  - **Secrets**: You must supply a `SecretResolver` (private JWK material per `kid`) when calling `DidCommFactory.createInMemoryService` / `createPacker`.
+  - **Placeholder**: `DidCommFactory.createInMemoryServiceWithPlaceholderCrypto` for local demos only (not interoperable).
 
 ## Installation
 
@@ -55,8 +55,14 @@ val resolveDid: suspend (String) -> DidDocument? = { did ->
     resolveDidDocument(did)
 }
 
-// Create DIDComm service
-val didcomm = DidCommFactory.createInMemoryService(kms, resolveDid)
+// Build a SecretResolver (e.g. MapSecretResolver) with private keys for each agreement key `kid`
+val secretResolver: org.didcommx.didcomm.secret.SecretResolver = TODO("populate MapSecretResolver or KMS-backed resolver")
+
+// Create DIDComm service (didcomm-java crypto)
+val didcomm = DidCommFactory.createInMemoryService(kms, resolveDid, secretResolver)
+
+// Or, for non-cryptographic demos only:
+// val didcomm = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms, resolveDid)
 ```
 
 ### Sending a Basic Message
@@ -214,9 +220,9 @@ val threadMessages = didcomm.getThreadMessages(thid)
 
 - **DidCommMessage**: Core message model following JWM format
 - **DidCommEnvelope**: Encrypted message envelope
-- **DidCommCrypto**: Placeholder cryptographic operations (for development)
-- **DidCommCryptoProduction**: Production crypto using `didcomm-java` library
-- **DidCommCryptoAdapter**: Adapter to switch between implementations
+- **DidCommCrypto**: Placeholder cryptographic operations (non-standard; development only)
+- **DidCommCryptoDidcomm**: Pack/unpack via `org.didcommx.didcomm.DIDComm`
+- **DidCommCryptoAdapter**: Selects placeholder vs didcomm-java (`useDidcommJava` + `SecretResolver`)
 - **DidCommPacker**: Message packing/unpacking
 - **DidCommService**: Service interface for messaging
 - **Protocol Helpers**: Builders for common protocols
@@ -234,10 +240,9 @@ DIDComm V2 uses:
 - **AES-256-GCM**: Content encryption
 - **AES-256-KW**: Key wrapping
 
-**Implementation Status:**
-- Placeholder implementation included (returns dummy data)
-- Production implementation available via `didcomm-java` library
-- See [Crypto Implementation Notes](./didcomm-crypto-implementation-notes.md) for details
+**Implementation status**
+- Interoperable encryption uses **didcomm-java**; DID documents are mapped from TrustWeave models (`TrustWeaveDidDocMapper`).
+- Mediators: the TrustWeave integration sets `forward(false)` on pack; enable forwarding in a custom layer if you use mediators.
 
 ## Protocol Support
 
@@ -258,27 +263,17 @@ DIDComm V2 uses:
 
 - `message`: Simple text messages
 
-## Production Setup
+## Production setup
 
-⚠️ **Important**: The default implementation uses placeholder crypto (returns dummy data). For production:
-
-1. **Add didcomm-java dependency** to `build.gradle.kts`:
+1. **Dependency**: The plugin already depends on `org.didcommx:didcomm:0.3.2`.
+2. **Secrets**: Implement `SecretResolver` so every `kid` used in encryption can be resolved to a `Secret` (typically `VerificationMethodType.JSON_WEB_KEY_2020` + JWK including private `d`).
+3. **DID documents**: Resolve `DidDocument`s that list **key agreement** keys compatible with the sender (same curve family as didcomm-java expects, e.g. X25519 `JsonWebKey2020` in tests).
+4. **Factory**:
    ```kotlin
-   implementation("org.didcommx:didcomm:0.3.2")
+   val didcomm = DidCommFactory.createInMemoryService(kms, resolveDid, secretResolver)
    ```
 
-2. **Uncomment production code** in `DidCommCryptoProduction.kt`
-
-3. **Enable production crypto** in factory:
-   ```kotlin
-   val didcomm = DidCommFactory.createInMemoryService(
-       kms = kms,
-       resolveDid = resolveDid,
-       useProductionCrypto = true
-   )
-   ```
-
-See [Integration Guide](./didcomm-integration-guide.md) for detailed instructions.
+See [Integration Guide](./didcomm-integration-guide.md) and [STORAGE_AND_SECRET_RESOLVER](./STORAGE_AND_SECRET_RESOLVER.md) for resolver patterns.
 
 ## Limitations
 

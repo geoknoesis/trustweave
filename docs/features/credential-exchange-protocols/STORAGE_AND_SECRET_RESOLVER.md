@@ -88,7 +88,8 @@ val dataSource = HikariDataSource().apply {
 val storage = PostgresDidCommMessageStorage(dataSource)
 
 // Create packer
-val packer = DidCommFactory.createPacker(kms, resolveDid)
+val packer = DidCommFactory.createPackerWithPlaceholderCrypto(kms, resolveDid)
+// Or with didcomm-java: DidCommFactory.createPacker(kms, resolveDid, secretResolver)
 
 // Create database-backed service
 val didCommService = DidCommFactory.createDatabaseService(
@@ -156,7 +157,7 @@ DidCommService
 ### Secret Resolver Architecture
 
 ```
-DidCommCryptoProduction
+DidCommCryptoDidcomm
     │
     └── SecretResolver
             ├── SecretResolverInMemory (default)

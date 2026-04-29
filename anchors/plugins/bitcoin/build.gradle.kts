@@ -15,10 +15,10 @@ dependencies {
     implementation("org.bitcoinj:bitcoinj-core:0.16.2")
 
     // HTTP client
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation(libs.okhttp)
 
     // JSON serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+    implementation(libs.kotlinx.serialization.json)
 
     // Test dependencies
     testImplementation(project(":testkit"))

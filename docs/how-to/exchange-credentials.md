@@ -140,7 +140,7 @@ val resolveDid: suspend (String) -> DidDocument? = { did ->
 }
 
 // Create protocol services
-val didCommService = DidCommFactory.createInMemoryService(kms, resolveDid)
+val didCommService = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms, resolveDid)
 val oidc4vciService = Oidc4VciService(...)
 val chapiService = ChapiService(...)
 ```

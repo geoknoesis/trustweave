@@ -17,10 +17,10 @@ dependencies {
     implementation("com.bettercloud:vault-java-driver:5.1.0")
 
     // HTTP client for Vault API
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation(libs.okhttp)
 
     // JSON serialization
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
+    implementation(libs.jackson.module.kotlin)
     implementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
 
     // Logging

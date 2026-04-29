@@ -17,7 +17,7 @@ dependencies {
 
 
     // HTTP client for Cheqd network integration
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation(libs.okhttp)
 
     // Test dependencies
     testImplementation(project(":testkit"))

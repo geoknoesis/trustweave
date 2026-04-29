@@ -197,7 +197,7 @@ sequenceDiagram
 val registry = CredentialExchangeProtocolRegistry()
 
 // Register DIDComm
-val didCommService = DidCommFactory.createInMemoryService(kms, resolveDid)
+val didCommService = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms, resolveDid)
 registry.register(DidCommExchangeProtocol(didCommService))
 
 // Offer credential

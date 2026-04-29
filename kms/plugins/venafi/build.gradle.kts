@@ -10,10 +10,10 @@ dependencies {
 
 
     // HTTP client for Venafi API
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation(libs.okhttp)
 
     // JSON serialization
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
+    implementation(libs.jackson.module.kotlin)
 
     // Test dependencies
     testImplementation(project(":testkit"))

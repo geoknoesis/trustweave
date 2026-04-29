@@ -88,7 +88,7 @@ class DidCommServiceTest {
             )
         }
 
-        val service = DidCommFactory.createInMemoryService(kms, resolveDid)
+        val service = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms, resolveDid)
 
         val message = BasicMessageProtocol.createBasicMessage(
             fromDid = "did:key:alice",
@@ -129,7 +129,7 @@ class DidCommServiceTest {
             )
         }
 
-        val service = DidCommFactory.createInMemoryService(kms, resolveDid)
+        val service = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms, resolveDid)
 
         val thid = "thread-123"
 

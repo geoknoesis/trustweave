@@ -6,6 +6,7 @@ import org.trustweave.credential.CredentialService
 import org.trustweave.credential.revocation.CredentialRevocationManager
 import org.trustweave.did.DidMethod
 import org.trustweave.did.KeyAlgorithm
+import org.trustweave.did.registry.DidMethodAutoRegisterFailure
 import org.trustweave.did.registry.DidMethodRegistry
 import org.trustweave.did.resolver.DidResolver
 import org.trustweave.did.spi.DidMethodProvider
@@ -16,6 +17,7 @@ import org.trustweave.trust.TrustRegistry
 import org.trustweave.trust.dsl.builders.AnchorConfig
 import org.trustweave.trust.dsl.builders.DidMethodConfig
 import org.trustweave.trust.services.TrustRegistryFactory
+import org.slf4j.LoggerFactory
 import java.util.ServiceLoader
 
 /**
@@ -26,6 +28,7 @@ import java.util.ServiceLoader
  * auto-discovery, KMS setup, credential service creation, and registry wiring live here.
  */
 internal object TrustWeaveFactory {
+    private val logger = LoggerFactory.getLogger(TrustWeaveFactory::class.java)
 
     /**
      * Build a [TrustWeaveConfig] from the provided builder state.
@@ -47,8 +50,13 @@ internal object TrustWeaveFactory {
         val didRegistry = state.didRegistry
 
         // Auto-register DID methods from SPI
-        val autoRegisteredRegistry = DidMethodRegistry.autoRegister(nonNullKms)
-        for ((methodName, method) in autoRegisteredRegistry.getAllMethods()) {
+        val autoRegisterResult = DidMethodRegistry.autoRegister(nonNullKms)
+        if (autoRegisterResult.hasFailures) {
+            for (failure in autoRegisterResult.failures) {
+                logDidMethodAutoRegisterFailure(failure)
+            }
+        }
+        for ((methodName, method) in autoRegisterResult.registry.getAllMethods()) {
             if (methodName !in didRegistry) {
                 didRegistry.register(method)
             }
@@ -237,6 +245,28 @@ internal object TrustWeaveFactory {
                     is SignResult.Failure.Error -> result.reason
                 }
                 throw IllegalStateException("Signing failed: $reason")
+            }
+        }
+    }
+
+    private fun logDidMethodAutoRegisterFailure(failure: DidMethodAutoRegisterFailure) {
+        val msg = "DidMethod SPI auto-register [{}]: {}"
+        val phase = failure.phase
+        val text = failure.message
+        val cause = failure.cause
+        if (phase == "environment") {
+            if (logger.isDebugEnabled) {
+                if (cause != null) {
+                    logger.debug(msg, phase, text, cause)
+                } else {
+                    logger.debug(msg, phase, text)
+                }
+            }
+        } else {
+            if (cause != null) {
+                logger.warn(msg, phase, text, cause)
+            } else {
+                logger.warn(msg, phase, text)
             }
         }
     }

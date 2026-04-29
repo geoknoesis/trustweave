@@ -178,9 +178,7 @@ class DidCommPacker(
             ?: throw IllegalArgumentException("Missing 'type' in message")
 
         val from = json["from"]?.jsonPrimitive?.content
-        val to = json["to"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
-            ?: json["to"]?.jsonPrimitive?.content?.let { listOf(it) }
-            ?: emptyList()
+        val to = json["to"].asStringList()
 
         val body = json["body"]?.jsonObject ?: buildJsonObject { }
         val created = json["created_time"]?.jsonPrimitive?.content
@@ -198,14 +196,14 @@ class DidCommPacker(
                 data = org.trustweave.credential.didcomm.models.DidCommAttachmentData(
                     base64 = dataObj["base64"]?.jsonPrimitive?.content,
                     json = dataObj["json"],
-                    links = dataObj["links"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
+                    links = dataObj["links"].asStringListOrNull(),
                 )
             )
         } ?: emptyList()
 
         val thid = json["thid"]?.jsonPrimitive?.content
         val pthid = json["pthid"]?.jsonPrimitive?.content
-        val ack = json["ack"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
+        val ack = json["ack"].asStringListOrNull()
 
         return DidCommMessage(
             id = id,
@@ -282,4 +280,24 @@ class DidCommPacker(
         }
     }
 }
+
+/**
+ * DIDComm allows a string or JSON array of strings. kotlinx.serialization.json 1.9+ throws when
+ * [JsonElement.jsonArray] is used on a non-array element, so we branch on the runtime type.
+ */
+private fun JsonElement?.asStringList(): List<String> =
+    when (this) {
+        null -> emptyList()
+        is JsonArray -> mapNotNull { (it as? JsonPrimitive)?.content }
+        is JsonPrimitive -> listOf(this.content)
+        else -> emptyList()
+    }
+
+private fun JsonElement?.asStringListOrNull(): List<String>? =
+    when (this) {
+        null -> null
+        is JsonArray -> mapNotNull { (it as? JsonPrimitive)?.content }
+        is JsonPrimitive -> listOf(this.content)
+        else -> null
+    }
 

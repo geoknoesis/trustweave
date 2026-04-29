@@ -16,7 +16,7 @@ dependencies {
 
 
     // HTTP client for AT Protocol integration
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation(libs.okhttp)
 
     // Test dependencies
     testImplementation(project(":testkit"))

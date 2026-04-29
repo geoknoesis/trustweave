@@ -20,7 +20,7 @@ This document summarizes the DIDComm V2 implementation for TrustWeave.
    - `DidCommAttachment`: Message attachments for credentials/presentations
 
 2. **Cryptography** (`crypto/`)
-   - `DidCommCrypto`: ECDH-1PU key agreement and AES-256-GCM encryption
+   - `DidCommCryptoDidcomm`: pack/unpack via didcomm-java; `DidCommCrypto`: placeholder only
    - Note**: Uses placeholder implementations for ECDH-1PU. For production, integrate a full DIDComm library.
 
 3. **Message Packing** (`packing/`)
@@ -132,7 +132,7 @@ import org.trustweave.testkit.InMemoryKeyManagementService
 val kms = InMemoryKeyManagementService()
 val resolveDid: suspend (String) -> DidDocument? = { /* resolve DID */ }
 
-val didcomm = DidCommFactory.createInMemoryService(kms, resolveDid)
+val didcomm = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms, resolveDid)
 
 // Send a basic message
 val message = BasicMessageProtocol.createBasicMessage(

@@ -65,7 +65,7 @@ If you're using protocol-specific APIs directly, you can migrate to the protocol
 
 ```kotlin
 // Direct DIDComm usage
-val didCommService = DidCommFactory.createInMemoryService(kms, resolveDid)
+val didCommService = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms, resolveDid)
 val offer = didCommService.createOffer(
     issuerDid = "did:key:issuer",
     holderDid = "did:key:holder",
@@ -78,7 +78,7 @@ val offer = didCommService.createOffer(
 ```kotlin
 // Using protocol abstraction
 val registry = ExchangeProtocolRegistries.default()
-val didCommService = DidCommFactory.createInMemoryService(kms, resolveDid)
+val didCommService = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms, resolveDid)
 registry.register(DidCommExchangeProtocol(didCommService))
 
 val exchangeService = ExchangeServices.createExchangeService(
@@ -186,7 +186,7 @@ val offer = when (offerResult) {
 
 1. **Register DIDComm protocol:**
    ```kotlin
-   val didCommService = DidCommFactory.createInMemoryService(kms, resolveDid)
+   val didCommService = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms, resolveDid)
    registry.register(DidCommExchangeProtocol(didCommService))
    ```
 
@@ -242,7 +242,7 @@ val offer = when (offerResult) {
 
 **Before:**
 ```kotlin
-val didCommService = DidCommFactory.createInMemoryService(kms, resolveDid)
+val didCommService = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms, resolveDid)
 ```
 
 **After:**

@@ -5,6 +5,12 @@ plugins {
 
 group = "org.trustweave.credentials"
 
+// org.didcommx:didcomm is a fat JAR that embeds com.nimbusds.* (built against ~9.16-preview).
+// A separate nimbus-jose-jwt on the classpath causes split packages / NoSuchMethodError at runtime.
+configurations.configureEach {
+    exclude(group = "com.nimbusds", module = "nimbus-jose-jwt")
+}
+
 dependencies {
     // Credential API (includes exchange API)
     implementation(project(":credentials:credential-api"))
@@ -21,7 +27,6 @@ dependencies {
     // Cryptography
     implementation(libs.bouncycastle.prov)
     implementation(libs.bouncycastle.pkix)
-    implementation(libs.nimbus.jose.jwt)
 
     // DIDComm library (production crypto implementation)
     implementation("org.didcommx:didcomm:0.3.2")

@@ -15,7 +15,7 @@ dependencies {
     implementation("org.web3j:core:4.9.8")
 
     // HTTP client for zkSync API
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation(libs.okhttp)
 
     // Test dependencies
     testImplementation(project(":testkit"))

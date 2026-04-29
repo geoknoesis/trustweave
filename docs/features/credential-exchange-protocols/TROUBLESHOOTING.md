@@ -26,7 +26,7 @@ ExchangeException.ProtocolNotRegistered: Protocol 'didcomm' not registered. Avai
 1. **Register the protocol:**
    ```kotlin
    val registry = ExchangeProtocolRegistries.default()
-   val didCommService = DidCommFactory.createInMemoryService(kms, resolveDid)
+   val didCommService = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms, resolveDid)
    registry.register(DidCommExchangeProtocol(didCommService))
    ```
 

@@ -19,7 +19,7 @@ import org.trustweave.credential.exchange.result.ExchangeResult
 
 // Create registry and exchange service
 val registry = ExchangeProtocolRegistries.default()
-val didCommService = DidCommFactory.createInMemoryService(kms, resolveDid)
+val didCommService = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms, resolveDid)
 registry.register(DidCommExchangeProtocol(didCommService))
 
 val exchangeService = ExchangeServices.createExchangeService(

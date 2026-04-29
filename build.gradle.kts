@@ -21,19 +21,121 @@ subprojects {
     // Configure all subprojects to build into the root project's build directory.
     // This centralizes all build outputs under the project root for easier cleanup and organization.
     // Each subproject's build output will be in build/<project-path>/ (e.g., build/did/core/)
-    layout.buildDirectory.set(rootProject.layout.buildDirectory.dir(project.path.removePrefix(":").replace(":", "/")))
+    //
+    // Windows: language servers (Kotlin/Java) often lock JARs under the repo's build/, breaking clean/jar.
+    // On Windows, use %LOCALAPPDATA%/TrustWeave/gradle-build/<rootName>/... instead (same layout, outside workspace).
+    // Opt out: gradle.properties → trustweave.windowsInRepoBuild=true
+    val centralizedRel = project.path.removePrefix(":").replace(":", "/")
+    val isWindows = System.getProperty("os.name", "").lowercase(java.util.Locale.ROOT).contains("windows")
+    val windowsInRepo =
+        (findProperty("trustweave.windowsInRepoBuild") as? String)?.equals("true", ignoreCase = true) == true
+    val useWindowsExternalBuild = isWindows && !windowsInRepo
+    layout.buildDirectory.set(
+        if (useWindowsExternalBuild) {
+            val localAppData =
+                System.getenv("LOCALAPPDATA")
+                    ?: System.getenv("USERPROFILE")
+                    ?: System.getProperty("java.io.tmpdir")
+            val external = File(
+                File(localAppData, "TrustWeave/gradle-build"),
+                "${rootProject.name}/$centralizedRel",
+            ).absoluteFile
+            objects.directoryProperty().fileValue(external)
+        } else {
+            rootProject.layout.buildDirectory.dir(centralizedRel)
+        },
+    )
 
     // Windows: IDE/antivirus often lock JARs under build/; Gradle fails on "Unable to delete file".
-    // Rename stale JAR before pack so the task can write a new file (orphan .jar.*.bak in libs/ is harmless).
+    // 1) Try delete, 2) rename aside in libs/, 3) move to TEMP — then the jar task can write a fresh file.
     tasks.withType<Jar>().configureEach {
         doFirst {
             val out = archiveFile.get().asFile
-            if (out.exists() && !out.delete()) {
-                val bak = File(out.parentFile, "${out.name}.${System.nanoTime()}.bak")
-                if (!out.renameTo(bak)) {
-                    throw GradleException(
-                        "Cannot replace locked JAR: ${out.absolutePath}. Close Cursor/IDE or delete this file, then rebuild.",
-                    )
+            if (!out.exists()) {
+                return@doFirst
+            }
+            if (out.delete()) {
+                return@doFirst
+            }
+            val bak = File(out.parentFile, "${out.name}.${System.nanoTime()}.bak")
+            if (out.renameTo(bak)) {
+                return@doFirst
+            }
+            val stashRoot =
+                File(System.getProperty("java.io.tmpdir"), "trustweave-jar-replace-stash").apply { mkdirs() }
+            val ext = out.extension
+            val base = if (ext.isEmpty()) out.name else out.name.removeSuffix(".$ext")
+            val dest = File(stashRoot, "${base}-${System.nanoTime()}${if (ext.isEmpty()) "" else ".$ext"}")
+            try {
+                java.nio.file.Files.move(
+                    out.toPath(),
+                    dest.toPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+                )
+            } catch (_: Exception) {
+                throw GradleException(
+                    "Cannot replace locked JAR: ${out.absolutePath}. Close Cursor/IDE or reload the window. " +
+                        "On Windows, outputs use %LOCALAPPDATA%\\TrustWeave\\gradle-build (remove trustweave.windowsInRepoBuild " +
+                        "from gradle.properties if you set it to true), or delete the file, then rebuild.",
+                )
+            }
+        }
+    }
+
+    // Windows: `clean` fails when IDE holds JARs. Evict locked files with retries before Gradle's Delete runs.
+    afterEvaluate {
+        tasks.findByName("clean")?.doFirst("trustweaveEvictLockedOutputsForClean") {
+            val buildDir = layout.buildDirectory.get().asFile
+            if (!buildDir.exists()) {
+                return@doFirst
+            }
+            val stashRoot =
+                File(System.getProperty("java.io.tmpdir"), "trustweave-gradle-clean-stash").apply { mkdirs() }
+            val maxRounds = 20
+            val pauseMs = 250L
+            repeat(maxRounds) { round ->
+                if (!buildDir.exists()) {
+                    return@doFirst
+                }
+                var anyStillStuck = false
+                buildDir.walkBottomUp().forEach { f ->
+                    if (!f.exists()) {
+                        return@forEach
+                    }
+                    when {
+                        f.isFile -> {
+                            if (f.delete()) {
+                                return@forEach
+                            }
+                            val ext = f.extension
+                            val base = if (ext.isEmpty()) f.name else f.name.removeSuffix(".$ext")
+                            val dest =
+                                File(stashRoot, "${base}-${System.nanoTime()}${if (ext.isEmpty()) "" else ".$ext"}")
+                            try {
+                                java.nio.file.Files.move(
+                                    f.toPath(),
+                                    dest.toPath(),
+                                    java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+                                )
+                            } catch (_: Exception) {
+                                anyStillStuck = true
+                            }
+                        }
+                        f.isDirectory && f != buildDir -> {
+                            val kids = f.listFiles()
+                            if (kids == null || kids.isEmpty()) {
+                                if (!f.delete()) {
+                                    anyStillStuck = true
+                                }
+                            }
+                        }
+                    }
+                }
+                if (!anyStillStuck) {
+                    return@doFirst
+                }
+                if (round < maxRounds - 1) {
+                    Thread.sleep(pauseMs)
                 }
             }
         }
@@ -42,8 +144,8 @@ subprojects {
     // Force consistent Kotlin stdlib version across all modules to avoid binary compatibility issues
     configurations.all {
         resolutionStrategy {
-            force("org.jetbrains.kotlin:kotlin-stdlib:2.2.21")
-            force("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.2.21")
+            force("org.jetbrains.kotlin:kotlin-stdlib:2.3.21")
+            force("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.3.21")
         }
     }
 
@@ -162,6 +264,82 @@ subprojects {
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+// Root project (e.g. ktlint): on Windows keep outputs out of the repo so IDE tooling does not lock build/.
+// Subprojects already use %LOCALAPPDATA%/TrustWeave/gradle-build/... unless trustweave.windowsInRepoBuild=true.
+val trustweaveRootWindowsExternal =
+    System.getProperty("os.name", "").lowercase(java.util.Locale.ROOT).contains("windows") &&
+        (findProperty("trustweave.windowsInRepoBuild") as? String)?.equals("true", ignoreCase = true) != true
+if (trustweaveRootWindowsExternal) {
+    val localAppData =
+        System.getenv("LOCALAPPDATA")
+            ?: System.getenv("USERPROFILE")
+            ?: System.getProperty("java.io.tmpdir")
+    val rootOut = File(
+        File(localAppData, "TrustWeave/gradle-build"),
+        "${rootProject.name}/_root",
+    ).absoluteFile
+    layout.buildDirectory.set(objects.directoryProperty().fileValue(rootOut))
+}
+
+// Root `clean`: same eviction as subprojects (outputs under _root can still be locked by tooling).
+afterEvaluate {
+    tasks.findByName("clean")?.doFirst("trustweaveEvictRootBuildDirForClean") {
+        val buildDir = layout.buildDirectory.get().asFile
+        if (!buildDir.exists()) {
+            return@doFirst
+        }
+        val stashRoot =
+            File(System.getProperty("java.io.tmpdir"), "trustweave-gradle-clean-stash").apply { mkdirs() }
+        val maxRounds = 20
+        val pauseMs = 250L
+        repeat(maxRounds) { round ->
+            if (!buildDir.exists()) {
+                return@doFirst
+            }
+            var anyStillStuck = false
+            buildDir.walkBottomUp().forEach { f ->
+                if (!f.exists()) {
+                    return@forEach
+                }
+                when {
+                    f.isFile -> {
+                        if (f.delete()) {
+                            return@forEach
+                        }
+                        val ext = f.extension
+                        val base = if (ext.isEmpty()) f.name else f.name.removeSuffix(".$ext")
+                        val dest =
+                            File(stashRoot, "${base}-${System.nanoTime()}${if (ext.isEmpty()) "" else ".$ext"}")
+                        try {
+                            java.nio.file.Files.move(
+                                f.toPath(),
+                                dest.toPath(),
+                                java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+                            )
+                        } catch (_: Exception) {
+                            anyStillStuck = true
+                        }
+                    }
+                    f.isDirectory && f != buildDir -> {
+                        val kids = f.listFiles()
+                        if (kids == null || kids.isEmpty()) {
+                            if (!f.delete()) {
+                                anyStillStuck = true
+                            }
+                        }
+                    }
+                }
+            }
+            if (!anyStillStuck) {
+                return@doFirst
+            }
+            if (round < maxRounds - 1) {
+                Thread.sleep(pauseMs)
             }
         }
     }

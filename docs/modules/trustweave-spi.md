@@ -26,7 +26,7 @@ import org.trustweave.testkit.kms.InMemoryKeyManagementService
 
 // Register every DidMethodProvider on the classpath (META-INF/services)
 val registry = runBlocking {
-    DidMethodRegistry.autoRegister(kms = InMemoryKeyManagementService())
+    DidMethodRegistry.autoRegister(kms = InMemoryKeyManagementService()).registry
 }
 ```
 

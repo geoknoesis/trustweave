@@ -46,7 +46,7 @@ object DidCommExamples {
         }
 
         // Create DIDComm service
-        val didcomm = DidCommFactory.createInMemoryService(kms, resolveDid)
+        val didcomm = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms, resolveDid)
 
         // Step 1: Issuer creates credential offer
         val preview = org.trustweave.credential.exchange.model.CredentialPreview(
@@ -119,7 +119,7 @@ object DidCommExamples {
             )
         }
 
-        val didcomm = DidCommFactory.createInMemoryService(kms, resolveDid)
+        val didcomm = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms, resolveDid)
 
         // Alice sends message to Bob
         val message = BasicMessageProtocol.createBasicMessage(

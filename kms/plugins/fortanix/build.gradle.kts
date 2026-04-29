@@ -14,11 +14,11 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
 
     // HTTP client for Fortanix DSM API
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation(libs.okhttp)
 
     // JSON serialization
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+    implementation(libs.jackson.module.kotlin)
+    implementation(libs.kotlinx.serialization.json)
 
     // Logging
     implementation("org.slf4j:slf4j-api:2.0.9")

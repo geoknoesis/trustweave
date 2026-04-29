@@ -27,7 +27,7 @@ import kotlinx.serialization.json.*
  *
  * **Example Usage:**
  * ```kotlin
- * val didCommService = DidCommFactory.createInMemoryService(kms, resolveDid)
+ * val didCommService = DidCommFactory.createInMemoryService(kms, resolveDid, secretResolver)
  * val protocol = DidCommExchangeProtocol(didCommService)
  *
  * val registry = ExchangeProtocolRegistries.default()

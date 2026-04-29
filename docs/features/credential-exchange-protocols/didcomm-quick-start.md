@@ -33,7 +33,7 @@ val resolveDid: suspend (String) -> DidDocument? = { did ->
 }
 
 // Create DIDComm service
-val didcomm = DidCommFactory.createInMemoryService(kms, resolveDid)
+val didcomm = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms, resolveDid)
 ```
 
 ### 2. Send a Basic Message
@@ -109,25 +109,17 @@ val issue = CredentialProtocol.createCredentialIssue(
 didcomm.sendMessage(issue, issuerDid, issuerKeyId, holderDid, holderKeyId)
 ```
 
-## Production Setup
+## Production setup
 
-For production use, you need to enable production crypto:
+The plugin already ships **didcomm-java**. Provide a **`SecretResolver`** and use:
 
-1. Add dependency:
 ```kotlin
-implementation("org.didcommx:didcomm:0.3.2")
+val didcomm = DidCommFactory.createInMemoryService(kms, resolveDid, secretResolver)
 ```
 
-2. Enable production crypto:
-```kotlin
-val didcomm = DidCommFactory.createInMemoryService(
-    kms = kms,
-    resolveDid = resolveDid,
-    useProductionCrypto = true
-)
-```
+For demos without real keys, use **`createInMemoryServiceWithPlaceholderCrypto`**.
 
-See [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md) for complete setup instructions.
+See [didcomm-integration-guide.md](./didcomm-integration-guide.md) for details.
 
 ## Next Steps
 

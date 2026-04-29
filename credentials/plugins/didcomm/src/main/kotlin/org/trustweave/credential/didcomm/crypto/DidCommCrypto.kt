@@ -30,8 +30,8 @@ import java.util.*
  * Cryptographic operations for DIDComm V2 (Fallback Implementation).
  *
  * This is a fallback implementation that provides basic structure but uses
- * simplified cryptographic operations. For production use, the system automatically
- * uses `DidCommCryptoProduction` which leverages the `didcomm-java` library.
+ * simplified cryptographic operations. For interoperable DIDComm v2, use [DidCommCryptoDidcomm]
+ * with a [org.didcommx.didcomm.secret.SecretResolver] and real key material.
  *
  * This implementation is kept for:
  * - Development/testing when didcomm-java is not available

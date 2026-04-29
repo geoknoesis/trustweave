@@ -126,7 +126,7 @@ import org.trustweave.credential.exchange.registry.ExchangeProtocolRegistries
 import org.trustweave.credential.exchange.ExchangeServices
 
    val registry = ExchangeProtocolRegistries.default()
-   val didCommService = DidCommFactory.createInMemoryService(kms) { didStr ->
+   val didCommService = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms) { didStr ->
        DidDocument(id = Did(didStr), verificationMethod = emptyList())
    }
    registry.register(DidCommExchangeProtocol(didCommService))
@@ -1357,7 +1357,7 @@ val offerResult = exchangeService.offer(
 **Solution:**
 ```kotlin
 val registry = ExchangeProtocolRegistries.default()
-val didCommService = DidCommFactory.createInMemoryService(kms) { didStr ->
+val didCommService = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms) { didStr ->
     DidDocument(id = Did(didStr), verificationMethod = emptyList())
 }
 registry.register(DidCommExchangeProtocol(didCommService))
@@ -1675,7 +1675,7 @@ suspend fun offerCredentialWithAutoRegister(
         // Auto-register protocol
         when (protocolName) {
             "didcomm" -> {
-                val service = DidCommFactory.createInMemoryService(kms) { didStr ->
+                val service = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms) { didStr ->
                     DidDocument(id = Did(didStr), verificationMethod = emptyList())
                 }
                 registry.register(DidCommExchangeProtocol(service))

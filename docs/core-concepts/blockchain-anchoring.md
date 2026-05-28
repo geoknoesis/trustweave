@@ -44,23 +44,26 @@ Anchoring complements verifiable credentials: you can notarise VC digests, prese
 | 4. Verify | `readPayload` rehydrates the JSON, or recompute the digest locally and compare to the stored reference. |
 
 ```kotlin
+import kotlinx.coroutines.runBlocking
 import org.trustweave.trust.TrustWeave
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.anchor.exceptions.BlockchainException
 
-val trustWeave = TrustWeave.build { ... }
-val anchorResult = trustWeave.blockchains.anchor(
-    data = credential,
-    serializer = VerifiableCredential.serializer(),
-    chainId = "algorand:testnet"
-)
-println("Anchored tx: ${anchorResult.ref.txHash}")
+runBlocking {
+    val trustWeave = TrustWeave.build { /* configure kms, did, anchor, ... */ }
+    val anchorResult = trustWeave.blockchains.anchor(
+        data = credential,
+        serializer = VerifiableCredential.serializer(),
+        chainId = "algorand:testnet"
+    )
+    println("Anchored tx: ${anchorResult.ref.txHash}")
 
-try {
-    val anchor = trustWeave.blockchains.anchor(data, serializer, chainId)
-    println("Anchored tx: ${anchor.ref.txHash}")
-} catch (e: BlockchainException.ChainNotRegistered) {
-    println("Chain not registered: ${e.chainId}; available: ${e.availableChains}")
+    try {
+        val anchor = trustWeave.blockchains.anchor(credential, VerifiableCredential.serializer(), "algorand:testnet")
+        println("Anchored tx: ${anchor.ref.txHash}")
+    } catch (e: BlockchainException.ChainNotRegistered) {
+        println("Chain not registered: ${e.chainId}; available: ${e.availableChains}")
+    }
 }
 ```
 
@@ -75,22 +78,25 @@ try {
 ## Reading and verifying
 
 ```kotlin
+import kotlinx.coroutines.runBlocking
 import org.trustweave.trust.TrustWeave
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.anchor.exceptions.BlockchainException
 
-val trustWeave = TrustWeave.build { ... }
-val data = trustWeave.blockchains.read<VerifiableCredential>(
-    ref = anchorRef,
-    serializer = VerifiableCredential.serializer()
-)
-println("Read credential: ${data.id}")
+runBlocking {
+    val trustWeave = TrustWeave.build { /* configure kms, did, anchor, ... */ }
+    val data = trustWeave.blockchains.read(
+        ref = anchorRef,
+        serializer = VerifiableCredential.serializer()
+    )
+    println("Read credential: ${data.id}")
 
-try {
-    val payload = trustWeave.blockchains.read<VerifiableCredential>(anchorRef, VerifiableCredential.serializer())
-    println("Read: ${payload.id}")
-} catch (e: BlockchainException.ChainNotRegistered) {
-    println("Chain not registered: ${e.chainId}")
+    try {
+        val payload = trustWeave.blockchains.read(anchorRef, VerifiableCredential.serializer())
+        println("Read: ${payload.id}")
+    } catch (e: BlockchainException.ChainNotRegistered) {
+        println("Chain not registered: ${e.chainId}")
+    }
 }
 ```
 
@@ -115,73 +121,6 @@ try {
 - Architecture Overview](../introduction/architecture-overview.md) for the DID ➜ credential ➜ anchor flow.
 - Verifiable Credentials](verifiable-credentials.md) to understand what you may want to anchor.
 - Blockchain-Anchored Revocation](blockchain-anchored-revocation.md) for anchoring credential revocation status lists.
-
----
-
-# Blockchain Anchoring
-
-Anchoring creates an immutable audit trail for important events or payloads by writing a compact reference to a blockchain. TrustWeave standardizes the experience so you can take advantage of tamper evidence without having to become a chain expert.
-
-## Why Anchor?
-
-- **Integrity** – prove a payload was not modified after anchoring by recomputing its digest and comparing it to the on-chain reference.
-- **Provenance** – demonstrate when information existed by referencing the block height or timestamp of the anchor transaction.
-- **Portability** – exchangeable `AnchorRef` models capture chain, transaction hash, optional contract, and any custom metadata.
-
-Anchoring is complementary to verifiable credentials: you can anchor raw JSON, credential digests, presentation receipts, or any other data you want to notarize.
-
-## How TrustWeave Anchoring Works
-
-1. **Choose a chain** – TrustWeave ships with in-memory clients for testing and adapters for [Algorand](../integrations/algorand.md), [Polygon](../integrations/README.md#blockchain-anchor-integrations), [Ethereum](../integrations/ethereum-anchor.md), [Base](../integrations/base-anchor.md), [Arbitrum](../integrations/arbitrum-anchor.md), Indy, and community providers. Chains are identified using CAIP-2 strings (for example `algorand:testnet`).
-2. **Serialize the payload** – the SDK serializes your Kotlin data using Kotlinx Serialization before hashing.
-3. **Submit** – the registered `BlockchainAnchorClient` stores the digest on-chain and returns an `AnchorResult` containing the `AnchorRef` (transaction hash, contract/app ID, chain).
-4. **Verify** – later you can `readPayload` or independently recompute the digest to confirm the payload matches the anchor reference.
-
-```kotlin
-val anchorClient = anchorRegistry.get("algorand:testnet")
-val result = anchorClient?.writePayload(jsonPayload)
-println("Anchored tx: ${result?.ref?.txHash}")
-```
-
-## Configuring Clients
-
-- **In-memory** – great for tests. Register with `BlockchainAnchorRegistry().register("inmemory:anchor", InMemoryBlockchainAnchorClient("inmemory:anchor"))`.
-- **Algorand** – configure `AlgorandBlockchainAnchorClientOptions` (`algodUrl`, `algodToken`, optional private key for signing). See [Algorand Integration Guide](../integrations/algorand.md).
-- **Polygon / Ganache** – supply RPC URLs, contract addresses, and private keys via typed options. See [Integration Modules](../integrations/README.md#blockchain-anchor-integrations).
-- **Indy** – connect to Hyperledger Indy pools using pool endpoints, wallet names, and DIDs.
-
-All clients share a common template (`AbstractBlockchainAnchorClient`) for fallbacks, metadata, and error handling. You can implement your own by extending the base class or providing an SPI adapter discovered via `META-INF/services`.
-
-## Reading and Verifying
-
-```kotlin
-val anchorRef: AnchorRef = result.ref
-val stored = anchorClient?.readPayload(anchorRef)
-println("Stored mediaType=${stored?.mediaType} payload=${stored?.payload}")
-```
-
-- The payload is returned as a `JsonElement`; you can re-hydrate it using your serializer.
-- Anchoring with in-memory fallbacks works without private keys, which makes it ideal for unit tests and demos.
-- For production you should secure credentials (RPC URLs, tokens, private keys) using your secrets management system.
-
-## When to Use Anchoring
-
-- Credential issuance receipts or revocation records.
-- Supply-chain checkpoints or sensor readings.
-- Publication timestamps for news or research.
-- Any workflow where you need evidence that “this existed in this exact form at this time.”
-
-## Next Steps
-
-**Ready to use Blockchain Anchoring?**
-- Quick Start – Step 5](../getting-started/quick-start.md#step-5-verify-and-optionally-anchor) - Anchor your first credential
-- Core API Reference – Blockchain Operations](../api-reference/core-api.md#blockchain-anchoring) - Complete API documentation
-- TrustWeave Anchor Module](../modules/trustweave-anchor.md) - Implementation details
-
-**Want to learn more?**
-- Verifiable Credentials](verifiable-credentials.md) - Issue and verify credentials
-- Blockchain-Anchored Revocation](blockchain-anchored-revocation.md) - Revocation with blockchain anchoring
-- Smart Contracts](smart-contracts.md) - Executable agreements with anchoring
 
 ## Related How-To Guides
 

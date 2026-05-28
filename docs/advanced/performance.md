@@ -185,33 +185,50 @@ suspend fun <T> retry(
 Batch blockchain transactions when possible:
 
 ```kotlin
-// Batch multiple anchors
-val anchors = credentials.map { credential ->
-    async { TrustWeave.anchor(credential, chainId) }
-}
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 
-val results = anchors.awaitAll()
+// Batch multiple anchors using the BlockchainService facade
+val results = credentials.map { credential ->
+    async {
+        trustWeave.blockchains.anchor(
+            data = credential,
+            serializer = MyCredentialDto.serializer(),
+            chainId = chainId
+        )
+    }
+}.awaitAll()
 ```
 
 **Outcome:** Reduces blockchain transaction fees.
 
 ### Confirmation Strategy
 
-Use appropriate confirmation strategies:
+`BlockchainAnchorClient` (and the higher-level `trustWeave.blockchains` facade) do
+not expose a generic `confirmationStrategy` option — confirmation policy is owned
+by each chain plugin and configured at plugin-construction time. Anchoring goes
+through `BlockchainService.anchor(data, serializer, chainId)` and reads through
+`BlockchainService.read(ref, serializer)`; both are one-shot calls that return when
+the underlying client considers the write/read settled.
 
 ```kotlin
-// For testnets, accept faster confirmations
-val client = BlockchainAnchorClient(chainId, options) {
-    confirmationStrategy = ConfirmationStrategy.Fastest
-}
+import org.trustweave.anchor.AnchorRef
 
-// For mainnet, wait for more confirmations
-val mainnetClient = BlockchainAnchorClient(chainId, options) {
-    confirmationStrategy = ConfirmationStrategy.Secure
-}
+// Write — settlement semantics depend on the chain plugin registered under chainId.
+val anchored = trustWeave.blockchains.anchor(
+    data       = myDto,
+    serializer = MyDto.serializer(),
+    chainId    = "algorand:testnet"
+)
+
+// Read back later.
+val roundTrip: MyDto = trustWeave.blockchains.read(anchored.ref, MyDto.serializer())
 ```
 
-**Outcome:** Balances speed and security.
+To tune confirmation depth, retries, polling cadence, or finality, configure the
+chain plugin you registered in `TrustWeave.build { blockchains { chain(...) { ... } } }`
+(see `anchors/plugins/algorand`, `anchors/plugins/ethereum`, etc. — each plugin
+defines its own options keys in its `BlockchainAnchorClientOptions` companion).
 
 ## Cryptographic Performance
 
@@ -220,26 +237,38 @@ val mainnetClient = BlockchainAnchorClient(chainId, options) {
 Choose algorithms based on performance needs:
 
 ```kotlin
-// Ed25519 is faster than RSA
-val fastKey = kms.generateKey(Algorithm.Ed25519)
+import org.trustweave.kms.Algorithm
+import org.trustweave.kms.results.GenerateKeyResult
 
-// RSA is more compatible but slower
-val compatibleKey = kms.generateKey(Algorithm.Rsa2048)
+// Ed25519 is faster than RSA
+val fast = kms.generateKey(Algorithm.Ed25519)
+val fastHandle = (fast as? GenerateKeyResult.Success)?.keyHandle
+
+// RSA-2048 is more compatible but slower
+val compatible = kms.generateKey(Algorithm.RSA.RSA_2048)
+val compatibleHandle = (compatible as? GenerateKeyResult.Success)?.keyHandle
 ```
 
 **Outcome:** Optimizes signing and verification speed.
 
 ### Key Caching
 
-Cache keys for repeated operations:
+Cache key handles for repeated operations:
 
 ```kotlin
-// Cache keys for issuer
-val issuerKeys = ConcurrentHashMap<String, Key>()
+import org.trustweave.core.identifiers.KeyId
+import org.trustweave.kms.KeyHandle
+import org.trustweave.kms.results.GenerateKeyResult
+import java.util.concurrent.ConcurrentHashMap
 
-suspend fun getOrCreateKey(issuerDid: String): Key {
+val issuerKeys = ConcurrentHashMap<String, KeyHandle>()
+
+suspend fun getOrCreateKey(issuerDid: String): KeyHandle {
     return issuerKeys.getOrPut(issuerDid) {
-        TrustWeave.createKey(issuerDid).getOrThrow()
+        when (val r = kms.generateKey(Algorithm.Ed25519)) {
+            is GenerateKeyResult.Success -> r.keyHandle
+            is GenerateKeyResult.Failure -> error("Key generation failed: $r")
+        }
     }
 }
 ```
@@ -254,9 +283,10 @@ Collect performance metrics:
 
 ```kotlin
 import kotlinx.coroutines.runBlocking
-import org.trustweave.testkit.services.*
 import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.dsl.credential.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.trust.types.getOrThrowDid
 
 // Measure operation time
@@ -317,9 +347,10 @@ Create benchmarks for critical paths:
 
 ```kotlin
 import kotlinx.coroutines.runBlocking
-import org.trustweave.testkit.services.*
 import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.dsl.credential.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.trust.types.getOrThrowDid
 import kotlin.test.Test
 import kotlin.test.assertTrue

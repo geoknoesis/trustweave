@@ -44,8 +44,8 @@ dependencies {
 ```kotlin
 import org.trustweave.polygondid.*
 import org.trustweave.anchor.*
-import org.trustweave.polygon.PolygonBlockchainAnchorClient
-import org.trustweave.kms.*
+import org.trustweave.anchor.polygon.PolygonBlockchainAnchorClient
+import org.trustweave.kms.inmemory.InMemoryKeyManagementService
 
 // Create configuration
 val config = PolygonDidConfig.builder()
@@ -86,6 +86,7 @@ When the module is on the classpath, did:polygon is automatically available:
 
 ```kotlin
 import org.trustweave.did.*
+import org.trustweave.did.spi.DidMethodProvider
 import java.util.ServiceLoader
 
 // Discover did:polygon provider
@@ -148,13 +149,14 @@ when (result) {
 
 ```kotlin
 import org.trustweave.did.identifiers.Did
+import org.trustweave.did.model.DidService
 
 val did = Did("did:polygon:0x1234...")
 val document = method.updateDid(did) { currentDoc ->
     currentDoc.copy(
-        service = currentDoc.service + Service(
+        service = currentDoc.service + DidService(
             id = "${currentDoc.id}#didcomm",
-            type = "DIDCommMessaging",
+            type = listOf("DIDCommMessaging"),
             serviceEndpoint = "https://example.com/didcomm"
         )
     )
@@ -231,7 +233,7 @@ import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.did.KeyAlgorithm
 import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.kms.InMemoryKeyManagementService
+import org.trustweave.kms.inmemory.InMemoryKeyManagementService
 import org.trustweave.polygondid.*
 
 val config = PolygonDidConfig.mumbai("https://rpc-mumbai.maticvigil.com")
@@ -242,10 +244,13 @@ val trustWeave = TrustWeave.build {
     anchor {
         chain(config.chainId) {
             provider("polygon")
+            // OptionsBuilder uses an infix String.to(value); list keys explicitly so the
+            // call resolves to the builder rather than kotlin.Pair.
             options {
-                for ((k, v) in config.toMap()) {
-                    if (v != null) k.to(v)
-                }
+                "rpcUrl" to config.rpcUrl
+                "chainId" to config.chainId
+                config.privateKey?.let { "privateKey" to it }
+                config.network?.let { "network" to it }
             }
         }
     }

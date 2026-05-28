@@ -45,9 +45,10 @@ class MyCredentialService : CredentialService {
 
 ### Provider
 Factory pattern implementations that create service instances:
-- **CredentialServiceProvider**: Creates credential services
 - **WalletFactory**: Creates wallet instances
 - **DidMethodProvider**: Creates DID method implementations
+
+(Note: there is no `CredentialServiceProvider` SPI — `CredentialService` is assembled by `TrustWeave.build { ... }` from the discovered proof engines and credential SPIs.)
 
 **Example:**
 ```kotlin
@@ -266,7 +267,7 @@ Kotlin **`Result`** is used by some services (for example smart-contract helpers
 **Example:**
 ```kotlin
 import org.trustweave.trust.types.getOrThrowDid
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 
 val did = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 ```

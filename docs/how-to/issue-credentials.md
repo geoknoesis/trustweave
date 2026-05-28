@@ -23,7 +23,6 @@ Here's a complete example that issues a credential:
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.quickStart
 import org.trustweave.trust.types.getOrThrowDid
-import org.trustweave.trust.types.getOrThrow
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.did.identifiers.Did
 import kotlinx.coroutines.runBlocking
@@ -126,11 +125,11 @@ import org.trustweave.trust.quickStart
 import org.trustweave.trust.types.getOrThrowDid
 import kotlinx.coroutines.runBlocking
 
-val trustWeave = runBlocking { TrustWeave.quickStart() }
-
-val issuerDid = trustWeave.createDid().getOrThrowDid()
-
-// Key ID is resolved from the issuer DID when you use signedBy(issuerDid)
+runBlocking {
+    val trustWeave = TrustWeave.quickStart()
+    val issuerDid = trustWeave.createDid().getOrThrowDid()
+    // Key ID is resolved from the issuer DID when you use signedBy(issuerDid)
+}
 ```
 
 ### Step 2: Build Credential Subject
@@ -247,7 +246,7 @@ val credential = trustWeave.issue {
         subject { id("did:key:holder"); "access" to "temporary" }
         expires(Clock.System.now().plus(30.days))
     }
-    signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+    signedBy(issuerDid)
 }
 ```
 
@@ -294,7 +293,7 @@ The proof type is automatically selected based on the key algorithm. For Ed25519
 Issue credentials for multiple subjects:
 
 ```kotlin
-// issuerDid: Did (e.g. from createDid().getOrThrowDid()), issuerKeyId: String (verification method fragment or full id per your KMS)
+// issuerDid: Did (e.g. from createDid().getOrThrowDid())
 val subjects = listOf(
     mapOf("id" to "did:key:alice", "name" to "Alice", "role" to "Engineer"),
     mapOf("id" to "did:key:bob", "name" to "Bob", "role" to "Manager")
@@ -308,11 +307,11 @@ val credentials = subjects.map { subjectData ->
             subject {
                 id(subjectData["id"] as String)
                 subjectData.forEach { (key, value) ->
-                    if (key != "id") key to value
+                    if (key != "id") key to (value as String)
                 }
             }
         }
-        signedBy(issuerDid, issuerKeyId)
+        signedBy(issuerDid)
     }
 }
 ```
@@ -356,12 +355,12 @@ val credential = trustWeave.issue {
         subject { id("did:key:holder"); "name" to "Alice" }
         status {
             id(statusList.id)
-            type("StatusList2021")
+            type("StatusList2021Entry")
             statusPurpose("revocation")
-            statusListIndex(0)
+            statusListIndex("0")
         }
     }
-    signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+    signedBy(issuerDid)
 }
 ```
 

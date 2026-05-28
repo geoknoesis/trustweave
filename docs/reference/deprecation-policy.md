@@ -182,11 +182,12 @@ IDEs (IntelliJ IDEA, VS Code) show deprecation warnings:
 
 ## Current Deprecations
 
-### Version 1.0.0-SNAPSHOT
+### Version 0.6.0
 
-**No deprecations** (initial version)
+**No deprecations** (pre-1.0 baseline)
 
 > **Note:** As TrustWeave evolves, deprecated APIs will be listed here with migration instructions.
+> Until the 1.0 release, breaking changes may occur on minor versions; see [Version Compatibility Matrix](version-compatibility.md).
 
 ## Reporting Issues
 
@@ -215,13 +216,13 @@ If you encounter issues with deprecated APIs:
 
 ## Related Documentation
 
-- Version Compatibility Matrix](version-compatibility.md) - Version requirements
-- Migration Guides](../migration/README.md) - Upgrade instructions
-- API Reference](../api-reference/README.md) - Complete API documentation
-- Release Notes](../CHANGELOG.md) - Version history and changes
+- [Version Compatibility Matrix](version-compatibility.md) - Version requirements
+- [Migration Guides](../migration/README.md) - Upgrade instructions
+- [API Reference](../api-reference/README.md) - Complete API documentation
+- [Release Notes](../../CHANGELOG.md) - Version history and changes
 
 ---
 
-**Last Updated:** January 2025  
+**Last Updated:** May 2026  
 **Policy Version:** 1.0  
-**TrustWeave Version:** 1.0.0-SNAPSHOT
+**TrustWeave Version:** 0.6.0

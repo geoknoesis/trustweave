@@ -47,7 +47,7 @@ A trust registry maintains a graph of trusted DIDs (trust anchors) and allows ve
 
 **How it fits in a workflow:**
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.TrustProviders.IN_MEMORY
 // 1. Configure trust registry
 val trustWeave = TrustWeave.build {
     trust { provider(IN_MEMORY) }
@@ -76,10 +76,13 @@ val result = trustWeave.verify {
 Enable trust registry in your TrustWeave configuration:
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders
+import org.trustweave.trust.dsl.credential.TrustProviders
 val trustWeave = TrustWeave.build {
     keys {
-        provider(IN_MEMORY)
+        provider(KmsProviders.IN_MEMORY)
         algorithm(ED25519)
     }
     
@@ -90,7 +93,7 @@ val trustWeave = TrustWeave.build {
     }
     
     trust {
-        provider(IN_MEMORY)  // For testing; use persistent provider in production
+        provider(TrustProviders.IN_MEMORY)  // For testing; use persistent provider in production
     }
 }
 ```
@@ -200,18 +203,23 @@ Here's a complete, runnable example:
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.credential.results.VerificationResult
+import org.trustweave.credential.results.getOrThrow
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.errorMessage
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import org.trustweave.did.identifiers.extractKeyId
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders
+import org.trustweave.trust.dsl.credential.TrustProviders
+import org.trustweave.trust.types.getOrThrowDid
 
 fun main() = runBlocking {
     // Step 1: Configure TrustWeave with trust registry
     val trustWeave = TrustWeave.build {
         keys {
-            provider(IN_MEMORY)
+            provider(KmsProviders.IN_MEMORY)
             algorithm(ED25519)
         }
         
@@ -222,20 +230,19 @@ fun main() = runBlocking {
         }
         
         trust {
-            provider(IN_MEMORY)
+            provider(TrustProviders.IN_MEMORY)
         }
     }
     
-    // Step 2: Create DIDs
-    val universityDid = trustWeave.createDid { method(KEY) }
-    val studentDid = trustWeave.createDid { method(KEY) }
+    // Step 2: Create DIDs (createDid returns a sealed DidCreationResult)
+    val universityDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+    val studentDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     
     // Step 3: Get key ID
-    
     val issuerDocument = when (val res = trustWeave.resolveDid(universityDid)) {
-    is DidResolutionResult.Success -> res.document
-    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
-}
+        is DidResolutionResult.Success -> res.document
+        else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+    }
     val keyId = issuerDocument.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
     
@@ -245,7 +252,7 @@ fun main() = runBlocking {
             credentialTypes("EducationCredential", "DegreeCredential")
             description("Trusted university for academic credentials")
         }
-        println("✅ Added university as trust anchor")
+        println("Added university as trust anchor")
     }
     
     // Step 5: Issue credential
@@ -256,14 +263,12 @@ fun main() = runBlocking {
             issuer(universityDid)
             subject {
                 id(studentDid.value)
-                "degree" {
-                    "name" to "Bachelor of Science"
-                }
+                "degree" to "Bachelor of Science"
             }
             issued(Clock.System.now())
         }
-        signedBy(universityDid)
-    }
+        signedBy(universityDid, keyId)
+    }.getOrThrow()
     
     // Step 6: Verify with trust checking
     val result = trustWeave.verify {
@@ -376,8 +381,8 @@ Credential is valid and trusted
 
 **Solution:**
 ```kotlin
-import org.trustweave.testkit.services.*
-// ✅ Ensure trust registry is configured
+import org.trustweave.trust.dsl.credential.TrustProviders.IN_MEMORY
+// Ensure trust registry is configured
 val trustWeave = TrustWeave.build {
     trust {
         provider(IN_MEMORY)  // or your provider
@@ -417,20 +422,27 @@ trustWeave.trust {
 **Solution:**
 ```kotlin
 import org.trustweave.did.identifiers.Did
+import org.trustweave.trust.types.IssuerIdentity
 import org.trustweave.trust.types.TrustPath
+import org.trustweave.trust.types.VerifierIdentity
 
-// ✅ Check if direct trust exists, then try a path (sealed TrustPath)
+// Check if direct trust exists, then try a path (sealed TrustPath)
 trustWeave.trust {
     val isDirectlyTrusted = isTrusted(issuerDid, credentialType)
 
     if (!isDirectlyTrusted) {
         when (
-            val path = findTrustPath(Did(verifierDid), Did(issuerDid))
+            val path = findTrustPath(
+                VerifierIdentity(Did(verifierDid)),
+                IssuerIdentity(Did(issuerDid))
+            )
         ) {
             is TrustPath.Verified ->
                 println("Trust path found: ${path.fullPath.joinToString(" -> ") { it.value }}")
             is TrustPath.NotFound ->
                 println("No trust path found - add trust anchor")
+            is TrustPath.NotConfigured ->
+                println("Trust registry not configured: ${path.reason}")
         }
     }
 }
@@ -446,18 +458,28 @@ Find trust paths between verifiers and issuers:
 
 ```kotlin
 import org.trustweave.did.identifiers.Did
+import org.trustweave.trust.types.IssuerIdentity
 import org.trustweave.trust.types.TrustPath
+import org.trustweave.trust.types.VerifierIdentity
 
 trustWeave.trust {
-    when (val path = findTrustPath(Did("did:key:verifier"), Did("did:key:issuer"))) {
+    when (
+        val path = findTrustPath(
+            VerifierIdentity(Did("did:key:verifier")),
+            IssuerIdentity(Did("did:key:issuer"))
+        )
+    ) {
         is TrustPath.Verified -> {
-            println("✅ Trust path found:")
-            println("   Path: ${path.fullPath.joinToString(" → ") { it.value }}")
+            println("Trust path found:")
+            println("   Path: ${path.fullPath.joinToString(" -> ") { it.value }}")
             println("   Hops: ${path.length}")
             println("   Score: ${path.trustScore}")
         }
         is TrustPath.NotFound -> {
-            println("❌ No trust path found")
+            println("No trust path found")
+        }
+        is TrustPath.NotConfigured -> {
+            println("Trust registry not configured: ${path.reason}")
         }
     }
 }

@@ -73,25 +73,34 @@ Trust scores range from 0.0 to 1.0, with higher scores indicating greater trust.
 ### Configuring Trust Registry
 
 ```kotlin
-import org.trustweave.testkit.services.*
-val trustWeave = TrustWeave.build {
-    keys {
-        provider(IN_MEMORY)
-        algorithm(KeyAlgorithms.ED25519)
-    }
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
+import org.trustweave.trust.dsl.credential.TrustProviders
+import org.trustweave.credential.model.ProofTypes
+import kotlinx.coroutines.runBlocking
 
-    did {
-        method(DidMethods.KEY) {
+val trustWeave = runBlocking {
+    TrustWeave.build {
+        keys {
+            provider(KmsProviders.IN_MEMORY)
             algorithm(KeyAlgorithms.ED25519)
         }
-    }
 
-    credentials {
-        defaultProofType(ProofTypes.ED25519)
-    }
+        did {
+            method(DidMethods.KEY) {
+                algorithm(KeyAlgorithms.ED25519)
+            }
+        }
 
-    trust {
-        provider(IN_MEMORY) // or other provider
+        credentials {
+            defaultProofType(ProofTypes.Ed25519)
+        }
+
+        trust {
+            provider(TrustProviders.IN_MEMORY) // or other provider
+        }
     }
 }
 ```
@@ -101,23 +110,27 @@ val trustWeave = TrustWeave.build {
 ### Adding Trust Anchors
 
 ```kotlin
-trustWeave.trust {
-    // Add university as trusted anchor for education credentials
-    addAnchor("did:key:university") {
-        credentialTypes("EducationCredential", "DegreeCredential")
-        description("Trusted university for academic credentials")
-    }
+import kotlinx.coroutines.runBlocking
 
-    // Add company as trusted anchor for employment credentials
-    addAnchor("did:key:company") {
-        credentialTypes("EmploymentCredential")
-        description("Trusted company for employment credentials")
-    }
+runBlocking {
+    trustWeave.trust {
+        // Add university as trusted anchor for education credentials
+        addAnchor("did:key:university") {
+            credentialTypes("EducationCredential", "DegreeCredential")
+            description("Trusted university for academic credentials")
+        }
 
-    // Add anchor that trusts all credential types (null credentialTypes)
-    addAnchor("did:key:universal-trust") {
-        description("Universal trust anchor")
-        // credentialTypes is null, so trusts all types
+        // Add company as trusted anchor for employment credentials
+        addAnchor("did:key:company") {
+            credentialTypes("EmploymentCredential")
+            description("Trusted company for employment credentials")
+        }
+
+        // Add anchor that trusts all credential types (no credentialTypes call)
+        addAnchor("did:key:universal-trust") {
+            description("Universal trust anchor")
+            // credentialTypes left unset, so trusts all types
+        }
     }
 }
 ```
@@ -127,19 +140,23 @@ trustWeave.trust {
 ### Checking Trust
 
 ```kotlin
-trustWeave.trust {
-    // Check if issuer is trusted for specific credential type
-    val isTrusted = isTrusted("did:key:university", "EducationCredential")
-    if (isTrusted) {
-        println("Issuer is trusted for EducationCredential")
+import kotlinx.coroutines.runBlocking
+
+runBlocking {
+    trustWeave.trust {
+        // Check if issuer is trusted for specific credential type
+        val isTrusted = isTrusted("did:key:university", "EducationCredential")
+        if (isTrusted) {
+            println("Issuer is trusted for EducationCredential")
+        }
+
+        // Check if issuer is trusted for any credential type
+        val isTrustedAny = isTrusted("did:key:university", null)
+
+        // Check trust for different credential type (should fail)
+        val notTrusted = isTrusted("did:key:university", "EmploymentCredential")
+        // Returns false if university only trusts EducationCredential
     }
-
-    // Check if issuer is trusted for any credential type
-    val isTrustedAny = isTrusted("did:key:university", null)
-
-    // Check trust for different credential type (should fail)
-    val notTrusted = isTrusted("did:key:university", "EmploymentCredential")
-    // Returns false if university only trusts EducationCredential
 }
 ```
 
@@ -149,23 +166,31 @@ trustWeave.trust {
 
 ```kotlin
 import org.trustweave.did.identifiers.Did
+import org.trustweave.trust.types.IssuerIdentity
 import org.trustweave.trust.types.TrustPath
+import org.trustweave.trust.types.VerifierIdentity
+import kotlinx.coroutines.runBlocking
 
-trustWeave.trust {
-    when (
-        val path = findTrustPath(
-            Did("did:key:verifier"),
-            Did("did:key:issuer")
-        )
-    ) {
-        is TrustPath.Verified -> {
-            println("Trust path found:")
-            println("  Path: ${path.fullPath.joinToString(" -> ") { it.value }}")
-            println("  Trust Score: ${path.trustScore}")
-            println("  Verified: ${path.verified}")
-        }
-        is TrustPath.NotFound -> {
-            println("No trust path found${path.reason?.let { ": $it" } ?: ""}")
+runBlocking {
+    trustWeave.trust {
+        when (
+            val path = findTrustPath(
+                VerifierIdentity(Did("did:key:verifier")),
+                IssuerIdentity(Did("did:key:issuer"))
+            )
+        ) {
+            is TrustPath.Verified -> {
+                println("Trust path found:")
+                println("  Path: ${path.fullPath.joinToString(" -> ") { it.value }}")
+                println("  Trust Score: ${path.trustScore}")
+                println("  Verified: ${path.verified}")
+            }
+            is TrustPath.NotFound -> {
+                println("No trust path found${path.reason?.let { ": $it" } ?: ""}")
+            }
+            is TrustPath.NotConfigured -> {
+                println("Trust registry not configured: ${path.reason}")
+            }
         }
     }
 }
@@ -176,14 +201,18 @@ trustWeave.trust {
 ### Getting Trusted Issuers
 
 ```kotlin
-trustWeave.trust {
-    // Get all trusted issuers for a specific credential type
-    val educationIssuers = getTrustedIssuers("EducationCredential")
-    educationIssuers.forEach { println("Trusted education issuer: $it") }
+import kotlinx.coroutines.runBlocking
 
-    // Get all trusted issuers (any credential type)
-    val allIssuers = getTrustedIssuers(null)
-    allIssuers.forEach { println("Trusted issuer: $it") }
+runBlocking {
+    trustWeave.trust {
+        // Get all trusted issuers for a specific credential type
+        val educationIssuers = getTrustedIssuers("EducationCredential")
+        educationIssuers.forEach { println("Trusted education issuer: $it") }
+
+        // Get all trusted issuers (any credential type)
+        val allIssuers = getTrustedIssuers(null)
+        allIssuers.forEach { println("Trusted issuer: $it") }
+    }
 }
 ```
 
@@ -192,12 +221,16 @@ trustWeave.trust {
 ### Removing Trust Anchors
 
 ```kotlin
-trustWeave.trust {
-    val removed = removeAnchor("did:key:university")
-    if (removed) {
-        println("Trust anchor removed")
-    } else {
-        println("Trust anchor not found")
+import kotlinx.coroutines.runBlocking
+
+runBlocking {
+    trustWeave.trust {
+        val removed = removeAnchor("did:key:university")
+        if (removed) {
+            println("Trust anchor removed")
+        } else {
+            println("Trust anchor not found")
+        }
     }
 }
 ```
@@ -224,14 +257,17 @@ Trust registry can be integrated into credential verification:
 
 ```kotlin
 import org.trustweave.credential.results.VerificationResult
+import kotlinx.coroutines.runBlocking
 
-when (val result = trustWeave.verify {
-    credential(credential)
-    requireTrust(requireNotNull(trustWeave.configuration.trustRegistry))
-}) {
-    is VerificationResult.Valid -> println("Issuer is trusted (and checks passed)")
-    is VerificationResult.Invalid.UntrustedIssuer -> println("Issuer is not trusted")
-    else -> println(result.allErrors.joinToString())
+runBlocking {
+    when (val result = trustWeave.verify {
+        credential(credential)
+        requireTrust(requireNotNull(trustWeave.configuration.trustRegistry))
+    }) {
+        is VerificationResult.Valid -> println("Issuer is trusted (and checks passed)")
+        is VerificationResult.Invalid.UntrustedIssuer -> println("Issuer is not trusted")
+        else -> println(result.allErrors.joinToString())
+    }
 }
 ```
 
@@ -241,16 +277,19 @@ when (val result = trustWeave.verify {
 
 ```kotlin
 import org.trustweave.credential.results.VerificationResult
+import kotlinx.coroutines.runBlocking
 
-val registry = requireNotNull(trustWeave.configuration.trustRegistry)
-when (val result = trustWeave.verify {
-    credential(credential)
-    requireTrust(registry)
-    checkExpiration()
-    validateSchema("https://example.org/schemas/credential.json")
-}) {
-    is VerificationResult.Valid -> println("Verification succeeded")
-    is VerificationResult.Invalid -> println(result.allErrors.joinToString())
+runBlocking {
+    val registry = requireNotNull(trustWeave.configuration.trustRegistry)
+    when (val result = trustWeave.verify {
+        credential(credential)
+        requireTrust(registry)
+        checkExpiration()
+        validateSchema("https://example.org/schemas/credential.json")
+    }) {
+        is VerificationResult.Valid -> println("Verification succeeded")
+        is VerificationResult.Invalid -> println(result.allErrors.joinToString())
+    }
 }
 ```
 
@@ -264,43 +303,52 @@ import org.trustweave.testkit.trust.InMemoryTrustRegistry
 import org.trustweave.trust.types.IssuerIdentity
 import org.trustweave.trust.types.TrustPath
 import org.trustweave.trust.types.VerifierIdentity
+import kotlinx.coroutines.runBlocking
 
-// Create a trust network with multiple anchors
-trustWeave.trust {
-    addAnchor("did:key:university1") {
-        credentialTypes("EducationCredential")
+runBlocking {
+    // Create a trust network with multiple anchors
+    trustWeave.trust {
+        addAnchor("did:key:university1") {
+            credentialTypes("EducationCredential")
+        }
+        addAnchor("did:key:university2") {
+            credentialTypes("EducationCredential")
+        }
+        addAnchor("did:key:company1") {
+            credentialTypes("EmploymentCredential")
+        }
     }
-    addAnchor("did:key:university2") {
-        credentialTypes("EducationCredential")
-    }
-    addAnchor("did:key:company1") {
-        credentialTypes("EmploymentCredential")
-    }
-}
 
-// Optional: wire relationships on an in-memory registry (tests / demos)
-val registry = trustWeave.configuration.trustRegistry as? InMemoryTrustRegistry
-registry?.addTrustRelationship("did:key:university1", "did:key:university2")
+    // Optional: wire relationships on an in-memory registry (tests / demos)
+    val registry = trustWeave.configuration.trustRegistry as? InMemoryTrustRegistry
+    registry?.addTrustRelationship("did:key:university1", "did:key:university2")
 
-when (
-    val path = trustWeave.findTrustPath(
-        VerifierIdentity(Did("did:key:university1")),
-        IssuerIdentity(Did("did:key:university2"))
-    )
-) {
-    is TrustPath.Verified -> println("Path: ${path.fullPath.joinToString(" -> ") { it.value }}")
-    is TrustPath.NotFound -> println("No path")
+    when (
+        val path = trustWeave.findTrustPath(
+            VerifierIdentity(Did("did:key:university1")),
+            IssuerIdentity(Did("did:key:university2"))
+        )
+    ) {
+        is TrustPath.Verified -> println("Path: ${path.fullPath.joinToString(" -> ") { it.value }}")
+        is TrustPath.NotFound -> println("No path")
+        is TrustPath.NotConfigured -> println("Trust registry not configured: ${path.reason}")
+    }
 }
 ```
 
 ### Trust Anchor Metadata
 
 ```kotlin
-trustWeave.trust {
-    addAnchor("did:key:issuer") {
-        credentialTypes("CredentialType1", "CredentialType2")
-        description("Detailed description of the trust anchor")
-        addedAt(Instant.now()) // Optional: specify when added
+import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Clock
+
+runBlocking {
+    trustWeave.trust {
+        addAnchor("did:key:issuer") {
+            credentialTypes("CredentialType1", "CredentialType2")
+            description("Detailed description of the trust anchor")
+            addedAt(Clock.System.now()) // Optional: specify when added (kotlinx.datetime.Instant)
+        }
     }
 }
 ```

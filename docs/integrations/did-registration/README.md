@@ -239,14 +239,14 @@ See `src/main/resources/did-methods/` for example registration files:
 JSON-registered methods work seamlessly with existing TrustWeave code:
 
 ```kotlin
-// Register JSON methods
-DidMethodRegistration.registerFromClasspath(registry, kms)
+// Register JSON methods (second arg is the classpath resource folder)
+DidMethodRegistration.registerFromClasspath(registry, "did-methods")
 
 // Also register native methods (they work together)
 val keyMethod = KeyDidMethod(kms)
 registry.register(keyMethod)
 
-// Use any registered method
+// Use any registered method (suspend function — call from a coroutine)
 val result = registry.resolve("did:key:...")
 ```
 

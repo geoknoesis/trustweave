@@ -2336,5 +2336,5 @@ This guide now covers all critical workflows for a TrustWeave SaaS platform:
 ✅ **Blockchain Anchoring** - Immutable audit trails and provenance
 ✅ **Smart Contracts** - Automated, verifiable agreements
 
-For additional workflows and future enhancements, see [Missing Workflows Analysis](./missing-workflows-analysis.md).
+For additional workflows and future enhancements, see [UX Documentation Index](./README.md).
 

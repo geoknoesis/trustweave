@@ -39,7 +39,9 @@ After installation, verify your setup by running a simple test:
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.getOrThrow // Pair<Did, DidDocument> from DidCreationResult
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {

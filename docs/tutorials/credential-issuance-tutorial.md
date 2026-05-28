@@ -75,30 +75,27 @@ credential {
 ```kotlin
 // Kotlin stdlib
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.*
-import java.time.Instant
+import kotlinx.datetime.Clock
 
 // TrustWeave core
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
 import org.trustweave.credential.model.ProofType
-import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.CredentialTypes
-import org.trustweave.testkit.services.*
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.errorMessage
 import org.trustweave.did.identifiers.extractKeyId
 import org.trustweave.did.identifiers.Did
-import org.trustweave.credential.results.VerificationResult
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
-        credentials { defaultProofType(ProofType.Ed25519Signature2020) }  // Using ProofType enum
+        credentials { defaultProofType(ProofType.Ed25519Signature2020) }  // Using ProofType sealed type
     }
 
     // Create issuer DID
@@ -106,12 +103,12 @@ fun main() = runBlocking {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
     }.getOrThrowDid()
-    
+
     // Resolve DID to get key ID
     val issuerDoc = when (val res = trustWeave.resolveDid(issuerDid)) {
-    is DidResolutionResult.Success -> res.document
-    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
-}
+        is DidResolutionResult.Success -> res.document
+        else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+    }
     val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
         ?: throw IllegalStateException("No verification method found")
 
@@ -120,15 +117,14 @@ fun main() = runBlocking {
         credential {
             type(CredentialTypes.PERSON)
             issuer(issuerDid)
-            subject {
-                id(Did("did:key:subject"))
+            subject(Did("did:key:subject")) {
                 "type" to "Person"
                 "name" to "Alice"
                 "email" to "alice@example.com"
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
-        signedBy(issuerDid)
+        signedBy(issuerDid, issuerKeyId)
     }.getOrThrow()
 
     println("Issued credential: ${credential.id}")
@@ -146,21 +142,20 @@ fun main() = runBlocking {
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
 import org.trustweave.credential.model.CredentialTypes
 import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.errorMessage
 import org.trustweave.did.identifiers.extractKeyId
 import org.trustweave.credential.results.getOrThrow
-import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.*
-import java.time.Instant
-import java.time.temporal.ChronoUnit
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.days
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
     val didResult = trustWeave.createDid { method(DidMethods.KEY) }
@@ -196,14 +191,13 @@ fun main() = runBlocking {
         credential {
             type(CredentialTypes.PERSON)
             issuer(issuerDid)
-            subject {
-                id("did:key:subject")
+            subject("did:key:subject") {
                 "type" to "Person"
                 "name" to "Alice"
                 "email" to "alice@example.com"
             }
-            issued(Instant.now())
-            expires(Instant.now().plus(365, ChronoUnit.DAYS))
+            issued(Clock.System.now())
+            expiresIn(365.days)
         }
         signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
     }
@@ -226,17 +220,18 @@ fun main() = runBlocking {
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
+import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.results.VerificationResult
-import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
-    val credential = /* previously issued credential */
+    val credential: VerifiableCredential = TODO("use a credential from the issuance step")
 
     val result = trustWeave.verify {
         credential(credential)
@@ -262,17 +257,18 @@ fun main() = runBlocking {
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
+import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.results.VerificationResult
-import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
-    val credential = /* previously issued credential */
+    val credential: VerifiableCredential = TODO("use a credential from the issuance step")
 
     val result = trustWeave.verify {
         credential(credential)
@@ -296,28 +292,32 @@ fun main() = runBlocking {
 ```kotlin
 // Kotlin stdlib
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.*
+import kotlinx.datetime.Clock
 
 // TrustWeave core
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
-import org.trustweave.credential.*
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders
+import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.credential.model.ProofType
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.identifiers.extractKeyId
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
-        credentials { defaultProofType(ProofType.Ed25519Signature2020) }  // Using ProofType enum
+        credentials { defaultProofType(ProofType.Ed25519Signature2020) }
     }
-    
+
     val didResult = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
     }
-    
+
     val issuerDid = when (didResult) {
         is DidCreationResult.Success -> didResult.did
         else -> {
@@ -349,11 +349,12 @@ fun main() = runBlocking {
     // Issue credential
     val issuanceResult = trustWeave.issue {
         credential {
+            type("VerifiableCredential")
             issuer(issuerDid)
-            subject {
-                id("did:key:subject")
+            subject("did:key:subject") {
+                "name" to "Alice"
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
         signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
     }
@@ -376,13 +377,15 @@ fun main() = runBlocking {
     when (verificationResult) {
         is VerificationResult.Valid -> println("Valid: true")
         is VerificationResult.Invalid.Expired -> println("Valid: false — expired at ${verificationResult.expiredAt}")
+        is VerificationResult.Invalid.NotYetValid -> println("Valid: false — not yet valid (validFrom ${verificationResult.validFrom})")
         is VerificationResult.Invalid.Revoked -> println("Valid: false — revoked")
         is VerificationResult.Invalid.InvalidProof -> println("Valid: false — invalid proof: ${verificationResult.reason}")
         is VerificationResult.Invalid.InvalidIssuer -> println("Valid: false — issuer: ${verificationResult.reason}")
         is VerificationResult.Invalid.UntrustedIssuer -> println("Valid: false — untrusted issuer: ${verificationResult.issuerDid.value}")
+        is VerificationResult.Invalid.UnsupportedFormat -> println("Valid: false — unsupported format ${verificationResult.format.value}")
+        is VerificationResult.Invalid.AdapterNotReady -> println("Valid: false — adapter not ready: ${verificationResult.reason}")
         is VerificationResult.Invalid.SchemaValidationFailed -> println("Valid: false — schema: ${verificationResult.allErrors.joinToString()}")
         is VerificationResult.Invalid.MultipleFailures -> println("Valid: false — ${verificationResult.allErrors.joinToString()}")
-        is VerificationResult.Invalid -> println("Valid: false — ${verificationResult.allErrors.joinToString()}")
     }
 
     // Note: Revocation is typically handled through credential status lists
@@ -399,22 +402,21 @@ fun main() = runBlocking {
 ```kotlin
 // Kotlin stdlib
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.*
 
 // TrustWeave core
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
 import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.errorMessage
 import org.trustweave.did.identifiers.extractKeyId
-import org.trustweave.credential.*
-import org.trustweave.testkit.services.*
+import org.trustweave.credential.results.IssuanceResult
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
     val didResult = trustWeave.createDid { method(DidMethods.KEY) }
@@ -456,15 +458,10 @@ fun main() = runBlocking {
     val credentials = subjects.mapNotNull { subjectData ->
         val issuanceResult = trustWeave.issue {
             credential {
-                type("VerifiableCredential", "PersonCredential")
+                type("PersonCredential")
                 issuer(issuerDid)
-                subject {
-                    id(subjectData["id"] as String)
-                    subjectData.forEach { (key, value) ->
-                        if (key != "id") {
-                            key to value
-                        }
-                    }
+                subject(subjectData["id"] as String) {
+                    "name" to (subjectData["name"] as String)
                 }
             }
             signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
@@ -500,21 +497,21 @@ import kotlinx.coroutines.runBlocking
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
 import org.trustweave.trust.dsl.credential.presentationResult
 import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.trust.types.PresentationResult
 import org.trustweave.credential.requests.VerificationOptions
 import org.trustweave.credential.results.VerificationResult
 import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
-    val credentials: List<VerifiableCredential> = /* credentials from issuance steps */
+    val credentials: List<VerifiableCredential> = TODO("credentials from earlier issuance steps")
     val holderDidResult = trustWeave.createDid { method(DidMethods.KEY) }
     val holderDid = when (holderDidResult) {
         is DidCreationResult.Success -> holderDidResult.did
@@ -590,23 +587,22 @@ TrustWeave uses sealed result types for all I/O operations, providing type-safe,
 ```kotlin
 // Kotlin stdlib
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.*
+import kotlinx.datetime.Clock
 
 // TrustWeave core
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
 import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.credential.results.IssuanceResult
-import org.trustweave.credential.*
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.errorMessage
 import org.trustweave.did.identifiers.extractKeyId
-import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
     
@@ -648,11 +644,12 @@ fun main() = runBlocking {
     // Issue credential with error handling
     val issuanceResult = trustWeave.issue {
         credential {
+            type("VerifiableCredential")
             issuer(issuerDid)
-            subject {
-                id("did:key:subject")
+            subject("did:key:subject") {
+                "name" to "Alice"
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
         }
         signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
     }

@@ -152,16 +152,19 @@ val verification = trustWeave.verify(credential)
 
 when (verification) {
     is VerificationResult.Valid -> {
-        // Additional trust check
-        val issuerTrusted = trustweave.trust.isTrustedIssuer(
-            issuer = IssuerIdentity(credential.issuer),
-            credentialType = CredentialType(credential.type.first())
-        )
-        
+        // Additional trust check via the trust DSL (suspending)
+        var issuerTrusted = false
+        trustWeave.trust {
+            issuerTrusted = isTrusted(
+                issuerDid = credential.issuer.id.value,
+                credentialType = credential.type.firstOrNull()?.value
+            )
+        }
+
         if (!issuerTrusted) {
             throw SecurityException("Issuer not trusted")
         }
-        
+
         // Now safe to use credential
     }
     is VerificationResult.Invalid -> {
@@ -171,7 +174,7 @@ when (verification) {
 
 // ❌ Bad: Accepting credentials without trust checks
 val verification = trustWeave.verify(credential)
-if (verification.isValid) {
+if (verification is VerificationResult.Valid) {
     // No trust registry check - accepting untrusted credentials!
 }
 ```
@@ -252,20 +255,20 @@ val insecure = trustWeave.wallet {
 Configure which issuers you trust for which credential types:
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.TrustProviders.IN_MEMORY
 val trustweave = TrustWeave.build {
     trust {
         provider(IN_MEMORY)
     }
 }
 
-// Add trust anchors
+// Add trust anchors (call inside a suspend context)
 trustweave.trust {
     addAnchor("did:key:university") {
         credentialTypes("EducationCredential", "DegreeCredential")
         description("Trusted university")
     }
-    
+
     addAnchor("did:key:government") {
         credentialTypes("GovernmentID", "Passport")
         description("Government authority")
@@ -282,12 +285,15 @@ Always verify before trusting:
 val verification = trustWeave.verify(credential)
 when (verification) {
     is VerificationResult.Valid -> {
-        // Verify issuer is in trust registry
-        val isTrusted = trustweave.trust.isTrustedIssuer(
-            issuer = IssuerIdentity(credential.issuer),
-            credentialType = CredentialType("EducationCredential")
-        )
-        
+        // Verify issuer is in trust registry (via trust DSL)
+        var isTrusted = false
+        trustWeave.trust {
+            isTrusted = isTrusted(
+                issuerDid = credential.issuer.id.value,
+                credentialType = "EducationCredential"
+            )
+        }
+
         if (isTrusted) {
             // Safe to trust this credential
             acceptCredential(credential)
@@ -304,8 +310,8 @@ when (verification) {
 Establish a chain of trust:
 
 ```kotlin
-// Verify credential
-val credentialValid = trustWeave.verify(credential).isValid
+// Verify credential (use exhaustive when on the sealed VerificationResult)
+val credentialValid = trustWeave.verify(credential) is VerificationResult.Valid
 
 // Verify issuer trust
 val issuerTrusted = verifyIssuerTrust(credential.issuer)
@@ -389,19 +395,24 @@ Only trust what you must, and verify everything:
 
 ```kotlin
 // ✅ Good: Verify everything
-fun acceptCredential(credential: VerifiableCredential): Boolean {
+suspend fun acceptCredential(credential: VerifiableCredential): Boolean {
     // 1. Verify proof, expiration, and revocation (defaults on trustWeave.verify)
-    val verification = trustWeave.verify(credential)
-    if (!verification.isValid) {
+    if (trustWeave.verify(credential) !is VerificationResult.Valid) {
         return false
     }
-    
-    // 2. Check issuer trust (application policy)
-    val issuerTrusted = trustweave.trust.isTrustedIssuer(...)
+
+    // 2. Check issuer trust (application policy) via the trust DSL
+    var issuerTrusted = false
+    trustWeave.trust {
+        issuerTrusted = isTrusted(
+            issuerDid = credential.issuer.id,
+            credentialType = credential.type.firstOrNull()
+        )
+    }
     if (!issuerTrusted) {
         return false
     }
-    
+
     return true
 }
 ```
@@ -414,14 +425,17 @@ Multiple layers of verification:
 // Layer 1: Cryptographic verification
 val verification = trustWeave.verify(credential)
 
-// Layer 2: Trust registry check
-val issuerTrusted = trustweave.trust.isTrustedIssuer(...)
+// Layer 2: Trust registry check (suspend)
+var issuerTrusted = false
+trustWeave.trust {
+    issuerTrusted = isTrusted(credential.issuer.id, credential.type.firstOrNull())
+}
 
 // Layer 3: Business logic validation
 val businessValid = validateBusinessRules(credential)
 
 // All layers must pass
-return verification.isValid && issuerTrusted && businessValid
+return verification is VerificationResult.Valid && issuerTrusted && businessValid
 ```
 
 ### 3. Fail Securely
@@ -449,24 +463,28 @@ when (val verification = trustWeave.verify(credential)) {
 Log all trust decisions for auditing:
 
 ```kotlin
-fun acceptCredential(credential: VerifiableCredential): Boolean {
+suspend fun acceptCredential(credential: VerifiableCredential): Boolean {
     val verification = trustWeave.verify(credential)
-    val issuerTrusted = trustweave.trust.isTrustedIssuer(...)
-    
-    val accepted = verification.isValid && issuerTrusted
-    
+    var issuerTrusted = false
+    trustWeave.trust {
+        issuerTrusted = isTrusted(credential.issuer.id.value, credential.type.firstOrNull()?.value)
+    }
+
+    val verificationValid = verification is VerificationResult.Valid
+    val accepted = verificationValid && issuerTrusted
+
     // Audit log
     auditLogger.info(
         "Credential trust decision",
         mapOf(
             "credentialId" to credential.id,
-            "issuer" to credential.issuer,
+            "issuer" to credential.issuer.id.value,
             "accepted" to accepted,
-            "verificationValid" to (verification is VerificationResult.Valid),
+            "verificationValid" to verificationValid,
             "issuerTrusted" to issuerTrusted
         )
     )
-    
+
     return accepted
 }
 ```
@@ -509,7 +527,7 @@ fun acceptCredential(credential: VerifiableCredential): Boolean {
 
 ## Related Documentation
 
-- Security Best Practices](./README.md) - General security guidelines
-- Trust Registry](../core-concepts/trust-registry.md) - Managing trust relationships
-- Error Handling](../advanced/error-handling.md) - Handling verification failures
+- [Security Best Practices](./README.md) - General security guidelines
+- [Trust Registry](../core-concepts/trust-registry.md) - Managing trust relationships
+- [Error Handling](../advanced/error-handling.md) - Handling verification failures
 

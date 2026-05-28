@@ -72,8 +72,14 @@ try {
 
 ### After (Result-based)
 
+Anchoring is exposed through the **`trustWeave.blockchains`** service (a `BlockchainService`). `anchor(...)` is `suspend` and returns an `AnchorResult` on success — failures surface as typed `BlockchainException` subclasses. Wrap with `runCatching` to use a `Result<T>` flow:
+
 ```kotlin
-val result = TrustWeave.anchor(data, serializer, chainId)
+import org.trustweave.anchor.exceptions.BlockchainException
+
+val result = runCatching {
+    trustWeave.blockchains.anchor(data, serializer, chainId)
+}
 result.fold(
     onSuccess = { anchor ->
         println("Anchored: ${anchor.ref.txHash}")
@@ -111,30 +117,21 @@ try {
 
 ### After
 
+`TrustWeave.createDid(...)` is a `suspend` method that returns the sealed `DidCreationResult`. Pattern-match instead of calling `.fold` on a `Result<T>`:
+
 ```kotlin
-val result = TrustWeave.createDid()
-result.fold(
-    onSuccess = { did ->
-        println("Created: ${did.id}")
-    },
-    onFailure = { error ->
-        when (error) {
-            is DidException.DidMethodNotRegistered -> {
-                println("Method not registered: ${error.method}")
-                println("Available methods: ${error.availableMethods}")
-            }
-            is DidException.InvalidDidFormat -> {
-                println("Invalid format: ${error.reason}")
-            }
-            else -> {
-                println("Error: ${error.message}")
-                error.context.forEach { (key, value) ->
-                    println("  $key: $value")
-                }
-            }
-        }
+import org.trustweave.trust.types.DidCreationResult
+
+val trustWeave = TrustWeave.quickStart()
+
+when (val result = trustWeave.createDid()) {
+    is DidCreationResult.Success -> println("Created: ${result.did}")
+    is DidCreationResult.Failure.MethodNotRegistered -> {
+        println("Method not registered: ${result.method}")
+        println("Available methods: ${result.availableMethods}")
     }
-)
+    is DidCreationResult.Failure -> println("Error: $result")
+}
 ```
 
 ## 4. Migrating Plugin Lifecycle
@@ -201,7 +198,7 @@ val chainId = "algorand:testnet"  // Still supported, but less safe
 
 **Problem**: Plugins not initialized before use
 
-**Solution**: Call `initialize()` and `start()` before using TrustWeave
+**Solution**: The `TrustWeave` facade does not expose `initialize()` / `start()` / `stop()`. Build it via `TrustWeave.build { … }` (or `TrustWeave.quickStart()`) and call `trustWeave.close()` on shutdown. If your own adapters implement `PluginLifecycle`, drive their hooks from the same composition root — see [Plugin lifecycle](../advanced/plugin-lifecycle.md).
 
 ## Testing Your Migration
 

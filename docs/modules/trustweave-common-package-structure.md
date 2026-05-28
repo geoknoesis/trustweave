@@ -1,10 +1,10 @@
 ---
-title: trustweave-common Package Structure
+title: common Package Structure
 ---
 
-# trustweave-common Package Structure
+# common Package Structure
 
-The `trustweave-common` module is organized into logical packages for better code organization and discoverability.
+The `common` module is organized into logical packages for better code organization and discoverability.
 
 ## Package Organization
 
@@ -26,6 +26,13 @@ org.trustweave.core/
 │   ├── PluginType.kt
 │   └── ProviderChain.kt
 │
+├── identifiers/            # Identifier value/open classes
+│   └── Identifiers.kt      # Iri, KeyId, IriSerializer, KeyIdSerializer
+│
+├── serialization/          # Serialization helpers
+│   ├── InstantSerializer.kt
+│   └── SerializationModule.kt
+│
 └── util/                   # General utilities
     ├── DigestUtils.kt      # JSON canonicalization and digest computation
     ├── ResultExtensions.kt # Result<T> extension functions
@@ -38,11 +45,11 @@ org.trustweave.core/
 
 Exception types and error handling:
 
-- **`TrustWeaveException`** – Base type; nested types include **`ValidationFailed`**, **`InvalidOperation`**, **`InvalidState`**, **`Unknown`**, **`DigestFailed`**, **`EncodeFailed`**, **`NotFound`**
-- **`PluginException`** – `BlankId`, `AlreadyRegistered`, `NotFound`, `InitializationFailed`
-- **`ProviderException`** – Provider chain failures
-- **`ConfigException`** – `NotFound`, `ReadFailed`, `InvalidFormat`
-- **`SerializationException`** – `InvalidJson`, `EncodeFailed`
+- **`TrustWeaveException`** – `open class` base type. Nested types: **`ValidationFailed`**, **`InvalidOperation`**, **`InvalidState`**, **`Unknown`**, **`DigestFailed`**, **`EncodeFailed`**, **`NotFound`**, **`UnsupportedAlgorithm`**
+- **`PluginException`** – sealed sibling class extending `TrustWeaveException`. Subtypes: `NotFound`, `InitializationFailed`, `AlreadyRegistered`, `BlankId` (object)
+- **`ProviderException`** – sealed sibling class. Subtypes: `NoneFound`, `PartiallyFound`, `AllFailed`
+- **`ConfigException`** – sealed sibling class. Subtypes: `NotFound`, `ReadFailed`, `InvalidFormat`
+- **`SerializationException`** – sealed sibling class. Subtypes: `InvalidJson`, `EncodeFailed`
 
 **Example:**
 ```kotlin
@@ -62,22 +69,15 @@ try {
 
 Plugin infrastructure for extensibility:
 
-- **`PluginRegistry`** – Thread-safe, unified plugin registry for capability-based discovery
 - **`PluginMetadata`** – Metadata about plugins (capabilities, dependencies, configuration)
 - **`PluginCapabilities`** – Domain-agnostic capabilities (features, extensions)
 - **`PluginConfiguration`** – Configuration loaded from YAML/JSON files
+- **`PluginConfigurationLoader`** – Loader for YAML/JSON plugin configurations
 - **`PluginType`** – Framework-level plugin type enumeration (BLOCKCHAIN, CREDENTIAL_SERVICE, DID_METHOD, KMS, etc.)
-- **`ProviderChain`** – Provider chain with automatic fallback support
 - **`PluginLifecycle`** – Lifecycle interface for plugin initialization, startup, shutdown, and cleanup
+- **`PluginRegistry`** / **`ProviderChain`** – Internal infrastructure (`internal` visibility). Use domain registries (`DidMethodRegistry`, `BlockchainAnchorRegistry`, etc.) instead.
 
-**Example:**
-```kotlin
-import org.trustweave.core.plugin.PluginRegistry
-import org.trustweave.core.plugin.PluginMetadata
-
-PluginRegistry.register(metadata, instance)
-val plugins = PluginRegistry.findByCapability("credential-storage")
-```
+> **TODO:** Add a public example for the domain-specific registries; `PluginRegistry` is no longer a public entry point.
 
 ### `org.trustweave.core.util`
 
@@ -104,8 +104,8 @@ if (!validation.isValid()) {
 ```
 
 **Note:** Domain-specific validators are in their respective modules:
-- `DidValidator` → `org.trustweave.did.validation.DidValidator` (in `trustweave-did`)
-- `ChainIdValidator` → `org.trustweave.anchor.validation.ChainIdValidator` (in `trustweave-anchor`)
+- `DidValidator` → `org.trustweave.did.validation.DidValidator` (in `did:did-core`)
+- `ChainIdValidator` → `org.trustweave.anchor.validation.ChainIdValidator` (in `anchors:anchor-core`)
 
 ## Related Packages
 
@@ -113,12 +113,12 @@ if (!validation.isValid()) {
 
 Domain-specific functionality is located in their respective modules:
 
-- **Proof Types** → `org.trustweave.credential.proof.ProofType` (in `trustweave-credentials`)
-- **Schema Format** → `org.trustweave.credential.SchemaFormat` (in `trustweave-credentials`)
-- **DID Validation** → `org.trustweave.did.validation.DidValidator` (in `trustweave-did`)
-- **Chain ID Validation** → `org.trustweave.anchor.validation.ChainIdValidator` (in `trustweave-anchor`)
-- **DID errors** → `org.trustweave.did.exception.DidException` (in `trustweave-did`)
-- **Blockchain errors** → `org.trustweave.anchor.exceptions.BlockchainException` (in `trustweave-anchor`)
+- **Proof Types** → `org.trustweave.credential.proof.ProofType` (in `credentials:credential-api`)
+- **Schema Format** → `org.trustweave.credential.SchemaFormat` (in `credentials:credential-api`)
+- **DID Validation** → `org.trustweave.did.validation.DidValidator` (in `did:did-core`)
+- **Chain ID Validation** → `org.trustweave.anchor.validation.ChainIdValidator` (in `anchors:anchor-core`)
+- **DID errors** → `org.trustweave.did.exception.DidException` (in `did:did-core`)
+- **Blockchain errors** → `org.trustweave.anchor.exceptions.BlockchainException` (in `anchors:anchor-core`)
 
 ## Migration Notes
 
@@ -127,9 +127,9 @@ If you're migrating from an older version:
 - **`org.trustweave.json.DigestUtils`** → **`org.trustweave.core.util.DigestUtils`**
 - **`org.trustweave.core.TrustWeaveException`** → **`org.trustweave.core.exception.TrustWeaveException`**
 - **Legacy docs referring to `TrustWeaveError`** → use **`TrustWeaveException`** and domain types (`DidException`, `BlockchainException`, `PluginException`, …)
-- **`org.trustweave.core.types.ProofType`** → **`org.trustweave.credential.model.ProofType`** (in `trustweave-credentials`)
-- **`org.trustweave.core.DidValidator`** → **`org.trustweave.did.validation.DidValidator`** (in `trustweave-did`)
-- **`org.trustweave.core.ChainIdValidator`** → **`org.trustweave.anchor.validation.ChainIdValidator`** (in `trustweave-anchor`)
+- **`org.trustweave.core.types.ProofType`** → **`org.trustweave.credential.model.ProofType`** (in `credentials:credential-api`)
+- **`org.trustweave.core.DidValidator`** → **`org.trustweave.did.validation.DidValidator`** (in `did:did-core`)
+- **`org.trustweave.core.ChainIdValidator`** → **`org.trustweave.anchor.validation.ChainIdValidator`** (in `anchors:anchor-core`)
 - **`org.trustweave.core.ValidationResult`** → **`org.trustweave.core.util.ValidationResult`** (still in common, but validators moved)
 
 ## Benefits of This Organization

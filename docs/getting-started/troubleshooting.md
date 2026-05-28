@@ -81,11 +81,10 @@ VerificationResult.Invalid.InvalidProof(..., errors=[Proof verification failed])
    ```kotlin
 import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.trust.types.getOrThrowDid
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 
    // Ensure issuer DID is created and resolvable
-   
-   
    val issuerDid = trustWeave.createDid {
        method(KEY)
        algorithm(ED25519)
@@ -95,33 +94,30 @@ import org.trustweave.testkit.services.*
 
 2. **Key ID mismatch**
    ```kotlin
-import org.trustweave.trust.types.getOrThrowDid
-import org.trustweave.trust.types.getOrThrow
-import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.did.resolver.errorMessage
-import org.trustweave.did.identifiers.extractKeyId
-import org.trustweave.testkit.services.*
+   import org.trustweave.trust.types.getOrThrowDid
+   import org.trustweave.did.resolver.DidResolutionResult
+   import org.trustweave.did.resolver.errorMessage
+   import org.trustweave.did.identifiers.extractKeyId
+   import org.trustweave.trust.dsl.credential.DidMethods.KEY
 
    // Get the correct key ID from the DID document
-import org.trustweave.credential.results.getOrThrow
-   
    val issuerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
    val issuerDoc = when (val res = trustWeave.resolveDid(issuerDid)) {
-    is DidResolutionResult.Success -> res.document
-    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
-}
+       is DidResolutionResult.Success -> res.document
+       else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+   }
    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
        ?: throw IllegalStateException("No verification method found")
    ```
 
 3. **Credential expired**
    ```kotlin
-   // Check expiration date
-   if (credential.expirationDate != null) {
-       val expiration = Instant.parse(credential.expirationDate)
-       if (expiration.isBefore(Instant.now())) {
-           println("Credential expired")
-       }
+   import kotlinx.datetime.Clock
+
+   // credential.expirationDate is already a kotlinx.datetime.Instant?
+   val expiration = credential.expirationDate
+   if (expiration != null && expiration < Clock.System.now()) {
+       println("Credential expired")
    }
    ```
 
@@ -144,10 +140,7 @@ WalletException.WalletCreationFailed: Provider 'database' not found
 - Check wallet provider availability
 
 ```kotlin
-import org.trustweave.trust.types.WalletCreationResult
-
 import org.trustweave.trust.types.getOrThrow
-import org.trustweave.credential.results.getOrThrow
 
 val wallet = trustWeave.wallet {
     id("holder-wallet")
@@ -169,19 +162,37 @@ PluginException.InitializationFailed: Configuration missing
 - Check plugin-specific requirements
 - Verify environment variables are set
 
-```kotlin
-val config = mapOf(
-    "database" to mapOf("url" to "jdbc:postgresql://localhost/TrustWeave"),
-    "apiKey" to System.getenv("PLUGIN_API_KEY")
-)
+There is no `trustWeave.initialize(config)` API. All plugin configuration happens
+inside `TrustWeave.build { ... }`. Re-read the failing plugin's required-options
+contract and pass values via the matching DSL block:
 
-try {
-    trustweave.initialize(config)
-    println("Plugins initialized")
-} catch (error: TrustWeaveException) {
-    println("Initialization failed: ${error.message}")
+```kotlin
+import org.trustweave.trust.TrustWeave
+
+val trustWeave = TrustWeave.build {
+    kms {
+        // KMS plugins typically need a credential or endpoint here.
+    }
+    did {
+        method("web") {
+            // did:web plugin options
+        }
+    }
+    blockchains {
+        chain("algorand:testnet") {
+            provider("algorand")
+            options {
+                put("algodUrl",   System.getenv("ALGOD_URL"))
+                put("algodToken", System.getenv("ALGOD_TOKEN"))
+            }
+        }
+    }
 }
 ```
+
+If a plugin still fails: confirm it appears on the classpath (`./gradlew dependencies`),
+that its `META-INF/services` provider file is shaded into the jar, and that the
+DSL block name matches the plugin id reported by the failing `PluginException`.
 
 ## Debugging Workflows
 
@@ -219,11 +230,11 @@ dependencies {
 Check all registries and available services:
 
 ```kotlin
-import org.trustweave.trust.dsl.credential.KEY
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.trust.types.getOrThrowDid
-import org.trustweave.testkit.services.*
 
-fun debugSystemState(trustWeave: TrustWeave) {
+suspend fun debugSystemState(trustWeave: TrustWeave) {
     println("=== TrustWeave System State ===")
 
     // Registered DID methods (from the facade configuration)
@@ -331,18 +342,16 @@ suspend fun traceDidResolution(did: String) {
     // Step 4: Resolution attempt
     println("\n[Step 4] Attempting resolution...")
     val startTime = System.currentTimeMillis()
-    val resolution = try {
-        trustWeave.resolveDid(did)
-    } catch (error: Exception) {
-        val duration = System.currentTimeMillis() - startTime
-        println("❌ Resolution failed (${duration}ms)")
-            println("   Error: ${error.message}")
-            println("   Code: ${error.code}")
-            error.context.forEach { (key, value) ->
-                println("   $key: $value")
-            }
+    val resolution = trustWeave.resolveDid(did)
+    val duration = System.currentTimeMillis() - startTime
+    when (resolution) {
+        is DidResolutionResult.Success ->
+            println("✅ Resolved (${duration}ms): ${resolution.document.id}")
+        is DidResolutionResult.Failure -> {
+            println("❌ Resolution failed (${duration}ms)")
+            println("   Error: ${resolution.errorMessage}")
         }
-    )
+    }
 }
 ```
 
@@ -351,8 +360,13 @@ suspend fun traceDidResolution(did: String) {
 Create a minimal reproducible example:
 
 ```kotlin
+import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.getOrThrowDid
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
 
 suspend fun minimalReproducibleExample() {
     println("=== Minimal Reproducible Example ===")
@@ -367,30 +381,20 @@ suspend fun minimalReproducibleExample() {
 
     // Step 2: Create a DID
     println("\n[2] Creating DID...")
-    
     val did = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     println("✅ DID created: ${did.value}")
 
     // Step 3: Resolve the DID
     println("\n[3] Resolving DID...")
-    val resolution = trustWeave.resolveDid(did)
-    when (resolution) {
+    when (val resolution = trustWeave.resolveDid(did)) {
         is DidResolutionResult.Success -> {
-                    println("✅ DID resolved")
-                    println("   Document: ${resolution.document?.id}")
-                },
-                onFailure = { error ->
-                    println("❌ Resolution failed")
-                    println("   Error: ${error.message}")
-                }
-            )
-        },
-        onFailure = { error ->
-            println("❌ DID creation failed")
-            println("   Error: ${error.message}")
-            println("   Code: ${error.code}")
+            println("✅ DID resolved")
+            println("   Document: ${resolution.document.id}")
         }
-    )
+        is DidResolutionResult.Failure -> {
+            println("❌ Resolution failed: ${resolution.errorMessage}")
+        }
+    }
 }
 ```
 
@@ -446,7 +450,10 @@ fun analyzeError(error: TrustWeaveException) {
 For operations requiring network access:
 
 ```kotlin
-suspend fun checkNetworkConnectivity() {
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorMessage
+
+suspend fun checkNetworkConnectivity(trustWeave: TrustWeave) {
     println("=== Network Connectivity Check ===")
 
     // Test DID resolution (requires network for did:web)
@@ -458,22 +465,15 @@ suspend fun checkNetworkConnectivity() {
     val duration = System.currentTimeMillis() - startTime
 
     when (resolution) {
-        is DidResolutionResult.Success -> {
+        is DidResolutionResult.Success ->
             println("✅ Network connectivity OK (${duration}ms)")
-        },
-        onFailure = { error ->
-            when (error) {
-                is DidException.DidNotFound -> {
-                    println("⚠️  Network accessible but DID not found")
-                }
-                else -> {
-                    println("❌ Network issue or timeout")
-                    println("   Error: ${error.message}")
-                    println("   Duration: ${duration}ms")
-                }
-            }
+        is DidResolutionResult.Failure.NotFound ->
+            println("⚠️  Network accessible but DID not found (${duration}ms)")
+        is DidResolutionResult.Failure -> {
+            println("❌ Network issue or resolver error (${duration}ms)")
+            println("   Error: ${resolution.errorMessage}")
         }
-    )
+    }
 }
 ```
 
@@ -537,17 +537,28 @@ suspend fun resolveDidCached(
 - Archive old credentials
 - Implement pagination for credential queries
 
+Persistent wallet storage is selected with `provider("database")` (or another
+registered wallet-storage factory) inside `trustWeave.wallet { ... }`. There is **no**
+`storageProvider` / `storagePath` DSL on `WalletBuilder`, and `Wallet.list(...)`
+takes a `CredentialFilter?` — not an `(offset, limit)` pair. Page through results
+by attaching predicates to `CredentialFilter`.
+
 ```kotlin
-// Use persistent storage instead of in-memory
+import org.trustweave.wallet.CredentialFilter
+
+// Use a registered persistent wallet provider.
 val wallet = trustWeave.wallet {
     holder(holderDid)
-    // Use database storage
-    storageProvider("database")
-    storagePath("wallets/${holderDid}")
-}
+    provider("database")
+}.getOrThrow()
 
-// Implement pagination
-val credentials = wallet.list(offset = 0, limit = 100)
+// All credentials (uses default empty filter).
+val all = wallet.list()
+
+// Filter to narrow the working set instead of paginating in memory.
+val degrees = wallet.list(
+    CredentialFilter(type = listOf("UniversityDegreeCredential"))
+)
 ```
 
 ### Slow Credential Issuance
@@ -646,7 +657,7 @@ class ThreadSafeCredentialStore {
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.TimeoutCancellationException
 import org.trustweave.trust.types.getOrThrowDid
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 
 suspend fun operationWithTimeout(
     trustWeave: TrustWeave,

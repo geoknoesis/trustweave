@@ -78,13 +78,13 @@ val mainnetClient = AlgorandBlockchainAnchorClient("algorand:mainnet", mainnetOp
 When the `chains/plugins/algorand` module is on the classpath, Algorand adapter is automatically discoverable:
 
 ```kotlin
-import org.trustweave.anchor.*
+import org.trustweave.anchor.spi.BlockchainAnchorClientProvider
 import org.trustweave.anchor.options.AlgorandOptions
 import java.util.ServiceLoader
 
 // Discover Algorand provider
 val providers = ServiceLoader.load(BlockchainAnchorClientProvider::class.java)
-val algorandProvider = providers.find { it.supportsChain("algorand:testnet") }
+val algorandProvider = providers.find { "algorand:testnet" in it.supportedChains }
 
 // Create client with type-safe options
 val options = AlgorandOptions(
@@ -92,7 +92,8 @@ val options = AlgorandOptions(
     privateKey = "..."
 )
 
-val client = algorandProvider?.create("algorand:testnet", options)
+// SPI create() takes a Map<String, Any?> — convert typed options via toMap()
+val client = algorandProvider?.create("algorand:testnet", options.toMap())
 ```
 
 ## Usage Examples
@@ -100,10 +101,11 @@ val client = algorandProvider?.create("algorand:testnet", options)
 ### Anchoring Data
 
 ```kotlin
-import org.trustweave.algorand.*
-import org.trustweave.anchor.*
+import org.trustweave.anchor.algorand.AlgorandBlockchainAnchorClient
 import org.trustweave.anchor.options.AlgorandOptions
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 runBlocking {
     // Create client
@@ -113,44 +115,36 @@ runBlocking {
     )
     val client = AlgorandBlockchainAnchorClient("algorand:testnet", options)
 
-    // Anchor data
-    val payload = "Hello, Algorand!".toByteArray()
-    val result = client.writePayload(payload)
-
-    result.fold(
-        onSuccess = { anchorResult ->
-            println("Anchored to: ${anchorResult.anchorRef.chainId}")
-            println("Transaction hash: ${anchorResult.anchorRef.transactionHash}")
-            println("Block height: ${anchorResult.anchorRef.metadata?.get("blockHeight")}")
-        },
-        onFailure = { error ->
-            println("Anchoring failed: ${error.message}")
-        }
-    )
+    // Anchor data (writePayload takes a JsonElement and returns AnchorResult)
+    val payload = buildJsonObject { put("message", "Hello, Algorand!") }
+    try {
+        val anchorResult = client.writePayload(payload)
+        println("Anchored to: ${anchorResult.ref.chainId}")
+        println("Transaction hash: ${anchorResult.ref.txHash}")
+        println("Network: ${anchorResult.ref.extra["network"]}")
+    } catch (e: Exception) {
+        println("Anchoring failed: ${e.message}")
+    }
 }
 ```
 
 ### Reading Anchored Data
 
 ```kotlin
-import org.trustweave.anchor.*
+import org.trustweave.anchor.AnchorRef
 
 val anchorRef = AnchorRef(
     chainId = "algorand:testnet",
-    transactionHash = "abc123...",
-    metadata = mapOf("blockHeight" to 12345L)
+    txHash = "abc123...",
+    extra = mapOf("network" to "testnet")
 )
 
-val result = client.readPayload(anchorRef)
-
-result.fold(
-    onSuccess = { data ->
-        println("Read payload: ${data.toString(Charsets.UTF_8)}")
-    },
-    onFailure = { error ->
-        println("Read failed: ${error.message}")
-    }
-)
+try {
+    val result = client.readPayload(anchorRef)
+    println("Read payload: ${result.payload}")
+} catch (e: Exception) {
+    println("Read failed: ${e.message}")
+}
 ```
 
 ### Using with TrustWeave Facade
@@ -172,15 +166,14 @@ runBlocking {
             chain("algorand:testnet") {
                 provider("algorand")
                 options {
-                    for ((k, v) in options.toMap()) {
-                        if (v != null) k.to(v)
-                    }
+                    "algodUrl" to options.algodUrl
+                    "privateKey" to options.privateKey
                 }
             }
         }
     }
 
-    val credential: VerifiableCredential = /* your credential */
+    val credential: VerifiableCredential = TODO("your credential")
     val anchorResult = trustWeave.blockchains.anchor(
         data = credential,
         serializer = VerifiableCredential.serializer(),

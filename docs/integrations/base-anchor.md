@@ -38,7 +38,7 @@ dependencies {
 
 ```kotlin
 import org.trustweave.anchor.*
-import org.trustweave.base.*
+import org.trustweave.anchor.base.*
 
 // Create Base anchor client for mainnet
 val options = mapOf(
@@ -100,7 +100,7 @@ val client = baseProvider?.create(
 
 ```kotlin
 import org.trustweave.anchor.*
-import org.trustweave.base.*
+import org.trustweave.anchor.base.*
 import kotlinx.serialization.json.*
 
 val client = BaseBlockchainAnchorClient(
@@ -140,7 +140,7 @@ println("Anchored to Base: ${result.ref.txHash}")
 
 ```kotlin
 import org.trustweave.trust.TrustWeave
-import org.trustweave.base.*
+import org.trustweave.anchor.base.*
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put

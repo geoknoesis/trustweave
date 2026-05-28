@@ -25,9 +25,10 @@ Rotating signing keys keeps verifiable credential ecosystems resilient: compromi
 
 ```kotlin
 import kotlinx.coroutines.runBlocking
-import org.trustweave.testkit.services.*
 import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.dsl.credential.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.trust.types.getOrThrow
 
 fun rotateIssuerDid() = runBlocking {

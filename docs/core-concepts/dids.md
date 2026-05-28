@@ -59,22 +59,24 @@ Wallets expose DID helpers through the `DidManagement` capability (see the [Wall
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.getOrThrowDid
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(ED25519) }
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did {
-            method(KEY) {
-                algorithm(ED25519)
+            method(DidMethods.KEY) {
+                algorithm(KeyAlgorithms.ED25519)
             }
         }
     }
 
     val issuerDid = trustWeave.createDid {
-        method(KEY)
-        algorithm(ED25519)
+        method(DidMethods.KEY)
+        algorithm(KeyAlgorithms.ED25519)
     }.getOrThrowDid()
 
     println("Issuer DID: ${issuerDid.value}")

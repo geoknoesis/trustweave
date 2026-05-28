@@ -21,7 +21,7 @@ dependencies {
 ```kotlin
 import org.trustweave.credential.didcomm.*
 import org.trustweave.credential.didcomm.protocol.*
-import org.trustweave.testkit.InMemoryKeyManagementService
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.did.*
 
 val kms = InMemoryKeyManagementService()
@@ -124,7 +124,7 @@ See [didcomm-integration-guide.md](./didcomm-integration-guide.md) for details.
 ## Next Steps
 
 - Read [README.md](README.md) for full documentation
-- See [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md) for production setup
-- Check [CRYPTO_IMPLEMENTATION_NOTES.md](CRYPTO_IMPLEMENTATION_NOTES.md) for crypto details
-- Review [IMPLEMENTATION.md](IMPLEMENTATION.md) for architecture
+- See [didcomm-integration-guide.md](./didcomm-integration-guide.md) for production setup
+- Check [didcomm-crypto-implementation-notes.md](./didcomm-crypto-implementation-notes.md) for crypto details
+- Review [didcomm-implementation.md](./didcomm-implementation.md) for architecture
 

@@ -1,10 +1,10 @@
 ---
-title: trustweave-did (Core Module)
+title: did:did-core
 ---
 
-# trustweave-did (Core Module)
+# did:did-core
 
-The `trustweave-did` module provides Decentralized Identifier (DID) and DID Document management with support for pluggable DID methods, DID resolution, and DID registration interfaces.
+The `did:did-core` module provides Decentralized Identifier (DID) and DID Document management with support for pluggable DID methods, DID resolution, and DID registration interfaces.
 
 ```kotlin
 dependencies {
@@ -20,7 +20,7 @@ dependencies {
 
 **Standards note:** TrustWeave is documented around **W3C DID Core 1.0**. For **DID 1.1** (and gaps vs full conformance), see **[DID Core 1.0 vs 1.1 and TrustWeave gaps](../reference/did-core-1-1-compliance-and-gaps.md)**.
 
-The `trustweave-did` core module provides:
+The `did:did-core` module provides:
 
 - **DidMethod Interface** – contract for DID method implementations
 - **DID Document Models** – W3C-compliant DID Document structures
@@ -35,7 +35,7 @@ The `trustweave-did` core module provides:
 
 ```mermaid
 graph TB
-    subgraph "trustweave-did Core Module"
+    subgraph "did:did-core Module"
         DidMethod[DidMethod Interface]
         DidMethodRegistry[DidMethodRegistry]
         DidResolver[DidResolver]
@@ -194,7 +194,7 @@ The module includes W3C-compliant models for:
 
 ### JSON-Based DID Method Registration
 
-With the **`trustweave-did-registrar`** artifact on the classpath, you can load DID methods from JSON that follows the [DID Method Registry](https://identity.foundation/did-registration/) format:
+With the **`did:registrar`** artifact on the classpath, you can load DID methods from JSON that follows the [DID Method Registry](https://identity.foundation/did-registration/) format:
 
 ```kotlin
 import org.trustweave.did.registrar.method.JsonDidMethodLoader
@@ -269,7 +269,6 @@ import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.runBlocking
-import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.quickStart()
@@ -388,17 +387,17 @@ val customResolver = DefaultUniversalResolver(
 
 TrustWeave provides implementations for:
 
-- **did:key** (`org.trustweave.did:key`) – Native did:key implementation. See [Key DID Integration Guide](../integrations/key-did.md).
-- **did:web** (`org.trustweave.did:web`) – Web DID method. See [Web DID Integration Guide](../integrations/web-did.md).
-- **did:ethr** (`org.trustweave.did:ethr`) – Ethereum DID method. See [Ethereum DID Integration Guide](../integrations/ethr-did.md).
-- **did:ion** (`org.trustweave.did:ion`) – Microsoft ION DID method. See [ION DID Integration Guide](../integrations/ion-did.md).
-- **did:jwk** (`org.trustweave.did:jwk`) – JWK DID method. See [JWK DID Integration Guide](../integrations/jwk-did.md).
-- **did:peer** (`org.trustweave.did:peer`) – Peer DID method. See [Peer DID Integration Guide](../integrations/peer-did.md).
-- **did:plc** (`org.trustweave.did:plc`) – PLC DID method. See [PLC DID Integration Guide](../integrations/plc-did.md).
-- **did:ens** (`org.trustweave.did:ens`) – ENS DID method. See [ENS DID Integration Guide](../integrations/ens-did.md).
-- **did:polygon** (`org.trustweave.did:polygon`) – Polygon DID method. See [Polygon DID Integration Guide](../integrations/polygon-did.md).
-- **did:sol** (`org.trustweave.did:sol`) – Solana DID method. See [Solana DID Integration Guide](../integrations/sol-did.md).
-- **did:cheqd** (`org.trustweave.did:cheqd`) – Cheqd DID method. See [Cheqd DID Integration Guide](../integrations/cheqd-did.md).
+- **did:key** (`org.trustweave:did-plugins-key`) – Native did:key implementation. See [Key DID Integration Guide](../integrations/key-did.md).
+- **did:web** (`org.trustweave:did-plugins-web`) – Web DID method. See [Web DID Integration Guide](../integrations/web-did.md).
+- **did:ethr** (`org.trustweave:did-plugins-ethr`) – Ethereum DID method. See [Ethereum DID Integration Guide](../integrations/ethr-did.md).
+- **did:ion** (`org.trustweave:did-plugins-ion`) – Microsoft ION DID method. See [ION DID Integration Guide](../integrations/ion-did.md).
+- **did:jwk** (`org.trustweave:did-plugins-jwk`) – JWK DID method. See [JWK DID Integration Guide](../integrations/jwk-did.md).
+- **did:peer** (`org.trustweave:did-plugins-peer`) – Peer DID method. See [Peer DID Integration Guide](../integrations/peer-did.md).
+- **did:plc** (`org.trustweave:did-plugins-plc`) – PLC DID method. See [PLC DID Integration Guide](../integrations/plc-did.md).
+- **did:ens** (`org.trustweave:did-plugins-ens`) – ENS DID method. See [ENS DID Integration Guide](../integrations/ens-did.md).
+- **did:polygon** (`org.trustweave:did-plugins-polygon`) – Polygon DID method. See [Polygon DID Integration Guide](../integrations/polygon-did.md).
+- **did:sol** (`org.trustweave:did-plugins-sol`) – Solana DID method. See [Solana DID Integration Guide](../integrations/sol-did.md).
+- **did:cheqd** (`org.trustweave:did-plugins-cheqd`) – Cheqd DID method. See [Cheqd DID Integration Guide](../integrations/cheqd-did.md).
 
 Additionally, the module supports HTTP-based DID methods through JSON configuration. See [DID Registration Integration Guide](../integrations/did-registration/README.md) for details.
 
@@ -458,13 +457,13 @@ graph TD
 
 ## Dependencies
 
-- Depends on [`trustweave-common`](trustweave-common.md) for core types, exceptions, and SPI interfaces
-- Depends on [`trustweave-kms`](trustweave-kms.md) for key operations
+- Depends on [`common`](trustweave-common.md) for core types, exceptions, and SPI interfaces
+- Depends on [`kms:kms-core`](trustweave-kms.md) for key operations
 
 ## Related Modules
 
-- **[trustweave-did-registrar](trustweave-did-registrar.md)** – DID Registrar implementations (clients and adapters)
-- **[trustweave-did-registrar-server](trustweave-did-registrar-server.md)** – Universal Registrar server implementation
+- **[did:registrar](trustweave-did-registrar.md)** – DID Registrar implementations (clients and adapters)
+- **[did:registrar-server-ktor](trustweave-did-registrar-server.md)** – Universal Registrar server implementation
 
 ## Next Steps
 

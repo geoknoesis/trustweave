@@ -135,7 +135,9 @@ package com.example.carbon.markets
 import org.trustweave.trust.TrustWeave
 import org.trustweave.credential.model.ProofType
 import org.trustweave.core.util.DigestUtils
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import java.time.Instant

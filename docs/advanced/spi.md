@@ -21,10 +21,14 @@ TrustWeave uses SPI to automatically discover and load plugins at runtime withou
 
 TrustWeave defines several provider interfaces:
 
-- `DidMethodProvider` – discovers DID method implementations
-- `KeyManagementServiceProvider` – discovers KMS implementations
-- `BlockchainAnchorClientProvider` – discovers blockchain adapter implementations
-- `CredentialServiceProvider` – discovers credential service implementations
+- `org.trustweave.did.spi.DidMethodProvider` – discovers DID method implementations
+- `org.trustweave.kms.spi.KeyManagementServiceProvider` – discovers KMS implementations
+- `org.trustweave.anchor.spi.BlockchainAnchorClientProvider` – discovers blockchain adapter implementations
+- `org.trustweave.credential.spi.proof.ProofEngineProvider` – discovers VC proof-suite engines (VC-LD, VC-JWT, SD-JWT-VC)
+- `org.trustweave.credential.spi.exchange.CredentialExchangeProtocolProvider` – discovers credential exchange protocol implementations
+- `org.trustweave.credential.spi.transform.CredentialFormatConverter` – discovers cross-format credential converters
+
+> **Note:** TrustWeave does not currently expose a single `CredentialServiceProvider` SPI. The `CredentialService` is wired in `TrustWeave.build { ... }` from the discovered proof engines and other credential SPIs above.
 
 ### Service Discovery
 
@@ -71,12 +75,12 @@ class MyDidMethodProvider : DidMethodProvider {
     override val supportedMethods: List<String> = listOf("mydid")
 
     override fun create(
-        method: String,
+        methodName: String,
         options: DidCreationOptions
     ): DidMethod? {
-        if (method != "mydid") return null
+        if (methodName != "mydid") return null
 
-        return MyDidMethod(options)
+        return MyCustomDidMethod(options) // your DidMethod implementation
     }
 }
 ```
@@ -170,12 +174,15 @@ val mockProvider = MockDidMethodProvider()
 ### Error Handling
 
 ```kotlin
+import org.trustweave.did.DidCreationOptions
+
+val options = DidCreationOptions()
 val providers = ServiceLoader.load(DidMethodProvider::class.java)
 
 providers.forEach { provider ->
     try {
         val method = provider.create("key", options)
-        // Use method
+        // Use method (may be null if provider doesn't support "key")
     } catch (e: Exception) {
         // Handle provider creation errors
         println("Failed to create method from provider ${provider.name}: ${e.message}")
@@ -187,11 +194,11 @@ providers.forEach { provider ->
 
 ```kotlin
 override fun create(
-    method: String,
+    methodName: String,
     options: DidCreationOptions
 ): DidMethod? {
     // Validate method name
-    if (!supportedMethods.contains(method)) {
+    if (!supportedMethods.contains(methodName)) {
         return null
     }
 
@@ -199,7 +206,7 @@ override fun create(
     val requiredOption = options.additionalProperties["requiredOption"] as? String
         ?: return null
 
-    return MyDidMethod(options)
+    return MyCustomDidMethod(options)
 }
 ```
 

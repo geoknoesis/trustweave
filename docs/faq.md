@@ -20,7 +20,7 @@ TrustWeave is produced by **Geoknoesis LLC** ([www.geoknoesis.com](https://www.g
 **Command:** Run the Gradle helper task; it bootstraps in-memory services so no external dependencies are required.
 
 ```bash
-./gradlew :TrustWeave-examples:runQuickStartSample
+./gradlew :distribution:examples:runQuickStartSample
 ```
 
 **Result:** A credential is issued, verified with full error handling, and anchored via the in-memory blockchain client—use the output as a baseline for your own experiments.
@@ -46,12 +46,12 @@ Details and contact paths live in the [Licensing Overview](licensing/README.md).
 
 ## How do I test without a blockchain or external KMS?
 
-Use `TrustWeave-testkit`. It ships in-memory DID methods, KMS, and blockchain anchor clients that mirror the production interfaces. Because everything stays in process, your unit tests and CI runs remain deterministic and fast.
+Use the `testkit` module (`org.trustweave:testkit`). It ships in-memory DID methods, KMS, and blockchain anchor clients that mirror the production interfaces. Because everything stays in process, your unit tests and CI runs remain deterministic and fast.
 
 ## Where can I find API signatures and parameters?
 
-- Wallet API Reference](api-reference/wallet-api.md) — wallet capabilities, typed option builders, and extension helpers.
-- Credential Service API Reference](api-reference/credential-service-api.md) — issuer/verifier SPI contracts and factory options.
+- [Wallet API Reference](api-reference/wallet-api.md) — wallet capabilities, typed option builders, and extension helpers.
+- [Credential Service API Reference](api-reference/credential-service-api.md) — issuer/verifier SPI contracts and factory options.
 - Module guides under `docs/modules/` summarise additional utilities exposed by each artifact.
 
 ## How do I enforce stricter verification policies?
@@ -65,7 +65,9 @@ Use **`trustWeave.verify { }`** with **`VerificationBuilder`** (and optional **`
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.DidCreationResult
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 
 val trustWeave = TrustWeave.build {
     keys { provider(IN_MEMORY); algorithm(ED25519) }

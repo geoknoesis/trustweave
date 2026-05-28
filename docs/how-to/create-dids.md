@@ -23,8 +23,9 @@ Here's a complete example that creates a DID, extracts the key ID, and uses it:
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.getOrThrow
-import org.trustweave.trust.dsl.credential.*
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.did.identifiers.extractKeyId
 import kotlinx.coroutines.runBlocking
 
@@ -71,8 +72,10 @@ First, create a `TrustWeave` instance with DID method support:
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.getOrThrow
-import org.trustweave.trust.dsl.credential.*
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 
 val trustWeave = TrustWeave.build {
     keys {
@@ -97,7 +100,9 @@ val trustWeave = TrustWeave.build {
 Create a DID using the default method (did:key) or specify a method:
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 // Simple: Use defaults (did:key, ED25519)
 val did = trustWeave.createDid {
     method(KEY)
@@ -107,10 +112,10 @@ val did = trustWeave.createDid {
 // Or even simpler with default method
 val didSimple = trustWeave.createDid()  // Uses "key" method by default
 
-// With custom method
+// With custom method — pass method-specific options via option(key, value)
 val webDid = trustWeave.createDid {
     method(WEB)
-    domain("example.com")
+    option("domain", "example.com")
 }
 ```
 
@@ -120,7 +125,8 @@ Extract the key ID from the DID for signing operations:
 
 ```kotlin
 import org.trustweave.did.identifiers.extractKeyId
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.errorMessage
 import org.trustweave.trust.types.getOrThrowDid
@@ -160,14 +166,15 @@ val credential = trustWeave.issue {
 Create DIDs for different roles (issuer, holder, verifier):
 
 ```kotlin
-import org.trustweave.testkit.services.*
-val issuerDid = trustWeave.createDid { method(KEY) }
-val holderDid = trustWeave.createDid { method(KEY) }
-val verifierDid = trustWeave.createDid { method(KEY) }
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.types.getOrThrowDid
+val issuerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+val holderDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+val verifierDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 
-println("Issuer: $issuerDid")
-println("Holder: $holderDid")
-println("Verifier: $verifierDid")
+println("Issuer: ${issuerDid.value}")
+println("Holder: ${holderDid.value}")
+println("Verifier: ${verifierDid.value}")
 ```
 
 ### Pattern 2: Create DID with Error Handling
@@ -175,23 +182,24 @@ println("Verifier: $verifierDid")
 Handle errors gracefully:
 
 ```kotlin
-import org.trustweave.testkit.services.*
-val did = try {
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.core.exception.PluginException
+
+// createDid returns DidCreationResult (no exception is thrown for normal failure cases);
+// only configuration errors propagate as TrustWeaveException.
+val didResult = try {
     trustWeave.createDid {
         method(KEY)
         algorithm(ED25519)
     }
+} catch (error: PluginException.NotFound) {
+    println("Plugin not registered: ${error.pluginId} (type=${error.pluginType ?: "n/a"})")
+    return@runBlocking
 } catch (error: TrustWeaveException) {
-    when (error) {
-        is TrustWeaveException.PluginNotFound -> {
-            println("DID method not registered: ${error.pluginId}")
-            return@runBlocking
-        }
-        else -> {
-            println("Unexpected error: ${error.message}")
-            return@runBlocking
-        }
-    }
+    println("Unexpected TrustWeave error: ${error.message}")
+    return@runBlocking
 }
 ```
 
@@ -245,21 +253,26 @@ val updated = trustWeave.updateDid {
 
 ### Pattern 5: Deactivate a DID
 
-Deactivate a DID when it's no longer needed:
+There is no `trustWeave.deactivateDid(...)` facade method. Deactivation is
+method-specific: resolve the `DidMethod` plugin from the registry and call its
+`deactivateDid(did: Did): Boolean` directly. `did:key` is stateless and cannot be
+deactivated (the underlying `DidMethod.deactivateDid` returns `false`).
 
 ```kotlin
+import org.trustweave.did.DidMethod
 import org.trustweave.did.identifiers.Did
 
-// Note: Deactivation depends on the DID method implementation
-// For did:key, deactivation is typically not supported as it's stateless
-// For other methods like did:web or did:ion, use the method-specific deactivation API
+val did    = Did("did:web:example.com:users:alice")
+val method = trustWeave.getDidRegistry().get("web") as? DidMethod
+    ?: error("did:web method not registered")
 
-val did = Did("did:key:example")
-val deactivated = trustWeave.deactivateDid(did)
-if (deactivated) {
-    println("DID deactivated successfully")
-}
+val deactivated: Boolean = method.deactivateDid(did)
+println(if (deactivated) "Deactivated $did" else "Could not deactivate $did")
 ```
+
+> The `DidMethod` SPI takes `Did` only — there is no `DeactivateDidOptions` parameter
+> on `DidMethod.deactivateDid`. Remote-registrar deactivation with options goes through
+> `org.trustweave.did.DidRegistrar.deactivateDid(...)` (see `did/registrar`) instead.
 
 ## DID Methods
 
@@ -281,7 +294,7 @@ DID operations now return sealed result types instead of throwing exceptions. Th
 
 ```kotlin
 import org.trustweave.trust.types.DidCreationResult
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 
 val didResult = trustWeave.createDid { 
     method(KEY) 
@@ -316,7 +329,7 @@ when (didResult) {
 
 ```kotlin
 import org.trustweave.trust.types.getOrThrowDid
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 
 val did = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 // Throws IllegalStateException on failure (suitable for tests/examples only)

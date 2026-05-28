@@ -39,9 +39,10 @@ Here's a complete example showing multi-chain anchoring:
 
 ```kotlin
 import org.trustweave.anchor.BlockchainAnchorRegistry
+import org.trustweave.anchor.anchorTyped
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 
 @Serializable
 data class CredentialDigest(
@@ -57,22 +58,19 @@ fun main() = runBlocking {
     anchorRegistry.register("polygon:mainnet", InMemoryBlockchainAnchorClient("polygon:mainnet"))
     anchorRegistry.register("ethereum:sepolia", InMemoryBlockchainAnchorClient("ethereum:sepolia"))
 
-    // Step 2: Create payload
+    // Step 2: Create payload value
     val digest = CredentialDigest(
         credentialId = "cred-123",
         digest = "z6Mk...",
         issuer = "did:key:issuer"
     )
-    val payload = Json.encodeToJsonElement(digest)
 
-    // Step 3: Anchor to multiple chains
-    val results = listOf(
-        anchorRegistry.anchor("algorand:testnet", payload),
-        anchorRegistry.anchor("polygon:mainnet", payload),
-        anchorRegistry.anchor("ethereum:sepolia", payload)
-    )
+    // Step 3: Anchor to multiple chains via anchorTyped extension
+    val results = listOf("algorand:testnet", "polygon:mainnet", "ethereum:sepolia").map { chainId ->
+        anchorRegistry.anchorTyped(digest, CredentialDigest.serializer(), chainId)
+    }
 
-    println("✅ Anchored to ${results.size} chains")
+    println("Anchored to ${results.size} chains")
     results.forEach { result ->
         println("   ${result.ref.chainId}: ${result.ref.txHash}")
     }
@@ -133,7 +131,6 @@ Create the data structure to anchor:
 
 ```kotlin
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 
 @Serializable
 data class CredentialDigest(
@@ -147,16 +144,13 @@ val digest = CredentialDigest(
     digest = "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
     issuer = "did:key:issuer"
 )
-
-val payload = Json.encodeToJsonElement(digest)
 ```
 
 **What this does:**
 - Creates serializable data structure
-- Serializes to JSON
-- Prepares for anchoring
+- Prepares for anchoring (the registry serializes via `anchorTyped`)
 
-**Expected Result:** JSON payload ready for anchoring.
+**Expected Result:** Value ready for anchoring.
 
 ---
 
@@ -165,7 +159,9 @@ val payload = Json.encodeToJsonElement(digest)
 Start with anchoring to one chain:
 
 ```kotlin
-val result = anchorRegistry.anchor("algorand:testnet", payload)
+import org.trustweave.anchor.anchorTyped
+
+val result = anchorRegistry.anchorTyped(digest, CredentialDigest.serializer(), "algorand:testnet")
 println("Anchored: ${result.ref.txHash}")
 ```
 
@@ -186,11 +182,11 @@ Anchor to multiple chains one at a time:
 val chains = listOf("algorand:testnet", "polygon:mainnet", "ethereum:sepolia")
 val results = chains.mapNotNull { chainId ->
     try {
-        val result = anchorRegistry.anchor(chainId, payload)
-        println("✅ Anchored to $chainId: ${result.ref.txHash}")
+        val result = anchorRegistry.anchorTyped(digest, CredentialDigest.serializer(), chainId)
+        println("Anchored to $chainId: ${result.ref.txHash}")
         result
-    } catch (error: BlockchainException) {
-        println("❌ Failed to anchor to $chainId: ${error.message}")
+    } catch (error: Exception) {
+        println("Failed to anchor to $chainId: ${error.message}")
         null
     }
 }
@@ -214,20 +210,23 @@ Anchor to multiple chains concurrently for better performance:
 ```kotlin
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 
 val chains = listOf("algorand:testnet", "polygon:mainnet", "ethereum:sepolia")
-val results = chains.map { chainId ->
-    async {
-        try {
-            val result = anchorRegistry.anchor(chainId, payload)
-            println("✅ Anchored to $chainId: ${result.ref.txHash}")
-            result
-        } catch (error: BlockchainException) {
-            println("❌ Failed to anchor to $chainId: ${error.message}")
-            null
+val results = coroutineScope {
+    chains.map { chainId ->
+        async {
+            try {
+                val result = anchorRegistry.anchorTyped(digest, CredentialDigest.serializer(), chainId)
+                println("Anchored to $chainId: ${result.ref.txHash}")
+                result
+            } catch (error: Exception) {
+                println("Failed to anchor to $chainId: ${error.message}")
+                null
+            }
         }
-    }
-}.awaitAll().filterNotNull()
+    }.awaitAll().filterNotNull()
+}
 
 println("Successfully anchored to ${results.size} of ${chains.size} chains")
 ```
@@ -248,20 +247,27 @@ println("Successfully anchored to ${results.size} of ${chains.size} chains")
 Anchor to chains sequentially with retry logic:
 
 ```kotlin
-suspend fun anchorWithRetry(
+import kotlinx.coroutines.delay
+import org.trustweave.anchor.AnchorResult
+import org.trustweave.anchor.BlockchainAnchorRegistry
+import org.trustweave.anchor.anchorTyped
+import kotlinx.serialization.KSerializer
+
+suspend fun <T : Any> BlockchainAnchorRegistry.anchorWithRetry(
+    value: T,
+    serializer: KSerializer<T>,
     chainId: String,
-    payload: JsonElement,
     maxRetries: Int = 3
 ): AnchorResult? {
     repeat(maxRetries) { attempt ->
         try {
-            return anchorRegistry.anchor(chainId, payload)
-        } catch (error: BlockchainException) {
+            return anchorTyped(value, serializer, chainId)
+        } catch (error: Exception) {
             if (attempt == maxRetries - 1) {
                 println("Failed after $maxRetries attempts: ${error.message}")
                 return null
             }
-            delay(1000 * (attempt + 1)) // Exponential backoff
+            delay(1000L * (attempt + 1)) // Exponential backoff
         }
     }
     return null
@@ -270,7 +276,7 @@ suspend fun anchorWithRetry(
 // Use with multiple chains
 val chains = listOf("algorand:testnet", "polygon:mainnet")
 val results = chains.mapNotNull { chainId ->
-    anchorWithRetry(chainId, payload)
+    anchorRegistry.anchorWithRetry(digest, CredentialDigest.serializer(), chainId)
 }
 ```
 
@@ -279,23 +285,24 @@ val results = chains.mapNotNull { chainId ->
 Anchor to primary chain, fallback to backup if it fails:
 
 ```kotlin
-suspend fun anchorWithFallback(
-    payload: JsonElement,
+suspend fun <T : Any> BlockchainAnchorRegistry.anchorWithFallback(
+    value: T,
+    serializer: KSerializer<T>,
     primaryChain: String = "algorand:testnet",
     backupChains: List<String> = listOf("polygon:mainnet", "ethereum:sepolia")
 ): AnchorResult? {
     // Try primary chain first
     try {
-        return anchorRegistry.anchor(primaryChain, payload)
-    } catch (error: BlockchainException) {
+        return anchorTyped(value, serializer, primaryChain)
+    } catch (error: Exception) {
         println("Primary chain failed: ${error.message}")
     }
 
     // Try backup chains
     for (backupChain in backupChains) {
         try {
-            return anchorRegistry.anchor(backupChain, payload)
-        } catch (error: BlockchainException) {
+            return anchorTyped(value, serializer, backupChain)
+        } catch (error: Exception) {
             println("Backup chain $backupChain failed: ${error.message}")
         }
     }
@@ -338,7 +345,7 @@ fun selectChains(criteria: ChainCriteria): List<String> {
 val selectedChains = selectChains(ChainCriteria(maxCost = 500))
 val results = selectedChains.mapNotNull { chainId ->
     try {
-        anchorRegistry.anchor(chainId, payload)
+        anchorRegistry.anchorTyped(digest, CredentialDigest.serializer(), chainId)
     } catch (e: Exception) {
         null
     }
@@ -350,9 +357,10 @@ val results = selectedChains.mapNotNull { chainId ->
 Ensure data is anchored to at least N chains:
 
 ```kotlin
-suspend fun anchorWithMinimumSuccess(
+suspend fun <T : Any> BlockchainAnchorRegistry.anchorWithMinimumSuccess(
+    value: T,
+    serializer: KSerializer<T>,
     chains: List<String>,
-    payload: JsonElement,
     minimumSuccess: Int = 2
 ): List<AnchorResult> {
     val results = mutableListOf<AnchorResult>()
@@ -363,11 +371,11 @@ suspend fun anchorWithMinimumSuccess(
         }
 
         try {
-            val result = anchorRegistry.anchor(chainId, payload)
+            val result = anchorTyped(value, serializer, chainId)
             results.add(result)
-            println("✅ Anchored to $chainId (${results.size}/$minimumSuccess)")
-        } catch (error: BlockchainException) {
-            println("❌ Failed to anchor to $chainId: ${error.message}")
+            println("Anchored to $chainId (${results.size}/$minimumSuccess)")
+        } catch (error: Exception) {
+            println("Failed to anchor to $chainId: ${error.message}")
         }
     }
 
@@ -383,7 +391,9 @@ suspend fun anchorWithMinimumSuccess(
 
 // Use with minimum success requirement
 val chains = listOf("algorand:testnet", "polygon:mainnet", "ethereum:sepolia")
-val results = anchorWithMinimumSuccess(chains, payload, minimumSuccess = 2)
+val results = anchorRegistry.anchorWithMinimumSuccess(
+    digest, CredentialDigest.serializer(), chains, minimumSuccess = 2
+)
 ```
 
 ---
@@ -424,7 +434,7 @@ when (chainId) {
 
 ```kotlin
 // One API, any chain
-val result = anchorRegistry.anchor(chainId, payload)
+val result = anchorRegistry.anchorTyped(value, MyType.serializer(), chainId)
 ```
 
 **Benefits:**
@@ -440,12 +450,13 @@ val result = anchorRegistry.anchor(chainId, payload)
 Handle multi-chain anchoring errors:
 
 ```kotlin
+import org.trustweave.anchor.anchorTyped
 import org.trustweave.anchor.exceptions.BlockchainException
 
 val chains = listOf("algorand:testnet", "polygon:mainnet", "ethereum:sepolia")
 val results = chains.mapNotNull { chainId ->
     try {
-        anchorRegistry.anchor(chainId, payload)
+        anchorRegistry.anchorTyped(digest, CredentialDigest.serializer(), chainId)
     } catch (error: BlockchainException) {
         when (error) {
             is BlockchainException.ChainNotRegistered -> {
@@ -461,6 +472,10 @@ val results = chains.mapNotNull { chainId ->
                 println("Error on $chainId: ${error.message}")
             }
         }
+        null
+    } catch (error: IllegalArgumentException) {
+        // anchorTyped throws IllegalArgumentException when chain is not registered
+        println("Chain not registered: $chainId")
         null
     }
 }

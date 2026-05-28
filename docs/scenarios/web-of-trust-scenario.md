@@ -36,7 +36,6 @@ import org.trustweave.trust.dsl.credential.KeyAlgorithms
 import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.credential.model.ProofType
 import kotlinx.coroutines.runBlocking
-import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
@@ -64,7 +63,6 @@ fun main() = runBlocking {
 ```kotlin
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.types.getOrThrowDid
-import org.trustweave.testkit.services.*
 
 val universityDid = trustWeave.createDid {
     method(DidMethods.KEY)
@@ -89,7 +87,6 @@ trustWeave.trust {
 ## 4. Delegation (optional)
 
 ```kotlin
-import org.trustweave.testkit.services.*
 trustWeave.updateDid {
     did(companyDid.value)
     method(DidMethods.KEY)

@@ -78,7 +78,7 @@ val contract2 = trustWeave.contracts.createDraft(request).getOrThrow()
 - Validates DID formats for all parties
 - Ensures expiration date is after effective date
 - Validates terms (unique IDs, valid party DIDs)
-- Throws `InvalidOperationException` if validation fails
+- Validation failures surface as a `Result.failure` wrapping `TrustWeaveException.InvalidOperation` (or `ValidationFailed`); there is no separate `InvalidOperationException` type.
 
 ---
 
@@ -147,7 +147,7 @@ val active = trustWeave.contracts.activateContract(contractId).getOrThrow()
 **Validation:**
 - Contract must be in `PENDING` status
 - Contract must not be expired
-- Throws `InvalidOperationException` if validation fails
+- Failures surface as `Result.failure(TrustWeaveException.InvalidOperation(...))`.
 
 **Status Transition:** `PENDING` → `ACTIVE`
 
@@ -274,7 +274,7 @@ val updated = trustWeave.contracts.updateStatus(
 
 **Validation:**
 - Validates state transition is allowed
-- Throws `InvalidOperationException` for invalid transitions
+- Invalid transitions surface as `Result.failure(TrustWeaveException.InvalidOperation(...))`.
 
 ---
 
@@ -299,7 +299,7 @@ val contract = trustWeave.contracts.getContract(contractId).getOrThrow()
 ```
 
 **Errors:**
-- `NotFoundException` if contract doesn't exist
+- `Result.failure(TrustWeaveException.NotFound(...))` if no contract with that id exists.
 
 ---
 
@@ -407,15 +407,18 @@ data class ContractTerms(
 
 ## Error Handling
 
-All methods return `Result<T>` which can be handled with:
+All methods return `kotlin.Result<T>`. Failures wrap `TrustWeaveException` subtypes — there are no `NotFoundException` / `InvalidOperationException` types in TrustWeave.
 
 ```kotlin
+import org.trustweave.core.exception.TrustWeaveException
+
 result.fold(
     onSuccess = { contract -> /* handle success */ },
     onFailure = { error ->
         when (error) {
-            is NotFoundException -> { /* contract not found */ }
-            is InvalidOperationException -> { /* invalid operation */ }
+            is TrustWeaveException.NotFound -> { /* contract not found */ }
+            is TrustWeaveException.InvalidOperation -> { /* invalid state transition / action */ }
+            is TrustWeaveException.ValidationFailed -> { /* bad input */ }
             else -> { /* other error */ }
         }
     }

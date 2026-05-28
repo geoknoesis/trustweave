@@ -38,8 +38,12 @@ dependencies {
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.TrustProviders
+import org.trustweave.credential.model.ProofType
 import kotlinx.coroutines.runBlocking
-import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
@@ -66,7 +70,7 @@ fun main() = runBlocking {
         }
 
         trust {
-            provider(IN_MEMORY)  // Trust registry provider
+            provider(TrustProviders.IN_MEMORY)  // Trust registry provider
         }
     }
 }
@@ -78,7 +82,11 @@ fun main() = runBlocking {
 You can create multiple `TrustWeave` instances for different environments:
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+
 // Production TrustWeave instance
 val productionTrustWeave = TrustWeave.build {
     keys { provider("hardware") }
@@ -89,7 +97,7 @@ val productionTrustWeave = TrustWeave.build {
 // Test TrustWeave instance
 val testTrustWeave = TrustWeave.build {
     keys { provider(IN_MEMORY) }
-    did { method(KEY) }
+    did { method(KEY) {} }
     anchor { chain("algorand:testnet") { inMemory() } }
 }
 ```
@@ -104,7 +112,7 @@ Create verifiable credentials using a fluent builder:
 import org.trustweave.trust.dsl.credential.credential
 import org.trustweave.did.identifiers.Did
 import kotlinx.datetime.Clock
-import kotlin.time.Duration.Companion.years
+import kotlin.time.Duration.Companion.days
 
 val issuerDid = Did("did:key:university")
 val credential = credential {
@@ -120,7 +128,7 @@ val credential = credential {
         }
     }
     issued(Clock.System.now())
-    expires(10.years)  // Use Duration extension, e.g., 10.years
+    expires((10 * 365).days)  // ~10 years; use Duration extensions like .days
     schema("https://example.edu/schemas/degree.json")
 }
 ```
@@ -291,7 +299,7 @@ val credentialId = wallet.store(credential)
 // Query credentials
 val credentials = wallet.query {
     byType("EducationCredential")
-    valid(true)
+    valid()
 }
 ```
 
@@ -302,6 +310,8 @@ Manage trust anchors:
 ```kotlin
 import org.trustweave.did.identifiers.Did
 import org.trustweave.trust.types.TrustPath
+import org.trustweave.trust.types.VerifierIdentity
+import org.trustweave.trust.types.IssuerIdentity
 
 trustWeave.trust {
     addAnchor("did:key:university") {
@@ -310,9 +320,10 @@ trustWeave.trust {
     }
 
     val isTrusted = isTrusted("did:key:university", "EducationCredential")
-    when (val path = findTrustPath(Did("did:key:verifier"), Did("did:key:issuer"))) {
+    when (val path = findTrustPath(VerifierIdentity(Did("did:key:verifier")), IssuerIdentity(Did("did:key:issuer")))) {
         is TrustPath.Verified -> { /* path.fullPath, path.trustScore */ }
         is TrustPath.NotFound -> { /* no path */ }
+        is TrustPath.NotConfigured -> { /* trust registry not configured */ }
     }
 }
 ```

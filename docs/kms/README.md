@@ -21,7 +21,6 @@ TrustWeave Key Management Service (KMS) provides a unified, type-safe interface 
 
 - **[Quick Start Guide](KMS_QUICK_START.md)** - Get started in 5 minutes
 - **[Plugin Configuration Guide](KMS_PLUGINS_CONFIGURATION.md)** - Complete configuration reference
-- **[Testing Guide](../../docs/internal/development/KMS_PLUGIN_TESTING_GUIDE.md)** - Plugin testing best practices
 
 ---
 
@@ -48,7 +47,6 @@ TrustWeave Key Management Service (KMS) provides a unified, type-safe interface 
 | **HashiCorp Vault** | `vault` | ✅ Production | ⚠️ Depends on backend |
 | **IBM Key Protect** | `ibm` | ✅ Production | ✅ Level 4 |
 | **InMemory** | `inmemory` | ✅ Development/Testing | ❌ No |
-| **WaltID** | `waltid` | ✅ Development/Testing | ❌ No |
 
 ---
 
@@ -122,8 +120,7 @@ when (result) {
 - **[InMemory KMS](../integrations/inmemory-kms.md)** - InMemory KMS plugin
 
 ### Developer Resources
-- **[Testing Guide](../../docs/internal/development/KMS_PLUGIN_TESTING_GUIDE.md)** - Plugin testing best practices
-- **[Code Review](../../docs/internal/reviews/KMS_FINAL_REVIEW_AND_SCORE_2025.md)** - Latest code review and score
+- **[Creating Plugins Guide](../contributing/creating-plugins.md)** - Implement custom KMS plugins
 
 ---
 
@@ -146,15 +143,16 @@ sealed class GenerateKeyResult {
 
 ### Type-Safe Constants
 
-Use `KmsOptionKeys` constants instead of magic strings:
+Use `KmsOptionKeys` constants instead of magic strings. Cross-provider keys live in `org.trustweave.kms.KmsOptionKeys` (`KEY_ID`, `KEY_NAME`, `NAME`, `DESCRIPTION`, `EXPORTABLE`, `EXTRACTABLE`). Provider-specific keys live in plugin modules: `AwsKmsOptionKeys` (`REGION`, `TAGS`, `ALIAS`, `ENABLE_AUTOMATIC_ROTATION`, …), `GcpKmsOptionKeys` (`KEY_RING`, `LABELS`), `HashiCorpKmsOptionKeys` (`ALLOW_PLAINTEXT_BACKUP`).
 
 ```kotlin
 import org.trustweave.kms.KmsOptionKeys
+import org.trustweave.awskms.AwsKmsOptionKeys
 
 val options = mapOf(
     KmsOptionKeys.KEY_ID to "my-key-id",
     KmsOptionKeys.DESCRIPTION to "My key",
-    KmsOptionKeys.TAGS to mapOf("env" to "prod")
+    AwsKmsOptionKeys.TAGS to mapOf("env" to "prod")
 )
 ```
 

@@ -49,7 +49,8 @@ class MyIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun testWithRealService() = runBlocking {
-        val config = createConfig(localStack.getEndpoint())
+        // LocalStackContainer exposes service-specific endpoints, e.g. getKmsEndpoint() / getS3Endpoint().
+        val config = createConfig(localStack.getKmsEndpoint())
         val service = createService(config)
 
         val result = service.operation()
@@ -111,8 +112,8 @@ fun testWithCustomSetup() = runBlocking {
 @ParameterizedTest
 @ValueSource(strings = ["Ed25519", "Secp256k1", "P256"])
 fun testWithDifferentAlgorithms(algorithm: String) = runBlocking {
-    val keyHandle = kms.generateKey(Algorithm.fromName(algorithm)!!)
-    assertNotNull(keyHandle)
+    val result = kms.generateKey(Algorithm.parse(algorithm)!!)
+    assertTrue(result is GenerateKeyResult.Success)
 }
 ```
 

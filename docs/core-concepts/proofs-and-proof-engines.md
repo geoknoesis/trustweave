@@ -19,9 +19,12 @@ A **proof suite** identifies the cryptographic proof format used in a Verifiable
 - **VC-LD** (`ProofSuiteId.VC_LD`) - W3C Verifiable Credentials with Linked Data Proofs
 - **VC-JWT** (`ProofSuiteId.VC_JWT`) - W3C Verifiable Credentials as JWT
 - **SD-JWT-VC** (`ProofSuiteId.SD_JWT_VC`) - IETF Selective Disclosure JWT Verifiable Credentials
-- **AnonCreds** (`ProofSuiteId.ANONCREDS`) - Hyperledger AnonCreds with zero-knowledge proofs
+- **mDoc/mDL** (`ProofSuiteId.MDOC`) - ISO 18013-5 mobile documents (CBOR/COSE)
+- **BBS 2023** (`ProofSuiteId.BBS_2023`) - W3C Data Integrity BBS Cryptosuite (selective disclosure + ZK)
 
-All proof suites are **built-in** and always available - no plugins or registration required.
+The VC-LD and SD-JWT-VC engines are **built-in** to the credential API; mDoc and BBS are
+shipped as separate plugin modules. No additional registration is required when the
+plugin JARs are on the classpath.
 
 ```kotlin
 import org.trustweave.credential.format.ProofSuiteId
@@ -29,7 +32,7 @@ import org.trustweave.credential.format.ProofSuiteId
 // Use enum values directly
 val vcLdSuite = ProofSuiteId.VC_LD
 val sdJwtVcSuite = ProofSuiteId.SD_JWT_VC
-val anonCredsSuite = ProofSuiteId.ANONCREDS
+val mdocSuite = ProofSuiteId.MDOC
 ```
 
 ### Proof Options
@@ -143,7 +146,7 @@ val request = IssuanceRequest(
     format = ProofSuiteId.VC_LD,
     issuer = issuer,
     credentialSubject = subject,
-    type = listOf(CredentialType("VerifiableCredential")),
+    type = listOf(CredentialType.VerifiableCredential),
     proofOptions = proofOptions {
         purpose = ProofPurpose.AssertionMethod
         verificationMethod = "did:key:issuer#key-1"
@@ -188,12 +191,10 @@ val options = proofOptions {
     option("canonicalizationAlgorithm", "urdna2015")
 }
 
-// For AnonCreds
-val anonCredsOptions = proofOptions {
+// Example: pass plugin-specific options via `option(...)` entries
+val customOptions = proofOptions {
     purpose = ProofPurpose.AssertionMethod
-    option("schema_id", "schema:123")
-    option("cred_def_id", "cred_def:456")
-    option("rev_reg_id", "rev_reg:789")
+    option("hashAlgorithm", "sha-256")
 }
 ```
 
@@ -201,13 +202,15 @@ val anonCredsOptions = proofOptions {
 
 ### Built-in Engines
 
-TrustWeave includes built-in proof engines for all supported proof suites:
+TrustWeave includes the following proof engines:
 
-- **VcLdProofEngine** - Handles VC-LD proofs with JSON-LD canonicalization
-- **SdJwtProofEngine** - Handles SD-JWT-VC proofs with selective disclosure
-- **AnonCredsProofEngine** - Handles AnonCreds proofs with zero-knowledge capabilities
+- **VcLdProofEngine** (built-in) - Handles VC-LD proofs with JSON-LD canonicalization
+- **SdJwtProofEngine** (built-in) - Handles SD-JWT-VC proofs with selective disclosure
+- **MdocProofEngine** (`credentials/plugins/mdl`) - ISO 18013-5 mDoc / mDL (CBOR/COSE)
+- **Bbs2023ProofEngine** (`credentials/plugins/bbs`) - BBS Cryptosuite with selective disclosure and ZK
 
-These engines are automatically available when you create a `CredentialService`:
+VC-LD and SD-JWT-VC are automatically available when you create a `CredentialService`; the
+mDoc and BBS engines are picked up via SPI when their plugin modules are on the classpath:
 
 ```kotlin
 import org.trustweave.credential.*
@@ -264,7 +267,7 @@ val request = IssuanceRequest(
     format = ProofSuiteId.VC_LD,
     issuer = issuer,
     credentialSubject = subject,
-    type = listOf(CredentialType("VerifiableCredential"))
+    type = listOf(CredentialType.VerifiableCredential)
     // proofOptions defaults to assertionMethod
 )
 
@@ -278,7 +281,7 @@ val request = IssuanceRequest(
     format = ProofSuiteId.VC_LD,
     issuer = issuer,
     credentialSubject = subject,
-    type = listOf(CredentialType("VerifiableCredential")),
+    type = listOf(CredentialType.VerifiableCredential),
     proofOptions = proofOptions {
         purpose = ProofPurpose.AssertionMethod
         verificationMethod = "did:key:issuer#key-1"

@@ -15,7 +15,7 @@ The module now includes:
 ### Universal Resolver Builder
 
 ```kotlin
-import org.trustweave.did.resolver.universalResolver
+import org.trustweave.did.dsl.universalResolver
 
 val resolver = universalResolver("https://dev.uniresolver.io") {
     timeout = 60

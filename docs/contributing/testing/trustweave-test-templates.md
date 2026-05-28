@@ -35,7 +35,6 @@ This ensures proof verification succeeds because the DID document contains the c
 ```kotlin
 import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.credential.results.IssuanceResult
-import org.trustweave.testkit.services.*
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.trust.types.getOrThrow
 import org.trustweave.credential.results.getOrThrow
@@ -87,7 +86,7 @@ val credential = trustWeave.issue {
 **Use Case:** Starting point for most integration tests
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.TrustProviders.IN_MEMORY
 @Test
 fun `test complete in-memory workflow template`() = runBlocking {
     val kms = InMemoryKeyManagementService()
@@ -120,7 +119,7 @@ fun `test complete in-memory workflow template`() = runBlocking {
 ```kotlin
 import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.credential.results.VerificationResult
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.RevocationProviders.IN_MEMORY
 @Test
 fun `test credential revocation workflow template`() = runBlocking {
     val trustWeave = TrustWeave.build {
@@ -250,7 +249,6 @@ fun `test verifiable presentation workflow template`() = runBlocking {
 
 ```kotlin
 import org.trustweave.trust.types.DidCreationResult
-import org.trustweave.testkit.services.*
 @Test
 fun `test DID update workflow template`() = runBlocking {
     // Create DID
@@ -300,7 +298,7 @@ fun `test DID update workflow template`() = runBlocking {
 **Use Case:** Testing blockchain anchoring
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.AnchorProviders.IN_MEMORY
 @Test
 fun `test blockchain anchoring workflow template`() = runBlocking {
     val trustWeave = TrustWeave.build {
@@ -315,11 +313,12 @@ fun `test blockchain anchoring workflow template`() = runBlocking {
         }
     }
 
-    // Issue credential with anchoring
+    // Issue credential. `anchor(...)` is not yet exposed on IssuanceBuilder —
+    // configure the anchor at TrustWeave.build { anchor { chain(...) {...} } }
+    // and use `trustWeave.blockchains` to write/read anchors explicitly.
     val issuanceResult = trustWeave.issue {
         credential { /* ... */ }
         signedBy(issuerDid = issuerDid, keyId = keyId)
-        anchor("testnet:inMemory")
     }
     
     val credential = when (issuanceResult) {
@@ -351,14 +350,14 @@ fun `test blockchain anchoring workflow template`() = runBlocking {
 ```kotlin
 @Test
 fun `test smart contract workflow template`() = runBlocking {
-    // Issue contract as credential
+    // Issue contract as credential. Anchoring is not a one-call IssuanceBuilder
+    // feature today — anchor explicitly via `trustWeave.blockchains.write(...)`.
     val issuanceResult = trustWeave.issue {
         credential {
             type(CredentialType.Custom("SmartContractCredential"), CredentialType.VerifiableCredential)
             // ... contract details
         }
         signedBy(issuerDid = issuerDid, keyId = keyId)
-        anchor("testnet:inMemory")
     }
     
     val contractCredential = when (issuanceResult) {
@@ -388,7 +387,8 @@ fun `test smart contract workflow template`() = runBlocking {
 **Use Case:** Testing with AWS KMS, Ethereum DID, etc.
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.ETHR
+import org.trustweave.trust.dsl.credential.TrustProviders.IN_MEMORY
 @Test
 @RequiresPlugin("aws-kms", "ethr-did") // List all required plugins
 fun `test with external services template`() = runBlocking {
@@ -423,7 +423,8 @@ import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.errorMessage
 import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.credential.results.VerificationResult
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.ETHR
+import org.trustweave.trust.dsl.credential.TrustProviders.IN_MEMORY
 @Test
 @RequiresPlugin("aws-kms", "ethr-did")
 fun `test workflow with AWS KMS and Ethereum DID`() = runBlocking {
@@ -495,7 +496,8 @@ import org.trustweave.did.identifiers.extractKeyId
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.errorMessage
 
-val issuerDidDoc = when (val res = trustWeave.configuration.didRegistry.resolve(issuerDid)) {
+// DidMethodRegistry.resolve(String) — pass the DID's raw string form.
+val issuerDidDoc = when (val res = trustWeave.configuration.didRegistry.resolve(issuerDid.value)) {
     is DidResolutionResult.Success -> res.document
     else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve issuer DID")
 }
@@ -516,7 +518,8 @@ val issuanceResult = trustWeave.issue {
             id(holderDid)
             "test" to "value"
         }
-        issued(Instant.now())
+        // TrustWeave's DSL uses kotlinx-datetime, not java.time.
+        issued(kotlinx.datetime.Clock.System.now())
     }
     signedBy(issuerDid = issuerDid, keyId = keyId) // Use extracted key ID
 }
@@ -602,7 +605,7 @@ val credential = when (issuanceResult2) {
 **Solution:** Ensure `statusListManager` is configured and passed to verifier:
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.RevocationProviders.IN_MEMORY
 val trustWeave = TrustWeave.build {
     // ... setup
     revocation { provider(IN_MEMORY) } // Must configure revocation provider

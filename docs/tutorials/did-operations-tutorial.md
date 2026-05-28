@@ -41,10 +41,14 @@ dependencies {
 A DID method is an implementation of the `DidMethod` interface that supports a specific DID method (e.g., `did:key`, `did:web`, `did:ion`). Each DID method has its own creation, resolution, update, and deactivation logic.
 
 ```kotlin
-import org.trustweave.did.*
+import org.trustweave.did.DidMethod
+import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.identifiers.Did
+import org.trustweave.did.model.DidDocument
+import org.trustweave.did.resolver.DidResolutionResult
 
-interface DidMethod {
+// Sketch of the SPI (see did/did-core/src/main/kotlin/org/trustweave/did/DidMethod.kt)
+interface DidMethodSketch {
     val method: String
     suspend fun createDid(options: DidCreationOptions): DidDocument
     suspend fun resolveDid(did: Did): DidResolutionResult
@@ -63,7 +67,6 @@ interface DidMethod {
 
 ```kotlin
 import org.trustweave.trust.types.DidCreationResult
-import org.trustweave.testkit.services.*
 
 // Kotlin stdlib
 import kotlinx.coroutines.runBlocking
@@ -72,11 +75,13 @@ import kotlinx.coroutines.runBlocking
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
+
 fun main() = runBlocking {
     // Build TrustWeave instance - KMS and DID methods auto-discovered via SPI
     val trustWeave = TrustWeave.build {
         keys {
-            provider(IN_MEMORY)  // Auto-discovered via SPI
+            provider(KmsProviders.IN_MEMORY)  // Auto-discovered via SPI
             algorithm(KeyAlgorithms.ED25519)
         }
         did {
@@ -87,7 +92,6 @@ fun main() = runBlocking {
     }
 
     // Create DID using did:key method (returns sealed result)
-    
     val didResult = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
@@ -126,14 +130,13 @@ import kotlinx.coroutines.runBlocking
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
-// Note: TestkitDidMethodFactory is for testing/tutorials only
-// In production, use appropriate DID method factories
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders
 
 fun main() = runBlocking {
-    // Build TrustWeave instance with testkit factories (for tutorials)
+    // Per-method options (algorithm, domain, ...) are set on the build-time DID config.
+    // The did:web plugin must be on the classpath (SPI auto-discovery).
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did {
             method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) }
             method(DidMethods.WEB) { domain("example.com") }
@@ -141,16 +144,14 @@ fun main() = runBlocking {
     }
 
     // Create DID with did:key method
-    
     val keyDid = trustWeave.createDid {
         method(DidMethods.KEY)
         algorithm(KeyAlgorithms.ED25519)
     }.getOrThrowDid()
 
-    // Create DID with did:web method
+    // Create DID with did:web method (uses the domain configured at build time)
     val webDid = trustWeave.createDid {
         method(DidMethods.WEB)
-        domain("example.com")
     }.getOrThrowDid()
 
     println("Key DID: ${keyDid.value}")
@@ -167,8 +168,10 @@ fun main() = runBlocking {
 import kotlinx.coroutines.runBlocking
 
 // TrustWeave core
-import org.trustweave.did.*
-import org.trustweave.kms.*
+import org.trustweave.did.DidMethod
+import org.trustweave.did.KeyAlgorithm
+import org.trustweave.did.didCreationOptions
+import org.trustweave.did.registry.DidMethodRegistry
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 
 fun main() = runBlocking {
@@ -178,13 +181,14 @@ fun main() = runBlocking {
     // Create DID method registry
     val registry = DidMethodRegistry()
 
-    // Register did:key method
-    val keyMethod = /* create or discover did:key method */
-    registry.register("key", keyMethod)
+    // Obtain a DidMethod implementation. Plugins (e.g. did:key) expose `DidMethod` instances
+    // via SPI; for direct registration use the plugin's factory or auto-registration.
+    val keyMethod: DidMethod = TODO("provide a did:key DidMethod implementation")
+    registry.register(keyMethod)  // method name is read from keyMethod.method
 
     // Create DID using registry
     val options = didCreationOptions {
-        algorithm = KeyAlgorithm.Secp256k1
+        algorithm = KeyAlgorithm.SECP256K1
     }
 
     val method = registry.get("key")
@@ -204,28 +208,26 @@ fun main() = runBlocking {
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
-import org.trustweave.trust.types.Did
+import org.trustweave.trust.dsl.credential.KmsProviders
+import org.trustweave.did.identifiers.Did
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.errorMessage
-import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
-import org.trustweave.trust.types.getOrThrow
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
-    
     val did = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
     val document = when (val res = trustWeave.resolveDid(did)) {
-    is DidResolutionResult.Success -> res.document
-    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
-}
-    
+        is DidResolutionResult.Success -> res.document
+        else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
+    }
+
     println("Resolved DID: ${document.id}")
-    println("Document: ${document}")
+    println("Document: $document")
     println("Verification methods: ${document.verificationMethod.size}")
 }
 ```
@@ -272,33 +274,36 @@ import kotlinx.coroutines.runBlocking
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
-import org.trustweave.did.*
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders
+import org.trustweave.trust.types.DidResult
+import org.trustweave.did.identifiers.Did
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     val did = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
 
-    // Update DID document
-    try {
-        val updatedDoc = trustWeave.updateDid {
-            did(did.value)  // DSL builder accepts string for convenience
-            // Add a new service endpoint
-            service {
-                id("${did.value}#service-1")
-                type("LinkedDomains")
-                endpoint("https://example.com/service")
-            }
+    // updateDid returns a sealed DidResult
+    when (val updateResult = trustWeave.updateDid {
+        did(did.value)  // DSL builder accepts string for convenience
+        method("key")
+        // Add a new service endpoint
+        addService {
+            id("${did.value}#service-1")
+            type("LinkedDomains")
+            endpoint("https://example.com/service")
         }
-
-        println("Updated DID: ${updatedDoc.id}")
-        println("Services: ${updatedDoc.service.size}")
-    } catch (error: Exception) {
-        println("Update failed: ${error.message}")
+    }) {
+        is DidResult.Success -> {
+            println("Updated DID: ${updateResult.did.value}")
+            println("Services: ${updateResult.document.service.size}")
+        }
+        is DidResult.Failure -> {
+            println("Update failed: $updateResult")
+        }
     }
 }
 ```
@@ -309,39 +314,30 @@ fun main() = runBlocking {
 
 ### Deactivating DIDs
 
-```kotlin
-// Kotlin stdlib
-import kotlinx.coroutines.runBlocking
+`TrustWeave` does **not** expose a top-level `deactivateDid(did)` facade method.
+Deactivation is method-specific: resolve the `DidMethod` plugin from the registry
+and call its `deactivateDid(did: Did)` directly. `did:key` is stateless and cannot
+be deactivated (the call returns `false`).
 
-// TrustWeave core
-import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.dsl.credential.DidMethods
-import org.trustweave.trust.dsl.credential.KeyAlgorithms
-import org.trustweave.testkit.services.*
+```kotlin
+import kotlinx.coroutines.runBlocking
+import org.trustweave.did.DidMethod
+import org.trustweave.did.identifiers.Did
 
 fun main() = runBlocking {
-    val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
-        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
-    }
+    val did = Did("did:web:example.com:users:alice")
 
-    val did = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
+    val method = trustWeave.getDidRegistry().get("web") as? DidMethod
+        ?: error("did:web is not registered")
 
-    // Deactivate DID using type-safe API
-    try {
-        val deactivated = trustWeave.deactivateDid(did)
-        if (deactivated) {
-            println("DID deactivated successfully: ${did.value}")
-        } else {
-            println("DID deactivation failed or not supported")
-        }
-    } catch (error: Exception) {
-        println("Deactivation error: ${error.message}")
-    }
+    val deactivated: Boolean = method.deactivateDid(did)
+    println(if (deactivated) "Deactivated $did" else "Could not deactivate $did")
 }
 ```
 
-**Outcome:** Deactivates a DID, marking it as no longer active.
+For remote (universal-registrar) deactivation with options, use
+`org.trustweave.did.DidRegistrar.deactivateDid(did, DeactivateDidOptions)` from the
+`did/registrar` module instead — the plain `DidMethod` SPI does not take options.
 
 ## Working with Multiple DID Methods
 
@@ -352,30 +348,34 @@ fun main() = runBlocking {
 import kotlinx.coroutines.runBlocking
 
 // TrustWeave core
-import org.trustweave.did.*
-import org.trustweave.kms.*
+import org.trustweave.did.DidMethod
+import org.trustweave.did.KeyAlgorithm
+import org.trustweave.did.didCreationOptions
+import org.trustweave.did.registry.DidMethodRegistry
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
 
 fun main() = runBlocking {
     val kms = InMemoryKeyManagementService()
     val registry = DidMethodRegistry()
 
-    // Register multiple DID methods
-    registry.register("key", /* did:key method */)
-    registry.register("web", /* did:web method */)
-    registry.register("ion", /* did:ion method */)
+    // Register multiple DID methods (each DidMethod knows its own method name)
+    val keyMethod: DidMethod = TODO("did:key DidMethod")
+    val webMethod: DidMethod = TODO("did:web DidMethod")
+    val ionMethod: DidMethod = TODO("did:ion DidMethod")
+    registry.registerAll(keyMethod, webMethod, ionMethod)
 
     // Create DIDs using different methods
     val keyDid = registry.get("key")?.createDid(didCreationOptions {
-        algorithm = KeyAlgorithm.Ed25519
+        algorithm = KeyAlgorithm.ED25519
     })
 
     val webDid = registry.get("web")?.createDid(didCreationOptions {
-        domain = "example.com"
-        path = "/did/user/alice"
+        property("domain", "example.com")
+        property("path", "/did/user/alice")
     })
 
     val ionDid = registry.get("ion")?.createDid(didCreationOptions {
-        // ION-specific options
+        // ION-specific options via property(key, value)
     })
 
     println("Key DID: ${keyDid?.id}")
@@ -398,13 +398,13 @@ import kotlinx.coroutines.runBlocking
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
-import org.trustweave.did.*
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders
+import org.trustweave.trust.types.getOrThrowDid
+import org.trustweave.did.resolver.DidResolutionResult
 
 fun main() = runBlocking {
-    // Build TrustWeave instance with testkit factories (for tutorials)
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -412,8 +412,8 @@ fun main() = runBlocking {
         val did = trustWeave.createDid {
             method(DidMethods.KEY)
             algorithm(KeyAlgorithms.ED25519)
-        }
-        
+        }.getOrThrowDid()
+
         // Resolve DID to get document
         val resolution = trustWeave.resolveDid(did)
         val document = when (resolution) {
@@ -450,39 +450,27 @@ import kotlinx.coroutines.runBlocking
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
-import org.trustweave.core.exception.TrustWeaveException
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders
+import org.trustweave.trust.types.DidCreationResult
 
 fun main() = runBlocking {
-    // Build TrustWeave instance with testkit factories (for tutorials)
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
-    try {
-        val did = trustWeave.createDid {
-            method(DidMethods.KEY)
-            algorithm(KeyAlgorithms.ED25519)
-        }
-        println("Created: ${did.value}")
-    } catch (error: Exception) {
-        when (error) {
-            is IllegalStateException -> {
-                if (error.message?.contains("not configured") == true) {
-                    println("DID method not configured: ${error.message}")
-                } else {
-                    println("Error: ${error.message}")
-                }
-            }
-            else -> {
-                println("Error: ${error.message}")
-            }
-            is DidException.DidNotFound -> {
-                println("DID not found: ${error.did}")
-            }
-            else -> println("Error: ${error.message}")
-        }
+    // Prefer exhaustive sealed-result handling over try/catch for DID creation.
+    when (val result = trustWeave.createDid {
+        method(DidMethods.KEY)
+        algorithm(KeyAlgorithms.ED25519)
+    }) {
+        is DidCreationResult.Success -> println("Created: ${result.did.value}")
+        is DidCreationResult.Failure.MethodNotRegistered ->
+            println("DID method '${result.method}' not registered. Available: ${result.availableMethods.joinToString()}")
+        is DidCreationResult.Failure.KeyGenerationFailed -> println("Key generation failed: ${result.reason}")
+        is DidCreationResult.Failure.DocumentCreationFailed -> println("Document creation failed: ${result.reason}")
+        is DidCreationResult.Failure.InvalidConfiguration -> println("Invalid configuration: ${result.reason}")
+        is DidCreationResult.Failure.Other -> println("Error: ${result.reason}")
     }
 }
 ```

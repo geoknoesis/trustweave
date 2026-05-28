@@ -181,6 +181,7 @@ if (kms?.supportsAlgorithm(Algorithm.Ed25519) == true) {
 import org.trustweave.kms.*
 import org.trustweave.kms.KmsOptionKeys
 import org.trustweave.kms.results.*
+import org.trustweave.hashicorpkms.HashiCorpKmsOptionKeys
 
 // Generate Ed25519 key with auto-generated name
 val result = kms.generateKey(Algorithm.Ed25519)
@@ -189,18 +190,20 @@ when (result) {
         val keyHandle = result.keyHandle
         println("Key created: ${keyHandle.id}")
     }
-    is GenerateKeyResult.Failure -> {
-        println("Error: ${result.reason}")
-    }
+    is GenerateKeyResult.Failure.UnsupportedAlgorithm -> println("Unsupported: ${result.algorithm.name}")
+    is GenerateKeyResult.Failure.InvalidOptions -> println("Invalid options: ${result.reason}")
+    is GenerateKeyResult.Failure.Error -> println("Error: ${result.reason}")
 }
 
-// Generate key with custom name
+// Generate key with custom name.
+// Vault uses KmsOptionKeys.KEY_NAME (not KEY_ID).
+// ALLOW_PLAINTEXT_BACKUP lives in HashiCorpKmsOptionKeys.
 val keyWithNameResult = kms.generateKey(
     algorithm = Algorithm.Ed25519,
     options = mapOf(
-        KmsOptionKeys.KEY_ID to "did-issuer-key",
+        KmsOptionKeys.KEY_NAME to "did-issuer-key",
         KmsOptionKeys.EXPORTABLE to false,
-        KmsOptionKeys.ALLOW_PLAINTEXT_BACKUP to false
+        HashiCorpKmsOptionKeys.ALLOW_PLAINTEXT_BACKUP to false
     )
 )
 
@@ -208,7 +211,7 @@ val keyWithNameResult = kms.generateKey(
 val fipsKeyResult = kms.generateKey(
     algorithm = Algorithm.P256,
     options = mapOf(
-        KmsOptionKeys.KEY_ID to "fips-compliant-key"
+        KmsOptionKeys.KEY_NAME to "fips-compliant-key"
     )
 )
 ```
@@ -216,23 +219,25 @@ val fipsKeyResult = kms.generateKey(
 ### Signing Data
 
 ```kotlin
+import org.trustweave.core.identifiers.KeyId
+
 // Sign with key name (KeyId value class)
-val sign = kms.sign(KeyId("did-issuer-key"), data.toByteArray())
-when (sign) {
+when (val sign = kms.sign(KeyId("did-issuer-key"), data.toByteArray())) {
     is SignResult.Success -> {
         val signature = sign.signature
         // Use signature
     }
-    is SignResult.Failure -> {
-        println("Error: ${sign.reason}")
-    }
+    is SignResult.Failure.KeyNotFound -> println("Key not found: ${sign.keyId}")
+    is SignResult.Failure.UnsupportedAlgorithm ->
+        println("Algorithm '${sign.requestedAlgorithm?.name}' incompatible with key '${sign.keyAlgorithm.name}'")
+    is SignResult.Failure.Error -> println("Error: ${sign.reason}")
 }
 
 // Sign with full key path
-val sign = kms.sign(KeyId("transit/keys/did-issuer-key"), data.toByteArray())
+val sign2 = kms.sign(KeyId("transit/keys/did-issuer-key"), data.toByteArray())
 
 // Sign with algorithm override
-val sign = kms.sign(
+val sign3 = kms.sign(
     keyId = KeyId("did-issuer-key"),
     data = data.toByteArray(),
     algorithm = Algorithm.Ed25519
@@ -243,21 +248,17 @@ val sign = kms.sign(
 
 ```kotlin
 // Get public key by key name (KeyId value class)
-val publicKeyResult = kms.getPublicKey(KeyId("did-issuer-key"))
-when (publicKeyResult) {
+when (val publicKeyResult = kms.getPublicKey(KeyId("did-issuer-key"))) {
     is GetPublicKeyResult.Success -> {
         val publicKey = publicKeyResult.keyHandle
-        // Access JWK format
-        val jwk = publicKey.publicKeyJwk
-        println("Public key JWK: $jwk")
+        println("Public key JWK: ${publicKey.publicKeyJwk}")
     }
-    is GetPublicKeyResult.Failure -> {
-        println("Error: ${publicKeyResult.reason}")
-    }
+    is GetPublicKeyResult.Failure.KeyNotFound -> println("Not found: ${publicKeyResult.keyId}")
+    is GetPublicKeyResult.Failure.Error -> println("Error: ${publicKeyResult.reason}")
 }
 
 // Get public key by full path
-val publicKeyResult = kms.getPublicKey(KeyId("transit/keys/did-issuer-key"))
+val publicKey2 = kms.getPublicKey(KeyId("transit/keys/did-issuer-key"))
 ```
 
 ### Key Deletion
@@ -318,11 +319,11 @@ Vault Transit uses key names (not IDs) to identify keys. Recommendations:
 
 ### Key Options
 
-When generating keys, you can specify:
+When generating keys, you can specify (all via the `options` map on `generateKey`):
 
-- `keyName`: Custom key name (default: auto-generated)
-- `exportable`: Allow key export (default: false)
-- `allowPlaintextBackup`: Allow plaintext backup (default: false)
+- `KmsOptionKeys.KEY_NAME` (`"keyName"`): Custom key name (default: auto-generated)
+- `KmsOptionKeys.EXPORTABLE` (`"exportable"`): Allow key export (default: false)
+- `HashiCorpKmsOptionKeys.ALLOW_PLAINTEXT_BACKUP` (`"allowPlaintextBackup"`): Allow plaintext backup (default: false)
 
 ## Key Rotation
 

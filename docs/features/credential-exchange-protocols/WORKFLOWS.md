@@ -105,7 +105,8 @@ registry.register(DidCommExchangeProtocol(didCommService))
 // Create ExchangeService
 val exchangeService = ExchangeServices.createExchangeService(
     protocolRegistry = registry,
-    credentialService = credentialService
+    credentialService = credentialService,
+    didResolver = didResolver
 )
 ```
 
@@ -162,17 +163,19 @@ println("✅ Offer created: ${offer.offerId}")
 // Store offer ID for later reference
 val offerId = offer.offerId
 
-// Extract protocol-specific data if needed
-val offerData = offer.offerData
+// Extract protocol-specific data if needed.
+// The protocol-agnostic envelope holds opaque protocol data as JsonElement:
+val envelope = offer.messageEnvelope            // ExchangeMessageEnvelope
+val messageType = envelope.messageType          // ExchangeMessageType.Offer
+val messageData: kotlinx.serialization.json.JsonElement = envelope.messageData
 when (offer.protocolName) {
-    "didcomm" -> {
-        val didCommMessage = offerData as DidCommMessage
-        // Handle DIDComm-specific data
+    ExchangeProtocolName.DidComm -> {
+        // messageData is a JSON serialization of the DIDComm message
     }
-    "oidc4vci" -> {
-        val oidcOffer = offerData as Oidc4VciOffer
-        // Handle OIDC4VCI-specific data
+    ExchangeProtocolName.Oidc4Vci -> {
+        // messageData is a JSON serialization of the OIDC4VCI offer
     }
+    else -> { /* other protocols */ }
 }
 ```
 
@@ -223,7 +226,7 @@ val credential = VerifiableCredential(
     issuer = Issuer.IriIssuer(Iri(issuerDid.value)),
     issuanceDate = Clock.System.now(),
     credentialSubject = CredentialSubject(
-        id = holderDid,
+        id = Iri(holderDid.value),  // CredentialSubject.id is Iri, not Did
         claims = mapOf(
             "name" to JsonPrimitive("Alice"),
             "email" to JsonPrimitive("alice@example.com"),
@@ -343,10 +346,9 @@ println("✅ Proof request created: ${proofRequest.requestId}")
 ```kotlin
 // Prover creates a verifiable presentation
 val presentation = VerifiablePresentation(
-    type = listOf("VerifiablePresentation"),
-    holder = proverDid,
-    verifiableCredential = listOf(credential),  // Credential from previous workflow
-    proof = proof  // Proof of presentation
+    type = listOf(CredentialType.fromString("VerifiablePresentation")),
+    holder = Iri(proverDid.value),  // VerifiablePresentation.holder is Iri
+    verifiableCredential = listOf(credential)  // Credential from previous workflow
 )
 ```
 
@@ -371,7 +373,6 @@ val presentationResponse = when (presentationResult) {
     is ExchangeResult.Success -> presentationResult.value
     else -> throw IllegalStateException("Presentation failed: $presentationResult")
 }
-)
 
 println("✅ Proof presented: ${presentationResponse.presentationId}")
 ```
@@ -491,7 +492,7 @@ val offer = when (offerResult) {
     is ExchangeResult.Success -> offerResult.value
     else -> throw IllegalStateException("Offer failed: $offerResult")
 }
-// Use offer.chapiMessage with navigator.credentials.store()
+// Use offer.messageEnvelope.messageData (JsonElement) with navigator.credentials.store()
 ```
 
 ---
@@ -561,14 +562,14 @@ suspend fun offerCredentialWithFallback(
 ### Strategy 2: Validate Before Operation
 
 ```kotlin
-fun validateRequest(request: CredentialOfferRequest): ValidationResult {
+fun validateRequest(request: ExchangeRequest.Offer): ValidationResult {
     val errors = mutableListOf<String>()
 
-    // Validate DIDs
-    if (!isValidDid(request.issuerDid)) {
+    // Validate DIDs (Did construction already enforces basic format)
+    if (request.issuerDid.value.isBlank()) {
         errors.add("Invalid issuer DID: ${request.issuerDid}")
     }
-    if (!isValidDid(request.holderDid)) {
+    if (request.holderDid.value.isBlank()) {
         errors.add("Invalid holder DID: ${request.holderDid}")
     }
 
@@ -588,8 +589,14 @@ fun validateRequest(request: CredentialOfferRequest): ValidationResult {
 }
 
 // Use before operation (validate DIDs, preview, etc. before calling exchangeService)
-// Note: The new API uses Did types and ExchangeRequest types which provide better type safety
-val validation = validateRequest(issuerDid, holderDid, credentialPreview)
+val offerRequest = ExchangeRequest.Offer(
+    protocolName = "didcomm".requireExchangeProtocolName(),
+    issuerDid = issuerDid,
+    holderDid = holderDid,
+    credentialPreview = credentialPreview,
+    options = ExchangeOptions.builder().build()
+)
+val validation = validateRequest(offerRequest)
 if (validation is ValidationResult.Invalid) {
     println("Validation failed:")
     validation.errors.forEach { println("  - $it") }
@@ -649,14 +656,6 @@ val oidcRequest = when (oidcRequestResult) {
     is ExchangeResult.Success -> oidcRequestResult.value
     else -> throw IllegalStateException("OIDC4VCI request failed: $oidcRequestResult")
 }
-        holderDid = holderDid,
-        issuerDid = issuerDid,
-        offerId = didCommOffer.offerId,
-        options = mapOf(
-            "credentialIssuer" to "https://issuer.example.com"
-        )
-    )
-)
 
 // Continue with OIDC4VCI
 val issueResult = exchangeService.issue(

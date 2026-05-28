@@ -34,14 +34,14 @@ dependencies {
     implementation("org.trustweave:kms-kms-core:0.6.0")
     implementation("org.trustweave:common:0.6.0")
 
-    // SPI support (optional, for auto-discovery)
-    // Note: Module paths have been renamed to avoid circular dependency issues:
-    // - did:core → did:did-core
-    // - credentials:core → credentials:credential-core
-    // - kms:core → kms:kms-core
-    // - anchors:core → anchors:anchor-core
-    // - wallet:core → wallet:wallet-core
-    implementation("org.trustweave:common:0.6.0")
+    // Credential SPI (proof engines, exchange protocols, status checkers)
+    implementation("org.trustweave:credentials-credential-api:0.6.0")
+
+    // Wallet SPI
+    implementation("org.trustweave:wallet-wallet-core:0.6.0")
+
+    // Test doubles (in-memory KMS, mock DID method, etc.)
+    testImplementation("org.trustweave:testkit:0.6.0")
 }
 ```
 
@@ -57,6 +57,7 @@ Implement **`org.trustweave.did.DidMethod`** in **`did-core`** (it extends **`Di
 // Abbreviated — see did-core for full Javadoc
 interface DidMethod : DidMethodResolver {
     val method: String
+    val capabilities: MethodCapabilities? get() = null
     suspend fun createDid(options: DidCreationOptions = DidCreationOptions()): DidDocument
     override suspend fun resolveDid(did: Did): DidResolutionResult
     suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument): DidDocument
@@ -249,78 +250,24 @@ val trustWeave = TrustWeave.build {
 }
 ```
 
-## 3. Implementing a Proof Generator
+## 3. Implementing a Proof Engine
 
-The `ProofGenerator` interface allows you to implement custom proof types.
+The legacy `ProofGenerator` interface has been replaced by **`org.trustweave.credential.spi.proof.ProofEngine`**, which covers issuance, verification, and presentation creation for a given proof suite (VC-LD, VC-JWT, SD-JWT-VC, etc.) keyed by **`ProofSuiteId`**.
 
-### Interface Definition
+### Reference
 
-```kotlin
-interface ProofGenerator {
-    val proofType: String  // e.g., "Ed25519Signature2020"
+A full `ProofEngine` walkthrough is out of scope for this page — see the canonical
+guide at [Proof Engine Implementation Guide](../advanced/proof-engine-implementation-guide.md).
+Quick pointers for orientation:
 
-    suspend fun generateProof(
-        credential: VerifiableCredential,
-        keyId: String,
-        options: ProofOptions
-    ): Proof
-}
-```
-
-### Example Implementation
-
-```kotlin
-package com.example.TrustWeave.plugins
-
-import org.trustweave.credential.model.vc.*
-import org.trustweave.credential.proof.*
-import org.trustweave.core.util.normalizeKeyId
-
-/**
- * Example proof generator implementation.
- */
-class ExampleProofGenerator(
-    private val signer: suspend (ByteArray, String) -> ByteArray
-) : ProofGenerator {
-
-    override val proofType = "ExampleSignature2020"
-
-    override suspend fun generateProof(
-        credential: VerifiableCredential,
-        keyId: String,
-        options: ProofOptions
-    ): Proof {
-        // Normalize key ID
-        val normalizedKeyId = normalizeKeyId(keyId)
-
-        // Create proof document (credential without proof)
-        val proofDocument = credential.copy(proof = null)
-
-        // Canonicalize and create digest
-        val canonicalJson = proofDocument.toCanonicalJson() // Implement this
-        val digest = canonicalJson.hash() // Implement this
-
-        // Sign the digest
-        val signature = signer(digest, normalizedKeyId)
-
-        // Create proof
-        return Proof(
-            type = proofType,
-            created = java.time.Instant.now().toString(),
-            proofPurpose = options.proofPurpose,
-            verificationMethod = options.verificationMethod
-                ?: "$credential.issuer#$normalizedKeyId",
-            proofValue = signature.encodeBase64(), // Implement encoding
-            challenge = options.challenge,
-            domain = options.domain
-        )
-    }
-}
-```
+- **SPI interface:** `credentials/credential-api/src/main/kotlin/org/trustweave/credential/spi/proof/ProofEngine.kt`
+- **Built-in reference engines:** `credentials/credential-api/.../proof/internal/engines/` (`VcLdProofEngine`, `SdJwtProofEngine`)
+- **External plugin examples:** `credentials/plugins/bbs/` (`Bbs2023ProofEngine`), `credentials/plugins/mdl/` (`MdocProofEngine`)
+- **Registration:** ship a `ProofEngineProvider` and a `META-INF/services/org.trustweave.credential.spi.proof.ProofEngineProvider` file. The default `CredentialService` picks it up automatically via `ServiceLoader`.
 
 ### Registration
 
-Proof generators are not registered on a separate `proofGenerators { }` builder. They are typically bundled inside a custom **`CredentialService`** (see below) or the default service constructed from KMS + DID resolution.
+Proof engines are not registered on a separate `proofGenerators { }` builder. Ship a **`ProofEngineProvider`** with a `META-INF/services/org.trustweave.credential.spi.proof.ProofEngineProvider` entry, or compose them into a custom **`CredentialService`** (see below).
 
 ## 4. Implementing a Key Management Service
 
@@ -329,98 +276,56 @@ The `KeyManagementService` interface allows you to integrate with different key 
 ### Interface Definition
 
 ```kotlin
+// Real signatures return Result types (Generate/GetPublicKey/Sign/DeleteKeyResult).
 interface KeyManagementService {
-    suspend fun generateKey(
-        algorithm: String,
-        options: Map<String, Any?> = emptyMap()
-    ): KeyHandle
+    suspend fun getSupportedAlgorithms(): Set<Algorithm>
 
-    suspend fun getPublicKey(keyId: KeyId): KeyHandle
+    suspend fun generateKey(
+        algorithm: Algorithm,
+        options: Map<String, Any?> = emptyMap()
+    ): GenerateKeyResult
+
+    suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult
 
     suspend fun sign(
         keyId: KeyId,
         data: ByteArray,
-        algorithm: String? = null
-    ): ByteArray
+        algorithm: Algorithm? = null
+    ): SignResult
 
-    suspend fun deleteKey(keyId: KeyId): Boolean
+    suspend fun deleteKey(keyId: KeyId): DeleteKeyResult
 }
 ```
 
 ### Example Implementation
 
+**Reference:** Copy from **`org.trustweave.testkit.kms.InMemoryKeyManagementService`** for a working implementation. Key points:
+
+- Algorithms are the **`Algorithm`** sealed class (e.g. `Algorithm.Ed25519`, `Algorithm.Secp256k1`) — not free-form strings.
+- All operations return **`Result`** sealed classes (`GenerateKeyResult`, `GetPublicKeyResult`, `SignResult`, `DeleteKeyResult`) — never throw cross-module exceptions or return raw `KeyHandle` / `ByteArray`.
+- `KeyId` is a value class wrapping the key identifier string.
+- Providers must implement **`getSupportedAlgorithms()`** so the SPI layer can match capabilities.
+
 ```kotlin
-package com.example.TrustWeave.plugins
-
-import org.trustweave.kms.*
-import java.security.*
-import java.util.concurrent.ConcurrentHashMap
-
-/**
- * Example KMS implementation using Java's KeyPairGenerator.
- */
+// Sketch only — see InMemoryKeyManagementService for full code.
 class ExampleKeyManagementService : KeyManagementService {
-
-    private val keys = ConcurrentHashMap<String, KeyPair>()
+    override suspend fun getSupportedAlgorithms(): Set<Algorithm> =
+        setOf(Algorithm.Ed25519, Algorithm.Secp256k1)
 
     override suspend fun generateKey(
-        algorithm: String,
+        algorithm: Algorithm,
         options: Map<String, Any?>
-    ): KeyHandle {
-        val keyPairGenerator = when (algorithm.uppercase()) {
-            "ED25519" -> KeyPairGenerator.getInstance("EdDSA")
-            "SECP256K1" -> KeyPairGenerator.getInstance("EC")
-            else -> throw IllegalArgumentException("Unsupported algorithm: $algorithm")
-        }
+    ): GenerateKeyResult = TODO()
 
-        keyPairGenerator.initialize(256)
-        val keyPair = keyPairGenerator.generateKeyPair()
-
-        val keyIdString = "key_${System.currentTimeMillis()}"
-        keys[keyIdString] = keyPair
-
-        // Convert to JWK format (simplified)
-        val publicKeyJwk = mapOf(
-            "kty" to "EC",
-            "crv" to algorithm,
-            "x" to keyPair.public.encoded.toString(Charsets.UTF_8)
-        )
-
-        return KeyHandle(
-            id = KeyId(keyIdString),
-            algorithm = algorithm,
-            publicKeyJwk = publicKeyJwk
-        )
-    }
-
-    override suspend fun getPublicKey(keyId: KeyId): KeyHandle {
-        val keyPair = keys[keyId.value]
-            ?: throw KeyNotFoundException("Key not found: ${keyId.value}")
-
-        return KeyHandle(
-            id = keyId,
-            algorithm = "Ed25519", // Determine from keyPair
-            publicKeyJwk = mapOf("kty" to "EC") // Convert properly
-        )
-    }
+    override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult = TODO()
 
     override suspend fun sign(
         keyId: KeyId,
         data: ByteArray,
-        algorithm: String?
-    ): ByteArray {
-        val keyPair = keys[keyId.value]
-            ?: throw KeyNotFoundException("Key not found: ${keyId.value}")
+        algorithm: Algorithm?
+    ): SignResult = TODO()
 
-        val signer = Signature.getInstance("Ed25519")
-        signer.initSign(keyPair.private)
-        signer.update(data)
-        return signer.sign()
-    }
-
-    override suspend fun deleteKey(keyId: KeyId): Boolean {
-        return keys.remove(keyId.value) != null
-    }
+    override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult = TODO()
 }
 ```
 
@@ -443,10 +348,13 @@ The public **`CredentialService`** API is **`issue(IssuanceRequest)`**, **`verif
 - Supply a custom **`credentialService(...)`** instance only if you truly replace orchestration; register it on the facade:
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+
 val trustWeave = TrustWeave.build {
-    keys { provider(IN_MEMORY); algorithm(ED25519) }
-    did { method(KEY) { algorithm(ED25519) } }
+    keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+    did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     credentialService(myCustomCredentialService)
 }
 ```
@@ -467,7 +375,7 @@ interface WalletFactory {
         walletDid: String? = null,
         holderDid: String? = null,
         options: WalletCreationOptions = WalletCreationOptions()
-    ): Any
+    ): Wallet
 }
 ```
 
@@ -571,18 +479,22 @@ For automatic discovery via Java ServiceLoader, implement provider interfaces:
 
 1. Create a provider class:
 ```kotlin
+import org.trustweave.did.DidCreationOptions
+import org.trustweave.did.DidMethod
+import org.trustweave.did.spi.DidMethodProvider
+
 class MyDidMethodProvider : DidMethodProvider {
     override val name = "mymethod"
+    override val supportedMethods: List<String> = listOf("mymethod")
 
-    override fun create(options: Map<String, Any?>): DidMethod? {
-        val kms = options["kms"] as? KeyManagementService
-            ?: return null
-        return MyDidMethod(kms)
+    override fun create(methodName: String, options: DidCreationOptions): DidMethod? {
+        if (methodName !in supportedMethods) return null
+        return MyDidMethod(/* construct from options.additionalProperties */)
     }
 }
 ```
 
-2. Create service file: `META-INF/services/org.trustweave.did.DidMethodProvider`
+2. Create service file: `META-INF/services/org.trustweave.did.spi.DidMethodProvider`
 ```
 com.example.MyDidMethodProvider
 ```
@@ -650,10 +562,10 @@ class ExampleDidMethodTest {
         val method = ExampleDidMethod(kms)
 
         val document = method.createDid()
-        val result = method.resolveDid(document.id)
+        val result = method.resolveDid(document.id) as DidResolutionResult.Success
 
         assertNotNull(result.document)
-        assertEquals(document.id, result.document!!.id)
+        assertEquals(document.id, result.document.id)
     }
 }
 ```
@@ -669,6 +581,7 @@ fun `test plugin with TrustWeave`() = runTest {
     }
 
     val did = trustWeave.createDid { method("example") }.getOrThrowDid()
+    // Did is a value class — use `.value` for the raw string.
     assertTrue(did.value.startsWith("did:example:"))
 }
 ```

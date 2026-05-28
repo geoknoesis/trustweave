@@ -5,6 +5,8 @@ nav_exclude: true
 
 # Protocol Abstraction Layer
 
+> **Note (audit 2026-05):** Code samples on this page describe a legacy registry-centric API (`CredentialExchangeProtocolRegistry.offerCredential(...)`, `requestCredential(...)`, `issueCredential(...)`, `requestProof(...)`, `presentProof(...)`) that does **not** exist in the current codebase. The real API surface uses `org.trustweave.credential.exchange.ExchangeService` with sealed `ExchangeRequest.Offer | Request | Issue` and `ProofExchangeRequest.Request | Presentation` types, returning `ExchangeResult<ExchangeResponse.*>`. The architecture diagrams and protocol descriptions below remain accurate. For the real API see [QUICK_START.md](../features/credential-exchange-protocols/QUICK_START.md), [EXAMPLES.md](../features/credential-exchange-protocols/EXAMPLES.md), and the source under `credentials/credential-api/src/main/kotlin/org/trustweave/credential/exchange/`.
+
 ## Overview
 
 The protocol abstraction layer provides a unified interface for credential exchange operations across different protocols (DIDComm, OIDC4VCI, CHAPI, OIDC4VP, etc.). This allows applications to use any protocol interchangeably without being tightly coupled to a specific implementation.
@@ -124,6 +126,14 @@ val offer = registry.offerCredential("didcomm", request)
 - **Library**: walt.id `waltid-openid4vc` (optional)
 - **Documentation**: [OIDC4VCI Protocol](../features/credential-exchange-protocols/oidc4vci.md)
 
+### OIDC4VP
+
+- **Protocol Name**: `"oidc4vp"`
+- **Supported Operations**: Proof request and presentation (verifier ↔ holder)
+- **Implementation**: `Oidc4VpExchangeProtocol`
+- **Module**: [credentials/plugins/oidc4vp](../../credentials/plugins/oidc4vp/)
+- **Profiles**: Includes a HAIP (High Assurance Interoperability Profile) validator at [HaipProfileValidator.kt](../../credentials/plugins/oidc4vp/src/main/kotlin/org/trustweave/credential/oidc4vp/haip/HaipProfileValidator.kt) for `vp_token`-based flows over SD-JWT VC and ISO mdoc.
+
 ### CHAPI
 
 - **Protocol Name**: `"chapi"`
@@ -132,6 +142,38 @@ val offer = registry.offerCredential("didcomm", request)
 - **Status**: ✅ Implemented (Basic)
 - **Library**: Custom implementation (browser API wrapper)
 - **Documentation**: [CHAPI Protocol](../features/credential-exchange-protocols/chapi.md)
+
+### SIOPv2
+
+- **Protocol Name**: `"siopv2"`
+- **Supported Operations**: Wallet-as-OP authentication (`id_token` flow); pairs with OIDC4VP for credential presentation in the same request.
+- **Implementation**: `SiopV2ExchangeProtocol`
+- **Module**: [credentials/plugins/siop](../../credentials/plugins/siop/) — see the plugin [README](../../credentials/plugins/siop/README.md)
+- **Use it for**: DID-based sign-in, wallet-initiated authentication, cross-device QR-code login.
+
+### Presentation Exchange (DIF PE v2)
+
+Not an exchange protocol on its own — a **declarative query language** used inside OIDC4VP, SIOPv2, DIDComm, and CHAPI flows so verifiers can specify exactly which credentials and fields they need.
+
+- **Module**: [credentials/plugins/presentation-exchange](../../credentials/plugins/presentation-exchange/) — see the plugin [README](../../credentials/plugins/presentation-exchange/README.md)
+- **Key types**: `PresentationDefinition`, `InputDescriptor`, `PresentationDefinitionMatcher`
+- **Spec**: [DIF Presentation Exchange v2](https://identity.foundation/presentation-exchange/)
+
+### OpenID Federation
+
+Not an exchange protocol — a **trust establishment layer** for the protocols above. Lets verifiers and issuers discover each other via signed entity statements and trust chains rooted at one or more trust anchors.
+
+- **Module**: [credentials/plugins/openid-federation](../../credentials/plugins/openid-federation/) — see the plugin [README](../../credentials/plugins/openid-federation/README.md)
+- **Key types**: `TrustChainResolver`, `EntityConfigurationEndpoint`, `EntityStatementJwtProcessor`, `FederationExchangeProtocol`
+- **Spec**: [OpenID Federation 1.0](https://openid.net/specs/openid-federation-1_0.html)
+
+### EUDI Wallet Profile
+
+A profile overlay (not a standalone protocol) that constrains OIDC4VCI, OIDC4VP, and SIOPv2 to the EU Digital Identity Wallet ARF — covering the EU PID credential, wallet trust evidence, and the EUDIW issuance/presentation rules.
+
+- **Module**: [credentials/plugins/eudiw](../../credentials/plugins/eudiw/) — see the plugin [README](../../credentials/plugins/eudiw/README.md)
+- **Includes**: `EuPidCredential`, `EuPidIssuanceProfile`, `EudiwOid4VciProfile`, `EudiwOid4VpProfile`, `WalletTrustEvidence`, `EudiwExchangeProtocol`
+- **Spec**: [EUDIW ARF](https://github.com/eu-digital-identity-wallet/eudi-doc-architecture-and-reference-framework)
 
 ## Message Flow
 
@@ -299,12 +341,15 @@ For detailed information on implementing new protocols, see:
 
 ## Future Enhancements
 
-- x] Auto-discovery via SPI
-- Protocol capability negotiation
-- Protocol fallback/retry
-- Protocol-specific validation
-- Metrics and observability per protocol
-- OIDC4VP implementation
-- SIOPv2 implementation
-- WACI implementation
+- [x] Auto-discovery via SPI
+- [x] OIDC4VP implementation — see [credentials/plugins/oidc4vp](../../credentials/plugins/oidc4vp/)
+- [x] SIOPv2 implementation — see [credentials/plugins/siop](../../credentials/plugins/siop/)
+- [x] DIF Presentation Exchange v2 — see [credentials/plugins/presentation-exchange](../../credentials/plugins/presentation-exchange/)
+- [x] OpenID Federation 1.0 trust chains — see [credentials/plugins/openid-federation](../../credentials/plugins/openid-federation/)
+- [x] EUDIW ARF profile overlay — see [credentials/plugins/eudiw](../../credentials/plugins/eudiw/)
+- [ ] Protocol capability negotiation
+- [ ] Protocol fallback/retry
+- [ ] Protocol-specific validation
+- [ ] Metrics and observability per protocol
+- [ ] WACI implementation
 

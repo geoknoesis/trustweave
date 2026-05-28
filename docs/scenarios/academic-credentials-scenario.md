@@ -163,7 +163,9 @@ import org.trustweave.trust.types.proofValid
 import org.trustweave.trust.types.issuerValid
 import org.trustweave.trust.types.notRevoked
 import org.trustweave.credential.proof.proofOptions
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.did.identifiers.extractKeyId
 import org.trustweave.wallet.CredentialOrganization
 import org.trustweave.wallet.CredentialPresentation
@@ -347,7 +349,9 @@ Create a TrustWeave instance that provides access to all functionality:
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.credential.model.ProofType
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 
 val trustWeave = TrustWeave.build {
     keys { provider(IN_MEMORY); algorithm(ED25519) }
@@ -363,7 +367,7 @@ val trustWeave = TrustWeave.build {
 Each party (university issuer and student holder) needs their own DID:
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 // Create university DID (issuer)
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.did.resolver.DidResolutionResult

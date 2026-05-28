@@ -48,26 +48,24 @@ import kotlinx.coroutines.runBlocking
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
-import org.trustweave.wallet.WalletCreationOptions
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders
+import org.trustweave.trust.types.getOrThrow
 import org.trustweave.core.exception.TrustWeaveException
 
 fun main() = runBlocking {
-    // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     try {
         val wallet = trustWeave.wallet {
             holder("did:key:holder")
-            type("inMemory")
+            provider("inMemory")
             enablePresentation()
         }.getOrThrow()
 
         println("Wallet ID: ${wallet.walletId}")
-        println("Holder: ${wallet.holderDid}")
     } catch (error: TrustWeaveException) {
         println("Wallet creation failed: ${error.message}")
     }
@@ -98,25 +96,28 @@ val inMemory = InMemoryWallet(holderDid = "did:key:test-holder")
 
 ### Basic Storage
 
+In 0.6.0 the `VerifiableCredential` constructor was tightened to use typed
+identifiers (`Issuer`, `CredentialSubject`, `kotlinx.datetime.Instant`,
+`List<CredentialType>`). Always build credentials through the issuance DSL — never
+the raw constructor — and store the result. Storage itself is unchanged.
+
 ```kotlin
-import org.trustweave.credential.model.vc.VerifiableCredential
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.did.identifiers.Did
 
-// Create a credential
-val credential = VerifiableCredential(
-    id = "https://example.com/credentials/123",
-    type = listOf("VerifiableCredential", "PersonCredential"),
-    issuer = "did:key:issuer",
-    credentialSubject = buildJsonObject {
-        put("id", "did:key:subject")
-        put("name", "Alice")
-        put("email", "alice@example.com")
-    },
-    issuanceDate = "2023-01-01T00:00:00Z"
-)
+// 1. Issue via the DSL (full walkthrough in the Credential Issuance tutorial).
+val credential = (trustWeave.issue {
+    credential {
+        issuer(issuerDid)
+        subject {
+            id(holderDid)
+            claim("degree", "Bachelor of Science")
+        }
+    }
+    signedBy(issuerDid = Did(issuerDid), keyId = "key-1")
+} as IssuanceResult.Success).credential
 
-// Store it
+// 2. Store it.
 val credentialId = wallet.store(credential)
 println("Stored credential: $credentialId")
 ```
@@ -301,11 +302,16 @@ val specific = wallet.query {
 ### Basic Presentation
 
 ```kotlin
+import org.trustweave.credential.proof.ProofOptions
+import org.trustweave.credential.proof.ProofPurpose
+
 if (wallet is CredentialPresentation) {
     val presentation = wallet.createPresentation(
         credentialIds = listOf(credentialId1, credentialId2),
         holderDid = "did:key:holder",
-        options = mapOf("holderDid" to "did:key:holder", "proofType" to "Ed25519Signature2020", "challenge" to "random-challenge-123",
+        options = ProofOptions(
+            purpose = ProofPurpose.Authentication,
+            challenge = "random-challenge-123",
             domain = "example.com"
         )
     )
@@ -319,6 +325,9 @@ if (wallet is CredentialPresentation) {
 Reveal only specific fields:
 
 ```kotlin
+import org.trustweave.credential.proof.ProofOptions
+import org.trustweave.credential.proof.ProofPurpose
+
 if (wallet is CredentialPresentation) {
     val selectivePresentation = wallet.createSelectiveDisclosure(
         credentialIds = listOf(credentialId),
@@ -328,7 +337,7 @@ if (wallet is CredentialPresentation) {
             "credentialSubject.degree.name"
         ),
         holderDid = "did:key:holder",
-        options = emptyMap<String, Any?>()
+        options = ProofOptions(purpose = ProofPurpose.Authentication)
     )
 }
 ```
@@ -431,6 +440,9 @@ wallet.withPresentation { presentation ->
 Manage multiple wallets with an instance-scoped directory:
 
 ```kotlin
+import org.trustweave.testkit.credential.BasicWallet
+import org.trustweave.testkit.credential.InMemoryWallet
+import org.trustweave.wallet.CredentialOrganization
 import org.trustweave.wallet.WalletDirectory
 
 val directory = WalletDirectory()
@@ -445,8 +457,9 @@ directory.register(wallet2)
 val retrieved = directory.get(wallet1.walletId)
 val byDid = directory.getByDid("did:key:wallet")
 
-// Find wallets with specific capabilities
-val orgWallets = directory.findByCapability(CredentialOrganization::class)
+// Find wallets with specific capabilities (compile-time, reified)
+val orgWallets: List<CredentialOrganization> = directory.findByCapability()
+// Or by capability feature name (runtime, from WalletCapabilities)
 val walletsWithCollections = directory.findByCapability("collections")
 ```
 
@@ -457,40 +470,45 @@ Here's a complete example combining all features:
 ```kotlin
 // Kotlin stdlib
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 
 // TrustWeave core
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
+import org.trustweave.trust.types.getOrThrow
 import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.testkit.credential.InMemoryWallet
-import org.trustweave.testkit.services.*
+import org.trustweave.credential.proof.ProofOptions
+import org.trustweave.credential.proof.ProofPurpose
+import org.trustweave.wallet.CredentialOrganization
+import org.trustweave.wallet.CredentialPresentation
+import org.trustweave.wallet.DidManagement
 
 fun main() = runBlocking {
-    // Create wallet using TrustWeave service API
-    // Build TrustWeave instance (for tutorials, using testkit factories)
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
     val wallet = trustWeave.wallet {
         holder("did:key:holder")
-        type("inMemory")
-    }
+        provider("inMemory")
+        enablePresentation()
+    }.getOrThrow()
 
-    // Store credentials
-    val credential1 = createCredential("Alice", "alice@example.com")
-    val credential2 = createCredential("Bob", "bob@example.com")
+    // `credential1`/`credential2` come from trustWeave.issue { ... }.getOrThrow()
+    // — see the credential-issuance tutorial for the issuance DSL.
+    val credential1: VerifiableCredential = TODO("issue with trustWeave.issue { ... }")
+    val credential2: VerifiableCredential = TODO("issue with trustWeave.issue { ... }")
 
     val id1 = wallet.store(credential1)
     val id2 = wallet.store(credential2)
 
-    // Organize credentials
-    val workCollection = wallet.createCollection("Work Credentials")
-    wallet.addToCollection(id1, workCollection)
-    wallet.tagCredential(id1, setOf("important", "verified"))
+    // Organize credentials (requires CredentialOrganization capability)
+    if (wallet is CredentialOrganization) {
+        val workCollection = wallet.createCollection("Work Credentials")
+        wallet.addToCollection(id1, workCollection)
+        wallet.tagCredential(id1, setOf("important", "verified"))
+    }
 
     // Query credentials
     val important = wallet.query {
@@ -498,32 +516,20 @@ fun main() = runBlocking {
         valid()
     }
 
-    // Create presentation
-    val presentation = wallet.createPresentation(
-        credentialIds = listOf(id1),
-        holderDid = wallet.holderDid,
-        options = mapOf(
-            "holderDid" to wallet.holderDid,
-            "proofType" to "Ed25519Signature2020"
+    // Create presentation (requires CredentialPresentation capability)
+    val holderDid = (wallet as? DidManagement)?.holderDid ?: "did:key:holder"
+    if (wallet is CredentialPresentation) {
+        val presentation = wallet.createPresentation(
+            credentialIds = listOf(id1),
+            holderDid = holderDid,
+            options = ProofOptions(purpose = ProofPurpose.Authentication)
         )
-    )
+        println("Created presentation with ${presentation.verifiableCredential.size} credentials")
+    }
 
     // Get statistics
     val stats = wallet.getStatistics()
     println("Wallet has ${stats.totalCredentials} credentials")
-}
-
-fun createCredential(name: String, email: String): VerifiableCredential {
-    return VerifiableCredential(
-        type = listOf("VerifiableCredential", "PersonCredential"),
-        issuer = "did:key:issuer",
-        credentialSubject = buildJsonObject {
-            put("id", "did:key:subject")
-            put("name", name)
-            put("email", email)
-        },
-        issuanceDate = "2023-01-01T00:00:00Z"
-    )
 }
 ```
 

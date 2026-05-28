@@ -45,7 +45,6 @@ import org.trustweave.contract.models.*
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
-import org.trustweave.testkit.services.*
 
 val trustWeave = TrustWeave.build {
     did { method(KEY) { algorithm(ED25519) } }
@@ -264,7 +263,8 @@ import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.errorMessage
 import org.trustweave.did.identifiers.extractKeyId
 import org.trustweave.credential.results.IssuanceResult
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.credential.results.getOrThrow
 
 suspend fun completeParametricInsuranceWorkflow() {

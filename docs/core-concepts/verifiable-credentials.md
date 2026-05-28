@@ -305,56 +305,47 @@ A Verifiable Credential contains:
 A credential is **issued** by an issuer to a subject:
 
 ```kotlin
-import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.ProofType
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
 import org.trustweave.trust.types.getOrThrowDid
-import org.trustweave.trust.types.getOrThrow
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.TrustWeave
-import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.did.resolver.errorMessage
 import org.trustweave.did.identifiers.Did
-import org.trustweave.did.identifiers.extractKeyId
+import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 
 // Issue credential using TrustWeave DSL API
-
-val trustWeave = TrustWeave.build {
-    keys { provider(IN_MEMORY); algorithm(ED25519) }
-    did { method(KEY) { algorithm(ED25519) } }
-    credentials { defaultProofType(ProofType.Ed25519Signature2020) }
-}
-
-
-val issuerDid = trustWeave.createDid {
-    method(KEY)
-    algorithm(ED25519)
-}.getOrThrowDid()
-
-val issuerDoc = when (val res = trustWeave.resolveDid(issuerDid)) {
-    is DidResolutionResult.Success -> res.document
-    else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
-}
-val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
-    ?: throw IllegalStateException("No verification method found")
-
-val subjectDid = Did("did:key:subject")
-
-val issuedCredential = trustWeave.issue {
-    credential {
-        type(CredentialType.Person)
-        issuer(issuerDid)
-        subject {
-            id(subjectDid)
-            "name" to "Alice"
-            "email" to "alice@example.com"
-        }
-        issued(Clock.System.now())
+val issuedCredential = runBlocking {
+    val trustWeave = TrustWeave.build {
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
+        credentials { defaultProofType(ProofType.Ed25519Signature2020) }
     }
-    signedBy(issuerDid)
-}.getOrThrow()
+
+    val issuerDid = trustWeave.createDid {
+        method(DidMethods.KEY)
+        algorithm(KeyAlgorithms.ED25519)
+    }.getOrThrowDid()
+
+    val subjectDid = Did("did:key:z6MkpTHR8VNsBxYAAWHut2Geadd9jSwuBV8xRoAnwWsdvktH")
+
+    trustWeave.issue {
+        credential {
+            type(CredentialType.Person)
+            issuer(issuerDid)
+            subject {
+                id(subjectDid)
+                "name" to "Alice"
+                "email" to "alice@example.com"
+            }
+            issued(Clock.System.now())
+        }
+        signedBy(issuerDid)  // key id auto-extracted from the DID document
+    }.getOrThrow()
+}
 ```
 
 **Outcome:** Produces a signed credential ready for distribution, anchored to the specific proof type and key you configured.
@@ -365,9 +356,10 @@ Store credentials in a wallet:
 
 ```kotlin
 import org.trustweave.testkit.credential.BasicWallet
+import kotlinx.coroutines.runBlocking
 
 val wallet = BasicWallet()
-val credentialId = wallet.store(issuedCredential)
+val credentialId = runBlocking { wallet.store(issuedCredential) }
 ```
 
 **Outcome:** Persists the credential in a wallet so it can be queried, organized, and presented later.
@@ -397,22 +389,27 @@ Verify a credential or presentation:
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.credential.results.VerificationResult
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
+import kotlinx.coroutines.runBlocking
 
-val trustWeave = TrustWeave.build {
-    keys { provider(IN_MEMORY); algorithm(ED25519) }
-    did { method(KEY) { algorithm(ED25519) } }
-}
+runBlocking {
+    val trustWeave = TrustWeave.build {
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
+    }
 
-val result = trustWeave.verify {
-    credential(issuedCredential)
-    checkExpiration()
-    // checkRevocation() requires status list integration
-}
+    val result = trustWeave.verify {
+        credential(issuedCredential)
+        checkExpiration()
+        // checkRevocation() requires status list integration
+    }
 
-when (result) {
-    is VerificationResult.Valid -> println("Credential verified")
-    is VerificationResult.Invalid -> println("Verification errors: ${result.allErrors.joinToString()}")
+    when (result) {
+        is VerificationResult.Valid -> println("Credential verified")
+        is VerificationResult.Invalid -> println("Verification errors: ${result.allErrors.joinToString()}")
+    }
 }
 ```
 
@@ -470,14 +467,14 @@ TrustWeave supports multiple proof types:
 Credentials can reference schemas for validation:
 
 ```kotlin
-val credential = VerifiableCredential(
-    // ...
-    credentialSchema = CredentialSchema(
-        id = "https://example.com/schemas/person.json",
-        type = "JsonSchemaValidator2018",
-        schemaFormat = SchemaFormat.JSON_SCHEMA
-    )
+import org.trustweave.credential.identifiers.SchemaId
+import org.trustweave.credential.model.vc.CredentialSchema
+
+val schema = CredentialSchema(
+    id = SchemaId("https://example.com/schemas/person.json"),
+    type = "JsonSchemaValidator2018"
 )
+// Pass `credentialSchema = schema` when constructing the VerifiableCredential.
 ```
 
 ## Privacy Features

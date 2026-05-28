@@ -179,61 +179,55 @@ The validator matches verification methods using:
 
 ## Examples
 
+Proof-purpose validation is invoked via `validateProofPurpose()` on the
+`VerificationBuilder` DSL (see "Basic Validation" above). There is no public
+standalone `validator.validateProofPurpose(...)` entry point. The cases below show
+which DID-document / proof combinations pass or fail that check.
+
 ### Valid Proof Purpose
 
-```kotlin
-// DID Document
-val issuerDoc = DidDocument(
-    id = "did:key:issuer",
-    assertionMethod = listOf("did:key:issuer#key-1")
-)
+DID document and proof that satisfy `validateProofPurpose()`:
 
-// Credential with proof
-val credential = VerifiableCredential(
-    issuer = "did:key:issuer",
-    proof = Proof(
-        proofPurpose = "assertionMethod",
-        verificationMethod = "did:key:issuer#key-1"
-    )
-)
-
-// Validation succeeds
-val result = validator.validateProofPurpose(
-    proofPurpose = "assertionMethod",
-    verificationMethod = "did:key:issuer#key-1",
-    issuerDid = "did:key:issuer"
-)
-// Validation succeeded
+```json
+// did:key:issuer DID document
+{
+  "id": "did:key:issuer",
+  "assertionMethod": ["did:key:issuer#key-1"]
+}
 ```
+```json
+// proof on the issued credential
+{
+  "proofPurpose": "assertionMethod",
+  "verificationMethod": "did:key:issuer#key-1"
+}
+```
+
+`validateProofPurpose()` succeeds: the proof's `verificationMethod` appears in the
+issuer DID document's `assertionMethod` relationship.
 
 ### Invalid Proof Purpose
 
-```kotlin
-// DID Document
-val issuerDoc = DidDocument(
-    id = "did:key:issuer",
-    assertionMethod = listOf("did:key:issuer#key-1")
-    // Note: capabilityInvocation is empty
-)
+Same key, but the proof claims `capabilityInvocation` — a relationship the key is
+not listed under:
 
-// Credential with proof using wrong purpose
-val credential = VerifiableCredential(
-    issuer = "did:key:issuer",
-    proof = Proof(
-        proofPurpose = "capabilityInvocation", // Wrong purpose!
-        verificationMethod = "did:key:issuer#key-1"
-    )
-)
-
-// Validation fails
-val result = validator.validateProofPurpose(
-    proofPurpose = "capabilityInvocation",
-    verificationMethod = "did:key:issuer#key-1",
-    issuerDid = "did:key:issuer"
-)
-// Validation failed
-// Error output explains that proof purpose 'capabilityInvocation' does not match verification relationships
+```json
+{
+  "id": "did:key:issuer",
+  "assertionMethod":      ["did:key:issuer#key-1"],
+  "capabilityInvocation": []
+}
 ```
+```json
+{
+  "proofPurpose": "capabilityInvocation",
+  "verificationMethod": "did:key:issuer#key-1"
+}
+```
+
+`validateProofPurpose()` fails. In code, the surrounding `trustWeave.verify { ... }`
+call returns a `VerificationResult.Invalid.InvalidProof` whose `reason` references
+the missing verification relationship.
 
 ## Best Practices
 

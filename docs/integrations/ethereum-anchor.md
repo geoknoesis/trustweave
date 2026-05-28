@@ -38,7 +38,7 @@ dependencies {
 
 ```kotlin
 import org.trustweave.anchor.*
-import org.trustweave.ethereum.*
+import org.trustweave.anchor.ethereum.*
 
 // Create Ethereum anchor client for mainnet
 val options = mapOf(
@@ -97,9 +97,9 @@ val client = ethereumProvider?.create(
 ### Integration Helper
 
 ```kotlin
-import org.trustweave.ethereum.*
+import org.trustweave.anchor.ethereum.*
 
-// Auto-discover and register
+// Auto-discover and register (returns EthereumIntegrationResult with registry + registeredChains)
 val result = EthereumIntegration.discoverAndRegister(
     options = mapOf(
         "rpcUrl" to "https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY"
@@ -121,7 +121,7 @@ val setup = EthereumIntegration.setup(
 
 ```kotlin
 import org.trustweave.anchor.*
-import org.trustweave.ethereum.*
+import org.trustweave.anchor.ethereum.*
 import kotlinx.serialization.json.*
 
 val client = EthereumBlockchainAnchorClient(
@@ -145,9 +145,8 @@ println("Anchored to: ${result.ref.txHash}")
 ### Reading Anchored Data
 
 ```kotlin
-// Read anchored data
-val txHash = result.ref.txHash
-val readResult = client.readPayload(txHash)
+// Read anchored data — readPayload takes the AnchorRef returned by writePayload
+val readResult = client.readPayload(result.ref)
 println("Retrieved: ${readResult.payload}")
 ```
 
@@ -162,7 +161,7 @@ println("Retrieved: ${readResult.payload}")
 
 ```kotlin
 import org.trustweave.trust.TrustWeave
-import org.trustweave.ethereum.*
+import org.trustweave.anchor.ethereum.*
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put

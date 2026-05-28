@@ -46,23 +46,26 @@ val config = IbmKmsConfig.builder()
 // Create KMS
 val kms = IbmKeyManagementService(config)
 
-// Generate key
+// Generate key, then sign with it.
 val result = kms.generateKey(Algorithm.Ed25519)
 when (result) {
     is GenerateKeyResult.Success -> {
-        println("Key created: ${result.keyHandle.id}")
-        println("Public key JWK: ${result.keyHandle.publicKeyJwk}")
-    }
-    is GenerateKeyResult.Failure -> {
-        println("Error: ${result.reason}")
-    }
-}
+        val handle = result.keyHandle
+        println("Key created: ${handle.id}")
+        println("Public key JWK: ${handle.publicKeyJwk}")
 
-// Sign data
-val sign = kms.sign(result.keyHandle.id, "Hello, TrustWeave!".toByteArray())
-when (sign) {
-    is SignResult.Success -> println("Signature: ${sign.signature.toHexString()}")
-    is SignResult.Failure -> println("Error: ${sign.reason}")
+        // Sign data
+        when (val sign = kms.sign(handle.id, "Hello, TrustWeave!".toByteArray())) {
+            is SignResult.Success -> println("Signature: ${sign.signature.toHexString()}")
+            is SignResult.Failure.KeyNotFound -> println("Key not found: ${sign.keyId}")
+            is SignResult.Failure.UnsupportedAlgorithm ->
+                println("Algorithm '${sign.requestedAlgorithm?.name}' incompatible with key '${sign.keyAlgorithm.name}'")
+            is SignResult.Failure.Error -> println("Error: ${sign.reason}")
+        }
+    }
+    is GenerateKeyResult.Failure.UnsupportedAlgorithm -> println("Unsupported: ${result.algorithm.name}")
+    is GenerateKeyResult.Failure.InvalidOptions -> println("Invalid options: ${result.reason}")
+    is GenerateKeyResult.Failure.Error -> println("Error: ${result.reason}")
 }
 ```
 
@@ -139,10 +142,11 @@ val kms = KeyManagementServices.create("ibm", mapOf(
 ```kotlin
 import org.trustweave.kms.KmsOptionKeys
 
+// IBM Key Protect uses KmsOptionKeys.NAME (not KEY_ID) for the key name.
 val result = kms.generateKey(
     Algorithm.Ed25519,
     options = mapOf(
-        KmsOptionKeys.KEY_ID to "my-custom-key-id",  // Optional
+        KmsOptionKeys.NAME to "my-custom-key-name",  // Optional
         KmsOptionKeys.DESCRIPTION to "My key description",  // Optional
         KmsOptionKeys.EXTRACTABLE to false  // Optional, prevent key extraction
     )

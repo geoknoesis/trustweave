@@ -35,7 +35,7 @@ dependencies {
 
 ```kotlin
 import org.trustweave.iondid.*
-import org.trustweave.kms.*
+import org.trustweave.kms.inmemory.InMemoryKeyManagementService
 
 // Create configuration
 val config = IonDidConfig.builder()
@@ -70,6 +70,7 @@ When the module is on the classpath, did:ion is automatically available:
 
 ```kotlin
 import org.trustweave.did.*
+import org.trustweave.did.spi.DidMethodProvider
 import java.util.ServiceLoader
 
 // Discover did:ion provider
@@ -138,13 +139,14 @@ when (result) {
 
 ```kotlin
 import org.trustweave.did.identifiers.Did
+import org.trustweave.did.model.DidService
 
 val did = Did("did:ion:EiA2...")
 val document = method.updateDid(did) { currentDoc ->
     currentDoc.copy(
-        service = currentDoc.service + Service(
+        service = currentDoc.service + DidService(
             id = "${currentDoc.id}#didcomm",
-            type = "DIDCommMessaging",
+            type = listOf("DIDCommMessaging"),
             serviceEndpoint = "https://example.com/didcomm"
         )
     )
@@ -224,7 +226,7 @@ import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.did.KeyAlgorithm
 import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.kms.InMemoryKeyManagementService
+import org.trustweave.kms.inmemory.InMemoryKeyManagementService
 import org.trustweave.iondid.*
 
 val config = IonDidConfig.testnet()

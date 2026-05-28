@@ -165,7 +165,9 @@ package com.example.employee.onboarding
 import org.trustweave.trust.TrustWeave
 import org.trustweave.core.*
 import org.trustweave.wallet.Wallet
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.credential.model.ProofType
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.trust.types.getOrThrow

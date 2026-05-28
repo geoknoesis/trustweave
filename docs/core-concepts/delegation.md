@@ -41,13 +41,13 @@ Each link in the chain must be verified to ensure the entire delegation is valid
 ### Setting Up Delegation
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods
 // Step 1: Update delegator DID document to include capability delegation
 trustWeave.updateDid {
     did(delegatorDid)
     method(DidMethods.KEY)
     addCapabilityDelegation("$delegateDid#key-1")
-}
+}.update()
 
 // Step 2: Verify the delegation was set up correctly
 val delegationResult = trustWeave.delegate {
@@ -64,10 +64,11 @@ if (delegationResult.valid) {
 ### Verifying Delegation Chain
 
 ```kotlin
+// Note: DelegationBuilder has no capability() filter; the chain verifier walks
+// capabilityDelegation references in the resolved DID documents.
 val result = trustWeave.delegate {
     from(delegatorDid)
     to(delegateDid)
-    capability("issueCredentials") // Optional: specify capability
     verify()
 }
 
@@ -83,23 +84,22 @@ if (result.valid) {
 ### Multi-Hop Delegation
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods
 // Set up multi-hop delegation chain
 trustWeave.updateDid {
     did(ceoDid)
     method(DidMethods.KEY)
     addCapabilityDelegation("$directorDid#key-1")
-}
+}.update()
 
 trustWeave.updateDid {
     did(directorDid)
     method(DidMethods.KEY)
     addCapabilityDelegation("$managerDid#key-1")
-}
+}.update()
 
-// Verify the entire chain
+// Verify the entire chain (verifyChain accepts a List<String> of DIDs)
 val result = trustWeave.delegate {
-    capability("issueCredentials")
     verifyChain(listOf(ceoDid, directorDid, managerDid))
 }
 
@@ -113,6 +113,7 @@ if (result.valid) {
 When a credential is issued by a delegate, the verification can check the delegation chain:
 
 ```kotlin
+import kotlinx.datetime.Clock
 import org.trustweave.trust.types.delegationValid
 import org.trustweave.did.identifiers.Did
 
@@ -129,19 +130,24 @@ val credential = trustWeave.issue {
                 "role" to "Software Engineer"
             }
         }
-        issued(Instant.now())
+        issued(Clock.System.now())
     }
     signedBy(issuerDid = Did(delegateDid), keyId = "key-1")
-}
+}.getOrThrow()
 
-// Verify credential with delegation check
+// Verify credential and separately verify the delegation chain
 val result = trustWeave.verify {
     credential(credential)
-    verifyDelegation(true) // Enable delegation verification
     checkExpiration()
 }
 
-if (result.delegationValid) {
+// VerificationBuilder does not have a dedicated verifyDelegation() method;
+// trigger the delegation walk explicitly via trustWeave.delegate { ... }.
+val delegation = trustWeave.delegate {
+    verifyChain(listOf(rootDid, delegateDid))
+}
+
+if (delegation.valid && result.delegationValid) {
     println("Delegation chain is valid")
 } else {
     println("Delegation verification failed: ${result.allErrors.joinToString()}")
@@ -179,91 +185,86 @@ trustWeave.updateDid {
 ## Example: Corporate Hierarchy
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Clock
 import org.trustweave.credential.results.VerificationResult
+import org.trustweave.did.identifiers.Did
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
 import org.trustweave.trust.types.delegationValid
 import org.trustweave.trust.types.proofValid
 import org.trustweave.trust.types.getOrThrowDid
-// Step 1: Create DIDs for corporate hierarchy
-val trustWeave = TrustWeave.build {
-    keys { provider(IN_MEMORY); algorithm(ED25519) }
-    did { method(KEY) { algorithm(ED25519) } }
-}
 
-val ceoDid = trustWeave.createDid {
-    method(KEY)
-    algorithm(ED25519)
-}.getOrThrowDid()
-
-val hrDirectorDid = trustWeave.createDid {
-    method(KEY)
-    algorithm(ED25519)
-}.getOrThrowDid()
-
-val hrManagerDid = trustWeave.createDid {
-    method(KEY)
-    algorithm(ED25519)
-}.getOrThrowDid()
-
-// Step 2: Set up delegation chain
-// CEO delegates to HR Director
-trustWeave.updateDid {
-    did(ceoDid)
-    method(DidMethods.KEY)
-    addCapabilityDelegation("$hrDirectorDid#key-1")
-}
-
-// HR Director delegates to HR Manager
-trustWeave.updateDid {
-    did(hrDirectorDid)
-    method(DidMethods.KEY)
-    addCapabilityDelegation("$hrManagerDid#key-1")
-}
-
-// Step 3: Verify the full chain
-val result = trustWeave.delegate {
-    capability("issueCredentials")
-    verifyChain(listOf(ceoDid, hrDirectorDid, hrManagerDid))
-}
-
-if (result.valid) {
-    println("Corporate delegation chain verified:")
-    println("  ${result.path.joinToString(" -> ")}")
-} else {
-    println("Delegation chain verification failed:")
-    result.errors.forEach { println("  - $it") }
-}
-
-// Step 4: Issue credential using delegated authority
-val credential = trustWeave.issue {
-    credential {
-        id("https://company.com/credential-123")
-        type("EmploymentCredential")
-        issuer(hrManagerDid) // HR Manager issues on behalf of company
-        subject {
-            id(employeeDid)
-            "employment" {
-                "company" to "Tech Corp"
-                "role" to "Software Engineer"
-                "startDate" to "2024-01-01"
-            }
-        }
-        issued(Instant.now())
+runBlocking {
+    // Step 1: Create DIDs for corporate hierarchy
+    val trustWeave = TrustWeave.build {
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+        did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
-    signedBy(issuerDid = hrManagerDid, keyId = "key-1")
-}
 
-// Step 5: Verify credential with delegation check
-val verification = trustWeave.verify {
-    credential(credential)
-    verifyDelegation(true)
-    checkExpiration()
-}
+    val ceoDid = trustWeave.createDid { method(DidMethods.KEY) }.getOrThrowDid().value
+    val hrDirectorDid = trustWeave.createDid { method(DidMethods.KEY) }.getOrThrowDid().value
+    val hrManagerDid = trustWeave.createDid { method(DidMethods.KEY) }.getOrThrowDid().value
+    val employeeDid = trustWeave.createDid { method(DidMethods.KEY) }.getOrThrowDid().value
 
-println("Credential Verification:")
-println("  Valid: ${verification is VerificationResult.Valid}")
-println("  Delegation valid: ${verification.delegationValid}")
-println("  Proof valid: ${verification.proofValid}")
+    // Step 2: Set up delegation chain
+    trustWeave.updateDid {
+        did(ceoDid)
+        method(DidMethods.KEY)
+        addCapabilityDelegation("$hrDirectorDid#key-1")
+    }.update()
+
+    trustWeave.updateDid {
+        did(hrDirectorDid)
+        method(DidMethods.KEY)
+        addCapabilityDelegation("$hrManagerDid#key-1")
+    }.update()
+
+    // Step 3: Verify the full chain
+    val result = trustWeave.delegate {
+        verifyChain(listOf(ceoDid, hrDirectorDid, hrManagerDid))
+    }
+
+    if (result.valid) {
+        println("Corporate delegation chain verified:")
+        println("  ${result.path.joinToString(" -> ")}")
+    } else {
+        println("Delegation chain verification failed:")
+        result.errors.forEach { println("  - $it") }
+    }
+
+    // Step 4: Issue credential using delegated authority
+    val credential = trustWeave.issue {
+        credential {
+            id("https://company.com/credential-123")
+            type("EmploymentCredential")
+            issuer(hrManagerDid)
+            subject {
+                id(employeeDid)
+                "employment" {
+                    "company" to "Tech Corp"
+                    "role" to "Software Engineer"
+                    "startDate" to "2024-01-01"
+                }
+            }
+            issued(Clock.System.now())
+        }
+        signedBy(issuerDid = Did(hrManagerDid), keyId = "key-1")
+    }.getOrThrow()
+
+    // Step 5: Verify the credential, then walk the delegation chain separately
+    val verification = trustWeave.verify {
+        credential(credential)
+        checkExpiration()
+    }
+
+    println("Credential Verification:")
+    println("  Valid: ${verification is VerificationResult.Valid}")
+    println("  Delegation valid: ${verification.delegationValid}")
+    println("  Proof valid: ${verification.proofValid}")
+}
 ```
 
 ## Advanced Usage
@@ -271,7 +272,7 @@ println("  Proof valid: ${verification.proofValid}")
 ### Removing Delegation
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods
 trustWeave.updateDid {
     did(delegatorDid)
     method(DidMethods.KEY)
@@ -284,7 +285,7 @@ trustWeave.updateDid {
 A delegator can delegate to multiple DIDs:
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods
 trustWeave.updateDid {
     did(ceoDid)
     method(DidMethods.KEY)
@@ -299,7 +300,7 @@ trustWeave.updateDid {
 A DID can delegate to itself (useful for key rotation):
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods
 trustWeave.updateDid {
     did(did)
     method(DidMethods.KEY)

@@ -66,9 +66,9 @@ class MyCustomDidMethod(
 
     override suspend fun deactivateDid(did: Did): Boolean = deactivateInBackend(did)
 
-    private suspend fun resolveFromBackend(did: Did): DidDocument? = null // your store
-    private suspend fun persistToBackend(did: Did, document: DidDocument) { /* … */ }
-    private suspend fun deactivateInBackend(did: Did): Boolean = false
+    private fun resolveFromBackend(did: Did): DidDocument? = null // your store
+    private fun persistToBackend(did: Did, document: DidDocument) { /* … */ }
+    private fun deactivateInBackend(did: Did): Boolean = false
 }
 ```
 
@@ -77,16 +77,17 @@ class MyCustomDidMethod(
 ```kotlin
 import org.trustweave.did.spi.DidMethodProvider
 import org.trustweave.did.*
+import org.trustweave.kms.KeyManagementService
 
 class MyDidMethodProvider : DidMethodProvider {
     override val name: String = "my-did-method"
     override val supportedMethods: List<String> = listOf("mydid")
 
     override fun create(
-        method: String,
+        methodName: String,
         options: DidCreationOptions
     ): DidMethod? {
-        if (method != "mydid") return null
+        if (methodName != "mydid") return null
 
         // Create KMS
         val kms = createKms(options)
@@ -99,7 +100,7 @@ class MyDidMethodProvider : DidMethodProvider {
 
     private fun createKms(options: DidCreationOptions): KeyManagementService {
         // Create or get KMS instance
-        return /* implementation */
+        TODO("provide KMS implementation")
     }
 }
 ```
@@ -118,13 +119,17 @@ com.example.MyDidMethodProvider
 
 ```kotlin
 import org.trustweave.anchor.*
+import kotlinx.serialization.json.JsonElement
 
 class MyBlockchainAnchorClient(
-    override val chainId: String,
+    val chainId: String,
     private val config: MyBlockchainConfig
 ) : BlockchainAnchorClient {
 
-    override suspend fun writePayload(payload: ByteArray): AnchorResult {
+    override suspend fun writePayload(
+        payload: JsonElement,
+        mediaType: String
+    ): AnchorResult {
         // Submit transaction to blockchain
         val txHash = submitTransaction(payload)
 
@@ -132,36 +137,36 @@ class MyBlockchainAnchorClient(
         val blockHeight = waitForConfirmation(txHash)
 
         return AnchorResult(
-            anchorRef = AnchorRef(
+            ref = AnchorRef(
                 chainId = chainId,
-                transactionHash = txHash,
-                metadata = mapOf(
-                    "blockHeight" to blockHeight,
-                    "timestamp" to System.currentTimeMillis()
+                txHash = txHash,
+                extra = mapOf(
+                    "blockHeight" to blockHeight.toString(),
+                    "timestamp" to System.currentTimeMillis().toString()
                 )
             ),
-            payload = payload
+            payload = payload,
+            mediaType = mediaType
         )
     }
 
-    override suspend fun readPayload(anchorRef: AnchorRef): ByteArray? {
+    override suspend fun readPayload(ref: AnchorRef): AnchorResult {
         // Read transaction from blockchain
-        return readTransaction(anchorRef.transactionHash)
+        val payload = readTransaction(ref.txHash)
+            ?: throw IllegalStateException("Anchor not found: ${ref.txHash}")
+        return AnchorResult(ref = ref, payload = payload)
     }
 
-    private suspend fun submitTransaction(payload: ByteArray): String {
-        // Submit to blockchain
-        return /* implementation */
+    private fun submitTransaction(payload: JsonElement): String {
+        TODO("submit transaction to your chain")
     }
 
-    private suspend fun waitForConfirmation(txHash: String): Long {
-        // Wait for confirmation
-        return /* implementation */
+    private fun waitForConfirmation(txHash: String): Long {
+        TODO("await N confirmations")
     }
 
-    private suspend fun readTransaction(txHash: String): ByteArray? {
-        // Read from blockchain
-        return /* implementation */
+    private fun readTransaction(txHash: String): JsonElement? {
+        TODO("read payload from your chain")
     }
 }
 ```
@@ -175,14 +180,16 @@ import org.trustweave.anchor.*
 class MyBlockchainAdapterProvider : BlockchainAnchorClientProvider {
     override val name: String = "my-blockchain"
 
-    override fun supportsChain(chainId: String): Boolean {
-        return chainId.startsWith("myblockchain:")
-    }
+    override val supportedChains: List<String> = listOf(
+        "myblockchain:mainnet",
+        "myblockchain:testnet"
+    )
 
     override fun create(
         chainId: String,
         options: Map<String, Any?>
-    ): BlockchainAnchorClient {
+    ): BlockchainAnchorClient? {
+        if (chainId !in supportedChains) return null
         val config = MyBlockchainConfig.fromOptions(options)
         return MyBlockchainAnchorClient(chainId, config)
     }
@@ -202,58 +209,61 @@ com.example.MyBlockchainAdapterProvider
 ### Implementing KeyManagementService
 
 ```kotlin
+import org.trustweave.core.identifiers.KeyId
 import org.trustweave.kms.*
+import org.trustweave.kms.results.*
 
 class MyKeyManagementService(
     private val config: MyKmsConfig
 ) : KeyManagementService {
 
-    override suspend fun generateKey(algorithm: Algorithm): Key {
-        // Generate key in your KMS
-        val keyId = generateKeyInKms(algorithm)
-        val publicKey = getPublicKey(keyId)
+    override suspend fun getSupportedAlgorithms(): Set<Algorithm> =
+        setOf(Algorithm.Ed25519, Algorithm.Secp256k1, Algorithm.P256)
 
-        return Key(
-            id = keyId,
-            algorithm = algorithm,
-            publicKey = publicKey
-        )
+    override suspend fun generateKey(
+        algorithm: Algorithm,
+        options: Map<String, Any?>
+    ): GenerateKeyResult {
+        if (!supportsAlgorithm(algorithm)) {
+            return GenerateKeyResult.Failure.UnsupportedAlgorithm(
+                algorithm = algorithm,
+                supportedAlgorithms = getSupportedAlgorithms()
+            )
+        }
+        return try {
+            val handle = generateKeyInKms(algorithm)
+            GenerateKeyResult.Success(handle)
+        } catch (e: Exception) {
+            GenerateKeyResult.Failure.Error(algorithm, e.message ?: "unknown")
+        }
     }
 
-    override suspend fun sign(keyId: String, data: ByteArray): ByteArray {
-        // Sign data using your KMS
-        return signWithKms(keyId, data)
+    override suspend fun sign(
+        keyId: KeyId,
+        data: ByteArray,
+        algorithm: Algorithm?
+    ): SignResult {
+        return try {
+            SignResult.Success(signature = signWithKms(keyId, data))
+        } catch (e: Exception) {
+            SignResult.Failure.Error(keyId, e.message ?: "unknown")
+        }
     }
 
-    override suspend fun getPublicKey(keyId: String): PublicKey {
-        // Get public key from your KMS
-        return getPublicKeyFromKms(keyId)
+    override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult {
+        val handle = getPublicKeyFromKms(keyId)
+            ?: return GetPublicKeyResult.Failure.KeyNotFound(keyId)
+        return GetPublicKeyResult.Success(handle)
     }
 
-    override suspend fun deleteKey(keyId: String): Boolean {
-        // Delete key from your KMS
-        return deleteKeyFromKms(keyId)
+    override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult {
+        return if (deleteKeyFromKms(keyId)) DeleteKeyResult.Deleted else DeleteKeyResult.NotFound
     }
 
-    private suspend fun generateKeyInKms(algorithm: Algorithm): String {
-        // Generate in your KMS
-        return /* implementation */
-    }
-
-    private suspend fun signWithKms(keyId: String, data: ByteArray): ByteArray {
-        // Sign with your KMS
-        return /* implementation */
-    }
-
-    private suspend fun getPublicKeyFromKms(keyId: String): PublicKey {
-        // Get from your KMS
-        return /* implementation */
-    }
-
-    private suspend fun deleteKeyFromKms(keyId: String): Boolean {
-        // Delete from your KMS
-        return /* implementation */
-    }
+    private fun generateKeyInKms(algorithm: Algorithm): KeyHandle { TODO() }
+    private fun signWithKms(keyId: KeyId, data: ByteArray): ByteArray { TODO() }
+    private fun getPublicKeyFromKms(keyId: KeyId): KeyHandle? { TODO() }
+    private fun deleteKeyFromKms(keyId: KeyId): Boolean { TODO() }
 }
 ```
 
@@ -265,13 +275,13 @@ import org.trustweave.kms.*
 
 class MyKmsProvider : KeyManagementServiceProvider {
     override val name: String = "my-kms"
-    override val supportedAlgorithms: List<Algorithm> = listOf(
+    override val supportedAlgorithms: Set<Algorithm> = setOf(
         Algorithm.Ed25519,
         Algorithm.Secp256k1,
         Algorithm.P256
     )
 
-    override fun create(options: Map<String, Any?>): KeyManagementService? {
+    override fun create(options: Map<String, Any?>): KeyManagementService {
         val config = MyKmsConfig.fromOptions(options)
         return MyKeyManagementService(config)
     }
@@ -291,7 +301,10 @@ com.example.MyKmsProvider
 ### Unit Testing
 
 ```kotlin
-import org.trustweave.testkit.*
+import kotlinx.coroutines.runBlocking
+import org.trustweave.did.KeyAlgorithm
+import org.trustweave.did.didCreationOptions
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 
@@ -302,12 +315,12 @@ class MyCustomDidMethodTest {
         val config = MyDidConfig.default()
         val method = MyCustomDidMethod(kms, config)
 
-        val did = method.createDid(didCreationOptions {
-            algorithm = KeyAlgorithm.Ed25519
+        val document = method.createDid(didCreationOptions {
+            algorithm = KeyAlgorithm.ED25519
         })
 
-        assertNotNull(did)
-        assert(did.id.startsWith("did:mydid:"))
+        assertNotNull(document)
+        assert(document.id.value.startsWith("did:mydid:"))
     }
 }
 ```
@@ -315,8 +328,10 @@ class MyCustomDidMethodTest {
 ### Integration Testing
 
 ```kotlin
-import org.trustweave.testkit.*
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class MyBlockchainAdapterIntegrationTest {
     @Test
@@ -324,11 +339,11 @@ class MyBlockchainAdapterIntegrationTest {
         val config = MyBlockchainConfig.testnet()
         val client = MyBlockchainAnchorClient("myblockchain:testnet", config)
 
-        val payload = "Hello, TrustWeave!".toByteArray()
-        val result = client.writePayload(payload)
+        val payload = JsonPrimitive("Hello, TrustWeave!")
+        val result = client.writePayload(payload, "application/json")
 
-        val readData = client.readPayload(result.anchorRef)
-        assert(readData.contentEquals(payload))
+        val readBack = client.readPayload(result.ref)
+        assertEquals(payload, readBack.payload)
     }
 }
 ```
@@ -340,17 +355,20 @@ class MyBlockchainAdapterIntegrationTest {
 Use TrustWeave's error types:
 
 ```kotlin
-import org.trustweave.core.exception.TrustWeaveException
-import kotlin.Result
+import org.trustweave.did.DidCreationOptions
+import org.trustweave.did.exception.DidException
+import org.trustweave.did.model.DidDocument
 
 suspend fun createDid(options: DidCreationOptions): Result<DidDocument> {
     return try {
-        val document: DidDocument = /* implementation */
+        val document: DidDocument = TODO("implementation")
         Result.success(document)
     } catch (e: Exception) {
         Result.failure(
             DidException.DidCreationFailed(
-                reason = e.message ?: "Unknown error"
+                did = null,
+                reason = e.message ?: "Unknown error",
+                cause = e
             )
         )
     }
@@ -386,12 +404,12 @@ Implement `PluginLifecycle` if needed:
 ```kotlin
 import org.trustweave.core.plugin.PluginLifecycle
 
-class MyBlockchainAnchorClient(
-    override val chainId: String,
+class MyLifecycleAwareAnchorClient(
+    val chainId: String,
     private val config: MyBlockchainConfig
 ) : BlockchainAnchorClient, PluginLifecycle {
 
-    override suspend fun initialize(options: Map<String, Any?>): Boolean {
+    override suspend fun initialize(config: Map<String, Any?>): Boolean {
         // Initialize connections
         return true
     }
@@ -406,10 +424,11 @@ class MyBlockchainAnchorClient(
         return true
     }
 
-    override suspend fun cleanup(): Boolean {
-        // Clean up resources
-        return true
+    override suspend fun cleanup() {
+        // Clean up resources (return type is Unit, do not throw)
     }
+
+    // ... implement BlockchainAnchorClient methods ...
 }
 ```
 

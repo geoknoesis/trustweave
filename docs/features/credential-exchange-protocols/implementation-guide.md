@@ -6,6 +6,14 @@ title: Protocol Implementation Guide
 
 Complete guide for implementing credential exchange protocols in TrustWeave.
 
+> **TODO (audit 2026-05):** The skeleton in [Step 2: Implement CredentialExchangeProtocol](#step-2-implement-credentialexchangeprotocol) and the `@Test` in [Unit Tests](#unit-tests) describe the obsolete request/response API (`offerCredential(CredentialOfferRequest)` returning `CredentialOfferResponse`, raw `protocolName: String`, `supportedOperations: Set<…>` on the protocol). The real SPI signatures are:
+>
+> - `interface CredentialExchangeProtocol { val protocolName: ExchangeProtocolName; val capabilities: ExchangeProtocolCapabilities; suspend fun offer(request: ExchangeRequest.Offer): ExchangeMessageEnvelope; suspend fun request(request: ExchangeRequest.Request): ExchangeMessageEnvelope; suspend fun issue(request: ExchangeRequest.Issue): Pair<VerifiableCredential, ExchangeMessageEnvelope>; suspend fun requestProof(request: ProofExchangeRequest.Request): ExchangeMessageEnvelope; suspend fun presentProof(request: ProofExchangeRequest.Presentation): Pair<VerifiablePresentation, ExchangeMessageEnvelope> }`
+> - Supported operations are declared via `capabilities = ExchangeProtocolCapabilities(supportedOperations = setOf(ExchangeOperation.OFFER_CREDENTIAL, …))`.
+> - The SPI provider interface is `org.trustweave.credential.spi.exchange.CredentialExchangeProtocolProvider` with `name: String`, `supportedProtocols: List<String>`, and `create(protocolName: String, options: Map<String, Any?>): CredentialExchangeProtocol?`.
+>
+> See `credentials/plugins/didcomm/src/main/kotlin/org/trustweave/credential/didcomm/exchange/DidCommExchangeProtocol.kt` and `…/exchange/spi/DidCommExchangeProtocolProvider.kt` for a working reference implementation.
+
 ## Overview
 
 This guide covers how to implement new credential exchange protocols using the protocol abstraction layer. All protocols implement the `CredentialExchangeProtocol` interface, allowing them to be used interchangeably.
@@ -268,7 +276,8 @@ fun `test complete exchange flow`() = runTest {
     
     val exchangeService = ExchangeServices.createExchangeService(
         protocolRegistry = registry,
-        credentialService = credentialService
+        credentialService = credentialService,
+        didResolver = didResolver
     )
 
     // Test full flow

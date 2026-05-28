@@ -16,7 +16,7 @@ A **Proof Engine** is an implementation of the `ProofEngine` SPI interface that 
 - **Proof Verification** - Verifying proofs during credential verification  
 - **Presentation Creation** - Creating verifiable presentations (if supported)
 
-All built-in proof suites (VC-LD, SD-JWT-VC, AnonCreds) are implemented as proof engines.
+The built-in proof engines shipped in `credential-api` are **VC-LD** (`VcLdProofEngine`) and **SD-JWT-VC** (`SdJwtProofEngine`). Additional engines are provided by separate plugin modules (e.g. `credentials/plugins/bbs/` for BBS-2023, `credentials/plugins/mdl/` for ISO 18013-5 mDoc).
 
 ## When to Implement a Proof Engine
 
@@ -65,14 +65,16 @@ interface ProofEngine {
 
 ### 1. Define Your Proof Suite
 
-First, add your proof suite to the `ProofSuiteId` enum (if extending the core library) or use a custom identifier:
+`ProofSuiteId` is a closed enum in `org.trustweave.credential.format` whose current values are `VC_LD`, `VC_JWT`, `SD_JWT_VC`, `MDOC`, and `BBS_2023`. To add a new proof suite you must add an entry to that enum (the SPI does not accept arbitrary string identifiers):
 
 ```kotlin
 enum class ProofSuiteId(val value: String) {
-    // ... existing suites
+    // ... existing entries (VC_LD, VC_JWT, SD_JWT_VC, MDOC, BBS_2023)
     CUSTOM_SUITE("custom-suite")
 }
 ```
+
+> **Limitation:** `ProofSuiteId` is a closed enum, so the SPI cannot accept arbitrary string suite identifiers from out-of-tree code. If you need a new suite that is not in the enum, you must add an entry to `org.trustweave.credential.format.ProofSuiteId` and rebuild `credentials/credential-api`. For third-party engines this means either contributing the new enum value upstream (open a GitHub issue with the requested identifier and the W3C/IETF spec link), or vendoring a patched `credential-api`. There is no out-of-tree workaround for adding a brand-new proof suite today.
 
 ### 2. Implement the ProofEngine Interface
 
@@ -138,30 +140,27 @@ class CustomProofEngine(
         // 1. Extract proof from credential
         val proof = credential.proof as? CustomProof
             ?: return VerificationResult.Invalid.InvalidProof(
-                format = format,
+                credential = credential,
                 reason = "Credential does not contain expected proof type"
             )
-        
-        // 2. Resolve issuer DID if needed
-        val issuerDid = when (val issuer = credential.issuer) {
-            is Issuer.IriIssuer -> issuer.id.value
-            is Issuer.ObjectIssuer -> issuer.id.value
-        }
-        
+
+        // 2. Resolve issuer IRI (typically a DID, but per W3C VC may be any IRI)
+        val issuerIri: Iri = credential.issuer.id
+
         // 3. Verify cryptographic proof
-        val isValid = verifyProof(credential, proof, issuerDid)
-        
+        val isValid = verifyProof(credential, proof, issuerIri)
+
         return if (isValid) {
             VerificationResult.Valid(
                 credential = credential,
-                issuerDid = Did(issuerDid),
-                subjectDid = extractSubjectDid(credential),
+                issuerIri = issuerIri,
+                subjectIri = credential.credentialSubject.id,
                 issuedAt = credential.issuanceDate,
-                expiresAt = credential.expirationDate
+                expiresAt = credential.validUntil ?: credential.expirationDate
             )
         } else {
             VerificationResult.Invalid.InvalidProof(
-                format = format,
+                credential = credential,
                 reason = "Cryptographic proof verification failed"
             )
         }
@@ -195,7 +194,7 @@ class CustomProofEngine(
     private suspend fun verifyProof(
         credential: VerifiableCredential,
         proof: CustomProof,
-        issuerDid: String
+        issuerIri: Iri
     ): Boolean {
         // Verify cryptographic proof
     }
@@ -256,7 +255,8 @@ class CustomProofEngine(private val config: ProofEngineConfig) {
     
     private suspend fun sign(data: ByteArray, keyId: String): ByteArray {
         val kms = getKms() ?: throw IllegalStateException("KMS not configured")
-        return kms.sign(data, KeyId(keyId))
+        // KMS contract is `sign(keyId, data, algorithm?)` and returns SignResult.
+        return kms.sign(KeyId(keyId), data).signature
     }
 }
 ```
@@ -298,12 +298,14 @@ override suspend fun verify(
         // Verify revocation status
     }
     
-    // Check expiration if requested
-    if (options.checkExpiration && credential.expirationDate != null) {
-        val now = Instant.now()
-        if (now.isAfter(credential.expirationDate)) {
+    // Check expiration if requested (validUntil for VC 2.0, expirationDate for VC 1.1)
+    val effectiveExpiry = credential.validUntil ?: credential.expirationDate
+    if (options.checkExpiration && effectiveExpiry != null) {
+        val now = kotlinx.datetime.Clock.System.now()
+        if (now > effectiveExpiry) {
             return VerificationResult.Invalid.Expired(
-                expiredAt = credential.expirationDate
+                credential = credential,
+                expiredAt = effectiveExpiry
             )
         }
     }
@@ -321,8 +323,9 @@ Here's a simplified example of a JWT-based proof engine:
 class SimpleJwtProofEngine(
     private val config: ProofEngineConfig = ProofEngineConfig()
 ) : ProofEngine {
-    
-    override val format = ProofSuiteId("simple-jwt")
+
+    // `ProofSuiteId` is a closed enum — use the closest built-in (here VC_JWT) or add a new entry.
+    override val format = ProofSuiteId.VC_JWT
     override val formatName = "Simple JWT"
     override val formatVersion = "1.0"
     
@@ -345,7 +348,7 @@ class SimpleJwtProofEngine(
         
         // Sign JWT
         val kms = getKms() ?: throw IllegalStateException("KMS not configured")
-        val signature = kms.sign(claims.toByteArray(), KeyId(keyId))
+        val signature = kms.sign(KeyId(keyId), claims.toByteArray()).signature
         
         // Create proof
         val proof = CredentialProof.JwtProof(
@@ -370,24 +373,24 @@ class SimpleJwtProofEngine(
     ): VerificationResult {
         val proof = credential.proof as? CredentialProof.JwtProof
             ?: return VerificationResult.Invalid.InvalidProof(
-                format = format,
+                credential = credential,
                 reason = "Expected JWT proof"
             )
-        
+
         // Verify JWT signature
         val isValid = verifyJwtSignature(proof.jwt, credential.issuer)
-        
+
         return if (isValid) {
             VerificationResult.Valid(
                 credential = credential,
-                issuerDid = extractIssuerDid(credential),
-                subjectDid = extractSubjectDid(credential),
+                issuerIri = credential.issuer.id,
+                subjectIri = credential.credentialSubject.id,
                 issuedAt = credential.issuanceDate,
-                expiresAt = credential.expirationDate
+                expiresAt = credential.validUntil ?: credential.expirationDate
             )
         } else {
             VerificationResult.Invalid.InvalidProof(
-                format = format,
+                credential = credential,
                 reason = "JWT signature verification failed"
             )
         }
@@ -417,8 +420,9 @@ class CustomProofEngineTest {
     @Test
     fun `test issue credential`() = runTest {
         val kms = InMemoryKeyManagementService()
-        val key = kms.generateKey(Algorithm.Ed25519)
-        
+        // generateKey returns a sealed GenerateKeyResult — use getOrThrow() (or pattern match) to obtain the handle.
+        val key = kms.generateKey(Algorithm.Ed25519).getOrThrow()
+
         val engine = CustomProofEngine(
             config = ProofEngineConfig(
                 properties = mapOf("kms" to kms)
@@ -428,18 +432,18 @@ class CustomProofEngineTest {
         val request = IssuanceRequest(
             format = ProofSuiteId.CUSTOM_SUITE,
             issuer = Issuer.from("did:key:issuer"),
-            issuerKeyId = VerificationMethodId("did:key:issuer#${key.id.value}"),
+            issuerKeyId = VerificationMethodId.parse("did:key:issuer#${key.id.value}"),
             credentialSubject = CredentialSubject.fromDid(
                 did = Did("did:key:subject"),
                 claims = mapOf("name" to JsonPrimitive("Alice"))
             ),
             type = listOf(CredentialType("VerifiableCredential"))
         )
-        
+
         val credential = engine.issue(request)
-        
+
         assertNotNull(credential.proof)
-        assertEquals(ProofSuiteId.CUSTOM_SUITE, credential.proof.getFormatId())
+        assertEquals(ProofSuiteId.CUSTOM_SUITE, credential.proof!!.getFormatId())
     }
     
     @Test
@@ -464,29 +468,22 @@ class CustomProofEngineTest {
 Once implemented, your proof engine can be used with `CredentialService`:
 
 ```kotlin
-// Manual registration
-val customEngine = CustomProofEngine(config)
-val engines = mapOf(
-    ProofSuiteId.CUSTOM_SUITE to customEngine
-)
+// Quick path: use built-in VC-LD and SD-JWT-VC engines wired with a DID resolver.
+val service = credentialService(didResolver = didResolver)
 
-val service = DefaultCredentialService(
-    engines = engines + createBuiltInEngines()
-)
-
-// Or via provider discovery
-val service = credentialService(
-    
-    // Custom engines discovered via ServiceLoader
-)
+// To add a custom engine, instantiate it and pass an engines map.
+// `createBuiltInEngines` and `DefaultCredentialService` are internal; if you need to
+// fully replace the engine set you must construct via the public `credentialService(...)`
+// factories in `org.trustweave.credential.CredentialServices`, or register your
+// `ProofEngineProvider` via Java ServiceLoader so it is auto-discovered by plugin loaders.
 ```
 
 ## Related Documentation
 
-- Proofs and Proof Engines](../core-concepts/proofs-and-proof-engines.md) - User-facing proof documentation
-- SPI Documentation](./spi.md) - Service Provider Interface details
-- Key Management](../core-concepts/key-management.md) - Key management for signing
-- Verifiable Credentials](../core-concepts/verifiable-credentials.md) - VC data model
+- [SPI Documentation](./spi.md) - Service Provider Interface details
+- [Proofs and Proof Engines](../core-concepts/proofs-and-proof-engines.md) - User-facing proof documentation (if available)
+- [Key Management](../core-concepts/key-management.md) - Key management for signing (if available)
+- [Verifiable Credentials](../core-concepts/verifiable-credentials.md) - VC data model (if available)
 
 
 

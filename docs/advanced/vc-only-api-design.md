@@ -1,5 +1,17 @@
 # VC-Only API Design - Aligning with W3C Verifiable Credentials
 
+> **Status**: This is a historical design document. Most of the proposal has been implemented (see `credentials/credential-api/.../model/vc/VerifiableCredential.kt`, `Issuer.kt`, `CredentialSubject.kt`, `CredentialProof.kt`). The shipped API differs from this proposal on a few points:
+>
+> - The format identifier is **`ProofSuiteId`** (enum: `VC_LD`, `VC_JWT`, `SD_JWT_VC`, `MDOC`, `BBS_2023`), not a free-form `CredentialFormat` token. mDoc and BBS-2023 are supported via plugin engines, not removed.
+> - The SPI is **`ProofEngine`** / **`ProofEngineProvider`**, not `VcProofAdapter`. There is no `VcLdProofAdapter` / `VcJwtProofAdapter` / `SdJwtVcProofAdapter` family — `VcLdProofEngine` and `SdJwtProofEngine` are the built-ins.
+> - `CredentialProof` is a sealed class with subtypes `LinkedDataProof`, `JwtProof`, `SdJwtVcProof`, and `MdocProof`.
+> - `Issuer` is sealed with `IriIssuer` and `ObjectIssuer`; both expose `val id: Iri`.
+> - `CredentialSubject` matches the proposal but exposes both `fromDid(...)` and `fromIri(...)` factories.
+> - `SubjectId` was **not** removed — it remains in `credentials/credential-api/.../identifiers/CredentialIdentifiers.kt` as a sealed class (`DidSubject`, `UriSubject`, `OtherSubject`).
+> - `VerifiableCredential` adds VC 2.0 fields (`validFrom`, `validUntil`, `name`, `description`) and uses `kotlinx.datetime.Instant` (not `java.time.Instant`).
+>
+> The "Changes Required" / "Files to remove" sections below do **not** reflect what shipped.
+
 ## Executive Summary
 
 This document outlines the design for refactoring TrustWeave's credential API to use **only DID and VC standards**, aligning the credential model directly with the **W3C Verifiable Credentials Data Model**.

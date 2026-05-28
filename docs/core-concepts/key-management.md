@@ -63,7 +63,7 @@ suspend fun checkKmsCapabilities(kms: KeyManagementService) {
     }
 
     // Check by name (case-insensitive)
-    if (kms.supportsalgorithm(SECP256K1)) {
+    if (kms.supportsAlgorithm("secp256k1")) {
         println("secp256k1 is supported")
     }
 }
@@ -73,6 +73,8 @@ suspend fun checkKmsCapabilities(kms: KeyManagementService) {
 
 ```kotlin
 import org.trustweave.kms.*
+import org.trustweave.kms.results.*
+import org.trustweave.core.identifiers.KeyId
 
 suspend fun issueSignerKey(kms: KeyManagementService): KeyId? {
     // Type-safe algorithm usage with Result-based API (recommended)
@@ -83,7 +85,7 @@ suspend fun issueSignerKey(kms: KeyManagementService): KeyId? {
             KmsOptionKeys.DESCRIPTION to "Issuer root key"
         )
     )
-    
+
     return when (result) {
         is GenerateKeyResult.Success -> {
             val handle = result.keyHandle
@@ -91,7 +93,7 @@ suspend fun issueSignerKey(kms: KeyManagementService): KeyId? {
             handle.id
         }
         is GenerateKeyResult.Failure -> {
-            println("Failed to generate key: ${result.reason}")
+            println("Failed to generate key: $result")
             null
         }
     }
@@ -102,7 +104,7 @@ suspend fun signDigest(kms: KeyManagementService, keyId: KeyId, digest: ByteArra
     return when (result) {
         is SignResult.Success -> result.signature
         is SignResult.Failure -> {
-            println("Failed to sign: ${result.reason}")
+            println("Failed to sign: $result")
             null
         }
     }
@@ -113,29 +115,42 @@ suspend fun signDigest(kms: KeyManagementService, keyId: KeyId, digest: ByteArra
 
 ### Example: wallet-level key generation
 
+The wallet `KeyManagement` capability (`org.trustweave.wallet.KeyManagement`) is the
+high-level entry point for wallets and exposes:
+
 ```kotlin
-import org.trustweave.kms.*
-import org.trustweave.kms.results.*
-
-val keyResult = wallet.withKeyManagement { keys ->
-    keys.generateKey(Algorithm.Ed25519, mapOf(
-        KmsOptionKeys.KEY_ID to "holder-authentication",
-        KmsOptionKeys.DESCRIPTION to "Holder authentication key"
-    ))
-}
-
-when (keyResult) {
-    is GenerateKeyResult.Success -> {
-        val keyHandle = keyResult.keyHandle
-        println("Holder key created: ${keyHandle.id.value}")
-    }
-    is GenerateKeyResult.Failure -> {
-        println("Failed to create key: ${keyResult.reason}")
-    }
-}
-
-**Outcome:** Uses the wallet DSL to mint a holder key with custom metadata using the Result-based API, returning the generated handle for later signing operations.
+suspend fun generateKey(
+    algorithm: String,
+    options: Map<String, Any?> = emptyMap()
+): String   // returns the new key id directly
 ```
+
+It returns a plain key-id `String` (or throws), **not** the sealed
+`GenerateKeyResult` type produced by the low-level KMS API. If you need exhaustive
+`Result`-style error handling (e.g. `GenerateKeyResult.Success` /
+`GenerateKeyResult.Failure.*`), call `KeyManagementService` directly — see
+[Example: generating and using keys](#example-generating-and-using-keys) above.
+
+```kotlin
+import org.trustweave.wallet.withKeyManagement
+import org.trustweave.kms.KmsOptionKeys
+import kotlinx.coroutines.runBlocking
+
+val keyId: String? = runBlocking {
+    wallet.withKeyManagement { keys ->
+        keys.generateKey(
+            algorithm = "Ed25519",
+            options = mapOf(
+                KmsOptionKeys.KEY_ID to "holder-authentication",
+                KmsOptionKeys.DESCRIPTION to "Holder authentication key"
+            )
+        )
+    }
+}
+println("Holder key created: $keyId")
+```
+
+**Outcome:** Uses the wallet DSL to mint a holder key with custom metadata, returning the key id for later signing operations.
 
 ## Practical usage tips
 
@@ -284,24 +299,23 @@ Use `KmsOptionKeys` constants for type-safe option keys:
 
 ```kotlin
 import org.trustweave.kms.*
-import org.trustweave.kms.KmsOptionKeys
 import org.trustweave.kms.results.*
+import org.trustweave.core.identifiers.KeyId
 
-val result = wallet.withKeyManagement { kms ->
-    kms.generateKey(Algorithm.Ed25519, mapOf(
-        KmsOptionKeys.KEY_ID to "issuer-signing",
-        KmsOptionKeys.DESCRIPTION to "Issuer signing key",
-        KmsOptionKeys.EXPORTABLE to false
-    ))
-}
+// Use a KeyManagementService directly for the Result-based API:
+suspend fun generate(kms: KeyManagementService): KeyId? {
+    val result = kms.generateKey(
+        algorithm = Algorithm.Ed25519,
+        options = mapOf(
+            KmsOptionKeys.KEY_ID to "issuer-signing",
+            KmsOptionKeys.DESCRIPTION to "Issuer signing key",
+            KmsOptionKeys.EXPORTABLE to false
+        )
+    )
 
-when (result) {
-    is GenerateKeyResult.Success -> {
-        val keyHandle = result.keyHandle
-        // Use key handle
-    }
-    is GenerateKeyResult.Failure -> {
-        // Handle error
+    return when (result) {
+        is GenerateKeyResult.Success -> result.keyHandle.id
+        is GenerateKeyResult.Failure -> null
     }
 }
 ```

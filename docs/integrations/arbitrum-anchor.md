@@ -38,7 +38,7 @@ dependencies {
 
 ```kotlin
 import org.trustweave.anchor.*
-import org.trustweave.arbitrum.*
+import org.trustweave.anchor.arbitrum.*
 
 // Create Arbitrum anchor client for mainnet
 val options = mapOf(
@@ -100,7 +100,7 @@ val client = arbitrumProvider?.create(
 
 ```kotlin
 import org.trustweave.anchor.*
-import org.trustweave.arbitrum.*
+import org.trustweave.anchor.arbitrum.*
 import kotlinx.serialization.json.*
 
 val client = ArbitrumBlockchainAnchorClient(
@@ -140,7 +140,7 @@ println("Anchored to Arbitrum: ${result.ref.txHash}")
 
 ```kotlin
 import org.trustweave.trust.TrustWeave
-import org.trustweave.arbitrum.*
+import org.trustweave.anchor.arbitrum.*
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put

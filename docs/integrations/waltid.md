@@ -33,25 +33,23 @@ dependencies {
 
 ### Basic Configuration
 
-The walt.id integration supports automatic discovery via SPI:
+The walt.id integration supports automatic discovery via SPI. `discoverAndRegister`
+takes a `DidMethodRegistry` to populate:
 
 ```kotlin
 import org.trustweave.waltid.WaltIdIntegration
-import org.trustweave.did.*
+import org.trustweave.did.registry.DidMethodRegistry
 import org.trustweave.kms.*
-import kotlinx.coroutines.runBlocking
 
-runBlocking {
-    // Auto-discover and register walt.id providers
-    val result = WaltIdIntegration.discoverAndRegister()
+// Auto-discover and register walt.id providers
+val registry = DidMethodRegistry()
+val result = WaltIdIntegration.discoverAndRegister(registry)
 
-    // Access registered components
-    val kms = result.kms
-    val registry = result.registry
-    val registeredMethods = result.registeredDidMethods
+// Access registered components
+val kms = result.kms
+val registeredMethods = result.registeredDidMethods
 
-    println("Registered DID methods: $registeredMethods")
-}
+println("Registered DID methods: $registeredMethods")
 ```
 
 ### Manual Setup
@@ -59,21 +57,22 @@ runBlocking {
 You can also manually configure walt.id components:
 
 ```kotlin
-import org.trustweave.waltid.*
-import org.trustweave.did.*
-import org.trustweave.kms.*
+import org.trustweave.waltid.WaltIdKeyManagementService
+import org.trustweave.waltid.did.WaltIdKeyMethod
+import org.trustweave.waltid.did.WaltIdWebMethod
+import org.trustweave.did.registry.DidMethodRegistry
 
 // Create walt.id KMS
 val kms = WaltIdKeyManagementService()
 
-// Create DID methods
-val keyMethod = WaltIdDidKeyMethod(kms)
-val webMethod = WaltIdDidWebMethod(kms)
+// Create DID methods (note: WaltIdKeyMethod / WaltIdWebMethod, no "Did" infix)
+val keyMethod = WaltIdKeyMethod(kms)
+val webMethod = WaltIdWebMethod(kms)
 
-// Register methods
+// Register methods (DidMethodRegistry.register takes a single DidMethod)
 val registry = DidMethodRegistry()
-registry.register("key", keyMethod)
-registry.register("web", webMethod)
+registry.register(keyMethod)
+registry.register(webMethod)
 ```
 
 ## Usage Examples
@@ -81,46 +80,56 @@ registry.register("web", webMethod)
 ### KMS Operations
 
 ```kotlin
-import org.trustweave.waltid.*
+import org.trustweave.waltid.WaltIdKeyManagementService
 import org.trustweave.kms.*
+import org.trustweave.kms.results.*
 
 val kms = WaltIdKeyManagementService()
 
-// Generate key
-val key = kms.generateKey(Algorithm.Ed25519)
-println("Generated key: ${key.id}")
+// Generate key — generateKey returns GenerateKeyResult (sealed)
+val handle = when (val result = kms.generateKey(Algorithm.Ed25519)) {
+    is GenerateKeyResult.Success -> result.keyHandle
+    is GenerateKeyResult.Failure -> error("Key generation failed: $result")
+}
+println("Generated key: ${handle.id}")
 
-// Sign data (key.id is already a KeyId value class)
+// Sign data — sign returns SignResult (sealed)
 val data = "Hello, TrustWeave!".toByteArray()
-val signature = kms.sign(key.id, data)
-println("Signature: ${signature.toHexString()}")
+val signature: ByteArray = when (val s = kms.sign(handle.id, data)) {
+    is SignResult.Success -> s.signature
+    is SignResult.Failure -> error("Sign failed: $s")
+}
 
-// Get public key (key.id is already a KeyId value class)
-val publicKey = kms.getPublicKey(key.id)
-println("Public key: ${publicKey.toHexString()}")
+// Get public key — getPublicKey returns GetPublicKeyResult (sealed)
+val publicJwk = when (val pk = kms.getPublicKey(handle.id)) {
+    is GetPublicKeyResult.Success -> pk.keyHandle.publicKeyJwk
+    is GetPublicKeyResult.Failure -> error("Get public key failed: $pk")
+}
+println("Public key JWK: $publicJwk")
 ```
 
 ### DID Operations
 
 ```kotlin
-import org.trustweave.waltid.*
-import org.trustweave.did.*
+import org.trustweave.waltid.WaltIdKeyManagementService
+import org.trustweave.waltid.did.WaltIdKeyMethod
+import org.trustweave.did.KeyAlgorithm
+import org.trustweave.did.didCreationOptions
 import org.trustweave.did.resolver.DidResolutionResult
 
 val kms = WaltIdKeyManagementService()
-val keyMethod = WaltIdDidKeyMethod(kms)
+val keyMethod = WaltIdKeyMethod(kms)
 
 // Create did:key
 val options = didCreationOptions {
-    algorithm = KeyAlgorithm.Ed25519
+    algorithm = KeyAlgorithm.ED25519
 }
 
 val didDoc = keyMethod.createDid(options)
 println("Created DID: ${didDoc.id}")
 
 // Resolve DID
-val resolutionResult = keyMethod.resolveDid(didDoc.id)
-when (resolutionResult) {
+when (val resolutionResult = keyMethod.resolveDid(didDoc.id)) {
     is DidResolutionResult.Success ->
         println("Resolved DID: ${resolutionResult.document.id}")
     is DidResolutionResult.Failure ->
@@ -134,10 +143,13 @@ when (resolutionResult) {
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.waltid.WaltIdIntegration
+import org.trustweave.did.registry.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 
 runBlocking {
-    WaltIdIntegration.discoverAndRegister()
+    // discoverAndRegister requires a DidMethodRegistry to populate.
+    val registry = DidMethodRegistry()
+    WaltIdIntegration.discoverAndRegister(registry)
 
     val trustWeave = TrustWeave.quickStart()
     when (val didResult = trustWeave.createDid { }) {
@@ -153,7 +165,7 @@ runBlocking {
 
 ### KMS Features
 
-- Key generation (Ed25519, secp256k1, P-256/P-384/P-521, RSA)
+- Key generation (Ed25519, secp256k1, P-256/P-384/P-521 — RSA is **not** in `WaltIdKeyManagementService.SUPPORTED_ALGORITHMS`)
 - Signing operations
 - Public key retrieval
 - Key deletion
@@ -201,17 +213,20 @@ See the [walt.id Testing Guide](../../kms/plugins/waltid/TESTING.md) for detaile
 The walt.id integration follows TrustWeave's error handling patterns:
 
 ```kotlin
-import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.kms.results.GenerateKeyResult
+import org.trustweave.kms.results.fold
 
 val result = kms.generateKey(Algorithm.Ed25519)
 result.fold(
     onSuccess = { key -> println("Key: ${key.id}") },
-    onFailure = { error ->
-        when (error) {
-            is TrustWeaveException.Unknown -> {
-                println("Key generation failed: ${error.reason}")
-            }
-            else -> println("Error: ${error.message}")
+    onFailure = { failure ->
+        when (failure) {
+            is GenerateKeyResult.Failure.UnsupportedAlgorithm ->
+                println("Unsupported: ${failure.algorithm.name}; supported=${failure.supportedAlgorithms.joinToString { it.name }}")
+            is GenerateKeyResult.Failure.InvalidOptions ->
+                println("Invalid options: ${failure.reason}")
+            is GenerateKeyResult.Failure.Error ->
+                println("Error: ${failure.reason}")
         }
     }
 )

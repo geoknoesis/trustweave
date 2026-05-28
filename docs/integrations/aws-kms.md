@@ -13,9 +13,11 @@ The `kms/plugins/aws` module provides a complete implementation of TrustWeave's 
 
 - Use AWS KMS for secure key generation and storage with **FIPS 140-3 Level 3 validated HSMs**
 - Leverage AWS KMS's automatic key rotation capabilities
-- Support all AWS KMS-compatible algorithms (Ed25519, secp256k1, P-256/P-384/P-521, RSA)
+- Support AWS KMS-compatible algorithms: secp256k1, P-256/P-384/P-521, RSA-2048/3072/4096
 - Integrate with existing AWS infrastructure and IAM policies
 - Meet regulatory compliance requirements with FIPS-validated cryptographic operations
+
+> **Limitation:** The plugin's `SUPPORTED_ALGORITHMS` does **not** include `Algorithm.Ed25519`. AWS KMS itself added Ed25519 service-side in Nov 2025, but the TrustWeave plugin has not been updated to advertise it — calling `kms.generateKey(Algorithm.Ed25519)` returns `GenerateKeyResult.Failure.UnsupportedAlgorithm`. Use one of the supported algorithms listed above (secp256k1, P-256 / P-384 / P-521, RSA-2048/3072/4096) until the plugin catches up.
 
 ## Installation
 
@@ -194,7 +196,6 @@ The AWS KMS plugin supports all AWS KMS-compatible algorithms. AWS KMS uses FIPS
 
 | Algorithm | AWS KMS Key Spec | Signing Algorithm | FIPS 140-3 Status | Notes |
 |-----------|-----------------|-------------------|-------------------|-------|
-| Ed25519 | `ECC_Ed25519` | `ECDSA_SHA_256` | ⚠️ Not in FIPS cert | Supported as of Nov 2025 (may use non-FIPS validated path) |
 | secp256k1 | `ECC_SECG_P256K1` | `ECDSA_SHA_256` | ✅ Allowed | Blockchain-only use per FIPS certificate |
 | P-256 | `ECC_NIST_P256` | `ECDSA_SHA_256` | ✅ Approved | FIPS 140-3 Level 3 validated |
 | P-384 | `ECC_NIST_P384` | `ECDSA_SHA_384` | ✅ Approved | FIPS 140-3 Level 3 validated |
@@ -231,8 +232,8 @@ val supported = kms?.getSupportedAlgorithms()
 println("Supported algorithms: ${supported?.joinToString { it.name }}")
 
 // Check specific algorithm
-if (kms?.supportsAlgorithm(Algorithm.Ed25519) == true) {
-    println("Ed25519 is supported")
+if (kms?.supportsAlgorithm(Algorithm.P256) == true) {
+    println("P-256 is supported")
 }
 ```
 
@@ -244,34 +245,37 @@ if (kms?.supportsAlgorithm(Algorithm.Ed25519) == true) {
 import org.trustweave.kms.*
 import org.trustweave.kms.KmsOptionKeys
 import org.trustweave.kms.results.*
+import org.trustweave.awskms.AwsKmsOptionKeys
 
-// Generate Ed25519 key
-val result = kms.generateKey(Algorithm.Ed25519)
+// Generate P-256 key
+val result = kms.generateKey(Algorithm.P256)
 when (result) {
     is GenerateKeyResult.Success -> {
         val keyHandle = result.keyHandle
         println("Key created: ${keyHandle.id}")
     }
-    is GenerateKeyResult.Failure -> {
-        println("Error: ${result.reason}")
-    }
+    is GenerateKeyResult.Failure.UnsupportedAlgorithm -> println("Unsupported: ${result.algorithm.name}")
+    is GenerateKeyResult.Failure.InvalidOptions -> println("Invalid options: ${result.reason}")
+    is GenerateKeyResult.Failure.Error -> println("Error: ${result.reason}")
 }
 
-// Generate key with alias (for easier rotation)
+// Generate key with alias (for easier rotation).
+// AWS-specific options (ALIAS, ENABLE_AUTOMATIC_ROTATION) live in AwsKmsOptionKeys;
+// cross-provider options (DESCRIPTION) live in KmsOptionKeys.
 val keyWithAliasResult = kms.generateKey(
-    algorithm = Algorithm.Ed25519,
+    algorithm = Algorithm.P256,
     options = mapOf(
-        KmsOptionKeys.ALIAS to "alias/issuer-key",
+        AwsKmsOptionKeys.ALIAS to "alias/issuer-key",
         KmsOptionKeys.DESCRIPTION to "Issuer signing key",
-        KmsOptionKeys.ENABLE_AUTOMATIC_ROTATION to true
+        AwsKmsOptionKeys.ENABLE_AUTOMATIC_ROTATION to true
     )
 )
 
-// Generate P-256 key for FIPS compliance
+// Generate P-384 key for higher security
 val fipsKeyResult = kms.generateKey(
-    algorithm = Algorithm.P256,
+    algorithm = Algorithm.P384,
     options = mapOf(
-        KmsOptionKeys.DESCRIPTION to "FIPS-compliant issuer key"
+        KmsOptionKeys.DESCRIPTION to "Higher-security issuer key"
     )
 )
 ```
@@ -279,53 +283,48 @@ val fipsKeyResult = kms.generateKey(
 ### Signing Data
 
 ```kotlin
-// Sign with key ID (KeyId value class)
-val sign = kms.sign(KeyId(keyId), data.toByteArray())
-when (sign) {
+import org.trustweave.core.identifiers.KeyId
+
+// Sign with key ID (KeyId value class).
+// SignResult.Failure is sealed — match on each leaf for the .reason / .keyId fields.
+when (val sign = kms.sign(KeyId(keyId), data.toByteArray())) {
     is SignResult.Success -> {
         val signature = sign.signature
         // Use signature
     }
-    is SignResult.Failure -> {
-        println("Error: ${sign.reason}")
-    }
+    is SignResult.Failure.KeyNotFound -> println("Key not found: ${sign.keyId}")
+    is SignResult.Failure.UnsupportedAlgorithm ->
+        println("Algorithm '${sign.requestedAlgorithm?.name}' incompatible with key '${sign.keyAlgorithm.name}'")
+    is SignResult.Failure.Error -> println("Error: ${sign.reason}")
 }
 
 // Sign with algorithm override
-val sign = kms.sign(
+val sign2 = kms.sign(
     keyId = KeyId(keyId),
     data = data.toByteArray(),
-    algorithm = Algorithm.Ed25519
+    algorithm = Algorithm.P256
 )
 
 // Sign using alias
-val sign = kms.sign(KeyId("alias/issuer-key"), data.toByteArray())
+val sign3 = kms.sign(KeyId("alias/issuer-key"), data.toByteArray())
 ```
 
 ### Retrieving Public Keys
 
 ```kotlin
 // Get public key by key ID (KeyId value class)
-val publicKeyResult = kms.getPublicKey(KeyId(keyId))
-when (publicKeyResult) {
+when (val publicKeyResult = kms.getPublicKey(KeyId(keyId))) {
     is GetPublicKeyResult.Success -> {
         val publicKey = publicKeyResult.keyHandle
-        // Use public key
+        println("Public key JWK: ${publicKey.publicKeyJwk}")
     }
-    is GetPublicKeyResult.Failure -> {
-        println("Error: ${publicKeyResult.reason}")
-    }
+    is GetPublicKeyResult.Failure.KeyNotFound -> println("Not found: ${publicKeyResult.keyId}")
+    is GetPublicKeyResult.Failure.Error -> println("Error: ${publicKeyResult.reason}")
 }
 
-// Get public key by ARN
-val publicKey = kms.getPublicKey(KeyId("arn:aws:kms:us-east-1:123456789012:key/123"))
-
-// Get public key by alias
-val publicKey = kms.getPublicKey(KeyId("alias/issuer-key"))
-
-// Access JWK format
-val jwk = publicKey.publicKeyJwk
-println("Public key JWK: $jwk")
+// Get public key by ARN or alias
+val publicKey1 = kms.getPublicKey(KeyId("arn:aws:kms:us-east-1:123456789012:key/123"))
+val publicKey2 = kms.getPublicKey(KeyId("alias/issuer-key"))
 ```
 
 ### Key Deletion
@@ -349,11 +348,13 @@ AWS KMS supports two types of key rotation:
 AWS KMS can automatically rotate customer-managed keys annually:
 
 ```kotlin
+import org.trustweave.awskms.AwsKmsOptionKeys
+
 // Enable automatic rotation when creating key
 val result = kms.generateKey(
-    algorithm = Algorithm.Ed25519,
+    algorithm = Algorithm.P256,
     options = mapOf(
-        KmsOptionKeys.ENABLE_AUTOMATIC_ROTATION to true
+        AwsKmsOptionKeys.ENABLE_AUTOMATIC_ROTATION to true
     )
 )
 when (result) {
@@ -385,11 +386,13 @@ when (result) {
 For more control, use TrustWeave's manual rotation pattern:
 
 ```kotlin
+import org.trustweave.awskms.AwsKmsOptionKeys
+
 // Step 1: Generate new key
 val newKeyResult = kms.generateKey(
-    algorithm = Algorithm.Ed25519,
+    algorithm = Algorithm.P256,
     options = mapOf(
-        KmsOptionKeys.ALIAS to "alias/issuer-key-v2",
+        AwsKmsOptionKeys.ALIAS to "alias/issuer-key-v2",
         KmsOptionKeys.DESCRIPTION to "Issuer key rotated 2025-01-15"
     )
 )
@@ -419,16 +422,18 @@ when (newKeyResult) {
 Key aliases make rotation easier:
 
 ```kotlin
+import org.trustweave.awskms.AwsKmsOptionKeys
+
 // Create key with alias
 val key1Result = kms.generateKey(
-    algorithm = Algorithm.Ed25519,
-    options = mapOf(KmsOptionKeys.ALIAS to "alias/issuer-key")
+    algorithm = Algorithm.P256,
+    options = mapOf(AwsKmsOptionKeys.ALIAS to "alias/issuer-key")
 )
 
 // Later, create new key and update alias
 val key2Result = kms.generateKey(
-    algorithm = Algorithm.Ed25519,
-    options = mapOf(KmsOptionKeys.ALIAS to "alias/issuer-key-temp")
+    algorithm = Algorithm.P256,
+    options = mapOf(AwsKmsOptionKeys.ALIAS to "alias/issuer-key-temp")
 )
 
 // Update alias to point to new key (requires AWS KMS extension)
@@ -442,7 +447,7 @@ val key2Result = kms.generateKey(
 The plugin maps AWS exceptions to TrustWeave exceptions:
 
 ```kotlin
-val result = kms.generateKey(Algorithm.Ed25519)
+val result = kms.generateKey(Algorithm.P256)
 when (result) {
     is GenerateKeyResult.Success -> {
         val keyHandle = result.keyHandle
@@ -522,10 +527,10 @@ For production, restrict resources to specific key ARNs:
 See the [Algorithm Compatibility Table](../core-concepts/algorithm-compatibility-table.md) for detailed comparison of algorithm support across DIDs, VCs, AWS KMS, and Azure Key Vault.
 
 **Key Points:**
-- AWS KMS supports Ed25519 (as of Nov 2025)
 - All NIST curves (P-256/P-384/P-521) supported
 - secp256k1 supported for blockchain integration
-- RSA keys supported for legacy compatibility
+- RSA keys (2048/3072/4096) supported for legacy compatibility
+- Ed25519 is not currently advertised by this plugin (see TODO above)
 - BLS12-381 not supported (requires specialized KMS)
 
 ## Best Practices

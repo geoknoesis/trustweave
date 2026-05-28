@@ -42,7 +42,6 @@ import org.trustweave.trust.types.WalletCreationResult
 import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.credential.results.VerificationResult
 import kotlinx.coroutines.runBlocking
-import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.quickStart()
@@ -159,10 +158,12 @@ import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.identifiers.extractKeyId
-import org.trustweave.core.*
+import org.trustweave.credential.results.getOrThrow
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Instant
-import org.trustweave.testkit.services.*
+import kotlinx.datetime.Clock
 import org.trustweave.did.resolver.errorMessage
 
 fun main() = runBlocking {
@@ -174,7 +175,9 @@ fun main() = runBlocking {
         "did:key:z6Mk..."
     )
 
-    val results = dids.mapAsync { did -> trustWeave.resolveDid(did) }
+    val results = coroutineScope {
+        dids.map { did -> async { trustWeave.resolveDid(did) } }.awaitAll()
+    }
 
     results.forEachIndexed { index, resolution ->
         when (resolution) {
@@ -185,28 +188,32 @@ fun main() = runBlocking {
         }
     }
 
-    val credentials = (1..10).mapAsync { index ->
-        runCatching {
-            val issuerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
-            val issuerDoc = when (val res = trustWeave.resolveDid(issuerDid)) {
-                is DidResolutionResult.Success -> res.document
-                else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
-            }
-            val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
-                ?: throw IllegalStateException("No verification method found")
-
-            trustWeave.issue {
-                credential {
-                    issuer(issuerDid)
-                    subject {
-                        id("did:key:holder-$index")
-                        "index" to index
+    val credentials = coroutineScope {
+        (1..10).map { index ->
+            async {
+                runCatching {
+                    val issuerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
+                    val issuerDoc = when (val res = trustWeave.resolveDid(issuerDid)) {
+                        is DidResolutionResult.Success -> res.document
+                        else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
                     }
-                    issued(Instant.now())
+                    val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
+                        ?: throw IllegalStateException("No verification method found")
+
+                    trustWeave.issue {
+                        credential {
+                            issuer(issuerDid)
+                            subject {
+                                id("did:key:holder-$index")
+                                "index" to index
+                            }
+                            issued(Clock.System.now())
+                        }
+                        signedBy(issuerDid, issuerKeyId)
+                    }.getOrThrow()
                 }
-                signedBy(issuerDid, issuerKeyId)
-            }.getOrThrow()
-        }
+            }
+        }.awaitAll()
     }
 
     val successful = credentials.filter { it.isSuccess }
@@ -226,7 +233,7 @@ fun main() = runBlocking {
 ```
 
 **Key Points:**
-- Use `mapAsync` for parallel operations
+- Use `async { ... }.awaitAll()` for parallel operations
 - Handle each result individually
 - Filter successful results for further processing
 
@@ -244,7 +251,6 @@ import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.errorMessage
-import org.trustweave.core.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -312,15 +318,19 @@ package com.example.patterns.lifecycle
 
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.wallet.presentationFromWalletResult
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.errorMessage
 import org.trustweave.did.identifiers.extractKeyId
 import org.trustweave.credential.results.VerificationResult
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.wallet.withLifecycle
+import org.trustweave.wallet.withOrganization
 import kotlinx.coroutines.runBlocking
-import java.time.Instant
-import java.time.temporal.ChronoUnit
-import org.trustweave.testkit.services.*
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.days
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.quickStart()
@@ -328,7 +338,7 @@ fun main() = runBlocking {
     val issuerDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
     val holderDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 
-    val expirationDate = Instant.now().plus(1, ChronoUnit.YEARS)
+    val expirationDate = Clock.System.now().plus(365.days)
     val issuerDoc = when (val res = trustWeave.resolveDid(issuerDid)) {
         is DidResolutionResult.Success -> res.document
         else -> throw IllegalStateException(res.errorMessage ?: "Failed to resolve DID")
@@ -343,7 +353,7 @@ fun main() = runBlocking {
                 id(holderDid.value)
                 "name" to "Alice"
             }
-            issued(Instant.now())
+            issued(Clock.System.now())
             expires(expirationDate)
         }
         signedBy(issuerDid, issuerKeyId)
@@ -363,15 +373,12 @@ fun main() = runBlocking {
         org.tagCredential(credentialId, setOf("degree", "verified"))
     }
 
-    wallet.withPresentation { pres ->
-        pres.createPresentation(
-            credentialIds = listOf(credentialId),
-            holderDid = holderDid.value,
-            options = mapOf(
-            "holderDid" to holderDid.value,
-            "challenge" to "job-application-${System.currentTimeMillis()}"
-        )
-        )
+    // For real presentations use trustWeave.presentationFromWalletResult(wallet) { ... }
+    // or pass a ProofOptions to wallet's CredentialPresentation API.
+    val pres = trustWeave.presentationFromWalletResult(wallet) {
+        fromWallet(credentialId)
+        holder(holderDid.value)
+        challenge("job-application-${System.currentTimeMillis()}")
     }
 
     val verification = try {
@@ -391,13 +398,11 @@ fun main() = runBlocking {
         }
     }
 
-    if (credential.expirationDate != null) {
-        val expiration = Instant.parse(credential.expirationDate)
-        if (expiration.isBefore(Instant.now())) {
-            println("Credential expired on ${credential.expirationDate}")
-            wallet.withLifecycle { lifecycle ->
-                lifecycle.archive(credentialId)
-            }
+    val expiration = credential.expirationDate
+    if (expiration != null && expiration < Clock.System.now()) {
+        println("Credential expired on $expiration")
+        wallet.withLifecycle { lifecycle ->
+            lifecycle.archive(credentialId)
         }
     }
 
@@ -423,18 +428,19 @@ package com.example.patterns.multichain
 
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.identifiers.extractKeyId
-import org.trustweave.core.*
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Instant
-import org.trustweave.testkit.services.*
+import kotlinx.datetime.Clock
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
+        keys { provider(IN_MEMORY); algorithm(ED25519) }
         anchor {
             chain("algorand:testnet") { inMemory() }
             chain("polygon:testnet") { inMemory() }
@@ -465,7 +471,7 @@ fun main() = runBlocking {
                     id("did:key:holder")
                     "data" to "important-data"
                 }
-                issued(Instant.now())
+                issued(Clock.System.now())
             }
             signedBy(issuerDid, issuerKeyId)
         }
@@ -518,11 +524,11 @@ import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.trust.types.WalletCreationResult
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.core.*
+import org.trustweave.did.identifiers.extractKeyId
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.wallet.withOrganization
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
-import org.trustweave.testkit.services.*
+import kotlinx.datetime.Clock
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.quickStart()
@@ -578,7 +584,7 @@ fun main() = runBlocking {
                     id(holderDid.value)
                     "credentialName" to name
                 }
-                issued(Instant.now())
+                issued(Clock.System.now())
                 type("VerifiableCredential", "${category}Credential")
             }
             signedBy(issuerDid)

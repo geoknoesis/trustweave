@@ -64,7 +64,8 @@ registry.register(protocol)
 
 val exchangeService = ExchangeServices.createExchangeService(
     protocolRegistry = registry,
-    credentialService = credentialService
+    credentialService = credentialService,
+    didResolver = didResolver
 )
 ```
 
@@ -104,8 +105,9 @@ val offer = when (offerResult) {
     else -> throw IllegalStateException("Offer failed: $offerResult")
 }
 
-// The offer contains an offer URI that can be shared with the holder
-val offerUri = (offer.offerData as Oidc4VciOffer).offerUri
+// The offer's protocol-agnostic envelope holds the OIDC4VCI offer JSON
+val messageData = offer.messageEnvelope.messageData  // JsonElement
+// The plugin serializes Oidc4VciOffer here; parse out e.g. offerUri:
 // Format: openid-credential-offer://?credential_issuer=...
 ```
 
@@ -146,7 +148,7 @@ val credential = VerifiableCredential(
     issuer = Issuer.IriIssuer(Iri("did:key:issuer")),
     issuanceDate = Clock.System.now(),
     credentialSubject = CredentialSubject(
-        id = Did("did:key:holder"),
+        id = Iri("did:key:holder"),  // CredentialSubject.id is Iri, not Did
         claims = mapOf(
             "name" to JsonPrimitive("Alice"),
             "email" to JsonPrimitive("alice@example.com")

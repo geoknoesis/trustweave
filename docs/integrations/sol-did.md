@@ -42,7 +42,7 @@ dependencies {
 import org.trustweave.soldid.*
 import org.trustweave.anchor.*
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import org.trustweave.kms.*
+import org.trustweave.kms.inmemory.InMemoryKeyManagementService
 
 // Create configuration
 val config = SolDidConfig.builder()
@@ -83,6 +83,7 @@ When the module is on the classpath, did:sol is automatically available:
 
 ```kotlin
 import org.trustweave.did.*
+import org.trustweave.did.spi.DidMethodProvider
 import java.util.ServiceLoader
 
 // Discover did:sol provider
@@ -93,6 +94,7 @@ val solProvider = providers.find { it.supportedMethods.contains("sol") }
 val options = didCreationOptions {
     property("rpcUrl", "https://api.devnet.solana.com")
     property("network", "devnet")
+    property("anchorClient", anchorClient) // Required: provide an anchor client
 }
 
 val method = solProvider?.create("sol", options)
@@ -144,13 +146,14 @@ when (result) {
 
 ```kotlin
 import org.trustweave.did.identifiers.Did
+import org.trustweave.did.model.DidService
 
 val did = Did("did:sol:7xK...")
 val document = method.updateDid(did) { currentDoc ->
     currentDoc.copy(
-        service = currentDoc.service + Service(
+        service = currentDoc.service + DidService(
             id = "${currentDoc.id}#didcomm",
-            type = "DIDCommMessaging",
+            type = listOf("DIDCommMessaging"),
             serviceEndpoint = "https://example.com/didcomm"
         )
     )
@@ -227,7 +230,7 @@ import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.did.KeyAlgorithm
 import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.kms.InMemoryKeyManagementService
+import org.trustweave.kms.inmemory.InMemoryKeyManagementService
 import org.trustweave.soldid.*
 
 val config = SolDidConfig.devnet("https://api.devnet.solana.com")

@@ -28,9 +28,12 @@ This style guide ensures consistent terminology, formatting, and patterns across
 ### Correct Usage Examples
 
 ```kotlin
-import org.trustweave.testkit.services.*
 // ✅ Correct: Class name capitalized
 import org.trustweave.trust.TrustWeave
+// Note: DSL constants (IN_MEMORY, ED25519, KEY, etc.) live in org.trustweave.trust.dsl.credential
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 
 // ✅ Correct: Variable name camelCase
 val trustWeave = TrustWeave.build {
@@ -54,7 +57,10 @@ Always include necessary imports at the top of code examples:
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.credential.results.VerificationResult
-import org.trustweave.testkit.services.*
+// DSL constants live in org.trustweave.trust.dsl.credential — import specific constants you need:
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import kotlinx.coroutines.runBlocking
 ```
 
@@ -63,7 +69,7 @@ import kotlinx.coroutines.runBlocking
 Always show error handling in production examples:
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 // ✅ Correct: Show error handling
 try {
     val did = trustWeave.createDid { method(KEY) }.getOrThrowDid()

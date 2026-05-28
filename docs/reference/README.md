@@ -81,11 +81,11 @@ Reference materials are designed for **quick lookup** rather than learning. Use 
 ## Next Steps
 
 **Looking for specific information?**
-- Glossary](../GLOSSARY.md) - Find term definitions
-- FAQ](../faq.md) - Find answers to common questions
-- Core Modules](../modules/core-modules.md) - Find module information
+- [Glossary](../GLOSSARY.md) - Find term definitions
+- [FAQ](../faq.md) - Find answers to common questions
+- [Core Modules](../modules/core-modules.md) - Find module information
 
 **Want to learn more?**
-- Concepts](../concepts/README.md) - Understand the fundamentals
-- How-To Guides](../how-to/README.md) - Complete practical tasks
+- [Concepts](../concepts/README.md) - Understand the fundamentals
+- [How-To Guides](../how-to/README.md) - Complete practical tasks
 

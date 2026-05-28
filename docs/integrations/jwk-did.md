@@ -51,7 +51,7 @@ The did:jwk provider can be configured via options or automatically discovered v
 ```kotlin
 import org.trustweave.did.*
 import org.trustweave.jwkdid.*
-import org.trustweave.kms.*
+import org.trustweave.kms.inmemory.InMemoryKeyManagementService
 
 // Manual creation
 val kms = InMemoryKeyManagementService()
@@ -64,6 +64,7 @@ When the module is on the classpath, did:jwk is automatically available:
 
 ```kotlin
 import org.trustweave.did.*
+import org.trustweave.did.spi.DidMethodProvider
 import java.util.ServiceLoader
 
 // Discover did:jwk provider
@@ -148,7 +149,7 @@ import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.did.KeyAlgorithm
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.jwkdid.*
-import org.trustweave.kms.InMemoryKeyManagementService
+import org.trustweave.kms.inmemory.InMemoryKeyManagementService
 
 val kms = InMemoryKeyManagementService()
 
@@ -279,7 +280,7 @@ did:jwk is very fast:
 
 ## References
 
-- DID JWK Method Specification](https://w3c-ccg.github.io/did-method-jwk/)
+- DID JWK Method Specification](https://github.com/quartzjer/did-jwk/blob/main/spec.md)
 - JSON Web Key (JWK) RFC 7517](https://tools.ietf.org/html/rfc7517)
 - TrustWeave Core API](../api-reference/core-api.md)
 

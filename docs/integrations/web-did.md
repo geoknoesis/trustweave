@@ -38,7 +38,7 @@ The did:web provider can be configured via options or automatically discovered v
 ```kotlin
 import org.trustweave.did.*
 import org.trustweave.webdid.*
-import org.trustweave.kms.*
+import org.trustweave.kms.inmemory.InMemoryKeyManagementService
 import okhttp3.OkHttpClient
 
 // Manual creation
@@ -55,6 +55,7 @@ When the module is on the classpath, did:web is automatically available:
 
 ```kotlin
 import org.trustweave.did.*
+import org.trustweave.did.spi.DidMethodProvider
 import java.util.ServiceLoader
 
 // Discover did:web provider
@@ -127,13 +128,14 @@ val document = method.createDid(options)
 
 ```kotlin
 import org.trustweave.did.identifiers.Did
+import org.trustweave.did.model.DidService
 
 val did = Did("did:web:example.com")
 val document = method.updateDid(did) { currentDoc ->
     currentDoc.copy(
-        service = currentDoc.service + Service(
+        service = currentDoc.service + DidService(
             id = "${currentDoc.id}#didcomm",
-            type = "DIDCommMessaging",
+            type = listOf("DIDCommMessaging"),
             serviceEndpoint = "https://example.com/didcomm"
         )
     )
@@ -231,18 +233,23 @@ s3Client.putObject(
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.getOrThrowDid
-import org.trustweave.kms.InMemoryKeyManagementService
+import org.trustweave.kms.inmemory.InMemoryKeyManagementService
 
 val kms = InMemoryKeyManagementService()
 
 val trustWeave = TrustWeave.build {
     customKms(kms)
     did {
+        // domain() configures the build-time DidMethodConfig (passed when the method is
+        // instantiated). At runtime, did:web still requires the 'domain' option.
         method("web") { domain("example.com") }
     }
 }
 
-val did = trustWeave.createDid { method("web") }.getOrThrowDid()
+val did = trustWeave.createDid {
+    method("web")
+    option("domain", "example.com") // required by WebDidMethod.createDid()
+}.getOrThrowDid()
 val resolved = trustWeave.resolveDid(did)
 ```
 

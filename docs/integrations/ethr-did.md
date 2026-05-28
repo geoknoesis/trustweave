@@ -44,8 +44,8 @@ dependencies {
 ```kotlin
 import org.trustweave.ethrdid.*
 import org.trustweave.anchor.*
-import org.trustweave.polygon.PolygonBlockchainAnchorClient
-import org.trustweave.kms.*
+import org.trustweave.anchor.polygon.PolygonBlockchainAnchorClient
+import org.trustweave.kms.inmemory.InMemoryKeyManagementService
 
 // Create configuration
 val config = EthrDidConfig.builder()
@@ -86,6 +86,7 @@ When the module is on the classpath, did:ethr is automatically available:
 
 ```kotlin
 import org.trustweave.did.*
+import org.trustweave.did.spi.DidMethodProvider
 import org.trustweave.anchor.*
 import java.util.ServiceLoader
 
@@ -149,13 +150,14 @@ when (result) {
 
 ```kotlin
 import org.trustweave.did.identifiers.Did
+import org.trustweave.did.model.DidService
 
 val did = Did("did:ethr:0x1234...")
 val document = method.updateDid(did) { currentDoc ->
     currentDoc.copy(
-        service = currentDoc.service + Service(
+        service = currentDoc.service + DidService(
             id = "${currentDoc.id}#didcomm",
-            type = "DIDCommMessaging",
+            type = listOf("DIDCommMessaging"),
             serviceEndpoint = "https://example.com/didcomm"
         )
     )
@@ -229,7 +231,7 @@ import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.did.KeyAlgorithm
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.ethrdid.*
-import org.trustweave.kms.InMemoryKeyManagementService
+import org.trustweave.kms.inmemory.InMemoryKeyManagementService
 
 val config = EthrDidConfig.sepolia("https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY")
 val kms = InMemoryKeyManagementService()
@@ -239,10 +241,14 @@ val trustWeave = TrustWeave.build {
     anchor {
         chain(config.chainId) {
             provider("polygon")
+            // OptionsBuilder exposes a String.to(value) *infix* function, so list keys
+            // explicitly with the infix form rather than a dot-call inside a loop
+            // (which would resolve to kotlin.Pair and be discarded).
             options {
-                for ((k, v) in config.toMap()) {
-                    if (v != null) k.to(v)
-                }
+                "rpcUrl" to config.rpcUrl
+                "chainId" to config.chainId
+                config.privateKey?.let { "privateKey" to it }
+                config.network?.let { "network" to it }
             }
         }
     }

@@ -54,28 +54,31 @@ val trustWeave = TrustWeave.quickStart() // in-memory did:key — see quick star
 
 ### Not Included by Default
 
+The string constants below (`AnchorProviders.ALGORAND`, `DidMethods.WEB`, `KmsProviders.AWS`, etc.) live in **`org.trustweave.trust.dsl.credential`** — import them, or pass the underlying string literal.
+
 1. **Blockchain Clients**
    - No blockchain clients registered until you add them
-   - Register clients inside **`TrustWeave.build { anchor { chain("algorand:testnet") { provider(ALGORAND) { ... } } } }`**
+   - Register clients inside **`anchor { chain("algorand:testnet") { provider(AnchorProviders.ALGORAND); options { /* … */ } } }`** (note: `provider(name)` takes no block — supply chain options via the sibling `options { }` block)
 
 2. **Additional DID Methods**
    - Only `did:key` unless you register more
-   - Add methods in **`did { method(WEB) { ... } }`** (or SPI-discovered plugins)
+   - Add methods in **`did { method(DidMethods.WEB) { domain("example.com") } }`** (or SPI-discovered plugins)
 
 3. **Production KMS**
    - In-memory KMS is for testing only
-   - Configure **`keys { provider("awsKms") { ... } }`** (or **`customKms(...)`**) for production
+   - Pass a configured instance via **`customKms(awsKms)`**, or declare a registered provider name with **`keys { provider(KmsProviders.AWS); algorithm(KeyAlgorithms.ED25519) }`** (no provider-options block — configure the KMS instance separately)
 
 ## Default Behavior Details
 
 ### DID Creation Defaults
 
 ```kotlin
-import org.trustweave.testkit.services.*
 // Default behavior (configured `did:key` + Ed25519 from TrustWeave.build)
-val did = trustWeave.createDid { }.getOrThrowDid()
+val did = trustWeave.createDid().getOrThrowDid()
 
-// Equivalent options are expressed in the `createDid { }` builder, e.g. method(KEY); algorithm(ED25519)
+// Equivalent options are expressed in the `createDid { }` builder, e.g.
+//   method(DidMethods.KEY); algorithm(KeyAlgorithms.ED25519)
+// (constants from org.trustweave.trust.dsl.credential)
 ```
 
 **Defaults:**
@@ -125,7 +128,9 @@ import org.trustweave.trust.dsl.credential.AnchorProviders
 
 // TrustWeave.build is suspend — call from runBlocking { } or another suspend entry point
 val trustWeave = TrustWeave.build {
-    customKms(awsKms) // or keys { provider("awsKms") { region("us-east-1"); ... } }
+    customKms(awsKms) // or keys { provider("awsKms"); algorithm("Ed25519") }
+                      // (provider(name) takes no block — configure the KMS instance
+                      //  separately via KeyManagementServices.create("aws", awsKmsOptions { … }))
 
     did {
         method("web") { domain("example.com") }
@@ -156,7 +161,13 @@ val trustWeave = TrustWeave.build {
 
 1. **Replace In-Memory KMS**
    ```kotlin
-   keys { provider("awsKms") { /* … */ } } // or customKms(yourKms)
+   // Build the KMS instance separately (provider-specific options go here)
+   val awsKms = KeyManagementServices.create("aws", awsKmsOptions { region = "us-east-1" })
+
+   TrustWeave.build {
+       customKms(awsKms)
+       // or, for already-registered providers: keys { provider("awsKms"); algorithm("Ed25519") }
+   }
    ```
 
 2. **Use Production DID Methods**
@@ -201,12 +212,12 @@ println("Wallet capabilities: ${wallet.capabilities}")
 
 ## Migration from Defaults to Production
 
-See [Production Deployment Guide](../deployment/production-checklist.md) for step-by-step migration from defaults to production configuration.
+See [Production Integration Checklist](../getting-started/production-integration-checklist.md) for step-by-step migration from defaults to production configuration.
 
 ## Related Documentation
 
 - [Configuration reference](README.md) — Complete configuration options
 - [Architecture overview](../introduction/architecture-overview.md) — Component architecture
 - [Installation](../getting-started/installation.md) — Setup instructions
-- [Production deployment](../deployment/production-checklist.md) — Production configuration
+- [Production integration checklist](../getting-started/production-integration-checklist.md) — Production configuration
 

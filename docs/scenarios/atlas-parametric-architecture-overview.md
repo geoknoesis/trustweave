@@ -146,7 +146,6 @@ Automatic Payout
 ```kotlin
 import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.trust.types.getOrThrowDid
-import org.trustweave.testkit.services.*
 
 // Create DIDs for EO providers, insurers, reinsurers
 val eoProviderDid = trustWeave.createDid { method(KEY) }.getOrThrowDid()
@@ -394,7 +393,6 @@ import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
 import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.trust.types.getOrThrowDid
-import org.trustweave.testkit.services.*
 
 // Initialize TrustWeave (configure real KMS / anchor providers in production)
 val trustWeave = TrustWeave.build {

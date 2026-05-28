@@ -41,7 +41,7 @@ dependencies {
 import org.trustweave.cheqddid.*
 import org.trustweave.anchor.*
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import org.trustweave.kms.*
+import org.trustweave.kms.inmemory.InMemoryKeyManagementService
 
 // Create configuration
 val config = CheqdDidConfig.builder()
@@ -82,6 +82,7 @@ When the module is on the classpath, did:cheqd is automatically available:
 
 ```kotlin
 import org.trustweave.did.*
+import org.trustweave.did.spi.DidMethodProvider
 import org.trustweave.anchor.*
 import java.util.ServiceLoader
 
@@ -145,13 +146,14 @@ when (result) {
 
 ```kotlin
 import org.trustweave.did.identifiers.Did
+import org.trustweave.did.model.DidService
 
 val did = Did("did:cheqd:mainnet:...")
 val document = method.updateDid(did) { currentDoc ->
     currentDoc.copy(
-        service = currentDoc.service + Service(
+        service = currentDoc.service + DidService(
             id = "${currentDoc.id}#didcomm",
-            type = "DIDCommMessaging",
+            type = listOf("DIDCommMessaging"),
             serviceEndpoint = "https://example.com/didcomm"
         )
     )
@@ -244,7 +246,7 @@ import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.did.KeyAlgorithm
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.cheqddid.*
-import org.trustweave.kms.InMemoryKeyManagementService
+import org.trustweave.kms.inmemory.InMemoryKeyManagementService
 
 val config = CheqdDidConfig.mainnet("https://api.cheqd.net")
 val kms = InMemoryKeyManagementService()

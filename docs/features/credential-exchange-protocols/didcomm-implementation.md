@@ -127,7 +127,7 @@ credentials/plugins/didcomm/
 ```kotlin
 import org.trustweave.credential.didcomm.*
 import org.trustweave.credential.didcomm.protocol.*
-import org.trustweave.testkit.InMemoryKeyManagementService
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
 
 val kms = InMemoryKeyManagementService()
 val resolveDid: suspend (String) -> DidDocument? = { /* resolve DID */ }

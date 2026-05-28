@@ -24,18 +24,15 @@ Production deployments require careful consideration of:
 Never use `inMemory` KMS in production. Use a production-grade key management service:
 
 ```kotlin
+import org.trustweave.trust.dsl.credential.KmsProviders.AWS
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+
 val trustWeave = TrustWeave.build {
     keys {
-        // ✅ Production: Use AWS KMS, Azure Key Vault, or HashiCorp Vault
-        provider(AWS) {
-            region("us-east-1")
-            keyAlias("trustweave-signing-key")
-        }
-        // Or
-        provider("azureKeyVault") {
-            vaultUrl("https://myvault.vault.azure.net")
-            keyName("signing-key")
-        }
+        // ✅ Production: select a provider registered via SPI (AWS KMS, Azure Key Vault, etc.)
+        // Provider-specific settings (region, key alias, vault URL) are sourced from environment
+        // or system properties picked up by the provider plugin.
+        provider(AWS)
         algorithm(ED25519)
     }
     // ... rest of configuration
@@ -57,21 +54,16 @@ val trustWeave = TrustWeave.build {
     keys { ... }
     did { ... }
     trust {
-        // ✅ Production: Use database-backed trust registry
-        provider("database") {
-            connectionString("jdbc:postgresql://db.example.org.trustweave")
-            schema("trust_registry")
-        }
+        // ✅ Production: Use a database-backed trust registry provider (registered via SPI/factory)
+        provider("database")
     }
 }
 
-// Wallets should use persistent storage
+// Wallets should use a persistent wallet provider (factory registered via WalletFactory)
 val wallet = trustWeave.wallet {
     holder(holderDid)
-    // Use database or S3 storage
-    storageProvider("database")
-    storagePath("wallets/${holderDid}")
-}
+    provider("database")
+}.getOrThrow()
 ```
 
 **Storage Options:**
@@ -84,21 +76,27 @@ val wallet = trustWeave.wallet {
 Use production blockchain networks:
 
 ```kotlin
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
+import org.trustweave.trust.dsl.credential.AnchorProviders.POLYGON
+
 val trustWeave = TrustWeave.build {
     // ... other configuration
     anchor {
-        // ✅ Production: Use mainnet or production testnets
+        // ✅ Production: Use mainnet or production testnets. Provider-specific options
+        // (API key, RPC URL, signing key) are supplied via options { ... } or via the
+        // plugin's environment configuration.
         chain("algorand:mainnet") {
-            provider(ALGORAND) {
-                apiKey(env("ALGORAND_API_KEY"))
-                network("mainnet")
+            provider(ALGORAND)
+            options {
+                "apiKey" to System.getenv("ALGORAND_API_KEY")
+                "network" to "mainnet"
             }
         }
-        // Or
         chain("polygon:mainnet") {
-            provider(POLYGON) {
-                rpcUrl("https://polygon-rpc.com")
-                privateKey(env("POLYGON_PRIVATE_KEY"))
+            provider(POLYGON)
+            options {
+                "rpcUrl" to "https://polygon-rpc.com"
+                "privateKey" to System.getenv("POLYGON_PRIVATE_KEY")
             }
         }
     }
@@ -119,11 +117,8 @@ Always enable trust registry in production:
 val trustWeave = TrustWeave.build {
     // ... other configuration
     trust {
-        provider("database") {
-            connectionString(env("TRUST_DB_URL"))
-            // Enable trust checking
-            enableTrustChecking(true)
-        }
+        // Select a registered trust registry provider via SPI / TrustRegistryFactory
+        provider("database")
     }
 }
 
@@ -331,7 +326,6 @@ suspend fun issueMultipleCredentials(
 Never hardcode secrets. Use environment variables or secret management:
 
 ```kotlin
-import org.trustweave.testkit.services.*
 // ✅ Good: Use environment variables
 val apiKey = System.getenv("ALGORAND_API_KEY")
     ?: throw IllegalStateException("ALGORAND_API_KEY not set")
@@ -479,7 +473,8 @@ Implement health checks:
 ```kotlin
 import org.springframework.boot.actuate.health.Health
 import org.springframework.boot.actuate.health.HealthIndicator
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 
 class TrustWeaveHealthIndicator(
     private val trustWeave: TrustWeave

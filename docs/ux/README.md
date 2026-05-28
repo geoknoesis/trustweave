@@ -28,27 +28,6 @@ This guide is essential for:
 - Developers implementing frontend applications
 - Stakeholders understanding user workflows
 
-## Additional Resources
-
-### [Missing Workflows Analysis](./missing-workflows-analysis.md)
-
-Comprehensive analysis identifying 18 critical workflows missing from the current UX guide, prioritized by importance:
-
-**High Priority Missing Workflows:**
-- Verifiable Presentations & Selective Disclosure
-- Wallet Management
-- Blockchain Anchoring
-- Smart Contracts
-
-**Medium Priority:**
-- Multi-Domain Management
-- Trust Path Discovery & Visualization
-- Credential Sharing & Collaboration
-- Batch Operations
-- And 10 more...
-
-This analysis helps prioritize UX development and ensures complete coverage of TrustWeave's capabilities.
-
 ## Related Documentation
 
 - Core Concepts: Trust Registry](../core-concepts/trust-registry.md) - Technical details on trust registries

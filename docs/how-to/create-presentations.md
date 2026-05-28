@@ -135,7 +135,6 @@ import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.trust.types.getOrThrow
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.types.getOrThrowDid
-import org.trustweave.testkit.services.*
 
 val trustWeave = TrustWeave.build {
     keys { provider(IN_MEMORY); algorithm(ED25519) }
@@ -246,7 +245,7 @@ Verify the presentation (as a verifier would):
 ```kotlin
 // As verifier
 val isValid = presentation.proof != null && 
-              presentation.holder == holderDid.value &&
+              presentation.holder.value == holderDid.value &&
               presentation.verifiableCredential.isNotEmpty()
 
 if (isValid) {
@@ -290,7 +289,6 @@ import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.types.getOrThrowDid
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
-import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
@@ -415,7 +413,7 @@ After creating a presentation, verify it's ready to share:
 ```kotlin
 // Quick verification
 val isValid = presentation.proof != null &&
-              presentation.holder == holderDid.value &&
+              presentation.holder.value == holderDid.value &&
               presentation.verifiableCredential.isNotEmpty() &&
               presentation.challenge != null
 

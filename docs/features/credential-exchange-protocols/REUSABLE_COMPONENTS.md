@@ -8,6 +8,12 @@ title: Reusable Components Across Protocols
 
 Many components implemented for DIDComm are reusable across other protocols (OIDC4VCI, CHAPI, etc.). This document outlines what's reusable and how to use it.
 
+> **TODO (audit 2026-05):** Locations below are aspirational. As of this audit:
+>
+> - `KeyEncryption`, `LocalKeyStore`, `MessageEncryption`, `EncryptionKeyManager`, `KeyRotationPolicy`/`KeyRotationManager`, `ReplicationManager`, `*MessageStorage`, `EncryptedFileLocalKeyStore`, `HybridKmsSecretResolver`, `KmsSecretResolver` all live under `credentials/plugins/didcomm/src/main/kotlin/org/trustweave/credential/didcomm/...` — **not** in `credential-core`.
+> - The `ProtocolMessage` / generic `ProtocolMessageStorage<T>` / generic `PostgresMessageStorage<T>` / `S3MessageArchiver` / `PostgresFullTextSearch` / `PostgresMessageAnalytics` types referenced below **do not currently exist** in the codebase. The DIDComm-specific equivalents (`DidCommMessage`, `DidCommMessageStorage`, `PostgresDidCommMessageStorage`, `MongoDidCommMessageStorage`) do exist.
+> - Treat the rest of this document as a *design proposal* for cross-protocol abstraction, not a description of the current API.
+
 ## ✅ Fully Reusable Components
 
 ### 1. Encryption & Key Management

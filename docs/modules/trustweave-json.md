@@ -4,9 +4,9 @@ title: JSON Utilities
 
 # JSON Utilities
 
-JSON canonicalization and digest computation utilities are part of the `trustweave-common` module.
+JSON canonicalization and digest computation utilities are part of the `common` module.
 
-> **Note:** As of version 1.0.0, JSON utilities are no longer in a separate module. They are included in `trustweave-common` under the `org.trustweave.core.util` package.
+> **Note:** As of version 1.0.0, JSON utilities are no longer in a separate module. They are included in `common` under the `org.trustweave.core.util` package.
 
 Add the common module to your build when you need deterministic hashing:
 

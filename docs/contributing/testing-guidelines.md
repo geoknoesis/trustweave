@@ -78,12 +78,13 @@ class DidMethodTest {
         val method = DidKeyMockMethod(kms)
 
         val options = didCreationOptions {
-            algorithm = KeyAlgorithm.Ed25519
+            algorithm = KeyAlgorithm.ED25519
         }
 
-        val did = method.createDid(options)
-        assertNotNull(did)
-        assert(did.id.startsWith("did:key:"))
+        val didDoc = method.createDid(options)
+        assertNotNull(didDoc)
+        // DidDocument.id is a Did value class; use `.value` for the raw string.
+        assert(didDoc.id.value.startsWith("did:key:"))
     }
 }
 ```
@@ -100,11 +101,12 @@ class KmsTest {
     fun testGenerateAndSign() = runBlocking {
         val kms = InMemoryKeyManagementService()
 
-        val key = kms.generateKey(Algorithm.Ed25519)
+        // generateKey/sign return sealed Result types — destructure or pattern-match.
+        val key = (kms.generateKey(Algorithm.Ed25519) as GenerateKeyResult.Success).keyHandle
         assertNotNull(key)
 
         val data = "Hello, TrustWeave!".toByteArray()
-        val signature = kms.sign(key.id, data)
+        val signature = (kms.sign(key.id, data) as SignResult.Success).signature
 
         assertNotNull(signature)
         assertEquals(64, signature.size) // Ed25519 signature size
@@ -119,7 +121,6 @@ class KmsTest {
 ```kotlin
 import kotlinx.coroutines.runBlocking
 import org.trustweave.credential.results.VerificationResult
-import org.trustweave.testkit.services.*
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.*
 import org.trustweave.trust.types.getOrThrow
@@ -132,8 +133,8 @@ class CredentialWorkflowTest {
     @Test
     fun testCredentialIssuanceAndVerification() = runBlocking {
         val trustWeave = TrustWeave.build {
-            keys { provider(IN_MEMORY); algorithm(ED25519) }
-            did { method(KEY) { algorithm(ED25519) } }
+            keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+            did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
         }
         val issuerDid = trustWeave.createDid { }.getOrThrowDid()
         val credential = trustWeave.issue {
@@ -158,7 +159,6 @@ class CredentialWorkflowTest {
 ### EO Integration Tests
 
 ```kotlin
-import org.trustweave.credential.results.VerificationResult
 import org.trustweave.testkit.eo.BaseEoIntegrationTest
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import org.trustweave.anchor.*
@@ -175,7 +175,9 @@ class MyEoIntegrationTest : BaseEoIntegrationTest() {
     @Test
     fun testEoScenario() = runBlocking {
         val result = runEoTestScenario()
-        assert(result.verificationResult is VerificationResult.Valid)
+        // runEoTestScenario returns EoTestResult whose verificationResult is an
+        // IntegrityVerificationResult (not VerificationResult). Check `.valid`.
+        assert(result.verificationResult.valid)
     }
 }
 ```
@@ -188,18 +190,20 @@ Use test fixtures for setup:
 
 ```kotlin
 import org.trustweave.testkit.*
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import kotlin.test.Test
-import org.trustweave.testkit.services.*
 
 class FixtureTest {
     @Test
     fun testWithFixture() = runBlocking {
-        val fixture = TrustWeaveTestFixture.builder()
+        TrustWeaveTestFixture.builder()
             .withKms(InMemoryKeyManagementService())
-            .withDidmethod(KEY) { DidKeyMockMethod(it) }
-            .withBlockchainClient("algorand:testnet") {
+            .withDidMethod("key")
+            .withBlockchainClient(
+                "algorand:testnet",
                 InMemoryBlockchainAnchorClient("algorand:testnet")
-            }
+            )
             .build()
             .use { fixture ->
                 val issuerDoc = fixture.createIssuerDid()
@@ -218,13 +222,9 @@ class FixtureTest {
 fun testErrorHandling() = runBlocking {
     val kms = InMemoryKeyManagementService()
 
-    val result = kms.sign("nonexistent-key", "data".toByteArray())
-    result.fold(
-        onSuccess = { fail("Expected error") },
-        onFailure = { error ->
-            assert(error is TrustWeaveException.NotFound)
-        }
-    )
+    // KMS operations return sealed Result types — pattern-match, do not .fold().
+    val result = kms.sign(KeyId("nonexistent-key"), "data".toByteArray())
+    assertTrue(result is SignResult.Failure.KeyNotFound)
 }
 ```
 
@@ -235,13 +235,9 @@ fun testErrorHandling() = runBlocking {
 fun testInvalidInput() = runBlocking {
     val method = DidKeyMockMethod(InMemoryKeyManagementService())
 
-    val result = method.resolveDid("invalid-did")
-    result.fold(
-        onSuccess = { fail("Expected error") },
-        onFailure = { error ->
-            assert(error is DidException.DidResolutionFailed)
-        }
-    )
+    // resolveDid takes a Did value class and returns DidResolutionResult.
+    val result = method.resolveDid(Did("did:key:unknown"))
+    assertTrue(result is DidResolutionResult.Failure.NotFound)
 }
 ```
 
@@ -273,12 +269,13 @@ Use descriptive assertions:
 
 ```kotlin
 // Good
-assertNotNull(did, "DID should not be null")
-assertEquals("did:key:", did.id.substring(0, 8), "DID should start with did:key:")
+assertNotNull(didDoc, "DID document should not be null")
+// DidDocument.id is a Did value class — use `.value` for the raw string.
+assertEquals("did:key:", didDoc.id.value.substring(0, 8), "DID should start with did:key:")
 
 // Less clear
-assert(did != null)
-assert(did.id.startsWith("did:key:"))
+assert(didDoc != null)
+assert(didDoc.id.value.startsWith("did:key:"))
 ```
 
 ## Test Coverage
@@ -293,9 +290,26 @@ Aim for:
 
 ### Measuring Coverage
 
-```bash
-./gradlew test jacocoTestReport
+Coverage tooling is **not** wired into the build today. The root `build.gradle.kts`
+applies neither JaCoCo nor Kover, so `./gradlew tasks` will not list a
+`jacocoTestReport` (or `koverReport`) target — running it fails with
+`Task 'jacocoTestReport' not found`.
+
+To collect coverage locally, apply a plugin in your fork and re-run tests, for
+example:
+
+```kotlin
+// settings.gradle.kts or root build.gradle.kts
+plugins {
+    id("org.jetbrains.kotlinx.kover") version "0.7.6"
+}
 ```
+```bash
+./gradlew test koverHtmlReport
+```
+
+Wiring coverage into the upstream build is tracked as a separate workstream — open
+an issue if you want it adopted project-wide.
 
 ## Running Tests
 

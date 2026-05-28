@@ -43,7 +43,12 @@ Product code should use **`PresentationRequest`** (`org.trustweave.credential.re
 
 ```kotlin
 import org.trustweave.trust.TrustWeave
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KmsProviders.AWS
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -73,7 +78,12 @@ fun main() = runBlocking {
 import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KmsProviders.AWS
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
 
 val trustWeave = TrustWeave.build { ... }
 
@@ -83,17 +93,15 @@ val did = trustWeave.createDid {
     algorithm(ED25519)
 }.getOrThrowDid()
 
-// Update DID → DidDocument (failures throw from the DID method)
+// Update DID → DidResult (sealed)
 val updated = trustWeave.updateDid {
     did("did:key:example")
     addService { /* ... */ }
 }
 
-// Rotate key → DidDocument
+// Rotate key → DidResult (sealed)
 val rotated = trustWeave.rotateKey {
     did("did:key:example")
-    oldKeyId("did:key:example#key-1")
-    newKeyId("did:key:example#key-2")
 }
 
 // Resolve → DidResolutionResult (sealed)
@@ -105,7 +113,12 @@ when (val resolution = trustWeave.resolveDid(did)) {
 
 ❌ **Incorrect (treating results as success values):**
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KmsProviders.AWS
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
 // createDid returns DidCreationResult, not Did
 val did = trustWeave.createDid { method(KEY) } // missing when / getOrThrowDid()
 ```
@@ -196,7 +209,12 @@ val allCredentials = wallet.list()
 
 ✅ **Correct:**
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KmsProviders.AWS
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
 val trustWeave = TrustWeave.build {
     trust { provider(IN_MEMORY) }
 }
@@ -211,11 +229,10 @@ trustWeave.trust {
     val isTrusted = isTrusted("did:key:university", "EducationCredential")
 }
 
-// Using direct methods
-trustWeave.addTrustAnchor("did:key:university") {
-    credentialTypes("EducationCredential")
-}
-val isTrusted = trustWeave.isTrustedIssuer("did:key:university", "EducationCredential")
+// To check via TrustRegistry directly (when configured)
+val isTrusted = trustWeave.configuration.trustRegistry
+    ?.isTrustedIssuer("did:key:university", "EducationCredential")
+    ?: false
 ```
 
 ## Error Handling Patterns
@@ -230,7 +247,12 @@ Example: **DID + issuance** via sealed results; **wallet** may still throw `Trus
 import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.core.exception.TrustWeaveException
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KmsProviders.AWS
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
 
 val did = when (val didResult = trustWeave.createDid { method(KEY) }) {
     is DidCreationResult.Success -> didResult.did
@@ -297,7 +319,12 @@ val did = TrustWeave.dids.create()
 **Correct:**
 ```kotlin
 import org.trustweave.trust.types.getOrThrowDid
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KmsProviders.AWS
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
 
 val trustWeave = TrustWeave.build { ... }
 val did = trustWeave.createDid { method(KEY) }.getOrThrowDid()
@@ -307,14 +334,24 @@ val did = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 
 **Wrong:**
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KmsProviders.AWS
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
 val did = trustWeave.createDid { method(KEY) }
 // This returns DidCreationResult, not Did - need to unwrap!
 ```
 
 **Correct:**
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KmsProviders.AWS
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
 when (val dr = trustWeave.createDid { method(KEY) }) {
     is DidCreationResult.Success -> {
         val did = dr.did
@@ -331,7 +368,12 @@ when (val dr = trustWeave.createDid { method(KEY) }) {
 
 **Wrong:**
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KmsProviders.AWS
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
 val trustWeave = TrustWeave.build {
     // Missing KMS configuration!
 }
@@ -341,7 +383,12 @@ val did = trustWeave.createDid { method(KEY) }
 
 **Correct:**
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KmsProviders.AWS
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
 val trustWeave = TrustWeave.build {
     keys {
         provider(IN_MEMORY)
@@ -388,7 +435,12 @@ val credential = trustWeave.issue { /* ... */ }.getOrThrow()
 ```kotlin
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.credential.results.getOrThrow
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KmsProviders.AWS
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
 
 val trustWeave = TrustWeave.build {
     keys { provider(IN_MEMORY); algorithm(ED25519) }
@@ -409,7 +461,12 @@ val credential = trustWeave.issue {
 Don't rely on defaults in production. Explicitly configure all components:
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KmsProviders.AWS
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
 val trustWeave = TrustWeave.build {
     keys {
         provider(AWS)  // Production KMS
@@ -466,7 +523,12 @@ val credential = trustWeave.issue {
 Create one `TrustWeave` instance and reuse it:
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KmsProviders.AWS
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
 // ✅ Good: Create once, reuse
 val trustWeave = TrustWeave.build { ... }
 

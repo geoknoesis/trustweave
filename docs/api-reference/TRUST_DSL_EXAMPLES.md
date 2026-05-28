@@ -117,12 +117,15 @@ import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.TrustPath
 import org.trustweave.trust.dsl.and
 import org.trustweave.trust.dsl.not
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders
+import org.trustweave.trust.dsl.credential.TrustProviders
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 
 val trustWeave = TrustWeave.build {
-    keys { provider(IN_MEMORY); algorithm(ED25519) }
+    keys { provider(KmsProviders.IN_MEMORY); algorithm(ED25519) }
     did { method(KEY) { algorithm(ED25519) } }
-    trust { provider(IN_MEMORY) }
+    trust { provider(TrustProviders.IN_MEMORY) }
 }
 
 // Create DIDs

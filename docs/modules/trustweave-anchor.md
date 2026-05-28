@@ -1,15 +1,14 @@
 ---
-title: trustweave-anchor
+title: anchors:anchor-core
 ---
 
-# trustweave-anchor
+# anchors:anchor-core
 
-The `trustweave-anchor` module provides blockchain anchoring abstraction with chain-agnostic interfaces for notarizing data on various blockchains.
+The `anchors:anchor-core` module provides blockchain anchoring abstraction with chain-agnostic interfaces for notarizing data on various blockchains.
 
 ```kotlin
 dependencies {
     implementation("org.trustweave:anchors-anchor-core:0.6.0")
-    implementation("org.trustweave:common:0.6.0")
     implementation("org.trustweave:common:0.6.0")
 }
 ```
@@ -18,7 +17,7 @@ dependencies {
 
 ## Overview
 
-The `trustweave-anchor` module provides:
+The `anchors:anchor-core` module provides:
 
 - **BlockchainAnchorClient Interface** – chain-agnostic interface for anchoring operations
 - **AnchorRef** – chain-agnostic reference structure (chain ID + transaction hash)
@@ -34,14 +33,19 @@ The `trustweave-anchor` module provides:
 
 ```kotlin
 import org.trustweave.anchor.*
+import kotlinx.serialization.json.JsonElement
 
 interface BlockchainAnchorClient {
-    val chainId: String  // CAIP-2 format: "eip155:1", "algorand:testnet", etc.
+    suspend fun writePayload(
+        payload: JsonElement,
+        mediaType: String = "application/json"
+    ): AnchorResult
 
-    suspend fun writePayload(payload: ByteArray): AnchorResult
-    suspend fun readPayload(anchorRef: AnchorRef): ByteArray?
+    suspend fun readPayload(ref: AnchorRef): AnchorResult
 }
 ```
+
+> Chain identification lives on `AnchorRef.chainId`, not on the client. Discover and select a client for a given CAIP-2 chain via `BlockchainAnchorRegistry` or a `BlockchainAnchorClientProvider`.
 
 **What this does:** Defines the contract for anchoring operations that all blockchain adapters must fulfill.
 
@@ -53,21 +57,32 @@ The module provides type-safe configuration options:
 
 ```kotlin
 sealed class BlockchainAnchorClientOptions {
-    data class AlgorandOptions(
-        val algodUrl: String,
-        val indexerUrl: String? = null,
-        val privateKey: String
-    ) : BlockchainAnchorClientOptions()
-
-    data class PolygonOptions(
-        val rpcUrl: String,
-        val chainId: Long,
-        val privateKey: String
-    ) : BlockchainAnchorClientOptions(), Closeable
-
-    // ... other options
+    abstract fun toMap(): Map<String, Any?>
 }
+
+data class AlgorandOptions(
+    val algodUrl: String? = null,
+    val algodToken: String? = null,
+    val privateKey: String? = null,
+    val appId: String? = null
+) : BlockchainAnchorClientOptions()
+
+data class PolygonOptions(
+    val rpcUrl: String? = null,
+    val privateKey: String? = null,
+    val contractAddress: String? = null
+) : BlockchainAnchorClientOptions()
+
+data class GanacheOptions(
+    val rpcUrl: String? = null,
+    val privateKey: String,
+    val contractAddress: String? = null
+) : BlockchainAnchorClientOptions()
+
+data class IndyOptions(/* ... */) : BlockchainAnchorClientOptions()
 ```
+
+> Provider `create(chainId, options)` accepts a `Map<String, Any?>`. Convert a typed options object via `options.toMap()` (or use the corresponding `fromMap` companion to build one).
 
 **What this does:** Provides compile-time validation for blockchain-specific configurations.
 
@@ -99,29 +114,33 @@ sealed class ChainId {
 
 ```kotlin
 import org.trustweave.anchor.*
+import org.trustweave.anchor.options.AlgorandOptions
+import org.trustweave.anchor.spi.BlockchainAnchorClientProvider
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import java.util.ServiceLoader
 
 // Discover blockchain adapter via SPI
 val providers = ServiceLoader.load(BlockchainAnchorClientProvider::class.java)
-val algorandProvider = providers.find { it.supportsChain("algorand:testnet") }
+val algorandProvider = providers.first { "algorand:testnet" in it.supportedChains }
 
-// Create anchor client with type-safe options
+// Create anchor client with typed options (converted to a Map for the provider)
 val options = AlgorandOptions(
     algodUrl = "https://testnet-api.algonode.cloud",
     privateKey = "..."
 )
+val client = algorandProvider.create("algorand:testnet", options.toMap())
+    ?: error("Provider did not produce a client for algorand:testnet")
 
-val client = algorandProvider?.create("algorand:testnet", options)
+// Anchor a JSON payload
+val payload = buildJsonObject { put("message", "Hello, TrustWeave!") }
+val result = client.writePayload(payload)
 
-// Anchor data
-val payload = "Hello, TrustWeave!".toByteArray()
-val result = client?.writePayload(payload)
-
-println("Anchored to: ${result?.anchorRef?.chainId}")
-println("Transaction hash: ${result?.anchorRef?.transactionHash}")
+println("Anchored to: ${result.ref.chainId}")
+println("Transaction hash: ${result.ref.txHash}")
 
 // Read anchored data
-val readData = result?.anchorRef?.let { client.readPayload(it) }
+val read = client.readPayload(result.ref)
 ```
 
 **What this does:** Uses SPI to discover a blockchain adapter, anchors data to the Algorand testnet, and then reads it back.
@@ -133,12 +152,12 @@ val readData = result?.anchorRef?.let { client.readPayload(it) }
 TrustWeave provides adapters for:
 
 - **Algorand** (`org.trustweave:anchors-plugins-algorand`) – Algorand mainnet and testnet. See [Algorand Integration Guide](../integrations/algorand.md).
-- **Polygon** (`org.trustweave.chains:polygon`) – Polygon mainnet and Mumbai testnet. See [Polygon Anchor Integration Guide](../integrations/README.md#blockchain-anchor-integrations).
-- **Ethereum** (`org.trustweave.chains:ethereum`) – Ethereum mainnet and Sepolia testnet. See [Ethereum Anchor Integration Guide](../integrations/ethereum-anchor.md).
-- **Base** (`org.trustweave.chains:base`) – Base (Coinbase L2). See [Base Anchor Integration Guide](../integrations/base-anchor.md).
-- **Arbitrum** (`org.trustweave.chains:arbitrum`) – Arbitrum One and Sepolia rollup. See [Arbitrum Anchor Integration Guide](../integrations/arbitrum-anchor.md).
-- **Ganache** (`org.trustweave.chains:ganache`) – Local Ethereum node for testing. See [Integration Modules](../integrations/README.md#blockchain-anchor-integrations).
-- **Indy** (`org.trustweave.chains:indy`) – Hyperledger Indy. See [Integration Modules](../integrations/README.md#other-did--kms-integrations).
+- **Polygon** (`org.trustweave:anchors-plugins-polygon`) – Polygon mainnet and Mumbai testnet. See [Polygon Anchor Integration Guide](../integrations/README.md#blockchain-anchor-integrations).
+- **Ethereum** (`org.trustweave:anchors-plugins-ethereum`) – Ethereum mainnet and Sepolia testnet. See [Ethereum Anchor Integration Guide](../integrations/ethereum-anchor.md).
+- **Base** (`org.trustweave:anchors-plugins-base`) – Base (Coinbase L2). See [Base Anchor Integration Guide](../integrations/base-anchor.md).
+- **Arbitrum** (`org.trustweave:anchors-plugins-arbitrum`) – Arbitrum One and Sepolia rollup. See [Arbitrum Anchor Integration Guide](../integrations/arbitrum-anchor.md).
+- **Ganache** (`org.trustweave:anchors-plugins-ganache`) – Local Ethereum node for testing. See [Integration Modules](../integrations/README.md#blockchain-anchor-integrations).
+- **Indy** (`org.trustweave:anchors-plugins-indy`) – Hyperledger Indy. See [Integration Modules](../integrations/README.md#other-did--kms-integrations).
 
 See the [Blockchain Anchor Integration Guides](../integrations/README.md) for detailed information about each adapter.
 
@@ -146,11 +165,12 @@ See the [Blockchain Anchor Integration Guides](../integrations/README.md) for de
 
 The module provides structured exception handling:
 
-- `BlockchainException` – base exception with chain ID and operation context
-- `BlockchainTransactionException` – transaction failures (includes txHash, payloadSize, gasUsed)
-- `BlockchainConnectionException` – connection failures (includes endpoint)
-- `BlockchainConfigurationException` – configuration errors (includes config key)
-- `BlockchainUnsupportedOperationException` – unsupported operations
+- `BlockchainException` – sealed base exception (extends `TrustWeaveException`) with chain ID and operation context
+- `BlockchainException.TransactionFailed` – transaction failures (includes txHash, payloadSize, gasUsed)
+- `BlockchainException.ConnectionFailed` – connection failures (includes endpoint)
+- `BlockchainException.ConfigurationFailed` – configuration errors (includes config key)
+- `BlockchainException.UnsupportedOperation` – unsupported operations
+- `BlockchainException.ChainNotRegistered` – no client registered for the requested chain
 
 **What this does:** Provides rich error context for debugging and error handling.
 
@@ -158,12 +178,13 @@ The module provides structured exception handling:
 
 ## Dependencies
 
-- Depends on [`trustweave-common`](trustweave-common.md) for core types, exceptions, and SPI interfaces (JSON utilities are included in `trustweave-common`)
+- Depends on [`common`](trustweave-common.md) for core types, exceptions, and SPI interfaces (JSON utilities are included in `common`)
 
 ## Next Steps
 
 - Review [Blockchain Anchoring Concepts](../core-concepts/blockchain-anchoring.md) for understanding anchoring
 - Explore [Blockchain Anchor Integration Guides](../integrations/README.md) for specific adapter setups
-- See [Anchor Package README](../../chains/TrustWeave-anchor/src/main/kotlin/com/geoknoesis/TrustWeave/anchor/README.md) for detailed package documentation
 - Check [Creating Plugins](../contributing/creating-plugins.md) to implement custom blockchain adapters
+
+> **TODO:** Add a per-package README under `anchors/anchor-core/` for deeper documentation.
 

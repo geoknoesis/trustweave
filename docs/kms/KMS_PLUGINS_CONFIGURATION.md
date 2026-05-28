@@ -132,7 +132,7 @@ import org.trustweave.kms.*
 
 val providers = KeyManagementServices.availableProviders()
 println("Available providers: $providers")
-// Output: [aws, azure, google-cloud-kms, vault, ibm, inmemory, waltid]
+// Output: [aws, azure, google-cloud-kms, vault, ibm, inmemory]
 ```
 
 #### Get Provider Instance (Advanced)
@@ -164,7 +164,7 @@ try {
 } catch (e: IllegalArgumentException) {
     println(e.message)
     // Output: KMS provider 'unknown-provider' not found. 
-    //         Available providers: [aws, azure, google-cloud-kms, vault, ibm, inmemory, waltid]
+    //         Available providers: [aws, azure, google-cloud-kms, vault, ibm, inmemory]
 }
 ```
 
@@ -182,7 +182,6 @@ try {
 | HashiCorp Vault | `vault` | Yes (address, token) |
 | IBM Key Protect | `ibm` | Yes (apiKey, instanceId) |
 | InMemory | `inmemory` | No |
-| WaltID | `waltid` | Depends on configuration |
 
 ### Best Practices
 
@@ -328,15 +327,14 @@ val kms = AwsKeyManagementService(config ?: throw IllegalStateException("AWS con
 ### SPI Configuration
 
 ```kotlin
-import org.trustweave.kms.KmsOptionKeys
-import org.trustweave.testkit.services.*
+import org.trustweave.awskms.AwsKmsOptionKeys
 
 val kms = awsProvider.create(mapOf(
-    KmsOptionKeys.REGION to "us-east-1",
-    KmsOptionKeys.ACCESS_KEY_ID to "AKIAIOSFODNN7EXAMPLE",
-    KmsOptionKeys.SECRET_ACCESS_KEY to "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
-    KmsOptionKeys.SESSION_TOKEN to "temporary-session-token",  // Optional
-    KmsOptionKeys.PENDING_WINDOW_IN_DAYS to 30,  // Optional
+    AwsKmsOptionKeys.REGION to "us-east-1",
+    AwsKmsOptionKeys.ACCESS_KEY_ID to "AKIAIOSFODNN7EXAMPLE",
+    AwsKmsOptionKeys.SECRET_ACCESS_KEY to "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+    AwsKmsOptionKeys.SESSION_TOKEN to "temporary-session-token",  // Optional
+    AwsKmsOptionKeys.PENDING_WINDOW_IN_DAYS to 30,  // Optional
     "cacheTtlSeconds" to 300L  // Optional
 ))
 ```
@@ -345,18 +343,19 @@ val kms = awsProvider.create(mapOf(
 
 ```kotlin
 import org.trustweave.kms.KmsOptionKeys
+import org.trustweave.awskms.AwsKmsOptionKeys
 
 val result = kms.generateKey(
     Algorithm.Ed25519,
     options = mapOf(
-        KmsOptionKeys.KEY_ID to "my-custom-key-id",  // Optional
-        KmsOptionKeys.DESCRIPTION to "My key description",  // Optional
-        KmsOptionKeys.TAGS to mapOf(  // Optional
+        KmsOptionKeys.KEY_ID to "my-custom-key-id",  // Optional (cross-provider)
+        KmsOptionKeys.DESCRIPTION to "My key description",  // Optional (cross-provider)
+        AwsKmsOptionKeys.TAGS to mapOf(  // Optional (AWS-specific)
             "Environment" to "Production",
             "Owner" to "Security Team"
         ),
-        KmsOptionKeys.ALIAS to "alias/my-key",  // Optional
-        KmsOptionKeys.ENABLE_AUTOMATIC_ROTATION to true  // Optional
+        AwsKmsOptionKeys.ALIAS to "alias/my-key",  // Optional (AWS-specific)
+        AwsKmsOptionKeys.ENABLE_AUTOMATIC_ROTATION to true  // Optional (AWS-specific)
     )
 )
 ```
@@ -438,14 +437,12 @@ val result = kms.generateKey(
     Algorithm.P256,
     options = mapOf(
         KmsOptionKeys.KEY_ID to "my-custom-key-id",  // Optional
-        KmsOptionKeys.DESCRIPTION to "My key description",  // Optional
-        KmsOptionKeys.TAGS to mapOf(  // Optional
-            "Environment" to "Production",
-            "Owner" to "Security Team"
-        )
+        KmsOptionKeys.DESCRIPTION to "My key description"  // Optional
     )
 )
 ```
+
+> **Limitation:** Azure-specific tag/label option keys are **not** exposed via a typed `AzureKmsOptionKeys` object today. To set Azure Key Vault tags or labels, pass them as raw string entries in the `options` map (the plugin forwards unknown keys verbatim to the Azure SDK call).
 
 ### Supported Algorithms
 
@@ -541,11 +538,13 @@ val kms = googleProvider.create(mapOf(
 ```kotlin
 import org.trustweave.kms.KmsOptionKeys
 
+import org.trustweave.googlekms.GcpKmsOptionKeys
+
 val result = kms.generateKey(
     Algorithm.Ed25519,
     options = mapOf(
-        KmsOptionKeys.KEY_ID to "my-custom-key-id",  // Optional
-        KmsOptionKeys.LABELS to mapOf(  // Optional
+        KmsOptionKeys.KEY_ID to "my-custom-key-id",  // Optional (cross-provider)
+        GcpKmsOptionKeys.LABELS to mapOf(  // Optional (GCP-specific)
             "environment" to "production",
             "owner" to "security-team"
         )
@@ -643,7 +642,7 @@ import org.trustweave.kms.KmsOptionKeys
 val result = kms.generateKey(
     Algorithm.Ed25519,
     options = mapOf(
-        KmsOptionKeys.KEY_ID to "my-custom-key-name"  // Optional
+        KmsOptionKeys.KEY_NAME to "my-custom-key-name"  // Optional (Vault prefers KEY_NAME)
     )
 )
 ```
@@ -779,43 +778,7 @@ val result = kms.generateKey(
 
 ## WaltID KMS
 
-### Configuration
-
-The WaltID KMS is similar to InMemory - it's an in-memory implementation that uses Java's built-in cryptographic providers.
-
-```kotlin
-import org.trustweave.waltid.*
-
-// No configuration needed
-val kms = WaltIdKeyManagementService()
-```
-
-### SPI Configuration
-
-```kotlin
-val kms = waltidProvider.create()  // No options needed
-```
-
-### Key Generation Options
-
-```kotlin
-import org.trustweave.kms.KmsOptionKeys
-
-val result = kms.generateKey(
-    Algorithm.Ed25519,
-    options = mapOf(
-        KmsOptionKeys.KEY_ID to "my-custom-key-id"  // Optional
-    )
-)
-```
-
-### Supported Algorithms
-
-- Ed25519 (requires Java 15+ or BouncyCastle)
-- secp256k1
-- P-256, P-384, P-521
-
-**Note**: Keys are stored in memory only. Suitable for development and testing only.
+> **Not shipped.** There is no `waltid` KMS provider in the current repository — no `KeyManagementServiceProvider` with name `waltid` is registered, so `KeyManagementServices.create("waltid", ...)` will fail. This section is retained as historical context; if/when the plugin lands it will be re-documented here. Track upstream availability before referencing this provider in production code.
 
 ---
 
@@ -825,12 +788,12 @@ All plugins register themselves via Java ServiceLoader. You can discover and use
 
 ```kotlin
 import org.trustweave.kms.*
-import org.trustweave.kms.KmsOptionKeys
+import org.trustweave.awskms.AwsKmsOptionKeys
 
 // Simple factory API - no ServiceLoader needed!
 // Create KMS instances directly by provider name
 val kms = KeyManagementServices.create("aws", mapOf(
-    KmsOptionKeys.REGION to "us-east-1"
+    AwsKmsOptionKeys.REGION to "us-east-1"
 ))
 
 // Or get list of available providers
@@ -846,53 +809,57 @@ println("Available providers: $availableProviders")
 - `vault` - HashiCorp Vault
 - `ibm` - IBM Key Protect
 - `inmemory` - InMemory KMS
-- `waltid` - WaltID KMS
 
 ---
 
 ## Common Options
 
-All plugins support common options via `KmsOptionKeys` constants:
+Cross-provider option keys live in `org.trustweave.kms.KmsOptionKeys`. Provider-specific
+keys (region, tags, alias, labels, rotation, etc.) live in plugin-specific objects:
+`AwsKmsOptionKeys`, `GcpKmsOptionKeys`, `HashiCorpKmsOptionKeys`.
 
 ### Key Generation Options
 
 ```kotlin
 import org.trustweave.kms.KmsOptionKeys
+import org.trustweave.awskms.AwsKmsOptionKeys
+import org.trustweave.googlekms.GcpKmsOptionKeys
+import org.trustweave.hashicorpkms.HashiCorpKmsOptionKeys
 
 val options = mapOf(
-    // Key Identification
-    KmsOptionKeys.KEY_ID to "my-custom-key-id",  // Optional: Custom key identifier
-    
-    // Metadata
-    KmsOptionKeys.DESCRIPTION to "My key description",  // Optional: Key description
-    KmsOptionKeys.TAGS to mapOf(  // Optional: Key tags (provider-specific)
-        "Environment" to "Production",
-        "Owner" to "Security Team"
-    ),
-    
-    // Provider-Specific Options
-    KmsOptionKeys.ALIAS to "alias/my-key",  // AWS: Key alias
-    KmsOptionKeys.LABELS to mapOf(...),  // Google: Key labels
-    KmsOptionKeys.ENABLE_AUTOMATIC_ROTATION to true,  // AWS: Enable key rotation
-    KmsOptionKeys.EXPORTABLE to false,  // AWS: Prevent key export
-    KmsOptionKeys.ALLOW_PLAINTEXT_BACKUP to false  // AWS: Prevent plaintext backup
+    // Cross-provider (org.trustweave.kms.KmsOptionKeys)
+    KmsOptionKeys.KEY_ID to "my-custom-key-id",
+    KmsOptionKeys.DESCRIPTION to "My key description",
+    KmsOptionKeys.EXPORTABLE to false,        // HashiCorp, Thales
+    KmsOptionKeys.EXTRACTABLE to false,       // IBM
+
+    // AWS-specific (org.trustweave.awskms.AwsKmsOptionKeys)
+    AwsKmsOptionKeys.TAGS to mapOf("Environment" to "Production"),
+    AwsKmsOptionKeys.ALIAS to "alias/my-key",
+    AwsKmsOptionKeys.ENABLE_AUTOMATIC_ROTATION to true,
+
+    // Google-specific (org.trustweave.googlekms.GcpKmsOptionKeys)
+    GcpKmsOptionKeys.LABELS to mapOf("environment" to "production"),
+    GcpKmsOptionKeys.KEY_RING to "my-key-ring",
+
+    // HashiCorp Vault-specific (org.trustweave.hashicorpkms.HashiCorpKmsOptionKeys)
+    HashiCorpKmsOptionKeys.ALLOW_PLAINTEXT_BACKUP to false
 )
 ```
 
 ### Available Constants
 
-See `KmsOptionKeys` for the complete list of supported option keys:
+Cross-provider keys on `KmsOptionKeys`:
 
-- `KEY_ID` - Custom key identifier
-- `KEY_NAME` - Key name (provider-specific)
-- `DESCRIPTION` - Key description
-- `TAGS` - Key tags (Map<String, String>)
-- `ALIAS` - Key alias (AWS)
-- `LABELS` - Key labels (Google)
-- `ENABLE_AUTOMATIC_ROTATION` - Enable automatic rotation (AWS)
-- `EXPORTABLE` - Allow key export (AWS)
-- `ALLOW_PLAINTEXT_BACKUP` - Allow plaintext backup (AWS)
-- And more...
+- `KEY_ID` – Key identifier (AWS, Google, InMemory)
+- `KEY_NAME` – Key name alternative (Azure, HashiCorp)
+- `NAME` – Short-form name (IBM, Fortanix, CyberArk, Thales)
+- `DESCRIPTION` – Human-readable description (AWS, Azure, IBM, Fortanix, Thales)
+- `EXPORTABLE` – Allow export of key material (HashiCorp, Thales)
+- `EXTRACTABLE` – Allow extraction of key material (IBM)
+
+For provider-specific keys (region, credentials, tags, labels, rotation, etc.) use the
+plugin's dedicated keys object — e.g. `AwsKmsOptionKeys.REGION`, `GcpKmsOptionKeys.KEY_RING`.
 
 ---
 
@@ -993,9 +960,9 @@ val config = AwsKmsConfig.builder()
 
 ## Additional Resources
 
-- KMS Core Concepts](../../docs/core-concepts/key-management.md)
-- Plugin Testing Guide](../../docs/internal/development/KMS_PLUGIN_TESTING_GUIDE.md)
-- Result-Based API Guide](../../docs/core-concepts/result-pattern.md)
+- KMS Core Concepts](../core-concepts/key-management.md)
+- Creating Plugins Guide](../contributing/creating-plugins.md)
+- Error Handling Guide](../advanced/error-handling.md)
 
 ---
 

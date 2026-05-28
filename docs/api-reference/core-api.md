@@ -54,13 +54,13 @@ The TrustWeave provides a unified, DSL-based API for decentralized identity and 
 | Create TrustWeave | `TrustWeave.build { }` | `TrustWeave` |
 | Create DID | `trustWeave.createDid { }` | `DidCreationResult` |
 | Resolve DID | `trustWeave.resolveDid(did)` | `DidResolutionResult` |
-| Update DID | `trustWeave.updateDid { }` | `DidDocument` |
+| Update DID | `trustWeave.updateDid { }` | `DidResult` |
 | Delegate DID | `trustWeave.delegate { }` | `DelegationChainResult` |
-| Rotate Key | `trustWeave.rotateKey { }` | `DidDocument` |
+| Rotate Key | `trustWeave.rotateKey { }` | `DidResult` |
 | Issue Credential | `trustWeave.issue { }` | `IssuanceResult` |
 | Verify Credential | `trustWeave.verify { }` / `verify(credential)` | `VerificationResult` |
 | Create Wallet | `trustWeave.wallet { }` | `WalletCreationResult` |
-| Trust operations | `trustWeave.trust { }` (anchors, paths, queries inside DSL) | `Unit` |
+| Trust operations | `trustWeave.trust { }` (anchors, paths, queries inside DSL) | `TrustPath.NotConfigured?` (`null` on success) |
 | Trust path (typed) | `trustWeave.findTrustPath(verifier, issuer)` | `TrustPath` |
 | Revoke credential | `trustWeave.revoke { }` | `Boolean` |
 | Revocation DSL | `trustWeave.revocation { }` | `RevocationBuilder` (status lists, checks) |
@@ -76,7 +76,12 @@ The TrustWeave provides a unified, DSL-based API for decentralized identity and 
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import kotlinx.coroutines.runBlocking
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
+import org.trustweave.trust.dsl.credential.TrustProviders
 
 fun main() = runBlocking {
     // Create with defaults (in-memory KMS, did:key method)
@@ -112,7 +117,7 @@ fun main() = runBlocking {
             }
         }
         trust {
-            provider(IN_MEMORY)
+            provider(TrustProviders.IN_MEMORY)
         }
     }
 }
@@ -139,9 +144,11 @@ The TrustWeave provides DSL-based operations:
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.trust.types.WalletCreationResult
 import org.trustweave.credential.results.IssuanceResult
 import kotlinx.coroutines.runBlocking
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build { ... }
@@ -167,15 +174,15 @@ fun main() = runBlocking {
         is IssuanceResult.Success -> issuanceResult.credential
         else -> throw IllegalStateException("Failed to issue credential")
     }
-}
 
-// Create wallet
-val walletResult = trustWeave.wallet {
-    holder("did:key:holder")
-}
-val wallet = when (walletResult) {
-    is WalletCreationResult.Success -> walletResult.wallet
-    else -> throw IllegalStateException("Failed to create wallet")
+    // Create wallet (also suspend — stays inside runBlocking)
+    val walletResult = trustWeave.wallet {
+        holder("did:key:holder")
+    }
+    val wallet = when (walletResult) {
+        is WalletCreationResult.Success -> walletResult.wallet
+        else -> throw IllegalStateException("Failed to create wallet")
+    }
 }
 ```
 
@@ -186,34 +193,25 @@ val wallet = when (walletResult) {
 Creates a new DID using the default or specified method.
 
 ```kotlin
-suspend fun createDid(block: DidBuilder.() -> Unit): DidCreationResult
+suspend fun createDid(
+    method: String? = null,
+    timeout: Duration = 10.seconds,
+    block: DidBuilder.() -> Unit = {}
+): DidCreationResult
 ```
 
 **Access via:** `trustWeave.createDid { }`
 
 **Parameters:**
 
-- **`method`** (String, optional): DID method identifier
-  - **Default**: `"key"` (did:key method)
-  - **Format**: Method name without `did:` prefix (e.g., `"key"`, `"web"`, `"ion"`)
-  - **Available Methods**: Use `getAvailableDidMethods()` to see registered methods
-  - **Example**: `"web"` for did:web, `"ion"` for did:ion
-  - **Validation**: Automatically validated - must be registered method
-  - **Common Values**: `"key"`, `"web"`, `"ion"`, `"ethr"`, `"polygon"`
-
-- **`options`** (DidCreationOptions, optional): DID creation options
-  - **Default**: `DidCreationOptions()` with ED25519 algorithm
-  - **Type**: Data class with typed properties
-  - **Properties**:
-    - `algorithm`: Key algorithm (ED25519, SECP256K1, RSA)
-    - `purposes`: List of key purposes (AUTHENTICATION, ASSERTION_METHOD, etc.)
-    - `additionalProperties`: Method-specific options
-  - **Example**: `DidCreationOptions(algorithm = KeyAlgorithm.ED25519)`
-
-- **`configure`** (DidCreationOptionsBuilder.() -> Unit, optional): Builder function
-  - **Alternative to**: `options` parameter
-  - **Type**: DSL builder function
-  - **Example**: `{ algorithm = KeyAlgorithm.ED25519; purpose(KeyPurpose.AUTHENTICATION) }`
+- **`method`** (String?, optional): DID method identifier, falling back to the configured default (e.g., `"key"`, `"web"`).
+  - The method must be registered via `TrustWeave.build { did { method(KEY) { ... } } }`.
+  - Inspect registered methods with `trustWeave.configuration.didMethods.keys`.
+- **`timeout`** (Duration, default `10.seconds`): Maximum time to wait for the operation.
+- **`block`** (DidBuilder.() -> Unit, optional): DSL block. Available functions:
+  - `method(name: String)` — DID method (overrides the positional `method` argument)
+  - `algorithm(name: String)` or `algorithm(value: KeyAlgorithm)` — key algorithm (`ED25519`, `SECP256K1`, `RSA`, etc.)
+  - `option(key, value)` — method-specific options (e.g. `domain` for did:web)
 
 **Returns:** `DidCreationResult` - Sealed result type containing:
 
@@ -255,7 +253,9 @@ suspend fun createDid(block: DidBuilder.() -> Unit): DidCreationResult
 
 **Example:**
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import org.trustweave.trust.types.getOrThrowDid
 
 // Simple usage (uses defaults: did:key, ED25519)
@@ -296,10 +296,10 @@ val did = trustWeave.createDid {
     algorithm(ED25519)
 }.getOrThrowDid() // Requires `import org.trustweave.trust.types.getOrThrowDid`; throws IllegalStateException on failure
 
-// With custom method
+// With custom method (web)
 val webDidResult = trustWeave.createDid {
     method(WEB)
-    domain("example.com")
+    option("domain", "example.com")
 }
 when (webDidResult) {
     is DidCreationResult.Success -> println("Created: ${webDidResult.did.value}")
@@ -363,21 +363,22 @@ Updates a DID document via the `DidDocument` DSL.
 suspend fun updateDid(
     timeout: Duration = 30.seconds,
     block: DidDocumentBuilder.() -> Unit
-): DidDocument
+): DidResult
 ```
 
 **Access via:** `trustWeave.updateDid { }`
 
 **Parameters:** Builder methods such as **`did(...)`**, **`addService { }`**, **`addVerificationMethod { }`**, etc., depending on your DID method.
 
-**Returns:** The updated `DidDocument`. Failures are thrown as `TrustWeaveException` / `DidException` from the underlying DID method.
+**Returns:** A sealed `DidResult` (see `org.trustweave.trust.types.DidResult`) — handle with `when`. Some underlying paths may still throw `TrustWeaveException` / `DidException`.
 
 **Example:**
 ```kotlin
 import org.trustweave.did.identifiers.Did
+import org.trustweave.trust.types.DidResult
 
 val did = Did("did:key:example")
-val updated = trustWeave.updateDid {
+val result = trustWeave.updateDid {
     did(did.value)
     addService {
         id("${did.value}#service-1")
@@ -385,7 +386,10 @@ val updated = trustWeave.updateDid {
         endpoint("https://example.com/service")
     }
 }
-println("Updated: ${updated.id}")
+when (result) {
+    is DidResult.Success -> println("Updated: ${result.document.id}")
+    is DidResult.Failure -> println("Update failed")
+}
 ```
 
 #### DID deactivation
@@ -624,333 +628,126 @@ when (
 
 ### Revocation and Status List Management
 
-TrustWeave provides comprehensive revocation management with blockchain anchoring support. See [Blockchain-Anchored Revocation](../core-concepts/blockchain-anchored-revocation.md) for detailed documentation.
+Revocation uses the `trustWeave.revocation { ... }` / `trustWeave.revoke { ... }` DSL,
+backed by `org.trustweave.credential.revocation.CredentialRevocationManager`
+(factory: `RevocationManagers.default()`, configured via `TrustWeave.build { credentials { revocationManager(...) } }`).
+Status lists follow W3C Status List 2021.
 
-#### createStatusList
+There is **no** top-level `TrustWeave.createStatusList(...)` / `revokeCredential(...)` /
+`checkRevocationStatus(...)` facade method. Use the DSL below, or call the
+`CredentialRevocationManager` directly when you need the lower-level surface
+(`createStatusList`, `revokeCredentials`, `unrevokeCredential`, `updateStatusListBatch`,
+`getStatusListStatistics`, etc. — see the interface for the full method set).
 
-Creates a new status list for managing credential revocation or suspension.
+#### Create a status list (DSL)
+
+`createStatusList()` returns a typed `StatusListId`. The `purpose` is `StatusPurpose.REVOCATION`
+or `StatusPurpose.SUSPENSION`; `size` defaults to 131072 entries (16 KB bitstring).
 
 ```kotlin
-suspend fun createStatusList(
-    issuerDid: String,
-    purpose: StatusPurpose,
-    size: Int = 131072,
-    customId: String? = null
-): Result<StatusListCredential>
+import org.trustweave.credential.model.StatusPurpose
+import org.trustweave.trust.dsl.credential.revocation
+
+val statusListId = trustWeave.revocation {
+    forIssuer("did:key:university")
+    purpose(StatusPurpose.REVOCATION)
+    size(131072)                  // optional, default 131072
+}.createStatusList()
+
+println("Created status list: ${statusListId.value}")
 ```
 
-**Parameters:**
-- `issuerDid`: The DID of the issuer who owns this status list (required, must be resolvable)
-- `purpose`: `StatusPurpose.REVOCATION` or `StatusPurpose.SUSPENSION` (required)
-- `size`: Initial size of the status list in entries (default: 131072 = 16KB, must be power of 2)
-- `customId`: Optional custom ID for the status list (auto-generated UUID if null)
+**Errors:** throws `IllegalStateException` if no `CredentialRevocationManager` is
+configured, or if `forIssuer(...)` was not called.
 
-**Returns:** `Result<StatusListCredential>` containing:
-- `id`: Unique identifier for the status list
-- `issuer`: DID of the issuer
-- `purpose`: REVOCATION or SUSPENSION
-- `size`: Number of entries in the status list
-- `credential`: The status list credential document
+#### Revoke / suspend a credential
 
-**Performance Characteristics:**
-- **Time Complexity:** O(1) for status list creation
-- **Space Complexity:** O(N) where N is the size parameter
-- **Network Calls:** 0 (local operation)
-- **Thread Safety:** Thread-safe, can be called concurrently
-
-**Edge Cases:**
-- If `issuerDid` is not resolvable, returns `DidNotFound` error
-- If `size` is not a power of 2, it may be rounded up to the nearest power of 2
-- If `customId` conflicts with existing status list, a new ID is generated
-
-**Example:**
-```kotlin
-val statusList = TrustWeave.createStatusList(
-    issuerDid = "did:key:issuer",
-    purpose = StatusPurpose.REVOCATION,
-    size = 65536  // 8KB status list
-).fold(
-    onSuccess = { list ->
-        println("Status List ID: ${list.id}")
-        println("Size: ${list.size} entries")
-    },
-    onFailure = { error ->
-        when (error) {
-            is DidException.DidNotFound -> {
-                println("Issuer DID not found: ${error.did}")
-            }
-            else -> println("Error: ${error.message}")
-        }
-    }
-)
-```
-
-**Errors:**
-- `DidException.DidNotFound` - Issuer DID cannot be resolved
-- `DidException.InvalidDidFormat` - Invalid issuer DID format
-- `TrustWeaveException.ValidationFailed` - Invalid size or purpose value
-
-#### revokeCredential
-
-Revokes a credential by adding it to a status list. The credential's index in the status list is determined by hashing the credential ID.
+`trustWeave.revoke { ... }` returns a `Boolean` (`true` on success). `suspend()` is the
+equivalent for `StatusPurpose.SUSPENSION` lists. Both require `credential(...)` **and**
+`statusList(...)` on the builder.
 
 ```kotlin
-suspend fun revokeCredential(
-    credentialId: String,
-    statusListId: String
-): Result<Boolean>
-```
+import org.trustweave.trust.dsl.credential.revoke
 
-**Parameters:**
-- `credentialId`: The ID of the credential to revoke (required, must be a valid URI or UUID)
-- `statusListId`: The ID of the status list to add the credential to (required, must exist)
-
-**Returns:** `Result<Boolean>` - `true` if revocation succeeded, `false` if already revoked
-
-**Performance Characteristics:**
-- **Time Complexity:** O(1) for bit manipulation (hash + bit set)
-- **Space Complexity:** O(1) (in-place bit update)
-- **Network Calls:** 0 (local operation, unless using blockchain-anchored registry)
-- **Thread Safety:** Thread-safe, can be called concurrently
-
-**Edge Cases:**
-- If credential is already revoked, returns `true` (idempotent operation)
-- If status list is full (all bits set), returns error
-- If `statusListId` doesn't exist, returns error
-- Hash collisions are extremely rare but possible (1 in 2^64 for default size)
-
-**Example:**
-```kotlin
-val revoked = TrustWeave.revokeCredential(
-    credentialId = "urn:uuid:credential-123",
-    statusListId = statusList.id
-).fold(
-    onSuccess = { success ->
-        if (success) {
-            println("Credential revoked successfully")
-        } else {
-            println("Credential was already revoked")
-        }
-    },
-    onFailure = { error ->
-        when (error) {
-            is TrustWeaveException.ValidationFailed -> {
-                println("Invalid credential ID or status list ID")
-            }
-            else -> println("Revocation error: ${error.message}")
-        }
-    }
-)
-```
-
-**Errors:**
-- `TrustWeaveException.ValidationFailed` - Invalid credential ID or status list ID format
-- `TrustWeaveException.InvalidState` - Status list not found or full
-
-#### suspendCredential
-
-Suspends a credential (temporarily disables it). The credential's index in the status list is determined by hashing the credential ID.
-
-```kotlin
-suspend fun suspendCredential(
-    credentialId: String,
-    statusListId: String
-): Result<Boolean>
-```
-
-**Parameters:**
-- `credentialId`: The ID of the credential to suspend (required, must be a valid URI or UUID)
-- `statusListId`: The ID of the suspension status list (required, must exist)
-
-**Returns:** `Result<Boolean>` - `true` if suspension succeeded, `false` if already suspended
-
-**Performance Characteristics:**
-- **Time Complexity:** O(1) for bit manipulation (hash + bit set)
-- **Space Complexity:** O(1) (in-place bit update)
-- **Network Calls:** 0 (local operation, unless using blockchain-anchored registry)
-- **Thread Safety:** ✅ Thread-safe, can be called concurrently
-
-**Edge Cases:**
-- If credential is already suspended, returns `true` (idempotent operation)
-- If status list is full (all bits set), returns error
-- If `statusListId` doesn't exist, returns error
-- Hash collisions are extremely rare but possible (1 in 2^64 for default size)
-
-**Example:**
-```kotlin
-val suspended = TrustWeave.suspendCredential(
-    credentialId = "urn:uuid:credential-123",
-    statusListId = suspensionList.id
-).fold(
-    onSuccess = { success ->
-        if (success) {
-            println("✅ Credential suspended successfully")
-        } else {
-            println("⚠️ Credential was already suspended")
-        }
-    },
-    onFailure = { error ->
-        when (error) {
-            is TrustWeaveException.ValidationFailed -> {
-                println("❌ Invalid credential ID or status list ID")
-            }
-            is TrustWeaveException.InvalidState -> {
-                println("❌ Status list not found or full")
-            }
-            else -> {
-                println("❌ Suspension error: ${error.message}")
-            }
-        }
-    }
-)
-```
-
-**Errors:**
-- `TrustWeaveException.ValidationFailed` - Invalid credential ID or status list ID format
-- `TrustWeaveException.InvalidState` - Status list not found or full
-
-#### checkRevocationStatus
-
-Checks if a credential is revoked or suspended by examining its status list entry.
-
-```kotlin
-suspend fun checkRevocationStatus(
-    credential: VerifiableCredential
-): Result<RevocationStatus>
-```
-
-**Parameters:**
-- `credential`: The credential to check (required, must have `credentialStatus` field if status list is used)
-
-**Returns:** `Result<RevocationStatus>` containing:
-- `revoked`: Whether the credential is revoked (`true` if revoked, `false` otherwise)
-- `suspended`: Whether the credential is suspended (`true` if suspended, `false` otherwise)
-- `statusListId`: The status list ID if applicable (from `credential.credentialStatus.id`)
-- `reason`: Optional revocation reason (if provided during revocation)
-
-**Performance Characteristics:**
-- **Time Complexity:** O(1) for bit lookup (hash + bit check)
-- **Space Complexity:** O(1) (no additional storage)
-- **Network Calls:** 0 for local status lists, 1+ for blockchain-anchored status lists (if not cached)
-- **Thread Safety:** ✅ Thread-safe, can be called concurrently
-
-**Edge Cases:**
-- If credential has no `credentialStatus` field → Returns `revoked = false`, `suspended = false`
-- If status list not found → Returns `TrustWeaveException.InvalidState`
-- If credential ID hash collision → Extremely rare (1 in 2^64), may return incorrect status
-- If status list not accessible → Returns `TrustWeaveException.InvalidOperation`
-
-**Example:**
-```kotlin
-val status = TrustWeave.checkRevocationStatus(credential).fold(
-    onSuccess = { status ->
-        when {
-            status.revoked -> {
-                println("❌ Credential is revoked")
-                println("   Status List: ${status.statusListId}")
-                status.reason?.let { println("   Reason: $it") }
-            }
-            status.suspended -> {
-                println("⚠️ Credential is suspended")
-                println("   Status List: ${status.statusListId}")
-            }
-            else -> {
-                println("✅ Credential is valid (not revoked or suspended)")
-            }
-        }
-    },
-    onFailure = { error ->
-        when (error) {
-            is TrustWeaveException.InvalidState -> {
-                println("❌ Status list not found")
-            }
-            is TrustWeaveException.InvalidOperation -> {
-                println("❌ Cannot access status list: ${error.message}")
-            }
-            else -> {
-                println("❌ Error checking revocation status: ${error.message}")
-            }
-        }
-    }
-)
-```
-
-**Errors:**
-- `TrustWeaveException.InvalidState` - Status list not found or not accessible
-- `TrustWeaveException.InvalidOperation` - Cannot access status list (network error, etc.)
-- `TrustWeaveException.ValidationFailed` - Credential structure invalid (missing required fields)
-
-#### Using BlockchainRevocationRegistry
-
-For blockchain-anchored revocation, use `BlockchainRevocationRegistry` with an anchoring strategy:
-
-```kotlin
-import org.trustweave.credential.revocation.*
-import java.time.Duration
-
-// Create status list manager
-val statusListManager = InMemoryStatusListManager()
-
-// Create blockchain anchor client
-val anchorClient = /* your blockchain anchor client */
-
-// Create registry with periodic anchoring strategy
-val registry = BlockchainRevocationRegistry(
-    anchorClient = anchorClient,
-    statusListManager = statusListManager,
-    anchorStrategy = PeriodicAnchorStrategy(
-        interval = Duration.ofHours(1),
-        maxUpdates = 100
-    ),
-    chainId = "algorand:testnet"
-)
-
-// Create status list
-val statusList = registry.createStatusList(
-    issuerDid = "did:key:issuer",
-    purpose = StatusPurpose.REVOCATION
-)
-
-// Revoke credential (automatic anchoring if threshold reached)
-registry.revokeCredential("cred-123", statusList.id)
-
-// Check pending anchors
-val pending = registry.getPendingAnchor(statusList.id)
-if (pending != null) {
-    println("Pending updates: ${pending.updateCount}")
+val revoked: Boolean = trustWeave.revoke {
+    credential("urn:uuid:credential-123")
+    statusList(statusListId.value)
 }
 
-// Manual anchoring
-val anchorRef = registry.anchorRevocationList(statusList, "algorand:testnet")
+val suspended: Boolean = trustWeave.revocation {
+    credential("urn:uuid:credential-456")
+    statusList(statusListId.value)
+}.suspend()
 ```
 
-**Anchoring Strategies:**
+#### Check revocation status
 
-1. **PeriodicAnchorStrategy** - Anchor on schedule or after N updates
-   ```kotlin
-   PeriodicAnchorStrategy(
-       interval = Duration.ofHours(1),
-       maxUpdates = 100
-   )
-   ```
+`.check(credential)` returns a `RevocationStatus(revoked, suspended, statusListId, index, reason)`.
+The credential must carry a `credentialStatus` entry pointing at the status list.
 
-2. **LazyAnchorStrategy** - Anchor only when verification is requested
-   ```kotlin
-   LazyAnchorStrategy(
-       maxStaleness = Duration.ofDays(1)
-   )
-   ```
+```kotlin
+import org.trustweave.credential.revocation.RevocationStatus
 
-3. **HybridAnchorStrategy** - Combine periodic and lazy approaches
-   ```kotlin
-   HybridAnchorStrategy(
-       periodicInterval = Duration.ofHours(1),
-       maxUpdates = 100,
-       forceAnchorOnVerify = true
-   )
-   ```
+val status: RevocationStatus = trustWeave.revocation { }.check(credential)
 
-See [Blockchain-Anchored Revocation](../core-concepts/blockchain-anchored-revocation.md) for complete documentation and examples.
+when {
+    status.revoked   -> println("Credential is revoked (reason=${status.reason})")
+    status.suspended -> println("Credential is suspended")
+    else             -> println("Credential is valid")
+}
+```
+
+#### Lower-level API: `CredentialRevocationManager`
+
+For batch operations, manual index assignment, statistics, list management, or use
+outside the `TrustWeave` facade, work with `CredentialRevocationManager` directly:
+
+```kotlin
+import org.trustweave.credential.identifiers.StatusListId
+import org.trustweave.credential.model.StatusPurpose
+import org.trustweave.credential.revocation.RevocationManagers
+import org.trustweave.credential.revocation.StatusUpdate
+
+val manager = RevocationManagers.default()                // in-memory, for dev/test
+
+val listId: StatusListId = manager.createStatusList(
+    issuerDid = "did:key:university",
+    purpose   = StatusPurpose.REVOCATION,
+    size      = 131072
+)
+
+manager.revokeCredentials(listOf("cred-1", "cred-2", "cred-3"), listId)
+manager.updateStatusListBatch(
+    statusListId = listId,
+    updates = listOf(StatusUpdate(index = 42, revoked = true, reason = "compromise"))
+)
+
+val stats = manager.getStatusListStatistics(listId)
+println("Used: ${stats?.usedIndices} / ${stats?.totalCapacity}")
+```
+
+#### Blockchain-anchored status lists
+
+There is no built-in `BlockchainRevocationRegistry` / `AnchorStrategy` API. To get
+tamper-evident anchoring today, anchor the status list payload yourself via
+`trustWeave.blockchains.anchor(...)` after each material update:
+
+```kotlin
+import org.trustweave.credential.model.vc.VerifiableCredential
+
+// Wherever you keep your serialized StatusList2021 credential:
+val statusListCredential: VerifiableCredential = renderStatusListCredential(listId)
+
+val anchored = trustWeave.blockchains.anchor(
+    data       = statusListCredential,
+    serializer = VerifiableCredential.serializer(),
+    chainId    = "algorand:testnet"
+)
+println("Anchored at txHash=${anchored.ref.txHash}")
+```
+
+See [Blockchain-Anchored Revocation](../core-concepts/blockchain-anchored-revocation.md)
+for the trade-offs and a worked example.
 
 ### Trust Operations
 
@@ -985,7 +782,7 @@ The DSL builder provides a fluent API for trust operations:
 **Example:**
 ```kotlin
 import org.trustweave.did.identifiers.Did
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.TrustProviders.IN_MEMORY
 import org.trustweave.trust.types.TrustPath
 
 val trustWeave = TrustWeave.build {
@@ -999,9 +796,13 @@ trustWeave.trust {
     }
 
     val isTrusted = isTrusted("did:key:university", "EducationCredential")
-    when (val path = findTrustPath(Did("did:key:verifier"), Did("did:key:issuer"))) {
+    when (val path = findTrustPath(
+        VerifierIdentity(Did("did:key:verifier")),
+        IssuerIdentity(Did("did:key:issuer"))
+    )) {
         is TrustPath.Verified -> println("Path: ${path.fullPath.joinToString(" -> ") { it.value }}")
         is TrustPath.NotFound -> println("No path")
+        is TrustPath.NotConfigured -> println("Trust registry not configured")
     }
 }
 ```
@@ -1009,108 +810,46 @@ trustWeave.trust {
 **Errors:**
 - `IllegalStateException` - Trust registry is not configured
 
-#### addTrustAnchor
+#### addAnchor / removeAnchor / isTrusted (inside `trust { }` DSL)
 
-Adds a trust anchor to the registry. Convenience method for adding a trust anchor without using the DSL.
+There is no top-level `trustWeave.addTrustAnchor(...)` / `removeTrustAnchor(...)` / `isTrustedIssuer(...)` facade method. Anchor management and trust checks live inside the `trustWeave.trust { ... }` DSL (`TrustBuilder`).
 
 ```kotlin
-suspend fun addTrustAnchor(
-    anchorDid: String,
-    block: TrustAnchorMetadataBuilder.() -> Unit = {}
-): Boolean
+// TrustBuilder DSL members:
+suspend fun addAnchor(did: String, block: TrustAnchorMetadataBuilder.() -> Unit = {}): Boolean
+suspend fun removeAnchor(did: String): Boolean
+suspend fun isTrusted(issuerDid: String, credentialType: String? = null): Boolean
+suspend fun getTrustedIssuers(credentialType: String? = null): List<String>
+suspend fun findTrustPath(from: VerifierIdentity, to: IssuerIdentity): TrustPath
 ```
 
-**Access via:** `trustWeave.addTrustAnchor(anchorDid) { }`
-
-**Parameters:**
-- **`anchorDid`** (String, required): The DID of the trust anchor
-- **`block`** (TrustAnchorMetadataBuilder.() -> Unit, optional): Configuration block for trust anchor metadata
-  - `credentialTypes(String...)`: Credential types this anchor can issue
-  - `description(String)`: Human-readable description
-  - `metadata(Map<String, Any>)`: Additional metadata
-
-**Returns:** `Boolean` - `true` if the anchor was added successfully, `false` if it already exists
+**Returns:** `addAnchor`/`removeAnchor` return `Boolean` (true if changed). `trustWeave.trust { }` itself returns `TrustPath.NotConfigured?` (null on success, non-null if no trust registry is wired).
 
 **Example:**
 ```kotlin
-val added = trustWeave.addTrustAnchor("did:key:university") {
-    credentialTypes("EducationCredential", "TranscriptCredential")
-    description("Trusted university")
-}
+trustWeave.trust {
+    val added = addAnchor("did:key:university") {
+        credentialTypes("EducationCredential", "TranscriptCredential")
+        description("Trusted university")
+    }
+    if (added) println("Trust anchor added") else println("Trust anchor already exists")
 
-if (added) {
-    println("Trust anchor added")
-} else {
-    println("Trust anchor already exists")
-}
-```
+    val isTrusted = isTrusted("did:key:university", "EducationCredential")
+    println("Trusted? $isTrusted")
 
-**Errors:**
-- `IllegalStateException` - Trust registry is not configured
-
-#### removeTrustAnchor
-
-Removes a trust anchor from the registry.
-
-```kotlin
-suspend fun removeTrustAnchor(anchorDid: String): Boolean
-```
-
-**Access via:** `trustWeave.removeTrustAnchor(anchorDid)`
-
-**Parameters:**
-- **`anchorDid`** (String, required): The DID of the trust anchor to remove
-
-**Returns:** `Boolean` - `true` if the anchor was removed, `false` if it didn't exist
-
-**Example:**
-```kotlin
-val removed = trustWeave.removeTrustAnchor("did:key:university")
-if (removed) {
-    println("Trust anchor removed")
+    val removed = removeAnchor("did:key:legacy-issuer")
+    if (removed) println("Removed legacy anchor")
 }
 ```
 
-**Errors:**
-- `IllegalStateException` - Trust registry is not configured
+For direct access without the DSL, call the underlying registry via
+`trustWeave.configuration.trustRegistry?.addTrustAnchor(...)` (see `TrustRegistry`).
 
-#### isTrustedIssuer
-
-Checks if an issuer is trusted for a specific credential type.
-
-```kotlin
-suspend fun isTrustedIssuer(
-    issuerDid: String,
-    credentialType: String? = null
-): Boolean
-```
-
-**Access via:** `trustWeave.isTrustedIssuer(issuerDid, credentialType)`
-
-**Parameters:**
-- **`issuerDid`** (String, required): The DID of the issuer to check
-- **`credentialType`** (String?, optional): The credential type (null means check for any type)
-
-**Returns:** `Boolean` - `true` if the issuer is trusted, `false` otherwise
-
-**Example:**
-```kotlin
-val isTrusted = trustWeave.isTrustedIssuer(
-    issuerDid = "did:key:university",
-    credentialType = "EducationCredential"
-)
-
-if (isTrusted) {
-    println("Issuer is trusted for EducationCredential")
-}
-```
-
-**Errors:**
-- `IllegalStateException` - Trust registry is not configured
+**Errors:** If the trust registry is not configured, `trustWeave.trust { }` returns `TrustPath.NotConfigured` without executing the block.
 
 #### findTrustPath
 
-Finds a trust path between verifier and issuer identities. Returns the sealed type **`TrustPath`** (**`Verified`** or **`NotFound`**).
+Finds a trust path between verifier and issuer identities. Returns the sealed type **`TrustPath`** (**`Verified`**, **`NotFound`**, or **`NotConfigured`** when no trust registry is wired).
 
 ```kotlin
 suspend fun findTrustPath(
@@ -1137,21 +876,18 @@ when (
 ) {
     is TrustPath.Verified -> println("Trust path: ${path.fullPath.joinToString(" -> ") { it.value }}")
     is TrustPath.NotFound -> println("No trust path found")
+    is TrustPath.NotConfigured -> println("Trust registry not configured: ${path.reason}")
 }
 ```
 
-**Errors:**
-- `IllegalStateException` - Trust registry is not configured
+#### getTrustedIssuers (inside `trust { }` DSL)
 
-#### getTrustedIssuers
-
-Gets all trusted issuers for a specific credential type.
+Gets all trusted issuers for a specific credential type. This method is exposed inside the `trustWeave.trust { ... }` DSL (`TrustBuilder`), not as a top-level facade method.
 
 ```kotlin
+// On TrustBuilder:
 suspend fun getTrustedIssuers(credentialType: String? = null): List<String>
 ```
-
-**Access via:** `trustWeave.getTrustedIssuers(credentialType)`
 
 **Parameters:**
 - **`credentialType`** (String?, optional): The credential type (null means all types)
@@ -1160,12 +896,13 @@ suspend fun getTrustedIssuers(credentialType: String? = null): List<String>
 
 **Example:**
 ```kotlin
-val trustedIssuers = trustWeave.getTrustedIssuers("EducationCredential")
-println("Trusted issuers: $trustedIssuers")
+trustWeave.trust {
+    val trustedIssuers = getTrustedIssuers("EducationCredential")
+    println("Trusted issuers: $trustedIssuers")
+}
 ```
 
-**Errors:**
-- `IllegalStateException` - Trust registry is not configured
+**Errors:** If the trust registry is not configured, `trustWeave.trust { }` returns `TrustPath.NotConfigured` without executing the block.
 
 ### Wallet Operations
 
@@ -1174,7 +911,7 @@ println("Trusted issuers: $trustedIssuers")
 Creates a wallet for storing credentials using the DSL. Wallets provide secure storage and management of verifiable credentials for a specific holder.
 
 ```kotlin
-suspend fun wallet(block: WalletBuilder.() -> Unit): Wallet
+suspend fun wallet(block: WalletBuilder.() -> Unit): WalletCreationResult
 ```
 
 **Access via:** `trustWeave.wallet { }`
@@ -1188,10 +925,12 @@ The DSL builder provides a fluent API for configuring the wallet:
 - **`enableOrganization()`**: Enable collections, tags, and metadata features
 - **`enablePresentation()`**: Enable presentation and selective disclosure support
 
-**Returns:** `Wallet` - The created wallet instance with:
+**Returns:** Sealed `WalletCreationResult` — `Success(wallet: Wallet)` exposes:
 - `walletId`: Unique wallet identifier
-- `holderDid`: The holder's DID
 - `capabilities`: Available wallet features (organization, presentation, etc.)
+- (and the holder DID if the wallet implements `DidManagement`)
+
+Failure variants: `InvalidHolderDid`, `FactoryNotConfigured`, `StorageFailed`, `Other`. Use `getOrThrow()` from `org.trustweave.trust.types` to unwrap in tests.
 
 **Wallet Options:**
 - `enableOrganization`: Enable collections, tags, and metadata features (default: `false`)
@@ -1213,19 +952,19 @@ The DSL builder provides a fluent API for configuring the wallet:
 
 **Example:**
 ```kotlin
+import org.trustweave.trust.types.WalletCreationResult
+import org.trustweave.trust.types.getOrThrow
+
 // Simple usage (in-memory, for testing)
 val wallet = trustWeave.wallet {
     holder("did:key:holder")
-}
+}.getOrThrow() // throws IllegalStateException on failure (tests/examples)
 println("Created wallet: ${wallet.walletId}")
-println("Holder: ${wallet.holderDid}")
 
-// With organization and presentation enabled
-val wallet = trustWeave.wallet {
-    holder("did:key:holder")
-    id("my-wallet-id")
-    enableOrganization()
-    enablePresentation()
+// Or handle the sealed result exhaustively
+when (val r = trustWeave.wallet { holder("did:key:holder") }) {
+    is WalletCreationResult.Success -> r.wallet.store(credential)
+    is WalletCreationResult.Failure -> println("Error: ${r}")
 }
 
 // Use wallet directly
@@ -1234,10 +973,11 @@ val retrieved = wallet.get(credentialId)
 val allCredentials = wallet.list()
 ```
 
-**Errors:**
-- `WalletException.WalletCreationFailed` - Wallet creation failed (provider not found, configuration invalid, storage unavailable, duplicate wallet ID)
-- `DidException.InvalidDidFormat` - Invalid holder DID format
-- `TrustWeaveException.ValidationFailed` - Invalid wallet options or configuration
+**Failures (variants of `WalletCreationResult.Failure`):**
+- `InvalidHolderDid(holderDid, reason)` - Holder DID is invalid
+- `FactoryNotConfigured(reason)` - No wallet factory wired in `TrustWeave.build { }`
+- `StorageFailed(reason, cause)` - Backing store failed
+- `Other(reason, cause)` - Any other failure
 
 ### Advanced TrustWeave Methods
 
@@ -1307,10 +1047,10 @@ fun from(config: TrustWeaveConfig): TrustWeave
 **Example:**
 ```kotlin
 import kotlinx.coroutines.runBlocking
-import org.trustweave.testkit.services.*
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.trust.dsl.trustWeave
 
 val config = runBlocking {
@@ -1423,7 +1163,7 @@ val anchorRef = AnchorRef(
     txHash = "abc123..."
 )
 try {
-    val data = trustweave.blockchains.read<MyData>(
+    val data = trustWeave.blockchains.read<MyData>(
         ref = anchorRef,
         serializer = MyData.serializer()
     )
@@ -1473,15 +1213,16 @@ println("Available chains: $chains") // ["algorand:testnet", "polygon:mainnet"]
 
 The `contracts` service provides operations for creating, binding, and executing smart contracts.
 
-#### draft
+#### draft / createDraft
 
-Creates a contract draft.
+Creates a contract draft. `draft(...)` is a convenience extension that delegates to `createDraft(...)` on `SmartContractService`.
 
 ```kotlin
-suspend fun draft(request: ContractDraftRequest): Result<SmartContract>
+suspend fun createDraft(request: ContractDraftRequest): Result<SmartContract>
+suspend fun SmartContractService.draft(request: ContractDraftRequest): Result<SmartContract>
 ```
 
-**Access via:** `trustWeave.contracts.draft(request)`
+**Access via:** `trustWeave.contracts.draft(request)` or `trustWeave.contracts.createDraft(request)`
 
 **Parameters:**
 - **`request`** (ContractDraftRequest, required): Contract draft request containing contract type, execution model, parties, terms, etc.
@@ -1490,7 +1231,7 @@ suspend fun draft(request: ContractDraftRequest): Result<SmartContract>
 
 **Example:**
 ```kotlin
-val contract = trustweave.contracts.draft(
+val contract = trustWeave.contracts.draft(
     request = ContractDraftRequest(
         contractType = ContractType.Insurance,
         executionModel = ExecutionModel.Parametric(...),
@@ -1511,7 +1252,7 @@ suspend fun bindContract(
     contractId: String,
     issuerDid: String,
     issuerKeyId: String,
-    chainId: String
+    chainId: String = "algorand:mainnet"
 ): Result<BoundContract>
 ```
 
@@ -1591,7 +1332,6 @@ import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.credential.results.VerificationResult
 import org.trustweave.trust.types.DidCreationResult
-import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.quickStart()
@@ -1636,7 +1376,11 @@ DID methods are registered during `TrustWeave` creation using the DSL:
 
 ```kotlin
 import org.trustweave.trust.TrustWeave
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.DidMethods.ION
 
 val trustWeave = TrustWeave.build {
     keys {
@@ -1682,7 +1426,7 @@ val trustWeave = TrustWeave.build {
 Trust registry is configured during `TrustWeave` creation:
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.TrustProviders.IN_MEMORY
 val trustWeave = TrustWeave.build {
     keys { ... }
     did { ... }

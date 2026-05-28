@@ -125,7 +125,7 @@ etc.) supplied by `TrustWeave-common` (which includes SPI interfaces).
 ## Related Documentation
 
 - **[Supported Plugins](../plugins.md)** - Comprehensive table view of all supported plugins organized by category
-- **[Plugin Implementation Status](../contributing/plugin-implementation-status.md)** - Current implementation status and roadmap for all plugins
+- **[Plugin Implementation Roadmap](../contributing/plugin-implementation-roadmap.md)** - Current implementation status and roadmap for all plugins
 - **[Plugin Lifecycle](../advanced/plugin-lifecycle.md)** - Managing plugin initialization, startup, and shutdown
 
 ## Creating Custom Plugins

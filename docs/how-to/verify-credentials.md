@@ -23,7 +23,9 @@ Here's a complete example that verifies a credential:
 import org.trustweave.trust.TrustWeave
 import org.trustweave.credential.results.VerificationResult
 import kotlinx.coroutines.runBlocking
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 
 fun main() = runBlocking {
     try {
@@ -67,7 +69,7 @@ fun main() = runBlocking {
                 println("❌ Invalid proof: ${result.reason}")
             }
             is VerificationResult.Invalid.UntrustedIssuer -> {
-                println("❌ Untrusted issuer: ${result.issuer}")
+                println("❌ Untrusted issuer: ${result.issuerDid.value}")
             }
             is VerificationResult.Invalid.SchemaValidationFailed -> {
                 println("❌ Schema validation failed: ${result.allErrors.joinToString()}")

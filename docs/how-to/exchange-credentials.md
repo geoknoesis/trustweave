@@ -79,163 +79,161 @@ sequenceDiagram
 
 ## Quick Example
 
-Here's a complete example showing unified API for all protocols:
+The unified entry point is `org.trustweave.credential.exchange.ExchangeService`. Build
+it once via `ExchangeServices.createExchangeServiceWithAutoDiscovery(...)` (which
+picks up every `CredentialExchangeProtocol` on the classpath via Java ServiceLoader),
+then call `offer(...)`, `request(...)`, `issue(...)`, `requestProof(...)`, or
+`presentProof(...)`. Each call returns a sealed `ExchangeResult<...>` you must
+exhaustively handle.
 
 ```kotlin
-import org.trustweave.credential.exchange.*
-import org.trustweave.credential.didcomm.exchange.DidCommExchangeProtocol
-import org.trustweave.credential.oidc4vci.exchange.Oidc4VciExchangeProtocol
-import org.trustweave.credential.chapi.exchange.ChapiExchangeProtocol
 import kotlinx.coroutines.runBlocking
+import org.trustweave.credential.exchange.ExchangeServices
+import org.trustweave.credential.exchange.model.CredentialPreview
+import org.trustweave.credential.exchange.request.ExchangeRequest
+import org.trustweave.credential.exchange.result.ExchangeResult
+import org.trustweave.credential.identifiers.ExchangeProtocolName
+import org.trustweave.did.identifiers.Did
 
 fun main() = runBlocking {
-    // Step 1: Create registry
-    val registry = CredentialExchangeProtocolRegistry()
-
-    // Step 2: Register protocols
-    registry.register(DidCommExchangeProtocol(didCommService))
-    registry.register(Oidc4VciExchangeProtocol(oidc4vciService))
-    registry.register(ChapiExchangeProtocol(chapiService))
-
-    // Step 3: Create offer request (same for all protocols)
-    val request = CredentialOfferRequest(
-        issuerDid = "did:key:issuer",
-        holderDid = "did:key:holder",
-        credentialPreview = CredentialPreview(...)
+    val service = ExchangeServices.createExchangeServiceWithAutoDiscovery(
+        credentialService = credentialService,    // your configured CredentialService
+        didResolver       = didResolver            // your configured DidResolver
     )
 
-    // Step 4: Use any protocol with identical API
-    val didCommOffer = registry.offerCredential("didcomm", request)
-    val oidcOffer = registry.offerCredential("oidc4vci", request)
-    val chapiOffer = registry.offerCredential("chapi", request)
+    val offer = ExchangeRequest.Offer(
+        protocolName      = ExchangeProtocolName.DidComm,
+        issuerDid         = Did("did:key:issuer"),
+        holderDid         = Did("did:key:holder"),
+        credentialPreview = CredentialPreview(
+            type   = listOf("VerifiableCredential", "EducationCredential"),
+            claims = mapOf("degree" to "Bachelor of Science")
+        )
+    )
 
-    println("✅ Created offers with all protocols")
+    when (val result = service.offer(offer)) {
+        is ExchangeResult.Success ->
+            println("Offer created: id=${result.value.offerId.value}")
+        is ExchangeResult.Failure.ProtocolNotSupported ->
+            println("Protocol ${result.protocolName.value} not on classpath. " +
+                "Available: ${result.availableProtocols.map { it.value }}")
+        is ExchangeResult.Failure ->
+            println("Offer failed: ${result.errors.joinToString()}")
+    }
 }
 ```
 
-**Expected Output:**
+**Expected Output (when the DIDComm plugin is on the classpath):**
 ```
-✅ Created offers with all protocols
+Offer created: id=<uuid>
 ```
 
 ## Step-by-Step Guide
 
-### Step 1: Set Up Protocol Services
+### Step 1: Build the `ExchangeService`
 
-First, create the protocol-specific services:
+Pick one of the three factories on `ExchangeServices`:
+
+- `createExchangeServiceWithAutoDiscovery(credentialService, didResolver)` — discovers
+  every `CredentialExchangeProtocol` on the classpath via `META-INF/services` (recommended).
+- `createExchangeServiceWithAutoDiscovery(credentialService, didResolver, protocols = [...])` —
+  same as above but restricted to a list of `ExchangeProtocolName` values.
+- `createExchangeService(credentialService, didResolver, vararg protocols)` — register
+  protocols explicitly when you need full control.
 
 ```kotlin
-import org.trustweave.credential.didcomm.DidCommFactory
-import org.trustweave.credential.oidc4vci.Oidc4VciService
-import org.trustweave.credential.chapi.ChapiService
-import org.trustweave.kms.KeyManagementService
+import org.trustweave.credential.exchange.ExchangeServices
 
-// Create KMS for cryptographic operations
-val kms: KeyManagementService = InMemoryKeyManagementService()
+val service = ExchangeServices.createExchangeServiceWithAutoDiscovery(
+    credentialService = credentialService,
+    didResolver       = didResolver
+)
 
-// Create DID resolver function
-val resolveDid: suspend (String) -> DidDocument? = { did ->
-    // Your DID resolution logic
-    null
-}
-
-// Create protocol services
-val didCommService = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms, resolveDid)
-val oidc4vciService = Oidc4VciService(...)
-val chapiService = ChapiService(...)
+println("Supported protocols: ${service.supportedProtocols().map { it.value }}")
 ```
 
-**What this does:**
-- Sets up key management for encryption/signing
-- Configures DID resolution
-- Creates protocol-specific services
-
-**Expected Result:** Protocol services ready for registration.
+**Expected Result:** A single `ExchangeService` wired to every protocol plugin
+(`anchors:plugins:didcomm`, `credentials:plugins:oidc4vci`, `credentials:plugins:chapi`, …)
+present on the classpath.
 
 ---
 
-### Step 2: Create and Register Protocols
+### Step 2: Build a protocol-agnostic `ExchangeRequest`
 
-Create the registry and register all protocols:
-
-```kotlin
-import org.trustweave.credential.exchange.CredentialExchangeProtocolRegistry
-import org.trustweave.credential.didcomm.exchange.DidCommExchangeProtocol
-import org.trustweave.credential.oidc4vci.exchange.Oidc4VciExchangeProtocol
-import org.trustweave.credential.chapi.exchange.ChapiExchangeProtocol
-
-val registry = CredentialExchangeProtocolRegistry()
-
-// Register DIDComm
-registry.register(DidCommExchangeProtocol(didCommService))
-
-// Register OIDC4VCI
-registry.register(Oidc4VciExchangeProtocol(oidc4vciService))
-
-// Register CHAPI
-registry.register(ChapiExchangeProtocol(chapiService))
-```
-
-**What this does:**
-- Creates a unified registry
-- Registers all available protocols
-- Makes protocols available via unified API
-
-**Expected Result:** Registry with all protocols registered.
-
----
-
-### Step 3: Create Credential Offer Request
-
-Create a request that works with all protocols:
+Pick the protocol via `ExchangeRequest.Offer.protocolName` — the *same* `ExchangeRequest`
+data class works for every transport.
 
 ```kotlin
-import org.trustweave.credential.exchange.CredentialOfferRequest
-import org.trustweave.credential.exchange.CredentialPreview
+import org.trustweave.credential.exchange.model.CredentialPreview
+import org.trustweave.credential.exchange.request.ExchangeRequest
+import org.trustweave.credential.identifiers.ExchangeProtocolName
+import org.trustweave.did.identifiers.Did
 
-val request = CredentialOfferRequest(
-    issuerDid = "did:key:issuer",
-    holderDid = "did:key:holder",
+val offer = ExchangeRequest.Offer(
+    protocolName      = ExchangeProtocolName.DidComm,
+    issuerDid         = Did("did:key:issuer"),
+    holderDid         = Did("did:key:holder"),
     credentialPreview = CredentialPreview(
-        type = listOf("VerifiableCredential", "EducationCredential"),
+        type   = listOf("VerifiableCredential", "EducationCredential"),
         claims = mapOf(
-            "degree" to "Bachelor of Science",
+            "degree"     to "Bachelor of Science",
             "university" to "Example University"
         )
     )
 )
 ```
 
-**What this does:**
-- Defines issuer and holder DIDs
-- Creates credential preview
-- Works with all protocols
+---
 
-**Expected Result:** A request object ready for any protocol.
+### Step 3: Drive the exchange (offer → request → issue)
+
+```kotlin
+import org.trustweave.credential.exchange.request.ExchangeRequest
+import org.trustweave.credential.exchange.result.ExchangeResult
+import org.trustweave.credential.exchange.result.getOrThrow
+
+val offerResp  = service.offer(offer).getOrThrow()
+
+val requestResp = service.request(
+    ExchangeRequest.Request(
+        protocolName = offer.protocolName,
+        holderDid    = offer.holderDid,
+        issuerDid    = offer.issuerDid,
+        offerId      = offerResp.offerId
+    )
+).getOrThrow()
+
+val issueResp = service.issue(
+    ExchangeRequest.Issue(
+        protocolName = offer.protocolName,
+        issuerDid    = offer.issuerDid,
+        holderDid    = offer.holderDid,
+        credential   = signedCredential,                 // produced by trustWeave.issue { ... }
+        requestId    = requestResp.requestId
+    )
+).getOrThrow()
+
+println("Issued credential: ${issueResp.credential.id}")
+```
+
+`getOrThrow()` is convenient for prototyping; in production switch to an exhaustive
+`when (val r = service.offer(...)) { is ExchangeResult.Success -> ...; is ExchangeResult.Failure.* -> ... }`.
 
 ---
 
-### Step 4: Offer Credential with Any Protocol
+### Step 4: Switch protocols at runtime
 
-Use the same API for all protocols:
+Reuse the same `ExchangeRequest.Offer` shape — only the `protocolName` changes:
 
 ```kotlin
-// DIDComm
-val didCommOffer = registry.offerCredential("didcomm", request)
-
-// OIDC4VCI
-val oidcOffer = registry.offerCredential("oidc4vci", request)
-
-// CHAPI
-val chapiOffer = registry.offerCredential("chapi", request)
+val didCommOffer = service.offer(offer.copy(protocolName = ExchangeProtocolName.DidComm))
+val oidcOffer    = service.offer(offer.copy(protocolName = ExchangeProtocolName.Oidc4Vci))
+val chapiOffer   = service.offer(offer.copy(protocolName = ExchangeProtocolName.Chapi))
 ```
 
-**What this does:**
-- Creates offers using different protocols
-- Uses identical API for all
-- Returns protocol-specific responses
-
-**Expected Result:** Credential offers created with all protocols.
+If a protocol is not on the classpath, the call returns
+`ExchangeResult.Failure.ProtocolNotSupported`, never a thrown exception. Check support
+explicitly with `service.supports(ExchangeProtocolName.Chapi)`.
 
 ---
 
@@ -317,63 +315,64 @@ Need credential exchange?
 
 ### Pattern 1: Protocol Selection at Runtime
 
-Select protocol based on holder capabilities:
+Pick a protocol based on holder capabilities, falling back to whatever is actually
+registered in the service.
 
 ```kotlin
-fun selectProtocol(holderCapabilities: HolderCapabilities): String {
-    return when {
-        holderCapabilities.supportsDidComm -> "didcomm"
-        holderCapabilities.supportsOidc4vci -> "oidc4vci"
-        holderCapabilities.supportsChapi -> "chapi"
-        else -> "didcomm" // Default
-    }
+import org.trustweave.credential.identifiers.ExchangeProtocolName
+
+fun selectProtocol(
+    service: ExchangeService,
+    holderCapabilities: HolderCapabilities
+): ExchangeProtocolName = when {
+    holderCapabilities.supportsDidComm  && service.supports(ExchangeProtocolName.DidComm)  -> ExchangeProtocolName.DidComm
+    holderCapabilities.supportsOidc4vci && service.supports(ExchangeProtocolName.Oidc4Vci) -> ExchangeProtocolName.Oidc4Vci
+    holderCapabilities.supportsChapi    && service.supports(ExchangeProtocolName.Chapi)    -> ExchangeProtocolName.Chapi
+    else -> service.supportedProtocols().first()
 }
 
-// Use selected protocol
-val protocol = selectProtocol(holderCapabilities)
-val offer = registry.offerCredential(protocol, request)
+val offerResult = service.offer(offer.copy(protocolName = selectProtocol(service, holderCapabilities)))
 ```
 
 ### Pattern 2: Multi-Protocol Support
 
-Support multiple protocols and let holder choose:
+Produce an offer per registered protocol and let the holder pick.
 
 ```kotlin
-// Create offers with all protocols
-val offers = mapOf(
-    "didcomm" to registry.offerCredential("didcomm", request),
-    "oidc4vci" to registry.offerCredential("oidc4vci", request),
-    "chapi" to registry.offerCredential("chapi", request)
-)
+val offers: Map<ExchangeProtocolName, ExchangeResult<ExchangeResponse.Offer>> =
+    service.supportedProtocols().associateWith { name ->
+        service.offer(offer.copy(protocolName = name))
+    }
 
-// Present options to holder
-holder.selectProtocol(offers.keys) { selectedProtocol ->
-    val offer = offers[selectedProtocol]
-    // Continue with selected protocol
+offers.forEach { (name, result) ->
+    when (result) {
+        is ExchangeResult.Success -> println("${name.value}: offer=${result.value.offerId.value}")
+        is ExchangeResult.Failure -> println("${name.value}: ${result.errors.joinToString()}")
+    }
 }
 ```
 
 ### Pattern 3: Protocol Fallback
 
-Try protocols in order of preference:
+Try protocols in order. Failures are values (`ExchangeResult.Failure`), so no
+`try/catch` is needed for the supported-protocol case.
 
 ```kotlin
 suspend fun offerWithFallback(
-    request: CredentialOfferRequest,
-    preferredProtocols: List<String> = listOf("didcomm", "oidc4vci", "chapi")
-): CredentialOfferResponse? {
-    for (protocol in preferredProtocols) {
-        try {
-            return registry.offerCredential(protocol, request)
-        } catch (e: ExchangeException.ProtocolNotRegistered) {
-            // Try next protocol
-            continue
-        } catch (e: Exception) {
-            // Protocol error, try next
-            continue
-        }
+    service: ExchangeService,
+    base: ExchangeRequest.Offer,
+    preferred: List<ExchangeProtocolName> = listOf(
+        ExchangeProtocolName.DidComm,
+        ExchangeProtocolName.Oidc4Vci,
+        ExchangeProtocolName.Chapi
+    )
+): ExchangeResult<ExchangeResponse.Offer>? {
+    for (name in preferred) {
+        val r = service.offer(base.copy(protocolName = name))
+        if (r is ExchangeResult.Success) return r
+        // else: continue to next protocol
     }
-    return null // All protocols failed
+    return null
 }
 ```
 
@@ -381,49 +380,65 @@ suspend fun offerWithFallback(
 
 ## Complete Workflow Example
 
-End-to-end credential exchange with protocol abstraction:
+End-to-end issuance via the protocol-agnostic API. The same flow works for any
+registered protocol — substitute `ExchangeProtocolName.Oidc4Vci` / `.Chapi` for the
+DIDComm name to switch.
 
 ```kotlin
-import org.trustweave.credential.exchange.*
 import kotlinx.coroutines.runBlocking
+import org.trustweave.credential.exchange.ExchangeServices
+import org.trustweave.credential.exchange.model.CredentialPreview
+import org.trustweave.credential.exchange.request.ExchangeRequest
+import org.trustweave.credential.exchange.result.ExchangeResult
+import org.trustweave.credential.exchange.result.getOrThrow
+import org.trustweave.credential.identifiers.ExchangeProtocolName
+import org.trustweave.did.identifiers.Did
 
 fun main() = runBlocking {
-    // 1. Setup
-    val registry = CredentialExchangeProtocolRegistry()
-    registry.register(DidCommExchangeProtocol(didCommService))
-    registry.register(Oidc4VciExchangeProtocol(oidc4vciService))
-
-    // 2. Create offer request
-    val request = CredentialOfferRequest(
-        issuerDid = "did:key:issuer",
-        holderDid = "did:key:holder",
-        credentialPreview = CredentialPreview(...)
+    val service = ExchangeServices.createExchangeServiceWithAutoDiscovery(
+        credentialService = credentialService,
+        didResolver       = didResolver
     )
 
-    // 3. Offer credential (protocol selection)
-    val protocol = "didcomm" // or select dynamically
-    val offer = registry.offerCredential(protocol, request)
+    val protocol  = ExchangeProtocolName.DidComm
+    val issuerDid = Did("did:key:issuer")
+    val holderDid = Did("did:key:holder")
 
-    // 4. Holder requests credential
-    val credentialRequest = registry.requestCredential(
-        protocol,
-        RequestCredentialRequest(
-            offerId = offer.offerId,
-            holderDid = "did:key:holder"
+    // 1. Issuer creates an offer
+    val offerResp = service.offer(
+        ExchangeRequest.Offer(
+            protocolName      = protocol,
+            issuerDid         = issuerDid,
+            holderDid         = holderDid,
+            credentialPreview = CredentialPreview(
+                type   = listOf("VerifiableCredential", "EducationCredential"),
+                claims = mapOf("degree" to "Bachelor of Science")
+            )
         )
-    )
+    ).getOrThrow()
 
-    // 5. Issue credential
-    val issuedCredential = registry.issueCredential(
-        protocol,
-        IssueCredentialRequest(
-            requestId = credentialRequest.requestId,
-            credential = credential,
-            issuerDid = "did:key:issuer"
+    // 2. Holder responds with a credential request
+    val requestResp = service.request(
+        ExchangeRequest.Request(
+            protocolName = protocol,
+            holderDid    = holderDid,
+            issuerDid    = issuerDid,
+            offerId      = offerResp.offerId
         )
-    )
+    ).getOrThrow()
 
-    println("✅ Credential issued via $protocol")
+    // 3. Issuer issues the (already signed) credential
+    val issueResp = service.issue(
+        ExchangeRequest.Issue(
+            protocolName = protocol,
+            issuerDid    = issuerDid,
+            holderDid    = holderDid,
+            credential   = signedCredential,        // from trustWeave.issue { ... }.getOrThrow()
+            requestId    = requestResp.requestId
+        )
+    ).getOrThrow()
+
+    println("Credential issued via ${protocol.value}: ${issueResp.credential.id}")
 }
 ```
 
@@ -431,26 +446,26 @@ fun main() = runBlocking {
 
 ## Error Handling
 
-Handle protocol-specific errors:
+`ExchangeResult.Failure` is sealed and exhaustively pattern-matchable. Prefer this
+over exception handling; the underlying transport may still throw, but the protocol
+layer surfaces errors through `Failure`.
 
 ```kotlin
-import org.trustweave.credential.exchange.exception.ExchangeException
-
-try {
-    val offer = registry.offerCredential("didcomm", request)
-} catch (error: ExchangeException) {
-    when (error) {
-        is ExchangeException.ProtocolNotRegistered -> {
-            println("Protocol not registered: ${error.protocolName}")
-            println("Available: ${registry.getRegisteredProtocols()}")
-        }
-        is ExchangeException.MissingRequiredOption -> {
-            println("Missing option: ${error.option}")
-        }
-        else -> {
-            println("Exchange error: ${error.message}")
-        }
-    }
+when (val r = service.offer(offer)) {
+    is ExchangeResult.Success -> { /* use r.value */ }
+    is ExchangeResult.Failure.ProtocolNotSupported ->
+        println("Protocol ${r.protocolName.value} not registered. " +
+            "Available: ${r.availableProtocols.map { it.value }}")
+    is ExchangeResult.Failure.OperationNotSupported ->
+        println("Protocol ${r.protocolName.value} cannot do ${r.operation}")
+    is ExchangeResult.Failure.InvalidRequest ->
+        println("Invalid request: field=${r.field} reason=${r.reason}")
+    is ExchangeResult.Failure.MessageNotFound ->
+        println("Message not found: id=${r.messageId} type=${r.messageType}")
+    is ExchangeResult.Failure.NetworkError ->
+        println("Network error: ${r.reason}")
+    is ExchangeResult.Failure.Unknown ->
+        println("Unknown failure: ${r.reason}")
 }
 ```
 
@@ -493,10 +508,10 @@ val chapiOffer = chapiHandler.createOfferMessage(
 ### After (With TrustWeave)
 
 ```kotlin
-// One API, any protocol
-val didCommOffer = registry.offerCredential("didcomm", request)
-val oidc4vciOffer = registry.offerCredential("oidc4vci", request)
-val chapiOffer = registry.offerCredential("chapi", request)
+// One API, any protocol — only the protocolName field changes.
+val didCommOffer  = service.offer(offer.copy(protocolName = ExchangeProtocolName.DidComm))
+val oidc4vciOffer = service.offer(offer.copy(protocolName = ExchangeProtocolName.Oidc4Vci))
+val chapiOffer    = service.offer(offer.copy(protocolName = ExchangeProtocolName.Chapi))
 ```
 
 **Benefits:**

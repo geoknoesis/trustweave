@@ -203,7 +203,6 @@ wallet.store(credential)
 ```kotlin
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.types.getOrThrow
-import org.trustweave.trust.types.getOrThrow
 
 val trustWeave = TrustWeave.quickStart()
 

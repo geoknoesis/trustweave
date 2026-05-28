@@ -122,19 +122,22 @@ package com.example.TrustWeave.quickstart
 
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.trust.types.getOrThrow
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.credential.results.VerificationResult
+import org.trustweave.did.identifiers.Did
 import org.trustweave.core.util.DigestUtils
-import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
-      
+
         // KMS and DID methods auto-discovered via SPI
         keys {
             provider(IN_MEMORY)
@@ -146,7 +149,7 @@ fun main() = runBlocking {
             }
         }
     }
-    
+
         // Step 1: Compute a digest (demonstrates canonicalization)
         val credentialSubject = buildJsonObject {
             put("id", "did:key:holder-placeholder")
@@ -219,7 +222,6 @@ fun main() = runBlocking {
         
         val credentialId = wallet.store(credential)
         println("✅ Stored credential: $credentialId")
-    }
 }
 ```
 
@@ -255,9 +257,11 @@ The example above already shows the production pattern. Here's an enhanced versi
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.credential.results.getOrThrow
-import org.trustweave.testkit.services.*
 import org.trustweave.did.identifiers.Did
 import kotlinx.coroutines.runBlocking
 
@@ -343,8 +347,10 @@ TrustWeave promotes a “batteries included” experience for newcomers. The mon
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.core.util.DigestUtils
-import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -386,7 +392,7 @@ fun main() = runBlocking {
 - Builds a credential payload using Kotlinx Serialization builders so the structure is type-safe.
 - Canonicalises and hashes the payload, returning a multibase-encoded digest you can anchor or sign.
 
-> **Important:** The defaults use in-memory components (KMS, wallets, DID methods) suitable for testing only. For production, configure your own KMS, DID methods, and storage backends. See [Default Configuration](../configuration/defaults.md) and [Production Deployment](../deployment/production-checklist.md) for details.
+> **Important:** The defaults use in-memory components (KMS, wallets, DID methods) suitable for testing only. For production, configure your own KMS, DID methods, and storage backends. See [Default Configuration](../configuration/defaults.md) and [Production Integration Checklist](production-integration-checklist.md) for details.
 
 **Result**
 `DigestUtils.sha256DigestMultibase` prints a deterministic digest (for example `u5v...`) that becomes the integrity reference for later steps.
@@ -401,7 +407,8 @@ Everything in TrustWeave assumes deterministic canonicalization, so the very fir
 **How simple:** Configure only what you need using a fluent builder—defaults cover the rest.
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import org.trustweave.trust.types.getOrThrow
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.did.identifiers.extractKeyId

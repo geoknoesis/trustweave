@@ -14,8 +14,8 @@ A constraint on credential attributes in proof requests. Specifies which issuer,
 **Example:**
 ```kotlin
 AttributeRestriction(
-    issuerDid = "did:key:issuer",
-    schemaId = "https://schema.org/Person"
+    issuerDid = Did("did:key:issuer"),
+    schemaId = SchemaId("https://schema.org/Person")
 )
 ```
 
@@ -282,14 +282,14 @@ A unique identifier for a credential request. Returned when a request is created
 ---
 
 ### Requested Attribute
-An attribute that a verifier requires in a proof request. Can include restrictions on which issuer, schema, or credential definition is acceptable.
+An attribute that a verifier requires in a proof request. Can include restrictions on which issuer, schema, or credential definition is acceptable. In the current API this is `AttributeRequest` (a `Map<String, AttributeRequest>` on `ProofRequest.requestedAttributes`).
 
 **Example:**
 ```kotlin
-RequestedAttribute(
+AttributeRequest(
     name = "name",
     restrictions = listOf(
-        AttributeRestriction(issuerDid = "did:key:issuer")
+        AttributeRestriction(issuerDid = Did("did:key:issuer"))
     )
 )
 ```
@@ -299,13 +299,19 @@ RequestedAttribute(
 ### Requested Predicate
 A predicate (comparison) that a verifier requires in a proof request. Specifies an attribute name, comparison type (>=, <=, ==), and value.
 
-**Example:**
+> **Note:** The current API has no dedicated `RequestedPredicate` type. Predicates are passed via `ProofRequest.options.metadata` (`ExchangeOptions.builder().addMetadata("requestedPredicates", ...)`).
+
+**Example (metadata-based):**
 ```kotlin
-RequestedPredicate(
-    name = "age",
-    pType = ">=",
-    pValue = 18
-)
+ExchangeOptions.builder()
+    .addMetadata("requestedPredicates", buildJsonObject {
+        putJsonObject("age_verification") {
+            put("name", JsonPrimitive("age"))
+            put("pType", JsonPrimitive(">="))
+            put("pValue", JsonPrimitive(18))
+        }
+    })
+    .build()
 ```
 
 ---

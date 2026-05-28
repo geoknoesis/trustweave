@@ -41,7 +41,6 @@ import org.trustweave.trust.quickStart
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.trust.types.getOrThrow
 import org.trustweave.credential.results.getOrThrow
-import org.trustweave.trust.dsl.credential.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -172,7 +171,9 @@ println("✅ Credential is valid")
 
 ```kotlin
 import org.trustweave.trust.TrustWeave
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.trust.types.getOrThrow
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.did.identifiers.extractKeyId
@@ -196,7 +197,11 @@ val cred = trustWeave.issue {
 ### Full Configuration
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
 import org.trustweave.did.identifiers.extractKeyId
 val trustWeave = TrustWeave.build {
     keys { provider(IN_MEMORY); algorithm(ED25519) }
@@ -226,7 +231,11 @@ println("Anchored at ${anchored.ref.txHash}")
 ### Adding DID Methods and Blockchain Anchoring
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
 val trustWeave = TrustWeave.build {
     keys { provider(IN_MEMORY); algorithm(ED25519) }
     did {
@@ -252,7 +261,9 @@ For rapid prototyping and testing:
 
 ```kotlin
 import org.trustweave.trust.TrustWeave
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.trust.types.getOrThrow
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.did.identifiers.extractKeyId
@@ -286,7 +297,11 @@ fun main() = runBlocking {
 ### Pattern 2: Production with Blockchain Anchoring
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.AWS
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
 import org.trustweave.did.identifiers.extractKeyId
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
@@ -316,7 +331,9 @@ End-to-end workflow with verification:
 
 ```kotlin
 import org.trustweave.trust.TrustWeave
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.trust.types.getOrThrow
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.did.identifiers.extractKeyId
@@ -416,9 +433,13 @@ import org.trustweave.trust.dsl.credential.*
 |--------|-----------|
 | `DidMethods` | `KEY`, `WEB`, `ION`, `ETHR` |
 | `KeyAlgorithms` | `ED25519`, `SECP256K1`, `RSA` |
-| `KmsProviders` | `IN_MEMORY`, `AWS`, `AZURE`, `GOOGLE`, `HASHICORP`, `FORTANIX`, `THALES` |
+| `KmsProviders` | `IN_MEMORY`, `AWS`, `AZURE`, `GOOGLE`, `HASHICORP`, `FORTANIX`, `THALES`, `CYBERARK`, `IBM` |
 | `AnchorProviders` | `IN_MEMORY`, `ALGORAND`, `ETHEREUM`, `POLYGON`, `BASE`, `ARBITRUM` |
-| `ProofTypes` | `ED25519`, `JWT`, `BBS_BLS` |
+| `TrustProviders` | `IN_MEMORY` |
+| `RevocationProviders` | `IN_MEMORY` |
+
+For proof types use `org.trustweave.credential.model.ProofType` directly
+(e.g. `ProofType.Ed25519Signature2020`, `ProofType.JsonWebSignature2020`).
 
 For third-party/custom providers, use strings directly: `provider("myCustomKms")`
 

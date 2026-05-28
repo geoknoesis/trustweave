@@ -164,8 +164,8 @@ val retrieved = directory.get(wallet.walletId)
 // Get by DID (if DidManagement supported)
 val byDid = directory.getByDid("did:key:wallet")
 
-// Find wallets with specific capability (type-safe)
-val orgWallets = directory.findByCapability(CredentialOrganization::class)
+// Find wallets with specific capability (type-safe via reified type parameter)
+val orgWallets = directory.findByCapability<CredentialOrganization>()
 
 // Find wallets by feature name (dynamic)
 val walletsWithCollections = directory.findByCapability("collections")
@@ -240,6 +240,7 @@ val workCredentials = wallet.query {
     bySubject(holderDid)
     notRevoked()
 }
+```
 
 **Outcome:** Shows how to combine query builders to fetch specific credential subsets (issuer, type, revocation state) in one call.
 
@@ -251,11 +252,7 @@ if (wallet is CredentialPresentation) {
     val presentation = wallet.createPresentation(
         credentialIds = listOf(credentialId1, credentialId2),
         holderDid = holderDid,
-        options = mapOf(
-            "holderDid" to holderDid,
-            "proofType" to "Ed25519Signature2020",
-            "challenge" to "random-challenge-string"
-        )
+        options = proofOptions { challenge = "random-challenge-string" }
     )
 
     // Selective disclosure
@@ -263,9 +260,10 @@ if (wallet is CredentialPresentation) {
         credentialIds = listOf(credentialId),
         disclosedFields = listOf("name", "email"),
         holderDid = holderDid,
-        options = emptyMap<String, Any?>()
+        options = proofOptions { }
     )
 }
+```
 
 **Outcome:** Highlights how wallets supporting presentations can create full VPs or selective disclosures while keeping capability checks in place.
 

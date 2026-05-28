@@ -77,14 +77,15 @@ import org.trustweave.credential.CredentialServices
 
 // Typical: resolver + optional schema/revocation
 val service = credentialService(
-    
+    didResolver = didResolver,
     schemaRegistry = null,
     revocationManager = null,
 )
 
 // Or KMS-integrated (used by TrustWeave factory)
 val fromKms = CredentialServices.createCredentialService(
-    kms = kms
+    kms = kms,
+    didResolver = didResolver
 )
 ```
 

@@ -44,8 +44,8 @@ dependencies {
 ```kotlin
 import org.trustweave.ensdid.*
 import org.trustweave.anchor.*
-import org.trustweave.polygon.PolygonBlockchainAnchorClient
-import org.trustweave.kms.*
+import org.trustweave.anchor.polygon.PolygonBlockchainAnchorClient
+import org.trustweave.kms.inmemory.InMemoryKeyManagementService
 
 // Create configuration
 val config = EnsDidConfig.builder()
@@ -81,6 +81,7 @@ When the module is on the classpath, did:ens is automatically available:
 
 ```kotlin
 import org.trustweave.did.*
+import org.trustweave.did.spi.DidMethodProvider
 import org.trustweave.anchor.*
 import java.util.ServiceLoader
 
@@ -204,7 +205,7 @@ import org.trustweave.trust.TrustWeave
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.ensdid.*
-import org.trustweave.kms.InMemoryKeyManagementService
+import org.trustweave.kms.inmemory.InMemoryKeyManagementService
 
 val config = EnsDidConfig.mainnet("https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY")
 val kms = InMemoryKeyManagementService()
@@ -214,10 +215,14 @@ val trustWeave = TrustWeave.build {
     anchor {
         chain(config.chainId) {
             provider("polygon")
+            // OptionsBuilder uses an infix String.to(value); list keys explicitly so the
+            // call resolves to the builder rather than kotlin.Pair.
             options {
-                for ((k, v) in config.toMap()) {
-                    if (v != null) k.to(v)
-                }
+                "rpcUrl" to config.rpcUrl
+                "chainId" to config.chainId
+                "ensRegistryAddress" to config.ensRegistryAddress
+                config.privateKey?.let { "privateKey" to it }
+                config.network?.let { "network" to it }
             }
         }
     }

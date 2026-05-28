@@ -19,7 +19,7 @@ ExchangeException.ProtocolNotRegistered: Protocol 'didcomm' not registered. Avai
 
 **Symptoms:**
 - Calling `offerCredential()` throws `ExchangeException.ProtocolNotRegistered`
-- `registry.getAllProtocolNames()` returns empty list
+- `registry.getSupportedProtocols()` returns empty list
 
 **Solutions:**
 
@@ -32,7 +32,7 @@ ExchangeException.ProtocolNotRegistered: Protocol 'didcomm' not registered. Avai
 
 2. **Check if protocol is registered:**
    ```kotlin
-   if (!registry.isRegistered("didcomm")) {
+   if (!registry.isRegistered("didcomm".requireExchangeProtocolName())) {
        println("Protocol not registered. Registering...")
        registry.register(DidCommExchangeProtocol(didCommService))
    }
@@ -40,7 +40,7 @@ ExchangeException.ProtocolNotRegistered: Protocol 'didcomm' not registered. Avai
 
 3. **Verify protocol name:**
    ```kotlin
-   val available = registry.getAllProtocolNames()
+   val available = registry.getSupportedProtocols()
    println("Available protocols: $available")
    // Make sure you're using the correct protocol name
    ```
@@ -110,9 +110,9 @@ ExchangeException.OperationNotSupported: Protocol 'oidc4vci' does not support op
 
 1. **Check supported operations:**
    ```kotlin
-   val protocol = registry.get("oidc4vci")
+   val protocol = registry.get("oidc4vci".requireExchangeProtocolName())
    if (protocol != null) {
-       println("Supported operations: ${protocol.supportedOperations}")
+       println("Supported operations: ${protocol.capabilities.supportedOperations}")
        // Output: [OFFER_CREDENTIAL, REQUEST_CREDENTIAL, ISSUE_CREDENTIAL]
    }
    ```
@@ -149,9 +149,9 @@ ExchangeException.OperationNotSupported: Protocol 'oidc4vci' does not support op
    ```
 
 **Prevention:**
-- Check `protocol.supportedOperations` before calling methods
+- Check `protocol.capabilities.supportedOperations` before calling methods
 - Use protocol comparison table to choose the right protocol
-- Handle `ExchangeException.OperationNotSupported` gracefully
+- Handle `ExchangeResult.Failure.OperationNotSupported` gracefully
 
 ---
 
@@ -343,7 +343,7 @@ val registry = ExchangeProtocolRegistries.default()
 val protocols = registry.getAll()
 protocols.forEach { (name, protocol) ->
     println("Protocol: $name")
-    println("  Supported operations: ${protocol.supportedOperations}")
+    println("  Supported operations: ${protocol.capabilities.supportedOperations}")
 }
 ```
 
@@ -351,9 +351,9 @@ protocols.forEach { (name, protocol) ->
 
 ```kotlin
 // Validate all inputs before operations
-fun validateOfferRequest(request: CredentialOfferRequest): Boolean {
-    return isValidDid(request.issuerDid) &&
-           isValidDid(request.holderDid) &&
+fun validateOfferRequest(request: ExchangeRequest.Offer): Boolean {
+    return request.issuerDid.value.isNotBlank() &&
+           request.holderDid.value.isNotBlank() &&
            request.credentialPreview.attributes.isNotEmpty()
 }
 ```

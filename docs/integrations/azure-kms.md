@@ -176,62 +176,62 @@ when (result) {
         val keyHandle = result.keyHandle
         println("Key created: ${keyHandle.id}")
     }
-    is GenerateKeyResult.Failure -> {
-        println("Error: ${result.reason}")
-    }
+    is GenerateKeyResult.Failure.UnsupportedAlgorithm -> println("Unsupported: ${result.algorithm.name}")
+    is GenerateKeyResult.Failure.InvalidOptions -> println("Invalid options: ${result.reason}")
+    is GenerateKeyResult.Failure.Error -> println("Error: ${result.reason}")
 }
 
-// Generate key with custom name and tags
-val keyWithTagsResult = kms.generateKey(
+// Generate key with custom name (Azure uses KmsOptionKeys.KEY_NAME, not KEY_ID).
+val keyWithNameResult = kms.generateKey(
     algorithm = Algorithm.P256,
     options = mapOf(
-        KmsOptionKeys.KEY_ID to "issuer-key-2025",
-        KmsOptionKeys.DESCRIPTION to "Issuer key for 2025",
-        KmsOptionKeys.TAGS to mapOf(
-            "environment" to "production",
-            "purpose" to "issuance"
-        )
+        KmsOptionKeys.KEY_NAME to "issuer-key-2025"
     )
 )
 
-// Generate P-256 key for FIPS compliance
+// Generate P-256 key with another name
 val fipsKeyResult = kms.generateKey(
     algorithm = Algorithm.P256,
     options = mapOf(
-        KmsOptionKeys.KEY_ID to "fips-compliant-key"
+        KmsOptionKeys.KEY_NAME to "fips-compliant-key"
     )
 )
 ```
 
+> **Limitation:** The current Azure plugin only honors `KmsOptionKeys.KEY_NAME` at generation time. Azure Key Vault supports tags, descriptions, and tag-based filtering, but those are **not** wired into the plugin yet — passing `KmsOptionKeys.DESCRIPTION` or tag keys is silently ignored. To attach tags today, mint the key via `KmsOptionKeys.KEY_NAME` and then set tags out-of-band through the Azure SDK / CLI against the resulting Key Vault key.
+
 ### Signing Data
 
 ```kotlin
-// Sign with key name (KeyId value class)
-val sign = kms.sign(KeyId(keyId), data.toByteArray())
-when (sign) {
+import org.trustweave.core.identifiers.KeyId
+
+// Sign with key name (KeyId value class).
+// SignResult.Failure is sealed — match each leaf for typed fields.
+when (val sign = kms.sign(KeyId(keyId), data.toByteArray())) {
     is SignResult.Success -> {
         val signature = sign.signature
         // Use signature
     }
-    is SignResult.Failure -> {
-        println("Error: ${sign.reason}")
-    }
+    is SignResult.Failure.KeyNotFound -> println("Key not found: ${sign.keyId}")
+    is SignResult.Failure.UnsupportedAlgorithm ->
+        println("Algorithm '${sign.requestedAlgorithm?.name}' incompatible with key '${sign.keyAlgorithm.name}'")
+    is SignResult.Failure.Error -> println("Error: ${sign.reason}")
 }
 
 // Sign with full key URL
-val sign = kms.sign(
+val sign2 = kms.sign(
     KeyId("https://myvault.vault.azure.net/keys/mykey"),
     data.toByteArray()
 )
 
 // Sign with key name and version
-val sign = kms.sign(
+val sign3 = kms.sign(
     KeyId("mykey/abc123def456"),
     data.toByteArray()
 )
 
 // Sign with algorithm override
-val sign = kms.sign(
+val sign4 = kms.sign(
     keyId = KeyId(keyId),
     data = data.toByteArray(),
     algorithm = Algorithm.P256
@@ -242,26 +242,18 @@ val sign = kms.sign(
 
 ```kotlin
 // Get public key by key name (KeyId value class)
-val publicKeyResult = kms.getPublicKey(KeyId("mykey"))
-when (publicKeyResult) {
+when (val publicKeyResult = kms.getPublicKey(KeyId("mykey"))) {
     is GetPublicKeyResult.Success -> {
         val publicKey = publicKeyResult.keyHandle
-        // Access JWK format
-        val jwk = publicKey.publicKeyJwk
-        println("Public key JWK: $jwk")
+        println("Public key JWK: ${publicKey.publicKeyJwk}")
     }
-    is GetPublicKeyResult.Failure -> {
-        println("Error: ${publicKeyResult.reason}")
-    }
+    is GetPublicKeyResult.Failure.KeyNotFound -> println("Not found: ${publicKeyResult.keyId}")
+    is GetPublicKeyResult.Failure.Error -> println("Error: ${publicKeyResult.reason}")
 }
 
-// Get public key by full URL
-val publicKeyResult = kms.getPublicKey(
-    KeyId("https://myvault.vault.azure.net/keys/mykey")
-)
-
-// Get public key by name and version
-val publicKeyResult = kms.getPublicKey(KeyId("mykey/abc123def456"))
+// Get public key by full URL or by name+version
+val pk2 = kms.getPublicKey(KeyId("https://myvault.vault.azure.net/keys/mykey"))
+val pk3 = kms.getPublicKey(KeyId("mykey/abc123def456"))
 ```
 
 ### Key Deletion
@@ -486,15 +478,11 @@ Create a new key version when rotating:
 
 ```kotlin
 // Step 1: Create new key version (Azure Key Vault doesn't support this directly via API)
-// Instead, create a new key with a new name
+// Instead, create a new key with a new name.
 val newKeyResult = kms.generateKey(
     algorithm = Algorithm.P256,
     options = mapOf(
-        KmsOptionKeys.KEY_ID to "issuer-key-v2",
-        KmsOptionKeys.TAGS to mapOf(
-            "version" to "2",
-            "rotated" to "2025-01-15"
-        )
+        KmsOptionKeys.KEY_NAME to "issuer-key-v2"
     )
 )
 when (newKeyResult) {
@@ -521,13 +509,13 @@ Use different key names for each rotation:
 // Create initial key
 val key1Result = kms.generateKey(
     algorithm = Algorithm.P256,
-    options = mapOf(KmsOptionKeys.KEY_ID to "issuer-key-v1")
+    options = mapOf(KmsOptionKeys.KEY_NAME to "issuer-key-v1")
 )
 
 // Later, create rotated key
 val key2Result = kms.generateKey(
     algorithm = Algorithm.P256,
-    options = mapOf(KmsOptionKeys.KEY_ID to "issuer-key-v2")
+    options = mapOf(KmsOptionKeys.KEY_NAME to "issuer-key-v2")
 )
 
 // Update your application to use key2

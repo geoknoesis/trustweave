@@ -6,6 +6,21 @@ title: Features Usage Guide
 
 This guide explains how to use TrustWeave's feature plugins.
 
+> **TODO (audit, 0.6.0):** Many examples below reference packages such as
+> `org.trustweave.audit`, `org.trustweave.metrics`, `org.trustweave.notifications`,
+> `org.trustweave.versioning`, `org.trustweave.backup`, `org.trustweave.expiration`,
+> `org.trustweave.analytics`, `org.trustweave.oidc4vci`,
+> `org.trustweave.didcomm`, `org.trustweave.chapi`, `org.trustweave.multiparty`,
+> `org.trustweave.health`, and `org.trustweave.rendering`. These are **not** shipped as
+> Gradle modules in 0.6.0 — they document the interface shapes / in-memory implementations
+> that integrators are expected to write today.
+>
+> Sections that **do** match real, shipped code are:
+> - Section 3 (QR / deep-link content via `org.trustweave.credential.oidc4vci.qr.QrCodeGenerator`)
+> - The Integration Example at the bottom (`TrustWeave.build { ... }`, `trustWeave.issue { ... }`)
+>
+> For the actually-shipped exchange / format plugins (DIDComm v2, OIDC4VCI, OIDC4VP, CHAPI, BBS+, mDL, status lists, etc.), see [../plugins.md](../plugins.md).
+
 ## Overview
 
 All features are implemented as standalone plugins that can be instantiated and used independently. They follow TrustWeave's plugin architecture and can be integrated into your application as needed.
@@ -345,7 +360,9 @@ import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.did.identifiers.Did
 import kotlinx.datetime.Clock
 import java.time.Instant
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 
 val trustWeave = TrustWeave.build {
     // Configure TrustWeave instance
@@ -406,9 +423,9 @@ suspend fun issueCredentialWithTracking(
 
 For production use, you'll want to create database-backed implementations. Each feature has an interface that you can implement:
 
-- `AuditLogger` â†’ `DatabaseAuditLogger`
-- `MetricsCollector` â†’ `DatabaseMetricsCollector`
-- `CredentialVersioning` â†’ `DatabaseCredentialVersioning`
+- `AuditLogger` -> `DatabaseAuditLogger`
+- `MetricsCollector` -> `DatabaseMetricsCollector`
+- `CredentialVersioning` -> `DatabaseCredentialVersioning`
 - etc.
 
 These can use your preferred database (PostgreSQL, MySQL, MongoDB, etc.) and follow the same interface contracts.

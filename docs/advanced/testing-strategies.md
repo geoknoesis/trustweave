@@ -38,8 +38,11 @@ dependencies {
 ### Testing DID Methods
 
 ```kotlin
-import org.trustweave.testkit.*
-import org.trustweave.did.*
+import kotlinx.coroutines.runBlocking
+import org.trustweave.did.KeyAlgorithm
+import org.trustweave.did.didCreationOptions
+import org.trustweave.testkit.did.DidKeyMockMethod
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 
@@ -50,12 +53,12 @@ class DidMethodTest {
         val method = DidKeyMockMethod(kms)
 
         val options = didCreationOptions {
-            algorithm = KeyAlgorithm.Ed25519
+            algorithm = KeyAlgorithm.ED25519
         }
 
-        val did = method.createDid(options)
-        assertNotNull(did)
-        assert(did.id.startsWith("did:key:"))
+        val document = method.createDid(options)
+        assertNotNull(document)
+        assert(document.id.value.startsWith("did:key:"))
     }
 }
 ```
@@ -67,21 +70,29 @@ class DidMethodTest {
 ### Testing Key Management
 
 ```kotlin
+import kotlinx.coroutines.runBlocking
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.kms.*
+import org.trustweave.kms.Algorithm
+import org.trustweave.kms.results.GenerateKeyResult
+import org.trustweave.kms.results.SignResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class KmsTest {
     @Test
     fun testGenerateAndSign() = runBlocking {
         val kms = InMemoryKeyManagementService()
 
-        val key = kms.generateKey(Algorithm.Ed25519)
-        assertNotNull(key)
+        val generated = kms.generateKey(Algorithm.Ed25519)
+        assertTrue(generated is GenerateKeyResult.Success, generated.toString())
+        val handle = (generated as GenerateKeyResult.Success).keyHandle
 
         val data = "Hello, TrustWeave!".toByteArray()
-        val signature = kms.sign(key.id, data)
+        val signed = kms.sign(handle.id, data)
+        assertTrue(signed is SignResult.Success, signed.toString())
+        val signature = (signed as SignResult.Success).signature
 
         assertNotNull(signature)
         assertEquals(64, signature.size) // Ed25519 signature size
@@ -98,11 +109,11 @@ class KmsTest {
 ```kotlin
 import kotlinx.coroutines.runBlocking
 import org.trustweave.credential.results.VerificationResult
-import org.trustweave.testkit.services.*
-import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.dsl.credential.*
-import org.trustweave.trust.types.getOrThrow
 import org.trustweave.credential.results.getOrThrow
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.trust.types.getOrThrowDid
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -124,7 +135,7 @@ class CredentialWorkflowTest {
                     "name" to "Alice"
                 }
             }
-            signedBy(issuerDid, "key-1")
+            signedBy(issuerDid) // key id auto-extracted from the DID document
         }.getOrThrow()
         val verification = trustWeave.verify(credential)
         assertTrue(verification is VerificationResult.Valid, verification.toString())
@@ -164,11 +175,12 @@ class AnchoringTest {
 ### EO Integration Tests
 
 ```kotlin
-import org.trustweave.credential.results.VerificationResult
-import org.trustweave.testkit.eo.BaseEoIntegrationTest
+import kotlinx.coroutines.runBlocking
+import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import org.trustweave.anchor.*
+import org.trustweave.testkit.eo.BaseEoIntegrationTest
 import kotlin.test.Test
+import kotlin.test.assertTrue
 
 class MyEoIntegrationTest : BaseEoIntegrationTest() {
     override fun createAnchorClient(
@@ -179,9 +191,9 @@ class MyEoIntegrationTest : BaseEoIntegrationTest() {
     }
 
     @Test
-    fun testEoScenario() = runBlocking {
+    fun testEoScenario() {
         val result = runEoTestScenario()
-        assert(result.verificationResult is VerificationResult.Valid)
+        assertTrue(result.verificationResult.valid)
     }
 }
 ```
@@ -193,19 +205,23 @@ class MyEoIntegrationTest : BaseEoIntegrationTest() {
 ### Using TrustWeaveTestFixture
 
 ```kotlin
-import org.trustweave.testkit.*
+import kotlinx.coroutines.runBlocking
+import org.trustweave.testkit.TrustWeaveTestFixture
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlin.test.Test
-import org.trustweave.testkit.services.*
+import kotlin.test.assertNotNull
 
 class FixtureTest {
     @Test
     fun testWithFixture() = runBlocking {
-        val fixture = TrustWeaveTestFixture.builder()
+        TrustWeaveTestFixture.builder()
             .withKms(InMemoryKeyManagementService())
-            .withDidmethod(KEY) { DidKeyMockMethod(it) }
-            .withBlockchainClient("algorand:testnet") {
+            .withDidMethod("key")
+            .withBlockchainClient(
+                "algorand:testnet",
                 InMemoryBlockchainAnchorClient("algorand:testnet")
-            }
+            )
             .build()
             .use { fixture ->
                 val issuerDoc = fixture.createIssuerDid()
@@ -230,7 +246,7 @@ Keep tests isolated:
 @Test
 fun testIsolated() = runBlocking {
     // Each test gets its own fixture
-    val fixture = TrustWeaveTestFixture.builder().build().use { fixture ->
+    TrustWeaveTestFixture.builder().withDidMethod("key").build().use { fixture ->
         // Test code
     }
 }
@@ -252,17 +268,24 @@ fixture.use { fixture ->
 Test error cases:
 
 ```kotlin
+import kotlinx.coroutines.runBlocking
+import org.trustweave.core.identifiers.KeyId
+import org.trustweave.kms.results.SignResult
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
+import kotlin.test.Test
+import kotlin.test.assertTrue
+import kotlin.test.fail
+
 @Test
 fun testErrorHandling() = runBlocking {
     val kms = InMemoryKeyManagementService()
 
-    val result = kms.sign("nonexistent-key", "data".toByteArray())
-    result.fold(
-        onSuccess = { fail("Expected error") },
-        onFailure = { error ->
-            assert(error is TrustWeaveException.NotFound)
-        }
-    )
+    val result = kms.sign(KeyId("nonexistent-key"), "data".toByteArray())
+    when (result) {
+        is SignResult.Success -> fail("Expected error")
+        is SignResult.Failure.KeyNotFound -> assertTrue(true)
+        is SignResult.Failure -> fail("Expected KeyNotFound, got $result")
+    }
 }
 ```
 
@@ -271,6 +294,11 @@ fun testErrorHandling() = runBlocking {
 Test performance-critical paths:
 
 ```kotlin
+import kotlinx.coroutines.runBlocking
+import org.trustweave.kms.Algorithm
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
+import kotlin.test.Test
+
 @Test
 fun testPerformance() = runBlocking {
     val kms = InMemoryKeyManagementService()
@@ -282,7 +310,7 @@ fun testPerformance() = runBlocking {
     }
 
     val duration = System.currentTimeMillis() - start
-    assert(duration < 1000) // Should complete in under 1 second
+    assert(duration < 5_000) // Illustrative threshold; real perf varies
 }
 ```
 
@@ -291,9 +319,14 @@ fun testPerformance() = runBlocking {
 ### Testing Custom DID Methods
 
 ```kotlin
-import org.trustweave.testkit.*
-import org.trustweave.did.*
+import kotlinx.coroutines.runBlocking
+import org.trustweave.did.KeyAlgorithm
+import org.trustweave.did.didCreationOptions
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 class MyCustomDidMethodTest {
     @Test
@@ -303,18 +336,18 @@ class MyCustomDidMethodTest {
         val method = MyCustomDidMethod(kms, config)
 
         // Create DID
-        val did = method.createDid(didCreationOptions {
-            algorithm = KeyAlgorithm.Ed25519
+        val document = method.createDid(didCreationOptions {
+            algorithm = KeyAlgorithm.ED25519
         })
 
         // Resolve DID
-        val resolutionResult = method.resolveDid(did.id)
+        val resolutionResult = method.resolveDid(document.id)
         val resolved = when (resolutionResult) {
             is DidResolutionResult.Success -> resolutionResult.document
             else -> null
         }
         assertNotNull(resolved)
-        assertEquals(did.id, resolved?.id)
+        assertEquals(document.id, resolved?.id)
     }
 }
 ```

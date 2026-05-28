@@ -53,13 +53,13 @@ dependencies {
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     // Build TrustWeave instance (auto-discovered via SPI)
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }  // Auto-discovered via SPI
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }  // Auto-discovered via SPI
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }  // Auto-discovered via SPI
         // KMS, DID methods, and CredentialService all auto-created!
     }
@@ -76,21 +76,22 @@ fun main() = runBlocking {
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
+import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.errorMessage
-import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     // Build TrustWeave instance (auto-discovered via SPI)
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }  // Auto-discovered via SPI
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }  // Auto-discovered via SPI
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }  // Auto-discovered via SPI
         // KMS, DID methods, and CredentialService all auto-created!
     }
 
     // Create a DID using the default method (did:key)
-    val did = trustWeave.createDid { method(DidMethods.KEY) }
+    val did = trustWeave.createDid { method(DidMethods.KEY) }.getOrThrowDid()
     val resolution = trustWeave.resolveDid(did)
     when (resolution) {
         is DidResolutionResult.Success -> {
@@ -114,21 +115,22 @@ fun main() = runBlocking {
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
+import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.errorMessage
-import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     // Build TrustWeave instance (auto-discovered via SPI)
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }  // Auto-discovered via SPI
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }  // Auto-discovered via SPI
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }  // Auto-discovered via SPI
         // KMS, DID methods, and CredentialService all auto-created!
     }
 
     // Create a DID using the modern DSL
-    val did = trustWeave.createDid { method(DidMethods.KEY) }
+    val did = trustWeave.createDid { method(DidMethods.KEY) }.getOrThrowDid()
     println("Created DID: ${did.value}")
 
     // Resolve the DID we just created
@@ -153,15 +155,15 @@ fun main() = runBlocking {
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.errorMessage
-import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     // Build TrustWeave instance (auto-discovered via SPI)
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }  // Auto-discovered via SPI
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }  // Auto-discovered via SPI
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }  // Auto-discovered via SPI
         // KMS, DID methods, and CredentialService all auto-created!
     }
@@ -221,19 +223,22 @@ fun main() = runBlocking {
 ### Step 1: Create Issuer and Holder DIDs
 
 ```kotlin
+import kotlinx.coroutines.runBlocking
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
 import org.trustweave.trust.types.getOrThrowDid
-import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     // Build TrustWeave instance (auto-discovered via SPI)
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }  // Auto-discovered via SPI
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }  // Auto-discovered via SPI
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }  // Auto-discovered via SPI
         // KMS, DID methods, and CredentialService all auto-created!
     }
 
     // Create issuer DID (the organization issuing credentials)
-    
     val issuerDid = trustWeave.createDid { method(DidMethods.KEY) }.getOrThrowDid()
     println("Issuer DID: ${issuerDid.value}")
 
@@ -253,15 +258,15 @@ import kotlinx.datetime.Clock
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.identifiers.extractKeyId
-import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -344,7 +349,7 @@ fun main() = runBlocking {
 
     trustWeave.issue {
         credential {
-            type("VerifiableCredential", "EducationalCredential")
+            type("EducationalCredential")
             issuer(issuerDid)
             subject {
                 id(holderDid)
@@ -401,15 +406,15 @@ import kotlinx.coroutines.runBlocking
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
 import org.trustweave.wallet.*
-import org.trustweave.testkit.services.*
 
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.trust.types.getOrThrow
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -421,7 +426,6 @@ fun main() = runBlocking {
     }.getOrThrow()
 
     println("✅ Wallet created: ${wallet.walletId}")
-    println("   Holder: ${holderDid.value}")
 }
 ```
 
@@ -430,14 +434,18 @@ fun main() = runBlocking {
 ### Step 2: Store Credentials
 
 ```kotlin
+import kotlinx.coroutines.runBlocking
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.trust.types.getOrThrow
-import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -445,8 +453,7 @@ fun main() = runBlocking {
     val holderDid = trustWeave.createDid { method(DidMethods.KEY) }.getOrThrowDid()
 
     // Issue credential (simplified - see Tutorial 2 for full example)
-    val credential: VerifiableCredential =
-        /* ... trustWeave.issue { ... }.getOrThrow() ... */
+    val credential: VerifiableCredential = TODO("see Tutorial 2 for full issuance example")
 
     val wallet = trustWeave.wallet {
         holder(holderDid)
@@ -463,19 +470,23 @@ fun main() = runBlocking {
 ### Step 3: Query Credentials
 
 ```kotlin
+import kotlinx.coroutines.runBlocking
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
 import org.trustweave.did.identifiers.Did
 import org.trustweave.wallet.Wallet
-import org.trustweave.testkit.services.*
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
     // ... create wallet, store credentials (see Step 2) ...
-    val wallet: Wallet = /* ... */
-    val issuerDid: Did = /* ... */
+    val wallet: Wallet = TODO("see Step 2")
+    val issuerDid: Did = TODO("see Step 1")
 
     val allCredentials = wallet.query { }
     println("Total credentials: ${allCredentials.size}")
@@ -497,28 +508,37 @@ fun main() = runBlocking {
 ### Step 4: Use Organization Features
 
 ```kotlin
+import kotlinx.coroutines.runBlocking
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.did.identifiers.Did
 import org.trustweave.trust.types.getOrThrow
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.types.getOrThrowDid
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
+    val holderDid: Did = trustWeave.createDid { method(DidMethods.KEY) }.getOrThrowDid()
     val wallet = trustWeave.wallet {
         holder(holderDid)
         provider("inMemory")
     }.getOrThrow()
 
-    val credential = /* ... */
+    val credential: VerifiableCredential = TODO("see Tutorial 2 for issuance")
     val credentialId = wallet.store(credential)
 
-    wallet.withOrganization { org ->
-        val collectionId = org.createCollection("Education")
-        org.addToCollection(credentialId, collectionId)
+    // Organization features require the wallet to implement CredentialOrganization.
+    if (wallet is org.trustweave.wallet.CredentialOrganization) {
+        val collectionId = wallet.createCollection("Education")
+        wallet.addToCollection(credentialId, collectionId)
 
-        org.tagCredential(credentialId, setOf("diploma", "bachelor"))
+        wallet.tagCredential(credentialId, setOf("diploma", "bachelor"))
 
         val educationCreds = wallet.query {
             byCollection(collectionId)
@@ -569,16 +589,16 @@ fun main() = runBlocking {
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.trust.types.getOrThrow
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.identifiers.extractKeyId
-import org.trustweave.testkit.services.*
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
-        keys { provider(IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
     }
 
@@ -765,7 +785,6 @@ fun main() = runBlocking {
 ### Step 1: Register Blockchain Client
 
 ```kotlin
-import org.trustweave.testkit.services.*
 // Kotlin stdlib
 import kotlinx.coroutines.runBlocking
 
@@ -773,9 +792,11 @@ import kotlinx.coroutines.runBlocking
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did {
             method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) }
         }
@@ -799,10 +820,13 @@ fun main() = runBlocking {
 ### Step 2: Anchor Data
 
 ```kotlin
+import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.encodeToString
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
 
 @Serializable
 data class ImportantData(
@@ -813,6 +837,7 @@ data class ImportantData(
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
+        keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
         did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
         anchor {
             chain("algorand:testnet") {
@@ -827,7 +852,7 @@ fun main() = runBlocking {
 
     val data = ImportantData(
         id = "data-123",
-        timestamp = Instant.now().toString(),
+        timestamp = Clock.System.now().toString(),
         value = "Important information"
     )
 
@@ -870,30 +895,39 @@ fun main() = runBlocking {
 
 ### Step 4: Anchor Credential Status List
 
+There is no `trustWeave.createStatusList(...)` facade method. Status lists live on
+`CredentialRevocationManager`; the easiest way to create one is via the DSL:
+
 ```kotlin
-fun main() = runBlocking {
-    val trustWeave = TrustWeave.build {
-        // ... (register blockchain client) ...
-    }
+import org.trustweave.credential.model.StatusPurpose
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.trust.dsl.credential.revocation
 
-    // Create status list for revocation
-    val statusList = trustWeave.createStatusList(
-        issuerDid = issuerDid.value,
-        purpose = StatusPurpose.REVOCATION
-    ).getOrThrow()
+// 1. Create a status list (purpose = REVOCATION or SUSPENSION).
+val statusListId = trustWeave.revocation {
+    forIssuer("did:key:issuer")
+    purpose(StatusPurpose.REVOCATION)
+    size(131072)
+}.createStatusList()
 
-    // Anchor status list to blockchain (throws on chain/client errors)
-    val anchored = trustWeave.blockchains.anchor(
-        data = statusList,
-        serializer = StatusListCredential.serializer(),
-        chainId = "algorand:testnet"
-    )
-    println("✅ Status list anchored at ${anchored.ref.chainId} / ${anchored.ref.txHash}")
-    println("   Revocation status is tamper-evident on-chain")
-}
+// 2. Render the status-list bitstring as a VerifiableCredential.
+//    (Application code: produce the StatusList2021Credential payload for this id.)
+val statusListCredential: VerifiableCredential = renderStatusListCredential(statusListId)
+
+// 3. Anchor it just like any other payload (see Step 2).
+val anchored = trustWeave.blockchains.anchor(
+    data       = statusListCredential,
+    serializer = VerifiableCredential.serializer(),
+    chainId    = "algorand:testnet"
+)
+println("Anchored status list at tx=${anchored.ref.txHash}")
 ```
 
-**What this does:** Demonstrates anchoring revocation status lists for tamper-evident revocation checking.
+See [Blockchain-Anchored Revocation](../core-concepts/blockchain-anchored-revocation.md)
+for the full lifecycle (revoke, check, re-anchor) and for guidance on choosing an
+anchoring cadence. The lower-level API is
+`org.trustweave.credential.revocation.CredentialRevocationManager`
+(factory: `RevocationManagers.default()`).
 
 ### Key Takeaways
 

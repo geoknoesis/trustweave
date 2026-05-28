@@ -22,8 +22,8 @@ TrustWeave uses a type-safe system for identifiers and domain types to prevent e
 ```kotlin
 import org.trustweave.did.identifiers.Did
 import org.trustweave.credential.identifiers.CredentialId
-import org.trustweave.credential.types.ProofType
-import org.trustweave.credential.types.CredentialType
+import org.trustweave.credential.model.ProofType
+import org.trustweave.credential.model.CredentialType
 
 // ✅ Identifiers - identify WHICH resource
 val did = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
@@ -75,7 +75,7 @@ val purpose = StatusPurpose.REVOCATION          // What purpose?
 | Aspect | Identifiers | Types |
 |--------|-------------|-------|
 | **Question** | "Which resource?" | "What kind?" |
-| **Package** | `{module}.identifiers` | `{module}.types` |
+| **Package** | `{module}.identifiers` | `{module}.model` |
 | **Structure** | Classes extending `Iri` | Sealed classes / Enums |
 | **Examples** | `Did`, `CredentialId` | `ProofType`, `CredentialType` |
 | **Validation** | Format (IRI/DID pattern) | Value (allowed categories) |
@@ -255,8 +255,9 @@ val asCredId = iri.asCredentialIdOrNull()
 Proof types specify the cryptographic signature algorithm:
 
 ```kotlin
-import org.trustweave.credential.types.ProofType
-import org.trustweave.credential.types.ProofTypes
+import org.trustweave.credential.model.ProofType
+import org.trustweave.credential.model.ProofTypes
+import kotlinx.serialization.json.Json
 
 // ✅ Using predefined types
 val ed25519 = ProofType.Ed25519Signature2020
@@ -275,7 +276,7 @@ val custom = ProofType.Custom("MyCustomProofType")
 val fromString = ProofTypes.fromString("Ed25519Signature2020")
 
 // ✅ Serialization (automatically handled)
-val json = Json.encodeToString(ed25519)  // "Ed25519Signature2020"
+val json = Json.encodeToString(ProofType.serializer(), ed25519)  // "\"Ed25519Signature2020\""
 ```
 
 ### Credential Types
@@ -283,8 +284,8 @@ val json = Json.encodeToString(ed25519)  // "Ed25519Signature2020"
 Credential types classify what kind of credential it is:
 
 ```kotlin
-import org.trustweave.credential.types.CredentialType
-import org.trustweave.credential.types.CredentialTypes
+import org.trustweave.credential.model.CredentialType
+import org.trustweave.credential.model.CredentialTypes
 
 // ✅ Standard types
 val verifiableCred = CredentialType.VerifiableCredential  // Always required
@@ -304,14 +305,8 @@ val customType = CredentialType.Custom("ProfessionalLicenseCredential")
 // ✅ From string
 val fromString = CredentialType.fromString("EducationCredential")
 
-// ✅ In VerifiableCredential
-val credential = VerifiableCredential(
-    type = listOf(
-        CredentialType.VerifiableCredential,
-        CredentialType.Education
-    ),
-    // ...
-)
+// ✅ In VerifiableCredential, pass the typed list:
+//     type = listOf(CredentialType.VerifiableCredential, CredentialType.Education)
 ```
 
 ### Status Purpose
@@ -319,7 +314,9 @@ val credential = VerifiableCredential(
 Status purpose indicates why a status list exists:
 
 ```kotlin
-import org.trustweave.credential.types.StatusPurpose
+import org.trustweave.credential.identifiers.StatusListId
+import org.trustweave.credential.model.StatusPurpose
+import org.trustweave.credential.model.vc.CredentialStatus
 
 // ✅ Enum values
 val revocation = StatusPurpose.REVOCATION    // For revoking credentials
@@ -327,10 +324,9 @@ val suspension = StatusPurpose.SUSPENSION    // For suspending credentials
 
 // ✅ In CredentialStatus
 val status = CredentialStatus(
-    id = StatusListId("https://..."),
+    id = StatusListId("https://example.org/status/1#94567"),
     type = "StatusList2021Entry",
     statusPurpose = StatusPurpose.REVOCATION  // Typed!
-    // ...
 )
 ```
 
@@ -339,17 +335,19 @@ val status = CredentialStatus(
 Schema format specifies the validation schema type:
 
 ```kotlin
-import org.trustweave.credential.types.SchemaFormat
+import org.trustweave.credential.identifiers.SchemaId
+import org.trustweave.credential.model.SchemaFormat
+import org.trustweave.credential.model.vc.CredentialSchema
 
 // ✅ Enum values
 val jsonSchema = SchemaFormat.JSON_SCHEMA  // JSON Schema Draft 7/2020-12
 val shacl = SchemaFormat.SHACL             // SHACL for RDF
 
-// ✅ In CredentialSchema
+// ✅ In CredentialSchema (the W3C VC type itself only carries `id` + `type`;
+//    use the `SchemaFormat` enum elsewhere to dispatch on validator format).
 val schema = CredentialSchema(
-    id = SchemaId("https://..."),
-    type = "JsonSchemaValidator2018",
-    schemaFormat = SchemaFormat.JSON_SCHEMA  // Typed!
+    id = SchemaId("https://example.org/schemas/degree.json"),
+    type = "JsonSchemaValidator2018"
 )
 ```
 
@@ -363,11 +361,13 @@ All identifier and type fields are now strongly typed:
 
 ```kotlin
 import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.model.vc.Issuer
+import org.trustweave.credential.model.vc.CredentialSubject
 import org.trustweave.credential.identifiers.CredentialId
-import org.trustweave.credential.identifiers.IssuerId
-import org.trustweave.credential.types.CredentialType
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
+import org.trustweave.credential.model.CredentialType
+import org.trustweave.did.identifiers.Did
+import kotlinx.datetime.Instant
+import kotlinx.serialization.json.JsonPrimitive
 
 val credential = VerifiableCredential(
     id = CredentialId("https://example.com/credentials/123"),  // ✅ Typed
@@ -375,18 +375,18 @@ val credential = VerifiableCredential(
         CredentialType.VerifiableCredential,
         CredentialType.Education
     ),  // ✅ Typed
-    issuer = IssuerId.fromDid(Did("did:key:z6Mk...")),  // ✅ Typed
-    credentialSubject = buildJsonObject {
-        put("id", "did:key:holder")
-        put("degree", "Bachelor of Science")
-    },
-    issuanceDate = "2024-01-15T10:00:00Z"
+    issuer = Issuer.fromDid(Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")),
+    credentialSubject = CredentialSubject.fromDid(
+        Did("did:key:z6MkpTHR8VNsBxYAAWHut2Geadd9jSwuBV8xRoAnwWsdvktH"),
+        claims = mapOf("degree" to JsonPrimitive("Bachelor of Science"))
+    ),
+    issuanceDate = Instant.parse("2024-01-15T10:00:00Z")
 )
 
 // ✅ Access typed fields
-println(credential.id?.value)      // "https://example.com/credentials/123"
-println(credential.issuer.value)   // "did:key:z6Mk..."
-println(credential.type.first())   // CredentialType.VerifiableCredential
+println(credential.id?.value)        // "https://example.com/credentials/123"
+println(credential.issuer.id.value)  // "did:key:z6Mk..."
+println(credential.type.first())     // CredentialType.VerifiableCredential
 ```
 
 ### Proof (`CredentialProof`)
@@ -503,10 +503,10 @@ import org.trustweave.credential.identifiers.SchemaId
 import org.trustweave.credential.identifiers.StatusListId
 
 // ✅ Types
-import org.trustweave.credential.types.ProofType
-import org.trustweave.credential.types.CredentialType
-import org.trustweave.credential.types.StatusPurpose
-import org.trustweave.credential.types.SchemaFormat
+import org.trustweave.credential.model.ProofType
+import org.trustweave.credential.model.CredentialType
+import org.trustweave.credential.model.StatusPurpose
+import org.trustweave.credential.model.SchemaFormat
 
 // ✅ Extension functions (for safe parsing)
 import org.trustweave.did.identifiers.toDidOrNull

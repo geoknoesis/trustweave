@@ -1,5 +1,12 @@
 # ProofAdapter Plugins Implementation
 
+> **Historical / superseded.** The skeleton modules listed below (`credential-proof-vcld`, `credential-proof-sdjwt`, `credential-proof-anoncreds`, `credential-proof-mdl`, `credential-proof-x509`, `credential-proof-passkey`) were never produced. The current layout is:
+>
+> - **Built-in engines** (in `credentials/credential-api`): `VcLdProofEngine` (`ProofSuiteId.VC_LD`), `SdJwtProofEngine` (`ProofSuiteId.SD_JWT_VC`).
+> - **External plugin engines**: `credentials/plugins/bbs/` (`Bbs2023ProofEngine` → `ProofSuiteId.BBS_2023`) and `credentials/plugins/mdl/` (`MdocProofEngine` → `ProofSuiteId.MDOC`).
+>
+> AnonCreds, X.509, and PassKey engines are **not** implemented. The `ProofAdapters.autoRegister(...)` and `ProofRegistries.default()` helpers shown below do not exist; the current SPI uses `ProofEngineProvider` via Java ServiceLoader (`META-INF/services/org.trustweave.credential.spi.proof.ProofEngineProvider`). **For new code, follow [proof-engine-implementation-guide.md](proof-engine-implementation-guide.md).** Content below is historical only.
+
 ## ✅ Implementation Complete
 
 All ProofAdapter plugins for major credential formats have been implemented with skeleton structures ready for full implementation.

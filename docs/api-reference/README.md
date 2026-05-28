@@ -17,23 +17,23 @@ Complete API reference for TrustWeave.
 
 | Category | Methods | Page |
 |----------|---------|------|
-| **DIDs** | `createDid()`, `resolveDid()`, `updateDid()`, `deactivateDid()` | [Core API](core-api.md#did-operations) |
-| **Credentials** | `issue()`, `verify()`, `present()` | [Core API](core-api.md#credential-operations) |
-| **Wallets** | `create()`, `store()`, `query()`, `present()` | [Wallet API](wallet-api.md) |
-| **Blockchain** | `anchor()`, `read()`, `verify()` | [Core API](core-api.md#blockchain-operations) |
-| **Smart Contracts** | `draft()`, `bindContract()`, `executeContract()` | [Smart Contract API](smart-contract-api.md) |
-| **Trust** | `addTrustAnchor()`, `isTrustedIssuer()`, `findTrustPath()` | [Core API](core-api.md#trust-operations) |
+| **DIDs** | `createDid()`, `resolveDid()`, `updateDid()`, `rotateKey()`, `delegate()` | [Core API](core-api.md#did-operations) |
+| **Credentials** | `issue()`, `verify()`, `presentationResult()`, `revoke()` | [Core API](core-api.md#credential-operations) |
+| **Wallets** | `wallet { }` (DSL); storage / query on the returned `Wallet` | [Wallet API](wallet-api.md) |
+| **Blockchain** | `blockchains.anchor()`, `blockchains.read()` | [Core API](core-api.md#blockchain-anchoring) |
+| **Smart Contracts** | `contracts.draft()` / `createDraft()`, `bindContract()`, `executeContract()` | [Smart Contract API](smart-contract-api.md) |
+| **Trust** | `trust { }`, `addTrustAnchor()`, `isTrustedIssuer()`, `findTrustPath()` | [Core API](core-api.md#trust-operations) |
 
 ## Core API
 
 - **[Core API](core-api.md)**: TrustWeave facade API
-  - DID operations (`createDid()`, `resolveDid()`, `updateDid()`, `deactivateDid()`)
-  - Credential operations (`issue()`, `verify()`)
+  - DID operations (`createDid()`, `createDidWithKey()`, `resolveDid()`, `updateDid()`, `rotateKey()`, `delegate()`). DID deactivation is method-specific (no top-level `deactivateDid()`).
+  - Credential operations (`issue()`, `verify()`, `revoke()`)
   - Wallet operations (`wallet { }`)
   - Blockchain anchoring (`blockchains.anchor()`, `blockchains.read()`)
-  - Smart contract operations (`contracts.draft()`, `contracts.bindContract()`, `contracts.executeContract()`, etc.)
+  - Smart contract operations (`contracts.draft()` / `contracts.createDraft()`, `contracts.bindContract()`, `contracts.executeContract()`, etc.)
   - Trust operations (`trust { }`, `addTrustAnchor()`, `isTrustedIssuer()`)
-  - Error handling with sealed result types (`DidCreationResult`, `IssuanceResult`, etc.)
+  - Error handling with sealed result types (`DidCreationResult`, `IssuanceResult`, `VerificationResult`, `DidResult`, `WalletCreationResult`, …)
 
 ## Service APIs
 
@@ -72,7 +72,7 @@ import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.anchor.exceptions.BlockchainException
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 
 val did = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 
@@ -95,7 +95,12 @@ See [Error handling](../advanced/error-handling.md) and [API patterns — result
 TrustWeave is configured during creation using a DSL:
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
+import org.trustweave.trust.dsl.credential.AnchorProviders.POLYGON
 val trustWeave = TrustWeave.build {
     factories(
         walletFactory = TestkitWalletFactory()
@@ -128,7 +133,9 @@ val trustWeave = TrustWeave.build {
 Manage plugin initialization and cleanup:
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 val trustWeave = TrustWeave.build {
     keys { provider(IN_MEMORY); algorithm(ED25519) }
     did { method(KEY) { algorithm(ED25519) } }

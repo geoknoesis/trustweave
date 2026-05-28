@@ -27,33 +27,35 @@ Based on the TrustWeave codebase:
 
 ### Supported Algorithms in TrustWeave
 
-```48:62:TrustWeave-did/src/main/kotlin/com/geoknoesis/TrustWeave/did/DidCreationOptions.kt
-    enum class KeyAlgorithm(val algorithmName: String) {
-        /** Ed25519 signature algorithm (recommended) */
-        ED25519("Ed25519"),
+Defined as a sealed class in `kms/kms-core/src/main/kotlin/org/trustweave/kms/Algorithm.kt`:
 
-        /** secp256k1 (Bitcoin/Ethereum curve) */
-        SECP256K1("secp256k1"),
+```kotlin
+sealed class Algorithm(val name: String) {
+    // Elliptic curve algorithms
+    object Ed25519 : Algorithm("Ed25519")
+    object Secp256k1 : Algorithm("secp256k1")
+    object P256 : Algorithm("P-256")
+    object P384 : Algorithm("P-384")
+    object P521 : Algorithm("P-521")
 
-        /** P-256 (NIST curve) */
-        P256("P-256"),
+    // RSA algorithms (with key size 2048, 3072, or 4096)
+    data class RSA(val rsaKeySize: Int) : Algorithm("RSA-$rsaKeySize")
 
-        /** P-384 (NIST curve) */
-        P384("P-384"),
+    // BLS algorithms
+    object BLS12_381 : Algorithm("BLS12-381")
 
-        /** P-521 (NIST curve) */
-        P521("P-521");
+    // Custom algorithm (for extensibility)
+    data class Custom(val customName: String) : Algorithm(customName)
+}
 ```
 
 ### Supported Proof Types in TrustWeave
 
-```32:36:TrustWeave-trust/src/main/kotlin/com/geoknoesis/TrustWeave/credential/dsl/TypeSafeHelpers.kt
-object ProofTypes {
-    const val ED25519 = "Ed25519Signature2020"
-    const val JWT = "JsonWebSignature2020"
-    const val BBS_BLS = "BbsBlsSignature2020"
-}
-```
+Available via `org.trustweave.credential.model.ProofType` (see `credentials/credential-api`). Common values include:
+
+- `Ed25519Signature2020`
+- `JsonWebSignature2020`
+- `BbsBlsSignature2020`
 
 ## Proof Type to Algorithm Mapping
 

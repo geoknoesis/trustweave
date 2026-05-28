@@ -166,6 +166,7 @@ Complete workflow for rotating keys in a DID document:
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.errorMessage
+import org.trustweave.trust.types.DidResult
 
 suspend fun rotateKeyWorkflow(
     trustWeave: TrustWeave,
@@ -175,9 +176,7 @@ suspend fun rotateKeyWorkflow(
 ): Result<DidDocument> {
     return try {
         // 1. Verify current DID document
-        val context = trustWeave.configuration
-        val resolver = context.getDidResolver()
-        val currentResolution = resolver?.resolve(did)
+        val currentResolution = trustWeave.resolveDid(did)
 
         if (currentResolution !is DidResolutionResult.Success) {
             return Result.failure(
@@ -195,10 +194,15 @@ suspend fun rotateKeyWorkflow(
             )
         }
 
-        // 3. Rotate key (returns DidDocument directly)
-        val updated = trustWeave.rotateKey {
+        // 3. Rotate key (returns a sealed DidResult)
+        val updated = when (val r = trustWeave.rotateKey {
             did(did)
             algorithm("Ed25519") // Algorithm required for key generation
+        }) {
+            is DidResult.Success -> r.document
+            is DidResult.Failure -> return Result.failure(
+                IllegalStateException("Key rotation failed: $r")
+            )
         }
 
         logger.info("Key rotated successfully", mapOf(
@@ -239,9 +243,9 @@ suspend fun manageTrustAnchorWorkflow(
             )
         }
 
-        // 2. Add trust anchor using trust DSL
+        // 2. Add trust anchor using trust DSL (String overload supports a metadata block)
         trustWeave.trust {
-            addAnchor(anchorDid) {
+            addAnchor(anchorDid.value) {
                 credentialTypes(*credentialTypes.toTypedArray())
                 description(description)
             }

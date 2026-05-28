@@ -42,6 +42,15 @@ TrustWeave is a multi-module repository. **Publishing a JAR to Maven Central doe
 
 Individual plugins under `did/plugins/*`, `kms/plugins/*`, `anchors/plugins/*`, `credentials/plugins/*`, etc., vary widely. Treat each as **Experimental** unless its own README states otherwise and you have run integration tests against your target environment. Many third-party or ledger-specific modules still contain stub or partial implementations (`TODO` in source).
 
+Newer plugin families that ship in `settings.gradle.kts` but are evolving:
+
+- DID methods: `did:plugins:ebsi`
+- Credentials formats / proofs: `credentials:plugins:bbs`, `credentials:plugins:mdl`, `credentials:plugins:eudiw`
+- Exchange / discovery: `credentials:plugins:siop`, `credentials:plugins:presentation-exchange`, `credentials:plugins:openid-federation`
+- Status lists: `credentials:plugins:status-list:bitstring`, `credentials:plugins:status-list:token`, `credentials:plugins:status-list:publishing`, `credentials:plugins:status-list:server`
+
+Until each carries its own GA notice, treat the above as **Experimental**.
+
 **Rule of thumb:** If you did not run your own integration and security review of a plugin, do not treat it as production-ready solely because it is on the classpath.
 
 ## Gradle publishing
@@ -50,6 +59,6 @@ The root build applies `maven-publish` to Kotlin/JVM library subprojects so arti
 
 ## Related docs
 
-- Production integration checklist](../getting-started/production-integration-checklist.md)
-- Result types guide](result-types-guide.md)
+- [Production integration checklist](../getting-started/production-integration-checklist.md)
+- [Result types guide](result-types-guide.md)
 - Security policy (repository root `SECURITY.md`)

@@ -39,7 +39,9 @@ import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.trust.types.WalletCreationResult
 import org.trustweave.credential.results.IssuanceResult
 import kotlinx.coroutines.runBlocking
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
@@ -49,8 +51,12 @@ fun main() = runBlocking {
 
     val did = when (val dr = trustWeave.createDid { method(KEY); algorithm(ED25519) }) {
         is DidCreationResult.Success -> dr.did
+        is DidCreationResult.Failure.MethodNotRegistered -> {
+            println("DID method '${dr.method}' not registered; available: ${dr.availableMethods}")
+            return@runBlocking
+        }
         is DidCreationResult.Failure -> {
-            println("DID creation failed: ${dr.reason}")
+            println("DID creation failed: $dr")
             return@runBlocking
         }
     }
@@ -65,7 +71,7 @@ fun main() = runBlocking {
                 "name" to "Alice"
             }
         }
-        signedBy(did) // or signedBy(did, "key-1") for an explicit verification method fragment
+        signedBy(did) // key id auto-extracted from the issuer DID document
     }) {
         is IssuanceResult.Success -> println("Issued credential: ${issued.credential.id}")
         is IssuanceResult.Failure.AdapterNotReady -> println("Configure CredentialService: ${issued.allErrors.joinToString()}")
@@ -82,9 +88,9 @@ fun main() = runBlocking {
 ```
 
 **Domain-Specific Exception Types (wallet and other throwing paths):**
-- `DidException`: DID-related errors (DidMethodNotRegistered, DidNotFound, InvalidDidFormat)
-- `CredentialException`: Credential-related errors (CredentialInvalid, CredentialIssuanceFailed)
-- `WalletException`: Wallet-related errors (WalletCreationFailed)
+- `DidException` (in `did:did-core`): `DidMethodNotRegistered`, `DidNotFound`, `InvalidDidFormat`, `DidResolutionFailed`, `DidCreationFailed`, `DidUpdateFailed`, `DidDeactivationFailed`, `RequiresAction`
+- `WalletException` (in `wallet:wallet-core`): `WalletCreationFailed`, `WalletFactoryNotConfigured`, `InvalidHolderDid`, `StorageError`
+- `BlockchainException` (in `anchors:anchor-core`): `ChainNotRegistered`, `TransactionFailed`, `ConnectionFailed`, `ConfigurationFailed`, `UnsupportedOperation`
 - `TrustWeaveException`: Base exception with error codes and context
 
 ## Error Types
@@ -127,10 +133,12 @@ TrustWeave uses a sealed hierarchy of error types that extend `TrustWeaveExcepti
 | `DidNotFound` | `DID_NOT_FOUND` | `did`, `availableMethods` | DID resolution fails | `did` |
 | `DidMethodNotRegistered` | `DID_METHOD_NOT_REGISTERED` | `method`, `availableMethods` | Using unregistered DID method | `did` |
 | `InvalidDidFormat` | `INVALID_DID_FORMAT` | `did`, `reason` | DID format validation fails | `did` |
-| `CredentialInvalid` | `CREDENTIAL_INVALID` | `reason`, `credentialId`, `field` | Credential validation fails | `credentials` |
-| `CredentialIssuanceFailed` | `CREDENTIAL_ISSUANCE_FAILED` | `reason`, `issuerDid` | Credential issuance fails | `credentials` |
+| `DidResolutionFailed` | `DID_RESOLUTION_FAILED` | `did`, `reason` | DID resolution throws (rare; prefer sealed `DidResolutionResult`) | `did` |
+| `DidCreationFailed` | `DID_CREATION_FAILED` | `did`, `reason` | DID creation failure (when not surfaced via `DidCreationResult`) | `did` |
 | `ChainNotRegistered` | `CHAIN_NOT_REGISTERED` | `chainId`, `availableChains` | Using unregistered blockchain | `anchor` |
-| `WalletCreationFailed` | `WALLET_CREATION_FAILED` | `reason`, `provider`, `walletId` | Wallet creation fails | `wallet` |
+| `WalletCreationFailed` | `WALLET_CREATION_FAILED` | `reason`, `provider`, `walletId` | Wallet creation fails (low-level) | `wallet` |
+| `InvalidHolderDid` | `INVALID_HOLDER_DID` | `holderDid`, `reason` | Invalid holder DID | `wallet` |
+| `StorageError` | `WALLET_STORAGE_ERROR` | `operation`, `reason` | Wallet storage error | `wallet` |
 
 ### DID-Related Errors (in `trustweave-did` module)
 
@@ -139,11 +147,13 @@ import org.trustweave.did.exception.DidException
 import org.trustweave.did.exception.DidException.DidMethodNotRegistered
 import org.trustweave.did.exception.DidException.DidNotFound
 import org.trustweave.did.exception.DidException.InvalidDidFormat
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.types.getOrThrowDid
 
-// Handle DID errors with short imports
+// `getOrThrowDid()` throws IllegalStateException (not DidException) — wrap
+// DID-method-level exceptions where you call into resolution/update APIs directly.
 try {
-    val did = trustWeave.createDid { method(KEY) }
+    val did = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 } catch (error: DidException) {
     when (error) {
         is DidMethodNotRegistered -> {
@@ -151,37 +161,30 @@ try {
             println("Available: ${error.availableMethods}")
         }
         is DidNotFound -> {
-            println("DID not found: ${error.did}")
+            println("DID not found: ${error.did.value}")
         }
         is InvalidDidFormat -> {
             println("Invalid format: ${error.reason}")
         }
+        else -> println("DID error: ${error.message}")
     }
 }
 ```
 
-### Credential-Related Errors (in `trustweave-credentials` module)
+### Credential-related errors (sealed result, not exception)
+
+> **Note:** TrustWeave does **not** ship a `CredentialException` hierarchy. Credential issuance and verification surface failures via sealed results — handle them exhaustively rather than with try/catch.
 
 ```kotlin
-import org.trustweave.credential.exception.CredentialException
-import org.trustweave.credential.exception.CredentialException.CredentialInvalid
-import org.trustweave.credential.exception.CredentialException.CredentialIssuanceFailed
+import org.trustweave.credential.results.IssuanceResult
 
-// Handle credential errors with short imports
-try {
-    val credential = trustWeave.issue { ... }
-} catch (error: CredentialException) {
-    when (error) {
-        is CredentialInvalid -> {
-            println("Credential invalid: ${error.reason}")
-            error.credentialId?.let { println("Credential ID: $it") }
-            error.field?.let { println("Field: $it") }
-        }
-        is CredentialIssuanceFailed -> {
-            println("Issuance failed: ${error.reason}")
-            error.issuerDid?.let { println("Issuer: $it") }
-        }
-    }
+when (val issued = trustWeave.issue { /* ... */ }) {
+    is IssuanceResult.Success -> { /* use issued.credential */ }
+    is IssuanceResult.Failure.UnsupportedFormat -> println("Unsupported: ${issued.format.value}")
+    is IssuanceResult.Failure.AdapterNotReady -> println("Configure CredentialService")
+    is IssuanceResult.Failure.InvalidRequest -> println("Invalid field '${issued.field}': ${issued.reason}")
+    is IssuanceResult.Failure.AdapterError -> println("Adapter error: ${issued.reason}")
+    is IssuanceResult.Failure.MultipleFailures -> println(issued.allErrors.joinToString())
 }
 ```
 
@@ -387,8 +390,6 @@ Quick lookup table for common error codes and their solutions:
 | `DID_NOT_FOUND` | `DidNotFound` | DID not resolvable, method not registered, network issue | Check DID format, ensure method registered, verify network connectivity |
 | `DID_METHOD_NOT_REGISTERED` | `DidMethodNotRegistered` | Method not in registry | Register the method on `DidMethodRegistry` / `TrustWeave.build`, or list names via `trustWeave.configuration.didRegistry.getAllMethodNames()` |
 | `INVALID_DID_FORMAT` | `InvalidDidFormat` | DID doesn't match `did:<method>:<identifier>` format | Validate DID format before use, check for typos |
-| `CREDENTIAL_INVALID` | `CredentialInvalid` | Missing required fields, invalid structure, missing proof | Check credential structure, ensure all required fields present |
-| `CREDENTIAL_ISSUANCE_FAILED` | `CredentialIssuanceFailed` | Signing failed, key not found, DID resolution failed | Verify issuer DID is resolvable, check key exists in DID document |
 | `CHAIN_NOT_REGISTERED` | `ChainNotRegistered` | Chain not registered in registry | Register a client on `BlockchainAnchorRegistry` / `TrustWeave.build { anchor { ... } }`, or list IDs via `trustWeave.configuration.blockchainRegistry.getAllChainIds()` |
 | `WALLET_CREATION_FAILED` | `WalletCreationFailed` | Provider not found, configuration invalid, storage unavailable | Check provider name, verify configuration, ensure storage accessible |
 | `BLANK_PLUGIN_ID` | `BlankPluginId` | Plugin ID is blank | Provide a non-blank plugin ID |
@@ -624,7 +625,7 @@ try {
 TrustWeave automatically converts exceptions to `TrustWeaveException`:
 
 ```kotlin
-import org.trustweave.core.toTrustWeaveException
+import org.trustweave.core.exception.toTrustWeaveException
 
 try {
     // Some operation that might throw
@@ -687,7 +688,8 @@ TrustWeave validates inputs before operations to catch errors early:
 ### DID Validation
 
 ```kotlin
-import org.trustweave.core.util.DidValidator
+import org.trustweave.did.validation.DidValidator
+import org.trustweave.core.util.ValidationResult
 
 // Validate DID format
 val validation = DidValidator.validateFormat("did:key:z6Mk...")
@@ -729,7 +731,7 @@ if (!proofValidation.isValid()) {
 ### Chain ID Validation
 
 ```kotlin
-import org.trustweave.core.ChainIdValidator
+import org.trustweave.anchor.validation.ChainIdValidator
 
 // Validate chain ID format
 val validation = ChainIdValidator.validateFormat("algorand:testnet")

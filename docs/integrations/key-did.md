@@ -50,7 +50,7 @@ The did:key provider can be configured via options or automatically discovered v
 ```kotlin
 import org.trustweave.did.*
 import org.trustweave.keydid.*
-import org.trustweave.kms.*
+import org.trustweave.kms.inmemory.InMemoryKeyManagementService
 
 // Manual creation
 val kms = InMemoryKeyManagementService()
@@ -63,6 +63,7 @@ When the module is on the classpath, did:key is automatically available:
 
 ```kotlin
 import org.trustweave.did.*
+import org.trustweave.did.spi.DidMethodProvider
 import java.util.ServiceLoader
 
 // Discover did:key provider
@@ -99,6 +100,7 @@ println("Created: ${document.id}") // did:key:z6Mk...
 
 ```kotlin
 import org.trustweave.did.identifiers.Did
+import org.trustweave.did.resolver.DidResolutionResult
 
 // Resolve DID (derived from public key)
 val did = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
@@ -146,7 +148,7 @@ import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.keydid.*
 import org.trustweave.did.KeyAlgorithm
 import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.kms.InMemoryKeyManagementService
+import org.trustweave.kms.inmemory.InMemoryKeyManagementService
 
 val kms = InMemoryKeyManagementService()
 

@@ -29,7 +29,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 
 @Serializable
 data class CredentialDigest(
@@ -61,7 +62,7 @@ fun main() = runBlocking {
         )
 
         // Anchor to blockchain - get client from registry
-        val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get("algorand:testnet")
+        val anchorClient = trustWeave.configuration.blockchainRegistry.get("algorand:testnet")
             as? BlockchainAnchorClient
             ?: throw IllegalStateException("Blockchain client not found")
         
@@ -102,7 +103,8 @@ fun main() = runBlocking {
 Register blockchain clients in TrustWeave:
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 val trustWeave = TrustWeave.build {
     keys {
         provider(IN_MEMORY)
@@ -146,7 +148,7 @@ Anchor data to the blockchain:
 import kotlinx.serialization.json.Json
 
 // Get anchor client from registry
-val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get("algorand:testnet")
+val anchorClient = trustWeave.configuration.blockchainRegistry.get("algorand:testnet")
     as? BlockchainAnchorClient
     ?: throw IllegalStateException("Blockchain client not found")
 
@@ -196,7 +198,7 @@ data class MyData(val id: String, val value: String)
 val data = MyData(id = "123", value = "test")
 
 // Get anchor client from registry
-val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get("algorand:testnet")
+val anchorClient = trustWeave.configuration.blockchainRegistry.get("algorand:testnet")
     as? BlockchainAnchorClient
     ?: throw IllegalStateException("Blockchain client not found")
 
@@ -223,7 +225,7 @@ val digest = CredentialDigest(
 )
 
 // Get anchor client and anchor digest
-val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get("algorand:testnet")
+val anchorClient = trustWeave.configuration.blockchainRegistry.get("algorand:testnet")
     as? BlockchainAnchorClient
     ?: throw IllegalStateException("Blockchain client not found")
 
@@ -256,7 +258,7 @@ val anchorRef = AnchorRef(
 )
 
 // Get anchor client and read
-val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get(anchorRef.chainId)
+val anchorClient = trustWeave.configuration.blockchainRegistry.get(anchorRef.chainId)
     as? BlockchainAnchorClient
     ?: throw IllegalStateException("Blockchain client not found")
 
@@ -272,7 +274,7 @@ Verify that the data matches the on-chain digest:
 import kotlinx.serialization.json.Json
 
 try {
-    val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get(anchorRef.chainId)
+    val anchorClient = trustWeave.configuration.blockchainRegistry.get(anchorRef.chainId)
         as? BlockchainAnchorClient
         ?: throw IllegalStateException("Blockchain client not found")
     
@@ -307,7 +309,7 @@ import kotlinx.serialization.json.Json
 val chains = listOf("algorand:testnet", "polygon:testnet")
 val anchorResults = chains.mapNotNull { chainId ->
     try {
-        val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get(chainId)
+        val anchorClient = trustWeave.configuration.blockchainRegistry.get(chainId)
             as? BlockchainAnchorClient
             ?: throw IllegalStateException("Blockchain client not found for $chainId")
         
@@ -336,7 +338,7 @@ val chains = listOf("algorand:testnet", "polygon:testnet")
 val anchorResults = chains.map { chainId ->
     async {
         try {
-            val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get(chainId)
+            val anchorClient = trustWeave.configuration.blockchainRegistry.get(chainId)
                 as? BlockchainAnchorClient
                 ?: throw IllegalStateException("Blockchain client not found for $chainId")
             
@@ -375,7 +377,7 @@ suspend fun anchorWithRetry(
     chainId: String,
     maxRetries: Int = 3
 ): AnchorResult? {
-    val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get(chainId)
+    val anchorClient = trustWeave.configuration.blockchainRegistry.get(chainId)
         as? BlockchainAnchorClient
         ?: throw IllegalStateException("Blockchain client not found for $chainId")
     
@@ -404,7 +406,7 @@ import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 
 val anchorResult = withTimeout(30000) { // 30 second timeout
-    val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get("algorand:testnet")
+    val anchorClient = trustWeave.configuration.blockchainRegistry.get("algorand:testnet")
         as? BlockchainAnchorClient
         ?: throw IllegalStateException("Blockchain client not found")
     
@@ -420,7 +422,7 @@ Check if an anchor exists before reading:
 ```kotlin
 suspend fun verifyAnchorExists(ref: AnchorRef): Boolean {
     return try {
-        val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get(ref.chainId)
+        val anchorClient = trustWeave.configuration.blockchainRegistry.get(ref.chainId)
             as? BlockchainAnchorClient
             ?: return false
         
@@ -440,7 +442,7 @@ Handle anchoring errors gracefully:
 import kotlinx.serialization.json.Json
 
 try {
-    val anchorClient = trustWeave.configuration.registries.blockchainRegistry.get("algorand:testnet")
+    val anchorClient = trustWeave.configuration.blockchainRegistry.get("algorand:testnet")
         as? BlockchainAnchorClient
         ?: throw IllegalStateException("Blockchain client not found")
     

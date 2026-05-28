@@ -5,7 +5,7 @@ nav_exclude: true
 
 # Credential Exchange Protocols
 
-Complete implementation of credential exchange protocols for TrustWeave, providing a unified interface for DIDComm V2, OIDC4VCI, and CHAPI.
+Complete implementation of credential exchange protocols for TrustWeave, providing a unified interface for DIDComm V2, OIDC4VCI, OIDC4VP, SIOPv2, and CHAPI.
 
 ## Quick Start
 
@@ -24,7 +24,8 @@ registry.register(DidCommExchangeProtocol(didCommService))
 
 val exchangeService = ExchangeServices.createExchangeService(
     protocolRegistry = registry,
-    credentialService = credentialService
+    credentialService = credentialService,
+    didResolver = didResolver
 )
 
 // Use any protocol with the same API
@@ -72,6 +73,27 @@ val offer = when (offerResult) {
 - Proof of possession (JWT)
 - Metadata discovery
 
+### ✅ OIDC4VP
+
+**Status**: Production Ready
+**Documentation**: [OIDC4VP Protocol](./oidc4vp.md)
+
+- Verifier-initiated proof requests via `vp_token`
+- DIF Presentation Exchange v2 integration
+- HAIP (High Assurance Interoperability Profile) validator
+- Cross-device and same-device direct-post flows
+- Pairs with SIOPv2 for combined authentication + presentation
+
+### ✅ SIOPv2
+
+**Status**: Production Ready
+**Documentation**: [SIOPv2 Protocol](./siopv2.md)
+
+- Wallet-as-OP (Self-Issued OpenID Provider v2) authentication
+- DID-based `id_token` issuance
+- Cross-device QR-code login
+- Pairs with OIDC4VP for combined sign-in + credential presentation
+
 ### ✅ CHAPI
 
 **Status**: Production Ready
@@ -105,15 +127,16 @@ val offer = when (offerResult) {
 
 ## Protocol Comparison
 
-| Feature | DIDComm | OIDC4VCI | CHAPI |
-|---------|---------|----------|-------|
-| Credential Offer | ✅ | ✅ | ✅ |
-| Credential Request | ✅ | ✅ | ❌ |
-| Credential Issue | ✅ | ✅ | ✅ |
-| Proof Request | ✅ | ❌ | ✅ |
-| Proof Presentation | ✅ | ❌ | ✅ |
-| Encryption | ✅ | Via HTTPS | Browser |
-| Production Ready | ✅ | ✅ | ✅ |
+| Feature | DIDComm | OIDC4VCI | OIDC4VP | SIOPv2 | CHAPI |
+|---------|---------|----------|---------|--------|-------|
+| Credential Offer | ✅ | ✅ | ❌ | ❌ | ✅ |
+| Credential Request | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Credential Issue | ✅ | ✅ | ❌ | ❌ | ✅ |
+| Proof Request | ✅ | ❌ | ✅ | ✅ | ✅ |
+| Proof Presentation | ✅ | ❌ | ✅ | ✅ | ✅ |
+| Authentication (`id_token`) | ❌ | ❌ | ❌ | ✅ | ❌ |
+| Encryption | ✅ | Via HTTPS | Via HTTPS | Via HTTPS | Browser |
+| Production Ready | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ## Production Status
 

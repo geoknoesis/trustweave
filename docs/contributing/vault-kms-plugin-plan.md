@@ -4,6 +4,8 @@ title: HashiCorp Vault KMS Plugin Implementation Plan
 
 # HashiCorp Vault KMS Plugin Implementation Plan
 
+> **STATUS**: This plugin has been implemented as the `kms/plugins/hashicorp` module under the **`org.trustweave.hashicorpkms`** package (not `com.geoknoesis.TrustWeave.hashicorpkms` as drafted below). The shipped provider registers under the SPI name **`"vault"`**. Treat this document as a historical implementation plan; the package paths below are pre-implementation working names — see `kms/plugins/hashicorp/src/main/kotlin/org/trustweave/hashicorpkms/` for the canonical sources.
+
 ## Overview
 
 This plan outlines the implementation of a HashiCorp Vault Key Management Service (KMS) plugin for TrustWeave. The plugin will be implemented as the `kms/plugins/hashicorp` module and will integrate with Vault's Transit secrets engine to provide cryptographic key operations for DID and Verifiable Credential workflows.
@@ -223,7 +225,7 @@ VaultKmsConfig.builder()
 - `kms/plugins/hashicorp/src/main/kotlin/com/geoknoesis/TrustWeave/hashicorpkms/VaultKeyManagementServiceProvider.kt`
 
 **Features**:
-- Provider name: `"vault"` or `"hashicorp-vault"`
+- Provider name: `"vault"` (as shipped)
 - Advertise supported algorithms
 - Create `VaultKeyManagementService` from options
 - Support configuration from options map or environment variables
@@ -242,7 +244,7 @@ VaultKmsConfig.builder()
 **Files**:
 - `kms/plugins/hashicorp/src/main/resources/META-INF/services/org.trustweave.kms.spi.KeyManagementServiceProvider`
 
-**Content**:
+**Content** (matches the shipped file):
 ```
 org.trustweave.hashicorpkms.VaultKeyManagementServiceProvider
 ```

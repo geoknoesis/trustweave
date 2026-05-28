@@ -50,7 +50,7 @@ Credential revocation uses **Status List 2021**—a compact, efficient method fo
 
 **How it fits in a workflow:**
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.RevocationProviders.IN_MEMORY
 // 1. Configure revocation
 val trustWeave = TrustWeave.build {
     revocation { provider(IN_MEMORY) }
@@ -83,10 +83,13 @@ val status = trustWeave.revocation {
 Enable revocation in your TrustWeave configuration:
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders
+import org.trustweave.trust.dsl.credential.RevocationProviders
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 val trustWeave = TrustWeave.build {
     keys {
-        provider(IN_MEMORY)
+        provider(KmsProviders.IN_MEMORY)
         algorithm(ED25519)
     }
     
@@ -97,7 +100,7 @@ val trustWeave = TrustWeave.build {
     }
     
     revocation {
-        provider(IN_MEMORY)  // For testing; use persistent provider in production
+        provider(RevocationProviders.IN_MEMORY)  // For testing; use persistent provider in production
     }
 }
 ```
@@ -250,7 +253,10 @@ Here's a complete, runnable example:
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.credential.model.ProofType
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders
+import org.trustweave.trust.dsl.credential.RevocationProviders
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.did.resolver.DidResolutionResult
@@ -266,7 +272,7 @@ fun main() = runBlocking {
     // Step 1: Configure TrustWeave with revocation
     val trustWeave = TrustWeave.build {
         keys {
-            provider(IN_MEMORY)
+            provider(KmsProviders.IN_MEMORY)
             algorithm(ED25519)
         }
         
@@ -277,7 +283,7 @@ fun main() = runBlocking {
         }
         
         revocation {
-            provider(IN_MEMORY)
+            provider(RevocationProviders.IN_MEMORY)
         }
     }
     
@@ -439,7 +445,7 @@ println("Credential is ${if (isRevoked) "revoked" else "active"}")
 
 **Solution:**
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.RevocationProviders.IN_MEMORY
 // ✅ Ensure revocation is configured
 val trustWeave = TrustWeave.build {
     revocation {
@@ -606,6 +612,183 @@ if (revoked) {
 
 ---
 
+## Choosing a Status List Manager
+
+The `revocation { provider(IN_MEMORY) }` block in the examples above is fine for tests, but production deployments should pick a concrete status-list format and a persistent backend. Two interoperable formats ship as plugins, each auto-discovered via SPI under a registered provider name.
+
+### W3C Bitstring Status List
+
+The default W3C format. Status lists are themselves Verifiable Credentials containing a gzipped, base64url-encoded bitstring. Best for VC-LD / VC-JWT credentials.
+
+- **Module**: [credentials/plugins/status-list/bitstring](../../credentials/plugins/status-list/bitstring/) — see the plugin [README](../../credentials/plugins/status-list/bitstring/README.md)
+- **Provider name**: `"bitstring"`
+- **Spec**: [W3C Bitstring Status List v1.0](https://www.w3.org/TR/vc-bitstring-status-list/)
+- **Use when**: issuing W3C VCs (`vc-ld`, `vc-jwt`).
+
+**Option A — SPI-driven (configure via system properties):**
+
+```kotlin
+// On the JVM, set these before TrustWeave.build:
+//   -Dtrustweave.statuslist.jdbc.url=jdbc:postgresql://...
+//   -Dtrustweave.statuslist.jdbc.username=...
+//   -Dtrustweave.statuslist.jdbc.password=...
+//   -Dtrustweave.statuslist.issuer.did=did:web:issuer.example.com
+val trustWeave = TrustWeave.build {
+    revocation { provider("bitstring") }
+}
+```
+
+**Option B — construct the manager directly for full control:**
+
+```kotlin
+import org.trustweave.revocation.bitstring.BitstringStatusListManagerFactory
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
+
+val dataSource = HikariDataSource(HikariConfig().apply {
+    jdbcUrl = "jdbc:postgresql://localhost:5432/trustweave"
+    username = "trustweave"
+    password = System.getenv("DB_PASSWORD")
+})
+
+val manager = BitstringStatusListManagerFactory.create(
+    dataSource = dataSource,
+    kms = kms,
+    issuerDid = "did:web:issuer.example.com",
+    bitsPerEntry = 1
+)
+// Wire `manager` into your own services as a CredentialRevocationManager.
+```
+
+### IETF Token Status List
+
+JWT/CWT-based status list designed for SD-JWT VC and ISO mdoc. Status is encoded as a signed token rather than a VC, so it fits the SD-JWT VC `status` claim and mdoc flows naturally.
+
+- **Module**: [credentials/plugins/status-list/token](../../credentials/plugins/status-list/token/) — see the plugin [README](../../credentials/plugins/status-list/token/README.md)
+- **Provider name**: `"token"`
+- **Spec**: [IETF Token Status List](https://datatracker.ietf.org/doc/draft-ietf-oauth-status-list/)
+- **Use when**: issuing SD-JWT VCs or mdocs.
+
+```kotlin
+// SPI route — additionally honors -Dtrustweave.statuslist.token.uri
+val trustWeave = TrustWeave.build {
+    revocation { provider("token") }
+}
+
+// Or build directly:
+import org.trustweave.revocation.token.TokenStatusListManagerFactory
+
+val manager = TokenStatusListManagerFactory.create(
+    dataSource = dataSource,
+    kms = kms,
+    issuerDid = "did:web:issuer.example.com",
+    statusListUri = "https://issuer.example.com/statuslists/1",
+    bitsPerEntry = 1
+)
+```
+
+> **Note:** Both SPI providers require a `KeyManagementService` to be injected before the framework calls `create()`. The TrustWeave `revocation { provider("bitstring") }` DSL handles this when KMS is configured in the same `TrustWeave.build { keys { ... } }` block.
+
+---
+
+## Publishing Status Lists
+
+For verifiers to check revocation, the signed status-list credential (or token) must be reachable at the URL embedded in the credential's `credentialStatus` entry. The [status-list/publishing](../../credentials/plugins/status-list/publishing/) module provides four backends behind a common `StatusListPublisher` interface — see the plugin [README](../../credentials/plugins/status-list/publishing/README.md) for full details.
+
+| Backend | Use when |
+|---|---|
+| `LocalFileStatusListPublisher` | Local dev / testing, or behind your own web server |
+| `S3StatusListPublisher` | Hosting on AWS S3 (optionally fronted by CloudFront) |
+| `AzureBlobStatusListPublisher` | Hosting on Azure Blob Storage |
+| `GcsStatusListPublisher` | Hosting on Google Cloud Storage |
+
+The interface is:
+
+```kotlin
+interface StatusListPublisher {
+    suspend fun publish(statusListId: String, content: ByteArray, contentType: String): String
+    suspend fun delete(statusListId: String)
+    suspend fun getUrl(statusListId: String): String?
+}
+```
+
+Example — set up an S3 publisher and push a serialized status list:
+
+```kotlin
+import org.trustweave.revocation.publishing.S3StatusListPublisher
+import org.trustweave.revocation.publishing.S3PublisherConfig
+import kotlinx.coroutines.runBlocking
+
+val publisher = S3StatusListPublisher(
+    S3PublisherConfig(
+        bucket = "trust.example.com",
+        region = "us-east-1",
+        keyPrefix = "statuslists/",
+        publicUrlPattern = "https://trust.example.com/statuslists/{id}"
+    )
+)
+
+runBlocking {
+    // `bytes` is the signed status list VC (Bitstring) or status token (Token),
+    // produced by the corresponding manager.
+    val url = publisher.publish(
+        statusListId = "sl-001",
+        content = bytes,
+        contentType = "application/json"  // or "application/jwt" for Token Status List
+    )
+    println("Published at: $url")
+}
+```
+
+> **Tip:** Republish whenever a status list changes. Verifiers fetch the URL with normal HTTP caching, so use short `Cache-Control` headers on the published object.
+
+---
+
+## Verifier-Side Status Checking
+
+On the verifier side, the [`CredentialStatusChecker`](../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/spi/status/CredentialStatusChecker.kt) SPI gates verification on a live status fetch — proof engines call it before returning a `Valid` result.
+
+```kotlin
+import org.trustweave.credential.spi.status.CredentialStatusChecker
+import org.trustweave.credential.spi.status.CredentialStatusCheckResult
+import org.trustweave.credential.model.vc.VerifiableCredential
+
+class HttpStatusChecker : CredentialStatusChecker {
+    override suspend fun checkStatus(
+        credential: VerifiableCredential
+    ): CredentialStatusCheckResult {
+        val entry = credential.credentialStatus
+            ?: return CredentialStatusCheckResult.NoStatus
+        // Fetch entry.statusListCredential, decode the bitstring,
+        // check the bit at entry.statusListIndex, then return one of:
+        //   Valid | Revoked(reason) | Suspended(reason) | CheckFailed(reason)
+        return CredentialStatusCheckResult.Valid
+    }
+}
+```
+
+Inject it via the proof engine config under the `"statusChecker"` key:
+
+```kotlin
+import org.trustweave.credential.spi.proof.ProofEngineConfig
+
+val config = ProofEngineConfig(
+    properties = mapOf("statusChecker" to HttpStatusChecker())
+)
+```
+
+The sealed result type covers every outcome a verifier needs to surface:
+
+| Result | Meaning |
+|---|---|
+| `Valid` | Status list confirms the credential is active |
+| `Revoked(reason)` | Credential has been permanently revoked |
+| `Suspended(reason)` | Credential is temporarily on hold |
+| `CheckFailed(reason)` | Status check itself failed (network, malformed list) |
+| `NoStatus` | Credential has no `credentialStatus` field |
+
+---
+
 ## Next Steps
 
 Now that you can revoke credentials, here are ways to extend your implementation:
@@ -630,7 +813,7 @@ See: [How to Verify Credentials](./verify-credentials.md)
 Anchor status lists to blockchain for tamper evidence:
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.RevocationProviders.IN_MEMORY
 // Configure blockchain anchoring
 val trustWeave = TrustWeave.build {
     anchor {

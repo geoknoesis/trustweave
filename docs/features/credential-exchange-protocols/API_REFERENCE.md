@@ -6,6 +6,17 @@ title: Credential Exchange Protocols - API Reference
 
 Complete API reference for the credential exchange protocol abstraction layer.
 
+> **TODO (audit 2026-05):** Sections [Core Interfaces](#core-interfaces), [Request Models](#request-models), [Response Models](#response-models) and [Registry API](#registry-api) below describe an obsolete API (`CredentialOfferRequest`/`CredentialOfferResponse`/`CredentialExchangeProtocolRegistry.offerCredential(...)`). The real API surface is:
+>
+> - `org.trustweave.credential.exchange.CredentialExchangeProtocol` — `protocolName: ExchangeProtocolName`, `capabilities: ExchangeProtocolCapabilities`, and `suspend offer/request/issue/requestProof/presentProof(...)` returning `ExchangeMessageEnvelope` (or `Pair<VC|VP, ExchangeMessageEnvelope>` for `issue`/`presentProof`).
+> - `org.trustweave.credential.exchange.ExchangeService` (created via `ExchangeServices.createExchangeService(protocolRegistry, credentialService, didResolver)` or `createExchangeServiceWithAutoDiscovery(credentialService, didResolver, options)`).
+> - Requests: sealed `ExchangeRequest.Offer | Request | Issue` and `ProofExchangeRequest.Request | Presentation` (each takes `protocolName: ExchangeProtocolName`, typed DIDs, and `options: ExchangeOptions`).
+> - Responses: `ExchangeResponse.Offer | Request | Issue` (with `offerId`/`requestId`/`issueId` and `messageEnvelope`) and `ProofExchangeResponse.*`.
+> - Results: `ExchangeResult.Success<T>` / `ExchangeResult.Failure.ProtocolNotSupported | OperationNotSupported | InvalidRequest | MessageNotFound | NetworkError | Unknown` (no `AdapterError`).
+> - Registry: `org.trustweave.credential.exchange.registry.ExchangeProtocolRegistry` with `register`, `get`, `getAll`, `getSupportedProtocols` (not `getAllProtocolNames`), `isRegistered`, `unregister`, `getCapabilities`, `supports(protocolName, op)`, `clear`. There is no `offerCredential(...)` / `requestCredential(...)` on the registry — those are on `ExchangeService` and use the sealed `ExchangeRequest.*` types.
+>
+> See [QUICK_START.md](./QUICK_START.md), [EXAMPLES.md](./EXAMPLES.md), and the source under `credentials/credential-api/src/main/kotlin/org/trustweave/credential/exchange/` for the actual signatures.
+
 ## Table of Contents
 
 1. [Core Interfaces](#core-interfaces)
@@ -580,7 +591,8 @@ suspend fun offerCredential(
 ```kotlin
 val exchangeService = ExchangeServices.createExchangeService(
     protocolRegistry = registry,
-    credentialService = credentialService
+    credentialService = credentialService,
+    didResolver = didResolver
 )
 
 val offerResult = exchangeService.offer(
@@ -916,7 +928,7 @@ Plugin-specific exceptions are located in their respective plugin modules:
 - **DIDComm**: `org.trustweave.credential.didcomm.exception.DidCommException`
   - `EncryptionFailed`, `DecryptionFailed`, `PackingFailed`, `UnpackingFailed`, `ProtocolError`
 
-- **OIDC4VCI**: `org.trustweave.credential.oidc4vci.exception.Oidc4VciException`
+- **OIDC4VCI**: `org.trustweave.credential.oidc4vci.exception.Oidc4VciException` (extends `TrustWeaveException` directly, not `ExchangeException`)
   - `HttpRequestFailed`, `TokenExchangeFailed`, `MetadataFetchFailed`, `CredentialRequestFailed`
 
 - **CHAPI**: `org.trustweave.credential.chapi.exception.ChapiException`

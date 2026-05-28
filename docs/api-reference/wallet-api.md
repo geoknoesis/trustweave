@@ -29,18 +29,18 @@ The main wallet interface that all wallets implement.
 ```kotlin
 interface Wallet : CredentialStorage {
     val walletId: String
-    val capabilities: WalletCapabilities
-    fun <T : Any> supports(capability: KClass<T>): Boolean
+    val capabilities: WalletCapabilities       // Derived from `is`-checks against capability interfaces
     suspend fun getStatistics(): WalletStatistics
 }
-
-#### Method summary
-
-| Method | Returns | Exceptions | Notes |
-|--------|---------|------------|-------|
-| `supports(capability)` | `Boolean` | – | Detect optional interfaces (presentation, DID management, etc.). |
-| `getStatistics()` | `WalletStatistics` | `IllegalStateException` if the backing store cannot compute statistics. | Useful for dashboards and monitoring. |
 ```
+
+There is **no** `supports(capability: KClass<T>)` on `Wallet`. Detect capabilities with either:
+- Compile-time: `if (wallet is CredentialCollections) { ... }` / `wallet.withCollections { ... }` (preferred)
+- Runtime: `wallet.capabilities.supports("collections")` (string lookup)
+
+| Method | Returns | Notes |
+|--------|---------|-------|
+| `getStatistics()` | `WalletStatistics` | Default implementation derived from `list()` and capability checks. |
 
 ### CredentialStorage
 
@@ -66,13 +66,12 @@ interface CredentialStorage {
 | `query` | `CredentialQueryBuilder.() -> Unit` | `List<VerifiableCredential>` | `IllegalArgumentException` when a query clause is unsupported. | Compose filters via builder functions (`byIssuer`, `notExpired`, etc.). |
 ```
 
-### CredentialOrganization
+### CredentialCollections / CredentialTagging / CredentialOrganization
 
-Optional interface for organizing credentials.
+The combined `CredentialOrganization` capability is split into two narrower interfaces; wallets may implement either, both, or the combined alias.
 
 ```kotlin
-interface CredentialOrganization {
-    // Collections
+interface CredentialCollections {
     suspend fun createCollection(name: String, description: String? = null): String
     suspend fun getCollection(collectionId: String): CredentialCollection?
     suspend fun listCollections(): List<CredentialCollection>
@@ -80,19 +79,22 @@ interface CredentialOrganization {
     suspend fun addToCollection(credentialId: String, collectionId: String): Boolean
     suspend fun removeFromCollection(credentialId: String, collectionId: String): Boolean
     suspend fun getCredentialsInCollection(collectionId: String): List<VerifiableCredential>
+}
 
-    // Tags
+interface CredentialTagging {
     suspend fun tagCredential(credentialId: String, tags: Set<String>): Boolean
     suspend fun untagCredential(credentialId: String, tags: Set<String>): Boolean
     suspend fun getTags(credentialId: String): Set<String>
     suspend fun getAllTags(): Set<String>
     suspend fun findByTag(tag: String): List<VerifiableCredential>
 
-    // Metadata
+    // Tag-adjacent metadata lives here, not on a separate metadata interface
     suspend fun addMetadata(credentialId: String, metadata: Map<String, Any>): Boolean
     suspend fun getMetadata(credentialId: String): CredentialMetadata?
     suspend fun updateNotes(credentialId: String, notes: String?): Boolean
 }
+
+interface CredentialOrganization : CredentialCollections, CredentialTagging
 
 #### Method summary
 
@@ -106,9 +108,11 @@ interface CredentialOrganization {
 
 ### CredentialLifecycle
 
-Optional interface for lifecycle management.
+Optional interface for lifecycle management (`org.trustweave.wallet.CredentialLifecycle`).
 
 ```kotlin
+import org.trustweave.credential.model.vc.VerifiableCredential
+
 interface CredentialLifecycle {
     suspend fun archive(credentialId: String): Boolean
     suspend fun unarchive(credentialId: String): Boolean
@@ -117,7 +121,21 @@ interface CredentialLifecycle {
 }
 ```
 
-> Implementations may throw `UnsupportedOperationException` when lifecycle features are disabled.
+#### Method summary
+
+| Method | Returns | Notes |
+|--------|---------|-------|
+| `archive` | `Boolean` | `false` indicates the credential id was not found. Archived credentials are hidden from `Wallet.list()` queries. |
+| `unarchive` | `Boolean` | `false` indicates the credential id was not found. |
+| `getArchived` | `List<VerifiableCredential>` | Used by the default `Wallet.getStatistics()` implementation. |
+| `refreshCredential` | `VerifiableCredential?` | Re-fetches the credential through its refresh service. Returns `null` if refresh failed or the credential is unknown. |
+
+Wallet implementations that do not support lifecycle should simply not implement this
+interface. Capability probing pattern:
+
+```kotlin
+val archived = (wallet as? CredentialLifecycle)?.getArchived().orEmpty()
+```
 
 ### CredentialPresentation
 
@@ -151,10 +169,11 @@ interface CredentialPresentation {
 
 ### DidManagement
 
-Optional interface for DID management.
+Optional interface for DID management (`org.trustweave.wallet.DidManagement`).
 
 ```kotlin
 import org.trustweave.did.DidCreationOptions
+import org.trustweave.did.DidCreationOptionsBuilder
 import org.trustweave.did.model.DidDocument
 
 interface DidManagement {
@@ -177,14 +196,14 @@ interface DidManagement {
 
 ### KeyManagement
 
-Optional interface for key management.
+Optional interface for key management (`org.trustweave.wallet.KeyManagement`).
 
 ```kotlin
 interface KeyManagement {
     suspend fun generateKey(
         algorithm: String,
-        configure: KeyGenerationOptionsBuilder.() -> Unit = {}
-    ): KeyInfo
+        options: Map<String, Any?> = emptyMap()
+    ): String                                    // returns the new key id
     suspend fun getKeys(): List<KeyInfo>
     suspend fun getKey(keyId: String): KeyInfo?
     suspend fun deleteKey(keyId: String): Boolean
@@ -192,29 +211,31 @@ interface KeyManagement {
 }
 ```
 
-| Method | Returns | Exceptions | Notes |
-|--------|---------|------------|-------|
-| `generateKey` | `KeyInfo` | `IllegalArgumentException` for unknown algorithms. | Delegates to the configured `KeyManagementService`. |
-| `deleteKey` | `Boolean` | `IllegalStateException` if removal unsupported. | `true` indicates the key was removed. |
-| `sign` | `ByteArray` | `IllegalStateException` when key missing/inactive. | Input should already be canonicalised. |
+| Method | Returns | Notes |
+|--------|---------|-------|
+| `generateKey` | `String` (key id) | Algorithm name + provider-specific options map. |
+| `deleteKey` | `Boolean` | `true` indicates the key was removed. |
+| `sign` | `ByteArray` | `keyId` is a plain `String`. |
 
 ### CredentialIssuance
 
-Optional interface for credential issuance.
+Optional interface for credential issuance (`org.trustweave.wallet.CredentialIssuance`).
 
 ```kotlin
-// Wallet integrations often delegate to TrustWeave / CredentialService instead of defining a second issuer.
-// If you expose issuance from a wallet helper, take typed inputs (e.g. IssuanceRequest) or your own options DTO.
+import org.trustweave.credential.proof.ProofOptions
+import org.trustweave.credential.model.vc.VerifiableCredential
+
 interface CredentialIssuance {
-    /** Optional wallet-facing helper; production code often delegates to [org.trustweave.credential.CredentialService.issue]. */
-    suspend fun issue(
+    suspend fun issueCredential(
         subjectDid: String,
         credentialType: String,
         claims: Map<String, Any>,
-        options: Map<String, Any?> = emptyMap()
+        options: ProofOptions? = null
     ): VerifiableCredential
 }
 ```
+
+Most production code should delegate to `org.trustweave.credential.CredentialService.issue(IssuanceRequest)` (or the `trustWeave.issue { ... }` DSL) rather than calling wallet-facing issuance directly.
 
 ## Data Models
 
@@ -255,11 +276,14 @@ class CredentialQueryBuilder {
 Collection model.
 
 ```kotlin
+import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
+
 data class CredentialCollection(
     val id: String,
     val name: String,
     val description: String? = null,
-    val createdAt: Instant = Instant.now(),
+    val createdAt: Instant = Clock.System.now(),
     val credentialCount: Int = 0
 )
 ```
@@ -274,8 +298,8 @@ data class CredentialMetadata(
     val notes: String? = null,
     val tags: Set<String> = emptySet(),
     val metadata: Map<String, Any> = emptyMap(),
-    val createdAt: Instant = Instant.now(),
-    val updatedAt: Instant = Instant.now()
+    val createdAt: Instant = Clock.System.now(),
+    val updatedAt: Instant = Clock.System.now()
 )
 ```
 
@@ -348,6 +372,10 @@ val options = WalletCreationOptionsBuilder().apply {
 A custom factory receives the same object:
 
 ```kotlin
+import org.trustweave.wallet.Wallet
+import org.trustweave.wallet.services.WalletCreationOptions
+import org.trustweave.wallet.services.WalletFactory
+
 class PostgresWalletFactory : WalletFactory {
     override suspend fun create(
         providerName: String,
@@ -355,7 +383,7 @@ class PostgresWalletFactory : WalletFactory {
         walletDid: String?,
         holderDid: String?,
         options: WalletCreationOptions
-    ): Any {
+    ): Wallet {
         val connection = options.additionalProperties["connectionString"] as? String
             ?: error("connectionString is required")
         require(options.enablePresentation) { "Presentations must be enabled for Postgres wallets" }
@@ -386,7 +414,10 @@ val directory = WalletDirectory()
 directory.register(wallet)
 val retrieved = directory.get(wallet.walletId)
 val didWallet = directory.getByDid("did:key:holder")
-val orgWallets = directory.findByCapability(CredentialOrganization::class)
+// Reified type parameter (no KClass argument):
+val orgWallets = directory.findByCapability<CredentialOrganization>()
+// Or by feature name (matches WalletCapabilities.supports):
+val collectionsWallets = directory.findByCapability("collections")
 directory.unregister(wallet.walletId)
 directory.clear()
 ```

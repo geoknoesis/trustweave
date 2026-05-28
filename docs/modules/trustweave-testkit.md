@@ -1,10 +1,10 @@
 ---
-title: trustweave-testkit
+title: testkit
 ---
 
-# trustweave-testkit
+# testkit
 
-The `trustweave-testkit` module provides in-memory test implementations and utilities for all TrustWeave service interfaces. This module is essential for testing and prototyping without external dependencies.
+The `testkit` module provides in-memory test implementations and utilities for all TrustWeave service interfaces. This module is essential for testing and prototyping without external dependencies.
 
 ```kotlin
 dependencies {
@@ -16,7 +16,7 @@ dependencies {
 
 ## Overview
 
-The `trustweave-testkit` module provides:
+The `testkit` module provides:
 
 - **In-Memory Implementations** – mock implementations of all SPI interfaces
 - **Test Fixtures** – comprehensive test fixture builder for complete test environments
@@ -32,10 +32,13 @@ The `trustweave-testkit` module provides:
 
 ```kotlin
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
+import org.trustweave.kms.Algorithm
+import org.trustweave.kms.results.GenerateKeyResult
+import org.trustweave.kms.results.SignResult
 
 val kms = InMemoryKeyManagementService()
-val key = kms.generateKey(Algorithm.Secp256k1)
-val signature = kms.sign(key.id, data.toByteArray())
+val handle = (kms.generateKey(Algorithm.Secp256k1) as GenerateKeyResult.Success).keyHandle
+val signature = (kms.sign(handle.id, data.toByteArray()) as SignResult.Success).signature
 ```
 
 **What this does:** Provides an in-memory key management service that stores keys in memory.
@@ -46,10 +49,12 @@ val signature = kms.sign(key.id, data.toByteArray())
 
 ```kotlin
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 val client = InMemoryBlockchainAnchorClient("algorand:testnet")
-val result = client.writePayload(payload.toByteArray())
-val readData = client.readPayload(result.anchorRef)
+val result = client.writePayload(buildJsonObject { put("note", "hi") })
+val readData = client.readPayload(result.ref)
 ```
 
 **What this does:** Provides an in-memory blockchain client that stores anchored data in memory.
@@ -60,12 +65,13 @@ val readData = client.readPayload(result.anchorRef)
 
 ```kotlin
 import org.trustweave.testkit.did.DidKeyMockMethod
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
+import org.trustweave.did.DidCreationOptions
+import org.trustweave.did.KeyAlgorithm
 
 val kms = InMemoryKeyManagementService()
 val method = DidKeyMockMethod(kms)
-val didDoc = method.createDid(didCreationOptions {
-    algorithm = KeyAlgorithm.Ed25519
-})
+val didDoc = method.createDid(DidCreationOptions(algorithm = KeyAlgorithm.ED25519))
 ```
 
 **What this does:** Provides a mock DID method implementation for testing DID operations.
@@ -78,16 +84,19 @@ A comprehensive test fixture builder for setting up complete test environments:
 
 ```kotlin
 import org.trustweave.testkit.TrustWeaveTestFixture
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.testkit.did.DidKeyMockMethod
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
 
+val kms = InMemoryKeyManagementService()
 val fixture = TrustWeaveTestFixture.builder()
-    .withKms(InMemoryKeyManagementService())
-    .withDidMethod("key", DidKeyMockMethod(kms))
+    .withKms(kms)
+    .withDidMethod(DidKeyMockMethod(kms))
     .withBlockchainClient("algorand:testnet", InMemoryBlockchainAnchorClient("algorand:testnet"))
     .build()
 
 // Use fixture
 val issuerDoc = fixture.createIssuerDid()
-val anchorClient = fixture.getBlockchainClient("algorand:testnet")
 ```
 
 **What this does:** Provides a fluent API for setting up complete test environments with KMS, DID methods, and blockchain clients.
@@ -158,18 +167,24 @@ val fixture = TrustWeaveTestFixture.builder()
 ### Complete Test Environment
 
 ```kotlin
-import org.trustweave.testkit.services.*
-val fixture = TrustWeaveTestFixture.builder()
-    .withKms(InMemoryKeyManagementService())
-    .withDidmethod(KEY) { DidKeyMockMethod(it) }
-    .withDidmethod(WEB) { DidWebMockMethod(it) }
-    .withBlockchainClient("algorand:testnet") { InMemoryBlockchainAnchorClient("algorand:testnet") }
-    .withBlockchainClient("polygon:testnet") { InMemoryBlockchainAnchorClient("polygon:testnet") }
+import org.trustweave.testkit.TrustWeaveTestFixture
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
+import org.trustweave.testkit.did.DidKeyMockMethod
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
+
+val kms = InMemoryKeyManagementService()
+TrustWeaveTestFixture.builder()
+    .withKms(kms)
+    .withDidMethod(DidKeyMockMethod(kms))
+    .withBlockchainClient("algorand:testnet", InMemoryBlockchainAnchorClient("algorand:testnet"))
+    .withBlockchainClient("polygon:testnet", InMemoryBlockchainAnchorClient("polygon:testnet"))
     .build()
     .use { fixture ->
         // Test with multiple DID methods and blockchains
     }
 ```
+
+> **TODO:** The fixture builder no longer exposes a Pascal-case `withDidmethod(name) { factory }` overload. Today you pass a constructed `DidMethod` to `withDidMethod(method)`, or use `withDidMethodPlugin(name, config)` for SPI-driven plugins.
 
 **What this does:** Creates a complete test environment with multiple DID methods and blockchain clients.
 
@@ -177,7 +192,7 @@ val fixture = TrustWeaveTestFixture.builder()
 
 ## Dependencies
 
-- Depends on all TrustWeave modules (`trustweave-common` (includes SPI), `trustweave-trust`, `trustweave-did`, `trustweave-kms`, `trustweave-anchor`)
+- Depends on the core TrustWeave modules (`common` (includes SPI), `trust`, `did:did-core`, `kms:kms-core`, `anchors:anchor-core`)
 - No external runtime dependencies (all implementations are in-memory)
 
 ## Best Practices

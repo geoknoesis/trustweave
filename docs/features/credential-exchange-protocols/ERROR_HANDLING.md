@@ -6,6 +6,8 @@ title: Credential Exchange Protocols - Error Handling
 
 Complete guide to error handling for credential exchange protocols.
 
+> **Note (audit 2026-05):** `ExchangeService` methods do not throw `ExchangeException` to callers; they return `ExchangeResult<T>` (`Success` / sealed `Failure.ProtocolNotSupported | OperationNotSupported | InvalidRequest | MessageNotFound | NetworkError | Unknown`). The `ExchangeException` hierarchy still exists (and plugins may throw it internally), but consumer code should pattern-match the sealed `ExchangeResult.Failure` cases shown below. There is **no** `ExchangeResult.Failure.AdapterError` variant — cryptographic / adapter errors surface as `Failure.Unknown`. `MissingRequiredOption.optionName` (not `.option`).
+
 ## Overview
 
 All credential exchange operations throw structured exceptions from the `ExchangeException` hierarchy. These exceptions extend `TrustWeaveException` and provide:
@@ -133,7 +135,8 @@ import org.trustweave.credential.exchange.ExchangeServices
    
    val exchangeService = ExchangeServices.createExchangeService(
        protocolRegistry = registry,
-       credentialService = credentialService
+       credentialService = credentialService,
+       didResolver = didResolver
    )
 
    // Now safe to use
@@ -378,11 +381,11 @@ val offerResult = exchangeService.offer(
 when (offerResult) {
     is ExchangeResult.Failure.NetworkError -> {
         println("Network error: ${offerResult.reason}")
-        // DIDComm encryption failures are typically network errors
+        // DIDComm encryption failures often surface as NetworkError
     }
-    is ExchangeResult.Failure.AdapterError -> {
-        println("Adapter error: ${offerResult.reason}")
-        // Cryptographic errors are typically adapter errors
+    is ExchangeResult.Failure.Unknown -> {
+        println("Unknown error: ${offerResult.reason}")
+        // Cryptographic / adapter errors surface as Unknown (no AdapterError variant)
     }
     else -> {
         // Success or other error
@@ -912,13 +915,13 @@ val offerResult = exchangeService.offer(
 when (offerResult) {
     is ExchangeResult.Failure.NetworkError -> {
         when {
-            offerResult.reason?.contains("404") == true -> {
+            offerResult.reason.contains("404") -> {
                 println("Credential issuer not found. Check URL.")
             }
-            offerResult.reason?.contains("401") == true -> {
+            offerResult.reason.contains("401") -> {
                 println("Authentication failed. Check credentials.")
             }
-            offerResult.reason?.contains("timeout") == true -> {
+            offerResult.reason.contains("timeout") -> {
                 println("Request timed out. Retry later.")
             }
             else -> {
@@ -1115,7 +1118,7 @@ if (!registry.isRegistered(protocolName)) {
 
 // Check operation is supported
 val protocol = registry.get(protocolName)
-if (protocol?.supportedOperations?.contains(ExchangeOperation.OFFER_CREDENTIAL) != true) {
+if (protocol?.capabilities?.supportedOperations?.contains(ExchangeOperation.OFFER_CREDENTIAL) != true) {
     println("Operation not supported")
     return
 }
@@ -1187,11 +1190,11 @@ when (offerResult) {
     }
     is ExchangeResult.Failure.NetworkError -> {
         println("Network error: ${offerResult.reason}")
-        // DIDComm encryption/decryption failures are typically network errors
+        // DIDComm encryption/decryption failures often surface as NetworkError
     }
-    is ExchangeResult.Failure.AdapterError -> {
-        println("Adapter error: ${offerResult.reason}")
-        // Cryptographic errors are typically adapter errors
+    is ExchangeResult.Failure.Unknown -> {
+        println("Unknown error: ${offerResult.reason}")
+        // Cryptographic / adapter errors surface as Unknown (no AdapterError variant)
     }
     else -> {
         println("Exchange error: $offerResult")
@@ -1364,7 +1367,8 @@ registry.register(DidCommExchangeProtocol(didCommService))
 
 val exchangeService = ExchangeServices.createExchangeService(
     protocolRegistry = registry,
-    credentialService = credentialService
+    credentialService = credentialService,
+    didResolver = didResolver
 )
 
 val offerResult = exchangeService.offer(
@@ -1428,11 +1432,11 @@ val offer = when (offerResult) {
 **Problem:**
 ```kotlin
 val proofRequestResult = exchangeService.requestProof(
-    ExchangeRequest.ProofRequest(
+    ProofExchangeRequest.Request(
         protocolName = "oidc4vci".requireExchangeProtocolName(),
         verifierDid = verifierDid,
         proverDid = proverDid,
-        // ... other fields
+        proofRequest = proofRequest,
         options = ExchangeOptions.builder().build()
     )
 )  // Returns ExchangeResult.Failure.OperationNotSupported
@@ -1443,24 +1447,24 @@ val proofRequestResult = exchangeService.requestProof(
 // Check supported operations first
 val protocolName = "oidc4vci".requireExchangeProtocolName()
 val protocol = registry.get(protocolName)
-if (protocol?.supportedOperations?.contains(ExchangeOperation.REQUEST_PROOF) == true) {
+if (protocol?.capabilities?.supportedOperations?.contains(ExchangeOperation.REQUEST_PROOF) == true) {
     val proofRequestResult = exchangeService.requestProof(
-        ExchangeRequest.ProofRequest(
+        ProofExchangeRequest.Request(
             protocolName = protocolName,
             verifierDid = verifierDid,
             proverDid = proverDid,
-            // ... other fields
+            proofRequest = proofRequest,
             options = ExchangeOptions.builder().build()
         )
     )
 } else {
     // Use different protocol
     val proofRequestResult = exchangeService.requestProof(
-        ExchangeRequest.ProofRequest(
+        ProofExchangeRequest.Request(
             protocolName = "didcomm".requireExchangeProtocolName(),
             verifierDid = verifierDid,
             proverDid = proverDid,
-            // ... other fields
+            proofRequest = proofRequest,
             options = ExchangeOptions.builder().build()
         )
     )
@@ -1530,10 +1534,9 @@ val result: ExchangeResult<*> = // ... get result
 fun isRetryable(result: ExchangeResult<*>): Boolean {
     return when (result) {
         is ExchangeResult.Failure.NetworkError -> true
-        is ExchangeResult.Failure.AdapterError -> {
-            // Check if it's a transient adapter error
-            result.reason?.contains("timeout") == true ||
-            result.reason?.contains("temporary") == true
+        is ExchangeResult.Failure.Unknown -> {
+            // Treat some transient Unknown errors as retryable
+            result.reason.contains("timeout") || result.reason.contains("temporary")
         }
         else -> false
     }
@@ -1711,15 +1714,16 @@ suspend fun offerCredentialWithAutoRegister(
 
 1. **Always check protocol registration:**
    ```kotlin
-   if (!registry.isRegistered("didcomm")) {
+   if (!registry.isRegistered("didcomm".requireExchangeProtocolName())) {
        // Register or use different protocol
    }
    ```
 
 2. **Check supported operations:**
    ```kotlin
-   val protocol = registry.get("oidc4vci")
-   if (protocol?.supportedOperations?.contains(ExchangeOperation.OFFER_CREDENTIAL) != true) {
+   val protocolName = "oidc4vci".requireExchangeProtocolName()
+   val protocol = registry.get(protocolName)
+   if (protocol?.capabilities?.supportedOperations?.contains(ExchangeOperation.OFFER_CREDENTIAL) != true) {
        // Use different protocol
    }
    ```

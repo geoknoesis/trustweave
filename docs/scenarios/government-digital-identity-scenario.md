@@ -208,7 +208,9 @@ import org.trustweave.credential.proof.Ed25519ProofGenerator
 import org.trustweave.credential.proof.ProofGeneratorRegistry
 import org.trustweave.credential.proof.proofOptions
 import org.trustweave.testkit.credential.InMemoryWallet
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.wallet.CredentialOrganization
 import org.trustweave.wallet.CredentialPresentation
 import org.trustweave.trust.types.getOrThrowDid

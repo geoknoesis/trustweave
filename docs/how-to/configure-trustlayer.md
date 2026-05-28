@@ -41,8 +41,12 @@ Here's a complete example showing the power of declarative configuration:
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.getOrThrow
-import org.trustweave.trust.dsl.credential.*
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
+import org.trustweave.trust.dsl.credential.TrustProviders
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -68,7 +72,7 @@ fun main() = runBlocking {
         }
 
         trust {
-            provider(IN_MEMORY)
+            provider(TrustProviders.IN_MEMORY)
         }
         // KMS, DID methods, anchor clients, and CredentialService all auto-created!
     }
@@ -115,8 +119,8 @@ Begin by creating a minimal TrustWeave configuration with just key management:
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.getOrThrow
-import org.trustweave.trust.dsl.credential.*
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 
 val trustWeave = TrustWeave.build {
     keys {
@@ -143,8 +147,9 @@ Add DID method support to your configuration:
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.getOrThrow
-import org.trustweave.trust.dsl.credential.*
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 
 val trustWeave = TrustWeave.build {
     keys {
@@ -177,8 +182,11 @@ Register additional DID methods for different use cases:
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.getOrThrow
-import org.trustweave.trust.dsl.credential.*
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.DidMethods.ETHR
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 
 val trustWeave = TrustWeave.build {
     // KMS and DID methods auto-discovered via SPI
@@ -194,9 +202,9 @@ val trustWeave = TrustWeave.build {
         method(WEB) {
             domain("example.com")
         }
-            method(ETHR) {
+        method(ETHR) {
             // Ethereum-specific configuration
-            network("sepolia")
+            option("network", "sepolia")
         }
     }
 }
@@ -218,8 +226,11 @@ Add blockchain anchoring support for tamper evidence:
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.getOrThrow
-import org.trustweave.trust.dsl.credential.*
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
+import org.trustweave.trust.dsl.credential.AnchorProviders.POLYGON
 
 val trustWeave = TrustWeave.build {
     // KMS, DID methods, and anchor clients auto-discovered via SPI
@@ -263,8 +274,12 @@ Add trust registry for managing trusted issuers:
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.getOrThrow
-import org.trustweave.trust.dsl.credential.*
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
+import org.trustweave.trust.dsl.credential.TrustProviders
+import org.trustweave.testkit.services.TestkitTrustRegistryFactory
 
 val trustWeave = TrustWeave.build {
     factories(
@@ -289,7 +304,7 @@ val trustWeave = TrustWeave.build {
     }
 
     trust {
-        provider(IN_MEMORY)
+        provider(TrustProviders.IN_MEMORY)
     }
 }
 ```
@@ -310,9 +325,15 @@ Here's a complete production-ready configuration:
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.getOrThrow
-import org.trustweave.trust.dsl.credential.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
+import org.trustweave.trust.dsl.credential.AnchorProviders.POLYGON
+import org.trustweave.trust.dsl.credential.TrustProviders
 import org.trustweave.credential.model.ProofType
-import org.trustweave.testkit.services.*
+import org.trustweave.testkit.services.TestkitTrustRegistryFactory
 
 val trustWeave = TrustWeave.build {
     factories(
@@ -343,7 +364,7 @@ val trustWeave = TrustWeave.build {
     }
 
     trust {
-        provider(IN_MEMORY)
+        provider(TrustProviders.IN_MEMORY)
     }
 
     credentials {
@@ -393,7 +414,13 @@ val trustWeave = TrustWeave(config)
 ### After (Declarative DSL)
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
+import org.trustweave.trust.dsl.credential.AnchorProviders.POLYGON
+import org.trustweave.trust.dsl.credential.TrustProviders
+import org.trustweave.testkit.services.TestkitTrustRegistryFactory
 
 // Declarative, readable configuration
 val trustWeave = TrustWeave.build {
@@ -407,7 +434,7 @@ val trustWeave = TrustWeave.build {
         chain("algorand:testnet") { provider(ALGORAND) }
         chain("polygon:mainnet") { provider(POLYGON) }
     }
-    trust { provider(IN_MEMORY) }
+    trust { provider(TrustProviders.IN_MEMORY) }
 }
 ```
 
@@ -428,8 +455,11 @@ For local development and testing:
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.getOrThrow
-import org.trustweave.trust.dsl.credential.*
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.TrustProviders
+import org.trustweave.testkit.services.TestkitTrustRegistryFactory
 
 val trustWeave = TrustWeave.build {
     factories(
@@ -451,7 +481,7 @@ val trustWeave = TrustWeave.build {
         }
     }
     trust {
-        provider(IN_MEMORY)
+        provider(TrustProviders.IN_MEMORY)
     }
 }
 ```
@@ -461,7 +491,12 @@ val trustWeave = TrustWeave.build {
 For production with real services:
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.AWS
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
+import org.trustweave.trust.dsl.credential.AnchorProviders.POLYGON
 val trustWeave = TrustWeave.build {
     keys {
         provider(AWS)  // Production KMS
@@ -497,8 +532,11 @@ Supporting multiple DID methods:
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.getOrThrow
-import org.trustweave.trust.dsl.credential.*
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.DidMethods.ETHR
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 
 val trustWeave = TrustWeave.build {
     // KMS and DID methods auto-discovered via SPI
@@ -513,11 +551,11 @@ val trustWeave = TrustWeave.build {
         method(WEB) {
             domain("example.com")
         }
-            method(ETHR) {
-            network("sepolia")
+        method(ETHR) {
+            option("network", "sepolia")
         }
         method("polygon") {
-            network("testnet")
+            option("network", "testnet")
         }
     }
 }
@@ -530,8 +568,11 @@ val trustWeave = TrustWeave.build {
 Handle configuration errors gracefully:
 
 ```kotlin
+import org.trustweave.core.exception.PluginException
 import org.trustweave.core.exception.TrustWeaveException
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 
 try {
     val trustWeave = TrustWeave.build {
@@ -547,12 +588,12 @@ try {
     }
 } catch (error: TrustWeaveException) {
     when (error) {
-        is TrustWeaveException.PluginNotFound -> {
+        is PluginException.NotFound -> {
             println("Provider not found: ${error.pluginId}")
-            println("Available providers: ${error.context["availablePlugins"]}")
+            println("Plugin type: ${error.pluginType}")
         }
-        is TrustWeaveException.PluginInitializationFailed -> {
-            println("Failed to initialize: ${error.reason}")
+        is PluginException.InitializationFailed -> {
+            println("Failed to initialize ${error.pluginId}: ${error.reason}")
         }
         else -> {
             println("Configuration error: ${error.message}")
@@ -570,7 +611,7 @@ Now that you've configured TrustWeave, you can:
 1. **[Create DIDs](create-dids.md)** - Create decentralized identifiers
 2. **[Issue Credentials](issue-credentials.md)** - Issue verifiable credentials
 3. **[Anchor to Blockchain](blockchain-anchoring.md)** - Anchor data for tamper evidence
-4. **[Manage Trust Anchors](../advanced/trust-registry.md)** - Configure trusted issuers
+4. **[Manage Trust Anchors](../core-concepts/trust-registry.md)** - Configure trusted issuers
 
 ---
 

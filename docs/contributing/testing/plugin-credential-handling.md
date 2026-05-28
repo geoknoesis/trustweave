@@ -62,7 +62,7 @@ fun `test with multiple plugins`() = runBlocking {
 ### Plugin Names
 
 Plugin names match the provider name:
-- **KMS providers**: `"aws"`, `"azure"`, `"google-cloud-kms"`, `"hashicorp"`, etc.
+- **KMS providers**: `"aws"`, `"azure"`, `"google-cloud-kms"`, `"vault"` (HashiCorp), etc.
 - **DID method providers**: `"ethr"`, `"ion"`, `"polygon"`, `"key"`, `"web"`, etc.
 - **Blockchain anchor providers**: `"ethereum"`, `"algorand"`, `"polygon"`, etc.
 
@@ -203,7 +203,6 @@ class MyKmsProvider : KeyManagementServiceProvider {
 ## Testing Your Plugin
 
 ```kotlin
-import org.trustweave.testkit.services.*
 // kms/plugins/myplugin/src/test/kotlin/MyKmsProviderTest.kt
 class MyKmsProviderTest {
 

@@ -94,7 +94,6 @@ when (val res = trustWeave.resolveDid(Did("did:key:example"))) {
 
 ```kotlin
 import org.trustweave.trust.dsl.credential.DidMethods
-import org.trustweave.testkit.services.*
 
 trustWeave.updateDid {
     did("did:key:example")

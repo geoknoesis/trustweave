@@ -70,18 +70,27 @@ TestContainers automatically downloads and manages containers.
 
 ## Test Coverage
 
-Generate coverage reports:
+Coverage tooling is **not configured** in the current repository. The root
+`build.gradle.kts` does not apply Kover or JaCoCo, so the `koverReport`,
+`koverHtmlReport`, `koverVerify`, and `jacocoTestReport` tasks are absent —
+invoking them fails with `Task '<name>' not found in root project`.
 
-```bash
-# Generate coverage report for all modules
-./gradlew koverReport
+If you need coverage in your fork, apply Kover (or JaCoCo) yourself and re-run
+tests:
 
-# View coverage report
-open build/reports/kover/index.html
-
-# Check coverage thresholds
-./gradlew koverVerify
+```kotlin
+// Root build.gradle.kts
+plugins {
+    id("org.jetbrains.kotlinx.kover") version "0.7.6"
+}
 ```
+```bash
+./gradlew test koverHtmlReport
+# Open build/reports/kover/html/index.html
+```
+
+Wiring coverage into the upstream build is tracked as a separate workstream — file
+a build-system issue if you want it enabled by default.
 
 ## Troubleshooting
 

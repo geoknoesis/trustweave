@@ -114,9 +114,10 @@ Likewise, invoke **`start()`**, **`stop()`**, and **`cleanup()`** on implementat
 ## Complete lifecycle example (custom plugin + facade)
 
 ```kotlin
-import org.trustweave.testkit.services.*
 import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.dsl.credential.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.trust.types.getOrThrowDid
 
 suspend fun main() {
@@ -206,26 +207,28 @@ Plugins are initialized in the order they are registered, and stopped in reverse
 
 ## Error Handling
 
-Lifecycle methods return `Result<Unit>` for error handling:
+`PluginLifecycle.initialize`, `start`, and `stop` return `Boolean` (`true` = success), and `cleanup` returns `Unit`. There is no `TrustWeave.initialize()` API — handle plugin failures yourself when wiring custom lifecycle-aware components:
 
 ```kotlin
-val result = TrustWeave.initialize()
-result.fold(
-    onSuccess = {
-        println("Initialization successful")
-    },
-    onFailure = { error ->
-        when (error) {
-            is PluginException.InitializationFailed -> {
-                println("Plugin ${error.pluginId} failed: ${error.reason}")
-                // Handle specific plugin failure
-            }
-            else -> {
-                println("Initialization error: ${error.message}")
-            }
-        }
+import org.trustweave.core.exception.PluginException
+
+val plugin = MyDatabaseBackedPlugin()
+try {
+    if (!plugin.initialize(configMap)) {
+        throw PluginException.InitializationFailed(
+            pluginId = "my-database-plugin",
+            reason = "initialize() returned false"
+        )
     }
-)
+    if (!plugin.start()) {
+        throw PluginException.InitializationFailed(
+            pluginId = "my-database-plugin",
+            reason = "start() returned false"
+        )
+    }
+} catch (e: PluginException.InitializationFailed) {
+    println("Plugin ${e.pluginId} failed: ${e.reason}")
+}
 ```
 
 ## Best Practices

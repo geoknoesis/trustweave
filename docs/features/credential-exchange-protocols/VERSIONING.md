@@ -83,7 +83,8 @@ registry.register(DidCommExchangeProtocol(didCommService))
 
 val exchangeService = ExchangeServices.createExchangeService(
     protocolRegistry = registry,
-    credentialService = credentialService
+    credentialService = credentialService,
+    didResolver = didResolver
 )
 
 val offerResult = exchangeService.offer(

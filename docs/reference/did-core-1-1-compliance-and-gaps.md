@@ -112,21 +112,21 @@ To claim conforming **consumer** and **producer** (and optionally **resolver**) 
 
 1. Run the [W3C DID test suite](https://github.com/w3c/did-test-suite/) against TrustWeave (consumer/producer and resolver if applicable).
 2. Publish results in this repo (e.g. under `docs/conformance/` or as a CI artifact) following the [implementation report](https://w3c.github.io/did-test-suite/) format.
-3. Update this document and [NOTICE](NOTICE.md) to state the claimed conformance roles and link to the test results.
+3. Update this document and [NOTICE](../../NOTICE.md) to state the claimed conformance roles and link to the test results.
 
 Until the test suite is run and the report is published, conformance is **self-assessed** based on the implementation work described in this document.
 
 ## 8. References
 
-- Decentralized Identifiers (DIDs) v1.1](https://www.w3.org/TR/did-1.1/) (W3C Candidate Recommendation)
-- Decentralized Identifiers (DIDs) v1.0](https://www.w3.org/TR/did-core/) (W3C Recommendation)
-- Controlled Identifiers v1.0](https://www.w3.org/TR/cid-1.0/)
-- Decentralized Identifier Resolution v0.3](https://www.w3.org/TR/did-resolution/)
-- W3C DID Test Suite](https://github.com/w3c/did-test-suite/)
+- [Decentralized Identifiers (DIDs) v1.1](https://www.w3.org/TR/did-1.1/) (W3C Candidate Recommendation)
+- [Decentralized Identifiers (DIDs) v1.0](https://www.w3.org/TR/did-core/) (W3C Recommendation)
+- [Controlled Identifiers v1.0](https://www.w3.org/TR/cid-1.0/)
+- [Decentralized Identifier Resolution v0.3](https://www.w3.org/TR/did-resolution/)
+- [W3C DID Test Suite](https://github.com/w3c/did-test-suite/)
 
 ---
 
 ## 9. Related TrustWeave docs
 
-- Decentralized Identifiers (DIDs) – core concepts](../core-concepts/dids.md)
-- trustweave-did module](../modules/trustweave-did.md)
+- [Decentralized Identifiers (DIDs) – core concepts](../core-concepts/dids.md)
+- [trustweave-did module](../modules/trustweave-did.md)

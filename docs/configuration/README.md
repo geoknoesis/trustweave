@@ -33,11 +33,18 @@ fun main() = runBlocking {
 
 **Default:** In-memory KMS (testing only).
 
-**Production:** Prefer a KMS provider your **`keys { provider("…") { … } }`** block can resolve, or pass an instance with **`customKms(kms)`**.
+**Production:** Prefer passing a configured KMS instance via **`customKms(kms)`**, or declare a provider name with **`keys { provider("awsKms"); algorithm("Ed25519") }`**. Note that `KeysBuilder.provider(name)` takes no nested block — provider-specific options are supplied when you construct the KMS instance you pass to `customKms(...)` (e.g. via `KeyManagementServices.create("aws", awsKmsOptions { region = "us-east-1" })`).
 
 ```kotlin
+import org.trustweave.kms.KeyManagementServices
+import org.trustweave.awskms.awsKmsOptions
+
+val awsKms = KeyManagementServices.create("aws", awsKmsOptions { region = "us-east-1" })
+
 TrustWeave.build {
-    customKms(awsKms) // or keys { provider("awsKms") { /* provider-specific options */ } }
+    customKms(awsKms)
+    // Alternative (named registration only, no provider-options block):
+    // keys { provider("awsKms"); algorithm("Ed25519") }
     did { method("key") { algorithm("Ed25519") } }
 }
 ```
@@ -201,5 +208,5 @@ TrustWeave.build {
 
 - [Default configuration](defaults.md)
 - [Architecture overview](../introduction/architecture-overview.md)
-- [Production checklist](../deployment/production-checklist.md)
+- [Production integration checklist](../getting-started/production-integration-checklist.md)
 - [Installation](../getting-started/installation.md)

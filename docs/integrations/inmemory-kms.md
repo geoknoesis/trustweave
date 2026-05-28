@@ -46,31 +46,33 @@ when (result) {
     is GenerateKeyResult.Success -> {
         val keyHandle = result.keyHandle
         println("Key created: ${keyHandle.id}")
-        
+
         // Sign data
-        val sign = kms.sign(keyHandle.id, "Hello, World!".toByteArray())
-        when (sign) {
+        when (val sign = kms.sign(keyHandle.id, "Hello, World!".toByteArray())) {
             is SignResult.Success -> println("Signature created")
-            is SignResult.Failure -> println("Error: ${sign.reason}")
+            is SignResult.Failure.KeyNotFound -> println("Not found: ${sign.keyId}")
+            is SignResult.Failure.UnsupportedAlgorithm ->
+                println("Algorithm '${sign.requestedAlgorithm?.name}' incompatible with key '${sign.keyAlgorithm.name}'")
+            is SignResult.Failure.Error -> println("Error: ${sign.reason}")
         }
-        
+
         // Get public key
-        val publicKeyResult = kms.getPublicKey(keyHandle.id)
-        when (publicKeyResult) {
+        when (val publicKeyResult = kms.getPublicKey(keyHandle.id)) {
             is GetPublicKeyResult.Success -> println("Public key: ${publicKeyResult.keyHandle.publicKeyJwk}")
-            is GetPublicKeyResult.Failure -> println("Error: ${publicKeyResult.reason}")
+            is GetPublicKeyResult.Failure.KeyNotFound -> println("Not found: ${publicKeyResult.keyId}")
+            is GetPublicKeyResult.Failure.Error -> println("Error: ${publicKeyResult.reason}")
         }
-        
+
         // Delete key
-        val deleteResult = kms.deleteKey(keyHandle.id)
-        when (deleteResult) {
+        when (val deleteResult = kms.deleteKey(keyHandle.id)) {
             is DeleteKeyResult.Deleted -> println("Key deleted")
             is DeleteKeyResult.NotFound -> println("Key not found")
+            is DeleteKeyResult.Failure.Error -> println("Error: ${deleteResult.reason}")
         }
     }
-    is GenerateKeyResult.Failure -> {
-        println("Error: ${result.reason}")
-    }
+    is GenerateKeyResult.Failure.UnsupportedAlgorithm -> println("Unsupported: ${result.algorithm.name}")
+    is GenerateKeyResult.Failure.InvalidOptions -> println("Invalid options: ${result.reason}")
+    is GenerateKeyResult.Failure.Error -> println("Error: ${result.reason}")
 }
 ```
 

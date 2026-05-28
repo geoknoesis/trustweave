@@ -19,7 +19,7 @@ Understanding how TrustWeave works at a conceptual level will help you use it ef
 
 ## Overview
 
-TrustWeave follows [Clean Architecture](architecture/CLEAN_ARCHITECTURE.md) principles (Uncle Bob) with clear separation between:
+TrustWeave follows [Clean Architecture](../architecture/CLEAN_ARCHITECTURE.md) principles (Uncle Bob) with clear separation between:
 - **Facade Layer** (`TrustWeave`) - High-level, developer-friendly API
 - **Service Layer** - Domain-specific services (DID, Credential, Wallet, etc.)
 - **Plugin Layer** - Pluggable implementations (DID methods, KMS, blockchains)
@@ -86,7 +86,9 @@ flowchart TB
 
 **Example:**
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 val trustWeave = TrustWeave.build {
     keys { provider(IN_MEMORY); algorithm(ED25519) }
     did { method(KEY) { algorithm(ED25519) } }
@@ -219,11 +221,16 @@ flowchart LR
 TrustWeave uses a **builder pattern** for configuration:
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.DidMethods.WEB
+import org.trustweave.trust.dsl.credential.AnchorProviders.ALGORAND
+import org.trustweave.trust.dsl.credential.TrustProviders
 TrustWeave.build {
     // Configure KMS
     keys {
-        provider(IN_MEMORY)  // Select KMS plugin
+        provider(KmsProviders.IN_MEMORY)  // Select KMS plugin
         algorithm(ED25519)  // Select algorithm
     }
 
@@ -246,7 +253,7 @@ TrustWeave.build {
 
     // Configure trust registry
     trust {
-        provider(IN_MEMORY)
+        provider(TrustProviders.IN_MEMORY)
     }
 }
 ```
@@ -274,7 +281,7 @@ Some services expose `Result<T>` or functional APIs for composition.
 
 ```kotlin
 import org.trustweave.trust.types.DidCreationResult
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 
 val didResult = trustWeave.createDid { method(KEY) }
 val did = when (didResult) {

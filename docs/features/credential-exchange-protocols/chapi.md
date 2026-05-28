@@ -57,7 +57,8 @@ registry.register(protocol)
 
 val exchangeService = ExchangeServices.createExchangeService(
     protocolRegistry = registry,
-    credentialService = credentialService
+    credentialService = credentialService,
+    didResolver = didResolver
 )
 ```
 
@@ -129,7 +130,7 @@ val credential = VerifiableCredential(
     issuer = Issuer.IriIssuer(Iri("did:key:issuer")),
     issuanceDate = Clock.System.now(),
     credentialSubject = CredentialSubject(
-        id = Did("did:key:holder"),
+        id = Iri("did:key:holder"),  // CredentialSubject.id is Iri, not Did
         claims = mapOf(
             "name" to JsonPrimitive("Alice"),
             "email" to JsonPrimitive("alice@example.com")
@@ -228,7 +229,7 @@ import org.trustweave.credential.model.CredentialType
 
 val presentation = VerifiablePresentation(
     type = listOf(CredentialType.fromString("VerifiablePresentation")),
-    verifier = Did("did:key:verifier"),
+    holder = Iri("did:key:prover"),  // VerifiablePresentation.holder is Iri (there is no `verifier` field)
     verifiableCredential = listOf(credential)
 )
 

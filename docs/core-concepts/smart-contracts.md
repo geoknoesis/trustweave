@@ -165,6 +165,8 @@ ExecutionModel.Manual
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.contract.models.*
+import org.trustweave.contract.draft
+import org.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
@@ -173,7 +175,7 @@ suspend fun createFloodInsuranceContract(
     trustweave: TrustWeave,
     insurerDid: String,
     insuredDid: String
-) {
+): SmartContract {
     val contract = trustweave.contracts.draft(
         request = ContractDraftRequest(
             contractType = ContractType.Insurance,
@@ -267,7 +269,7 @@ suspend fun executeFloodContract(
         executionContext = ExecutionContext(
             triggerData = buildJsonObject {
                 put("floodDepthCm", 75.0)
-                put("credentialId", floodDataCredential.id)
+                put("credentialId", floodDataCredential.id?.value)
             }
         )
     ).getOrThrow()

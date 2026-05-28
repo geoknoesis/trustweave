@@ -1,10 +1,10 @@
 ---
-title: trustweave-did-registrar
+title: did:registrar
 ---
 
-# trustweave-did-registrar
+# did:registrar
 
-The `trustweave-did-registrar` module provides implementations of the `DidRegistrar` interface for creating, updating, and deactivating DIDs according to the [DID Registration specification](https://identity.foundation/did-registration/).
+The `did:registrar` module provides implementations of the `DidRegistrar` interface for creating, updating, and deactivating DIDs according to the [DID Registration specification](https://identity.foundation/did-registration/).
 
 ```kotlin
 dependencies {
@@ -18,7 +18,7 @@ dependencies {
 
 ## Overview
 
-The `trustweave-did-registrar` module provides:
+The `did:registrar` module provides:
 
 - **DidRegistrar Implementations** – clients for Universal Registrar services and local KMS-based registrars
 - **Protocol Adapters** – adapters for different Universal Registrar implementations (standard, GoDiddy, etc.)
@@ -30,7 +30,7 @@ The `trustweave-did-registrar` module provides:
 
 ```mermaid
 graph TB
-    subgraph "trustweave-did-registrar Module"
+    subgraph "did:registrar Module"
         DidRegistrar[DidRegistrar Interface]
 
         subgraph "Clients"
@@ -119,7 +119,7 @@ A local registrar implementation that uses a Key Management Service (KMS) for In
 
 ```kotlin
 import org.trustweave.did.registrar.client.*
-import org.trustweave.kms.*
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
 
 val kms = InMemoryKeyManagementService()
 val registrar = KmsBasedRegistrar(kms)
@@ -377,6 +377,8 @@ graph TD
         A --> B[client/]
         A --> C[adapter/]
         A --> D[util/]
+        A --> M[method/]
+        A --> S[storage/]
 
         B --> B1[DefaultUniversalRegistrar.kt]
         B --> B2[KmsBasedRegistrar.kt]
@@ -384,7 +386,12 @@ graph TD
         C --> C1[UniversalRegistrarProtocolAdapter.kt]
         C --> C2[StandardUniversalRegistrarAdapter.kt]
 
-        D --> D1[JobTracker.kt]
+        M --> M1[HttpDidMethod.kt]
+        M --> M2[JsonDidMethodLoader.kt]
+
+        S --> S1[JobStorage.kt]
+        S --> S2[InMemoryJobStorage.kt]
+        S --> S3[DatabaseJobStorage.kt]
     end
 
     style A fill:#e1f5ff
@@ -394,15 +401,15 @@ graph TD
 
 ## Dependencies
 
-- Depends on [`trustweave-did`](trustweave-did.md) for `DidRegistrar` interface and models
-- Depends on [`trustweave-kms`](trustweave-kms.md) for `KmsBasedRegistrar` implementation
+- Depends on [`did:did-core`](trustweave-did.md) for `DidRegistrar` interface and models
+- Depends on [`kms:kms-core`](trustweave-kms.md) for `KmsBasedRegistrar` implementation
 - Depends on `kotlinx.coroutines` for async operations
 - Depends on `kotlinx.serialization` for JSON serialization
 
 ## Related Modules
 
-- **[trustweave-did](trustweave-did.md)** – Core DID module with `DidRegistrar` interface
-- **[trustweave-did-registrar-server](trustweave-did-registrar-server.md)** – Universal Registrar server implementation
+- **[did:did-core](trustweave-did.md)** – Core DID module with `DidRegistrar` interface
+- **[did:registrar-server-ktor](trustweave-did-registrar-server.md)** – Universal Registrar server implementation
 
 ## Next Steps
 

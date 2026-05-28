@@ -2052,5 +2052,5 @@ Ce guide couvre tous les flux de travail critiques pour TrustWeave Education :
 ✅ **Ancrage Blockchain** - Pistes d'audit immuables pour les dossiers académiques
 ✅ **Contrats Intelligents Académiques** - Accords automatisés et vérifiables pour les bourses et récompenses
 
-Pour les flux de travail supplémentaires et les améliorations futures, voir [Analyse des Flux de Travail Manquants](./missing-workflows-analysis.md).
+Pour les flux de travail supplémentaires et les améliorations futures, voir [Index de la documentation UX](./README.md).
 

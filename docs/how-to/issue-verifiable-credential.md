@@ -80,8 +80,9 @@ Set up TrustWeave with a Key Management Service and DID method. For development,
 ```kotlin
 import org.trustweave.credential.model.ProofType
 import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.dsl.credential.*
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 
 val trustWeave = TrustWeave.build {
     // KMS and DID methods auto-discovered via SPI
@@ -107,7 +108,7 @@ val trustWeave = TrustWeave.build {
 - `did { }` registers the DID method (e.g., `did:key`) for creating issuer identities
 - `credentials { }` sets the default proof type for cryptographic signatures
 
-> **Note:** For production, replace `"inMemory"` with a secure KMS provider (AWS KMS, CyberArk, etc.). See the [KMS plugins documentation](../plugins/kms-plugins.md) for options.
+> **Note:** For production, replace `"inMemory"` with a secure KMS provider (AWS KMS, CyberArk, etc.). See the [KMS plugins documentation](../plugins.md#key-management-service-kms-plugins) for options.
 
 ---
 
@@ -210,7 +211,7 @@ val issuedCredential = trustWeave.issue {
         // ... credential definition from Step 4
     }
     signedBy(issuerDid)
-    withProof(ED25519_SIGNATURE_2020)
+    withProof(ProofSuiteId.VC_LD)
 }.getOrThrow()
 ```
 
@@ -272,10 +273,11 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import kotlin.time.Duration.Companion.days
 import org.trustweave.trust.types.getOrThrowDid
-import org.trustweave.trust.types.getOrThrow
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.identifiers.extractKeyId
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.credential.results.getOrThrow
 
 fun main() = runBlocking {
@@ -443,7 +445,8 @@ trustWeave.issue {
 
 **Solution:**
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 // ✅ Ensure KMS is configured
 val trustWeave = TrustWeave.build {
     // KMS and DID methods auto-discovered via SPI
@@ -463,7 +466,9 @@ val trustWeave = TrustWeave.build {
 
 **Solution:**
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 // ✅ Register DID method
 val trustWeave = TrustWeave.build {
     keys { provider(IN_MEMORY); algorithm(ED25519) }
@@ -576,10 +581,12 @@ See: [How to Revoke Credentials](./revoke-credentials.md)
 Let credential holders store and manage their credentials:
 
 ```kotlin
+import org.trustweave.trust.types.getOrThrow
+
 val wallet = trustWeave.wallet {
     holder(holderDid.value)
     enableOrganization()
-}
+}.getOrThrow()
 
 val stored = issuedCredential.storeIn(wallet)
 ```

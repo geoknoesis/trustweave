@@ -5,16 +5,16 @@ title: SPI Interfaces
 # SPI Interfaces
 
 The SPI (Service Provider Interface) interfaces are shared service and plugin abstractions that
-other TrustWeave modules implement or consume. These interfaces are included in `trustweave-common`.
+other TrustWeave modules implement or consume. These interfaces are included in `common`.
 
-**Note:** SPI interfaces are included in `trustweave-common`. You don't need a separate dependency for SPI functionality. The interfaces are automatically available when you include `trustweave-common` or other TrustWeave modules.
+**Note:** SPI interfaces are included in `common`. You don't need a separate dependency for SPI functionality. The interfaces are automatically available when you include `common` or other TrustWeave modules.
 
-**Result:** SPI interfaces are available through `trustweave-common` so you can register custom DID methods, KMS providers, or blockchain clients without pulling in the higher-level modules.
+**Result:** SPI interfaces are available through `common` so you can register custom DID methods, KMS providers, or blockchain clients without pulling in the higher-level modules.
 
 ## Responsibilities
 
 - **DID methods**: `DidMethodProvider` implementations can be discovered with `ServiceLoader` and registered on `DidMethodRegistry` (see `did-core`).
-- **Shared plugin helpers** in `trustweave-common`: metadata, configuration loading, provider chaining (`org.trustweave.core.plugin`).
+- **Shared plugin helpers** in `common`: metadata, configuration loading, provider chaining (`org.trustweave.core.plugin`).
 - **Factories** wired through `TrustWeave.build { factories(...) }` (for example `WalletFactory` in `org.trustweave.wallet.services`).
 
 ## Typical Usage
@@ -36,13 +36,13 @@ val registry = runBlocking {
 
 ## Dependencies
 
-SPI interfaces are included in `trustweave-common`. All other modules that interact
-with service abstractions depend on `trustweave-common` (which includes the SPI interfaces).
+SPI interfaces are included in `common`. All other modules that interact
+with service abstractions depend on `common` (which includes the SPI interfaces).
 
 ## Next Steps
 
-- Explore [`TrustWeave-trust`](trustweave-trust.md) for trust runtime built on top of
+- Explore [`trust`](trustweave-trust.md) for trust runtime built on top of
   the SPI layer.
-- Review [`TrustWeave-common`](trustweave-common.md) to see how credential features
+- Review [`common`](trustweave-common.md) to see how credential features
   consume the SPI interfaces.
 

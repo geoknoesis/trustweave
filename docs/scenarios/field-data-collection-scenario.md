@@ -230,7 +230,9 @@ Configure TrustWeave with blockchain anchoring support:
 import org.trustweave.trust.TrustWeave
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import kotlinx.coroutines.runBlocking
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 
 fun main() = runBlocking {
     // Setup TrustWeave with blockchain support
@@ -264,7 +266,8 @@ fun main() = runBlocking {
 Create a DID for your organization (the issuer of credentials):
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 // Create organization DID
 import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.did.resolver.DidResolutionResult
@@ -290,7 +293,8 @@ Create a DID for a field worker and issue an authorization credential:
 ```kotlin
 import org.trustweave.credential.model.vc.VerifiableCredential
 import java.time.Instant
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.trust.types.getOrThrow
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.did.resolver.DidResolutionResult
@@ -585,7 +589,9 @@ import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.trust.types.getOrThrow
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.identifiers.extractKeyId
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.credential.results.getOrThrow
 
 fun main() = runBlocking {

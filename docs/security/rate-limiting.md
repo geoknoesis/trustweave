@@ -54,9 +54,10 @@ Use dedicated rate limiting libraries in your application:
 
 **Example:**
 ```kotlin
+import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.Bucket
-import io.github.bucket4j.BucketConfiguration
-import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy
+import io.github.bucket4j.Refill
+import java.time.Duration
 
 // Configure rate limiter at application startup
 val bucket = Bucket.builder()

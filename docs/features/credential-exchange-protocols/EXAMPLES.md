@@ -62,7 +62,8 @@ fun main() = runBlocking {
 
     val exchangeService = ExchangeServices.createExchangeService(
         protocolRegistry = registry,
-        credentialService = credentialService
+        credentialService = credentialService,
+        didResolver = didResolver
     )
 
     // Create offer
@@ -177,7 +178,7 @@ fun main() = runBlocking {
         issuer = Issuer.IriIssuer(Iri(issuerDid.value)),
         issuanceDate = Clock.System.now(),
         credentialSubject = CredentialSubject(
-            id = holderDid,
+            id = Iri(holderDid.value),  // CredentialSubject.id is Iri, not Did
             claims = mapOf(
                 "name" to JsonPrimitive("Alice"),
                 "email" to JsonPrimitive("alice@example.com")
@@ -526,7 +527,8 @@ fun multipleProtocolsExample() = runBlocking {
 
     val exchangeService = ExchangeServices.createExchangeService(
         protocolRegistry = registry,
-        credentialService = credentialService
+        credentialService = credentialService,
+        didResolver = didResolver
     )
 
     println("Registered protocols: ${registry.getSupportedProtocols()}")
@@ -666,7 +668,8 @@ fun setupExchangeService(): ExchangeService {
 
     return ExchangeServices.createExchangeService(
         protocolRegistry = registry,
-        credentialService = credentialService
+        credentialService = credentialService,
+        didResolver = didResolver
     )
 }
 ```

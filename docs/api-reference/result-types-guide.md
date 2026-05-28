@@ -301,7 +301,7 @@ val wallet = result.getOrThrow() // Throws IllegalStateException on failure
 For tests and examples, use the typed unwrappers (same functions the production code recommends for “fail fast” demos):
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.types.getOrThrow

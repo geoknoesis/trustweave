@@ -58,7 +58,9 @@ import org.trustweave.trust.TrustWeave
 import org.trustweave.credential.trust.TrustEvaluator
 import org.trustweave.did.identifiers.Did
 import org.trustweave.credential.results.VerificationResult
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -165,11 +167,14 @@ val result = trustWeave.verify {
 Use trust registry to check for direct trust anchors or trust paths:
 
 ```kotlin
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KmsProviders
+import org.trustweave.trust.dsl.credential.TrustProviders
 val trustWeave = TrustWeave.build {
-    keys { provider(IN_MEMORY) }
+    keys { provider(KmsProviders.IN_MEMORY) }
     did { method(KEY) { algorithm(ED25519) } }
-    trust { provider(IN_MEMORY) }
+    trust { provider(TrustProviders.IN_MEMORY) }
 }
 
 // Require issuer to be a direct trust anchor
@@ -181,7 +186,7 @@ trustWeave.verify {
 // Require trust path (max length 3)
 trustWeave.verify {
     credential(credential)
-    requireTrustPath(trustWeave.configuration.trustRegistry!!, maxLength = 3)
+    requireTrustPath(trustWeave.configuration.trustRegistry!!, maxPathLength = 3)
 }
 ```
 
@@ -228,7 +233,7 @@ trustWeave.verify {
     requireTrust(trustRegistry)
     
     // Option 2: Require trust path
-    requireTrustPath(trustRegistry, maxLength = 3)
+    requireTrustPath(trustRegistry, maxPathLength = 3)
     
     // Option 3: Custom policy
     val policy = TrustEvaluator.allowlist(trustedIssuers)
@@ -370,7 +375,7 @@ class CredentialVerificationEndpoint(
         return when (result) {
             is VerificationResult.Valid -> VerificationResponse(
                 valid = true,
-                issuer = credential.issuer.value
+                issuer = credential.issuer.id.value
             )
             is VerificationResult.Invalid -> VerificationResponse(
                 valid = false,
@@ -410,7 +415,7 @@ suspend fun verifyWithMultiplePolicies(
 
 - **[Configure Trust Registry](configure-trust-registry.md)** - Learn about trust registries and trust anchors
 - **[Verify Credentials](verify-credentials.md)** - Complete guide to credential verification
-- **[Trust Concepts](../../core-concepts/trust-registry.md)** - Understanding trust models
+- **[Trust Concepts](../core-concepts/trust-registry.md)** - Understanding trust models
 
 ## Summary
 

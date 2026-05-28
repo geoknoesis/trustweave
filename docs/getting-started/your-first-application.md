@@ -46,7 +46,7 @@ The block below wires together in-memory services so you can run the whole workf
 
 ```kotlin
 import org.trustweave.anchor.*
-import org.trustweave.did.*
+import org.trustweave.did.registry.DidMethodRegistry
 import org.trustweave.core.util.DigestUtils
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import org.trustweave.testkit.did.DidKeyMockMethod
@@ -76,12 +76,12 @@ fun main() = runBlocking {
     // Step 2: Create a DID for the issuer
     val issuerDoc = didMethod.createDid()
     val issuerDid = issuerDoc.id
-    println("Created issuer DID: $issuerDid")
+    println("Created issuer DID: ${issuerDid.value}")
 
     // Step 3: Create a verifiable credential payload
     val vcPayload = buildJsonObject {
         put("vcId", "vc-12345")
-        put("issuer", issuerDid)
+        put("issuer", issuerDid.value)
         put("credentialSubject", buildJsonObject {
             put("id", "subject-123")
             put("type", "Person")
@@ -99,7 +99,7 @@ fun main() = runBlocking {
     val digestObj = VerifiableCredentialDigest(
         vcId = "vc-12345",
         vcDigest = digest,
-        issuer = issuerDid
+        issuer = issuerDid.value
     )
 
     val anchorResult = blockchainRegistry.anchorTyped(
@@ -119,7 +119,7 @@ fun main() = runBlocking {
     )
 
     assert(retrieved.vcDigest == digest)
-    assert(retrieved.issuer == issuerDid)
+    assert(retrieved.issuer == issuerDid.value)
     println("Verification successful!")
 }
 ```

@@ -164,7 +164,10 @@ import org.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.datetime.Clock
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.dsl.credential.AnchorProviders
 import org.trustweave.did.identifiers.extractKeyId
 
 fun main() = runBlocking {
@@ -175,7 +178,7 @@ fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
         keys { provider(IN_MEMORY); algorithm(ED25519) }
         did { method(KEY) { algorithm(ED25519) } }
-        anchor { chain("inmemory:testnet") { provider(IN_MEMORY) } }
+        anchor { chain("inmemory:testnet") { provider(AnchorProviders.IN_MEMORY) } }
     }
     
     println("\n✅ TrustWeave initialized")

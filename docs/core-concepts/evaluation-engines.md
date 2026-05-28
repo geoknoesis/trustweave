@@ -244,14 +244,17 @@ abstract class BaseEvaluationEngine : ContractEvaluationEngine {
 Thread-safe collection for managing evaluation engines with operator overloads:
 
 ```kotlin
-interface EvaluationEngines {
+interface EvaluationEngines : Iterable<ContractEvaluationEngine> {
     operator fun plusAssign(engine: ContractEvaluationEngine)  // engines += engine
     operator fun minusAssign(engineId: String)                 // engines -= "engine-id"
+    fun remove(engineId: String): Boolean
     operator fun get(engineId: String): ContractEvaluationEngine?  // engines["engine-id"]
     operator fun contains(engineId: String): Boolean           // "engine-id" in engines
     fun verify(engineId: String, expectedHash: String): Boolean
     val keys: Set<String>
+    val values: Collection<ContractEvaluationEngine>
     val size: Int
+    val isEmpty: Boolean
     fun clear()
 }
 
@@ -288,6 +291,7 @@ package com.example.contracts.engines
 
 import org.trustweave.contract.evaluation.*
 import org.trustweave.contract.models.*
+import kotlinx.serialization.json.JsonElement
 
 class MyCustomEngine : BaseEvaluationEngine() {
     override val engineId: String = "my-custom-engine"
@@ -650,16 +654,18 @@ Evaluation engine 'my-engine' integrity check failed
 
 ### Version Mismatch
 
-```
-Evaluation engine version mismatch. Expected: 1.0.0, Actual: 2.0.0
-```
-
-**Solution**: Use the correct engine version or update the contract to use the new version.
+The framework only enforces engine integrity via `implementationHash` (see
+`EngineReference.verifyOrThrow`). The `version` / `expectedVersion` fields on
+`EngineReference` are **captured but not validated** at runtime — a mismatch will
+not block execution. Treat them as documentation only, and rebuild + rebind
+contracts after upgrading an engine so the recorded `implementationHash` matches
+the deployed bytes. If you need version-gated dispatch, enforce it in application
+code by reading `EngineReference.version` before invoking the engine.
 
 ## See Also
 
 - Smart Contracts](smart-contracts.md) for contract lifecycle and execution models
 - Verifiable Credentials](verifiable-credentials.md) for credential issuance and verification
 - Blockchain Anchoring](blockchain-anchoring.md) for anchoring concepts
-- API Reference](../api-reference/contract-api.md) for complete API documentation
+- API Reference](../api-reference/smart-contract-api.md) for complete API documentation
 

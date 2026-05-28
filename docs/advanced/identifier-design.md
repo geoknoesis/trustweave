@@ -124,13 +124,12 @@ did/did-core/
   └── identifiers/
       └── DidIdentifiers.kt       (Did, VerificationMethodId, DidUrl)
 
-credentials/credential-core/
+credentials/credential-api/
   └── identifiers/
-      └── CredentialIdentifiers.kt (CredentialId, IssuerId, StatusListId, SchemaId)
-  └── types/
+      └── CredentialIdentifiers.kt (CredentialId, IssuerId, StatusListId, SchemaId, SubjectId)
+  └── model/
       └── CredentialTypes.kt       (ProofType, CredentialType)
-      └── SchemaFormat.kt          (SchemaFormat enum)
-      └── StatusPurpose.kt         (StatusPurpose enum)
+      └── ...                      (SchemaFormat, StatusPurpose live alongside model classes)
 
 wallet/wallet-core/
   └── identifiers/
@@ -154,7 +153,7 @@ contract/
 ### Dependency Flow
 
 ```
-credentials/credential-core
+credentials/credential-api
     ↓ (depends on)
 did/did-core
     ↓ (depends on)
@@ -515,7 +514,7 @@ data class VerificationMethodId(
 
 ### Credential Module Identifiers
 
-**Location**: `credentials/credential-core/src/main/kotlin/org.trustweave/credential/identifiers/CredentialIdentifiers.kt`
+**Location**: `credentials/credential-api/src/main/kotlin/org/trustweave/credential/identifiers/CredentialIdentifiers.kt`
 
 ```kotlin
 package org.trustweave.credential.identifiers
@@ -607,7 +606,7 @@ class SchemaId(
 
 ### Credential Types
 
-**Location**: `credentials/credential-core/src/main/kotlin/org.trustweave/credential/types/CredentialTypes.kt`
+**Location**: `credentials/credential-api/src/main/kotlin/org/trustweave/credential/model/CredentialTypes.kt`
 
 ```kotlin
 package org.trustweave.credential.types
@@ -871,13 +870,12 @@ val invalid = Did("not-a-did")
 
 **One file per module for identifiers:**
 ```
-credentials/credential-core/src/main/kotlin/org.trustweave/credential/
+credentials/credential-api/src/main/kotlin/org/trustweave/credential/
   └── identifiers/
       └── CredentialIdentifiers.kt  (all credential identifiers)
-  └── types/
+  └── model/
       └── CredentialTypes.kt        (all credential types)
-      └── SchemaFormat.kt           (enum)
-      └── StatusPurpose.kt          (enum)
+      └── ...                       (SchemaFormat, StatusPurpose etc. live in the same package)
 ```
 
 **Rationale**: 

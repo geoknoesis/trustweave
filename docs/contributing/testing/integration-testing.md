@@ -46,7 +46,7 @@ class VaultKmsIntegrationTest : KmsIntegrationTest() {
 
     override fun getKms(): KeyManagementService {
         val config = VaultKmsConfig.builder()
-            .vaultUrl(vault.getVaultUrl())
+            .address(vault.getVaultUrl())
             .token(vault.getRootToken())
             .build()
         return VaultKeyManagementService(config)
@@ -56,20 +56,28 @@ class VaultKmsIntegrationTest : KmsIntegrationTest() {
 
 ### Ganache (Ethereum)
 
+`GanacheContainer` lives in `anchors/plugins/ganache` (test sources). Instantiate it directly — there is no `create()` factory.
+
 ```kotlin
 @Testcontainers
 class EthereumIntegrationTest : ChainIntegrationTest() {
 
     companion object {
         @JvmStatic
-        val ganache = GanacheContainer.create()
+        val ganache = GanacheContainer().apply { start() }
     }
 
+    override fun getChainId(): String = "eip155:1337"
+
     override fun getChainClient(): BlockchainAnchorClient {
-        val config = EthereumOptions(
-            rpcUrl = ganache.rpcEndpoint
+        // EthereumBlockchainAnchorClient takes (chainId, options: Map<String, Any?>).
+        return EthereumBlockchainAnchorClient(
+            chainId = getChainId(),
+            options = mapOf(
+                "rpcUrl" to ganache.getRpcUrl(),
+                "privateKey" to ganache.getFirstAccountPrivateKey()
+            )
         )
-        return EthereumBlockchainAnchorClient("eip155:1337", config)
     }
 }
 ```

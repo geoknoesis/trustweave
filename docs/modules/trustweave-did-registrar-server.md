@@ -4,7 +4,7 @@ title: trustweave-did-registrar-server (Ktor)
 
 # trustweave-did-registrar-server (Ktor)
 
-The `trustweave-did-registrar-server-ktor` module provides a Ktor-based HTTP server implementation of the Universal Registrar protocol, allowing you to host your own Universal Registrar service.
+The `did:registrar-server-ktor` module provides a Ktor-based HTTP server implementation of the Universal Registrar protocol, allowing you to host your own Universal Registrar service.
 
 ```kotlin
 dependencies {
@@ -17,11 +17,11 @@ dependencies {
 
 **Result:** Gradle exposes a Universal Registrar server that implements the DID Registration specification endpoints, allowing clients to create, update, and deactivate DIDs through HTTP.
 
-> **Note:** For Spring Boot applications, use the `registrar-server-spring` module instead. See [trustweave-did-registrar-server-spring](trustweave-did-registrar-server-spring.md) for details.
+> **Note:** For Spring Boot applications, use the `did:registrar-server-spring` module instead. (A dedicated reference page for the Spring variant is not yet published — see the source under `did/registrar-server-spring/`.)
 
 ## Overview
 
-The `trustweave-did-registrar-server-ktor` module provides:
+The `did:registrar-server-ktor` module provides:
 
 - **DID Registrar Server** – Ktor-based HTTP server implementing both Universal Registrar protocol and RESTful endpoints
 - **RESTful API Endpoints** – recommended endpoints for DID operations (`POST /1.0/dids`, `PUT /1.0/dids/{did}`, `DELETE /1.0/dids/{did}`, `GET /1.0/jobs/{jobId}`)
@@ -35,7 +35,7 @@ The `trustweave-did-registrar-server-ktor` module provides:
 
 ```mermaid
 graph TB
-    subgraph "trustweave-did-registrar-server-ktor Module"
+    subgraph "did:registrar-server-ktor Module"
         Server[DidRegistrarServer]
         Routes[DidRegistrarRoutes]
         Storage[JobStorage Interface]
@@ -89,8 +89,10 @@ Main server class that configures and runs the DID Registrar HTTP service:
 
 ```kotlin
 import org.trustweave.did.registrar.server.*
+import org.trustweave.did.registrar.storage.*
 import org.trustweave.did.registrar.client.*
-import org.trustweave.kms.*
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
+import org.trustweave.did.registrar.client.KmsBasedRegistrar
 
 // Create registrar backend
 val kms = InMemoryKeyManagementService()
@@ -165,6 +167,7 @@ Database-backed implementation that stores job responses in a relational databas
 
 ```kotlin
 import org.trustweave.did.registrar.server.*
+import org.trustweave.did.registrar.storage.*
 import com.zaxxer.hikari.HikariDataSource
 import javax.sql.DataSource
 
@@ -408,6 +411,7 @@ sequenceDiagram
 
 ```kotlin
 import org.trustweave.did.registrar.server.*
+import org.trustweave.did.registrar.storage.*
 import org.trustweave.did.registrar.client.*
 import org.trustweave.kms.*
 
@@ -432,6 +436,7 @@ For production deployments, use the database-backed implementation:
 
 ```kotlin
 import org.trustweave.did.registrar.server.*
+import org.trustweave.did.registrar.storage.*
 import com.zaxxer.hikari.HikariDataSource
 
 // Create DataSource
@@ -473,7 +478,8 @@ You can also implement your own `JobStorage`:
 import org.trustweave.did.registrar.server.*
 import org.trustweave.did.registrar.model.*
 
-// Custom job storage implementation (e.g., Redis)
+// Custom job storage implementation (e.g., Redis).
+// JobStorage lives in org.trustweave.did.registrar.storage (in did:registrar).
 class RedisJobStorage : JobStorage {
     // Implement using Redis
     override fun store(jobId: String, response: DidRegistrationResponse) {
@@ -500,6 +506,7 @@ You can chain registrars, using a local server that delegates to another Univers
 
 ```kotlin
 import org.trustweave.did.registrar.server.*
+import org.trustweave.did.registrar.storage.*
 import org.trustweave.did.registrar.client.*
 
 // Create upstream registrar
@@ -541,7 +548,7 @@ val response = client.createDid(
 
 ```mermaid
 graph TD
-    subgraph "did:registrar-server-ktor Package Structure"
+    subgraph "did:registrar-server-ktor"
         A[org.trustweave.did.registrar.server]
         A --> B[DidRegistrarServer.kt]
         A --> C[DidRegistrarRoutes.kt]
@@ -550,10 +557,13 @@ graph TD
         D --> D2[UpdateDidRequest.kt]
         D --> D3[DeactivateDidRequest.kt]
         D --> D4[ErrorResponse.kt]
-        A --> D[JobStorage.kt]
+    end
 
-        D --> D1[JobStorage Interface]
-        D --> D2[InMemoryJobStorage]
+    subgraph "did:registrar"
+        S[org.trustweave.did.registrar.storage]
+        S --> S1[JobStorage.kt]
+        S --> S2[InMemoryJobStorage.kt]
+        S --> S3[DatabaseJobStorage.kt]
     end
 
     subgraph "Dependencies"
@@ -565,11 +575,12 @@ graph TD
     B --> E
     C --> F
     C --> G
-    C --> D
+    C --> S
 
     style A fill:#e1f5ff
     style B fill:#fff4e1
     style C fill:#e8f5e9
+    style S fill:#e8f5e9
 ```
 
 ## Deployment Considerations
@@ -615,15 +626,15 @@ fun Application.module() {
 
 ## Dependencies
 
-- Depends on [`trustweave-did-registrar`](trustweave-did-registrar.md) for `DidRegistrar` implementations
-- Depends on [`trustweave-did`](trustweave-did.md) for models and interfaces
+- Depends on [`did:registrar`](trustweave-did-registrar.md) for `DidRegistrar` implementations and `JobStorage` types
+- Depends on [`did:did-core`](trustweave-did.md) for models and interfaces
 - Depends on `ktor-server-core` and `ktor-server-netty` for HTTP server
 - Depends on `ktor-serialization-kotlinx-json` for JSON serialization
 
 ## Related Modules
 
-- **[trustweave-did](trustweave-did.md)** – Core DID module with `DidRegistrar` interface
-- **[trustweave-did-registrar](trustweave-did-registrar.md)** – DID Registrar client implementations
+- **[did:did-core](trustweave-did.md)** – Core DID module with `DidRegistrar` interface
+- **[did:registrar](trustweave-did-registrar.md)** – DID Registrar client implementations
 
 ## Next Steps
 

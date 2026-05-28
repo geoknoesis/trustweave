@@ -794,7 +794,9 @@ import org.trustweave.credential.results.VerificationResult
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.trust.types.getOrThrow
 import org.trustweave.did.identifiers.extractKeyId
-import org.trustweave.testkit.services.*
+import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.credential.results.getOrThrow
 
 suspend fun completeFloodInsuranceWorkflow() {
@@ -901,7 +903,6 @@ import com.atlasparametric.products.flood.SarFloodProduct
 import com.atlasparametric.products.heatwave.HeatwaveProduct
 import com.atlasparametric.products.solar.SolarAttenuationProduct
 import kotlinx.coroutines.runBlocking
-import org.trustweave.testkit.services.*
 
 /**
  * Atlas Parametric MGA Platform

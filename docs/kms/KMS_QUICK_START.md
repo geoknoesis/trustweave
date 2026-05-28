@@ -105,7 +105,7 @@ import org.trustweave.kms.*
 
 val providers = KeyManagementServices.availableProviders()
 println("Available providers: $providers")
-// Output: [aws, azure, google-cloud-kms, vault, ibm, inmemory, waltid]
+// Output: [aws, azure, google-cloud-kms, vault, ibm, inmemory]
 ```
 
 ### Instance Caching
@@ -124,7 +124,7 @@ try {
 } catch (e: IllegalArgumentException) {
     println(e.message)
     // Output: KMS provider 'unknown-provider' not found. 
-    //         Available providers: [aws, azure, google-cloud-kms, vault, ibm, inmemory, waltid]
+    //         Available providers: [aws, azure, google-cloud-kms, vault, ibm, inmemory]
 }
 ```
 
@@ -138,7 +138,6 @@ try {
 | HashiCorp Vault | `vault` | Yes (address, token) |
 | IBM Key Protect | `ibm` | Yes (apiKey, instanceId) |
 | InMemory | `inmemory` | No |
-| WaltID | `waltid` | Depends on configuration |
 
 ---
 
@@ -220,14 +219,18 @@ import org.trustweave.kms.*
 import org.trustweave.kms.KmsOptionKeys
 
 // Generate key with options
+// Note: TAGS, ALIAS, ENABLE_AUTOMATIC_ROTATION are AWS-specific constants
+// in `org.trustweave.awskms.AwsKmsOptionKeys`, not on cross-provider `KmsOptionKeys`.
+import org.trustweave.awskms.AwsKmsOptionKeys
+
 val result = kms.generateKey(
     Algorithm.Ed25519,
     options = mapOf(
         KmsOptionKeys.KEY_ID to "my-key-id",
         KmsOptionKeys.DESCRIPTION to "My key",
-        KmsOptionKeys.TAGS to mapOf("Environment" to "Production"),
-        KmsOptionKeys.ALIAS to "alias/my-key",
-        KmsOptionKeys.ENABLE_AUTOMATIC_ROTATION to true
+        AwsKmsOptionKeys.TAGS to mapOf("Environment" to "Production"),
+        AwsKmsOptionKeys.ALIAS to "alias/my-key",
+        AwsKmsOptionKeys.ENABLE_AUTOMATIC_ROTATION to true
     )
 )
 
@@ -322,11 +325,13 @@ val kms = GoogleCloudKeyManagementService(config)
 import org.trustweave.kms.*
 import org.trustweave.kms.KmsOptionKeys
 
+import org.trustweave.googlekms.GcpKmsOptionKeys
+
 val result = kms.generateKey(
     Algorithm.Ed25519,
     options = mapOf(
         KmsOptionKeys.KEY_ID to "my-key-id",
-        KmsOptionKeys.LABELS to mapOf(
+        GcpKmsOptionKeys.LABELS to mapOf(
             "environment" to "production",
             "owner" to "security-team"
         )
@@ -378,12 +383,14 @@ val kms = VaultKeyManagementService(config)
 import org.trustweave.kms.*
 import org.trustweave.kms.KmsOptionKeys
 
+import org.trustweave.hashicorpkms.HashiCorpKmsOptionKeys
+
 val result = kms.generateKey(
     Algorithm.Ed25519,
     options = mapOf(
         KmsOptionKeys.KEY_ID to "my-key-name",
         KmsOptionKeys.EXPORTABLE to false,
-        KmsOptionKeys.ALLOW_PLAINTEXT_BACKUP to false
+        HashiCorpKmsOptionKeys.ALLOW_PLAINTEXT_BACKUP to false
     )
 )
 
@@ -452,12 +459,12 @@ All KMS plugins are automatically discovered via Java ServiceLoader. The recomme
 
 ```kotlin
 import org.trustweave.kms.*
-import org.trustweave.kms.KmsOptionKeys
+import org.trustweave.awskms.AwsKmsOptionKeys
 
 // Simple factory API - no ServiceLoader needed!
 // Create KMS instances directly by provider name
 val awsKms = KeyManagementServices.create("aws", mapOf(
-    KmsOptionKeys.REGION to "us-east-1"
+    AwsKmsOptionKeys.REGION to "us-east-1"
 ))
 val azureKms = KeyManagementServices.create("azure", mapOf(
     "vaultUrl" to "https://myvault.vault.azure.net"
@@ -485,7 +492,7 @@ import org.trustweave.kms.*
 // Get list of all available providers
 val providers = KeyManagementServices.availableProviders()
 println("Available providers: $providers")
-// Output: [aws, azure, google-cloud-kms, vault, ibm, inmemory, waltid]
+// Output: [aws, azure, google-cloud-kms, vault, ibm, inmemory]
 ```
 
 ### Using the KMS Instance
@@ -598,8 +605,8 @@ val badOptions = mapOf(
 ## Next Steps
 
 - Complete Configuration Guide](KMS_PLUGINS_CONFIGURATION.md)
-- Plugin Testing Guide](../../docs/internal/development/KMS_PLUGIN_TESTING_GUIDE.md)
-- Result-Based API Documentation](../../docs/core-concepts/result-pattern.md)
+- Creating Plugins Guide](../contributing/creating-plugins.md)
+- Error Handling Guide](../advanced/error-handling.md)
 
 ---
 

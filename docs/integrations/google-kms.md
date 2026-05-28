@@ -135,14 +135,16 @@ The Google Cloud KMS plugin supports the following algorithms:
 
 | Algorithm | Google Cloud KMS Algorithm | Notes |
 |-----------|---------------------------|-------|
+| Ed25519 | (varies)                  | Advertised by the plugin; availability depends on the GCP KMS region/version |
 | secp256k1 | `EC_SIGN_SECP256K1_SHA256` | Blockchain-compatible |
 | P-256 | `EC_SIGN_P256_SHA256` | FIPS 140-2 compliant |
 | P-384 | `EC_SIGN_P384_SHA384` | FIPS 140-2 compliant |
+| P-521 | (varies)                  | Advertised by the plugin; availability depends on the GCP KMS region/version |
 | RSA-2048 | `RSA_SIGN_PKCS1_2048_SHA256` | Legacy support |
 | RSA-3072 | `RSA_SIGN_PKCS1_3072_SHA256` | Higher security |
 | RSA-4096 | `RSA_SIGN_PKCS1_4096_SHA256` | Maximum security |
 
-**Note:** Ed25519 and P-521 support may vary by Google Cloud KMS version. The plugin will throw a clear error message if these algorithms are not available, suggesting alternatives.
+**Note:** Ed25519 and P-521 are advertised by `GoogleCloudKeyManagementService.SUPPORTED_ALGORITHMS`, but actual availability depends on your Google Cloud KMS deployment. Server-side errors will surface as `GenerateKeyResult.Failure.Error`.
 
 ### Checking Algorithm Support
 
@@ -171,6 +173,7 @@ if (kms?.supportsAlgorithm(Algorithm.Secp256k1) == true) {
 import org.trustweave.kms.*
 import org.trustweave.kms.KmsOptionKeys
 import org.trustweave.kms.results.*
+import org.trustweave.googlekms.GcpKmsOptionKeys
 
 // Generate secp256k1 key
 val result = kms.generateKey(Algorithm.Secp256k1)
@@ -179,28 +182,30 @@ when (result) {
         val keyHandle = result.keyHandle
         println("Key created: ${keyHandle.id}")
     }
-    is GenerateKeyResult.Failure -> {
-        println("Error: ${result.reason}")
-    }
+    is GenerateKeyResult.Failure.UnsupportedAlgorithm -> println("Unsupported: ${result.algorithm.name}")
+    is GenerateKeyResult.Failure.InvalidOptions -> println("Invalid options: ${result.reason}")
+    is GenerateKeyResult.Failure.Error -> println("Error: ${result.reason}")
 }
 
-// Generate key with custom ID and labels
+// Generate key with custom ID and labels.
+// Google-specific options (KEY_RING, LABELS) live in GcpKmsOptionKeys;
+// cross-provider KEY_ID lives in KmsOptionKeys.
 val keyWithLabelsResult = kms.generateKey(
     algorithm = Algorithm.P256,
     options = mapOf(
         KmsOptionKeys.KEY_ID to "issuer-key-2025",
-        KmsOptionKeys.LABELS to mapOf(
+        GcpKmsOptionKeys.LABELS to mapOf(
             "environment" to "production",
             "purpose" to "issuance"
         )
     )
 )
 
-// Generate P-256 key for FIPS compliance
+// Generate P-256 key in a specific key ring (overrides config default)
 val fipsKeyResult = kms.generateKey(
     algorithm = Algorithm.P256,
     options = mapOf(
-        KmsOptionKeys.KEY_RING to "fips-keys" // Override default key ring
+        GcpKmsOptionKeys.KEY_RING to "fips-keys"
     )
 )
 ```
@@ -208,26 +213,28 @@ val fipsKeyResult = kms.generateKey(
 ### Signing Data
 
 ```kotlin
+import org.trustweave.core.identifiers.KeyId
+
 // Sign with key resource name (KeyId value class)
-val sign = kms.sign(KeyId(keyId), data.toByteArray())
-when (sign) {
+when (val sign = kms.sign(KeyId(keyId), data.toByteArray())) {
     is SignResult.Success -> {
         val signature = sign.signature
         // Use signature
     }
-    is SignResult.Failure -> {
-        println("Error: ${sign.reason}")
-    }
+    is SignResult.Failure.KeyNotFound -> println("Key not found: ${sign.keyId}")
+    is SignResult.Failure.UnsupportedAlgorithm ->
+        println("Algorithm '${sign.requestedAlgorithm?.name}' incompatible with key '${sign.keyAlgorithm.name}'")
+    is SignResult.Failure.Error -> println("Error: ${sign.reason}")
 }
 
 // Sign with full resource name
-val sign = kms.sign(
+val sign2 = kms.sign(
     KeyId("projects/my-project/locations/us-east1/keyRings/my-key-ring/cryptoKeys/my-key"),
     data.toByteArray()
 )
 
 // Sign with algorithm override
-val sign = kms.sign(
+val sign3 = kms.sign(
     keyId = KeyId(keyId),
     data = data.toByteArray(),
     algorithm = Algorithm.Secp256k1
@@ -238,21 +245,17 @@ val sign = kms.sign(
 
 ```kotlin
 // Get public key by key ID (uses config defaults, KeyId value class)
-val publicKeyResult = kms.getPublicKey(KeyId("my-key"))
-when (publicKeyResult) {
+when (val publicKeyResult = kms.getPublicKey(KeyId("my-key"))) {
     is GetPublicKeyResult.Success -> {
         val publicKey = publicKeyResult.keyHandle
-        // Access JWK format
-        val jwk = publicKey.publicKeyJwk
-        println("Public key JWK: $jwk")
+        println("Public key JWK: ${publicKey.publicKeyJwk}")
     }
-    is GetPublicKeyResult.Failure -> {
-        println("Error: ${publicKeyResult.reason}")
-    }
+    is GetPublicKeyResult.Failure.KeyNotFound -> println("Not found: ${publicKeyResult.keyId}")
+    is GetPublicKeyResult.Failure.Error -> println("Error: ${publicKeyResult.reason}")
 }
 
 // Get public key by full resource name
-val publicKeyResult = kms.getPublicKey(
+val publicKey2 = kms.getPublicKey(
     KeyId("projects/my-project/locations/us-east1/keyRings/my-key-ring/cryptoKeys/my-key")
 )
 ```

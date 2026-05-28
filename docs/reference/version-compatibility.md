@@ -39,10 +39,10 @@ This document provides version compatibility information for TrustWeave SDK and 
 
 | TrustWeave Version | Kotlin Version | Status |
 |-------------------|----------------|--------|
-| 0.6.0             | 2.2.21+       | ✅ Required |
-| Future            | 2.2.0+        | ✅ Required |
+| 0.6.0             | 2.3.21        | ✅ Built against |
+| Future            | 2.3.x         | ✅ Tracking latest stable |
 
-**Why Kotlin 2.2.0+?**
+**Why Kotlin 2.3.x?**
 - Required for DSL builders and type-safe configuration
 - Modern coroutine features
 - Improved type inference
@@ -51,7 +51,7 @@ This document provides version compatibility information for TrustWeave SDK and 
 
 | Build Tool | Minimum Version | Status |
 |------------|----------------|--------|
-| Gradle     | 8.5+           | ✅ Required |
+| Gradle     | 9.2+           | ✅ Required (wrapper pinned to 9.2.0) |
 | Maven      | 3.8.0+         | ✅ Required |
 
 ## Dependency Compatibility
@@ -60,9 +60,9 @@ This document provides version compatibility information for TrustWeave SDK and 
 
 | Dependency | Version | Purpose |
 |------------|---------|---------|
-| `kotlinx-serialization-json` | 1.6.0+ | JSON serialization |
-| `kotlinx-coroutines-core` | 1.7.3+ | Coroutines support |
-| `kotlinx-datetime` | 0.5.0+ | Date/time handling |
+| `kotlinx-serialization-json` | 1.11.0 | JSON serialization |
+| `kotlinx-coroutines-core` | 1.10.2 | Coroutines support |
+| `kotlinx-datetime` | 0.6.2 | Date/time handling |
 
 ### Optional Dependencies
 
@@ -197,11 +197,11 @@ When upgrading TrustWeave versions:
 
 ## Related Documentation
 
-- Installation Guide](../getting-started/installation.md) - Setup instructions
-- Migration Guides](../migration/README.md) - Upgrade instructions
-- Module Overview](../modules/core-modules.md) - Module dependencies
+- [Installation Guide](../getting-started/installation.md) - Setup instructions
+- [Migration Guides](../migration/README.md) - Upgrade instructions
+- [Module Overview](../modules/core-modules.md) - Module dependencies
 
 ---
 
-**Last Updated:** January 2025  
+**Last Updated:** May 2026  
 **TrustWeave Version:** 0.6.0

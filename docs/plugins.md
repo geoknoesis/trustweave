@@ -11,10 +11,11 @@ TrustWeave's plugin architecture enables you to integrate with various DID metho
 
 ## 📋 Quick Navigation
 
-- DID Method Plugins](#did-method-plugins)
-- Blockchain Anchor Plugins](#blockchain-anchor-plugins)
-- Key Management Service (KMS) Plugins](#key-management-service-kms-plugins)
-- Other Integrations](#other-integrations)
+- [DID Method Plugins](#did-method-plugins)
+- [Blockchain Anchor Plugins](#blockchain-anchor-plugins)
+- [Key Management Service (KMS) Plugins](#key-management-service-kms-plugins)
+- [Credential Format & Exchange Plugins](#credential-format--exchange-plugins)
+- [Other Integrations](#other-integrations)
 
 ---
 
@@ -35,6 +36,7 @@ DID method plugins enable TrustWeave to create, resolve, and manage DIDs using v
 | **did:ens** | `org.trustweave:did-plugins-ens` | [ENS DID Guide](integrations/ens-did.md) | Ethereum Name Service (ENS) resolver integration with human-readable identifiers |
 | **did:plc** | `org.trustweave:did-plugins-plc` | [PLC DID Guide](integrations/plc-did.md) | Personal Linked Container (PLC) DID method for AT Protocol with HTTP-based resolution |
 | **did:cheqd** | `org.trustweave:did-plugins-cheqd` | [Cheqd DID Guide](integrations/cheqd-did.md) | Cheqd network DID method with payment-enabled features on Cosmos-based blockchain |
+| **did:ebsi** | `org.trustweave:did-plugins-ebsi` | See module README | European Blockchain Services Infrastructure (EBSI) DID method |
 
 ---
 
@@ -48,7 +50,7 @@ Blockchain anchor plugins enable TrustWeave to anchor credential digests to vari
 | **Base** | `org.trustweave:anchors-plugins-base` | [Base Anchor Guide](integrations/base-anchor.md) | Mainnet, Sepolia | Base (Coinbase L2) anchoring with fast confirmations and lower fees |
 | **Arbitrum** | `org.trustweave:anchors-plugins-arbitrum` | [Arbitrum Anchor Guide](integrations/arbitrum-anchor.md) | Mainnet, Sepolia | Arbitrum One (largest L2 by TVL) anchoring with EVM compatibility |
 | **Algorand** | `org.trustweave:anchors-plugins-algorand` | [Algorand Guide](integrations/algorand.md) | Mainnet, Testnet | Algorand blockchain anchoring for production-ready anchoring |
-| **Polygon** | `org.trustweave:anchors-plugins-polygon` | [Polygon DID Guide](integrations/polygon-did.md) | Mainnet, Mumbai | Polygon PoS anchoring with shared SPI plumbing |
+| **Polygon** | `org.trustweave:anchors-plugins-polygon` | [Integration Modules](integrations/README.md#blockchain-anchor-integrations) | Mainnet, Amoy | Polygon PoS anchoring with shared SPI plumbing |
 | **Ganache** | `org.trustweave:anchors-plugins-ganache` | [Integration Modules](integrations/README.md#blockchain-anchor-integrations) | Local | Local developer anchoring using Ganache/Testcontainers for testing |
 
 ---
@@ -73,45 +75,42 @@ KMS plugins enable TrustWeave to use various key management services for secure 
 
 ---
 
-## Feature Plugins
+## Credential Format & Exchange Plugins
 
-Feature plugins provide additional capabilities for credential management, monitoring, and communication. All feature plugins follow TrustWeave's plugin architecture.
+Credential plugins provide format support (SD-JWT VC, mdoc / mDL, BBS+), status / revocation, and exchange / discovery protocols. They live under `credentials/plugins/*` and are pulled in alongside `credentials:credential-api`.
 
-### Core Features
+### Exchange protocols
 
-| Plugin | Module ID | Documentation | Description |
-|--------|-----------|---------------|-------------|
-| **Audit Logging** | `core:plugins:audit-logging` | [Features Guide](features/README.md) | Immutable audit logs for all operations with queryable event history |
-| **Metrics & Telemetry** | `core:plugins:metrics` | [Features Guide](features/README.md) | Performance and usage metrics with statistics and percentiles |
-| **Health Checks** | `core:plugins:health-checks` | [Features Guide](features/README.md) | System diagnostics and health monitoring |
+| Plugin | Module ID | Description |
+|--------|-----------|-------------|
+| **OIDC4VCI** | `org.trustweave:credentials-plugins-oidc4vci` | OpenID for Verifiable Credential Issuance |
+| **OIDC4VP** | `org.trustweave:credentials-plugins-oidc4vp` | OpenID for Verifiable Presentations |
+| **SIOPv2** | `org.trustweave:credentials-plugins-siop` | Self-Issued OpenID Provider v2 |
+| **Presentation Exchange** | `org.trustweave:credentials-plugins-presentation-exchange` | DIF Presentation Exchange request / definition matching |
+| **DIDComm v2** | `org.trustweave:credentials-plugins-didcomm` | DIDComm v2 secure messaging and credential exchange |
+| **CHAPI** | `org.trustweave:credentials-plugins-chapi` | Credential Handler API for browser-based wallets |
+| **OpenID Federation** | `org.trustweave:credentials-plugins-openid-federation` | OpenID Federation 1.0 (issuer / verifier discovery) |
+| **EUDIW** | `org.trustweave:credentials-plugins-eudiw` | EU Digital Identity Wallet profile glue |
 
-### Credential Management
+### Credential formats / proofs
 
-| Plugin | Module ID | Documentation | Description |
-|--------|-----------|---------------|-------------|
-| **Credential Versioning** | `core:plugins:credential-versioning` | [Features Guide](features/README.md) | Version tracking and rollback for credentials |
-| **Backup & Recovery** | `core:plugins:credential-backup` | [Features Guide](features/README.md) | Export/import credentials from wallets |
-| **Expiration Management** | `core:plugins:expiration-management` | [Features Guide](features/README.md) | Monitor and manage expiring credentials |
-| **Credential Rendering** | `core:plugins:credential-rendering` | [Features Guide](features/README.md) | Render credentials as HTML/PDF |
+| Plugin | Module ID | Description |
+|--------|-----------|-------------|
+| **BBS+** | `org.trustweave:credentials-plugins-bbs` | BBS+ selective-disclosure proofs |
+| **mDL / mdoc** | `org.trustweave:credentials-plugins-mdl` | ISO/IEC 18013-5 mobile driving licence (mdoc) format |
 
-### Communication & Exchange
+### Status / revocation
 
-| Plugin | Module ID | Documentation | Description |
-|--------|-----------|---------------|-------------|
-| **QR Code Generation** | `core:plugins:qr-code` | [Features Guide](features/README.md) | Generate QR codes for credential sharing |
-| **Notifications** | `core:plugins:notifications` | [Features Guide](features/README.md) | Push notifications and webhooks for credential events |
-| **OIDC4VCI** | `core:plugins:oidc4vci` | [Features Guide](features/README.md) | OpenID Connect for Verifiable Credential Issuance |
-| **DIDComm v2** | `core:plugins:didcomm` | [Features Guide](features/README.md) | DIDComm v2 credential exchange protocol |
-| **CHAPI** | `core:plugins:chapi` | [Features Guide](features/README.md) | Credential Handler API support |
+| Plugin | Module ID | Description |
+|--------|-----------|-------------|
+| **StatusList (bitstring)** | `org.trustweave:credentials-plugins-status-list-bitstring` | W3C Bitstring Status List 2023 |
+| **StatusList (token)** | `org.trustweave:credentials-plugins-status-list-token` | Token-based status list |
+| **StatusList (publishing)** | `org.trustweave:credentials-plugins-status-list-publishing` | Publishing helpers for status lists |
+| **StatusList (database)** | `org.trustweave:credentials-plugins-status-list-database` | Database-backed status list storage |
+| **StatusList (server)** | `org.trustweave:credentials-plugins-status-list-server` | HTTP server for status list documents |
+| **Anchor adapter** | `org.trustweave:credentials-plugins-anchor` | Anchor credentials / status data to a configured chain |
 
-### Advanced Features
-
-| Plugin | Module ID | Documentation | Description |
-|--------|-----------|---------------|-------------|
-| **Multi-Party Issuance** | `core:plugins:multi-party-issuance` | [Features Guide](features/README.md) | Collaborative credential issuance with consensus |
-| **Analytics & Reporting** | `core:plugins:analytics` | [Features Guide](features/README.md) | Analytics and trend analysis for credentials |
-
-For detailed usage examples, see the [Features Usage Guide](features/USAGE_GUIDE.md).
+For application-level helpers (audit logging, metrics, notifications, rendering, etc.) referenced in the legacy "feature plugins" tables, see the [Features Usage Guide](features/USAGE_GUIDE.md) — those are integration patterns, not separate Gradle modules in this release.
 
 ---
 
@@ -197,7 +196,7 @@ If you need to create a custom plugin, see the [Creating Plugins Guide](contribu
 ## Related Documentation
 
 - [Integration modules](integrations/README.md) — Detailed integration guides for each plugin
-- [Plugin implementation status](contributing/plugin-implementation-status.md) — Current implementation status of all plugins
+- [Plugin implementation roadmap](contributing/plugin-implementation-roadmap.md) — Current implementation status of all plugins
 - [Creating plugins](contributing/creating-plugins.md) — Guide for implementing custom plugins
 - [Plugin lifecycle](advanced/plugin-lifecycle.md) — Managing plugin initialization and lifecycle
 

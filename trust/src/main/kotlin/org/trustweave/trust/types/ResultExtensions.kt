@@ -39,6 +39,12 @@ fun VerificationResult.getOrThrow(): VerifiableCredential {
                 "Errors: ${errors.joinToString("; ")}"
             )
         }
+        is VerificationResult.Invalid.Suspended -> {
+            throw IllegalStateException(
+                "Credential is suspended${suspendedAt?.let { " since $it" } ?: ""}. " +
+                "Errors: ${errors.joinToString("; ")}"
+            )
+        }
         is VerificationResult.Invalid.InvalidProof -> {
             throw IllegalStateException(
                 "Credential proof is invalid: ${reason}. " +
@@ -87,6 +93,20 @@ fun VerificationResult.getOrThrow(): VerifiableCredential {
         is VerificationResult.Invalid.MultipleFailures -> {
             throw IllegalStateException(
                 "Credential verification failed with multiple errors: ${errors.joinToString("; ")}"
+            )
+        }
+        is VerificationResult.Invalid.RevocationCheckFailed -> {
+            throw IllegalStateException(
+                "Revocation check failed: $reason. " +
+                "Errors: ${errors.joinToString("; ")}"
+            )
+        }
+        is VerificationResult.Invalid -> {
+            // Defensive catch-all for any future Invalid subclass added to credential-api
+            // without a corresponding branch here.
+            throw IllegalStateException(
+                "Credential verification failed (${this::class.simpleName}): " +
+                "${errors.joinToString("; ")}"
             )
         }
     }

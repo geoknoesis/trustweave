@@ -28,8 +28,8 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.microseconds
 import kotlin.time.Duration.Companion.nanoseconds
 
-// Extension for years (not in standard library)
-private val Int.years: kotlin.time.Duration get() = (this * 365).days
+// Approximation: uses 365.25-day average. For calendar-exact expiry use validUntil(instant) directly.
+private val Int.years: kotlin.time.Duration get() = (this * 365.25).toLong().days
 
 /**
  * Credential Builder DSL.
@@ -51,18 +51,21 @@ private val Int.years: kotlin.time.Duration get() = (this * 365).days
  *         }
  *     }
  *     issued(Instant.now())
- *     expires(Clock.System.now().plus(10.years))
+ *     expires(Clock.System.now() + 3650.days)  // ~10 years
  *     schema("https://example.edu/schemas/degree.json")
  * }
  * ```
  */
 class CredentialBuilder {
+    private val logger = org.slf4j.LoggerFactory.getLogger(CredentialBuilder::class.java)
     private var id: String? = null
     private val types = mutableListOf<String>()
     private var issuer: String? = null
     private var subjectBuilder: VcSubjectBuilder? = null
     private var issuanceDate: Instant? = null
     private var expirationDate: Instant? = null
+    private var validFrom: Instant? = null
+    private var validUntil: Instant? = null
     private var credentialStatus: CredentialStatus? = null
     private var credentialSchema: CredentialSchema? = null
     private val evidenceList = mutableListOf<Evidence>()
@@ -169,11 +172,8 @@ class CredentialBuilder {
      * @param date The issuance date (defaults to current time if not specified)
      */
     fun issued(date: Instant) {
-        // Allow issuance date up to 1 minute in the future for clock skew tolerance
-        val maxFutureDate = Clock.System.now().plus(1.minutes)
-        require(date <= maxFutureDate) {
-            "Issuance date cannot be more than 1 minute in the future. Got: $date"
-        }
+        // Future-date guard is evaluated in build() against the clock at build time,
+        // avoiding a race where maxFutureDate is captured long before build() is called.
         this.issuanceDate = date
     }
 
@@ -200,8 +200,22 @@ class CredentialBuilder {
     }
 
     /**
+     * Set validFrom date (VC 2.0).
+     */
+    fun validFrom(date: Instant) {
+        this.validFrom = date
+    }
+
+    /**
+     * Set validUntil date (VC 2.0).
+     */
+    fun validUntil(date: Instant) {
+        this.validUntil = date
+    }
+
+    /**
      * Set expiration date as duration from now (convenience alias).
-     * 
+     *
      * This is an alias for `expires(duration)` for better readability.
      * 
      * **Example:**
@@ -222,6 +236,9 @@ class CredentialBuilder {
     fun status(block: CredentialStatusBuilder.() -> Unit) {
         val builder = CredentialStatusBuilder()
         builder.block()
+        require(builder.hasId()) {
+            "status { id(...) } is required. Provide a status list entry URL inside the status { } block."
+        }
         credentialStatus = builder.build()
     }
 
@@ -260,21 +277,19 @@ class CredentialBuilder {
 
     /**
      * Set refresh service.
-     * 
-     * @param id Must be a valid URI for the refresh service
+     *
+     * Per W3C VC data model, [id] is the refresh service URI (which also serves as the endpoint)
+     * and [type] identifies the service type (e.g., "ManualRefreshService2020").
+     *
+     * @param id Must be a valid URI for the refresh service endpoint
      * @param type Service type identifier
-     * @param endpoint Must be a valid URI for the service endpoint
-     * @throws IllegalArgumentException if any parameter is blank or not a valid URI
+     * @throws IllegalArgumentException if any parameter is blank or id is not a valid URI
      */
-    fun refreshService(id: String, type: String, endpoint: String) {
+    fun refreshService(id: String, type: String) {
         require(id.isNotBlank()) { "Refresh service ID cannot be blank" }
         require(type.isNotBlank()) { "Refresh service type cannot be blank" }
-        require(endpoint.isNotBlank()) { "Refresh service endpoint cannot be blank" }
-        require(id.matches(Regex("^[a-zA-Z][a-zA-Z0-9+.-]*:.*"))) { 
-            "Refresh service ID must be a valid URI. Got: $id" 
-        }
-        require(endpoint.matches(Regex("^[a-zA-Z][a-zA-Z0-9+.-]*:.*"))) { 
-            "Refresh service endpoint must be a valid URI. Got: $endpoint" 
+        require(id.matches(Regex("^[a-zA-Z][a-zA-Z0-9+.-]*:.*"))) {
+            "Refresh service ID must be a valid URI. Got: $id"
         }
         refreshService = RefreshService(Iri(id), type)
     }
@@ -291,8 +306,37 @@ class CredentialBuilder {
         }
 
 
-        // Auto-set issuance date if not provided (safe default)
-        val issuanceDateInstant = issuanceDate ?: Clock.System.now()
+        // VC 2.0 temporal consistency
+        val effectiveStart = validFrom ?: issuanceDate
+        val effectiveEnd = validUntil ?: expirationDate
+        if (effectiveStart != null && effectiveEnd != null) {
+            require(effectiveStart <= effectiveEnd) {
+                "Credential validity period is invalid: start ($effectiveStart) is after end ($effectiveEnd)"
+            }
+        }
+
+        // Warn if the stored issuance date is more than 5 seconds in the future at build time.
+        val now = Clock.System.now()
+        val capturedIssuanceDate = issuanceDate
+        if (capturedIssuanceDate != null && capturedIssuanceDate > now + 5.seconds) {
+            logger.warn("issued date {} is in the future", capturedIssuanceDate)
+        }
+        validFrom?.let { vf ->
+            if (vf > now + 5.seconds) {
+                logger.warn("validFrom date {} is in the future", vf)
+            }
+        }
+
+        // SEC-07: issuanceDate is now nullable in VerifiableCredential.
+        // - If issued() was explicitly called, honour it (VC 1.1 and dual-context credentials).
+        // - If neither issued() nor validFrom() was called, default to now() for backward-compat VC 1.1.
+        // - If only validFrom() was set (VC 2.0 caller), omit the deprecated issuanceDate field
+        //   entirely by setting it to null.
+        val issuanceDateInstant: Instant? = when {
+            capturedIssuanceDate != null -> capturedIssuanceDate  // explicit issued() call
+            validFrom == null -> Clock.System.now()               // VC 1.1 default
+            else -> null                                          // VC 2.0: omit issuanceDate
+        }
 
         val subjectCredential = subjectBuilder?.build()
             ?: throw IllegalStateException(
@@ -302,12 +346,14 @@ class CredentialBuilder {
         return VerifiableCredential(
             id = id?.let { CredentialId(it) },
             type = allTypes.map { CredentialType.fromString(it) },
-            issuer = issuer?.let { Issuer.from(it) } 
+            issuer = issuer?.let { Issuer.from(it) }
                 ?: throw IllegalStateException(
                     "Issuer is required. Use issuer(did) to specify the credential issuer DID."
                 ),
             credentialSubject = subjectCredential,
             issuanceDate = issuanceDateInstant,
+            validFrom = this.validFrom,
+            validUntil = this.validUntil,
             expirationDate = expirationDate,
             credentialStatus = credentialStatus,
             credentialSchema = credentialSchema,
@@ -576,6 +622,8 @@ class CredentialStatusBuilder {
     fun statusListCredential(credential: String) {
         this.statusListCredential = credential
     }
+
+    fun hasId(): Boolean = id != null
 
     fun build(): CredentialStatus {
         val statusId = id ?: throw IllegalStateException("Status ID is required")

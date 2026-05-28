@@ -4,10 +4,12 @@ import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.KeyAlgorithm
 import org.trustweave.did.KeyPurpose
 import org.trustweave.kms.KeyManagementService
+import org.trustweave.trust.dsl.TrustWeaveDsl
 
 /**
  * DID methods configuration builder.
  */
+@TrustWeaveDsl
 class DidConfigBuilder {
     val methods = mutableMapOf<String, DidMethodConfig>()
     var defaultMethod: String? = null
@@ -51,6 +53,7 @@ data class DidMethodConfig(
 /**
  * DID method configuration builder.
  */
+@TrustWeaveDsl
 class DidMethodConfigBuilder {
     private var algorithm: KeyAlgorithm? = null
     private var domain: String? = null

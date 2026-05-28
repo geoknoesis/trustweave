@@ -3,6 +3,7 @@ package org.trustweave.trust.dsl.did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.DidMethod
 import org.trustweave.did.model.DidService
+import org.trustweave.did.model.ServiceEndpoint
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
@@ -198,7 +199,7 @@ class DidDocumentBuilder(
             DidService(
                 id = serviceData.id,
                 type = listOf(serviceData.type),
-                serviceEndpoint = serviceData.endpoint
+                serviceEndpoint = ServiceEndpoint.of(serviceData.endpoint)
             )
         }
 

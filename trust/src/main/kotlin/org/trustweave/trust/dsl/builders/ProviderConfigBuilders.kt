@@ -1,8 +1,11 @@
 package org.trustweave.trust.dsl.builders
 
+import org.trustweave.trust.dsl.TrustWeaveDsl
+
 /**
  * Revocation configuration builder.
  */
+@TrustWeaveDsl
 class RevocationConfigBuilder {
     var provider: String? = null
 
@@ -14,6 +17,7 @@ class RevocationConfigBuilder {
 /**
  * Schema configuration builder.
  */
+@TrustWeaveDsl
 class SchemaConfigBuilder {
     var provider: String? = null
 
@@ -25,6 +29,7 @@ class SchemaConfigBuilder {
 /**
  * Trust registry configuration builder.
  */
+@TrustWeaveDsl
 class TrustConfigBuilder {
     var provider: String? = null
 

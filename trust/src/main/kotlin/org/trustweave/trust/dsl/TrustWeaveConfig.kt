@@ -6,6 +6,7 @@ import org.trustweave.credential.CredentialService
 import org.trustweave.credential.model.ProofType
 import org.trustweave.credential.model.SchemaFormat
 import org.trustweave.credential.revocation.CredentialRevocationManager
+import org.trustweave.credential.schema.SchemaRegistry
 import org.trustweave.did.KeyAlgorithm
 import org.trustweave.did.registry.DidMethodRegistry
 import org.trustweave.did.resolver.DidResolver
@@ -76,7 +77,8 @@ class TrustWeaveConfig internal constructor(
     val kmsService: KmsService? = null,
     val defaultDidMethod: String? = null,
     val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-    val smartContractService: SmartContractService? = null
+    val smartContractService: SmartContractService? = null,
+    val schemaRegistry: SchemaRegistry? = null
 ) {
     /**
      * Copy with overridden credential service and/or revocation manager (e.g. tests sharing one manager).
@@ -99,6 +101,7 @@ class TrustWeaveConfig internal constructor(
         defaultDidMethod = defaultDidMethod,
         ioDispatcher = ioDispatcher,
         smartContractService = smartContractService,
+        schemaRegistry = schemaRegistry,
     )
 
     /**
@@ -155,6 +158,7 @@ class TrustWeaveConfig internal constructor(
      *
      * Collects DSL configuration and delegates to [TrustWeaveFactory] for construction.
      */
+    @TrustWeaveDsl
     class Builder(private val name: String = "default") {
         private val didRegistry = DidMethodRegistry()
         private val blockchainRegistry = BlockchainAnchorRegistry()

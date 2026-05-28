@@ -2,10 +2,12 @@ package org.trustweave.trust.dsl.builders
 
 import org.trustweave.did.KeyAlgorithm
 import org.trustweave.kms.KeyManagementService
+import org.trustweave.trust.dsl.TrustWeaveDsl
 
 /**
  * Keys (KMS) configuration builder.
  */
+@TrustWeaveDsl
 class KeysBuilder {
     var provider: String? = null
     private var algorithmString: String? = null

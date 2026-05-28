@@ -46,6 +46,34 @@ class VerificationBuilder(
     private var schemaId: String? = null
     private var validateProofPurpose: Boolean = false
     private var trustPolicy: CredentialTrustPolicy? = null
+    private var verifyPresentationProof: Boolean = true
+    private var enforceHolderBinding: Boolean = false
+    private var verifyChallenge: Boolean = false
+    private var expectedChallenge: String? = null
+    private var verifyDomain: Boolean = false
+    private var expectedDomain: String? = null
+
+    /**
+     * Engine-specific verification parameters threaded into
+     * [VerificationOptions.additionalOptions] when [build] runs.
+     *
+     * `internal` so that extension functions in sub-packages (e.g.
+     * `org.trustweave.trust.dsl.credential.jades`) can configure proof-engine-specific knobs
+     * (trust-anchor resolvers, JAdES profile floors, mDL session transcripts, ...) without
+     * polluting the main DSL surface.
+     */
+    internal val additionalOptions: MutableMap<String, Any?> = mutableMapOf()
+
+    /**
+     * Inject an engine-specific verification option into [VerificationOptions.additionalOptions].
+     *
+     * Prefer typed extension functions (e.g. `requireJadesProfile(...)`) where they exist; this
+     * setter is the low-level escape hatch for engines that do not yet have a typed extension.
+     */
+    fun additionalOption(key: String, value: Any?) {
+        require(key.isNotBlank()) { "Additional option key cannot be blank" }
+        additionalOptions[key] = value
+    }
 
     /**
      * Set the credential to verify.
@@ -236,6 +264,39 @@ class VerificationBuilder(
     }
 
     /**
+     * Enable or disable presentation proof verification.
+     */
+    fun verifyPresentationProof(value: Boolean) {
+        this.verifyPresentationProof = value
+    }
+
+    /**
+     * Enable or disable holder binding enforcement.
+     * When enabled, each credential's credentialSubject.id must match the presentation holder.
+     */
+    fun enforceHolderBinding(value: Boolean) {
+        this.enforceHolderBinding = value
+    }
+
+    /**
+     * Require the presentation to include the given challenge value.
+     * Sets verifyChallenge=true and stores the expected value.
+     */
+    fun challenge(challenge: String) {
+        this.verifyChallenge = true
+        this.expectedChallenge = challenge
+    }
+
+    /**
+     * Require the presentation to include the given domain value.
+     * Sets verifyDomain=true and stores the expected value.
+     */
+    fun domain(domain: String) {
+        this.verifyDomain = true
+        this.expectedDomain = domain
+    }
+
+    /**
      * Build and perform verification.
      * 
      * This operation performs I/O-bound work (credential verification, DID resolution, revocation checking)
@@ -252,7 +313,14 @@ class VerificationBuilder(
             checkNotBefore = true,
             resolveIssuerDid = true,
             validateSchema = validateSchema,
-            schemaId = schemaId?.let { SchemaId(it) }
+            schemaId = schemaId?.let { SchemaId(it) },
+            verifyPresentationProof = verifyPresentationProof,
+            enforceHolderBinding = enforceHolderBinding,
+            verifyChallenge = verifyChallenge,
+            expectedChallenge = expectedChallenge,
+            verifyDomain = verifyDomain,
+            expectedDomain = expectedDomain,
+            additionalOptions = additionalOptions.toMap(),
         )
 
         credentialService.verify(cred, trustPolicy = trustPolicy, options = options)

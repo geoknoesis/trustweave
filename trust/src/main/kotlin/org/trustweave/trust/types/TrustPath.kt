@@ -3,7 +3,6 @@ package org.trustweave.trust.types
 import org.trustweave.trust.TrustAnchorMetadata
 import org.trustweave.did.identifiers.Did
 import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
 
 /**
  * Trust anchor in a trust path.
@@ -61,7 +60,7 @@ sealed class TrustPath {
         val to: IssuerIdentity,
         val anchors: List<TrustAnchor>,
         val verified: Boolean = true,
-        val verifiedAt: Instant = Clock.System.now(),
+        val verifiedAt: Instant,
         val trustScore: Double = 1.0
     ) : TrustPath() {
         init {
@@ -92,6 +91,15 @@ sealed class TrustPath {
         val from: VerifierIdentity,
         val to: IssuerIdentity,
         val reason: String? = null
+    ) : TrustPath()
+
+    /**
+     * Trust registry is not configured.
+     *
+     * @param reason Description of the missing configuration
+     */
+    data class NotConfigured(
+        val reason: String = "Trust registry is not configured. Configure it in TrustWeave.build { trust { ... } }"
     ) : TrustPath()
 }
 

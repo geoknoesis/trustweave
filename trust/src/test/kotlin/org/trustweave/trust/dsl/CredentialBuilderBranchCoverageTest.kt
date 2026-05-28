@@ -108,7 +108,7 @@ class CredentialBuilderBranchCoverageTest {
         }
 
         assertNotNull(credential.credentialSubject)
-        assertEquals("did:key:subject", credential.credentialSubject.id.value)
+        assertEquals("did:key:subject", credential.credentialSubject.id?.value)
     }
 
     @Test
@@ -167,8 +167,10 @@ class CredentialBuilderBranchCoverageTest {
         val after = Clock.System.now()
         
         // Verify issuance date was set to a time between before and after
+        val issuanceDate = credential.issuanceDate
+        assertNotNull(issuanceDate) { "Issuance date should be set when neither issued() nor validFrom() is called" }
         assertTrue(
-            credential.issuanceDate >= before && credential.issuanceDate <= after,
+            issuanceDate!! >= before && issuanceDate <= after,
             "Issuance date should be set to a time between before and after"
         )
     }
@@ -395,7 +397,7 @@ class CredentialBuilderBranchCoverageTest {
 
     @Test
     fun `test branch status error when ID missing`() {
-        assertFailsWith<IllegalStateException> {
+        assertFailsWith<IllegalArgumentException> {
             credential {
                 type("PersonCredential")
                 issuer("did:key:issuer")
@@ -577,8 +579,7 @@ class CredentialBuilderBranchCoverageTest {
             issued(Clock.System.now())
             refreshService(
                 id = "https://example.com/refresh",
-                type = "CredentialRefreshService2020",
-                endpoint = "https://example.com/refresh-endpoint"
+                type = "CredentialRefreshService2020"
             )
         }
 
@@ -602,7 +603,7 @@ class CredentialBuilderBranchCoverageTest {
         }
 
         val subjectObj = buildJsonObject {
-            put("id", credential.credentialSubject.id.value)
+            put("id", credential.credentialSubject.id?.value)
             credential.credentialSubject.claims.forEach { (key, value) -> put(key, value) }
         }
         assertEquals("John Doe", subjectObj["name"]?.jsonPrimitive?.content)
@@ -621,7 +622,7 @@ class CredentialBuilderBranchCoverageTest {
         }
 
         val subjectObj = buildJsonObject {
-            put("id", credential.credentialSubject.id.value)
+            put("id", credential.credentialSubject.id?.value)
             credential.credentialSubject.claims.forEach { (key, value) -> put(key, value) }
         }
         assertEquals(30, subjectObj["age"]?.jsonPrimitive?.int)

@@ -1,8 +1,11 @@
 package org.trustweave.trust.dsl.builders
 
+import org.trustweave.trust.dsl.TrustWeaveDsl
+
 /**
  * Anchor layer (blockchain) configuration builder.
  */
+@TrustWeaveDsl
 class AnchorConfigBuilder {
     val chains = mutableMapOf<String, AnchorConfig>()
 
@@ -22,6 +25,7 @@ data class AnchorConfig(
 /**
  * Builder for a single blockchain anchor chain configuration.
  */
+@TrustWeaveDsl
 class AnchorChainConfigBuilder {
     private var provider: String? = null
     private val options = mutableMapOf<String, Any?>()
@@ -47,6 +51,7 @@ class AnchorChainConfigBuilder {
 /**
  * Generic options builder.
  */
+@TrustWeaveDsl
 class OptionsBuilder {
     val options = mutableMapOf<String, Any?>()
 

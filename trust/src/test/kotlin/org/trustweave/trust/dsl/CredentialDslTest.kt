@@ -31,7 +31,7 @@ class CredentialDslTest {
         assertTrue(credential.type.contains(org.trustweave.credential.model.CredentialType.VerifiableCredential))
         assertTrue(credential.type.any { it.value == "PersonCredential" })
         assertEquals("did:key:issuer", credential.issuer.id.value)
-        assertEquals("did:key:subject", credential.credentialSubject.id.value)
+        assertEquals("did:key:subject", credential.credentialSubject.id?.value)
         assertEquals("John Doe", credential.credentialSubject.claims["name"]?.jsonPrimitive?.content)
     }
 
@@ -179,8 +179,10 @@ class CredentialDslTest {
         val after = Clock.System.now()
         
         // Verify issuance date was set to a time between before and after
+        val issuanceDate = credential.issuanceDate
+        assertNotNull(issuanceDate) { "Issuance date should be set when neither issued() nor validFrom() is called" }
         assertTrue(
-            credential.issuanceDate >= before && credential.issuanceDate <= after,
+            issuanceDate!! >= before && issuanceDate <= after,
             "Issuance date should be set to a time between before and after"
         )
     }

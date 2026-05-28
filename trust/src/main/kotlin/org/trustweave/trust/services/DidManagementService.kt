@@ -16,6 +16,8 @@ import org.trustweave.trust.dsl.did.DidBuilder
 import org.trustweave.trust.dsl.did.DidDocumentBuilder
 import org.trustweave.trust.dsl.did.DelegationBuilder
 import org.trustweave.trust.types.DidCreationResult
+import org.trustweave.trust.types.DidResult
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
@@ -74,16 +76,21 @@ class DidManagementService(
     ): DidCreationWithKeyResult = withContext(ioDispatcher) {
         when (val result = createDid(method, timeout, block)) {
             is DidCreationResult.Success -> {
-                try {
-                    val keyId = getKeyId(result.did)
-                    DidCreationWithKeyResult.Success(result.did, keyId)
-                } catch (e: Exception) {
-                    DidCreationWithKeyResult.Failure.KeyExtractionFailed(
-                        did = result.did,
-                        reason = e.message ?: "Key extraction failed",
-                        cause = e
-                    )
-                }
+                val keyResult = getKeyId(result.did)
+                val ex = keyResult.exceptionOrNull()
+                if (ex is CancellationException) throw ex
+                keyResult.fold(
+                    onSuccess = { keyId ->
+                        DidCreationWithKeyResult.Success(result.did, keyId)
+                    },
+                    onFailure = { e ->
+                        DidCreationWithKeyResult.Failure.KeyExtractionFailed(
+                            did = result.did,
+                            reason = e.message ?: "Key extraction failed",
+                            cause = e
+                        )
+                    }
+                )
             }
             is DidCreationResult.Failure ->
                 DidCreationWithKeyResult.Failure.FromCreation(result)
@@ -94,18 +101,23 @@ class DidManagementService(
      * Get the first key ID from a DID document.
      *
      * @param did The DID to extract the key ID from
-     * @return The key ID string
-     * @throws IllegalStateException if DID resolution fails or no verification method found
+     * @return Result wrapping the key ID string, or a failure with a descriptive message
      */
-    suspend fun getKeyId(did: Did): String {
+    suspend fun getKeyId(did: Did): Result<String> = try {
         val document = when (val r = resolveDid(did)) {
             is DidResolutionResult.Success -> r.document
             else -> throw IllegalStateException("Failed to resolve DID: ${did.value}")
         }
-        return document.verificationMethod.firstOrNull()?.let { vm ->
-            vm.id.value.substringAfter("#").takeIf { it.isNotEmpty() }
-                ?: throw IllegalStateException("No key ID found in verification method: ${vm.id.value}")
-        } ?: throw IllegalStateException("No verification method found for DID: ${did.value}")
+        val keyId =
+            document.verificationMethod.firstOrNull()?.let { vm ->
+                vm.id.value.takeIf { it.isNotEmpty() }
+                    ?: throw IllegalStateException("No key ID found in verification method: ${vm.id.value}")
+            } ?: throw IllegalStateException("No verification method found for DID: ${did.value}")
+        Result.success(keyId)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Result.failure(e)
     }
 
     /**
@@ -123,6 +135,7 @@ class DidManagementService(
             try {
                 didRegistry.resolve(did)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 DidResolutionResult.Failure.ResolutionError(
                     did = Did(did),
                     reason = e.message ?: "Unknown resolution error",
@@ -149,17 +162,29 @@ class DidManagementService(
      *
      * @param timeout Maximum time to wait (default: 30 seconds)
      * @param block DSL block for specifying the update
-     * @return The updated DID document
+     * @return Sealed result type with the updated DID document or failure details
      */
     suspend fun updateDid(
         timeout: Duration = 30.seconds,
         block: DidDocumentBuilder.() -> Unit
-    ): DidDocument = withTimeout(timeout) {
-        withContext(ioDispatcher) {
-            val builder = DidDocumentBuilder(didContext)
-            builder.block()
-            builder.update()
+    ): DidResult = try {
+        val document = withTimeout(timeout) {
+            withContext(ioDispatcher) {
+                val builder = DidDocumentBuilder(didContext)
+                builder.block()
+                builder.update()
+            }
         }
+        val did = document.id
+        DidResult.Success(did = did, document = document)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        DidResult.Failure.UpdateFailed(
+            did = null,
+            reason = e.message ?: "DID update failed",
+            cause = e
+        )
     }
 
     /**
@@ -185,20 +210,32 @@ class DidManagementService(
      *
      * @param timeout Maximum time to wait (default: 30 seconds)
      * @param block DSL block for specifying the key rotation
-     * @return The updated DID document with rotated key
+     * @return Sealed result type with the updated DID document (rotated key) or failure details
      */
     suspend fun rotateKey(
         timeout: Duration = 30.seconds,
         block: KeyRotationBuilder.() -> Unit
-    ): DidDocument = withTimeout(timeout) {
-        withContext(ioDispatcher) {
-            val service = kmsService
-                ?: throw IllegalStateException(
-                    "KmsService is not configured. Configure it in TrustWeave.build { keys { ... } }"
-                )
-            val builder = KeyRotationBuilder(didContext, kms, service, ioDispatcher)
-            builder.block()
-            builder.rotate()
+    ): DidResult = try {
+        val document = withTimeout(timeout) {
+            withContext(ioDispatcher) {
+                val service = kmsService
+                    ?: throw IllegalStateException(
+                        "KmsService is not configured. Configure it in TrustWeave.build { keys { ... } }"
+                    )
+                val builder = KeyRotationBuilder(didContext, kms, service, ioDispatcher)
+                builder.block()
+                builder.rotate()
+            }
         }
+        val did = document.id
+        DidResult.Success(did = did, document = document)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        DidResult.Failure.UpdateFailed(
+            did = null,
+            reason = e.message ?: "Key rotation failed",
+            cause = e
+        )
     }
 }

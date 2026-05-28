@@ -150,9 +150,7 @@ class SchemaBuilder(
 fun TrustWeave.schema(schemaId: String? = null, block: SchemaBuilder.() -> Unit = {}): SchemaBuilder {
     val schemaRegistry = getSchemaRegistry()
     val builder = SchemaBuilder(schemaRegistry)
-    if (schemaId != null) {
-        builder.id(schemaId)
-    }
+    schemaId?.let(builder::id)
     builder.block()
     return builder
 }

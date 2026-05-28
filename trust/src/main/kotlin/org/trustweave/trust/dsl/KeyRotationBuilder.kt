@@ -134,6 +134,8 @@ class KeyRotationBuilder(
                 throw IllegalArgumentException("Algorithm not supported: ${result.algorithm}")
             is GenerateKeyResult.Failure.InvalidOptions ->
                 throw IllegalArgumentException("Invalid key generation options: ${result.reason}")
+            is GenerateKeyResult.Failure.DuplicateKeyId ->
+                throw IllegalArgumentException("Key with ID '${result.keyId.value}' already exists")
             is GenerateKeyResult.Failure.Error ->
                 throw IllegalStateException("Failed to generate key: ${result.reason}", result.cause)
         }

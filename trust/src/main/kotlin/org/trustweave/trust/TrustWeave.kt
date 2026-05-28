@@ -26,6 +26,7 @@ import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.credential.results.VerificationResult
 import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.trust.types.DidCreationWithKeyResult
+import org.trustweave.trust.types.DidResult
 import org.trustweave.trust.types.IssuerIdentity
 import org.trustweave.trust.types.VerifierIdentity
 import org.trustweave.trust.types.WalletCreationResult
@@ -226,11 +227,16 @@ class TrustWeave internal constructor(
      */
     override fun getDidResolver(): DidResolver {
         return DidResolver { did ->
-            runCatching { config.didRegistry.resolve(did.value) }
-                .getOrElse { null } ?: DidResolutionResult.Failure.ResolutionError(
+            try {
+                config.didRegistry.resolve(did.value)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                DidResolutionResult.Failure.ResolutionError(
                     did = did,
-                    reason = "DID resolution failed"
+                    reason = "Failed to resolve DID: ${e.message}"
                 )
+            }
         }
     }
 
@@ -303,9 +309,10 @@ class TrustWeave internal constructor(
 
     /**
      * Get the schema registry.
+     * Returns the configured registry if set, otherwise falls back to the default registry.
      */
     internal fun getSchemaRegistry(): SchemaRegistry? {
-        return org.trustweave.credential.schema.SchemaRegistries.default()
+        return config.schemaRegistry ?: org.trustweave.credential.schema.SchemaRegistries.default()
     }
 
     /**
@@ -439,7 +446,7 @@ class TrustWeave internal constructor(
         block: DidBuilder.() -> Unit = {}
     ): DidCreationWithKeyResult = didService.createDidWithKey(method, timeout, block)
 
-    suspend fun getKeyId(did: Did): String = didService.getKeyId(did)
+    suspend fun getKeyId(did: Did): Result<String> = didService.getKeyId(did)
 
     suspend fun resolveDid(
         did: String,
@@ -454,7 +461,7 @@ class TrustWeave internal constructor(
     suspend fun updateDid(
         timeout: Duration = 30.seconds,
         block: DidDocumentBuilder.() -> Unit
-    ): DidDocument = didService.updateDid(timeout, block)
+    ): DidResult = didService.updateDid(timeout, block)
 
     suspend fun delegate(
         timeout: Duration = 30.seconds,
@@ -464,7 +471,7 @@ class TrustWeave internal constructor(
     suspend fun rotateKey(
         timeout: Duration = 30.seconds,
         block: KeyRotationBuilder.() -> Unit
-    ): DidDocument = didService.rotateKey(timeout, block)
+    ): DidResult = didService.rotateKey(timeout, block)
 
     override suspend fun resolve(did: Did): DidResolutionResult = didService.resolveDid(did)
 
@@ -512,7 +519,7 @@ class TrustWeave internal constructor(
         timeout: Duration = 10.seconds
     ): TrustPath {
         val service = trustService
-            ?: throw IllegalStateException("Trust registry is not configured. Configure it in TrustWeave.build { trust { ... } }")
+            ?: return TrustPath.NotConfigured("Trust registry is not configured. Configure it in TrustWeave.build { trust { ... } }")
         return service.findTrustPath(verifier, issuer, timeout)
     }
 
@@ -524,7 +531,7 @@ class TrustWeave internal constructor(
      *
      * **Example**:
      * ```kotlin
-     * trustWeave.trust {
+     * val notConfigured = trustWeave.trust {
      *     addAnchor("did:key:university") {
      *         credentialTypes("EducationCredential")
      *         description("Trusted university")
@@ -533,16 +540,19 @@ class TrustWeave internal constructor(
      *     val isTrusted = isTrusted("did:key:university", "EducationCredential")
      *     val path = findTrustPath(VerifierIdentity(Did("did:key:verifier")), IssuerIdentity(Did("did:key:issuer")))
      * }
+     * if (notConfigured != null) {
+     *     println("Trust registry not configured: ${notConfigured.reason}")
+     * }
      * ```
      *
      * @param block DSL block for trust operations
-     * @throws IllegalStateException if trust registry is not configured
+     * @return [TrustPath.NotConfigured] if the trust registry is not configured, null on success
      */
-    suspend fun trust(block: suspend TrustBuilder.() -> Unit) {
-        val service = trustService ?: throw IllegalStateException(
-            "Trust registry is not configured. Configure it in trustWeave { trust { provider(\"inMemory\") } }"
-        )
+    suspend fun trust(block: suspend TrustBuilder.() -> Unit): TrustPath.NotConfigured? {
+        val service = trustService
+            ?: return TrustPath.NotConfigured("Trust registry is not configured. Configure it in trustWeave { trust { provider(\"inMemory\") } }")
         service.trust(block)
+        return null
     }
 
     /**

@@ -77,7 +77,7 @@ sealed class DidResult {
         ) : Failure()
 
         data class UpdateFailed(
-            val did: Did,
+            val did: Did?,
             val reason: String,
             val cause: Throwable? = null
         ) : Failure()

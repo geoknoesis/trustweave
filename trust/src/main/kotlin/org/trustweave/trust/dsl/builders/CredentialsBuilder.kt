@@ -1,10 +1,12 @@
 package org.trustweave.trust.dsl.builders
 
 import org.trustweave.credential.model.ProofType
+import org.trustweave.trust.dsl.TrustWeaveDsl
 
 /**
  * Credentials configuration builder.
  */
+@TrustWeaveDsl
 class CredentialsBuilder {
     var defaultProofType: ProofType? = null
     var autoAnchor: Boolean? = null

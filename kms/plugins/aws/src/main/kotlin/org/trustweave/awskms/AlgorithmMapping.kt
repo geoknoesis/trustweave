@@ -1,5 +1,6 @@
 package org.trustweave.awskms
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.kms.Algorithm
 import org.trustweave.kms.JwkKeys
 import org.trustweave.kms.JwkKeyTypes
@@ -25,24 +26,10 @@ object AlgorithmMapping {
      */
     fun toAwsKeySpec(algorithm: Algorithm): KeySpec {
         return when (algorithm) {
-            is Algorithm.Ed25519 -> {
-                // Try to use Ed25519 if available, otherwise fall back to P256
-                try {
-                    KeySpec.valueOf("ECC_ED25519")
-                } catch (e: IllegalArgumentException) {
-                    // Ed25519 may not be available in all SDK versions
-                    // Fall back to P256 for compatibility
-                    KeySpec.ECC_NIST_P256
-                }
-            }
-            is Algorithm.Secp256k1 -> {
-                try {
-                    KeySpec.valueOf("ECC_SECG_P256K1")
-                } catch (e: IllegalArgumentException) {
-                    // Fallback if enum name is different
-                    KeySpec.ECC_NIST_P256
-                }
-            }
+            is Algorithm.Ed25519 -> throw IllegalArgumentException(
+                "Ed25519 is not supported by AWS KMS. Use P-256, P-384, P-521, or secp256k1."
+            )
+            is Algorithm.Secp256k1 -> KeySpec.ECC_SECG_P256_K1
             is Algorithm.P256 -> KeySpec.ECC_NIST_P256
             is Algorithm.P384 -> KeySpec.ECC_NIST_P384
             is Algorithm.P521 -> KeySpec.ECC_NIST_P521
@@ -67,16 +54,20 @@ object AlgorithmMapping {
      */
     fun toAwsSigningAlgorithm(algorithm: Algorithm): SigningAlgorithmSpec {
         return when (algorithm) {
-            is Algorithm.Ed25519 -> SigningAlgorithmSpec.ECDSA_SHA_256 // AWS uses ECDSA_SHA_256 for Ed25519
+            is Algorithm.Ed25519 -> throw IllegalArgumentException(
+                "Ed25519 is not supported by AWS KMS."
+            )
             is Algorithm.Secp256k1 -> SigningAlgorithmSpec.ECDSA_SHA_256
             is Algorithm.P256 -> SigningAlgorithmSpec.ECDSA_SHA_256
             is Algorithm.P384 -> SigningAlgorithmSpec.ECDSA_SHA_384
             is Algorithm.P521 -> SigningAlgorithmSpec.ECDSA_SHA_512
-            is Algorithm.RSA -> {
-                when (algorithm.keySize) {
-                    2048, 3072, 4096 -> SigningAlgorithmSpec.RSASSA_PKCS1_V1_5_SHA_256
-                    else -> throw IllegalArgumentException("Unsupported RSA key size: ${algorithm.keySize}")
-                }
+            is Algorithm.RSA -> when (algorithm.keySize) {
+                2048 -> SigningAlgorithmSpec.RSASSA_PKCS1_V1_5_SHA_256
+                3072 -> SigningAlgorithmSpec.RSASSA_PKCS1_V1_5_SHA_384
+                4096 -> SigningAlgorithmSpec.RSASSA_PKCS1_V1_5_SHA_512
+                else -> throw IllegalArgumentException(
+                    "Unsupported RSA key size: ${algorithm.keySize}. Supported sizes are 2048, 3072, 4096."
+                )
             }
             else -> throw IllegalArgumentException("Algorithm ${algorithm.name} is not supported by AWS KMS")
         }
@@ -92,26 +83,6 @@ object AlgorithmMapping {
     fun publicKeyToJwk(publicKeyBytes: ByteArray, algorithm: Algorithm): Map<String, Any?> {
         return try {
             when (algorithm) {
-                is Algorithm.Ed25519 -> {
-                    // Ed25519 keys from AWS KMS are in raw format (32 bytes)
-                    // If it's DER-encoded, we need to extract the raw key
-                    val rawKey = if (publicKeyBytes.size == 32) {
-                        publicKeyBytes
-                    } else {
-                        // Try to extract from DER format
-                        // Ed25519 public key in DER: 30 2A 30 05 06 03 2B 65 70 03 21 00 [32 bytes]
-                        if (publicKeyBytes.size >= 44 && publicKeyBytes[0] == 0x30.toByte()) {
-                            publicKeyBytes.sliceArray(12 until 44)
-                        } else {
-                            publicKeyBytes.takeLast(32).toByteArray()
-                        }
-                    }
-                    mapOf(
-                        JwkKeys.KTY to JwkKeyTypes.OKP,
-                        JwkKeys.CRV to Algorithm.Ed25519.curveName,
-                        JwkKeys.X to Base64.getUrlEncoder().withoutPadding().encodeToString(rawKey)
-                    )
-                }
                 is Algorithm.Secp256k1, is Algorithm.P256, is Algorithm.P384, is Algorithm.P521 -> {
                     val keyFactory = KeyFactory.getInstance("EC")
                     val publicKey = keyFactory.generatePublic(X509EncodedKeySpec(publicKeyBytes)) as ECPublicKey
@@ -130,17 +101,16 @@ object AlgorithmMapping {
                         else -> 32
                     }
 
-                    // Convert BigInteger to byte array (unsigned, big-endian)
+                    // Convert BigInteger to byte array (unsigned, big-endian, fixed length).
+                    // BigInteger.toByteArray() prepends a 0x00 sign byte for positive values
+                    // whose MSB is 1; strip it before right-aligning into the fixed-length result.
                     fun toUnsignedByteArray(bigInt: BigInteger, length: Int): ByteArray {
-                        val bytes = bigInt.toByteArray()
+                        val signed = bigInt.toByteArray()
+                        val bytes = if (signed.isNotEmpty() && signed[0] == 0.toByte()) signed.copyOfRange(1, signed.size) else signed
                         val result = ByteArray(length)
-                        val offset = length - bytes.size
-                        if (offset >= 0) {
-                            System.arraycopy(bytes, 0, result, offset, bytes.size)
-                        } else {
-                            // If bytes are longer, take the last 'length' bytes
-                            System.arraycopy(bytes, bytes.size - length, result, 0, length)
-                        }
+                        val srcOffset = maxOf(0, bytes.size - length)
+                        val dstOffset = maxOf(0, length - bytes.size)
+                        System.arraycopy(bytes, srcOffset, result, dstOffset, minOf(bytes.size, length))
                         return result
                     }
 
@@ -175,8 +145,10 @@ object AlgorithmMapping {
                         JwkKeys.E to Base64.getUrlEncoder().withoutPadding().encodeToString(toUnsignedByteArray(exponent))
                     )
                 }
-                else -> throw IllegalArgumentException("Unsupported algorithm for JWK conversion: ${algorithm.name}")
+                else -> throw IllegalArgumentException("Unsupported algorithm: ${algorithm.name}")
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             throw IllegalArgumentException("Failed to convert AWS KMS public key to JWK: ${e.message}", e)
         }

@@ -84,7 +84,10 @@ object KeyManagementServices {
         
         val cacheKey = ConfigCacheKey.create(providerName, options)
         
-        return instanceCache.getOrPut(cacheKey) {
+        // computeIfAbsent is atomic — the factory executes at most once per cache key, unlike
+        // the Kotlin stdlib getOrPut which is explicitly non-atomic and may call the lambda
+        // multiple times, leaking SDK clients with open connection pools.
+        return instanceCache.computeIfAbsent(cacheKey) {
             val provider = cachedProviders.find { it.name == providerName }
                 ?: throw IllegalArgumentException(
                     "KMS provider '$providerName' not found. Available providers: ${cachedProviders.map { it.name }}"
@@ -107,10 +110,13 @@ object KeyManagementServices {
      */
     fun create(providerName: String, options: Map<String, Any?> = emptyMap()): KeyManagementService {
         checkShutdown()
-        
+
         val cacheKey = ConfigCacheKey.create(providerName, options)
-        
-        return instanceCache.getOrPut(cacheKey) {
+
+        // computeIfAbsent is atomic — the factory executes at most once per cache key, unlike
+        // the Kotlin stdlib getOrPut which is explicitly non-atomic and may call the lambda
+        // multiple times, leaking SDK clients with open connection pools.
+        return instanceCache.computeIfAbsent(cacheKey) {
             val provider = cachedProviders.find { it.name == providerName }
                 ?: throw IllegalArgumentException(
                     "KMS provider '$providerName' not found. Available providers: ${cachedProviders.map { it.name }}"

@@ -8,6 +8,7 @@ import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.model.DidService
 import org.trustweave.did.model.parseServiceTypesFromJson
+import org.trustweave.did.model.serviceEndpointFromJsonElement
 import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolutionMetadata
@@ -90,12 +91,8 @@ abstract class WaltIdDidMethodBase(
             ?.jsonArray
             ?.mapNotNull { s ->
                 val sObj = s.jsonObject
-                val serviceEndpoint = sObj["serviceEndpoint"]?.let {
-                    when (it) {
-                        is JsonPrimitive -> it.content
-                        else -> it.toString()
-                    }
-                } ?: return@mapNotNull null
+                val serviceEndpoint = serviceEndpointFromJsonElement(sObj["serviceEndpoint"])
+                    ?: return@mapNotNull null
                 DidService(
                     id = sObj["id"]?.jsonPrimitive?.content ?: return@mapNotNull null,
                     type = parseServiceTypesFromJson(sObj["type"]) ?: return@mapNotNull null,
@@ -156,6 +153,11 @@ class WaltIdKeyMethod(
                 )
                 is GenerateKeyResult.Failure.InvalidOptions -> throw TrustWeaveException.Unknown(
                     message = "Failed to generate key: ${generateResult.reason}",
+                    context = mapOf("method" to "key", "algorithm" to algorithm),
+                    cause = null
+                )
+                is GenerateKeyResult.Failure.DuplicateKeyId -> throw TrustWeaveException.Unknown(
+                    message = "Failed to generate key: key '${generateResult.keyId.value}' already exists",
                     context = mapOf("method" to "key", "algorithm" to algorithm),
                     cause = null
                 )
@@ -271,6 +273,11 @@ class WaltIdWebMethod(
                 )
                 is GenerateKeyResult.Failure.InvalidOptions -> throw TrustWeaveException.Unknown(
                     message = "Failed to generate key: ${generateResult.reason}",
+                    context = mapOf("method" to "web", "algorithm" to algorithm),
+                    cause = null
+                )
+                is GenerateKeyResult.Failure.DuplicateKeyId -> throw TrustWeaveException.Unknown(
+                    message = "Failed to generate key: key '${generateResult.keyId.value}' already exists",
                     context = mapOf("method" to "web", "algorithm" to algorithm),
                     cause = null
                 )

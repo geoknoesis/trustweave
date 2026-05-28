@@ -396,7 +396,8 @@ abstract class KeyManagementServiceContractTest {
             mapOf(KmsOptionKeys.KEY_ID to keyId)
         )
         assertTrue(
-            secondResult is GenerateKeyResult.Failure.InvalidOptions,
+            secondResult is GenerateKeyResult.Failure.InvalidOptions ||
+                secondResult is GenerateKeyResult.Failure.DuplicateKeyId,
             "Should reject duplicate key ID, got: $secondResult"
         )
     }

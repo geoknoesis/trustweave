@@ -122,8 +122,48 @@ class AlgorithmTest {
     fun `test Algorithm hashCode - same custom algorithms have same hash code`() {
         val custom1 = Algorithm.Custom("MyAlg")
         val custom2 = Algorithm.Custom("MyAlg")
-        
+
         assertEquals(custom1.hashCode(), custom2.hashCode())
+    }
+
+    @Test
+    fun `isCompatibleWith - same algorithm is always compatible`() {
+        assertTrue(Algorithm.Ed25519.isCompatibleWith(Algorithm.Ed25519))
+        assertTrue(Algorithm.P256.isCompatibleWith(Algorithm.P256))
+        assertTrue(Algorithm.Secp256k1.isCompatibleWith(Algorithm.Secp256k1))
+        assertTrue(Algorithm.RSA.RSA_2048.isCompatibleWith(Algorithm.RSA.RSA_2048))
+    }
+
+    @Test
+    fun `isCompatibleWith - RSA requires matching key size`() {
+        assertTrue(Algorithm.RSA.RSA_2048.isCompatibleWith(Algorithm.RSA.RSA_2048))
+        assertTrue(Algorithm.RSA.RSA_4096.isCompatibleWith(Algorithm.RSA.RSA_4096))
+        assertFalse(Algorithm.RSA.RSA_2048.isCompatibleWith(Algorithm.RSA.RSA_4096))
+        assertFalse(Algorithm.RSA.RSA_4096.isCompatibleWith(Algorithm.RSA.RSA_2048))
+        assertFalse(Algorithm.RSA.RSA_2048.isCompatibleWith(Algorithm.RSA.RSA_3072))
+    }
+
+    @Test
+    fun `isCompatibleWith - Ed25519 is never compatible with EC curves`() {
+        assertFalse(Algorithm.Ed25519.isCompatibleWith(Algorithm.P256))
+        assertFalse(Algorithm.Ed25519.isCompatibleWith(Algorithm.Secp256k1))
+        assertFalse(Algorithm.P256.isCompatibleWith(Algorithm.Ed25519))
+        assertFalse(Algorithm.Secp256k1.isCompatibleWith(Algorithm.Ed25519))
+    }
+
+    @Test
+    fun `isCompatibleWith - EC algorithms with same curve name are compatible`() {
+        assertTrue(Algorithm.P256.isCompatibleWith(Algorithm.P256))
+        assertTrue(Algorithm.P384.isCompatibleWith(Algorithm.P384))
+        assertFalse(Algorithm.P256.isCompatibleWith(Algorithm.P384))
+        assertFalse(Algorithm.P256.isCompatibleWith(Algorithm.Secp256k1))
+    }
+
+    @Test
+    fun `isCompatibleWith - cross-type incompatibility`() {
+        assertFalse(Algorithm.RSA.RSA_2048.isCompatibleWith(Algorithm.P256))
+        assertFalse(Algorithm.P256.isCompatibleWith(Algorithm.RSA.RSA_2048))
+        assertFalse(Algorithm.RSA.RSA_2048.isCompatibleWith(Algorithm.Ed25519))
     }
 }
 

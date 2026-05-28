@@ -4,6 +4,7 @@ import org.trustweave.kms.Algorithm
 import org.trustweave.kms.JwkKeys
 import org.trustweave.kms.JwkKeyTypes
 import com.azure.security.keyvault.keys.models.KeyType
+import kotlinx.coroutines.CancellationException
 import com.azure.security.keyvault.keys.models.KeyCurveName
 import com.azure.security.keyvault.keys.cryptography.models.SignatureAlgorithm
 import java.security.KeyFactory
@@ -60,13 +61,11 @@ object AlgorithmMapping {
             is Algorithm.P256 -> SignatureAlgorithm.ES256
             is Algorithm.P384 -> SignatureAlgorithm.ES384
             is Algorithm.P521 -> SignatureAlgorithm.ES512
-            is Algorithm.RSA -> {
-                when (algorithm.keySize) {
-                    2048 -> SignatureAlgorithm.RS256
-                    3072 -> SignatureAlgorithm.RS256
-                    4096 -> SignatureAlgorithm.RS256
-                    else -> throw IllegalArgumentException("Unsupported RSA key size: ${algorithm.keySize}")
-                }
+            is Algorithm.RSA -> when (algorithm.keySize) {
+                2048 -> SignatureAlgorithm.RS256
+                3072 -> SignatureAlgorithm.RS384
+                4096 -> SignatureAlgorithm.RS512
+                else -> throw IllegalArgumentException("Unsupported RSA key size: ${algorithm.keySize}")
             }
             else -> throw IllegalArgumentException("Algorithm ${algorithm.name} is not supported by Azure Key Vault")
         }
@@ -83,17 +82,9 @@ object AlgorithmMapping {
         return try {
             when (algorithm) {
                 is Algorithm.Secp256k1, is Algorithm.P256, is Algorithm.P384, is Algorithm.P521 -> {
-                    val keyFactory = KeyFactory.getInstance("EC")
-                    val publicKey = keyFactory.generatePublic(X509EncodedKeySpec(publicKeyBytes)) as ECPublicKey
-                    val params = publicKey.params
-                    val point = publicKey.w
-
                     val curveName = algorithm.curveName
                         ?: throw IllegalArgumentException("Unsupported EC algorithm: ${algorithm.name}")
 
-                    // Extract x and y coordinates from affine coordinates
-                    val affineX = point.affineX
-                    val affineY = point.affineY
                     val coordinateLength = when (algorithm) {
                         is Algorithm.Secp256k1, is Algorithm.P256 -> 32
                         is Algorithm.P384 -> 48
@@ -101,21 +92,48 @@ object AlgorithmMapping {
                         else -> 32
                     }
 
-                    // Convert BigInteger to byte array (big-endian, right-aligned)
-                    val xBytes = affineX.toByteArray()
-                    val yBytes = affineY.toByteArray()
+                    // Azure extractPublicKeyBytesFromJwk returns a raw uncompressed EC point
+                    // (0x04 || x || y). X509EncodedKeySpec requires DER/SubjectPublicKeyInfo
+                    // encoding and would always throw InvalidKeySpecException on such input.
+                    // Detect this case and extract x/y directly without the round-trip.
+                    val expectedRawSize = 1 + coordinateLength * 2
+                    if (publicKeyBytes[0] == 0x04.toByte() && publicKeyBytes.size == expectedRawSize) {
+                        val x = publicKeyBytes.copyOfRange(1, 1 + coordinateLength)
+                        val y = publicKeyBytes.copyOfRange(1 + coordinateLength, publicKeyBytes.size)
+                        return mapOf(
+                            JwkKeys.KTY to JwkKeyTypes.EC,
+                            JwkKeys.CRV to curveName,
+                            JwkKeys.X to Base64.getUrlEncoder().withoutPadding().encodeToString(x),
+                            JwkKeys.Y to Base64.getUrlEncoder().withoutPadding().encodeToString(y)
+                        )
+                    }
+
+                    // Fall through to the DER/SubjectPublicKeyInfo path for fully-encoded keys.
+                    val keyFactory = KeyFactory.getInstance("EC")
+                    val publicKey = keyFactory.generatePublic(X509EncodedKeySpec(publicKeyBytes)) as ECPublicKey
+                    val point = publicKey.w
+
+                    // Extract x and y coordinates from affine coordinates
+                    val affineX = point.affineX
+                    val affineY = point.affineY
+
+                    // Strip the optional leading 0x00 sign byte that BigInteger.toByteArray() prepends
+                    // for positive values whose MSB is 1, then left-pad (right-align in the fixed-length
+                    // array) with zeros.  The x/y arrays are zero-initialised so left-padding is automatic.
+                    fun strippedBytes(bi: java.math.BigInteger): ByteArray {
+                        val b = bi.toByteArray()
+                        return if (b.size > 1 && b[0] == 0.toByte()) b.copyOfRange(1, b.size) else b
+                    }
+                    val xStripped = strippedBytes(affineX)
+                    val yStripped = strippedBytes(affineY)
 
                     val x = ByteArray(coordinateLength)
                     val y = ByteArray(coordinateLength)
 
-                    // Copy right-aligned (big-endian), padding with zeros on the left if needed
-                    val xStart = maxOf(0, xBytes.size - coordinateLength)
-                    val yStart = maxOf(0, yBytes.size - coordinateLength)
-                    val xOffset = maxOf(0, coordinateLength - xBytes.size)
-                    val yOffset = maxOf(0, coordinateLength - yBytes.size)
-
-                    System.arraycopy(xBytes, xStart, x, xOffset, minOf(xBytes.size, coordinateLength))
-                    System.arraycopy(yBytes, yStart, y, yOffset, minOf(yBytes.size, coordinateLength))
+                    // Left-align: copy into the rightmost bytes of the fixed-length array
+                    // (for valid EC coordinates xStripped.size <= coordinateLength always holds)
+                    System.arraycopy(xStripped, 0, x, coordinateLength - xStripped.size, xStripped.size)
+                    System.arraycopy(yStripped, 0, y, coordinateLength - yStripped.size, yStripped.size)
 
                     mapOf(
                         JwkKeys.KTY to JwkKeyTypes.EC,
@@ -132,12 +150,18 @@ object AlgorithmMapping {
 
                     mapOf(
                         JwkKeys.KTY to JwkKeyTypes.RSA,
-                        JwkKeys.N to Base64.getUrlEncoder().withoutPadding().encodeToString(modulus.toByteArray()),
-                        JwkKeys.E to Base64.getUrlEncoder().withoutPadding().encodeToString(exponent.toByteArray())
+                        JwkKeys.N to Base64.getUrlEncoder().withoutPadding().encodeToString(
+                            modulus.toByteArray().let { b -> if (b.isNotEmpty() && b[0] == 0.toByte()) b.copyOfRange(1, b.size) else b }
+                        ),
+                        JwkKeys.E to Base64.getUrlEncoder().withoutPadding().encodeToString(
+                            exponent.toByteArray().let { b -> if (b.isNotEmpty() && b[0] == 0.toByte()) b.copyOfRange(1, b.size) else b }
+                        )
                     )
                 }
                 else -> throw IllegalArgumentException("Unsupported algorithm for JWK conversion: ${algorithm.name}")
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             throw IllegalArgumentException("Failed to convert Azure Key Vault public key to JWK: ${e.message}", e)
         }
@@ -170,8 +194,8 @@ object AlgorithmMapping {
                     id.substringAfterLast("/")
                 }
             } else {
-                // For non-URL format, return just the key name (before first slash if present)
-                id.substringBefore("/")
+                // For non-URL format, return as-is (preserves "keyname/version" if present)
+                id
             }
         }
     }

@@ -31,7 +31,7 @@ sealed class Algorithm(val name: String) {
      */
     val securityLevel: SecurityLevel
         get() = when (this) {
-            is RSA -> when (rsaKeySize) {
+            is RSA -> when (keySize) {
                 2048 -> SecurityLevel.LEGACY
                 3072 -> SecurityLevel.STANDARD
                 4096 -> SecurityLevel.HIGH
@@ -52,7 +52,8 @@ sealed class Algorithm(val name: String) {
             P384 -> "P-384"
             P521 -> "P-521"
             BLS12_381 -> "BLS12-381"
-            else -> null
+            is RSA -> null // RSA is not an elliptic-curve algorithm
+            is Custom -> null // Custom algorithms have no defined curve
         }
     
     /**
@@ -60,21 +61,26 @@ sealed class Algorithm(val name: String) {
      * 
      * Algorithms are compatible if:
      * - They are the same algorithm
-     * - They are both RSA variants (any RSA key size can sign with any other)
+     * - They are both RSA variants with the same key size (RSA-2048 is not compatible with RSA-4096)
      * - They are both ECC algorithms with the same curve
      */
     fun isCompatibleWith(other: Algorithm): Boolean {
         // Same algorithm is always compatible
         if (this == other) return true
         
-        // For RSA, any RSA variant can sign with any other RSA variant (same key type)
-        if (this is RSA && other is RSA) return true
+        // For RSA, key sizes must match — RSA-2048 and RSA-4096 are different key types
+        if (this is RSA && other is RSA) return this.rsaKeySize == other.rsaKeySize
         
-        // For ECC, algorithms must match exactly (same curve)
+        // Ed25519 is OKP, not EC — never compatible with EC curves
+        if (this is Ed25519 || other is Ed25519) return this is Ed25519 && other is Ed25519
+        if (this is BLS12_381 || other is BLS12_381) return this is BLS12_381 && other is BLS12_381
+        // For custom algorithms, compare by name
+        if (this is Custom) return other is Custom && this.name == other.name
+        // For EC algorithms, compare curve names
         if (this.curveName != null && other.curveName != null) {
             return this.curveName == other.curveName
         }
-        
+
         // Otherwise, not compatible
         return false
     }
@@ -96,7 +102,7 @@ sealed class Algorithm(val name: String) {
         /**
          * Returns the key size in bits for RSA algorithms.
          */
-        val keySize: Int = rsaKeySize
+        val keySize: Int get() = rsaKeySize
 
         companion object {
             /**
@@ -119,23 +125,28 @@ sealed class Algorithm(val name: String) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Algorithm) return false
-        
+        // Require identical runtime class: prevents RSA(2048) == Custom("RSA-2048") and
+        // similar cross-subclass confusions even when names happen to match.
+        if (this::class != other::class) return false
+
         // Critical: Custom algorithms should never equal standard algorithms
         // This prevents algorithm confusion attacks
         if (this is Custom && other !is Custom) return false
         if (this !is Custom && other is Custom) return false
-        
-        // For same type, compare names (case-insensitive)
-        return name.equals(other.name, ignoreCase = true)
+
+        // For same type, compare names (case-sensitive — standard algorithm names have fixed casing)
+        return name == other.name
     }
 
     override fun hashCode(): Int {
-        // Include type in hash code to ensure Custom algorithms have different hash codes
-        val typeHash = when (this) {
-            is Custom -> "Custom".hashCode()
-            else -> javaClass.name.hashCode()
+        // Include type in hash code to ensure Custom algorithms have different hash codes.
+        // RSA variants share the same class name so we fold rsaKeySize into the hash to
+        // ensure RSA(2048), RSA(3072), and RSA(4096) occupy distinct hash buckets.
+        return when (this) {
+            is Custom -> "Custom".hashCode() * 31 + name.hashCode()
+            is RSA -> this::class.java.name.hashCode() * 31 + rsaKeySize
+            else -> this::class.java.name.hashCode() * 31 + name.hashCode()
         }
-        return typeHash * 31 + name.lowercase().hashCode()
     }
 
     override fun toString(): String = name

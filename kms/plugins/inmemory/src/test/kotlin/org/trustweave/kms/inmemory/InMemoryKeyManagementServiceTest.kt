@@ -181,8 +181,7 @@ class InMemoryKeyManagementServiceTest {
             mapOf(KmsOptionKeys.KEY_ID to keyId)
         )
 
-        assertTrue(secondResult is GenerateKeyResult.Failure.InvalidOptions)
-        assertTrue(secondResult.reason.contains("already exists"))
+        assertTrue(secondResult is GenerateKeyResult.Failure.DuplicateKeyId)
     }
 
     @Test

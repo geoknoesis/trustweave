@@ -21,6 +21,7 @@ import java.security.interfaces.RSAPublicKey
 import java.security.spec.*
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
 import org.bouncycastle.jce.ECNamedCurveTable
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 
@@ -95,18 +96,26 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider
  * ```
  */
 class InMemoryKeyManagementService(
-    private val keyStore: MutableMap<KeyId, KeyPair> = ConcurrentHashMap(),
-    private val keyMetadata: MutableMap<KeyId, Algorithm> = ConcurrentHashMap()
+    keyStore: MutableMap<KeyId, KeyPair> = ConcurrentHashMap(),
+    keyMetadata: MutableMap<KeyId, Algorithm> = ConcurrentHashMap()
 ) : KeyManagementService {
 
-    init {
-        // Ensure BouncyCastle provider is registered for secp256k1 and Ed25519 support
-        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
-            Security.addProvider(BouncyCastleProvider())
-        }
-    }
+    private val keyStore: ConcurrentHashMap<KeyId, KeyPair> =
+        if (keyStore is ConcurrentHashMap<KeyId, KeyPair>) keyStore else ConcurrentHashMap(keyStore)
+    private val keyMetadata: ConcurrentHashMap<KeyId, Algorithm> =
+        if (keyMetadata is ConcurrentHashMap<KeyId, Algorithm>) keyMetadata else ConcurrentHashMap(keyMetadata)
 
     companion object {
+        init {
+            // Register BouncyCastle once per classloader. Security.addProvider is idempotent
+            // (returns -1 on duplicate) but we skip it here to avoid the duplicate-registration
+            // log warning. Cross-classloader races on the JVM Security provider list are
+            // outside our control.
+            if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+                Security.addProvider(BouncyCastleProvider())
+            }
+        }
+
         /**
          * Algorithms supported by InMemoryKeyManagementService.
          * 
@@ -166,7 +175,7 @@ class InMemoryKeyManagementService(
                 providedKeyId
             } else {
                 // Generate a new key ID if not provided
-                "trustweave-key-${System.currentTimeMillis()}-${UUID.randomUUID().toString().take(8)}"
+                "trustweave-key-${UUID.randomUUID()}"
             }
             
             // Validate key ID format
@@ -179,36 +188,50 @@ class InMemoryKeyManagementService(
             }
             
             val keyId = KeyId(keyIdString)
-            
-            // Check if key already exists
-            if (keyStore.containsKey(keyId)) {
-                logger.warn("Key already exists: keyId={}", keyId.value)
-                return@withContext GenerateKeyResult.Failure.InvalidOptions(
-                    algorithm = algorithm,
-                    reason = "Key with ID '${keyId.value}' already exists",
-                    invalidOptions = options
-                )
-            }
 
             // Generate key pair using Java crypto
             val keyPair = generateKeyPair(algorithm)
-            
-            // Store key pair and metadata
-            keyStore[keyId] = keyPair
+
+            // Claim the key-store slot FIRST to detect duplicate key IDs atomically.
+            // Only after the claim succeeds is it safe to write metadata; this eliminates
+            // the TOCTOU window that existed when metadata was written unconditionally before
+            // putIfAbsent (two concurrent callers with the same ID could both write metadata,
+            // then only one would win the slot, leaving a mismatched metadata entry).
+            val existing = keyStore.putIfAbsent(keyId, keyPair)
+            if (existing != null) {
+                logger.warn("Key already exists: keyId={}", keyId.value)
+                return@withContext GenerateKeyResult.Failure.DuplicateKeyId(keyId)
+            }
+            // This thread owns the slot — safe to write metadata.
             keyMetadata[keyId] = algorithm
+            // Key-store slot claimed — compute the JWK.
+            // If JWK conversion fails the try/catch below rolls back both maps so the slot is
+            // fully released and the caller gets a clean Failure result.
+            try {
+                // Convert public key to JWK format
+                val publicKeyJwk = publicKeyToJwk(keyPair.public, algorithm)
 
-            // Convert public key to JWK format
-            val publicKeyJwk = publicKeyToJwk(keyPair.public, algorithm)
+                val handle = KeyHandle(
+                    id = keyId,
+                    algorithm = algorithm.name,
+                    publicKeyJwk = publicKeyJwk
+                )
 
-            val handle = KeyHandle(
-                id = keyId,
-                algorithm = algorithm.name,
-                publicKeyJwk = publicKeyJwk
-            )
+                logger.info("Generated key in in-memory KMS: keyId={}, algorithm={}", keyId.value, algorithm.name)
 
-            logger.info("Generated key in in-memory KMS: keyId={}, algorithm={}", keyId.value, algorithm.name)
-
-            GenerateKeyResult.Success(handle)
+                GenerateKeyResult.Success(handle)
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                // Roll back both maps so no ghost key is left behind
+                keyStore.remove(keyId)
+                keyMetadata.remove(keyId)
+                logger.error("Failed to compute public key JWK for new key, rolling back: keyId={}", keyId.value, e)
+                GenerateKeyResult.Failure.Error(
+                    algorithm = algorithm,
+                    reason = "Failed to compute public key JWK: ${e.message}",
+                    cause = e
+                )
+            }
         } catch (e: NoSuchAlgorithmException) {
             logger.error("Algorithm not supported by JVM: algorithm={}", algorithm.name, e)
             GenerateKeyResult.Failure.Error(
@@ -224,6 +247,8 @@ class InMemoryKeyManagementService(
                 reason = "Invalid algorithm parameters for '${algorithm.name}': ${e.message ?: "Unknown error"}",
                 cause = e
             )
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             logger.error("Failed to generate key: algorithm={}", algorithm.name, e)
             GenerateKeyResult.Failure.Error(
@@ -258,6 +283,8 @@ class InMemoryKeyManagementService(
                 reason = "Invalid key format: ${e.message ?: "Unknown error"}",
                 cause = e
             )
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             logger.error("Failed to get public key: keyId={}", keyId.value, e)
             GetPublicKeyResult.Failure.Error(
@@ -341,6 +368,8 @@ class InMemoryKeyManagementService(
                 reason = "Signature generation failed: ${e.message ?: "Unknown error"}",
                 cause = e
             )
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             logger.error("Failed to sign data: keyId={}", keyId.value, e)
             SignResult.Failure.Error(
@@ -353,16 +382,21 @@ class InMemoryKeyManagementService(
 
     override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult = withContext(Dispatchers.IO) {
         try {
-            val removed = keyStore.remove(keyId) != null
+            // Remove the key first so concurrent sign()/getPublicKey() calls observe
+            // KeyNotFound rather than a metadata-absent error. Metadata is removed
+            // immediately after; the brief window where metadata outlives the key is
+            // harmless because every reader checks keyStore first.
+            val removed = keyStore.remove(keyId)
             keyMetadata.remove(keyId)
-            
-            if (removed) {
+            if (removed != null) {
                 logger.info("Deleted key from in-memory KMS: keyId={}", keyId.value)
                 DeleteKeyResult.Deleted
             } else {
                 logger.debug("Key not found for deletion: keyId={}", keyId.value)
                 DeleteKeyResult.NotFound
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             logger.error("Failed to delete key: keyId={}", keyId.value, e)
             DeleteKeyResult.Failure.Error(
@@ -382,15 +416,20 @@ class InMemoryKeyManagementService(
 
     /**
      * Clears all keys from memory.
-     * 
+     *
      * **Warning:** This operation is irreversible and will delete all keys.
      * Use with caution, especially in production scenarios.
+     *
+     * **Thread Safety:** This method is only safe when no concurrent operations are
+     * in-flight (intended for tests only). The synchronized block was removed to avoid
+     * giving a false impression of atomic safety: coroutine operations ([generateKey],
+     * [sign], [deleteKey]) never acquired the lock, so `synchronized` never provided
+     * true atomicity across all operations.
      */
     fun clearAllKeys() {
-        val count = keyStore.size
         keyStore.clear()
         keyMetadata.clear()
-        logger.info("Cleared all keys from in-memory KMS: removed {} keys", count)
+        logger.info("Cleared all keys from in-memory KMS")
     }
 
     /**
@@ -479,14 +518,19 @@ class InMemoryKeyManagementService(
     private fun publicKeyToJwk(publicKey: PublicKey, algorithm: Algorithm): Map<String, Any?> {
         return when (algorithm) {
             is Algorithm.Ed25519 -> {
-                // Ed25519 public key is 32 bytes
                 val publicKeyBytes = publicKey.encoded
-                // Extract the raw 32-byte key from DER encoding
-                val rawKey = if (publicKeyBytes.size >= 44 && publicKeyBytes[0] == 0x30.toByte()) {
-                    // Ed25519 public key in DER: 30 2A 30 05 06 03 2B 65 70 03 21 00 [32 bytes]
-                    publicKeyBytes.sliceArray(12 until 44)
-                } else {
-                    publicKeyBytes.takeLast(32).toByteArray()
+                val rawKey = when {
+                    publicKeyBytes.size >= 44 && publicKeyBytes[0] == 0x30.toByte() -> {
+                        val spki = SubjectPublicKeyInfo.getInstance(publicKeyBytes)
+                        spki.publicKeyData.bytes
+                    }
+                    publicKeyBytes.size == 32 && publicKey.algorithm == "Ed25519" -> {
+                        publicKeyBytes
+                    }
+                    else -> throw IllegalArgumentException(
+                        "Cannot extract Ed25519 raw key bytes: unexpected encoding " +
+                            "(algorithm=${publicKey.algorithm}, size=${publicKeyBytes.size})"
+                    )
                 }
                 mapOf(
                     JwkKeys.KTY to JwkKeyTypes.OKP,
@@ -509,16 +553,22 @@ class InMemoryKeyManagementService(
                     else -> 32
                 }
 
-                // Convert BigInteger to unsigned byte array
+                // Convert BigInteger to byte array (unsigned, big-endian, fixed length).
+                // BigInteger.toByteArray() prepends a 0x00 sign byte for positive values
+                // whose MSB is 1; strip it before right-aligning into the fixed-length result.
                 fun toUnsignedByteArray(bigInt: BigInteger, length: Int): ByteArray {
-                    val bytes = bigInt.toByteArray()
-                    val result = ByteArray(length)
-                    val offset = length - bytes.size
-                    if (offset >= 0) {
-                        System.arraycopy(bytes, 0, result, offset, bytes.size)
-                    } else {
-                        System.arraycopy(bytes, bytes.size - length, result, 0, length)
+                    val signed = bigInt.toByteArray()
+                    val bytes = if (signed.isNotEmpty() && signed[0] == 0.toByte()) signed.copyOfRange(1, signed.size) else signed
+                    // A valid EC coordinate can never be wider than the field element size after
+                    // the sign byte is stripped. Guard against a corrupt BigInteger value that
+                    // would silently truncate the MSB via the srcOffset arithmetic below.
+                    require(bytes.size <= length) {
+                        "EC coordinate too large after sign-byte strip: ${bytes.size} > $length"
                     }
+                    val result = ByteArray(length)
+                    val srcOffset = maxOf(0, bytes.size - length)
+                    val dstOffset = maxOf(0, length - bytes.size)
+                    System.arraycopy(bytes, srcOffset, result, dstOffset, minOf(bytes.size, length))
                     return result
                 }
 
@@ -583,6 +633,7 @@ class InMemoryKeyManagementService(
                     signer.update(data)
                     signer.sign()
                 } catch (e: Exception) {
+                    if (e is kotlinx.coroutines.CancellationException) throw e
                     // Fall back to standard provider if BouncyCastle fails
                     try {
                         val signer = Signature.getInstance(hashAlgorithm)
@@ -590,7 +641,13 @@ class InMemoryKeyManagementService(
                         signer.update(data)
                         signer.sign()
                     } catch (e2: Exception) {
-                        throw SignatureException("Failed to sign secp256k1 with $hashAlgorithm: ${e2.message}", e2)
+                        if (e2 is kotlinx.coroutines.CancellationException) throw e2
+                        val wrapped = InvalidAlgorithmParameterException(
+                            "secp256k1 not supported by any provider. BouncyCastle failed: ${e2.message}"
+                        )
+                        wrapped.initCause(e2)
+                        wrapped.addSuppressed(e) // preserve original JVM provider failure
+                        throw wrapped
                     }
                 }
             }
@@ -608,12 +665,11 @@ class InMemoryKeyManagementService(
                 signer.sign()
             }
             is Algorithm.RSA -> {
-                // Use RSA with SHA-256/384/512 based on key size
                 val hashAlgorithm = when (algorithm.keySize) {
                     2048 -> "SHA256withRSA"
                     3072 -> "SHA384withRSA"
                     4096 -> "SHA512withRSA"
-                    else -> "SHA256withRSA"
+                    else -> throw IllegalArgumentException("Unsupported RSA key size: ${algorithm.keySize}")
                 }
                 val signer = Signature.getInstance(hashAlgorithm)
                 signer.initSign(privateKey)

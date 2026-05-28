@@ -107,6 +107,7 @@ include("credentials:plugins:status-list:publishing")
 include("credentials:plugins:status-list:server")
 include("credentials:plugins:presentation-exchange")
 include("credentials:plugins:siop")
+include("credentials:plugins:openid-federation")
 
 // Distribution
 include("distribution:all")

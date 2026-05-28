@@ -34,7 +34,7 @@ hikaricp = "7.0.2"
 
 # Security
 bouncycastle = "1.84"
-nimbus-jose-jwt = "9.48"
+nimbus-jose-jwt = "10.9"
 cbor-java = "4.5.4"
 jsonld-java = "0.13.6"
 

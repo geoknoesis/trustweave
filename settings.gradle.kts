@@ -46,6 +46,7 @@ include("did:plugins:threebox")
 include("did:plugins:btcr")
 include("did:plugins:tezos")
 include("did:plugins:orb")
+include("did:plugins:ebsi")
 
 // Wallet domain
 include("wallet:wallet-core")

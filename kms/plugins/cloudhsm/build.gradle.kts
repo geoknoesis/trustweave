@@ -14,7 +14,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
 
     // AWS CloudHSM SDK
-    implementation(platform("software.amazon.awssdk:bom:2.20.0"))
+    implementation(platform("software.amazon.awssdk:bom:2.43.0"))
     implementation("software.amazon.awssdk:cloudhsmv2")
     implementation("software.amazon.awssdk:cloudhsm")
 

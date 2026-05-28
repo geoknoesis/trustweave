@@ -32,10 +32,10 @@ class AwsKeyManagementServiceTest {
 
     @Test
     fun `test get supported algorithms`() = runBlocking {
-        // Create service with mock (would need actual mock setup)
+        // AWS KMS does not support Ed25519 — supported set excludes it.
         val supported = AwsKeyManagementService.SUPPORTED_ALGORITHMS
 
-        assertTrue(supported.contains(Algorithm.Ed25519))
+        assertFalse(supported.contains(Algorithm.Ed25519))
         assertTrue(supported.contains(Algorithm.Secp256k1))
         assertTrue(supported.contains(Algorithm.P256))
         assertTrue(supported.contains(Algorithm.P384))
@@ -43,14 +43,15 @@ class AwsKeyManagementServiceTest {
         assertTrue(supported.contains(Algorithm.RSA.RSA_2048))
         assertTrue(supported.contains(Algorithm.RSA.RSA_3072))
         assertTrue(supported.contains(Algorithm.RSA.RSA_4096))
-        assertEquals(8, supported.size)
+        assertEquals(7, supported.size)
     }
 
     @Test
     fun `test algorithm mapping to AWS key spec`() {
-        // Test that mapping returns valid KeySpec values
-        val ed25519Spec = AlgorithmMapping.toAwsKeySpec(Algorithm.Ed25519)
-        assertNotNull(ed25519Spec)
+        // AWS KMS does not support Ed25519 — mapping throws.
+        assertThrows<IllegalArgumentException> {
+            AlgorithmMapping.toAwsKeySpec(Algorithm.Ed25519)
+        }
 
         val secp256k1Spec = AlgorithmMapping.toAwsKeySpec(Algorithm.Secp256k1)
         assertNotNull(secp256k1Spec)
@@ -65,7 +66,10 @@ class AwsKeyManagementServiceTest {
 
     @Test
     fun `test algorithm mapping to AWS signing algorithm`() {
-        assertEquals(SigningAlgorithmSpec.ECDSA_SHA_256, AlgorithmMapping.toAwsSigningAlgorithm(Algorithm.Ed25519))
+        // AWS KMS does not support Ed25519 — mapping throws.
+        assertThrows<IllegalArgumentException> {
+            AlgorithmMapping.toAwsSigningAlgorithm(Algorithm.Ed25519)
+        }
         assertEquals(SigningAlgorithmSpec.ECDSA_SHA_256, AlgorithmMapping.toAwsSigningAlgorithm(Algorithm.Secp256k1))
         assertEquals(SigningAlgorithmSpec.ECDSA_SHA_256, AlgorithmMapping.toAwsSigningAlgorithm(Algorithm.P256))
         assertEquals(SigningAlgorithmSpec.ECDSA_SHA_384, AlgorithmMapping.toAwsSigningAlgorithm(Algorithm.P384))
@@ -127,7 +131,8 @@ class AwsKeyManagementServiceTest {
 
         assertEquals("aws", provider.name)
         assertEquals(AwsKeyManagementService.SUPPORTED_ALGORITHMS, provider.supportedAlgorithms)
-        assertTrue(provider.supportsAlgorithm(Algorithm.Ed25519))
+        assertFalse(provider.supportsAlgorithm(Algorithm.Ed25519))
+        assertTrue(provider.supportsAlgorithm(Algorithm.Secp256k1))
         assertFalse(provider.supportsAlgorithm(Algorithm.BLS12_381))
     }
 

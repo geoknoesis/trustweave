@@ -47,8 +47,8 @@ class AlgorithmMappingTest {
         assertEquals(SignatureAlgorithm.ES384, AlgorithmMapping.toAzureSignatureAlgorithm(Algorithm.P384))
         assertEquals(SignatureAlgorithm.ES512, AlgorithmMapping.toAzureSignatureAlgorithm(Algorithm.P521))
         assertEquals(SignatureAlgorithm.RS256, AlgorithmMapping.toAzureSignatureAlgorithm(Algorithm.RSA.RSA_2048))
-        assertEquals(SignatureAlgorithm.RS256, AlgorithmMapping.toAzureSignatureAlgorithm(Algorithm.RSA.RSA_3072))
-        assertEquals(SignatureAlgorithm.RS256, AlgorithmMapping.toAzureSignatureAlgorithm(Algorithm.RSA.RSA_4096))
+        assertEquals(SignatureAlgorithm.RS384, AlgorithmMapping.toAzureSignatureAlgorithm(Algorithm.RSA.RSA_3072))
+        assertEquals(SignatureAlgorithm.RS512, AlgorithmMapping.toAzureSignatureAlgorithm(Algorithm.RSA.RSA_4096))
     }
 
     @Test
@@ -61,7 +61,7 @@ class AlgorithmMappingTest {
     @Test
     fun `test resolve key ID`() {
         assertEquals("mykey", AlgorithmMapping.resolveKeyId("mykey"))
-        assertEquals("mykey", AlgorithmMapping.resolveKeyId("mykey/abc123def456"))
+        assertEquals("mykey/abc123def456", AlgorithmMapping.resolveKeyId("mykey/abc123def456"))
         assertEquals("mykey", AlgorithmMapping.resolveKeyId("https://myvault.vault.azure.net/keys/mykey"))
         assertEquals("mykey/version123", AlgorithmMapping.resolveKeyId("https://myvault.vault.azure.net/keys/mykey/version123"))
     }

@@ -46,7 +46,7 @@ google-cloud-bom-legacy = "26.80.0"
 
 # Other
 vault-java-driver = "5.1.0"
-microsoft-graph = "5.80.0"
+microsoft-graph = "6.63.0"
 azure-identity = "1.18.2"
 
 # Build tools

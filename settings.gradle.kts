@@ -112,6 +112,7 @@ include("credentials:plugins:mdl")
 include("credentials:plugins:bbs")
 include("credentials:plugins:eudiw")
 include("credentials:plugins:jades")
+include("credentials:oidc4vci-server")
 
 // Distribution
 include("distribution:all")

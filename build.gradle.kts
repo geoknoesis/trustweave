@@ -36,10 +36,11 @@ subprojects {
                 System.getenv("LOCALAPPDATA")
                     ?: System.getenv("USERPROFILE")
                     ?: System.getProperty("java.io.tmpdir")
-            val external = File(
-                File(localAppData, "TrustWeave/gradle-build"),
-                "${rootProject.name}/$centralizedRel",
-            ).absoluteFile
+            val external =
+                File(
+                    File(localAppData, "TrustWeave/gradle-build"),
+                    "${rootProject.name}/$centralizedRel",
+                ).absoluteFile
             objects.directoryProperty().fileValue(external)
         } else {
             rootProject.layout.buildDirectory.dir(centralizedRel)
@@ -65,7 +66,7 @@ subprojects {
                 File(System.getProperty("java.io.tmpdir"), "trustweave-jar-replace-stash").apply { mkdirs() }
             val ext = out.extension
             val base = if (ext.isEmpty()) out.name else out.name.removeSuffix(".$ext")
-            val dest = File(stashRoot, "${base}-${System.nanoTime()}${if (ext.isEmpty()) "" else ".$ext"}")
+            val dest = File(stashRoot, "$base-${System.nanoTime()}${if (ext.isEmpty()) "" else ".$ext"}")
             try {
                 java.nio.file.Files.move(
                     out.toPath(),
@@ -110,7 +111,7 @@ subprojects {
                             val ext = f.extension
                             val base = if (ext.isEmpty()) f.name else f.name.removeSuffix(".$ext")
                             val dest =
-                                File(stashRoot, "${base}-${System.nanoTime()}${if (ext.isEmpty()) "" else ".$ext"}")
+                                File(stashRoot, "$base-${System.nanoTime()}${if (ext.isEmpty()) "" else ".$ext"}")
                             try {
                                 java.nio.file.Files.move(
                                     f.toPath(),
@@ -243,7 +244,8 @@ subprojects {
                             name.set(project.name)
                             description.set(
                                 project.description
-                                    ?: "TrustWeave ${project.name} module. See docs/reference/module-maturity.md for GA vs experimental guidance.",
+                                    ?: "TrustWeave ${project.name} module. " +
+                                    "See docs/reference/module-maturity.md for GA vs experimental guidance.",
                             )
                             url.set("https://github.com/geoknoesis/trustweave")
 
@@ -279,10 +281,11 @@ if (trustweaveRootWindowsExternal) {
         System.getenv("LOCALAPPDATA")
             ?: System.getenv("USERPROFILE")
             ?: System.getProperty("java.io.tmpdir")
-    val rootOut = File(
-        File(localAppData, "TrustWeave/gradle-build"),
-        "${rootProject.name}/_root",
-    ).absoluteFile
+    val rootOut =
+        File(
+            File(localAppData, "TrustWeave/gradle-build"),
+            "${rootProject.name}/_root",
+        ).absoluteFile
     layout.buildDirectory.set(objects.directoryProperty().fileValue(rootOut))
 }
 
@@ -314,7 +317,7 @@ afterEvaluate {
                         val ext = f.extension
                         val base = if (ext.isEmpty()) f.name else f.name.removeSuffix(".$ext")
                         val dest =
-                            File(stashRoot, "${base}-${System.nanoTime()}${if (ext.isEmpty()) "" else ".$ext"}")
+                            File(stashRoot, "$base-${System.nanoTime()}${if (ext.isEmpty()) "" else ".$ext"}")
                         try {
                             java.nio.file.Files.move(
                                 f.toPath(),

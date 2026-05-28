@@ -71,6 +71,7 @@ include("kms:plugins:cloudhsm")
 include("kms:plugins:entrust")
 include("kms:plugins:inmemory")
 include("kms:plugins:waltid")
+include("kms:plugins:pkcs11")
 include("kms:plugins:venafi")
 
 // Anchors domain

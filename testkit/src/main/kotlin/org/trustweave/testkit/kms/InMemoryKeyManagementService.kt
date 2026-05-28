@@ -294,6 +294,7 @@ suspend fun InMemoryKeyManagementService.generateKey(
                 "Supported: ${result.supportedAlgorithms.joinToString(", ") { it.name }}"
         )
         is GenerateKeyResult.Failure.InvalidOptions -> throw IllegalArgumentException(result.reason)
+        is GenerateKeyResult.Failure.DuplicateKeyId -> throw IllegalArgumentException("Key with ID '${result.keyId.value}' already exists")
         is GenerateKeyResult.Failure.Error -> throw RuntimeException(result.reason, result.cause)
     }
 }

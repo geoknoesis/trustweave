@@ -49,6 +49,12 @@ class DidKeyMockMethod(
             is org.trustweave.kms.results.GenerateKeyResult.Failure.Error -> {
                 throw IllegalArgumentException("Failed to generate key: ${generateResult.reason}")
             }
+            is org.trustweave.kms.results.GenerateKeyResult.Failure.DuplicateKeyId -> {
+                throw IllegalArgumentException("Key with ID '${generateResult.keyId.value}' already exists")
+            }
+            is org.trustweave.kms.results.GenerateKeyResult.Failure -> {
+                throw IllegalArgumentException("Failed to generate key: $generateResult")
+            }
         }
 
         // Create a simplified did:key identifier

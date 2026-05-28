@@ -110,7 +110,7 @@ class ParametricInsuranceEngine : BaseEvaluationEngine() {
         val value = pathValue?.jsonPrimitive?.content?.toDoubleOrNull()
             ?: throw IllegalArgumentException(
                 "Cannot extract numeric value from path: $path. " +
-                "Found: ${pathValue?.let { it.toString() } ?: "null"}"
+                "Found: ${pathValue?.toString() ?: "null"}"
             )
 
         val threshold = thresholdStr.toDoubleOrNull()
@@ -229,14 +229,14 @@ class ParametricInsuranceEngine : BaseEvaluationEngine() {
         val value1 = path1Value?.jsonPrimitive?.content?.toDoubleOrNull()
             ?: throw IllegalArgumentException(
                 "Cannot extract numeric value from path: $path1. " +
-                "Found: ${path1Value?.let { it.toString() } ?: "null"}"
+                "Found: ${path1Value?.toString() ?: "null"}"
             )
 
         val path2Value = inputObj[path2]
         val value2 = path2Value?.jsonPrimitive?.content?.toDoubleOrNull()
             ?: throw IllegalArgumentException(
                 "Cannot extract numeric value from path: $path2. " +
-                "Found: ${path2Value?.let { it.toString() } ?: "null"}"
+                "Found: ${path2Value?.toString() ?: "null"}"
             )
 
         // Evaluate comparison with epsilon for equality

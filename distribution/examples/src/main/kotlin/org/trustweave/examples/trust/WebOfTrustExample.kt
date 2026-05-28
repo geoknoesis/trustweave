@@ -259,6 +259,9 @@ fun main() = runBlocking {
             is org.trustweave.trust.types.TrustPath.NotFound -> {
                 println("No trust path found from verifier to university: ${trustPath.reason}")
             }
+            is org.trustweave.trust.types.TrustPath.NotConfigured -> {
+                println("Trust registry not configured: ${trustPath.reason}")
+            }
         }
 
         val trustPath2 = findTrustPath(
@@ -274,6 +277,9 @@ fun main() = runBlocking {
             }
             is org.trustweave.trust.types.TrustPath.NotFound -> {
                 println("No trust path found from verifier to company: ${trustPath2.reason}")
+            }
+            is org.trustweave.trust.types.TrustPath.NotConfigured -> {
+                println("Trust registry not configured: ${trustPath2.reason}")
             }
         }
     }

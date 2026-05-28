@@ -9,6 +9,7 @@ import org.trustweave.trust.types.TrustPath
 import org.trustweave.trust.types.VerifierIdentity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import java.util.concurrent.ConcurrentHashMap
 
@@ -92,6 +93,7 @@ class InMemoryTrustRegistry : TrustRegistry {
                 to = to,
                 anchors = emptyList(),
                 verified = true,
+                verifiedAt = Clock.System.now(),
                 trustScore = 1.0
             )
         }
@@ -136,6 +138,7 @@ class InMemoryTrustRegistry : TrustRegistry {
             to = to,
             anchors = anchors,
             verified = true,
+            verifiedAt = Clock.System.now(),
             trustScore = trustScore
         )
     }

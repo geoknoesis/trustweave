@@ -117,6 +117,8 @@ fun main() = runBlocking {
             is org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof -> proof.type
             is org.trustweave.credential.model.vc.CredentialProof.JwtProof -> "JWT"
             is org.trustweave.credential.model.vc.CredentialProof.SdJwtVcProof -> "SD-JWT"
+            is org.trustweave.credential.model.vc.CredentialProof.MdocProof -> "mso_mdoc"
+            is org.trustweave.credential.model.vc.CredentialProof.JAdES -> "JAdES"
             null -> null
         }
         println("  - Proof type: $proofType")

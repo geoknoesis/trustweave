@@ -310,7 +310,7 @@ class BitcoinBlockchainAnchorClient(
         }
 
         val request = Request.Builder()
-            .url(rpcUrl!!)
+            .url(rpcUrl ?: error("rpcUrl not configured"))
             .post(requestBody.toString().toRequestBody("application/json".toMediaType()))
             .build()
 

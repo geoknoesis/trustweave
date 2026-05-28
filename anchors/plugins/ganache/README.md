@@ -120,10 +120,10 @@ Simply run the tests - Ganache will be started automatically in Docker:
 
 ```bash
 # Run all tests (Ganache container starts automatically)
-./gradlew :TrustWeave-ganache:test
+./gradlew :anchors:plugins:ganache:test
 
 # Run specific test
-./gradlew :TrustWeave-ganache:test --tests "*GanacheEoIntegrationTest*"
+./gradlew :anchors:plugins:ganache:test --tests "*GanacheEoIntegrationTest*"
 ```
 
 ### Requirements

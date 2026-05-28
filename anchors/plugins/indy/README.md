@@ -164,7 +164,7 @@ Indy uses **ATTRIB transactions** to store data on the ledger. The implementatio
 ## Requirements
 
 - Java 21+
-- Kotlin 2.2.0+
+- Kotlin 2.3.x+
 - Access to Indy ledger pool (for production use)
 
 ## Testing
@@ -172,7 +172,7 @@ Indy uses **ATTRIB transactions** to store data on the ledger. The implementatio
 Tests use in-memory fallback mode and don't require a running Indy pool:
 
 ```bash
-./gradlew :TrustWeave-indy:test
+./gradlew :anchors:plugins:indy:test
 ```
 
 ## Future Enhancements

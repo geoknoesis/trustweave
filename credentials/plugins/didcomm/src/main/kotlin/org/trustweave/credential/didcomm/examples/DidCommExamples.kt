@@ -2,7 +2,9 @@ package org.trustweave.credential.didcomm.examples
 
 import org.trustweave.credential.didcomm.*
 import org.trustweave.credential.didcomm.protocol.*
-import org.trustweave.credential.didcomm.utils.DidCommUtils
+import org.trustweave.credential.didcomm.utils.findKeyAgreementKey
+import org.trustweave.credential.didcomm.utils.hasDidCommService
+import org.trustweave.credential.didcomm.utils.getDidCommServiceEndpoint
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.identifiers.Did
@@ -168,15 +170,15 @@ object DidCommExamples {
         )
 
         // Find key agreement key
-        val keyAgreementKey = DidCommUtils.findKeyAgreementKey(document)
+        val keyAgreementKey = document.findKeyAgreementKey()
         println("Found key agreement key: ${keyAgreementKey?.id}")
 
         // Check for DIDComm service
-        val hasService = DidCommUtils.hasDidCommService(document)
+        val hasService = document.hasDidCommService
         println("Has DIDComm service: $hasService")
 
         // Get service endpoint
-        val endpoint = DidCommUtils.getDidCommServiceEndpoint(document)
+        val endpoint = document.getDidCommServiceEndpoint()
         println("Service endpoint: $endpoint")
     }
 }

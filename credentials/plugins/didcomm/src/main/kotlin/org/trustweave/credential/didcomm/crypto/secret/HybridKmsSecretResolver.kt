@@ -1,81 +1,44 @@
 package org.trustweave.credential.didcomm.crypto.secret
 
-import org.trustweave.kms.KeyManagementService
+import kotlinx.coroutines.runBlocking
 import org.didcommx.didcomm.secret.Secret
 import org.didcommx.didcomm.secret.SecretResolver
-import kotlinx.coroutines.runBlocking
+import org.trustweave.kms.KeyManagementService
+import java.util.Optional
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Hybrid SecretResolver that uses local keys for DIDComm operations.
+ * Hybrid [SecretResolver] that uses a [LocalKeyStore] for DIDComm ECDH keys.
  *
- * This is the recommended approach for production:
- * - DIDComm keys are generated and stored locally (for ECDH operations)
- * - Other keys use cloud KMS (for signing, etc.)
- * - Best of both worlds: security + functionality
+ * This is the recommended production approach:
+ * - DIDComm key pairs (X25519, P-256) are generated and stored in [localKeyStore]
+ *   (encrypted at rest via [EncryptedFileLocalKeyStore]) so private key material
+ *   is available for ECDH key agreement.
+ * - An optional [cloudKms] can be provided for other operations, but it is not
+ *   consulted for DIDComm secrets since cloud KMS typically cannot export private keys.
  *
- * **Why Hybrid?**
- * - Many cloud KMS (AWS KMS, Azure Key Vault) don't expose private keys
- * - DIDComm requires private keys for ECDH key agreement
- * - Solution: Store DIDComm keys locally (encrypted), use cloud KMS for other operations
- *
- * **Security Considerations:**
- * - Local keys must be encrypted at rest
- * - Use secure storage (encrypted file, secure vault, etc.)
- * - Implement key rotation policies
- * - Limit access to key storage
- *
- * **Example Usage:**
- * ```kotlin
- * val localKeyStore = EncryptedFileLocalKeyStore(
- *     keyFile = File("/secure/didcomm-keys.enc"),
- *     encryptionKey = deriveMasterKey()
- * )
- * val resolver = HybridKmsSecretResolver(localKeyStore)
- * ```
+ * Populate [localKeyStore] via
+ * [org.trustweave.credential.didcomm.crypto.rotation.KeyRotationManager].
  */
 class HybridKmsSecretResolver(
-    private val localKeyStore: LocalKeyStore, // For DIDComm keys
-    private val cloudKms: KeyManagementService? = null // For other operations (optional)
-) {
+    private val localKeyStore: LocalKeyStore,
+    @Suppress("unused") private val cloudKms: KeyManagementService? = null,
+) : SecretResolver {
 
     private val keyCache = ConcurrentHashMap<String, Secret>()
 
-    /**
-     * Resolves a secret by key ID.
-     *
-     * Always checks local key store first (for DIDComm keys).
-     * Falls back to cloud KMS if needed (though this won't work for ECDH).
-     *
-     * TODO: Implement SecretResolver interface properly - the interface signature may differ
-     * (e.g., suspend function, different return type, etc.)
-     *
-     * @param secretId Key ID
-     * @return Secret, or null if not found
-     */
-    fun resolve(secretId: String): Secret? {
-        return runBlocking {
-            // Check cache first
-            keyCache[secretId]?.let { return@runBlocking it }
+    override fun findKey(kid: String): Optional<Secret> = Optional.ofNullable(resolveKey(kid))
 
-            // Always check local key store first (for DIDComm keys)
-            localKeyStore.get(secretId)?.let {
-                keyCache[secretId] = it
-                return@runBlocking it
-            }
-
-            // If not found locally, could fall back to cloud KMS
-            // But for DIDComm, we need local keys for ECDH
-            // So return null if not found locally
-            null
-        }
-    }
+    override fun findKeys(kids: List<String>): Set<String> =
+        kids.filter { findKey(it).isPresent }.toSet()
 
     /**
-     * Clears the key cache.
+     * Clears the in-memory key cache (call after key rotation).
      */
-    fun clearCache() {
-        keyCache.clear()
+    fun clearCache() = keyCache.clear()
+
+    private fun resolveKey(secretId: String): Secret? = runBlocking {
+        keyCache[secretId]?.let { return@runBlocking it }
+        localKeyStore.get(secretId)?.also { keyCache[secretId] = it }
     }
 }
-

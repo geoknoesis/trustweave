@@ -75,9 +75,14 @@ class DidCommCryptoDidcomm(
         val msg = result.message
         if (senderDid.isNotBlank()) {
             val unpackedFrom = msg.from
-            if (unpackedFrom != null && unpackedFrom != senderDid) {
+            if (unpackedFrom == null) {
                 throw IllegalArgumentException(
-                    "DIDComm decrypted message from '$unpackedFrom' does not match expected senderDid '$senderDid'",
+                    "Expected authenticated message from '$senderDid' but received anonymous (anoncrypt) message"
+                )
+            }
+            if (unpackedFrom != senderDid) {
+                throw IllegalArgumentException(
+                    "DIDComm decrypted message from '$unpackedFrom' does not match expected senderDid '$senderDid'"
                 )
             }
         }

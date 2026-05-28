@@ -6,7 +6,11 @@ import org.trustweave.credential.exchange.exception.ExchangeException
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.vc.VerifiablePresentation
 import org.trustweave.credential.oidc4vp.exception.Oidc4VpException
+import org.trustweave.credential.oidc4vp.haip.HaipProfileValidator
 import org.trustweave.credential.oidc4vp.models.*
+import org.trustweave.credential.oidc4vp.models.ClientIdScheme
+import org.trustweave.credential.oidc4vp.session.InMemorySessionStore
+import org.trustweave.credential.oidc4vp.session.SessionStore
 import org.trustweave.kms.KeyManagementService
 import org.trustweave.kms.results.SignResult
 import kotlinx.coroutines.Dispatchers
@@ -18,7 +22,6 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.net.URLDecoder
 import java.util.*
 import java.util.Base64
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * OIDC4VP (OpenID Connect for Verifiable Presentations) service.
@@ -58,11 +61,31 @@ import java.util.concurrent.ConcurrentHashMap
  * service.submitPermissionResponse(permissionResponse)
  * ```
  */
+private val lenientJson = Json { ignoreUnknownKeys = true }
+
 class Oidc4VpService(
     private val kms: KeyManagementService,
-    private val httpClient: OkHttpClient = OkHttpClient()
+    private val httpClient: OkHttpClient = OkHttpClient(),
+    /**
+     * When `true`, [parseAuthorizationUrl] enforces HAIP constraints:
+     * - `client_id_scheme` must be `did`, `x509_san_dns`, or `verifier_attestation`
+     * - `response_mode` must be `direct_post` or `direct_post.jwt`
+     * - `response_uri` is required for direct_post modes
+     * - `nonce` is required
+     * - Either `presentation_definition` or `dcql_query` must be present
+     *
+     * Throws [org.trustweave.credential.oidc4vp.exception.Oidc4VpException.HaipViolationException]
+     * on violation.
+     */
+    val haipMode: Boolean = false,
+    /**
+     * Store for in-flight [PermissionRequest] objects.
+     *
+     * Defaults to [InMemorySessionStore]. Inject a DB-backed implementation to survive
+     * restarts or share state across nodes.
+     */
+    val sessionStore: SessionStore = InMemorySessionStore(),
 ) {
-    private val permissionRequests = ConcurrentHashMap<String, PermissionRequest>()
     @Volatile private var metadata: VerifierMetadata? = null
 
     /**
@@ -82,40 +105,107 @@ class Oidc4VpService(
             } else {
                 ""
             }
-            
+
             // Parse query parameters
             val queryParams = parseQueryParameters(queryString)
+
             val clientId = queryParams["client_id"]
+            val clientIdScheme = queryParams["client_id_scheme"]
+                ?.let { ClientIdScheme.fromString(it) }
+                ?: ClientIdScheme.PRE_REGISTERED
             val requestUri = queryParams["request_uri"]
-            
-            if (requestUri == null) {
-                throw Oidc4VpException.UrlParseFailed(
-                    url = authorizationUrl,
-                    reason = "Missing 'request_uri' parameter"
-                )
+            val responseUri = queryParams["response_uri"]
+            val redirectUri = queryParams["redirect_uri"]
+            val responseMode = queryParams["response_mode"]
+            val nonce = queryParams["nonce"]
+            val state = queryParams["state"]
+
+            // Parse dcql_query into typed DcqlQuery if present
+            val dcqlQuery = queryParams["dcql_query"]?.let { raw ->
+                try {
+                    lenientJson.decodeFromString<DcqlQuery>(raw)
+                } catch (_: Exception) {
+                    null
+                }
             }
-            
-            // Fetch authorization request from request_uri
-            val authorizationRequest = fetchAuthorizationRequest(requestUri)
-            
+
+            // presentation_definition may be a JSON string embedded directly in the URL param
+            val urlPresentationDefinition = queryParams["presentation_definition"]?.let { raw ->
+                try {
+                    Json.parseToJsonElement(raw).jsonObject
+                } catch (_: Exception) {
+                    null
+                }
+            }
+
+            // Build base AuthorizationRequest from URL params
+            val urlRequest = AuthorizationRequest(
+                responseUri = responseUri,
+                redirectUri = redirectUri,
+                clientId = clientId,
+                clientIdScheme = clientIdScheme,
+                requestUri = requestUri,
+                presentationDefinition = urlPresentationDefinition,
+                nonce = nonce,
+                state = state,
+                responseMode = responseMode,
+                dcqlQuery = dcqlQuery,
+            )
+
+            // If request_uri is present, fetch and merge — fetched values take precedence
+            val authorizationRequest = if (requestUri != null) {
+                val fetched = fetchAuthorizationRequest(requestUri)
+                AuthorizationRequest(
+                    responseUri = fetched.responseUri ?: urlRequest.responseUri,
+                    redirectUri = fetched.redirectUri ?: urlRequest.redirectUri,
+                    clientId = fetched.clientId ?: urlRequest.clientId,
+                    clientIdScheme = if (fetched.clientIdScheme != ClientIdScheme.PRE_REGISTERED)
+                        fetched.clientIdScheme else urlRequest.clientIdScheme,
+                    requestUri = requestUri,
+                    presentationDefinition = fetched.presentationDefinition ?: urlRequest.presentationDefinition,
+                    nonce = fetched.nonce ?: urlRequest.nonce,
+                    state = fetched.state ?: urlRequest.state,
+                    responseMode = fetched.responseMode ?: urlRequest.responseMode,
+                    dcqlQuery = fetched.dcqlQuery ?: urlRequest.dcqlQuery,
+                )
+            } else {
+                // No request_uri: all data must come from URL params directly
+                if (urlRequest.responseUri == null && urlRequest.redirectUri == null) {
+                    throw Oidc4VpException.UrlParseFailed(
+                        url = authorizationUrl,
+                        reason = "Missing both 'request_uri' and response endpoint ('response_uri' / 'redirect_uri')"
+                    )
+                }
+                urlRequest
+            }
+
+            // HAIP compliance check — runs before any further processing
+            if (haipMode) {
+                val violations = HaipProfileValidator.validateAuthorizationRequest(authorizationRequest)
+                if (violations.isNotEmpty()) {
+                    throw Oidc4VpException.HaipViolationException(violations)
+                }
+            }
+
             val requestId = UUID.randomUUID().toString()
-            
+
             // Extract requested credential types and claims from presentation_definition
             val requestedCredentialTypes = extractCredentialTypes(authorizationRequest.presentationDefinition)
             val requestedClaims = extractRequestedClaims(authorizationRequest.presentationDefinition)
-            
+
+            val verifierUrl = requestUri?.let { extractVerifierUrl(it) }
+                ?: authorizationRequest.responseUri?.let { extractVerifierUrl(it) }
+                ?: authorizationRequest.redirectUri?.let { extractVerifierUrl(it) }
+
             val permissionRequest = PermissionRequest(
                 requestId = requestId,
-                authorizationRequest = authorizationRequest.copy(
-                    clientId = clientId ?: authorizationRequest.clientId,
-                    requestUri = requestUri
-                ),
-                verifierUrl = extractVerifierUrl(requestUri),
+                authorizationRequest = authorizationRequest,
+                verifierUrl = verifierUrl,
                 requestedCredentialTypes = requestedCredentialTypes,
                 requestedClaims = requestedClaims
             )
-            
-            permissionRequests[requestId] = permissionRequest
+
+            sessionStore.put(requestId, permissionRequest)
             permissionRequest
         } catch (e: Oidc4VpException) {
             throw e
@@ -174,10 +264,14 @@ class Oidc4VpService(
      * @param permissionResponse The permission response to submit
      */
     suspend fun submitPermissionResponse(permissionResponse: PermissionResponse) = withContext(Dispatchers.IO) {
-        val request = permissionRequests[permissionResponse.requestId]
+        val request = sessionStore.get(permissionResponse.requestId)
             ?: throw ExchangeException.RequestNotFound(requestId = permissionResponse.requestId)
         
-        val responseUri = request.authorizationRequest.responseUri
+        val responseUri = request.authorizationRequest.effectiveResponseEndpoint
+            ?: throw Oidc4VpException.PresentationSubmissionFailed(
+                reason = "No response endpoint available (neither response_uri nor redirect_uri)",
+                verifierUrl = request.verifierUrl ?: "unknown"
+            )
         
         // Create response payload
         val responseBody = buildJsonObject {
@@ -231,21 +325,46 @@ class Oidc4VpService(
         }
         
         // Parse JSON manually since AuthorizationRequest.presentationDefinition is JsonObject (not @Serializable)
-        val json = Json { ignoreUnknownKeys = true }
-        val jsonElement = json.parseToJsonElement(body).jsonObject
+        val jsonElement = lenientJson.parseToJsonElement(body).jsonObject
         
+        // presentation_definition may be a nested JsonObject or an embedded JSON string
+        val presentationDefinition = jsonElement["presentation_definition"]?.let { elem ->
+            when {
+                elem is JsonObject -> elem
+                elem is JsonPrimitive && elem.isString -> try {
+                    Json.parseToJsonElement(elem.content).jsonObject
+                } catch (_: Exception) {
+                    null
+                }
+                else -> null
+            }
+        }
+
+        val dcqlQuery = jsonElement["dcql_query"]?.let { elem ->
+            try {
+                when {
+                    elem is JsonObject -> lenientJson.decodeFromJsonElement<DcqlQuery>(elem)
+                    elem is JsonPrimitive && elem.isString -> lenientJson.decodeFromString<DcqlQuery>(elem.content)
+                    else -> null
+                }
+            } catch (_: Exception) {
+                null
+            }
+        }
+
         return AuthorizationRequest(
-            responseUri = jsonElement["response_uri"]?.jsonPrimitive?.content
-                ?: throw Oidc4VpException.AuthorizationRequestFetchFailed(
-                    requestUri = requestUri,
-                    reason = "Missing 'response_uri' in authorization request"
-                ),
+            responseUri = jsonElement["response_uri"]?.jsonPrimitive?.content,
+            redirectUri = jsonElement["redirect_uri"]?.jsonPrimitive?.content,
             clientId = jsonElement["client_id"]?.jsonPrimitive?.content,
+            clientIdScheme = jsonElement["client_id_scheme"]?.jsonPrimitive?.content
+                ?.let { ClientIdScheme.fromString(it) }
+                ?: ClientIdScheme.PRE_REGISTERED,
             requestUri = jsonElement["request_uri"]?.jsonPrimitive?.content,
-            presentationDefinition = jsonElement["presentation_definition"]?.jsonObject,
+            presentationDefinition = presentationDefinition,
             nonce = jsonElement["nonce"]?.jsonPrimitive?.content,
             state = jsonElement["state"]?.jsonPrimitive?.content,
-            redirectUri = jsonElement["redirect_uri"]?.jsonPrimitive?.content
+            responseMode = jsonElement["response_mode"]?.jsonPrimitive?.content,
+            dcqlQuery = dcqlQuery,
         )
     }
 
@@ -275,8 +394,7 @@ class Oidc4VpService(
             )
         }
         
-        val json = Json { ignoreUnknownKeys = true }
-        json.decodeFromString<VerifierMetadata>(body)
+        lenientJson.decodeFromString<VerifierMetadata>(body)
     }
 
     /**
@@ -310,7 +428,7 @@ class Oidc4VpService(
                         add(type.value)
                     }
                 })
-                presentation.holder?.let { put("holder", it.value) }
+                put("holder", presentation.holder.value)
                 // Note: Full VP serialization would be more complex
             })
         }

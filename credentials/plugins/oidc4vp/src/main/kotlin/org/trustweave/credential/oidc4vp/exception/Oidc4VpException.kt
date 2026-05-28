@@ -118,5 +118,18 @@ sealed class Oidc4VpException(
             "reason" to reason
         )
     )
+
+    /**
+     * Exception thrown when an authorization request violates the HAIP profile.
+     *
+     * @param violations List of HAIP violations found in the request
+     */
+    data class HaipViolationException(
+        val violations: List<org.trustweave.credential.oidc4vp.haip.HaipViolation>,
+    ) : Oidc4VpException(
+        code = "OIDC4VP_HAIP_VIOLATION",
+        message = "Authorization request violates HAIP profile: ${violations.joinToString("; ") { "${it.field}: ${it.message}" }}",
+        context = mapOf("violations" to violations.map { "${it.field}: ${it.message}" }),
+    )
 }
 

@@ -10,38 +10,30 @@ import org.trustweave.credential.identifiers.ExchangeProtocolName
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.vc.VerifiablePresentation
 import org.trustweave.credential.oidc4vp.Oidc4VpService
-import org.trustweave.credential.oidc4vp.exception.Oidc4VpException
+import org.trustweave.credential.oidc4vp.models.PermissionRequest
+import org.trustweave.credential.oidc4vp.models.PresentableCredential
+import org.trustweave.credential.oidc4vp.session.InMemorySessionStore
+import org.trustweave.credential.oidc4vp.session.SessionStore
 import kotlinx.serialization.json.*
 
 /**
- * OIDC4VP (OpenID Connect for Verifiable Presentations) implementation
- * of CredentialExchangeProtocol.
+ * OIDC4VP (OpenID for Verifiable Presentations) implementation of
+ * [CredentialExchangeProtocol].
  *
- * Provides presentation exchange operations using OIDC4VP protocol.
- * Primarily supports proof operations (request proof, present proof).
+ * Supports [ExchangeOperation.REQUEST_PROOF] and [ExchangeOperation.PRESENT_PROOF].
+ * Issuance operations are not supported — use OID4VCI for those.
  *
- * **OIDC4VP Flow:**
- * 1. Verifier creates authorization request (QR code or URL)
- * 2. Holder parses authorization URL and fetches request
- * 3. Holder creates presentation from selected credentials
- * 4. Holder submits presentation to verifier
- *
- * **Example Usage:**
- * ```kotlin
- * val oidc4vpService = Oidc4VpService(
- *     kms = kms,
- *     httpClient = OkHttpClient()
- * )
- * val protocol = Oidc4VpExchangeProtocol(oidc4vpService)
- *
- * val registry = ExchangeProtocolRegistries.default()
- * registry.register(protocol)
- *
- * val envelope = registry.requestProof(ExchangeProtocolName.Oidc4Vp, request)
- * ```
+ * ## Flow
+ * 1. Verifier shares an `openid4vp://` authorization URL (QR code, deep link, etc.)
+ * 2. Wallet calls `requestProof()` with the URL — the service parses the request and
+ *    stores the [PermissionRequest] keyed by its `requestId`.
+ * 3. Wallet selects credentials and calls `presentProof()` with the `requestId`,
+ *    selected credential IDs, and holder key info.
+ * 4. The service builds a VP token and submits it to the verifier's `response_uri`.
  */
 class Oidc4VpExchangeProtocol(
-    private val oidc4vpService: Oidc4VpService
+    private val oidc4vpService: Oidc4VpService,
+    private val sessionStore: SessionStore = InMemorySessionStore(),
 ) : CredentialExchangeProtocol {
 
     override val protocolName = ExchangeProtocolName.Oidc4Vp
@@ -49,69 +41,55 @@ class Oidc4VpExchangeProtocol(
     override val capabilities = ExchangeProtocolCapabilities(
         supportedOperations = setOf(
             ExchangeOperation.REQUEST_PROOF,
-            ExchangeOperation.PRESENT_PROOF
-            // Note: OIDC4VP doesn't support issuance operations
-            // Use DIDComm or OIDC4VCI for credential issuance
+            ExchangeOperation.PRESENT_PROOF,
         ),
-        supportsAsync = false,  // OIDC4VP is synchronous HTTP-based
+        supportsAsync = false,
         supportsMultipleCredentials = true,
-        supportsSelectiveDisclosure = true,  // OIDC4VP supports selective disclosure
-        requiresTransportSecurity = true
+        supportsSelectiveDisclosure = true,
+        requiresTransportSecurity = true,
     )
 
     override suspend fun offer(request: ExchangeRequest.Offer): ExchangeMessageEnvelope {
         throw org.trustweave.core.exception.TrustWeaveException.InvalidOperation(
             code = "OPERATION_NOT_SUPPORTED",
-            message = "Operation OFFER_CREDENTIAL not supported for protocol ${protocolName.value}",
-            context = mapOf(
-                "protocolName" to protocolName.value,
-                "operation" to "OFFER_CREDENTIAL",
-                "supportedOperations" to capabilities.supportedOperations.map { it.name }
-            )
+            message = "OFFER_CREDENTIAL not supported by OID4VP — use OID4VCI instead",
+            context = mapOf("protocol" to protocolName.value),
         )
     }
 
     override suspend fun request(request: ExchangeRequest.Request): ExchangeMessageEnvelope {
         throw org.trustweave.core.exception.TrustWeaveException.InvalidOperation(
             code = "OPERATION_NOT_SUPPORTED",
-            message = "Operation REQUEST_CREDENTIAL not supported for protocol ${protocolName.value}",
-            context = mapOf(
-                "protocolName" to protocolName.value,
-                "operation" to "REQUEST_CREDENTIAL",
-                "supportedOperations" to capabilities.supportedOperations.map { it.name }
-            )
+            message = "REQUEST_CREDENTIAL not supported by OID4VP — use OID4VCI instead",
+            context = mapOf("protocol" to protocolName.value),
         )
     }
 
     override suspend fun issue(request: ExchangeRequest.Issue): Pair<VerifiableCredential, ExchangeMessageEnvelope> {
         throw org.trustweave.core.exception.TrustWeaveException.InvalidOperation(
             code = "OPERATION_NOT_SUPPORTED",
-            message = "Operation ISSUE_CREDENTIAL not supported for protocol ${protocolName.value}",
-            context = mapOf(
-                "protocolName" to protocolName.value,
-                "operation" to "ISSUE_CREDENTIAL",
-                "supportedOperations" to capabilities.supportedOperations.map { it.name }
-            )
+            message = "ISSUE_CREDENTIAL not supported by OID4VP — use OID4VCI instead",
+            context = mapOf("protocol" to protocolName.value),
         )
     }
 
     override suspend fun requestProof(request: ProofExchangeRequest.Request): ExchangeMessageEnvelope {
-        // Extract authorization URL from request
         val authorizationUrl = request.options.metadata["authorizationUrl"]?.jsonPrimitive?.content
-            ?: throw IllegalArgumentException("authorizationUrl required in options.metadata for OIDC4VP proof request")
+            ?: throw IllegalArgumentException("authorizationUrl required in options.metadata")
 
-        // Parse authorization URL to create PermissionRequest
         val permissionRequest = oidc4vpService.parseAuthorizationUrl(authorizationUrl)
+        sessionStore.put(permissionRequest.requestId, permissionRequest)
 
-        // Convert PermissionRequest to JSON
         val requestJson = buildJsonObject {
             put("requestId", permissionRequest.requestId)
             put("authorizationRequest", buildJsonObject {
-                put("responseUri", permissionRequest.authorizationRequest.responseUri)
+                permissionRequest.authorizationRequest.responseUri?.let { put("responseUri", it) }
+                permissionRequest.authorizationRequest.redirectUri?.let { put("redirectUri", it) }
                 permissionRequest.authorizationRequest.clientId?.let { put("clientId", it) }
                 permissionRequest.authorizationRequest.requestUri?.let { put("requestUri", it) }
                 permissionRequest.authorizationRequest.nonce?.let { put("nonce", it) }
                 permissionRequest.authorizationRequest.state?.let { put("state", it) }
+                permissionRequest.authorizationRequest.responseMode?.let { put("responseMode", it) }
             })
             permissionRequest.verifierUrl?.let { put("verifierUrl", it) }
             put("requestedCredentialTypes", JsonArray(permissionRequest.requestedCredentialTypes.map { JsonPrimitive(it) }))
@@ -121,26 +99,83 @@ class Oidc4VpExchangeProtocol(
             protocolName = protocolName,
             messageType = ExchangeMessageType.ProofRequest,
             messageData = requestJson,
-            metadata = mapOf(
-                "requestId" to JsonPrimitive(permissionRequest.requestId)
-            )
+            metadata = mapOf("requestId" to JsonPrimitive(permissionRequest.requestId)),
         )
     }
 
-    override suspend fun presentProof(request: ProofExchangeRequest.Presentation): Pair<VerifiablePresentation, ExchangeMessageEnvelope> {
-        // Extract request ID and metadata
+    override suspend fun presentProof(
+        request: ProofExchangeRequest.Presentation,
+    ): Pair<VerifiablePresentation, ExchangeMessageEnvelope> {
         val requestId = request.requestId.value
-        val selectedCredentials = request.options.metadata["selectedCredentials"]?.jsonArray
-            ?: throw IllegalArgumentException("selectedCredentials required in options.metadata for OIDC4VP presentation")
-        val selectedFields = request.options.metadata["selectedFields"]?.jsonArray
+        val permissionRequest = sessionStore.get(requestId)
+            ?: throw IllegalStateException(
+                "No pending OID4VP request found for requestId=$requestId. " +
+                    "Call requestProof() first.",
+            )
+
         val holderDid = request.proverDid.value
         val keyId = request.options.metadata["keyId"]?.jsonPrimitive?.content
-            ?: throw IllegalArgumentException("keyId required in options.metadata for OIDC4VP presentation")
+            ?: throw IllegalArgumentException("keyId required in options.metadata")
 
-        // Parse the permission request (would be stored from requestProof call)
-        // For now, we'll need to reconstruct it - in a full implementation, this would be stored
-        // Note: This is a simplified implementation - full implementation would store the permission request
-        throw IllegalStateException("OIDC4VP presentProof requires the permission request to be stored. Use Oidc4VpService.createPermissionResponse() directly instead.")
+        val selectedCredentialIds = request.options.metadata["selectedCredentials"]
+            ?.jsonArray
+            ?.mapNotNull { it.jsonPrimitive.contentOrNull }
+            ?: emptyList()
+
+        val vcList = request.presentation.verifiableCredential
+
+        val selectedCredentials = selectedCredentialIds.mapIndexed { index, id ->
+            PresentableCredential(
+                credentialId = id,
+                credential = vcList.getOrNull(index)
+                    ?: throw IllegalArgumentException("No credential provided for credentialId=$id"),
+                credentialType = vcList.getOrNull(index)
+                    ?.type?.firstOrNull()?.value ?: "VerifiableCredential",
+            )
+        }
+
+        // selectedFields keyed by credentialId → align to selectedCredentials order
+        val selectedFieldsMap = request.options.metadata["selectedFields"]
+            ?.jsonObject
+            ?.entries
+            ?.associate { (k, v) -> k to v.jsonArray.map { it.jsonPrimitive.content } }
+            ?: emptyMap()
+        val selectedFields: List<List<String>> = selectedCredentialIds.map { id ->
+            selectedFieldsMap[id] ?: emptyList()
+        }
+
+        val permissionResponse = oidc4vpService.createPermissionResponse(
+            permissionRequest = permissionRequest,
+            holderDid = holderDid,
+            keyId = keyId,
+            selectedCredentials = selectedCredentials,
+            selectedFields = selectedFields,
+        )
+
+        oidc4vpService.submitPermissionResponse(permissionResponse)
+        sessionStore.remove(requestId)
+
+        val vp = VerifiablePresentation(
+            type = listOf(org.trustweave.credential.model.CredentialType.Custom("VerifiablePresentation")),
+            holder = org.trustweave.core.identifiers.Iri(holderDid),
+            verifiableCredential = vcList,
+        )
+
+        val responseJson = buildJsonObject {
+            put("responseId", permissionResponse.responseId)
+            put("requestId", permissionResponse.requestId)
+            put("vpToken", permissionResponse.vpToken)
+            permissionResponse.state?.let { put("state", it) }
+        }
+
+        return Pair(
+            vp,
+            ExchangeMessageEnvelope(
+                protocolName = protocolName,
+                messageType = ExchangeMessageType.ProofPresentation,
+                messageData = responseJson,
+                metadata = mapOf("responseId" to JsonPrimitive(permissionResponse.responseId)),
+            ),
+        )
     }
 }
-

@@ -1,14 +1,19 @@
 package org.trustweave.credential.didcomm.crypto.rotation
 
-import org.trustweave.credential.didcomm.crypto.secret.LocalKeyStore
-import org.trustweave.kms.KeyManagementService
+import com.nimbusds.jose.jwk.Curve
+import com.nimbusds.jose.jwk.gen.OctetKeyPairGenerator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.didcommx.didcomm.secret.Secret
-import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
-import kotlin.time.Duration.Companion.days
+import kotlinx.datetime.Instant
+import org.didcommx.didcomm.common.VerificationMaterial
+import org.didcommx.didcomm.common.VerificationMaterialFormat
+import org.didcommx.didcomm.common.VerificationMethodType
+import org.didcommx.didcomm.secret.Secret
+import org.trustweave.credential.didcomm.crypto.secret.LocalKeyStore
+import org.trustweave.kms.KeyManagementService
 import java.util.UUID
+import kotlin.time.Duration.Companion.days
 
 /**
  * Manages key rotation for DIDComm keys.
@@ -107,9 +112,14 @@ class KeyRotationManager(
     }
 
     private suspend fun generateNewKey(keyId: String): Secret {
-        // Generate new key using KMS
-        // This is a placeholder - actual implementation depends on key type
-        throw NotImplementedError("Key generation to be implemented based on key type")
+        val keyPair = OctetKeyPairGenerator(Curve.X25519)
+            .keyID(keyId)
+            .generate()
+        return Secret(
+            keyId,
+            VerificationMethodType.JSON_WEB_KEY_2020,
+            VerificationMaterial(VerificationMaterialFormat.JWK, keyPair.toJSONString()),
+        )
     }
 
     private suspend fun updateDidDocument(oldKeyId: String, newKeyId: String) {

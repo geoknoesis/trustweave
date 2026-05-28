@@ -87,10 +87,10 @@ class InMemoryDidCommMessageStorage : DidCommMessageStorage {
     ): List<DidCommMessage> {
         return messages.values
             .filter { message ->
-                filter.fromDid?.let { it == message.from } ?: true &&
+                (filter.fromDid == null || filter.fromDid == message.from) &&
                 filter.toDid?.let { message.to.contains(it) } ?: true &&
-                filter.type?.let { it == message.type } ?: true &&
-                filter.thid?.let { it == message.thid } ?: true &&
+                (filter.type == null || filter.type == message.type) &&
+                (filter.thid == null || filter.thid == message.thid) &&
                 filter.createdAfter?.let {
                     (message.created ?: "") >= it
                 } ?: true &&

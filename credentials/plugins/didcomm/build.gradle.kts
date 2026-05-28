@@ -24,6 +24,9 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.datetime)
 
+    // Logging
+    implementation(libs.slf4j.api)
+
     // Cryptography
     implementation(libs.bouncycastle.prov)
     implementation(libs.bouncycastle.pkix)

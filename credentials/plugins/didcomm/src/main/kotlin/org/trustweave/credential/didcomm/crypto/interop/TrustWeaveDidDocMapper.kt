@@ -13,7 +13,9 @@ import org.didcommx.didcomm.diddoc.DIDDoc
 import org.didcommx.didcomm.diddoc.VerificationMethod as DidCommVerificationMethod
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidService
+import org.trustweave.did.model.ServiceEndpoint
 import org.trustweave.did.model.VerificationMethod
+import org.trustweave.did.model.toAny
 
 /**
  * Maps a TrustWeave [DidDocument] to a didcomm-java [DIDDoc].
@@ -108,8 +110,8 @@ object TrustWeaveDidDocMapper {
         val types = s.type.map { it.lowercase() }
         if (!types.any { it.contains("didcomm") }) return null
         val endpoint = when (val ep = s.serviceEndpoint) {
-            is String -> ep
-            else -> ep.toString()
+            is ServiceEndpoint.Url -> ep.url
+            else -> ep.toAny().toString()
         }
         return DIDCommService(
             id = s.id,

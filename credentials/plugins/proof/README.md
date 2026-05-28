@@ -8,44 +8,48 @@ All proof format implementations are now built into `credential-api` and are alw
 
 | Format | Location | Capabilities |
 |--------|----------|--------------|
-| **VC-LD** | `credential-api/src/main/kotlin/org.trustweave/credential/proof/internal/engines/` | Selective disclosure, Predicates |
-| **SD-JWT-VC** | `credential-api/src/main/kotlin/org.trustweave/credential/proof/internal/engines/` | Selective disclosure |
-| **AnonCreds** | `credential-api/src/main/kotlin/org.trustweave/credential/proof/internal/engines/` | ZK-proofs, Selective disclosure |
+| **VC-LD** | `credential-api/src/main/kotlin/org/trustweave/credential/proof/internal/engines/VcLdProofEngine.kt` | Selective disclosure, Predicates |
+| **SD-JWT-VC** | `credential-api/src/main/kotlin/org/trustweave/credential/proof/internal/engines/SdJwtProofEngine.kt` | Selective disclosure |
+
+> **TODO**: An AnonCreds engine was planned but is not yet present in `credential-api`. AnonCreds support is currently out of scope until a dedicated engine ships.
 
 ## Usage
 
-All proof formats are automatically available when you create a credential service:
+All built-in proof formats are automatically available when you create a credential service:
 
 ```kotlin
-import org.trustweave.credential.*
+import org.trustweave.credential.credentialService
+import org.trustweave.credential.requests.IssuanceRequest
+import org.trustweave.credential.format.ProofSuiteId
 
 val service = credentialService(didResolver)
 
-// All formats are built-in and ready to use
-val vcLdCredential = service.issue(
-    IssuanceRequest(
-        format = CredentialFormatId("vc-ld"),
-        // ... other fields
-    )
+// Built-in formats are ready to use (no registration needed)
+val request = IssuanceRequest(
+    format = ProofSuiteId("vc-ld"),
+    // ... other fields (issuer, credentialSubject, type, ...)
 )
+val result = service.issue(request)
 ```
 
-No registration or discovery needed - all formats are built-in!
+No registration or discovery needed - all built-in formats are wired directly.
 
 ## Architecture
 
-Proof engines are located in:
+Proof engines live in:
 ```
-credential-api/src/main/kotlin/org.trustweave/credential/proof/
+credential-api/src/main/kotlin/org/trustweave/credential/proof/
 ├── ProofOptions.kt                    # Public API
 └── internal/
-    ├── ProofEngineRegistry.kt
-    ├── DefaultProofEngineRegistry.kt
-    ├── ProofEngines.kt
     └── engines/                        # All built-in engines
         ├── VcLdProofEngine.kt
+        ├── VcLdProofEngineProvider.kt
         ├── SdJwtProofEngine.kt
-        └── AnonCredsProofEngine.kt
+        ├── SdJwtProofEngineProvider.kt
+        ├── DidVerificationMethodResolver.kt
+        ├── JsonLdDocumentBuilder.kt
+        ├── ProofEngineUtils.kt
+        └── SelectiveDisclosureFilter.kt
 ```
 
-All engines are directly instantiated - no ServiceLoader or plugin discovery needed.
+Engines are directly instantiated by `DefaultCredentialService` - no ServiceLoader or plugin discovery needed.

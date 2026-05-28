@@ -158,7 +158,15 @@ class Oidc4VciExchangeProtocol(
         )
 
         // Return the VerifiableCredential from the issue result
-        return Pair(issueResult.credential, envelope)
+        // If transactionId is present the issuer deferred — callers must use pollDeferredCredential
+        return Pair(
+            issueResult.credential ?: throw IllegalStateException(
+                "Credential not immediately available — deferred issuance " +
+                    "(transactionId=${issueResult.transactionId}). " +
+                    "Use Oidc4VciService.pollDeferredCredential() to retrieve.",
+            ),
+            envelope,
+        )
     }
 
     override suspend fun requestProof(request: ProofExchangeRequest.Request): ExchangeMessageEnvelope {

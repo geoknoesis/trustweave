@@ -113,6 +113,7 @@ include("credentials:plugins:bbs")
 include("credentials:plugins:eudiw")
 include("credentials:plugins:jades")
 include("credentials:oidc4vci-server")
+include("credentials:vc-api-server")
 
 // Distribution
 include("distribution:all")

@@ -110,6 +110,7 @@ include("credentials:plugins:siop")
 include("credentials:plugins:openid-federation")
 include("credentials:plugins:mdl")
 include("credentials:plugins:bbs")
+include("credentials:plugins:eudiw")
 
 // Distribution
 include("distribution:all")

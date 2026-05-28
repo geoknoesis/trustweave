@@ -105,6 +105,7 @@ include("credentials:plugins:status-list:bitstring")
 include("credentials:plugins:status-list:token")
 include("credentials:plugins:status-list:publishing")
 include("credentials:plugins:status-list:server")
+include("credentials:plugins:presentation-exchange")
 
 // Distribution
 include("distribution:all")

@@ -124,6 +124,11 @@ include("signatures:xades")
 include("signatures:pades")
 include("signatures:etsi-validation")
 
+// Trust Registry domain
+include("trust-registry:trust-registry-core")
+include("trust-registry:plugins:database")
+include("trust-registry:trust-registry-server")
+
 // Distribution
 include("distribution:all")
 include("distribution:bom")

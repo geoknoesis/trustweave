@@ -111,7 +111,7 @@ object DigestUtils {
      * with LRU eviction, preventing unbounded growth in long-running applications.
      */
     @Volatile
-    var enableDigestCache: Boolean = true
+    var isDigestCacheEnabled: Boolean = true
         set(value) {
             field = value
             if (!value) {
@@ -212,11 +212,11 @@ object DigestUtils {
             // Not valid JSON or parsing failed, compute digest directly on original string
             val canonical = data
             // Check cache
-            if (enableDigestCache && maxCacheSize > 0) {
+            if (isDigestCacheEnabled && maxCacheSize > 0) {
                 getCachedDigest(canonical)?.let { return it }
             }
             val digest = computeDigest(canonical)
-            if (enableDigestCache && maxCacheSize > 0) {
+            if (isDigestCacheEnabled && maxCacheSize > 0) {
                 putCachedDigest(canonical, digest)
             }
             digest
@@ -237,7 +237,7 @@ object DigestUtils {
         val canonical = canonicalizeJson(element)
 
         // Check cache
-        if (enableDigestCache && maxCacheSize > 0) {
+        if (isDigestCacheEnabled && maxCacheSize > 0) {
             getCachedDigest(canonical)?.let { return it }
         }
 
@@ -245,7 +245,7 @@ object DigestUtils {
         val digest = computeDigest(canonical)
 
         // Cache if enabled
-        if (enableDigestCache && maxCacheSize > 0) {
+        if (isDigestCacheEnabled && maxCacheSize > 0) {
             putCachedDigest(canonical, digest)
         }
 
@@ -272,7 +272,7 @@ object DigestUtils {
             // Multibase encoding: base58btc uses prefix 'z' per multibase specification
             // (https://github.com/multiformats/multibase). The prefix 'u' is base64url —
             // using 'z' here is correct because encodeBase58() produces base58btc output.
-            val base58 = encodeBase58(digestBytes)
+            val base58 = digestBytes.encodeBase58()
             "z$base58"
         } catch (e: java.security.NoSuchAlgorithmException) {
             // SHA-256 should always be available in standard JVMs, but handle gracefully
@@ -291,48 +291,6 @@ object DigestUtils {
     }
 
     /**
-     * Encodes bytes to base58 (simplified implementation).
-     * For production use, consider using a proper multibase library.
-     *
-     * Base58 encoding algorithm:
-     * 1. Convert byte array to BigInteger (treating as unsigned big-endian)
-     * 2. Repeatedly divide by 58, using remainder as index into alphabet
-     * 3. Handle leading zeros specially (they encode as '1' characters)
-     * 4. Reverse the result since we built it from least significant digit
-     */
-    private fun encodeBase58(bytes: ByteArray): String {
-        val alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
-        // BigInteger(1, bytes) treats bytes as unsigned big-endian integer.
-        // The '1' parameter ensures positive sign (unsigned interpretation).
-        var num = java.math.BigInteger(1, bytes)
-        val sb = StringBuilder()
-
-        // Base conversion: repeatedly divide by 58, using remainder as digit.
-        // This builds the base58 representation from least significant to most significant.
-        while (num > java.math.BigInteger.ZERO) {
-            val remainder = num.mod(java.math.BigInteger.valueOf(58))
-            sb.append(alphabet[remainder.toInt()])
-            num = num.divide(java.math.BigInteger.valueOf(58))
-        }
-
-        // Base58 special case: Leading zero bytes are encoded as '1' characters.
-        // This is because '0' is not in the base58 alphabet, so we use '1' (the first
-        // character) as a placeholder. We must add these AFTER the division loop
-        // because they represent the most significant digits.
-        for (byte in bytes) {
-            if (byte.toInt() == 0) {
-                sb.append('1')
-            } else {
-                // Stop at first non-zero byte - only leading zeros need special handling
-                break
-            }
-        }
-
-        // Reverse because we built the string from least significant to most significant.
-        return sb.reverse().toString()
-    }
-
-    /**
      * Clears the digest cache.
      * Useful for memory management or testing.
      */
@@ -342,10 +300,10 @@ object DigestUtils {
     }
 
     /**
-     * Gets the current cache size.
+     * The current cache size.
      * Useful for monitoring cache usage.
      */
-    @Synchronized
-    fun getCacheSize(): Int = digestCache.size
+    val cacheSize: Int
+        @Synchronized get() = digestCache.size
 }
 

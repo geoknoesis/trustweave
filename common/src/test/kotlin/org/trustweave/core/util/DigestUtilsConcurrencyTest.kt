@@ -11,7 +11,7 @@ class DigestUtilsConcurrencyTest {
 
     @Test
     fun `test concurrent digest computation with cache`() = runBlocking {
-        DigestUtils.enableDigestCache = true
+        DigestUtils.isDigestCacheEnabled = true
         DigestUtils.maxCacheSize = 1000
         DigestUtils.clearCache()
 
@@ -32,12 +32,12 @@ class DigestUtilsConcurrencyTest {
         results.awaitAll()
 
         // All threads should have computed the same digest
-        assertEquals(1, DigestUtils.getCacheSize())
+        assertEquals(1, DigestUtils.cacheSize)
     }
 
     @Test
     fun `test concurrent digest computation with different inputs`() = runBlocking {
-        DigestUtils.enableDigestCache = true
+        DigestUtils.isDigestCacheEnabled = true
         DigestUtils.maxCacheSize = 1000
         DigestUtils.clearCache()
 
@@ -59,12 +59,12 @@ class DigestUtilsConcurrencyTest {
 
         // Should have cached all unique inputs
         val expectedCacheSize = threads * inputsPerThread
-        assertTrue(DigestUtils.getCacheSize() <= expectedCacheSize)
+        assertTrue(DigestUtils.cacheSize <= expectedCacheSize)
     }
 
     @Test
     fun `test concurrent cache access and eviction`() = runBlocking {
-        DigestUtils.enableDigestCache = true
+        DigestUtils.isDigestCacheEnabled = true
         DigestUtils.maxCacheSize = 50
         DigestUtils.clearCache()
 
@@ -84,7 +84,7 @@ class DigestUtilsConcurrencyTest {
         results.awaitAll()
 
         // Cache should be at max size or less (LRU eviction)
-        assertTrue(DigestUtils.getCacheSize() <= DigestUtils.maxCacheSize)
+        assertTrue(DigestUtils.cacheSize <= DigestUtils.maxCacheSize)
     }
 
     @Test
@@ -106,7 +106,7 @@ class DigestUtilsConcurrencyTest {
 
     @Test
     fun `test cache thread safety when disabled`() = runBlocking {
-        DigestUtils.enableDigestCache = false
+        DigestUtils.isDigestCacheEnabled = false
         DigestUtils.clearCache()
 
         val json = """{"test": "value"}"""
@@ -123,10 +123,10 @@ class DigestUtilsConcurrencyTest {
 
         results.awaitAll()
 
-        assertEquals(0, DigestUtils.getCacheSize())
+        assertEquals(0, DigestUtils.cacheSize)
         
         // Re-enable for other tests
-        DigestUtils.enableDigestCache = true
+        DigestUtils.isDigestCacheEnabled = true
     }
 }
 

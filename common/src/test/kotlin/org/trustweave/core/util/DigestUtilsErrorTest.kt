@@ -70,7 +70,7 @@ class DigestUtilsErrorTest {
 
     @Test
     fun `test cache behavior`() {
-        DigestUtils.enableDigestCache = true
+        DigestUtils.isDigestCacheEnabled = true
         DigestUtils.clearCache()
 
         val json = """{"test": "value"}"""
@@ -79,15 +79,15 @@ class DigestUtilsErrorTest {
         val digest2 = DigestUtils.sha256DigestMultibase(json)
 
         assertEquals(digest1, digest2)
-        assertEquals(1, DigestUtils.getCacheSize())
+        assertEquals(1, DigestUtils.cacheSize)
 
         DigestUtils.clearCache()
-        assertEquals(0, DigestUtils.getCacheSize())
+        assertEquals(0, DigestUtils.cacheSize)
     }
 
     @Test
     fun `test cache can be disabled`() {
-        DigestUtils.enableDigestCache = false
+        DigestUtils.isDigestCacheEnabled = false
         DigestUtils.clearCache()
 
         val json = """{"test": "value"}"""
@@ -95,10 +95,10 @@ class DigestUtilsErrorTest {
         DigestUtils.sha256DigestMultibase(json)
         DigestUtils.sha256DigestMultibase(json)
 
-        assertEquals(0, DigestUtils.getCacheSize())
+        assertEquals(0, DigestUtils.cacheSize)
 
         // Re-enable for other tests
-        DigestUtils.enableDigestCache = true
+        DigestUtils.isDigestCacheEnabled = true
     }
 
     @Test

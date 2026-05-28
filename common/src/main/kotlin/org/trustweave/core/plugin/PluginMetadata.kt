@@ -60,12 +60,12 @@ data class PluginCapabilities(
  *
  * @param pluginId ID of the required plugin
  * @param versionRange Optional version range requirement (e.g., ">=1.0.0,<2.0.0")
- * @param optional Whether the dependency is optional
+ * @param isOptional Whether the dependency is optional
  */
 data class PluginDependency(
     val pluginId: String,
     val versionRange: String? = null,
-    val optional: Boolean = false
+    val isOptional: Boolean = false
 )
 
 

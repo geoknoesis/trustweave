@@ -34,7 +34,7 @@ class DigestUtilsPerformanceTest {
             }
         }
 
-        DigestUtils.enableDigestCache = true
+        DigestUtils.isDigestCacheEnabled = true
         DigestUtils.clearCache()
 
         // First computation (cache miss)
@@ -68,7 +68,7 @@ class DigestUtilsPerformanceTest {
 
     @Test
     fun `test cache eviction performance`() {
-        DigestUtils.enableDigestCache = true
+        DigestUtils.isDigestCacheEnabled = true
         DigestUtils.maxCacheSize = 100
         DigestUtils.clearCache()
 
@@ -83,7 +83,7 @@ class DigestUtilsPerformanceTest {
         // Should complete in reasonable time
         assertTrue(duration < 2000, "Cache eviction took too long: ${duration}ms")
         // Cache should be at max size
-        assertTrue(DigestUtils.getCacheSize() <= DigestUtils.maxCacheSize)
+        assertTrue(DigestUtils.cacheSize <= DigestUtils.maxCacheSize)
     }
 
     @Test

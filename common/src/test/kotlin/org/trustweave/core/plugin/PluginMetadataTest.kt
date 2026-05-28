@@ -15,7 +15,7 @@ class PluginMetadataTest {
             extensions = mapOf("customCapability" to "customValue")
         )
         val dependencies = listOf(
-            PluginDependency(pluginId = "kms-plugin", versionRange = ">=1.0.0", optional = false)
+            PluginDependency(pluginId = "kms-plugin", versionRange = ">=1.0.0", isOptional = false)
         )
 
         val metadata = PluginMetadata(
@@ -86,12 +86,12 @@ class PluginMetadataTest {
         val dependency = PluginDependency(
             pluginId = "kms-plugin",
             versionRange = ">=1.0.0,<2.0.0",
-            optional = true
+            isOptional = true
         )
 
         assertEquals("kms-plugin", dependency.pluginId)
         assertEquals(">=1.0.0,<2.0.0", dependency.versionRange)
-        assertTrue(dependency.optional)
+        assertTrue(dependency.isOptional)
     }
 
     @Test
@@ -100,7 +100,7 @@ class PluginMetadataTest {
 
         assertEquals("kms-plugin", dependency.pluginId)
         assertNull(dependency.versionRange)
-        assertFalse(dependency.optional)
+        assertFalse(dependency.isOptional)
     }
 }
 

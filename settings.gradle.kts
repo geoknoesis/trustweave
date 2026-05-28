@@ -101,6 +101,10 @@ include("credentials:plugins:oidc4vci")
 include("credentials:plugins:oidc4vp")
 include("credentials:plugins:didcomm")
 include("credentials:plugins:chapi")
+include("credentials:plugins:status-list:bitstring")
+include("credentials:plugins:status-list:token")
+include("credentials:plugins:status-list:publishing")
+include("credentials:plugins:status-list:server")
 
 // Distribution
 include("distribution:all")

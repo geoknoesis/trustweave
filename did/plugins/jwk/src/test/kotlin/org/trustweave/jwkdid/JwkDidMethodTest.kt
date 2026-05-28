@@ -6,7 +6,7 @@ import org.trustweave.did.KeyAlgorithm
 import org.trustweave.did.KeyPurpose
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.kms.inmemory.InMemoryKeyManagementService
-import kotlin.test.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
@@ -72,7 +72,8 @@ class JwkDidMethodTest {
 
     @Test
     fun `resolveDid returns error for invalid did`() = runTest {
-        val result = method.resolveDid(org.trustweave.did.identifiers.Did("did:jwk:!!!invalid!!!"))
+        // A syntactically valid DID but with a method-specific-id that is not a valid base64url JWK.
+        val result = method.resolveDid(org.trustweave.did.identifiers.Did("did:jwk:notavalidjwk"))
         assertIs<DidResolutionResult.Failure>(result)
     }
 }

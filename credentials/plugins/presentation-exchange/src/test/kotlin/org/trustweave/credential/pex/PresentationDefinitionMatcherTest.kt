@@ -382,7 +382,7 @@ class PresentationDefinitionMatcherTest {
         val result = PresentationDefinitionMatcher.match(definition, listOf(alice, bob))
 
         assertEquals(1, result["id-subject"]?.size)
-        assertEquals("did:example:alice", result["id-subject"]!!.first().credentialSubject.id.value)
+        assertEquals("did:example:alice", result["id-subject"]!!.first().credentialSubject.id!!.value)
     }
 
     @Test

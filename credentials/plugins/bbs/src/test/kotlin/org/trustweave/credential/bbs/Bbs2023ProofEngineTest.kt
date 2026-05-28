@@ -121,7 +121,7 @@ class Bbs2023ProofEngineTest {
         val vc = engine.issue(request)
 
         assertEquals(issuerDid, (vc.issuer as Issuer.IriIssuer).id.value)
-        assertEquals(subjectDid, vc.credentialSubject.id.value)
+        assertEquals(subjectDid, vc.credentialSubject.id!!.value)
     }
 
     @Test

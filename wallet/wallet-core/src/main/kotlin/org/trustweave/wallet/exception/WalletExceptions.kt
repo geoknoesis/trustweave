@@ -53,5 +53,19 @@ sealed class WalletException(
             "reason" to reason
         )
     )
+
+    /**
+     * Wallet storage operation failed.
+     */
+    data class StorageError(
+        val operation: String,
+        val reason: String,
+        override val cause: Throwable? = null
+    ) : WalletException(
+        code = "WALLET_STORAGE_ERROR",
+        message = "Wallet storage error during '$operation': $reason",
+        context = mapOf("operation" to operation, "reason" to reason),
+        cause = cause
+    )
 }
 

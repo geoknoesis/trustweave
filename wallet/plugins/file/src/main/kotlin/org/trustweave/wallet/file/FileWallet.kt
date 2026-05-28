@@ -2,9 +2,11 @@ package org.trustweave.wallet.file
 
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.wallet.*
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -41,6 +43,10 @@ class FileWallet(
     private val walletDir: Path,
     private val encryptionKey: String? = null
 ) : Wallet, CredentialStorage {
+
+    private companion object {
+        private val logger = LoggerFactory.getLogger(FileWallet::class.java)
+    }
 
     private val json = Json {
         prettyPrint = false
@@ -140,8 +146,11 @@ class FileWallet(
                                 credentials.add(credential)
                             }
                         }
+                    } catch (e: CancellationException) {
+                        throw e
                     } catch (e: Exception) {
-                        // Skip corrupted files
+                        // Skip corrupted/unreadable files, but record why so failures are diagnosable.
+                        logger.warn("Skipping credential file that could not be read: {}", file, e)
                     }
                 }
         }
@@ -181,7 +190,7 @@ class FileWallet(
             if (filterTypes != null && !filterTypes.any { type -> credential.type.any { ct -> ct.value == type } }) return false
         }
         if (filter.subjectId != null) {
-            val subjectId = credential.credentialSubject.id.value
+            val subjectId = credential.credentialSubject.id?.value
             if (subjectId != filter.subjectId) return false
         }
         if (filter.expired != null) {

@@ -86,6 +86,13 @@ data class CredentialFilter(
     val type: List<String>? = null,
     val subjectId: String? = null,
     val expired: Boolean? = null,
+    /**
+     * When true, returns only credentials that have a [credentialStatus] entry.
+     * Note: this does NOT perform a live revocation check — it only filters by
+     * the presence of a status entry. Credentials may be suspended or valid even
+     * when this filter returns them. Use a [CredentialRevocationManager] for
+     * definitive revocation status.
+     */
     val revoked: Boolean? = null
 )
 
@@ -148,7 +155,7 @@ class CredentialQueryBuilder {
      */
     fun bySubject(subjectId: String) {
         filters.add { credential ->
-            credential.credentialSubject.id.value == subjectId
+            credential.credentialSubject.id?.value == subjectId
         }
     }
 

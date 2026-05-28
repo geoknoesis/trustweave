@@ -154,7 +154,7 @@ abstract class CloudWallet(
             if (filterTypes != null && !filterTypes.any { filterType -> credential.type.any { it.value == filterType } }) return false
         }
         if (filter.subjectId != null) {
-            val subjectId = credential.credentialSubject.id.value
+            val subjectId = credential.credentialSubject.id?.value
             if (subjectId != filter.subjectId) return false
         }
         if (filter.expired != null) {

@@ -12,6 +12,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)
 
+    // Logging
+    implementation(libs.slf4j.api)
 
     // Encryption libraries
     implementation("org.bouncycastle:bcprov-jdk18on:1.78.1")

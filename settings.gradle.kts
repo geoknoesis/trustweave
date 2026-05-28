@@ -115,6 +115,15 @@ include("credentials:plugins:jades")
 include("credentials:oidc4vci-server")
 include("credentials:vc-api-server")
 
+// Signatures domain (eIDAS QES support — see docs/architecture/eidas-qes-design.md)
+include("signatures:tsa-core")
+include("signatures:trust-lists")
+include("signatures:jades")
+include("signatures:cades")
+include("signatures:xades")
+include("signatures:pades")
+include("signatures:etsi-validation")
+
 // Distribution
 include("distribution:all")
 include("distribution:bom")

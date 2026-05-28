@@ -1,6 +1,8 @@
 package org.trustweave.keydid
 
 import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.core.util.decodeBase58
+import org.trustweave.core.util.encodeBase58
 import org.trustweave.did.*
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
@@ -10,8 +12,10 @@ import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.base.AbstractDidMethod
 import org.trustweave.did.base.DidMethodUtils
 import org.trustweave.kms.KeyManagementService
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.withLock
 /**
  * Native implementation of did:key method.
  *
@@ -39,6 +43,8 @@ import kotlinx.coroutines.withContext
 class KeyDidMethod(
     kms: KeyManagementService
 ) : AbstractDidMethod("key", kms) {
+
+    private val logger = org.slf4j.LoggerFactory.getLogger(KeyDidMethod::class.java)
 
     override suspend fun createDid(options: DidCreationOptions): DidDocument = withContext(Dispatchers.IO) {
         try {
@@ -72,15 +78,15 @@ class KeyDidMethod(
                 did = did,
                 verificationMethod = listOf(verificationMethod),
                 authentication = listOf(verificationMethod.id.value),
-                assertionMethod = if (options.purposes.contains(KeyPurpose.ASSERTION)) {
-                    listOf(verificationMethod.id.value)
-                } else null
+                assertionMethod = listOf(verificationMethod.id.value)
             )
 
             // Store locally (did:key documents are derived, not stored externally)
             storeDocument(document.id.value, document)
 
             document
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: TrustWeaveException) {
             throw e
         } catch (e: IllegalArgumentException) {
@@ -104,6 +110,8 @@ class KeyDidMethod(
             // Decode multibase to get prefixed key
             val prefixedKey = try {
                 decodeMultibase(multibaseEncoded)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 return@withContext DidMethodUtils.createErrorResolutionResult(
                     "invalidDid",
@@ -122,44 +130,64 @@ class KeyDidMethod(
                     did.value
                 )
 
-            // Check local storage first (cache hit for keys this instance created)
-            val stored = getStoredDocument(did)
-            if (stored != null) {
-                return@withContext DidMethodUtils.createSuccessResolutionResult(
-                    stored,
-                    method,
-                    getDocumentMetadata(did)?.created,
-                    getDocumentMetadata(did)?.updated
+            // Use updateMutex to make the cache-check → derive → store sequence atomic.
+            // Without the lock, two concurrent calls for the same uncached DID would both
+            // miss the cache, both derive a new document with independent `created`
+            // timestamps, and both call storeDocument — corrupting the stored metadata.
+            updateMutex.withLock {
+                // Re-check inside the lock in case another coroutine stored the document
+                // while this coroutine was waiting to acquire the lock.
+                val stored = getStoredDocument(did)
+                if (stored != null) {
+                    val storedKey = stored.verificationMethod.firstOrNull()?.publicKeyMultibase
+                    if (storedKey == multibaseEncoded) {
+                        val metadata = getDocumentMetadata(did)
+                        return@withLock DidMethodUtils.createSuccessResolutionResult(
+                            stored,
+                            method,
+                            metadata?.created,
+                            metadata?.updated
+                        )
+                    }
+                    // Key mismatch — cached document is inconsistent; fall through to re-derive
+                }
+
+                // did:key is self-certifying: reconstruct the document deterministically from
+                // the public key bytes encoded in the DID itself. No external registry required.
+                val vmType = DidMethodUtils.algorithmToVerificationMethodType(algorithm)
+                val didStr = did.value
+                val didObj = Did(didStr)
+                val vmIdStr = "$didStr#$multibaseEncoded"
+                val vmId = VerificationMethodId.parse(vmIdStr, didObj)
+
+                val verificationMethod = VerificationMethod(
+                    id = vmId,
+                    type = vmType,
+                    controller = didObj,
+                    publicKeyMultibase = multibaseEncoded,
+                    publicKeyJwk = buildJwkFromBytes(algorithm, publicKeyBytes)
                 )
+
+                val document = DidMethodUtils.buildDidDocument(
+                    did = didStr,
+                    verificationMethod = listOf(verificationMethod),
+                    authentication = listOf(vmIdStr),
+                    assertionMethod = listOf(vmIdStr)
+                )
+
+                // Cache the derived document (already inside the lock, writes directly).
+                val didString = didStr
+                val now = kotlinx.datetime.Clock.System.now()
+                documents[didString] = document
+                documentMetadata[didString] = org.trustweave.did.model.DidDocumentMetadata(
+                    created = now,
+                    updated = now
+                )
+
+                DidMethodUtils.createSuccessResolutionResult(document, method, now, now)
             }
-
-            // did:key is self-certifying: reconstruct the document deterministically from
-            // the public key bytes encoded in the DID itself. No external registry required.
-            val vmType = DidMethodUtils.algorithmToVerificationMethodType(algorithm)
-            val didStr = did.value
-            val didObj = Did(didStr)
-            val vmIdStr = "$didStr#$multibaseEncoded"
-            val vmId = VerificationMethodId.parse(vmIdStr, didObj)
-
-            val verificationMethod = VerificationMethod(
-                id = vmId,
-                type = vmType,
-                controller = didObj,
-                publicKeyMultibase = multibaseEncoded,
-                publicKeyJwk = buildJwkFromBytes(algorithm, publicKeyBytes)
-            )
-
-            val document = DidMethodUtils.buildDidDocument(
-                did = didStr,
-                verificationMethod = listOf(verificationMethod),
-                authentication = listOf(vmIdStr),
-                assertionMethod = listOf(vmIdStr)
-            )
-
-            // Cache the derived document
-            storeDocument(didStr, document)
-
-            DidMethodUtils.createSuccessResolutionResult(document, method)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: TrustWeaveException) {
             DidMethodUtils.createErrorResolutionResult(
                 "invalidDid",
@@ -168,9 +196,12 @@ class KeyDidMethod(
                 did.value
             )
         } catch (e: Exception) {
+            // Log full details internally; surface only a generic message to callers
+            // so that KMS hostnames and internal variable names are not leaked.
+            logger.error("Unexpected error resolving DID {}: {}", did.value, e.message, e)
             DidMethodUtils.createErrorResolutionResult(
-                "invalidDid",
-                e.message,
+                "resolutionError",
+                "Internal resolution error",
                 method,
                 did.value
             )
@@ -181,10 +212,13 @@ class KeyDidMethod(
      * Gets public key bytes from a key handle.
      */
     private fun getPublicKeyBytes(keyHandle: org.trustweave.kms.KeyHandle, algorithm: String): ByteArray {
-        // Try multibase first
+        // Try multibase first — the encoded value may include a multicodec prefix; strip it so
+        // the caller can re-apply the correct prefix without double-prefixing.
         val multibase = keyHandle.publicKeyMultibase
         if (multibase != null && multibase.startsWith("z")) {
-            return decodeMultibase(multibase)
+            val decoded = decodeMultibase(multibase)
+            val parsed = parseMulticodecPrefixedKey(decoded)
+            return parsed?.second ?: decoded
         }
 
         // Try JWK format
@@ -211,11 +245,33 @@ class KeyDidMethod(
                     }
                 }
                 "SECP256K1", "P-256", "P-384", "P-521" -> {
-                    // EC public key: combine x and y coordinates
+                    // EC public key: combine x and y coordinates into an uncompressed point.
+                    // RFC 7518 §6.2.1.2: JWK coordinates may omit leading zero bytes, so each
+                    // coordinate must be left-padded to the curve's field size before concatenation.
                     if (x != null && y != null) {
+                        val coordSize = when (algorithm.uppercase()) {
+                            "SECP256K1", "P-256" -> 32
+                            "P-384" -> 48
+                            "P-521" -> 66
+                            else -> null
+                        }
+                        // normalizeTo strips a single legal leading 0x00 sign byte (produced by
+                        // BigInteger.toByteArray() or many JWK libraries), left-pads short arrays,
+                        // and rejects anything else out of range so a corrupt coordinate is caught
+                        // here rather than silently producing a malformed uncompressed point.
+                        fun ByteArray.normalizeTo(targetSize: Int): ByteArray = when {
+                            size == targetSize -> this
+                            size == targetSize + 1 && this[0] == 0.toByte() -> copyOfRange(1, size)
+                            size < targetSize -> ByteArray(targetSize - size) + this
+                            else -> throw IllegalArgumentException(
+                                "JWK coordinate is $size bytes; expected $targetSize for this curve"
+                            )
+                        }
                         val xBytes = java.util.Base64.getUrlDecoder().decode(x)
                         val yBytes = java.util.Base64.getUrlDecoder().decode(y)
-                        byteArrayOf(0x04) + xBytes + yBytes // 0x04 = uncompressed point
+                        val xPadded = if (coordSize != null) xBytes.normalizeTo(coordSize) else xBytes
+                        val yPadded = if (coordSize != null) yBytes.normalizeTo(coordSize) else yBytes
+                        byteArrayOf(0x04) + xPadded + yPadded // 0x04 = uncompressed point
                     } else {
                         throw org.trustweave.core.exception.TrustWeaveException.ValidationFailed(
                             field = "jwk.x/y",
@@ -282,16 +338,40 @@ class KeyDidMethod(
                     )
                 } else null
             }
+            "P-384" -> {
+                if (publicKeyBytes.size >= 97 && publicKeyBytes[0] == 0x04.toByte()) {
+                    val x = publicKeyBytes.sliceArray(1..48)
+                    val y = publicKeyBytes.sliceArray(49..96)
+                    mapOf(
+                        "kty" to "EC",
+                        "crv" to "P-384",
+                        "x" to b64url.encodeToString(x),
+                        "y" to b64url.encodeToString(y)
+                    )
+                } else null
+            }
+            "P-521" -> {
+                if (publicKeyBytes.size >= 133 && publicKeyBytes[0] == 0x04.toByte()) {
+                    val x = publicKeyBytes.sliceArray(1..66)
+                    val y = publicKeyBytes.sliceArray(67..132)
+                    mapOf(
+                        "kty" to "EC",
+                        "crv" to "P-521",
+                        "x" to b64url.encodeToString(x),
+                        "y" to b64url.encodeToString(y)
+                    )
+                } else null
+            }
             else -> null
         }
     }
 
-    private fun encodeMultibase(bytes: ByteArray): String = "z${DidMethodUtils.encodeBase58(bytes)}"
+    private fun encodeMultibase(bytes: ByteArray): String = "z${bytes.encodeBase58()}"
 
     private fun decodeMultibase(encoded: String): ByteArray {
         require(encoded.isNotEmpty()) { "Empty multibase string" }
         return when (val prefix = encoded[0]) {
-            'z' -> DidMethodUtils.decodeBase58(encoded.substring(1))
+            'z' -> encoded.substring(1).decodeBase58()
             else -> throw IllegalArgumentException("Unsupported multibase prefix: $prefix")
         }
     }

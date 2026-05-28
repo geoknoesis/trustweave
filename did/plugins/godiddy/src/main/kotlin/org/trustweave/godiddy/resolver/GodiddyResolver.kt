@@ -7,6 +7,7 @@ import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.model.DidService
+import org.trustweave.did.model.serviceEndpointFromJsonElement
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolutionMetadata
 import org.trustweave.did.resolver.UniversalResolver
@@ -192,7 +193,7 @@ class GodiddyResolver(
             val sEndpoint = sObj["serviceEndpoint"]
 
             if (sId != null && sTypes != null && sEndpoint != null) {
-                val endpoint = convertJsonElement(sEndpoint) ?: return@mapNotNull null
+                val endpoint = serviceEndpointFromJsonElement(sEndpoint) ?: return@mapNotNull null
                 DidService(
                     id = sId,
                     type = sTypes,

@@ -1,254 +1,164 @@
 package org.trustweave.jwkdid
 
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import org.trustweave.core.exception.TrustWeaveException
-import org.trustweave.did.*
+import org.trustweave.did.DidCreationOptions
+import org.trustweave.did.KeyPurpose
+import org.trustweave.did.base.AbstractDidMethod
+import org.trustweave.did.base.DidMethodUtils
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.did.base.AbstractDidMethod
-import org.trustweave.did.base.DidMethodUtils
 import org.trustweave.kms.KeyManagementService
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.*
-import java.security.MessageDigest
 import java.util.Base64
 
 /**
- * Implementation of did:jwk method.
+ * did:jwk DID method implementation.
  *
- * did:jwk uses JSON Web Keys (JWK) directly:
- * - Format: `did:jwk:{base64url-encoded-jwk}`
- * - Public key is encoded as a JWK and then base64url-encoded
- * - Document is derived from the JWK itself
- * - No external registry required
+ * Format: `did:jwk:<base64url-encoded-JWK-JSON>`
  *
- * **Example Usage:**
- * ```kotlin
- * val kms = InMemoryKeyManagementService()
- * val method = JwkDidMethod(kms)
+ * The DID is self-certifying — the public key JWK is embedded in the DID identifier
+ * itself. Resolution requires no external registry: the document is derived by
+ * decoding the identifier.
  *
- * // Create DID
- * val options = didCreationOptions {
- *     algorithm = KeyAlgorithm.ED25519
- * }
- * val document = method.createDid(options)
- *
- * // Resolve DID (derived from JWK)
- * val result = method.resolveDid(document.id)
- * ```
+ * Spec: https://github.com/quartzjer/did-jwk/blob/main/spec.md
  */
-class JwkDidMethod(
-    kms: KeyManagementService
-) : AbstractDidMethod("jwk", kms) {
+class JwkDidMethod(kms: KeyManagementService) : AbstractDidMethod("jwk", kms) {
+
+    private val json = Json { ignoreUnknownKeys = true }
+    private val b64url = Base64.getUrlEncoder().withoutPadding()
+    private val b64urlDec = Base64.getUrlDecoder()
 
     override suspend fun createDid(options: DidCreationOptions): DidDocument = withContext(Dispatchers.IO) {
-        try {
-            val algorithm = options.algorithm.algorithmName
-            val keyHandle = generateKey(algorithm, options.additionalProperties)
+        val algorithm = options.algorithm.algorithmName
+        val keyHandle = generateKey(algorithm, options.additionalProperties)
 
-            // Get JWK from key handle
-            val jwk = keyHandle.publicKeyJwk
-                ?: throw TrustWeaveException.Unknown(
-                    code = "MISSING_JWK",
-                    message = "KeyHandle must have publicKeyJwk for did:jwk"
-                )
+        val jwk = keyHandle.publicKeyJwk
+            ?: throw TrustWeaveException.ValidationFailed(
+                field = "publicKeyJwk",
+                reason = "KMS must produce a JWK representation for did:jwk",
+                value = null,
+            )
 
-            // Normalize JWK (remove private key fields, sort keys)
-            val normalizedJwk = normalizeJwk(jwk)
-
-            // Convert JWK to JSON string
-            val jwkJson = buildJsonObject {
-                normalizedJwk.forEach { (key, value) ->
-                    when (value) {
-                        null -> put(key, JsonNull)
-                        is String -> put(key, value)
-                        is Number -> put(key, value)
-                        is Boolean -> put(key, value)
-                        is Map<*, *> -> put(key, buildJsonObject {
-                            (value as Map<*, *>).forEach { (k, v) ->
-                                when (v) {
-                                    is String -> put(k.toString(), v)
-                                    is Number -> put(k.toString(), v)
-                                    is Boolean -> put(k.toString(), v)
-                                    else -> put(k.toString(), v.toString())
-                                }
-                            }
-                        })
-                        else -> put(key, value.toString())
-                    }
+        val jwkJson = buildJsonObject {
+            jwk.forEach { (k, v) ->
+                when (v) {
+                    is String -> put(k, v)
+                    else -> put(k, v.toString())
                 }
             }
-
-            val jwkString = Json.encodeToString(JsonElement.serializer(), jwkJson)
-
-            // Encode JWK as base64url (no padding)
-            val base64urlEncoded = Base64.getUrlEncoder().withoutPadding().encodeToString(
-                jwkString.toByteArray(Charsets.UTF_8)
-            )
-
-            // Create did:jwk identifier
-            val did = "did:jwk:$base64urlEncoded"
-
-            // Create verification method
-            val verificationMethod = DidMethodUtils.createVerificationMethod(
-                did = did,
-                keyHandle = keyHandle,
-                algorithm = options.algorithm
-            )
-
-            // Build DID document
-            val document = DidMethodUtils.buildDidDocument(
-                did = did,
-                verificationMethod = listOf(verificationMethod),
-                authentication = listOf(verificationMethod.id.value),
-                assertionMethod = if (options.purposes.contains(KeyPurpose.ASSERTION)) {
-                    listOf(verificationMethod.id.value)
-                } else null
-            )
-
-            // Store locally (did:jwk documents are derived, not stored externally)
-            storeDocument(document.id, document)
-
-            document
-        } catch (e: TrustWeaveException) {
-            throw e
-        } catch (e: IllegalArgumentException) {
-            throw e
-        } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                code = "CREATE_FAILED",
-                message = "Failed to create did:jwk: ${e.message}",
-                cause = e
-            )
         }
+
+        val encoded = b64url.encodeToString(jwkJson.toString().toByteArray(Charsets.UTF_8))
+        val did = "did:jwk:$encoded"
+        val vmId = "$did#0"
+        val didObj = Did(did)
+
+        val verificationMethod = VerificationMethod(
+            id = VerificationMethodId.parse(vmId, didObj),
+            type = DidMethodUtils.algorithmToVerificationMethodType(algorithm),
+            controller = didObj,
+            publicKeyJwk = jwk,
+        )
+
+        val document = DidMethodUtils.buildDidDocument(
+            did = did,
+            verificationMethod = listOf(verificationMethod),
+            authentication = listOf(vmId),
+            assertionMethod = if (options.purposes.contains(KeyPurpose.ASSERTION)) listOf(vmId) else null,
+        )
+
+        storeDocument(did, document)
+        document
     }
 
     override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
 
-            val didString = did.value
-            // Extract base64url-encoded JWK from DID
-            val base64urlEncoded = didString.substringAfter("did:jwk:")
-
-            // Decode base64url to get JWK JSON string
-            val jwkString = try {
-                String(Base64.getUrlDecoder().decode(base64urlEncoded), Charsets.UTF_8)
+            val encoded = did.value.substringAfter("did:jwk:")
+            val jwkBytes = try {
+                b64urlDec.decode(encoded)
             } catch (e: Exception) {
                 return@withContext DidMethodUtils.createErrorResolutionResult(
                     "invalidDid",
                     "Invalid base64url encoding: ${e.message}",
-                    method
+                    method,
+                    did.value,
                 )
             }
 
-            // Parse JWK JSON
-            val jwkJson = try {
-                Json.parseToJsonElement(jwkString).jsonObject
+            val jwkObj: JsonObject = try {
+                json.parseToJsonElement(String(jwkBytes, Charsets.UTF_8)).jsonObject
             } catch (e: Exception) {
                 return@withContext DidMethodUtils.createErrorResolutionResult(
                     "invalidDid",
                     "Invalid JWK JSON: ${e.message}",
-                    method
+                    method,
+                    did.value,
                 )
             }
 
-            // Convert JSON to map
-            val jwk = jwkJson.entries.associate { entry ->
-                entry.key to when (val value = entry.value) {
-                    is JsonPrimitive -> {
-                        when {
-                            value.isString -> value.content
-                            value.booleanOrNull != null -> value.boolean
-                            value.longOrNull != null -> value.long
-                            value.doubleOrNull != null -> value.double
-                            else -> value.content
-                        }
-                    }
-                    is JsonNull -> null
-                    else -> value.toString()
-                }
-            }
-
-            // Validate JWK has required fields
-            if (!jwk.containsKey("kty")) {
-                return@withContext DidMethodUtils.createErrorResolutionResult(
-                    "invalidDid",
-                    "JWK missing 'kty' (key type) field",
-                    method
-                )
-            }
-
-            // Check local storage first (for keys we generated)
             val stored = getStoredDocument(did)
             if (stored != null) {
-                return@withContext DidMethodUtils.createSuccessResolutionResult(
-                    stored,
-                    method,
-                    getDocumentMetadata(did)?.created,
-                    getDocumentMetadata(did)?.updated
-                )
+                return@withContext DidMethodUtils.createSuccessResolutionResult(stored, method)
             }
 
-            // For did:jwk, we can derive the document from the JWK
-            // Build a minimal DID document from the JWK
-            val verificationMethodId = "$didString#0"
-            val verificationMethodType = when (jwk["kty"]) {
-                "OKP" -> when (jwk["crv"]) {
-                    "Ed25519" -> "Ed25519VerificationKey2020"
-                    else -> "JsonWebKey2020"
+            val kty = (jwkObj["kty"] as? JsonPrimitive)?.content ?: "OKP"
+            val crv = (jwkObj["crv"] as? JsonPrimitive)?.content
+            val algorithm = jwkAlgorithm(kty, crv)
+
+            val jwkMap: Map<String, Any?> = jwkObj.entries.associate { (k, v) ->
+                k to when (v) {
+                    is JsonPrimitive -> v.content
+                    else -> v.toString()
                 }
-                "EC" -> "EcdsaSecp256k1VerificationKey2019"
-                "RSA" -> "RsaVerificationKey2018"
-                else -> "JsonWebKey2020"
             }
 
+            val vmId = "${did.value}#0"
             val verificationMethod = VerificationMethod(
-                id = VerificationMethodId.parse(verificationMethodId, Did(didString)),
-                type = verificationMethodType,
-                controller = Did(didString),
-                publicKeyJwk = jwk as Map<String, Any?>
+                id = VerificationMethodId.parse(vmId, did),
+                type = DidMethodUtils.algorithmToVerificationMethodType(algorithm),
+                controller = did,
+                publicKeyJwk = jwkMap,
             )
 
             val document = DidMethodUtils.buildDidDocument(
-                did = didString,
+                did = did.value,
                 verificationMethod = listOf(verificationMethod),
-                authentication = listOf(verificationMethodId),
-                assertionMethod = listOf(verificationMethodId)
+                authentication = listOf(vmId),
+                assertionMethod = listOf(vmId),
             )
 
-            // Store for caching
-            storeDocument(document.id.value, document)
-
+            storeDocument(did.value, document)
             DidMethodUtils.createSuccessResolutionResult(document, method)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: TrustWeaveException) {
-            DidMethodUtils.createErrorResolutionResult(
-                "invalidDid",
-                e.message,
-                method,
-                did.value
-            )
+            DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
         } catch (e: Exception) {
-            DidMethodUtils.createErrorResolutionResult(
-                "invalidDid",
-                e.message,
-                method,
-                did.value
-            )
+            DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
         }
     }
 
-    /**
-     * Normalizes a JWK by removing private key fields and ensuring required fields are present.
-     */
-    private fun normalizeJwk(jwk: Map<String, Any?>): Map<String, Any?> {
-        // Private key fields to remove
-        val privateKeyFields = setOf("d", "p", "q", "dp", "dq", "qi", "oth")
-
-        return jwk.filterKeys { it !in privateKeyFields }
+    private fun jwkAlgorithm(kty: String, crv: String?): String = when {
+        kty == "OKP" && crv == "Ed25519" -> "ED25519"
+        kty == "EC" && crv == "P-256" -> "P-256"
+        kty == "EC" && crv == "P-384" -> "P-384"
+        kty == "EC" && crv == "P-521" -> "P-521"
+        kty == "EC" && crv == "secp256k1" -> "SECP256K1"
+        kty == "RSA" -> "RSA"
+        else -> "ED25519"
     }
 }
-

@@ -5,6 +5,7 @@ import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidService
+import org.trustweave.did.model.ServiceEndpoint
 import org.trustweave.did.model.VerificationMethod
 import kotlin.test.*
 
@@ -156,9 +157,9 @@ class DidUtilsTest {
     @Test
     fun `test getServicesByType`() {
         val did = Did("did:test:123")
-        val service1 = DidService("service-1", listOf("LinkedDomains"), "https://example.com")
-        val service2 = DidService("service-2", listOf("DIDCommMessaging"), mapOf("uri" to "https://messaging.com"))
-        val service3 = DidService("service-3", listOf("LinkedDomains"), "https://another.com")
+        val service1 = DidService("service-1", listOf("LinkedDomains"), ServiceEndpoint.Url("https://example.com"))
+        val service2 = DidService("service-2", listOf("DIDCommMessaging"), ServiceEndpoint.ObjectEndpoint(mapOf("uri" to "https://messaging.com")))
+        val service3 = DidService("service-3", listOf("LinkedDomains"), ServiceEndpoint.Url("https://another.com"))
         
         val document = DidDocument(
             id = did,
@@ -186,7 +187,7 @@ class DidUtilsTest {
         val document = DidDocument(
             id = did,
             service = listOf(
-                DidService("service-1", listOf("LinkedDomains"), "https://example.com")
+                DidService("service-1", listOf("LinkedDomains"), ServiceEndpoint.Url("https://example.com"))
             )
         )
 

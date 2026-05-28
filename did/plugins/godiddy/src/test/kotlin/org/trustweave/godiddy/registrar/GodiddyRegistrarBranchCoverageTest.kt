@@ -4,6 +4,7 @@ import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidService
+import org.trustweave.did.model.ServiceEndpoint
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.didCreationOptions
 import org.trustweave.did.identifiers.Did
@@ -204,7 +205,7 @@ class GodiddyRegistrarBranchCoverageTest {
                 DidService(
                     id = "did:key:123#service-1",
                     type = listOf("LinkedDomains"),
-                    serviceEndpoint = "https://example.com"
+                    serviceEndpoint = ServiceEndpoint.Url("https://example.com")
                 )
             )
         )

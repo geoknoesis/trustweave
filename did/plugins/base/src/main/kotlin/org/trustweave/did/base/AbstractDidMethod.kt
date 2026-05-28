@@ -13,6 +13,8 @@ import org.trustweave.kms.KeyManagementService
 import org.trustweave.kms.results.GenerateKeyResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonElement
@@ -61,6 +63,8 @@ abstract class AbstractDidMethod(
      */
     protected val documents = ConcurrentHashMap<String, DidDocument>()
 
+    protected val updateMutex = Mutex()
+
     /**
      * Document metadata storage.
      */
@@ -78,21 +82,21 @@ abstract class AbstractDidMethod(
         validateDidFormat(did)
 
         val didString = did.value
-        val current = documents[didString]
-            ?: throw org.trustweave.did.exception.DidException.DidNotFound(
-                did = did,
-                availableMethods = listOf(method)
-            )
 
-        val updated = updater(current)
-
-        // Update document and metadata
-        documents[didString] = updated
-        val now = Clock.System.now()
-        documentMetadata[didString] = (documentMetadata[didString] ?: DidDocumentMetadata(created = now))
-            .copy(updated = now)
-
-        updated
+        // Atomically read-compute-write both documents and metadata to avoid lost-update races.
+        updateMutex.withLock {
+            val current = documents[didString]
+                ?: throw org.trustweave.did.exception.DidException.DidNotFound(
+                    did = did,
+                    availableMethods = listOf(method)
+                )
+            val updatedDocument = updater(current)
+            documents[didString] = updatedDocument
+            val now = Clock.System.now()
+            documentMetadata[didString] = (documentMetadata[didString] ?: DidDocumentMetadata(created = now))
+                .copy(updated = now)
+            updatedDocument
+        }
     }
 
     /**
@@ -104,8 +108,14 @@ abstract class AbstractDidMethod(
         validateDidFormat(did)
 
         val didString = did.value
-        val removed = documents.remove(didString) != null
-        documentMetadata.remove(didString)
+        // Both maps must be updated atomically under updateMutex so a concurrent
+        // storeDocument/updateDid cannot observe a state where the document is gone
+        // but the metadata still exists (or vice versa).
+        var removed = false
+        updateMutex.withLock {
+            removed = documents.remove(didString) != null
+            documentMetadata.remove(didString)
+        }
         removed
     }
 
@@ -139,18 +149,22 @@ abstract class AbstractDidMethod(
      * @param document The DID document
      * @param created Optional creation timestamp (defaults to now)
      */
-    protected fun storeDocument(did: Any, document: DidDocument, created: Instant? = null) {
+    protected suspend fun storeDocument(did: Any, document: DidDocument, created: Instant? = null) {
         val didString = when (did) {
             is Did -> did.value
             is String -> did
             else -> throw IllegalArgumentException("did must be Did or String, got ${did::class}")
         }
-        documents[didString] = document
-        val now = created ?: Clock.System.now()
-        documentMetadata[didString] = DidDocumentMetadata(
-            created = now,
-            updated = now
-        )
+        // Acquire updateMutex so that both map writes are atomic with respect to
+        // concurrent updateDid / deactivateDid / storeDocument calls (RACE-1).
+        updateMutex.withLock {
+            val now = created ?: Clock.System.now()
+            documents[didString] = document
+            documentMetadata[didString] = DidDocumentMetadata(
+                created = now,
+                updated = now
+            )
+        }
     }
 
     /**
@@ -250,7 +264,12 @@ abstract class AbstractDidMethod(
             )
             is GenerateKeyResult.Failure.InvalidOptions -> throw TrustWeaveException.Unknown(
                 code = "INVALID_OPTIONS",
-                message = result.reason
+                message = result.reason,
+                cause = result.cause
+            )
+            is GenerateKeyResult.Failure.DuplicateKeyId -> throw TrustWeaveException.Unknown(
+                code = "DUPLICATE_KEY_ID",
+                message = "Key with ID '${result.keyId.value}' already exists"
             )
             is GenerateKeyResult.Failure.Error -> throw TrustWeaveException.Unknown(
                 code = "KEY_GENERATION_ERROR",

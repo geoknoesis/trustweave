@@ -8,6 +8,7 @@ import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.model.DidService
 import org.trustweave.did.model.parseServiceTypesFromJson
+import org.trustweave.did.model.serviceEndpointFromJsonElement
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.base.AbstractDidMethod
 import org.trustweave.did.base.DidMethodUtils
@@ -291,12 +292,8 @@ class IonDidMethod(
             DidService(
                 id = sObj["id"]?.jsonPrimitive?.content ?: return@mapNotNull null,
                 type = sTypes,
-                serviceEndpoint = sObj["serviceEndpoint"]?.let {
-                    when (it) {
-                        is JsonPrimitive -> it.content
-                        else -> it.toString()
-                    }
-                } ?: return@mapNotNull null
+                serviceEndpoint = serviceEndpointFromJsonElement(sObj["serviceEndpoint"])
+                    ?: return@mapNotNull null
             )
         } ?: emptyList()
 

@@ -5,6 +5,7 @@ import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.model.DidService
+import org.trustweave.did.model.ServiceEndpoint
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolutionMetadata
@@ -85,7 +86,7 @@ class DidMethodInterfaceContractTest {
                 service = doc.service + DidService(
                     id = "${did.value}#service-1",
                     type = listOf("LinkedDomains"),
-                    serviceEndpoint = "https://example.com"
+                    serviceEndpoint = ServiceEndpoint.Url("https://example.com")
                 )
             )
         }

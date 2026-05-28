@@ -3,6 +3,7 @@ package org.trustweave.did.representation
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidService
 import org.trustweave.did.model.VerificationMethod
+import org.trustweave.did.model.serviceEndpointToJsonElement
 import org.trustweave.did.model.toServiceTypeJsonElement
 import kotlinx.serialization.json.*
 
@@ -131,7 +132,7 @@ object DidDocumentJsonProducer {
         return buildJsonObject {
             put("id", JsonPrimitive(s.id))
             put("type", s.type.toServiceTypeJsonElement())
-            put("serviceEndpoint", anyToJsonElement(s.serviceEndpoint))
+            put("serviceEndpoint", serviceEndpointToJsonElement(s.serviceEndpoint))
         }
     }
 

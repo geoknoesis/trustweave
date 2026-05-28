@@ -7,6 +7,7 @@ import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.model.DidService
 import org.trustweave.did.model.parseServiceTypesFromJson
+import org.trustweave.did.model.serviceEndpointFromJsonElement
 import org.trustweave.did.model.toServiceTypeJsonElement
 import org.trustweave.did.representation.DidDocumentJsonProducer
 import org.trustweave.did.registrar.DidRegistrar
@@ -369,7 +370,7 @@ class GodiddyRegistrar(
             val sEndpoint = sObj["serviceEndpoint"]
 
             if (sId != null && sTypes != null && sEndpoint != null) {
-                val endpoint = convertJsonElement(sEndpoint) ?: return@mapNotNull null
+                val endpoint = serviceEndpointFromJsonElement(sEndpoint) ?: return@mapNotNull null
                 DidService(
                     id = sId,
                     type = sTypes,

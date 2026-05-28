@@ -148,10 +148,10 @@ data class IonDidConfig(
         }
 
         fun build(): IonDidConfig {
-            require(ionNodeUrl != null) { "ionNodeUrl is required" }
+            val ionNodeUrl = requireNotNull(ionNodeUrl) { "ionNodeUrl is required" }
 
             return IonDidConfig(
-                ionNodeUrl = ionNodeUrl!!,
+                ionNodeUrl = ionNodeUrl,
                 bitcoinRpcUrl = bitcoinRpcUrl,
                 bitcoinNetwork = bitcoinNetwork,
                 batchSize = batchSize,

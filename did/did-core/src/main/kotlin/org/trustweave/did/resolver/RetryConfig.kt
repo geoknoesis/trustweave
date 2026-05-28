@@ -1,7 +1,9 @@
 package org.trustweave.did.resolver
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlin.math.pow
+import kotlin.reflect.KClass
 
 /**
  * Configuration for retry logic in HTTP operations.
@@ -26,6 +28,7 @@ import kotlin.math.pow
  * @param maxDelayMs Maximum delay between retries in milliseconds (default: 2000)
  * @param retryableStatusCodes HTTP status codes that should trigger retry (default: 5xx errors)
  * @param retryableExceptions Exception types that should trigger retry (default: network exceptions)
+ * @param nonRetryableExceptions Exception types that must never be retried even if they extend a retryable type
  */
 data class RetryConfig(
     val maxRetries: Int = 3,
@@ -36,7 +39,8 @@ data class RetryConfig(
         java.net.ConnectException::class.java,
         java.net.SocketTimeoutException::class.java,
         java.io.IOException::class.java
-    )
+    ),
+    val nonRetryableExceptions: List<KClass<out Throwable>> = listOf()
 ) {
     init {
         require(maxRetries >= 0) { "maxRetries must be non-negative" }
@@ -47,19 +51,40 @@ data class RetryConfig(
     /**
      * Executes a suspend function with retry logic.
      *
+     * **Interruption policy**: [java.io.InterruptedIOException] (excluding
+     * [java.net.SocketTimeoutException]) is always rethrown immediately, regardless of
+     * [retryableExceptions] or [nonRetryableExceptions] configuration. It signals thread
+     * interruption and must not be swallowed or retried. [java.net.SocketTimeoutException] is a
+     * subclass of [java.io.InterruptedIOException] but represents a transient network condition
+     * and is allowed to follow the normal retry path.
+     *
      * @param block The suspend function to execute
      * @return The result of the function
      * @throws Throwable The last exception if all retries are exhausted
      */
     suspend fun <T> executeWithRetry(block: suspend () -> T): T {
         var lastException: Throwable? = null
-        var delayMs = initialDelayMs
 
         for (attempt in 0..maxRetries) {
             try {
                 return block()
             } catch (e: Throwable) {
+                if (e is CancellationException) throw e  // Never retry cancellation
+                if (e is Error) throw e  // Never retry JVM errors (OutOfMemoryError, StackOverflowError, etc.)
+                if (e is InterruptedException) {
+                    Thread.currentThread().interrupt()
+                    throw e
+                }
+                // Never retry thread-interruption-caused IOExceptions, but SocketTimeoutException
+                // (a subclass of InterruptedIOException) is a transient network condition and
+                // must follow the normal retry path rather than being re-thrown immediately.
+                if (e is java.io.InterruptedIOException && e !is java.net.SocketTimeoutException) throw e
+
                 lastException = e
+
+                // Non-retryable exceptions should not be retried even if they extend a retryable type
+                val nonRetryable = nonRetryableExceptions.any { it.isInstance(e) }
+                if (nonRetryable) throw e
 
                 // Check if exception is retryable
                 val isRetryable = retryableExceptions.any { it.isInstance(e) }
@@ -72,14 +97,15 @@ data class RetryConfig(
                 }
 
                 // Exponential backoff with jitter
-                delayMs = minOf(
+                val delayMs = minOf(
                     (initialDelayMs * 2.0.pow(attempt.toDouble())).toLong(),
                     maxDelayMs
                 )
 
-                // Add small random jitter to avoid thundering herd
-                val jitter = (delayMs * 0.1).toLong()
-                val randomJitter = (Math.random() * jitter).toLong()
+                // Add small random jitter (0–20% of delayMs) to avoid thundering herd.
+                // Compute as Double before truncating to avoid zero-jitter when delayMs < 10.
+                // Minimum jitter is 1 ms so there is always some spread even for tiny delays.
+                val randomJitter = maxOf(1L, (delayMs * kotlin.random.Random.nextDouble(0.0, 0.2)).toLong())
                 val finalDelay = delayMs + randomJitter
 
                 delay(finalDelay)

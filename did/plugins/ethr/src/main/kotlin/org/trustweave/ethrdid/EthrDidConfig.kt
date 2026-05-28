@@ -157,12 +157,12 @@ data class EthrDidConfig(
         }
 
         fun build(): EthrDidConfig {
-            require(rpcUrl != null) { "rpcUrl is required" }
-            require(chainId != null) { "chainId is required" }
+            val rpcUrl = requireNotNull(rpcUrl) { "rpcUrl is required" }
+            val chainId = requireNotNull(chainId) { "chainId is required" }
 
             return EthrDidConfig(
-                rpcUrl = rpcUrl!!,
-                chainId = chainId!!,
+                rpcUrl = rpcUrl,
+                chainId = chainId,
                 registryAddress = registryAddress,
                 privateKey = privateKey,
                 network = network,

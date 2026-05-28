@@ -1,12 +1,15 @@
 package org.trustweave.peerdid
 
 import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.core.util.decodeBase58
+import org.trustweave.core.util.encodeBase58
 import org.trustweave.did.*
 import org.trustweave.did.exception.DidException
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidService
+import org.trustweave.did.model.ServiceEndpoint
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.base.AbstractDidMethod
@@ -58,7 +61,7 @@ class PeerDidMethod(
                 listOf(DidService(
                     id = "$did#didcomm",
                     type = listOf("DIDCommMessaging"),
-                    serviceEndpoint = serviceEndpoint
+                    serviceEndpoint = ServiceEndpoint.Url(serviceEndpoint)
                 ))
             } else emptyList()
 
@@ -292,7 +295,7 @@ class PeerDidMethod(
                         services.add(DidService(
                             id = "$didString#didcomm",
                             type = listOf("DIDCommMessaging"),
-                            serviceEndpoint = endpoint
+                            serviceEndpoint = ServiceEndpoint.Url(endpoint)
                         ))
                     }
                 }
@@ -323,7 +326,7 @@ class PeerDidMethod(
     ): DidDocument {
         val vm = DidMethodUtils.createVerificationMethod(did = did, keyHandle = keyHandle, algorithm = algorithm)
         val svc = if (serviceEndpoint != null) {
-            listOf(DidService(id = "$did#didcomm", type = listOf("DIDCommMessaging"), serviceEndpoint = serviceEndpoint))
+            listOf(DidService(id = "$did#didcomm", type = listOf("DIDCommMessaging"), serviceEndpoint = ServiceEndpoint.Url(serviceEndpoint)))
         } else emptyList()
         return DidMethodUtils.buildDidDocument(
             did = did,
@@ -361,7 +364,7 @@ class PeerDidMethod(
     private fun parseMulticodecKey(prefixedKey: ByteArray): Pair<String, ByteArray>? =
         DidMethodUtils.parseMulticodecKey(prefixedKey)
 
-    private fun encodeBase58(bytes: ByteArray): String = DidMethodUtils.encodeBase58(bytes)
+    private fun encodeBase58(bytes: ByteArray): String = bytes.encodeBase58()
 
-    private fun decodeBase58(encoded: String): ByteArray = DidMethodUtils.decodeBase58(encoded)
+    private fun decodeBase58(encoded: String): ByteArray = encoded.decodeBase58()
 }

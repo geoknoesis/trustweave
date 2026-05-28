@@ -11,6 +11,7 @@ dependencies {
     // HttpDidMethod uses reflection to load DefaultUniversalRegistrar if available at runtime
     // If did:registrar module is on classpath, full compliance features work automatically
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.jdk8)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)
     // Logging (compileOnly - implementations provide actual logger)

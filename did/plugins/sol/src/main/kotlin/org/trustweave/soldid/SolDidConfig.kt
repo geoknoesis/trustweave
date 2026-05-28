@@ -159,10 +159,10 @@ data class SolDidConfig(
         }
 
         fun build(): SolDidConfig {
-            require(rpcUrl != null) { "rpcUrl is required" }
+            val rpcUrl = requireNotNull(rpcUrl) { "rpcUrl is required" }
 
             return SolDidConfig(
-                rpcUrl = rpcUrl!!,
+                rpcUrl = rpcUrl,
                 network = network,
                 programId = programId,
                 privateKey = privateKey,

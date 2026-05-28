@@ -6,6 +6,7 @@ import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.model.DidOrUrl
 import org.trustweave.did.model.DidService
+import org.trustweave.did.model.ServiceEndpoint
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolutionMetadata
@@ -94,10 +95,10 @@ class DidModelsBranchCoverageTest {
         val service = DidService(
             id = "did:key:123#service-1",
             type = listOf("LinkedDomains"),
-            serviceEndpoint = "https://example.com"
+            serviceEndpoint = ServiceEndpoint.Url("https://example.com")
         )
 
-        assertEquals("https://example.com", service.serviceEndpoint)
+        assertEquals(ServiceEndpoint.Url("https://example.com"), service.serviceEndpoint)
     }
 
     @Test
@@ -106,10 +107,10 @@ class DidModelsBranchCoverageTest {
         val service = DidService(
             id = "did:key:123#service-1",
             type = listOf("DIDCommMessaging"),
-            serviceEndpoint = endpoint
+            serviceEndpoint = ServiceEndpoint.ObjectEndpoint(endpoint)
         )
 
-        assertEquals(endpoint, service.serviceEndpoint)
+        assertEquals(ServiceEndpoint.ObjectEndpoint(endpoint), service.serviceEndpoint)
     }
 
     @Test
@@ -118,10 +119,10 @@ class DidModelsBranchCoverageTest {
         val service = DidService(
             id = "did:key:123#service-1",
             type = listOf("LinkedDomains"),
-            serviceEndpoint = endpoint
+            serviceEndpoint = ServiceEndpoint.of(endpoint)
         )
 
-        assertEquals(endpoint, service.serviceEndpoint)
+        assertEquals(ServiceEndpoint.of(endpoint), service.serviceEndpoint)
     }
 
     @Test
@@ -146,7 +147,7 @@ class DidModelsBranchCoverageTest {
                 DidService(
                     id = "did:key:123#service-1",
                     type = listOf("LinkedDomains"),
-                    serviceEndpoint = "https://example.com"
+                    serviceEndpoint = ServiceEndpoint.Url("https://example.com")
                 )
             )
         )

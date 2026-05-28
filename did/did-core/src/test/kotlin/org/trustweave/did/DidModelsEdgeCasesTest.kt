@@ -6,6 +6,7 @@ import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.model.DidOrUrl
 import org.trustweave.did.model.DidService
+import org.trustweave.did.model.ServiceEndpoint
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolutionMetadata
@@ -81,10 +82,10 @@ class DidModelsEdgeCasesTest {
         val service = DidService(
             id = "did:web:example.com#service-1",
             type = listOf("LinkedDomains"),
-            serviceEndpoint = endpoints
+            serviceEndpoint = ServiceEndpoint.of(endpoints)
         )
 
-        assertTrue(service.serviceEndpoint is List<*>)
+        assertTrue(service.serviceEndpoint is ServiceEndpoint.ArrayEndpoint)
     }
 
     @Test
@@ -97,10 +98,10 @@ class DidModelsEdgeCasesTest {
         val service = DidService(
             id = "did:web:example.com#service-1",
             type = listOf("DIDCommMessaging"),
-            serviceEndpoint = endpoint
+            serviceEndpoint = ServiceEndpoint.ObjectEndpoint(endpoint)
         )
 
-        assertTrue(service.serviceEndpoint is Map<*, *>)
+        assertTrue(service.serviceEndpoint is ServiceEndpoint.ObjectEndpoint)
     }
 
     @Test
@@ -130,12 +131,12 @@ class DidModelsEdgeCasesTest {
         val service1 = DidService(
             id = "did:key:issuer#service-1",
             type = listOf("LinkedDomains"),
-            serviceEndpoint = "https://example.com"
+            serviceEndpoint = ServiceEndpoint.Url("https://example.com")
         )
         val service2 = DidService(
             id = "did:key:issuer#service-2",
             type = listOf("DIDCommMessaging"),
-            serviceEndpoint = mapOf("uri" to "https://messaging.example.com")
+            serviceEndpoint = ServiceEndpoint.ObjectEndpoint(mapOf("uri" to "https://messaging.example.com"))
         )
 
         val doc = DidDocument(
@@ -295,12 +296,12 @@ class DidModelsEdgeCasesTest {
         val service1 = DidService(
             id = "did:web:example.com#service-1",
             type = listOf("LinkedDomains"),
-            serviceEndpoint = "https://example.com"
+            serviceEndpoint = ServiceEndpoint.Url("https://example.com")
         )
         val service2 = DidService(
             id = "did:web:example.com#service-1",
             type = listOf("LinkedDomains"),
-            serviceEndpoint = "https://example.com"
+            serviceEndpoint = ServiceEndpoint.Url("https://example.com")
         )
 
         assertEquals(service1, service2)

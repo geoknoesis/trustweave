@@ -1,73 +1,78 @@
 package org.trustweave.jwkdid
 
-import org.trustweave.did.*
+import kotlinx.coroutines.test.runTest
+import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.KeyAlgorithm
+import org.trustweave.did.KeyPurpose
 import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import org.trustweave.kms.inmemory.InMemoryKeyManagementService
+import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class JwkDidMethodTest {
 
-    private lateinit var kms: InMemoryKeyManagementService
-    private lateinit var method: JwkDidMethod
+    private val kms = InMemoryKeyManagementService()
+    private val method = JwkDidMethod(kms)
 
-    @BeforeEach
-    fun setup() {
-        kms = InMemoryKeyManagementService()
-        method = JwkDidMethod(kms)
+    @Test
+    fun `createDid produces did-jwk identifier`() = runTest {
+        val doc = method.createDid(DidCreationOptions(algorithm = KeyAlgorithm.ED25519))
+        assertTrue(doc.id.value.startsWith("did:jwk:"))
     }
 
     @Test
-    fun `test method name is jwk`() {
-        assertEquals("jwk", method.method)
+    fun `created DID has exactly one verification method`() = runTest {
+        val doc = method.createDid(DidCreationOptions(algorithm = KeyAlgorithm.ED25519))
+        assertEquals(1, doc.verificationMethod.size)
+        assertTrue(doc.verificationMethod[0].id.value.endsWith("#0"))
     }
 
     @Test
-    fun `test create DID with Ed25519`() = runBlocking {
-        val document = method.createDid(
-            didCreationOptions {
-                algorithm = KeyAlgorithm.ED25519
-            }
+    fun `verification method contains JWK`() = runTest {
+        val doc = method.createDid(DidCreationOptions(algorithm = KeyAlgorithm.ED25519))
+        val vm = doc.verificationMethod[0]
+        assertNotNull(vm.publicKeyJwk)
+        assertEquals("OKP", vm.publicKeyJwk!!["kty"])
+        assertEquals("Ed25519", vm.publicKeyJwk!!["crv"])
+    }
+
+    @Test
+    fun `resolveDid returns Success for valid did-jwk`() = runTest {
+        val doc = method.createDid(DidCreationOptions(algorithm = KeyAlgorithm.ED25519))
+        val result = method.resolveDid(doc.id)
+        assertIs<DidResolutionResult.Success>(result)
+        assertEquals(doc.id.value, result.document.id.value)
+    }
+
+    @Test
+    fun `resolveDid reconstructs document from identifier without stored state`() = runTest {
+        val kms2 = InMemoryKeyManagementService()
+        val method2 = JwkDidMethod(kms2)
+        val doc = method.createDid(DidCreationOptions(algorithm = KeyAlgorithm.ED25519))
+        val result = method2.resolveDid(doc.id)
+        assertIs<DidResolutionResult.Success>(result)
+        assertEquals(1, result.document.verificationMethod.size)
+        assertNotNull(result.document.verificationMethod[0].publicKeyJwk)
+    }
+
+    @Test
+    fun `createDid with assertion purpose includes assertionMethod`() = runTest {
+        val doc = method.createDid(
+            DidCreationOptions(
+                algorithm = KeyAlgorithm.ED25519,
+                purposes = listOf(KeyPurpose.AUTHENTICATION, KeyPurpose.ASSERTION),
+            ),
         )
-
-        assertNotNull(document)
-        assertTrue(document.id.value.startsWith("did:jwk:"))
-        assertEquals(1, document.verificationMethod.size)
-        assertEquals(1, document.authentication.size)
+        assertNotNull(doc.assertionMethod)
+        assertTrue(doc.assertionMethod!!.isNotEmpty())
     }
 
     @Test
-    fun `test resolve DID after creation`() = runBlocking {
-        val document = method.createDid(
-            didCreationOptions {
-                algorithm = KeyAlgorithm.ED25519
-            }
-        )
-
-        val result = method.resolveDid(document.id)
-
-        assertTrue(result is DidResolutionResult.Success)
-        val successResult = result as DidResolutionResult.Success
-        assertEquals(document.id, successResult.document.id)
-        assertEquals("jwk", successResult.resolutionMetadata.pattern)
-    }
-
-    @Test
-    fun `test DID format is base64url encoded`() = runBlocking {
-        val document = method.createDid(
-            didCreationOptions {
-                algorithm = KeyAlgorithm.ED25519
-            }
-        )
-
-        // did:jwk should be base64url encoded (no padding)
-        val encoded = document.id.value.substringAfter("did:jwk:")
-        assertTrue(encoded.matches(Regex("^[A-Za-z0-9_-]+$")))
+    fun `resolveDid returns error for invalid did`() = runTest {
+        val result = method.resolveDid(org.trustweave.did.identifiers.Did("did:jwk:!!!invalid!!!"))
+        assertIs<DidResolutionResult.Failure>(result)
     }
 }
-

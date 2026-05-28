@@ -44,7 +44,7 @@ class DefaultUniversalResolverTest {
             timeout = 5
         )
 
-        val exception = assertThrows<IllegalArgumentException> {
+        val exception = assertThrows<DidException.InvalidDidFormat> {
             resolver.resolveDid("")
         }
 
@@ -58,7 +58,7 @@ class DefaultUniversalResolverTest {
             timeout = 5
         )
 
-        val exception = assertThrows<IllegalArgumentException> {
+        val exception = assertThrows<DidException.InvalidDidFormat> {
             resolver.resolveDid("not-a-did")
         }
 
@@ -103,9 +103,11 @@ class DefaultUniversalResolverTest {
             put("id", "did:test:123")
         }
 
+        // When the "didDocument" key is absent, the adapter returns null so that
+        // performResolution produces NotFound instead of treating the metadata
+        // envelope as the DID document.
         val extracted = adapter.extractDidDocument(json)
-        assertNotNull(extracted)
-        assertEquals("did:test:123", extracted["id"]?.jsonPrimitive?.content)
+        assertNull(extracted)
     }
 
     @Test

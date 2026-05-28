@@ -3,7 +3,6 @@ package org.trustweave.did.registry
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.DidMethod
 import org.trustweave.did.DidCreationOptions
-import org.trustweave.did.exception.DidException
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.spi.DidMethodProvider
 import org.trustweave.kms.KeyManagementService
@@ -96,17 +95,25 @@ class DidMethodRegistry {
      * Resolves a DID using a registered method.
      *
      * @param did The DID string to resolve
-     * @return DidResolutionResult
-     * @throws DidException.DidMethodNotRegistered if the method is not registered
+     * @return DidResolutionResult — returns [DidResolutionResult.Failure.InvalidFormat] for malformed DIDs,
+     *   [DidResolutionResult.Failure.MethodNotRegistered] if the method is not registered
      */
     suspend fun resolve(did: String): DidResolutionResult {
-        val parsed = Did(did)
+        val parsed = try {
+            Did(did)
+        } catch (e: IllegalArgumentException) {
+            return DidResolutionResult.Failure.InvalidFormat(
+                did = did,
+                reason = e.message ?: "Invalid DID format"
+            )
+        }
         val methodName = parsed.method
         val method = methods[methodName]
-        return method?.resolveDid(parsed) ?: throw DidException.DidMethodNotRegistered(
-            method = methodName,
-            availableMethods = methods.keys.toList()
-        )
+        return method?.resolveDid(parsed)
+            ?: DidResolutionResult.Failure.MethodNotRegistered(
+                method = methodName,
+                availableMethods = methods.keys.toList()
+            )
     }
 
     /**
@@ -147,6 +154,8 @@ class DidMethodRegistry {
     }
 
     companion object {
+        private val logger = org.trustweave.did.util.DidLogging.getLogger(DidMethodRegistry::class.java)
+
         /**
          * Creates a registry and auto-registers all methods discovered via SPI.
          *
@@ -194,7 +203,15 @@ class DidMethodRegistry {
                 }
 
                 for (methodName in methodsToRegister) {
-                    val provider = providers.find { methodName in it.supportedMethods }
+                    val providersForMethod = providers.filter { methodName in it.supportedMethods }
+                    if (providersForMethod.size > 1) {
+                        logger.warn(
+                            "Multiple SPI providers support DID method '$methodName': " +
+                                "${providersForMethod.map { it::class.java.simpleName }}. " +
+                                "Using first: ${providersForMethod.first()::class.java.simpleName}"
+                        )
+                    }
+                    val provider = providersForMethod.firstOrNull()
                     if (provider == null) {
                         failures.add(
                             DidMethodAutoRegisterFailure(
@@ -225,6 +242,8 @@ class DidMethodRegistry {
                                 )
                             )
                         }
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
                     } catch (e: Exception) {
                         failures.add(
                             DidMethodAutoRegisterFailure(
@@ -235,6 +254,8 @@ class DidMethodRegistry {
                         )
                     }
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
                 failures.add(
                     DidMethodAutoRegisterFailure(

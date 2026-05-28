@@ -21,13 +21,28 @@ This module implements:
 ```
 did-core/
 ├── identifiers/      # DID, VerificationMethodId, DidUrl
-├── model/           # DidDocument, VerificationMethod, DidService
-├── resolver/        # Resolution implementations
-├── registry/        # DID method registry
-├── registrar/      # DID registration interfaces
-├── validation/      # DID format validation
-├── exception/       # DID-specific exceptions
-└── util/           # Utility functions
+├── model/            # DidDocument, VerificationMethod, DidService, ServiceEndpointExtensions
+├── resolver/         # Resolution implementations (UniversalResolver, RegistryBasedResolver, …)
+├── resolution/       # Resolution helpers / metadata
+├── registry/         # DID method registry
+├── registrar/        # DID registration interfaces (DidRegistrar, PollableRegistrar)
+├── registration/     # Registration helpers
+├── validation/       # DID format validation
+├── verification/     # Verification helpers
+├── verifier/         # Delegation chain verifier
+├── parser/           # DID URL parsing
+├── batch/            # Batch operations
+├── discovery/        # Method discovery
+├── dsl/              # Extension functions and DSL builders
+├── events/           # Domain events
+├── negotiation/      # Capability negotiation
+├── representation/   # Document representations
+├── rotation/         # Key rotation
+├── services/         # Services
+├── spi/              # SPI interfaces
+├── storage/          # Storage interfaces
+├── exception/        # DID-specific exceptions
+└── util/             # Utility functions
 ```
 
 ### Key Design Patterns
@@ -52,7 +67,7 @@ import org.trustweave.did.resolver.RegistryBasedResolver
 val did = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
 
 // Resolve using Universal Resolver
-val resolver = DefaultUniversalResolver("https://dev.uniresolver.io")
+val resolver = DefaultUniversalResolver(baseUrl = "https://dev.uniresolver.io")
 val result = resolver.resolveDid(did.value)
 
 // Or use a registry-based resolver
@@ -180,9 +195,11 @@ try {
   - `DidDeactivationFailed`
 
 ### Utilities (`util/`)
-- `DidUtils`: Common utility functions
-- `DidLogging`: Centralized logging
-- `ServiceEndpointExtensions`: Type-safe service endpoint access
+- `DidUtils.kt`: Common file-level utility functions (e.g., `normalizeKeyId`)
+- `DidLogging` (internal): SLF4J-optional logging facade
+
+### Service endpoints (`model/`)
+- `ServiceEndpointExtensions`: Type-safe service endpoint access (lives next to `DidDocument` / `DidService`)
 
 ## Extension Functions
 

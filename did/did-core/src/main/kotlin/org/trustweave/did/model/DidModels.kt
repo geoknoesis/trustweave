@@ -46,7 +46,7 @@ data class VerificationMethod(
 data class DidService(
     val id: String,  // Service IDs are often relative URIs, so keeping as String
     val type: List<String>,  // DID 1.1: string or set of strings
-    @Contextual val serviceEndpoint: Any  // URL, object, or array
+    val serviceEndpoint: ServiceEndpoint  // URL, object, or array (see [ServiceEndpoint])
 )
 
 /**

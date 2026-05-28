@@ -106,11 +106,30 @@ data class DidResolutionMetadata(
                     kotlinx.datetime.Instant.parse(it) 
                 },
                 nextVersionId = map["nextVersionId"] as? String,
-                properties = (map["properties"] as? Map<*, *>)?.mapNotNull { 
-                    (it.key as? String)?.let { key -> 
-                        key to (it.value?.toString() ?: "")
-                    }
-                }?.toMap() ?: emptyMap()
+                properties = run {
+                    val knownKeys =
+                        setOf(
+                            "contentType",
+                            "error",
+                            "errorMessage",
+                            "pattern",
+                            "driverUrl",
+                            "duration",
+                            "retrieved",
+                            "canonicalId",
+                            "equivalentId",
+                            "nextUpdate",
+                            "nextVersionId",
+                            "properties",
+                        )
+                    (map["properties"] as? Map<*, *>)
+                        ?.mapNotNull { (k, v) -> (k as? String)?.let { it to (v?.toString() ?: "") } }
+                        ?.toMap()
+                        ?: map.entries
+                            .filter { it.key !in knownKeys }
+                            .mapNotNull { (k, v) -> (k as? String)?.let { it to (v?.toString() ?: "") } }
+                            .toMap()
+                }
             )
         }
     }

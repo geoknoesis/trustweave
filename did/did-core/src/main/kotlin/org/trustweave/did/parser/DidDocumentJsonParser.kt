@@ -8,6 +8,7 @@ import org.trustweave.did.model.DidOrUrl
 import org.trustweave.did.model.DidService
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.model.parseServiceTypesFromJson
+import org.trustweave.did.model.serviceEndpointFromJsonElement
 import kotlinx.serialization.json.*
 
 /**
@@ -208,7 +209,7 @@ object DidDocumentJsonParser {
             val sTypes = parseServiceTypesFromJson(sObj["type"])
             val sEndpoint = sObj["serviceEndpoint"]
             if (sId != null && sTypes != null && sEndpoint != null) {
-                val endpoint = convertJsonElement(sEndpoint) ?: return@mapNotNull null
+                val endpoint = serviceEndpointFromJsonElement(sEndpoint) ?: return@mapNotNull null
                 DidService(
                     id = sId,
                     type = sTypes,

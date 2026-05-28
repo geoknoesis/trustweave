@@ -13,7 +13,6 @@ import org.trustweave.did.resolver.DidResolutionMetadata
 import org.trustweave.kms.KeyHandle
 import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
-import java.math.BigInteger
 
 /**
  * Common utilities for DID method implementations.
@@ -287,40 +286,6 @@ object DidMethodUtils {
     }
 
     // ──────────────────────────── Multibase / Multicodec ────────────────────────────
-
-    private val BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
-
-    /**
-     * Base58btc-encodes [bytes] (used by did:key and did:peer).
-     */
-    fun encodeBase58(bytes: ByteArray): String {
-        var num = BigInteger(1, bytes)
-        val sb = StringBuilder()
-        while (num > BigInteger.ZERO) {
-            val rem = num.mod(BigInteger.valueOf(58))
-            sb.append(BASE58_ALPHABET[rem.toInt()])
-            num = num.divide(BigInteger.valueOf(58))
-        }
-        for (b in bytes) { if (b.toInt() == 0) sb.append('1') else break }
-        return sb.reverse().toString()
-    }
-
-    /**
-     * Decodes a base58btc-encoded string to bytes.
-     */
-    fun decodeBase58(encoded: String): ByteArray {
-        var num = BigInteger.ZERO
-        var leadingZeros = 0
-        for (ch in encoded) { if (ch == '1') leadingZeros++ else break }
-        for (ch in encoded) {
-            val digit = BASE58_ALPHABET.indexOf(ch)
-            require(digit >= 0) { "Invalid base58 character: $ch" }
-            num = num.multiply(BigInteger.valueOf(58)).add(BigInteger.valueOf(digit.toLong()))
-        }
-        var bytes = num.toByteArray()
-        if (bytes.isNotEmpty() && bytes[0].toInt() == 0) bytes = bytes.sliceArray(1 until bytes.size)
-        return ByteArray(leadingZeros) { 0 } + bytes
-    }
 
     /**
      * Returns the 2-byte multicodec prefix for [algorithm].

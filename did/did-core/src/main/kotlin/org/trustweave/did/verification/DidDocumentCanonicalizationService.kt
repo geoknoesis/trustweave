@@ -29,6 +29,16 @@ import java.util.Base64
  */
 interface DidDocumentCanonicalizationService {
     /**
+     * Whether this implementation is fully URDNA2015-conformant.
+     *
+     * Returns `false` by default. A production URDNA2015 implementation should override
+     * this to `true`. When `false`, the digest integrity check in
+     * [DefaultDidDocumentVerificationService.verifyDocument] is skipped with a warning
+     * rather than always producing a misleading "digest mismatch" error.
+     */
+    val isConformant: Boolean get() = false
+
+    /**
      * Canonicalize DID document using URDNA2015 algorithm.
      *
      * @param document The DID document to canonicalize
@@ -65,7 +75,14 @@ interface DidDocumentCanonicalizationService {
  * For production use, consider integrating with a full JSON-LD library.
  */
 class JsonLdCanonicalizationService : DidDocumentCanonicalizationService {
-    
+
+    /**
+     * Not URDNA2015-conformant: this implementation uses deterministic JSON serialization,
+     * not the RDF Dataset Normalisation algorithm. A conformant implementation would set
+     * this to `true`.
+     */
+    override val isConformant: Boolean = false
+
     override suspend fun canonicalize(document: DidDocument): String {
         // Simplified canonicalization
         // Full implementation would use URDNA2015 algorithm from JSON-LD spec

@@ -14,7 +14,9 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)
 
-    compileOnly("org.slf4j:slf4j-api:2.0.9")
+    // JsonDidMethodLoader logs directly via org.slf4j.LoggerFactory, so slf4j-api must be on the
+    // runtime classpath (implementation, not compileOnly). Apps still supply the binding.
+    implementation(libs.slf4j.api)
 
     // Test dependencies
     testImplementation(project(":testkit"))

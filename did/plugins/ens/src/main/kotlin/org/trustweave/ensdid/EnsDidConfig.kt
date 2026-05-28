@@ -135,14 +135,14 @@ data class EnsDidConfig(
         }
 
         fun build(): EnsDidConfig {
-            require(ensRegistryAddress != null) { "ensRegistryAddress is required" }
-            require(rpcUrl != null) { "rpcUrl is required" }
-            require(chainId != null) { "chainId is required" }
+            val ensRegistryAddress = requireNotNull(ensRegistryAddress) { "ensRegistryAddress is required" }
+            val rpcUrl = requireNotNull(rpcUrl) { "rpcUrl is required" }
+            val chainId = requireNotNull(chainId) { "chainId is required" }
 
             return EnsDidConfig(
-                ensRegistryAddress = ensRegistryAddress!!,
-                rpcUrl = rpcUrl!!,
-                chainId = chainId!!,
+                ensRegistryAddress = ensRegistryAddress,
+                rpcUrl = rpcUrl,
+                chainId = chainId,
                 privateKey = privateKey,
                 network = network,
                 additionalProperties = additionalProperties.toMap()

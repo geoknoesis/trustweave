@@ -2,6 +2,7 @@ package org.trustweave.did.verifier
 
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
+import org.trustweave.did.model.serviceEndpointAsObject
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolver
 import kotlinx.coroutines.Dispatchers
@@ -222,10 +223,16 @@ class DidDocumentDelegationVerifier(
 
         // For each delegation credential service, verify it
         for (service in delegationServices) {
-            // If service endpoint is a VerifiableCredential, verify it
-            // Note: This is a simplified check. Full verification requires CredentialVerifier
+            // The embedded credential must be an object (JSON structure) to be
+            // structurally verifiable. Non-object endpoints (e.g. a plain URL
+            // string) cannot be validated here, so treat them as failing the
+            // content check — matching the previous behaviour for non-Map endpoints.
+            // Note: This is a structural check only. Full verification requires CredentialVerifier.
+            val endpointObject = service.serviceEndpointAsObject()
+                ?: return@withContext false
+
             val credentialValid = verifyDelegationCredentialContent(
-                credential = service.serviceEndpoint,
+                credential = EmbeddedDelegationCredential.fromEndpointObject(endpointObject),
                 delegatorDid = delegatorDoc.id.value,
                 delegateDid = delegateDid.value
             )
@@ -239,57 +246,32 @@ class DidDocumentDelegationVerifier(
     }
 
     /**
-     * Verify the content of a delegation credential.
+     * Verify the structural content of a delegation credential embedded in a DID
+     * document service endpoint.
      *
-     * Note: This performs basic structural validation only.
-     * Full proof verification would require CredentialVerifier from credentials module.
+     * Performs **structural validation only**: the issuer matches the delegator, the
+     * subject matches the delegate, and a proof is present. Full cryptographic proof
+     * verification is the responsibility of the credentials module's CredentialVerifier
+     * — did-core intentionally does not depend on it (see [EmbeddedDelegationCredential]).
+     *
+     * @param credential Structural view of the embedded delegation credential
+     * @param delegatorDid Expected issuer DID
+     * @param delegateDid Expected subject DID
      */
-    private suspend fun verifyDelegationCredentialContent(
-        credential: Any,
+    private fun verifyDelegationCredentialContent(
+        credential: EmbeddedDelegationCredential,
         delegatorDid: String,
         delegateDid: String
-    ): Boolean = withContext(Dispatchers.IO) {
-        try {
-            // Basic validation - check if credential is a Map (JSON structure)
-            when (credential) {
-                is Map<*, *> -> {
-                    val issuer = credential["issuer"] as? String
-                    val subject = credential["credentialSubject"]
+    ): Boolean {
+        // Issuer must be the delegator
+        if (credential.issuer != delegatorDid) return false
 
-                    // Verify issuer is delegator
-                    if (issuer != delegatorDid) {
-                        return@withContext false
-                    }
+        // Subject must be the delegate
+        val subjectId = credential.subjectId ?: return false
+        if (subjectId != delegateDid && !subjectId.startsWith("$delegateDid#")) return false
 
-                    // Verify subject is delegate
-                    val subjectId = when (subject) {
-                        is Map<*, *> -> subject["id"] as? String
-                        is String -> subject
-                        else -> null
-                    }
-
-                    val subjectIdStr = subjectId?.toString() ?: return@withContext false
-                    if (subjectIdStr != delegateDid && !subjectIdStr.startsWith("$delegateDid#")) {
-                        return@withContext false
-                    }
-
-                    // Verify credential has proof
-                    val proof = credential["proof"]
-                    if (proof == null) {
-                        return@withContext false
-                    }
-
-                    true
-                }
-                else -> {
-                    // Unknown credential format - assume invalid
-                    false
-                }
-            }
-        } catch (e: Exception) {
-            // If credential structure is invalid, return false
-            false
-        }
+        // Credential must carry a proof (structural presence check only)
+        return credential.hasProof
     }
 }
 
@@ -305,4 +287,40 @@ data class DelegationChainResult(
     val path: List<String>,
     val errors: List<String> = emptyList()
 )
+
+/**
+ * Structural view of a delegation credential embedded in a DID document service
+ * endpoint object (W3C DID Core permits arbitrary JSON objects as service endpoints).
+ *
+ * did-core validates structure only (issuer / subject / proof presence). This type
+ * deliberately does **not** reference the credentials module's `VerifiableCredential`:
+ * `credentials:credential-api` already depends on `did:did-core`, so a back-dependency
+ * would be circular. Full cryptographic verification is performed by the credentials
+ * layer's CredentialVerifier, not here.
+ */
+internal data class EmbeddedDelegationCredential(
+    val issuer: String?,
+    val subjectId: String?,
+    val hasProof: Boolean
+) {
+    companion object {
+        /**
+         * Extracts the structurally-relevant fields from a decoded service-endpoint
+         * object. Parsing is total — unexpected shapes yield null fields rather than
+         * throwing.
+         */
+        fun fromEndpointObject(endpoint: Map<String, Any?>): EmbeddedDelegationCredential {
+            val subjectId = when (val subject = endpoint["credentialSubject"]) {
+                is Map<*, *> -> subject["id"] as? String
+                is String -> subject
+                else -> null
+            }
+            return EmbeddedDelegationCredential(
+                issuer = endpoint["issuer"] as? String,
+                subjectId = subjectId,
+                hasProof = endpoint["proof"] != null
+            )
+        }
+    }
+}
 

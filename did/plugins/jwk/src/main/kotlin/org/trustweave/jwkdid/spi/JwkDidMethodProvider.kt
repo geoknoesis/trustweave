@@ -8,7 +8,7 @@ import org.trustweave.jwkdid.JwkDidMethod
 /**
  * SPI provider for did:jwk method.
  *
- * Automatically discovers did:jwk method when this module is on the classpath.
+ * Automatically discovered when this module is on the classpath via Java ServiceLoader.
  */
 class JwkDidMethodProvider : AbstractDidMethodProvider() {
 
@@ -21,4 +21,3 @@ class JwkDidMethodProvider : AbstractDidMethodProvider() {
         return JwkDidMethod(resolveKms(options))
     }
 }
-

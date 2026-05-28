@@ -43,8 +43,9 @@ class StandardUniversalResolverAdapter : UniversalResolverProtocolAdapter {
 
     override fun extractDidDocument(jsonResponse: JsonObject): JsonObject? {
         // Standard format: { "didDocument": {...}, "didDocumentMetadata": {...}, ... }
-        // If "didDocument" key exists, use it; otherwise assume the root is the document
-        return jsonResponse["didDocument"]?.jsonObject ?: jsonResponse
+        // Return null when "didDocument" is absent so performResolution produces NotFound
+        // instead of treating the metadata envelope as the DID document.
+        return jsonResponse["didDocument"]?.jsonObject
     }
 
     override fun extractDocumentMetadata(jsonResponse: JsonObject): JsonObject? {

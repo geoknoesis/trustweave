@@ -4,6 +4,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import java.time.Duration
 import org.trustweave.contract.models.*
 import org.trustweave.credential.CredentialService
 import org.trustweave.credential.format.ProofSuiteId
@@ -75,7 +76,7 @@ class ContractCredentialIssuanceTest {
             error("not used")
         override suspend fun verifyPresentation(presentation: VerifiablePresentation, trustPolicy: TrustEvaluator?, options: VerificationOptions): VerificationResult =
             error("not used")
-        override suspend fun status(credential: VerifiableCredential): CredentialStatusInfo =
+        override suspend fun status(credential: VerifiableCredential, clockSkewTolerance: Duration): CredentialStatusInfo =
             error("not used")
         override fun supports(format: ProofSuiteId): Boolean = false
         override fun supportedFormats(): List<ProofSuiteId> = emptyList()

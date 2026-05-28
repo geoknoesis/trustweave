@@ -1,0 +1,35 @@
+﻿name: Conformance Tests (PR)
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'credentials/credential-api/**'
+      - 'credentials/plugins/presentation-exchange/**'
+      - 'did/did-core/**'
+      - 'did/plugins/key/**'
+      - 'distribution/conformance/**'
+
+concurrency:
+  group: conformance-pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  conformance:
+    name: Phase 1 Conformance Suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Run conformance tests
+        run: ./gradlew :distribution:conformance:conformanceTest
+      - name: Upload conformance report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: conformance-report-pr-${{ github.run_number }}
+          path: distribution/conformance/build/reports/conformance/

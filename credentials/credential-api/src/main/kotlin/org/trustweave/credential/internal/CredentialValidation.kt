@@ -7,6 +7,7 @@ import org.trustweave.credential.schema.SchemaRegistry
 import org.trustweave.core.identifiers.Iri
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlin.time.toKotlinDuration
 
 /**
  * Credential validation utilities.
@@ -104,20 +105,30 @@ internal object CredentialValidation {
         options: VerificationOptions,
         now: Instant = Clock.System.now()
     ): VerificationResult.Invalid.NotYetValid? {
-        if (!options.checkNotBefore || credential.validFrom == null) {
+        // For a pure VC 2.0 credential (no VC 1.1 context), use only validFrom.
+        // For dual-context credentials (both VC 1.1 and VC 2.0 context strings present), fall
+        // back to issuanceDate when validFrom is absent — otherwise a credential that only sets
+        // issuanceDate would have its not-before check silently skipped.
+        // For pure VC 1.1, fall back to issuanceDate as usual.
+        val effectiveNotBefore = if (credential.isVc2 && !credential.isVc1) {
+            credential.validFrom
+        } else {
+            credential.validFrom ?: credential.issuanceDate
+        }
+        if (!options.checkNotBefore || effectiveNotBefore == null) {
             return null
         }
-        
-        val clockSkewKt = kotlin.time.Duration.parse(options.clockSkewTolerance.toString())
-        val earliestValidTime = credential.validFrom.minus(clockSkewKt)
-        
+
+        val clockSkewKt = options.clockSkewTolerance.toKotlinDuration()
+        val earliestValidTime = effectiveNotBefore.minus(clockSkewKt)
+
         if (now < earliestValidTime) {
             val timeUntilValid = earliestValidTime - now
             return VerificationResult.Invalid.NotYetValid(
                 credential = credential,
-                validFrom = credential.validFrom,
+                validFrom = effectiveNotBefore,
                 errors = listOf(
-                    "Credential is not yet valid. Valid from: ${credential.validFrom}, " +
+                    "Credential is not yet valid. Valid from: $effectiveNotBefore, " +
                     "Current time: $now (accounting for ${options.clockSkewTolerance} clock skew tolerance). " +
                     "Credential will be valid in approximately ${timeUntilValid.inWholeSeconds} seconds."
                 )
@@ -146,20 +157,30 @@ internal object CredentialValidation {
         options: VerificationOptions,
         now: Instant = Clock.System.now()
     ): VerificationResult.Invalid.Expired? {
-        if (!options.checkExpiration || credential.expirationDate == null) {
+        // For a pure VC 2.0 credential (no VC 1.1 context), use only validUntil.
+        // For dual-context credentials (both VC 1.1 and VC 2.0 context strings present), fall
+        // back to expirationDate when validUntil is absent — otherwise a credential that only
+        // sets expirationDate would have its expiration check silently skipped.
+        // For pure VC 1.1, fall back to expirationDate as usual.
+        val effectiveExpiry = if (credential.isVc2 && !credential.isVc1) {
+            credential.validUntil
+        } else {
+            credential.validUntil ?: credential.expirationDate
+        }
+        if (!options.checkExpiration || effectiveExpiry == null) {
             return null
         }
-        
-        val clockSkewKt = kotlin.time.Duration.parse(options.clockSkewTolerance.toString())
-        val latestValidTime = credential.expirationDate.plus(clockSkewKt)
-        
+
+        val clockSkewKt = options.clockSkewTolerance.toKotlinDuration()
+        val latestValidTime = effectiveExpiry.plus(clockSkewKt)
+
         if (now > latestValidTime) {
             val timeSinceExpiration = now - latestValidTime
             return VerificationResult.Invalid.Expired(
                 credential = credential,
-                expiredAt = credential.expirationDate,
+                expiredAt = effectiveExpiry,
                 errors = listOf(
-                    "Credential has expired. Expiration date: ${credential.expirationDate}, " +
+                    "Credential has expired. Expiration date: $effectiveExpiry, " +
                     "Current time: $now (accounting for ${options.clockSkewTolerance} clock skew tolerance). " +
                     "Credential expired approximately ${timeSinceExpiration.inWholeSeconds} seconds ago."
                 )
@@ -222,6 +243,8 @@ internal object CredentialValidation {
                     validationErrors = listOf("Schema registry error: ${e.message}"),
                     errors = listOf("Schema validation failed: ${e.message}")
                 )
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
                 return VerificationResult.Invalid.SchemaValidationFailed(
                     credential = credential,
@@ -250,7 +273,7 @@ internal object CredentialValidation {
     suspend fun validateTrust(
         credential: VerifiableCredential,
         trustPolicy: org.trustweave.credential.trust.TrustEvaluator?
-    ): VerificationResult.Invalid.UntrustedIssuer? {
+    ): VerificationResult.Invalid? {
         if (trustPolicy == null) {
             // No trust policy configured - skip trust validation (fail-open)
             return null
@@ -258,30 +281,61 @@ internal object CredentialValidation {
         
         val issuerIri = credential.issuer.id
         
-        // Only validate DIDs - URIs/URNs are handled differently
         if (!issuerIri.isDid) {
-            return null
+            // Non-DID issuers cannot be trust-checked via DID resolution.
+            // When a trust policy is active, reject non-DID issuers by default.
+            return VerificationResult.Invalid.InvalidIssuer(
+                credential = credential,
+                issuerIri = issuerIri,
+                reason = "Non-DID issuer '${issuerIri.value}' cannot be evaluated by the configured trust policy",
+                errors = listOf("Non-DID issuers are not supported by the trust evaluator")
+            )
         }
         
+        // Validate IRI length before parsing
         try {
-            // Validate IRI length before parsing
             InputValidation.validateIri(issuerIri)
-            
-            val issuerDid = org.trustweave.did.identifiers.Did(issuerIri.value)
-            val isTrusted = trustPolicy.isTrusted(issuerDid)
-            
-            if (!isTrusted) {
-                return VerificationResult.Invalid.UntrustedIssuer(
-                    credential = credential,
-                    issuerDid = issuerDid
-                )
-            }
         } catch (e: IllegalArgumentException) {
-            // Invalid DID format or length - will be caught by proof engine verification
-            // Don't fail trust validation here, let the proof verification catch format errors
-            return null
+            return VerificationResult.Invalid.InvalidIssuer(
+                credential = credential,
+                issuerIri = issuerIri,
+                reason = "Malformed issuer IRI: ${e.message}",
+                errors = listOf("Malformed issuer IRI: ${e.message}")
+            )
         }
-        
+
+        val issuerDid = try {
+            org.trustweave.did.identifiers.Did(issuerIri.value)
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            return VerificationResult.Invalid.InvalidIssuer(
+                credential = credential,
+                issuerIri = issuerIri,
+                reason = "Malformed issuer DID: ${e.message}",
+                errors = listOf("Malformed issuer DID: ${e.message}")
+            )
+        }
+
+        val isTrusted = try {
+            trustPolicy.isTrusted(issuerDid)
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            return VerificationResult.Invalid.InvalidIssuer(
+                credential = credential,
+                issuerIri = issuerIri,
+                reason = "Trust evaluation failed: ${e.message}",
+                errors = listOf("Trust evaluation error: ${e.message}")
+            )
+        }
+        if (!isTrusted) {
+            return VerificationResult.Invalid.UntrustedIssuer(
+                credential = credential,
+                issuerDid = issuerDid
+            )
+        }
+
         return null
     }
 }

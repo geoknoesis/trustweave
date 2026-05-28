@@ -56,6 +56,10 @@ data class VerificationOptions(
     val verifyChallenge: Boolean = false,
     val expectedChallenge: String? = null,
     val verifyDomain: Boolean = false,
-    val expectedDomain: String? = null
+    val expectedDomain: String? = null,
+    /** Format-specific or engine-specific verification parameters (e.g. `sessionTranscript` for mDL). */
+    val additionalOptions: Map<String, Any?> = emptyMap(),
+    /** When true, each credential's credentialSubject.id must match the presentation holder. Opt-in; defaults to false. */
+    val enforceHolderBinding: Boolean = false,
 )
 

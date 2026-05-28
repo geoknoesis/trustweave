@@ -65,7 +65,7 @@ class CredentialTransformerJwtTest {
         assertNotNull(recoveredCredential, "Credential should be recovered")
         assertEquals(originalCredential.type, recoveredCredential.type, "Type should match")
         assertEquals(originalCredential.issuer.id.value, recoveredCredential.issuer.id.value, "Issuer should match")
-        assertEquals(originalCredential.credentialSubject.id.value, recoveredCredential.credentialSubject.id.value, "Subject should match")
+        assertEquals(originalCredential.credentialSubject.id?.value, recoveredCredential.credentialSubject.id?.value, "Subject should match")
     }
 
     @Test

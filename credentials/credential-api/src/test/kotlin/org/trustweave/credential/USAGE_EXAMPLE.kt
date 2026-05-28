@@ -134,6 +134,14 @@ suspend fun exampleBasicCredentialFlow(
             println("  Revoked at: ${result.revokedAt}")
             println("  Reason: ${result.revocationReason}")
         }
+        is VerificationResult.Invalid.Suspended -> {
+            println("✗ Credential is suspended")
+            println("  Suspended at: ${result.suspendedAt}")
+            println("  Reason: ${result.reason}")
+        }
+        is VerificationResult.Invalid.RevocationCheckFailed -> {
+            println("✗ Revocation status check failed: ${result.reason}")
+        }
         is VerificationResult.Invalid.InvalidProof -> {
             println("✗ Cryptographic proof verification failed")
             println("  Reason: ${result.reason}")

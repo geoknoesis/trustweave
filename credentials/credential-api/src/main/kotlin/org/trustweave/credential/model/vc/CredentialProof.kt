@@ -50,5 +50,42 @@ sealed class CredentialProof {
         val sdJwtVc: String,  // SD-JWT-VC compact format
         val disclosures: List<String>? = null  // Optional disclosures
     ) : CredentialProof()
+
+    /**
+     * ISO 18013-5 mDL/mDoc proof.
+     *
+     * Stores the CBOR-encoded DeviceResponse bytes produced by MdocProofEngine.
+     * The bytes contain the full ISO 18013-5 DeviceResponse structure including
+     * IssuerAuth (COSE_Sign1 over the MSO) and optional DeviceAuth.
+     */
+    @Serializable
+    data class MdocProof(
+        val deviceResponse: ByteArray,
+        val docType: String
+    ) : CredentialProof() {
+        override fun equals(other: Any?): Boolean =
+            other is MdocProof && deviceResponse.contentEquals(other.deviceResponse) && docType == other.docType
+
+        override fun hashCode(): Int = 31 * deviceResponse.contentHashCode() + docType.hashCode()
+    }
+
+    /**
+     * ETSI TS 119 182-1 JAdES proof.
+     *
+     * The signature is wrapped in JWS JSON Serialization (Flattened) when the unsigned `etsiU`
+     * block is non-empty (B-T and beyond) and in JWS Compact when it is empty (strict B-B).
+     * Either form fits in [jws] as a single string.
+     *
+     * @property jws        The JWS Compact (B-B) or JWS JSON Flattened (B-T) string emitted by
+     *                      [org.trustweave.signatures.jades.DefaultJadesSigner].
+     * @property profile    The JAdES profile level, encoded as a string for serialization
+     *                      stability: `"B-B"` or `"B-T"`. Verifiers cross-check this against
+     *                      what they actually find in the [jws] envelope.
+     */
+    @Serializable
+    data class JAdES(
+        val jws: String,
+        val profile: String,
+    ) : CredentialProof()
 }
 

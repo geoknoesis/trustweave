@@ -120,6 +120,12 @@ suspend fun exampleCredentialFlow(
         is VerificationResult.Invalid.Revoked -> {
             println("❌ Credential revoked: ${verificationResult.revocationReason}")
         }
+        is VerificationResult.Invalid.Suspended -> {
+            println("❌ Credential suspended: ${verificationResult.reason}")
+        }
+        is VerificationResult.Invalid.RevocationCheckFailed -> {
+            println("❌ Revocation check failed: ${verificationResult.reason}")
+        }
         is VerificationResult.Invalid.InvalidIssuer -> {
             println("❌ Invalid issuer: ${verificationResult.reason}")
         }

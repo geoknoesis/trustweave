@@ -14,6 +14,7 @@ import org.trustweave.credential.trust.TrustEvaluator
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import java.time.Duration
 
 /**
  * Credential service for W3C Verifiable Credentials.
@@ -227,7 +228,10 @@ interface CredentialService {
      * @param credential The credential to check
      * @return Status information including validity, revocation, and expiration
      */
-    suspend fun status(credential: VerifiableCredential): CredentialStatusInfo
+    suspend fun status(
+        credential: VerifiableCredential,
+        clockSkewTolerance: Duration = Duration.ofMinutes(5)
+    ): CredentialStatusInfo
     
     /**
      * Check if format is supported.

@@ -39,7 +39,7 @@ data class ExchangeOptions(
     /**
      * Whether to require acknowledgment.
      */
-    val requireAck: Boolean = false,
+    val requiresAck: Boolean = false,
     
     /**
      * Thread ID for message threading.
@@ -110,7 +110,7 @@ data class ExchangeOptions(
      */
     class Builder {
         private var timeoutMillis: Long? = null
-        private var requireAck: Boolean = false
+        private var requiresAck: Boolean = false
         private var threadId: String? = null
         private val metadata = mutableMapOf<String, JsonElement>()
         
@@ -149,8 +149,8 @@ data class ExchangeOptions(
         /**
          * Require acknowledgment.
          */
-        fun requireAck(value: Boolean = true): Builder {
-            this.requireAck = value
+        fun requiresAck(value: Boolean = true): Builder {
+            this.requiresAck = value
             return this
         }
         
@@ -207,7 +207,7 @@ data class ExchangeOptions(
          */
         fun build(): ExchangeOptions = ExchangeOptions(
             timeoutMillis = timeoutMillis,
-            requireAck = requireAck,
+            requiresAck = requiresAck,
             threadId = threadId,
             metadata = metadata.toMap()
         )
@@ -220,7 +220,7 @@ data class ExchangeOptions(
 fun ExchangeOptions.merge(other: ExchangeOptions): ExchangeOptions {
     return ExchangeOptions(
         timeoutMillis = other.timeoutMillis ?: this.timeoutMillis,
-        requireAck = other.requireAck || this.requireAck,
+        requiresAck = other.requiresAck || this.requiresAck,
         threadId = other.threadId ?: this.threadId,
         metadata = (this.metadata + other.metadata).toMap()
     )

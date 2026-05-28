@@ -14,6 +14,14 @@ import kotlinx.serialization.json.*
 import java.util.Base64
 import java.security.PublicKey
 
+// Helper: extract a String field from the proof's additionalProperties (LinkedDataProof)
+// or fall back to null for other proof types.
+private fun CredentialProof?.proofStringField(field: String): String? =
+    (this as? CredentialProof.LinkedDataProof)
+        ?.additionalProperties
+        ?.get(field)
+        ?.let { (it as? JsonPrimitive)?.contentOrNull }
+
 /**
  * Presentation verification utilities.
  * 
@@ -34,22 +42,28 @@ internal object PresentationVerification {
         if (!options.verifyChallenge) {
             return null
         }
-        
-        if (options.expectedChallenge != null) {
-            if (presentation.challenge != options.expectedChallenge) {
-                return VerificationResult.Invalid.InvalidProof(
-                    credential = presentation.verifiableCredential.first(),
-                    reason = "Challenge mismatch",
-                    errors = listOf(
-                        "Expected challenge '${options.expectedChallenge}', " +
-                        "but got '${presentation.challenge}'"
-                    )
-                )
-            }
+
+        if (options.expectedChallenge == null) {
+            return VerificationResult.Invalid.InvalidProof(
+                credential = presentation.verifiableCredential.first(),
+                reason = "verifyChallenge is enabled but no expectedChallenge was provided",
+                errors = listOf("verifyChallenge requires expectedChallenge to be set")
+            )
         }
-        // Note: If verifyChallenge is true but no expectedChallenge is provided,
-        // we continue verification (might want to add a warning in the future)
-        
+
+        // Per W3C VP spec, challenge must be inside the proof, not the outer envelope.
+        val proofChallenge = presentation.proof.proofStringField("challenge")
+        if (proofChallenge != options.expectedChallenge) {
+            return VerificationResult.Invalid.InvalidProof(
+                credential = presentation.verifiableCredential.first(),
+                reason = "Challenge mismatch",
+                errors = listOf(
+                    "Expected challenge '${options.expectedChallenge}', " +
+                    "but got '$proofChallenge'"
+                )
+            )
+        }
+
         return null
     }
     
@@ -67,20 +81,28 @@ internal object PresentationVerification {
         if (!options.verifyDomain) {
             return null
         }
-        
-        if (options.expectedDomain != null) {
-            if (presentation.domain != options.expectedDomain) {
-                return VerificationResult.Invalid.InvalidProof(
-                    credential = presentation.verifiableCredential.first(),
-                    reason = "Domain mismatch",
-                    errors = listOf(
-                        "Expected domain '${options.expectedDomain}', " +
-                        "but got '${presentation.domain}'"
-                    )
-                )
-            }
+
+        if (options.expectedDomain == null) {
+            return VerificationResult.Invalid.InvalidProof(
+                credential = presentation.verifiableCredential.first(),
+                reason = "verifyDomain is enabled but no expectedDomain was provided",
+                errors = listOf("verifyDomain requires expectedDomain to be set")
+            )
         }
-        
+
+        // Per W3C VP spec, domain must be inside the proof, not the outer envelope.
+        val proofDomain = presentation.proof.proofStringField("domain")
+        if (proofDomain != options.expectedDomain) {
+            return VerificationResult.Invalid.InvalidProof(
+                credential = presentation.verifiableCredential.first(),
+                reason = "Domain mismatch",
+                errors = listOf(
+                    "Expected domain '${options.expectedDomain}', " +
+                    "but got '$proofDomain'"
+                )
+            )
+        }
+
         return null
     }
     

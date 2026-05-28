@@ -66,18 +66,28 @@ data class VerifiableCredential(
     val issuer: Issuer,  // VC issuer (IRI - typically DID, but can be URI/URN - or object with id/name)
     
     @SerialName("issuanceDate")
-    @Contextual val issuanceDate: Instant,
+    @Contextual val issuanceDate: Instant? = null,
     
     @SerialName("credentialSubject")
     val credentialSubject: CredentialSubject,  // VC subject (IRI id + claims - typically DID but can be URI/URN)
     
     // Optional VC fields
-    @Transient
-    val validFrom: Instant? = null,  // VC 2.0: When credential becomes valid (nbf equivalent) - serialized as ISO 8601 via manual JSON building
-    
-    @Transient
-    val expirationDate: Instant? = null,  // Serialized as ISO 8601 via manual JSON building
-    
+    // VC 2.0: replaces issuanceDate; both serialised so parsers can read either version
+    @SerialName("validFrom")
+    @Contextual val validFrom: Instant? = null,
+
+    // VC 1.1 expiry; use validUntil for VC 2.0
+    @SerialName("expirationDate")
+    @Contextual val expirationDate: Instant? = null,
+
+    // VC 2.0: replaces expirationDate
+    @SerialName("validUntil")
+    @Contextual val validUntil: Instant? = null,
+
+    // VC 2.0: human-readable name and description
+    val name: String? = null,
+    val description: String? = null,
+
     @SerialName("credentialStatus")
     val credentialStatus: CredentialStatus? = null,
     
@@ -103,9 +113,11 @@ data class VerifiableCredential(
      * @return True if credential is valid at the given instant.
      */
     fun isValid(instant: Instant = Clock.System.now()): Boolean {
+        val effectiveValidFrom = validFrom ?: issuanceDate
+        val effectiveExpiry = validUntil ?: expirationDate
         return when {
-            validFrom != null && instant < validFrom -> false
-            expirationDate != null && instant > expirationDate -> false
+            effectiveValidFrom != null && instant < effectiveValidFrom -> false
+            effectiveExpiry != null && instant > effectiveExpiry -> false
             else -> true
         }
     }

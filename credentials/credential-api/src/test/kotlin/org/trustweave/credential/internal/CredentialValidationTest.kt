@@ -237,7 +237,10 @@ class CredentialValidationTest {
         val credential = createTestCredential(issuer = Issuer.IriIssuer(issuerIri))
         val TrustEvaluator = TrustEvaluator.allowlist(setOf(Did("did:key:test")))
         val result = CredentialValidation.validateTrust(credential, TrustEvaluator)
-        assertNull(result, "Non-DID issuer should skip trust validation")
+        // Fail-closed: when a trust policy is active, a non-DID issuer cannot be
+        // evaluated via DID resolution and is rejected as an invalid issuer.
+        assertNotNull(result, "Non-DID issuer should be rejected when a trust policy is active")
+        assertTrue(result is VerificationResult.Invalid.InvalidIssuer)
     }
     
     // Helper functions

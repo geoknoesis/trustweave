@@ -29,6 +29,11 @@ internal object ErrorHandling {
         return try {
             val credential = operation()
             IssuanceResult.Success(credential)
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // Re-throw cancellation exceptions to respect coroutine cancellation.
+            // Must be FIRST: CancellationException extends IllegalStateException, so placing
+            // this clause after IllegalStateException would cause CE to be swallowed.
+            throw e
         } catch (e: IllegalArgumentException) {
             IssuanceResult.Failure.InvalidRequest(
                 field = "request",
@@ -39,9 +44,6 @@ internal object ErrorHandling {
                 format = format,
                 reason = e.message
             )
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            // Re-throw cancellation exceptions to respect coroutine cancellation
-            throw e
         } catch (e: java.util.concurrent.TimeoutException) {
             IssuanceResult.Failure.AdapterError(
                 format = format,

@@ -36,7 +36,7 @@ class SdJwtProofEngineTest {
     fun `test engine properties`() {
         assertEquals(ProofSuiteId.SD_JWT_VC, engine.format)
         assertEquals("SD-JWT-VC", engine.formatName)
-        assertEquals("draft-ietf-oauth-sd-jwt-vc-01", engine.formatVersion)
+        assertEquals("draft-ietf-oauth-sd-jwt-vc-04", engine.formatVersion)
         assertTrue(engine.capabilities.selectiveDisclosure)
         assertFalse(engine.capabilities.zeroKnowledge)
         assertTrue(engine.capabilities.revocation)

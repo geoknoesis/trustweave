@@ -78,6 +78,12 @@ internal object SecurityConstants {
      * Maximum length for schema ID (in characters).
      */
     const val MAX_SCHEMA_ID_LENGTH = 500
+
+    /**
+     * Maximum length for credential status entry ID (in characters).
+     * Matches the VARCHAR(255) column in the database schema.
+     */
+    const val MAX_STATUS_ID_LENGTH = 255
     
     /**
      * Maximum length for verification method ID (in characters).

@@ -6,11 +6,15 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
 /**
- * VC Credential Subject - contains an IRI id (DID, URI, URN, etc.) and claims.
- * 
+ * VC Credential Subject - contains an optional IRI id (DID, URI, URN, etc.) and claims.
+ *
  * Per W3C VC Data Model, credentialSubject.id can be any IRI, not just a DID.
  * Leverages the common Iri base class for identifier support.
- * 
+ *
+ * **Note:** Per W3C VC 2.0 §4.4, the `id` field is **optional**. Anonymous-subject credentials
+ * (where `credentialSubject` carries only claims and no `id`) are spec-valid VC 2.0 documents.
+ * Use `id = null` to represent such credentials.
+ *
  * **Examples:**
  * ```kotlin
  * // DID subject (most common)
@@ -21,41 +25,44 @@ import kotlinx.serialization.json.JsonElement
  *         put("name", "Bachelor of Science")
  *     }
  * ))
- * 
+ *
  * // URI subject
  * val uri = Iri("https://example.com/users/123")
  * val subject = CredentialSubject.fromIri(uri, claims = mapOf(...))
- * 
+ *
  * // URN subject
  * val urn = Iri("urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6")
  * val subject = CredentialSubject.fromIri(urn, claims = mapOf(...))
+ *
+ * // Anonymous subject (VC 2.0 §4.4)
+ * val anon = CredentialSubject(id = null, claims = mapOf(...))
  * ```
  */
 @Serializable
 data class CredentialSubject(
-    val id: Iri,  // Subject IRI (DID, URI, URN, etc.) - required per VC spec
-    val claims: Map<String, JsonElement> = emptyMap()  // Additional claims
+    val id: Iri? = null, // Subject IRI (DID, URI, URN, etc.) - optional per W3C VC 2.0 §4.4
+    val claims: Map<String, JsonElement> = emptyMap() // Additional claims
 ) {
     /**
      * Check if the subject ID is a DID.
      */
     val isDid: Boolean
-        get() = id.isDid
-    
+        get() = id?.isDid ?: false
+
     /**
      * Check if the subject ID is an HTTP/HTTPS URL.
-     * 
+     *
      * **Note:** All URLs are URIs, but not all URIs are URLs.
      * DIDs and URNs are URIs but not URLs.
      */
     val isHttpUrl: Boolean
-        get() = id.isHttpUrl
-    
+        get() = id?.isHttpUrl ?: false
+
     /**
      * Check if the subject ID is a URN.
      */
     val isUrn: Boolean
-        get() = id.isUrn
+        get() = id?.isUrn ?: false
     
     /**
      * Convenience accessor for claims.

@@ -70,7 +70,7 @@ class CredentialTransformerCborTest {
         assertEquals(originalCredential.type, recoveredCredential.type)
         assertEquals(originalCredential.context, recoveredCredential.context)
         assertEquals(originalCredential.issuer.id.value, recoveredCredential.issuer.id.value)
-        assertEquals(originalCredential.credentialSubject.id.value, recoveredCredential.credentialSubject.id.value)
+        assertEquals(originalCredential.credentialSubject.id?.value, recoveredCredential.credentialSubject.id?.value)
         assertEquals(originalCredential.credentialSubject.claims.size, recoveredCredential.credentialSubject.claims.size)
     }
     

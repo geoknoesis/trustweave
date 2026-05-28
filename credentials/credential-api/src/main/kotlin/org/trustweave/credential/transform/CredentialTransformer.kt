@@ -98,9 +98,9 @@ class CredentialTransformer {
             // Set issuer
             builder.issuer(credential.issuer.id.value)
 
-            // Set issued at
-            val issuedAt = credential.issuanceDate.epochSeconds
-            builder.issueTime(java.util.Date.from(JavaInstant.ofEpochSecond(issuedAt)))
+            // Set issued at (prefer issuanceDate; fall back to validFrom for VC 2.0 credentials)
+            val issuedAtEpoch = (credential.issuanceDate ?: credential.validFrom)?.epochSeconds
+            issuedAtEpoch?.let { builder.issueTime(java.util.Date.from(JavaInstant.ofEpochSecond(it))) }
 
             // Set expiration if present
             credential.expirationDate?.let { expirationDate ->

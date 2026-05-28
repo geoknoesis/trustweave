@@ -28,7 +28,8 @@ sealed class IssuanceResult {
      * Issuance succeeded.
      */
     data class Success(
-        val credential: VerifiableCredential
+        val credential: VerifiableCredential,
+        val warnings: List<String> = emptyList()
     ) : IssuanceResult()
     
     /**
@@ -190,7 +191,7 @@ sealed class IssuanceResult {
      */
     val allWarnings: List<String>
         get() = when (this) {
-            is Success -> emptyList()  // Success doesn't have warnings
+            is Success -> warnings
             is Failure -> warnings
         }
 }

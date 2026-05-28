@@ -37,8 +37,12 @@ class RevocationCheckerTest {
             revocationManager = null,
             policy = RevocationFailurePolicy.FAIL_CLOSED
         )
-        
-        assertNull(failure, "Should not fail when no revocation manager")
+
+        // Fail-closed: a credential carrying a credentialStatus but no configured
+        // revocation manager cannot be verified and must be rejected.
+        assertNotNull(failure, "FAIL_CLOSED should reject when no revocation manager is configured")
+        assertTrue(failure is VerificationResult.Invalid.RevocationCheckFailed)
+        assertTrue(failure.errors.any { it.contains("no revocation manager") })
         assertTrue(warnings.isEmpty(), "Should not have warnings")
     }
     
@@ -105,7 +109,7 @@ class RevocationCheckerTest {
         )
         
         assertNotNull(failure, "Suspended credential should fail")
-        assertTrue(failure is VerificationResult.Invalid.Revoked)
+        assertTrue(failure is VerificationResult.Invalid.Suspended)
         assertTrue(failure.errors.first().contains("suspended"))
     }
     
@@ -121,9 +125,8 @@ class RevocationCheckerTest {
         )
         
         assertNotNull(failure, "FAIL_CLOSED policy should reject on timeout")
-        assertTrue(failure is VerificationResult.Invalid.InvalidProof)
-        assertTrue(failure.reason.contains("Revocation check failed") || failure.errors.any { it.contains("Revocation check failed") })
-        assertTrue(failure.errors.any { it.contains("fail-closed") })
+        assertTrue(failure is VerificationResult.Invalid.RevocationCheckFailed)
+        assertTrue(failure.reason.contains("timed out") || failure.errors.any { it.contains("timed out") })
     }
     
     @Test
@@ -170,7 +173,7 @@ class RevocationCheckerTest {
         )
         
         assertNotNull(failure, "FAIL_CLOSED should reject on I/O error")
-        assertTrue(failure is VerificationResult.Invalid.InvalidProof)
+        assertTrue(failure is VerificationResult.Invalid.RevocationCheckFailed)
         assertTrue(failure.errors.first().contains("Revocation check I/O error"))
     }
     

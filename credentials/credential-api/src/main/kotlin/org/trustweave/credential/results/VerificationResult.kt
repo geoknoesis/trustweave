@@ -28,9 +28,10 @@ import kotlinx.datetime.Instant
 sealed class VerificationResult {
     /**
      * Get the credential from any result type.
+     * Nullable for presentation-level errors where no single credential is the subject of the failure.
      */
-    abstract val credential: VerifiableCredential
-    
+    abstract val credential: VerifiableCredential?
+
     /**
      * Verification succeeded.
      */
@@ -60,15 +61,16 @@ sealed class VerificationResult {
      * Verification failed.
      */
     sealed class Invalid : VerificationResult() {
-        abstract override val credential: VerifiableCredential
+        abstract override val credential: VerifiableCredential?
         abstract val errors: List<String>
         abstract val warnings: List<String>
         
         /**
          * Cryptographic proof verification failed.
+         * [credential] is null when the failure is at presentation level (not attributable to a specific embedded credential).
          */
         data class InvalidProof(
-            override val credential: VerifiableCredential,
+            override val credential: VerifiableCredential?,
             val reason: String,
             override val errors: List<String> = emptyList(),
             override val warnings: List<String> = emptyList(),
@@ -104,6 +106,18 @@ sealed class VerificationResult {
             override val errors: List<String> = emptyList(),
             override val warnings: List<String> = emptyList(),
             val revocationReason: String? = null
+        ) : Invalid()
+
+        /**
+         * Credential has been suspended (temporarily invalid, may be reinstated).
+         * Distinct from [Revoked] so callers can apply different handling per status.
+         */
+        data class Suspended(
+            override val credential: VerifiableCredential?,
+            val suspendedAt: Instant? = null,
+            val reason: String? = null,
+            override val errors: List<String> = emptyList(),
+            override val warnings: List<String> = emptyList()
         ) : Invalid()
         
         /**
@@ -170,6 +184,19 @@ sealed class VerificationResult {
         }
         
         /**
+         * Revocation check could not be completed (e.g. network failure, no revocation manager).
+         * Distinct from [Revoked] (credential is known-revoked) — this type signals that the
+         * revocation status is *unknown* and the credential was rejected under a FAIL_CLOSED policy.
+         */
+        data class RevocationCheckFailed(
+            override val credential: VerifiableCredential?,
+            val reason: String,
+            override val errors: List<String> = emptyList(),
+            override val warnings: List<String> = emptyList(),
+            val cause: Throwable? = null
+        ) : Invalid()
+
+        /**
          * Schema validation failed.
          */
         data class SchemaValidationFailed(
@@ -191,6 +218,9 @@ sealed class VerificationResult {
         ) : Invalid() {
             init {
                 require(failures.isNotEmpty()) { "MultipleFailures requires at least one failure" }
+                require(credential == failures.first().credential) {
+                    "MultipleFailures.credential must match failures[0].credential to avoid inconsistent state"
+                }
             }
         }
     }
@@ -211,6 +241,8 @@ sealed class VerificationResult {
             is Invalid.Expired -> errors
             is Invalid.NotYetValid -> errors
             is Invalid.Revoked -> errors
+            is Invalid.Suspended -> errors
+            is Invalid.RevocationCheckFailed -> errors
             is Invalid.InvalidIssuer -> errors
             is Invalid.UntrustedIssuer -> errors
             is Invalid.UnsupportedFormat -> errors
@@ -293,6 +325,12 @@ val VerificationResult.isExpired: Boolean
  */
 val VerificationResult.isRevoked: Boolean
     get() = this is VerificationResult.Invalid.Revoked
+
+/**
+ * Check if result is suspended.
+ */
+val VerificationResult.isSuspended: Boolean
+    get() = this is VerificationResult.Invalid.Suspended
 
 /**
  * Check if result is invalid proof.

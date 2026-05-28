@@ -10,8 +10,17 @@ internal object CredentialConstants {
      * Proof type constants.
      */
     object ProofTypes {
-        /** Ed25519Signature2020 proof suite identifier. */
+        /** Ed25519Signature2020 W3C Data Integrity cryptosuite (Linked Data Proofs). */
         const val ED25519_SIGNATURE_2020 = "Ed25519Signature2020"
+
+        /** JsonWebSignature2020 W3C Data Integrity cryptosuite (detached JWS). */
+        const val JSON_WEB_SIGNATURE_2020 = "JsonWebSignature2020"
+
+        /** BBS-2023 W3C Data Integrity BBS Cryptosuite (zero-knowledge selective disclosure). */
+        const val BBS_2023 = "DataIntegrityProof"
+
+        /** ECDSA RDFC 2019 W3C Data Integrity cryptosuite. */
+        const val ECDSA_RDFC_2019 = "ecdsa-rdfc-2019"
     }
     
     /**
@@ -50,6 +59,12 @@ internal object CredentialConstants {
     object SecuritySuites {
         /** Ed25519 Signature Suite 2020 context. */
         const val ED25519_2020_V1 = "https://w3id.org/security/suites/ed25519-2020/v1"
+
+        /** JsonWebSignature2020 context. */
+        const val JSON_WEB_SIGNATURE_2020_V1 = "https://w3id.org/security/suites/jws-2020/v1"
+
+        /** W3C Data Integrity context (BBS-2023 and other modern suites). */
+        const val DATA_INTEGRITY_V2 = "https://w3id.org/security/data-integrity/v2"
     }
     
     /**

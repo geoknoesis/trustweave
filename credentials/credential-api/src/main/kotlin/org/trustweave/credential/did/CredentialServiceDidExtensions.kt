@@ -139,9 +139,9 @@ suspend fun CredentialService.resolveSubjectDid(
     credential: VerifiableCredential
 ): Did? {
     val subjectId = credential.credentialSubject.id
-    
-    // Check if subject ID is a DID
-    return if (subjectId.isDid) {
+
+    // Check if subject ID is a DID (id is optional per W3C VC 2.0 §4.4)
+    return if (subjectId != null && subjectId.isDid) {
         try {
             val did = Did(subjectId.value)
             val resolutionResult = didResolver.resolve(did)

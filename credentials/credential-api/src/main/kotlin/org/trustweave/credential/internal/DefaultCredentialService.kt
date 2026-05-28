@@ -28,6 +28,7 @@ import org.trustweave.did.resolver.DidResolver
 import kotlinx.serialization.json.*
 import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
+import kotlin.time.toKotlinDuration
 
 /**
  * Default implementation of CredentialService.
@@ -51,7 +52,7 @@ internal class DefaultCredentialService(
         try {
             request.id?.let { InputValidation.validateCredentialId(it) }
             InputValidation.validateIri(request.issuer.id)
-            InputValidation.validateIri(request.credentialSubject.id)
+            request.credentialSubject.id?.let { InputValidation.validateIri(it) }
             request.credentialSchema?.id?.value?.let { InputValidation.validateSchemaId(it) }
             request.issuerKeyId?.value?.let { InputValidation.validateVerificationMethodId(it) }
             
@@ -84,7 +85,7 @@ internal class DefaultCredentialService(
     
     override suspend fun verify(
         credential: VerifiableCredential,
-        TrustEvaluator: TrustEvaluator?,
+        trustEvaluator: TrustEvaluator?,
         options: VerificationOptions
     ): VerificationResult {
         // Input validation for security and stability
@@ -104,12 +105,13 @@ internal class DefaultCredentialService(
         // Validate proof exists
         CredentialValidation.validateProofExists(credential)?.let { return it }
         
-        // Get format from proof
+        // Get format from proof — at this point proof is non-null (validateProofExists passed),
+        // so a null proofSuiteId means the proof type is present but unrecognised/unsupported.
         val proofSuiteId = credential.proof?.getFormatId()
             ?: return VerificationResult.Invalid.InvalidProof(
                 credential = credential,
-                reason = "Credential has no proof",
-                errors = listOf("VerifiableCredential must have a proof for verification")
+                reason = "Proof type is unrecognized or unsupported",
+                errors = listOf("Proof format ID could not be determined from proof type")
             )
         
         val engine = engines[proofSuiteId]
@@ -151,7 +153,7 @@ internal class DefaultCredentialService(
         }
         
         // Trust policy check (format-agnostic)
-        CredentialValidation.validateTrust(credential, TrustEvaluator)?.let { return it }
+        CredentialValidation.validateTrust(credential, trustEvaluator)?.let { return it }
         
         // Delegate to proof engine for format-specific verification
         val engineResult = engine.verify(credential, options)
@@ -215,7 +217,7 @@ internal class DefaultCredentialService(
     
     override suspend fun verifyPresentation(
         presentation: VerifiablePresentation,
-        TrustEvaluator: TrustEvaluator?,
+        trustEvaluator: TrustEvaluator?,
         options: VerificationOptions
     ): VerificationResult {
         // Input validation for security and stability
@@ -261,7 +263,7 @@ internal class DefaultCredentialService(
         
         // Verify each credential in the presentation
         val credentialResults = presentation.verifiableCredential.map { credential ->
-            verify(credential, TrustEvaluator, options)
+            verify(credential, trustEvaluator, options)
         }
         
         // If any credential is invalid, return failure
@@ -269,14 +271,9 @@ internal class DefaultCredentialService(
         if (firstInvalidCredential != null) {
             return firstInvalidCredential
         }
-        
-        // Verify challenge if required
-        PresentationVerification.verifyChallenge(presentation, options)?.let { return it }
-        
-        // Verify domain if required
-        PresentationVerification.verifyDomain(presentation, options)?.let { return it }
-        
-        // Verify presentation proof if verification is enabled
+
+        // Verify presentation proof FIRST (cryptographic integrity must be established before
+        // checking holder binding or challenge, to prevent binding-bypass attacks).
         if (options.verifyPresentationProof) {
             if (presentation.proof == null) {
                 // Presentation proof is required when verification is enabled
@@ -292,18 +289,18 @@ internal class DefaultCredentialService(
                 val proofFormat = presentation.proof.getFormatId()
                 PresentationVerification.verifyProofFormatSupported(proofFormat, engines, presentation)?.let { return it }
                 val engine = engines[proofFormat]!!
-                
+
                 // For presentation proof verification, we need to verify the proof signature
                 // This is similar to credential verification but for the presentation itself
                 // Since proof engines don't have a direct "verifyPresentationProof" method,
                 // we'll create a minimal credential-like structure for verification
                 // Note: This is a simplified approach - full implementation would verify
                 // the presentation document itself, not a credential
-                
+
                 // For VC-LD presentations, we can verify the LinkedDataProof directly
                 if (presentation.proof is org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof) {
                     val proof = presentation.proof as org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
-                    
+
                     // Verify the proof signature
                     val holderIri = presentation.holder
                     if (holderIri.isDid) {
@@ -312,20 +309,19 @@ internal class DefaultCredentialService(
                             verificationMethodId = proof.verificationMethod,
                             didResolver = didResolver
                         )
-                        
+
                         if (verificationMethod == null) {
-                            return VerificationResult.Invalid.InvalidIssuer(
-                                credential = presentation.verifiableCredential.first(),
-                                issuerIri = holderIri,
-                                reason = "Could not resolve holder DID or get verification key",
+                            return VerificationResult.Invalid.InvalidProof(
+                                credential = null,
+                                reason = "Presentation proof verification failed: could not resolve holder DID or get verification key for '${holderIri.value}'",
                                 errors = listOf("Failed to resolve holder: ${holderIri.value}")
                             )
                         }
-                        
+
                         // Build presentation document without proof for canonicalization
                         val vpDocument = buildPresentationDocumentWithoutProof(presentation)
                         val canonical = canonicalizePresentationDocument(vpDocument)
-                        
+
                         // Verify signature
                         val isValid = PresentationVerification.verifyPresentationSignature(
                             canonical = canonical,
@@ -333,7 +329,7 @@ internal class DefaultCredentialService(
                             verificationMethod = verificationMethod,
                             proofType = proof.type
                         )
-                        
+
                         if (!isValid) {
                             return VerificationResult.Invalid.InvalidProof(
                                 credential = presentation.verifiableCredential.first(),
@@ -341,68 +337,140 @@ internal class DefaultCredentialService(
                                 errors = listOf("Invalid signature on VerifiablePresentation proof")
                             )
                         }
+
+                        // F-01: Verify the proof's verificationMethod belongs to the declared holder.
+                        // This prevents an attacker from supplying a valid proof signed by a
+                        // different DID's key while keeping holder binding superficially intact.
+                        // SEC-08: presentation.holder is non-nullable; the prior `!= null` guard
+                        // was vacuous and has been removed.
+                        if (options.enforceHolderBinding) {
+                            val holderDid = presentation.holder.value
+                            if (!proof.verificationMethod.startsWith(holderDid)) {
+                                return VerificationResult.Invalid.InvalidProof(
+                                    credential = null,
+                                    reason = "Presentation proof verificationMethod '${proof.verificationMethod}' " +
+                                        "does not belong to holder '$holderDid'"
+                                )
+                            }
+                        }
+                    } else {
+                        return VerificationResult.Invalid.InvalidProof(
+                            credential = null,
+                            reason = "Presentation holder '${holderIri.value}' is not a DID",
+                            errors = listOf("Non-DID holder IRI cannot be verified: ${holderIri.value}")
+                        )
                     }
                 } else if (presentation.proof is org.trustweave.credential.model.vc.CredentialProof.SdJwtVcProof) {
-                    // SD-JWT-VC presentation proofs would be verified differently
-                    // For now, we'll return a warning that SD-JWT-VC presentation proof verification
-                    // is not fully implemented
-                    return VerificationResult.Valid(
+                    return VerificationResult.Invalid.InvalidProof(
                         credential = presentation.verifiableCredential.first(),
-                        issuerIri = presentation.verifiableCredential.first().issuer.id,
-                        subjectIri = presentation.holder,
-                        issuedAt = Clock.System.now(),
-                        expiresAt = presentation.expirationDate,
-                        warnings = listOf(
-                            "SD-JWT-VC presentation proof verification is not fully implemented. " +
-                            "Only credential proofs were verified."
-                        )
+                        reason = "SD-JWT-VC presentation proof verification is not implemented",
+                        errors = listOf("SD-JWT-VC presentation proof verification is not supported")
+                    )
+                } else {
+                    return VerificationResult.Invalid.InvalidProof(
+                        credential = presentation.verifiableCredential.first(),
+                        reason = "Unsupported presentation proof type: ${presentation.proof::class.simpleName}",
+                        errors = listOf("Presentation proof type '${presentation.proof::class.simpleName}' is not supported for verification")
                     )
                 }
             }
         }
+
+        // Guard: holder binding is meaningless without presentation proof verification — the
+        // holder field can be trivially forged if the presentation signature is not checked.
+        if (options.enforceHolderBinding && !options.verifyPresentationProof) {
+            return VerificationResult.Invalid.InvalidProof(
+                credential = null,
+                reason = "Holder binding cannot be enforced without presentation proof verification",
+                errors = listOf("verifyPresentationProof must be true when enforceHolderBinding is true")
+            )
+        }
+
+        // Holder binding: presentation.holder must match each credential's credentialSubject.id
+        if (options.enforceHolderBinding) {
+            val holderIri = presentation.holder
+            for (credential in presentation.verifiableCredential) {
+                val subjectId = credential.credentialSubject.id
+                if (subjectId == null || subjectId.value != holderIri.value) {
+                    return VerificationResult.Invalid.InvalidProof(
+                        credential = null,
+                        reason = "Holder binding failed: credential subject ID does not match presentation holder",
+                        errors = listOf("credentialSubject.id is missing or does not match holder DID")
+                    )
+                }
+            }
+        }
+
+        // Guard: challenge/domain fields can be trivially forged when the presentation signature
+        // was not verified.  Require proof verification before honouring either check.
+        if ((options.verifyChallenge || options.verifyDomain) && !options.verifyPresentationProof) {
+            return VerificationResult.Invalid.InvalidProof(
+                credential = null,
+                reason = "Challenge/domain verification requires presentation proof verification",
+                errors = listOf("verifyPresentationProof must be true when verifyChallenge or verifyDomain is enabled")
+            )
+        }
+
+        // Verify challenge if required
+        PresentationVerification.verifyChallenge(presentation, options)?.let { return it }
+
+        // Verify domain if required
+        PresentationVerification.verifyDomain(presentation, options)?.let { return it }
         
         // All checks passed - return success
         val firstValidResult = credentialResults.firstOrNull { it is VerificationResult.Valid }
             as? VerificationResult.Valid
-        
+
+        // F-07: Warn when a presentation contains credentials from more than one issuer.
+        // Only the first issuer is reflected in the top-level result field, which may mislead
+        // relying parties that inspect only that field.
+        val distinctIssuers = credentialResults
+            .filterIsInstance<VerificationResult.Valid>()
+            .mapNotNull { it.issuerIri }
+            .distinct()
+        val multiIssuerWarnings = if (distinctIssuers.size > 1) {
+            listOf(
+                "Presentation contains credentials from ${distinctIssuers.size} distinct issuers: " +
+                    "$distinctIssuers. Only the first issuer is reflected in this result."
+            )
+        } else {
+            emptyList()
+        }
+
+        // SEC-06: When the presentation proof was not verified, subjectIri is unverified — set it
+        // to null so callers cannot rely on an unverified holder DID.
+        val warnings = credentialResults.flatMap { it.allWarnings } + multiIssuerWarnings
+        val proofWarnings = if (trustEvaluator != null && !options.verifyPresentationProof) {
+            listOf(
+                "Trust evaluation was performed but presentation proof was not verified. subjectIri is unverified."
+            )
+        } else {
+            emptyList()
+        }
+
         return VerificationResult.Valid(
             credential = presentation.verifiableCredential.first(),
             issuerIri = firstValidResult?.issuerIri ?: presentation.verifiableCredential.first().issuer.id,
-            subjectIri = presentation.holder,
-            issuedAt = firstValidResult?.issuedAt ?: Clock.System.now(),
+            // SEC-06: only populate subjectIri from the holder when the proof has been verified;
+            // an unverified holder value could be trivially forged by an attacker.
+            subjectIri = if (options.verifyPresentationProof) presentation.holder else null,
+            issuedAt = firstValidResult?.issuedAt
+                ?: presentation.verifiableCredential.firstOrNull()?.issuanceDate
+                ?: presentation.verifiableCredential.firstOrNull()?.validFrom
+                ?: Clock.System.now(),
             expiresAt = presentation.expirationDate ?: firstValidResult?.expiresAt,
-            warnings = credentialResults.flatMap { it.allWarnings }
+            warnings = warnings + proofWarnings
         )
     }
     
     // Helper methods for presentation verification
     
     private fun buildPresentationDocumentWithoutProof(presentation: VerifiablePresentation): kotlinx.serialization.json.JsonObject {
+        val fullJson = json.encodeToJsonElement(VerifiablePresentation.serializer(), presentation).jsonObject
         return kotlinx.serialization.json.buildJsonObject {
-            put("@context", kotlinx.serialization.json.buildJsonArray {
-                presentation.context.forEach { add(it) }
-            })
-            presentation.id?.let { put("id", it.value) }
-            put("type", kotlinx.serialization.json.buildJsonArray {
-                presentation.type.forEach { add(it.value) }
-            })
-            put("holder", presentation.holder.value)
-            put("verifiableCredential", kotlinx.serialization.json.buildJsonArray {
-                presentation.verifiableCredential.forEach { credential ->
-                    // For presentation proof verification, include credential IDs
-                    // The actual credential proofs are verified separately above
-                    add(kotlinx.serialization.json.buildJsonObject {
-                        credential.id?.let { put("id", it.value) }
-                        put("type", buildJsonArray {
-                            credential.type.forEach { add(it.value) }
-                        })
-                    })
-                }
-            })
-            presentation.expirationDate?.let { put("expirationDate", it.toString()) }
-            presentation.challenge?.let { put("challenge", it) }
-            presentation.domain?.let { put("domain", it) }
-            // Explicitly exclude proof for canonicalization
+            fullJson.entries.forEach { (k, v) ->
+                if (k != "proof") put(k, v)
+            }
         }
     }
     
@@ -420,27 +488,51 @@ internal class DefaultCredentialService(
     }
     
     
-    override suspend fun status(credential: VerifiableCredential): CredentialStatusInfo {
+    override suspend fun status(
+        credential: VerifiableCredential,
+        clockSkewTolerance: java.time.Duration
+    ): CredentialStatusInfo {
         val now = Clock.System.now()
-        
-        val expired = credential.expirationDate != null && now > credential.expirationDate
-        
+        val clockSkewKt = clockSkewTolerance.toKotlinDuration()
+
+        // Use the same VC-version-aware expiry/notBefore logic as CredentialValidation so that
+        // status() and verify() always agree on which field is authoritative for each VC version.
+        // SEC-03: was incorrectly using raw `validUntil ?: expirationDate` for all VC versions.
+        val effectiveExpiry = if (credential.isVc2 && !credential.isVc1) {
+            credential.validUntil
+        } else {
+            credential.validUntil ?: credential.expirationDate
+        }
+        // SEC-05: apply clock-skew tolerance, matching verify()'s behaviour.
+        val expired = effectiveExpiry != null && now > effectiveExpiry.plus(clockSkewKt)
+
         val revoked = if (credential.credentialStatus != null && revocationManager != null) {
             try {
                 val revocationStatus = revocationManager.checkRevocationStatus(credential)
                 revocationStatus.revoked || revocationStatus.suspended
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
-                false // If revocation check fails, assume not revoked
+                true // Fail-closed: treat revocation check errors as revoked
             }
         } else {
             false
         }
-        
+
+        // SEC-03: VC-version-aware notBefore (matches CredentialValidation.validateNotBefore).
+        val effectiveNotBefore = if (credential.isVc2 && !credential.isVc1) {
+            credential.validFrom
+        } else {
+            credential.validFrom ?: credential.issuanceDate
+        }
+        // SEC-05: apply clock-skew tolerance.
+        val notYetValid = effectiveNotBefore != null && now < effectiveNotBefore.minus(clockSkewKt)
+
         return CredentialStatusInfo(
-            valid = !expired && !revoked,
+            valid = !expired && !revoked && !notYetValid,
             revoked = revoked,
             expired = expired,
-            notYetValid = false  // VC doesn't have validFrom, only expirationDate
+            notYetValid = notYetValid
         )
     }
     

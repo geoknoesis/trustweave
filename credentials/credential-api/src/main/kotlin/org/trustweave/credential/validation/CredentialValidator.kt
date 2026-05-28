@@ -57,19 +57,11 @@ object CredentialValidator {
             }
         }
 
-        // Check credential subject
+        // Check credential subject (id is optional per W3C VC 2.0 §4.4)
         val subjectId = credential.credentialSubject.id
-        if (subjectId.value.isBlank()) {
-            return ValidationResult.Invalid(
-                code = "MISSING_SUBJECT",
-                message = "Credential subject ID is required",
-                field = "credentialSubject.id",
-                value = null
-            )
-        }
 
         // Validate subject IRI format (if it's a DID)
-        if (subjectId.isDid) {
+        if (subjectId != null && subjectId.isDid) {
             try {
                 Did(subjectId.value)
             } catch (e: IllegalArgumentException) {

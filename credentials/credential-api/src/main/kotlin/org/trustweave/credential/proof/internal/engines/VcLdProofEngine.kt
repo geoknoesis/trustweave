@@ -3,6 +3,7 @@ package org.trustweave.credential.proof.internal.engines
 import org.trustweave.credential.internal.CredentialConstants
 import org.trustweave.credential.internal.infrastructure.DefaultJsonLdCanonicalizationAdapter
 import org.trustweave.credential.internal.infrastructure.DefaultEd25519SignatureVerificationAdapter
+import org.trustweave.credential.internal.infrastructure.DefaultJsonWebSignature2020Adapter
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.model.vc.VerifiableCredential
@@ -15,6 +16,8 @@ import org.trustweave.credential.spi.proof.SignatureVerificationPort
 import org.trustweave.credential.spi.proof.ProofEngine
 import org.trustweave.credential.spi.proof.ProofEngineCapabilities
 import org.trustweave.credential.spi.proof.ProofEngineConfig
+import org.trustweave.credential.spi.status.CredentialStatusChecker
+import org.trustweave.credential.spi.status.CredentialStatusCheckResult
 import org.trustweave.credential.requests.IssuanceRequest
 import org.trustweave.credential.requests.PresentationRequest
 import org.trustweave.credential.requests.VerificationOptions
@@ -24,6 +27,16 @@ import org.trustweave.core.identifiers.KeyId
 import org.trustweave.kms.KeyManagementService
 import org.trustweave.kms.results.SignResult
 import org.trustweave.did.model.VerificationMethod
+import com.nimbusds.jose.JWSAlgorithm
+import com.nimbusds.jose.JWSHeader
+import com.nimbusds.jose.JWSObject
+import com.nimbusds.jose.Payload
+import com.nimbusds.jose.crypto.Ed25519Signer
+import com.nimbusds.jose.crypto.ECDSASigner
+import com.nimbusds.jose.jwk.Curve
+import com.nimbusds.jose.jwk.ECKey
+import com.nimbusds.jose.jwk.OctetKeyPair
+import com.nimbusds.jose.util.Base64URL
 import kotlinx.serialization.json.*
 import kotlinx.datetime.Clock
 import java.util.*
@@ -47,7 +60,9 @@ import org.slf4j.LoggerFactory
 internal class VcLdProofEngine(
     private val config: ProofEngineConfig = ProofEngineConfig(),
     private val canonicalizationPort: JsonLdCanonicalizationPort = DefaultJsonLdCanonicalizationAdapter(),
-    private val signatureVerificationPort: SignatureVerificationPort = DefaultEd25519SignatureVerificationAdapter()
+    private val signatureVerificationPort: SignatureVerificationPort = DefaultEd25519SignatureVerificationAdapter(),
+    private val jwsVerificationAdapter: DefaultJsonWebSignature2020Adapter = DefaultJsonWebSignature2020Adapter(),
+    private val statusChecker: CredentialStatusChecker? = null,
 ) : ProofEngine {
 
     private val vmResolver: DidVerificationMethodResolver by lazy {
@@ -119,12 +134,24 @@ internal class VcLdProofEngine(
             request.proofOptions?.domain?.let { put("domain", JsonPrimitive(it)) }
         }
         
+        val requestedSuite = request.proofOptions?.additionalOptions?.get("proofType")
+            ?.toString()?.removeSurrounding("\"")
+            ?: CredentialConstants.ProofTypes.ED25519_SIGNATURE_2020
+
+        // JsonWebSignature2020 uses a JWS-based proofValue; all other suites use base64url raw bytes
+        val finalSignature = if (requestedSuite == CredentialConstants.ProofTypes.JSON_WEB_SIGNATURE_2020) {
+            signDocumentAsJws(canonicalDocument, keyId, request.proofOptions
+                ?.additionalOptions?.get("jwsAlgorithm")?.toString()?.removeSurrounding("\"") ?: "EdDSA")
+        } else {
+            signature
+        }
+
         val linkedDataProof = CredentialProof.LinkedDataProof(
-            type = request.proofOptions?.additionalOptions?.get("proofType")?.toString()?.removeSurrounding("\"") ?: CredentialConstants.ProofTypes.ED25519_SIGNATURE_2020,
+            type = requestedSuite,
             created = proofCreated,
             verificationMethod = verificationMethod,
             proofPurpose = proofPurpose,
-            proofValue = signature,
+            proofValue = finalSignature,
             additionalProperties = additionalProperties
         )
         
@@ -182,7 +209,30 @@ internal class VcLdProofEngine(
                     "Invalid signature on VC-LD document"
                 )
             }
-            
+
+            // Revocation / suspension check
+            val effectiveChecker = statusChecker
+                ?: (config.properties["statusChecker"] as? CredentialStatusChecker)
+            if (effectiveChecker != null && credential.credentialStatus != null) {
+                when (val status = effectiveChecker.checkStatus(credential)) {
+                    is CredentialStatusCheckResult.Revoked -> return VerificationResult.Invalid.Revoked(
+                        credential = credential,
+                        revokedAt = null,
+                        errors = listOf("Credential has been revoked: ${status.reason ?: "no reason provided"}"),
+                    )
+                    is CredentialStatusCheckResult.Suspended -> return VerificationResult.Invalid.InvalidProof(
+                        credential = credential,
+                        reason = "Credential is suspended: ${status.reason ?: "no reason provided"}",
+                        errors = listOf("Credential suspended"),
+                    )
+                    is CredentialStatusCheckResult.CheckFailed -> logger.warn(
+                        "Status check failed for credential {}: {}",
+                        credential.id?.value, status.reason
+                    )
+                    else -> {}
+                }
+            }
+
             // Create valid result
             createValidVerificationResult(credential, issuerIri, proof)
             
@@ -232,8 +282,8 @@ internal class VcLdProofEngine(
             credential = credential,
             issuerIri = issuerIri,
             subjectIri = credential.credentialSubject.id,
-            issuedAt = credential.issuanceDate,
-            expiresAt = credential.expirationDate,
+            issuedAt = credential.issuanceDate ?: credential.validFrom ?: kotlinx.datetime.Clock.System.now(),
+            expiresAt = credential.expirationDate ?: credential.validUntil,
             warnings = emptyList(),
             formatMetadata = buildJsonObject {
                 put("proofType", proof.type)
@@ -307,6 +357,7 @@ internal class VcLdProofEngine(
         
         // Get holder from first credential's subject
         val holder = credentialsToInclude.first().credentialSubject.id
+            ?: throw IllegalArgumentException("Cannot create presentation: credential subject has no id")
         
         // Create VerifiablePresentation
         // Note: VC-LD presentations may need a proof on the presentation itself
@@ -371,6 +422,14 @@ internal class VcLdProofEngine(
             return false
         }
 
+        val documentBytes = canonical.toByteArray(Charsets.UTF_8)
+
+        // JsonWebSignature2020: proofValue is a detached JWS (header..signature, no payload in middle)
+        if (proofType == CredentialConstants.ProofTypes.JSON_WEB_SIGNATURE_2020) {
+            logger.debug("Verifying JsonWebSignature2020 detached JWS")
+            return jwsVerificationAdapter.verifyDetachedJws(proofValue, documentBytes, verificationMethod)
+        }
+
         val signatureBytes = try {
             Base64.getUrlDecoder().decode(proofValue)
         } catch (e: Exception) {
@@ -378,10 +437,36 @@ internal class VcLdProofEngine(
             return false
         }
 
-        val documentBytes = canonical.toByteArray(Charsets.UTF_8)
         logger.debug("Verifying signature: signatureLength={}, documentLength={}", signatureBytes.size, documentBytes.size)
-
         return signatureVerificationPort.verify(documentBytes, signatureBytes, verificationMethod, proofType)
+    }
+
+    /**
+     * Sign using detached JWS (JsonWebSignature2020 proof type).
+     * Returns the compact JWS with empty second segment: `<header>..<signature>`.
+     */
+    private suspend fun signDocumentAsJws(canonical: String, keyId: String, algorithm: String): String {
+        val kms = getKms() ?: throw IllegalStateException("KMS required for JsonWebSignature2020 signing")
+        val jwsAlgorithm = when (algorithm.uppercase()) {
+            "EDDSA", "ED25519" -> JWSAlgorithm.EdDSA
+            "ES256" -> JWSAlgorithm.ES256
+            "ES384" -> JWSAlgorithm.ES384
+            "ES512" -> JWSAlgorithm.ES512
+            else -> JWSAlgorithm.EdDSA
+        }
+        val header = JWSHeader.Builder(jwsAlgorithm).build()
+        val payloadBytes = canonical.toByteArray(Charsets.UTF_8)
+        val signingInput = "${header.toBase64URL()}.${Base64URL.encode(payloadBytes)}"
+            .toByteArray(Charsets.UTF_8)
+        val signResult = kms.sign(KeyId(keyId), signingInput)
+        val sigBytes = when (signResult) {
+            is SignResult.Success -> signResult.signature
+            is SignResult.Failure.KeyNotFound -> throw IllegalStateException("Key not found: ${signResult.keyId.value}")
+            is SignResult.Failure.UnsupportedAlgorithm -> throw IllegalStateException("Unsupported algorithm")
+            is SignResult.Failure.Error -> throw IllegalStateException("Sign error: ${signResult.reason}")
+        }
+        // Detached JWS: header..signature (empty payload segment)
+        return "${header.toBase64URL()}..${Base64URL.encode(sigBytes)}"
     }
     
     private fun getKms(): KeyManagementService? {

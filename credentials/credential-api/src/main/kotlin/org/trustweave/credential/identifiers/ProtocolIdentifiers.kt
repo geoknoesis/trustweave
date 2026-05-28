@@ -39,6 +39,8 @@ class ExchangeProtocolName(val value: String) {
         val Oidc4Vci = ExchangeProtocolName("oidc4vci")
         val Oidc4Vp = ExchangeProtocolName("oidc4vp")
         val Chapi = ExchangeProtocolName("chapi")
+        val SiopV2 = ExchangeProtocolName("siop-v2")
+        val Mdl = ExchangeProtocolName("mdl")
     }
 }
 

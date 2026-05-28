@@ -55,19 +55,31 @@ internal object RevocationChecker {
         revocationManager: CredentialRevocationManager?,
         policy: RevocationFailurePolicy
     ): Pair<VerificationResult.Invalid?, List<String>> {
-        if (revocationManager == null || credential.credentialStatus == null) {
+        if (revocationManager == null) {
+            return if (credential.credentialStatus == null) {
+                Pair(null, emptyList())
+            } else {
+                handleRevocationFailure(
+                    credential = credential,
+                    error = IllegalStateException("No revocation manager configured"),
+                    reason = "Credential has a credentialStatus but no revocation manager is configured",
+                    policy = policy
+                )
+            }
+        }
+        if (credential.credentialStatus == null) {
             return Pair(null, emptyList())
         }
         
         return try {
             val revocationStatus = revocationManager.checkRevocationStatus(credential)
-            
+
             if (revocationStatus.revoked) {
                 val errorMessage = "Credential has been revoked${revocationStatus.reason?.let { ": $it" } ?: ""}"
                 Pair(
                     VerificationResult.Invalid.Revoked(
                         credential = credential,
-                        revokedAt = Clock.System.now(),
+                        revokedAt = revocationStatus.revokedAt ?: Clock.System.now(),
                         errors = listOf(errorMessage),
                         warnings = emptyList(),
                         revocationReason = revocationStatus.reason
@@ -77,12 +89,12 @@ internal object RevocationChecker {
             } else if (revocationStatus.suspended) {
                 val errorMessage = "Credential is suspended${revocationStatus.reason?.let { ": $it" } ?: ""}"
                 Pair(
-                    VerificationResult.Invalid.Revoked(
+                    VerificationResult.Invalid.Suspended(
                         credential = credential,
-                        revokedAt = Clock.System.now(),
+                        suspendedAt = revocationStatus.revokedAt,
+                        reason = revocationStatus.reason,
                         errors = listOf(errorMessage),
-                        warnings = emptyList(),
-                        revocationReason = revocationStatus.reason
+                        warnings = emptyList()
                     ),
                     emptyList()
                 )
@@ -90,6 +102,10 @@ internal object RevocationChecker {
                 // Credential is not revoked
                 Pair(null, emptyList())
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // CancellationException must be the FIRST catch clause so it is never swallowed
+            // by a broader handler (e.g. IOException or Exception) in the clauses below.
+            throw e
         } catch (e: java.util.concurrent.TimeoutException) {
             handleRevocationFailure(
                 credential = credential,
@@ -132,9 +148,6 @@ internal object RevocationChecker {
                 reason = "Invalid revocation check request: ${e.message}",
                 policy = policy
             )
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            // Re-throw cancellation exceptions
-            throw e
         } catch (e: Exception) {
             handleRevocationFailure(
                 credential = credential,
@@ -170,14 +183,11 @@ internal object RevocationChecker {
             RevocationFailurePolicy.FAIL_CLOSED -> {
                 // Fail-closed: Reject credential if revocation cannot be checked
                 Pair(
-                    VerificationResult.Invalid.InvalidProof(
+                    VerificationResult.Invalid.RevocationCheckFailed(
                         credential = credential,
-                        reason = "Revocation check failed: $reason",
-                        errors = listOf(
-                            "Cannot verify credential revocation status: $reason",
-                            "Credential rejected due to revocation check failure (fail-closed policy)"
-                        ),
-                        warnings = emptyList()
+                        reason = reason,
+                        errors = listOf(reason),
+                        cause = error
                     ),
                     emptyList()
                 )

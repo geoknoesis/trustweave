@@ -34,6 +34,28 @@ import kotlinx.datetime.Instant
  */
 interface CredentialRevocationManager {
     /**
+     * Find an existing active status list for the given issuer and purpose, or create a new one.
+     *
+     * Callers should prefer this method over [createStatusList] to avoid creating a new status
+     * list per credential (which exhausts capacity quickly). A default implementation is provided
+     * that delegates to [listStatusLists] + [createStatusList] so existing implementations
+     * continue to work without changes.
+     *
+     * @param issuerDid Issuer DID
+     * @param purpose Status list purpose (revocation or suspension)
+     * @return ID of an existing or newly created status list
+     */
+    suspend fun findOrCreateStatusList(
+        issuerDid: String,
+        purpose: StatusPurpose
+    ): StatusListId {
+        // Default: reuse the most-recently-updated list for this issuer+purpose, or create one.
+        val existing = listStatusLists(issuerDid).filter { it.purpose == purpose }
+        return existing.maxByOrNull { it.lastUpdated }?.id
+            ?: createStatusList(issuerDid, purpose)
+    }
+
+    /**
      * Create a new status list.
      *
      * @param issuerDid Issuer DID
@@ -240,7 +262,8 @@ data class RevocationStatus(
     val suspended: Boolean = false,
     val statusListId: StatusListId? = null,
     val index: Int? = null,
-    val reason: String? = null
+    val reason: String? = null,
+    val revokedAt: Instant? = null
 ) {
     /**
      * True if credential is valid (not revoked and not suspended).

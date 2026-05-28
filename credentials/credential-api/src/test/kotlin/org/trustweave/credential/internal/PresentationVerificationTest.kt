@@ -74,9 +74,11 @@ class PresentationVerificationTest {
         )
         
         val result = PresentationVerification.verifyChallenge(presentation, options)
-        
-        // Should pass (current behavior - might want to add warning in future)
-        assertNull(result)
+
+        // Fail-closed: verifyChallenge is enabled but no expectedChallenge was supplied.
+        assertNotNull(result, "Should fail when verifyChallenge is enabled without an expectedChallenge")
+        assertTrue(result is VerificationResult.Invalid.InvalidProof)
+        assertTrue(result.errors.any { it.contains("expectedChallenge") })
     }
     
     @Test
@@ -130,8 +132,11 @@ class PresentationVerificationTest {
         )
         
         val result = PresentationVerification.verifyDomain(presentation, options)
-        
-        assertNull(result, "Should pass when no expected domain")
+
+        // Fail-closed: verifyDomain is enabled but no expectedDomain was supplied.
+        assertNotNull(result, "Should fail when verifyDomain is enabled without an expectedDomain")
+        assertTrue(result is VerificationResult.Invalid.InvalidProof)
+        assertTrue(result.errors.any { it.contains("expectedDomain") })
     }
     
     @Test
@@ -222,6 +227,24 @@ class PresentationVerificationTest {
         domain: String? = null
     ): VerifiablePresentation {
         val credential = createTestCredential()
+        // Per W3C VP spec, challenge/domain live inside the proof, not the outer envelope.
+        // PresentationVerification reads them from LinkedDataProof.additionalProperties.
+        val proof = if (challenge != null || domain != null) {
+            val extras = buildMap<String, kotlinx.serialization.json.JsonElement> {
+                challenge?.let { put("challenge", kotlinx.serialization.json.JsonPrimitive(it)) }
+                domain?.let { put("domain", kotlinx.serialization.json.JsonPrimitive(it)) }
+            }
+            org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof(
+                type = "Ed25519Signature2020",
+                created = Clock.System.now(),
+                verificationMethod = "did:key:test#key-1",
+                proofPurpose = "authentication",
+                proofValue = "z-test-proof-value",
+                additionalProperties = extras
+            )
+        } else {
+            null
+        }
         return VerifiablePresentation(
             context = listOf(CredentialConstants.VcContexts.VC_1_1),
             type = listOf(CredentialType.fromString("VerifiablePresentation")),
@@ -229,7 +252,7 @@ class PresentationVerificationTest {
             verifiableCredential = listOf(credential),
             challenge = challenge,
             domain = domain,
-            proof = null
+            proof = proof
         )
     }
     

@@ -34,6 +34,8 @@ object CredentialProofSerializer : KSerializer<CredentialProof> {
                     is CredentialProof.LinkedDataProof -> json.encodeToJsonElement(value)
                     is CredentialProof.JwtProof -> json.encodeToJsonElement(value)
                     is CredentialProof.SdJwtVcProof -> json.encodeToJsonElement(value)
+                    is CredentialProof.MdocProof -> json.encodeToJsonElement(value)
+                    is CredentialProof.JAdES -> json.encodeToJsonElement(value)
                 }
                 // Add discriminator
                 val jsonObject = jsonElement.jsonObject.toMutableMap()
@@ -41,6 +43,8 @@ object CredentialProofSerializer : KSerializer<CredentialProof> {
                     is CredentialProof.LinkedDataProof -> "LinkedDataProof"
                     is CredentialProof.JwtProof -> "JwtProof"
                     is CredentialProof.SdJwtVcProof -> "SdJwtVcProof"
+                    is CredentialProof.MdocProof -> "MdocProof"
+                    is CredentialProof.JAdES -> "JAdES"
                 })
                 encoder.encodeJsonElement(JsonObject(jsonObject))
             }
@@ -50,6 +54,8 @@ object CredentialProofSerializer : KSerializer<CredentialProof> {
                     is CredentialProof.LinkedDataProof -> CredentialProof.LinkedDataProof.serializer().serialize(encoder, value)
                     is CredentialProof.JwtProof -> CredentialProof.JwtProof.serializer().serialize(encoder, value)
                     is CredentialProof.SdJwtVcProof -> CredentialProof.SdJwtVcProof.serializer().serialize(encoder, value)
+                    is CredentialProof.MdocProof -> CredentialProof.MdocProof.serializer().serialize(encoder, value)
+                    is CredentialProof.JAdES -> CredentialProof.JAdES.serializer().serialize(encoder, value)
                 }
             }
         }
@@ -66,6 +72,8 @@ object CredentialProofSerializer : KSerializer<CredentialProof> {
                     "LinkedDataProof" -> json.decodeFromJsonElement<CredentialProof.LinkedDataProof>(jsonElement)
                     "JwtProof" -> json.decodeFromJsonElement<CredentialProof.JwtProof>(jsonElement)
                     "SdJwtVcProof" -> json.decodeFromJsonElement<CredentialProof.SdJwtVcProof>(jsonElement)
+                    "MdocProof" -> json.decodeFromJsonElement<CredentialProof.MdocProof>(jsonElement)
+                    "JAdES" -> json.decodeFromJsonElement<CredentialProof.JAdES>(jsonElement)
                     else -> throw kotlinx.serialization.SerializationException("Unknown CredentialProof type: $type")
                 }
             }

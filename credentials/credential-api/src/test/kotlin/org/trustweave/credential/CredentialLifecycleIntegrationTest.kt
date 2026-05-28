@@ -111,7 +111,7 @@ class CredentialLifecycleIntegrationTest {
         
         assertNotNull(credential.proof, "Credential should have a proof")
         assertEquals(issuerDid.value, credential.issuer.id.value, "Issuer should match")
-        assertEquals(holderDid.value, credential.credentialSubject.id.value, "Subject should match")
+        assertEquals(holderDid.value, credential.credentialSubject.id?.value, "Subject should match")
         
         // Step 3: Verify credential
         val verificationOptions = VerificationOptions(
@@ -263,6 +263,8 @@ class CredentialLifecycleIntegrationTest {
                         is VerificationResult.Invalid.InvalidIssuer -> result.reason
                         is VerificationResult.Invalid.Expired -> "Expired at: ${result.expiredAt}"
                         is VerificationResult.Invalid.Revoked -> "Revoked at: ${result.revokedAt}, reason: ${result.revocationReason}"
+                        is VerificationResult.Invalid.Suspended -> "Suspended at: ${result.suspendedAt}, reason: ${result.reason}"
+                        is VerificationResult.Invalid.RevocationCheckFailed -> "Revocation check failed: ${result.reason}"
                         is VerificationResult.Invalid.NotYetValid -> "Not yet valid, valid from: ${result.validFrom}"
                         is VerificationResult.Invalid.UnsupportedFormat -> "Unsupported format: ${result.format.value}"
                         is VerificationResult.Invalid.AdapterNotReady -> result.reason ?: result.errors.joinToString()

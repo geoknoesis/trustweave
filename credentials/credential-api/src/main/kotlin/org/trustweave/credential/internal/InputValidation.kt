@@ -74,8 +74,26 @@ internal object InputValidation {
     }
     
     /**
+     * Validate credential status entry ID length.
+     *
+     * Status list entry IDs have a tighter bound than schema IDs because they are stored
+     * in a VARCHAR(255) database column.
+     *
+     * @param statusId The status entry ID to validate
+     * @throws IllegalArgumentException if status ID exceeds maximum length
+     */
+    fun validateStatusId(statusId: String) {
+        if (statusId.length > SecurityConstants.MAX_STATUS_ID_LENGTH) {
+            throw IllegalArgumentException(
+                "Credential status ID exceeds maximum length of ${SecurityConstants.MAX_STATUS_ID_LENGTH} characters: " +
+                "${statusId.length} characters"
+            )
+        }
+    }
+
+    /**
      * Validate verification method ID length.
-     * 
+     *
      * @param verificationMethodId The verification method ID to validate
      * @throws IllegalArgumentException if verification method ID exceeds maximum length
      */
@@ -134,8 +152,8 @@ internal object InputValidation {
         // Validate issuer IRI
         validateIri(credential.issuer.id)
         
-        // Validate subject IRI
-        validateIri(credential.credentialSubject.id)
+        // Validate subject IRI (optional per W3C VC 2.0 §4.4 — skip when absent)
+        credential.credentialSubject.id?.let { validateIri(it) }
         
         // Validate claims count
         validateCredentialClaimsCount(credential)
@@ -144,7 +162,7 @@ internal object InputValidation {
         credential.credentialSchema?.id?.value?.let { validateSchemaId(it) }
         
         // Validate status ID if present
-        credential.credentialStatus?.id?.value?.let { validateSchemaId(it) }
+        credential.credentialStatus?.id?.value?.let { validateStatusId(it) }
     }
     
     /**

@@ -24,9 +24,13 @@ export default function HomeScreen() {
 
   // Refresh when the tab regains focus (so a Receive in another tab shows up here).
   useFocusEffect(useCallback(() => {
-    list().then((creds) => {
-      setState((prev) => (prev ? { ...prev, credentials: creds } : prev))
-    })
+    list()
+      .then((creds) => {
+        setState((prev) => (prev ? { ...prev, credentials: creds } : prev))
+      })
+      .catch((e) => {
+        setError(e instanceof Error ? e.message : String(e))
+      })
   }, []))
 
   const onDelete = (id: string) =>

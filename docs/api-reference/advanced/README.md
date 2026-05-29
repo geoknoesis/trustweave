@@ -21,8 +21,6 @@ This section is aimed at teams who are moving past the quick starts and now need
 - [Error Handling](error-handling.md) — sealed **result types**, `TrustWeaveException` (and domain subclasses), `Result<T>` utilities, and input validation.
 - [Plugin Lifecycle](plugin-lifecycle.md) — initialize, start, stop, and cleanup plugins that implement `PluginLifecycle`.
 
-> **Historical / superseded**: [`proof-adapter-implementation-guide.md`](proof-adapter-implementation-guide.md), [`proof-adapter-plugin-organization.md`](proof-adapter-plugin-organization.md), and [`proof-adapter-plugins-implementation.md`](proof-adapter-plugins-implementation.md) describe an earlier `ProofAdapter` / `CredentialEnvelope` design that has been replaced by `ProofEngine` and `VerifiableCredential`. Consult them only for historical context — follow the Proof Engine Implementation Guide for new work.
-
 ## Error Handling
 
 TrustWeave provides structured error handling with rich context:

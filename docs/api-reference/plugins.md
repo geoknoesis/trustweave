@@ -1,9 +1,10 @@
 ---
 title: Supported Plugins
-nav_exclude: true
+parent: API Reference
+nav_order: 30
 redirect_from:
   - /plugins/
-
+  - /api-reference/plugins/
 ---
 
 # Supported Plugins
@@ -18,7 +19,11 @@ TrustWeave's plugin architecture enables you to integrate with various DID metho
 - [Blockchain Anchor Plugins](#blockchain-anchor-plugins)
 - [Key Management Service (KMS) Plugins](#key-management-service-kms-plugins)
 - [Credential Format & Exchange Plugins](#credential-format--exchange-plugins)
+- [Signature Suites — eIDAS QES](#signature-suites--eidas-qes)
+- [Trust Registry](#trust-registry)
+- [Server Modules](#server-modules)
 - [Other Integrations](#other-integrations)
+- [Experimental / Stub Plugins](#experimental--stub-plugins)
 
 ---
 
@@ -54,6 +59,7 @@ Blockchain anchor plugins enable TrustWeave to anchor credential digests to vari
 | **Arbitrum** | `org.trustweave:anchors-plugins-arbitrum` | [Arbitrum Anchor Guide](../how-to/integrations/arbitrum-anchor.md) | Mainnet, Sepolia | Arbitrum One (largest L2 by TVL) anchoring with EVM compatibility |
 | **Algorand** | `org.trustweave:anchors-plugins-algorand` | [Algorand Guide](../how-to/integrations/algorand.md) | Mainnet, Testnet | Algorand blockchain anchoring for production-ready anchoring |
 | **Polygon** | `org.trustweave:anchors-plugins-polygon` | [Integration Modules](../how-to/integrations/README.md#blockchain-anchor-integrations) | Mainnet, Amoy | Polygon PoS anchoring with shared SPI plumbing |
+| **Bitcoin** | `org.trustweave:anchors-plugins-bitcoin` | See module README | Mainnet, Testnet | Bitcoin anchoring via OP_RETURN with BitcoinJ |
 | **Ganache** | `org.trustweave:anchors-plugins-ganache` | [Integration Modules](../how-to/integrations/README.md#blockchain-anchor-integrations) | Local | Local developer anchoring using Ganache/Testcontainers for testing |
 
 ---
@@ -75,6 +81,9 @@ KMS plugins enable TrustWeave to use various key management services for secure 
 | Plugin | Module ID | Documentation | Key Features |
 |--------|-----------|---------------|--------------|
 | **HashiCorp Vault** | `org.trustweave:kms-plugins-hashicorp` | [HashiCorp Vault Guide](../how-to/integrations/hashicorp-vault-kms.md) | Transit engine, Token/AppRole auth, Ed25519, secp256k1, P-256/P-384/P-521, RSA |
+| **PKCS#11 / HSM** | `org.trustweave:kms-plugins-pkcs11` | See module README | Generic PKCS#11 provider for hardware HSMs (SoftHSM2 tested), token-based authentication |
+| **IBM Key Protect** | `org.trustweave:kms-plugins-ibm` | [IBM Key Protect Guide](../how-to/integrations/ibm-key-protect-kms.md) | IBM Cloud Key Protect with IAM auth, key wrap/unwrap, EC and RSA keys |
+| **In-Memory** | `org.trustweave:kms-plugins-inmemory` | [In-Memory KMS Guide](../how-to/integrations/inmemory-kms.md) | Ephemeral in-memory key storage for development and tests |
 
 ---
 
@@ -101,6 +110,7 @@ Credential plugins provide format support (SD-JWT VC, mdoc / mDL, BBS+), status 
 |--------|-----------|-------------|
 | **BBS+** | `org.trustweave:credentials-plugins-bbs` | BBS+ selective-disclosure proofs |
 | **mDL / mdoc** | `org.trustweave:credentials-plugins-mdl` | ISO/IEC 18013-5 mobile driving licence (mdoc) format |
+| **JAdES (credential proof)** | `org.trustweave:credentials-plugins-jades` | ETSI JAdES JSON Advanced Electronic Signature proofs on credentials |
 
 ### Status / revocation
 
@@ -114,6 +124,47 @@ Credential plugins provide format support (SD-JWT VC, mdoc / mDL, BBS+), status 
 | **Anchor adapter** | `org.trustweave:credentials-plugins-anchor` | Anchor credentials / status data to a configured chain |
 
 For application-level helpers (audit logging, metrics, notifications, rendering, etc.) referenced in the legacy "feature plugins" tables, see the [Features Usage Guide](features/USAGE_GUIDE.md) — those are integration patterns, not separate Gradle modules in this release.
+
+---
+
+## Signature Suites — eIDAS QES
+
+Advanced electronic signature support aligned with ETSI / eIDAS for qualified electronic signatures. See [eIDAS QES design](../core-concepts/architecture/eidas-qes-design.md) for the overall architecture.
+
+| Plugin | Module ID | Description |
+|--------|-----------|-------------|
+| **TSA core** | `org.trustweave:signatures-tsa-core` | RFC 3161 time-stamp client and configuration (BouncyCastle backend) |
+| **Trust lists** | `org.trustweave:signatures-trust-lists` | ETSI TS 119 612 trust list parser, LOTL signature verifier, trust-anchor resolver |
+| **JAdES** | `org.trustweave:signatures-jades` | ETSI TS 119 182-1 JSON Advanced Electronic Signatures |
+| **CAdES** | `org.trustweave:signatures-cades` | ETSI TS 119 122 CMS Advanced Electronic Signatures |
+| **XAdES** | `org.trustweave:signatures-xades` | ETSI TS 119 132 XML Advanced Electronic Signatures |
+| **PAdES** | `org.trustweave:signatures-pades` | ETSI TS 119 142 PDF Advanced Electronic Signatures (skeleton) |
+| **ETSI validation** | `org.trustweave:signatures-etsi-validation` | ETSI EN 319 102 signature validation report engine |
+
+---
+
+## Trust Registry
+
+Pluggable trust registry for issuer/holder/verifier trust relationships.
+
+| Module | Module ID | Description |
+|--------|-----------|-------------|
+| **Trust Registry core** | `org.trustweave:trust-registry-trust-registry-core` | SPI and core registry types |
+| **Database registry** | `org.trustweave:trust-registry-plugins-database` | Relational-database-backed registry implementation |
+| **Trust Registry server** | `org.trustweave:trust-registry-trust-registry-server` | Ktor-based HTTP server exposing the registry |
+
+---
+
+## Server Modules
+
+Ready-to-run Ktor server modules wrapping the above plugins.
+
+| Module | Module ID | Description |
+|--------|-----------|-------------|
+| **OIDC4VCI issuer server** | `org.trustweave:credentials-oidc4vci-server` | Ktor issuer server implementing the OIDC4VCI protocol |
+| **VC API server** | `org.trustweave:credentials-vc-api-server` | Ktor server implementing the W3C VC API (issue/verify) |
+| **Status List server** | `org.trustweave:credentials-plugins-status-list-server` | HTTP server publishing W3C Bitstring / Token status list documents |
+| **DID Registrar server** | `org.trustweave:did-registrar` | Ktor server implementing the Universal Registrar interface for supported DID methods |
 
 ---
 
@@ -134,6 +185,8 @@ The following plugins have scaffolding in place but are not yet fully implemente
 
 | Plugin | Module | Status |
 |--------|--------|--------|
+| **Optimism** | `org.trustweave:anchors-plugins-optimism` | Code scaffolded; not yet documented or production-tested |
+| **zkSync** | `org.trustweave:anchors-plugins-zksync` | Code scaffolded; not yet documented or production-tested |
 | **Cardano** | `org.trustweave:anchors-plugins-cardano` | Transaction submission/reading not implemented |
 | **StarkNet** | `org.trustweave:anchors-plugins-starknet` | Transaction operations not implemented |
 | **Indy** | `org.trustweave:anchors-plugins-indy` | ATTRIB transaction operations not implemented |
@@ -141,8 +194,11 @@ The following plugins have scaffolding in place but are not yet fully implemente
 | **did:tezos** | `org.trustweave:did-plugins-tezos` | Create/resolve not implemented |
 | **did:orb** | `org.trustweave:did-plugins-orb` | Create/resolve not implemented |
 | **did:3box** | `org.trustweave:did-plugins-threebox` | Create/resolve not implemented |
+| **Fortanix** | `org.trustweave:kms-plugins-fortanix` | Code scaffolded; not yet production-tested |
+| **CyberArk Conjur** | `org.trustweave:kms-plugins-cyberark` | Code scaffolded; not yet production-tested |
 | **CloudHSM** | `org.trustweave:kms-plugins-cloudhsm` | Not implemented |
 | **Entrust** | `org.trustweave:kms-plugins-entrust` | Not implemented |
+| **Thales** | `org.trustweave:kms-plugins-thales` | Not implemented |
 | **Thales Luna** | `org.trustweave:kms-plugins-thales-luna` | Not implemented |
 | **Utimaco** | `org.trustweave:kms-plugins-utimaco` | Not implemented |
 | **ServiceNow** | `credentials:platforms:servicenow` | Credential issuance/verification not implemented |

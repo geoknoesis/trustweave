@@ -22,3 +22,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "trustweave-reference-wallet-android"
 include(":app")
+include(":shared")

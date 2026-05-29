@@ -1,4 +1,4 @@
-﻿name: Conformance Tests (PR)
+name: Conformance Tests (PR)
 
 on:
   pull_request:
@@ -24,7 +24,7 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - name: Run conformance tests
         run: ./gradlew :distribution:conformance:conformanceTest
       - name: Upload conformance report

@@ -1,4 +1,4 @@
-﻿name: Conformance Tests (Nightly)
+name: Conformance Tests (Nightly)
 
 on:
   schedule:
@@ -10,7 +10,7 @@ jobs:
     name: Full Phase 1 Conformance Suite
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-java@v4
         with:
           java-version: '21'

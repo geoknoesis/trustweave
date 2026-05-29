@@ -4,6 +4,7 @@ import android.content.Context
 import java.util.UUID
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
@@ -15,9 +16,11 @@ import kotlinx.serialization.json.put
 /**
  * Holder-side wallet facade.
  *
- * Mirrors the TypeScript `reference-wallet/lib/wallet.ts` so the two reference
- * implementations stay structurally aligned. When the Kotlin wallet-core-mp SDK
- * gains the corresponding capability surface, this becomes a thin wrapper.
+ * Phase 2.5: store() handles both `vc+jwt` and `vc+sd-jwt`. createPresentation()
+ * routes single-SD-JWT presentations through the SdJwt helpers (KB-JWT path) and
+ * VC-JWT presentations through the legacy VP-JWT path.
+ *
+ * Mirrors the TypeScript `reference-wallet/lib/wallet.ts`.
  */
 class Wallet(private val context: Context) {
 
@@ -26,7 +29,6 @@ class Wallet(private val context: Context) {
 
     data class State(val holder: Storage.HolderIdentity, val credentials: List<Storage.StoredCredential>)
 
-    /** Idempotent. First call generates a holder identity; subsequent calls load it. */
     fun bootstrap(): State {
         val existing = storage.loadHolder()
         val holder = existing ?: run {
@@ -44,73 +46,97 @@ class Wallet(private val context: Context) {
     }
 
     fun list(): List<Storage.StoredCredential> = storage.loadCredentials()
-
     fun deleteCredential(id: String) = storage.deleteCredential(id)
-
     fun reset() = storage.reset()
 
     /**
-     * Store a received VC-JWT. Decodes the unverified payload to extract preview metadata.
-     * Issuer signature verification happens at the verifier side; on receipt we trust the
-     * issuer claim purely for indexing/display.
+     * Store a received credential.
+     *
+     * @param credential the credential string (VC-JWT or SD-JWT VC compact form)
+     * @param format media type identifier ("vc+jwt" or "vc+sd-jwt")
+     * @param selectivelyDisclosable for SD-JWT VC: issuer-declared list of disclosable
+     *   claim names. Used at presentation time to drive the consent UI. Ignored for VC-JWT.
      */
-    fun store(vcJwt: String): Storage.StoredCredential {
-        val payload = decodeJwtPayload(vcJwt)
-        val vc = payload["vc"]?.jsonObject
-        val issuerDid = (payload["iss"]?.jsonPrimitive?.content
-            ?: vc?.get("issuer")?.jsonPrimitive?.content
-            ?: "")
-        val subjectDid = payload["sub"]?.jsonPrimitive?.content ?: ""
-        val types = extractTypes(vc)
-        val preview = buildPreview(types, vc)
+    fun store(
+        credential: String,
+        format: String,
+        selectivelyDisclosable: List<String> = emptyList(),
+    ): Storage.StoredCredential {
+        val meta = when (format) {
+            "vc+sd-jwt" -> extractSdJwtMeta(credential)
+            else -> extractVcJwtMeta(credential)
+        }
         val cred = Storage.StoredCredential(
             id = UUID.randomUUID().toString(),
-            vcJwt = vcJwt,
+            format = format,
+            credential = credential,
             receivedAt = Clock.System.now().toString(),
-            issuerDid = issuerDid,
-            subjectDid = subjectDid,
-            type = types,
-            previewTitle = preview.first,
-            previewSubtitle = preview.second,
+            issuerDid = meta.issuerDid,
+            subjectDid = meta.subjectDid,
+            type = meta.types,
+            previewTitle = meta.title,
+            previewSubtitle = meta.subtitle,
+            selectivelyDisclosable = selectivelyDisclosable,
         )
         storage.addCredential(cred)
         return cred
     }
 
     /**
-     * Build a Verifiable Presentation containing one or more credentials, signed by the
-     * holder. Returns the compact VP-JWT. Verifier must check both the outer VP signature
-     * (proves holder possession) AND each inner VC signature.
+     * Build a presentation containing one or more credentials.
+     *
+     * For an SD-JWT VC presentation (exactly one credential, format=vc+sd-jwt):
+     * returns the SD-JWT VC compact form with only the chosen disclosures and a
+     * key-binding JWT signed by the holder.
+     *
+     * For all other shapes: builds a VP-JWT (legacy Phase 1 path).
+     *
+     * @param disclose for SD-JWT VC: names of claims to disclose. Empty = disclose nothing.
+     *   Ignored for VC-JWT (all claims always disclosed).
      */
     fun createPresentation(
         credentialIds: List<String>,
         verifierAudience: String,
         challenge: String,
+        disclose: Set<String> = emptySet(),
     ): String {
-        val holder = storage.loadHolder()
-            ?: throw IllegalStateException("Wallet not bootstrapped")
+        val holder = storage.loadHolder() ?: throw IllegalStateException("Wallet not bootstrapped")
         val creds = storage.loadCredentials().filter { it.id in credentialIds }
         require(creds.isNotEmpty()) { "No matching credentials to present" }
 
+        val privateKey = Crypto.b64uDecode(holder.privateKey)
         val now = Clock.System.now().epochSeconds
+
+        // SD-JWT VC path (single credential).
+        if (creds.size == 1 && creds[0].format == "vc+sd-jwt") {
+            return SdJwt.present(
+                sdJwtVc = creds[0].credential,
+                selectDisclose = disclose,
+                holderPrivateKey = privateKey,
+                holderDid = holder.did,
+                audience = verifierAudience,
+                nonce = challenge,
+                now = now,
+            )
+        }
+
+        // Legacy VP-JWT path.
         val vpPayload = buildJsonObject {
             put("iss", holder.did)
             put("sub", holder.did)
             put("aud", verifierAudience)
             put("nonce", challenge)
             put("iat", now)
-            put("exp", now + 300)  // 5 minute window
+            put("exp", now + 300)
             put("vp", buildJsonObject {
                 put("@context", buildJsonArray { add(JsonPrimitive("https://www.w3.org/ns/credentials/v2")) })
                 put("type", buildJsonArray { add(JsonPrimitive("VerifiablePresentation")) })
                 put("holder", holder.did)
                 put("verifiableCredential", buildJsonArray {
-                    creds.forEach { add(JsonPrimitive(it.vcJwt)) }
+                    creds.forEach { add(JsonPrimitive(it.credential)) }
                 })
             })
         }
-
-        val privateKey = Crypto.b64uDecode(holder.privateKey)
         val didTail = holder.did.removePrefix("did:key:")
         return Crypto.signJwsCompact(
             jsonPayload = json.encodeToString(JsonObject.serializer(), vpPayload),
@@ -121,25 +147,17 @@ class Wallet(private val context: Context) {
 
     // ----- internal helpers -----
 
-    private fun decodeJwtPayload(jwt: String): JsonObject {
-        val parts = jwt.split(".")
+    private data class Meta(val issuerDid: String, val subjectDid: String, val types: List<String>, val title: String, val subtitle: String?)
+
+    private fun extractVcJwtMeta(vcJwt: String): Meta {
+        val parts = vcJwt.split(".")
         require(parts.size == 3) { "Not a JWT" }
-        val payloadJson = Crypto.b64uDecodeString(parts[1])
-        return Json.parseToJsonElement(payloadJson).jsonObject
-    }
-
-    private fun extractTypes(vc: JsonObject?): List<String> {
-        if (vc == null) return listOf("VerifiableCredential")
-        val t = vc["type"]
-        return when {
-            t == null -> listOf("VerifiableCredential")
-            t is kotlinx.serialization.json.JsonArray -> t.map { it.jsonPrimitive.content }
-            else -> listOf(t.jsonPrimitive.content)
-        }
-    }
-
-    /** Returns (title, subtitle). */
-    private fun buildPreview(types: List<String>, vc: JsonObject?): Pair<String, String?> {
+        val payload = Json.parseToJsonElement(Crypto.b64uDecodeString(parts[1])).jsonObject
+        val vc = payload["vc"]?.jsonObject
+        val issuerDid = payload["iss"]?.jsonPrimitive?.content
+            ?: vc?.get("issuer")?.jsonPrimitive?.content ?: ""
+        val subjectDid = payload["sub"]?.jsonPrimitive?.content ?: ""
+        val types = extractTypes(vc)
         val title = types.firstOrNull { it != "VerifiableCredential" } ?: "Credential"
         val subject = vc?.get("credentialSubject")?.jsonObject
         val subtitle = subject?.let {
@@ -147,6 +165,26 @@ class Wallet(private val context: Context) {
                 ?: it["degree"]?.jsonPrimitive?.content
                 ?: it["title"]?.jsonPrimitive?.content
         }
-        return title to subtitle
+        return Meta(issuerDid, subjectDid, types, title, subtitle)
+    }
+
+    private fun extractSdJwtMeta(sdJwtVc: String): Meta {
+        val decoded = SdJwt.decode(sdJwtVc)
+        val issuerDid = decoded.issuerPayload["iss"]?.jsonPrimitive?.content ?: ""
+        val subjectDid = decoded.issuerPayload["sub"]?.jsonPrimitive?.content ?: ""
+        val vct = decoded.issuerPayload["vct"]?.jsonPrimitive?.content ?: "Credential"
+        val subtitle = decoded.disclosures
+            .firstOrNull { it.name in listOf("name", "degree", "title") }
+            ?.value?.jsonPrimitive?.content
+        return Meta(issuerDid, subjectDid, listOf(vct), vct, subtitle)
+    }
+
+    private fun extractTypes(vc: JsonObject?): List<String> {
+        if (vc == null) return listOf("VerifiableCredential")
+        val t = vc["type"] ?: return listOf("VerifiableCredential")
+        return when (t) {
+            is kotlinx.serialization.json.JsonArray -> t.map { it.jsonPrimitive.content }
+            is JsonElement -> listOf(t.jsonPrimitive.content)
+        }
     }
 }

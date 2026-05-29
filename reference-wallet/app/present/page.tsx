@@ -19,6 +19,7 @@ interface VerificationResponse {
     issuer: string
     subject: string
     disclosedClaims: Record<string, unknown>
+    withheldClaimNames?: string[]
   }>
 }
 
@@ -34,6 +35,7 @@ export default function PresentPage() {
   const [state, setState] = useState<WalletState | null>(null)
   const [credentials, setCredentials] = useState<StoredCredential[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [disclose, setDisclose] = useState<Record<string, boolean>>({})
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
 
   useEffect(() => {
@@ -43,6 +45,16 @@ export default function PresentPage() {
     setCredentials(creds)
     if (creds.length > 0) setSelectedId(creds[0].id)
   }, [])
+
+  // Reset disclosure selection when the chosen credential changes.
+  useEffect(() => {
+    if (!selectedId) return
+    const cred = credentials.find((c) => c.id === selectedId)
+    if (!cred) return
+    const initial: Record<string, boolean> = {}
+    for (const name of cred.selectivelyDisclosable) initial[name] = true  // default: reveal all
+    setDisclose(initial)
+  }, [selectedId, credentials])
 
   if (!state) {
     return (
@@ -66,13 +78,24 @@ export default function PresentPage() {
       }
 
       setStatus({ kind: 'building-vp' })
-      const vp = createPresentation([selectedId], presentationRequest.audience, presentationRequest.nonce)
+      const discloseNames = Object.entries(disclose).filter(([, v]) => v).map(([k]) => k)
+      const vp = createPresentation(
+        [selectedId],
+        presentationRequest.audience,
+        presentationRequest.nonce,
+        discloseNames,
+      )
 
       setStatus({ kind: 'verifying' })
+      const selected = credentials.find((c) => c.id === selectedId)!
       const verifyRes = await fetch('/api/demo-verifier/verify', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ vp, expectedNonce: presentationRequest.nonce }),
+        body: JSON.stringify({
+          presentation: vp,
+          format: selected.format,
+          expectedNonce: presentationRequest.nonce,
+        }),
       })
       if (!verifyRes.ok) throw new Error(`Verify failed: HTTP ${verifyRes.status}`)
       const response = (await verifyRes.json()) as VerificationResponse
@@ -100,6 +123,10 @@ export default function PresentPage() {
     )
   }
 
+  const selectedCred = credentials.find((c) => c.id === selectedId)
+  const disclosableNames = selectedCred?.selectivelyDisclosable ?? []
+  const isSdJwt = selectedCred?.format === 'vc+sd-jwt'
+
   return (
     <>
       <div className="panel">
@@ -125,11 +152,34 @@ export default function PresentPage() {
             />
             <div className="icon">🎓</div>
             <div className="body">
-              <div className="title">{c.preview.title}</div>
+              <div className="title">{c.preview.title} <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>({c.format})</span></div>
               {c.preview.subtitle && <div className="subtitle">{c.preview.subtitle}</div>}
             </div>
           </label>
         ))}
+
+        {isSdJwt && disclosableNames.length > 0 && (
+          <>
+            <h3>Disclose to verifier</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem' }}>
+              Tick the claims you&apos;re willing to reveal. Unticked claims stay hashed inside the
+              credential — the verifier sees only that the issuer signed something, not what.
+            </p>
+            <div style={{ background: 'var(--surface-alt)', borderRadius: '6px', padding: '0.85rem 1rem' }}>
+              {disclosableNames.map((name) => (
+                <label key={name} style={{ display: 'flex', alignItems: 'center', padding: '0.3rem 0', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={disclose[name] ?? false}
+                    onChange={(e) => setDisclose({ ...disclose, [name]: e.target.checked })}
+                    style={{ marginRight: '0.6rem' }}
+                  />
+                  <code style={{ color: disclose[name] ? 'var(--success)' : 'var(--text-muted)' }}>{name}</code>
+                </label>
+              ))}
+            </div>
+          </>
+        )}
 
         <div className="button-row">
           <button onClick={onPresent} disabled={!selectedId || status.kind === 'fetching-request' || status.kind === 'building-vp' || status.kind === 'verifying'}>
@@ -185,13 +235,14 @@ export default function PresentPage() {
                       </span>
                     </div>
                   ))}
+                  {cred.withheldClaimNames && cred.withheldClaimNames.length > 0 && (
+                    <div style={{ marginTop: '0.75rem', paddingTop: '0.5rem', borderTop: '1px dashed var(--border)' }}>
+                      <span className="claim-key" style={{ color: 'var(--text-muted)' }}>withheld:</span>{' '}
+                      <span style={{ color: 'var(--text-muted)' }}>{cred.withheldClaimNames.join(', ')}</span>
+                    </div>
+                  )}
                 </div>
               ))}
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
-                Phase 1 sends ALL claims in the VC. Selective disclosure (showing only the specific
-                facts the verifier asked for) is Phase 1.1 — that&apos;s when the disclosed/withheld
-                split becomes visible here.
-              </p>
             </>
           )}
         </div>

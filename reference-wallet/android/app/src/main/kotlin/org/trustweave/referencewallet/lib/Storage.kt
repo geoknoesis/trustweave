@@ -9,13 +9,13 @@ import kotlinx.serialization.json.Json
 /**
  * Encrypted local storage for the wallet — holder identity + credentials.
  *
- * Backed by EncryptedSharedPreferences, which derives its wrapping key from Android
- * Keystore. The on-disk SharedPreferences file is unreadable without the device's
- * Keystore-bound key, which requires device unlock to access.
+ * Phase 2 baseline: EncryptedSharedPreferences derives its wrapping key from Android
+ * Keystore, so the on-disk file is non-extractable without device unlock. Phase 2.5
+ * binds the holder signing key DIRECTLY to Keystore.
  *
- * Phase 2 baseline. Phase 2.5 binds the holder signing key DIRECTLY to Keystore (as a
- * non-extractable Ed25519 key on API 33+, or a wrapped Ed25519 seed below that), at
- * which point the private-key blob leaves this storage.
+ * Phase 2.5: storage shape upgraded to v2 — credentials carry their format
+ * (`vc+jwt` vs `vc+sd-jwt`) and the issuer-declared list of selectively-disclosable
+ * claim names (for the present-screen UI).
  */
 class Storage(context: Context) {
 
@@ -32,6 +32,19 @@ class Storage(context: Context) {
         encodeDefaults = true
     }
 
+    init {
+        // v1 → v2 migration: if we detect old-shape data, wipe it. Acceptable for a
+        // demo; a real wallet would migrate in place. The v1 schema had `vcJwt`
+        // instead of `credential` + `format`; an older serialized cred deserialised
+        // through the v2 schema would either fail or load with empty fields.
+        val existingVersion = prefs.getString(KEY_SCHEMA_VERSION, null)
+        if (existingVersion == null) {
+            prefs.edit().putString(KEY_SCHEMA_VERSION, CURRENT_VERSION.toString()).apply()
+        } else if (existingVersion.toIntOrNull() != CURRENT_VERSION) {
+            prefs.edit().clear().putString(KEY_SCHEMA_VERSION, CURRENT_VERSION.toString()).apply()
+        }
+    }
+
     @Serializable
     data class HolderIdentity(
         val did: String,
@@ -43,13 +56,16 @@ class Storage(context: Context) {
     @Serializable
     data class StoredCredential(
         val id: String,
-        val vcJwt: String,
+        val format: String,  // "vc+jwt" or "vc+sd-jwt"
+        val credential: String,  // VC-JWT or SD-JWT VC compact form
         val receivedAt: String,
         val issuerDid: String,
         val subjectDid: String,
         val type: List<String>,
         val previewTitle: String,
         val previewSubtitle: String? = null,
+        /** SD-JWT VC only: claim names the issuer marked selectively-disclosable. */
+        val selectivelyDisclosable: List<String> = emptyList(),
     )
 
     fun loadHolder(): HolderIdentity? =
@@ -71,20 +87,14 @@ class Storage(context: Context) {
         ).apply()
     }
 
-    fun addCredential(cred: StoredCredential) {
-        saveCredentials(loadCredentials() + cred)
-    }
-
-    fun deleteCredential(id: String) {
-        saveCredentials(loadCredentials().filterNot { it.id == id })
-    }
-
-    fun reset() {
-        prefs.edit().clear().apply()
-    }
+    fun addCredential(cred: StoredCredential) { saveCredentials(loadCredentials() + cred) }
+    fun deleteCredential(id: String) { saveCredentials(loadCredentials().filterNot { it.id == id }) }
+    fun reset() { prefs.edit().clear().apply() }
 
     companion object {
         private const val KEY_HOLDER = "holder"
         private const val KEY_CREDENTIALS = "credentials"
+        private const val KEY_SCHEMA_VERSION = "schema-version"
+        private const val CURRENT_VERSION = 2
     }
 }

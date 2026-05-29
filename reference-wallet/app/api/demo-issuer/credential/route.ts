@@ -1,21 +1,23 @@
 /**
- * Demo issuer credential endpoint.
+ * Demo issuer credential endpoint — SD-JWT VC profile.
  *
- * Conceptually a stand-in for an OID4VCI Credential Endpoint: receives a holder DID
- * and returns a freshly-signed Verifiable Credential bound to that subject.
+ * Phase 2.5 upgrade from plain VC-JWT to SD-JWT VC (IETF draft-ietf-oauth-sd-jwt-vc).
+ * The credential is now returned as `<issuer-jwt>~<disclosure1>~<disclosure2>~...`,
+ * with personal claims (name, degree, major, etc.) marked selectively disclosable.
+ * The always-visible claims are `issuer` and `vct` (credential type identifier).
  *
- * Phase 1 simplification: direct GET with `?subject=did:key:...` query param. A real
- * OID4VCI flow would involve a credential offer URI, pre-authorized code or auth code,
- * and a token endpoint — deferred to Phase 1.1.
+ * Format identifier: `vc+sd-jwt` (per draft).
  */
 import { NextRequest, NextResponse } from 'next/server'
-import { signJws } from '@/lib/crypto'
+import { issueSdJwtVc } from '@/lib/sdjwt'
 import { getIssuer } from '@/lib/server-keys'
 
 interface CredentialResponse {
-  format: 'vc+jwt'
+  format: 'vc+sd-jwt'
   credential: string
   issuer: string
+  /** Names of claims the issuer marked as selectively disclosable. */
+  selectivelyDisclosable: string[]
 }
 
 export async function GET(req: NextRequest): Promise<NextResponse<CredentialResponse | { error: string }>> {
@@ -29,45 +31,37 @@ export async function GET(req: NextRequest): Promise<NextResponse<CredentialResp
 
   const issuer = getIssuer()
   const now = Math.floor(Date.now() / 1000)
-  const oneYear = 365 * 24 * 60 * 60
 
-  const payload = {
-    iss: issuer.did,
-    sub: subject,
-    iat: now,
-    nbf: now,
-    exp: now + oneYear,
-    jti: `urn:uuid:${crypto.randomUUID()}`,
-    vc: {
-      '@context': [
-        'https://www.w3.org/ns/credentials/v2',
-        'https://www.w3.org/ns/credentials/examples/v2',
-      ],
-      type: ['VerifiableCredential', 'BachelorOfScienceDegree'],
-      issuer: issuer.did,
-      validFrom: new Date(now * 1000).toISOString(),
-      validUntil: new Date((now + oneYear) * 1000).toISOString(),
-      credentialSubject: {
-        id: subject,
-        name: 'Demo Holder',
-        degree: 'Bachelor of Science',
-        major: 'Computer Science',
-        institution: 'TrustWeave Demo University',
-        graduationDate: '2026-05-29',
-        gpa: '3.8',
-      },
+  // What's selectively disclosable vs always visible:
+  // - The holder MUST decide which personal claims to reveal at presentation time.
+  // - `iss`, `iat`, `nbf`, `exp`, `vct`, `sub`, `cnf` always travel with the credential —
+  //   those are credential metadata, not personal data.
+  const selectivelyDisclosable = [
+    { name: 'name', value: 'Demo Holder' },
+    { name: 'degree', value: 'Bachelor of Science' },
+    { name: 'major', value: 'Computer Science' },
+    { name: 'institution', value: 'TrustWeave Demo University' },
+    { name: 'graduationDate', value: '2026-05-29' },
+    { name: 'gpa', value: '3.8' },
+  ]
+
+  const sdJwtVc = issueSdJwtVc({
+    issuerDid: issuer.did,
+    issuerPrivateKey: issuer.keyPair.privateKey,
+    issuerKid: `${issuer.did}#${issuer.did.slice('did:key:'.length)}`,
+    holderDid: subject,
+    alwaysVisible: {
+      jti: `urn:uuid:${crypto.randomUUID()}`,
     },
-  }
-
-  const vcJwt = signJws(
-    payload,
-    issuer.keyPair.privateKey,
-    `${issuer.did}#${issuer.did.slice('did:key:'.length)}`,
-  )
+    selectivelyDisclosable,
+    vct: 'BachelorOfScienceDegree',
+    now,
+  })
 
   return NextResponse.json({
-    format: 'vc+jwt',
-    credential: vcJwt,
+    format: 'vc+sd-jwt',
+    credential: sdJwtVc,
     issuer: issuer.did,
+    selectivelyDisclosable: selectivelyDisclosable.map((c) => c.name),
   })
 }

@@ -34,7 +34,7 @@ import org.trustweave.referencewallet.lib.Wallet
 private sealed interface ReceiveStatus {
     data object Idle : ReceiveStatus
     data object Requesting : ReceiveStatus
-    data class Success(val cred: Storage.StoredCredential) : ReceiveStatus
+    data class Success(val cred: Storage.StoredCredential, val format: String, val disclosable: List<String>) : ReceiveStatus
     data class Error(val message: String) : ReceiveStatus
 }
 
@@ -48,9 +48,7 @@ fun ReceiveScreen(onDone: () -> Unit) {
     var holderDid by remember { mutableStateOf<String?>(null) }
     var status by remember { mutableStateOf<ReceiveStatus>(ReceiveStatus.Idle) }
 
-    LaunchedEffect(Unit) {
-        holderDid = wallet.bootstrap().holder.did
-    }
+    LaunchedEffect(Unit) { holderDid = wallet.bootstrap().holder.did }
 
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Card {
@@ -58,7 +56,7 @@ fun ReceiveScreen(onDone: () -> Unit) {
                 Text("Receive a credential", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "The demo issuer will sign a Bachelor of Science credential addressed to your holder DID and return it as a Verifiable Credential JWT.",
+                    "The demo issuer will sign a Bachelor of Science credential as an SD-JWT VC with each personal claim marked selectively disclosable. At presentation time you choose which claims to reveal.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -78,8 +76,12 @@ fun ReceiveScreen(onDone: () -> Unit) {
                                 status = ReceiveStatus.Requesting
                                 try {
                                     val offer = backend.receiveCredential(did)
-                                    val stored = wallet.store(offer.credential)
-                                    status = ReceiveStatus.Success(stored)
+                                    val stored = wallet.store(
+                                        credential = offer.credential,
+                                        format = offer.format,
+                                        selectivelyDisclosable = offer.selectivelyDisclosable,
+                                    )
+                                    status = ReceiveStatus.Success(stored, offer.format, offer.selectivelyDisclosable)
                                 } catch (e: Exception) {
                                     status = ReceiveStatus.Error(e.message ?: e::class.simpleName ?: "unknown")
                                 }
@@ -100,38 +102,29 @@ fun ReceiveScreen(onDone: () -> Unit) {
         }
 
         when (val s = status) {
-            is ReceiveStatus.Success -> CalloutCard(
-                title = "Received and stored",
-                body = "${s.cred.previewTitle} · ${s.cred.previewSubtitle ?: ""}",
-                primaryAction = "View in wallet" to onDone,
-                tint = MaterialTheme.colorScheme.secondary,
-            )
-            is ReceiveStatus.Error -> CalloutCard(
-                title = "Failed",
-                body = s.message,
-                tint = MaterialTheme.colorScheme.error,
-            )
-            else -> Unit
-        }
-    }
-}
-
-@Composable
-private fun CalloutCard(
-    title: String,
-    body: String,
-    primaryAction: Pair<String, () -> Unit>? = null,
-    tint: androidx.compose.ui.graphics.Color,
-) {
-    Card(colors = CardDefaults.cardColors(containerColor = tint.copy(alpha = 0.1f))) {
-        Column(Modifier.padding(16.dp)) {
-            Text(title, fontWeight = FontWeight.SemiBold, color = tint)
-            Spacer(Modifier.height(4.dp))
-            Text(body, style = MaterialTheme.typography.bodyMedium)
-            primaryAction?.let { (label, action) ->
-                Spacer(Modifier.height(12.dp))
-                Button(onClick = action) { Text(label) }
+            is ReceiveStatus.Success -> Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f))) {
+                Column(Modifier.padding(16.dp)) {
+                    Text("Received and stored", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.secondary)
+                    Spacer(Modifier.height(4.dp))
+                    Text("${s.cred.previewTitle} (${s.format})")
+                    s.cred.previewSubtitle?.let { Text(it) }
+                    if (s.disclosable.isNotEmpty()) {
+                        Spacer(Modifier.height(8.dp))
+                        Text("Selectively-disclosable:", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(s.disclosable.joinToString(", "), fontFamily = FontFamily.Monospace, fontSize = 12.sp)
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    Button(onClick = onDone) { Text("View in wallet") }
+                }
             }
+            is ReceiveStatus.Error -> Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.1f))) {
+                Column(Modifier.padding(16.dp)) {
+                    Text("Failed", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.error)
+                    Spacer(Modifier.height(4.dp))
+                    Text(s.message)
+                }
+            }
+            else -> Unit
         }
     }
 }

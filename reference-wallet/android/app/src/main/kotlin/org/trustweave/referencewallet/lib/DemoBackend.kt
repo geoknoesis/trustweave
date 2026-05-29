@@ -14,10 +14,10 @@ import org.trustweave.referencewallet.BuildConfig
 /**
  * Thin client for the in-repo Next.js demo backend (issuer + verifier).
  *
- * The web wallet talks to this same backend via fetch(); the Android wallet uses
- * OkHttp. The base URL comes from BuildConfig.DEMO_BACKEND_BASE_URL — defaults to
- * `http://10.0.2.2:3000` (the emulator's host-machine alias). For a real device,
- * override via `-PDEMO_BACKEND_BASE_URL=http://<your-LAN-IP>:3000`.
+ * Phase 2.5: receiveCredential() now returns SD-JWT VC by default with the
+ * issuer's selectively-disclosable claim list; the verify() body uses the new
+ * `presentation` + `format` field shape (with a `vp` legacy fallback on the
+ * server side).
  */
 class DemoBackend(
     private val baseUrl: String = BuildConfig.DEMO_BACKEND_BASE_URL,
@@ -31,7 +31,12 @@ class DemoBackend(
     private val json = Json { ignoreUnknownKeys = true }
 
     @Serializable
-    data class CredentialOffer(val format: String, val credential: String, val issuer: String)
+    data class CredentialOffer(
+        val format: String,
+        val credential: String,
+        val issuer: String,
+        val selectivelyDisclosable: List<String> = emptyList(),
+    )
 
     @Serializable
     data class PresentationRequestParams(
@@ -50,6 +55,7 @@ class DemoBackend(
         val issuer: String,
         val subject: String,
         val disclosedClaims: Map<String, kotlinx.serialization.json.JsonElement> = emptyMap(),
+        val withheldClaimNames: List<String>? = null,
     )
 
     @Serializable
@@ -61,7 +67,11 @@ class DemoBackend(
     )
 
     @Serializable
-    private data class VerifyRequest(val vp: String, val expectedNonce: String)
+    private data class VerifyRequest(
+        val presentation: String,
+        val format: String,
+        val expectedNonce: String,
+    )
 
     suspend fun receiveCredential(subjectDid: String): CredentialOffer = withContext(Dispatchers.IO) {
         val encoded = java.net.URLEncoder.encode(subjectDid, "UTF-8")
@@ -82,15 +92,21 @@ class DemoBackend(
         }
     }
 
-    suspend fun verify(vp: String, expectedNonce: String): VerificationResponse = withContext(Dispatchers.IO) {
-        val payload = json.encodeToString(VerifyRequest.serializer(), VerifyRequest(vp, expectedNonce))
+    suspend fun verify(
+        presentation: String,
+        format: String,
+        expectedNonce: String,
+    ): VerificationResponse = withContext(Dispatchers.IO) {
+        val payload = json.encodeToString(
+            VerifyRequest.serializer(),
+            VerifyRequest(presentation = presentation, format = format, expectedNonce = expectedNonce),
+        )
         val req = Request.Builder()
             .url("$baseUrl/api/demo-verifier/verify")
             .post(payload.toRequestBody("application/json".toMediaType()))
             .build()
         http.newCall(req).execute().use { response ->
             val body = response.body?.string() ?: error("Empty verify response")
-            // Don't throw on non-2xx — the verifier may return a structured failure body.
             json.decodeFromString(VerificationResponse.serializer(), body)
         }
     }

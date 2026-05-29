@@ -1,21 +1,21 @@
 /**
  * Browser localStorage adapter for the reference wallet.
  *
- * Phase 1 only — Phase 2 (mobile) uses Keychain / Secure Enclave. The shape of this
- * module deliberately mirrors what a real `SecureKeyStore` + `CredentialStore` pair
- * would look like, so swapping the implementation later is a focused refactor.
+ * Phase 1 → 2.5: storage shape extended to remember which disclosures the issuer
+ * said are selectively-disclosable. The wallet uses that list to drive the
+ * presentation consent UI (checkbox per disclosable claim).
  *
- * SECURITY NOTE: localStorage is NOT a secure key store. The holder private key sits
- * in cleartext, accessible to any JS running in the page (and to extensions). This is
- * acceptable for a Phase 1 walking-skeleton demo; it would not be acceptable for any
- * production wallet. Phase 1.1 should move the holder key behind WebAuthn-bound non-
- * extractable WebCrypto keys.
+ * SECURITY NOTE: localStorage is NOT a secure key store. The holder private key
+ * sits in cleartext, accessible to any JS running in the page (and to extensions).
+ * Acceptable for a Phase 1/2 walking-skeleton demo; would NOT be acceptable for
+ * any production wallet. Phase 2.5 moves the holder key behind WebAuthn-bound
+ * non-extractable WebCrypto keys for the web build.
  */
 
 const HOLDER_KEY = 'trustweave-wallet-holder'
 const CREDENTIALS_KEY = 'trustweave-wallet-credentials'
 const VERSION_KEY = 'trustweave-wallet-schema-version'
-const CURRENT_VERSION = 1
+const CURRENT_VERSION = 2
 
 export interface HolderIdentity {
   did: string
@@ -26,15 +26,21 @@ export interface HolderIdentity {
 
 export interface StoredCredential {
   id: string  // local UUID for the wallet's record
-  vcJwt: string  // the VC-JWT itself
+  format: 'vc+jwt' | 'vc+sd-jwt'
+  credential: string  // the credential as-issued (VC-JWT or SD-JWT VC compact form)
   receivedAt: string
   issuerDid: string
-  type: string[]
+  type: string[]  // either `vc.type` (VC-JWT) or `[vct]` (SD-JWT VC)
   subjectDid: string
   preview: {
     title: string
     subtitle?: string
   }
+  /**
+   * For SD-JWT VC: names of claims the issuer marked as selectively disclosable.
+   * Empty for plain VC-JWT (no selective disclosure).
+   */
+  selectivelyDisclosable: string[]
 }
 
 function isBrowser(): boolean {
@@ -47,10 +53,12 @@ function ensureSchemaVersion(): void {
   if (!existing) {
     window.localStorage.setItem(VERSION_KEY, String(CURRENT_VERSION))
   } else if (Number(existing) !== CURRENT_VERSION) {
-    throw new Error(
-      `Wallet storage schema mismatch: have v${existing}, expected v${CURRENT_VERSION}. ` +
-      `Use Settings → Reset Wallet to start over.`,
-    )
+    // v1 → v2: storage shape changed (added `format`, `credential` replaces `vcJwt`,
+    // added `selectivelyDisclosable`). No automatic migration — wipe and let the user
+    // re-receive. Acceptable for a demo wallet; a real wallet would migrate in place.
+    window.localStorage.removeItem(HOLDER_KEY)
+    window.localStorage.removeItem(CREDENTIALS_KEY)
+    window.localStorage.setItem(VERSION_KEY, String(CURRENT_VERSION))
   }
 }
 
@@ -91,7 +99,6 @@ export function deleteCredential(id: string): void {
   saveCredentials(all)
 }
 
-/** Wipe the wallet — irrecoverable. Used by the Settings → Reset action. */
 export function resetWallet(): void {
   if (!isBrowser()) return
   window.localStorage.removeItem(HOLDER_KEY)

@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "TrustWeave Wallet",
+    "slug": "trustweave-reference-wallet",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "trustweavewallet",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "org.trustweave.referencewallet.expo",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
+      }
+    },
+    "android": {
+      "package": "org.trustweave.referencewallet.expo",
+      "usesCleartextTraffic": true
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "demoBackendBaseUrl": "http://10.0.2.2:3000"
+    }
+  }
+}

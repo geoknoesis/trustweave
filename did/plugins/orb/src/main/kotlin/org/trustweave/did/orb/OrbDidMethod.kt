@@ -49,6 +49,7 @@ class OrbDidMethod(
     kms: KeyManagementService,
     private val config: OrbDidConfig,
     httpClient: OkHttpClient? = null,
+    private val keyStore: SidetreeKeyStore = InMemorySidetreeKeyStore(),
 ) : AbstractDidMethod("orb", kms) {
 
     private val client: OkHttpClient = httpClient ?: OkHttpClient.Builder()
@@ -78,10 +79,20 @@ class OrbDidMethod(
                     message = "Public key JWK is required for did:orb (KMS returned a key with no JWK).",
                 )
 
-            val (createOp, longFormDid) = sidetree.buildCreateOperation(publicKeyJwk)
-            val response = sidetree.submitOperation(createOp)
+            val created = sidetree.buildCreateOperation(publicKeyJwk)
+            val response = sidetree.submitOperation(created.operation)
 
-            val resolvedDid: String = response.did ?: longFormDid
+            val resolvedDid: String = response.did ?: created.longFormDid
+
+            keyStore.put(
+                created.didSuffix,
+                SidetreeKeyPair(
+                    updatePrivateJwk = created.updateKeyPair.privateJwk,
+                    updatePublicJwk = created.updateKeyPair.publicJwk,
+                    recoveryPrivateJwk = created.recoveryKeyPair.privateJwk,
+                    recoveryPublicJwk = created.recoveryKeyPair.publicJwk,
+                ),
+            )
 
             val verificationMethod = DidMethodUtils.createVerificationMethod(
                 did = resolvedDid,
@@ -198,12 +209,39 @@ class OrbDidMethod(
             }
 
             val updated = updater(current)
-            val updateOp = sidetree.buildUpdateOperation(did.value, updated)
+
+            val suffix = extractSuffixOrThrow(did.value)
+            val previousKeys = keyStore.get(suffix)
+                ?: throw OrbException(
+                    code = "ORB_KEYS_NOT_FOUND",
+                    message = "Update keys for $did are not in the key store. " +
+                        "Updates can only be issued by the instance that created the DID, " +
+                        "or one configured with a persistent SidetreeKeyStore containing the prior keys.",
+                )
+            val nextUpdateKeyPair = sidetree.generateP256KeyPair()
+            val previousUpdateKeyPair = SidetreeOrbClient.P256KeyPair(
+                privateJwk = previousKeys.updatePrivateJwk,
+                publicJwk = previousKeys.updatePublicJwk,
+            )
+
+            val updateOp = sidetree.buildUpdateOperation(
+                did = did.value,
+                updatedDocument = updated,
+                previousUpdateKeyPair = previousUpdateKeyPair,
+                nextUpdatePublicJwk = nextUpdateKeyPair.publicJwk,
+            )
             val response = sidetree.submitOperation(updateOp)
             if (!response.success) {
                 throw OrbException.httpError(response.httpStatus, response.error ?: response.rawBody)
             }
 
+            keyStore.put(
+                suffix,
+                previousKeys.copy(
+                    updatePrivateJwk = nextUpdateKeyPair.privateJwk,
+                    updatePublicJwk = nextUpdateKeyPair.publicJwk,
+                ),
+            )
             storeDocument(did, updated)
             updated
         } catch (e: OrbException) {
@@ -229,11 +267,26 @@ class OrbDidMethod(
     override suspend fun deactivateDid(did: Did): Boolean = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
-            val deactivateOp = sidetree.buildDeactivateOperation(did.value)
+
+            val suffix = extractSuffixOrThrow(did.value)
+            val previousKeys = keyStore.get(suffix)
+                ?: return@withContext false
+
+            val previousRecoveryKeyPair = SidetreeOrbClient.P256KeyPair(
+                privateJwk = previousKeys.recoveryPrivateJwk,
+                publicJwk = previousKeys.recoveryPublicJwk,
+            )
+
+            val deactivateOp = sidetree.buildDeactivateOperation(
+                did = did.value,
+                previousRecoveryKeyPair = previousRecoveryKeyPair,
+            )
             val response = sidetree.submitOperation(deactivateOp)
             if (!response.success) {
                 return@withContext false
             }
+
+            keyStore.remove(suffix)
             documents.remove(did.value)
             documentMetadata.remove(did.value)
             true
@@ -248,6 +301,14 @@ class OrbDidMethod(
                 cause = e,
             )
         }
+    }
+
+    private fun extractSuffixOrThrow(did: String): String {
+        val prefix = "${config.namespace}:"
+        require(did.startsWith(prefix)) { "DID does not match Orb namespace '$prefix': $did" }
+        val rest = did.removePrefix(prefix)
+        val colon = rest.indexOf(':')
+        return if (colon >= 0) rest.substring(0, colon) else rest
     }
 
     /**

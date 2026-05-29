@@ -72,22 +72,36 @@ internal class SidetreeOrbClient(
     // ─── Operation builders ──────────────────────────────────────────────────────
 
     /**
-     * Builds a Sidetree create operation and the corresponding long-form DID.
+     * Output of [buildCreateOperation]. The caller MUST persist the returned
+     * [updateKeyPair] and [recoveryKeyPair] (via a [SidetreeKeyStore]) — they are
+     * needed to construct subsequent update and deactivate operations.
+     */
+    data class CreateOperationResult(
+        val operation: JsonObject,
+        val longFormDid: String,
+        val didSuffix: String,
+        val updateKeyPair: P256KeyPair,
+        val recoveryKeyPair: P256KeyPair,
+    )
+
+    /**
+     * Builds a Sidetree create operation, the long-form DID, and returns the
+     * ephemeral update + recovery keypairs that the on-ledger commitments are
+     * derived from.
      *
      * @param publicKeyJwk JWK of the signing key (must contain `kty` and the
      *                     curve parameters). Embedded in the document patch.
-     * @return Pair of (create-operation JSON, longFormDid).
      */
     suspend fun buildCreateOperation(
         publicKeyJwk: Map<String, Any?>,
-    ): Pair<JsonObject, String> = withContext(Dispatchers.IO) {
+    ): CreateOperationResult = withContext(Dispatchers.IO) {
         val b64url = Base64.getUrlEncoder().withoutPadding()
 
-        val recoveryPublicJwk = generateEphemeralP256PublicJwk()
-        val updatePublicJwk = generateEphemeralP256PublicJwk()
+        val recoveryKeyPair = generateP256KeyPair()
+        val updateKeyPair = generateP256KeyPair()
 
-        val recoveryCommitment = computeCommitment(recoveryPublicJwk)
-        val updateCommitment = computeCommitment(updatePublicJwk)
+        val recoveryCommitment = computeCommitment(recoveryKeyPair.publicJwk)
+        val updateCommitment = computeCommitment(updateKeyPair.publicJwk)
 
         val delta = buildJsonObject {
             put("updateCommitment", updateCommitment)
@@ -107,7 +121,7 @@ internal class SidetreeOrbClient(
                                                 buildJsonObject {
                                                     put("id", "key-1")
                                                     put("type", "JsonWebKey2020")
-                                                    put("publicKeyJwk", mapToJsonObject(publicKeyJwk))
+                                                    put("publicKeyJwk", mapToJsonObject(publicKeyJwk.withoutPrivateD()))
                                                     put(
                                                         "purposes",
                                                         buildJsonArray {
@@ -149,17 +163,35 @@ internal class SidetreeOrbClient(
             put("delta", delta)
         }
 
-        createOp to longFormDid
+        CreateOperationResult(
+            operation = createOp,
+            longFormDid = longFormDid,
+            didSuffix = didSuffix,
+            updateKeyPair = updateKeyPair,
+            recoveryKeyPair = recoveryKeyPair,
+        )
     }
 
+    /**
+     * Builds a Sidetree update operation per spec §6.2.
+     *
+     *  - `revealValue` is the base64url(sha256(JCS(previousUpdatePublicJwk))), so it
+     *    matches the `updateCommitment` left on-ledger by the previous operation.
+     *  - `signedData` is a JWS Compact Serialization signed by the **previous**
+     *    update private key, whose payload `{updateKey, deltaHash}` proves
+     *    possession of that key and binds the new delta.
+     *  - `delta.updateCommitment` is the hash of [nextUpdatePublicJwk] and becomes
+     *    the on-ledger commitment for the next update.
+     */
     suspend fun buildUpdateOperation(
         did: String,
         updatedDocument: DidDocument,
+        previousUpdateKeyPair: P256KeyPair,
+        nextUpdatePublicJwk: Map<String, Any?>,
     ): JsonObject = withContext(Dispatchers.IO) {
         val b64url = Base64.getUrlEncoder().withoutPadding()
-        val nextUpdatePublicJwk = generateEphemeralP256PublicJwk()
         val nextUpdateCommitment = computeCommitment(nextUpdatePublicJwk)
-        val revealValue = b64url.encodeToString(sha256(jcsCanonicalizeMap(nextUpdatePublicJwk)))
+        val revealValue = b64url.encodeToString(sha256(jcsCanonicalizeMap(previousUpdateKeyPair.publicJwk)))
 
         val delta = buildJsonObject {
             put("updateCommitment", nextUpdateCommitment)
@@ -177,37 +209,45 @@ internal class SidetreeOrbClient(
         }
         val deltaHash = b64url.encodeToString(sha256(jcsCanonicalize(delta)))
 
+        val signedPayload = buildJsonObject {
+            put("updateKey", mapToJsonObject(previousUpdateKeyPair.publicJwk))
+            put("deltaHash", deltaHash)
+        }
+        val signedDataJws = JwsCompact.signES256(signedPayload, previousUpdateKeyPair.privateJwk)
+
         buildJsonObject {
             put("type", "update")
             put("didSuffix", extractDidSuffix(did))
             put("revealValue", revealValue)
             put("delta", delta)
-            put(
-                "signedData",
-                buildJsonObject {
-                    put("updateKey", mapToJsonObject(nextUpdatePublicJwk))
-                    put("deltaHash", deltaHash)
-                },
-            )
+            put("signedData", JsonPrimitive(signedDataJws))
         }
     }
 
-    suspend fun buildDeactivateOperation(did: String): JsonObject = withContext(Dispatchers.IO) {
+    /**
+     * Builds a Sidetree deactivate operation per spec §6.4. Reveals the previous
+     * recovery key and presents a JWS signed by the previous recovery private key
+     * whose payload binds [did] to that key.
+     */
+    suspend fun buildDeactivateOperation(
+        did: String,
+        previousRecoveryKeyPair: P256KeyPair,
+    ): JsonObject = withContext(Dispatchers.IO) {
         val b64url = Base64.getUrlEncoder().withoutPadding()
-        val recoveryPublicJwk = generateEphemeralP256PublicJwk()
-        val revealValue = b64url.encodeToString(sha256(jcsCanonicalizeMap(recoveryPublicJwk)))
+        val revealValue = b64url.encodeToString(sha256(jcsCanonicalizeMap(previousRecoveryKeyPair.publicJwk)))
+
+        val suffix = extractDidSuffix(did)
+        val signedPayload = buildJsonObject {
+            put("didSuffix", suffix)
+            put("recoveryKey", mapToJsonObject(previousRecoveryKeyPair.publicJwk))
+        }
+        val signedDataJws = JwsCompact.signES256(signedPayload, previousRecoveryKeyPair.privateJwk)
 
         buildJsonObject {
             put("type", "deactivate")
-            put("didSuffix", extractDidSuffix(did))
+            put("didSuffix", suffix)
             put("revealValue", revealValue)
-            put(
-                "signedData",
-                buildJsonObject {
-                    put("didSuffix", extractDidSuffix(did))
-                    put("recoveryKey", mapToJsonObject(recoveryPublicJwk))
-                },
-            )
+            put("signedData", JsonPrimitive(signedDataJws))
         }
     }
 
@@ -326,16 +366,42 @@ internal class SidetreeOrbClient(
 
     // ─── Cryptographic helpers ───────────────────────────────────────────────────
 
-    private fun generateEphemeralP256PublicJwk(): Map<String, Any?> {
+    /**
+     * P-256 (secp256r1) keypair represented as JWKs (RFC 7517 / 7518).
+     *
+     *  - [publicJwk] keys: `kty=EC, crv=P-256, x, y`.
+     *  - [privateJwk] keys: same plus `d` (the private scalar).
+     *
+     * Used both for the on-the-fly ephemerals embedded in Sidetree create/update
+     * operations and for the keys persisted in [SidetreeKeyStore].
+     */
+    data class P256KeyPair(
+        val privateJwk: Map<String, Any?>,
+        val publicJwk: Map<String, Any?>,
+    )
+
+    /**
+     * Generates a fresh P-256 keypair and returns it as [P256KeyPair].
+     */
+    fun generateP256KeyPair(): P256KeyPair {
         val gen = KeyPairGenerator.getInstance("EC")
         gen.initialize(ECGenParameterSpec("secp256r1"))
         val kp = gen.generateKeyPair()
         val pub = kp.public as ECPublicKey
+        val priv = kp.private as java.security.interfaces.ECPrivateKey
         val b64url = Base64.getUrlEncoder().withoutPadding()
         val w = pub.w
         val xBytes = w.affineX.toByteArray().padCoord()
         val yBytes = w.affineY.toByteArray().padCoord()
-        return mapOf("kty" to "EC", "crv" to "P-256", "x" to b64url.encodeToString(xBytes), "y" to b64url.encodeToString(yBytes))
+        val dBytes = priv.s.toByteArray().padCoord()
+        val publicJwk = mapOf(
+            "kty" to "EC",
+            "crv" to "P-256",
+            "x" to b64url.encodeToString(xBytes),
+            "y" to b64url.encodeToString(yBytes),
+        )
+        val privateJwk = publicJwk + ("d" to b64url.encodeToString(dBytes))
+        return P256KeyPair(privateJwk = privateJwk, publicJwk = publicJwk)
     }
 
     private fun ByteArray.padCoord(): ByteArray = when {
@@ -343,6 +409,13 @@ internal class SidetreeOrbClient(
         size < 32 -> ByteArray(32 - size) + this
         else -> this
     }
+
+    /**
+     * Strip `d` (private component) from a JWK before embedding it in a published
+     * artifact such as a Sidetree document patch.
+     */
+    private fun Map<String, Any?>.withoutPrivateD(): Map<String, Any?> =
+        if (containsKey("d")) filterKeys { it != "d" } else this
 
     private fun computeCommitment(publicKeyJwk: Map<String, Any?>): String {
         val canonical = jcsCanonicalizeMap(publicKeyJwk)

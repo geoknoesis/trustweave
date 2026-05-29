@@ -1,3 +1,8 @@
+---
+redirect_from:
+  - /advanced/proof-adapter-plugins-implementation/
+---
+
 # ProofAdapter Plugins Implementation
 
 > **Historical / superseded.** The skeleton modules listed below (`credential-proof-vcld`, `credential-proof-sdjwt`, `credential-proof-anoncreds`, `credential-proof-mdl`, `credential-proof-x509`, `credential-proof-passkey`) were never produced. The current layout is:

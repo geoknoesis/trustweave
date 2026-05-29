@@ -1,6 +1,9 @@
 ---
 title: Key DID Integration
 parent: Integration Modules
+redirect_from:
+  - /integrations/key-did/
+
 ---
 
 # Key DID Integration

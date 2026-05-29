@@ -2,6 +2,9 @@
 title: IDE Setup Guide
 nav_order: 6
 parent: Getting Started
+redirect_from:
+  - /getting-started/ide-setup/
+
 ---
 
 # IDE Setup Guide

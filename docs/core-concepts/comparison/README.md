@@ -1,6 +1,9 @@
 ---
 title: Comparison Documentation
 nav_exclude: true
+redirect_from:
+  - /comparison/README/
+
 ---
 
 # Comparison Documentation

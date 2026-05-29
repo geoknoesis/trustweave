@@ -1,3 +1,8 @@
+---
+redirect_from:
+  - /architecture/credential-api-architecture/
+---
+
 # Credential API Architecture
 
 ## Overview

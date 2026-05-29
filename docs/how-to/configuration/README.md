@@ -1,6 +1,9 @@
 ---
 title: Configuration Reference
 nav_exclude: true
+redirect_from:
+  - /configuration/README/
+
 ---
 
 # Configuration Reference

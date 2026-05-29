@@ -8,6 +8,9 @@ keywords:
   - glossary
   - faq
   - migration
+redirect_from:
+  - /reference/README/
+
 ---
 
 # Reference

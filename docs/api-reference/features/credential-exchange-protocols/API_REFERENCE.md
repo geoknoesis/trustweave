@@ -1,5 +1,8 @@
 ---
 title: Credential Exchange Protocols - API Reference
+redirect_from:
+  - /features/credential-exchange-protocols/API_REFERENCE/
+
 ---
 
 # Credential Exchange Protocols - API Reference

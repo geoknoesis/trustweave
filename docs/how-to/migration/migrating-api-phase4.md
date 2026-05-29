@@ -8,6 +8,9 @@ keywords:
   - phase 4
   - service layer
   - direct methods
+redirect_from:
+  - /migration/migrating-api-phase4/
+
 ---
 
 # Migrating to Phase 4 API: Service Layer Removal

@@ -1,3 +1,8 @@
+---
+redirect_from:
+  - /security/rate-limiting/
+---
+
 # Rate Limiting in Credential API
 
 ## Overview

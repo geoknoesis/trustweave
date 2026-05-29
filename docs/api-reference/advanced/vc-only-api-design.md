@@ -1,3 +1,8 @@
+---
+redirect_from:
+  - /advanced/vc-only-api-design/
+---
+
 # VC-Only API Design - Aligning with W3C Verifiable Credentials
 
 > **Status**: This is a historical design document. Most of the proposal has been implemented (see `credentials/credential-api/.../model/vc/VerifiableCredential.kt`, `Issuer.kt`, `CredentialSubject.kt`, `CredentialProof.kt`). The shipped API differs from this proposal on a few points:

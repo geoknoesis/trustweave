@@ -1,5 +1,8 @@
 ---
 title: "Final Code Review: Exception Handling Implementation"
+redirect_from:
+  - /features/credential-exchange-protocols/FINAL_CODE_REVIEW/
+
 ---
 
 # Final Code Review: Exception Handling Implementation

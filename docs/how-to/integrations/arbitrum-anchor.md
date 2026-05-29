@@ -1,6 +1,9 @@
 ---
 title: Arbitrum Blockchain Anchor Integration
 parent: Integration Modules
+redirect_from:
+  - /integrations/arbitrum-anchor/
+
 ---
 
 # Arbitrum Blockchain Anchor Integration

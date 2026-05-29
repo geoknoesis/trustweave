@@ -9,6 +9,9 @@ keywords:
   - chain-agnostic
   - did-method-agnostic
   - kms-agnostic
+redirect_from:
+  - /introduction/key-features/
+
 ---
 
 # Key Features

@@ -1,5 +1,8 @@
 ---
 title: kms:kms-core
+redirect_from:
+  - /modules/trustweave-kms/
+
 ---
 
 # kms:kms-core

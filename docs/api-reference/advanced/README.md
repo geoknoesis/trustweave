@@ -1,6 +1,9 @@
 ---
 title: Advanced Topics
 nav_order: 80
+redirect_from:
+  - /advanced/README/
+
 ---
 
 # Advanced Topics

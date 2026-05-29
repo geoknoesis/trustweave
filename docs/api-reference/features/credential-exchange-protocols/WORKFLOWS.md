@@ -1,5 +1,8 @@
 ---
 title: Credential Exchange Protocols - Workflows
+redirect_from:
+  - /features/credential-exchange-protocols/WORKFLOWS/
+
 ---
 
 # Credential Exchange Protocols - Workflows

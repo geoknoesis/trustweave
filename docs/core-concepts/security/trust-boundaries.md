@@ -7,6 +7,9 @@ keywords:
   - trust boundaries
   - trust model
   - security model
+redirect_from:
+  - /security/trust-boundaries/
+
 ---
 
 # Trust Boundaries

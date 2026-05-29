@@ -1,5 +1,8 @@
 ---
 title: Credential Exchange Protocols - Examples
+redirect_from:
+  - /features/credential-exchange-protocols/EXAMPLES/
+
 ---
 
 # Credential Exchange Protocols - Examples

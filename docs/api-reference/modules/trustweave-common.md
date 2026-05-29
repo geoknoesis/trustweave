@@ -1,5 +1,8 @@
 ---
 title: common
+redirect_from:
+  - /modules/trustweave-common/
+
 ---
 
 # common

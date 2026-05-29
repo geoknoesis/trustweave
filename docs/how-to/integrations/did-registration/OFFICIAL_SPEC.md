@@ -2,6 +2,9 @@
 title: Official DID Registration Specification Support
 parent: DID Method Registration via JSON
 grand_parent: Integration Modules
+redirect_from:
+  - /integrations/did-registration/OFFICIAL_SPEC/
+
 ---
 
 # Official DID Registration Specification Support

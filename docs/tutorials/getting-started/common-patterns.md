@@ -8,6 +8,9 @@ keywords:
   - common tasks
   - examples
   - production
+redirect_from:
+  - /getting-started/common-patterns/
+
 ---
 
 # Common Patterns

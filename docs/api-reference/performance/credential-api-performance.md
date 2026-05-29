@@ -1,3 +1,8 @@
+---
+redirect_from:
+  - /performance/credential-api-performance/
+---
+
 # Credential API Performance Characteristics
 
 ## Overview

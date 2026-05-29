@@ -8,6 +8,9 @@ keywords:
   - breaking changes
   - migration
   - lifecycle
+redirect_from:
+  - /reference/deprecation-policy/
+
 ---
 
 # Deprecation Policy

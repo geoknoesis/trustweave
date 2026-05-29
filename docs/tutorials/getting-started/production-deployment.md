@@ -2,6 +2,9 @@
 title: Production Deployment Guide
 nav_order: 12
 parent: Getting Started
+redirect_from:
+  - /getting-started/production-deployment/
+
 ---
 
 # Production Deployment Guide

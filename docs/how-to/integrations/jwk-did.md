@@ -1,6 +1,9 @@
 ---
 title: JWK DID Integration
 parent: Integration Modules
+redirect_from:
+  - /integrations/jwk-did/
+
 ---
 
 # JWK DID Integration

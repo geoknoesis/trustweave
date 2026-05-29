@@ -9,6 +9,9 @@ keywords:
   - maven
   - dependencies
   - prerequisites
+redirect_from:
+  - /getting-started/installation/
+
 ---
 
 # Installation

@@ -2,6 +2,9 @@
 title: DID Method Registration JSON Specification
 parent: DID Method Registration via JSON
 grand_parent: Integration Modules
+redirect_from:
+  - /integrations/did-registration/SPECIFICATION/
+
 ---
 
 # DID Method Registration JSON Specification

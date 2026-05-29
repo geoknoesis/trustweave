@@ -1,3 +1,8 @@
+---
+redirect_from:
+  - /conformance/did-1-1-implementation-report/
+---
+
 # DID 1.1 Implementation Report (TrustWeave)
 
 This document is the placeholder for the **W3C DID test suite** implementation report for TrustWeave.

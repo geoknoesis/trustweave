@@ -1,6 +1,9 @@
 ---
 title: ENS DID (did:ens) Integration
 parent: Integration Modules
+redirect_from:
+  - /integrations/ens-did/
+
 ---
 
 # ENS DID (did:ens) Integration

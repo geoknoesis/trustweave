@@ -1,6 +1,9 @@
 ---
 title: AWS KMS Integration
 parent: Integration Modules
+redirect_from:
+  - /integrations/aws-kms/
+
 ---
 
 # AWS KMS Integration

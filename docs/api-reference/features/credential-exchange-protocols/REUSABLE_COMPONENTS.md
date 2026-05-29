@@ -1,5 +1,8 @@
 ---
 title: Reusable Components Across Protocols
+redirect_from:
+  - /features/credential-exchange-protocols/REUSABLE_COMPONENTS/
+
 ---
 
 # Reusable Components Across Protocols

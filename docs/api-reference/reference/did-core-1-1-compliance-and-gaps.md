@@ -8,6 +8,9 @@ keywords:
   - W3C
   - compliance
   - Controlled Identifiers
+redirect_from:
+  - /reference/did-core-1-1-compliance-and-gaps/
+
 ---
 
 # DID Core 1.0 vs 1.1 and TrustWeave compliance gaps

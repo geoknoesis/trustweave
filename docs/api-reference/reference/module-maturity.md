@@ -7,6 +7,9 @@ keywords:
   - support
   - experimental
   - production
+redirect_from:
+  - /reference/module-maturity/
+
 ---
 
 # Module maturity matrix

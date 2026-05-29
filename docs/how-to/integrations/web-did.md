@@ -1,6 +1,9 @@
 ---
 title: Web DID Integration
 parent: Integration Modules
+redirect_from:
+  - /integrations/web-did/
+
 ---
 
 # Web DID Integration

@@ -1,5 +1,8 @@
 ---
 title: anchors:anchor-core
+redirect_from:
+  - /modules/trustweave-anchor/
+
 ---
 
 # anchors:anchor-core

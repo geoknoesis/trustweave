@@ -8,6 +8,9 @@ keywords:
   - sealed results
   - patterns
   - best practices
+redirect_from:
+  - /advanced/error-handling-patterns/
+
 ---
 
 # Error Handling Patterns: Exceptions vs Sealed Results

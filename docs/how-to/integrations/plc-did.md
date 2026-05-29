@@ -1,6 +1,9 @@
 ---
 title: PLC DID (did:plc) Integration
 parent: Integration Modules
+redirect_from:
+  - /integrations/plc-did/
+
 ---
 
 # PLC DID (did:plc) Integration

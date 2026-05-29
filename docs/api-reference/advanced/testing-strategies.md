@@ -1,6 +1,9 @@
 ---
 title: Testing Strategies
 nav_exclude: true
+redirect_from:
+  - /advanced/testing-strategies/
+
 ---
 
 # Testing Strategies

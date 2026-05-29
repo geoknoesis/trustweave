@@ -8,6 +8,9 @@ keywords:
   - overview
   - purpose
   - design philosophy
+redirect_from:
+  - /introduction/what-is-trustweave/
+
 ---
 
 # What is TrustWeave?

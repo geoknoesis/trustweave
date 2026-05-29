@@ -1,5 +1,8 @@
 ---
 title: Features Usage Guide
+redirect_from:
+  - /features/USAGE_GUIDE/
+
 ---
 
 # Features Usage Guide

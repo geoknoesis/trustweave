@@ -1,5 +1,8 @@
 ---
 title: OIDC4VCI Plugin
+redirect_from:
+  - /features/credential-exchange-protocols/oidc4vci/
+
 ---
 
 # OIDC4VCI Plugin

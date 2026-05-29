@@ -1,6 +1,9 @@
 ---
 title: Plugin Lifecycle Management
 nav_exclude: true
+redirect_from:
+  - /advanced/plugin-lifecycle/
+
 ---
 
 # Plugin Lifecycle Management

@@ -2,6 +2,9 @@
 title: KMS Quick Start Guide
 nav_order: 11
 parent: KMS Documentation
+redirect_from:
+  - /kms/KMS_QUICK_START/
+
 ---
 
 # KMS Quick Start Guide

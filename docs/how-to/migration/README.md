@@ -1,6 +1,9 @@
 ---
 title: Migration Guides
 nav_exclude: true
+redirect_from:
+  - /migration/README/
+
 ---
 
 # Migration Guides

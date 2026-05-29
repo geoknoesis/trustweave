@@ -1,5 +1,8 @@
 ---
 title: Credential Exchange Protocols - Troubleshooting
+redirect_from:
+  - /features/credential-exchange-protocols/TROUBLESHOOTING/
+
 ---
 
 # Credential Exchange Protocols - Troubleshooting

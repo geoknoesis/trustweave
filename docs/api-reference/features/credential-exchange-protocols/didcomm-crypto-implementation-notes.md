@@ -1,5 +1,8 @@
 ---
 title: DIDComm Crypto Implementation Notes
+redirect_from:
+  - /features/credential-exchange-protocols/didcomm-crypto-implementation-notes/
+
 ---
 
 # DIDComm Crypto Implementation Notes

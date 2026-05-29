@@ -35,6 +35,7 @@ plugins:
   - jekyll-sitemap
   - jekyll-mermaid
   - jekyll-relative-links
+  - jekyll-redirect-from
 
 # Exclude files from processing
 exclude:

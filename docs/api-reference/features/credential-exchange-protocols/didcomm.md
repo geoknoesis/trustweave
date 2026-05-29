@@ -1,5 +1,8 @@
 ---
 title: DIDComm V2 Plugin
+redirect_from:
+  - /features/credential-exchange-protocols/didcomm/
+
 ---
 
 # DIDComm V2 Plugin

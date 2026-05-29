@@ -1,5 +1,8 @@
 ---
 title: SIOPv2 Plugin
+redirect_from:
+  - /features/credential-exchange-protocols/siopv2/
+
 ---
 
 # SIOPv2 Plugin

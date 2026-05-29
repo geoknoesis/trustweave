@@ -4,6 +4,9 @@ nav_order: 30
 parent: Architecture
 status: Draft (proposed)
 last_updated: 2026-05
+redirect_from:
+  - /architecture/conformance-testing-plan/
+
 ---
 
 # Conformance Testing and Certification Plan

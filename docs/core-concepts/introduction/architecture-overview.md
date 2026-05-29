@@ -9,6 +9,9 @@ keywords:
   - plugins
   - services
   - structure
+redirect_from:
+  - /introduction/architecture-overview/
+
 ---
 
 # Architecture Overview

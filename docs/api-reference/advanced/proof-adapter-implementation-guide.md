@@ -1,3 +1,8 @@
+---
+redirect_from:
+  - /advanced/proof-adapter-implementation-guide/
+---
+
 # ProofAdapter Implementation Guide
 
 > **Historical / superseded.** This document describes the legacy `ProofAdapter` / `CredentialEnvelope` / `EnvelopeSerialization` / `CredentialFormat` / `Claims` abstractions, which have been removed. The shipping SPI is **`ProofEngine`** (`org.trustweave.credential.spi.proof.ProofEngine`) and works directly on `VerifiableCredential` + sealed `CredentialProof` (`LinkedDataProof`, `JwtProof`, `SdJwtVcProof`, `MdocProof`). Built-in engines: `VcLdProofEngine`, `SdJwtProofEngine`. External plugin engines: `credentials/plugins/bbs/` (`Bbs2023ProofEngine`), `credentials/plugins/mdl/` (`MdocProofEngine`). **For new code, follow [proof-engine-implementation-guide.md](proof-engine-implementation-guide.md).** The material below is retained only for archival/historical reference.

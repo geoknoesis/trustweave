@@ -1,5 +1,8 @@
 ---
 title: DIDComm Location Analysis
+redirect_from:
+  - /features/credential-exchange-protocols/didcomm-location-analysis/
+
 ---
 
 # DIDComm Location Analysis

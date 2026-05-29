@@ -1,6 +1,9 @@
 ---
 title: Verification Policies
 nav_exclude: true
+redirect_from:
+  - /advanced/verification-policies/
+
 ---
 
 # Verification Policies

@@ -7,6 +7,9 @@ keywords:
   - operations
   - logging
   - security
+redirect_from:
+  - /getting-started/production-integration-checklist/
+
 ---
 
 # Production integration checklist

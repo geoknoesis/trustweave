@@ -9,6 +9,9 @@ keywords:
   - java
   - gradle
   - requirements
+redirect_from:
+  - /reference/version-compatibility/
+
 ---
 
 # Version Compatibility Matrix

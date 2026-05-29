@@ -1,5 +1,8 @@
 ---
 title: trustweave-did-registrar-server (Ktor)
+redirect_from:
+  - /modules/trustweave-did-registrar-server/
+
 ---
 
 # trustweave-did-registrar-server (Ktor)

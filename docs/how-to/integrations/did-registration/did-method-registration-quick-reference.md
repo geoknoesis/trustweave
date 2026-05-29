@@ -1,3 +1,8 @@
+---
+redirect_from:
+  - /integrations/did-registration/did-method-registration-quick-reference/
+---
+
 # DID Method Registration - Quick Reference
 
 ## JSON Structure → DidMethod Implementation

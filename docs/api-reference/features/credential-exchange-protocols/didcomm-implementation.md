@@ -1,5 +1,8 @@
 ---
 title: DIDComm V2 Implementation Summary
+redirect_from:
+  - /features/credential-exchange-protocols/didcomm-implementation/
+
 ---
 
 # DIDComm V2 Implementation Summary

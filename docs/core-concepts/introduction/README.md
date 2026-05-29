@@ -6,6 +6,9 @@ keywords:
   - overview
   - what is trustweave
   - getting started
+redirect_from:
+  - /introduction/README/
+
 ---
 
 # Introduction

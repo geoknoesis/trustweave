@@ -1,5 +1,8 @@
 ---
 title: Trusted Domain UX Guide - Complete User Experience Documentation
+redirect_from:
+  - /ux/trusted-domain-ux-guide/
+
 ---
 
 # Trusted Domain UX Guide - Complete User Experience Documentation

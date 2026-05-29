@@ -1,6 +1,9 @@
 ---
 title: Supported Plugins
 nav_exclude: true
+redirect_from:
+  - /plugins/
+
 ---
 
 # Supported Plugins

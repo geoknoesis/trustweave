@@ -2,6 +2,9 @@
 title: Core Modules
 nav_order: 1
 parent: Reference
+redirect_from:
+  - /modules/core-modules/
+
 ---
 
 # Core Modules

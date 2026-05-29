@@ -1,6 +1,9 @@
 ---
 title: Creating Custom Adapters
 nav_exclude: true
+redirect_from:
+  - /advanced/custom-adapters/
+
 ---
 
 # Creating Custom Adapters

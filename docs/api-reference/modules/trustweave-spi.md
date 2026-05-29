@@ -1,5 +1,8 @@
 ---
 title: SPI Interfaces
+redirect_from:
+  - /modules/trustweave-spi/
+
 ---
 
 # SPI Interfaces

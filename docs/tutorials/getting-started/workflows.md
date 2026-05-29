@@ -2,6 +2,9 @@
 title: Common Workflows
 nav_order: 9
 parent: Getting Started
+redirect_from:
+  - /getting-started/workflows/
+
 ---
 
 # Common Workflows

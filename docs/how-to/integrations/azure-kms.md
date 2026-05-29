@@ -1,6 +1,9 @@
 ---
 title: Azure Key Vault Integration
 parent: Integration Modules
+redirect_from:
+  - /integrations/azure-kms/
+
 ---
 
 # Azure Key Vault Integration

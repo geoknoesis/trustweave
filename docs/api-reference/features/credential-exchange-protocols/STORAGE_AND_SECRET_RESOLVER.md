@@ -1,5 +1,8 @@
 ---
 title: Persistent Storage & Secret Resolver Implementation
+redirect_from:
+  - /features/credential-exchange-protocols/STORAGE_AND_SECRET_RESOLVER/
+
 ---
 
 # Persistent Storage & Secret Resolver Implementation

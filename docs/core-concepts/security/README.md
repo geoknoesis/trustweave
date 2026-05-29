@@ -1,3 +1,8 @@
+---
+redirect_from:
+  - /security/README/
+---
+
 # Security Documentation
 
 This directory contains security-related documentation for the credential-api module.

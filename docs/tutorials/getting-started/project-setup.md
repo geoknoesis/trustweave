@@ -2,6 +2,9 @@
 title: Project Setup
 nav_order: 5
 parent: Getting Started
+redirect_from:
+  - /getting-started/project-setup/
+
 ---
 
 # Project Setup

@@ -1,6 +1,9 @@
 ---
 title: TrustWeave Features
 nav_exclude: true
+redirect_from:
+  - /features/README/
+
 ---
 
 # TrustWeave Features

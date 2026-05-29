@@ -2,6 +2,9 @@
 title: KMS Documentation
 nav_order: 10
 parent: Documentation
+redirect_from:
+  - /kms/README/
+
 ---
 
 # TrustWeave KMS Documentation

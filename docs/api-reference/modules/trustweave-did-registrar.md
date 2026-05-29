@@ -1,5 +1,8 @@
 ---
 title: did:registrar
+redirect_from:
+  - /modules/trustweave-did-registrar/
+
 ---
 
 # did:registrar

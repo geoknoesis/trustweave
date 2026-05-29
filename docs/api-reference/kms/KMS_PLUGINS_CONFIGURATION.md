@@ -2,6 +2,9 @@
 title: KMS Plugins Configuration Guide
 nav_order: 12
 parent: KMS Documentation
+redirect_from:
+  - /kms/KMS_PLUGINS_CONFIGURATION/
+
 ---
 
 # KMS Plugins Configuration Guide

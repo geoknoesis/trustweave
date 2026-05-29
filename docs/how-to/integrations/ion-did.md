@@ -1,6 +1,9 @@
 ---
 title: ION DID Integration
 parent: Integration Modules
+redirect_from:
+  - /integrations/ion-did/
+
 ---
 
 # ION DID Integration

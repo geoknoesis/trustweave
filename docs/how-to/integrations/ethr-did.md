@@ -1,6 +1,9 @@
 ---
 title: Ethereum DID (did:ethr) Integration
 parent: Integration Modules
+redirect_from:
+  - /integrations/ethr-did/
+
 ---
 
 # Ethereum DID (did:ethr) Integration

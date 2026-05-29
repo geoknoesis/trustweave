@@ -1,6 +1,9 @@
 ---
 title: IBM Key Protect KMS Integration
 parent: Integration Modules
+redirect_from:
+  - /integrations/ibm-key-protect-kms/
+
 ---
 
 # IBM Key Protect KMS Integration

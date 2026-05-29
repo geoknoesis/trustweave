@@ -10,6 +10,9 @@ keywords:
   - type safety
   - value classes
   - design
+redirect_from:
+  - /advanced/identifier-design/
+
 ---
 
 # Identifier Design Specification

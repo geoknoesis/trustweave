@@ -1,6 +1,9 @@
 ---
 title: Base Blockchain Anchor Integration
 parent: Integration Modules
+redirect_from:
+  - /integrations/base-anchor/
+
 ---
 
 # Base Blockchain Anchor Integration

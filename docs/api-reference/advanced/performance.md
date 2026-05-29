@@ -1,6 +1,9 @@
 ---
 title: Performance Considerations
 nav_exclude: true
+redirect_from:
+  - /advanced/performance/
+
 ---
 
 # Performance Considerations

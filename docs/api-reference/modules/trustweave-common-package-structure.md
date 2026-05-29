@@ -1,5 +1,8 @@
 ---
 title: common Package Structure
+redirect_from:
+  - /modules/trustweave-common-package-structure/
+
 ---
 
 # common Package Structure

@@ -1,3 +1,8 @@
+---
+redirect_from:
+  - /architecture/eidas-qes-design/
+---
+
 # eIDAS QES Design (TrustWeave 0.7.x)
 
 **Status:** This is a forward-looking design document for adding eIDAS 2.0 qualified-electronic-signature

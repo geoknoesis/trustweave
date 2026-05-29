@@ -1,5 +1,8 @@
 ---
 title: Credential Exchange Protocols - Versioning
+redirect_from:
+  - /features/credential-exchange-protocols/VERSIONING/
+
 ---
 
 # Credential Exchange Protocols - Versioning

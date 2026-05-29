@@ -1,5 +1,8 @@
 ---
 title: CHAPI Plugin
+redirect_from:
+  - /features/credential-exchange-protocols/chapi/
+
 ---
 
 # CHAPI Plugin

@@ -11,6 +11,9 @@ keywords:
   - example
   - did
   - verifiable credential
+redirect_from:
+  - /getting-started/quick-start/
+
 ---
 
 # Quick Start

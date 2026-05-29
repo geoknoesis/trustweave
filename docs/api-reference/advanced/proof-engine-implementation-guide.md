@@ -2,6 +2,9 @@
 title: Proof Engine Implementation Guide
 nav_order: 1
 parent: Advanced
+redirect_from:
+  - /advanced/proof-engine-implementation-guide/
+
 ---
 
 # Proof Engine Implementation Guide

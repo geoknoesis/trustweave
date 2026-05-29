@@ -1,6 +1,9 @@
 ---
 title: InMemory KMS Integration
 parent: Integration Modules
+redirect_from:
+  - /integrations/inmemory-kms/
+
 ---
 
 # InMemory KMS Integration

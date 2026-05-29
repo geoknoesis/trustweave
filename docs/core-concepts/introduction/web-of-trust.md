@@ -2,6 +2,9 @@
 title: "The Web of Trust: Foundation for Decentralized Trust"
 nav_order: 8
 parent: Introduction
+redirect_from:
+  - /introduction/web-of-trust/
+
 ---
 
 # The Web of Trust: Foundation for Decentralized Trust

@@ -1,6 +1,9 @@
 ---
 title: Credential Exchange Protocols
 nav_exclude: true
+redirect_from:
+  - /features/credential-exchange-protocols/README/
+
 ---
 
 # Credential Exchange Protocols

@@ -1,5 +1,8 @@
 ---
 title: Default Configuration
+redirect_from:
+  - /configuration/defaults/
+
 ---
 
 # Default Configuration

@@ -1,3 +1,8 @@
+---
+redirect_from:
+  - /architecture/CLEAN_ARCHITECTURE/
+---
+
 # Clean Architecture in TrustWeave
 
 TrustWeave applies [Uncle Bob's Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) principles to ensure maintainability, testability, and independence from frameworks.

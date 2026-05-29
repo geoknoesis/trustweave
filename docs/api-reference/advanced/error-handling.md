@@ -8,6 +8,9 @@ keywords:
   - trustweaveexception
   - debugging
   - troubleshooting
+redirect_from:
+  - /advanced/error-handling/
+
 ---
 
 # Error Handling

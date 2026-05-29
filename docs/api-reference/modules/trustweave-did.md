@@ -1,5 +1,8 @@
 ---
 title: did:did-core
+redirect_from:
+  - /modules/trustweave-did/
+
 ---
 
 # did:did-core

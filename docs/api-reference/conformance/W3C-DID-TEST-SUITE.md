@@ -1,3 +1,8 @@
+---
+redirect_from:
+  - /conformance/W3C-DID-TEST-SUITE/
+---
+
 # W3C DID test suite (DID Core / DID 1.1–aligned data model)
 
 The official suite lives at **[w3c/did-test-suite](https://github.com/w3c/did-test-suite)**. It exercises DID identifier rules, document properties, JSON production/consumption, resolution, and URL dereferencing against **registered implementation JSON fixtures** (and resolvers where configured).

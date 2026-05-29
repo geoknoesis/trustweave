@@ -1,5 +1,8 @@
 ---
 title: "TrustWeave vs. Other APIs: Comprehensive Comparison"
+redirect_from:
+  - /comparison/trustweave-vs-other-apis/
+
 ---
 
 # TrustWeave vs. Other APIs: Comprehensive Comparison

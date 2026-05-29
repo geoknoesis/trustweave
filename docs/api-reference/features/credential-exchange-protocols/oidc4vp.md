@@ -1,5 +1,8 @@
 ---
 title: OIDC4VP Plugin
+redirect_from:
+  - /features/credential-exchange-protocols/oidc4vp/
+
 ---
 
 # OIDC4VP Plugin

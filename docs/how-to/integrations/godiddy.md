@@ -1,6 +1,9 @@
 ---
 title: GoDiddy Integration
 parent: Integration Modules
+redirect_from:
+  - /integrations/godiddy/
+
 ---
 
 # GoDiddy Integration

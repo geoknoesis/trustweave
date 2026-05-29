@@ -11,6 +11,9 @@ keywords:
   - healthcare
   - education
   - iot
+redirect_from:
+  - /introduction/use-cases/
+
 ---
 
 # Use Cases

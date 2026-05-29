@@ -1,5 +1,8 @@
 ---
 title: Credential Exchange Protocols - Error Handling
+redirect_from:
+  - /features/credential-exchange-protocols/ERROR_HANDLING/
+
 ---
 
 # Credential Exchange Protocols - Error Handling

@@ -1,3 +1,8 @@
+---
+redirect_from:
+  - /kms/API_VERSIONING/
+---
+
 # KMS API Versioning Strategy
 
 **Module:** `kms-core`  

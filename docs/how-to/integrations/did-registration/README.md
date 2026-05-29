@@ -2,6 +2,9 @@
 title: DID Method Registration via JSON
 parent: Integration Modules
 has_children: true
+redirect_from:
+  - /integrations/did-registration/README/
+
 ---
 
 # DID Method Registration via JSON

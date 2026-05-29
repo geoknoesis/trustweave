@@ -1,3 +1,8 @@
+---
+redirect_from:
+  - /advanced/proof-adapter-plugin-organization/
+---
+
 # ProofAdapter Plugin Organization Guide
 
 > **Historical / superseded.** The `ProofAdapter` / `ProofAdapterProvider` / `CredentialEnvelope` SPI described below has been replaced by **`ProofEngine`** / **`ProofEngineProvider`** (package `org.trustweave.credential.spi.proof`), which operate directly on `VerifiableCredential`. The current ServiceLoader file is `META-INF/services/org.trustweave.credential.spi.proof.ProofEngineProvider`. The format identifier is `ProofSuiteId` (enum), not a custom `CredentialFormat`. Built-in proof suites (`VC_LD`, `SD_JWT_VC`) live inside `credentials/credential-api`; external plugin engines: `credentials/plugins/bbs/` (`Bbs2023ProofEngineProvider`), `credentials/plugins/mdl/` (`MdocProofEngineProvider`). The naming, registration, and `autoRegister` / `ProofRegistries` / `ProofAdapters` APIs referenced below do **not** exist in the current codebase. **For new code, follow [proof-engine-implementation-guide.md](proof-engine-implementation-guide.md).** Content below is retained only for historical reference.

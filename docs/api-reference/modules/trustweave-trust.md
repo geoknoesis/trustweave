@@ -1,5 +1,8 @@
 ---
 title: trust
+redirect_from:
+  - /modules/trustweave-trust/
+
 ---
 
 # trust

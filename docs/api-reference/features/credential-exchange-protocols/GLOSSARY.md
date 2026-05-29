@@ -1,5 +1,8 @@
 ---
 title: Credential Exchange Protocols - Glossary
+redirect_from:
+  - /features/credential-exchange-protocols/GLOSSARY/
+
 ---
 
 # Credential Exchange Protocols - Glossary

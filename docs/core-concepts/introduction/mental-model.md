@@ -11,6 +11,9 @@ keywords:
   - dsl
   - plugins
   - services
+redirect_from:
+  - /introduction/mental-model/
+
 ---
 
 # TrustWeave Mental Model

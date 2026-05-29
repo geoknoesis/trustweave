@@ -1,5 +1,8 @@
 ---
 title: contract Module
+redirect_from:
+  - /modules/trustweave-contract/
+
 ---
 
 # contract Module

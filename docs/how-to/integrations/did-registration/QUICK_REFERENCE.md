@@ -2,6 +2,9 @@
 title: DID Method Registration - Quick Reference
 parent: DID Method Registration via JSON
 grand_parent: Integration Modules
+redirect_from:
+  - /integrations/did-registration/QUICK_REFERENCE/
+
 ---
 
 # DID Method Registration - Quick Reference

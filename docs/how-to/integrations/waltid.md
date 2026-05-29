@@ -1,6 +1,9 @@
 ---
 title: walt.id Integration
 parent: Integration Modules
+redirect_from:
+  - /integrations/waltid/
+
 ---
 
 # walt.id Integration

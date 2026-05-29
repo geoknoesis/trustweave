@@ -1,6 +1,9 @@
 ---
 title: Peer DID Integration
 parent: Integration Modules
+redirect_from:
+  - /integrations/peer-did/
+
 ---
 
 # Peer DID Integration

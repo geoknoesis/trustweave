@@ -1,6 +1,9 @@
 ---
 title: Polygon DID Integration
 parent: Integration Modules
+redirect_from:
+  - /integrations/polygon-did/
+
 ---
 
 # Polygon DID Integration

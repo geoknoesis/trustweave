@@ -1,3 +1,8 @@
+---
+redirect_from:
+  - /features/credential-exchange-protocols/QUICK_START/
+---
+
 # Credential Exchange Protocols - Quick Start
 
 Get started with credential exchange protocols in 5 minutes! This guide will walk you through creating your first credential exchange using the protocol abstraction layer.

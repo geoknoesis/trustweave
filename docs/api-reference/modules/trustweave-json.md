@@ -1,5 +1,8 @@
 ---
 title: JSON Utilities
+redirect_from:
+  - /modules/trustweave-json/
+
 ---
 
 # JSON Utilities

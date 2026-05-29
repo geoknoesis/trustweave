@@ -8,6 +8,9 @@ keywords:
   - history
   - motivation
   - frustration
+redirect_from:
+  - /introduction/origin-story/
+
 ---
 
 # The Story Behind TrustWeave

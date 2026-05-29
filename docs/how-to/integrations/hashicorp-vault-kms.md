@@ -1,6 +1,9 @@
 ---
 title: HashiCorp Vault KMS Integration
 parent: Integration Modules
+redirect_from:
+  - /integrations/hashicorp-vault-kms/
+
 ---
 
 # HashiCorp Vault KMS Integration

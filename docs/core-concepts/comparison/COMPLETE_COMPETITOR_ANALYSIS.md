@@ -1,5 +1,8 @@
 ---
 title: TrustWeave vs. Competitors - Complete Analysis
+redirect_from:
+  - /comparison/COMPLETE_COMPETITOR_ANALYSIS/
+
 ---
 
 # TrustWeave vs. Competitors - Complete Analysis

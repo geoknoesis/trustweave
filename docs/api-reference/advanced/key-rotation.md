@@ -1,6 +1,9 @@
 ---
 title: Key Rotation Strategies
 nav_exclude: true
+redirect_from:
+  - /advanced/key-rotation/
+
 ---
 
 # Key Rotation Strategies

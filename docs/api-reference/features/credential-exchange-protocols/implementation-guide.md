@@ -1,5 +1,8 @@
 ---
 title: Protocol Implementation Guide
+redirect_from:
+  - /features/credential-exchange-protocols/implementation-guide/
+
 ---
 
 # Protocol Implementation Guide

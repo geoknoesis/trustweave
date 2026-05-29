@@ -1,5 +1,8 @@
 ---
 title: DIDComm V2 Quick Start
+redirect_from:
+  - /features/credential-exchange-protocols/didcomm-quick-start/
+
 ---
 
 # DIDComm V2 Quick Start

@@ -1,3 +1,8 @@
+---
+redirect_from:
+  - /modules/did-core-idiomatic-api/
+---
+
 # Idiomatic Kotlin API Guide
 
 This document describes the idiomatic Kotlin features added to the `did-core` module.

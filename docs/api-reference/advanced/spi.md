@@ -1,6 +1,9 @@
 ---
 title: Service Provider Interface (SPI)
 nav_exclude: true
+redirect_from:
+  - /advanced/spi/
+
 ---
 
 # Service Provider Interface (SPI)

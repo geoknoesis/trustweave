@@ -7,6 +7,9 @@ keywords:
   - quick start
   - setup
   - onboarding
+redirect_from:
+  - /getting-started/README/
+
 ---
 
 # Getting Started

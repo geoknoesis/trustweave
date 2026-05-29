@@ -1,5 +1,8 @@
 ---
 title: DIDComm V2 Integration Guide
+redirect_from:
+  - /features/credential-exchange-protocols/didcomm-integration-guide/
+
 ---
 
 # DIDComm V2 Integration Guide

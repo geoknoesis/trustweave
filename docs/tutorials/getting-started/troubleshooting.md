@@ -2,6 +2,9 @@
 title: Troubleshooting Guide
 nav_order: 11
 parent: Getting Started
+redirect_from:
+  - /getting-started/troubleshooting/
+
 ---
 
 # Troubleshooting Guide

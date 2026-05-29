@@ -1,5 +1,8 @@
 ---
 title: UX Documentation
+redirect_from:
+  - /ux/README/
+
 ---
 
 # UX Documentation

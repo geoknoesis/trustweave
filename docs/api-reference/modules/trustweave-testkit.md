@@ -1,5 +1,8 @@
 ---
 title: testkit
+redirect_from:
+  - /modules/trustweave-testkit/
+
 ---
 
 # testkit

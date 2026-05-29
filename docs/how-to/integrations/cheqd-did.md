@@ -1,6 +1,9 @@
 ---
 title: Cheqd DID (did:cheqd) Integration
 parent: Integration Modules
+redirect_from:
+  - /integrations/cheqd-did/
+
 ---
 
 # Cheqd DID (did:cheqd) Integration

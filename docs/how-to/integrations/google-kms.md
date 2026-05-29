@@ -1,6 +1,9 @@
 ---
 title: Google Cloud KMS Integration
 parent: Integration Modules
+redirect_from:
+  - /integrations/google-kms/
+
 ---
 
 # Google Cloud KMS Integration

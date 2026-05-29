@@ -1,6 +1,9 @@
 ---
 title: Solana DID Integration
 parent: Integration Modules
+redirect_from:
+  - /integrations/sol-did/
+
 ---
 
 # Solana DID Integration

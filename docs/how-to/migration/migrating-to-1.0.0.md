@@ -1,5 +1,8 @@
 ---
 title: Migrating to TrustWeave 1.0.0
+redirect_from:
+  - /migration/migrating-to-1.0.0/
+
 ---
 
 # Migrating to TrustWeave 1.0.0

@@ -1,6 +1,9 @@
 ---
 title: Algorand Integration
 parent: Integration Modules
+redirect_from:
+  - /integrations/algorand/
+
 ---
 
 # Algorand Integration

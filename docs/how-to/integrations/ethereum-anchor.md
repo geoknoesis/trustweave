@@ -1,6 +1,9 @@
 ---
 title: Ethereum Blockchain Anchor Integration
 parent: Integration Modules
+redirect_from:
+  - /integrations/ethereum-anchor/
+
 ---
 
 # Ethereum Blockchain Anchor Integration

@@ -14,6 +14,6 @@ object SidetreeCommitment {
 
     fun compute(publicKeyJwk: Map<String, Any?>): String {
         val canonical = SidetreeJcs.canonicalize(publicKeyJwk)
-        return b64url.encodeToString(SidetreeJcs.sha256(canonical))
+        return b64url.encodeToString(SidetreeJcs.multihashSha256(canonical))
     }
 }

@@ -25,5 +25,7 @@ dependencies {
     testImplementation(project(":testkit"))
     testImplementation(libs.mockwebserver)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.testcontainers)
+    testImplementation(libs.testcontainers.junit)
 }
 

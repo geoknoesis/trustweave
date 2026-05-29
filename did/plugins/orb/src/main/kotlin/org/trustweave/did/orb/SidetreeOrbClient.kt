@@ -23,9 +23,16 @@ internal class SidetreeOrbClient(
         namespace = "${config.namespace}:",
         operationsPath = SidetreeMethodSpec.ORB.operationsPath,
         identifiersPath = SidetreeMethodSpec.ORB.identifiersPath,
+        // Orb requires every create operation to carry an `anchorOrigin` inside
+        // `suffixData` so it can route witnesses; we default to the configured
+        // base URL. Operators must include the same URL in Orb's `--allowed-origins`.
+        suffixDataExtensionFields = mapOf("anchorOrigin" to config.baseUrl),
     )
 
     private val builder = SidetreeOperationBuilder(methodSpec)
+
+    /** Exposed for OrbDidMethod's suffix extraction; same instance as the builder used here. */
+    internal val builderForExtraction: SidetreeOperationBuilder get() = builder
     private val transport = SidetreeHttpClient(
         httpClient = httpClient,
         baseUrl = config.baseUrl,

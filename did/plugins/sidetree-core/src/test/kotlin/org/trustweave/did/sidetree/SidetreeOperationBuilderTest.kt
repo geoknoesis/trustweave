@@ -51,14 +51,14 @@ class SidetreeOperationBuilderTest {
             nextUpdatePublicJwk = next.publicJwk,
         )
 
-        val expectedRevealValue = b64url.encodeToString(sha256(jcs(previous.publicJwk)))
+        val expectedRevealValue = b64url.encodeToString(multihashSha256(jcs(previous.publicJwk)))
         assertEquals(
             expectedRevealValue,
             updateOp["revealValue"]?.jsonPrimitive?.content,
             "revealValue MUST be base64url(SHA-256(JCS(previousUpdatePublicJwk))).",
         )
 
-        val rebuilt = b64url.encodeToString(sha256(jcs(next.publicJwk)))
+        val rebuilt = b64url.encodeToString(multihashSha256(jcs(next.publicJwk)))
         val nextCommitment = updateOp["delta"]?.jsonObject?.get("updateCommitment")?.jsonPrimitive?.content
         assertEquals(rebuilt, nextCommitment, "delta.updateCommitment MUST be the hash of the NEXT update public key.")
 
@@ -129,7 +129,7 @@ class SidetreeOperationBuilderTest {
         assertEquals("P-256", updateKey["crv"]?.jsonPrimitive?.content)
 
         val delta = updateOp["delta"] as JsonObject
-        val expectedDeltaHash = b64url.encodeToString(sha256(jcs(delta)))
+        val expectedDeltaHash = b64url.encodeToString(multihashSha256(jcs(delta)))
         assertEquals(expectedDeltaHash, payload["deltaHash"]?.jsonPrimitive?.content)
     }
 
@@ -142,7 +142,7 @@ class SidetreeOperationBuilderTest {
             previousRecoveryKeyPair = previousRecovery,
         )
 
-        val expectedRevealValue = b64url.encodeToString(sha256(jcs(previousRecovery.publicJwk)))
+        val expectedRevealValue = b64url.encodeToString(multihashSha256(jcs(previousRecovery.publicJwk)))
         assertEquals(
             expectedRevealValue,
             deactivateOp["revealValue"]?.jsonPrimitive?.content,
@@ -178,9 +178,14 @@ class SidetreeOperationBuilderTest {
     }
 
     @Test
-    fun `extractDidSuffix handles short-form and long-form DIDs`() {
-        assertEquals("EiSuffix", builder.extractDidSuffix("did:orb:EiSuffix"))
-        assertEquals("EiSuffix", builder.extractDidSuffix("did:orb:EiSuffix:long-form-payload"))
+    fun `extractDidSuffix handles short, long-form and Orb-anchored DIDs`() {
+        // Real Sidetree suffixes are exactly 46 base64url chars (multihash-SHA-256)
+        // and start with `Ei`. The extractor picks whichever segment matches that
+        // shape, so it can disambiguate the three canonical did:orb layouts.
+        val suffix = "EiAEpo0adJfl_TLAL9As91fPEsPPDH-DbE4pJrnpXOH-jw"
+        assertEquals(suffix, builder.extractDidSuffix("did:orb:$suffix"))
+        assertEquals(suffix, builder.extractDidSuffix("did:orb:$suffix:long-form-payload-base64url"))
+        assertEquals(suffix, builder.extractDidSuffix("did:orb:uAAA:$suffix"))
     }
 
     // ─── Test helpers ────────────────────────────────────────────────────────────
@@ -192,6 +197,7 @@ class SidetreeOperationBuilderTest {
     private fun jcs(obj: JsonObject): ByteArray = SidetreeJcs.canonicalize(obj)
     private fun jcs(map: Map<String, Any?>): ByteArray = SidetreeJcs.canonicalize(map)
     private fun sha256(b: ByteArray) = MessageDigest.getInstance("SHA-256").digest(b)
+    private fun multihashSha256(b: ByteArray) = byteArrayOf(0x12, 0x20) + sha256(b)
 
     private fun verifyJwsAgainst(jws: String, publicJwk: Map<String, Any?>): Boolean {
         val parts = jws.split(".")

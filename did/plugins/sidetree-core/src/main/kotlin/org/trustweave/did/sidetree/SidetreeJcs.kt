@@ -29,6 +29,31 @@ object SidetreeJcs {
     fun sha256(bytes: ByteArray): ByteArray =
         MessageDigest.getInstance("SHA-256").digest(bytes)
 
+    /**
+     * Multihash-encoded SHA-256 digest: a `[0x12, 0x20]` prefix (SHA-256 algorithm
+     * code 0x12 followed by the digest length 0x20 = 32) concatenated with the raw
+     * SHA-256 output.
+     *
+     * Sidetree v1.0.0 §5.4 requires every hash that appears on the wire
+     * (`revealValue`, `deltaHash`, commitments, the DID suffix, …) to be
+     * multihash-framed so future protocol versions can rotate the hash algorithm
+     * without breaking existing payloads.
+     */
+    fun multihashSha256(bytes: ByteArray): ByteArray {
+        val digest = sha256(bytes)
+        val out = ByteArray(digest.size + 2)
+        out[0] = MULTIHASH_SHA256_CODE
+        out[1] = MULTIHASH_SHA256_LEN
+        System.arraycopy(digest, 0, out, 2, digest.size)
+        return out
+    }
+
+    /** SHA-256 multihash algorithm code (0x12 = 18 in the multicodec table). */
+    private const val MULTIHASH_SHA256_CODE: Byte = 0x12
+
+    /** SHA-256 digest length in bytes (0x20 = 32). */
+    private const val MULTIHASH_SHA256_LEN: Byte = 0x20
+
     private fun build(element: JsonElement): String = when (element) {
         is JsonObject -> element.entries
             .sortedBy { it.key }

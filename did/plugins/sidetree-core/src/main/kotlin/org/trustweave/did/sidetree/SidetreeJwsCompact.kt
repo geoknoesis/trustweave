@@ -34,7 +34,10 @@ object SidetreeJwsCompact {
         val d = privateJwk["d"] as? String
             ?: error("JWK private key must contain 'd' (private scalar, base64url)")
 
-        val headerJson = """{"alg":"ES256","typ":"application/jose"}"""
+        // Sidetree v1 (and Orb's reference operationparser) accepts ONLY the bare
+        // `alg` field in the JWS protected header; including `typ` triggers
+        // "invalid protected header: typ". Keep this minimal.
+        val headerJson = """{"alg":"ES256"}"""
         val payloadJson = json.encodeToString(JsonObject.serializer(), payload)
         val headerB64 = b64url.encodeToString(headerJson.toByteArray(StandardCharsets.UTF_8))
         val payloadB64 = b64url.encodeToString(payloadJson.toByteArray(StandardCharsets.UTF_8))

@@ -17,6 +17,13 @@ data class SidetreeMethodSpec(
     val namespace: String,
     val operationsPath: String,
     val identifiersPath: String,
+    /**
+     * Optional extra fields that the method's reference operator requires inside the
+     * `suffixData` envelope on create operations. Orb requires `anchorOrigin` here
+     * (so the operation's `didSuffix` covers it); vanilla Sidetree does not. Empty
+     * by default.
+     */
+    val suffixDataExtensionFields: Map<String, String> = emptyMap(),
 ) {
     init {
         require(namespace.endsWith(":")) { "Sidetree namespace must end with ':' (got '$namespace')" }

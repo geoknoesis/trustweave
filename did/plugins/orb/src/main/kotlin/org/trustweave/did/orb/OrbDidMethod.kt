@@ -307,13 +307,14 @@ class OrbDidMethod(
         }
     }
 
-    private fun extractSuffixOrThrow(did: String): String {
-        val prefix = "${config.namespace}:"
-        require(did.startsWith(prefix)) { "DID does not match Orb namespace '$prefix': $did" }
-        val rest = did.removePrefix(prefix)
-        val colon = rest.indexOf(':')
-        return if (colon >= 0) rest.substring(0, colon) else rest
-    }
+    /**
+     * Pick the Sidetree suffix out of any of the canonical Orb DID forms — including
+     * the anchored form `did:orb:<anchor-segment>:<suffix>` that Orb's
+     * `/sidetree/v1/operations` response returns. Delegates to the shared
+     * [org.trustweave.did.sidetree.SidetreeOperationBuilder.extractDidSuffix].
+     */
+    private fun extractSuffixOrThrow(did: String): String =
+        sidetree.builderForExtraction.extractDidSuffix(did)
 
     /**
      * Internal access to the underlying Sidetree client for tests and advanced users.

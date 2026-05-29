@@ -103,7 +103,7 @@ fun HomeScreen(
             confirmButton = {
                 TextButton(onClick = {
                     wallet.deleteCredential(cred.id)
-                    state = Wallet.State(s.holder, wallet.list())
+                    state = s.copy(credentials = wallet.list())
                     confirmDelete = null
                 }) { Text("Delete", color = MaterialTheme.colorScheme.error) }
             },
@@ -125,19 +125,34 @@ private fun IdentityPanel(holder: Storage.HolderIdentity) {
                 Column(Modifier.padding(12.dp)) {
                     Text("HOLDER DID", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.height(4.dp))
-                    Text(
-                        holder.did,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 12.sp,
-                    )
+                    Text(holder.did, fontFamily = FontFamily.Monospace, fontSize = 12.sp)
                 }
             }
             Spacer(Modifier.height(8.dp))
-            Text(
-                "Keys live in EncryptedSharedPreferences (Phase 2 baseline). Phase 2.5 binds the holder signing key directly to Android Keystore.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            val keystoreBound = holder.keySource == "keystore"
+            Surface(
+                color = if (keystoreBound) MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant,
+                shape = RoundedCornerShape(6.dp),
+            ) {
+                Column(Modifier.padding(10.dp)) {
+                    Text(
+                        if (keystoreBound) "🔒 Key in Android Keystore" else "🔑 Key in EncryptedSharedPreferences",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = if (keystoreBound) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        if (keystoreBound) {
+                            "Ed25519 private key lives inside AndroidKeyStore. Signing happens there; the bytes never enter app memory."
+                        } else {
+                            "Ed25519 seed lives encrypted in EncryptedSharedPreferences (Keystore wraps the storage key, not the signing key). Keystore-bound Ed25519 is API 33+ only; this device falls back to software."
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
         }
     }
 }

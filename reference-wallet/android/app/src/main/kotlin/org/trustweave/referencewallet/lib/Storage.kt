@@ -9,13 +9,14 @@ import kotlinx.serialization.json.Json
 /**
  * Encrypted local storage for the wallet — holder identity + credentials.
  *
- * Phase 2 baseline: EncryptedSharedPreferences derives its wrapping key from Android
- * Keystore, so the on-disk file is non-extractable without device unlock. Phase 2.5
- * binds the holder signing key DIRECTLY to Keystore.
+ * Phase 2.5b: HolderIdentity now records which backend stores the signing key
+ * (`keySource = "keystore"` on API 33+ vs `"software"` on older). When keystore-backed,
+ * `softwarePrivateKey` is null and the actual key material lives in AndroidKeyStore
+ * under [keystoreAlias]; we only keep the public key here for display + did:key
+ * derivation. On the software path the private key seed continues to sit in
+ * EncryptedSharedPreferences (Phase 2 baseline).
  *
- * Phase 2.5: storage shape upgraded to v2 — credentials carry their format
- * (`vc+jwt` vs `vc+sd-jwt`) and the issuer-declared list of selectively-disclosable
- * claim names (for the present-screen UI).
+ * Schema: still v2 (the HolderIdentity additions are additive with safe defaults).
  */
 class Storage(context: Context) {
 
@@ -33,10 +34,8 @@ class Storage(context: Context) {
     }
 
     init {
-        // v1 → v2 migration: if we detect old-shape data, wipe it. Acceptable for a
-        // demo; a real wallet would migrate in place. The v1 schema had `vcJwt`
-        // instead of `credential` + `format`; an older serialized cred deserialised
-        // through the v2 schema would either fail or load with empty fields.
+        // v1 → v2 migration: old shape had `vcJwt` instead of `credential`+`format`.
+        // Wipe and start fresh; acceptable for a demo wallet.
         val existingVersion = prefs.getString(KEY_SCHEMA_VERSION, null)
         if (existingVersion == null) {
             prefs.edit().putString(KEY_SCHEMA_VERSION, CURRENT_VERSION.toString()).apply()
@@ -48,23 +47,27 @@ class Storage(context: Context) {
     @Serializable
     data class HolderIdentity(
         val did: String,
-        val publicKey: String,   // base64url
-        val privateKey: String,  // base64url
+        val publicKey: String,                         // base64url — always present
+        /** "software" (Phase 2 + API 29-32) or "keystore" (API 33+ Keystore-bound). */
+        val keySource: String = "software",
+        /** base64url. Present only when keySource="software". */
+        val softwarePrivateKey: String? = null,
+        /** Keystore alias. Present only when keySource="keystore". */
+        val keystoreAlias: String? = null,
         val createdAt: String,
     )
 
     @Serializable
     data class StoredCredential(
         val id: String,
-        val format: String,  // "vc+jwt" or "vc+sd-jwt"
-        val credential: String,  // VC-JWT or SD-JWT VC compact form
+        val format: String,
+        val credential: String,
         val receivedAt: String,
         val issuerDid: String,
         val subjectDid: String,
         val type: List<String>,
         val previewTitle: String,
         val previewSubtitle: String? = null,
-        /** SD-JWT VC only: claim names the issuer marked selectively-disclosable. */
         val selectivelyDisclosable: List<String> = emptyList(),
     )
 

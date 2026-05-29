@@ -101,11 +101,14 @@ object SdJwt {
      * Build a holder presentation. Selects only the named disclosures and appends a
      * KB-JWT signed by the holder, binding to the verifier's audience + nonce + the
      * SHA-256 of the presentation prefix (`sd_hash`).
+     *
+     * Phase 2.5b: takes a signing closure so a Keystore-bound holder key works
+     * transparently (its private bytes never leave AndroidKeyStore).
      */
     fun present(
         sdJwtVc: String,
         selectDisclose: Set<String>,
-        holderPrivateKey: ByteArray,
+        holderSigner: (ByteArray) -> ByteArray,
         holderDid: String,
         audience: String,
         nonce: String,
@@ -122,27 +125,12 @@ object SdJwt {
             put("nonce", nonce)
             put("sd_hash", sdHash)
         }
-        val kbJwt = signJwsWithTyp(
+        val kbJwt = Crypto.signJwsCompact(
             jsonPayload = Json.encodeToString(JsonElement.serializer(), kbPayload),
-            privateKey = holderPrivateKey,
             kid = "$holderDid#$didTail",
             typ = "kb+jwt",
+            signer = holderSigner,
         )
         return prefix + kbJwt
-    }
-
-    /** Like Crypto.signJwsCompact but with a custom `typ` header. */
-    private fun signJwsWithTyp(
-        jsonPayload: String,
-        privateKey: ByteArray,
-        kid: String,
-        typ: String,
-    ): String {
-        val header = """{"alg":"EdDSA","typ":"$typ","kid":"$kid"}"""
-        val encodedHeader = Crypto.b64uEncodeString(header)
-        val encodedPayload = Crypto.b64uEncodeString(jsonPayload)
-        val signingInput = "$encodedHeader.$encodedPayload"
-        val signature = Crypto.signEd25519(signingInput.toByteArray(Charsets.UTF_8), privateKey)
-        return "$signingInput.${Crypto.b64uEncode(signature)}"
     }
 }

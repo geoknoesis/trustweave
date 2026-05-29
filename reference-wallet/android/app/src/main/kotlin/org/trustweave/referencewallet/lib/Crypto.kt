@@ -98,24 +98,32 @@ object Crypto {
     fun b64uDecodeString(s: String): String = String(b64uDecode(s), Charsets.UTF_8)
 
     /**
-     * Build a compact JWS (Ed25519, alg=EdDSA) over a JSON payload string.
+     * Build a compact JWS (Ed25519, alg=EdDSA, typ="JWT") over a JSON payload string,
+     * delegating the signing operation to [signer].
      *
-     * Caller is responsible for producing the JSON serialisation — that keeps this
-     * function transport-neutral and lets the wallet facade choose how it serialises
-     * its VP-JWT payload (kotlinx.serialization preferred).
+     * Phase 2.5b: the signer is a closure rather than a raw private key so the caller
+     * can use a Keystore-bound key (where the private bytes never leave AndroidKeyStore)
+     * or a software key transparently.
      */
     fun signJwsCompact(
         jsonPayload: String,
-        privateKey: ByteArray,
         kid: String,
+        typ: String = "JWT",
+        signer: (ByteArray) -> ByteArray,
     ): String {
-        val header = """{"alg":"EdDSA","typ":"JWT","kid":"$kid"}"""
+        val header = """{"alg":"EdDSA","typ":"$typ","kid":"$kid"}"""
         val encodedHeader = b64uEncodeString(header)
         val encodedPayload = b64uEncodeString(jsonPayload)
         val signingInput = "$encodedHeader.$encodedPayload"
-        val signature = signEd25519(signingInput.toByteArray(Charsets.UTF_8), privateKey)
+        val signature = signer(signingInput.toByteArray(Charsets.UTF_8))
         return "$signingInput.${b64uEncode(signature)}"
     }
+
+    /**
+     * Legacy overload — takes raw Ed25519 private key bytes. Wraps the closure variant.
+     */
+    fun signJwsCompact(jsonPayload: String, privateKey: ByteArray, kid: String): String =
+        signJwsCompact(jsonPayload, kid) { signEd25519(it, privateKey) }
 
     // ----- internal: raw <-> JCA key conversions -----
 

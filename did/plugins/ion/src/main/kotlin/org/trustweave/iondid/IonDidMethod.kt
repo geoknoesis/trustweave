@@ -12,6 +12,10 @@ import org.trustweave.did.model.serviceEndpointFromJsonElement
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.base.AbstractDidMethod
 import org.trustweave.did.base.DidMethodUtils
+import org.trustweave.did.sidetree.InMemorySidetreeKeyStore
+import org.trustweave.did.sidetree.SidetreeKeyPair
+import org.trustweave.did.sidetree.SidetreeKeyStore
+import org.trustweave.did.sidetree.SidetreeP256KeyPair
 import org.trustweave.kms.KeyManagementService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -53,7 +57,8 @@ import java.net.URL
 class IonDidMethod(
     kms: KeyManagementService,
     private val config: IonDidConfig,
-    httpClient: OkHttpClient? = null
+    httpClient: OkHttpClient? = null,
+    private val keyStore: SidetreeKeyStore = InMemorySidetreeKeyStore()
 ) : AbstractDidMethod("ion", kms) {
 
     private val httpClient: OkHttpClient = httpClient ?: OkHttpClient.Builder()
@@ -69,8 +74,7 @@ class IonDidMethod(
             val algorithm = options.algorithm.algorithmName
             val keyHandle = generateKey(algorithm, options.additionalProperties)
 
-            // Create Sidetree create operation (returns operation + long-form DID)
-            val (createOperation, localLongFormDid) = sidetreeClient.createCreateOperation(
+            val createResult = sidetreeClient.buildCreateOperation(
                 publicKeyJwk = keyHandle.publicKeyJwk
                     ?: throw TrustWeaveException.Unknown(
                         code = "MISSING_JWK",
@@ -79,10 +83,20 @@ class IonDidMethod(
             )
 
             // Submit operation to ION node (best-effort; long-form DID is usable immediately)
-            val operationResponse = sidetreeClient.submitOperation(createOperation)
+            val operationResponse = sidetreeClient.submitOperation(createResult.operation)
 
             // Prefer the DID returned by the ION node; fall back to locally derived long-form DID
-            val longFormDid = operationResponse.longFormDid ?: localLongFormDid
+            val longFormDid = operationResponse.did ?: createResult.longFormDid
+
+            keyStore.put(
+                createResult.didSuffix,
+                SidetreeKeyPair(
+                    updatePrivateJwk = createResult.updateKeyPair.privateJwk,
+                    updatePublicJwk = createResult.updateKeyPair.publicJwk,
+                    recoveryPrivateJwk = createResult.recoveryKeyPair.privateJwk,
+                    recoveryPublicJwk = createResult.recoveryKeyPair.publicJwk,
+                )
+            )
 
             // Create DID document from operation
             val document = buildIonDocument(
@@ -125,7 +139,7 @@ class IonDidMethod(
             }
 
             // Convert ION document to TrustWeave format
-            val convertedDocument = convertIonDocument(resolutionResult.document)
+            val convertedDocument = convertIonDocument(resolutionResult.document!!)
 
             // Store locally for caching
             storeDocument(convertedDocument.id.value, convertedDocument)
@@ -168,16 +182,37 @@ class IonDidMethod(
             // Apply updater
             val updatedDocument = updater(currentDocument)
 
-            // Create Sidetree update operation
-            val updateOperation = sidetreeClient.createUpdateOperation(
+            val suffix = extractDidSuffix(didString)
+            val previousKeys = keyStore.get(suffix)
+                ?: throw TrustWeaveException.Unknown(
+                    code = "ION_KEYS_NOT_FOUND",
+                    message = "Update keys for $didString are not in the key store. " +
+                        "Updates can only be issued by the instance that created the DID, " +
+                        "or one configured with a persistent SidetreeKeyStore containing the prior keys."
+                )
+            val nextUpdateKeyPair = sidetreeClient.generateP256KeyPair()
+            val previousUpdateKeyPair = SidetreeP256KeyPair(
+                privateJwk = previousKeys.updatePrivateJwk,
+                publicJwk = previousKeys.updatePublicJwk
+            )
+
+            val updateOperation = sidetreeClient.buildUpdateOperation(
                 did = didString,
-                previousOperationHash = (currentResult as? DidResolutionResult.Success)?.documentMetadata?.versionId ?: "",
-                updatedDocument = updatedDocument
+                updatedDocument = updatedDocument,
+                previousUpdateKeyPair = previousUpdateKeyPair,
+                nextUpdatePublicJwk = nextUpdateKeyPair.publicJwk
             )
 
             // Submit update operation
             sidetreeClient.submitOperation(updateOperation)
 
+            keyStore.put(
+                suffix,
+                previousKeys.copy(
+                    updatePrivateJwk = nextUpdateKeyPair.privateJwk,
+                    updatePublicJwk = nextUpdateKeyPair.publicJwk
+                )
+            )
             // Store updated document
             storeDocument(updatedDocument.id.value, updatedDocument)
 
@@ -207,15 +242,23 @@ class IonDidMethod(
                 else -> return@withContext false
             }
 
-            // Create Sidetree deactivate operation
-            val deactivateOperation = sidetreeClient.createDeactivateOperation(
+            val suffix = extractDidSuffix(didString)
+            val previousKeys = keyStore.get(suffix) ?: return@withContext false
+
+            val previousRecoveryKeyPair = SidetreeP256KeyPair(
+                privateJwk = previousKeys.recoveryPrivateJwk,
+                publicJwk = previousKeys.recoveryPublicJwk
+            )
+
+            val deactivateOperation = sidetreeClient.buildDeactivateOperation(
                 did = didString,
-                previousOperationHash = (currentResult as? DidResolutionResult.Success)?.documentMetadata?.versionId ?: ""
+                previousRecoveryKeyPair = previousRecoveryKeyPair
             )
 
             // Submit deactivate operation
             sidetreeClient.submitOperation(deactivateOperation)
 
+            keyStore.remove(suffix)
             // Remove from local storage
             documents.remove(didString)
             documentMetadata.remove(didString)
@@ -304,6 +347,13 @@ class IonDidMethod(
             assertionMethod = assertionMethod,
             service = service
         )
+    }
+
+    private fun extractDidSuffix(did: String): String {
+        require(did.startsWith("did:ion:")) { "DID does not match did:ion namespace: $did" }
+        val rest = did.removePrefix("did:ion:")
+        val colon = rest.indexOf(':')
+        return if (colon >= 0) rest.substring(0, colon) else rest
     }
 
     private fun jsonObjectToMap(obj: JsonObject): Map<String, Any?> {

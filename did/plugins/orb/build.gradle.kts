@@ -8,6 +8,7 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":did:did-core"))
     implementation(project(":did:plugins:base"))
+    implementation(project(":did:plugins:sidetree-core"))
     implementation(project(":credentials:credential-api"))
     implementation(project(":kms:kms-core"))
     implementation(libs.kotlinx.coroutines.core)

@@ -1,10 +1,10 @@
-package org.trustweave.did.orb
+package org.trustweave.did.sidetree
 
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Persists the Sidetree update + recovery keypairs associated with each DID this
- * plugin instance has created.
+ * Persists the Sidetree update + recovery keypairs associated with each DID the
+ * plugin has created.
  *
  * Sidetree update and deactivate operations are cryptographically chained: each
  * operation must reveal the *previous* update / recovery public key (whose hash
@@ -40,7 +40,7 @@ data class SidetreeKeyPair(
 /**
  * In-memory implementation used by default. Suitable for tests and ephemeral
  * applications. NOT suitable for production: a process restart loses the keys
- * and the DIDs become un-updatable.
+ * and any DIDs created by this instance become un-updatable.
  */
 class InMemorySidetreeKeyStore : SidetreeKeyStore {
     private val store = ConcurrentHashMap<String, SidetreeKeyPair>()

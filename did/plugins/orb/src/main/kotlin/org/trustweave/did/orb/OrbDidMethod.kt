@@ -9,6 +9,10 @@ import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.parser.DidDocumentJsonParser
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.sidetree.InMemorySidetreeKeyStore
+import org.trustweave.did.sidetree.SidetreeKeyPair
+import org.trustweave.did.sidetree.SidetreeKeyStore
+import org.trustweave.did.sidetree.SidetreeP256KeyPair
 import org.trustweave.kms.KeyManagementService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -219,7 +223,7 @@ class OrbDidMethod(
                         "or one configured with a persistent SidetreeKeyStore containing the prior keys.",
                 )
             val nextUpdateKeyPair = sidetree.generateP256KeyPair()
-            val previousUpdateKeyPair = SidetreeOrbClient.P256KeyPair(
+            val previousUpdateKeyPair = SidetreeP256KeyPair(
                 privateJwk = previousKeys.updatePrivateJwk,
                 publicJwk = previousKeys.updatePublicJwk,
             )
@@ -272,7 +276,7 @@ class OrbDidMethod(
             val previousKeys = keyStore.get(suffix)
                 ?: return@withContext false
 
-            val previousRecoveryKeyPair = SidetreeOrbClient.P256KeyPair(
+            val previousRecoveryKeyPair = SidetreeP256KeyPair(
                 privateJwk = previousKeys.recoveryPrivateJwk,
                 publicJwk = previousKeys.recoveryPublicJwk,
             )

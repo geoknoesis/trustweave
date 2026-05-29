@@ -10,6 +10,7 @@ pluginManagement {
     // For example, subprojects can use kotlin("jvm") and Gradle will automatically use version 2.3.21.
     plugins {
         kotlin("jvm") version "2.3.21"
+        kotlin("multiplatform") version "2.3.21"
         kotlin("plugin.serialization") version "2.3.21"
         id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
     }
@@ -30,6 +31,7 @@ include("did:registrar")
 include("did:registrar-server-ktor")
 include("did:registrar-server-spring")
 include("did:plugins:base")
+include("did:plugins:sidetree-core")
 include("did:plugins:key")
 include("did:plugins:web")
 include("did:plugins:ethr")
@@ -134,3 +136,7 @@ include("distribution:all")
 include("distribution:bom")
 include("distribution:examples")
 include("distribution:conformance")
+
+// Kotlin Multiplatform scaffolds (Strategy A migration; v1: empty scaffolds only)
+include("wallet:wallet-core-mp")
+include("credentials:credential-models-mp")

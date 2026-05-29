@@ -1,4 +1,4 @@
-package org.trustweave.did.orb
+package org.trustweave.did.sidetree
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -14,20 +14,19 @@ import java.security.spec.ECPrivateKeySpec
 import java.util.Base64
 
 /**
- * Helpers for producing JWS Compact Serialization signatures with ES256 (P-256 + SHA-256),
- * the canonical algorithm used by Sidetree `signedData` envelopes for update and
- * deactivate operations.
+ * JWS Compact Serialization (`<header>.<payload>.<signature>`) with ES256
+ * (P-256 + SHA-256) — the canonical signature algorithm Sidetree expects on
+ * update and deactivate `signedData` envelopes.
  */
-internal object JwsCompact {
+object SidetreeJwsCompact {
 
     private val b64url: Base64.Encoder = Base64.getUrlEncoder().withoutPadding()
     private val b64urlDecoder: Base64.Decoder = Base64.getUrlDecoder()
     private val json = Json { encodeDefaults = true }
 
     /**
-     * Build a JWS Compact Serialization (`<header>.<payload>.<signature>`) over
-     * [payload], signed with the EC private key encoded in [privateJwk]
-     * (`kty=EC, crv=P-256, d=<base64url(private scalar)>`).
+     * Build a JWS Compact Serialization over [payload], signed with the EC private
+     * key encoded in [privateJwk] (`kty=EC, crv=P-256, d=<base64url(private scalar)>`).
      */
     fun signES256(payload: JsonObject, privateJwk: Map<String, Any?>): String {
         require(privateJwk["kty"] == "EC") { "JWK kty must be EC" }

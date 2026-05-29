@@ -1,4 +1,4 @@
-package org.trustweave.did.orb
+package org.trustweave.did.sidetree
 
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -6,10 +6,9 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import okhttp3.OkHttpClient
 import org.junit.jupiter.api.Test
-import org.trustweave.did.model.DidDocument
 import org.trustweave.did.identifiers.Did
+import org.trustweave.did.model.DidDocument
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.security.AlgorithmParameters
@@ -23,33 +22,29 @@ import java.security.spec.ECPoint
 import java.security.spec.ECPublicKeySpec
 import java.util.Base64
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertNotEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 /**
- * Cryptographic correctness tests for [SidetreeOrbClient.buildUpdateOperation] and
- * [SidetreeOrbClient.buildDeactivateOperation] per Sidetree v1.0.0 §6.2 / §6.4.
- *
- * These tests verify what the existing mockwebserver-based tests cannot: that the
- * operations would actually be accepted by a conformant Sidetree node.
+ * Cryptographic correctness tests for [SidetreeOperationBuilder] per Sidetree
+ * v1.0.0 §6.2 / §6.4. Validates the chain of commitments and that signedData
+ * is a real, verifiable JWS — what end-to-end tests against an Orb / ION node
+ * would otherwise catch.
  */
-class SidetreeUpdateOperationTest {
+class SidetreeOperationBuilderTest {
 
     private val b64url = Base64.getUrlEncoder().withoutPadding()
     private val b64urlDecoder = Base64.getUrlDecoder()
 
-    private val client = SidetreeOrbClient(
-        httpClient = OkHttpClient(),
-        config = OrbDidConfig(baseUrl = "https://orb.example.com"),
-    )
+    private val builder = SidetreeOperationBuilder(SidetreeMethodSpec.ORB)
 
     @Test
     fun `update reveals the PREVIOUS update key (not a fresh one)`() = runBlocking {
-        val previous = client.generateP256KeyPair()
-        val next = client.generateP256KeyPair()
+        val previous = SidetreeP256KeyPair.generate()
+        val next = SidetreeP256KeyPair.generate()
 
-        val updateOp = client.buildUpdateOperation(
+        val updateOp = builder.buildUpdateOperation(
             did = "did:orb:EiSomeSuffix",
             updatedDocument = emptyDocument("did:orb:EiSomeSuffix"),
             previousUpdateKeyPair = previous,
@@ -75,11 +70,11 @@ class SidetreeUpdateOperationTest {
     }
 
     @Test
-    fun `update signedData is a JWS Compact Serialization (3 dot-separated parts), not a JSON object`() = runBlocking {
-        val previous = client.generateP256KeyPair()
-        val next = client.generateP256KeyPair()
+    fun `update signedData is a JWS Compact Serialization, not a JSON object`() = runBlocking {
+        val previous = SidetreeP256KeyPair.generate()
+        val next = SidetreeP256KeyPair.generate()
 
-        val updateOp = client.buildUpdateOperation(
+        val updateOp = builder.buildUpdateOperation(
             did = "did:orb:EiSomeSuffix",
             updatedDocument = emptyDocument("did:orb:EiSomeSuffix"),
             previousUpdateKeyPair = previous,
@@ -88,16 +83,15 @@ class SidetreeUpdateOperationTest {
 
         val signedData = updateOp["signedData"]?.jsonPrimitive?.content
         assertNotNull(signedData)
-        val parts = signedData.split(".")
-        assertEquals(3, parts.size, "signedData MUST be a JWS Compact Serialization with 3 parts.")
+        assertEquals(3, signedData.split(".").size, "signedData MUST be a JWS Compact Serialization with 3 parts.")
     }
 
     @Test
     fun `update signedData JWS verifies against the previous update public key`() = runBlocking {
-        val previous = client.generateP256KeyPair()
-        val next = client.generateP256KeyPair()
+        val previous = SidetreeP256KeyPair.generate()
+        val next = SidetreeP256KeyPair.generate()
 
-        val updateOp = client.buildUpdateOperation(
+        val updateOp = builder.buildUpdateOperation(
             did = "did:orb:EiSomeSuffix",
             updatedDocument = emptyDocument("did:orb:EiSomeSuffix"),
             previousUpdateKeyPair = previous,
@@ -112,10 +106,10 @@ class SidetreeUpdateOperationTest {
 
     @Test
     fun `update signedData payload contains updateKey=previous and deltaHash`() = runBlocking {
-        val previous = client.generateP256KeyPair()
-        val next = client.generateP256KeyPair()
+        val previous = SidetreeP256KeyPair.generate()
+        val next = SidetreeP256KeyPair.generate()
 
-        val updateOp = client.buildUpdateOperation(
+        val updateOp = builder.buildUpdateOperation(
             did = "did:orb:EiSomeSuffix",
             updatedDocument = emptyDocument("did:orb:EiSomeSuffix"),
             previousUpdateKeyPair = previous,
@@ -128,14 +122,12 @@ class SidetreeUpdateOperationTest {
             String(b64urlDecoder.decode(parts[1]), StandardCharsets.UTF_8),
         ) as JsonObject
 
-        // updateKey in the payload MUST be the previous update public key.
         val updateKey = payload["updateKey"] as JsonObject
         assertEquals(previous.publicJwk["x"], updateKey["x"]?.jsonPrimitive?.content)
         assertEquals(previous.publicJwk["y"], updateKey["y"]?.jsonPrimitive?.content)
         assertEquals("EC", updateKey["kty"]?.jsonPrimitive?.content)
         assertEquals("P-256", updateKey["crv"]?.jsonPrimitive?.content)
 
-        // deltaHash MUST be base64url(SHA-256(JCS(delta))).
         val delta = updateOp["delta"] as JsonObject
         val expectedDeltaHash = b64url.encodeToString(sha256(jcs(delta)))
         assertEquals(expectedDeltaHash, payload["deltaHash"]?.jsonPrimitive?.content)
@@ -143,9 +135,9 @@ class SidetreeUpdateOperationTest {
 
     @Test
     fun `deactivate reveals the PREVIOUS recovery key and signs with its private half`() = runBlocking {
-        val previousRecovery = client.generateP256KeyPair()
+        val previousRecovery = SidetreeP256KeyPair.generate()
 
-        val deactivateOp = client.buildDeactivateOperation(
+        val deactivateOp = builder.buildDeactivateOperation(
             did = "did:orb:EiSomeSuffix",
             previousRecoveryKeyPair = previousRecovery,
         )
@@ -166,39 +158,39 @@ class SidetreeUpdateOperationTest {
         )
     }
 
+    @Test
+    fun `create produces a long-form DID that starts with the configured namespace`() = runBlocking {
+        val publicKeyJwk = mapOf(
+            "kty" to "EC",
+            "crv" to "P-256",
+            "x" to "abc",
+            "y" to "def",
+        )
+
+        val result = builder.buildCreateOperation(publicKeyJwk)
+        assertTrue(
+            result.longFormDid.startsWith(SidetreeMethodSpec.ORB.namespace),
+            "long-form DID must use the Orb namespace prefix",
+        )
+        assertEquals("create", result.operation["type"]?.jsonPrimitive?.content)
+        assertNotNull(result.updateKeyPair.privateJwk["d"], "create result must expose the update private key")
+        assertNotNull(result.recoveryKeyPair.privateJwk["d"], "create result must expose the recovery private key")
+    }
+
+    @Test
+    fun `extractDidSuffix handles short-form and long-form DIDs`() {
+        assertEquals("EiSuffix", builder.extractDidSuffix("did:orb:EiSuffix"))
+        assertEquals("EiSuffix", builder.extractDidSuffix("did:orb:EiSuffix:long-form-payload"))
+    }
+
     // ─── Test helpers ────────────────────────────────────────────────────────────
 
     private fun emptyDocument(did: String): DidDocument {
         return DidDocument(id = Did(did))
     }
 
-    /**
-     * JCS canonicalization for a JSON object: sort object keys lexicographically,
-     * no whitespace, matches the helper inside [SidetreeOrbClient].
-     */
-    private fun jcs(obj: JsonObject): ByteArray {
-        return obj.entries
-            .sortedBy { it.key }
-            .joinToString(",", "{", "}") { (k, v) -> "\"$k\":${jcsValue(v)}" }
-            .toByteArray(StandardCharsets.UTF_8)
-    }
-
-    private fun jcs(map: Map<String, Any?>): ByteArray {
-        val tree = map.entries
-            .sortedBy { it.key }
-            .joinToString(",", "{", "}") { (k, v) -> "\"$k\":\"${v}\"" }
-        return tree.toByteArray(StandardCharsets.UTF_8)
-    }
-
-    private fun jcsValue(element: kotlinx.serialization.json.JsonElement): String = when (element) {
-        is JsonObject -> element.entries
-            .sortedBy { it.key }
-            .joinToString(",", "{", "}") { (k, v) -> "\"$k\":${jcsValue(v)}" }
-        is kotlinx.serialization.json.JsonArray -> element.joinToString(",", "[", "]") { jcsValue(it) }
-        is JsonPrimitive -> element.toString()
-        else -> element.toString()
-    }
-
+    private fun jcs(obj: JsonObject): ByteArray = SidetreeJcs.canonicalize(obj)
+    private fun jcs(map: Map<String, Any?>): ByteArray = SidetreeJcs.canonicalize(map)
     private fun sha256(b: ByteArray) = MessageDigest.getInstance("SHA-256").digest(b)
 
     private fun verifyJwsAgainst(jws: String, publicJwk: Map<String, Any?>): Boolean {

@@ -2,7 +2,8 @@
 title: DIDComm V2 Implementation Summary
 redirect_from:
   - /features/credential-exchange-protocols/didcomm-implementation/
-
+parent: Feature Reference
+grand_parent: API Reference
 ---
 
 # DIDComm V2 Implementation Summary

@@ -1,6 +1,6 @@
 ---
 title: Core Concepts
-nav_order: 20
+nav_order: 10
 keywords:
   - core concepts
   - dids
@@ -8,6 +8,7 @@ keywords:
   - wallets
   - blockchain
   - key management
+has_children: true
 ---
 
 # Core Concepts

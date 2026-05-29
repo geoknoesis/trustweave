@@ -1,6 +1,8 @@
 ---
 redirect_from:
   - /architecture/CLEAN_ARCHITECTURE/
+parent: Architecture
+grand_parent: Core Concepts
 ---
 
 # Clean Architecture in TrustWeave

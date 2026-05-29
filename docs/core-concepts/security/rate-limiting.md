@@ -1,6 +1,8 @@
 ---
 redirect_from:
   - /security/rate-limiting/
+parent: Security
+grand_parent: Core Concepts
 ---
 
 # Rate Limiting in Credential API

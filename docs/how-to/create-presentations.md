@@ -1,3 +1,6 @@
+---
+parent: How-To Guides
+---
 # How to Create Verifiable Presentations
 
 ## Purpose

@@ -1,10 +1,10 @@
 ---
 title: KMS Documentation
 nav_order: 10
-parent: Documentation
+parent: API Reference
 redirect_from:
   - /kms/README/
-
+has_children: true
 ---
 
 # TrustWeave KMS Documentation

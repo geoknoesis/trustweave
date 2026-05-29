@@ -2,7 +2,8 @@
 title: Default Configuration
 redirect_from:
   - /configuration/defaults/
-
+parent: Configuration
+grand_parent: How-To Guides
 ---
 
 # Default Configuration

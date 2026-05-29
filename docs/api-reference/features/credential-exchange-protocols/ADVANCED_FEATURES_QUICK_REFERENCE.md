@@ -2,7 +2,8 @@
 title: Advanced Features - Quick Reference
 redirect_from:
   - /features/credential-exchange-protocols/ADVANCED_FEATURES_QUICK_REFERENCE/
-
+parent: Feature Reference
+grand_parent: API Reference
 ---
 
 # Advanced Features - Quick Reference

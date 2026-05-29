@@ -1,5 +1,6 @@
 ---
 title: Code Example Style Guide
+parent: Contributing to TrustWeave
 ---
 
 # Code Example Style Guide

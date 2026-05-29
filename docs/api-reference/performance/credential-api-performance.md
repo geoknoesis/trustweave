@@ -1,6 +1,8 @@
 ---
 redirect_from:
   - /performance/credential-api-performance/
+parent: Performance
+grand_parent: API Reference
 ---
 
 # Credential API Performance Characteristics

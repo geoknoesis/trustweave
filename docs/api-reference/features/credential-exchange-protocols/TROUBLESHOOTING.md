@@ -2,7 +2,8 @@
 title: Credential Exchange Protocols - Troubleshooting
 redirect_from:
   - /features/credential-exchange-protocols/TROUBLESHOOTING/
-
+parent: Feature Reference
+grand_parent: API Reference
 ---
 
 # Credential Exchange Protocols - Troubleshooting

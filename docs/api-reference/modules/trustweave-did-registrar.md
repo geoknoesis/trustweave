@@ -2,7 +2,8 @@
 title: did:registrar
 redirect_from:
   - /modules/trustweave-did-registrar/
-
+parent: Module Reference
+grand_parent: API Reference
 ---
 
 # did:registrar

@@ -1,3 +1,6 @@
+---
+parent: Contributing to TrustWeave
+---
 # Error and result handling
 
 This document describes how TrustWeave surfaces failures across layers. Follow it for new APIs and refactors.

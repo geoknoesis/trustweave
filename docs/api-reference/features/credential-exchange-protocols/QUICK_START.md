@@ -1,6 +1,8 @@
 ---
 redirect_from:
   - /features/credential-exchange-protocols/QUICK_START/
+parent: Feature Reference
+grand_parent: API Reference
 ---
 
 # Credential Exchange Protocols - Quick Start

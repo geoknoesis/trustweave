@@ -2,7 +2,8 @@
 title: common
 redirect_from:
   - /modules/trustweave-common/
-
+parent: Module Reference
+grand_parent: API Reference
 ---
 
 # common

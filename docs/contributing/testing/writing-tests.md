@@ -1,5 +1,7 @@
 ---
 title: Writing Tests Guide
+parent: Testing
+grand_parent: Contributing to TrustWeave
 ---
 
 # Writing Tests Guide

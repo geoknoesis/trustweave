@@ -2,7 +2,8 @@
 title: Credential Exchange Protocols - API Reference
 redirect_from:
   - /features/credential-exchange-protocols/API_REFERENCE/
-
+parent: Feature Reference
+grand_parent: API Reference
 ---
 
 # Credential Exchange Protocols - API Reference

@@ -1,6 +1,8 @@
 ---
 redirect_from:
   - /architecture/eidas-qes-design/
+parent: Architecture
+grand_parent: Core Concepts
 ---
 
 # eIDAS QES Design (TrustWeave 0.7.x)

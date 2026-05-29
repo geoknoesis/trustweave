@@ -2,7 +2,8 @@
 title: CHAPI Plugin
 redirect_from:
   - /features/credential-exchange-protocols/chapi/
-
+parent: Feature Reference
+grand_parent: API Reference
 ---
 
 # CHAPI Plugin

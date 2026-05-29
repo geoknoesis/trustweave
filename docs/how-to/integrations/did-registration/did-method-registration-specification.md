@@ -1,6 +1,8 @@
 ---
 redirect_from:
   - /integrations/did-registration/did-method-registration-specification/
+parent: Integration Modules
+grand_parent: How-To Guides
 ---
 
 # DID Method Registration JSON Specification

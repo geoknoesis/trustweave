@@ -1,5 +1,7 @@
 ---
 title: Integration Testing Best Practices
+parent: Testing
+grand_parent: Contributing to TrustWeave
 ---
 
 # Integration Testing Best Practices

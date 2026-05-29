@@ -7,6 +7,7 @@ keywords:
   - tasks
   - step-by-step
   - practical
+has_children: true
 ---
 
 # How-To Guides

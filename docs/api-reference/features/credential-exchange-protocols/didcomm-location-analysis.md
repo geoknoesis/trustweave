@@ -2,7 +2,8 @@
 title: DIDComm Location Analysis
 redirect_from:
   - /features/credential-exchange-protocols/didcomm-location-analysis/
-
+parent: Feature Reference
+grand_parent: API Reference
 ---
 
 # DIDComm Location Analysis

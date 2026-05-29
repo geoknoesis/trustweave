@@ -2,7 +2,8 @@
 title: OIDC4VCI Plugin
 redirect_from:
   - /features/credential-exchange-protocols/oidc4vci/
-
+parent: Feature Reference
+grand_parent: API Reference
 ---
 
 # OIDC4VCI Plugin

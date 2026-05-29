@@ -1,6 +1,8 @@
 ---
 redirect_from:
   - /conformance/did-1-1-implementation-report/
+parent: Conformance
+grand_parent: API Reference
 ---
 
 # DID 1.1 Implementation Report (TrustWeave)

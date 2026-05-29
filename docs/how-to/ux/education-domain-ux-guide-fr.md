@@ -2,7 +2,8 @@
 title: Guide UX du Domaine Éducation - Documentation d'Expérience Utilisateur pour les Cas d'Usage Éducatifs
 redirect_from:
   - /ux/education-domain-ux-guide-fr/
-
+parent: UX
+grand_parent: How-To Guides
 ---
 
 # Guide UX du Domaine Éducation - Documentation d'Expérience Utilisateur pour les Cas d'Usage Éducatifs

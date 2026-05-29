@@ -1,3 +1,6 @@
+---
+parent: How-To Guides
+---
 # How to Issue a Verifiable Credential
 
 ## Purpose

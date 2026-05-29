@@ -1,5 +1,7 @@
 ---
 title: Plugin Credential Handling for Tests
+parent: Testing
+grand_parent: Contributing to TrustWeave
 ---
 
 # Plugin Credential Handling for Tests

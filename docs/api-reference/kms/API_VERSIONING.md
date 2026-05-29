@@ -1,6 +1,8 @@
 ---
 redirect_from:
   - /kms/API_VERSIONING/
+parent: KMS Reference
+grand_parent: API Reference
 ---
 
 # KMS API Versioning Strategy

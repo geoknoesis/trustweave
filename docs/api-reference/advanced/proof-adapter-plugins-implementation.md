@@ -1,6 +1,8 @@
 ---
 redirect_from:
   - /advanced/proof-adapter-plugins-implementation/
+parent: Advanced Topics
+grand_parent: API Reference
 ---
 
 # ProofAdapter Plugins Implementation

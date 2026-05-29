@@ -1,3 +1,6 @@
+---
+parent: How-To Guides
+---
 # How to Revoke Credentials
 
 ## Purpose

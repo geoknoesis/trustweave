@@ -2,7 +2,8 @@
 title: "TrustWeave vs. Other APIs: Comprehensive Comparison"
 redirect_from:
   - /comparison/trustweave-vs-other-apis/
-
+parent: Comparison
+grand_parent: Core Concepts
 ---
 
 # TrustWeave vs. Other APIs: Comprehensive Comparison

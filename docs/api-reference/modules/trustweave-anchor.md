@@ -2,7 +2,8 @@
 title: anchors:anchor-core
 redirect_from:
   - /modules/trustweave-anchor/
-
+parent: Module Reference
+grand_parent: API Reference
 ---
 
 # anchors:anchor-core

@@ -2,7 +2,8 @@
 title: UX Documentation
 redirect_from:
   - /ux/README/
-
+parent: How-To Guides
+has_children: true
 ---
 
 # UX Documentation

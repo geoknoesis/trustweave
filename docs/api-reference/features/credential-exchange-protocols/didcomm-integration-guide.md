@@ -2,7 +2,8 @@
 title: DIDComm V2 Integration Guide
 redirect_from:
   - /features/credential-exchange-protocols/didcomm-integration-guide/
-
+parent: Feature Reference
+grand_parent: API Reference
 ---
 
 # DIDComm V2 Integration Guide

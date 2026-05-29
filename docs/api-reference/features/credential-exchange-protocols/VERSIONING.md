@@ -2,7 +2,8 @@
 title: Credential Exchange Protocols - Versioning
 redirect_from:
   - /features/credential-exchange-protocols/VERSIONING/
-
+parent: Feature Reference
+grand_parent: API Reference
 ---
 
 # Credential Exchange Protocols - Versioning

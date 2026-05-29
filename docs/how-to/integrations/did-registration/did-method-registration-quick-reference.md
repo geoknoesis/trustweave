@@ -1,6 +1,8 @@
 ---
 redirect_from:
   - /integrations/did-registration/did-method-registration-quick-reference/
+parent: Integration Modules
+grand_parent: How-To Guides
 ---
 
 # DID Method Registration - Quick Reference

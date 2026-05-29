@@ -1,5 +1,6 @@
 ---
 title: TrustWeave Plugin Implementation Roadmap
+parent: Contributing to TrustWeave
 ---
 
 # TrustWeave Plugin Implementation Roadmap

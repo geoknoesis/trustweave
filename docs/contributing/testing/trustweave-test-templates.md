@@ -1,5 +1,7 @@
 ---
 title: TrustWeave Test Templates
+parent: Testing
+grand_parent: Contributing to TrustWeave
 ---
 
 # TrustWeave Test Templates

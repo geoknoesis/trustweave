@@ -1,7 +1,7 @@
 ---
 title: Use Case Scenarios
 nav_order: 40
-parent: null
+
 nav_exclude: false
 keywords:
   - scenarios
@@ -13,6 +13,7 @@ keywords:
   - education
   - supply chain
   - iot
+has_children: true
 ---
 
 # TrustWeave Use Case Scenarios

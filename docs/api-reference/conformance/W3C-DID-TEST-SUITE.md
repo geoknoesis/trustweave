@@ -1,6 +1,8 @@
 ---
 redirect_from:
   - /conformance/W3C-DID-TEST-SUITE/
+parent: Conformance
+grand_parent: API Reference
 ---
 
 # W3C DID test suite (DID Core / DID 1.1–aligned data model)

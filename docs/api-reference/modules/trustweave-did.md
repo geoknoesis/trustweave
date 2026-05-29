@@ -2,7 +2,8 @@
 title: did:did-core
 redirect_from:
   - /modules/trustweave-did/
-
+parent: Module Reference
+grand_parent: API Reference
 ---
 
 # did:did-core

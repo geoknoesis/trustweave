@@ -1,10 +1,9 @@
 ---
 title: DID Method Registration via JSON
-parent: Integration Modules
+parent: How-To Guides
 has_children: true
 redirect_from:
   - /integrations/did-registration/README/
-
 ---
 
 # DID Method Registration via JSON

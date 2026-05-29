@@ -2,7 +2,8 @@
 title: Features Usage Guide
 redirect_from:
   - /features/USAGE_GUIDE/
-
+parent: Feature Reference
+grand_parent: API Reference
 ---
 
 # Features Usage Guide

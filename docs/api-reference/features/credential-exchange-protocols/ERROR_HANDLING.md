@@ -2,7 +2,8 @@
 title: Credential Exchange Protocols - Error Handling
 redirect_from:
   - /features/credential-exchange-protocols/ERROR_HANDLING/
-
+parent: Feature Reference
+grand_parent: API Reference
 ---
 
 # Credential Exchange Protocols - Error Handling

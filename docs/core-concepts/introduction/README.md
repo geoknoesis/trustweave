@@ -8,7 +8,8 @@ keywords:
   - getting started
 redirect_from:
   - /introduction/README/
-
+parent: Core Concepts
+has_children: true
 ---
 
 # Introduction

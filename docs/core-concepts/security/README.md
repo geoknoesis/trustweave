@@ -1,6 +1,8 @@
 ---
 redirect_from:
   - /security/README/
+parent: Core Concepts
+has_children: true
 ---
 
 # Security Documentation

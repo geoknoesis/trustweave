@@ -2,7 +2,8 @@
 title: Protocol Implementation Guide
 redirect_from:
   - /features/credential-exchange-protocols/implementation-guide/
-
+parent: Feature Reference
+grand_parent: API Reference
 ---
 
 # Protocol Implementation Guide

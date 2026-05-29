@@ -1,5 +1,7 @@
 ---
 title: Test Patterns
+parent: Testing
+grand_parent: Contributing to TrustWeave
 ---
 
 # Test Patterns

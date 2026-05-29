@@ -1,5 +1,7 @@
 ---
 title: Test Setup Guide
+parent: Testing
+grand_parent: Contributing to TrustWeave
 ---
 
 # Test Setup Guide

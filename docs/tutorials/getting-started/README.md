@@ -9,7 +9,8 @@ keywords:
   - onboarding
 redirect_from:
   - /getting-started/README/
-
+parent: Tutorials
+has_children: true
 ---
 
 # Getting Started

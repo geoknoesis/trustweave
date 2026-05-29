@@ -1,6 +1,8 @@
 ---
 redirect_from:
   - /architecture/credential-api-architecture/
+parent: Architecture
+grand_parent: Core Concepts
 ---
 
 # Credential API Architecture

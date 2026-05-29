@@ -7,6 +7,7 @@ keywords:
   - learning path
   - beginner
   - advanced
+has_children: true
 ---
 
 # Tutorials

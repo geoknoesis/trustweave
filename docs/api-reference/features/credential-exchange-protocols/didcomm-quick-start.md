@@ -2,7 +2,8 @@
 title: DIDComm V2 Quick Start
 redirect_from:
   - /features/credential-exchange-protocols/didcomm-quick-start/
-
+parent: Feature Reference
+grand_parent: API Reference
 ---
 
 # DIDComm V2 Quick Start

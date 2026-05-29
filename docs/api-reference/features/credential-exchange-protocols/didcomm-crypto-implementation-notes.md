@@ -2,7 +2,8 @@
 title: DIDComm Crypto Implementation Notes
 redirect_from:
   - /features/credential-exchange-protocols/didcomm-crypto-implementation-notes/
-
+parent: Feature Reference
+grand_parent: API Reference
 ---
 
 # DIDComm Crypto Implementation Notes

@@ -3,7 +3,8 @@ title: Advanced Topics
 nav_order: 80
 redirect_from:
   - /advanced/README/
-
+parent: API Reference
+has_children: true
 ---
 
 # Advanced Topics

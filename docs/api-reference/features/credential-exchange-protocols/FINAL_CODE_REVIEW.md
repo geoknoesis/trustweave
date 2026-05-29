@@ -2,7 +2,8 @@
 title: "Final Code Review: Exception Handling Implementation"
 redirect_from:
   - /features/credential-exchange-protocols/FINAL_CODE_REVIEW/
-
+parent: Feature Reference
+grand_parent: API Reference
 ---
 
 # Final Code Review: Exception Handling Implementation

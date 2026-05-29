@@ -2,7 +2,8 @@
 title: SPI Interfaces
 redirect_from:
   - /modules/trustweave-spi/
-
+parent: Module Reference
+grand_parent: API Reference
 ---
 
 # SPI Interfaces

@@ -2,7 +2,8 @@
 title: JSON Utilities
 redirect_from:
   - /modules/trustweave-json/
-
+parent: Module Reference
+grand_parent: API Reference
 ---
 
 # JSON Utilities

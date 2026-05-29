@@ -2,7 +2,8 @@
 title: Persistent Storage & Secret Resolver Implementation
 redirect_from:
   - /features/credential-exchange-protocols/STORAGE_AND_SECRET_RESOLVER/
-
+parent: Feature Reference
+grand_parent: API Reference
 ---
 
 # Persistent Storage & Secret Resolver Implementation

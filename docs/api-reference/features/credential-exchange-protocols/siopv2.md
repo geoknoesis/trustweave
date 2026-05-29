@@ -2,7 +2,8 @@
 title: SIOPv2 Plugin
 redirect_from:
   - /features/credential-exchange-protocols/siopv2/
-
+parent: Feature Reference
+grand_parent: API Reference
 ---
 
 # SIOPv2 Plugin

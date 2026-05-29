@@ -1,6 +1,8 @@
 ---
 redirect_from:
   - /advanced/proof-adapter-plugin-organization/
+parent: Advanced Topics
+grand_parent: API Reference
 ---
 
 # ProofAdapter Plugin Organization Guide

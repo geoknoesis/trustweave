@@ -2,7 +2,8 @@
 title: trustweave-did-registrar-server (Ktor)
 redirect_from:
   - /modules/trustweave-did-registrar-server/
-
+parent: Module Reference
+grand_parent: API Reference
 ---
 
 # trustweave-did-registrar-server (Ktor)

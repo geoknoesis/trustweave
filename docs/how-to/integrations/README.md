@@ -4,7 +4,7 @@ nav_order: 90
 has_children: true
 redirect_from:
   - /integrations/README/
-
+parent: How-To Guides
 ---
 
 # Integration Modules

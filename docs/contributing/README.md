@@ -1,6 +1,7 @@
 ---
 title: Contributing to TrustWeave
 nav_order: 100
+has_children: true
 ---
 
 # Contributing to TrustWeave

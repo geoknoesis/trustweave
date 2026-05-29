@@ -2,7 +2,8 @@
 title: OIDC4VP Plugin
 redirect_from:
   - /features/credential-exchange-protocols/oidc4vp/
-
+parent: Feature Reference
+grand_parent: API Reference
 ---
 
 # OIDC4VP Plugin

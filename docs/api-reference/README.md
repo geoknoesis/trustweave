@@ -1,12 +1,13 @@
 ---
 title: API Reference
-nav_order: 60
+nav_order: 50
 keywords:
   - api reference
   - api
   - methods
   - functions
   - documentation
+has_children: true
 ---
 
 # API Reference

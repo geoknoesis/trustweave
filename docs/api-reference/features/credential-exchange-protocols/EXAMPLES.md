@@ -2,7 +2,8 @@
 title: Credential Exchange Protocols - Examples
 redirect_from:
   - /features/credential-exchange-protocols/EXAMPLES/
-
+parent: Feature Reference
+grand_parent: API Reference
 ---
 
 # Credential Exchange Protocols - Examples

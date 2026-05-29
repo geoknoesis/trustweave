@@ -2,7 +2,8 @@
 title: Credential Exchange Protocols - Workflows
 redirect_from:
   - /features/credential-exchange-protocols/WORKFLOWS/
-
+parent: Feature Reference
+grand_parent: API Reference
 ---
 
 # Credential Exchange Protocols - Workflows

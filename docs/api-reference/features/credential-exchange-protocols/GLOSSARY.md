@@ -2,7 +2,8 @@
 title: Credential Exchange Protocols - Glossary
 redirect_from:
   - /features/credential-exchange-protocols/GLOSSARY/
-
+parent: Feature Reference
+grand_parent: API Reference
 ---
 
 # Credential Exchange Protocols - Glossary

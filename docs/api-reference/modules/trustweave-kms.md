@@ -2,7 +2,8 @@
 title: kms:kms-core
 redirect_from:
   - /modules/trustweave-kms/
-
+parent: Module Reference
+grand_parent: API Reference
 ---
 
 # kms:kms-core

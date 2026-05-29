@@ -2,7 +2,8 @@
 title: TrustWeave vs. Competitors - Complete Analysis
 redirect_from:
   - /comparison/COMPLETE_COMPETITOR_ANALYSIS/
-
+parent: Comparison
+grand_parent: Core Concepts
 ---
 
 # TrustWeave vs. Competitors - Complete Analysis

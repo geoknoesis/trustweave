@@ -1,6 +1,8 @@
 ---
 redirect_from:
   - /advanced/proof-adapter-implementation-guide/
+parent: Advanced Topics
+grand_parent: API Reference
 ---
 
 # ProofAdapter Implementation Guide

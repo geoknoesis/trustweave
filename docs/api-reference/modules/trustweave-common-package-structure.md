@@ -2,7 +2,8 @@
 title: common Package Structure
 redirect_from:
   - /modules/trustweave-common-package-structure/
-
+parent: Module Reference
+grand_parent: API Reference
 ---
 
 # common Package Structure

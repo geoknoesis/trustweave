@@ -2,7 +2,8 @@
 title: trust
 redirect_from:
   - /modules/trustweave-trust/
-
+parent: Module Reference
+grand_parent: API Reference
 ---
 
 # trust

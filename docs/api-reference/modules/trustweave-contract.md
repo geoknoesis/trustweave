@@ -2,7 +2,8 @@
 title: contract Module
 redirect_from:
   - /modules/trustweave-contract/
-
+parent: Module Reference
+grand_parent: API Reference
 ---
 
 # contract Module

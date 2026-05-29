@@ -1,6 +1,6 @@
 ---
 title: TrustWeave Mental Model
-nav_order: 7
+nav_order: 40
 parent: Introduction
 keywords:
   - mental model

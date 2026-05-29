@@ -1,6 +1,6 @@
 ---
 title: DID Core 1.0 vs 1.1 and TrustWeave compliance gaps
-nav_order: 15
+nav_order: 330
 parent: API Reference
 keywords:
   - DID Core

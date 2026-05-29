@@ -1,6 +1,6 @@
 ---
 title: Your First Application
-nav_order: 4
+nav_order: 50
 parent: Getting Started
 redirect_from:
   - /getting-started/your-first-application/

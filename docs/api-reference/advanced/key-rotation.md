@@ -3,7 +3,7 @@ title: Key Rotation Strategies
 nav_exclude: true
 redirect_from:
   - /advanced/key-rotation/
-
+nav_order: 60
 ---
 
 # Key Rotation Strategies

@@ -1,5 +1,6 @@
 ---
 parent: How-To Guides
+nav_order: 90
 ---
 # How to Revoke Credentials
 

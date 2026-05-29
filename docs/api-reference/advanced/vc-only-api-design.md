@@ -3,6 +3,7 @@ redirect_from:
   - /advanced/vc-only-api-design/
 parent: Advanced Topics
 grand_parent: API Reference
+nav_order: 120
 ---
 
 # VC-Only API Design - Aligning with W3C Verifiable Credentials

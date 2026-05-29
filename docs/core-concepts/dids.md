@@ -1,6 +1,6 @@
 ---
 title: Decentralized Identifiers (DIDs)
-nav_order: 2
+nav_order: 20
 parent: Core Concepts
 keywords:
   - dids

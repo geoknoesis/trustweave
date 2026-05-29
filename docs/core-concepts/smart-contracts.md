@@ -1,6 +1,6 @@
 ---
 title: Smart Contracts
-nav_order: 5
+nav_order: 140
 parent: Core Concepts
 keywords:
   - smart contracts

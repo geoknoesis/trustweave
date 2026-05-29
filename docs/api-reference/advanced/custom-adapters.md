@@ -3,7 +3,7 @@ title: Creating Custom Adapters
 nav_exclude: true
 redirect_from:
   - /advanced/custom-adapters/
-
+nav_order: 100
 ---
 
 # Creating Custom Adapters

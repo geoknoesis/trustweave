@@ -1,6 +1,6 @@
 ---
 title: Error Types
-nav_order: 2
+nav_order: 70
 parent: API Reference
 keywords:
   - errors

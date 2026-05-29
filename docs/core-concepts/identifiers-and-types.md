@@ -1,6 +1,6 @@
 ---
 title: Identifiers and Types
-nav_order: 1
+nav_order: 10
 parent: Core Concepts
 keywords:
   - identifiers

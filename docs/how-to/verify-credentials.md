@@ -1,6 +1,6 @@
 ---
 title: Verify Credentials
-nav_order: 5
+nav_order: 60
 parent: How-To Guides
 keywords:
   - verify

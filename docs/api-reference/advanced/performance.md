@@ -3,7 +3,7 @@ title: Performance Considerations
 nav_exclude: true
 redirect_from:
   - /advanced/performance/
-
+nav_order: 110
 ---
 
 # Performance Considerations

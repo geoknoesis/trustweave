@@ -4,6 +4,7 @@ redirect_from:
   - /ux/README/
 parent: How-To Guides
 has_children: true
+nav_order: 230
 ---
 
 # UX Documentation

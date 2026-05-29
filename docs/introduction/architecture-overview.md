@@ -1,6 +1,6 @@
 ---
 title: Architecture Overview
-nav_order: 6
+nav_order: 50
 parent: Introduction
 keywords:
   - architecture

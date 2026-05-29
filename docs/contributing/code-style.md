@@ -1,6 +1,7 @@
 ---
 title: Code Style
 nav_exclude: true
+nav_order: 20
 ---
 
 # Code Style

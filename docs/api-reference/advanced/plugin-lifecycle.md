@@ -3,7 +3,7 @@ title: Plugin Lifecycle Management
 nav_exclude: true
 redirect_from:
   - /advanced/plugin-lifecycle/
-
+nav_order: 20
 ---
 
 # Plugin Lifecycle Management

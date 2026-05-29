@@ -1,6 +1,6 @@
 ---
 title: Manage Wallets
-nav_order: 6
+nav_order: 100
 parent: How-To Guides
 keywords:
   - wallet

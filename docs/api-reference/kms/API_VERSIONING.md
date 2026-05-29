@@ -3,6 +3,7 @@ redirect_from:
   - /kms/API_VERSIONING/
 parent: KMS Reference
 grand_parent: API Reference
+nav_order: 30
 ---
 
 # KMS API Versioning Strategy

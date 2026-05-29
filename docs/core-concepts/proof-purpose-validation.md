@@ -1,6 +1,7 @@
 ---
 title: Proof Purpose Validation
 nav_exclude: true
+nav_order: 60
 ---
 
 # Proof Purpose Validation

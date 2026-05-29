@@ -1,6 +1,7 @@
 ---
 title: Beginner Tutorial Series
 nav_exclude: true
+nav_order: 20
 ---
 
 # Beginner Tutorial Series

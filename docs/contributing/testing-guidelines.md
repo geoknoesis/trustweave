@@ -1,6 +1,7 @@
 ---
 title: Testing Guidelines
 nav_exclude: true
+nav_order: 60
 ---
 
 # Testing Guidelines

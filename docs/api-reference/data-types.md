@@ -1,6 +1,6 @@
 ---
 title: Data Types
-nav_order: 3
+nav_order: 60
 parent: API Reference
 keywords:
   - data types

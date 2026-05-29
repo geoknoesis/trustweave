@@ -1,6 +1,7 @@
 ---
 title: Creating TrustWeave Plugins
 nav_exclude: true
+nav_order: 10
 ---
 
 # Creating TrustWeave Plugins

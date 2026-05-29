@@ -1,6 +1,6 @@
 ---
 title: Blockchain Anchoring
-nav_order: 4
+nav_order: 150
 parent: Core Concepts
 keywords:
   - blockchain

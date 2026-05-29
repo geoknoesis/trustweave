@@ -1,5 +1,6 @@
 ---
 parent: How-To Guides
+nav_order: 140
 ---
 # How to Configure Trust Registry
 

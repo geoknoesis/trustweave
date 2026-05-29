@@ -1,6 +1,6 @@
 ---
 title: Use TrustWeave Facade for Quick Setup
-nav_order: 1
+nav_order: 10
 parent: How-To Guides
 keywords:
   - facade

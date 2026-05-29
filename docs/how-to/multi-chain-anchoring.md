@@ -1,6 +1,6 @@
 ---
 title: Multi-Chain Anchoring Patterns
-nav_order: 8
+nav_order: 120
 parent: How-To Guides
 keywords:
   - multi-chain

@@ -1,6 +1,6 @@
 ---
 title: Configure TrustWeave
-nav_order: 2
+nav_order: 20
 parent: How-To Guides
 keywords:
   - configuration

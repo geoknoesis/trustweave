@@ -1,6 +1,6 @@
 ---
 title: Deprecation Policy
-nav_order: 2
+nav_order: 320
 parent: API Reference
 keywords:
   - deprecation

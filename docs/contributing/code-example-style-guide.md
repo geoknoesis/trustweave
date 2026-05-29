@@ -1,6 +1,7 @@
 ---
 title: Code Example Style Guide
 parent: Contributing to TrustWeave
+nav_order: 30
 ---
 
 # Code Example Style Guide

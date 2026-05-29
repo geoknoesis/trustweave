@@ -1,6 +1,6 @@
 ---
 title: Identifier Design Specification
-nav_order: 1
+nav_order: 70
 parent: Advanced Topics
 keywords:
   - identifiers

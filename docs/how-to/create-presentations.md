@@ -1,5 +1,6 @@
 ---
 parent: How-To Guides
+nav_order: 70
 ---
 # How to Create Verifiable Presentations
 

@@ -3,7 +3,7 @@ title: Verification Policies
 nav_exclude: true
 redirect_from:
   - /advanced/verification-policies/
-
+nav_order: 50
 ---
 
 # Verification Policies

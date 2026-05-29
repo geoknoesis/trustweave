@@ -1,6 +1,6 @@
 ---
 title: Create and Manage DIDs
-nav_order: 3
+nav_order: 30
 parent: How-To Guides
 keywords:
   - dids

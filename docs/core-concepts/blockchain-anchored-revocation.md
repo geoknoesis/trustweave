@@ -1,6 +1,7 @@
 ---
 title: Blockchain-Anchored Revocation
 nav_exclude: true
+nav_order: 160
 ---
 
 # Blockchain-Anchored Revocation

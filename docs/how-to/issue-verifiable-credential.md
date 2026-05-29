@@ -1,5 +1,6 @@
 ---
 parent: How-To Guides
+nav_order: 50
 ---
 # How to Issue a Verifiable Credential
 

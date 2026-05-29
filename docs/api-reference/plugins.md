@@ -1,7 +1,7 @@
 ---
 title: Supported Plugins
 parent: API Reference
-nav_order: 30
+nav_order: 90
 redirect_from:
   - /plugins/
   - /api-reference/plugins/

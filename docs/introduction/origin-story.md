@@ -1,6 +1,6 @@
 ---
 title: The Story Behind TrustWeave
-nav_order: 3
+nav_order: 80
 parent: Introduction
 keywords:
   - origin story

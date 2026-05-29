@@ -3,7 +3,7 @@ title: Service Provider Interface (SPI)
 nav_exclude: true
 redirect_from:
   - /advanced/spi/
-
+nav_order: 10
 ---
 
 # Service Provider Interface (SPI)

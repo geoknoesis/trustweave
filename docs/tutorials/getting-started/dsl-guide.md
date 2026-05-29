@@ -1,6 +1,6 @@
 ---
 title: TrustWeave DSL Guide
-nav_order: 10
+nav_order: 60
 parent: Getting Started
 redirect_from:
   - /getting-started/dsl-guide/

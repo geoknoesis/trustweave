@@ -1,6 +1,6 @@
 ---
 title: Result Types Guide
-nav_order: 6
+nav_order: 80
 parent: API Reference
 keywords:
   - result types

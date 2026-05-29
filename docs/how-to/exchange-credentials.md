@@ -1,6 +1,6 @@
 ---
 title: Exchange Credentials with Multiple Protocols
-nav_order: 9
+nav_order: 80
 parent: How-To Guides
 keywords:
   - credential exchange

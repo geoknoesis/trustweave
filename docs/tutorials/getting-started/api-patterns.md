@@ -1,6 +1,6 @@
 ---
 title: API Patterns and Best Practices
-nav_order: 8
+nav_order: 80
 parent: Getting Started
 redirect_from:
   - /getting-started/api-patterns/

@@ -1,6 +1,6 @@
 ---
 title: KMS Documentation
-nav_order: 10
+nav_order: 220
 parent: API Reference
 redirect_from:
   - /kms/README/

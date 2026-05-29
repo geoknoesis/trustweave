@@ -1,6 +1,7 @@
 ---
 title: Credential Issuance Tutorial
 nav_exclude: true
+nav_order: 30
 ---
 
 # Credential Issuance Tutorial

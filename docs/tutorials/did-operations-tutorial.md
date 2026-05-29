@@ -1,6 +1,7 @@
 ---
 title: DID Operations Tutorial
 nav_exclude: true
+nav_order: 40
 ---
 
 # DID Operations Tutorial

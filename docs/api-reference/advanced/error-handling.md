@@ -1,6 +1,6 @@
 ---
 title: Error Handling
-nav_order: 6
+nav_order: 30
 parent: Advanced Topics
 keywords:
   - error handling

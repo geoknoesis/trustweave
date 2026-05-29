@@ -1,6 +1,6 @@
 ---
 title: Credential Service API Reference
-nav_order: 6
+nav_order: 30
 parent: API Reference
 ---
 

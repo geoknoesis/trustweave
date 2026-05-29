@@ -1,6 +1,7 @@
 ---
 title: Wallet API Tutorial
 nav_exclude: true
+nav_order: 50
 ---
 
 # Wallet API Tutorial

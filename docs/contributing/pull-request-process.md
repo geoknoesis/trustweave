@@ -1,6 +1,7 @@
 ---
 title: Pull Request Process
 nav_exclude: true
+nav_order: 50
 ---
 
 # Pull Request Process

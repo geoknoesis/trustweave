@@ -1,6 +1,6 @@
 ---
 title: Installation
-nav_order: 2
+nav_order: 10
 parent: Getting Started
 keywords:
   - installation

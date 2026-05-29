@@ -1,6 +1,6 @@
 ---
 title: What is TrustWeave?
-nav_order: 2
+nav_order: 10
 parent: Introduction
 keywords:
   - what is trustweave

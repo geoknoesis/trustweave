@@ -42,7 +42,7 @@ Resolving a DID yields a **DID Document**, a JSON-LD structure listing public ke
 
 - **Identity anchor** – issuers, holders, verifiers, and services use DIDs as their canonical identifier during credential issuance and verification.
 - **Portability** – you can switch DID methods (key, web, Ion, etc.) without rewriting business logic; only the registry wiring changes.
-- **Foundation for proofs** – verifier flows fetch DID documents to validate signatures created during issuance (see the [Architecture Overview](introduction/architecture-overview.md)).
+- **Foundation for proofs** – verifier flows fetch DID documents to validate signatures created during issuance (see the [Architecture Overview](../introduction/architecture-overview.md)).
 
 ## How TrustWeave models DIDs
 

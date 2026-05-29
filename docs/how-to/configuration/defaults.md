@@ -221,7 +221,7 @@ See [Production Integration Checklist](../../tutorials/getting-started/productio
 ## Related Documentation
 
 - [Configuration reference](README.md) — Complete configuration options
-- [Architecture overview](../../core-concepts/introduction/architecture-overview.md) — Component architecture
+- [Architecture overview](../../introduction/architecture-overview.md) — Component architecture
 - [Installation](../../tutorials/getting-started/installation.md) — Setup instructions
 - [Production integration checklist](../../tutorials/getting-started/production-integration-checklist.md) — Production configuration
 

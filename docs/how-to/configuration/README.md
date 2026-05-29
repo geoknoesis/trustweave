@@ -210,6 +210,6 @@ TrustWeave.build {
 ## Related documentation
 
 - [Default configuration](defaults.md)
-- [Architecture overview](../../core-concepts/introduction/architecture-overview.md)
+- [Architecture overview](../../introduction/architecture-overview.md)
 - [Production integration checklist](../../tutorials/getting-started/production-integration-checklist.md)
 - [Installation](../../tutorials/getting-started/installation.md)

@@ -381,7 +381,7 @@ fun benchmarkDidCreation() = runBlocking {
 - Review [Error Handling](error-handling.md) for performance-aware error handling
 - See [Testing Strategies](testing-strategies.md) for performance testing
 - Check module-specific documentation for performance tips
-- Explore [Architecture Overview](../../core-concepts/introduction/architecture-overview.md) for design considerations
+- Explore [Architecture Overview](../../introduction/architecture-overview.md) for design considerations
 
 ## References
 

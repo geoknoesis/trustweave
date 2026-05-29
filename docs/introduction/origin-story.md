@@ -10,7 +10,7 @@ keywords:
   - frustration
 redirect_from:
   - /introduction/origin-story/
-
+  - /core-concepts/introduction/origin-story/
 ---
 
 # The Story Behind TrustWeave

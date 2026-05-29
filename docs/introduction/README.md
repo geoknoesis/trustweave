@@ -1,6 +1,6 @@
 ---
 title: Introduction
-nav_order: 0
+nav_order: 5
 keywords:
   - introduction
   - overview
@@ -8,8 +8,8 @@ keywords:
   - getting started
 redirect_from:
   - /introduction/README/
-parent: Core Concepts
 has_children: true
+  - /core-concepts/introduction/README/
 ---
 
 # Introduction

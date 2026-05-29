@@ -13,7 +13,7 @@ keywords:
   - services
 redirect_from:
   - /introduction/mental-model/
-
+  - /core-concepts/introduction/mental-model/
 ---
 
 # TrustWeave Mental Model

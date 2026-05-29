@@ -1,6 +1,8 @@
 ---
 title: HashiCorp Vault KMS Plugin Implementation Plan
 parent: Contributing to TrustWeave
+published: false
+
 ---
 
 # HashiCorp Vault KMS Plugin Implementation Plan

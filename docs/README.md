@@ -167,7 +167,7 @@ TrustWeave is built on a modular, pluggable architecture:
 - **Type Safety** - Compile-time guarantees with Kotlin
 - **Testability** - In-memory implementations for all interfaces
 
-[📖 Architecture Overview →](core-concepts/introduction/architecture-overview.md)
+[📖 Architecture Overview →](introduction/architecture-overview.md)
 
 ---
 

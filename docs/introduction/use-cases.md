@@ -13,7 +13,7 @@ keywords:
   - iot
 redirect_from:
   - /introduction/use-cases/
-
+  - /core-concepts/introduction/use-cases/
 ---
 
 # Use Cases

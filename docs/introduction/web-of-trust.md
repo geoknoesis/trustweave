@@ -4,7 +4,7 @@ nav_order: 8
 parent: Introduction
 redirect_from:
   - /introduction/web-of-trust/
-
+  - /core-concepts/introduction/web-of-trust/
 ---
 
 # The Web of Trust: Foundation for Decentralized Trust

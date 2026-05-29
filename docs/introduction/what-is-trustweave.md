@@ -10,7 +10,7 @@ keywords:
   - design philosophy
 redirect_from:
   - /introduction/what-is-trustweave/
-
+  - /core-concepts/introduction/what-is-trustweave/
 ---
 
 # What is TrustWeave?

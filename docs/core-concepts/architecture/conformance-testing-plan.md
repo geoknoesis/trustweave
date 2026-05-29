@@ -6,6 +6,7 @@ status: Draft (proposed)
 last_updated: 2026-05
 redirect_from:
   - /architecture/conformance-testing-plan/
+published: false
 
 ---
 

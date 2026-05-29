@@ -602,7 +602,7 @@ fun `test plugin with TrustWeave`() = runTest {
 - Review existing implementations in `trustweave-testkit` for reference
 - See [Integration Modules](../how-to/integrations/README.md) for production examples
 - Check [Plugin Lifecycle](../api-reference/advanced/plugin-lifecycle.md) for lifecycle management
-- Review [Architecture Overview](../core-concepts/introduction/architecture-overview.md) for design patterns
+- Review [Architecture Overview](../introduction/architecture-overview.md) for design patterns
 
 ## Related Documentation
 

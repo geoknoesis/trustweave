@@ -11,7 +11,7 @@ keywords:
   - structure
 redirect_from:
   - /introduction/architecture-overview/
-
+  - /core-concepts/introduction/architecture-overview/
 ---
 
 # Architecture Overview

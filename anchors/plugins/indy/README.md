@@ -1,185 +1,110 @@
-# TrustWeave Indy Adapter
+# TrustWeave Indy Anchor
 
-Hyperledger Indy blockchain adapter for TrustWeave, providing blockchain anchoring capabilities for Indy ledger pools.
+`anchors:plugins:indy` implements `BlockchainAnchorClient` on top of Hyperledger Indy.
 
-## Overview
-
-This module implements `BlockchainAnchorClient` for Hyperledger Indy ledgers, allowing you to anchor data to Indy pools such as Sovrin Mainnet, Sovrin Staging, and BCovrin Testnet.
+It writes the SHA-256 digest of a payload (plus the payload itself, when it fits) to
+an Indy ledger using the **ATTRIB** transaction type and reads it back through
+**GET_ATTRIB**. All wire requests are constructed in Kotlin and submitted to an
+[`indy-vdr-proxy`](https://github.com/hyperledger/indy-vdr/tree/main/indy-vdr-proxy)
+HTTP endpoint, so the plugin works against any Indy pool (Sovrin Mainnet/Staging,
+BCovrin, von-network, …) without pulling in native binaries.
 
 ## Chain IDs
 
-**Type-Safe Chain IDs (Recommended)**:
-```kotlin
-import org.trustweave.anchor.ChainId
+Format: `indy:<network>:<pool-name>`
 
-val sovrinMainnet = ChainId.Indy.SovrinMainnet      // "indy:mainnet:sovrin"
-val sovrinStaging = ChainId.Indy.SovrinStaging     // "indy:testnet:sovrin-staging"
-val bcovrinTestnet = ChainId.Indy.BCovrinTestnet   // "indy:testnet:bcovrin"
-```
+| Chain ID                          | Pool                    |
+|-----------------------------------|-------------------------|
+| `indy:mainnet:sovrin`             | Sovrin Mainnet          |
+| `indy:testnet:sovrin-staging`     | Sovrin Staging          |
+| `indy:testnet:bcovrin`            | BCovrin Testnet         |
 
-**String-based Chain IDs (Legacy)**:
-Supported chain ID format: `indy:<network>:<pool-name>`
+Custom pools are accepted as long as `poolEndpoint` is supplied in the options.
 
-- `indy:mainnet:sovrin` - Sovrin Mainnet
-- `indy:testnet:sovrin-staging` - Sovrin Staging
-- `indy:testnet:bcovrin` - BCovrin Testnet
+## Configuration
+
+| Option           | Required for writes | Description                                                             |
+|------------------|---------------------|-------------------------------------------------------------------------|
+| `poolEndpoint`   | yes                 | Base URL of an `indy-vdr-proxy` instance                               |
+| `did`            | yes                 | Submitter DID (identifier on the ATTRIB request)                       |
+| `signingKeySeed` | yes                 | Base58-encoded 32-byte Ed25519 seed                                    |
+| `targetDid`      | no (default = `did`)| DID the attribute is attached to (`operation.dest`)                    |
+| `signingKey`     | optional alias      | 64-byte Base58 signing key (`seed || pubkey`) emitted by `indy-cli`    |
+
+Without `signingKeySeed`/`signingKey` the client falls back to in-memory storage so
+that examples and unit tests can run without a live pool.
 
 ## Usage
 
-### Adding Dependency
-
 ```kotlin
-dependencies {
-    implementation("org.trustweave:anchors-plugins-indy:0.6.0")
-}
-```
-
-### Automatic Discovery via SPI
-
-```kotlin
-import org.trustweave.anchor.indy.IndyIntegration
-import kotlinx.coroutines.runBlocking
-
-fun main() = runBlocking {
-    // Automatically discover and register Indy adapters
-    val result = IndyIntegration.discoverAndRegister()
-
-    println("Registered chains: ${result.registeredChains}")
-}
-```
-
-### Manual Setup with Type-Safe Options
-
-```kotlin
-import org.trustweave.anchor.indy.IndyIntegration
+import org.trustweave.anchor.indy.IndyBlockchainAnchorClient
 import org.trustweave.anchor.options.IndyOptions
-import org.trustweave.anchor.ChainId
-import kotlinx.coroutines.runBlocking
 
-fun main() = runBlocking {
-    // Type-safe chain ID
-    val chainId = ChainId.Indy.BCovrinTestnet
-
-    // Type-safe options (compile-time validation)
-    val options = IndyOptions(
-        walletName = "my-wallet",
-        walletKey = "wallet-key",
-        did = "did:indy:testnet:...",
-        poolEndpoint = "https://test.bcovrin.vonx.io" // Optional
+val client = IndyBlockchainAnchorClient(
+    chainId = IndyBlockchainAnchorClient.BCOVRIN_TESTNET,
+    options = mapOf(
+        "poolEndpoint" to "http://localhost:9000",
+        "did" to "V4SGRU86Z58d6TV7PBUe6f",
+        "signingKeySeed" to "DvFAY1mNkUu1vSEzQyT9bAg6QqfZqWdMSCJ4Bc2pY3iU"
     )
-
-    // Setup with type-safe configuration
-    val result = IndyIntegration.setup(
-        chainIds = listOf(chainId.toString()),
-        options = options.toMap()
-    )
-    println("Registered chains: ${result.registeredChains}")
-}
-```
-
-### Manual Setup (Legacy Map-based Options)
-
-```kotlin
-import org.trustweave.anchor.indy.IndyIntegration
-import kotlinx.coroutines.runBlocking
-
-fun main() = runBlocking {
-    // Setup with wallet credentials for real transactions
-    val result = IndyIntegration.setup(
-        chainIds = listOf("indy:testnet:bcovrin"),
-        options = mapOf(
-            "walletName" to "my-wallet",
-            "walletKey" to "wallet-key",
-            "did" to "did:indy:testnet:...",
-            "poolEndpoint" to "https://test.bcovrin.vonx.io" // Optional
-        )
-    )
-    println("Registered chains: ${result.registeredChains}")
-}
-```
-
-### Anchoring Data with Type-Safe Configuration
-
-```kotlin
-import org.trustweave.anchor.*
-import org.trustweave.anchor.ChainId
-import org.trustweave.anchor.indy.IndyIntegration
-import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.*
-import kotlinx.serialization.Serializable
-
-@Serializable
-data class VerifiableCredentialDigest(
-    val vcId: String,
-    val vcDigest: String
 )
+val result = client.writePayload(buildJsonObject { put("digest", "abc") })
+println("ledger seqNo = ${result.ref.txHash}")
+```
 
-fun main() = runBlocking {
-    // Type-safe chain ID
-    val chainId = ChainId.Indy.BCovrinTestnet
+The plugin registers itself via SPI; calling `IndyIntegration.discoverAndRegister()`
+will wire it into a `BlockchainAnchorRegistry` alongside other adapters.
 
-    // Register Indy client (uses in-memory fallback for testing)
-    val integration = IndyIntegration.setup(
-        chainIds = listOf(chainId.toString()),
-        options = emptyMap() // Uses in-memory fallback for testing
-    )
-    val registry = integration.registry
+## Wire format
 
-    // Anchor data
-    val digest = VerifiableCredentialDigest(
-        vcId = "vc-12345",
-        vcDigest = "uABC123..."
-    )
+ATTRIB write request, signed with Ed25519 over the canonical signing payload:
 
-    val result = registry.anchorTyped(
-        value = digest,
-        serializer = VerifiableCredentialDigest.serializer(),
-        targetChainId = chainId.toString()
-    )
-
-    println("Anchored at: ${result.ref.txHash}")
+```json
+{
+  "operation": {
+    "type": "100",
+    "dest": "<submitter-did>",
+    "raw": "{\"digest\":\"…\",\"mediaType\":\"application/json\",\"payload\":{…}}"
+  },
+  "identifier": "<submitter-did>",
+  "reqId": 1700000000000001,
+  "protocolVersion": 2,
+  "signature": "<base58-ed25519>"
 }
 ```
 
-## Implementation Notes
+GET_ATTRIB is sent unsigned and returns a `data` field with the same JSON string
+verbatim, which the plugin parses back into a `JsonElement`.
 
-### Current Status
+## Running locally
 
-The initial implementation provides:
-- ✅ Chain ID parsing and validation
-- ✅ In-memory fallback for testing (no wallet required)
-- ✅ SPI discovery support
-- ⚠️ **TODO**: Real Indy ledger integration (requires indy-vdr or Indy SDK)
+Start a local Indy network with [von-network](https://github.com/bcgov/von-network):
 
-### Indy Integration Options
+```bash
+docker run --rm -d --name vonnetwork \
+  -p 9000:9000 -p 9701-9708:9701-9708 \
+  bcgovimages/von-network-base:latest \
+  ./scripts/start_webserver.sh
+```
 
-1. **indy-vdr** (Recommended): Use `indy-vdr` library (Rust-based, with potential Java/Kotlin bindings)
-2. **HTTP-based**: Direct HTTP calls to Indy Node pool endpoints
-3. **Indy SDK** (Deprecated): Legacy SDK (not recommended)
-
-### Transaction Type
-
-Indy uses **ATTRIB transactions** to store data on the ledger. The implementation stores payload data as a DID attribute.
-
-## Requirements
-
-- Java 21+
-- Kotlin 2.3.x+
-- Access to Indy ledger pool (for production use)
+Then `POST /register` (e.g. `curl -X POST http://localhost:9000/register -d '{"seed":"00000000000000000000000000000000","role":"ENDORSER"}'`)
+to mint a Steward DID and feed the returned DID + seed into the plugin options.
 
 ## Testing
 
-Tests use in-memory fallback mode and don't require a running Indy pool:
-
 ```bash
 ./gradlew :anchors:plugins:indy:test
+./gradlew :anchors:plugins:indy:integrationTest   # requires Docker
 ```
 
-## Future Enhancements
+Unit tests use WireMock to mock `indy-vdr-proxy` and verify the on-the-wire JSON
+matches expectations. Integration tests bring up `bcgovimages/von-network-base` via
+TestContainers and exercise the real ATTRIB/GET_ATTRIB round-trip; they skip cleanly
+when Docker is not available.
 
-- [ ] Full indy-vdr integration
-- [ ] Support for Indy-specific features (schemas, credential definitions)
-- [ ] Wallet management integration
-- [ ] Pool connection pooling
-- [ ] Transaction retry logic
+## References
 
+- [Indy transactions](https://github.com/hyperledger/indy-node/blob/main/docs/source/transactions.md)
+- [Indy requests](https://github.com/hyperledger/indy-node/blob/main/docs/source/requests.md)
+- [indy-vdr-proxy](https://github.com/hyperledger/indy-vdr/tree/main/indy-vdr-proxy)
+- [von-network](https://github.com/bcgov/von-network)

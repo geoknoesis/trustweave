@@ -12,6 +12,7 @@ dependencies {
     implementation(project(":kms:kms-core"))
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.datetime)
 
     // HTTP client for Orb API
     implementation(libs.okhttp)
@@ -21,5 +22,7 @@ dependencies {
 
     // Test dependencies
     testImplementation(project(":testkit"))
+    testImplementation(libs.mockwebserver)
+    testImplementation(libs.kotlinx.coroutines.test)
 }
 

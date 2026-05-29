@@ -1,74 +1,83 @@
 package org.trustweave.integrations.entra
 
-import org.trustweave.core.exception.TrustWeaveException
+import okhttp3.OkHttpClient
+import org.trustweave.integrations.entra.exchange.EntraExchangeProtocol
 
 /**
- * Microsoft Entra ID (Azure AD) integration for trustweave.
+ * High-level facade for Microsoft Entra Verified ID integration.
  *
- * Provides integration with Microsoft Entra ID for:
- * - Verifiable Credential issuance and verification
- * - DID management within Entra ID
- * - Integration with Microsoft Entra Verified ID
+ * Wires the OAuth2 token client, issuance client, and presentation client together
+ * and exposes them along with a ready-to-register [EntraExchangeProtocol].
  *
- * **Note:** This is a placeholder implementation. Full implementation requires
- * Microsoft Graph API integration and Entra Verified ID support.
+ * For low-level access (custom request bodies, sovereign clouds, callback parsing)
+ * use the individual clients directly.
  *
  * **Example:**
  * ```kotlin
  * val integration = EntraIntegration(
- *     tenantId = "tenant-id",
- *     clientId = "client-id",
- *     clientSecret = "client-secret"
+ *     EntraConfig(
+ *         tenantId = "0000…",
+ *         clientId = "0000…",
+ *         clientSecret = System.getenv("ENTRA_CLIENT_SECRET"),
+ *         authorityDid = "did:web:verifiedid.example.com",
+ *     ),
  * )
  *
- * // Issue credential to Entra ID user
- * val credential = integration.issueCredential(
- *     userId = "user@example.com",
- *     credentialType = "EmployeeCredential"
+ * val envelope = integration.exchangeProtocol.offer(
+ *     ExchangeRequest.Offer(
+ *         protocolName = ExchangeProtocolName("entra"),
+ *         issuerDid = Did(integration.config.authorityDid),
+ *         holderDid = Did("did:web:holder.example.com"),
+ *         credentialPreview = CredentialPreview(attributes = emptyList()),
+ *         options = entraIssuanceOptions(
+ *             manifestUrl = "https://verifiedid.did.msidentity.com/v1.0/.../manifest",
+ *             credentialType = "EmployeeCredential",
+ *             callbackUrl = "https://example.com/entra/callback",
+ *             clientName = "Acme Corp",
+ *         ),
+ *     ),
  * )
  * ```
  */
 class EntraIntegration(
-    val tenantId: String,
-    val clientId: String,
-    val clientSecret: String
+    val config: EntraConfig,
+    httpClient: OkHttpClient = OkHttpClient(),
 ) {
-    init {
-        require(tenantId.isNotBlank()) { "Microsoft Entra tenant ID must be specified" }
-        require(clientId.isNotBlank()) { "Microsoft Entra client ID must be specified" }
-        require(clientSecret.isNotBlank()) { "Microsoft Entra client secret must be specified" }
-    }
+    /** OAuth2 client_credentials token client with in-memory cache. */
+    val tokenClient: EntraTokenClient = EntraTokenClient(config = config, httpClient = httpClient)
 
-    /**
-     * Issues a verifiable credential to a Microsoft Entra ID user.
-     *
-     * @param userId Entra ID user ID or email
-     * @param credentialType Type of credential to issue
-     * @return Issued verifiable credential
-     */
-    suspend fun issueCredential(
-        userId: String,
-        credentialType: String
-    ): Any {
-        // TODO: Implement Entra ID credential issuance
-        throw TrustWeaveException.Unknown(
-            message = "Microsoft Entra ID integration requires Microsoft Graph API implementation. " +
-            "Structure is ready for implementation."
-        )
-    }
+    /** Issuance Request Service client. */
+    val issuanceClient: EntraIssuanceClient = EntraIssuanceClient(config, tokenClient, httpClient)
 
-    /**
-     * Verifies a verifiable credential from Microsoft Entra ID.
-     *
-     * @param credentialId Entra ID credential record ID
-     * @return Verification result
-     */
-    suspend fun verifyCredential(credentialId: String): Any {
-        // TODO: Implement Entra ID credential verification
-        throw TrustWeaveException.Unknown(
-            message = "Microsoft Entra ID integration requires Microsoft Graph API implementation. " +
-            "Structure is ready for implementation."
+    /** Presentation Request Service client (also parses webhook callbacks). */
+    val presentationClient: EntraPresentationClient =
+        EntraPresentationClient(config, tokenClient, httpClient)
+
+    /** Protocol-agnostic [EntraExchangeProtocol] wired to the above clients. */
+    val exchangeProtocol: EntraExchangeProtocol =
+        EntraExchangeProtocol(issuanceClient, presentationClient)
+
+    companion object {
+        /**
+         * Backwards-compatible constructor for callers that previously used the four-string form.
+         */
+        @JvmStatic
+        fun fromCredentials(
+            tenantId: String,
+            clientId: String,
+            clientSecret: String,
+            authorityDid: String,
+            apiBaseUrl: String = EntraConfig.DEFAULT_API_BASE_URL,
+            tokenEndpointBaseUrl: String = EntraConfig.DEFAULT_TOKEN_ENDPOINT_BASE,
+        ): EntraIntegration = EntraIntegration(
+            EntraConfig(
+                tenantId = tenantId,
+                clientId = clientId,
+                clientSecret = clientSecret,
+                authorityDid = authorityDid,
+                apiBaseUrl = apiBaseUrl,
+                tokenEndpointBaseUrl = tokenEndpointBaseUrl,
+            ),
         )
     }
 }
-

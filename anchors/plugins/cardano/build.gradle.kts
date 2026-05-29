@@ -4,25 +4,27 @@ plugins {
 }
 
 group = "org.trustweave.chains"
+
 dependencies {
     implementation(project(":common"))
     implementation(project(":anchors:anchor-core"))
-    implementation(project(":credentials:credential-api"))
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
 
-    // HTTP client for Cardano API
-    // Note: Cardano uses UTXO model, different from account-based chains
-    // Cardano SDK dependencies may not be available in public Maven repositories
-    // This implementation uses HTTP client directly. For production use, add Cardano SDK
-    // from appropriate repository or use Cardano API client when available.
+    // HTTP client for Blockfrost API and direct submission
     implementation(libs.okhttp)
 
-    // JSON serialization
+    // JSON + CBOR (Cardano metadata canonicalises to CBOR)
     implementation(libs.jackson.module.kotlin)
-    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.jackson.dataformat.cbor)
 
-    // Test dependencies
-    testImplementation(project(":testkit"))
+    // Cardano transaction building & Blockfrost backend (CIP-20 transaction metadata)
+    implementation("com.bloxbean.cardano:cardano-client-lib:0.5.1")
+    implementation("com.bloxbean.cardano:cardano-client-backend-blockfrost:0.5.1")
+
+    // Test dependencies — keep light to avoid coupling to broken-in-CI modules.
+    testImplementation(libs.bundles.test)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockwebserver)
+    testRuntimeOnly(libs.junit.jupiter.engine)
 }
-

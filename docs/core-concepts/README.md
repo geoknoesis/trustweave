@@ -14,7 +14,7 @@ keywords:
 
 Welcome to TrustWeave's core concepts! This section introduces the fundamental building blocks of decentralized identity and trust systems.
 
-> **New to TrustWeave?** Start with the [Mental Model](../introduction/mental-model.md) guide to understand how TrustWeave works at a conceptual level before diving into specific concepts.
+> **New to TrustWeave?** Start with the [Mental Model](introduction/mental-model.md) guide to understand how TrustWeave works at a conceptual level before diving into specific concepts.
 
 ## What You'll Learn
 

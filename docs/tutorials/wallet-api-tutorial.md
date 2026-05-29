@@ -17,7 +17,7 @@ dependencies {
 
 **Result:** Wallet APIs, **`TrustWeave`**, and testkit factories used in this tutorial.
 
-> Tip: Run **`./gradlew :distribution:examples:runQuickStartSample`** (or follow [Quick start](../getting-started/quick-start.md)) for runnable samples aligned with the snippets below.
+> Tip: Run **`./gradlew :distribution:examples:runQuickStartSample`** (or follow [Quick start](getting-started/quick-start.md)) for runnable samples aligned with the snippets below.
 
 ## Prerequisites
 
@@ -546,5 +546,5 @@ fun main() = runBlocking {
 
 - Explore the [Wallet API Reference](../api-reference/wallet-api.md)
 - Learn about [DIDs](../core-concepts/dids.md) and [Verifiable Credentials](../core-concepts/verifiable-credentials.md)
-- Check out [Advanced Topics](../advanced/README.md) for custom implementations
+- Check out [Advanced Topics](../api-reference/advanced/README.md) for custom implementations
 

@@ -803,7 +803,7 @@ suspend fun generateComplianceReport(
 - Explore [Security Clearance Scenario](security-clearance-access-control-scenario.md) for access control patterns
 - Learn about [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) for audit trails
 - Review [Key Management](../core-concepts/key-management.md) for key rotation
-- See [Security Best Practices](../security/README.md) for comprehensive security guidance
+- See [Security Best Practices](../core-concepts/security/README.md) for comprehensive security guidance
 
 ## Related Documentation
 

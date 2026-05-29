@@ -108,7 +108,7 @@ val trustWeave = TrustWeave.build {
 - `did { }` registers the DID method (e.g., `did:key`) for creating issuer identities
 - `credentials { }` sets the default proof type for cryptographic signatures
 
-> **Note:** For production, replace `"inMemory"` with a secure KMS provider (AWS KMS, CyberArk, etc.). See the [KMS plugins documentation](../plugins.md#key-management-service-kms-plugins) for options.
+> **Note:** For production, replace `"inMemory"` with a secure KMS provider (AWS KMS, CyberArk, etc.). See the [KMS plugins documentation](../api-reference/plugins.md#key-management-service-kms-plugins) for options.
 
 ---
 
@@ -572,7 +572,7 @@ val credential = trustWeave.issue {
 }
 ```
 
-See: [How to Revoke Credentials](./revoke-credentials.md)
+See: [How to Revoke Credentials](revoke-credentials.md)
 
 ---
 
@@ -591,7 +591,7 @@ val wallet = trustWeave.wallet {
 val stored = issuedCredential.storeIn(wallet)
 ```
 
-See: [How to Manage Credentials in Wallets](./manage-wallet-credentials.md)
+See: [How to Manage Credentials in Wallets](manage-wallet-credentials.md)
 
 ---
 
@@ -611,7 +611,7 @@ val presentation = trustWeave.presentationFromWalletResult(wallet) {
 }.getOrThrow()
 ```
 
-See: [How to Create Verifiable Presentations](./create-presentations.md)
+See: [How to Create Verifiable Presentations](create-presentations.md)
 
 ---
 
@@ -628,7 +628,7 @@ trustWeave.trust {
 }
 ```
 
-See: [How to Configure Trust Registries](./configure-trust-registry.md)
+See: [How to Configure Trust Registries](configure-trust-registry.md)
 
 ---
 

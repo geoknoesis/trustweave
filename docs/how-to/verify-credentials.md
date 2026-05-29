@@ -595,7 +595,7 @@ when (verification) {
 
 For complete API documentation, see:
 - **[Core API - verify()](../api-reference/core-api.md#verify)** - Complete parameter reference
-- **[Verification Policies](../advanced/verification-policies.md)** - Advanced verification configuration
+- **[Verification Policies](../api-reference/advanced/verification-policies.md)** - Advanced verification configuration
 
 ## Related Concepts
 
@@ -606,7 +606,7 @@ For complete API documentation, see:
 ## Related How-To Guides
 
 - **[Issue Credentials](issue-credentials.md)** - Issue credentials to verify
-- **[Handle Errors](../advanced/error-handling.md)** - Error handling patterns
+- **[Handle Errors](../api-reference/advanced/error-handling.md)** - Error handling patterns
 
 ## Next Steps
 

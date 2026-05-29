@@ -529,13 +529,13 @@ Now that you've learned credential exchange, you can:
 1. **[Issue Credentials](issue-credentials.md)** - Learn credential issuance details
 2. **[Verify Credentials](verify-credentials.md)** - Verify exchanged credentials
 3. **[Configure TrustWeave](configure-trustlayer.md)** - Full configuration options
-4. **[Protocol-Specific Guides](../features/credential-exchange-protocols/)** - Deep dive into each protocol
+4. **[Protocol-Specific Guides](../api-reference/features/credential-exchange-protocols/)** - Deep dive into each protocol
 
 ---
 
 ## Related Documentation
 
-- **[Credential Exchange Protocols](../features/credential-exchange-protocols/README.md)** - Complete protocol documentation
+- **[Credential Exchange Protocols](../api-reference/features/credential-exchange-protocols/README.md)** - Complete protocol documentation
 - **[API Reference](../api-reference/core-api.md)** - Complete API documentation
 - **[Core Concepts](../core-concepts/credential-exchange-protocols.md)** - Understanding protocol abstraction
 

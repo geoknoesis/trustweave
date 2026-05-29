@@ -544,7 +544,7 @@ val result = trustWeave.verify {
 }
 ```
 
-See: [How to Verify Credentials](./verify-credentials.md)
+See: [How to Verify Credentials](verify-credentials.md)
 
 ---
 

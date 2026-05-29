@@ -160,8 +160,8 @@ For **`VerificationResult.Invalid`**, **`IssuanceResult.Failure`**, and **`Prese
 
 ### Internal Links
 
-- Use relative paths: `[Getting Started](getting-started/README.md)`
-- Use fragments for sections: `[Quick Start](getting-started/quick-start.md#hello-trustweave)`
+- Use relative paths: `[Getting Started](tutorials/getting-started/README.md)`
+- Use fragments for sections: `[Quick Start](tutorials/getting-started/quick-start.md#hello-trustweave)`
 
 ### External Links
 

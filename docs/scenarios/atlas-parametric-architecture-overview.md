@@ -441,7 +441,7 @@ val anchorRef = trustWeave.blockchains.anchor(
 ## Next Steps
 
 1. **Read Implementation Guide**: [parametric-insurance-mga-implementation-guide.md](parametric-insurance-mga-implementation-guide.md)
-2. **Review TrustWeave Docs**: [Getting Started](../getting-started/quick-start.md)
+2. **Review TrustWeave Docs**: [Getting Started](../tutorials/getting-started/quick-start.md)
 3. **Build MVP**: Start with SAR flood product
 4. **Add Products**: Heatwave, solar attenuation
 5. **Scale**: Multi-provider, global expansion

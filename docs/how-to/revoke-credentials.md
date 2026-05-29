@@ -804,7 +804,7 @@ val result = trustWeave.verify {
 }
 ```
 
-See: [How to Verify Credentials](./verify-credentials.md)
+See: [How to Verify Credentials](verify-credentials.md)
 
 ---
 
@@ -829,7 +829,7 @@ val trustWeave = TrustWeave.build {
 // Status lists will be anchored automatically when threshold is reached
 ```
 
-See: [How to Anchor to Blockchain](./blockchain-anchoring.md)
+See: [How to Anchor to Blockchain](blockchain-anchoring.md)
 
 ---
 

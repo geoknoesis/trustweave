@@ -88,7 +88,7 @@ try {
 }
 ```
 
-See [Error handling](../advanced/error-handling.md) and [API patterns — results vs exceptions](../getting-started/api-patterns.md#api-contract-results-vs-exceptions).
+See [Error handling](advanced/error-handling.md) and [API patterns — results vs exceptions](../tutorials/getting-started/api-patterns.md#api-contract-results-vs-exceptions).
 
 ## Configuration
 
@@ -153,7 +153,7 @@ try {
 }
 ```
 
-See [Plugin Lifecycle](../advanced/plugin-lifecycle.md) for detailed plugin lifecycle management.
+See [Plugin Lifecycle](advanced/plugin-lifecycle.md) for detailed plugin lifecycle management.
 
 ## Next Steps
 

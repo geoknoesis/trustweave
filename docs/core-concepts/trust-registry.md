@@ -18,12 +18,12 @@ The trust registry sits on top of the rest of the issuance/verification stack. B
 ### DID resolution
 **Why it matters:** Trust checks must confirm that issuers resolve to valid DID documents.
 **What to wire:** Configure DID methods and resolvers inside `TrustWeave.build { did { ... } }` (and optional custom KMS) so issuance and verification share one resolver graph. For verification, call `trustWeave.verify { credential(...); requireTrust(registry); ... }` instead of wiring a standalone verifier type.
-**Related docs:** [DIDs](dids.md), [Verification Policies](../advanced/verification-policies.md).
+**Related docs:** [DIDs](dids.md), [Verification Policies](../api-reference/advanced/verification-policies.md).
 
 ### Key management
 **Why it matters:** Issuers, holders, and verifiers need signing keys to produce and check proofs along the trust path.
 **What to wire:** Supply a `KeyManagementService` for every participant. For production, back the service with a Hardware Security Module (HSM) or remote Key Management Service (KMS) instead of `InMemoryKeyManagementService`.
-**Related docs:** [Key Management](key-management.md), [Quick Start – Step 4](../getting-started/quick-start.md#step-4-issue-a-credential-and-store-it).
+**Related docs:** [Key Management](key-management.md), [Quick Start – Step 4](../tutorials/getting-started/quick-start.md#step-4-issue-a-credential-and-store-it).
 
 ### Proof generators
 **Why it matters:** The registry does not create proofs itself, but it relies on credentials and presentations having cryptographic evidence attached.
@@ -33,7 +33,7 @@ The trust registry sits on top of the rest of the issuance/verification stack. B
 ### Schema and status services
 **Why it matters:** Trust decisions often depend on schema validity or revocation state.
 **What to wire:** Register schemas with `SchemaRegistry` and expose status list endpoints before enabling `validateSchema` or `checkRevocation` during verification.
-**Related docs:** [Verification Policies](../advanced/verification-policies.md), scenario guides under `getting-started/`.
+**Related docs:** [Verification Policies](../api-reference/advanced/verification-policies.md), scenario guides under `getting-started/`.
 
 ### Trust anchors
 **Why it matters:** The registry only knows who to trust if you seed it with anchor definitions.

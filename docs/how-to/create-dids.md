@@ -286,7 +286,7 @@ TrustWeave supports multiple DID methods. Choose based on your needs:
 | `did:ethr` | Ethereum-based identity | Yes (Ethereum) |
 | `did:polygon` | Polygon-based identity | Yes (Polygon) |
 
-See [DID Method Integrations](../how-to/README.md#did-method-integrations) for complete list.
+See [DID Method Integrations](README.md#did-method-integrations) for complete list.
 
 ## Error Handling
 
@@ -350,16 +350,16 @@ For complete API documentation, see:
 
 ## Related Concepts
 
-- **[DIDs](../concepts/README.md#core-concepts)** - Understanding what DIDs are
+- **[DIDs](../core-concepts/README.md#core-concepts)** - Understanding what DIDs are
 - **[Key Management](../core-concepts/key-management.md)** - How keys are managed for DIDs
-- **[DID Methods](../integrations/README.md#did-method-integrations)** - Available DID method implementations
+- **[DID Methods](integrations/README.md#did-method-integrations)** - Available DID method implementations
 
 ## See Also
 
 - **[DIDs Concept](../core-concepts/dids.md)** - Understanding what DIDs are and why they exist
 - **[Key Management](../core-concepts/key-management.md)** - How keys are managed for DIDs
 - **[DID Operations Tutorial](../tutorials/did-operations-tutorial.md)** - Comprehensive tutorial with examples
-- **[DID Method Integrations](../integrations/README.md#did-method-integrations)** - Implementation guides for all DID methods
+- **[DID Method Integrations](integrations/README.md#did-method-integrations)** - Implementation guides for all DID methods
 
 ## Related How-To Guides
 

@@ -685,7 +685,7 @@ fun main() = runBlocking {
 
 - Review [Verifiable Credentials Concepts](../core-concepts/verifiable-credentials.md) for deeper understanding
 - See [Wallet API Tutorial](wallet-api-tutorial.md) for credential storage
-- Explore [Verification Policies](../advanced/verification-policies.md) for advanced verification
+- Explore [Verification Policies](../api-reference/advanced/verification-policies.md) for advanced verification
 - Check [Creating Plugins](../contributing/creating-plugins.md) to implement custom credential services
 
 ## References

@@ -59,7 +59,7 @@ This series provides a structured learning path from zero to building production
 
 Before diving in:
 
-- Install TrustWeave by following the [installation guide](../getting-started/installation.md).
+- Install TrustWeave by following the [installation guide](getting-started/installation.md).
 - Be comfortable with Kotlin coroutines and the `Result`-returning facade APIs.
 - For beginners: Start with the [Beginner Tutorial Series](beginner-tutorial-series.md).
 - For experienced developers: Jump to specific advanced tutorials.
@@ -106,7 +106,7 @@ Start with [Beginner Tutorial Series](beginner-tutorial-series.md) and complete 
 ### For Experienced Developers
 
 **Quick Path:**
-1. Review [Quick Start Guide](../getting-started/quick-start.md) for API overview
+1. Review [Quick Start Guide](getting-started/quick-start.md) for API overview
 2. Jump to specific tutorials based on your use case:
    - **DID Operations:** [DID Operations Tutorial](did-operations-tutorial.md)
    - **Wallets:** [Wallet API Tutorial](wallet-api-tutorial.md)
@@ -114,9 +114,9 @@ Start with [Beginner Tutorial Series](beginner-tutorial-series.md) and complete 
 3. Reference [API Reference](../api-reference/core-api.md) as needed
 
 **Production Ready:**
-1. Review [Common Patterns](../getting-started/common-patterns.md) for TrustWeave-specific patterns
+1. Review [Common Patterns](getting-started/common-patterns.md) for TrustWeave-specific patterns
 2. Study [Scenarios](../scenarios/README.md) for your use case
-3. Consult [Error Handling](../advanced/error-handling.md) for production patterns
+3. Consult [Error Handling](../api-reference/advanced/error-handling.md) for production patterns
 
 ## Next Steps
 

@@ -5,7 +5,7 @@ nav_exclude: true
 
 # Protocol Abstraction Layer
 
-> **Note (audit 2026-05):** Code samples on this page describe a legacy registry-centric API (`CredentialExchangeProtocolRegistry.offerCredential(...)`, `requestCredential(...)`, `issueCredential(...)`, `requestProof(...)`, `presentProof(...)`) that does **not** exist in the current codebase. The real API surface uses `org.trustweave.credential.exchange.ExchangeService` with sealed `ExchangeRequest.Offer | Request | Issue` and `ProofExchangeRequest.Request | Presentation` types, returning `ExchangeResult<ExchangeResponse.*>`. The architecture diagrams and protocol descriptions below remain accurate. For the real API see [QUICK_START.md](../features/credential-exchange-protocols/QUICK_START.md), [EXAMPLES.md](../features/credential-exchange-protocols/EXAMPLES.md), and the source under `credentials/credential-api/src/main/kotlin/org/trustweave/credential/exchange/`.
+> **Note (audit 2026-05):** Code samples on this page describe a legacy registry-centric API (`CredentialExchangeProtocolRegistry.offerCredential(...)`, `requestCredential(...)`, `issueCredential(...)`, `requestProof(...)`, `presentProof(...)`) that does **not** exist in the current codebase. The real API surface uses `org.trustweave.credential.exchange.ExchangeService` with sealed `ExchangeRequest.Offer | Request | Issue` and `ProofExchangeRequest.Request | Presentation` types, returning `ExchangeResult<ExchangeResponse.*>`. The architecture diagrams and protocol descriptions below remain accurate. For the real API see [QUICK_START.md](../api-reference/features/credential-exchange-protocols/QUICK_START.md), [EXAMPLES.md](../api-reference/features/credential-exchange-protocols/EXAMPLES.md), and the source under `credentials/credential-api/src/main/kotlin/org/trustweave/credential/exchange/`.
 
 ## Overview
 
@@ -115,7 +115,7 @@ val offer = registry.offerCredential("didcomm", request)
 - **Implementation**: `DidCommExchangeProtocol`
 - **Status**: ✅ Fully Implemented
 - **Library**: Custom implementation with `didcomm-java` integration
-- **Documentation**: [DIDComm Protocol](../features/credential-exchange-protocols/didcomm.md)
+- **Documentation**: [DIDComm Protocol](../api-reference/features/credential-exchange-protocols/didcomm.md)
 
 ### OIDC4VCI
 
@@ -124,7 +124,7 @@ val offer = registry.offerCredential("didcomm", request)
 - **Implementation**: `Oidc4VciExchangeProtocol`
 - **Status**: ✅ Implemented (Basic)
 - **Library**: walt.id `waltid-openid4vc` (optional)
-- **Documentation**: [OIDC4VCI Protocol](../features/credential-exchange-protocols/oidc4vci.md)
+- **Documentation**: [OIDC4VCI Protocol](../api-reference/features/credential-exchange-protocols/oidc4vci.md)
 
 ### OIDC4VP
 
@@ -141,7 +141,7 @@ val offer = registry.offerCredential("didcomm", request)
 - **Implementation**: `ChapiExchangeProtocol`
 - **Status**: ✅ Implemented (Basic)
 - **Library**: Custom implementation (browser API wrapper)
-- **Documentation**: [CHAPI Protocol](../features/credential-exchange-protocols/chapi.md)
+- **Documentation**: [CHAPI Protocol](../api-reference/features/credential-exchange-protocols/chapi.md)
 
 ### SIOPv2
 

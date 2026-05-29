@@ -43,17 +43,17 @@ These guides cover the essential operations you'll use in most TrustWeave applic
 - **[Anchor to Blockchain](blockchain-anchoring.md)** - Anchor data for tamper evidence
 - **[Multi-Chain Anchoring](multi-chain-anchoring.md)** - Anchor to multiple blockchains for redundancy
 - **[Exchange Credentials](exchange-credentials.md)** - Exchange credentials using multiple protocols (DIDComm, OIDC4VCI, CHAPI)
-- **[Handle Errors](../advanced/error-handling.md)** - Error handling patterns and best practices
+- **[Handle Errors](../api-reference/advanced/error-handling.md)** - Error handling patterns and best practices
 
 ### Advanced Tasks
 
 For more complex scenarios and customization:
 
-- **[Rotate Keys](../advanced/key-rotation.md)** - Rotate cryptographic keys while preserving credential history
-- **[Configure Verification Policies](../advanced/verification-policies.md)** - Customize verification behavior
-- **[Build Custom Adapters](../advanced/custom-adapters.md)** - Create custom implementations
-- **[Implement SPI Plugins](../advanced/spi.md)** - Build pluggable components
-- **[Optimize Performance](../advanced/performance.md)** - Performance tuning and best practices
+- **[Rotate Keys](../api-reference/advanced/key-rotation.md)** - Rotate cryptographic keys while preserving credential history
+- **[Configure Verification Policies](../api-reference/advanced/verification-policies.md)** - Customize verification behavior
+- **[Build Custom Adapters](../api-reference/advanced/custom-adapters.md)** - Create custom implementations
+- **[Implement SPI Plugins](../api-reference/advanced/spi.md)** - Build pluggable components
+- **[Optimize Performance](../api-reference/advanced/performance.md)** - Performance tuning and best practices
 
 ### Integration Guides
 
@@ -94,7 +94,7 @@ Each how-to guide follows this structure:
 ## Related Documentation
 
 - **[Tutorials](../tutorials/README.md)** - Step-by-step learning experiences
-- **[Concepts](../concepts/README.md)** - Understanding the "why" behind TrustWeave
+- **[Concepts](../core-concepts/README.md)** - Understanding the "why" behind TrustWeave
 - **[API Reference](../api-reference/README.md)** - Complete API documentation
 - **[Use Case Scenarios](../scenarios/README.md)** - Real-world examples
 
@@ -110,5 +110,5 @@ Each how-to guide follows this structure:
 **Want to learn more?**
 
 - **[Tutorials](../tutorials/README.md)** — structured learning path
-- **[Concepts](../concepts/README.md)** — fundamentals
+- **[Concepts](../core-concepts/README.md)** — fundamentals
 

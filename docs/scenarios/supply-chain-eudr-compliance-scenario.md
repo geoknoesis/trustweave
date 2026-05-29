@@ -562,7 +562,7 @@ suspend fun verifyAgainstClimateTrace(
 
 - Explore [Supply Chain Traceability Scenario](supply-chain-traceability-scenario.md)
 - Learn about [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md)
-- Review [Verification Policies](../advanced/verification-policies.md)
+- Review [Verification Policies](../api-reference/advanced/verification-policies.md)
 
 ## Related Documentation
 

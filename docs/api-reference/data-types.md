@@ -397,7 +397,7 @@ sealed class CredentialProof {
 
 The proof variant is picked by the `ProofEngine` matching the credential's `ProofSuiteId`
 (`VC_LD`, `VC_JWT`, `SD_JWT_VC`, `MDOC`, `BBS_2023`). Engines are auto-discovered via
-the `ProofEngineProvider` SPI — see [Proof Engine Implementation Guide](../advanced/proof-engine-implementation-guide.md).
+the `ProofEngineProvider` SPI — see [Proof Engine Implementation Guide](advanced/proof-engine-implementation-guide.md).
 
 ## Service Types
 

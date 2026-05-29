@@ -247,7 +247,7 @@ All steps must pass for verification to succeed. Any failure returns detailed er
 - **Service-level control** – call **`CredentialService.issue(IssuanceRequest(...))`** when you need explicit **`ProofSuiteId`**, **`ProofOptions`**, schema, or validity windows outside the DSL.
 - **Anchoring** – store the credential digest with a `BlockchainAnchorClient` to prove freshness (see [Blockchain Anchoring](blockchain-anchoring.md)).
 - **Revocation** – integrate status endpoints by adding `credentialStatus` claims; custom verification policies can enforce them.
-- **Error handling** – credential operations throw exceptions (e.g., `IllegalStateException`) on failure. Use `try-catch` blocks for error handling. See [Error Handling](../advanced/error-handling.md).
+- **Error handling** – credential operations throw exceptions (e.g., `IllegalStateException`) on failure. Use `try-catch` blocks for error handling. See [Error Handling](../api-reference/advanced/error-handling.md).
 - **Input validation** – TrustWeave automatically validates credential structure, issuer DID format, and method registration before issuance.
 
 ## Related How-To Guides

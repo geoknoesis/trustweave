@@ -617,7 +617,7 @@ Now that you've configured TrustWeave, you can:
 
 ## Related Documentation
 
-- **[DSL Guide](../getting-started/dsl-guide.md)** - Deep dive into DSL features
+- **[DSL Guide](../tutorials/getting-started/dsl-guide.md)** - Deep dive into DSL features
 - **[API Reference](../api-reference/core-api.md)** - Complete API documentation
 - **[Core Concepts](../core-concepts/README.md)** - Understanding TrustWeave architecture
 

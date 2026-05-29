@@ -339,8 +339,8 @@ an issue if you want it adopted project-wide.
 
 ## Next Steps
 
-- Review [trustweave-testkit Module](../modules/trustweave-testkit.md) for testing utilities
-- See [Testing Strategies](../advanced/testing-strategies.md) for advanced patterns
+- Review [trustweave-testkit Module](../api-reference/modules/trustweave-testkit.md) for testing utilities
+- See [Testing Strategies](../api-reference/advanced/testing-strategies.md) for advanced patterns
 - Check [Development Setup](development-setup.md) for environment setup
 - Explore existing tests in TrustWeave modules for examples
 

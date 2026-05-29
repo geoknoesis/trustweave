@@ -1300,11 +1300,11 @@ try {
 }
 ```
 
-If you implement **`PluginLifecycle`** on your own adapters, **you** invoke those hooks from your composition root; the facade does not expose **`initialize()`** / **`start()`** / **`stop()`** methods. See [Plugin lifecycle](../advanced/plugin-lifecycle.md).
+If you implement **`PluginLifecycle`** on your own adapters, **you** invoke those hooks from your composition root; the facade does not expose **`initialize()`** / **`start()`** / **`stop()`** methods. See [Plugin lifecycle](advanced/plugin-lifecycle.md).
 
 ## Error Types
 
-Facade methods return **sealed results** (`IssuanceResult`, `VerificationResult`, `DidCreationResult`, …) or **throw** domain exceptions extending **`TrustWeaveException`** (`DidException`, `BlockchainException`, `PluginException`, …). See [Error handling](../advanced/error-handling.md).
+Facade methods return **sealed results** (`IssuanceResult`, `VerificationResult`, `DidCreationResult`, …) or **throw** domain exceptions extending **`TrustWeaveException`** (`DidException`, `BlockchainException`, `PluginException`, …). See [Error handling](advanced/error-handling.md).
 
 ### Common Error Types
 
@@ -1321,7 +1321,7 @@ Facade methods return **sealed results** (`IssuanceResult`, `VerificationResult`
 
 **`issue`**, **`verify`**, **`presentationResult`**, and **batch** flows return sealed types (`IssuanceResult`, `VerificationResult`, `PresentationResult`). **`createDid`** and several DID lifecycle APIs return **`DidCreationResult`** / related sealed types—use `when` (or test-only `getOrThrowDid()`), not a blanket try-catch, for those failures.
 
-See [API patterns — results vs exceptions](../getting-started/api-patterns.md#api-contract-results-vs-exceptions) and [Result types guide](result-types-guide.md).
+See [API patterns — results vs exceptions](../tutorials/getting-started/api-patterns.md#api-contract-results-vs-exceptions) and [Result types guide](result-types-guide.md).
 
 **Example (credential + DID results):**
 ```kotlin
@@ -1361,12 +1361,12 @@ fun main() = runBlocking {
 ### Exceptions and unwrapping helpers
 
 - **`getOrThrow()`** / **`getOrThrowDid()`** throw **`IllegalStateException`** on failure—wrap call sites if you use them in production.
-- **`wallet { }`** and some integration paths may throw **`TrustWeaveException`** subclasses (see [Error handling](../advanced/error-handling.md)).
+- **`wallet { }`** and some integration paths may throw **`TrustWeaveException`** subclasses (see [Error handling](advanced/error-handling.md)).
 ### `Result<T>` and lower-level APIs
 
 Some services return **`Result<T>`** for composition (plugins, custom implementations). Handle with `fold` or `getOrElse`.
 
-**Best Practice:** Handle sealed results with exhaustive `when`; never treat **`AdapterNotReady`** results as success, and never log placeholder credentials from misconfigured **`verify { }`** as real holder data (see [Production checklist](../getting-started/production-integration-checklist.md)).
+**Best Practice:** Handle sealed results with exhaustive `when`; never treat **`AdapterNotReady`** results as success, and never log placeholder credentials from misconfigured **`verify { }`** as real holder data (see [Production checklist](../tutorials/getting-started/production-integration-checklist.md)).
 
 ## Configuration
 
@@ -1437,7 +1437,7 @@ val trustWeave = TrustWeave.build {
 }
 ```
 
-**Note:** For advanced configuration with custom services, proof generators, or credential services, you may need to configure the underlying `TrustWeaveConfig` directly. See [Advanced Configuration](../advanced/README.md) for details.
+**Note:** For advanced configuration with custom services, proof generators, or credential services, you may need to configure the underlying `TrustWeaveConfig` directly. See [Advanced Configuration](advanced/README.md) for details.
 
 ## Related Documentation
 

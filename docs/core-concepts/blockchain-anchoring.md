@@ -38,7 +38,7 @@ Anchoring complements verifiable credentials: you can notarise VC digests, prese
 
 | Step | Implementation |
 |------|----------------|
-| 1. Choose a chain | Register a `BlockchainAnchorClient` (in-memory, [Algorand](../integrations/algorand.md), [Polygon](../integrations/README.md#blockchain-anchor-integrations), [Ethereum](../integrations/ethereum-anchor.md), [Base](../integrations/base-anchor.md), [Arbitrum](../integrations/arbitrum-anchor.md), Indy, or your own adapter). Chains use CAIP-2 IDs such as `algorand:testnet`. |
+| 1. Choose a chain | Register a `BlockchainAnchorClient` (in-memory, [Algorand](../how-to/integrations/algorand.md), [Polygon](../how-to/integrations/README.md#blockchain-anchor-integrations), [Ethereum](../how-to/integrations/ethereum-anchor.md), [Base](../how-to/integrations/base-anchor.md), [Arbitrum](../how-to/integrations/arbitrum-anchor.md), Indy, or your own adapter). Chains use CAIP-2 IDs such as `algorand:testnet`. |
 | 2. Canonicalise payload | Kotlinx Serialization + JSON Canonicalization Scheme ensure deterministic bytes. |
 | 3. Submit | `writePayload` stores the digest on chain and returns `AnchorResult` with an `AnchorRef`. |
 | 4. Verify | `readPayload` rehydrates the JSON, or recompute the digest locally and compare to the stored reference. |
@@ -110,7 +110,7 @@ runBlocking {
 - **Retry-friendly anchoring** – public chains may require exponential back-off; design idempotent submissions.
 - **Integrate with revocation** – anchor revocation lists or proofs to create audit trails for credential status changes.
 - **Testing** – use the in-memory client or spin up Ganache/Testnet clients for end-to-end tests.
-- **Error handling** – anchoring uses **`AnchorResult`** on success and throws **`BlockchainException`** on many failures. See [Error handling](../advanced/error-handling.md).
+- **Error handling** – anchoring uses **`AnchorResult`** on success and throws **`BlockchainException`** on many failures. See [Error handling](../api-reference/advanced/error-handling.md).
 - **Input validation** – TrustWeave automatically validates chain ID format and registration before anchoring.
 
 ## See also

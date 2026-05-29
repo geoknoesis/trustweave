@@ -480,7 +480,7 @@ fun main() = runBlocking {
 ## Next Steps
 
 - Review [DID Concepts](../core-concepts/dids.md) for deeper understanding
-- Explore [DID Integration Guides](../integrations/README.md) for specific method implementations
+- Explore [DID Integration Guides](../how-to/integrations/README.md) for specific method implementations
 - See [Wallet API Tutorial](wallet-api-tutorial.md) for credential workflows
 - Check [Creating Plugins](../contributing/creating-plugins.md) to implement custom DID methods
 

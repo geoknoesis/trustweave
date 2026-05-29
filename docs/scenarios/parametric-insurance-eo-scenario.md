@@ -508,7 +508,7 @@ if (anchorResult != null) {
 
 - Explore [Earth Observation Scenario](earth-observation-scenario.md) for EO data integrity
 - Learn about [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md)
-- Review [Error Handling](../advanced/error-handling.md) for production patterns
+- Review [Error Handling](../api-reference/advanced/error-handling.md) for production patterns
 
 ## Related Documentation
 

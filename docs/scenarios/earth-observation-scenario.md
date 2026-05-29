@@ -474,7 +474,7 @@ resource(
 ## Next Steps
 
 - Explore [Core Concepts](../core-concepts/README.md) for deeper understanding
-- Learn about [Integration Modules](../integrations/README.md) for production use
+- Learn about [Integration Modules](../how-to/integrations/README.md) for production use
 
 ## Common Questions
 

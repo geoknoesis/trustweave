@@ -473,10 +473,10 @@ try {
 
 For production use, see integration guides for specific blockchains:
 
-- **[Algorand Integration](../integrations/algorand.md)** - Algorand anchoring setup
-- **[Ethereum Integration](../integrations/ethereum-anchor.md)** - Ethereum anchoring setup
-- **[Polygon Integration](../integrations/polygon-did.md)** - Polygon anchoring setup
-- **[Base Integration](../integrations/base-anchor.md)** - Base anchoring setup
+- **[Algorand Integration](integrations/algorand.md)** - Algorand anchoring setup
+- **[Ethereum Integration](integrations/ethereum-anchor.md)** - Ethereum anchoring setup
+- **[Polygon Integration](integrations/polygon-did.md)** - Polygon anchoring setup
+- **[Base Integration](integrations/base-anchor.md)** - Base anchoring setup
 
 ## API Reference
 

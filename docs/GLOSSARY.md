@@ -227,7 +227,7 @@ Identifier for a specific key within a DID document.
 ### Plugin
 Extensible component that implements TrustWeave interfaces (DID methods, anchor clients, etc.).
 
-**Related:** [Plugin Lifecycle](advanced/plugin-lifecycle.md)
+**Related:** [Plugin Lifecycle](api-reference/advanced/plugin-lifecycle.md)
 
 ### Plugin Lifecycle
 Methods for initializing, starting, stopping, and cleaning up plugins.
@@ -242,7 +242,7 @@ interface PluginLifecycle {
 }
 ```
 
-**Related:** [Plugin Lifecycle](advanced/plugin-lifecycle.md)
+**Related:** [Plugin Lifecycle](api-reference/advanced/plugin-lifecycle.md)
 
 ## Error Terms
 
@@ -259,7 +259,7 @@ DidException.DidMethodNotRegistered(
 )
 ```
 
-**Related:** [Error handling](advanced/error-handling.md)
+**Related:** [Error handling](api-reference/advanced/error-handling.md)
 
 ### Result&lt;T&gt;
 Kotlin **`Result`** is used by some services (for example smart-contract helpers). The **`TrustWeave`** facade often returns **sealed result types** instead (`DidCreationResult`, `IssuanceResult`, `VerificationResult`, …).
@@ -272,7 +272,7 @@ import org.trustweave.trust.dsl.credential.DidMethods.KEY
 val did = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 ```
 
-**Related:** [Error Handling](advanced/error-handling.md)
+**Related:** [Error Handling](api-reference/advanced/error-handling.md)
 
 ## Related Documentation
 

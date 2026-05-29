@@ -257,7 +257,7 @@ The legacy `ProofGenerator` interface has been replaced by **`org.trustweave.cre
 ### Reference
 
 A full `ProofEngine` walkthrough is out of scope for this page — see the canonical
-guide at [Proof Engine Implementation Guide](../advanced/proof-engine-implementation-guide.md).
+guide at [Proof Engine Implementation Guide](../api-reference/advanced/proof-engine-implementation-guide.md).
 Quick pointers for orientation:
 
 - **SPI interface:** `credentials/credential-api/src/main/kotlin/org/trustweave/credential/spi/proof/ProofEngine.kt`
@@ -531,7 +531,7 @@ class MyBlockchainClient : BlockchainAnchorClient, PluginLifecycle {
 
 Call **`trustWeave.close()`** when you discard the facade so **`Closeable`** collaborators (KMS, anchor clients, etc.) can shut down. If **your** plugin implements **`PluginLifecycle`**, invoke those hooks from your own wiring; the facade does not expose **`initialize()`** / **`start()`** / **`stop()`**.
 
-See [Plugin lifecycle](../advanced/plugin-lifecycle.md) for patterns.
+See [Plugin lifecycle](../api-reference/advanced/plugin-lifecycle.md) for patterns.
 
 ## Testing Your Plugin
 
@@ -600,9 +600,9 @@ fun `test plugin with TrustWeave`() = runTest {
 ## Next Steps
 
 - Review existing implementations in `trustweave-testkit` for reference
-- See [Integration Modules](../integrations/README.md) for production examples
-- Check [Plugin Lifecycle](../advanced/plugin-lifecycle.md) for lifecycle management
-- Review [Architecture Overview](../introduction/architecture-overview.md) for design patterns
+- See [Integration Modules](../how-to/integrations/README.md) for production examples
+- Check [Plugin Lifecycle](../api-reference/advanced/plugin-lifecycle.md) for lifecycle management
+- Review [Architecture Overview](../core-concepts/introduction/architecture-overview.md) for design patterns
 
 ## Related Documentation
 

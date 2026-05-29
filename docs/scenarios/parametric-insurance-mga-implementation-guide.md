@@ -1283,7 +1283,7 @@ class AuditTrailService(
 
 3. **Start Building**:
    - Clone TrustWeave repository
-   - Follow [Quick Start Guide](../getting-started/quick-start.md)
+   - Follow [Quick Start Guide](../tutorials/getting-started/quick-start.md)
    - Implement SAR flood product first
 
 ## Related Documentation

@@ -322,7 +322,7 @@ val eoData = acceptEoDataCredential(dataCredential)
 1. **Read Implementation Guide**: [parametric-insurance-mga-implementation-guide.md](parametric-insurance-mga-implementation-guide.md)
 2. **Review Architecture**: [atlas-parametric-architecture-overview.md](atlas-parametric-architecture-overview.md)
 3. **Smart Contracts Guide**: [Smart Contract: Parametric Insurance](smart-contract-parametric-insurance-scenario.md)
-4. **Explore TrustWeave**: [Quick Start](../getting-started/quick-start.md)
+4. **Explore TrustWeave**: [Quick Start](../tutorials/getting-started/quick-start.md)
 5. **Start Building**: Begin with SAR flood product MVP using Smart Contracts
 
 ---

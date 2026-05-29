@@ -14,7 +14,7 @@ This guide shows you how to create Verifiable Presentations (VPs) from credentia
 **Why this matters:**
 Verifiable Presentations allow credential holders to share credentials selectively while maintaining privacy. They enable zero-knowledge proofs, selective disclosure, and privacy-preserving credential exchange—essential for user-controlled identity systems.
 
-> **API entry point:** Presentations are built through **`TrustWeave`**, not the wallet object. Use **`trustWeave.presentationFromWalletResult(wallet) { ... }`** (sealed [`PresentationResult`](../api-reference/result-types-guide.md)) or **`.getOrThrow()`** in tests (throws **`TrustWeaveException.InvalidState`** with `PRESENTATION_*` codes on failure). See [API patterns — results vs exceptions](../getting-started/api-patterns.md#api-contract-results-vs-exceptions).
+> **API entry point:** Presentations are built through **`TrustWeave`**, not the wallet object. Use **`trustWeave.presentationFromWalletResult(wallet) { ... }`** (sealed [`PresentationResult`](../api-reference/result-types-guide.md)) or **`.getOrThrow()`** in tests (throws **`TrustWeaveException.InvalidState`** with `PRESENTATION_*` codes on failure). See [API patterns — results vs exceptions](../tutorials/getting-started/api-patterns.md#api-contract-results-vs-exceptions).
 
 ---
 
@@ -637,7 +637,7 @@ presentation.verifiableCredential.forEach { cred ->
 }
 ```
 
-See: [How to Verify Credentials](./verify-credentials.md)
+See: [How to Verify Credentials](verify-credentials.md)
 
 ---
 
@@ -667,7 +667,7 @@ Exchange presentations using protocols:
 // See exchange-credentials.md for protocol details
 ```
 
-See: [How to Exchange Credentials](./exchange-credentials.md)
+See: [How to Exchange Credentials](exchange-credentials.md)
 
 ---
 

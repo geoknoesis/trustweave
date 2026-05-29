@@ -154,7 +154,7 @@ println("Holder key created: $keyId")
 
 ## Practical usage tips
 
-- **Production** – back keys with Hardware Security Modules (HSMs) or cloud Key Management Service (KMS) ([AWS KMS](../integrations/aws-kms.md), [Azure Key Vault](../integrations/azure-kms.md), [Google Cloud KMS](../integrations/google-kms.md), [HashiCorp Vault](../integrations/hashicorp-vault-kms.md), [IBM Key Protect](../integrations/ibm-key-protect-kms.md), etc.) via custom providers.
+- **Production** – back keys with Hardware Security Modules (HSMs) or cloud Key Management Service (KMS) ([AWS KMS](../how-to/integrations/aws-kms.md), [Azure Key Vault](../how-to/integrations/azure-kms.md), [Google Cloud KMS](../how-to/integrations/google-kms.md), [HashiCorp Vault](../how-to/integrations/hashicorp-vault-kms.md), [IBM Key Protect](../how-to/integrations/ibm-key-protect-kms.md), etc.) via custom providers.
 - **Rotation** – maintain previous keys so verifiers can validate historic credentials; rotate key IDs in VC proofs.
 - **Access control** – enforce authorisation at the Key Management Service (KMS) boundary; TrustWeave assumes the provider handles policy.
 - **Testing** – rely on `InMemoryKeyManagementService` from the `inmemory` plugin for determinism.

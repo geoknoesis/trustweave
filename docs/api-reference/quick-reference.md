@@ -42,7 +42,7 @@ Wallet storage/query live on the **`Wallet`** instance after a successful result
 
 ## Blockchain
 
-Use **`trustWeave.blockchains`** (e.g. `anchor`, `read`) — not a top-level `anchor { }` on the facade. See [Core API — Blockchain](core-api.md) and [quick start](../getting-started/quick-start.md).
+Use **`trustWeave.blockchains`** (e.g. `anchor`, `read`) — not a top-level `anchor { }` on the facade. See [Core API — Blockchain](core-api.md) and [quick start](../tutorials/getting-started/quick-start.md).
 
 ## Trust registry
 
@@ -188,4 +188,4 @@ trustWeave.rotateKey {
 - **[Core API](core-api.md)**
 - **[Wallet API](wallet-api.md)**
 - **[Result types](result-types-guide.md)**
-- **[Error handling](../advanced/error-handling.md)**
+- **[Error handling](advanced/error-handling.md)**

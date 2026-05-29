@@ -180,6 +180,6 @@ println("Capacity: ${stats?.totalCapacity}, used: ${stats?.usedIndices}, " +
 
 ## Related documentation
 
-- [Blockchain Anchoring](./blockchain-anchoring.md) — general anchoring guide
-- [Verifiable Credentials](./verifiable-credentials.md) — credential model and lifecycle
+- [Blockchain Anchoring](blockchain-anchoring.md) — general anchoring guide
+- [Verifiable Credentials](verifiable-credentials.md) — credential model and lifecycle
 - [Core API — Revocation and Status List Management](../api-reference/core-api.md#revocation-and-status-list-management) — DSL and manager reference

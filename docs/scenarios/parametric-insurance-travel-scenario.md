@@ -881,7 +881,7 @@ if (anchorResult != null) {
 
 - Explore [Parametric Insurance with Earth Observation](parametric-insurance-eo-scenario.md) for EO data use cases
 - Learn about [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md)
-- Review [Error Handling](../advanced/error-handling.md) for production patterns
+- Review [Error Handling](../api-reference/advanced/error-handling.md) for production patterns
 
 ## Related Documentation
 

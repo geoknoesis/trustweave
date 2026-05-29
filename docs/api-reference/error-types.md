@@ -368,7 +368,7 @@ try {
 
 ## Related Documentation
 
-- **[Error Handling Guide](../advanced/error-handling.md)** - Complete error handling guide
+- **[Error Handling Guide](advanced/error-handling.md)** - Complete error handling guide
 - **[Core API](core-api.md)** - API methods that throw these errors
 - **[Quick Reference](quick-reference.md)** - Quick API lookup
 

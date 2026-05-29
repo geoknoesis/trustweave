@@ -56,7 +56,7 @@ Use the `testkit` module (`org.trustweave:testkit`). It ships in-memory DID meth
 
 ## How do I enforce stricter verification policies?
 
-Use **`trustWeave.verify { }`** with **`VerificationBuilder`** (and optional **`VerificationOptions`** when calling **`CredentialService.verify`** directly); see [Verification Policies](advanced/verification-policies.md). You can enable expiration checks, proof-purpose enforcement, schema validation, revocation lookups, and issuer trust via **`TrustEvaluator`** / **`TrustRegistry`**, and you receive a sealed **`VerificationResult`** (`org.trustweave.credential.results`).
+Use **`trustWeave.verify { }`** with **`VerificationBuilder`** (and optional **`VerificationOptions`** when calling **`CredentialService.verify`** directly); see [Verification Policies](api-reference/advanced/verification-policies.md). You can enable expiration checks, proof-purpose enforcement, schema validation, revocation lookups, and issuer trust via **`TrustEvaluator`** / **`TrustRegistry`**, and you receive a sealed **`VerificationResult`** (`org.trustweave.credential.results`).
 
 ## How do I handle errors in TrustWeave?
 
@@ -87,9 +87,9 @@ when (val dr = trustWeave.createDid { method(KEY) }) {
 }
 ```
 
-**Note:** Wallet and some other APIs may still throw **`TrustWeaveException`**. See the [API contract table](getting-started/api-patterns.md#api-contract-results-vs-exceptions).
+**Note:** Wallet and some other APIs may still throw **`TrustWeaveException`**. See the [API contract table](tutorials/getting-started/api-patterns.md#api-contract-results-vs-exceptions).
 
-See [Error Handling](advanced/error-handling.md) for detailed patterns and [API Patterns](getting-started/api-patterns.md).
+See [Error Handling](api-reference/advanced/error-handling.md) for detailed patterns and [API Patterns](tutorials/getting-started/api-patterns.md).
 
 ## Where do I log issues or request features?
 

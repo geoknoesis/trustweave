@@ -1,7 +1,7 @@
 ---
 title: Version Compatibility Matrix
 nav_order: 1
-parent: Reference
+parent: API Reference
 keywords:
   - version
   - compatibility
@@ -11,7 +11,7 @@ keywords:
   - requirements
 redirect_from:
   - /reference/version-compatibility/
-
+  - /api-reference/reference/version-compatibility/
 ---
 
 # Version Compatibility Matrix

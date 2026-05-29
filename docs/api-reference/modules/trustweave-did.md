@@ -22,7 +22,7 @@ dependencies {
 
 ## Overview
 
-**Standards note:** TrustWeave is documented around **W3C DID Core 1.0**. For **DID 1.1** (and gaps vs full conformance), see **[DID Core 1.0 vs 1.1 and TrustWeave gaps](../reference/did-core-1-1-compliance-and-gaps.md)**.
+**Standards note:** TrustWeave is documented around **W3C DID Core 1.0**. For **DID 1.1** (and gaps vs full conformance), see **[DID Core 1.0 vs 1.1 and TrustWeave gaps](../did-core-1-1-compliance-and-gaps.md)**.
 
 The `did:did-core` module provides:
 

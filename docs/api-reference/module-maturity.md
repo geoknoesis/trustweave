@@ -1,7 +1,7 @@
 ---
 title: Module maturity matrix
 nav_order: 3
-parent: Reference
+parent: API Reference
 keywords:
   - modules
   - support
@@ -9,7 +9,7 @@ keywords:
   - production
 redirect_from:
   - /reference/module-maturity/
-
+  - /api-reference/reference/module-maturity/
 ---
 
 # Module maturity matrix

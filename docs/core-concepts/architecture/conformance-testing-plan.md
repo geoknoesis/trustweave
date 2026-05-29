@@ -247,7 +247,7 @@ intentionally compact; the full how-to lives in the relevant
 - **Description.** Validates DID document syntax (§3.1 ABNF), parsing,
   serialization, verification relationships, services, and resolver
   outputs. Already triaged for TrustWeave in
-  [`docs/reference/did-core-1-1-compliance-and-gaps.md`](../../api-reference/reference/did-core-1-1-compliance-and-gaps.md).
+  [`docs/reference/did-core-1-1-compliance-and-gaps.md`](../../api-reference/did-core-1-1-compliance-and-gaps.md).
 - **Setup.** Clone `w3c/did-test-suite`. For each DID method plugin
   under `did/plugins/`, supply a fixture JSON and either (a) an in-process
   resolver hook or (b) an HTTP resolver endpoint conforming to DID
@@ -476,7 +476,7 @@ quarter. Each phase is gated by the prior phase landing successfully.
   [DID 1.1 implementation report](../../api-reference/conformance/did-1-1-implementation-report.md)
   to reference real upstream-suite runs (currently it cites only the
   self-assessment in
-  [DID Core 1.0 vs 1.1 and TrustWeave compliance gaps](../../api-reference/reference/did-core-1-1-compliance-and-gaps.md)).
+  [DID Core 1.0 vs 1.1 and TrustWeave compliance gaps](../../api-reference/did-core-1-1-compliance-and-gaps.md)).
 - Add `docs/conformance/index.md` and the README badge section.
 
 **Exit criteria.** Every P0 self-run suite green on `main` for ten
@@ -566,7 +566,7 @@ docs/conformance/
 spec to (a) the TrustWeave module that implements it and (b) the
 specific test name in the upstream suite that exercises it. Format is
 modelled on
-[`docs/reference/did-core-1-1-compliance-and-gaps.md`](../../api-reference/reference/did-core-1-1-compliance-and-gaps.md):
+[`docs/reference/did-core-1-1-compliance-and-gaps.md`](../../api-reference/did-core-1-1-compliance-and-gaps.md):
 a markdown table per major spec section, with the clause text on the
 left and TrustWeave evidence on the right.
 
@@ -708,11 +708,11 @@ cost, which is why it's the immediate priority.
   — current placeholder; to be expanded under Phase 1.
 - [W3C DID Test Suite — how to run](../../api-reference/conformance/W3C-DID-TEST-SUITE.md)
   — step-by-step that informs §5.2 above.
-- [DID Core 1.0 vs 1.1 and TrustWeave compliance gaps](../../api-reference/reference/did-core-1-1-compliance-and-gaps.md)
+- [DID Core 1.0 vs 1.1 and TrustWeave compliance gaps](../../api-reference/did-core-1-1-compliance-and-gaps.md)
   — template for the per-suite `coverage.md` artefact.
-- [Module maturity](../../api-reference/reference/module-maturity.md) — used to decide
+- [Module maturity](../../api-reference/module-maturity.md) — used to decide
   which plugins are ready for a paid conformance run.
-- [Version compatibility](../../api-reference/reference/version-compatibility.md) —
+- [Version compatibility](../../api-reference/version-compatibility.md) —
   tracks which spec versions are wired into which TrustWeave releases.
 
 ---

@@ -52,7 +52,7 @@ dependencies {
 - **[Quick Start](docs/tutorials/getting-started/quick-start.md)** - Get up and running in 5 minutes
 - **[Create presentations](docs/how-to/create-presentations.md)** - `presentationFromWalletResult` / `PresentationResult`
 - **[Production integration checklist](docs/tutorials/getting-started/production-integration-checklist.md)** - Logging, timeouts, result types
-- **[Module maturity matrix](docs/api-reference/reference/module-maturity.md)** - Which modules are GA vs experimental
+- **[Module maturity matrix](docs/api-reference/module-maturity.md)** - Which modules are GA vs experimental
 - **[API Reference](docs/api-reference/)** - Detailed API documentation
 - **[Architecture & Modules](docs/core-concepts/introduction/architecture-overview.md)** - Module details and design principles
 - **[Available Plugins](docs/api-reference/plugins.md)** - DID methods, blockchain anchors, and KMS plugins

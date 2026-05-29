@@ -1,7 +1,7 @@
 ---
 title: Deprecation Policy
 nav_order: 2
-parent: Reference
+parent: API Reference
 keywords:
   - deprecation
   - policy
@@ -10,7 +10,7 @@ keywords:
   - lifecycle
 redirect_from:
   - /reference/deprecation-policy/
-
+  - /api-reference/reference/deprecation-policy/
 ---
 
 # Deprecation Policy

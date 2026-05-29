@@ -28,7 +28,7 @@ To generate a formal implementation report:
 3. Run `npm run test` / `npm run test-and-generate-report` and collect results.
 4. Publish the results here (or as a CI artifact) in the format expected by the [implementation report](https://w3c.github.io/did-test-suite/).
 
-Until TrustWeave is added as an implementation in the W3C suite, **TrustWeave-specific** conformance remains **self-assessed** (see [DID Core 1.1 compliance and gaps](../reference/did-core-1-1-compliance-and-gaps.md)). The upstream suite itself runs clean as documented above.
+Until TrustWeave is added as an implementation in the W3C suite, **TrustWeave-specific** conformance remains **self-assessed** (see [DID Core 1.1 compliance and gaps](../did-core-1-1-compliance-and-gaps.md)). The upstream suite itself runs clean as documented above.
 
 ## Self-assessed implementation summary
 

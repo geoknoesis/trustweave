@@ -1,7 +1,7 @@
 ---
 title: DID Core 1.0 vs 1.1 and TrustWeave compliance gaps
 nav_order: 15
-parent: Reference
+parent: API Reference
 keywords:
   - DID Core
   - DID 1.1
@@ -10,7 +10,7 @@ keywords:
   - Controlled Identifiers
 redirect_from:
   - /reference/did-core-1-1-compliance-and-gaps/
-
+  - /api-reference/reference/did-core-1-1-compliance-and-gaps/
 ---
 
 # DID Core 1.0 vs 1.1 and TrustWeave compliance gaps

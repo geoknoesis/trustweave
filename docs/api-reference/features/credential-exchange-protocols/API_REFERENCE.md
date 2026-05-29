@@ -954,7 +954,7 @@ See [Error Handling Guide](ERROR_HANDLING.md) for complete exception reference, 
 - **[Examples](EXAMPLES.md)** - Complete code examples
 - **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
 - **[Glossary](GLOSSARY.md)** - Terms and concepts
-- **[Best Practices](BEST_PRACTICES.md)** - Security and performance guidelines
+- **Best Practices** - Security and performance guidelines
 - **[Versioning](VERSIONING.md)** - Version info and migration guides
 - **[Core Concepts](../../../core-concepts/credential-exchange-protocols.md)** - Deep dive into protocol abstraction
 

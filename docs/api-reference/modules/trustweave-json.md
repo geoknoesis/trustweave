@@ -85,9 +85,9 @@ fun sha256DigestMultibase(element: JsonElement): String
 
 **Example:**
 ```kotlin
-val json = buildJsonObject {
-    put("vcId", "vc-12345")
-    put("issuer", "did:web:example.com")
+val json = jsonData {
+    "vcId" to "vc-12345"
+    "issuer" to "did:web:example.com"
 }
 
 val digest = DigestUtils.sha256DigestMultibase(json)
@@ -153,14 +153,14 @@ Digests are encoded using multibase with base58btc encoding:
 
 ```kotlin
 import org.trustweave.core.util.DigestUtils
-import kotlinx.serialization.json.*
+import org.trustweave.core.json.jsonData
 
-val vc = buildJsonObject {
-    put("id", "vc-12345")
-    put("issuer", "did:web:example.com")
-    put("credentialSubject", buildJsonObject {
-        put("id", "subject-123")
-    })
+val vc = jsonData {
+    "id" to "vc-12345"
+    "issuer" to "did:web:example.com"
+    "credentialSubject" {
+        "id" to "subject-123"
+    }
 }
 
 val digest = DigestUtils.sha256DigestMultibase(vc)

@@ -620,10 +620,10 @@ Security Training & Certification Verification Scenario - Complete End-to-End Ex
 
 ## Related Documentation
 
-- Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
-- Employee Onboarding Scenario](employee-onboarding-scenario.md) - Related onboarding scenario
-- Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
-- API Reference](../api-reference/core-api.md) - Complete API documentation
-- Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
+- [Employee Onboarding Scenario](employee-onboarding-scenario.md) - Related onboarding scenario
+- [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
+- [API Reference](../api-reference/core-api.md) - Complete API documentation
+- [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
 
 

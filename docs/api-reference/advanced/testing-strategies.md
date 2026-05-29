@@ -400,7 +400,7 @@ Aim for:
 
 ## References
 
-- TrustWeave-testkit Module](../modules/trustweave-testkit.md)
-- Error Handling](error-handling.md)
-- Creating Plugins](../contributing/creating-plugins.md)
+- [TrustWeave-testkit Module](../modules/trustweave-testkit.md)
+- [Error Handling](error-handling.md)
+- [Creating Plugins](../contributing/creating-plugins.md)
 

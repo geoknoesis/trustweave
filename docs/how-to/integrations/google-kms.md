@@ -457,14 +457,14 @@ val TrustWeave = TrustWeave.build {
 
 ## Related Documentation
 
-- Key Management Guide](../core-concepts/key-management.md) - Core KMS concepts
-- Algorithm Compatibility Table](../core-concepts/algorithm-compatibility-table.md) - Algorithm support comparison
-- Key Rotation Guide](../advanced/key-rotation.md) - Key rotation strategies
-- Creating Plugins Guide](../contributing/creating-plugins.md) - Custom KMS implementations
+- [Key Management Guide](../core-concepts/key-management.md) - Core KMS concepts
+- [Algorithm Compatibility Table](../core-concepts/algorithm-compatibility-table.md) - Algorithm support comparison
+- [Key Rotation Guide](../../api-reference/advanced/key-rotation.md) - Key rotation strategies
+- [Creating Plugins Guide](../contributing/creating-plugins.md) - Custom KMS implementations
 
 ## See Also
 
-- Google Cloud KMS Documentation](https://cloud.google.com/kms/docs)
-- Google Cloud KMS Java Client](https://github.com/googleapis/java-kms)
-- Google Cloud KMS API Reference](https://cloud.google.com/kms/docs/reference/rest)
+- [Google Cloud KMS Documentation](https://cloud.google.com/kms/docs)
+- [Google Cloud KMS Java Client](https://github.com/googleapis/java-kms)
+- [Google Cloud KMS API Reference](https://cloud.google.com/kms/docs/reference/rest)
 

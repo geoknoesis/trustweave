@@ -206,15 +206,12 @@ val floodCredential = trustWeave.issue {
 **Purpose**: Automatically execute contracts based on EO data
 ```kotlin
 // Execute contract with EO data
-val result = trustWeave.contracts.executeContract(
-    contract = active,
-    executionContext = ExecutionContext(
-        triggerData = buildJsonObject {
-            put("floodDepthCm", 75.0)
-            put("credentialId", floodCredential.id)
-        }
-    )
-).getOrThrow()
+val result = trustWeave.contracts.executeContract(active) {
+    trigger {
+        "floodDepthCm" to 75.0
+        "credentialId" to floodCredential.id
+    }
+}.getOrThrow()
 
 if (result.executed) {
     // Process automatic payout
@@ -377,9 +374,9 @@ See [Parametric Insurance MGA Implementation Guide](parametric-insurance-mga-imp
 
 ### 2. Explore TrustWeave
 
-- Quick Start](../getting-started/quick-start.md)
-- Parametric Insurance with EO Data](parametric-insurance-eo-scenario.md)
-- Earth Observation Scenario](earth-observation-scenario.md)
+- [Quick Start](../getting-started/quick-start.md)
+- [Parametric Insurance with EO Data](parametric-insurance-eo-scenario.md)
+- [Earth Observation Scenario](earth-observation-scenario.md)
 
 ### 3. Start Building
 

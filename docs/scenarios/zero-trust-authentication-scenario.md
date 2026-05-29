@@ -609,11 +609,11 @@ Zero Trust Continuous Authentication Scenario - Complete End-to-End Example
 
 ## Related Documentation
 
-- Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
-- Security Clearance Scenario](security-clearance-access-control-scenario.md) - Related access control scenario
-- IoT Device Identity Scenario](iot-device-identity-scenario.md) - Device attestation integration
-- Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
-- API Reference](../api-reference/core-api.md) - Complete API documentation
-- Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
+- [Security Clearance Scenario](security-clearance-access-control-scenario.md) - Related access control scenario
+- [IoT Device Identity Scenario](iot-device-identity-scenario.md) - Device attestation integration
+- [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
+- [API Reference](../api-reference/core-api.md) - Complete API documentation
+- [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
 
 

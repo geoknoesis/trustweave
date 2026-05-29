@@ -117,7 +117,7 @@ val offer = when (offerResult) {
 - **[Error Handling](ERROR_HANDLING.md)** - Complete error reference
 - **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
 - **[Glossary](GLOSSARY.md)** - Terms and concepts
-- **[Best Practices](BEST_PRACTICES.md)** - Security, performance, and design patterns
+- **Best Practices** - Security, performance, and design patterns
 - **[Versioning](VERSIONING.md)** - Version info and migration guides
 
 ### Core Concepts

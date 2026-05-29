@@ -3,6 +3,9 @@ plugins {
     // We use 'apply false' because we're configuring Kotlin tasks in subprojects, not applying the plugin to the root.
     // The plugin version is resolved from settings.gradle.kts where it's already declared.
     kotlin("jvm") apply false
+    // KMP plugin declared with apply false so multiplatform subprojects can alias it without
+    // re-stating the version (the plugin is already on the classpath via kotlin("jvm") apply false above).
+    alias(libs.plugins.kotlin.multiplatform) apply false
     id("org.jlleitschuh.gradle.ktlint")
 }
 
@@ -177,8 +180,11 @@ subprojects {
         // Standardize test dependencies across all modules.
         // This ensures consistency and makes it easier to update test dependency versions.
         // Modules can still add additional test dependencies if needed.
-        // Only apply if the Java plugin is applied (which provides the testImplementation configuration).
-        extensions.findByType<org.gradle.api.plugins.JavaPluginExtension>()?.let {
+        // Only apply if the testImplementation configuration actually exists. The plain Java/Kotlin-JVM
+        // plugins create it; the Kotlin Multiplatform plugin does NOT create a top-level
+        // `testImplementation` (it uses `jvmTestImplementation` etc.), so KMP modules are skipped here
+        // and configure their test deps directly in their own sourceSets blocks.
+        if (configurations.findByName("testImplementation") != null) {
             project.dependencies {
                 add("testImplementation", libs.bundles.test)
                 add("testRuntimeOnly", libs.junit.jupiter.engine)

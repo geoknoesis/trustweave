@@ -542,8 +542,8 @@ fun verifyWithTrustWeave(...) = trustWeave.verify { ... }
 
 ## Related Documentation
 
-- Mental Model](../introduction/mental-model.md) - Understanding TrustWeave architecture
-- Quick Start](quick-start.md) - Getting started guide
-- API Reference](../api-reference/core-api.md) - Complete API documentation
-- Error Handling](../advanced/error-handling.md) - Detailed error handling guide
+- [Mental Model](../introduction/mental-model.md) - Understanding TrustWeave architecture
+- [Quick Start](quick-start.md) - Getting started guide
+- [API Reference](../api-reference/core-api.md) - Complete API documentation
+- [Error Handling](../api-reference/advanced/error-handling.md) - Detailed error handling guide
 

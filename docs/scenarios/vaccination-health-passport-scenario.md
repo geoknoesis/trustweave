@@ -159,8 +159,6 @@ import org.trustweave.core.*
 import org.trustweave.wallet.Wallet
 import org.trustweave.wallet.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import org.trustweave.trust.types.getOrThrowDid
@@ -482,10 +480,10 @@ Vaccination and Health Passport Scenario - Complete End-to-End Example
 
 ## Related Documentation
 
-- Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
-- Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
-- API Reference](../api-reference/core-api.md) - Complete API documentation
-- Healthcare Medical Records Scenario](healthcare-medical-records-scenario.md) - Related healthcare scenario
-- Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
+- [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
+- [API Reference](../api-reference/core-api.md) - Complete API documentation
+- [Healthcare Medical Records Scenario](healthcare-medical-records-scenario.md) - Related healthcare scenario
+- [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
 
 

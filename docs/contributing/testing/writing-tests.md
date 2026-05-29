@@ -153,8 +153,8 @@ class MyTest : BasePluginTest() {
 
 ## Next Steps
 
-- TrustWeave test templates](trustweave-test-templates.md) - Comprehensive workflow templates
-- Test Patterns](test-patterns.md) - Common test patterns and examples
-- Integration Testing](integration-testing.md) - Integration test best practices
-- Plugin Credential Handling](plugin-credential-handling.md) - Handling external service credentials
+- [TrustWeave test templates](trustweave-test-templates.md) - Comprehensive workflow templates
+- [Test Patterns](test-patterns.md) - Common test patterns and examples
+- [Integration Testing](integration-testing.md) - Integration test best practices
+- [Plugin Credential Handling](plugin-credential-handling.md) - Handling external service credentials
 

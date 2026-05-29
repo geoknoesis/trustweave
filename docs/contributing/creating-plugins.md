@@ -607,10 +607,10 @@ fun `test plugin with TrustWeave`() = runTest {
 
 ## Related Documentation
 
-- Plugin Lifecycle Management](../advanced/plugin-lifecycle.md)
-- Integration Modules](../integrations/README.md)
-- Architecture Overview](../introduction/architecture-overview.md)
-- Core API Reference](../api-reference/core-api.md)
-- Credential Service API](../api-reference/credential-service-api.md)
+- [Plugin Lifecycle Management](../api-reference/advanced/plugin-lifecycle.md)
+- [Integration Modules](../how-to/integrations/README.md)
+- [Architecture Overview](../introduction/architecture-overview.md)
+- [Core API Reference](../api-reference/core-api.md)
+- [Credential Service API](../api-reference/credential-service-api.md)
 
 

@@ -199,7 +199,7 @@ val waltIdDidProvider = didProviders.find {
 
 ## Testing
 
-See the [walt.id Testing Guide](../../kms/plugins/waltid/TESTING.md) for detailed testing information.
+See the [walt.id Testing Guide](https://github.com/geoknoesis/trustweave/blob/main/kms/plugins/waltid/TESTING.md) for detailed testing information.
 
 ### Running Tests
 
@@ -245,8 +245,8 @@ result.fold(
 
 ## References
 
-- walt.id Documentation](https://walt.id/)
-- walt.id GitHub](https://github.com/walt-id/waltid-ssikit)
-- TrustWeave KMS Module](../modules/trustweave-kms.md)
-- TrustWeave DID Module](../modules/trustweave-did.md)
+- [walt.id Documentation](https://walt.id/)
+- [walt.id GitHub](https://github.com/walt-id/waltid-ssikit)
+- [TrustWeave KMS Module](../../api-reference/modules/trustweave-kms.md)
+- [TrustWeave DID Module](../../api-reference/modules/trustweave-did.md)
 

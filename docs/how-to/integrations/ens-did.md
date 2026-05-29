@@ -325,8 +325,8 @@ did:ens:alice.eth         // Employee DID
 
 ## References
 
-- Ethereum Name Service (ENS)](https://ens.domains/)
-- ENS Documentation](https://docs.ens.domains/)
-- ENS Resolver Contracts](https://docs.ens.domains/contract-api-reference/ens)
-- Ethereum DID Method](https://github.com/decentralized-identity/ethr-did-resolver)
+- [Ethereum Name Service (ENS)](https://ens.domains/)
+- [ENS Documentation](https://docs.ens.domains/)
+- [ENS Resolver Contracts](https://docs.ens.domains/contract-api-reference/ens)
+- [Ethereum DID Method](https://github.com/decentralized-identity/ethr-did-resolver)
 

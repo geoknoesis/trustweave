@@ -53,11 +53,10 @@ val signature = (kms.sign(handle.id, data.toByteArray()) as SignResult.Success).
 
 ```kotlin
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.trustweave.core.json.jsonData
 
 val client = InMemoryBlockchainAnchorClient("algorand:testnet")
-val result = client.writePayload(buildJsonObject { put("note", "hi") })
+val result = client.writePayload(jsonData { "note" to "hi" })
 val readData = client.readPayload(result.ref)
 ```
 
@@ -245,7 +244,7 @@ See [Plugin Credential Handling](../../contributing/testing/plugin-credential-ha
 - Review [Testing Strategies](../advanced/testing-strategies.md) for advanced testing patterns
 - See [TrustWeave test templates](../../contributing/testing/trustweave-test-templates.md) for comprehensive workflow templates
 - Explore [Plugin Credential Handling](../../contributing/testing/plugin-credential-handling.md) for external service testing
-- Explore [EO Test Integration README](../../testkit/src/main/kotlin/org/trustweave/testkit/eo/README.md) for detailed EO test utilities
+- Explore [EO Test Integration README](https://github.com/geoknoesis/trustweave/blob/main/testkit/src/main/kotlin/org/trustweave/testkit/eo) for detailed EO test utilities
 - See [Test Fixtures](../../testkit/src/main/kotlin/org/trustweave/testkit/TrustWeaveTestFixture.kt) for fixture builder documentation
 - Check [Creating Plugins](../../contributing/creating-plugins.md) to understand SPI interfaces being mocked
 

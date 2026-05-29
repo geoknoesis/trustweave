@@ -186,6 +186,6 @@ repositories {
 
 ## Next Steps
 
-- Quick Start](quick-start.md) - Create your first TrustWeave application
-- Your First Application](your-first-application.md) - Build a complete example
+- [Quick Start](quick-start.md) - Create your first TrustWeave application
+- [Your First Application](your-first-application.md) - Build a complete example
 

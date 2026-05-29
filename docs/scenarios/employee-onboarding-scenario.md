@@ -589,10 +589,10 @@ Background Check Credential: ✅ VALID
 
 ## Related Documentation
 
-- Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
-- Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
-- API Reference](../api-reference/core-api.md) - Complete API documentation
-- Wallet API](../api-reference/wallet-api.md) - Wallet operations reference
-- Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
+- [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
+- [API Reference](../api-reference/core-api.md) - Complete API documentation
+- [Wallet API](../api-reference/wallet-api.md) - Wallet operations reference
+- [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
 
 

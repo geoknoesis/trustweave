@@ -624,7 +624,7 @@ The `revocation { provider(IN_MEMORY) }` block in the examples above is fine for
 
 The default W3C format. Status lists are themselves Verifiable Credentials containing a gzipped, base64url-encoded bitstring. Best for VC-LD / VC-JWT credentials.
 
-- **Module**: [credentials/plugins/status-list/bitstring](../../credentials/plugins/status-list/bitstring/) — see the plugin [README](../../credentials/plugins/status-list/bitstring/README.md)
+- **Module**: [credentials/plugins/status-list/bitstring](https://github.com/geoknoesis/trustweave/tree/main/credentials/plugins/status-list/bitstring) — see the plugin [README](https://github.com/geoknoesis/trustweave/blob/main/credentials/plugins/status-list/bitstring/README.md)
 - **Provider name**: `"bitstring"`
 - **Spec**: [W3C Bitstring Status List v1.0](https://www.w3.org/TR/vc-bitstring-status-list/)
 - **Use when**: issuing W3C VCs (`vc-ld`, `vc-jwt`).
@@ -668,7 +668,7 @@ val manager = BitstringStatusListManagerFactory.create(
 
 JWT/CWT-based status list designed for SD-JWT VC and ISO mdoc. Status is encoded as a signed token rather than a VC, so it fits the SD-JWT VC `status` claim and mdoc flows naturally.
 
-- **Module**: [credentials/plugins/status-list/token](../../credentials/plugins/status-list/token/) — see the plugin [README](../../credentials/plugins/status-list/token/README.md)
+- **Module**: [credentials/plugins/status-list/token](https://github.com/geoknoesis/trustweave/tree/main/credentials/plugins/status-list/token) — see the plugin [README](https://github.com/geoknoesis/trustweave/blob/main/credentials/plugins/status-list/token/README.md)
 - **Provider name**: `"token"`
 - **Spec**: [IETF Token Status List](https://datatracker.ietf.org/doc/draft-ietf-oauth-status-list/)
 - **Use when**: issuing SD-JWT VCs or mdocs.
@@ -697,7 +697,7 @@ val manager = TokenStatusListManagerFactory.create(
 
 ## Publishing Status Lists
 
-For verifiers to check revocation, the signed status-list credential (or token) must be reachable at the URL embedded in the credential's `credentialStatus` entry. The [status-list/publishing](../../credentials/plugins/status-list/publishing/) module provides four backends behind a common `StatusListPublisher` interface — see the plugin [README](../../credentials/plugins/status-list/publishing/README.md) for full details.
+For verifiers to check revocation, the signed status-list credential (or token) must be reachable at the URL embedded in the credential's `credentialStatus` entry. The [status-list/publishing](https://github.com/geoknoesis/trustweave/tree/main/credentials/plugins/status-list/publishing) module provides four backends behind a common `StatusListPublisher` interface — see the plugin [README](https://github.com/geoknoesis/trustweave/blob/main/credentials/plugins/status-list/publishing/README.md) for full details.
 
 | Backend | Use when |
 |---|---|
@@ -750,7 +750,7 @@ runBlocking {
 
 ## Verifier-Side Status Checking
 
-On the verifier side, the [`CredentialStatusChecker`](../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/spi/status/CredentialStatusChecker.kt) SPI gates verification on a live status fetch — proof engines call it before returning a `Valid` result.
+On the verifier side, the [`CredentialStatusChecker`](https://github.com/geoknoesis/trustweave/blob/main/credentials/credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/spi/status/CredentialStatusChecker.kt) SPI gates verification on a live status fetch — proof engines call it before returning a `Valid` result.
 
 ```kotlin
 import org.trustweave.credential.spi.status.CredentialStatusChecker

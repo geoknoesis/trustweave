@@ -120,8 +120,7 @@ sealed class ChainId {
 import org.trustweave.anchor.*
 import org.trustweave.anchor.options.AlgorandOptions
 import org.trustweave.anchor.spi.BlockchainAnchorClientProvider
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.trustweave.core.json.jsonData
 import java.util.ServiceLoader
 
 // Discover blockchain adapter via SPI
@@ -137,7 +136,7 @@ val client = algorandProvider.create("algorand:testnet", options.toMap())
     ?: error("Provider did not produce a client for algorand:testnet")
 
 // Anchor a JSON payload
-val payload = buildJsonObject { put("message", "Hello, TrustWeave!") }
+val payload = jsonData { "message" to "Hello, TrustWeave!" }
 val result = client.writePayload(payload)
 
 println("Anchored to: ${result.ref.chainId}")
@@ -161,7 +160,7 @@ TrustWeave provides adapters for:
 - **Base** (`org.trustweave:anchors-plugins-base`) – Base (Coinbase L2). See [Base Anchor Integration Guide](../../how-to/integrations/base-anchor.md).
 - **Arbitrum** (`org.trustweave:anchors-plugins-arbitrum`) – Arbitrum One and Sepolia rollup. See [Arbitrum Anchor Integration Guide](../../how-to/integrations/arbitrum-anchor.md).
 - **Ganache** (`org.trustweave:anchors-plugins-ganache`) – Local Ethereum node for testing. See [Integration Modules](../../how-to/integrations/README.md#blockchain-anchor-integrations).
-- **Indy** (`org.trustweave:anchors-plugins-indy`) – Hyperledger Indy. See [Integration Modules](../../how-to/integrations/README.md#other-did--kms-integrations).
+- **Indy** (`org.trustweave:anchors-plugins-indy`) – Hyperledger Indy. See [Integration Modules](../../how-to/integrations/README.md#other-integrations).
 
 See the [Blockchain Anchor Integration Guides](../../how-to/integrations/README.md) for detailed information about each adapter.
 

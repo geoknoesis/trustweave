@@ -121,5 +121,5 @@ TrustWeave is designed to be domain-agnostic, making it suitable for a wide rang
 ## Next Steps
 
 - Understand the [Architecture Overview](architecture-overview.md)
-- Get started with [Installation](../../tutorials/getting-started/installation.md)
+- Get started with [Installation](../getting-started/installation.md)
 

@@ -52,27 +52,29 @@ suspend fun createDraft(
 
 **Returns:** `Result<SmartContract>` with contract in `DRAFT` status
 
-**Example:**
+**Example (DSL form, recommended):**
 ```kotlin
 import org.trustweave.trust.TrustWeave
 
 val trustWeave = TrustWeave.build { ... }
 
-// Recommended: Use draft() for cleaner API
-val contract = trustWeave.contracts.draft(
-    request = ContractDraftRequest(
-        contractType = ContractType.Insurance,
-        executionModel = ExecutionModel.Parametric(...),
-        parties = ContractParties(...),
-        terms = ContractTerms(...),
-        effectiveDate = Instant.now().toString(),
-        contractData = buildJsonObject { ... }
-    )
-).getOrThrow()
-
-// Alternative: createDraft() is also available
-val contract2 = trustWeave.contracts.createDraft(request).getOrThrow()
+val contract = trustWeave.contracts.draft {
+    contractType = ContractType.Insurance
+    executionModel = ExecutionModel.Parametric(...)
+    parties = ContractParties(insurerDid, insuredDid)
+    terms = contractTerms
+    effectiveDate = Instant.now().toString()
+    contractData {
+        "domain" to "flood"
+        "thresholds" {
+            "floodDepthCm" to 50.0
+        }
+    }
+}.getOrThrow()
 ```
+
+If you already have a `ContractDraftRequest` in hand (e.g. coming over the
+wire), `createDraft(request)` and `draft(request)` accept it directly.
 
 **Validation:**
 - Validates DID formats for all parties
@@ -181,16 +183,22 @@ suspend fun executeContract(
 - `evidence`: List of verifiable credential IDs used as evidence
 - `timestamp`: Execution timestamp
 
-**Example:**
+**Example (DSL form, recommended):**
 ```kotlin
-val result = trustWeave.contracts.executeContract(
-    contract = activeContract,
-    executionContext = ExecutionContext(
-        triggerData = buildJsonObject {
-            put("floodDepthCm", 75.0)
-        }
-    )
-).getOrThrow()
+val result = trustWeave.contracts.executeContract(activeContract) {
+    trigger {
+        "floodDepthCm" to 75.0
+        "credentialId" to floodCredential.id
+    }
+}.getOrThrow()
+```
+
+`event { }` is the event-driven counterpart; `timeContext` and
+`additionalContext { }` are also available inside the block. For one-liner
+parametric calls there is also `executeParametric(contract, vararg pairs)`:
+
+```kotlin
+trustWeave.contracts.executeParametric(activeContract, "floodDepthCm" to 75.0)
 ```
 
 **Validation:**
@@ -224,14 +232,11 @@ suspend fun evaluateConditions(
 - `overallResult`: Whether all conditions are satisfied
 - `timestamp`: Evaluation timestamp
 
-**Example:**
+**Example (DSL form, recommended):**
 ```kotlin
-val evaluation = trustWeave.contracts.evaluateConditions(
-    contract = contract,
-    inputData = buildJsonObject {
-        put("floodDepthCm", 75.0)
-    }
-).getOrThrow()
+val evaluation = trustWeave.contracts.evaluateConditions(contract) {
+    "floodDepthCm" to 75.0
+}.getOrThrow()
 
 evaluation.conditions.forEach { condition ->
     println("${condition.conditionId}: ${if (condition.satisfied) "✓" else "✗"}")
@@ -427,7 +432,7 @@ result.fold(
 
 ## See Also
 
-- Smart Contracts Core Concepts](../core-concepts/smart-contracts.md) for detailed concepts
-- Parametric Insurance Scenario](../scenarios/smart-contract-parametric-insurance-scenario.md) for complete example
-- Core API Reference](core-api.md) for TrustWeave facade API
+- [Smart Contracts Core Concepts](../core-concepts/smart-contracts.md) for detailed concepts
+- [Parametric Insurance Scenario](../scenarios/smart-contract-parametric-insurance-scenario.md) for complete example
+- [Core API Reference](core-api.md) for TrustWeave facade API
 

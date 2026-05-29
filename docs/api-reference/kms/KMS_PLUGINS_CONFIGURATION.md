@@ -23,7 +23,7 @@ This guide provides comprehensive configuration documentation for all TrustWeave
 
 ## Table of Contents
 
-1. [Using KeyManagementServices Factory](#using-keymanagementservices-factory)
+1. [Using KeyManagementServices Factory](#3-factory-api-recommended)
 2. [Common Configuration Patterns](#common-configuration-patterns)
 3. [AWS KMS](#aws-kms)
 4. [Azure Key Vault](#azure-key-vault)
@@ -963,9 +963,9 @@ val config = AwsKmsConfig.builder()
 
 ## Additional Resources
 
-- KMS Core Concepts](../core-concepts/key-management.md)
-- Creating Plugins Guide](../contributing/creating-plugins.md)
-- Error Handling Guide](../advanced/error-handling.md)
+- [KMS Core Concepts](../core-concepts/key-management.md)
+- [Creating Plugins Guide](../contributing/creating-plugins.md)
+- [Error Handling Guide](../advanced/error-handling.md)
 
 ---
 

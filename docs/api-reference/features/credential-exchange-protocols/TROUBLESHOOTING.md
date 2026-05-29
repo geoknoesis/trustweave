@@ -398,13 +398,13 @@ when (offerResult) {
 If you encounter issues not covered here:
 
 1. **Check Documentation:**
-   - Quick Start](./QUICK_START.md)
-   - API Reference](./API_REFERENCE.md)
-   - Error Handling](./ERROR_HANDLING.md)
+   - [Quick Start](./QUICK_START.md)
+   - [API Reference](./API_REFERENCE.md)
+   - [Error Handling](./ERROR_HANDLING.md)
 
 2. **Check Examples:**
-   - Complete Examples](./EXAMPLES.md)
-   - Workflows](./WORKFLOWS.md)
+   - [Complete Examples](./EXAMPLES.md)
+   - [Workflows](./WORKFLOWS.md)
 
 3. **File an Issue:**
    - Include error message
@@ -420,6 +420,6 @@ If you encounter issues not covered here:
 - **[Error Handling](ERROR_HANDLING.md)** - Error handling guide
 - **[Workflows](WORKFLOWS.md)** - Step-by-step workflows
 - **[Examples](EXAMPLES.md)** - Code examples
-- **[Best Practices](BEST_PRACTICES.md)** - Best practices and patterns
+- **Best Practices** - Best practices and patterns
 - **[Glossary](GLOSSARY.md)** - Terms and concepts
 

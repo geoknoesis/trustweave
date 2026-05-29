@@ -68,7 +68,7 @@ Use camelCase for variable names:
 
 ```kotlin
 val issuerDid = "did:key:issuer"
-val credentialSubject = buildJsonObject { }
+val credentialSubject = jsonData { }
 ```
 
 ### Constants
@@ -317,8 +317,8 @@ When reviewing code:
 
 ## References
 
-- Kotlin Style Guide](https://kotlinlang.org/docs/coding-conventions.html)
-- ktlint Documentation](https://ktlint.github.io/)
-- KDoc Reference](https://kotlinlang.org/docs/kotlin-doc.html)
+- [Kotlin Style Guide](https://kotlinlang.org/docs/coding-conventions.html)
+- [ktlint Documentation](https://ktlint.github.io/)
+- [KDoc Reference](https://kotlinlang.org/docs/kotlin-doc.html)
 
 

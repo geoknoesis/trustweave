@@ -381,8 +381,8 @@ Cheqd is designed for verifiable credentials:
 
 ## References
 
-- Cheqd Network Documentation](https://docs.cheqd.io/)
-- Cheqd DID Method Specification](https://docs.cheqd.io/node/architecture/adr-list/adr-005-cheqd-did-method-specification)
-- Cosmos SDK Documentation](https://docs.cosmos.network/)
-- DID Core Specification](https://www.w3.org/TR/did-core/)
+- [Cheqd Network Documentation](https://docs.cheqd.io/)
+- [Cheqd DID Method Specification](https://docs.cheqd.io/node/architecture/adr-list/adr-005-cheqd-did-method-specification)
+- [Cosmos SDK Documentation](https://docs.cosmos.network/)
+- [DID Core Specification](https://www.w3.org/TR/did-core/)
 

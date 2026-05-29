@@ -293,11 +293,14 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
 
         mutex.withLock {
             for (update in updates) {
-                if (update.revoked != null && metadata.purpose == StatusPurpose.REVOCATION) {
-                    revocationBitSet?.set(update.index, update.revoked)
+                // Copy nullable properties to locals — cross-module smart cast not possible.
+                val revoked = update.revoked
+                val suspended = update.suspended
+                if (revoked != null && metadata.purpose == StatusPurpose.REVOCATION) {
+                    revocationBitSet?.set(update.index, revoked)
                 }
-                if (update.suspended != null && metadata.purpose == StatusPurpose.SUSPENSION) {
-                    suspensionBitSet?.set(update.index, update.suspended)
+                if (suspended != null && metadata.purpose == StatusPurpose.SUSPENSION) {
+                    suspensionBitSet?.set(update.index, suspended)
                 }
             }
         }

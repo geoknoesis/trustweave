@@ -13,6 +13,7 @@ import org.trustweave.did.identifiers.Did
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.coroutines.runBlocking
+import kotlin.time.Duration.Companion.minutes
 import kotlin.test.Test
 import kotlin.test.assertNull
 import kotlin.test.assertNotNull
@@ -93,7 +94,7 @@ class CredentialValidationTest {
         val credential = createCredentialWithValidFrom(validFrom)
         val options = VerificationOptions(
             checkNotBefore = true,
-            clockSkewTolerance = java.time.Duration.ofMinutes(5)
+            clockSkewTolerance = 5.minutes
         )
         val result = CredentialValidation.validateNotBefore(credential, options, now)
         assertNull(result, "Credential with validFrom in the past should be valid")
@@ -106,7 +107,7 @@ class CredentialValidationTest {
         val credential = createCredentialWithValidFrom(validFrom)
         val options = VerificationOptions(
             checkNotBefore = true,
-            clockSkewTolerance = java.time.Duration.ofMinutes(5)
+            clockSkewTolerance = 5.minutes
         )
         val result = CredentialValidation.validateNotBefore(credential, options, now)
         assertNotNull(result, "Credential with future validFrom should return error")
@@ -121,7 +122,7 @@ class CredentialValidationTest {
         val credential = createCredentialWithValidFrom(validFrom)
         val options = VerificationOptions(
             checkNotBefore = true,
-            clockSkewTolerance = java.time.Duration.ofMinutes(5)
+            clockSkewTolerance = 5.minutes
         )
         val result = CredentialValidation.validateNotBefore(credential, options, now)
         assertNull(result, "Credential within clock skew tolerance should be valid")
@@ -152,7 +153,7 @@ class CredentialValidationTest {
         val credential = createCredentialWithExpiration(expirationDate)
         val options = VerificationOptions(
             checkExpiration = true,
-            clockSkewTolerance = java.time.Duration.ofMinutes(5)
+            clockSkewTolerance = 5.minutes
         )
         val result = CredentialValidation.validateExpiration(credential, options, now)
         assertNull(result, "Credential with future expiration should be valid")
@@ -165,7 +166,7 @@ class CredentialValidationTest {
         val credential = createCredentialWithExpiration(expirationDate)
         val options = VerificationOptions(
             checkExpiration = true,
-            clockSkewTolerance = java.time.Duration.ofMinutes(5)
+            clockSkewTolerance = 5.minutes
         )
         val result = CredentialValidation.validateExpiration(credential, options, now)
         assertNotNull(result, "Expired credential should return error")
@@ -180,7 +181,7 @@ class CredentialValidationTest {
         val credential = createCredentialWithExpiration(expirationDate)
         val options = VerificationOptions(
             checkExpiration = true,
-            clockSkewTolerance = java.time.Duration.ofMinutes(5)
+            clockSkewTolerance = 5.minutes
         )
         val result = CredentialValidation.validateExpiration(credential, options, now)
         assertNull(result, "Credential within clock skew tolerance should be valid")

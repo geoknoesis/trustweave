@@ -421,6 +421,6 @@ trustWeave.issueBatch {
 
 ## Next Steps
 
-- Quick Start](quick-start.md) - Get started with a complete example
-- API Reference](../api-reference/core-api.md) - Complete API documentation
-- Core Concepts](../core-concepts/README.md) - Deep dives into DIDs, VCs, etc.
+- [Quick Start](quick-start.md) - Get started with a complete example
+- [API Reference](../api-reference/core-api.md) - Complete API documentation
+- [Core Concepts](../core-concepts/README.md) - Deep dives into DIDs, VCs, etc.

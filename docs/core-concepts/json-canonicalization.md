@@ -53,7 +53,7 @@ The helper accepts either a `JsonElement` or raw JSON string. Use it whenever yo
 
 ## Further Reading
 
-- Quick Start – Step 2](../getting-started/quick-start.md#step-2-bootstrap-TrustWeave-and-compute-a-digest)
-- W3C JSON Canonicalization Scheme](https://www.rfc-editor.org/rfc/rfc8785)
-- Digest Utilities API](../modules/trustweave-json.md) for more helpers.
+- [Quick Start – Step 2](../getting-started/quick-start.md#step-2-bootstrap-TrustWeave-and-compute-a-digest)
+- [W3C JSON Canonicalization Scheme](https://www.rfc-editor.org/rfc/rfc8785)
+- [Digest Utilities API](../api-reference/modules/trustweave-json.md) for more helpers.
 

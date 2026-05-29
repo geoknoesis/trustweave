@@ -484,7 +484,7 @@ See the [Wallet API Tutorial](../tutorials/wallet-api-tutorial.md) for comprehen
 
 ## Related Documentation
 
-- Wallets Core Concept](../core-concepts/wallets.md)
-- Wallet API Tutorial](../tutorials/wallet-api-tutorial.md)
-- Verifiable Credentials](../core-concepts/verifiable-credentials.md)
+- [Wallets Core Concept](../core-concepts/wallets.md)
+- [Wallet API Tutorial](../tutorials/wallet-api-tutorial.md)
+- [Verifiable Credentials](../core-concepts/verifiable-credentials.md)
 

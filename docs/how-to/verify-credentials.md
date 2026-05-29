@@ -611,12 +611,12 @@ For complete API documentation, see:
 ## Next Steps
 
 **Ready to issue credentials?**
-- Issue Credentials](issue-credentials.md) - Issue credentials that can be verified
+- [Issue Credentials](issue-credentials.md) - Issue credentials that can be verified
 
 **Want to configure verification?**
-- Verification Policies](../advanced/verification-policies.md) - Advanced verification configuration
+- [Verification Policies](../api-reference/advanced/verification-policies.md) - Advanced verification configuration
 
 **Want to learn more?**
-- Verifiable Credentials Concept](../core-concepts/verifiable-credentials.md) - Deep dive into credentials
-- Credential Issuance Tutorial](../tutorials/credential-issuance-tutorial.md) - Comprehensive tutorial
+- [Verifiable Credentials Concept](../core-concepts/verifiable-credentials.md) - Deep dive into credentials
+- [Credential Issuance Tutorial](../tutorials/credential-issuance-tutorial.md) - Comprehensive tutorial
 

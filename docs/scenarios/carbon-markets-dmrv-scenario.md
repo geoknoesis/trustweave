@@ -139,7 +139,7 @@ import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.*
+import org.trustweave.core.json.jsonData
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import org.trustweave.trust.types.DidCreationResult
@@ -194,25 +194,25 @@ fun main() = runBlocking {
     println("✅ Created buyer DID: ${buyerDid.value}")
 
     // Step 3: Create EO data evidence (forest carbon sequestration)
-    val eoEvidence = buildJsonObject {
-        put("id", "eo-evidence-forest-2024")
-        put("type", "ForestCarbonSequestration")
-        put("location", buildJsonObject {
-            put("latitude", 45.5017)
-            put("longitude", -73.5673)
-            put("region", "Quebec Forest, Canada")
-            put("area", 1000.0)  // hectares
-        })
-        put("measurement", buildJsonObject {
-            put("carbonSequestrated", 5000.0)  // tons CO2
-            put("measurementPeriod", buildJsonObject {
-                put("startDate", "2024-01-01")
-                put("endDate", "2024-12-31")
-            })
-            put("method", "Sentinel-2 L2A Spectral Analysis")
-            put("confidence", 0.92)
-        })
-        put("timestamp", Instant.now().toString())
+    val eoEvidence = jsonData {
+        "id" to "eo-evidence-forest-2024"
+        "type" to "ForestCarbonSequestration"
+        "location" {
+            "latitude" to 45.5017
+            "longitude" to -73.5673
+            "region" to "Quebec Forest, Canada"
+            "area" to 1000.0  // hectares
+        }
+        "measurement" {
+            "carbonSequestrated" to 5000.0  // tons CO2
+            "measurementPeriod" {
+                "startDate" to "2024-01-01"
+                "endDate" to "2024-12-31"
+            }
+            "method" to "Sentinel-2 L2A Spectral Analysis"
+            "confidence" to 0.92
+        }
+        "timestamp" to Instant.now().toString()
     }
 
     val eoEvidenceDigest = DigestUtils.sha256DigestMultibase(eoEvidence)
@@ -503,16 +503,16 @@ val companyCredit = issueCarbonCredit(
 Map carbon credits to TTF tokens:
 
 ```kotlin
-val ttfToken = buildJsonObject {
-    put("tokenType", "CarbonEmissionToken")
-    put("amount", 5000.0)
-    put("unit", "tCO2e")
-    put("evidence", buildJsonObject {
-        put("type", "VerifiableCredential")
-        put("credentialId", carbonCredit.id)
-        put("eoEvidenceDigest", eoEvidenceDigest)
-    })
-    put("standard", "TTF")
+val ttfToken = jsonData {
+    "tokenType" to "CarbonEmissionToken"
+    "amount" to 5000.0
+    "unit" to "tCO2e"
+    "evidence" {
+        "type" to "VerifiableCredential"
+        "credentialId" to carbonCredit.id
+        "eoEvidenceDigest" to eoEvidenceDigest
+    }
+    "standard" to "TTF"
 }
 ```
 
@@ -524,8 +524,8 @@ val ttfToken = buildJsonObject {
 
 ## Related Documentation
 
-- Earth Observation Scenario](earth-observation-scenario.md) - EO data integrity
-- Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
-- API Reference](../api-reference/core-api.md) - Complete API documentation
+- [Earth Observation Scenario](earth-observation-scenario.md) - EO data integrity
+- [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
+- [API Reference](../api-reference/core-api.md) - Complete API documentation
 
 

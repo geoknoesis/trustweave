@@ -878,9 +878,9 @@ We invite developers, organizations, and investors to join us in building the fo
 ### 12.2 Resources
 
 **Documentation:**
-- TrustWeave Documentation](https://github.com/geoknoesis/TrustWeave)
-- API Reference](https://github.com/geoknoesis/TrustWeave/docs/api-reference)
-- Use Case Scenarios](https://github.com/geoknoesis/TrustWeave/docs/scenarios)
+- [TrustWeave Documentation](https://github.com/geoknoesis/TrustWeave)
+- [API Reference](https://github.com/geoknoesis/TrustWeave/docs/api-reference)
+- [Use Case Scenarios](https://github.com/geoknoesis/TrustWeave/docs/scenarios)
 
 **Community:**
 - GitHub: https://github.com/geoknoesis/TrustWeave

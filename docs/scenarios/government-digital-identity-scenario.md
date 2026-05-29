@@ -225,8 +225,6 @@ import org.trustweave.anchor.anchorTyped
 import org.trustweave.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import kotlinx.serialization.json.Json
 import java.time.Instant
 import java.time.temporal.ChronoUnit

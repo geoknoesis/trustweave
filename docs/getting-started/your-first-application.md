@@ -55,8 +55,8 @@ import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.*
 import kotlinx.serialization.Serializable
+import org.trustweave.core.json.jsonData
 
 @Serializable
 data class VerifiableCredentialDigest(
@@ -82,16 +82,16 @@ fun main() = runBlocking {
     println("Created issuer DID: ${issuerDid.value}")
 
     // Step 3: Create a verifiable credential payload
-    val vcPayload = buildJsonObject {
-        put("vcId", "vc-12345")
-        put("issuer", issuerDid.value)
-        put("credentialSubject", buildJsonObject {
-            put("id", "subject-123")
-            put("type", "Person")
-            put("name", "Alice")
-            put("email", "alice@example.com")
-        })
-        put("issued", "2024-01-01T00:00:00Z")
+    val vcPayload = jsonData {
+        "vcId" to "vc-12345"
+        "issuer" to issuerDid.value
+        "credentialSubject" {
+            "id" to "subject-123"
+            "type" to "Person"
+            "name" to "Alice"
+            "email" to "alice@example.com"
+        }
+        "issued" to "2024-01-01T00:00:00Z"
     }
 
     // Step 4: Compute digest

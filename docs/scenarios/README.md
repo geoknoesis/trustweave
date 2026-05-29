@@ -280,11 +280,11 @@ fun main() = runBlocking {
 
 ## Related Documentation
 
-- Quick Start](../getting-started/quick-start.md) – Get started with TrustWeave
-- Common Patterns](../getting-started/common-patterns.md) – Reusable code patterns
-- API Reference](../api-reference/core-api.md) – Complete API documentation
-- Core Concepts](../core-concepts/README.md) – Fundamental concepts
-- Troubleshooting](../getting-started/troubleshooting.md) – Common issues and solutions
+- [Quick Start](../getting-started/quick-start.md) – Get started with TrustWeave
+- [Common Patterns](../getting-started/common-patterns.md) – Reusable code patterns
+- [API Reference](../api-reference/core-api.md) – Complete API documentation
+- [Core Concepts](../core-concepts/README.md) – Fundamental concepts
+- [Troubleshooting](../getting-started/troubleshooting.md) – Common issues and solutions
 
 ## Contributing Scenarios
 

@@ -952,17 +952,17 @@ After completing this tutorial series, you're ready to:
 
 1. **Build Real Applications**: Use the patterns you've learned in production
 2. **Explore Advanced Topics**:
-   - Key Rotation](../advanced/key-rotation.md)
-   - Verification Policies](../advanced/verification-policies.md)
-   - Error Recovery Patterns](../advanced/error-handling.md#error-recovery-patterns)
+   - [Key Rotation](../api-reference/advanced/key-rotation.md)
+   - [Verification Policies](../api-reference/advanced/verification-policies.md)
+   - [Error Recovery Patterns](../api-reference/advanced/error-handling.md#error-recovery-patterns)
 3. **Study Domain Scenarios**: See how TrustWeave is used in [real-world scenarios](../scenarios/README.md)
 4. **Contribute**: Help improve TrustWeave by [creating plugins](../contributing/creating-plugins.md)
 
 ## Additional Resources
 
-- API Reference](../api-reference/core-api.md) - Complete API documentation
-- Core Concepts](../core-concepts/README.md) - Deep dives into concepts
-- Common Patterns](../getting-started/common-patterns.md) - Production patterns
-- Troubleshooting](../getting-started/troubleshooting.md) - Debugging guide
-- FAQ](../faq.md) - Frequently asked questions
+- [API Reference](../api-reference/core-api.md) - Complete API documentation
+- [Core Concepts](../core-concepts/README.md) - Deep dives into concepts
+- [Common Patterns](../getting-started/common-patterns.md) - Production patterns
+- [Troubleshooting](../getting-started/troubleshooting.md) - Debugging guide
+- [FAQ](../faq.md) - Frequently asked questions
 

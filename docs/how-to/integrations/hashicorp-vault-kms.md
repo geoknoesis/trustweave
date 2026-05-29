@@ -435,14 +435,14 @@ Then run tests with the local Vault instance.
 
 ## Related Documentation
 
-- Key Management Guide](../core-concepts/key-management.md) - Core KMS concepts
-- Algorithm Compatibility Table](../core-concepts/algorithm-compatibility-table.md) - Algorithm support comparison
-- Key Rotation Guide](../advanced/key-rotation.md) - Key rotation strategies
-- Creating Plugins Guide](../contributing/creating-plugins.md) - Custom KMS implementations
+- [Key Management Guide](../core-concepts/key-management.md) - Core KMS concepts
+- [Algorithm Compatibility Table](../core-concepts/algorithm-compatibility-table.md) - Algorithm support comparison
+- [Key Rotation Guide](../../api-reference/advanced/key-rotation.md) - Key rotation strategies
+- [Creating Plugins Guide](../contributing/creating-plugins.md) - Custom KMS implementations
 
 ## See Also
 
-- HashiCorp Vault Transit Engine Documentation](https://developer.hashicorp.com/vault/docs/secrets/transit)
-- Vault API Reference](https://developer.hashicorp.com/vault/api-docs)
-- Vault Policies Guide](https://developer.hashicorp.com/vault/docs/concepts/policies)
+- [HashiCorp Vault Transit Engine Documentation](https://developer.hashicorp.com/vault/docs/secrets/transit)
+- [Vault API Reference](https://developer.hashicorp.com/vault/api-docs)
+- [Vault Policies Guide](https://developer.hashicorp.com/vault/docs/concepts/policies)
 

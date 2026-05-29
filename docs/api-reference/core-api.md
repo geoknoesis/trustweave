@@ -19,7 +19,7 @@ Complete API reference for TrustWeave's TrustWeave API.
 
 > **Version:** 0.6.0
 > **Kotlin:** 2.2.21+ | **Java:** 21+
-> See [CHANGELOG.md](../../CHANGELOG.md) for version history and migration guides.
+> See [CHANGELOG.md](https://github.com/geoknoesis/trustweave/blob/main/CHANGELOG.md) for version history and migration guides.
 >
 > **Note:** This API reference documents the `TrustWeave` API, which is the primary interface for trust and identity operations in TrustWeave. The TrustWeave provides a DSL-based API for creating DIDs, issuing credentials, managing wallets, and more.
 
@@ -1238,7 +1238,7 @@ val contract = trustWeave.contracts.draft(
         parties = ContractParties(...),
         terms = ContractTerms(...),
         effectiveDate = Instant.now().toString(),
-        contractData = buildJsonObject { ... }
+        contractData = jsonData { ... }
     )
 ).getOrThrow()
 ```
@@ -1441,11 +1441,11 @@ val trustWeave = TrustWeave.build {
 
 ## Related Documentation
 
-- Error Handling](../advanced/error-handling.md) - Detailed error handling patterns
-- Plugin Lifecycle](../advanced/plugin-lifecycle.md) - Plugin lifecycle management
-- Wallet API](wallet-api.md) - Wallet operations reference
-- Credential Service API](credential-service-api.md) - Credential service SPI
-- DIDs Core Concept](../core-concepts/dids.md) - DID concepts and usage
-- Verifiable Credentials Core Concept](../core-concepts/verifiable-credentials.md) - Credential concepts
-- Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+- [Error Handling](../advanced/error-handling.md) - Detailed error handling patterns
+- [Plugin Lifecycle](../advanced/plugin-lifecycle.md) - Plugin lifecycle management
+- [Wallet API](wallet-api.md) - Wallet operations reference
+- [Credential Service API](credential-service-api.md) - Credential service SPI
+- [DIDs Core Concept](../core-concepts/dids.md) - DID concepts and usage
+- [Verifiable Credentials Core Concept](../core-concepts/verifiable-credentials.md) - Credential concepts
+- [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
 

@@ -781,8 +781,8 @@ If you're still experiencing issues:
 
 ## Related Documentation
 
-- Error Handling](../advanced/error-handling.md) - Detailed error handling patterns
-- Installation](installation.md) - Setup and configuration
-- Quick Start](quick-start.md) - Getting started guide
-- API Reference](../api-reference/core-api.md) - Complete API documentation
+- [Error Handling](../api-reference/advanced/error-handling.md) - Detailed error handling patterns
+- [Installation](installation.md) - Setup and configuration
+- [Quick Start](quick-start.md) - Getting started guide
+- [API Reference](../api-reference/core-api.md) - Complete API documentation
 

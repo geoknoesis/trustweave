@@ -339,7 +339,7 @@ val result = method.resolveDid(document.id)
 
 ## References
 
-- Ethereum DID Method Specification](https://github.com/decentralized-identity/ethr-did-resolver)
-- ERC1056 Registry Contract](https://github.com/uport-project/ethr-did-registry)
-- Ethereum DID Resolver](https://github.com/decentralized-identity/ethr-did-resolver)
+- [Ethereum DID Method Specification](https://github.com/decentralized-identity/ethr-did-resolver)
+- [ERC1056 Registry Contract](https://github.com/uport-project/ethr-did-registry)
+- [Ethereum DID Resolver](https://github.com/decentralized-identity/ethr-did-resolver)
 

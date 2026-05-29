@@ -327,7 +327,7 @@ If you have questions about API versioning or encounter issues:
 
 ## References
 
-- Semantic Versioning](https://semver.org/)
-- Kotlin API Design Guidelines](https://kotlinlang.org/docs/coding-conventions.html)
-- TrustWeave Deprecation Policy](../deprecation-policy.md)
+- [Semantic Versioning](https://semver.org/)
+- [Kotlin API Design Guidelines](https://kotlinlang.org/docs/coding-conventions.html)
+- [TrustWeave Deprecation Policy](../deprecation-policy.md)
 

@@ -137,8 +137,7 @@ import org.trustweave.trust.TrustWeave
 import org.trustweave.core.*
 import org.trustweave.core.util.DigestUtils
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.trustweave.core.json.jsonData
 import java.time.Instant
 import java.time.Duration
 import org.trustweave.trust.types.DidCreationResult
@@ -196,7 +195,7 @@ fun main() = runBlocking {
         ?: error("No verification method found")
 
     // Create flight delay data (issued by airline)
-    val flightDelayData = buildJsonObject {
+    val flightDelayData = jsonData {
         "id" to "flight-delay-AA1234-2024-10-08"
         "type" to "FlightDelay"
         "flight" {
@@ -326,33 +325,33 @@ fun main() = runBlocking {
         ?: error("No verification method found")
 
     // Create weather event data (issued by weather service)
-    val weatherData = buildJsonObject {
-        put("id", "weather-event-LHR-2024-10-08")
-        put("type", "WeatherEvent")
-        put("location", buildJsonObject {
-            put("airport", "LHR")
-            put("city", "London")
-            put("country", "UK")
-            put("coordinates", buildJsonObject {
-                put("latitude", 51.4700)
-                put("longitude", -0.4543)
-            })
-        })
-        put("event", buildJsonObject {
-            put("type", "Severe Storm")
-            put("severity", "High")
-            put("description", "Thunderstorms with heavy rain and strong winds")
-            put("startTime", "2024-10-08T12:00:00Z")
-            put("endTime", "2024-10-08T18:00:00Z")
-            put("windSpeed", 45)  // mph
-            put("visibility", 0.5)  // miles
-        })
-        put("impact", buildJsonObject {
-            put("travelDisruption", true)
-            put("flightsCancelled", 50)
-            put("flightsDelayed", 120)
-            put("timestamp", Instant.now().toString())
-        })
+    val weatherData = jsonData {
+        "id" to "weather-event-LHR-2024-10-08"
+        "type" to "WeatherEvent"
+        "location" {
+            "airport" to "LHR"
+            "city" to "London"
+            "country" to "UK"
+            "coordinates" {
+                "latitude" to 51.4700
+                "longitude" to -0.4543
+            }
+        }
+        "event" {
+            "type" to "Severe Storm"
+            "severity" to "High"
+            "description" to "Thunderstorms with heavy rain and strong winds"
+            "startTime" to "2024-10-08T12:00:00Z"
+            "endTime" to "2024-10-08T18:00:00Z"
+            "windSpeed" to 45  // mph
+            "visibility" to 0.5  // miles
+        }
+        "impact" {
+            "travelDisruption" to true
+            "flightsCancelled" to 50
+            "flightsDelayed" to 120
+            "timestamp" to Instant.now().toString()
+        }
     }
 
     val weatherDigest = DigestUtils.sha256DigestMultibase(weatherData)
@@ -457,24 +456,24 @@ fun main() = runBlocking {
         ?: error("No verification method found")
 
     // Create baggage delay data (issued by baggage tracking system)
-    val baggageData = buildJsonObject {
-        put("id", "baggage-delay-ABC123-2024-10-08")
-        put("type", "BaggageDelay")
-        put("baggage", buildJsonObject {
-            put("tagNumber", "ABC123")
-            put("flightNumber", "AA1234")
-            put("destination", "LHR")
-        })
-        put("status", buildJsonObject {
-            put("status", "Delayed")
-            put("location", "JFK")
-            put("lastSeen", "2024-10-08T14:00:00Z")
-            put("currentTime", "2024-10-09T15:00:00Z")  // 25 hours later
-        })
-        put("delay", buildJsonObject {
-            put("durationHours", 25)
-            put("estimatedArrival", "2024-10-09T20:00:00Z")
-        })
+    val baggageData = jsonData {
+        "id" to "baggage-delay-ABC123-2024-10-08"
+        "type" to "BaggageDelay"
+        "baggage" {
+            "tagNumber" to "ABC123"
+            "flightNumber" to "AA1234"
+            "destination" to "LHR"
+        }
+        "status" {
+            "status" to "Delayed"
+            "location" to "JFK"
+            "lastSeen" to "2024-10-08T14:00:00Z"
+            "currentTime" to "2024-10-09T15:00:00Z"  // 25 hours later
+        }
+        "delay" {
+            "durationHours" to 25
+            "estimatedArrival" to "2024-10-09T20:00:00Z"
+        }
     }
 
     val baggageDigest = DigestUtils.sha256DigestMultibase(baggageData)
@@ -716,23 +715,23 @@ For medical emergency coverage with quick payouts:
 
 ```kotlin
 // Medical service provider issues emergency credential
-val medicalData = buildJsonObject {
-    put("id", "medical-emergency-2024-10-08")
-    put("type", "MedicalEmergency")
-    put("patient", buildJsonObject {
-        put("policyNumber", "TRAVEL-POL-12345")
+val medicalData = jsonData {
+    "id" to "medical-emergency-2024-10-08"
+    "type" to "MedicalEmergency"
+    "patient" {
+        "policyNumber" to "TRAVEL-POL-12345"
         // No PII - privacy preserving
-    })
-    put("emergency", buildJsonObject {
-        put("type", "Medical Treatment")
-        put("location", buildJsonObject {
-            put("country", "UK")
-            put("city", "London")
-        })
-        put("timestamp", Instant.now().toString())
-        put("amount", 1500.0)
-        put("currency", "USD")
-    })
+    }
+    "emergency" {
+        "type" to "Medical Treatment"
+        "location" {
+            "country" to "UK"
+            "city" to "London"
+        }
+        "timestamp" to Instant.now().toString()
+        "amount" to 1500.0
+        "currency" to "USD"
+    }
 }
 
 val medicalDigest = DigestUtils.sha256DigestMultibase(medicalData)
@@ -885,8 +884,8 @@ if (anchorResult != null) {
 
 ## Related Documentation
 
-- Parametric Insurance with Earth Observation](parametric-insurance-eo-scenario.md) - EO data insurance
-- Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
-- API Reference](../api-reference/core-api.md) - Complete API documentation
+- [Parametric Insurance with Earth Observation](parametric-insurance-eo-scenario.md) - EO data insurance
+- [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
+- [API Reference](../api-reference/core-api.md) - Complete API documentation
 
 

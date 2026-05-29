@@ -328,7 +328,7 @@ did:polygon is similar to did:ethr but optimized for Polygon:
 
 ## References
 
-- Polygon Documentation](https://docs.polygon.technology/)
-- Polygon Network](https://polygon.technology/)
-- Ethereum DID Specification](https://github.com/decentralized-identity/ethr-did-resolver) (similar pattern)
+- [Polygon Documentation](https://docs.polygon.technology/)
+- [Polygon Network](https://polygon.technology/)
+- [Ethereum DID Specification](https://github.com/decentralized-identity/ethr-did-resolver) (similar pattern)
 

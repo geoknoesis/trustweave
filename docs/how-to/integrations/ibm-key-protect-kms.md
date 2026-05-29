@@ -195,11 +195,11 @@ Configure via IBM Cloud IAM.
 
 ## Related Documentation
 
-- Key Management Concepts](../core-concepts/key-management.md)
-- IBM Key Protect Documentation](https://cloud.ibm.com/docs/key-protect)
+- [Key Management Concepts](../core-concepts/key-management.md)
+- [IBM Key Protect Documentation](https://cloud.ibm.com/docs/key-protect)
 
 ## See Also
 
-- IBM Key Protect Documentation](https://cloud.ibm.com/docs/key-protect)
-- IBM Cloud IAM Documentation](https://cloud.ibm.com/docs/iam)
+- [IBM Key Protect Documentation](https://cloud.ibm.com/docs/key-protect)
+- [IBM Cloud IAM Documentation](https://cloud.ibm.com/docs/iam)
 

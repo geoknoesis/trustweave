@@ -573,10 +573,10 @@ Repair Credential: [OK] VALID
 
 ## Related Documentation
 
-- Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
-- Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
-- API Reference](../api-reference/core-api.md) - Complete API documentation
-- Healthcare Medical Records Scenario](healthcare-medical-records-scenario.md) - Related healthcare scenario
-- Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
+- [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
+- [API Reference](../api-reference/core-api.md) - Complete API documentation
+- [Healthcare Medical Records Scenario](healthcare-medical-records-scenario.md) - Related healthcare scenario
+- [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
 
 

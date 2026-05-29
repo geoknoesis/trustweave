@@ -317,8 +317,6 @@ import java.time.Instant
 ```kotlin
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.results.IssuanceResult
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import java.time.Instant
 
     // Step 3: Create student DID and enrollment credential

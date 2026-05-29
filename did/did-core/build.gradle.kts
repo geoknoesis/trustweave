@@ -6,6 +6,8 @@ plugins {
 group = "org.trustweave"
 dependencies {
     implementation(project(":common"))
+    // Re-export portable DID identifier + validator types (Did, VerificationMethodId, DidUrl, DidValidator).
+    api(project(":did:did-identifiers-mp"))
     implementation(project(":kms:kms-core"))
     // Note: did:registrar is NOT a dependency to avoid circular dependency
     // HttpDidMethod uses reflection to load DefaultUniversalRegistrar if available at runtime

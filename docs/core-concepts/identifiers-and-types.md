@@ -679,9 +679,9 @@ val did = "did:key:z6Mk...".toDidOrNull() ?: return
 
 ## Related Documentation
 
-- Identifier Design Specification](../advanced/identifier-design.md) - Comprehensive design document covering the architecture and implementation details
-- Decentralized Identifiers (DIDs)](dids.md) - Learn about DIDs and DID documents
-- Verifiable Credentials](verifiable-credentials.md) - Learn about credentials and their lifecycle
+- [Identifier Design Specification](../api-reference/advanced/identifier-design.md) - Comprehensive design document covering the architecture and implementation details
+- [Decentralized Identifiers (DIDs)](dids.md) - Learn about DIDs and DID documents
+- [Verifiable Credentials](verifiable-credentials.md) - Learn about credentials and their lifecycle
 
 ---
 

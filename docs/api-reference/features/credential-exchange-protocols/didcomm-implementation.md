@@ -220,8 +220,8 @@ didcomm.sendMessage(
 
 ## References
 
-- DIDComm V2 Specification](https://didcomm.org/book/v2/)
-- JWM Specification](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-jwsreq-26)
-- Issue Credential Protocol](https://github.com/decentralized-identity/waci-presentation-exchange)
-- Present Proof Protocol](https://github.com/decentralized-identity/presentation-exchange)
+- [DIDComm V2 Specification](https://didcomm.org/book/v2/)
+- [JWM Specification](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-jwsreq-26)
+- [Issue Credential Protocol](https://github.com/decentralized-identity/waci-presentation-exchange)
+- [Present Proof Protocol](https://github.com/decentralized-identity/presentation-exchange)
 

@@ -168,8 +168,7 @@ import org.trustweave.credential.results.VerificationResult
 import org.trustweave.did.identifiers.extractKeyId
 import org.trustweave.core.util.DigestUtils
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.trustweave.core.json.jsonData
 import java.time.Instant
 import java.time.LocalDate
 import java.time.Period
@@ -223,12 +222,12 @@ fun main() = runBlocking {
     val photoBase64 = Base64.getEncoder().encodeToString(photoBytes)
 
     // Create photo metadata for digest computation
-    val photoMetadata = buildJsonObject {
-        put("type", "photo")
-        put("format", "jpeg")
-        put("data", photoBase64)
-                    put("subjectDid", individualDid.value)
-        put("purpose", "ageVerification")
+    val photoMetadata = jsonData {
+        "type" to "photo"
+        "format" to "jpeg"
+        "data" to photoBase64
+        "subjectDid" to individualDid.value
+        "purpose" to "ageVerification"
     }
 
     // Compute cryptographic digest of photo for integrity verification
@@ -597,10 +596,10 @@ Age Verification Scenario - Complete End-to-End Example with Photo
 
 ## Related Documentation
 
-- Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
-- Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
-- API Reference](../api-reference/core-api.md) - Complete API documentation
-- Government Digital Identity Scenario](government-digital-identity-scenario.md) - Related identity scenario
-- Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
+- [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
+- [API Reference](../api-reference/core-api.md) - Complete API documentation
+- [Government Digital Identity Scenario](government-digital-identity-scenario.md) - Related identity scenario
+- [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
 
 

@@ -2,6 +2,8 @@ package org.trustweave.contract
 
 import org.trustweave.anchor.AnchorRef
 import org.trustweave.contract.models.*
+import org.trustweave.core.json.JsonDataBuilder
+import org.trustweave.core.json.jsonData
 import org.trustweave.credential.model.vc.VerifiableCredential
 import kotlin.Result
 import kotlinx.serialization.json.JsonElement
@@ -106,6 +108,27 @@ suspend fun SmartContractService.draft(
 ): Result<SmartContract> = createDraft(request)
 
 /**
+ * DSL form of [SmartContractService.createDraft].
+ *
+ * ```kotlin
+ * trustWeave.contracts.draft {
+ *     contractType = ContractType.Insurance
+ *     executionModel = ExecutionModel.Parametric
+ *     parties = ContractParties(insurerDid, insuredDid)
+ *     terms = contractTerms
+ *     effectiveDate = "2026-05-28T00:00:00Z"
+ *     contractData {
+ *         "domain" to "flood"
+ *         "thresholds" { "floodDepthCm" to 50.0 }
+ *     }
+ * }
+ * ```
+ */
+suspend fun SmartContractService.draft(
+    block: ContractDraftBuilder.() -> Unit
+): Result<SmartContract> = createDraft(contractDraft(block))
+
+/**
  * Convenience alias for [SmartContractService.issueContractCredential].
  *
  * Allows callers to write `service.issueCredential(...)` instead of
@@ -116,6 +139,66 @@ suspend fun SmartContractService.issueCredential(
     issuerDid: String,
     issuerKeyId: String
 ): Result<VerifiableCredential> = issueContractCredential(contract, issuerDid, issuerKeyId)
+
+/**
+ * Execute a contract with parametric trigger data supplied as key/value pairs.
+ *
+ * Shortcut for `executeContract(contract, parametricContext(*triggerData))` — lets
+ * callers stay in plain Kotlin types instead of building a [JsonElement]:
+ *
+ * ```kotlin
+ * trustWeave.contracts.executeParametric(
+ *     activeContract,
+ *     "floodDepthCm" to 75.0,
+ *     "stationId" to "STA-42"
+ * )
+ * ```
+ */
+suspend fun SmartContractService.executeParametric(
+    contract: SmartContract,
+    vararg triggerData: Pair<String, Any?>
+): Result<ExecutionResult> = executeContract(contract, parametricContext(*triggerData))
+
+/**
+ * Execute a contract with event data supplied as key/value pairs.
+ *
+ * Shortcut for `executeContract(contract, eventContext(*eventData))`.
+ */
+suspend fun SmartContractService.executeEvent(
+    contract: SmartContract,
+    vararg eventData: Pair<String, Any?>
+): Result<ExecutionResult> = executeContract(contract, eventContext(*eventData))
+
+/**
+ * DSL form of [SmartContractService.executeContract].
+ *
+ * ```kotlin
+ * trustWeave.contracts.executeContract(activeContract) {
+ *     trigger {
+ *         "floodDepthCm" to 75.0
+ *         "credentialId" to floodCredential.id
+ *     }
+ * }
+ * ```
+ */
+suspend fun SmartContractService.executeContract(
+    contract: SmartContract,
+    block: ExecutionContextBuilder.() -> Unit
+): Result<ExecutionResult> = executeContract(contract, executionContext(block))
+
+/**
+ * DSL form of [SmartContractService.evaluateConditions].
+ *
+ * ```kotlin
+ * trustWeave.contracts.evaluateConditions(contract) {
+ *     "floodDepthCm" to 75.0
+ * }
+ * ```
+ */
+suspend fun SmartContractService.evaluateConditions(
+    contract: SmartContract,
+    block: JsonDataBuilder.() -> Unit
+): Result<ConditionEvaluation> = evaluateConditions(contract, jsonData(block))
 
 /**
  * Contract draft request.

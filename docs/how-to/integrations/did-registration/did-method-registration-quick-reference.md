@@ -154,7 +154,7 @@ This creates a `DidMethod` that:
 
 ## See Also
 
-- DID Method Registration Specification](did-method-registration-specification.md) - Detailed specification
-- DID Method Registration Guide](did-method-registration-guide.md) - Usage guide
+- [DID Method Registration Specification](did-method-registration-specification.md) - Detailed specification
+- [DID Method Registration Guide](did-method-registration-guide.md) - Usage guide
 - Schema definition: `src/main/resources/did-methods/schema.json`
 

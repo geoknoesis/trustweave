@@ -581,6 +581,7 @@ package org.trustweave.examples.fielddata
 import org.trustweave.trust.TrustWeave
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import org.trustweave.core.util.DigestUtils
+import org.trustweave.core.json.jsonData
 import org.trustweave.credential.results.VerificationResult
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
@@ -810,10 +811,10 @@ fun main() = runBlocking {
 }
 
 fun computeLocationDigest(location: GeoLocation): String {
-    val locationJson = buildJsonObject {
-        put("latitude", location.latitude)
-        put("longitude", location.longitude)
-        put("altitude", location.altitude ?: JsonNull)
+    val locationJson = jsonData {
+        "latitude" to location.latitude
+        "longitude" to location.longitude
+        "altitude" to location.altitude
     }
     return DigestUtils.sha256DigestMultibase(locationJson)
 }

@@ -132,7 +132,7 @@ val offer = registry.offerCredential("didcomm", request)
 - **Protocol Name**: `"oidc4vp"`
 - **Supported Operations**: Proof request and presentation (verifier ↔ holder)
 - **Implementation**: `Oidc4VpExchangeProtocol`
-- **Module**: [credentials/plugins/oidc4vp](../../credentials/plugins/oidc4vp/)
+- **Module**: [credentials/plugins/oidc4vp](https://github.com/geoknoesis/trustweave/tree/main/credentials/plugins/oidc4vp)
 - **Profiles**: Includes a HAIP (High Assurance Interoperability Profile) validator at [HaipProfileValidator.kt](../../credentials/plugins/oidc4vp/src/main/kotlin/org/trustweave/credential/oidc4vp/haip/HaipProfileValidator.kt) for `vp_token`-based flows over SD-JWT VC and ISO mdoc.
 
 ### CHAPI
@@ -149,14 +149,14 @@ val offer = registry.offerCredential("didcomm", request)
 - **Protocol Name**: `"siopv2"`
 - **Supported Operations**: Wallet-as-OP authentication (`id_token` flow); pairs with OIDC4VP for credential presentation in the same request.
 - **Implementation**: `SiopV2ExchangeProtocol`
-- **Module**: [credentials/plugins/siop](../../credentials/plugins/siop/) — see the plugin [README](../../credentials/plugins/siop/README.md)
+- **Module**: [credentials/plugins/siop](https://github.com/geoknoesis/trustweave/tree/main/credentials/plugins/siop) — see the plugin [README](https://github.com/geoknoesis/trustweave/blob/main/credentials/plugins/siop/README.md)
 - **Use it for**: DID-based sign-in, wallet-initiated authentication, cross-device QR-code login.
 
 ### Presentation Exchange (DIF PE v2)
 
 Not an exchange protocol on its own — a **declarative query language** used inside OIDC4VP, SIOPv2, DIDComm, and CHAPI flows so verifiers can specify exactly which credentials and fields they need.
 
-- **Module**: [credentials/plugins/presentation-exchange](../../credentials/plugins/presentation-exchange/) — see the plugin [README](../../credentials/plugins/presentation-exchange/README.md)
+- **Module**: [credentials/plugins/presentation-exchange](https://github.com/geoknoesis/trustweave/tree/main/credentials/plugins/presentation-exchange) — see the plugin [README](https://github.com/geoknoesis/trustweave/blob/main/credentials/plugins/presentation-exchange/README.md)
 - **Key types**: `PresentationDefinition`, `InputDescriptor`, `PresentationDefinitionMatcher`
 - **Spec**: [DIF Presentation Exchange v2](https://identity.foundation/presentation-exchange/)
 
@@ -164,7 +164,7 @@ Not an exchange protocol on its own — a **declarative query language** used in
 
 Not an exchange protocol — a **trust establishment layer** for the protocols above. Lets verifiers and issuers discover each other via signed entity statements and trust chains rooted at one or more trust anchors.
 
-- **Module**: [credentials/plugins/openid-federation](../../credentials/plugins/openid-federation/) — see the plugin [README](../../credentials/plugins/openid-federation/README.md)
+- **Module**: [credentials/plugins/openid-federation](https://github.com/geoknoesis/trustweave/tree/main/credentials/plugins/openid-federation) — see the plugin [README](https://github.com/geoknoesis/trustweave/blob/main/credentials/plugins/openid-federation/README.md)
 - **Key types**: `TrustChainResolver`, `EntityConfigurationEndpoint`, `EntityStatementJwtProcessor`, `FederationExchangeProtocol`
 - **Spec**: [OpenID Federation 1.0](https://openid.net/specs/openid-federation-1_0.html)
 
@@ -172,7 +172,7 @@ Not an exchange protocol — a **trust establishment layer** for the protocols a
 
 A profile overlay (not a standalone protocol) that constrains OIDC4VCI, OIDC4VP, and SIOPv2 to the EU Digital Identity Wallet ARF — covering the EU PID credential, wallet trust evidence, and the EUDIW issuance/presentation rules.
 
-- **Module**: [credentials/plugins/eudiw](../../credentials/plugins/eudiw/) — see the plugin [README](../../credentials/plugins/eudiw/README.md)
+- **Module**: [credentials/plugins/eudiw](https://github.com/geoknoesis/trustweave/tree/main/credentials/plugins/eudiw) — see the plugin [README](https://github.com/geoknoesis/trustweave/blob/main/credentials/plugins/eudiw/README.md)
 - **Includes**: `EuPidCredential`, `EuPidIssuanceProfile`, `EudiwOid4VciProfile`, `EudiwOid4VpProfile`, `WalletTrustEvidence`, `EudiwExchangeProtocol`
 - **Spec**: [EUDIW ARF](https://github.com/eu-digital-identity-wallet/eudi-doc-architecture-and-reference-framework)
 
@@ -338,16 +338,16 @@ Each protocol may require protocol-specific options in the `options` map:
 ## Protocol Implementation
 
 For detailed information on implementing new protocols, see:
-- Protocol Implementation Guide](../features/credential-exchange-protocols/implementation-guide.md)
+- [Protocol Implementation Guide](../api-reference/features/credential-exchange-protocols/implementation-guide.md)
 
 ## Future Enhancements
 
 - [x] Auto-discovery via SPI
-- [x] OIDC4VP implementation — see [credentials/plugins/oidc4vp](../../credentials/plugins/oidc4vp/)
-- [x] SIOPv2 implementation — see [credentials/plugins/siop](../../credentials/plugins/siop/)
-- [x] DIF Presentation Exchange v2 — see [credentials/plugins/presentation-exchange](../../credentials/plugins/presentation-exchange/)
-- [x] OpenID Federation 1.0 trust chains — see [credentials/plugins/openid-federation](../../credentials/plugins/openid-federation/)
-- [x] EUDIW ARF profile overlay — see [credentials/plugins/eudiw](../../credentials/plugins/eudiw/)
+- [x] OIDC4VP implementation — see [credentials/plugins/oidc4vp](https://github.com/geoknoesis/trustweave/tree/main/credentials/plugins/oidc4vp)
+- [x] SIOPv2 implementation — see [credentials/plugins/siop](https://github.com/geoknoesis/trustweave/tree/main/credentials/plugins/siop)
+- [x] DIF Presentation Exchange v2 — see [credentials/plugins/presentation-exchange](https://github.com/geoknoesis/trustweave/tree/main/credentials/plugins/presentation-exchange)
+- [x] OpenID Federation 1.0 trust chains — see [credentials/plugins/openid-federation](https://github.com/geoknoesis/trustweave/tree/main/credentials/plugins/openid-federation)
+- [x] EUDIW ARF profile overlay — see [credentials/plugins/eudiw](https://github.com/geoknoesis/trustweave/tree/main/credentials/plugins/eudiw)
 - [ ] Protocol capability negotiation
 - [ ] Protocol fallback/retry
 - [ ] Protocol-specific validation

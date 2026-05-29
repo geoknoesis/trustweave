@@ -591,16 +591,16 @@ docker run -d -p 4566:4566 localstack/localstack
 
 ## Related Documentation
 
-- Key Management Guide](../core-concepts/key-management.md) - Core KMS concepts
-- Algorithm Compatibility Table](../core-concepts/algorithm-compatibility-table.md) - Algorithm support comparison
-- Key Rotation Guide](../advanced/key-rotation.md) - Key rotation strategies
-- Creating Plugins Guide](../contributing/creating-plugins.md) - Custom KMS implementations
+- [Key Management Guide](../core-concepts/key-management.md) - Core KMS concepts
+- [Algorithm Compatibility Table](../core-concepts/algorithm-compatibility-table.md) - Algorithm support comparison
+- [Key Rotation Guide](../../api-reference/advanced/key-rotation.md) - Key rotation strategies
+- [Creating Plugins Guide](../contributing/creating-plugins.md) - Custom KMS implementations
 
 ## FIPS 140-3 Compliance
 
 AWS KMS uses FIPS 140-3 Level 3 validated hardware security modules. For details, see:
 
-- NIST CMVP Certificate #4884](https://csrc.nist.gov/projects/cryptographic-module-validation-program/certificate/4884) - AWS Key Management Service HSM validation
+- [NIST CMVP Certificate #4884](https://csrc.nist.gov/projects/cryptographic-module-validation-program/certificate/4884) - AWS Key Management Service HSM validation
 - Certificate Status: Active (Sunset: 11/17/2026)
 - Security Level: Level 3
 - Module Type: Hardware (Multi-Chip Stand Alone)
@@ -609,7 +609,7 @@ The validated module supports ECDSA (FIPS 186-4) on NIST curves, ECDSA secp256k1
 
 ## See Also
 
-- AWS KMS Developer Guide](https://docs.aws.amazon.com/kms/latest/developerguide/)
-- AWS KMS API Reference](https://docs.aws.amazon.com/kms/latest/APIReference/)
-- NIST CMVP Certificate #4884](https://csrc.nist.gov/projects/cryptographic-module-validation-program/certificate/4884) - FIPS 140-3 validation details
+- [AWS KMS Developer Guide](https://docs.aws.amazon.com/kms/latest/developerguide/)
+- [AWS KMS API Reference](https://docs.aws.amazon.com/kms/latest/APIReference/)
+- [NIST CMVP Certificate #4884](https://csrc.nist.gov/projects/cryptographic-module-validation-program/certificate/4884) - FIPS 140-3 validation details
 

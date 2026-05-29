@@ -252,5 +252,5 @@ Comprehensive test support:
 
 - See [Use Cases](use-cases.md) for real-world applications
 - Explore the [Architecture Overview](architecture-overview.md)
-- Get started with [Installation](../../tutorials/getting-started/installation.md)
+- Get started with [Installation](../getting-started/installation.md)
 

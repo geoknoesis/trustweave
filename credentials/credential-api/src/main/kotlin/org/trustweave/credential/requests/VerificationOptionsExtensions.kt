@@ -1,6 +1,7 @@
 package org.trustweave.credential.requests
 
-import java.time.Duration
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * Preset verification options for common use cases.
@@ -28,7 +29,7 @@ object VerificationOptionPresets {
         checkNotBefore = true,
         resolveIssuerDid = true,
         validateSchema = true,
-        clockSkewTolerance = Duration.ofMinutes(1)  // Tight tolerance
+        clockSkewTolerance = 1.minutes  // Tight tolerance
     )
     
     /**
@@ -42,7 +43,7 @@ object VerificationOptionPresets {
         checkNotBefore = false,
         resolveIssuerDid = false,
         validateSchema = false,
-        clockSkewTolerance = Duration.ofMinutes(10)  // Lenient tolerance
+        clockSkewTolerance = 10.minutes  // Lenient tolerance
     )
     
     /**
@@ -56,7 +57,7 @@ object VerificationOptionPresets {
         checkNotBefore = true,
         resolveIssuerDid = true,
         validateSchema = false,  // Schema validation is expensive
-        clockSkewTolerance = Duration.ofMinutes(5)
+        clockSkewTolerance = 5.minutes
     )
 }
 

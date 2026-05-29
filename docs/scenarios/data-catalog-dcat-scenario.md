@@ -252,8 +252,7 @@ fun main() = runBlocking {
 
 ```kotlin
 import org.trustweave.credential.model.vc.VerifiableCredential
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.trustweave.core.json.jsonData
 import java.time.Instant
 
     // Step 2: Create publisher and dataset DIDs
@@ -294,50 +293,50 @@ import java.time.Instant
 
     // DCAT dataset description following W3C DCAT vocabulary
     // This provides standard format for dataset metadata
-    val dcatDataset = buildJsonObject {
-        put("@context", "https://www.w3.org/ns/dcat#")
-        put("@type", "dcat:Dataset")
-        put("dct:identifier", datasetDid.id)
-        put("dct:title", datasetTitle)
-        put("dct:description", datasetDescription)
-        put("dct:issued", Instant.now().toString())
-        put("dct:modified", Instant.now().toString())
-        put("dct:publisher", buildJsonObject {
-            put("@type", "foaf:Organization")
-            put("foaf:name", "National Statistics Office")
-            put("dct:identifier", publisherDid.id)
-        })
-        put("dcat:theme", datasetTheme)
-        put("dcat:keyword", datasetKeywords)
-        put("dct:spatial", buildJsonObject {
-            put("@type", "dct:Location")
-            put("dct:title", "National Coverage")
-        })
-        put("dct:temporal", buildJsonObject {
-            put("@type", "dct:PeriodOfTime")
-            put("dct:startDate", "2024-01-01")
-            put("dct:endDate", "2024-12-31")
-        })
-        put("dcat:distribution", listOf(
-            buildJsonObject {
-                put("@type", "dcat:Distribution")
-                put("dct:title", "CSV Download")
-                put("dcat:accessURL", "https://data.gov.example.com/datasets/census-2024.csv")
-                put("dcat:mediaType", "text/csv")
-                put("dcat:format", "CSV")
-                put("dcat:byteSize", "10485760") // 10 MB
-            },
-            buildJsonObject {
-                put("@type", "dcat:Distribution")
-                put("dct:title", "API Access")
-                put("dcat:accessURL", "https://api.data.gov.example.com/v1/census")
-                put("dcat:mediaType", "application/json")
-                put("dcat:format", "JSON")
-            }
-        ))
-        put("dcat:landingPage", "https://data.gov.example.com/datasets/census-2024")
-        put("dct:license", "https://creativecommons.org/licenses/by/4.0/")
-        put("dct:language", "en")
+    val dcatDataset = jsonData {
+        "@context" to "https://www.w3.org/ns/dcat#"
+        "@type" to "dcat:Dataset"
+        "dct:identifier" to datasetDid.id
+        "dct:title" to datasetTitle
+        "dct:description" to datasetDescription
+        "dct:issued" to Instant.now().toString()
+        "dct:modified" to Instant.now().toString()
+        "dct:publisher" {
+            "@type" to "foaf:Organization"
+            "foaf:name" to "National Statistics Office"
+            "dct:identifier" to publisherDid.id
+        }
+        "dcat:theme" to datasetTheme
+        "dcat:keyword" to datasetKeywords
+        "dct:spatial" {
+            "@type" to "dct:Location"
+            "dct:title" to "National Coverage"
+        }
+        "dct:temporal" {
+            "@type" to "dct:PeriodOfTime"
+            "dct:startDate" to "2024-01-01"
+            "dct:endDate" to "2024-12-31"
+        }
+        "dcat:distribution" to listOf(
+            mapOf(
+                "@type" to "dcat:Distribution",
+                "dct:title" to "CSV Download",
+                "dcat:accessURL" to "https://data.gov.example.com/datasets/census-2024.csv",
+                "dcat:mediaType" to "text/csv",
+                "dcat:format" to "CSV",
+                "dcat:byteSize" to "10485760" // 10 MB
+            ),
+            mapOf(
+                "@type" to "dcat:Distribution",
+                "dct:title" to "API Access",
+                "dcat:accessURL" to "https://api.data.gov.example.com/v1/census",
+                "dcat:mediaType" to "application/json",
+                "dcat:format" to "JSON"
+            )
+        )
+        "dcat:landingPage" to "https://data.gov.example.com/datasets/census-2024"
+        "dct:license" to "https://creativecommons.org/licenses/by/4.0/"
+        "dct:language" to "en"
     }
 
     println("DCAT dataset description created:")
@@ -447,28 +446,28 @@ import org.trustweave.core.util.DigestUtils
     val catalogManagerDid = didMethod.createDid()
 
     // DCAT catalog description
-    val dcatCatalog = buildJsonObject {
-        put("@context", "https://www.w3.org/ns/dcat#")
-        put("@type", "dcat:Catalog")
-        put("dct:title", "National Data Catalog")
-        put("dct:description", "Central catalog of government datasets")
-        put("dct:issued", Instant.now().toString())
-        put("dct:modified", Instant.now().toString())
-        put("dct:publisher", buildJsonObject {
-            put("@type", "foaf:Organization")
-            put("foaf:name", "Data Catalog Authority")
-            put("dct:identifier", catalogManagerDid.id)
-        })
-        put("dcat:dataset", listOf(
-            buildJsonObject {
-                put("@id", datasetDid.id)
-                put("dct:title", datasetTitle)
-            }
-        ))
-        put("dcat:themeTaxonomy", buildJsonObject {
-            put("@type", "skos:ConceptScheme")
-            put("dct:title", "Dataset Themes")
-        })
+    val dcatCatalog = jsonData {
+        "@context" to "https://www.w3.org/ns/dcat#"
+        "@type" to "dcat:Catalog"
+        "dct:title" to "National Data Catalog"
+        "dct:description" to "Central catalog of government datasets"
+        "dct:issued" to Instant.now().toString()
+        "dct:modified" to Instant.now().toString()
+        "dct:publisher" {
+            "@type" to "foaf:Organization"
+            "foaf:name" to "Data Catalog Authority"
+            "dct:identifier" to catalogManagerDid.id
+        }
+        "dcat:dataset" to listOf(
+            mapOf(
+                "@id" to datasetDid.id,
+                "dct:title" to datasetTitle
+            )
+        )
+        "dcat:themeTaxonomy" {
+            "@type" to "skos:ConceptScheme"
+            "dct:title" to "Dataset Themes"
+        }
     }
 
     println("DCAT catalog created:")

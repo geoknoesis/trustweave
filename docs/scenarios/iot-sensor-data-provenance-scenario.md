@@ -163,6 +163,7 @@ import org.trustweave.trust.TrustWeave
 import org.trustweave.core.*
 import org.trustweave.wallet.Wallet
 import org.trustweave.core.util.DigestUtils
+import org.trustweave.core.json.jsonData
 import org.trustweave.wallet.services.WalletCreationOptionsBuilder
 import kotlinx.coroutines.runBlocking
 import org.trustweave.credential.model.ProofType
@@ -307,17 +308,17 @@ fun main() = runBlocking {
 
     // Temperature reading
     val temperatureReading = 23.5
-    val temperatureData = buildJsonObject {
-        put("sensorId", temperatureSensorDid.value)
-        put("sensorType", "Temperature")
-        put("value", temperatureReading)
-        put("unit", "Celsius")
-        put("timestamp", Instant.now().toString())
-        put("location", buildJsonObject {
-            put("latitude", 40.7128)
-            put("longitude", -74.0060)
-            put("altitude", 10.0)
-        })
+    val temperatureData = jsonData {
+        "sensorId" to temperatureSensorDid.value
+        "sensorType" to "Temperature"
+        "value" to temperatureReading
+        "unit" to "Celsius"
+        "timestamp" to Instant.now().toString()
+        "location" {
+            "latitude" to 40.7128
+            "longitude" to -74.0060
+            "altitude" to 10.0
+        }
     }
 
     val temperatureDataBytes = temperatureData.toString().toByteArray()
@@ -328,17 +329,17 @@ fun main() = runBlocking {
 
     // Humidity reading
     val humidityReading = 65.3
-    val humidityData = buildJsonObject {
-        put("sensorId", humiditySensorDid.value)
-        put("sensorType", "Humidity")
-        put("value", humidityReading)
-        put("unit", "% RH")
-        put("timestamp", Instant.now().toString())
-        put("location", buildJsonObject {
-            put("latitude", 40.7128)
-            put("longitude", -74.0060)
-            put("altitude", 10.0)
-        })
+    val humidityData = jsonData {
+        "sensorId" to humiditySensorDid.value
+        "sensorType" to "Humidity"
+        "value" to humidityReading
+        "unit" to "% RH"
+        "timestamp" to Instant.now().toString()
+        "location" {
+            "latitude" to 40.7128
+            "longitude" to -74.0060
+            "altitude" to 10.0
+        }
     }
 
     val humidityDataBytes = humidityData.toString().toByteArray()
@@ -645,10 +646,10 @@ IoT Sensor Data Provenance & Integrity Scenario - Complete End-to-End Example
 
 ## Related Documentation
 
-- Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
-- IoT Device Identity Scenario](iot-device-identity-scenario.md) - Related device identity scenario
-- Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
-- API Reference](../api-reference/core-api.md) - Complete API documentation
-- Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
+- [IoT Device Identity Scenario](iot-device-identity-scenario.md) - Related device identity scenario
+- [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
+- [API Reference](../api-reference/core-api.md) - Complete API documentation
+- [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
 
 

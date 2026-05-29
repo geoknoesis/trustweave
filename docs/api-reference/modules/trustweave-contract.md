@@ -86,16 +86,17 @@ import org.trustweave.contract.models.*
 val trustweave = TrustWeave.build { ... }
 
 // Create contract draft
-val contract = trustweave.contracts.draft(
-    request = ContractDraftRequest(
-        contractType = ContractType.Insurance,
-        executionModel = ExecutionModel.Parametric(...),
-        parties = ContractParties(...),
-        terms = ContractTerms(...),
-        effectiveDate = Instant.now().toString(),
-        contractData = buildJsonObject { ... }
-    )
-).getOrThrow()
+val contract = trustweave.contracts.draft {
+    contractType = ContractType.Insurance
+    executionModel = ExecutionModel.Parametric(...)
+    parties = ContractParties(insurerDid, insuredDid)
+    terms = contractTerms
+    effectiveDate = Instant.now().toString()
+    contractData {
+        "domain" to "flood"
+        "thresholds" { "floodDepthCm" to 50.0 }
+    }
+}.getOrThrow()
 
 // Bind contract (issue VC and anchor)
 val bound = trustweave.contracts.bindContract(
@@ -108,12 +109,12 @@ val bound = trustweave.contracts.bindContract(
 val active = trustweave.contracts.activateContract(bound.contract.id).getOrThrow()
 
 // Execute contract
-val result = trustweave.contracts.executeContract(
-    contract = active,
-    executionContext = ExecutionContext(
-        triggerData = buildJsonObject { ... }
-    )
-).getOrThrow()
+val result = trustweave.contracts.executeContract(active) {
+    trigger {
+        "floodDepthCm" to 75.0
+        "credentialId" to floodCredential.id
+    }
+}.getOrThrow()
 ```
 
 ## Features
@@ -162,9 +163,9 @@ For production use, implement `SmartContractService` with persistent storage (da
 
 ## See Also
 
-- Smart Contracts Core Concepts](../core-concepts/smart-contracts.md) for detailed concepts
-- Smart Contract API Reference](../api-reference/smart-contract-api.md) for complete API documentation
-- Parametric Insurance Scenario](../scenarios/smart-contract-parametric-insurance-scenario.md) for complete example
-- Verifiable Credentials](../core-concepts/verifiable-credentials.md) for credential concepts
-- Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) for anchoring concepts
+- [Smart Contracts Core Concepts](../core-concepts/smart-contracts.md) for detailed concepts
+- [Smart Contract API Reference](../api-reference/smart-contract-api.md) for complete API documentation
+- [Parametric Insurance Scenario](../scenarios/smart-contract-parametric-insurance-scenario.md) for complete example
+- [Verifiable Credentials](../core-concepts/verifiable-credentials.md) for credential concepts
+- [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) for anchoring concepts
 

@@ -6,8 +6,7 @@ import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.testkit.BasePluginTest
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.trustweave.core.json.jsonData
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -76,9 +75,9 @@ abstract class ChainPluginTestTemplate : BasePluginTest() {
     fun `test anchor multiple payloads`() = runBlocking {
         val client = getChainClient()
         val payloads = (1..3).map { index ->
-            buildJsonObject {
-                put("id", "test-$index")
-                put("data", "payload-$index")
+            jsonData {
+                "id" to "test-$index"
+                "data" to "payload-$index"
             }
         }
 
@@ -116,7 +115,7 @@ abstract class ChainPluginTestTemplate : BasePluginTest() {
     @Test
     fun `test anchor empty payload`() = runBlocking {
         val client = getChainClient()
-        val emptyPayload = buildJsonObject { }
+        val emptyPayload = jsonData { }
 
         try {
             val result = client.writePayload(emptyPayload)
@@ -129,8 +128,8 @@ abstract class ChainPluginTestTemplate : BasePluginTest() {
     @Test
     fun `test anchor large payload`() = runBlocking {
         val client = getChainClient()
-        val largePayload = buildJsonObject {
-            put("data", "x".repeat(10000)) // 10KB payload
+        val largePayload = jsonData {
+            "data" to "x".repeat(10000) // 10KB payload
         }
 
         try {
@@ -157,10 +156,10 @@ abstract class ChainPluginTestTemplate : BasePluginTest() {
      * Creates a test payload for anchoring.
      */
     protected fun createTestPayload(): JsonObject {
-        return buildJsonObject {
-            put("test", "data")
-            put("timestamp", System.currentTimeMillis())
-            put("digest", "test-digest-${System.currentTimeMillis()}")
+        return jsonData {
+            "test" to "data"
+            "timestamp" to System.currentTimeMillis()
+            "digest" to "test-digest-${System.currentTimeMillis()}"
         }
     }
 }

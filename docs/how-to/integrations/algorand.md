@@ -107,8 +107,7 @@ val client = algorandProvider?.create("algorand:testnet", options.toMap())
 import org.trustweave.anchor.algorand.AlgorandBlockchainAnchorClient
 import org.trustweave.anchor.options.AlgorandOptions
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.trustweave.core.json.jsonData
 
 runBlocking {
     // Create client
@@ -119,7 +118,7 @@ runBlocking {
     val client = AlgorandBlockchainAnchorClient("algorand:testnet", options)
 
     // Anchor data (writePayload takes a JsonElement and returns AnchorResult)
-    val payload = buildJsonObject { put("message", "Hello, Algorand!") }
+    val payload = jsonData { "message" to "Hello, Algorand!" }
     try {
         val anchorResult = client.writePayload(payload)
         println("Anchored to: ${anchorResult.ref.chainId}")
@@ -270,8 +269,8 @@ Algorand has very low transaction fees (typically 0.001 ALGO). The adapter autom
 
 ## References
 
-- Algorand Documentation](https://developer.algorand.org/docs/)
-- Algorand SDK](https://github.com/algorand/java-algorand-sdk)
-- TrustWeave Anchor Module](../modules/trustweave-anchor.md)
-- Blockchain Anchoring Guide](../core-concepts/blockchain-anchoring.md)
+- [Algorand Documentation](https://developer.algorand.org/docs/)
+- [Algorand SDK](https://github.com/algorand/java-algorand-sdk)
+- [TrustWeave Anchor Module](../../api-reference/modules/trustweave-anchor.md)
+- [Blockchain Anchoring Guide](../core-concepts/blockchain-anchoring.md)
 

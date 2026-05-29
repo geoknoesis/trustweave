@@ -595,7 +595,7 @@ val wallet = trustWeave.wallet {
 val stored = issuedCredential.storeIn(wallet)
 ```
 
-See: [How to Manage Credentials in Wallets](manage-wallet-credentials.md)
+See: [How to Manage Credentials in Wallets](manage-wallets.md)
 
 ---
 

@@ -9,6 +9,7 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":did:did-core"))
     implementation(project(":kms:kms-core"))  // Needed for proof engines
+    api(project(":credentials:credential-models-mp"))
     
     // credential-api is now self-contained with its own identifiers and types
     // No dependency on credential-core needed

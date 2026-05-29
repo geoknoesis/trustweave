@@ -255,7 +255,7 @@ val offerMessage = DidCommMessage(
     type = DidCommMessageTypes.CREDENTIAL_OFFER,
     from = "did:key:issuer",
     to = listOf("did:key:holder"),
-    body = buildJsonObject { /* offer data */ }
+    body = jsonData { /* offer data */ }
 )
 didcomm.sendMessage(offerMessage)
 

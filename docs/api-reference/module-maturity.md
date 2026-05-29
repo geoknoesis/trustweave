@@ -62,6 +62,6 @@ The root build applies `maven-publish` to Kotlin/JVM library subprojects so arti
 
 ## Related docs
 
-- [Production integration checklist](../../tutorials/getting-started/production-integration-checklist.md)
+- [Production integration checklist](../getting-started/production-integration-checklist.md)
 - [Result types guide](result-types-guide.md)
 - Security policy (repository root `SECURITY.md`)

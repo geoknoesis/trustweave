@@ -385,8 +385,8 @@ fun benchmarkDidCreation() = runBlocking {
 
 ## References
 
-- Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html)
-- Kotlinx Serialization](https://github.com/Kotlin/kotlinx.serialization)
-- Error Handling](error-handling.md)
-- Testing Strategies](testing-strategies.md)
+- [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html)
+- [Kotlinx Serialization](https://github.com/Kotlin/kotlinx.serialization)
+- [Error Handling](error-handling.md)
+- [Testing Strategies](testing-strategies.md)
 

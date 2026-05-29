@@ -290,7 +290,7 @@ if (wallet is CredentialPresentation) {
 
 ## Next Steps
 
-- Manage Wallets](../how-to/manage-wallets.md) - Step-by-step guide
+- [Manage Wallets](../how-to/manage-wallets.md) - Step-by-step guide
 - Check out the [Wallet API Tutorial](../tutorials/wallet-api-tutorial.md) for hands-on examples
 - Explore the [Wallet API Reference](../api-reference/wallet-api.md)
 - Learn about [DIDs](dids.md) and [Verifiable Credentials](verifiable-credentials.md)

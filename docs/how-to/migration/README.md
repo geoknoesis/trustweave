@@ -32,7 +32,7 @@ TrustWeave follows semantic versioning (SemVer) principles:
 
 ### How to Handle Deprecations
 
-1. **Check CHANGELOG**: Review deprecation notices in [CHANGELOG.md](../../CHANGELOG.md)
+1. **Check CHANGELOG**: Review deprecation notices in [CHANGELOG.md](https://github.com/geoknoesis/trustweave/blob/main/CHANGELOG.md)
 2. **Update Code**: Replace deprecated APIs with recommended alternatives
 3. **Test Thoroughly**: Ensure your code works with new APIs
 4. **Plan Migration**: Schedule migration before major version upgrade
@@ -57,7 +57,7 @@ See [Migrating to 1.0.0](migrating-to-1.0.0.md) for detailed migration instructi
 
 ### Migrating to Typed Values API
 
-See [Migrating to Typed Values API](migrating-to-typed-values.md) for migration from String-based parameters to type-safe typed values:
+See Migrating to Typed Values API for migration from String-based parameters to type-safe typed values:
 - Replacing String parameters with `Did`, `KeyId`, etc.
 - Updating DSL builders to use typed values
 - Benefits of compile-time type safety

@@ -212,8 +212,6 @@ import org.trustweave.did.identifiers.Did
 import org.trustweave.core.util.DigestUtils
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import kotlinx.serialization.json.Json
 import java.time.Instant
 import java.time.temporal.ChronoUnit

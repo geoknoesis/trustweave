@@ -8,6 +8,7 @@ dependencies {
     implementation(project(":common"))     // For JSON utilities and common types
     implementation(project(":credentials:credential-api"))  // For VerifiableCredential models
     implementation(project(":did:did-core"))    // For DID operations
+    api(project(":wallet:wallet-core-mp"))
 
     // Kotlin Coroutines
     implementation(libs.kotlinx.coroutines.core)

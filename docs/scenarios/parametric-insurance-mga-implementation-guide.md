@@ -111,8 +111,7 @@ import org.trustweave.trust.TrustWeave
 import org.trustweave.contract.models.*
 import org.trustweave.core.*
 import org.trustweave.core.util.DigestUtils
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.trustweave.core.json.jsonData
 import java.time.Instant
 import org.trustweave.core.Did
 import org.trustweave.trust.types.getOrThrow
@@ -141,73 +140,71 @@ class SarFloodProduct(
         location: Location
     ): SmartContract {
 
-        val contract = trustWeave.contracts.draft(
-            request = ContractDraftRequest(
-                contractType = ContractType.Insurance,
-                executionModel = ExecutionModel.Parametric(
-                    triggerType = TriggerType.EarthObservation,
-                    evaluationEngine = "parametric-insurance"
-                ),
-                parties = ContractParties(
-                    primaryPartyDid = insurerDid,
-                    counterpartyDid = insuredDid
-                ),
-                terms = ContractTerms(
-                    obligations = listOf(
-                        Obligation(
-                            id = "payout-obligation",
-                            partyDid = insurerDid,
-                            description = "Pay out based on flood depth tier",
-                            obligationType = ObligationType.PAYMENT
-                        )
-                    ),
-                    conditions = listOf(
-                        ContractCondition(
-                            id = "flood-threshold-20cm",
-                            description = "Flood depth >= 20cm (Tier 1)",
-                            conditionType = ConditionType.THRESHOLD,
-                            expression = "$.floodDepthCm >= 20"
-                        ),
-                        ContractCondition(
-                            id = "flood-threshold-50cm",
-                            description = "Flood depth >= 50cm (Tier 2)",
-                            conditionType = ConditionType.THRESHOLD,
-                            expression = "$.floodDepthCm >= 50"
-                        ),
-                        ContractCondition(
-                            id = "flood-threshold-100cm",
-                            description = "Flood depth >= 100cm (Tier 3)",
-                            conditionType = ConditionType.THRESHOLD,
-                            expression = "$.floodDepthCm >= 100"
-                        )
-                    ),
-                    jurisdiction = "US",
-                    governingLaw = "State of North Carolina"
-                ),
-                effectiveDate = Instant.now().toString(),
-                expirationDate = Instant.now().plusSeconds(365 * 24 * 60 * 60).toString(),
-                contractData = buildJsonObject {
-                    "productType" to "SarFlood"
-                    "coverageAmount" to coverageAmount
-                    "location" {
-                        "latitude" to location.latitude
-                        "longitude" to location.longitude
-                        "address" to location.address
-                        "region" to location.region
-                    }
-                    "thresholds" {
-                        "tier1Cm" to 20.0
-                        "tier2Cm" to 50.0
-                        "tier3Cm" to 100.0
-                    }
-                    "payoutTiers" {
-                        "tier1" to 0.25  // 25% of coverage
-                        "tier2" to 0.50  // 50% of coverage
-                        "tier3" to 1.0   // 100% of coverage
-                    }
-                }
+        val contract = trustWeave.contracts.draft {
+            contractType = ContractType.Insurance
+            executionModel = ExecutionModel.Parametric(
+                triggerType = TriggerType.EarthObservation,
+                evaluationEngine = "parametric-insurance"
             )
-        ).getOrThrow()
+            parties = ContractParties(
+                primaryPartyDid = insurerDid,
+                counterpartyDid = insuredDid
+            )
+            terms = ContractTerms(
+                obligations = listOf(
+                    Obligation(
+                        id = "payout-obligation",
+                        partyDid = insurerDid,
+                        description = "Pay out based on flood depth tier",
+                        obligationType = ObligationType.PAYMENT
+                    )
+                ),
+                conditions = listOf(
+                    ContractCondition(
+                        id = "flood-threshold-20cm",
+                        description = "Flood depth >= 20cm (Tier 1)",
+                        conditionType = ConditionType.THRESHOLD,
+                        expression = "$.floodDepthCm >= 20"
+                    ),
+                    ContractCondition(
+                        id = "flood-threshold-50cm",
+                        description = "Flood depth >= 50cm (Tier 2)",
+                        conditionType = ConditionType.THRESHOLD,
+                        expression = "$.floodDepthCm >= 50"
+                    ),
+                    ContractCondition(
+                        id = "flood-threshold-100cm",
+                        description = "Flood depth >= 100cm (Tier 3)",
+                        conditionType = ConditionType.THRESHOLD,
+                        expression = "$.floodDepthCm >= 100"
+                    )
+                ),
+                jurisdiction = "US",
+                governingLaw = "State of North Carolina"
+            )
+            effectiveDate = Instant.now().toString()
+            expirationDate = Instant.now().plusSeconds(365 * 24 * 60 * 60).toString()
+            contractData {
+                "productType" to "SarFlood"
+                "coverageAmount" to coverageAmount
+                "location" {
+                    "latitude" to location.latitude
+                    "longitude" to location.longitude
+                    "address" to location.address
+                    "region" to location.region
+                }
+                "thresholds" {
+                    "tier1Cm" to 20.0
+                    "tier2Cm" to 50.0
+                    "tier3Cm" to 100.0
+                }
+                "payoutTiers" {
+                    "tier1" to 0.25  // 25% of coverage
+                    "tier2" to 0.50  // 50% of coverage
+                    "tier3" to 1.0   // 100% of coverage
+                }
+            }
+        }.getOrThrow()
 
         println("[OK] Flood contract draft created: ${contract.id}")
         return contract
@@ -242,29 +239,29 @@ class SarFloodProduct(
         timestamp: Instant
     ): Result<VerifiableCredential> = trustweaveCatching {
 
-        // Step 1: Create EO data payload
-        val floodData = buildJsonObject {
-            put("id", "sar-flood-${location.id}-${timestamp.toEpochMilli()}")
-            put("type", "SarFloodMeasurement")
-            put("location", buildJsonObject {
-                put("latitude", location.latitude)
-                put("longitude", location.longitude)
-                put("address", location.address)
-                put("region", location.region)
-            })
-            put("measurement", buildJsonObject {
-                put("floodDepthCm", sarData.floodDepthCm)
-                put("floodAreaSqKm", sarData.floodAreaSqKm)
-                put("confidence", sarData.confidence)
-                put("source", "Sentinel-1 SAR")
-                put("processingMethod", "SAR Flood Extraction")
-                put("demUsed", sarData.demUsed)
-                put("timestamp", timestamp.toString())
-            })
-            put("quality", buildJsonObject {
-                put("validationStatus", "validated")
-                put("dataQuality", sarData.quality)
-            })
+        // Step 1: Create EO data payload using the typed DSL
+        val floodData = jsonData {
+            "id" to "sar-flood-${location.id}-${timestamp.toEpochMilli()}"
+            "type" to "SarFloodMeasurement"
+            "location" {
+                "latitude" to location.latitude
+                "longitude" to location.longitude
+                "address" to location.address
+                "region" to location.region
+            }
+            "measurement" {
+                "floodDepthCm" to sarData.floodDepthCm
+                "floodAreaSqKm" to sarData.floodAreaSqKm
+                "confidence" to sarData.confidence
+                "source" to "Sentinel-1 SAR"
+                "processingMethod" to "SAR Flood Extraction"
+                "demUsed" to sarData.demUsed
+                "timestamp" to timestamp.toString()
+            }
+            "quality" {
+                "validationStatus" to "validated"
+                "dataQuality" to sarData.quality
+            }
         }
 
         // Step 2: Compute data digest for integrity
@@ -328,20 +325,14 @@ class SarFloodProduct(
             ?.jsonPrimitive?.content?.toDouble()
             ?: error("Flood depth not found in credential")
 
-        // Create execution context with trigger data
-        val executionContext = ExecutionContext(
-            triggerData = buildJsonObject {
-                put("floodDepthCm", floodDepthCm)
-                put("credentialId", floodCredential.id)
-                put("timestamp", Instant.now().toString())
+        // Execute contract with trigger data
+        val result = trustWeave.contracts.executeContract(contract) {
+            trigger {
+                "floodDepthCm" to floodDepthCm
+                "credentialId" to floodCredential.id
+                "timestamp" to Instant.now().toString()
             }
-        )
-
-        // Execute contract
-        val result = trustWeave.contracts.executeContract(
-            contract = contract,
-            executionContext = executionContext
-        ).getOrThrow()
+        }.getOrThrow()
 
         if (result.executed) {
             println("[OK] Contract executed! Payout triggered for flood depth: ${floodDepthCm}cm")
@@ -392,8 +383,7 @@ package com.atlasparametric.products.heatwave
 import org.trustweave.trust.TrustWeave
 import org.trustweave.core.*
 import org.trustweave.core.util.DigestUtils
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.trustweave.core.json.jsonData
 import java.time.Instant
 import java.time.Duration
 import org.trustweave.core.Did
@@ -415,23 +405,23 @@ class HeatwaveProduct(
         // Calculate consecutive days above threshold
         val consecutiveDays = calculateConsecutiveDays(lstData, threshold.temperatureC)
 
-        val heatwaveData = buildJsonObject {
-            put("id", "heatwave-${location.id}-${Instant.now().toEpochMilli()}")
-            put("type", "HeatwaveMeasurement")
-            put("location", buildJsonObject {
-                put("latitude", location.latitude)
-                put("longitude", location.longitude)
-                put("region", location.region)
-            })
-            put("measurement", buildJsonObject {
-                put("maxTemperatureC", lstData.maxOf { it.temperatureC })
-                put("avgTemperatureC", lstData.average { it.temperatureC })
-                put("consecutiveDays", consecutiveDays)
-                put("thresholdC", threshold.temperatureC)
-                put("minDaysRequired", threshold.minDays)
-                put("source", "MODIS LST + ERA5")
-                put("timestamp", Instant.now().toString())
-            })
+        val heatwaveData = jsonData {
+            "id" to "heatwave-${location.id}-${Instant.now().toEpochMilli()}"
+            "type" to "HeatwaveMeasurement"
+            "location" {
+                "latitude" to location.latitude
+                "longitude" to location.longitude
+                "region" to location.region
+            }
+            "measurement" {
+                "maxTemperatureC" to lstData.maxOf { it.temperatureC }
+                "avgTemperatureC" to lstData.average { it.temperatureC }
+                "consecutiveDays" to consecutiveDays
+                "thresholdC" to threshold.temperatureC
+                "minDaysRequired" to threshold.minDays
+                "source" to "MODIS LST + ERA5"
+                "timestamp" to Instant.now().toString()
+            }
         }
 
         val dataDigest = DigestUtils.sha256DigestMultibase(heatwaveData)
@@ -486,52 +476,50 @@ class HeatwaveProduct(
         location: Location
     ): SmartContract {
 
-        val contract = trustWeave.contracts.draft(
-            request = ContractDraftRequest(
-                contractType = ContractType.Insurance,
-                executionModel = ExecutionModel.Parametric(
-                    triggerType = TriggerType.EarthObservation,
-                    evaluationEngine = "parametric-insurance"
-                ),
-                parties = ContractParties(
-                    primaryPartyDid = insurerDid,
-                    counterpartyDid = insuredDid
-                ),
-                terms = ContractTerms(
-                    obligations = listOf(
-                        Obligation(
-                            id = "heatwave-payout",
-                            partyDid = insurerDid,
-                            description = "Pay out for consecutive days above threshold",
-                            obligationType = ObligationType.PAYMENT
-                        )
-                    ),
-                    conditions = listOf(
-                        ContractCondition(
-                            id = "heatwave-threshold",
-                            description = "Temperature >= ${threshold.temperatureC}Ã‚ C for ${threshold.minDays} days",
-                            conditionType = ConditionType.COMPOSITE,
-                            expression = "$.consecutiveDays >= ${threshold.minDays} && $.maxTemperatureC >= ${threshold.temperatureC}"
-                        )
+        val contract = trustWeave.contracts.draft {
+            contractType = ContractType.Insurance
+            executionModel = ExecutionModel.Parametric(
+                triggerType = TriggerType.EarthObservation,
+                evaluationEngine = "parametric-insurance"
+            )
+            parties = ContractParties(
+                primaryPartyDid = insurerDid,
+                counterpartyDid = insuredDid
+            )
+            terms = ContractTerms(
+                obligations = listOf(
+                    Obligation(
+                        id = "heatwave-payout",
+                        partyDid = insurerDid,
+                        description = "Pay out for consecutive days above threshold",
+                        obligationType = ObligationType.PAYMENT
                     )
                 ),
-                effectiveDate = Instant.now().toString(),
-                expirationDate = Instant.now().plusSeconds(365 * 24 * 60 * 60).toString(),
-                contractData = buildJsonObject {
-                    put("productType", "Heatwave")
-                    put("basePayout", basePayout)
-                    put("threshold", buildJsonObject {
-                        put("temperatureC", threshold.temperatureC)
-                        put("minDays", threshold.minDays)
-                    })
-                    put("location", buildJsonObject {
-                        put("latitude", location.latitude)
-                        put("longitude", location.longitude)
-                        put("region", location.region)
-                    })
-                }
+                conditions = listOf(
+                    ContractCondition(
+                        id = "heatwave-threshold",
+                        description = "Temperature >= ${threshold.temperatureC}°C for ${threshold.minDays} days",
+                        conditionType = ConditionType.COMPOSITE,
+                        expression = "$.consecutiveDays >= ${threshold.minDays} && $.maxTemperatureC >= ${threshold.temperatureC}"
+                    )
+                )
             )
-        ).getOrThrow()
+            effectiveDate = Instant.now().toString()
+            expirationDate = Instant.now().plusSeconds(365 * 24 * 60 * 60).toString()
+            contractData {
+                "productType" to "Heatwave"
+                "basePayout" to basePayout
+                "threshold" {
+                    "temperatureC" to threshold.temperatureC
+                    "minDays" to threshold.minDays
+                }
+                "location" {
+                    "latitude" to location.latitude
+                    "longitude" to location.longitude
+                    "region" to location.region
+                }
+            }
+        }.getOrThrow()
 
         return contract
     }
@@ -557,18 +545,13 @@ class HeatwaveProduct(
             ?.jsonPrimitive?.content?.toDouble()
             ?: error("Max temperature not found")
 
-        val executionContext = ExecutionContext(
-            triggerData = buildJsonObject {
-                put("consecutiveDays", consecutiveDays)
-                put("maxTemperatureC", maxTemp)
-                put("credentialId", heatwaveCredential.id)
+        return trustWeave.contracts.executeContract(contract) {
+            trigger {
+                "consecutiveDays" to consecutiveDays
+                "maxTemperatureC" to maxTemp
+                "credentialId" to heatwaveCredential.id
             }
-        )
-
-        return trustWeave.contracts.executeContract(
-            contract = contract,
-            executionContext = executionContext
-        ).getOrThrow()
+        }.getOrThrow()
     }
 
     private fun calculateConsecutiveDays(
@@ -625,8 +608,7 @@ package com.atlasparametric.products.solar
 import org.trustweave.trust.TrustWeave
 import org.trustweave.core.*
 import org.trustweave.core.util.DigestUtils
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.trustweave.core.json.jsonData
 import java.time.Instant
 import org.trustweave.core.Did
 
@@ -649,22 +631,22 @@ class SolarAttenuationProduct(
         val currentIrradiance = irradianceData.currentWattPerSqM
         val attenuationPercent = ((baselineIrradiance - currentIrradiance) / baselineIrradiance) * 100.0
 
-        val solarData = buildJsonObject {
-            put("id", "solar-attenuation-${location.id}-${Instant.now().toEpochMilli()}")
-            put("type", "SolarAttenuationMeasurement")
-            put("location", buildJsonObject {
-                put("latitude", location.latitude)
-                put("longitude", location.longitude)
-                put("solarFarmId", location.solarFarmId)
-            })
-            put("measurement", buildJsonObject {
-                put("aod", aodData.aodValue)
-                put("baselineIrradiance", baselineIrradiance)
-                put("currentIrradiance", currentIrradiance)
-                put("attenuationPercent", attenuationPercent)
-                put("source", "MODIS/VIIRS AOD + CERES Irradiance")
-                put("timestamp", Instant.now().toString())
-            })
+        val solarData = jsonData {
+            "id" to "solar-attenuation-${location.id}-${Instant.now().toEpochMilli()}"
+            "type" to "SolarAttenuationMeasurement"
+            "location" {
+                "latitude" to location.latitude
+                "longitude" to location.longitude
+                "solarFarmId" to location.solarFarmId
+            }
+            "measurement" {
+                "aod" to aodData.aodValue
+                "baselineIrradiance" to baselineIrradiance
+                "currentIrradiance" to currentIrradiance
+                "attenuationPercent" to attenuationPercent
+                "source" to "MODIS/VIIRS AOD + CERES Irradiance"
+                "timestamp" to Instant.now().toString()
+            }
         }
 
         val dataDigest = DigestUtils.sha256DigestMultibase(solarData)
@@ -1103,7 +1085,7 @@ class MultiProviderEoDataService(
 
         EoData(
             type = dataType ?: "Unknown",
-            data = data ?: buildJsonObject {},
+            data = data ?: jsonData { },
             provider = issuerDid,
             credentialId = dataCredential.id
         )
@@ -1193,13 +1175,13 @@ class AuditTrailService(
     ): AuditRecord {
 
         // Create audit record
-        val auditRecord = buildJsonObject {
-            put("id", event.id)
-            put("timestamp", event.timestamp.toString())
-            put("eventType", event.type)
-            put("actor", event.actor)
-            put("resource", event.resource)
-            put("details", event.details)
+        val auditRecord = jsonData {
+            "id" to event.id
+            "timestamp" to event.timestamp.toString()
+            "eventType" to event.type
+            "actor" to event.actor
+            "resource" to event.resource
+            "details" to event.details
         }
 
         // Anchor to blockchain for immutability
@@ -1274,12 +1256,12 @@ class AuditTrailService(
 ## Next Steps
 
 1. **Review Existing Scenarios**:
-   - Parametric Insurance with EO Data](parametric-insurance-eo-scenario.md)
-   - Earth Observation Scenario](earth-observation-scenario.md)
+   - [Parametric Insurance with EO Data](parametric-insurance-eo-scenario.md)
+   - [Earth Observation Scenario](earth-observation-scenario.md)
 
 2. **Explore TrustWeave APIs**:
-   - Core API Reference](../api-reference/core-api.md)
-   - Blockchain Anchoring](../core-concepts/blockchain-anchoring.md)
+   - [Core API Reference](../api-reference/core-api.md)
+   - [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md)
 
 3. **Start Building**:
    - Clone TrustWeave repository
@@ -1288,9 +1270,9 @@ class AuditTrailService(
 
 ## Related Documentation
 
-- Parametric Insurance with EO Data](parametric-insurance-eo-scenario.md) - EO data insurance patterns
-- Earth Observation Scenario](earth-observation-scenario.md) - EO data integrity
-- Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
-- API Reference](../api-reference/core-api.md) - Complete API documentation
+- [Parametric Insurance with EO Data](parametric-insurance-eo-scenario.md) - EO data insurance patterns
+- [Earth Observation Scenario](earth-observation-scenario.md) - EO data integrity
+- [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
+- [API Reference](../api-reference/core-api.md) - Complete API documentation
 
 

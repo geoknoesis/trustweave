@@ -1459,11 +1459,11 @@ val vmId = VerificationMethodId.build {
 
 ## References
 
-- W3C DID Core Specification](https://www.w3.org/TR/did-core/)
-- W3C Verifiable Credentials Data Model](https://www.w3.org/TR/vc-data-model/)
-- RFC 3987 - Internationalized Resource Identifiers (IRIs)](https://tools.ietf.org/html/rfc3987)
-- Kotlin Value Classes](https://kotlinlang.org/docs/inline-classes.html)
-- Kotlinx Serialization](https://github.com/Kotlin/kotlinx.serialization)
+- [W3C DID Core Specification](https://www.w3.org/TR/did-core/)
+- [W3C Verifiable Credentials Data Model](https://www.w3.org/TR/vc-data-model/)
+- [RFC 3987 - Internationalized Resource Identifiers (IRIs)](https://tools.ietf.org/html/rfc3987)
+- [Kotlin Value Classes](https://kotlinlang.org/docs/inline-classes.html)
+- [Kotlinx Serialization](https://github.com/Kotlin/kotlinx.serialization)
 
 ---
 

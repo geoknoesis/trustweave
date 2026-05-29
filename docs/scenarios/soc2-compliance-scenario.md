@@ -173,6 +173,7 @@ import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
+import org.trustweave.core.json.jsonData
 import kotlinx.datetime.Clock
 import kotlin.time.Duration.Companion.days
 import org.trustweave.trust.types.getOrThrowDid
@@ -275,20 +276,20 @@ fun main() = runBlocking {
     println("✅ Employee Access Credential issued: ${employeeAccessCredential.id}")
 
     // Step 4: Create audit log entry (CC7.1, CC7.2)
-    val auditLogEntry = buildJsonObject {
-        put("id", "audit-log-${Instant.now().toEpochMilli()}")
-        put("timestamp", Instant.now().toString())
-        put("userId", adminDid.value)
-        put("action", "credential:issue")
-        put("resourceType", "credential")
-        put("resourceId", adminAccessCredential.id)
-        put("result", "success")
-        put("ipAddress", "192.168.1.100")
-        put("userAgent", "TrustWeave-Client/1.0")
-        put("details", buildJsonObject {
-            put("credentialType", "AccessControlCredential")
-            put("role", "Administrator")
-        })
+    val auditLogEntry = jsonData {
+        "id" to "audit-log-${Instant.now().toEpochMilli()}"
+        "timestamp" to Instant.now().toString()
+        "userId" to adminDid.value
+        "action" to "credential:issue"
+        "resourceType" to "credential"
+        "resourceId" to adminAccessCredential.id
+        "result" to "success"
+        "ipAddress" to "192.168.1.100"
+        "userAgent" to "TrustWeave-Client/1.0"
+        "details" {
+            "credentialType" to "AccessControlCredential"
+            "role" to "Administrator"
+        }
     }
 
     // Anchor audit log to blockchain for immutability
@@ -441,43 +442,43 @@ fun main() = runBlocking {
     println("✅ Incident response credential issued: ${incidentCredential.id}")
 
     // Step 9: Compliance report generation
-    val complianceReport = buildJsonObject {
-        put("reportId", "SOC2-REPORT-${Instant.now().toEpochMilli()}")
-        put("reportDate", Instant.now().toString())
-        put("reportPeriod", buildJsonObject {
-            put("startDate", Instant.now().minus(90, ChronoUnit.DAYS).toString())
-            put("endDate", Instant.now().toString())
-        })
-        put("controls", buildJsonObject {
-            put("CC6", buildJsonObject {
-                put("status", "Compliant")
-                put("accessCredentialsIssued", 2)
-                put("accessVerifications", 1)
-            })
-            put("CC7", buildJsonObject {
-                put("status", "Compliant")
-                put("auditLogsAnchored", 1)
-                put("keyRotations", 1)
-                put("systemChanges", 1)
-            })
-            put("A1", buildJsonObject {
-                put("status", "Compliant")
-                put("uptime", "99.9%")
-            })
-            put("PI", buildJsonObject {
-                put("status", "Compliant")
-                put("credentialVerifications", 1)
-            })
-            put("C1", buildJsonObject {
-                put("status", "Compliant")
-                put("encryptionEnabled", true)
-            })
-        })
-        put("incidents", buildJsonObject {
-            put("total", 1)
-            put("resolved", 1)
-            put("open", 0)
-        })
+    val complianceReport = jsonData {
+        "reportId" to "SOC2-REPORT-${Instant.now().toEpochMilli()}"
+        "reportDate" to Instant.now().toString()
+        "reportPeriod" {
+            "startDate" to Instant.now().minus(90, ChronoUnit.DAYS).toString()
+            "endDate" to Instant.now().toString()
+        }
+        "controls" {
+            "CC6" {
+                "status" to "Compliant"
+                "accessCredentialsIssued" to 2
+                "accessVerifications" to 1
+            }
+            "CC7" {
+                "status" to "Compliant"
+                "auditLogsAnchored" to 1
+                "keyRotations" to 1
+                "systemChanges" to 1
+            }
+            "A1" {
+                "status" to "Compliant"
+                "uptime" to "99.9%"
+            }
+            "PI" {
+                "status" to "Compliant"
+                "credentialVerifications" to 1
+            }
+            "C1" {
+                "status" to "Compliant"
+                "encryptionEnabled" to true
+            }
+        }
+        "incidents" {
+            "total" to 1
+            "resolved" to 1
+            "open" to 0
+        }
     }
 
     // Anchor compliance report
@@ -602,19 +603,19 @@ suspend fun logAuditEvent(
     result: String,
     details: Map<String, String> = emptyMap()
 ): String {
-    val auditEntry = buildJsonObject {
-        put("id", "audit-${Instant.now().toEpochMilli()}")
-        put("timestamp", Instant.now().toString())
-        put("userId", userId)
-        put("action", action)
-        put("resourceType", resourceType)
-        put("resourceId", resourceId)
-        put("result", result)
-        put("details", buildJsonObject {
+    val auditEntry = jsonData {
+        "id" to "audit-${Instant.now().toEpochMilli()}"
+        "timestamp" to Instant.now().toString()
+        "userId" to userId
+        "action" to action
+        "resourceType" to resourceType
+        "resourceId" to resourceId
+        "result" to result
+        "details" {
             details.forEach { (key, value) ->
-                put(key, value)
+                key to value
             }
-        })
+        }
     }
 
     // Store in database for querying
@@ -724,33 +725,33 @@ suspend fun generateComplianceReport(
     }
 
     // Check control compliance
-    val controls = buildJsonObject {
-        put("CC6", buildJsonObject {
-            put("status", checkAccessControlCompliance(auditLogs))
-            put("accessCredentialsIssued", countAccessCredentialsIssued(auditLogs))
-            put("accessVerifications", countAccessVerifications(auditLogs))
-        })
-        put("CC7", buildJsonObject {
-            put("status", checkSystemOperationsCompliance(auditLogs))
-            put("auditLogsAnchored", countAnchoredAuditLogs(auditLogs))
-            put("keyRotations", countKeyRotations(auditLogs))
-        })
+    val controls = jsonData {
+        "CC6" {
+            "status" to checkAccessControlCompliance(auditLogs)
+            "accessCredentialsIssued" to countAccessCredentialsIssued(auditLogs)
+            "accessVerifications" to countAccessVerifications(auditLogs)
+        }
+        "CC7" {
+            "status" to checkSystemOperationsCompliance(auditLogs)
+            "auditLogsAnchored" to countAnchoredAuditLogs(auditLogs)
+            "keyRotations" to countKeyRotations(auditLogs)
+        }
         // ... additional controls
     }
 
-    val report = buildJsonObject {
-        put("reportId", "SOC2-REPORT-${Instant.now().toEpochMilli()}")
-        put("reportDate", Instant.now().toString())
-        put("reportPeriod", buildJsonObject {
-            put("startDate", startDate.toString())
-            put("endDate", endDate.toString())
-        })
-        put("controls", controls)
-        put("summary", buildJsonObject {
-            put("totalOperations", auditLogs.size)
-            put("anchoredOperations", countAnchoredAuditLogs(auditLogs))
-            put("complianceStatus", "Compliant")
-        })
+    val report = jsonData {
+        "reportId" to "SOC2-REPORT-${Instant.now().toEpochMilli()}"
+        "reportDate" to Instant.now().toString()
+        "reportPeriod" {
+            "startDate" to startDate.toString()
+            "endDate" to endDate.toString()
+        }
+        "controls" to controls
+        "summary" {
+            "totalOperations" to auditLogs.size
+            "anchoredOperations" to countAnchoredAuditLogs(auditLogs)
+            "complianceStatus" to "Compliant"
+        }
     }
 
     // Anchor report to blockchain
@@ -807,10 +808,10 @@ suspend fun generateComplianceReport(
 
 ## Related Documentation
 
-- Security Clearance Scenario](security-clearance-access-control-scenario.md) - Access control patterns
-- Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
-- Key Management](../core-concepts/key-management.md) - Key management guide
-- Security Best Practices](../security/README.md) - Comprehensive security guidance
-- API Reference](../api-reference/core-api.md) - Complete API documentation
+- [Security Clearance Scenario](security-clearance-access-control-scenario.md) - Access control patterns
+- [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
+- [Key Management](../core-concepts/key-management.md) - Key management guide
+- Security Best Practices - Comprehensive security guidance
+- [API Reference](../api-reference/core-api.md) - Complete API documentation
 
 

@@ -285,8 +285,10 @@ internal class DefaultCredentialService(
                     )
                 )
             } else {
+                // Copy nullable property to a local — cross-module smart cast not possible.
+                val presentationProof = presentation.proof!!
                 // Verify presentation proof using the appropriate proof engine
-                val proofFormat = presentation.proof.getFormatId()
+                val proofFormat = presentationProof.getFormatId()
                 PresentationVerification.verifyProofFormatSupported(proofFormat, engines, presentation)?.let { return it }
                 val engine = engines[proofFormat]!!
 
@@ -367,10 +369,11 @@ internal class DefaultCredentialService(
                         errors = listOf("SD-JWT-VC presentation proof verification is not supported")
                     )
                 } else {
+                    val proofTypeName = presentation.proof!!::class.simpleName
                     return VerificationResult.Invalid.InvalidProof(
                         credential = presentation.verifiableCredential.first(),
-                        reason = "Unsupported presentation proof type: ${presentation.proof::class.simpleName}",
-                        errors = listOf("Presentation proof type '${presentation.proof::class.simpleName}' is not supported for verification")
+                        reason = "Unsupported presentation proof type: $proofTypeName",
+                        errors = listOf("Presentation proof type '$proofTypeName' is not supported for verification")
                     )
                 }
             }
@@ -490,10 +493,10 @@ internal class DefaultCredentialService(
     
     override suspend fun status(
         credential: VerifiableCredential,
-        clockSkewTolerance: java.time.Duration
+        clockSkewTolerance: kotlin.time.Duration
     ): CredentialStatusInfo {
         val now = Clock.System.now()
-        val clockSkewKt = clockSkewTolerance.toKotlinDuration()
+        val clockSkewKt = clockSkewTolerance
 
         // Use the same VC-version-aware expiry/notBefore logic as CredentialValidation so that
         // status() and verify() always agree on which field is authoritative for each VC version.

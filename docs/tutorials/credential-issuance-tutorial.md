@@ -691,7 +691,7 @@ fun main() = runBlocking {
 
 ## References
 
-- W3C Verifiable Credentials Specification](https://www.w3.org/TR/vc-data-model/)
-- TrustWeave Common Module](../modules/trustweave-common.md)
-- TrustWeave Core API](../api-reference/core-api.md)
+- [W3C Verifiable Credentials Specification](https://www.w3.org/TR/vc-data-model/)
+- [TrustWeave Common Module](../api-reference/modules/trustweave-common.md)
+- [TrustWeave Core API](../api-reference/core-api.md)
 

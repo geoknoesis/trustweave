@@ -126,6 +126,7 @@ val setup = EthereumIntegration.setup(
 import org.trustweave.anchor.*
 import org.trustweave.anchor.ethereum.*
 import kotlinx.serialization.json.*
+import org.trustweave.core.json.jsonData
 
 val client = EthereumBlockchainAnchorClient(
     EthereumBlockchainAnchorClient.SEPOLIA,
@@ -136,9 +137,9 @@ val client = EthereumBlockchainAnchorClient(
 )
 
 // Anchor a JSON payload
-val payload = buildJsonObject {
-    put("digest", "uABC123...")
-    put("timestamp", System.currentTimeMillis())
+val payload = jsonData {
+    "digest" to "uABC123..."
+    "timestamp" to System.currentTimeMillis()
 }
 
 val result = client.writePayload(payload, "application/json")
@@ -166,8 +167,7 @@ println("Retrieved: ${readResult.payload}")
 import org.trustweave.trust.TrustWeave
 import org.trustweave.anchor.ethereum.*
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.trustweave.core.json.jsonData
 
 val trustWeave = TrustWeave.build {
     did { method("key") { algorithm("Ed25519") } }
@@ -180,7 +180,7 @@ val trustWeave = TrustWeave.build {
 }
 
 val digest = "uABC123..."
-val payload = buildJsonObject { put("digest", digest) }
+val payload = jsonData { "digest" to digest }
 val result = trustWeave.blockchains.anchor(
     data = payload,
     serializer = JsonElement.serializer(),
@@ -228,7 +228,7 @@ println("Anchored: ${result.ref.txHash}")
 
 ## References
 
-- Ethereum Documentation](https://ethereum.org/en/developers/docs/)
-- Sepolia Testnet](https://sepolia.dev/)
-- Web3j Documentation](https://docs.web3j.io/)
+- [Ethereum Documentation](https://ethereum.org/en/developers/docs/)
+- [Sepolia Testnet](https://sepolia.dev/)
+- [Web3j Documentation](https://docs.web3j.io/)
 

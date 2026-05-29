@@ -169,19 +169,20 @@ import org.trustweave.godiddy.*
 import org.trustweave.godiddy.issuer.GodiddyIssuer
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
+import org.trustweave.core.json.jsonData
 
 val client = GodiddyClient(GodiddyConfig.default())
 val issuer = GodiddyIssuer(client)
 
 // Issue credential via GoDiddy Issuer (suspend; takes a JsonObject + options map)
 runBlocking {
-    val credentialJson: JsonObject = buildJsonObject {
-        put("@context", JsonArray(listOf(JsonPrimitive("https://www.w3.org/2018/credentials/v1"))))
-        put("type", JsonArray(listOf(JsonPrimitive("VerifiableCredential"))))
-        put("issuer", "did:key:z6Mk...")
-        putJsonObject("credentialSubject") {
-            put("id", "did:example:subject")
-            put("name", "Alice")
+    val credentialJson: JsonObject = jsonData {
+        "@context" to listOf("https://www.w3.org/2018/credentials/v1")
+        "type" to listOf("VerifiableCredential")
+        "issuer" to "did:key:z6Mk..."
+        "credentialSubject" {
+            "id" to "did:example:subject"
+            "name" to "Alice"
         }
     }
 
@@ -275,8 +276,8 @@ when (val result = resolver.resolveDid(did)) {
 
 ## References
 
-- GoDiddy Documentation](https://godiddy.com/docs)
-- Universal Resolver](https://dev.uniresolver.io/)
-- TrustWeave DID Module](../modules/trustweave-did.md)
-- TrustWeave Core API](../api-reference/core-api.md)
+- [GoDiddy Documentation](https://godiddy.com/docs)
+- [Universal Resolver](https://dev.uniresolver.io/)
+- [TrustWeave DID Module](../../api-reference/modules/trustweave-did.md)
+- [TrustWeave Core API](../api-reference/core-api.md)
 

@@ -207,8 +207,6 @@ import org.trustweave.anchor.BlockchainAnchorRegistry
 import org.trustweave.anchor.anchorTyped
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import kotlinx.serialization.json.Json
 import java.time.Instant
 import java.util.UUID

@@ -22,7 +22,7 @@ Understanding how TrustWeave works at a conceptual level will help you use it ef
 
 ## Overview
 
-TrustWeave follows [Clean Architecture](../architecture/CLEAN_ARCHITECTURE.md) principles (Uncle Bob) with clear separation between:
+TrustWeave follows [Clean Architecture](../core-concepts/architecture/CLEAN_ARCHITECTURE.md) principles (Uncle Bob) with clear separation between:
 - **Facade Layer** (`TrustWeave`) - High-level, developer-friendly API
 - **Service Layer** - Domain-specific services (DID, Credential, Wallet, etc.)
 - **Plugin Layer** - Pluggable implementations (DID methods, KMS, blockchains)
@@ -111,7 +111,7 @@ when (val v = trustWeave.verify(credential)) {
 }
 ```
 
-See [Result types guide](../../api-reference/result-types-guide.md) and [API patterns](../../tutorials/getting-started/api-patterns.md#api-contract-results-vs-exceptions).
+See [Result types guide](../../api-reference/result-types-guide.md) and [API patterns](../getting-started/api-patterns.md#api-contract-results-vs-exceptions).
 
 ### 2. Configuration (`TrustWeaveConfig`)
 
@@ -268,7 +268,7 @@ TrustWeave.build {
 
 ## Error Handling Model
 
-TrustWeave uses a **hybrid** model; the [API patterns — results vs exceptions](../../tutorials/getting-started/api-patterns.md#api-contract-results-vs-exceptions) table is the source of truth.
+TrustWeave uses a **hybrid** model; the [API patterns — results vs exceptions](../getting-started/api-patterns.md#api-contract-results-vs-exceptions) table is the source of truth.
 
 ### 1. Sealed results (credential pipeline and many facade APIs)
 
@@ -372,8 +372,8 @@ when (val w = trustWeave.wallet { holder(holderDid) }) {
 
 ## Next Steps
 
-- Quick Start](../getting-started/quick-start.md) - Hands-on introduction
-- Core Concepts](../core-concepts/README.md) - Deep dives into DIDs, VCs, etc.
-- API Reference](../api-reference/core-api.md) - Complete API documentation
-- Architecture Overview](architecture-overview.md) - Technical architecture details
+- [Quick Start](../getting-started/quick-start.md) - Hands-on introduction
+- [Core Concepts](../core-concepts/README.md) - Deep dives into DIDs, VCs, etc.
+- [API Reference](../api-reference/core-api.md) - Complete API documentation
+- [Architecture Overview](architecture-overview.md) - Technical architecture details
 

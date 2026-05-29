@@ -195,7 +195,7 @@ Create a run configuration for debugging:
 
 ## Next Steps
 
-- Quick Start](quick-start.md) - Create your first TrustWeave application
-- Your First Application](your-first-application.md) - Build a complete example
-- API Reference](../api-reference/core-api.md) - Complete API documentation
+- [Quick Start](quick-start.md) - Create your first TrustWeave application
+- [Your First Application](your-first-application.md) - Build a complete example
+- [API Reference](../api-reference/core-api.md) - Complete API documentation
 

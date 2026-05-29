@@ -444,8 +444,8 @@ class MyLifecycleAwareAnchorClient(
 
 ## References
 
-- Creating Plugins](../contributing/creating-plugins.md)
-- Service Provider Interface](spi.md)
-- Plugin Lifecycle](plugin-lifecycle.md)
-- Service Provider Interface](spi.md)
+- [Creating Plugins](../contributing/creating-plugins.md)
+- [Service Provider Interface](spi.md)
+- [Plugin Lifecycle](plugin-lifecycle.md)
+- [Service Provider Interface](spi.md)
 

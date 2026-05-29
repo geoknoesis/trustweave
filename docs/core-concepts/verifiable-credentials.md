@@ -514,22 +514,22 @@ Some proof types (like BBS+) support zero-knowledge proofs, allowing you to prov
 
 ## See also
 
-- Credential Service API](../api-reference/credential-service-api.md) for parameter details and SPI guidance
-- Quick Start – Step 4 & 5](../getting-started/quick-start.md#step-4-issue-a-credential-and-store-it) for a runnable walkthrough
-- Wallets](wallets.md) for storage and presentation
-- Architecture Overview](../introduction/architecture-overview.md) for the credential flow diagram
+- [Credential Service API](../api-reference/credential-service-api.md) for parameter details and SPI guidance
+- [Quick Start – Step 4 & 5](../getting-started/quick-start.md#step-4-issue-a-credential-and-store-it) for a runnable walkthrough
+- [Wallets](wallets.md) for storage and presentation
+- [Architecture Overview](../introduction/architecture-overview.md) for the credential flow diagram
 
 ## Next Steps
 
 **Ready to use credentials?**
-- Issue Credentials](../how-to/issue-credentials.md) - Step-by-step guide
-- Verify Credentials](../how-to/verify-credentials.md) - Step-by-step guide
-- Quick Start – Step 4 & 5](../getting-started/quick-start.md#step-4-issue-a-credential-and-store-it) - Create your first credential
+- [Issue Credentials](../how-to/issue-credentials.md) - Step-by-step guide
+- [Verify Credentials](../how-to/verify-credentials.md) - Step-by-step guide
+- [Quick Start – Step 4 & 5](../getting-started/quick-start.md#step-4-issue-a-credential-and-store-it) - Create your first credential
 
 **Want to learn more?**
-- Wallets](wallets.md) - Managing credentials
-- Wallet API Tutorial](../tutorials/wallet-api-tutorial.md) - Hands-on wallet examples
-- Credential Service API Reference](../api-reference/credential-service-api.md) - Complete API documentation
-- Core API Reference](../api-reference/core-api.md) - TrustWeave API
+- [Wallets](wallets.md) - Managing credentials
+- [Wallet API Tutorial](../tutorials/wallet-api-tutorial.md) - Hands-on wallet examples
+- [Credential Service API Reference](../api-reference/credential-service-api.md) - Complete API documentation
+- [Core API Reference](../api-reference/core-api.md) - TrustWeave API
 
 

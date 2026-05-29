@@ -242,7 +242,7 @@ override fun create(
 
 ## References
 
-- Java Service Provider Interface](https://docs.oracle.com/javase/tutorial/ext/basics/spi.html)
-- Core Modules](../modules/core-modules.md)
-- Creating Plugins](../contributing/creating-plugins.md)
+- [Java Service Provider Interface](https://docs.oracle.com/javase/tutorial/ext/basics/spi.html)
+- [Core Modules](../modules/core-modules.md)
+- [Creating Plugins](../contributing/creating-plugins.md)
 

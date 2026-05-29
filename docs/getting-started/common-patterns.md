@@ -20,7 +20,7 @@ redirect_from:
 
 ## Table of Contents
 
-1. [Issuer → Holder → Verifier workflow](#issuer--holder--verifier-workflow)
+1. [Issuer → Holder → Verifier workflow](#issuer--holder--verifier-workflow-issuer--holder--verifier-workflow)
 2. [Batch Operations](#batch-operations)
 3. [Error Recovery with Fallbacks](#error-recovery-with-fallbacks)
 4. [Credential Lifecycle Management](#credential-lifecycle-management)

@@ -118,9 +118,9 @@ Available via `org.trustweave.credential.model.ProofType` (see `credentials/cred
 
 ## Related Documentation
 
-- Key Management Guide](./key-management.md)
-- Verifiable Credentials Guide](./verifiable-credentials.md)
-- DID Guide](./dids.md)
-- Architecture Overview](../introduction/architecture-overview.md)
+- [Key Management Guide](./key-management.md)
+- [Verifiable Credentials Guide](./verifiable-credentials.md)
+- [DID Guide](./dids.md)
+- [Architecture Overview](../introduction/architecture-overview.md)
 
 

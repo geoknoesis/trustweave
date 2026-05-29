@@ -346,10 +346,13 @@ internal class VcLdProofEngine(
             throw IllegalArgumentException("At least one credential is required for presentation")
         }
         
-        // Handle selective disclosure if disclosedClaims is specified
-        val credentialsToInclude = if (request.disclosedClaims != null && request.disclosedClaims.isNotEmpty()) {
+        // Handle selective disclosure if disclosedClaims is specified.
+        // Copy to a local before checking + using — cross-module smart cast on a public
+        // property declared in :credentials:credential-models-mp is not possible.
+        val disclosedClaims = request.disclosedClaims
+        val credentialsToInclude = if (disclosedClaims != null && disclosedClaims.isNotEmpty()) {
             credentials.map { credential ->
-                SelectiveDisclosureFilter.filter(credential, request.disclosedClaims)
+                SelectiveDisclosureFilter.filter(credential, disclosedClaims)
             }
         } else {
             credentials

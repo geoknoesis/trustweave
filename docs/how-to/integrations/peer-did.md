@@ -298,7 +298,7 @@ val result = method.resolveDid(document.id)
 
 ## References
 
-- Peer DID Method Specification](https://identity.foundation/peer-did-method-spec/)
-- DID Core Specification](https://www.w3.org/TR/did-core/)
-- TrustWeave Core API](../api-reference/core-api.md)
+- [Peer DID Method Specification](https://identity.foundation/peer-did-method-spec/)
+- [DID Core Specification](https://www.w3.org/TR/did-core/)
+- [TrustWeave Core API](../api-reference/core-api.md)
 

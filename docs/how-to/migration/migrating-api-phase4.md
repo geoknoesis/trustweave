@@ -85,9 +85,9 @@ when (val result = trustweave.resolveDid("did:key:...")) {
 // Issue credential
 val credential = trustweave.credentials.issue(
     issuer = issuerDid.id,
-    subject = buildJsonObject {
-        put("id", holderDid.id)
-        put("name", "Alice")
+    subject = jsonData {
+        "id" to holderDid.id
+        "name" to "Alice"
     },
     config = IssuanceConfig(
         proofType = ProofType.Ed25519Signature2020,
@@ -180,9 +180,9 @@ val issuerKeyId = issuerDid.verificationMethod.first().id
 // Credentials
 val credential = trustweave.credentials.issue(
     issuer = issuerDid.id,
-    subject = buildJsonObject {
-        put("id", holderDid.id)
-        put("name", "Alice")
+    subject = jsonData {
+        "id" to holderDid.id
+        "name" to "Alice"
     },
     config = IssuanceConfig(
         proofType = ProofType.Ed25519Signature2020,

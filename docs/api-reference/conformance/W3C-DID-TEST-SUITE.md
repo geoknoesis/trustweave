@@ -15,8 +15,8 @@ Many tests remain relevant for **DID 1.1** (syntax, core properties, consumption
 
 ## Prerequisites
 
-- Node.js](https://nodejs.org/) (≥ 14; LTS recommended)
-- Git](https://git-scm.com/)
+- [Node.js](https://nodejs.org/) (≥ 14; LTS recommended)
+- [Git](https://git-scm.com/)
 
 ## Run locally
 

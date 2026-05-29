@@ -537,15 +537,15 @@ val key2Result = kms.generateKey(
 
 ## Related Documentation
 
-- Key Management Guide](../core-concepts/key-management.md) - Core KMS concepts
-- Algorithm Compatibility Table](../core-concepts/algorithm-compatibility-table.md) - Algorithm support comparison
-- Key Rotation Guide](../advanced/key-rotation.md) - Key rotation strategies
-- Creating Plugins Guide](../contributing/creating-plugins.md) - Custom KMS implementations
+- [Key Management Guide](../core-concepts/key-management.md) - Core KMS concepts
+- [Algorithm Compatibility Table](../core-concepts/algorithm-compatibility-table.md) - Algorithm support comparison
+- [Key Rotation Guide](../../api-reference/advanced/key-rotation.md) - Key rotation strategies
+- [Creating Plugins Guide](../contributing/creating-plugins.md) - Custom KMS implementations
 
 ## See Also
 
-- Azure Key Vault Documentation](https://learn.microsoft.com/azure/key-vault/)
-- Azure Key Vault Java SDK](https://github.com/Azure/azure-sdk-for-java/tree/main/sdk/keyvault)
-- Azure Key Vault REST API Reference](https://learn.microsoft.com/rest/api/keyvault/)
-- Azure Managed Identity Documentation](https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/)
+- [Azure Key Vault Documentation](https://learn.microsoft.com/azure/key-vault/)
+- [Azure Key Vault Java SDK](https://github.com/Azure/azure-sdk-for-java/tree/main/sdk/keyvault)
+- [Azure Key Vault REST API Reference](https://learn.microsoft.com/rest/api/keyvault/)
+- [Azure Managed Identity Documentation](https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/)
 

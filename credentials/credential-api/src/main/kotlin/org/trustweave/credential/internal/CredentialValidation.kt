@@ -119,7 +119,7 @@ internal object CredentialValidation {
             return null
         }
 
-        val clockSkewKt = options.clockSkewTolerance.toKotlinDuration()
+        val clockSkewKt = options.clockSkewTolerance
         val earliestValidTime = effectiveNotBefore.minus(clockSkewKt)
 
         if (now < earliestValidTime) {
@@ -171,7 +171,7 @@ internal object CredentialValidation {
             return null
         }
 
-        val clockSkewKt = options.clockSkewTolerance.toKotlinDuration()
+        val clockSkewKt = options.clockSkewTolerance
         val latestValidTime = effectiveExpiry.plus(clockSkewKt)
 
         if (now > latestValidTime) {
@@ -202,8 +202,11 @@ internal object CredentialValidation {
         options: VerificationOptions,
         schemaRegistry: SchemaRegistry?
     ): VerificationResult.Invalid.SchemaValidationFailed? {
-        if (options.validateSchema && schemaRegistry != null && credential.credentialSchema != null) {
-            val schemaId = options.schemaId ?: credential.credentialSchema.id
+        // Copy nullable property to a local — cross-module smart cast on a public
+        // property declared in :credentials:credential-models-mp is not possible.
+        val credentialSchema = credential.credentialSchema
+        if (options.validateSchema && schemaRegistry != null && credentialSchema != null) {
+            val schemaId = options.schemaId ?: credentialSchema.id
             
             // Validate schema ID length
             try {

@@ -122,10 +122,9 @@ import org.trustweave.credential.model.vc.VerifiableCredential
 
 // Kotlinx imports
 import kotlinx.coroutines.runBlocking
-// Note: buildJsonObject is only needed for standalone JSON creation outside DSL
-// Within DSL blocks (subject {}, credential {}, etc.), use DSL syntax instead
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+// Use jsonData { } for standalone JSON creation outside TrustWeave DSL blocks.
+// Within DSL blocks (subject {}, credential {}, etc.), use DSL syntax instead.
+import org.trustweave.core.json.jsonData
 ```
 
 ### Import Organization
@@ -135,7 +134,7 @@ import kotlinx.serialization.json.put
 3. Standard library imports
 4. Third-party imports
 
-### DSL vs buildJsonObject
+### DSL vs jsonData
 
 **Within DSL blocks**, use the DSL syntax:
 ```kotlin
@@ -153,13 +152,15 @@ subject {
 }
 ```
 
-**Outside DSL blocks** (for standalone JSON creation), use `buildJsonObject`:
+**Outside DSL blocks** (for standalone JSON creation), use `jsonData { }`:
 ```kotlin
-val jsonPayload = buildJsonObject {
-    put("id", "did:key:holder")
-    put("name", "Alice")
+val jsonPayload = jsonData {
+    "id" to "did:key:holder"
+    "name" to "Alice"
 }
 ```
+
+> Note: `kotlinx.serialization.json.buildJsonObject` is an internal kotlinx helper and is not intended for user code. Prefer `jsonData { }`, which keeps `kotlinx.serialization` out of the public surface and stays in plain Kotlin types.
 
 ## Code Comments
 
@@ -201,12 +202,12 @@ val did = trustWeave.createDid { }.getOrThrowDid()
 val issuerDid = "did:key:issuer"
 val issuerKeyId = "did:key:issuer#key-1"
 // Note: For DSL usage, build subject directly in credential block
-// For standalone JSON, use: val credentialSubject = buildJsonObject { ... }
+// For standalone JSON, use: val credentialSubject = jsonData { ... }
 
 // Bad: Abbreviations
 val iDid = "did:key:issuer"
 val kId = "did:key:issuer#key-1"
-val cs = buildJsonObject { ... }
+val cs = jsonData { ... }
 ```
 
 ## Package Declarations
@@ -287,8 +288,7 @@ import org.trustweave.did.resolver.errorMessage
 
 // Kotlinx imports
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.trustweave.core.json.jsonData
 
 /**
  * Example: Creating and using a DID

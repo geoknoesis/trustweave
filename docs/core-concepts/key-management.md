@@ -162,14 +162,14 @@ println("Holder key created: $keyId")
 
 ## See also
 
-- Wallet API Reference – KeyManagement](../api-reference/wallet-api.md#keymanagement)
-- KMS Integration Guides](../integrations/README.md#key-management-systems-kms) – Implementation guides for AWS KMS, Azure Key Vault, Google Cloud KMS, HashiCorp Vault, IBM Key Protect, and InMemory KMS
-- KMS Quick Start Guide](../kms/KMS_QUICK_START.md) – Quick start examples for all KMS plugins
-- KMS Configuration Guide](../kms/KMS_PLUGINS_CONFIGURATION.md) – Complete configuration reference
-- DIDs](dids.md) for how keys feed DID documents.
-- Credential Service API](../api-reference/credential-service-api.md) to see where keys sign credentials.
-- Advanced – Key Rotation](../advanced/key-rotation.md) *(to be added in a later step of this plan).*
-- Architecture Overview](../introduction/architecture-overview.md)
+- [Wallet API Reference – KeyManagement](../api-reference/wallet-api.md#keymanagement)
+- [KMS Integration Guides](../how-to/integrations/README.md#key-management-service-kms-integrations) – Implementation guides for AWS KMS, Azure Key Vault, Google Cloud KMS, HashiCorp Vault, IBM Key Protect, and InMemory KMS
+- [KMS Quick Start Guide](../api-reference/kms/KMS_QUICK_START.md) – Quick start examples for all KMS plugins
+- [KMS Configuration Guide](../api-reference/kms/KMS_PLUGINS_CONFIGURATION.md) – Complete configuration reference
+- [DIDs](dids.md) for how keys feed DID documents.
+- [Credential Service API](../api-reference/credential-service-api.md) to see where keys sign credentials.
+- [Advanced – Key Rotation](../api-reference/advanced/key-rotation.md) *(to be added in a later step of this plan).*
+- [Architecture Overview](../introduction/architecture-overview.md)
 
 ---
 
@@ -413,16 +413,16 @@ Add `META-INF/services/org.trustweave.kms.spi.KeyManagementServiceProvider` cont
 ## Next Steps
 
 **Ready to use Key Management?**
-- Wallet API Reference – KeyManagement](../api-reference/wallet-api.md#keymanagement) - DSL hooks and typed options
-- Algorithm Compatibility Table](algorithm-compatibility-table.md) - Algorithm support across DIDs, VCs, AWS KMS, and Azure Key Vault
-- KMS Integrations](../integrations/README.md#key-management-systems-kms) - AWS KMS, Azure Key Vault, WaltID, and more
+- [Wallet API Reference – KeyManagement](../api-reference/wallet-api.md#keymanagement) - DSL hooks and typed options
+- [Algorithm Compatibility Table](algorithm-compatibility-table.md) - Algorithm support across DIDs, VCs, AWS KMS, and Azure Key Vault
+- [KMS Integrations](../how-to/integrations/README.md#key-management-service-kms-integrations) - AWS KMS, Azure Key Vault, WaltID, and more
 
 **Want to learn more?**
-- DIDs](dids.md) - Understand how keys are used in DID documents
-- Verifiable Credentials](verifiable-credentials.md) - Learn how keys sign credentials
-- SPI Guide](../advanced/spi.md) - Build custom KMS providers
+- [DIDs](dids.md) - Understand how keys are used in DID documents
+- [Verifiable Credentials](verifiable-credentials.md) - Learn how keys sign credentials
+- [SPI Guide](../api-reference/advanced/spi.md) - Build custom KMS providers
 
 **Explore related concepts:**
-- Testkit KMS](../modules/trustweave-common.md) - Testing helpers
-- Security Best Practices](../security/README.md) - Security guidelines
+- [Testkit KMS](../api-reference/modules/trustweave-common.md) - Testing helpers
+- [Security Best Practices](../security/README.md) - Security guidelines
 

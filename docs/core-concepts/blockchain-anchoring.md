@@ -115,18 +115,18 @@ runBlocking {
 
 ## See also
 
-- Blockchain Anchor Integration Guides](../integrations/README.md#blockchain-anchor-integrations) – Implementation guides for Algorand, Ethereum, Base, Arbitrum, Polygon, and Ganache
-- Quick Start – Step 5](../getting-started/quick-start.md#step-5-verify-and-optionally-anchor) for an end-to-end example.
-- Wallet API Reference – Anchoring helpers](../api-reference/wallet-api.md#anchors) for wallet-integrated flows.
-- Architecture Overview](../introduction/architecture-overview.md) for the DID ➜ credential ➜ anchor flow.
-- Verifiable Credentials](verifiable-credentials.md) to understand what you may want to anchor.
-- Blockchain-Anchored Revocation](blockchain-anchored-revocation.md) for anchoring credential revocation status lists.
+- [Blockchain Anchor Integration Guides](../how-to/integrations/README.md#blockchain-anchor-integrations) – Implementation guides for Algorand, Ethereum, Base, Arbitrum, Polygon, and Ganache
+- Quick Start – Step 5 for an end-to-end example.
+- Wallet API Reference – Anchoring helpers for wallet-integrated flows.
+- [Architecture Overview](../introduction/architecture-overview.md) for the DID ➜ credential ➜ anchor flow.
+- [Verifiable Credentials](verifiable-credentials.md) to understand what you may want to anchor.
+- [Blockchain-Anchored Revocation](blockchain-anchored-revocation.md) for anchoring credential revocation status lists.
 
 ## Related How-To Guides
 
 - **[Anchor to Blockchain](../how-to/blockchain-anchoring.md)** - Step-by-step guide for anchoring data to blockchains
 
 **Explore integrations:**
-- Blockchain Integrations](../integrations/README.md#blockchain-anchoring) - Algorand, Polygon, Ethereum, and more
-- Use Case Scenarios](../scenarios/README.md) - Real-world anchoring examples
+- [Blockchain Integrations](../how-to/integrations/README.md#blockchain-anchor-integrations) - Algorand, Polygon, Ethereum, and more
+- [Use Case Scenarios](../scenarios/README.md) - Real-world anchoring examples
 

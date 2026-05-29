@@ -105,9 +105,9 @@ See the [Algorithm Compatibility Table](algorithm-compatibility-table.md) for a 
 ## Next Steps
 
 **New to TrustWeave?**
-- Introduction](../introduction/README.md) - Start here to understand what TrustWeave is
-- Mental Model](../introduction/mental-model.md) - Understand how concepts fit together
-- Getting Started](../getting-started/README.md) - Installation and quick start
+- [Introduction](../introduction/README.md) - Start here to understand what TrustWeave is
+- [Mental Model](../introduction/mental-model.md) - Understand how concepts fit together
+- [Getting Started](../getting-started/README.md) - Installation and quick start
 
 **Ready to learn concepts?**
 - Start with [Identifiers and Types](identifiers-and-types.md) to understand the type system
@@ -118,6 +118,6 @@ See the [Algorithm Compatibility Table](algorithm-compatibility-table.md) for a 
 
 **Want hands-on practice?**
 - [Getting Started](../getting-started/README.md) - Step-by-step guides
-- Wallet API Tutorial](../tutorials/wallet-api-tutorial.md) - Hands-on wallet examples
-- Use Case Scenarios](../scenarios/README.md) - Real-world examples
+- [Wallet API Tutorial](../tutorials/wallet-api-tutorial.md) - Hands-on wallet examples
+- [Use Case Scenarios](../scenarios/README.md) - Real-world examples
 

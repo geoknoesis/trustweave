@@ -981,9 +981,9 @@ For a detailed explanation of when to use exceptions vs sealed results, see [Err
 
 ## Related Documentation
 
-- Error Handling Patterns](error-handling-patterns.md) - Exceptions vs sealed results guide
-- API Reference](../api-reference/)
-- Verification Policies](verification-policies.md)
-- Plugin Lifecycle](plugin-lifecycle.md)
-- Troubleshooting](../getting-started/troubleshooting.md)
+- [Error Handling Patterns](error-handling-patterns.md) - Exceptions vs sealed results guide
+- [API Reference](../api-reference/)
+- [Verification Policies](verification-policies.md)
+- [Plugin Lifecycle](plugin-lifecycle.md)
+- [Troubleshooting](../getting-started/troubleshooting.md)
 

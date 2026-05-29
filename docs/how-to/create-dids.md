@@ -286,7 +286,7 @@ TrustWeave supports multiple DID methods. Choose based on your needs:
 | `did:ethr` | Ethereum-based identity | Yes (Ethereum) |
 | `did:polygon` | Polygon-based identity | Yes (Polygon) |
 
-See [DID Method Integrations](README.md#did-method-integrations) for complete list.
+See [DID Method Integrations](integrations/README.md#did-method-integrations) for complete list.
 
 ## Error Handling
 
@@ -344,9 +344,9 @@ val did = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 For complete API documentation, see:
 - **[Core API - createDid()](../api-reference/core-api.md#create)** - Complete parameter reference
 - **[Core API - createDidWithKey()](../api-reference/core-api.md#createdidwithkey)** - DID + first key id
-- **[Core API - resolveDid()](../api-reference/core-api.md#resolve)** - Resolution details
-- **[Core API - updateDid()](../api-reference/core-api.md#update)** - Update operations
-- **[Core API - deactivateDid()](../api-reference/core-api.md#deactivate)** - Deactivation
+- **[Core API - resolveDid()](../api-reference/core-api.md#resolvedid--resolve)** - Resolution details
+- **[Core API - updateDid()](../api-reference/core-api.md#updatedid)** - Update operations
+- **[Core API - deactivateDid()](../api-reference/core-api.md#did-deactivation)** - Deactivation
 
 ## Related Concepts
 
@@ -369,9 +369,9 @@ For complete API documentation, see:
 ## Next Steps
 
 **Ready to issue credentials?**
-- Issue Credentials](issue-credentials.md) - Use your DID to issue credentials
+- [Issue Credentials](issue-credentials.md) - Use your DID to issue credentials
 
 **Want to learn more?**
-- DIDs Concept](../core-concepts/dids.md) - Deep dive into DIDs
-- DID Operations Tutorial](../tutorials/did-operations-tutorial.md) - Comprehensive tutorial
+- [DIDs Concept](../core-concepts/dids.md) - Deep dive into DIDs
+- [DID Operations Tutorial](../tutorials/did-operations-tutorial.md) - Comprehensive tutorial
 

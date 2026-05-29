@@ -112,10 +112,10 @@ The entity about which claims are being made in a credential.
 
 **Example:**
 ```kotlin
-buildJsonObject {
-    put("id", "did:key:holder")
-    put("name", "Alice")
-    put("degree", "B.S. Computer Science")
+jsonData {
+    "id" to "did:key:holder"
+    "name" to "Alice"
+    "degree" to "B.S. Computer Science"
 }
 ```
 
@@ -276,7 +276,7 @@ val did = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 
 ## Related Documentation
 
-- Core Concepts](core-concepts/README.md) - Detailed explanations
-- API Reference](api-reference/README.md) - Complete API documentation
-- Quick Start](getting-started/quick-start.md) - Getting started guide
+- [Core Concepts](core-concepts/README.md) - Detailed explanations
+- [API Reference](api-reference/README.md) - Complete API documentation
+- [Quick Start](getting-started/quick-start.md) - Getting started guide
 

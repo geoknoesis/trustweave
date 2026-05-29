@@ -22,22 +22,23 @@ A parametric insurance MGA platform that:
 ### Step 1: Create Smart Contract
 ```kotlin
 // Create parametric insurance contract
-val contract = trustWeave.contracts.draft(
-    request = ContractDraftRequest(
-        contractType = ContractType.Insurance,
-        executionModel = ExecutionModel.Parametric(
-            triggerType = TriggerType.EarthObservation,
-            evaluationEngine = "parametric-insurance"
-        ),
-        parties = ContractParties(
-            primaryPartyDid = insurerDid,
-            counterpartyDid = insuredDid
-        ),
-        terms = ContractTerms(...),
-        effectiveDate = Instant.now().toString(),
-        contractData = buildJsonObject { ... }
+val contract = trustWeave.contracts.draft {
+    contractType = ContractType.Insurance
+    executionModel = ExecutionModel.Parametric(
+        triggerType = TriggerType.EarthObservation,
+        evaluationEngine = "parametric-insurance"
     )
-).getOrThrow()
+    parties = ContractParties(
+        primaryPartyDid = insurerDid,
+        counterpartyDid = insuredDid
+    )
+    terms = ContractTerms(...)
+    effectiveDate = Instant.now().toString()
+    contractData {
+        "productType" to "SarFlood"
+        "coverageAmount" to 1_000_000.0
+    }
+}.getOrThrow()
 ```
 
 ### Step 2: Bind Contract (Issue VC & Anchor)
@@ -73,15 +74,12 @@ val floodCredential = trustWeave.issue {
 ### Step 4: Execute Contract & Payout
 ```kotlin
 // Execute contract with EO data
-val result = trustWeave.contracts.executeContract(
-    contract = active,
-    executionContext = ExecutionContext(
-        triggerData = buildJsonObject {
-            put("floodDepthCm", 75.0)
-            put("credentialId", floodCredential.id)
-        }
-    )
-).getOrThrow()
+val result = trustWeave.contracts.executeContract(active) {
+    trigger {
+        "floodDepthCm" to 75.0
+        "credentialId" to floodCredential.id
+    }
+}.getOrThrow()
 
 // Process payout if executed
 if (result.executed) {
@@ -179,9 +177,9 @@ if (result.executed) {
 3. **[EO Scenario](parametric-insurance-eo-scenario.md)** - EO data patterns
 
 ### TrustWeave Docs
-- Quick Start](../getting-started/quick-start.md)
-- API Reference](../api-reference/core-api.md)
-- Blockchain Anchoring](../core-concepts/blockchain-anchoring.md)
+- [Quick Start](../getting-started/quick-start.md)
+- [API Reference](../api-reference/core-api.md)
+- [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md)
 
 ## 💻 Code Snippets
 
@@ -200,42 +198,40 @@ val trustWeave = TrustWeave.build {
 
 ### Create Flood Insurance Contract
 ```kotlin
-val contract = trustWeave.contracts.draft(
-    request = ContractDraftRequest(
-        contractType = ContractType.Insurance,
-        executionModel = ExecutionModel.Parametric(
-            triggerType = TriggerType.EarthObservation,
-            evaluationEngine = "parametric-insurance"
-        ),
-        parties = ContractParties(
-            primaryPartyDid = insurerDid,
-            counterpartyDid = insuredDid
-        ),
-        terms = ContractTerms(
-            obligations = listOf(
-                Obligation(
-                    id = "payout-obligation",
-                    partyDid = insurerDid,
-                    description = "Pay out based on flood depth tier",
-                    obligationType = ObligationType.PAYMENT
-                )
-            ),
-            conditions = listOf(
-                ContractCondition(
-                    id = "flood-threshold-20cm",
-                    description = "Flood depth >= 20cm",
-                    conditionType = ConditionType.THRESHOLD,
-                    expression = "$.floodDepthCm >= 20"
-                )
+val contract = trustWeave.contracts.draft {
+    contractType = ContractType.Insurance
+    executionModel = ExecutionModel.Parametric(
+        triggerType = TriggerType.EarthObservation,
+        evaluationEngine = "parametric-insurance"
+    )
+    parties = ContractParties(
+        primaryPartyDid = insurerDid,
+        counterpartyDid = insuredDid
+    )
+    terms = ContractTerms(
+        obligations = listOf(
+            Obligation(
+                id = "payout-obligation",
+                partyDid = insurerDid,
+                description = "Pay out based on flood depth tier",
+                obligationType = ObligationType.PAYMENT
             )
         ),
-        effectiveDate = Instant.now().toString(),
-        contractData = buildJsonObject {
-            put("productType", "SarFlood")
-            put("coverageAmount", 1_000_000.0)
-        }
+        conditions = listOf(
+            ContractCondition(
+                id = "flood-threshold-20cm",
+                description = "Flood depth >= 20cm",
+                conditionType = ConditionType.THRESHOLD,
+                expression = "$.floodDepthCm >= 20"
+            )
+        )
     )
-).getOrThrow()
+    effectiveDate = Instant.now().toString()
+    contractData {
+        "productType" to "SarFlood"
+        "coverageAmount" to 1_000_000.0
+    }
+}.getOrThrow()
 ```
 
 ### Bind and Activate Contract
@@ -270,15 +266,12 @@ val floodCredential = trustWeave.issue {
 
 ### Execute Contract
 ```kotlin
-val result = trustWeave.contracts.executeContract(
-    contract = active,
-    executionContext = ExecutionContext(
-        triggerData = buildJsonObject {
-            put("floodDepthCm", 75.0)
-            put("credentialId", floodCredential.id)
-        }
-    )
-).getOrThrow()
+val result = trustWeave.contracts.executeContract(active) {
+    trigger {
+        "floodDepthCm" to 75.0
+        "credentialId" to floodCredential.id
+    }
+}.getOrThrow()
 
 if (result.executed) {
     // Process payout

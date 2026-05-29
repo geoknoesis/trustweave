@@ -317,8 +317,8 @@ val document = method.createDid(options)
 
 ## References
 
-- ION Specification](https://identity.foundation/ion/)
-- Sidetree Protocol Specification](https://identity.foundation/sidetree/spec/)
-- ION GitHub Repository](https://github.com/decentralized-identity/ion)
-- ION Node Implementation](https://github.com/decentralized-identity/ion-sdk)
+- [ION Specification](https://identity.foundation/ion/)
+- [Sidetree Protocol Specification](https://identity.foundation/sidetree/spec/)
+- [ION GitHub Repository](https://github.com/decentralized-identity/ion)
+- [ION Node Implementation](https://github.com/decentralized-identity/ion-sdk)
 

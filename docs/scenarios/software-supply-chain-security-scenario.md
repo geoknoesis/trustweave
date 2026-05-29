@@ -172,8 +172,6 @@ import org.trustweave.did.resolver.errorMessage
 import org.trustweave.did.identifiers.extractKeyId
 import org.trustweave.credential.results.VerificationResult
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Base64
@@ -331,11 +329,11 @@ fun main() = runBlocking {
                     "sbomFormat" to "SPDX"
                     "creationDate" to Instant.now().toString()
                     "dependencies" to dependencies.map { dep ->
-                        buildJsonObject {
-                            "name" to (dep["name"] as String)
-                            "version" to (dep["version"] as String)
+                        mapOf(
+                            "name" to (dep["name"] as String),
+                            "version" to (dep["version"] as String),
                             "digest" to (dep["digest"] as String)
-                        }
+                        )
                     }
                 }
             }
@@ -635,10 +633,10 @@ Software Supply Chain Security Scenario - Complete End-to-End Example
 
 ## Related Documentation
 
-- Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
-- IoT Device Identity Scenario](iot-device-identity-scenario.md) - Related device attestation
-- Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
-- API Reference](../api-reference/core-api.md) - Complete API documentation
-- Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
+- [IoT Device Identity Scenario](iot-device-identity-scenario.md) - Related device attestation
+- [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
+- [API Reference](../api-reference/core-api.md) - Complete API documentation
+- [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
 
 

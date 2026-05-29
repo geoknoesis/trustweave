@@ -222,7 +222,7 @@ If you encounter issues with deprecated APIs:
 - [Version Compatibility Matrix](version-compatibility.md) - Version requirements
 - [Migration Guides](../../how-to/migration/README.md) - Upgrade instructions
 - [API Reference](../README.md) - Complete API documentation
-- [Release Notes](../../CHANGELOG.md) - Version history and changes
+- [Release Notes](https://github.com/geoknoesis/trustweave/blob/main/CHANGELOG.md) - Version history and changes
 
 ---
 

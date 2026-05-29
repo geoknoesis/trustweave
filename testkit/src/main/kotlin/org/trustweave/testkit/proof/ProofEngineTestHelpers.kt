@@ -26,7 +26,8 @@ import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
 import kotlinx.serialization.json.*
 import kotlin.time.Duration as KotlinDuration
-import java.time.Duration
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
 import java.util.*
@@ -258,7 +259,7 @@ class ProofEngineTestHelpers(
         checkNotBefore: Boolean = true,
         resolveIssuerDid: Boolean = true,
         validateSchema: Boolean = false,
-        clockSkewTolerance: Duration = Duration.ofMinutes(5)
+        clockSkewTolerance: Duration = 5.minutes
     ): VerificationOptions {
         return VerificationOptions(
             checkRevocation = checkRevocation,

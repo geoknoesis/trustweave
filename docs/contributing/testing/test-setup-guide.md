@@ -132,7 +132,7 @@ export GRADLE_OPTS="-Xmx4g -Xms1g"
 
 ## Next Steps
 
-- Writing Tests](writing-tests.md) - Guide for writing new tests
-- Test Patterns](test-patterns.md) - Common test patterns
-- Integration Testing](integration-testing.md) - Integration test best practices
+- [Writing Tests](writing-tests.md) - Guide for writing new tests
+- [Test Patterns](test-patterns.md) - Common test patterns
+- [Integration Testing](integration-testing.md) - Integration test best practices
 

@@ -4,7 +4,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import java.time.Duration
+import kotlin.time.Duration
 import org.trustweave.contract.models.*
 import org.trustweave.credential.CredentialService
 import org.trustweave.credential.format.ProofSuiteId

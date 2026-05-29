@@ -325,7 +325,7 @@ This implementation follows the [W3C did:web specification](https://w3c-ccg.gith
 
 ## References
 
-- W3C did:web Specification](https://w3c-ccg.github.io/did-method-web/)
-- DID Core Specification](https://www.w3.org/TR/did-core/)
-- TrustWeave Core API](../api-reference/core-api.md)
+- [W3C did:web Specification](https://w3c-ccg.github.io/did-method-web/)
+- [DID Core Specification](https://www.w3.org/TR/did-core/)
+- [TrustWeave Core API](../api-reference/core-api.md)
 

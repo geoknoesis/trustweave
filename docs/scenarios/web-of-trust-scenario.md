@@ -157,8 +157,8 @@ trustWeave.trust {
 
 ## See also
 
-- Trust registry](../core-concepts/trust-registry.md)
-- Delegation](../core-concepts/delegation.md)
-- Proof purpose validation](../core-concepts/proof-purpose-validation.md)
-- DIDs](../core-concepts/dids.md)
-- API patterns — results vs exceptions](../getting-started/api-patterns.md)
+- [Trust registry](../core-concepts/trust-registry.md)
+- [Delegation](../core-concepts/delegation.md)
+- [Proof purpose validation](../core-concepts/proof-purpose-validation.md)
+- [DIDs](../core-concepts/dids.md)
+- [API patterns — results vs exceptions](../getting-started/api-patterns.md)

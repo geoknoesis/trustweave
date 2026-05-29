@@ -152,7 +152,7 @@ A type of operation in credential exchange. Includes:
 - `REQUEST_PROOF`: Verifier requests a proof
 - `PRESENT_PROOF`: Prover presents a proof
 
-**See also:** [ExchangeOperation](API_REFERENCE.md#exchangeoperation)
+**See also:** ExchangeOperation
 
 ---
 
@@ -308,11 +308,11 @@ A predicate (comparison) that a verifier requires in a proof request. Specifies 
 **Example (metadata-based):**
 ```kotlin
 ExchangeOptions.builder()
-    .addMetadata("requestedPredicates", buildJsonObject {
-        putJsonObject("age_verification") {
-            put("name", JsonPrimitive("age"))
-            put("pType", JsonPrimitive(">="))
-            put("pValue", JsonPrimitive(18))
+    .addMetadata("requestedPredicates", jsonData {
+        "age_verification" {
+            "name" to "age"
+            "pType" to ">="
+            "pValue" to 18
         }
     })
     .build()

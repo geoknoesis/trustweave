@@ -572,11 +572,11 @@ IoT Firmware Update Verification Scenario - Complete End-to-End Example
 
 ## Related Documentation
 
-- Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
-- IoT Device Identity Scenario](iot-device-identity-scenario.md) - Related device identity scenario
-- Software Supply Chain Security Scenario](software-supply-chain-security-scenario.md) - Related software security scenario
-- Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
-- API Reference](../api-reference/core-api.md) - Complete API documentation
-- Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
+- [IoT Device Identity Scenario](iot-device-identity-scenario.md) - Related device identity scenario
+- [Software Supply Chain Security Scenario](software-supply-chain-security-scenario.md) - Related software security scenario
+- [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
+- [API Reference](../api-reference/core-api.md) - Complete API documentation
+- [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
 
 

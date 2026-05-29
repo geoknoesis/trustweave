@@ -228,8 +228,6 @@ import org.trustweave.anchor.AnchorResult
 import org.trustweave.did.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import kotlinx.serialization.json.Json
 import org.trustweave.core.util.DigestUtils
 import java.time.Instant

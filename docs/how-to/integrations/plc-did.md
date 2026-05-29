@@ -349,8 +349,8 @@ PLC DIDs support distributed identity systems:
 
 ## References
 
-- AT Protocol Documentation](https://atproto.com/)
-- PLC DID Method Specification](https://atproto.com/specs/did)
-- PLC Registry](https://plc.directory)
-- DID Core Specification](https://www.w3.org/TR/did-core/)
+- [AT Protocol Documentation](https://atproto.com/)
+- [PLC DID Method Specification](https://atproto.com/specs/did)
+- [PLC Registry](https://plc.directory)
+- [DID Core Specification](https://www.w3.org/TR/did-core/)
 

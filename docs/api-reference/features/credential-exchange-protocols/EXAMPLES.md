@@ -687,6 +687,6 @@ fun setupExchangeService(): ExchangeService {
 - **[Workflows](WORKFLOWS.md)** - Step-by-step workflows
 - **[Error Handling](ERROR_HANDLING.md)** - Error handling guide
 - **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
-- **[Best Practices](BEST_PRACTICES.md)** - Best practices and patterns
+- **Best Practices** - Best practices and patterns
 - **[Glossary](GLOSSARY.md)** - Terms and concepts
 

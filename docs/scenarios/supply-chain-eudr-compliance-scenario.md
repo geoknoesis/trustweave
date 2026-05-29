@@ -137,6 +137,7 @@ import org.trustweave.core.*
 import org.trustweave.core.util.DigestUtils
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
+import org.trustweave.core.json.jsonData
 import java.time.Instant
 import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.trust.types.getOrThrowDid
@@ -182,35 +183,35 @@ fun main() = runBlocking {
     println("✅ Farm DID: ${farmDid.value}")
 
     // Step 4: Create EO data evidence (non-deforestation proof)
-    val eoDeforestationProof = buildJsonObject {
-        put("id", "eo-deforestation-proof-2024")
-        put("type", "NonDeforestationProof")
-        put("location", buildJsonObject {
-            put("latitude", -3.4653)
-            put("longitude", -62.2159)
-            put("region", "Amazon Rainforest, Brazil")
-            put("farmId", farmDid.id)
-            put("polygon", buildJsonArray {
+    val eoDeforestationProof = jsonData {
+        "id" to "eo-deforestation-proof-2024"
+        "type" to "NonDeforestationProof"
+        "location" {
+            "latitude" to -3.4653
+            "longitude" to -62.2159
+            "region" to "Amazon Rainforest, Brazil"
+            "farmId" to farmDid.id
+            "polygon" to listOf(
                 // Farm boundary coordinates
-                add(buildJsonArray { add(-62.22); add(-3.47) })
-                add(buildJsonArray { add(-62.21); add(-3.47) })
-                add(buildJsonArray { add(-62.21); add(-3.46) })
-                add(buildJsonArray { add(-62.22); add(-3.46) })
-                add(buildJsonArray { add(-62.22); add(-3.47) })
-            })
-        })
-        put("analysis", buildJsonObject {
-            put("method", "Sentinel-2 L2A Time Series Analysis")
-            put("analysisPeriod", buildJsonObject {
-                put("startDate", "2020-01-01")
-                put("endDate", "2024-12-31")
-            })
-            put("deforestationDetected", false)
-            put("forestCoverChange", 0.02)  // 2% increase (reforestation)
-            put("confidence", 0.95)
-            put("verificationDate", Instant.now().toString())
-        })
-        put("timestamp", Instant.now().toString())
+                listOf(-62.22, -3.47),
+                listOf(-62.21, -3.47),
+                listOf(-62.21, -3.46),
+                listOf(-62.22, -3.46),
+                listOf(-62.22, -3.47)
+            )
+        }
+        "analysis" {
+            "method" to "Sentinel-2 L2A Time Series Analysis"
+            "analysisPeriod" {
+                "startDate" to "2020-01-01"
+                "endDate" to "2024-12-31"
+            }
+            "deforestationDetected" to false
+            "forestCoverChange" to 0.02  // 2% increase (reforestation)
+            "confidence" to 0.95
+            "verificationDate" to Instant.now().toString()
+        }
+        "timestamp" to Instant.now().toString()
     }
 
     val eoProofDigest = DigestUtils.sha256DigestMultibase(eoDeforestationProof)
@@ -349,9 +350,9 @@ fun main() = runBlocking {
 
     // Step 10: Check against Climate TRACE (global verifier)
     val climateTraceVerification = verifyAgainstClimateTrace(
-        location = buildJsonObject {
-            put("latitude", -3.4653)
-            put("longitude", -62.2159)
+        location = jsonData {
+            "latitude" to -3.4653
+            "longitude" to -62.2159
         },
         eoEvidence = eoDeforestationProof
     )
@@ -515,27 +516,27 @@ sealed class ComplianceResult {
 DPP using VCs:
 
 ```kotlin
-val dpp = buildJsonObject {
-    put("id", "dpp-product-001")
-    put("product", buildJsonObject {
-        put("type", "Coffee")
-        put("quantity", 10000.0)
-        put("unit", "kg")
-    })
-    put("compliance", buildJsonObject {
-        put("eudrCompliant", true)
-        put("complianceCredentialId", complianceCredential.id)
-        put("verificationDate", Instant.now().toString())
-    })
-    put("provenance", buildJsonObject {
-        put("farm", farmDid.id)
-        put("harvestDate", "2024-06-15")
-        put("exportDate", Instant.now().toString())
-    })
-    put("eoEvidence", buildJsonObject {
-        put("digest", eoProofDigest)
-        put("verificationStatus", "verified")
-    })
+val dpp = jsonData {
+    "id" to "dpp-product-001"
+    "product" {
+        "type" to "Coffee"
+        "quantity" to 10000.0
+        "unit" to "kg"
+    }
+    "compliance" {
+        "eudrCompliant" to true
+        "complianceCredentialId" to complianceCredential.id
+        "verificationDate" to Instant.now().toString()
+    }
+    "provenance" {
+        "farm" to farmDid.id
+        "harvestDate" to "2024-06-15"
+        "exportDate" to Instant.now().toString()
+    }
+    "eoEvidence" {
+        "digest" to eoProofDigest
+        "verificationStatus" to "verified"
+    }
 }
 ```
 
@@ -566,9 +567,9 @@ suspend fun verifyAgainstClimateTrace(
 
 ## Related Documentation
 
-- Supply Chain Traceability Scenario](supply-chain-traceability-scenario.md) - Supply chain workflows
-- Earth Observation Scenario](earth-observation-scenario.md) - EO data integrity
-- Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
-- API Reference](../api-reference/core-api.md) - Complete API documentation
+- [Supply Chain Traceability Scenario](supply-chain-traceability-scenario.md) - Supply chain workflows
+- [Earth Observation Scenario](earth-observation-scenario.md) - EO data integrity
+- [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
+- [API Reference](../api-reference/core-api.md) - Complete API documentation
 
 

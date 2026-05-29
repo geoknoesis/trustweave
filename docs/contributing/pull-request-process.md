@@ -229,8 +229,8 @@ After merge:
 
 ## References
 
-- Conventional Commits](https://www.conventionalcommits.org/)
-- Git Flow](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow)
-- Code Review Best Practices](https://github.com/google/eng-practices/blob/master/review/)
+- [Conventional Commits](https://www.conventionalcommits.org/)
+- [Git Flow](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow)
+- [Code Review Best Practices](https://github.com/google/eng-practices/blob/master/review/)
 
 

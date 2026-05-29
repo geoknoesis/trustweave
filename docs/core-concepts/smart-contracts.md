@@ -167,8 +167,6 @@ import org.trustweave.trust.TrustWeave
 import org.trustweave.contract.models.*
 import org.trustweave.contract.draft
 import org.trustweave.credential.model.vc.VerifiableCredential
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import java.time.Instant
 
 suspend fun createFloodInsuranceContract(
@@ -176,49 +174,47 @@ suspend fun createFloodInsuranceContract(
     insurerDid: String,
     insuredDid: String
 ): SmartContract {
-    val contract = trustweave.contracts.draft(
-        request = ContractDraftRequest(
-            contractType = ContractType.Insurance,
-            executionModel = ExecutionModel.Parametric(
-                triggerType = TriggerType.EarthObservation,
-                evaluationEngine = "parametric-insurance"
-            ),
-            parties = ContractParties(
-                primaryPartyDid = insurerDid,
-                counterpartyDid = insuredDid
-            ),
-            terms = ContractTerms(
-                obligations = listOf(
-                    Obligation(
-                        id = "obligation-1",
-                        partyDid = insurerDid,
-                        description = "Pay out if flood depth exceeds 50cm",
-                        obligationType = ObligationType.PAYMENT,
-                        deadline = null
-                    )
-                ),
-                conditions = listOf(
-                    ContractCondition(
-                        id = "condition-1",
-                        description = "Flood depth >= 50cm",
-                        conditionType = ConditionType.THRESHOLD,
-                        expression = "$.floodDepth >= 50"
-                    )
+    val contract = trustweave.contracts.draft {
+        contractType = ContractType.Insurance
+        executionModel = ExecutionModel.Parametric(
+            triggerType = TriggerType.EarthObservation,
+            evaluationEngine = "parametric-insurance"
+        )
+        parties = ContractParties(
+            primaryPartyDid = insurerDid,
+            counterpartyDid = insuredDid
+        )
+        terms = ContractTerms(
+            obligations = listOf(
+                Obligation(
+                    id = "obligation-1",
+                    partyDid = insurerDid,
+                    description = "Pay out if flood depth exceeds 50cm",
+                    obligationType = ObligationType.PAYMENT,
+                    deadline = null
                 )
             ),
-            effectiveDate = Instant.now().toString(),
-            expirationDate = Instant.now().plusSeconds(365 * 24 * 60 * 60).toString(),
-            contractData = buildJsonObject {
-                put("productType", "SarFlood")
-                put("coverageAmount", 1_000_000.0)
-                put("location", buildJsonObject {
-                    put("latitude", 35.2271)
-                    put("longitude", -80.8431)
-                    put("address", "Charlotte, NC")
-                })
-            }
+            conditions = listOf(
+                ContractCondition(
+                    id = "condition-1",
+                    description = "Flood depth >= 50cm",
+                    conditionType = ConditionType.THRESHOLD,
+                    expression = "$.floodDepth >= 50"
+                )
+            )
         )
-    ).getOrThrow()
+        effectiveDate = Instant.now().toString()
+        expirationDate = Instant.now().plusSeconds(365 * 24 * 60 * 60).toString()
+        contractData {
+            "productType" to "SarFlood"
+            "coverageAmount" to 1_000_000.0
+            "location" {
+                "latitude" to 35.2271
+                "longitude" to -80.8431
+                "address" to "Charlotte, NC"
+            }
+        }
+    }.getOrThrow()
 
     println("Created contract: ${contract.id}")
     return contract
@@ -264,15 +260,12 @@ suspend fun executeFloodContract(
     contract: SmartContract,
     floodDataCredential: VerifiableCredential
 ) {
-    val result = trustweave.contracts.executeContract(
-        contract = contract,
-        executionContext = ExecutionContext(
-            triggerData = buildJsonObject {
-                put("floodDepthCm", 75.0)
-                put("credentialId", floodDataCredential.id?.value)
-            }
-        )
-    ).getOrThrow()
+    val result = trustweave.contracts.executeContract(contract) {
+        trigger {
+            "floodDepthCm" to 75.0
+            "credentialId" to floodDataCredential.id?.value
+        }
+    }.getOrThrow()
 
     if (result.executed) {
         println("Contract executed!")
@@ -390,17 +383,17 @@ ContractParties(
 ## Next Steps
 
 **Ready to use Smart Contracts?**
-- Smart Contract API Reference](../api-reference/smart-contract-api.md) - Complete API documentation
-- Parametric Insurance Scenario](../scenarios/smart-contract-parametric-insurance-scenario.md) - Complete parametric insurance example
-- Parametric Insurance MGA Implementation Guide](../scenarios/parametric-insurance-mga-implementation-guide.md) - Advanced implementation guide
+- [Smart Contract API Reference](../api-reference/smart-contract-api.md) - Complete API documentation
+- [Parametric Insurance Scenario](../scenarios/smart-contract-parametric-insurance-scenario.md) - Complete parametric insurance example
+- [Parametric Insurance MGA Implementation Guide](../scenarios/parametric-insurance-mga-implementation-guide.md) - Advanced implementation guide
 
 **Want to learn more?**
-- Verifiable Credentials](verifiable-credentials.md) - Understand credential issuance and verification
-- Blockchain Anchoring](blockchain-anchoring.md) - Learn about anchoring concepts
-- DIDs](dids.md) - Understand DID management
-- Evaluation Engines](evaluation-engines.md) - Pluggable condition evaluation with tamper protection
+- [Verifiable Credentials](verifiable-credentials.md) - Understand credential issuance and verification
+- [Blockchain Anchoring](blockchain-anchoring.md) - Learn about anchoring concepts
+- [DIDs](dids.md) - Understand DID management
+- [Evaluation Engines](evaluation-engines.md) - Pluggable condition evaluation with tamper protection
 
 **Explore related concepts:**
-- Core API Reference](../api-reference/core-api.md) - Complete API documentation
-- Use Case Scenarios](../scenarios/README.md) - More real-world examples
+- [Core API Reference](../api-reference/core-api.md) - Complete API documentation
+- [Use Case Scenarios](../scenarios/README.md) - More real-world examples
 

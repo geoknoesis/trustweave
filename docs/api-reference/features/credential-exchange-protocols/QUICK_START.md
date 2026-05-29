@@ -541,6 +541,6 @@ when (offerResult) {
 - **[Error Handling](ERROR_HANDLING.md)** - Error handling guide
 - **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
 - **[Glossary](GLOSSARY.md)** - Terms and concepts
-- **[Best Practices](BEST_PRACTICES.md)** - Security and performance guidelines
+- **Best Practices** - Security and performance guidelines
 - **[Versioning](VERSIONING.md)** - Version info and migration guides
 

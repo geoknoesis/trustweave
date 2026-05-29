@@ -112,19 +112,6 @@ interface ProofEngine {
 }
 
 /**
- * Proof engine capabilities.
- * 
- * Describes what capabilities a proof engine supports.
- */
-data class ProofEngineCapabilities(
-    val selectiveDisclosure: Boolean = false,
-    val zeroKnowledge: Boolean = false,
-    val revocation: Boolean = true,
-    val presentation: Boolean = true,
-    val predicates: Boolean = false
-)
-
-/**
  * Proof engine configuration.
  * 
  * Configuration options for initializing a proof engine.

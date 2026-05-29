@@ -135,8 +135,7 @@ import org.trustweave.credential.results.VerificationResult
 import org.trustweave.did.identifiers.Did
 import org.trustweave.core.util.DigestUtils
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.trustweave.core.json.jsonData
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
@@ -154,10 +153,10 @@ fun main() = runBlocking {
     }
 
         // Step 1: Compute a digest (demonstrates canonicalization)
-        val credentialSubject = buildJsonObject {
-            put("id", "did:key:holder-placeholder")
-            put("name", "Alice Example")
-            put("role", "Site Reliability Engineer")
+        val credentialSubject = jsonData {
+            "id" to "did:key:holder-placeholder"
+            "name" to "Alice Example"
+            "role" to "Site Reliability Engineer"
         }
         val digest = DigestUtils.sha256DigestMultibase(credentialSubject)
         println("Canonical credential-subject digest: $digest")
@@ -355,8 +354,7 @@ import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.core.util.DigestUtils
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.trustweave.core.json.jsonData
 
 fun main() = runBlocking {
     // Option 1: Using build (recommended for production)
@@ -378,10 +376,10 @@ fun main() = runBlocking {
     // val trustWeave = TrustWeave.inMemory()
     
     // Build credential subject payload
-    val credentialSubject = buildJsonObject {
-        put("id", "did:key:holder-placeholder")
-        put("name", "Alice Example")
-        put("role", "Site Reliability Engineer")
+    val credentialSubject = jsonData {
+        "id" to "did:key:holder-placeholder"
+        "name" to "Alice Example"
+        "role" to "Site Reliability Engineer"
     }
 
     // Compute deterministic digest (canonicalizes JSON first)
@@ -683,16 +681,16 @@ Ready to explore real-world workflows? Each guide below walks through an end-to-
 - **[View All Scenarios](../../scenarios/README.md)** – Complete list of all available scenarios
 
 **Popular Scenarios:**
-- Academic Credentials](../scenarios/academic-credentials-scenario.md) – issue diplomas, validate transcripts, and manage revocation.
-- Employee Onboarding](../scenarios/employee-onboarding-scenario.md) – complete onboarding with education, work history, and background checks.
-- Vaccination Health Passports](../scenarios/vaccination-health-passport-scenario.md) – privacy-preserving health credentials for travel and access.
-- Event Ticketing](../scenarios/event-ticketing-scenario.md) – verifiable tickets with transfer control and fraud prevention.
-- Age Verification](../scenarios/age-verification-scenario.md) – verify age without revealing personal information.
-- Insurance Claims](../scenarios/insurance-claims-scenario.md) – complete claims verification with fraud prevention.
-- Financial Services (KYC)](../scenarios/financial-services-kyc-scenario.md) – streamline onboarding and reuse credentials across institutions.
-- Government Digital Identity](../scenarios/government-digital-identity-scenario.md) – citizens receive, store, and present official IDs.
-- Healthcare Records](../scenarios/healthcare-medical-records-scenario.md) – share consented medical data across providers with audit trails.
-- Supply Chain Traceability](../scenarios/supply-chain-traceability-scenario.md) – follow goods from origin to shelf with verifiable checkpoints.
+- [Academic Credentials](../scenarios/academic-credentials-scenario.md) – issue diplomas, validate transcripts, and manage revocation.
+- [Employee Onboarding](../scenarios/employee-onboarding-scenario.md) – complete onboarding with education, work history, and background checks.
+- [Vaccination Health Passports](../scenarios/vaccination-health-passport-scenario.md) – privacy-preserving health credentials for travel and access.
+- [Event Ticketing](../scenarios/event-ticketing-scenario.md) – verifiable tickets with transfer control and fraud prevention.
+- [Age Verification](../scenarios/age-verification-scenario.md) – verify age without revealing personal information.
+- [Insurance Claims](../scenarios/insurance-claims-scenario.md) – complete claims verification with fraud prevention.
+- [Financial Services (KYC)](../scenarios/financial-services-kyc-scenario.md) – streamline onboarding and reuse credentials across institutions.
+- [Government Digital Identity](../scenarios/government-digital-identity-scenario.md) – citizens receive, store, and present official IDs.
+- [Healthcare Records](../scenarios/healthcare-medical-records-scenario.md) – share consented medical data across providers with audit trails.
+- [Supply Chain Traceability](../scenarios/supply-chain-traceability-scenario.md) – follow goods from origin to shelf with verifiable checkpoints.
 
 ## Troubleshooting
 
@@ -711,7 +709,7 @@ Follow this structured path to master TrustWeave:
 - Understand basic concepts
 
 ### 2. Learn the Fundamentals
-- **[Beginner Tutorial Series](../beginner-tutorial-series.md)** - Structured 5-tutorial series (2+ hours)
+- **[Beginner Tutorial Series](../tutorials/beginner-tutorial-series.md)** - Structured 5-tutorial series (2+ hours)
   - Tutorial 1: Your First DID (15-20 min)
   - Tutorial 2: Issuing Your First Credential (20-25 min)
   - Tutorial 3: Managing Credentials with Wallets (25-30 min)
@@ -736,7 +734,7 @@ Follow this structured path to master TrustWeave:
 ## What's Next?
 
 **New to TrustWeave?**
-1. Start with [Beginner Tutorial Series](../beginner-tutorial-series.md) - Tutorial 1
+1. Start with [Beginner Tutorial Series](../tutorials/beginner-tutorial-series.md) - Tutorial 1
 2. Complete all 5 tutorials in order
 3. Move to [Common Patterns](common-patterns.md) for production patterns
 
@@ -752,9 +750,9 @@ Follow this structured path to master TrustWeave:
 
 ## Additional Resources
 
-- Core Concepts](../core-concepts/README.md) - Learn the fundamentals
-- API Reference](../api-reference/core-api.md) - Complete API documentation
-- Troubleshooting](troubleshooting.md) - Common issues and solutions
-- Error Handling Guide](../advanced/error-handling.md) - Detailed error handling patterns
-- FAQ](../faq.md) - Frequently asked questions
+- [Core Concepts](../core-concepts/README.md) - Learn the fundamentals
+- [API Reference](../api-reference/core-api.md) - Complete API documentation
+- [Troubleshooting](troubleshooting.md) - Common issues and solutions
+- [Error Handling Guide](../api-reference/advanced/error-handling.md) - Detailed error handling patterns
+- [FAQ](../faq.md) - Frequently asked questions
 

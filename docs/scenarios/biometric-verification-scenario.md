@@ -178,8 +178,7 @@ import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.credential.results.VerificationResult
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.trustweave.core.json.jsonData
 
 fun main() = runBlocking {
     println("=".repeat(70))
@@ -220,39 +219,39 @@ fun main() = runBlocking {
     // Simulate fingerprint template (in production, use fingerprint SDK)
     val fingerprintTemplate = "fingerprint-template-data-${individualDid}".toByteArray()
     val fingerprintTemplateBase64 = Base64.getEncoder().encodeToString(fingerprintTemplate)
-    val fingerprintMetadata = buildJsonObject {
-        put("type", "fingerprint")
-        put("algorithm", "ISO/IEC 19794-2")
-        put("template", fingerprintTemplateBase64)
-        put("subjectDid", individualDid)
-        put("quality", "high")
-        put("minutiaeCount", 25)
+    val fingerprintMetadata = jsonData {
+        "type" to "fingerprint"
+        "algorithm" to "ISO/IEC 19794-2"
+        "template" to fingerprintTemplateBase64
+        "subjectDid" to individualDid
+        "quality" to "high"
+        "minutiaeCount" to 25
     }
     val fingerprintDigest = DigestUtils.sha256DigestMultibase(fingerprintMetadata)
 
     // Simulate face template (in production, use face recognition SDK)
     val faceTemplate = "face-template-data-${individualDid}".toByteArray()
     val faceTemplateBase64 = Base64.getEncoder().encodeToString(faceTemplate)
-    val faceMetadata = buildJsonObject {
-        put("type", "face")
-        put("algorithm", "ISO/IEC 19794-5")
-        put("template", faceTemplateBase64)
-        put("subjectDid", individualDid)
-        put("quality", "high")
-        put("livenessDetected", true)
+    val faceMetadata = jsonData {
+        "type" to "face"
+        "algorithm" to "ISO/IEC 19794-5"
+        "template" to faceTemplateBase64
+        "subjectDid" to individualDid
+        "quality" to "high"
+        "livenessDetected" to true
     }
     val faceDigest = DigestUtils.sha256DigestMultibase(faceMetadata)
 
     // Simulate voice template (in production, use voice recognition SDK)
     val voiceTemplate = "voice-template-data-${individualDid}".toByteArray()
     val voiceTemplateBase64 = Base64.getEncoder().encodeToString(voiceTemplate)
-    val voiceMetadata = buildJsonObject {
-        put("type", "voice")
-        put("algorithm", "ISO/IEC 19794-14")
-        put("template", voiceTemplateBase64)
-        put("subjectDid", individualDid)
-        put("quality", "high")
-        put("phrase", "My voice is my password")
+    val voiceMetadata = jsonData {
+        "type" to "voice"
+        "algorithm" to "ISO/IEC 19794-14"
+        "template" to voiceTemplateBase64
+        "subjectDid" to individualDid
+        "quality" to "high"
+        "phrase" to "My voice is my password"
     }
     val voiceDigest = DigestUtils.sha256DigestMultibase(voiceMetadata)
 
@@ -646,10 +645,10 @@ Biometric Verification Scenario - Complete End-to-End Example
 
 ## Related Documentation
 
-- Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
-- Age Verification Scenario](age-verification-scenario.md) - Related age verification with photo
-- Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
-- API Reference](../api-reference/core-api.md) - Complete API documentation
-- Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
+- [Quick Start](../getting-started/quick-start.md) - Get started with TrustWeave
+- [Age Verification Scenario](age-verification-scenario.md) - Related age verification with photo
+- [Common Patterns](../getting-started/common-patterns.md) - Reusable code patterns
+- [API Reference](../api-reference/core-api.md) - Complete API documentation
+- [Troubleshooting](../getting-started/troubleshooting.md) - Common issues and solutions
 
 

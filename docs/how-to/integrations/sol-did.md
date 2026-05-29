@@ -314,7 +314,7 @@ This implementation uses Solana JSON-RPC API:
 
 ## References
 
-- Solana Documentation](https://docs.solana.com/)
-- Solana JSON-RPC API](https://docs.solana.com/api/http)
-- Solana Web3.js](https://solana-labs.github.io/solana-web3.js/)
+- [Solana Documentation](https://docs.solana.com/)
+- [Solana JSON-RPC API](https://docs.solana.com/api/http)
+- [Solana Web3.js](https://solana-labs.github.io/solana-web3.js/)
 

@@ -124,8 +124,7 @@ import org.trustweave.credential.pex.InputDescriptor
 import org.trustweave.credential.pex.Constraints
 import org.trustweave.credential.pex.Field
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.trustweave.core.json.jsonData
 
 val definition = PresentationDefinition(
     id = "employee-verification",
@@ -142,22 +141,22 @@ val definition = PresentationDefinition(
     ),
 )
 
-val authorizationRequest = buildJsonObject {
-    put("client_id", "https://verifier.example.com")
-    put("client_id_scheme", "x509_san_dns")
-    put("response_mode", "direct_post")
-    put("response_uri", "https://verifier.example.com/oidc4vp/response")
-    put("nonce", java.util.UUID.randomUUID().toString())
-    put("state", java.util.UUID.randomUUID().toString())
-    put("presentation_definition", Json.encodeToJsonElement(
+val authorizationRequest = jsonData {
+    "client_id" to "https://verifier.example.com"
+    "client_id_scheme" to "x509_san_dns"
+    "response_mode" to "direct_post"
+    "response_uri" to "https://verifier.example.com/oidc4vp/response"
+    "nonce" to java.util.UUID.randomUUID().toString()
+    "state" to java.util.UUID.randomUUID().toString()
+    "presentation_definition" to Json.encodeToJsonElement(
         PresentationDefinition.serializer(), definition,
-    ))
+    )
 }
 // Serve from your request_uri endpoint and share:
 // openid4vp://authorize?client_id=...&request_uri=https://verifier.example.com/req/abc
 ```
 
-See the [Presentation Exchange plugin README](../../../credentials/plugins/presentation-exchange)
+See the [Presentation Exchange plugin README](https://github.com/geoknoesis/trustweave/tree/main/credentials/plugins/presentation-exchange)
 for the full `PresentationDefinition` API.
 
 ### Holder Side: Parse, Respond, Submit
@@ -180,7 +179,7 @@ import org.trustweave.did.identifiers.Did
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
+import org.trustweave.core.json.jsonData
 
 fun main() = runBlocking {
     val verifierDid = Did("did:web:verifier.example.com")
@@ -238,10 +237,10 @@ fun main() = runBlocking {
                     "selectedCredentials" to JsonArray(
                         listOf(JsonPrimitive("employee_credential")),
                     ),
-                    "selectedFields" to buildJsonObject {
-                        put("employee_credential", JsonArray(
+                    "selectedFields" to jsonData {
+                        "employee_credential" to JsonArray(
                             listOf(JsonPrimitive("employeeId")),
-                        ))
+                        )
                     },
                 ),
             ),
@@ -306,7 +305,7 @@ val submission = PresentationDefinitionMatcher.buildSubmission(definition, match
 
 The matcher emits a `PresentationSubmission` you can attach to the response
 (`PermissionResponse.presentationSubmission`). See the
-[Presentation Exchange plugin README](../../../credentials/plugins/presentation-exchange)
+[Presentation Exchange plugin README](https://github.com/geoknoesis/trustweave/tree/main/credentials/plugins/presentation-exchange)
 for the complete `PresentationDefinition` schema and matcher options.
 
 ### HAIP Profile Validation
@@ -426,4 +425,4 @@ when (val result = exchangeService.requestProof(req)) {
 - [OpenID4VC High Assurance Interoperability Profile (HAIP)](https://openid.net/specs/openid4vc-haip.html)
 - [SIOPv2 plugin](siopv2.md)
 - [OIDC4VCI plugin](oidc4vci.md)
-- [Presentation Exchange plugin README](../../../credentials/plugins/presentation-exchange)
+- [Presentation Exchange plugin README](https://github.com/geoknoesis/trustweave/tree/main/credentials/plugins/presentation-exchange)

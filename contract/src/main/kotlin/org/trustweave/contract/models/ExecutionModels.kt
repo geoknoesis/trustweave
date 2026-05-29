@@ -7,6 +7,9 @@ import kotlinx.datetime.Instant
 
 /**
  * Execution context for contract execution.
+ *
+ * Prefer the [executionContext] DSL or [parametricContext] / [eventContext]
+ * factories over constructing this directly — they hide the JSON layer.
  */
 @Serializable
 data class ExecutionContext(
@@ -15,6 +18,30 @@ data class ExecutionContext(
     val timeContext: String? = null,          // ISO 8601 timestamp for time-based execution
     val additionalContext: JsonElement? = null
 )
+
+/**
+ * Build a parametric [ExecutionContext] from key/value pairs.
+ *
+ * One-liner shortcut for the [executionContext] DSL:
+ *
+ * ```kotlin
+ * parametricContext("floodDepthCm" to 75.0, "stationId" to "STA-42")
+ * ```
+ *
+ * Accepted value types: primitives ([String], [Number], [Boolean]), `null`, or
+ * nested [Map] / [List]. For richer structure use [executionContext] `{ }`.
+ */
+fun parametricContext(vararg data: Pair<String, Any?>): ExecutionContext =
+    executionContext { trigger { data.forEach { (k, v) -> k to v } } }
+
+/**
+ * Build an event-driven [ExecutionContext] from key/value pairs.
+ *
+ * See [parametricContext] for accepted value types.
+ */
+fun eventContext(vararg data: Pair<String, Any?>): ExecutionContext =
+    executionContext { event { data.forEach { (k, v) -> k to v } } }
+
 
 /**
  * Execution result.

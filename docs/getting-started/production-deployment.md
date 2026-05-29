@@ -535,9 +535,9 @@ Before deploying to production:
 
 ## Related Documentation
 
-- API Patterns](api-patterns.md) - Correct API usage patterns
-- Error Handling](../advanced/error-handling.md) - Detailed error handling guide
-- Performance](../advanced/performance.md) - Performance optimization guide
-- Security](../security/README.md) - Security best practices
-- Troubleshooting](troubleshooting.md) - Common issues and solutions
+- [API Patterns](api-patterns.md) - Correct API usage patterns
+- [Error Handling](../api-reference/advanced/error-handling.md) - Detailed error handling guide
+- [Performance](../api-reference/advanced/performance.md) - Performance optimization guide
+- Security - Security best practices
+- [Troubleshooting](troubleshooting.md) - Common issues and solutions
 

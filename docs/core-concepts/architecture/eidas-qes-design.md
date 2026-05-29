@@ -137,13 +137,13 @@ credentials/credential-api/          [MODIFIED]
 ### 4.5 `credentials/credential-api` modifications
 
 - New `CredentialProof.JAdES` sealed-class variant (see
-  [`CredentialProof.kt`](../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/model/vc/CredentialProof.kt)
+  [`CredentialProof.kt`](https://github.com/geoknoesis/trustweave/blob/main/credentials/credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/model/vc/CredentialProof.kt)
   for the existing variants).
 - New `JAdESProofEngine` implementing
   [`ProofEngine`](../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/spi/proof/ProofEngine.kt),
   registered via the same SPI route used by `VcLdProofEngine` and `SdJwtProofEngine`.
 - New `ProofSuiteId.JADES` enum entry alongside the existing values in
-  [`ProofSuiteId.kt`](../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/format/ProofSuiteId.kt).
+  [`ProofSuiteId.kt`](https://github.com/geoknoesis/trustweave/blob/main/credentials/credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/format/ProofSuiteId.kt).
 - DSL hooks on
   [`IssuanceRequestBuilder`](../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/requests/IssuanceRequestBuilder.kt)
   and `VerificationBuilder`.
@@ -540,7 +540,7 @@ enum class KeyIdEncoding {
 ### 5.5 `credentials/credential-api` additions
 
 Extension of the existing `CredentialProof` sealed class (current shape in
-[`CredentialProof.kt`](../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/model/vc/CredentialProof.kt)):
+[`CredentialProof.kt`](https://github.com/geoknoesis/trustweave/blob/main/credentials/credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/model/vc/CredentialProof.kt)):
 
 ```kotlin
 package org.trustweave.credential.model.vc
@@ -567,11 +567,11 @@ sealed class CredentialProof {
 ```
 
 `CredentialProofSerializer` (see
-[`CredentialProofSerializer.kt`](../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/model/vc/CredentialProofSerializer.kt))
+[`CredentialProofSerializer.kt`](https://github.com/geoknoesis/trustweave/blob/main/credentials/credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/model/vc/CredentialProofSerializer.kt))
 gains one branch for the new `@type` discriminator value `JAdES`.
 
 `ProofSuiteId` (see
-[`ProofSuiteId.kt`](../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/format/ProofSuiteId.kt))
+[`ProofSuiteId.kt`](https://github.com/geoknoesis/trustweave/blob/main/credentials/credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/format/ProofSuiteId.kt))
 gains an entry:
 
 ```kotlin
@@ -668,9 +668,9 @@ change.
 
 `CredentialProof.JAdES` is added as a new sibling of `LinkedDataProof`, `JwtProof`, `SdJwtVcProof`,
 and `MdocProof` in
-[`CredentialProof.kt`](../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/model/vc/CredentialProof.kt).
+[`CredentialProof.kt`](https://github.com/geoknoesis/trustweave/blob/main/credentials/credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/model/vc/CredentialProof.kt).
 The custom `@type` discriminator in
-[`CredentialProofSerializer.kt`](../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/model/vc/CredentialProofSerializer.kt)
+[`CredentialProofSerializer.kt`](https://github.com/geoknoesis/trustweave/blob/main/credentials/credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/model/vc/CredentialProofSerializer.kt)
 gains one branch.
 
 ### 7.3 IssuanceBuilder DSL — `withJadesProfile`
@@ -709,7 +709,7 @@ The builder stashes these in the `proofOptions` map already used by the SD-JWT a
 ### 7.4 VerificationBuilder DSL — `requireJadesProfile`
 
 The verification side, currently driven by
-[`VerificationOptions`](../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/requests/VerificationOptions.kt),
+[`VerificationOptions`](https://github.com/geoknoesis/trustweave/blob/main/credentials/credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/requests/VerificationOptions.kt),
 gains a parallel configurator:
 
 ```kotlin

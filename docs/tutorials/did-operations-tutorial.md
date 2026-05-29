@@ -487,7 +487,7 @@ fun main() = runBlocking {
 
 ## References
 
-- W3C DID Core Specification](https://www.w3.org/TR/did-core/)
-- TrustWeave DID Module](../modules/trustweave-did.md)
-- TrustWeave Core API](../api-reference/core-api.md)
+- [W3C DID Core Specification](https://www.w3.org/TR/did-core/)
+- [TrustWeave DID Module](../api-reference/modules/trustweave-did.md)
+- [TrustWeave Core API](../api-reference/core-api.md)
 

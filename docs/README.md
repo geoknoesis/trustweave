@@ -16,7 +16,7 @@ title: TrustWeave
 [![License](https://img.shields.io/badge/license-Dual-green.svg)](LICENSE)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.2.0-orange.svg)](https://kotlinlang.org)
 
-[Quick Start](#quick-start) • [Documentation](getting-started/quick-start.md) • [Scenarios](scenarios/README.md) • [GitHub](https://github.com/geoknoesis/TrustWeave)
+[Quick Start](#zap-quick-start) • [Documentation](getting-started/quick-start.md) • [Scenarios](scenarios/README.md) • [GitHub](https://github.com/geoknoesis/TrustWeave)
 
 </div>
 
@@ -177,11 +177,11 @@ TrustWeave is built on a modular, pluggable architecture:
 
 Installation, quick start guide, and common patterns
 
-- Quick Start](getting-started/quick-start.md) - Get up and running in 5 minutes
-- API Patterns](getting-started/api-patterns.md) - Correct API usage patterns
-- Mental Model](introduction/mental-model.md) - Understanding TrustWeave architecture
-- Production Deployment](getting-started/production-deployment.md) - Production best practices
-- Common Workflows](getting-started/workflows.md) - Real-world workflow examples
+- [Quick Start](getting-started/quick-start.md) - Get up and running in 5 minutes
+- [API Patterns](getting-started/api-patterns.md) - Correct API usage patterns
+- [Mental Model](introduction/mental-model.md) - Understanding TrustWeave architecture
+- [Production Deployment](getting-started/production-deployment.md) - Production best practices
+- [Common Workflows](getting-started/workflows.md) - Real-world workflow examples
 
 ### 📖 [Core Concepts](core-concepts/README.md)
 

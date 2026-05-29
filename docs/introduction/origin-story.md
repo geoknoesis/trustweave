@@ -232,8 +232,8 @@ If that sounds like you, welcome. Let's build trusted domains together.
 ---
 
 **Next Steps:**
-- What is TrustWeave?](what-is-trustweave.md) - Learn about the technical details
-- Key Features](key-features.md) - See what TrustWeave can do
-- Quick Start](../getting-started/quick-start.md) - Start building in 5 minutes
-- Use Cases](use-cases.md) - See how others are using TrustWeave
+- [What is TrustWeave?](what-is-trustweave.md) - Learn about the technical details
+- [Key Features](key-features.md) - See what TrustWeave can do
+- [Quick Start](../getting-started/quick-start.md) - Start building in 5 minutes
+- [Use Cases](use-cases.md) - See how others are using TrustWeave
 

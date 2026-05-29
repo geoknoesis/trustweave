@@ -422,12 +422,12 @@ For complete API documentation, see:
 ## Next Steps
 
 **Ready to verify?**
-- Verify Credentials](verify-credentials.md) - Verify your issued credentials
+- [Verify Credentials](verify-credentials.md) - Verify your issued credentials
 
 **Want to store credentials?**
-- Manage Wallets](manage-wallets.md) - Store credentials securely
+- [Manage Wallets](manage-wallets.md) - Store credentials securely
 
 **Want to learn more?**
-- Verifiable Credentials Concept](../core-concepts/verifiable-credentials.md) - Deep dive into credentials
-- Credential Issuance Tutorial](../tutorials/credential-issuance-tutorial.md) - Comprehensive tutorial
+- [Verifiable Credentials Concept](../core-concepts/verifiable-credentials.md) - Deep dive into credentials
+- [Credential Issuance Tutorial](../tutorials/credential-issuance-tutorial.md) - Comprehensive tutorial
 

@@ -532,7 +532,7 @@ path "transit/keys/+/+" {
 
 ## References
 
-- HashiCorp Vault Transit Engine Documentation](https://developer.hashicorp.com/vault/docs/secrets/transit)
-- Vault API Reference](https://developer.hashicorp.com/vault/api-docs)
-- Vault Java Client Libraries](https://github.com/hashicorp/vault-java-driver)
+- [HashiCorp Vault Transit Engine Documentation](https://developer.hashicorp.com/vault/docs/secrets/transit)
+- [Vault API Reference](https://developer.hashicorp.com/vault/api-docs)
+- [Vault Java Client Libraries](https://github.com/hashicorp/vault-java-driver)
 

@@ -689,7 +689,7 @@ val issue = when (issueResult) {
 - **[Error Handling](ERROR_HANDLING.md)** - Error handling guide
 - **[Examples](EXAMPLES.md)** - Complete code examples
 - **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
-- **[Best Practices](BEST_PRACTICES.md)** - Workflow best practices
+- **Best Practices** - Workflow best practices
 - **[Glossary](GLOSSARY.md)** - Terms and concepts
 - **[Versioning](VERSIONING.md)** - Protocol migration guides
 

@@ -19,8 +19,8 @@ Quick lookup for common **TrustWeave** (`trustWeave`) operations. For full signa
 | Method | Description | Link |
 |--------|-------------|------|
 | `createDid { }` | Create a new DID (returns `DidCreationResult`) | [createDid()](core-api.md#create) |
-| `resolveDid(did)` | Resolve a DID (`String` or `Did`) → `DidResolutionResult` | [resolveDid()](core-api.md#resolve) |
-| `updateDid { }` | Update a DID document → `DidDocument` | [updateDid()](core-api.md#update) |
+| `resolveDid(did)` | Resolve a DID (`String` or `Did`) → `DidResolutionResult` | [resolveDid()](core-api.md#resolvedid--resolve) |
+| `updateDid { }` | Update a DID document → `DidDocument` | [updateDid()](core-api.md#updatedid) |
 | `createDidWithKey { }` | Create DID and expose key id → `DidCreationWithKeyResult` | [core-api.md](core-api.md) |
 
 ## Credentials

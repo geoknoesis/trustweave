@@ -22,7 +22,7 @@ This guide provides quick start examples for using TrustWeave KMS plugins. All e
 
 ## Table of Contents
 
-1. [Using KeyManagementServices Factory](#using-keymanagementservices-factory)
+1. [Using KeyManagementServices Factory](#using-keymanagementservices-factory-recommended)
 2. [InMemory KMS (Development/Testing)](#inmemory-kms)
 3. [AWS KMS](#aws-kms)
 4. [Azure Key Vault](#azure-key-vault)
@@ -607,9 +607,9 @@ val badOptions = mapOf(
 
 ## Next Steps
 
-- Complete Configuration Guide](KMS_PLUGINS_CONFIGURATION.md)
-- Creating Plugins Guide](../contributing/creating-plugins.md)
-- Error Handling Guide](../advanced/error-handling.md)
+- [Complete Configuration Guide](KMS_PLUGINS_CONFIGURATION.md)
+- [Creating Plugins Guide](../contributing/creating-plugins.md)
+- [Error Handling Guide](../advanced/error-handling.md)
 
 ---
 

@@ -230,6 +230,6 @@ This implementation is designed to work with walt.id's `waltid-openid4vc` librar
 
 ## References
 
-- OIDC4VCI Specification](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html)
-- walt.id OpenID4VC Library](https://github.com/walt-id/waltid-openid4vc)
+- [OIDC4VCI Specification](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html)
+- [walt.id OpenID4VC Library](https://github.com/walt-id/waltid-openid4vc)
 

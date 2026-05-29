@@ -501,5 +501,5 @@ Chain Plugins (org.trustweave:anchors-plugins-*)
 
 - Learn about [Core Modules](../../api-reference/modules/core-modules.md)
 - Explore [Integration Modules](../../how-to/integrations/README.md)
-- Review the [TrustWeave setup checklist](../trust-registry.md#trustweave-setup-checklist) before wiring issuance or verification flows
+- Review the [TrustWeave setup checklist](../core-concepts/trust-registry.md#trustweave-setup-checklist) before wiring issuance or verification flows
 

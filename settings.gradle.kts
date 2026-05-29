@@ -21,12 +21,14 @@ rootProject.name = "trustweave"
 
 // Core modules
 include("common")
+include("common-mp")
 include("trust")
 include("testkit")
 include("contract")
 
 // DID domain
 include("did:did-core")
+include("did:did-identifiers-mp")
 include("did:registrar")
 include("did:registrar-server-ktor")
 include("did:registrar-server-spring")

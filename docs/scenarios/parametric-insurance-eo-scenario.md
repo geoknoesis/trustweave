@@ -136,8 +136,7 @@ import org.trustweave.trust.TrustWeave
 import org.trustweave.core.*
 import org.trustweave.core.util.DigestUtils
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.trustweave.core.json.jsonData
 import java.time.Instant
 import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.credential.results.VerificationResult
@@ -189,25 +188,25 @@ fun main() = runBlocking {
         ?: throw IllegalStateException("No verification method found")
 
     // Create EO data payload (rainfall measurement)
-    val rainfallData = buildJsonObject {
-        put("id", "rainfall-measurement-2024-06-15")
-        put("type", "RainfallMeasurement")
-        put("location", buildJsonObject {
-            put("latitude", 37.7749)
-            put("longitude", -122.4194)
-            put("region", "San Francisco, CA")
-        })
-        put("measurement", buildJsonObject {
-            put("value", 0.5)  // 0.5 inches of rainfall
-            put("unit", "inches")
-            put("timestamp", Instant.now().toString())
-            put("source", "Sentinel-2 L2A")
-            put("method", "Spectral Analysis")
-        })
-        put("quality", buildJsonObject {
-            put("confidence", 0.95)
-            put("validationStatus", "validated")
-        })
+    val rainfallData = jsonData {
+        "id" to "rainfall-measurement-2024-06-15"
+        "type" to "RainfallMeasurement"
+        "location" {
+            "latitude" to 37.7749
+            "longitude" to -122.4194
+            "region" to "San Francisco, CA"
+        }
+        "measurement" {
+            "value" to 0.5  // 0.5 inches of rainfall
+            "unit" to "inches"
+            "timestamp" to Instant.now().toString()
+            "source" to "Sentinel-2 L2A"
+            "method" to "Spectral Analysis"
+        }
+        "quality" {
+            "confidence" to 0.95
+            "validationStatus" to "validated"
+        }
     }
 
     // Compute digest for data integrity
@@ -402,25 +401,25 @@ For spectral analysis use cases:
 
 ```kotlin
 // Create spectral fingerprint credential
-val spectralData = buildJsonObject {
-    put("id", "spectral-fingerprint-wildfire-2024")
-    put("type", "SpectralFingerprint")
-    put("location", buildJsonObject {
-        put("latitude", 34.0522)
-        put("longitude", -118.2437)
-        put("region", "Los Angeles, CA")
-    })
-    put("spectralAnalysis", buildJsonObject {
-        put("bands", buildJsonArray {
-            add(buildJsonObject { put("band", "NIR"); put("value", 0.85) })
-            add(buildJsonObject { put("band", "SWIR"); put("value", 0.72) })
-            add(buildJsonObject { put("band", "Red"); put("value", 0.45) })
-        })
-        put("damageType", "Wildfire")
-        put("damageSeverity", 0.78)
-        put("confidence", 0.92)
-    })
-    put("timestamp", Instant.now().toString())
+val spectralData = jsonData {
+    "id" to "spectral-fingerprint-wildfire-2024"
+    "type" to "SpectralFingerprint"
+    "location" {
+        "latitude" to 34.0522
+        "longitude" to -118.2437
+        "region" to "Los Angeles, CA"
+    }
+    "spectralAnalysis" {
+        "bands" to listOf(
+            mapOf("band" to "NIR", "value" to 0.85),
+            mapOf("band" to "SWIR", "value" to 0.72),
+            mapOf("band" to "Red", "value" to 0.45)
+        )
+        "damageType" to "Wildfire"
+        "damageSeverity" to 0.78
+        "confidence" to 0.92
+    }
+    "timestamp" to Instant.now().toString()
 }
 
 val spectralDigest = DigestUtils.sha256DigestMultibase(spectralData)
@@ -512,8 +511,8 @@ if (anchorResult != null) {
 
 ## Related Documentation
 
-- Earth Observation Scenario](earth-observation-scenario.md) - EO data integrity workflow
-- Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
-- API Reference](../api-reference/core-api.md) - Complete API documentation
+- [Earth Observation Scenario](earth-observation-scenario.md) - EO data integrity workflow
+- [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) - Anchoring concepts
+- [API Reference](../api-reference/core-api.md) - Complete API documentation
 
 

@@ -383,6 +383,6 @@ Future implementations may include:
 
 ## See Also
 
-- Delegation Documentation](delegation.md)
-- DID Documentation](dids.md)
-- Web of Trust Scenario](../scenarios/web-of-trust-scenario.md)
+- [Delegation Documentation](delegation.md)
+- [DID Documentation](dids.md)
+- [Web of Trust Scenario](../scenarios/web-of-trust-scenario.md)

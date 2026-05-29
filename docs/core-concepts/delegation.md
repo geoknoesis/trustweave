@@ -346,7 +346,7 @@ Common delegation verification errors:
 
 ## See Also
 
-- Trust Registry Documentation](trust-registry.md)
-- DID Documentation](dids.md)
-- Delegation Chain Example](../../distribution/TrustWeave-examples/src/main/kotlin/com/geoknoesis/TrustWeave/examples/delegation/DelegationChainExample.kt)
-- Web of Trust Scenario](../scenarios/web-of-trust-scenario.md)
+- [Trust Registry Documentation](trust-registry.md)
+- [DID Documentation](dids.md)
+- [Delegation Chain Example](https://github.com/geoknoesis/trustweave/blob/main/distribution/examples/src/main/kotlin/org/trustweave/examples/delegation/DelegationChainExample.kt)
+- [Web of Trust Scenario](../scenarios/web-of-trust-scenario.md)

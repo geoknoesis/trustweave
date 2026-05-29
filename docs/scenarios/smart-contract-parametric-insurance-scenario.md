@@ -42,7 +42,7 @@ import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import org.trustweave.contract.models.*
-import kotlinx.serialization.json.buildJsonObject
+import org.trustweave.core.json.jsonData
 import kotlinx.serialization.json.put
 import java.time.Instant
 
@@ -72,75 +72,73 @@ suspend fun createFloodInsuranceContract(
     location: Location
 ): SmartContract {
 
-    val contract = trustWeave.contracts.draft(
-        request = ContractDraftRequest(
-            contractType = ContractType.Insurance,
-            executionModel = ExecutionModel.Parametric(
-                triggerType = TriggerType.EarthObservation,
-                evaluationEngine = "parametric-insurance"
-            ),
-            parties = ContractParties(
-                primaryPartyDid = insurerDid,
-                counterpartyDid = insuredDid
-            ),
-            terms = ContractTerms(
-                obligations = listOf(
-                    Obligation(
-                        id = "payout-obligation",
-                        partyDid = insurerDid,
-                        description = "Pay out based on flood depth tier",
-                        obligationType = ObligationType.PAYMENT
-                    )
-                ),
-                conditions = listOf(
-                    ContractCondition(
-                        id = "flood-threshold-20cm",
-                        description = "Flood depth >= 20cm (Tier 1)",
-                        conditionType = ConditionType.THRESHOLD,
-                        expression = "$.floodDepthCm >= 20"
-                    ),
-                    ContractCondition(
-                        id = "flood-threshold-50cm",
-                        description = "Flood depth >= 50cm (Tier 2)",
-                        conditionType = ConditionType.THRESHOLD,
-                        expression = "$.floodDepthCm >= 50"
-                    ),
-                    ContractCondition(
-                        id = "flood-threshold-100cm",
-                        description = "Flood depth >= 100cm (Tier 3)",
-                        conditionType = ConditionType.THRESHOLD,
-                        expression = "$.floodDepthCm >= 100"
-                    )
-                ),
-                penalties = null,
-                rewards = null,
-                jurisdiction = "US",
-                governingLaw = "State of North Carolina"
-            ),
-            effectiveDate = Instant.now().toString(),
-            expirationDate = Instant.now().plusSeconds(365 * 24 * 60 * 60).toString(),
-            contractData = buildJsonObject {
-                put("productType", "SarFlood")
-                put("coverageAmount", coverageAmount)
-                put("location", buildJsonObject {
-                    put("latitude", location.latitude)
-                    put("longitude", location.longitude)
-                    put("address", location.address)
-                    put("region", location.region)
-                })
-                put("thresholds", buildJsonObject {
-                    put("tier1Cm", 20.0)
-                    put("tier2Cm", 50.0)
-                    put("tier3Cm", 100.0)
-                })
-                put("payoutTiers", buildJsonObject {
-                    put("tier1", 0.25)  // 25% of coverage
-                    put("tier2", 0.50)  // 50% of coverage
-                    put("tier3", 1.0)   // 100% of coverage
-                })
-            }
+    val contract = trustWeave.contracts.draft {
+        contractType = ContractType.Insurance
+        executionModel = ExecutionModel.Parametric(
+            triggerType = TriggerType.EarthObservation,
+            evaluationEngine = "parametric-insurance"
         )
-    ).getOrThrow()
+        parties = ContractParties(
+            primaryPartyDid = insurerDid,
+            counterpartyDid = insuredDid
+        )
+        terms = ContractTerms(
+            obligations = listOf(
+                Obligation(
+                    id = "payout-obligation",
+                    partyDid = insurerDid,
+                    description = "Pay out based on flood depth tier",
+                    obligationType = ObligationType.PAYMENT
+                )
+            ),
+            conditions = listOf(
+                ContractCondition(
+                    id = "flood-threshold-20cm",
+                    description = "Flood depth >= 20cm (Tier 1)",
+                    conditionType = ConditionType.THRESHOLD,
+                    expression = "$.floodDepthCm >= 20"
+                ),
+                ContractCondition(
+                    id = "flood-threshold-50cm",
+                    description = "Flood depth >= 50cm (Tier 2)",
+                    conditionType = ConditionType.THRESHOLD,
+                    expression = "$.floodDepthCm >= 50"
+                ),
+                ContractCondition(
+                    id = "flood-threshold-100cm",
+                    description = "Flood depth >= 100cm (Tier 3)",
+                    conditionType = ConditionType.THRESHOLD,
+                    expression = "$.floodDepthCm >= 100"
+                )
+            ),
+            penalties = null,
+            rewards = null,
+            jurisdiction = "US",
+            governingLaw = "State of North Carolina"
+        )
+        effectiveDate = Instant.now().toString()
+        expirationDate = Instant.now().plusSeconds(365 * 24 * 60 * 60).toString()
+        contractData {
+            "productType" to "SarFlood"
+            "coverageAmount" to coverageAmount
+            "location" {
+                "latitude" to location.latitude
+                "longitude" to location.longitude
+                "address" to location.address
+                "region" to location.region
+            }
+            "thresholds" {
+                "tier1Cm" to 20.0
+                "tier2Cm" to 50.0
+                "tier3Cm" to 100.0
+            }
+            "payoutTiers" {
+                "tier1" to 0.25  // 25% of coverage
+                "tier2" to 0.50  // 50% of coverage
+                "tier3" to 1.0   // 100% of coverage
+            }
+        }
+    }.getOrThrow()
 
     println("[OK] Contract draft created: ${contract.id}")
     println("   Contract Number: ${contract.contractNumber}")
@@ -217,20 +215,14 @@ suspend fun processFloodDataAndExecute(
     eoDataCredential: VerifiableCredential
 ): ExecutionResult {
 
-    // Create execution context with trigger data
-    val executionContext = ExecutionContext(
-        triggerData = buildJsonObject {
-            put("floodDepthCm", floodDepthCm)
-            put("credentialId", eoDataCredential.id)
-            put("timestamp", Instant.now().toString())
+    // Execute contract with trigger data
+    val result = trustWeave.contracts.executeContract(contract) {
+        trigger {
+            "floodDepthCm" to floodDepthCm
+            "credentialId" to eoDataCredential.id
+            "timestamp" to Instant.now().toString()
         }
-    )
-
-    // Execute contract
-    val result = trustWeave.contracts.executeContract(
-        contract = contract,
-        executionContext = executionContext
-    ).getOrThrow()
+    }.getOrThrow()
 
     if (result.executed) {
         println("Contract executed")

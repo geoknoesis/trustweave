@@ -256,8 +256,6 @@ fun main() = runBlocking {
 ```kotlin
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.core.util.DigestUtils
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import java.time.Instant
 
     // Step 3: Create article content DID

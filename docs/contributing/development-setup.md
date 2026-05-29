@@ -200,7 +200,7 @@ If dependencies fail to resolve:
 
 ## References
 
-- Gradle Documentation](https://docs.gradle.org/)
-- Kotlin Documentation](https://kotlinlang.org/docs/home.html)
-- ktlint Documentation](https://ktlint.github.io/)
+- [Gradle Documentation](https://docs.gradle.org/)
+- [Kotlin Documentation](https://kotlinlang.org/docs/home.html)
+- [ktlint Documentation](https://ktlint.github.io/)
 

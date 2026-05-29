@@ -1099,7 +1099,7 @@ Invalid credential: missing issuer
 val credential = VerifiableCredential(
     type = listOf("VerifiableCredential"),  // Required
     issuer = "did:key:issuer",              // Required
-    credentialSubject = buildJsonObject { }, // Required
+    credentialSubject = jsonData { }, // Required
     issuanceDate = Instant.now().toString() // Required
 )
 ```
@@ -1777,6 +1777,6 @@ suspend fun offerCredentialWithAutoRegister(
 - **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
 - **[Workflows](WORKFLOWS.md)** - Step-by-step workflows
 - **[Examples](EXAMPLES.md)** - Code examples with error handling
-- **[Best Practices](BEST_PRACTICES.md)** - Error handling best practices
+- **Best Practices** - Error handling best practices
 - **[Glossary](GLOSSARY.md)** - Terms and concepts
 

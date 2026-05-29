@@ -628,8 +628,8 @@ val result = trustWeave.verify {
 
 ## Next Steps
 
-- Test Patterns](test-patterns.md) - Common test patterns
-- Integration Testing](integration-testing.md) - Integration test best practices
-- Plugin Credential Handling](plugin-credential-handling.md) - Handling external service credentials
-- TrustWeave-testkit Module](../../modules/trustweave-testkit.md) - Testkit components overview
+- [Test Patterns](test-patterns.md) - Common test patterns
+- [Integration Testing](integration-testing.md) - Integration test best practices
+- [Plugin Credential Handling](plugin-credential-handling.md) - Handling external service credentials
+- [TrustWeave-testkit Module](../../api-reference/modules/trustweave-testkit.md) - Testkit components overview
 

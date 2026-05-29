@@ -269,8 +269,8 @@ when (val result = trustWeave.verify {
 
 ## See Also
 
-- DID Documentation](dids.md)
-- Delegation Documentation](delegation.md)
-- Web of Trust Scenario](../scenarios/web-of-trust-scenario.md)
-- W3C DID Core Specification](https://www.w3.org/TR/did-core/)
+- [DID Documentation](dids.md)
+- [Delegation Documentation](delegation.md)
+- [Web of Trust Scenario](../scenarios/web-of-trust-scenario.md)
+- [W3C DID Core Specification](https://www.w3.org/TR/did-core/)
 

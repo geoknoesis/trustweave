@@ -347,8 +347,8 @@ an issue if you want it adopted project-wide.
 
 ## References
 
-- trustweave-testkit Module](../modules/trustweave-testkit.md)
-- Testing Strategies](../advanced/testing-strategies.md)
-- Kotlin Test Documentation](https://kotlinlang.org/api/latest/kotlin.test/)
+- [trustweave-testkit Module](../api-reference/modules/trustweave-testkit.md)
+- [Testing Strategies](../api-reference/advanced/testing-strategies.md)
+- [Kotlin Test Documentation](https://kotlinlang.org/api/latest/kotlin.test/)
 
 

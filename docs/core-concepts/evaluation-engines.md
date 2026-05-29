@@ -123,17 +123,14 @@ Since all data arrives as JSON, `JsonElement` eliminates unnecessary conversion 
 `JsonElement` provides a balance between type safety and flexibility:
 
 ```kotlin
-// Compile-time: Ensures it's structured JSON
-val inputData: JsonElement = buildJsonObject {
-    put("floodDepthCm", 75.0)
-    put("timestamp", Instant.now().toString())
+// Application code uses the typed DSL — the JsonElement layer stays internal.
+val inputData = jsonData {
+    "floodDepthCm" to 75.0
+    "timestamp" to Instant.now().toString()
 }
 
-// Runtime: Safe, explicit access with null handling
-val inputObj = inputData as? JsonObject
-    ?: throw IllegalArgumentException("Expected JSON object")
-
-val value = inputObj["floodDepthCm"]?.jsonPrimitive?.content?.toDoubleOrNull()
+// Engine implementations (the SPI side) see it as JsonElement and parse it
+// with the kotlinx.serialization API — see the engine snippet below.
 ```
 
 This is safer than `Any`, which provides no compile-time guarantees and requires extensive runtime type checking.
@@ -165,12 +162,12 @@ Using `Any` would require conversion to JSON before hashing, adding complexity a
 `JsonElement` provides a clear, explicit API:
 
 ```kotlin
-// Clear and explicit
-val data = buildJsonObject {
-    put("temperature", 35.5)
-    put("humidity", 0.65)
+// Application code uses the DSL; no kotlinx.serialization import required.
+val payload = jsonData {
+    "temperature" to 35.5
+    "humidity" to 0.65
 }
-engine.evaluateCondition(condition, data, context)
+engine.evaluateCondition(condition, payload, context)
 ```
 
 Compared to `Any`, which is unclear about accepted types and requires documentation to understand what's supported.
@@ -199,16 +196,14 @@ class CustomEngine : BaseEvaluationEngine() {
 `JsonElement` works seamlessly with TrustWeave's execution flow:
 
 ```kotlin
-// Data flows naturally through the system
-val executionContext = ExecutionContext(
-    triggerData = buildJsonObject { ... }  // JsonElement
-)
+// Application code: typed DSL, no JsonElement in sight.
+val ctx = executionContext {
+    trigger { "floodDepthCm" to 75.0 }
+}
 
-// Passed directly to evaluation
-evaluateConditions(contract, executionContext.triggerData)  // JsonElement
-
-// Engine receives it directly
-engine.evaluateCondition(condition, inputData, context)  // JsonElement
+// Internally, ctx.triggerData is a JsonElement and flows unchanged into the engine.
+evaluateConditions(contract, ctx.triggerData!!)            // JsonElement on the SPI boundary
+engine.evaluateCondition(condition, ctx.triggerData!!, evalCtx)  // JsonElement
 ```
 
 No conversion layers needed - data flows naturally from external sources through the framework to engines.
@@ -466,14 +461,9 @@ val bound = trustWeave.contracts.bindContract(
 )
 
 // Execute contract (engine integrity is verified)
-val result = trustWeave.contracts.executeContract(
-    contract = bound.contract,
-    executionContext = ExecutionContext(
-        triggerData = buildJsonObject {
-            put("floodDepthCm", 75.0)
-        }
-    )
-)
+val result = trustWeave.contracts.executeContract(bound.contract) {
+    trigger { "floodDepthCm" to 75.0 }
+}
 ```
 
 ## Expression Formats
@@ -567,7 +557,7 @@ fun `test threshold evaluation`() {
         conditionType = ConditionType.THRESHOLD,
         expression = "$.value >= 50"
     )
-    val inputData = buildJsonObject { put("value", 75.0) }
+    val inputData = jsonData { "value" to 75.0 }
 
     val result = runBlocking {
         engine.evaluateCondition(condition, inputData, context)
@@ -584,15 +574,13 @@ Evaluation engines integrate seamlessly with TrustWeave's contract system:
 ### Contract Creation
 
 ```kotlin
-val contract = trustWeave.contracts.draft(
-    request = ContractDraftRequest(
-        executionModel = ExecutionModel.Parametric(
-            triggerType = TriggerType.EarthObservation,
-            evaluationEngine = "parametric-insurance"
-        ),
-        // ... other fields
+val contract = trustWeave.contracts.draft {
+    executionModel = ExecutionModel.Parametric(
+        triggerType = TriggerType.EarthObservation,
+        evaluationEngine = "parametric-insurance"
     )
-)
+    // ... other fields (contractType, parties, terms, effectiveDate, contractData { })
+}
 ```
 
 ### Contract Binding
@@ -613,12 +601,11 @@ val bound = trustWeave.contracts.bindContract(
 During execution, engine integrity is automatically verified:
 
 ```kotlin
-val result = trustWeave.contracts.executeContract(
-    contract = contract,
-    executionContext = ExecutionContext(
-        triggerData = inputData
-    )
-)
+val result = trustWeave.contracts.executeContract(contract) {
+    trigger {
+        "floodDepthCm" to 75.0
+    }
+}
 // Engine integrity is verified automatically
 ```
 
@@ -665,8 +652,8 @@ code by reading `EngineReference.version` before invoking the engine.
 
 ## See Also
 
-- Smart Contracts](smart-contracts.md) for contract lifecycle and execution models
-- Verifiable Credentials](verifiable-credentials.md) for credential issuance and verification
-- Blockchain Anchoring](blockchain-anchoring.md) for anchoring concepts
-- API Reference](../api-reference/smart-contract-api.md) for complete API documentation
+- [Smart Contracts](smart-contracts.md) for contract lifecycle and execution models
+- [Verifiable Credentials](verifiable-credentials.md) for credential issuance and verification
+- [Blockchain Anchoring](blockchain-anchoring.md) for anchoring concepts
+- [API Reference](../api-reference/smart-contract-api.md) for complete API documentation
 

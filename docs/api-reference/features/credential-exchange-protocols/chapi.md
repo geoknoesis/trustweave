@@ -301,6 +301,6 @@ CHAPI requires a browser that supports the Credential Handler API. Check compati
 
 ## References
 
-- Credential Handler API Specification](https://w3c.github.io/webappsec-credential-management/)
-- Credential Handler API Polyfill](https://github.com/digitalbazaar/credential-handler-polyfill)
+- [Credential Handler API Specification](https://w3c.github.io/webappsec-credential-management/)
+- [Credential Handler API Polyfill](https://github.com/digitalbazaar/credential-handler-polyfill)
 

@@ -509,12 +509,12 @@ For complete API documentation, see:
 ## Next Steps
 
 **Ready to issue credentials?**
-- Issue Credentials](issue-credentials.md) - Issue credentials to store in wallet
+- [Issue Credentials](issue-credentials.md) - Issue credentials to store in wallet
 
 **Want to create presentations?**
 - Enable presentation capability and use `withPresentation { }`
 
 **Want to learn more?**
-- Wallets Concept](../core-concepts/wallets.md) - Deep dive into wallets
-- Wallet API Tutorial](../tutorials/wallet-api-tutorial.md) - Comprehensive tutorial
+- [Wallets Concept](../core-concepts/wallets.md) - Deep dive into wallets
+- [Wallet API Tutorial](../tutorials/wallet-api-tutorial.md) - Comprehensive tutorial
 

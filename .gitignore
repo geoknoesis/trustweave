@@ -67,3 +67,6 @@ docs/internal/
 internal/
 docs/_site/internal/
 docs/_site/
+
+# Local docs HTML preview output
+docs_html/

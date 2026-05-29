@@ -91,7 +91,7 @@ jobs:
           set -euo pipefail
           echo "Checking docs for obsolete API contract wording..."
           if grep -rE "All \`TrustWeave\` methods throw|All TrustWeave methods throw" docs/ --include="*.md" 2>/dev/null; then
-            echo "❌ Found blanket claim that all TrustWeave methods throw. Use the hybrid contract in docs/getting-started/api-patterns.md"
+            echo "❌ Found blanket claim that all TrustWeave methods throw. Use the hybrid contract in docs/tutorials/getting-started/api-patterns.md"
             exit 1
           fi
           echo "✅ No forbidden blanket throw wording in docs/"
@@ -113,7 +113,7 @@ jobs:
           # Phase 4 removed: trustweave.dids.*, .credentials.*, .wallets.* (and TrustWeave.dids.* misuse).
           # Do not grep issueCredential / verifyCredential / .create() globally — those match exchange
           # registries, KMS factories, Testcontainers, diagrams, and teaching examples.
-          # Allowed: docs/migration/ (before/after), docs/getting-started/api-patterns.md (wrong vs right).
+          # Allowed: docs/how-to/migration/ (before/after), docs/tutorials/getting-started/api-patterns.md (wrong vs right).
           if grep -r -E \
               --include='*.md' \
               --exclude-dir=migration \
@@ -127,7 +127,7 @@ jobs:
               docs/ README.md \
               2>/dev/null; then
             echo "❌ Found removed service-layer API. Use createDid / resolveDid / issue { } / verify / wallet { }."
-            echo "   Legacy snippets belong in docs/migration/ or anti-patterns in docs/getting-started/api-patterns.md"
+            echo "   Legacy snippets belong in docs/how-to/migration/ or anti-patterns in docs/tutorials/getting-started/api-patterns.md"
             exit 1
           fi
           echo "✅ No removed TrustWeave service-layer API outside migration / api-patterns.md"

@@ -1,5 +1,5 @@
 ---
-title: Error Handling Patterns: Exceptions vs Sealed Results
+title: "Error Handling Patterns: Exceptions vs Sealed Results"
 nav_order: 7
 parent: Advanced Topics
 keywords:

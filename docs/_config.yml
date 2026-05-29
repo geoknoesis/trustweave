@@ -7,11 +7,13 @@ author: GeoKnoesis
 version: 0.6.0
 
 # GitHub Pages Configuration
-# baseurl is empty to serve at root path for custom domain (trustweave.org)
-# GitHub Pages project sites will still work at geoknoesis.github.io/trustweave/ via redirect
-# All links use relative URLs ({{ site.baseurl }}) to work on both domains
+# baseurl is empty to serve at root path for custom domain (trustweave.org).
+# GitHub Pages project sites (geoknoesis.github.io/trustweave/) issue a 301 to the
+# custom domain, so generated absolute URLs must point at the custom domain — otherwise
+# canonical/sitemap/og:url end up at https://geoknoesis.github.io/<path>/ (no /trustweave/
+# prefix), which 404s.
 baseurl: ""
-url: "https://geoknoesis.github.io"
+url: "https://trustweave.org"
 
 # Jekyll Settings
 markdown: kramdown

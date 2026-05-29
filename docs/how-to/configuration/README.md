@@ -211,5 +211,5 @@ TrustWeave.build {
 
 - [Default configuration](defaults.md)
 - [Architecture overview](../../introduction/architecture-overview.md)
-- [Production integration checklist](../../tutorials/getting-started/production-integration-checklist.md)
-- [Installation](../../tutorials/getting-started/installation.md)
+- [Production integration checklist](../../getting-started/production-integration-checklist.md)
+- [Installation](../../getting-started/installation.md)

@@ -117,7 +117,7 @@ See the [Algorithm Compatibility Table](algorithm-compatibility-table.md) for a 
 - Check out [Blockchain Anchoring](blockchain-anchoring.md) for data integrity
 
 **Want hands-on practice?**
-- Tutorials](../tutorials/README.md) - Step-by-step guides
+- [Getting Started](../getting-started/README.md) - Step-by-step guides
 - Wallet API Tutorial](../tutorials/wallet-api-tutorial.md) - Hands-on wallet examples
 - Use Case Scenarios](../scenarios/README.md) - Real-world examples
 

@@ -94,7 +94,7 @@ Each how-to guide follows this structure:
 
 ## Related Documentation
 
-- **[Tutorials](../tutorials/README.md)** - Step-by-step learning experiences
+- **[Getting Started](../getting-started/README.md)** - Step-by-step learning experiences
 - **[Concepts](../core-concepts/README.md)** - Understanding the "why" behind TrustWeave
 - **[API Reference](../api-reference/README.md)** - Complete API documentation
 - **[Use Case Scenarios](../scenarios/README.md)** - Real-world examples
@@ -110,6 +110,6 @@ Each how-to guide follows this structure:
 
 **Want to learn more?**
 
-- **[Tutorials](../tutorials/README.md)** — structured learning path
+- **[Getting Started](../getting-started/README.md)** — structured learning path
 - **[Concepts](../core-concepts/README.md)** — fundamentals
 

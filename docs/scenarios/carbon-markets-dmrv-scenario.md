@@ -520,7 +520,7 @@ val ttfToken = buildJsonObject {
 
 - Explore [Earth Observation Scenario](earth-observation-scenario.md) for EO data integrity
 - Learn about [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md)
-- Review [Credential Lifecycle](../tutorials/getting-started/common-patterns.md#credential-lifecycle-management)
+- Review [Credential Lifecycle](../getting-started/common-patterns.md#credential-lifecycle-management)
 
 ## Related Documentation
 

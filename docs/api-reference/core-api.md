@@ -1321,7 +1321,7 @@ Facade methods return **sealed results** (`IssuanceResult`, `VerificationResult`
 
 **`issue`**, **`verify`**, **`presentationResult`**, and **batch** flows return sealed types (`IssuanceResult`, `VerificationResult`, `PresentationResult`). **`createDid`** and several DID lifecycle APIs return **`DidCreationResult`** / related sealed types—use `when` (or test-only `getOrThrowDid()`), not a blanket try-catch, for those failures.
 
-See [API patterns — results vs exceptions](../tutorials/getting-started/api-patterns.md#api-contract-results-vs-exceptions) and [Result types guide](result-types-guide.md).
+See [API patterns — results vs exceptions](../getting-started/api-patterns.md#api-contract-results-vs-exceptions) and [Result types guide](result-types-guide.md).
 
 **Example (credential + DID results):**
 ```kotlin
@@ -1366,7 +1366,7 @@ fun main() = runBlocking {
 
 Some services return **`Result<T>`** for composition (plugins, custom implementations). Handle with `fold` or `getOrElse`.
 
-**Best Practice:** Handle sealed results with exhaustive `when`; never treat **`AdapterNotReady`** results as success, and never log placeholder credentials from misconfigured **`verify { }`** as real holder data (see [Production checklist](../tutorials/getting-started/production-integration-checklist.md)).
+**Best Practice:** Handle sealed results with exhaustive `when`; never treat **`AdapterNotReady`** results as success, and never log placeholder credentials from misconfigured **`verify { }`** as real holder data (see [Production checklist](../getting-started/production-integration-checklist.md)).
 
 ## Configuration
 

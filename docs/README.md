@@ -16,7 +16,7 @@ title: TrustWeave
 [![License](https://img.shields.io/badge/license-Dual-green.svg)](LICENSE)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.2.0-orange.svg)](https://kotlinlang.org)
 
-[Quick Start](#quick-start) • [Documentation](tutorials/getting-started/quick-start.md) • [Scenarios](scenarios/README.md) • [GitHub](https://github.com/geoknoesis/TrustWeave)
+[Quick Start](#quick-start) • [Documentation](getting-started/quick-start.md) • [Scenarios](scenarios/README.md) • [GitHub](https://github.com/geoknoesis/TrustWeave)
 
 </div>
 
@@ -85,7 +85,7 @@ dependencies {
 }
 ```
 
-[📖 Full Quick Start Guide →](tutorials/getting-started/quick-start.md)
+[📖 Full Quick Start Guide →](getting-started/quick-start.md)
 
 ---
 
@@ -173,7 +173,7 @@ TrustWeave is built on a modular, pluggable architecture:
 
 ## 📚 Documentation
 
-### 🚀 [Getting Started](tutorials/getting-started/quick-start.md)
+### 🚀 [Getting Started](getting-started/quick-start.md)
 
 Installation, quick start guide, and common patterns
 
@@ -320,7 +320,7 @@ val wallet = trustWeave.wallet {
 
 ## 📖 Next Steps
 
-### ▶️ [Quick Start](tutorials/getting-started/quick-start.md)
+### ▶️ [Quick Start](getting-started/quick-start.md)
 
 Get up and running in 5 minutes
 
@@ -342,7 +342,7 @@ Complete API documentation
 
 **Ready to build the future of trust and identity?**
 
-[Get Started Now →](tutorials/getting-started/quick-start.md)
+[Get Started Now →](getting-started/quick-start.md)
 
 Made with ❤️ by [Geoknoesis LLC](https://www.geoknoesis.com)
 

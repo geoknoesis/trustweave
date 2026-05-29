@@ -12,7 +12,7 @@ This document explains the **default configuration** you get from **`TrustWeave.
 
 ## Default Configuration Overview
 
-**`TrustWeave.quickStart()`** wires an in-memory KMS, **`did:key`**, and credential services suitable for demos. **`TrustWeave.build { }`** uses the same style of defaults for any block you omit (see factory behavior in source / [Installation](../../tutorials/getting-started/installation.md)).
+**`TrustWeave.quickStart()`** wires an in-memory KMS, **`did:key`**, and credential services suitable for demos. **`TrustWeave.build { }`** uses the same style of defaults for any block you omit (see factory behavior in source / [Installation](../../getting-started/installation.md)).
 
 ```kotlin
 import org.trustweave.trust.TrustWeave
@@ -216,12 +216,12 @@ println("Wallet capabilities: ${wallet.capabilities}")
 
 ## Migration from Defaults to Production
 
-See [Production Integration Checklist](../../tutorials/getting-started/production-integration-checklist.md) for step-by-step migration from defaults to production configuration.
+See [Production Integration Checklist](../../getting-started/production-integration-checklist.md) for step-by-step migration from defaults to production configuration.
 
 ## Related Documentation
 
 - [Configuration reference](README.md) — Complete configuration options
 - [Architecture overview](../../introduction/architecture-overview.md) — Component architecture
-- [Installation](../../tutorials/getting-started/installation.md) — Setup instructions
-- [Production integration checklist](../../tutorials/getting-started/production-integration-checklist.md) — Production configuration
+- [Installation](../../getting-started/installation.md) — Setup instructions
+- [Production integration checklist](../../getting-started/production-integration-checklist.md) — Production configuration
 

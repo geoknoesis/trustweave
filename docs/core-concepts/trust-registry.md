@@ -24,7 +24,7 @@ The trust registry sits on top of the rest of the issuance/verification stack. B
 ### Key management
 **Why it matters:** Issuers, holders, and verifiers need signing keys to produce and check proofs along the trust path.
 **What to wire:** Supply a `KeyManagementService` for every participant. For production, back the service with a Hardware Security Module (HSM) or remote Key Management Service (KMS) instead of `InMemoryKeyManagementService`.
-**Related docs:** [Key Management](key-management.md), [Quick Start – Step 4](../tutorials/getting-started/quick-start.md#step-4-issue-a-credential-and-store-it).
+**Related docs:** [Key Management](key-management.md), [Quick Start – Step 4](../getting-started/quick-start.md#step-4-issue-a-credential-and-store-it).
 
 ### Proof generators
 **Why it matters:** The registry does not create proofs itself, but it relies on credentials and presentations having cryptographic evidence attached.

@@ -458,7 +458,7 @@ Now that you've learned the facade API, you can:
 
 ## Related Documentation
 
-- **[Quick Start](../tutorials/getting-started/quick-start.md)** - Complete getting started guide
+- **[Quick Start](../getting-started/quick-start.md)** - Complete getting started guide
 - **[TrustWeave Configuration](configure-trustlayer.md)** - Full configuration guide
 - **[API Reference](../api-reference/core-api.md)** - Complete API documentation
 

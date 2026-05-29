@@ -4,7 +4,7 @@ nav_order: 100
 parent: Getting Started
 redirect_from:
   - /getting-started/troubleshooting/
-
+  - /tutorials/getting-started/troubleshooting/
 ---
 
 # Troubleshooting Guide

@@ -4,7 +4,7 @@ nav_order: 50
 parent: Getting Started
 redirect_from:
   - /getting-started/your-first-application/
-
+  - /tutorials/getting-started/your-first-application/
 ---
 
 # Your First Application

@@ -343,7 +343,7 @@ fun main() = runBlocking {
 
 ## Related Documentation
 
-- [Quick Start](../tutorials/getting-started/quick-start.md) — examples using these patterns
+- [Quick Start](../getting-started/quick-start.md) — examples using these patterns
 - [Error Handling](../api-reference/advanced/error-handling.md) — error handling patterns
 - [Code Style](code-style.md) — general code style guidelines
 

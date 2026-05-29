@@ -11,7 +11,7 @@ Get started with credential exchange protocols in 5 minutes! This guide will wal
 
 > **Version:** 0.6.0
 > **Kotlin:** 2.2.0+ | **Java:** 21+
-> **Prerequisites:** See [Installation](../../../tutorials/getting-started/installation.md)
+> **Prerequisites:** See [Installation](../../../getting-started/installation.md)
 
 ## Complete Runnable Example
 
@@ -223,7 +223,7 @@ fun main() = runBlocking {
 ```
 
 **To run this example:**
-1. Add dependencies (see [Installation](../../../tutorials/getting-started/installation.md))
+1. Add dependencies (see [Installation](../../../getting-started/installation.md))
 2. Copy the code above into `src/main/kotlin/QuickStart.kt`
 3. Run with `./gradlew run` or execute in your IDE
 

@@ -89,7 +89,7 @@ try {
 }
 ```
 
-See [Error handling](advanced/error-handling.md) and [API patterns — results vs exceptions](../tutorials/getting-started/api-patterns.md#api-contract-results-vs-exceptions).
+See [Error handling](advanced/error-handling.md) and [API patterns — results vs exceptions](../getting-started/api-patterns.md#api-contract-results-vs-exceptions).
 
 ## Configuration
 
@@ -168,7 +168,7 @@ See [Plugin Lifecycle](advanced/plugin-lifecycle.md) for detailed plugin lifecyc
 - Error Handling](../advanced/error-handling.md) - Error handling patterns
 - Plugin Lifecycle](../advanced/plugin-lifecycle.md) - Plugin lifecycle management
 - Common Patterns](../getting-started/common-patterns.md) - Production-ready patterns
-- Tutorials](../tutorials/README.md) - Step-by-step guides
+- [Getting Started](../getting-started/README.md) - Step-by-step guides
 - Use Case Scenarios](../scenarios/README.md) - Real-world examples
 
 **Looking for specific APIs?**

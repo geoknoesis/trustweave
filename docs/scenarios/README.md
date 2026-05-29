@@ -31,7 +31,7 @@ Each scenario provides a complete, runnable example showing how to use TrustWeav
 4. **Advanced Features** – Wallet organization, presentations, blockchain anchoring
 5. **Verification** – Complete verification workflows
 
-Longer scenarios should use **`trustWeave.issue { }`** / **`trustWeave.verify { }`** and sealed **`IssuanceResult`** / **`VerificationResult`**; some narrative snippets still use **`mapOf(...)`** for wallet presentation options that **do not** match the published API one-to-one. Wallet **`CredentialPresentation`** in the SDK uses **`ProofOptions`** (`org.trustweave.credential.proof`). Prefer **[Quick Start](../tutorials/getting-started/quick-start.md)**, **[API patterns](../tutorials/getting-started/api-patterns.md)**, and **[Credential Service API](../api-reference/credential-service-api.md)** for copy-paste-accurate calls (`IssuanceRequest`, `PresentationRequest`, `presentationResult { }`).
+Longer scenarios should use **`trustWeave.issue { }`** / **`trustWeave.verify { }`** and sealed **`IssuanceResult`** / **`VerificationResult`**; some narrative snippets still use **`mapOf(...)`** for wallet presentation options that **do not** match the published API one-to-one. Wallet **`CredentialPresentation`** in the SDK uses **`ProofOptions`** (`org.trustweave.credential.proof`). Prefer **[Quick Start](../getting-started/quick-start.md)**, **[API patterns](../getting-started/api-patterns.md)**, and **[Credential Service API](../api-reference/credential-service-api.md)** for copy-paste-accurate calls (`IssuanceRequest`, `PresentationRequest`, `presentationResult { }`).
 
 ## Popular Scenarios
 
@@ -214,7 +214,7 @@ Scenarios are organized by industry domain and use case. Each scenario includes 
 
 ## How to Use These Scenarios
 
-1. **Start with Quick Start** – If you haven't already, complete the [Quick Start Guide](../tutorials/getting-started/quick-start.md) to understand the basics.
+1. **Start with Quick Start** – If you haven't already, complete the [Quick Start Guide](../getting-started/quick-start.md) to understand the basics.
 
 2. **Choose Your Scenario** – Pick a scenario that matches your use case or domain.
 
@@ -222,7 +222,7 @@ Scenarios are organized by industry domain and use case. Each scenario includes 
 
 4. **Customize** – Adapt the examples to your specific requirements.
 
-5. **Explore Patterns** – See [Common Patterns](../tutorials/getting-started/common-patterns.md) for reusable code patterns.
+5. **Explore Patterns** – See [Common Patterns](../getting-started/common-patterns.md) for reusable code patterns.
 
 ## Scenario Structure
 
@@ -276,7 +276,7 @@ fun main() = runBlocking {
 
 - Java 21+
 - Kotlin 2.2.21+
-- TrustWeave dependency (see [Installation](../tutorials/getting-started/installation.md))
+- TrustWeave dependency (see [Installation](../getting-started/installation.md))
 
 ## Related Documentation
 

@@ -23,7 +23,7 @@ TrustWeave provides structured error handling with rich context for better debug
 
 **Sealed-result error handling (preferred for credentials):**
 - Use exhaustive **`when`** on **`IssuanceResult`**, **`VerificationResult`**, **`PresentationResult`**
-- See [API patterns — results vs exceptions](../../tutorials/getting-started/api-patterns.md#api-contract-results-vs-exceptions)
+- See [API patterns — results vs exceptions](../../getting-started/api-patterns.md#api-contract-results-vs-exceptions)
 
 **Exception-based error handling:**
 - **`getOrThrow()`** / **`getOrThrowDid()`** throw **`IllegalStateException`**

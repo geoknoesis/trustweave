@@ -1,6 +1,6 @@
 ---
 title: Getting Started
-nav_order: 10
+nav_order: 20
 keywords:
   - getting started
   - installation
@@ -9,8 +9,8 @@ keywords:
   - onboarding
 redirect_from:
   - /getting-started/README/
-parent: Tutorials
 has_children: true
+  - /tutorials/getting-started/README/
 ---
 
 # Getting Started
@@ -68,7 +68,7 @@ Let's get started!
 
 **Looking for examples?**
 - Use Case Scenarios](../scenarios/README.md) - 25+ real-world examples
-- Tutorials](../tutorials/README.md) - Step-by-step guides
+- [Getting Started](../getting-started/README.md) - Step-by-step guides
 
 **Need to complete a specific task?**
 - How-To Guides](../how-to/README.md) - Task-oriented guides for common operations

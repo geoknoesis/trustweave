@@ -4,7 +4,7 @@ nav_order: 20
 parent: Getting Started
 redirect_from:
   - /getting-started/ide-setup/
-
+  - /tutorials/getting-started/ide-setup/
 ---
 
 # IDE Setup Guide

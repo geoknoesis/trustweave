@@ -13,7 +13,7 @@ keywords:
   - verifiable credential
 redirect_from:
   - /getting-started/quick-start/
-
+  - /tutorials/getting-started/quick-start/
 ---
 
 # Quick Start

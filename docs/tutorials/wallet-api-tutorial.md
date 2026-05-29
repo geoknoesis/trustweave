@@ -18,7 +18,7 @@ dependencies {
 
 **Result:** Wallet APIs, **`TrustWeave`**, and testkit factories used in this tutorial.
 
-> Tip: Run **`./gradlew :distribution:examples:runQuickStartSample`** (or follow [Quick start](getting-started/quick-start.md)) for runnable samples aligned with the snippets below.
+> Tip: Run **`./gradlew :distribution:examples:runQuickStartSample`** (or follow [Quick start](../getting-started/quick-start.md)) for runnable samples aligned with the snippets below.
 
 ## Prerequisites
 

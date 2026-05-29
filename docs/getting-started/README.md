@@ -1,6 +1,6 @@
 ---
 title: Getting Started
-nav_order: 20
+nav_order: 10
 keywords:
   - getting started
   - installation

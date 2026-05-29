@@ -6,9 +6,8 @@ keywords:
   - overview
   - what is trustweave
   - getting started
-redirect_from:
-  - /introduction/README/
 has_children: true
+redirect_from:
   - /core-concepts/introduction/README/
 ---
 

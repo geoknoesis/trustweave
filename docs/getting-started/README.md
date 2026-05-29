@@ -7,9 +7,8 @@ keywords:
   - quick start
   - setup
   - onboarding
-redirect_from:
-  - /getting-started/README/
 has_children: true
+redirect_from:
   - /tutorials/getting-started/README/
 ---
 

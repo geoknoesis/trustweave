@@ -27,6 +27,14 @@ package org.trustweave.did.orb
  * @property authHeader Optional HTTP header pair (name, value) for authenticated
  *                      Orb deployments. `null` for anonymous access.
  * @property timeoutSeconds HTTP client timeout in seconds (default 30).
+ * @property anchorOrigin Value emitted as `anchorOrigin` in create and recover
+ *                        operations. Defaults to [baseUrl]. Override when the
+ *                        Orb node is reachable from the JVM at a different URL
+ *                        than the one it advertises (e.g. inside Docker where
+ *                        the JVM talks to `localhost:<random>` but Orb's
+ *                        `--allowed-origins` lists `host.docker.internal:48326`).
+ *                        Whatever value you pass MUST also appear in Orb's
+ *                        `--allowed-origins`.
  */
 data class OrbDidConfig(
     val baseUrl: String,
@@ -35,6 +43,7 @@ data class OrbDidConfig(
     val identifiersPath: String = DEFAULT_IDENTIFIERS_PATH,
     val authHeader: Pair<String, String>? = null,
     val timeoutSeconds: Long = 30L,
+    val anchorOrigin: String? = null,
 ) {
 
     init {

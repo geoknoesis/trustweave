@@ -230,6 +230,78 @@ class IonDidMethod(
         }
     }
 
+    /**
+     * Recovers a did:ion DID. Used when the update key has been lost or
+     * compromised but the recovery key is still available. Rotates BOTH the
+     * update and recovery keys in one operation and replaces the document state
+     * with the result of [updater].
+     *
+     * The previous recovery key is loaded from the [keyStore]; the operation
+     * fails fast with `ION_KEYS_NOT_FOUND` when it is absent.
+     */
+    suspend fun recoverDid(
+        did: Did,
+        updater: (DidDocument) -> DidDocument
+    ): DidDocument = withContext(Dispatchers.IO) {
+        try {
+            validateDidFormat(did)
+
+            val didString = did.value
+            val currentResult = resolveDid(did)
+            val currentDocument = when (currentResult) {
+                is DidResolutionResult.Success -> currentResult.document
+                else -> throw TrustWeaveException.NotFound(
+                    message = "DID document not found: $didString"
+                )
+            }
+            val recovered = updater(currentDocument)
+
+            val suffix = extractDidSuffix(didString)
+            val previousKeys = keyStore.get(suffix)
+                ?: throw TrustWeaveException.Unknown(
+                    code = "ION_KEYS_NOT_FOUND",
+                    message = "Recovery keys for $didString are not in the key store. " +
+                        "Recover can only be issued by the instance that created the DID, " +
+                        "or one configured with a persistent SidetreeKeyStore containing the prior keys."
+                )
+            val previousRecoveryKeyPair = SidetreeP256KeyPair(
+                privateJwk = previousKeys.recoveryPrivateJwk,
+                publicJwk = previousKeys.recoveryPublicJwk
+            )
+            val nextUpdateKeyPair = sidetreeClient.generateP256KeyPair()
+            val nextRecoveryKeyPair = sidetreeClient.generateP256KeyPair()
+
+            val recoverOp = sidetreeClient.buildRecoverOperation(
+                did = didString,
+                newDocument = recovered,
+                previousRecoveryKeyPair = previousRecoveryKeyPair,
+                nextUpdatePublicJwk = nextUpdateKeyPair.publicJwk,
+                nextRecoveryPublicJwk = nextRecoveryKeyPair.publicJwk
+            )
+            sidetreeClient.submitOperation(recoverOp)
+
+            keyStore.put(
+                suffix,
+                SidetreeKeyPair(
+                    updatePrivateJwk = nextUpdateKeyPair.privateJwk,
+                    updatePublicJwk = nextUpdateKeyPair.publicJwk,
+                    recoveryPrivateJwk = nextRecoveryKeyPair.privateJwk,
+                    recoveryPublicJwk = nextRecoveryKeyPair.publicJwk
+                )
+            )
+            storeDocument(recovered.id.value, recovered)
+            recovered
+        } catch (e: TrustWeaveException) {
+            throw e
+        } catch (e: Exception) {
+            throw TrustWeaveException.Unknown(
+                code = "RECOVER_FAILED",
+                message = "Failed to recover did:ion: ${e.message}",
+                cause = e
+            )
+        }
+    }
+
     override suspend fun deactivateDid(did: Did): Boolean = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)

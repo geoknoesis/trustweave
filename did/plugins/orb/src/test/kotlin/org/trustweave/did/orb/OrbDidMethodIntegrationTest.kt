@@ -81,6 +81,7 @@ class OrbDidMethodIntegrationTest {
                 name to value
             },
             timeoutSeconds = 30L,
+            anchorOrigin = ownedContainer?.anchorOrigin,
         )
         val method = OrbDidMethod(kms, cfg)
 
@@ -101,39 +102,63 @@ class OrbDidMethodIntegrationTest {
     }
 
     private suspend fun assertOrbAcceptsWireFormat(method: OrbDidMethod) {
-        // Reach into the sidetree client to build a second, independent DID purely
-        // so we have something whose keys are in the local key store.
+        // Build a second DID just so the local key store has something to use; we
+        // submit the operations directly to Orb to validate wire format, bypassing
+        // the published-operation-required path that needs full anchoring.
         val secondDoc = method.createDid(didCreationOptions { algorithm = KeyAlgorithm.ED25519 })
         val httpClient = OkHttpClient()
-        // Synthesize the bare update / deactivate envelopes from the same builder the
-        // plugin uses, and confirm Orb's parser accepts the shape.
         val sidetree = method.javaClass.getDeclaredField("sidetree").apply { isAccessible = true }
             .get(method) as SidetreeOrbClient
+
         val updateOp = sidetree.buildUpdateOperation(
             did = secondDoc.id.value,
             updatedDocument = secondDoc,
             previousUpdateKeyPair = sidetree.generateP256KeyPair(),
             nextUpdatePublicJwk = sidetree.generateP256KeyPair().publicJwk,
         )
-        val payload = updateOp.toString().toRequestBody("application/json".toMediaType())
+        assertOrbParsesOperation(httpClient, updateOp.toString(), kind = "update")
+
+        val recoverOp = sidetree.buildRecoverOperation(
+            did = secondDoc.id.value,
+            newDocument = secondDoc,
+            previousRecoveryKeyPair = sidetree.generateP256KeyPair(),
+            nextUpdatePublicJwk = sidetree.generateP256KeyPair().publicJwk,
+            nextRecoveryPublicJwk = sidetree.generateP256KeyPair().publicJwk,
+        )
+        assertOrbParsesOperation(httpClient, recoverOp.toString(), kind = "recover")
+
+        val deactivateOp = sidetree.buildDeactivateOperation(
+            did = secondDoc.id.value,
+            previousRecoveryKeyPair = sidetree.generateP256KeyPair(),
+        )
+        assertOrbParsesOperation(httpClient, deactivateOp.toString(), kind = "deactivate")
+    }
+
+    private fun assertOrbParsesOperation(httpClient: OkHttpClient, body: String, kind: String) {
+        val payload = body.toRequestBody("application/json".toMediaType())
         val request = Request.Builder()
             .url("$baseUrl/sidetree/v1/operations")
             .post(payload)
             .build()
         httpClient.newCall(request).execute().use { response ->
             val responseBody = response.body?.string() ?: ""
+            // Wire-format acceptance: either Orb queued the op (any 2xx) or it
+            // rejected with a known post-parse error that indicates the envelope
+            // was understood. Anything else — especially `bad request: parse operation`
+            // — is a real spec violation.
             val isWireOk = response.isSuccessful || listOf(
                 "create operation not found",
                 "no operations to update",
+                "operation already exists",
             ).any { responseBody.contains(it, ignoreCase = true) }
             assertTrue(
                 isWireOk,
-                "Update wire format rejected by Orb: HTTP ${response.code} $responseBody",
+                "$kind wire format rejected by Orb: HTTP ${response.code} $responseBody",
             )
             assertNotEquals(
                 true,
                 responseBody.contains("bad request: parse operation", ignoreCase = true),
-                "Update envelope failed Orb's parse step: $responseBody",
+                "$kind envelope failed Orb's parse step: $responseBody",
             )
         }
     }

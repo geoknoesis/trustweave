@@ -26,7 +26,10 @@ internal class SidetreeOrbClient(
         // Orb requires every create operation to carry an `anchorOrigin` inside
         // `suffixData` so it can route witnesses; we default to the configured
         // base URL. Operators must include the same URL in Orb's `--allowed-origins`.
-        suffixDataExtensionFields = mapOf("anchorOrigin" to config.baseUrl),
+        suffixDataExtensionFields = mapOf("anchorOrigin" to (config.anchorOrigin ?: config.baseUrl)),
+        // Recover operations require the same anchorOrigin inside the signedData
+        // payload — the recovered DID keeps its anchor-origin association.
+        recoverSignedDataExtensionFields = mapOf("anchorOrigin" to (config.anchorOrigin ?: config.baseUrl)),
     )
 
     private val builder = SidetreeOperationBuilder(methodSpec)
@@ -49,6 +52,20 @@ internal class SidetreeOrbClient(
         previousUpdateKeyPair: SidetreeP256KeyPair,
         nextUpdatePublicJwk: Map<String, Any?>,
     ): JsonObject = builder.buildUpdateOperation(did, updatedDocument, previousUpdateKeyPair, nextUpdatePublicJwk)
+
+    suspend fun buildRecoverOperation(
+        did: String,
+        newDocument: org.trustweave.did.model.DidDocument,
+        previousRecoveryKeyPair: SidetreeP256KeyPair,
+        nextUpdatePublicJwk: Map<String, Any?>,
+        nextRecoveryPublicJwk: Map<String, Any?>,
+    ): JsonObject = builder.buildRecoverOperation(
+        did,
+        newDocument,
+        previousRecoveryKeyPair,
+        nextUpdatePublicJwk,
+        nextRecoveryPublicJwk,
+    )
 
     suspend fun buildDeactivateOperation(
         did: String,

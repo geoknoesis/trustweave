@@ -24,6 +24,13 @@ data class SidetreeMethodSpec(
      * by default.
      */
     val suffixDataExtensionFields: Map<String, String> = emptyMap(),
+    /**
+     * Optional extra fields the method's reference operator requires inside the
+     * `signedData` payload of recover operations. Orb requires `anchorOrigin`
+     * here so the recovered DID stays associated with a known anchor origin.
+     * Empty by default.
+     */
+    val recoverSignedDataExtensionFields: Map<String, String> = emptyMap(),
 ) {
     init {
         require(namespace.endsWith(":")) { "Sidetree namespace must end with ':' (got '$namespace')" }

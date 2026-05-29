@@ -134,6 +134,62 @@ class SidetreeOperationBuilderTest {
     }
 
     @Test
+    fun `recover reveals the PREVIOUS recovery key, rotates both commitments, and signs with its private half`() = runBlocking {
+        val previousRecovery = SidetreeP256KeyPair.generate()
+        val nextUpdate = SidetreeP256KeyPair.generate()
+        val nextRecovery = SidetreeP256KeyPair.generate()
+
+        val recoverOp = builder.buildRecoverOperation(
+            did = "did:orb:EiSomeSuffix",
+            newDocument = emptyDocument("did:orb:EiSomeSuffix"),
+            previousRecoveryKeyPair = previousRecovery,
+            nextUpdatePublicJwk = nextUpdate.publicJwk,
+            nextRecoveryPublicJwk = nextRecovery.publicJwk,
+        )
+
+        val expectedRevealValue = b64url.encodeToString(multihashSha256(jcs(previousRecovery.publicJwk)))
+        assertEquals(
+            expectedRevealValue,
+            recoverOp["revealValue"]?.jsonPrimitive?.content,
+            "revealValue MUST be base64url(multihash(SHA-256(JCS(previousRecoveryPublicJwk)))).",
+        )
+
+        val expectedUpdateCommitment = b64url.encodeToString(multihashSha256(jcs(nextUpdate.publicJwk)))
+        assertEquals(
+            expectedUpdateCommitment,
+            recoverOp["delta"]?.jsonObject?.get("updateCommitment")?.jsonPrimitive?.content,
+            "delta.updateCommitment MUST be the hash of the next update public key.",
+        )
+
+        val signedData = recoverOp["signedData"]?.jsonPrimitive?.content
+        assertNotNull(signedData)
+        assertEquals(3, signedData.split(".").size, "signedData MUST be a JWS Compact Serialization.")
+        assertTrue(
+            verifyJwsAgainst(signedData, previousRecovery.publicJwk),
+            "signedData JWS MUST verify with the previous recovery public key.",
+        )
+
+        val payload = Json.parseToJsonElement(
+            String(b64urlDecoder.decode(signedData.split(".")[1]), StandardCharsets.UTF_8),
+        ) as JsonObject
+
+        val recoveryKey = payload["recoveryKey"] as JsonObject
+        assertEquals(previousRecovery.publicJwk["x"], recoveryKey["x"]?.jsonPrimitive?.content)
+        assertEquals(previousRecovery.publicJwk["y"], recoveryKey["y"]?.jsonPrimitive?.content)
+
+        val expectedRecoveryCommitment = b64url.encodeToString(multihashSha256(jcs(nextRecovery.publicJwk)))
+        assertEquals(
+            expectedRecoveryCommitment,
+            payload["recoveryCommitment"]?.jsonPrimitive?.content,
+            "signedData.recoveryCommitment MUST be the hash of the next recovery public key.",
+        )
+
+        val delta = recoverOp["delta"] as JsonObject
+        val expectedDeltaHash = b64url.encodeToString(multihashSha256(jcs(delta)))
+        assertEquals(expectedDeltaHash, payload["deltaHash"]?.jsonPrimitive?.content)
+    }
+
+    @Test
     fun `deactivate reveals the PREVIOUS recovery key and signs with its private half`() = runBlocking {
         val previousRecovery = SidetreeP256KeyPair.generate()
 

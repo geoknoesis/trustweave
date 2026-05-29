@@ -262,6 +262,83 @@ class OrbDidMethod(
     }
 
     /**
+     * Recovers a did:orb DID. Used when the update key has been lost or
+     * compromised but the recovery key is still available. Rotates BOTH the
+     * update and recovery keys in one operation and replaces the document state
+     * with the result of [updater] (typically used to also rotate the signing
+     * key embedded in the document).
+     *
+     * The previous recovery key is loaded from the [keyStore]; the operation
+     * fails fast with `ORB_KEYS_NOT_FOUND` when it is absent.
+     */
+    suspend fun recoverDid(
+        did: Did,
+        updater: (DidDocument) -> DidDocument,
+    ): DidDocument = withContext(Dispatchers.IO) {
+        try {
+            validateDidFormat(did)
+
+            val current = when (val r = resolveDid(did)) {
+                is DidResolutionResult.Success -> r.document
+                else -> throw TrustWeaveException.NotFound(
+                    resource = did.value,
+                    message = "DID document not found: ${did.value}",
+                )
+            }
+            val recovered = updater(current)
+
+            val suffix = extractSuffixOrThrow(did.value)
+            val previousKeys = keyStore.get(suffix)
+                ?: throw OrbException(
+                    code = "ORB_KEYS_NOT_FOUND",
+                    message = "Recovery keys for $did are not in the key store. " +
+                        "Recover can only be issued by the instance that created the DID, " +
+                        "or one configured with a persistent SidetreeKeyStore containing the prior keys.",
+                )
+            val previousRecoveryKeyPair = SidetreeP256KeyPair(
+                privateJwk = previousKeys.recoveryPrivateJwk,
+                publicJwk = previousKeys.recoveryPublicJwk,
+            )
+            val nextUpdateKeyPair = sidetree.generateP256KeyPair()
+            val nextRecoveryKeyPair = sidetree.generateP256KeyPair()
+
+            val recoverOp = sidetree.buildRecoverOperation(
+                did = did.value,
+                newDocument = recovered,
+                previousRecoveryKeyPair = previousRecoveryKeyPair,
+                nextUpdatePublicJwk = nextUpdateKeyPair.publicJwk,
+                nextRecoveryPublicJwk = nextRecoveryKeyPair.publicJwk,
+            )
+            val response = sidetree.submitOperation(recoverOp)
+            if (!response.success) {
+                throw OrbException.httpError(response.httpStatus, response.error ?: response.rawBody)
+            }
+
+            keyStore.put(
+                suffix,
+                SidetreeKeyPair(
+                    updatePrivateJwk = nextUpdateKeyPair.privateJwk,
+                    updatePublicJwk = nextUpdateKeyPair.publicJwk,
+                    recoveryPrivateJwk = nextRecoveryKeyPair.privateJwk,
+                    recoveryPublicJwk = nextRecoveryKeyPair.publicJwk,
+                ),
+            )
+            storeDocument(did, recovered)
+            recovered
+        } catch (e: OrbException) {
+            throw e
+        } catch (e: TrustWeaveException) {
+            throw e
+        } catch (e: Exception) {
+            throw TrustWeaveException.Unknown(
+                code = "ORB_RECOVER_FAILED",
+                message = "Failed to recover did:orb: ${e.message}",
+                cause = e,
+            )
+        }
+    }
+
+    /**
      * Deactivates a did:orb DID by building a Sidetree deactivate operation
      * and submitting it to the Orb node, then removing the local cache entry.
      *

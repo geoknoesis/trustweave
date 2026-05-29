@@ -63,6 +63,15 @@ class OrbNodeContainer(
     val baseUrl: String
         get() = "http://${host}:${getMappedPort(INTERNAL_PORT)}"
 
+    /**
+     * `anchorOrigin` value to pass in [OrbDidConfig.anchorOrigin] when running
+     * against this container. Matches the URL Orb is configured to recognise
+     * (`--external-endpoint` + `--allowed-origins`), which is the in-container
+     * host:port pair rather than the host-mapped port [baseUrl] uses.
+     */
+    val anchorOrigin: String
+        get() = "http://host.docker.internal:$INTERNAL_PORT"
+
     override fun start() {
         // Re-write the command now that we can't know the mapped port up front but
         // need three of Orb's args to carry the real external URL.

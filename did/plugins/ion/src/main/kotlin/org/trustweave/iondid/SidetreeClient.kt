@@ -39,6 +39,20 @@ internal class SidetreeClient(
         nextUpdatePublicJwk: Map<String, Any?>,
     ): JsonObject = builder.buildUpdateOperation(did, updatedDocument, previousUpdateKeyPair, nextUpdatePublicJwk)
 
+    suspend fun buildRecoverOperation(
+        did: String,
+        newDocument: DidDocument,
+        previousRecoveryKeyPair: SidetreeP256KeyPair,
+        nextUpdatePublicJwk: Map<String, Any?>,
+        nextRecoveryPublicJwk: Map<String, Any?>,
+    ): JsonObject = builder.buildRecoverOperation(
+        did,
+        newDocument,
+        previousRecoveryKeyPair,
+        nextUpdatePublicJwk,
+        nextRecoveryPublicJwk,
+    )
+
     suspend fun buildDeactivateOperation(
         did: String,
         previousRecoveryKeyPair: SidetreeP256KeyPair,

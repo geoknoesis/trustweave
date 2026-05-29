@@ -159,6 +159,60 @@ class SidetreeOperationBuilder(private val methodSpec: SidetreeMethodSpec) {
     }
 
     /**
+     * Build a Sidetree recover operation per spec §6.3.
+     *
+     * Recover is used when the *update* key has been lost or compromised but the
+     * *recovery* key is still available. It rotates BOTH the update and recovery
+     * commitments in one step, and replaces the document state with patches
+     * built from [newDocument].
+     *
+     *  - `revealValue` is `base64url(multihash-SHA-256(JCS(previousRecoveryPublicJwk)))`
+     *    so it matches the `recoveryCommitment` left on-ledger by the create or
+     *    previous recover.
+     *  - `delta.updateCommitment` is the hash of [nextUpdatePublicJwk] — the new
+     *    update key that subsequent updates must reveal.
+     *  - `signedData` is a JWS Compact Serialization signed by the **previous**
+     *    recovery private key. Its payload `{recoveryKey, recoveryCommitment, deltaHash}`
+     *    proves possession of that key and commits to both the next recovery key
+     *    and the new delta.
+     */
+    suspend fun buildRecoverOperation(
+        did: String,
+        newDocument: DidDocument,
+        previousRecoveryKeyPair: SidetreeP256KeyPair,
+        nextUpdatePublicJwk: Map<String, Any?>,
+        nextRecoveryPublicJwk: Map<String, Any?>,
+    ): JsonObject = withContext(Dispatchers.IO) {
+        val nextUpdateCommitment = SidetreeCommitment.compute(nextUpdatePublicJwk)
+        val nextRecoveryCommitment = SidetreeCommitment.compute(nextRecoveryPublicJwk)
+        val revealValue = b64url.encodeToString(
+            SidetreeJcs.multihashSha256(SidetreeJcs.canonicalize(previousRecoveryKeyPair.publicJwk)),
+        )
+
+        val delta = buildJsonObject {
+            put("updateCommitment", nextUpdateCommitment)
+            put("patches", diffToPatches(newDocument))
+        }
+        val deltaHash = b64url.encodeToString(SidetreeJcs.multihashSha256(SidetreeJcs.canonicalize(delta)))
+
+        val signedPayload = buildJsonObject {
+            put("recoveryKey", SidetreeJcs.mapToJsonObject(previousRecoveryKeyPair.publicJwk))
+            put("recoveryCommitment", nextRecoveryCommitment)
+            put("deltaHash", deltaHash)
+            methodSpec.recoverSignedDataExtensionFields.forEach { (key, value) -> put(key, value) }
+        }
+        val signedDataJws = SidetreeJwsCompact.signES256(signedPayload, previousRecoveryKeyPair.privateJwk)
+
+        buildJsonObject {
+            put("type", "recover")
+            put("didSuffix", extractDidSuffix(did))
+            put("revealValue", revealValue)
+            put("delta", delta)
+            put("signedData", JsonPrimitive(signedDataJws))
+        }
+    }
+
+    /**
      * Build a Sidetree deactivate operation per spec §6.4.
      */
     suspend fun buildDeactivateOperation(

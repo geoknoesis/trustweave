@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TrustWeave &times; Accountly &times; Kill Bill — Subscription Management Integration Design</title>
+<style>
+  :root {
+    --bg: #ffffff; --fg: #0f1729; --muted: #64748b; --border: #e2e8f0;
+    --primary: #2463eb; --primary-soft: #eff4ff; --accent: #0f766e;
+    --code-bg: #0f1729; --code-fg: #e2e8f0; --warn-bg: #fff7ed; --warn-br: #fdba74;
+    --ok-bg: #ecfdf5; --ok-br: #6ee7b7; --new-bg: #eff4ff; --rm-bg: #fef2f2;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: Inter, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--fg); background: var(--bg); margin: 0; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 48px 28px 96px; }
+  header.doc { border-bottom: 1px solid var(--border); padding-bottom: 24px; margin-bottom: 8px; }
+  header.doc h1 { font-size: 1.9rem; line-height: 1.2; letter-spacing: -0.025em; margin: 0 0 12px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px 18px; color: var(--muted); font-size: 0.85rem; }
+  .meta b { color: var(--fg); font-weight: 600; }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.72rem;
+           font-weight: 600; letter-spacing: 0.02em; background: var(--primary-soft); color: var(--primary); }
+  h2 { font-size: 1.35rem; letter-spacing: -0.02em; margin: 48px 0 8px; padding-top: 12px; }
+  h2 .num { color: var(--primary); font-variant-numeric: tabular-nums; margin-right: 8px; }
+  h3 { font-size: 1.05rem; margin: 28px 0 6px; }
+  h4 { font-size: 0.92rem; margin: 20px 0 4px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  p, li { font-size: 0.95rem; }
+  a { color: var(--primary); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { font-family: "SF Mono", ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 0.85em;
+         background: #f1f5f9; padding: 1px 6px; border-radius: 6px; }
+  pre { background: var(--code-bg); color: var(--code-fg); padding: 18px 20px; border-radius: var(--radius);
+        overflow-x: auto; font-size: 0.82rem; line-height: 1.5; }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+  table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 0.88rem; }
+  th, td { border: 1px solid var(--border); padding: 8px 11px; text-align: left; vertical-align: top; }
+  th { background: #f8fafc; font-weight: 600; }
+  tbody tr:nth-child(even) { background: #fbfcfe; }
+  .callout { border: 1px solid var(--border); border-left-width: 4px; border-radius: 10px;
+             padding: 12px 16px; margin: 16px 0; font-size: 0.9rem; }
+  .callout.rec { background: var(--ok-bg); border-left-color: var(--accent); }
+  .callout.warn { background: var(--warn-bg); border-left-color: #ea580c; }
+  .callout.info { background: var(--primary-soft); border-left-color: var(--primary); }
+  .callout .t { font-weight: 700; display: block; margin-bottom: 2px; }
+  .tag { font-size: 0.72rem; font-weight: 600; padding: 1px 8px; border-radius: 6px; white-space: nowrap; }
+  .tag.new { background: #dcfce7; color: #166534; }
+  .tag.chg { background: #fef9c3; color: #854d0e; }
+  .tag.rm  { background: #fee2e2; color: #991b1b; }
+  nav.toc { background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 16px 22px; margin: 24px 0 8px; }
+  nav.toc ol { margin: 6px 0 0; padding-left: 20px; columns: 2; column-gap: 32px; }
+  nav.toc li { margin: 3px 0; font-size: 0.88rem; }
+  .lede { font-size: 1.02rem; color: #1e293b; }
+  .pillrow { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+  .pill { background: #f1f5f9; border: 1px solid var(--border); border-radius: 999px;
+          padding: 4px 12px; font-size: 0.8rem; }
+  .pill b { color: var(--primary); }
+  hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+  .small { font-size: 0.82rem; color: var(--muted); }
+  .diagram { background: #fbfcfe; border: 1px solid var(--border); }
+  footer.doc { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--border);
+               color: var(--muted); font-size: 0.82rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="doc">
+  <span class="badge">DESIGN SPEC &middot; DRAFT FOR REVIEW</span>
+  <h1>Subscription Management Integration<br />TrustWeave SaaS &times; Accountly &times; Kill Bill</h1>
+  <div class="meta">
+    <span><b>Date:</b> 2026-06-01</span>
+    <span><b>Author:</b> Stephane Fellah (with Claude Code)</span>
+    <span><b>Status:</b> Draft — pending review</span>
+    <span><b>Scope:</b> <code>trustweave-saas</code> + <code>accountly</code> + Kill Bill</span>
+  </div>
+</header>
+
+<p class="lede">
+  Replace TrustWeave SaaS's direct Stripe billing with <b>Accountly + Kill Bill</b> as the single system of
+  record for subscriptions and metered usage. TrustWeave integrates as a <b>remote API client</b> and a
+  <b>merchant ("Application owner")</b> in Accountly: it declares its plan tiers into Accountly's catalog,
+  provisions each Organization as an Accountly subscriber, meters billable activity, and enforces plan limits
+  locally against a cached entitlement snapshot kept in sync via webhooks.
+</p>
+
+<h3>Settled decisions (from brainstorming)</h3>
+<div class="pillrow">
+  <span class="pill"><b>Role:</b> Full replacement — Accountly+KB are system of record</span>
+  <span class="pill"><b>Topology:</b> Remote API client</span>
+  <span class="pill"><b>Auth:</b> Shared Keycloak + client-credentials service JWT</span>
+  <span class="pill"><b>Metered:</b> creds issued, verifications, blockchain tx cost, seats/DIDs</span>
+  <span class="pill"><b>Customer UX:</b> Embedded in TrustWeave UI, proxied</span>
+  <span class="pill"><b>Enforcement:</b> Approach A — cached snapshot + async usage + webhook</span>
+  <span class="pill"><b>Catalog:</b> TrustWeave-declared, reconciled into Accountly</span>
+</div>
+
+<nav class="toc">
+  <strong>Contents</strong>
+  <ol>
+    <li><a href="#context">Context &amp; current state</a></li>
+    <li><a href="#arch">Architecture &amp; component map</a></li>
+    <li><a href="#identity">Identity, catalog &amp; tier mapping</a></li>
+    <li><a href="#catalog">Catalog-as-code &amp; plan widgets</a></li>
+    <li><a href="#metering">Metering &amp; entitlement enforcement</a></li>
+    <li><a href="#flows">Lifecycle flows</a></li>
+    <li><a href="#tw-changes">Changes — TrustWeave SaaS</a></li>
+    <li><a href="#ac-changes">Changes — Accountly</a></li>
+    <li><a href="#kb-changes">Changes — Kill Bill catalog</a></li>
+    <li><a href="#data">Data model changes</a></li>
+    <li><a href="#api">API contracts</a></li>
+    <li><a href="#testing">Testing strategy</a></li>
+    <li><a href="#rollout">Migration &amp; rollout</a></li>
+    <li><a href="#risks">Risks &amp; open questions</a></li>
+  </ol>
+</nav>
+
+<!-- ───────────────────────── 1 ───────────────────────── -->
+<h2 id="context"><span class="num">1.</span>Context &amp; current state</h2>
+<p>
+  <b>TrustWeave SaaS</b> (<code>trustweave-saas</code>, Spring Boot + React) is multi-tenant via
+  <code>Organization</code> with <code>OrganizationTier { FREE, PRO, ENTERPRISE }</code>. It currently bills
+  <b>directly through Stripe</b>: <code>StripeService</code>, <code>SubscriptionService</code> (Stripe-coupled
+  <code>Subscription</code> entity), and <code>TransactionCostBillingService</code> (blockchain transaction
+  costs → Stripe invoice items). These are the components this integration <b>retires</b>.
+</p>
+<p>
+  <b>Accountly</b> (<code>accountly</code>, Next.js frontend + Kotlin/Spring backend on <code>:9393</code>, Kill
+  Bill on <code>:8080</code>) is already a multi-tenant metered-billing platform. Its model: an <b>owner</b>
+  (merchant) registers <b>Applications</b>; each Application has <b>Plans</b>
+  (<code>FlatRate</code>/<code>PerUsage</code>) with <b>plan_quotas</b> mapped to Kill Bill products; subscribers
+  get <b>Subscriptions</b> carrying <code>killbill_bundle_id</code>/<code>killbill_subscription_id</code>;
+  <b>usage events</b> are ingested idempotently → rollups → daily analytics → entitlement snapshots. Kill Bill
+  performs invoicing; an inbound webhook feeds Kill Bill state back into Accountly.
+</p>
+<div class="callout info">
+  <span class="t">Why this fits</span>
+  Accountly already implements (a) merchant catalog write APIs, (b) idempotent usage ingestion with explicit
+  <code>subscriberAccountId</code>, (c) entitlement-snapshot computation, and (d) Kill Bill account/subscription
+  provisioning. The integration mostly <em>wires TrustWeave into existing Accountly machinery</em> plus a small
+  set of merchant-facing additions.
+</div>
+
+<!-- ───────────────────────── 2 ───────────────────────── -->
+<h2 id="arch"><span class="num">2.</span>Architecture &amp; component map</h2>
+<pre class="diagram"><code>TrustWeave SaaS (Spring)                       Accountly API (Spring)              Kill Bill
+─────────────────────────                      ──────────────────────              ─────────
+Organization                                   Owner: "TrustWeave SaaS" (service)
+  ├ tier (local cache)        ┌─ AccountlyBillingClient ─►  Application
+  ├ accountlySubscriberId     │   (service JWT, retry)      ├ Plans tw-free/pro/ent ──►  KB catalog
+  ├ killbillAccountId         │                             │   └ plan_quotas            (products,
+  └ entitlementSnapshot ◄──┐  ├─ CatalogReconciler ───────►  create/update plans         prices,
+                           │  │                              usage-vars, KB mapping       usage units)
+ issue / verify / anchor   │  ├─ UsageReporter (outbox) ──►  POST usage-events ──► rollups ──► KB usage
+   │                       │  │                                                        │
+   ▼                       │  ├─ OrganizationBillingSvc ──►  merchant subscribe/    ──►  KB bundle +
+ EntitlementGate (local) ──┘  │                              change/cancel               subscription
+   │                          └─ BillingProxyController ◄──  GET plans / snapshot
+   ▼   (frontend)                  ▲
+ React widgets:                    │
+   PricingPlans · CurrentPlanCard · UsageMeter
+                                   │
+ AccountlyWebhookController ◄────── MerchantWebhookDispatcher ◄── KB inbound webhook
+   (HMAC verify → update tier + refresh snapshot)   (subscription.updated, payment_failed)
+</code></pre>
+
+<h4>New in TrustWeave SaaS — package <code>billing/accountly/</code> (replaces <code>billing/</code> Stripe code)</h4>
+<table>
+  <thead><tr><th>Component</th><th>Responsibility</th></tr></thead>
+  <tbody>
+    <tr><td><code>AccountlyBillingClient</code></td><td>Typed HTTP client to Accountly <code>/api/v1</code>; obtains &amp; caches a Keycloak client-credentials service token; handles errors → domain results.</td></tr>
+    <tr><td><code>CatalogReconciler</code></td><td>Reconciles the declarative tier catalog (FREE/PRO/ENTERPRISE + quotas + KB mapping + usage variables) into Accountly. Idempotent create-or-update; runs on startup and via admin trigger.</td></tr>
+    <tr><td><code>OrganizationBillingService</code></td><td>Orchestrates provisioning (subscriber + default plan), upgrade/downgrade, cancel; updates local mapping &amp; tier cache.</td></tr>
+    <tr><td><code>UsageReporter</code></td><td>Drains a durable <code>usage_outbox</code>; posts <code>usage-events</code> to Accountly with stable idempotency keys and retry/backoff.</td></tr>
+    <tr><td><code>EntitlementGate</code></td><td>Local pre-flight check of a billable action against the cached entitlement snapshot (allow / soft-warn / hard-block).</td></tr>
+    <tr><td><code>AccountlyWebhookController</code></td><td>Receives Accountly merchant webhooks (HMAC-verified); updates <code>OrganizationTier</code> and refreshes the snapshot.</td></tr>
+    <tr><td><code>BillingProxyController</code></td><td>Frontend-facing endpoints (the embedded-proxy UX): list plans, current subscription/usage, subscribe/upgrade/cancel. Never exposes Accountly directly to the browser.</td></tr>
+  </tbody>
+</table>
+
+<h4>Retired in TrustWeave SaaS</h4>
+<div class="pillrow">
+  <span class="pill"><span class="tag rm">remove</span> <code>StripeService</code></span>
+  <span class="pill"><span class="tag rm">remove</span> <code>SubscriptionService</code> (Stripe)</span>
+  <span class="pill"><span class="tag chg">refactor</span> <code>TransactionCostBillingService</code> → emit usage events, not Stripe invoice items</span>
+  <span class="pill"><span class="tag chg">refactor</span> <code>Subscription</code> entity → Accountly/KB references, drop <code>stripe_*</code></span>
+</div>
+
+<!-- ───────────────────────── 3 ───────────────────────── -->
+<h2 id="identity"><span class="num">3.</span>Identity, catalog &amp; tier mapping</h2>
+<table>
+  <thead><tr><th>TrustWeave concept</th><th>Accountly concept</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>The TrustWeave company (1 service identity)</td><td><b>Owner</b> of Application <code>"TrustWeave SaaS"</code></td><td>Authenticated via shared-Keycloak <b>client-credentials service JWT</b>; mapped to an Accountly owner <code>app_user</code>.</td></tr>
+    <tr><td><code>Organization</code></td><td><b>Subscriber</b> (<code>app_users</code>) + <b>Kill Bill account</b></td><td>Mapping <code>accountlySubscriberId</code> + <code>killbillAccountId</code> stored on <code>Organization</code>. Subscriber identified by external ref <code>trustweave:org:&lt;id&gt;</code>.</td></tr>
+    <tr><td><code>OrganizationTier</code> FREE / PRO / ENTERPRISE</td><td><b>Plan</b> <code>tw-free</code> / <code>tw-pro</code> / <code>tw-enterprise</code></td><td>Tier stays in TrustWeave <b>only for local feature-gating</b>; the authoritative plan lives in Accountly and drives the tier via webhook sync.</td></tr>
+    <tr><td>Tier limits (e.g. Free = 500 creds/mo)</td><td><b>plan_quotas</b> (<code>event_type</code>, <code>hard_limit</code>, <code>period</code>)</td><td>Declared by TrustWeave's <code>CatalogReconciler</code>.</td></tr>
+    <tr><td>Billable actions</td><td>declared <b>usage variables</b> + <code>usage-events</code></td><td>Event types in next section.</td></tr>
+  </tbody>
+</table>
+
+<h4>Metered event types</h4>
+<table>
+  <thead><tr><th>Event type</th><th>Source in TrustWeave</th><th>Pricing intent</th></tr></thead>
+  <tbody>
+    <tr><td><code>credential.issued</code></td><td>Credential issuance service</td><td>Core quota (Free = 500/mo); overage on metered plans.</td></tr>
+    <tr><td><code>credential.verified</code></td><td>Verifier Gateway / OID4VP</td><td>Metered; may be free up to a quota.</td></tr>
+    <tr><td><code>blockchain.tx</code></td><td><code>TransactionCostService</code> (anchoring/on-chain)</td><td>Cost passthrough — quantity = unit cost (USD-cents) in <code>properties</code>.</td></tr>
+    <tr><td><code>wallet.seat</code> / <code>did.created</code></td><td>DID creation / active holder wallets</td><td>Seat-style metric (periodic high-water or creation count).</td></tr>
+  </tbody>
+</table>
+<p class="small">
+  Each event type is declared once per Application as an Accountly usage variable and referenced by
+  <code>plan_quotas.event_type</code>. <code>blockchain.tx</code> carries its native/USD cost in the event's
+  <code>properties</code> JSON so Kill Bill can bill the passthrough amount.
+</p>
+
+<!-- ───────────────────────── 4 ───────────────────────── -->
+<h2 id="catalog"><span class="num">4.</span>Catalog-as-code &amp; plan widgets</h2>
+
+<h3>4.1 TrustWeave declares the catalog</h3>
+<p>
+  Rather than seeding Accountly by hand, TrustWeave owns a declarative tier definition (config / Kotlin DSL).
+  <code>CatalogReconciler</code> pushes it into Accountly through existing owner APIs, idempotently:
+</p>
+<pre><code>ensure Application "TrustWeave SaaS"            // POST /api/v1/applications (once)
+for each tier in [FREE, PRO, ENTERPRISE]:
+    ensure Plan (name, pricingModel, monthlyFee, level, isDefault)   // POST …/plans
+    set Kill Bill mapping (product, plan, priceList)                 // PATCH …/killbill-mapping
+    for each quota (eventType, hardLimit, period):                   // POST …/quotas
+        ensure quota
+ensure usage variables [credential.issued, credential.verified,      // POST …/usage-variables
+                        blockchain.tx, wallet.seat]</code></pre>
+<div class="callout warn">
+  <span class="t">Caveat — two catalog layers</span>
+  Accountly plans <em>reference</em> the Kill Bill catalog by name (<code>killbillPlanName</code> /
+  <code>killbillProductName</code> / <code>killbillPriceList</code>, default price-list <code>"DEFAULT"</code>);
+  they do <b>not</b> create priced products. The monetary catalog (recurring prices, usage-tier rates) lives in
+  <b>Kill Bill's own catalog</b> (uploaded <code>catalog.xml</code> or KB catalog API). "TrustWeave configures
+  tiers" covers the Accountly plan metadata + quotas + mapping automatically; provisioning the matching Kill
+  Bill catalog is a related dependency — see <a href="#kb-changes">§9</a>.
+</div>
+
+<h3>4.2 Widgets render tiers from Accountly</h3>
+<p>Accountly is the single source of truth for plan presentation. <code>GET …/applications/{appId}/plans</code>
+   returns <code>PlanResponse</code> with <code>name</code>, <code>monthlyFee</code>, <code>level</code>,
+   <code>isDefault</code>, KB mapping, and the full <code>quotas</code> list — enough to render price + feature
+   bullets. Two widget families, both served via the TrustWeave backend proxy (browser never calls Accountly):</p>
+<table>
+  <thead><tr><th>Widget</th><th>Data source</th><th>Behavior</th></tr></thead>
+  <tbody>
+    <tr><td><code>&lt;PricingPlans/&gt;</code> (public)</td><td>TrustWeave <code>GET /billing/plans</code> → proxied Accountly plan list (sanitized)</td><td>Renders tier cards from live Accountly data; price + quota-derived feature bullets; edit a tier in Accountly → page updates with no redeploy.</td></tr>
+    <tr><td><code>&lt;CurrentPlanCard/&gt;</code> (in-app)</td><td>Cached entitlement snapshot</td><td>Current plan badge, renewal, "Upgrade" CTA.</td></tr>
+    <tr><td><code>&lt;UsageMeter/&gt;</code> (in-app)</td><td>Entitlement snapshot + daily analytics</td><td>Per-quota used/remaining ("412 / 500 credentials"), near-limit warning state.</td></tr>
+  </tbody>
+</table>
+
+<!-- ───────────────────────── 5 ───────────────────────── -->
+<h2 id="metering"><span class="num">5.</span>Metering &amp; entitlement enforcement (Approach A)</h2>
+<p>
+  The core paths (issue / verify / anchor) must stay fast and resilient to Accountly being briefly unavailable,
+  so enforcement is <b>local against a cached entitlement snapshot</b>; usage is reported <b>asynchronously</b>;
+  authoritative state changes flow back via <b>webhook</b>.
+</p>
+<h4>Read path — gating</h4>
+<ol>
+  <li>Billable action requested → <code>EntitlementGate.check(org, eventType, qty)</code> against the cached snapshot.</li>
+  <li><b>Allow</b> (under limit) → proceed. <b>Soft-warn</b> (near limit) → proceed + surface upgrade nudge. <b>Hard-block</b> (over a hard limit on a non-overage tier) → reject with an "upgrade to continue" error.</li>
+  <li>Snapshot is refreshed on a TTL <em>and</em> on webhook events; an optional tunable forces a synchronous refresh when within <em>N%</em> of a hard limit to tighten the overshoot bound.</li>
+</ol>
+<h4>Write path — reporting</h4>
+<ol>
+  <li>On a successful billable action, append a row to a durable <code>usage_outbox</code> (same DB tx as the business write — no lost/double events).</li>
+  <li><code>UsageReporter</code> drains the outbox and calls <code>POST …/applications/{appId}/usage-events</code> with a stable <b>idempotency key</b> (<code>org:eventType:businessId</code>) and explicit <code>subscriberAccountId</code>; Accountly de-dupes replays.</li>
+  <li>Retry with backoff; mark rows <code>sent</code>/<code>failed</code>; expose a metric for outbox lag.</li>
+</ol>
+<div class="callout rec">
+  <span class="t">Consistency note</span>
+  Enforcement is eventually consistent: a burst can slightly overshoot a hard limit before the next refresh.
+  Bound is configurable via snapshot TTL + the near-limit synchronous refresh. Acceptable for these metrics
+  (credentials, verifications, seats); financial truth is always reconciled in Accountly/Kill Bill.
+</div>
+
+<!-- ───────────────────────── 6 ───────────────────────── -->
+<h2 id="flows"><span class="num">6.</span>Lifecycle flows</h2>
+
+<h4>A. Catalog reconciliation (startup / admin)</h4>
+<pre><code>TrustWeave CatalogReconciler ──► Accountly (owner JWT)
+  ensure Application → ensure Plans + quotas + KB mapping + usage variables  (idempotent)</code></pre>
+
+<h4>B. Organization provisioning (lazy — on org creation or first billable use)</h4>
+<pre><code>OrganizationBillingService.provision(org)
+  → POST …/applications/{appId}/subscribers { externalRef: "trustweave:org:<id>" }   (NEW endpoint)
+       Accountly: create app_user + Kill Bill account → returns subscriberId, killbillAccountId
+  → POST …/applications/{appId}/subscribers/{subscriberId}/subscriptions { plan: tw-free }  (NEW)
+  → cache subscriberId, killbillAccountId, tier=FREE, initial entitlement snapshot on Organization</code></pre>
+
+<h4>C. Billable action (e.g. issue credential)</h4>
+<pre><code>issueCredential()
+  → EntitlementGate.check(org, "credential.issued", 1)         // local, cached snapshot
+  → [allowed] persist credential + append usage_outbox row     // single DB tx
+  → UsageReporter → POST …/usage-events (idempotent)           // async
+       Accountly → rollups → daily analytics → Kill Bill usage</code></pre>
+
+<h4>D. Upgrade / downgrade / cancel (embedded proxy UX)</h4>
+<pre><code>React → TrustWeave BillingProxyController → OrganizationBillingService.changePlan(org, tw-pro)
+  → PATCH …/subscribers/{id}/subscriptions/{subId} { plan: tw-pro }   (NEW merchant-mediated)
+       Accountly → Kill Bill change plan
+  → MerchantWebhookDispatcher → TrustWeave AccountlyWebhookController  (authoritative confirm)
+       → update OrganizationTier + refresh snapshot</code></pre>
+
+<h4>E. Inbound state sync (payment failure, cancellation, KB-driven change)</h4>
+<pre><code>Kill Bill → Accountly inbound webhook → MerchantWebhookDispatcher (HMAC)
+  → TrustWeave AccountlyWebhookController
+       subscription.updated  → set tier, refresh snapshot
+       invoice.payment_failed → mark PAST_DUE, optionally restrict features</code></pre>
+
+<!-- ───────────────────────── 7 ───────────────────────── -->
+<h2 id="tw-changes"><span class="num">7.</span>Changes — TrustWeave SaaS</h2>
+<table>
+  <thead><tr><th>Area</th><th>Change</th><th></th></tr></thead>
+  <tbody>
+    <tr><td><code>billing/accountly/*</code></td><td>New package: client, reconciler, billing service, usage reporter, entitlement gate, webhook controller, proxy controller (per §2).</td><td><span class="tag new">new</span></td></tr>
+    <tr><td><code>billing/StripeService.kt</code>, Stripe <code>SubscriptionService.kt</code></td><td>Delete after migration cut-over.</td><td><span class="tag rm">remove</span></td></tr>
+    <tr><td><code>TransactionCostBillingService</code></td><td>Emit <code>blockchain.tx</code> usage events with cost passthrough instead of Stripe invoice items.</td><td><span class="tag chg">refactor</span></td></tr>
+    <tr><td><code>Subscription</code> entity + repo</td><td>Replace <code>stripe_*</code> columns with <code>accountly_subscription_id</code>, <code>killbill_subscription_id</code>, <code>killbill_bundle_id</code>, <code>plan_code</code>, <code>status</code>.</td><td><span class="tag chg">migrate</span></td></tr>
+    <tr><td><code>Organization</code> entity</td><td>Add <code>accountlySubscriberId</code>, <code>killbillAccountId</code>, <code>entitlementSnapshotJson</code>, <code>snapshotRefreshedAt</code>; keep <code>tier</code> as local cache.</td><td><span class="tag chg">migrate</span></td></tr>
+    <tr><td>React frontend</td><td><code>&lt;PricingPlans/&gt;</code>, <code>&lt;CurrentPlanCard/&gt;</code>, <code>&lt;UsageMeter/&gt;</code> wired to <code>BillingProxyController</code>.</td><td><span class="tag new">new</span></td></tr>
+    <tr><td>Config</td><td>Accountly base URL, application id, Keycloak client-credentials (client id/secret/scope), webhook HMAC secret, snapshot TTL, near-limit threshold.</td><td><span class="tag new">new</span></td></tr>
+  </tbody>
+</table>
+
+<!-- ───────────────────────── 8 ───────────────────────── -->
+<h2 id="ac-changes"><span class="num">8.</span>Changes — Accountly</h2>
+<p>The integration relies mostly on existing Accountly APIs, plus this focused set of additions:</p>
+<table>
+  <thead><tr><th>Change</th><th>Detail</th><th></th></tr></thead>
+  <tbody>
+    <tr><td>Merchant-mediated subscriber provisioning</td><td><code>POST /api/v1/applications/{appId}/subscribers</code> — owner-authenticated; creates an <code>app_user</code> for an <b>external ref</b> (not the JWT subject) + Kill Bill account; returns ids.</td><td><span class="tag new">new</span></td></tr>
+    <tr><td>Merchant-mediated subscribe / change / cancel</td><td><code>POST|PATCH|DELETE /api/v1/applications/{appId}/subscribers/{subscriberId}/subscriptions</code> — owner subscribes <em>its</em> subscriber to <em>its</em> plan.</td><td><span class="tag new">new</span></td></tr>
+    <tr><td>Relax demo-sandbox guard</td><td><code>SubscriptionLifecycleService.subscribe()</code> currently requires <code>subscriber == plan owner</code> ("demo sandbox"). Allow the merchant-mediated path where owner ≠ subscriber.</td><td><span class="tag chg">change</span></td></tr>
+    <tr><td>External-ref identity</td><td><code>IdentityProvisioningService</code> + <code>app_users</code>: add <code>external_ref</code> column &amp; lookup so owner-provisioned subscribers have stable identity independent of a Keycloak subject.</td><td><span class="tag chg">migrate</span></td></tr>
+    <tr><td>Outbound merchant webhooks</td><td><code>MerchantWebhookDispatcher</code>: on subscription state change / payment failure, POST an HMAC-signed event to the owner's configured webhook URL. (Today Accountly only <em>receives</em> the KB inbound webhook.)</td><td><span class="tag new">new</span></td></tr>
+    <tr><td>Service principal as owner</td><td>Accept the TrustWeave Keycloak client-credentials principal as an Accountly owner and bind it to the "TrustWeave SaaS" Application.</td><td><span class="tag chg">config</span></td></tr>
+  </tbody>
+</table>
+
+<!-- ───────────────────────── 9 ───────────────────────── -->
+<h2 id="kb-changes"><span class="num">9.</span>Changes — Kill Bill catalog</h2>
+<p>
+  Provide the priced catalog that Accountly plans reference. Author a <code>catalog.xml</code> (versioned, e.g. in
+  <code>accountly</code> or an ops repo) with:
+</p>
+<ul>
+  <li>Products <code>trustweave-free</code> / <code>trustweave-pro</code> / <code>trustweave-enterprise</code> with recurring monthly prices.</li>
+  <li>Usage units for <code>credential.issued</code>, <code>credential.verified</code>, <code>blockchain.tx</code>, <code>wallet.seat</code> with tiered/usage pricing (and overage where applicable).</li>
+  <li>Price list <code>DEFAULT</code> (matches Accountly's default mapping).</li>
+</ul>
+<p class="small">Provisioning method (uploaded XML vs KB catalog API automation) and price authoring ownership are open
+   questions — see <a href="#risks">§14</a>.</p>
+
+<!-- ───────────────────────── 10 ───────────────────────── -->
+<h2 id="data"><span class="num">10.</span>Data model changes</h2>
+<h4>TrustWeave — <code>organizations</code></h4>
+<pre><code>+ accountly_subscriber_id   text
++ killbill_account_id       text
++ entitlement_snapshot_json jsonb
++ snapshot_refreshed_at     timestamptz
+  tier                      (kept — local feature-gate cache, synced from Accountly)</code></pre>
+<h4>TrustWeave — <code>subscriptions</code> (refactor)</h4>
+<pre><code>- stripe_subscription_id, stripe_customer_id
++ accountly_subscription_id text
++ killbill_subscription_id  text
++ killbill_bundle_id        text
++ plan_code                 text   // tw-free | tw-pro | tw-enterprise
+  status                    enum   // ACTIVE | PAST_DUE | CANCELED | TRIALING</code></pre>
+<h4>TrustWeave — <code>usage_outbox</code> (new)</h4>
+<pre><code>id, organization_id, event_type, quantity, unit, occurred_at,
+idempotency_key (unique), correlation_id, properties_json,
+status (PENDING|SENT|FAILED), attempts, created_at, sent_at</code></pre>
+<h4>Accountly — <code>app_users</code></h4>
+<pre><code>+ external_ref text  (unique per owner/application)   // "trustweave:org:<id>"</code></pre>
+
+<!-- ───────────────────────── 11 ───────────────────────── -->
+<h2 id="api"><span class="num">11.</span>API contracts</h2>
+<h4>Accountly — existing, reused</h4>
+<pre><code>POST   /api/v1/applications
+POST   /api/v1/applications/{appId}/plans
+POST   /api/v1/plans/{planId}/quotas
+PATCH  /api/v1/plans/{planId}/killbill-mapping
+POST   /api/v1/applications/{appId}/usage-variables
+GET    /api/v1/applications/{appId}/plans               // drives PricingPlans widget
+POST   /api/v1/applications/{appId}/usage-events        // idempotent usage ingest
+GET    /api/v1/applications/{appId}/subscribers/{id}/entitlement</code></pre>
+<h4>Accountly — new (merchant-mediated)</h4>
+<pre><code>POST   /api/v1/applications/{appId}/subscribers
+       { externalRef } → { subscriberId, killbillAccountId }
+POST   /api/v1/applications/{appId}/subscribers/{subscriberId}/subscriptions
+       { planId | planCode } → 201
+PATCH  /api/v1/applications/{appId}/subscribers/{subscriberId}/subscriptions/{subId}
+       { planId | planCode }            // upgrade/downgrade
+DELETE /api/v1/applications/{appId}/subscribers/{subscriberId}/subscriptions/{subId}   // cancel</code></pre>
+<h4>TrustWeave — frontend-facing proxy</h4>
+<pre><code>GET    /billing/plans                 // sanitized Accountly plan list (public)
+GET    /billing/me/subscription       // current plan + snapshot (in-app)
+GET    /billing/me/usage              // per-quota used/remaining
+POST   /billing/me/subscribe          { planCode }
+POST   /billing/me/change-plan        { planCode }
+POST   /billing/me/cancel
+POST   /billing/webhooks/accountly    // inbound, HMAC-verified</code></pre>
+
+<!-- ───────────────────────── 12 ───────────────────────── -->
+<h2 id="testing"><span class="num">12.</span>Testing strategy</h2>
+<ul>
+  <li><b>TrustWeave unit:</b> <code>EntitlementGate</code> (allow/warn/block boundaries), <code>UsageReporter</code> (idempotency, retry/backoff, outbox state machine), <code>CatalogReconciler</code> (idempotent create-vs-update), webhook HMAC verification.</li>
+  <li><b>TrustWeave client contract:</b> <code>AccountlyBillingClient</code> against a WireMock stub of Accountly's contract (success, 4xx, 5xx, replay).</li>
+  <li><b>Accountly integration:</b> reuse existing H2 + dev-JWT harness for the new merchant endpoints (provision subscriber, merchant subscribe, change/cancel, relaxed guard); external-ref provisioning; <code>MerchantWebhookDispatcher</code> emission + signature.</li>
+  <li><b>End-to-end smoke:</b> docker-compose (Kill Bill + Accountly + TrustWeave) — reconcile catalog → provision org → subscribe → issue credential → assert usage event lands in analytics and a Kill Bill invoice line appears.</li>
+  <li><b>Migration test:</b> a Stripe-era <code>Subscription</code> row maps to an Accountly subscription with correct tier (see §13).</li>
+</ul>
+
+<!-- ───────────────────────── 13 ───────────────────────── -->
+<h2 id="rollout"><span class="num">13.</span>Migration &amp; rollout</h2>
+<table>
+  <thead><tr><th>Phase</th><th>What</th><th>User impact</th></tr></thead>
+  <tbody>
+    <tr><td>0 — Catalog</td><td>Author Kill Bill catalog; <code>CatalogReconciler</code> creates the Accountly Application/plans/quotas/usage-vars.</td><td>None.</td></tr>
+    <tr><td>1 — Shadow</td><td>Provision subscribers + report usage to Accountly while Stripe stays authoritative; compare Accountly entitlement vs Stripe state for parity.</td><td>None (dual-write).</td></tr>
+    <tr><td>2 — Cut-over</td><td>Migrate existing orgs: create matching Accountly subscriptions from current tier; flip enforcement to the snapshot; switch UI to proxy widgets.</td><td>Billing source of truth changes; communicate.</td></tr>
+    <tr><td>3 — Decommission</td><td>Remove Stripe code paths and <code>stripe_*</code> columns. (The payment processor behind Kill Bill — Stripe or otherwise — is a separate concern, out of scope here.)</td><td>None.</td></tr>
+  </tbody>
+</table>
+<p class="small">Data migration: for each existing <code>Organization</code>, provision an Accountly subscriber and a
+   subscription matching its current <code>OrganizationTier</code>; backfill mapping ids; reconcile any open
+   <code>TransactionCostAllocation</code> balances before turning off the Stripe invoice path.</p>
+
+<!-- ───────────────────────── 14 ───────────────────────── -->
+<h2 id="risks"><span class="num">14.</span>Risks &amp; open questions</h2>
+<table>
+  <thead><tr><th>#</th><th>Item</th><th>Disposition</th></tr></thead>
+  <tbody>
+    <tr><td>R1</td><td><b>Kill Bill catalog ownership.</b> Who authors/maintains prices and how is the catalog provisioned (XML upload vs API)?</td><td>Open — needs a decision before Phase 0.</td></tr>
+    <tr><td>R2</td><td><b>Outbound merchant webhook is net-new in Accountly</b> (only inbound KB webhook exists today).</td><td>Scoped in §8; alternative is TrustWeave polling the entitlement endpoint on a timer if webhook is deferred.</td></tr>
+    <tr><td>R3</td><td><b>Eventual-consistency overshoot</b> on hard limits during bursts.</td><td>Mitigated by snapshot TTL + near-limit synchronous refresh; bound is configurable.</td></tr>
+    <tr><td>R4</td><td><b>Multi-user organizations.</b> One Accountly subscriber per Organization via external ref; individual TrustWeave members are not Accountly subscribers.</td><td>Confirm this is the intended granularity.</td></tr>
+    <tr><td>R5</td><td><b>Service principal → Accountly owner binding</b> in Keycloak (client scope/role, mapping to the owner <code>app_user</code> + Application).</td><td>Define client-credentials client &amp; claim mapping during Phase 0.</td></tr>
+    <tr><td>R6</td><td><b>Transaction-cost passthrough modeling</b> in Kill Bill (usage unit with variable amount).</td><td>Validate the catalog can express cost-passthrough; otherwise bill via Kill Bill credits/charges.</td></tr>
+  </tbody>
+</table>
+
+<footer class="doc">
+  Generated as a brainstorming design spec (superpowers). Next step on approval: produce a phased implementation
+  plan via the writing-plans skill. &middot; <code>docs/superpowers/specs/2026-06-01-trustweave-accountly-killbill-subscription-integration-design.html</code>
+</footer>
+
+</div>
+</body>
+</html>

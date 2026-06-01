@@ -16,6 +16,11 @@ dependencies {
     api(project(":wallet:wallet-core"))
     api(project(":common"))
 
+    // Real did:key method (produces resolvable did:key:z6Mk… that encode the signing key).
+    // Expose its base too so consumers see the AbstractDidMethod -> DidMethod supertype chain.
+    api(project(":did:plugins:base"))
+    api(project(":did:plugins:key"))
+
     // Include testkit for development/testing convenience
     api(project(":testkit"))
 

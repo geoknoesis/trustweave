@@ -66,10 +66,15 @@ class KeyDidMethod(
             // Create did:key identifier
             val did = "did:key:$multibaseEncoded"
 
-            // Create verification method
+            // Create verification method.
+            // Some KMS providers (e.g. the in-memory KMS) return a KeyHandle with publicKeyMultibase = null.
+            // Supply the multibase we just derived so the stored document is self-consistent; otherwise
+            // resolveDid's cache check (stored.publicKeyMultibase == DID multibase) fails, it re-derives the
+            // document with the DID multibase as the verification-method id fragment, and issuance then tries
+            // to sign with that multibase as a KMS key id (which does not exist) instead of the real key id.
             val verificationMethod = DidMethodUtils.createVerificationMethod(
                 did = did,
-                keyHandle = keyHandle,
+                keyHandle = keyHandle.copy(publicKeyMultibase = multibaseEncoded),
                 algorithm = options.algorithm
             )
 

@@ -26,6 +26,8 @@ redirect_from:
 4. [Credential Lifecycle Management](#credential-lifecycle-management)
 5. [Multi-Chain Anchoring](#multi-chain-anchoring)
 6. [Wallet Organization Patterns](#wallet-organization-patterns)
+7. [Education trust domain demo (reference wallet)](#education-trust-domain-demo-reference-wallet)
+8. [Spatial Web drone demo (reference wallet)](#spatial-web-drone-demo-reference-wallet)
 
 ---
 
@@ -659,9 +661,91 @@ fun main() = runBlocking {
 
 ---
 
+## Education trust domain demo (reference wallet) {#education-trust-domain-demo-reference-wallet}
+
+The **reference wallet** (`reference-wallet/`) includes a runnable **demo-university** trust domain: a CSV-backed registrar that issues SD-JWT degree credentials and accepts them at a demo verifier. Use it to walk through issuer → holder → verifier without writing Kotlin first.
+
+### Trust domain data
+
+| Asset | Path |
+|-------|------|
+| Domain metadata | `reference-wallet/data/trust-domains/demo-university/domain.json` |
+| Degree roster (5 students) | `reference-wallet/data/trust-domains/demo-university/degrees.csv` |
+| Discovery API | `GET /api/demo-issuer/trust-domain` |
+
+Each CSV row becomes a signed credential with selectively disclosable claims (`name`, `degree`, `major`, `institution`, `graduationDate`, `gpa`).
+
+### Web demo routes
+
+| Route | Role |
+|-------|------|
+| `/issuer/degrees` | Roster of all graduates in the trust domain |
+| `/issuer/degree/[studentId]` | **Degree detail page** — full registrar record + wallet offer QR |
+| `/issuer/offer` | Combined issuer console (student picker + QR) |
+| `/` · `/receive` · `/present` | Holder wallet — library, scan offer, share to verifier |
+| `/verifier` | Live verifier — show request QR, poll verification status |
+| `/verifier/test` | **Verifier test harness** — automated E2E without a phone |
+
+### Typical demo flow
+
+1. Start the web wallet: `cd reference-wallet && npm run dev -- -H 0.0.0.0 -p 3000`
+2. Open **`/issuer/degree/STU-001`** (or any student) and scan the offer QR from the Expo wallet **Receive** tab.
+3. Open **`/verifier`**, scan the verifier QR from the wallet **Share** tab, disclose claims, and tap **Share with verifier**.
+4. Confirm the verifier page updates, or run **`/verifier/test`** to exercise the same APIs headlessly.
+
+For phone wallets, set `demoBackendBaseUrl` in `reference-wallet/expo/app.json` to your PC's LAN IP (e.g. `http://192.168.1.252:3000`).
+
+**Kotlin equivalents:** See [Academic Credentials scenario](../scenarios/academic-credentials-scenario.md) and `distribution/examples/.../AcademicCredentialsExample.kt` for library-level patterns; the reference wallet demo uses the same issuer/holder/verifier roles over HTTP.
+
+---
+
+## Spatial Web drone demo (reference wallet) {#spatial-web-drone-demo-reference-wallet}
+
+The **reference wallet** includes a runnable **Spatial Web** scenario: FAA drone identification (with registered aircraft photos), SF Bay airspace activity authorization, and an airspace gatekeeper that verifies presentations plus geographic policy.
+
+### Trust domain data
+
+| Asset | Path |
+|-------|------|
+| Airspace domain | `reference-wallet/data/trust-domains/demo-sf-airspace/domain.json` |
+| Airspace drone roster | `reference-wallet/data/trust-domains/demo-sf-airspace/drones.csv` |
+| FAA registry | `reference-wallet/data/trust-domains/demo-faa-drone-registry/domain.json` |
+| FAA drone roster + photos | `reference-wallet/data/trust-domains/demo-faa-drone-registry/drones.csv`, `reference-wallet/public/drones/*.jpg` (480×360 JPEG, ≤50 KiB; regenerate with `npm run resize-demo-photos`) |
+| Airspace discovery | `GET /api/demo-issuer/spatial/trust-domain` |
+| FAA discovery | `GET /api/demo-issuer/faa/trust-domain` |
+
+### Web demo routes
+
+| Route | Role |
+|-------|------|
+| `/demos` | Demo hub — links to all runnable scenarios |
+| `/issuer/faa` | FAA UAS registration roster |
+| `/issuer/faa/[droneId]` | **Drone ID credential** — registration record, aircraft photo, offer QR |
+| `/issuer/airspace` | SF Bay airspace authority — activity authorization roster |
+| `/issuer/airspace/[droneId]` | **Activity authorization** — domain constraints + offer QR |
+| `/airspace/gate` | Airspace gatekeeper — location/activity session + presentation QR |
+| `/` · `/receive` · `/present` | Drone agent wallet |
+
+### Typical demo flow
+
+1. Start the web wallet: `cd reference-wallet && npm run dev -- -H 0.0.0.0 -p 3000`
+2. Open **`/demos`** or go directly to **`/issuer/faa/DRONE-001`** — scan the FAA offer QR (**Receive**) for `DroneIdentificationCredential` (includes photo URL + digest).
+3. Open **`/issuer/airspace/DRONE-001`** — scan the airspace offer QR for `ActivityAuthorizationCredential`.
+4. Open **`/airspace/gate`** — set activity `data-collection` and SF coordinates (`37.7749`, `-122.4194`), click **Open gate & show QR**.
+5. **Share** tab → scan gate QR → disclose claims → submit. Gate shows cleared or denied (try LA coordinates to see denial).
+
+For phone wallets, set `demoBackendBaseUrl` in `reference-wallet/expo/app.json` to your PC's LAN IP.
+
+**Kotlin equivalent:** `./gradlew :distribution:examples:runSpatialWeb` — see [Spatial Web Authorization scenario](../scenarios/spatial-web-authorization-scenario.md) and `distribution/examples/.../SpatialWebExample.kt`.
+
+---
+
 ## Related Documentation
 
 - [Quick Start](quick-start.md) - Getting started guide
+- [Academic Credentials Scenario](../scenarios/academic-credentials-scenario.md) - Kotlin education credential flow
+- [Spatial Web Authorization Scenario](../scenarios/spatial-web-authorization-scenario.md) - Drone airspace authorization flow
+- [Reference Wallet README](../../reference-wallet/README.md) - Runnable SD-JWT demo (web + Expo)
 - [Wallet API Reference](../../api-reference/wallet-api.md) - Complete wallet API
 - [Error Handling](../../api-reference/advanced/error-handling.md) - Error handling patterns
 - [Troubleshooting](troubleshooting.md) - Common issues and solutions

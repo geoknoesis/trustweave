@@ -2,6 +2,7 @@ package org.trustweave.anchor.polygon
 
 import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.anchor.BlockchainAnchorRegistry
+import org.trustweave.anchor.payment.PaymentDeprecation
 import org.trustweave.anchor.spi.BlockchainAnchorClientProvider
 import org.trustweave.anchor.spi.BlockchainIntegrationHelper
 
@@ -26,6 +27,7 @@ class PolygonBlockchainAnchorClientProvider : BlockchainAnchorClientProvider {
         if (chainIdNum != 137 && chainIdNum != 80001) {
             return null
         }
+        PaymentDeprecation.warnIfRawCreds(chainId, options, this)
         return PolygonBlockchainAnchorClient(chainId, options)
     }
 }

@@ -1,9 +1,17 @@
 package org.trustweave.anchor.ethereum
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.*
 import org.trustweave.anchor.*
 import org.trustweave.anchor.exceptions.BlockchainException
+import org.trustweave.anchor.exceptions.TreasuryException
+import org.trustweave.anchor.payment.AssetRef
+import org.trustweave.anchor.payment.OperationDescriptor
+import org.trustweave.anchor.payment.PaymentContext
+import org.trustweave.anchor.payment.TokenAmount
+import org.trustweave.anchor.payment.isUnmanaged
 import org.trustweave.core.exception.TrustWeaveException
-import kotlinx.serialization.json.*
 import org.web3j.protocol.Web3j
 import org.web3j.protocol.http.HttpService
 import org.web3j.tx.RawTransactionManager
@@ -118,6 +126,120 @@ class EthereumBlockchainAnchorClient(
 
     override protected fun getBlockchainName(): String {
         return "Ethereum"
+    }
+
+    override suspend fun estimate(op: OperationDescriptor): TokenAmount = withContext(Dispatchers.IO) {
+        val gasPrice = web3j.ethGasPrice().send().gasPrice
+        val gasLimit = op.contractCall?.let {
+            // Best-effort calldata-based gas size; fall back to default on failure.
+            try {
+                val from = credentials?.address ?: "0x0000000000000000000000000000000000000000"
+                val tx = org.web3j.protocol.core.methods.request.Transaction.createFunctionCallTransaction(
+                    from,
+                    null,
+                    null,
+                    null,
+                    it.contractAddress,
+                    it.value?.amount ?: BigInteger.ZERO,
+                    org.web3j.utils.Numeric.toHexString(it.callData),
+                )
+                web3j.ethEstimateGas(tx).send().amountUsed
+            } catch (_: Exception) {
+                org.web3j.tx.gas.DefaultGasProvider.GAS_LIMIT
+            }
+        } ?: org.web3j.tx.gas.DefaultGasProvider.GAS_LIMIT
+
+        val gasCost = gasPrice.multiply(gasLimit)
+        val valueWei = op.contractCall?.value?.amount ?: BigInteger.ZERO
+        TokenAmount(op.chainId, AssetRef.Native, gasCost + valueWei)
+    }
+
+    override suspend fun writePayload(
+        payload: JsonElement,
+        ctx: PaymentContext,
+        mediaType: String,
+    ): AnchorResult {
+        if (ctx.isUnmanaged) return writePayload(payload, mediaType)
+        require(ctx.chainId == chainId) {
+            "PaymentContext.chainId (${ctx.chainId}) does not match client chainId ($chainId)"
+        }
+
+        val payloadJson = Json.encodeToString(JsonElement.serializer(), payload)
+        val payloadBytes = payloadJson.toByteArray(StandardCharsets.UTF_8)
+
+        val estimate = estimate(
+            OperationDescriptor(
+                kind = "anchor.writePayload",
+                chainId = chainId,
+                payload = payload,
+                payloadSizeBytes = payloadBytes.size.toLong(),
+            ),
+        )
+        ctx.maxFee?.let { cap ->
+            if (estimate > cap) {
+                throw TreasuryException.CallerCapExceeded(
+                    correlationId = ctx.correlationId,
+                    chainId = chainId,
+                    estimated = estimate,
+                    callerMax = cap,
+                )
+            }
+        }
+
+        return withContext(Dispatchers.IO) {
+            try {
+                val creds = credentials
+                    ?: throw IllegalStateException("Credentials not configured. Provide 'privateKey' in options.")
+                val txHash = submitTransaction(payloadBytes)
+                val feePaid = computeActualFee(txHash)
+
+                AnchorResult(
+                    ref = buildAnchorRef(
+                        txHash = txHash,
+                        contract = getContractAddress(),
+                        extra = buildExtraMetadata(mediaType),
+                    ),
+                    payload = payload,
+                    mediaType = mediaType,
+                    timestamp = System.currentTimeMillis() / 1000,
+                    fee = feePaid,
+                    payerAddress = creds.address,
+                )
+            } catch (e: TrustWeaveException) {
+                throw e
+            } catch (e: Exception) {
+                throw BlockchainException.TransactionFailed(
+                    chainId = chainId,
+                    operation = "writePayload",
+                    payloadSize = payloadBytes.size.toLong(),
+                    reason = "Failed to anchor payload to ${getBlockchainName()}: ${e.message ?: "Unknown error"}",
+                ).apply { initCause(e) }
+            }
+        }
+    }
+
+    private fun computeActualFee(txHash: String): TokenAmount? = try {
+        val receiptOpt = web3j.ethGetTransactionReceipt(txHash).send().transactionReceipt
+        if (receiptOpt.isPresent) {
+            val receipt = receiptOpt.get()
+            val gasUsed = receipt.gasUsed ?: BigInteger.ZERO
+            // effectiveGasPrice — exposed by EIP-1559 receipts; fall back to tx gasPrice.
+            val effectivePrice = try {
+                val getter = receipt.javaClass.getMethod("getEffectiveGasPrice")
+                (getter.invoke(receipt) as? String)
+                    ?.let { org.web3j.utils.Numeric.decodeQuantity(it) }
+            } catch (_: Exception) {
+                null
+            } ?: run {
+                web3j.ethGetTransactionByHash(txHash).send().transaction.orElse(null)?.gasPrice
+                    ?: BigInteger.ZERO
+            }
+            TokenAmount(chainId, AssetRef.Native, gasUsed.multiply(effectivePrice))
+        } else {
+            null
+        }
+    } catch (_: Exception) {
+        null
     }
 
     private suspend fun submitTransaction(data: ByteArray): String {

@@ -1,6 +1,7 @@
 package org.trustweave.anchor.optimism
 
 import org.trustweave.anchor.BlockchainAnchorClient
+import org.trustweave.anchor.payment.PaymentDeprecation
 import org.trustweave.anchor.spi.BlockchainAnchorClientProvider
 
 /**
@@ -18,6 +19,7 @@ class OptimismIntegration : BlockchainAnchorClientProvider {
 
     override fun create(chainId: String, options: Map<String, Any?>): BlockchainAnchorClient? {
         return if (supportedChains.contains(chainId)) {
+            PaymentDeprecation.warnIfRawCreds(chainId, options, this)
             OptimismBlockchainAnchorClient(chainId, options)
         } else {
             null

@@ -2,6 +2,7 @@ package org.trustweave.anchor.indy
 
 import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.anchor.BlockchainAnchorRegistry
+import org.trustweave.anchor.payment.PaymentDeprecation
 import org.trustweave.anchor.spi.BlockchainAnchorClientProvider
 import org.trustweave.anchor.spi.BlockchainIntegrationHelper
 
@@ -23,6 +24,7 @@ class IndyBlockchainAnchorClientProvider : BlockchainAnchorClientProvider {
         if (!chainId.startsWith("indy:")) {
             return null
         }
+        PaymentDeprecation.warnIfRawCreds(chainId, options, this)
         return IndyBlockchainAnchorClient(chainId, options)
     }
 }

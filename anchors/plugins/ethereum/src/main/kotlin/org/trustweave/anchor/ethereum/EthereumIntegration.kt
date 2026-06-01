@@ -2,6 +2,7 @@ package org.trustweave.anchor.ethereum
 
 import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.anchor.BlockchainAnchorRegistry
+import org.trustweave.anchor.payment.PaymentDeprecation
 import org.trustweave.anchor.spi.BlockchainAnchorClientProvider
 import org.trustweave.anchor.spi.BlockchainIntegrationHelper
 
@@ -26,6 +27,7 @@ class EthereumBlockchainAnchorClientProvider : BlockchainAnchorClientProvider {
         if (chainIdNum != 1 && chainIdNum != 11155111) {
             return null
         }
+        PaymentDeprecation.warnIfRawCreds(chainId, options, this)
         return EthereumBlockchainAnchorClient(chainId, options)
     }
 }

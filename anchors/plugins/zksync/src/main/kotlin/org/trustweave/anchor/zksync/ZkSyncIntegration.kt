@@ -1,6 +1,7 @@
 package org.trustweave.anchor.zksync
 
 import org.trustweave.anchor.BlockchainAnchorClient
+import org.trustweave.anchor.payment.PaymentDeprecation
 import org.trustweave.anchor.spi.BlockchainAnchorClientProvider
 
 /**
@@ -18,6 +19,7 @@ class ZkSyncIntegration : BlockchainAnchorClientProvider {
 
     override fun create(chainId: String, options: Map<String, Any?>): BlockchainAnchorClient? {
         return if (supportedChains.contains(chainId)) {
+            PaymentDeprecation.warnIfRawCreds(chainId, options, this)
             ZkSyncBlockchainAnchorClient(chainId, options)
         } else {
             null

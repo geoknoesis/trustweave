@@ -2,6 +2,7 @@ package org.trustweave.anchor.cardano
 
 import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.anchor.BlockchainAnchorRegistry
+import org.trustweave.anchor.payment.PaymentDeprecation
 import org.trustweave.anchor.spi.BlockchainAnchorClientProvider
 import org.trustweave.anchor.spi.BlockchainIntegrationHelper
 
@@ -55,6 +56,7 @@ class CardanoBlockchainAnchorClientProvider : BlockchainAnchorClientProvider {
         }
 
         if (mergedOptions[CardanoAnchorConfig.KEY_PROJECT_ID] == null) return null
+        PaymentDeprecation.warnIfRawCreds(chainId, mergedOptions, this)
         return CardanoBlockchainAnchorClient(chainId, mergedOptions)
     }
 }

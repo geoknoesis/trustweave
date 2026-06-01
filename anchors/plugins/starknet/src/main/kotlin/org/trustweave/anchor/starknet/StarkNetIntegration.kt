@@ -1,6 +1,7 @@
 package org.trustweave.anchor.starknet
 
 import org.trustweave.anchor.BlockchainAnchorClient
+import org.trustweave.anchor.payment.PaymentDeprecation
 import org.trustweave.anchor.spi.BlockchainAnchorClientProvider
 
 /**
@@ -18,6 +19,7 @@ class StarkNetIntegration : BlockchainAnchorClientProvider {
 
     override fun create(chainId: String, options: Map<String, Any?>): BlockchainAnchorClient? {
         return if (supportedChains.contains(chainId) || chainId.startsWith("starknet:")) {
+            PaymentDeprecation.warnIfRawCreds(chainId, options, this)
             StarkNetBlockchainAnchorClient(chainId, options)
         } else {
             null

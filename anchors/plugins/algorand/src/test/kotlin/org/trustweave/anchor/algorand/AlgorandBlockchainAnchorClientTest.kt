@@ -1,12 +1,15 @@
 package org.trustweave.anchor.algorand
 
 import org.trustweave.anchor.AnchorRef
+import org.trustweave.anchor.payment.FeeStrategy
+import org.trustweave.anchor.payment.PaymentContext
 import org.trustweave.core.exception.TrustWeaveException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -53,6 +56,40 @@ class AlgorandBlockchainAnchorClientTest {
             assert(false) { "Should have thrown NotFound" }
         } catch (e: TrustWeaveException.NotFound) {
             assertNotNull(e.message)
+        }
+    }
+
+    @Test
+    fun `unmanaged PaymentContext delegates to legacy write and leaves fee unset`() = runBlocking<Unit> {
+        val client = AlgorandBlockchainAnchorClient(AlgorandBlockchainAnchorClient.TESTNET)
+        val payload = buildJsonObject { put("ctx", "unmanaged") }
+        val ctx = PaymentContext.unmanaged(AlgorandBlockchainAnchorClient.TESTNET)
+
+        val result = client.writePayload(payload, ctx)
+
+        assertEquals(AlgorandBlockchainAnchorClient.TESTNET, result.ref.chainId)
+        assertTrue(result.ref.txHash.startsWith("algo_"))
+        assertNull(result.fee, "unmanaged path must not populate fee")
+        assertNull(result.payerAddress, "unmanaged path must not populate payerAddress")
+    }
+
+    @Test
+    fun `managed PaymentContext with mismatched chainId fails fast`() = runBlocking<Unit> {
+        val client = AlgorandBlockchainAnchorClient(AlgorandBlockchainAnchorClient.TESTNET)
+        val payload = buildJsonObject { put("ctx", "mismatch") }
+        val ctx = PaymentContext(
+            domainId = "domain.test",
+            payerDid = "did:example:payer",
+            chainId = AlgorandBlockchainAnchorClient.MAINNET,
+            feeStrategy = FeeStrategy.DomainPays,
+        )
+
+        try {
+            client.writePayload(payload, ctx)
+            assert(false) { "Should have thrown IllegalArgumentException for chain mismatch" }
+        } catch (e: IllegalArgumentException) {
+            assertNotNull(e.message)
+            assertTrue(e.message!!.contains("PaymentContext.chainId"))
         }
     }
 

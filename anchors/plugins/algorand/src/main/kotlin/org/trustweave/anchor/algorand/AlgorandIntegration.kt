@@ -2,6 +2,7 @@ package org.trustweave.anchor.algorand
 
 import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.anchor.BlockchainAnchorRegistry
+import org.trustweave.anchor.payment.PaymentDeprecation
 import org.trustweave.anchor.spi.BlockchainAnchorClientProvider
 import org.trustweave.anchor.spi.BlockchainIntegrationHelper
 
@@ -23,6 +24,7 @@ class AlgorandBlockchainAnchorClientProvider : BlockchainAnchorClientProvider {
         if (!chainId.startsWith("algorand:")) {
             return null
         }
+        PaymentDeprecation.warnIfRawCreds(chainId, options, this)
         return AlgorandBlockchainAnchorClient(chainId, options)
     }
 }

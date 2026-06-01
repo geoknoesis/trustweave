@@ -2,6 +2,7 @@ package org.trustweave.anchor.arbitrum
 
 import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.anchor.BlockchainAnchorRegistry
+import org.trustweave.anchor.payment.PaymentDeprecation
 import org.trustweave.anchor.spi.BlockchainAnchorClientProvider
 import org.trustweave.anchor.spi.BlockchainIntegrationHelper
 
@@ -26,6 +27,7 @@ class ArbitrumBlockchainAnchorClientProvider : BlockchainAnchorClientProvider {
         if (chainIdNum != 42161 && chainIdNum != 421614) {
             return null
         }
+        PaymentDeprecation.warnIfRawCreds(chainId, options, this)
         return ArbitrumBlockchainAnchorClient(chainId, options)
     }
 }

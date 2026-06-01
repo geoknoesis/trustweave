@@ -14,11 +14,14 @@ import org.trustweave.kms.KeyManagementService
 import org.trustweave.kms.services.KmsService
 import org.trustweave.revocation.services.StatusListRegistryFactory
 import org.trustweave.trust.TrustRegistry
+import org.trustweave.trust.domain.TrustedDomainManager
 import org.trustweave.trust.dsl.builders.AnchorConfig
 import org.trustweave.trust.dsl.builders.AnchorConfigBuilder
 import org.trustweave.trust.dsl.builders.CredentialsBuilder
 import org.trustweave.trust.dsl.builders.DidConfigBuilder
 import org.trustweave.trust.dsl.builders.DidMethodConfig
+import org.trustweave.trust.dsl.builders.DomainConfig
+import org.trustweave.trust.dsl.builders.DomainConfigBuilder
 import org.trustweave.trust.dsl.builders.KeysBuilder
 import org.trustweave.trust.dsl.builders.RevocationConfigBuilder
 import org.trustweave.contract.SmartContractService
@@ -78,7 +81,8 @@ class TrustWeaveConfig internal constructor(
     val defaultDidMethod: String? = null,
     val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     val smartContractService: SmartContractService? = null,
-    val schemaRegistry: SchemaRegistry? = null
+    val schemaRegistry: SchemaRegistry? = null,
+    val trustedDomainManager: TrustedDomainManager? = null,
 ) {
     /**
      * Copy with overridden credential service and/or revocation manager (e.g. tests sharing one manager).
@@ -102,6 +106,7 @@ class TrustWeaveConfig internal constructor(
         ioDispatcher = ioDispatcher,
         smartContractService = smartContractService,
         schemaRegistry = schemaRegistry,
+        trustedDomainManager = trustedDomainManager,
     )
 
     /**
@@ -150,7 +155,8 @@ class TrustWeaveConfig internal constructor(
         val trustRegistryFactory: TrustRegistryFactory?,
         val walletFactory: WalletFactory?,
         val ioDispatcher: CoroutineDispatcher,
-        val smartContractService: SmartContractService? = null
+        val smartContractService: SmartContractService? = null,
+        val domainConfig: DomainConfig? = null,
     )
 
     /**
@@ -180,6 +186,7 @@ class TrustWeaveConfig internal constructor(
         private var trustRegistryFactory: TrustRegistryFactory? = null
         private var walletFactory: WalletFactory? = null
         private var smartContractService: SmartContractService? = null
+        private var domainConfig: DomainConfig? = null
 
         fun smartContractService(service: SmartContractService) {
             this.smartContractService = service
@@ -272,6 +279,17 @@ class TrustWeaveConfig internal constructor(
             this.ioDispatcher = dispatcher
         }
 
+        /**
+         * Attach a Trusted Domain to this TrustWeave instance. Threading a
+         * domain through enables [org.trustweave.trust.TrustWeave.activeDomain]
+         * and [org.trustweave.trust.TrustWeave.anchorThroughDomain]; without
+         * one, the legacy [org.trustweave.trust.TrustWeave.blockchains] surface
+         * is the only anchoring path.
+         */
+        fun domain(block: DomainConfigBuilder.() -> Unit) {
+            domainConfig = DomainConfigBuilder().apply(block).build()
+        }
+
         suspend fun build(): TrustWeaveConfig = TrustWeaveFactory.build(
             BuilderState(
                 name = name,
@@ -294,7 +312,8 @@ class TrustWeaveConfig internal constructor(
                 trustRegistryFactory = trustRegistryFactory,
                 walletFactory = walletFactory,
                 ioDispatcher = ioDispatcher,
-                smartContractService = smartContractService
+                smartContractService = smartContractService,
+                domainConfig = domainConfig,
             )
         )
     }

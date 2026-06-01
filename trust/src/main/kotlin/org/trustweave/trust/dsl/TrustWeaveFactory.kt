@@ -14,9 +14,15 @@ import org.trustweave.kms.KeyManagementService
 import org.trustweave.kms.KeyManagementServices
 import org.trustweave.kms.results.SignResult
 import org.trustweave.trust.TrustRegistry
+import org.trustweave.trust.domain.TrustedDomainManager
+import org.trustweave.trust.domain.treasury.ChainAccount
+import org.trustweave.trust.domain.treasury.InMemoryChainAccount
+import org.trustweave.trust.domain.treasury.InMemoryDomainTreasury
 import org.trustweave.trust.dsl.builders.AnchorConfig
 import org.trustweave.trust.dsl.builders.DidMethodConfig
+import org.trustweave.trust.dsl.builders.DomainConfig
 import org.trustweave.trust.services.TrustRegistryFactory
+import org.trustweave.anchor.BlockchainAnchorRegistry
 import org.slf4j.LoggerFactory
 import java.util.ServiceLoader
 
@@ -99,11 +105,16 @@ internal object TrustWeaveFactory {
         val resolvedCredentialService =
             resolveCredentialService(state, didResolver, finalSigner, nonNullKms)
 
+        val snapshotRegistry = blockchainRegistry.snapshot()
+        val trustedDomainManager = state.domainConfig?.let {
+            buildTrustedDomainManager(it, snapshotRegistry, nonNullKms)
+        }
+
         return TrustWeaveConfig(
             name = state.name,
             kms = nonNullKms,
             didRegistry = didRegistry,
-            blockchainRegistry = blockchainRegistry.snapshot(),
+            blockchainRegistry = snapshotRegistry,
             credentialConfig = TrustWeaveConfig.CredentialConfig(
                 defaultProofType = state.defaultProofType,
                 autoAnchor = state.autoAnchor,
@@ -117,7 +128,40 @@ internal object TrustWeaveFactory {
             kmsService = null,
             defaultDidMethod = defaultDidMethod,
             ioDispatcher = state.ioDispatcher,
-            smartContractService = state.smartContractService
+            smartContractService = state.smartContractService,
+            trustedDomainManager = trustedDomainManager,
+        )
+    }
+
+    private fun buildTrustedDomainManager(
+        config: DomainConfig,
+        registry: BlockchainAnchorRegistry,
+        kms: KeyManagementService,
+    ): TrustedDomainManager {
+        val accounts: Map<String, ChainAccount> = config.accounts.associate { acc ->
+            val client = registry.get(acc.chainId)
+                ?: throw IllegalStateException(
+                    "domain { chainAccount(\"${acc.chainId}\") } references a chain " +
+                        "that is not registered. Configure anchor { chain(\"${acc.chainId}\") { ... } } first.",
+                )
+            acc.chainId to InMemoryChainAccount(
+                chainId = acc.chainId,
+                address = acc.address,
+                keyRef = acc.keyRef,
+                anchorClient = client,
+                kms = kms,
+            )
+        }
+        val treasury = InMemoryDomainTreasury(
+            domainId = config.domainId,
+            accounts = accounts,
+            spendPolicy = config.spendPolicy,
+        )
+        return TrustedDomainManager(
+            domainId = config.domainId,
+            payerDid = config.payerDid,
+            treasury = treasury,
+            registry = registry,
         )
     }
 

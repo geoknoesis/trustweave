@@ -1,8 +1,13 @@
 package org.trustweave.trust
 
+import kotlinx.serialization.json.JsonElement
+import org.trustweave.anchor.AnchorResult
+import org.trustweave.anchor.payment.FeeStrategy
+import org.trustweave.anchor.payment.TokenAmount
 import org.trustweave.anchor.services.BlockchainService
 import org.trustweave.contract.DefaultSmartContractService
 import org.trustweave.contract.SmartContractService
+import org.trustweave.trust.domain.TrustedDomainManager
 import org.trustweave.trust.context.DidDslContext
 import org.trustweave.trust.context.WalletDslContext
 import org.trustweave.trust.dsl.*
@@ -158,6 +163,61 @@ class TrustWeave internal constructor(
         )
     }
 
+    /**
+     * Active [TrustedDomainManager] for this facade, or `null` when no
+     * `domain { ... }` block was configured.
+     *
+     * The legacy [blockchains] surface stays unchanged and never routes through
+     * the treasury. Callers that want fee caps, sponsor allow-lists, and a
+     * settled audit ledger go through this manager (or the
+     * [anchorThroughDomain] convenience).
+     *
+     * **Example:**
+     * ```kotlin
+     * val tw = TrustWeave.build {
+     *     anchor { chain("algorand:testnet") { provider("algorand") } }
+     *     domain {
+     *         domainId("acme")
+     *         payerDid("did:web:acme.example")
+     *         chainAccount("algorand:testnet") {
+     *             keyRef = KmsKeyRef("in-memory", "alg-key")
+     *             address = "ABC...XYZ"
+     *         }
+     *     }
+     * }
+     * val ledger = tw.activeDomain?.treasury()?.ledger()
+     * ```
+     */
+    val activeDomain: TrustedDomainManager? get() = config.trustedDomainManager
+
+    /**
+     * Anchor [payload] through the active [TrustedDomainManager]. Throws
+     * [IllegalStateException] when no `domain { ... }` was configured;
+     * otherwise delegates to [TrustedDomainManager.anchor] verbatim.
+     */
+    suspend fun anchorThroughDomain(
+        operationKind: String,
+        chainId: String,
+        payload: JsonElement,
+        feeStrategy: FeeStrategy = FeeStrategy.DomainPays,
+        maxFee: TokenAmount? = null,
+        mediaType: String = "application/json",
+    ): AnchorResult {
+        val domain = activeDomain
+            ?: error(
+                "No active Trusted Domain. Configure one in TrustWeave.build { domain { ... } } " +
+                    "before calling anchorThroughDomain.",
+            )
+        return domain.anchor(
+            operationKind = operationKind,
+            chainId = chainId,
+            payload = payload,
+            feeStrategy = feeStrategy,
+            maxFee = maxFee,
+            mediaType = mediaType,
+        )
+    }
+
     // ========== Domain Services (thin composer pattern) ==========
 
     private val issuanceService: CredentialIssuanceService? by lazy {
@@ -301,9 +361,12 @@ class TrustWeave internal constructor(
     }
 
     /**
-     * Get KMS from TrustWeave.
+     * Get the underlying KMS.
+     *
+     * Public so consumers can, for example, register a real DID method bound to the same KMS that
+     * signs credentials (`getDidRegistry().register(KeyDidMethod(getKms()!!))`).
      */
-    internal fun getKms(): KeyManagementService? {
+    fun getKms(): KeyManagementService? {
         return config.kms as? KeyManagementService
     }
 

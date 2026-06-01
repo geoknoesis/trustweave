@@ -22,7 +22,7 @@ spring-boot = "3.5.14"
 
 # Blockchain
 web3j = "5.0.2"
-web3j-legacy = "4.14.0"
+web3j-legacy = "5.0.2"
 bitcoinj = "0.17.1"
 algosdk = "2.10.1"
 

@@ -12,7 +12,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     // Web3j for Ethereum-compatible chains
-    implementation("org.web3j:core:4.9.8")
+    implementation("org.web3j:core:5.0.2")
 
     // Test dependencies
     testImplementation(project(":testkit"))

@@ -10,7 +10,7 @@ dependencies {
     implementation(project(":anchors:anchor-core"))
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
-    implementation("org.web3j:core:5.0.1")
+    implementation("org.web3j:core:5.0.2")
 
     // Test dependencies
     testImplementation(project(":testkit"))

@@ -22,6 +22,7 @@ import { verifyJws, didKeyToPublicKey, b64uDecodeString } from '@/lib/crypto'
 import { decodeSdJwtVc } from '@/lib/sdjwt'
 import { sha256 } from '@noble/hashes/sha256'
 import { getVerifier } from '@/lib/server-keys'
+import { recordVerification } from '@/lib/verification-inbox'
 
 interface VerificationCheck { step: string; passed: boolean; detail?: string }
 
@@ -77,9 +78,25 @@ export async function POST(req: NextRequest): Promise<NextResponse<VerificationR
     ?? (presentation.includes('~') ? 'vc+sd-jwt' : 'vc+jwt')
 
   if (format === 'vc+sd-jwt') {
-    return NextResponse.json(await verifySdJwtVc(presentation, body.expectedNonce, checks, recordCheck))
+    const result = await verifySdJwtVc(presentation, body.expectedNonce, checks, recordCheck)
+    recordVerification({
+      valid: result.valid,
+      nonce: body.expectedNonce,
+      holder: result.holder,
+      checks: result.checks,
+      credentials: result.credentials,
+    })
+    return NextResponse.json(result)
   }
-  return NextResponse.json(await verifyVpJwt(presentation, body.expectedNonce, checks, recordCheck))
+  const result = await verifyVpJwt(presentation, body.expectedNonce, checks, recordCheck)
+  recordVerification({
+    valid: result.valid,
+    nonce: body.expectedNonce,
+    holder: result.holder,
+    checks: result.checks,
+    credentials: result.credentials,
+  })
+  return NextResponse.json(result)
 }
 
 // ============================================================

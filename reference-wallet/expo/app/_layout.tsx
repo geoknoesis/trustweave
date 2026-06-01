@@ -2,51 +2,64 @@ import '../polyfills'
 
 import { Tabs } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
-
-const PRIMARY = '#1e3a8a'
+import { Text } from 'react-native'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
+import { AppErrorBoundary } from '@/components/AppErrorBoundary'
+import { theme } from '@/lib/credentialDisplay'
 
 export default function RootLayout() {
   return (
-    <>
-      <StatusBar style="light" />
-      <Tabs
-        screenOptions={{
-          tabBarActiveTintColor: PRIMARY,
-          headerStyle: { backgroundColor: PRIMARY },
-          headerTintColor: '#ffffff',
-          headerTitleStyle: { fontWeight: '600' },
-        }}
-      >
-        <Tabs.Screen
-          name="index"
-          options={{
-            title: 'Wallet',
-            tabBarIcon: ({ color }) => <TabIcon color={color}>💳</TabIcon>,
+    <SafeAreaProvider>
+      <AppErrorBoundary>
+        <StatusBar style="light" />
+        <Tabs
+          screenOptions={{
+            tabBarActiveTintColor: theme.primary,
+            tabBarInactiveTintColor: theme.textMuted,
+            tabBarStyle: {
+              backgroundColor: theme.surface,
+              borderTopColor: theme.border,
+              paddingTop: 4,
+            },
+            headerStyle: { backgroundColor: theme.primary },
+            headerTintColor: '#ffffff',
+            headerTitleStyle: { fontWeight: '600' },
+            sceneStyle: { backgroundColor: theme.bg },
           }}
-        />
-        <Tabs.Screen
-          name="receive"
-          options={{
-            title: 'Receive',
-            tabBarIcon: ({ color }) => <TabIcon color={color}>⬇️</TabIcon>,
-          }}
-        />
-        <Tabs.Screen
-          name="present"
-          options={{
-            title: 'Present',
-            tabBarIcon: ({ color }) => <TabIcon color={color}>⬆️</TabIcon>,
-          }}
-        />
-      </Tabs>
-    </>
+        >
+          <Tabs.Screen
+            name="index"
+            options={{
+              title: 'My credentials',
+              headerTitle: 'My credentials',
+              tabBarLabel: 'Library',
+              tabBarIcon: ({ color }) => <TabIcon color={color}>📚</TabIcon>,
+            }}
+          />
+          <Tabs.Screen
+            name="receive"
+            options={{
+              title: 'Add credential',
+              headerTitle: 'Add credential',
+              tabBarLabel: 'Add',
+              tabBarIcon: ({ color }) => <TabIcon color={color}>➕</TabIcon>,
+            }}
+          />
+          <Tabs.Screen
+            name="present"
+            options={{
+              title: 'Share credential',
+              headerTitle: 'Share credential',
+              tabBarLabel: 'Share',
+              tabBarIcon: ({ color }) => <TabIcon color={color}>📤</TabIcon>,
+            }}
+          />
+        </Tabs>
+      </AppErrorBoundary>
+    </SafeAreaProvider>
   )
 }
 
-import { Text } from 'react-native'
-
 function TabIcon({ children, color }: { children: string; color: string }) {
-  // Emoji rendered as text tinted via opacity — Expo Go ships no icon font by default,
-  // and adding @expo/vector-icons just for tab icons would bloat the demo.
-  return <Text style={{ fontSize: 18, opacity: color === '#1e3a8a' ? 1 : 0.6 }}>{children}</Text>
+  return <Text style={{ fontSize: 20, opacity: color === theme.primary ? 1 : 0.55 }}>{children}</Text>
 }

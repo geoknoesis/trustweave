@@ -1,35 +1,50 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ActivityIndicator, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native'
 import { Link, useFocusEffect } from 'expo-router'
+import { CredentialLibraryCard } from '@/components/CredentialLibraryCard'
+import { VerifierQrScanner, VerifierQrScannerButton } from '@/components/VerifierQrScanner'
 import { bootstrap, createPresentation, list, type WalletState } from '@/lib/wallet'
 import type { StoredCredential } from '@/lib/storage'
-import { fetchPresentationRequest, verify, type VerificationResponse } from '@/lib/demoBackend'
+import { demoBackendBaseUrl } from '@/lib/demoBackend'
+import { humanClaimName, theme } from '@/lib/credentialDisplay'
+import {
+  credentialMatchesRequest,
+  type PresentationRequestParams,
+  type PresentationRequestQrPayload,
+} from '@/lib/presentationRequestQr'
+import { isCredentialBoundToHolder, bindingMismatchDetail } from '@/lib/holderBinding'
+import {
+  fetchPresentationRequestFromQr,
+  submitPresentationToVerifier,
+} from '@/lib/presentationClient'
+import type { VerificationResponse } from '@/lib/demoBackend'
+
+type Phase = 'scan' | 'consent' | 'done'
 
 type Status =
   | { kind: 'idle' }
-  | { kind: 'fetchingRequest' }
+  | { kind: 'loadingRequest' }
   | { kind: 'buildingVp' }
-  | { kind: 'verifying' }
+  | { kind: 'submitting' }
   | { kind: 'done'; response: VerificationResponse }
   | { kind: 'error'; message: string }
 
 export default function PresentScreen() {
   const [state, setState] = useState<WalletState | null>(null)
   const [creds, setCreds] = useState<StoredCredential[]>([])
+  const [phase, setPhase] = useState<Phase>('scan')
+  const [scannerOpen, setScannerOpen] = useState(false)
+  const [verifierQr, setVerifierQr] = useState<PresentationRequestQrPayload | null>(null)
+  const [request, setRequest] = useState<PresentationRequestParams | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [disclose, setDisclose] = useState<Record<string, boolean>>({})
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
 
-  useEffect(() => { bootstrap().then(setState) }, [])
-
   useFocusEffect(useCallback(() => {
-    list().then((all) => {
-      setCreds(all)
-      if (all.length > 0 && !selectedId) setSelectedId(all[0].id)
-    })
-  }, [selectedId]))
+    bootstrap().then(setState)
+    list().then(setCreds)
+  }, []))
 
-  // When selected credential changes, default-disclose all of its disclosable claims.
   useEffect(() => {
     if (!selectedId) return
     const c = creds.find((x) => x.id === selectedId)
@@ -39,197 +54,444 @@ export default function PresentScreen() {
     setDisclose(init)
   }, [selectedId, creds])
 
-  if (!state) return <View style={s.center}><Text>Initialising wallet…</Text></View>
+  useEffect(() => {
+    if (phase !== 'consent' || !state) return
+    const bound = request
+      ? creds.filter(
+          (c) =>
+            credentialMatchesRequest(c.type, request.acceptedTypes) &&
+            isCredentialBoundToHolder(c, state.holder.did),
+        )
+      : creds.filter((c) => isCredentialBoundToHolder(c, state.holder.did))
+    if (bound.length === 0) return
+    if (!selectedId || !bound.some((c) => c.id === selectedId)) {
+      setSelectedId(bound[0].id)
+    }
+  }, [phase, state, creds, request, selectedId])
 
-  if (creds.length === 0) {
-    return (
-      <View style={s.center}>
-        <Text style={s.emptyIcon}>📭</Text>
-        <Text style={s.muted}>No credentials to present.</Text>
-        <Link href="/receive" asChild>
-          <TouchableOpacity style={s.btn}><Text style={s.btnText}>Receive one first</Text></TouchableOpacity>
-        </Link>
-      </View>
-    )
-  }
-
-  const selected = creds.find((c) => c.id === selectedId)
-  const isSdJwt = selected?.format === 'vc+sd-jwt'
-
-  const onPresent = async () => {
-    if (!selected) return
+  const onVerifierScanned = async (qr: PresentationRequestQrPayload) => {
+    setScannerOpen(false)
+    setStatus({ kind: 'loadingRequest' })
     try {
-      setStatus({ kind: 'fetchingRequest' })
-      const req = await fetchPresentationRequest()
-      setStatus({ kind: 'buildingVp' })
-      const discloseNames = Object.entries(disclose).filter(([, v]) => v).map(([k]) => k)
-      const vp = await createPresentation([selected.id], req.audience, req.nonce, discloseNames)
-      setStatus({ kind: 'verifying' })
-      const response = await verify(vp, selected.format, req.nonce)
-      setStatus({ kind: 'done', response })
+      const wallet = await bootstrap()
+      setState(wallet)
+      const freshCreds = await list()
+      setCreds(freshCreds)
+      const req = qr.presentationRequest
+        ?? await fetchPresentationRequestFromQr(qr, demoBackendBaseUrl)
+      const matching = freshCreds.filter(
+        (c) =>
+          c.format !== 'vc-ld' &&
+          credentialMatchesRequest(c.type, req.acceptedTypes) &&
+          isCredentialBoundToHolder(c, wallet.holder.did),
+      )
+      if (matching.length === 0) {
+        const typeMatch = freshCreds.some((c) => credentialMatchesRequest(c.type, req.acceptedTypes))
+        const mismatch = freshCreds
+          .filter((c) => credentialMatchesRequest(c.type, req.acceptedTypes))
+          .map((c) => bindingMismatchDetail(c, wallet.holder.did))
+          .find(Boolean)
+        throw new Error(
+          typeMatch
+            ? mismatch
+              ? `${mismatch} Go to Add and scan the issuer QR again for this wallet.`
+              : 'Your credentials belong to an old wallet identity. Go to Add and scan the issuer QR again.'
+            : freshCreds.length === 0
+              ? 'No credentials in your wallet. Go to Add and scan the issuer QR first.'
+              : 'You have no credentials that match what this verifier accepts.',
+        )
+      }
+      setVerifierQr(qr)
+      setRequest(req)
+      setSelectedId(matching[0].id)
+      setPhase('consent')
+      setStatus({ kind: 'idle' })
     } catch (e) {
       setStatus({ kind: 'error', message: e instanceof Error ? e.message : String(e) })
     }
   }
 
-  const inFlight = status.kind === 'fetchingRequest' || status.kind === 'buildingVp' || status.kind === 'verifying'
+  const onShare = async () => {
+    let wallet: WalletState
+    try {
+      wallet = await bootstrap()
+      setState(wallet)
+    } catch (e) {
+      setStatus({
+        kind: 'error',
+        message: e instanceof Error ? e.message : 'Wallet not ready. Go back and try again.',
+      })
+      return
+    }
+    if (!verifierQr) {
+      setStatus({ kind: 'error', message: 'Scan a verifier QR first.' })
+      return
+    }
+    if (!selectedId) {
+      setStatus({ kind: 'error', message: 'Select a credential to share.' })
+      return
+    }
+    const freshCreds = wallet.credentials.length > 0 ? wallet.credentials : await list()
+    setCreds(freshCreds)
+    const selected = freshCreds.find((c) => c.id === selectedId)
+    if (!selected) {
+      setStatus({ kind: 'error', message: 'Selected credential is no longer in your wallet.' })
+      return
+    }
+    if (!isCredentialBoundToHolder(selected, wallet.holder.did)) {
+      const detail = bindingMismatchDetail(selected, wallet.holder.did)
+      setStatus({
+        kind: 'error',
+        message: detail
+          ? `${detail} Go to Add and scan the issuer QR again.`
+          : 'This credential belongs to a different wallet identity. Go to Add and scan the issuer QR again.',
+      })
+      return
+    }
+    try {
+      setStatus({ kind: 'buildingVp' })
+      const req = verifierQr.presentationRequest
+        ?? await fetchPresentationRequestFromQr(verifierQr, demoBackendBaseUrl)
+      setRequest(req)
+      const discloseNames = Object.entries(disclose).filter(([, v]) => v).map(([k]) => k)
+      const vp = await createPresentation([selected.id], req.audience, req.nonce, discloseNames)
+      setStatus({ kind: 'submitting' })
+      const response = await submitPresentationToVerifier(
+        verifierQr,
+        vp,
+        selected.format as 'vc+jwt' | 'vc+sd-jwt',
+        req.nonce,
+        demoBackendBaseUrl,
+      )
+      setStatus({ kind: 'done', response })
+      setPhase('done')
+    } catch (e) {
+      setStatus({ kind: 'error', message: e instanceof Error ? e.message : String(e) })
+    }
+  }
+
+  const resetFlow = () => {
+    setPhase('scan')
+    setVerifierQr(null)
+    setRequest(null)
+    setSelectedId(null)
+    setStatus({ kind: 'idle' })
+  }
+
+  if (!state) {
+    return (
+      <View style={[s.center, s.flex]}>
+        <Text style={s.muted}>Opening your wallet…</Text>
+      </View>
+    )
+  }
+
+  if (creds.length === 0) {
+    return (
+      <View style={[s.center, s.flex]}>
+        <Text style={s.emptyIcon}>📤</Text>
+        <Text style={s.emptyTitle}>Nothing to share yet</Text>
+        <Text style={s.muted}>Add a credential to your library first.</Text>
+        <Link href="/receive" asChild>
+          <TouchableOpacity style={s.btn}><Text style={s.btnText}>Add credential</Text></TouchableOpacity>
+        </Link>
+      </View>
+    )
+  }
+
+  const matchingCreds = request
+    ? creds.filter(
+        (c) =>
+          c.format !== 'vc-ld' &&
+          credentialMatchesRequest(c.type, request.acceptedTypes) &&
+          isCredentialBoundToHolder(c, state.holder.did),
+      )
+    : creds.filter(
+        (c) => c.format !== 'vc-ld' && isCredentialBoundToHolder(c, state.holder.did),
+      )
+  const selected = matchingCreds.find((c) => c.id === selectedId)
+  const canShare = Boolean(selected && isCredentialBoundToHolder(selected, state.holder.did))
+  const inFlight = status.kind === 'loadingRequest' || status.kind === 'buildingVp' || status.kind === 'submitting'
+
+  if (phase === 'scan') {
+    return (
+      <>
+        <ScrollView style={[s.scroll, s.flex]} contentContainerStyle={s.container}>
+          <Text style={s.heroTitle}>Share credential</Text>
+          <Text style={s.heroSub}>Scan the verifier&apos;s presentation-request QR — not the verify link from your credential.</Text>
+
+          <View style={s.scanPanel}>
+            <Text style={s.scanIcon}>📤</Text>
+            <Text style={s.scanTitle}>Scan verifier QR</Text>
+            <Text style={s.muted}>
+              Open the verifier page (/verifier) on your PC, then scan its QR here. A credential &quot;Verify link&quot; is for others to open in a browser — use your camera app for that.
+            </Text>
+            <VerifierQrScannerButton
+              onPress={() => setScannerOpen(true)}
+              loading={status.kind === 'loadingRequest'}
+            />
+          </View>
+
+          {status.kind === 'loadingRequest' && (
+            <View style={s.loadingRow}>
+              <ActivityIndicator color={theme.primary} />
+              <Text style={s.muted}>Reading verifier request…</Text>
+            </View>
+          )}
+
+          {status.kind === 'error' && (
+            <View style={s.errorPanel}>
+              <Text style={s.errorTitle}>
+                {status.message.includes('demo server') || status.message.includes('demoBackendBaseUrl')
+                  ? 'Cannot reach demo server'
+                  : status.message.includes('Add') || status.message.includes('issuer')
+                    ? 'Credential needed'
+                    : 'Could not connect to verifier'}
+              </Text>
+              <Text style={s.errorMessage}>{status.message}</Text>
+              {(status.message.includes('Add') || status.message.includes('issuer')) && (
+                <Link href="/receive" asChild>
+                  <TouchableOpacity style={[s.btnOutline, { marginTop: 10 }]}>
+                    <Text style={s.btnOutlineText}>Add credential</Text>
+                  </TouchableOpacity>
+                </Link>
+              )}
+            </View>
+          )}
+
+          <View style={s.stepsPanel}>
+            <Step n={1} text="Verifier shows a QR on their screen." />
+            <Step n={2} text="You scan it here with your wallet." />
+            <Step n={3} text="You review and approve what to share." last />
+          </View>
+        </ScrollView>
+
+        <VerifierQrScanner
+          visible={scannerOpen}
+          onClose={() => setScannerOpen(false)}
+          onScan={onVerifierScanned}
+        />
+      </>
+    )
+  }
 
   return (
-    <ScrollView style={s.scroll} contentContainerStyle={s.container}>
-      <View style={s.panel}>
-        <Text style={s.h2}>Present a credential</Text>
-        <Text style={s.muted}>
-          The wallet builds a Verifiable Presentation containing the selected credential, signed by
-          your holder DID, and sends it to the demo verifier.
-        </Text>
-        <Text style={s.h3}>Choose a credential</Text>
-        {creds.map((c) => (
-          <TouchableOpacity
-            key={c.id}
-            style={[s.credCard, selectedId === c.id && s.credCardSelected]}
-            onPress={() => setSelectedId(c.id)}
-          >
-            <Text style={s.radio}>{selectedId === c.id ? '◉' : '○'}</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={s.credTitle}>{c.preview.title} <Text style={s.credFormat}>({c.format})</Text></Text>
-              {c.preview.subtitle && <Text style={s.credSubtitle}>{c.preview.subtitle}</Text>}
-            </View>
-          </TouchableOpacity>
-        ))}
-      </View>
+    <ScrollView style={[s.scroll, s.flex]} contentContainerStyle={s.container}>
+      <Text style={s.heroTitle}>Review & share</Text>
+      <Text style={s.heroSub}>Choose what to disclose to the verifier.</Text>
 
-      {isSdJwt && selected!.selectivelyDisclosable.length > 0 && (
-        <View style={s.panel}>
-          <Text style={s.h3}>Disclose to verifier</Text>
-          <Text style={s.muted}>
-            Tick the claims you're willing to reveal. Unticked claims stay hashed inside the
-            credential — the verifier sees only that the issuer signed something, not what.
-          </Text>
-          <View style={s.discloseBox}>
-            {selected!.selectivelyDisclosable.map((name) => (
-              <View key={name} style={s.discloseRow}>
-                <Switch
-                  value={disclose[name] ?? false}
-                  onValueChange={(v) => setDisclose((prev) => ({ ...prev, [name]: v }))}
-                />
-                <Text style={[s.mono, { marginLeft: 12, color: disclose[name] ? '#059669' : '#64748b' }]}>
-                  {name}
-                </Text>
-              </View>
-            ))}
-          </View>
+      {request && (
+        <View style={s.requestPanel}>
+          <Text style={s.requestTitle}>Verifier request</Text>
+          <Text style={s.muted}>Accepts: {request.acceptedTypes.join(', ') || 'any credential'}</Text>
         </View>
       )}
 
-      <View style={s.panel}>
-        <TouchableOpacity style={[s.btn, inFlight && s.btnDisabled]} onPress={onPresent} disabled={inFlight}>
-          {inFlight ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <ActivityIndicator color="#fff" />
-              <Text style={s.btnText}>{statusLabel(status)}</Text>
-            </View>
-          ) : (
-            <Text style={s.btnText}>Present to demo verifier</Text>
-          )}
-        </TouchableOpacity>
-        {status.kind === 'error' && (
-          <View style={s.errorCallout}>
-            <Text style={s.errorTitle}>Failed</Text>
-            <Text>{status.message}</Text>
-          </View>
-        )}
-      </View>
+      <Text style={s.sectionLabel}>SELECT CREDENTIAL</Text>
+      {matchingCreds.map((c) => (
+        <View key={c.id} style={selectedId === c.id ? s.selectedWrap : undefined}>
+          <CredentialLibraryCard cred={c} onPress={() => setSelectedId(c.id)} />
+        </View>
+      ))}
 
-      {status.kind === 'done' && <VerificationResultPanel response={status.response} />}
+      {selected && selected.format === 'vc+sd-jwt' && selected.selectivelyDisclosable.length > 0 && (
+        <View style={s.sharePanel}>
+          <Text style={s.sectionLabel}>CHOOSE WHAT TO SHARE</Text>
+          {selected.selectivelyDisclosable.map((name) => (
+            <View key={name} style={s.shareRow}>
+              <Switch
+                value={disclose[name] ?? false}
+                onValueChange={(v) => setDisclose((prev) => ({ ...prev, [name]: v }))}
+                trackColor={{ true: theme.success }}
+              />
+              <Text style={s.shareLabel}>{humanClaimName(name)}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {matchingCreds.length === 0 && request && (
+        <View style={s.warnPanel}>
+          <Text style={s.warnTitle}>No matching credentials</Text>
+          <Text style={s.errorMessage}>
+            Delete old credentials and scan the issuer QR again to receive a fresh copy for this wallet.
+          </Text>
+        </View>
+      )}
+
+      {status.kind === 'error' && (
+        <View style={s.errorPanel}>
+          <Text style={s.errorTitle}>Sharing failed</Text>
+          <Text style={s.errorMessage}>{status.message}</Text>
+        </View>
+      )}
+
+      <TouchableOpacity
+        style={[s.btn, (inFlight || !canShare) && s.btnDisabled]}
+        onPress={onShare}
+        disabled={inFlight || !canShare}
+      >
+        {inFlight ? (
+          <View style={s.loadingRow}>
+            <ActivityIndicator color="#fff" />
+            <Text style={s.btnText}>{statusLabel(status)}</Text>
+          </View>
+        ) : (
+          <Text style={s.btnText}>Share with verifier</Text>
+        )}
+      </TouchableOpacity>
+
+      <TouchableOpacity style={s.btnOutline} onPress={resetFlow} disabled={inFlight}>
+        <Text style={s.btnOutlineText}>Scan another QR</Text>
+      </TouchableOpacity>
+
+      {phase === 'done' && status.kind === 'done' && (
+        <VerificationResultPanel response={status.response} onDone={resetFlow} />
+      )}
     </ScrollView>
   )
 }
 
-function VerificationResultPanel({ response }: { response: VerificationResponse }) {
+function Step({ n, text, last }: { n: number; text: string; last?: boolean }) {
   return (
-    <View style={s.panel}>
-      <Text style={s.h2}>Verification result</Text>
-      <View style={[s.summary, response.valid ? s.successCallout : s.errorCallout]}>
+    <View style={[s.stepRow, !last && s.stepBorder]}>
+      <View style={s.stepNum}><Text style={s.stepNumText}>{n}</Text></View>
+      <Text style={s.stepText}>{text}</Text>
+    </View>
+  )
+}
+
+function VerificationResultPanel({
+  response,
+  onDone,
+}: {
+  response: VerificationResponse
+  onDone: () => void
+}) {
+  return (
+    <View style={s.resultPanel}>
+      <Text style={s.sectionLabel}>VERIFICATION RESULT</Text>
+      <View style={[s.summary, response.valid ? s.successPanel : s.errorPanel]}>
         <Text style={response.valid ? s.successTitle : s.errorTitle}>
-          {response.valid ? '✓ Presentation verified.' : '✗ Verification failed.'}
+          {response.valid ? '✓ Credential verified' : '✗ Verification failed'}
         </Text>
       </View>
-      <Text style={s.h3}>Checklist</Text>
       {response.checks.map((c, i) => (
-        <View key={i} style={[s.checkRow, c.passed ? s.checkRowPass : s.checkRowFail]}>
-          <Text style={[s.checkMark, c.passed ? { color: '#059669' } : { color: '#dc2626' }]}>
+        <View key={i} style={[s.checkRow, c.passed ? s.checkPass : s.checkFail]}>
+          <Text style={{ color: c.passed ? theme.success : '#dc2626', fontWeight: '700' }}>
             {c.passed ? '✓' : '✗'}
           </Text>
-          <View style={{ flex: 1 }}>
-            <Text>{c.step}</Text>
-            {c.detail && <Text style={s.detail}>{c.detail}</Text>}
-          </View>
+          <Text style={s.checkStep}>{c.step}</Text>
         </View>
       ))}
-      {response.credentials && response.credentials.length > 0 && (
-        <>
-          <Text style={s.h3}>What the verifier saw</Text>
-          {response.credentials.map((cred, i) => (
-            <View key={i} style={s.discloseBlock}>
-              <Text style={[s.mono, { color: '#1e3a8a', fontWeight: '600' }]}>type: {cred.type.join(', ')}</Text>
-              {Object.entries(cred.disclosedClaims).map(([k, v]) => (
-                <Text key={k} style={s.mono}>
-                  {k}: {typeof v === 'object' ? JSON.stringify(v) : String(v)}
-                </Text>
-              ))}
-              {cred.withheldClaimNames && cred.withheldClaimNames.length > 0 && (
-                <View style={s.withheldBlock}>
-                  <Text style={[s.mono, { color: '#64748b' }]}>withheld: {cred.withheldClaimNames.join(', ')}</Text>
-                </View>
-              )}
-            </View>
-          ))}
-        </>
-      )}
+      <TouchableOpacity style={s.btnOutline} onPress={onDone}>
+        <Text style={s.btnOutlineText}>Done</Text>
+      </TouchableOpacity>
     </View>
   )
 }
 
 function statusLabel(s: Status): string {
   switch (s.kind) {
-    case 'fetchingRequest': return 'Fetching verifier request…'
-    case 'buildingVp': return 'Building presentation…'
-    case 'verifying': return 'Verifying…'
+    case 'loadingRequest': return 'Reading request…'
+    case 'buildingVp': return 'Preparing…'
+    case 'submitting': return 'Sending…'
     default: return ''
   }
 }
 
 const s = StyleSheet.create({
-  scroll: { backgroundColor: '#f8fafc' },
-  container: { padding: 16, gap: 16 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 8 },
-  panel: { backgroundColor: '#ffffff', borderRadius: 8, padding: 16, gap: 12, borderWidth: 1, borderColor: '#e2e8f0' },
-  h2: { color: '#1e3a8a', fontSize: 18, fontWeight: '600' },
-  h3: { color: '#1e3a8a', fontSize: 14, fontWeight: '600' },
-  muted: { color: '#64748b', fontSize: 13 },
-  mono: { fontFamily: 'Menlo', fontSize: 12 },
-  emptyIcon: { fontSize: 32 },
-  credCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f1f5f9', padding: 12, borderRadius: 6, gap: 12 },
-  credCardSelected: { borderWidth: 2, borderColor: '#1e3a8a' },
-  radio: { fontSize: 18, color: '#1e3a8a' },
-  credTitle: { color: '#1e3a8a', fontWeight: '600' },
-  credFormat: { fontSize: 10, color: '#64748b', fontWeight: '400' },
-  credSubtitle: { color: '#1f2937', fontSize: 13 },
-  discloseBox: { backgroundColor: '#f1f5f9', padding: 12, borderRadius: 6, gap: 4 },
-  discloseRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 2 },
-  btn: { backgroundColor: '#1e3a8a', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 6, alignItems: 'center' },
-  btnDisabled: { opacity: 0.6 },
-  btnText: { color: '#ffffff', fontWeight: '500' },
-  summary: { padding: 12, borderRadius: 6, borderLeftWidth: 4 },
-  successCallout: { backgroundColor: '#ecfdf5', borderLeftColor: '#059669' },
-  successTitle: { color: '#059669', fontWeight: '700' },
-  errorCallout: { backgroundColor: '#fef2f2', borderLeftColor: '#dc2626' },
-  errorTitle: { color: '#dc2626', fontWeight: '700' },
-  checkRow: { flexDirection: 'row', alignItems: 'flex-start', padding: 8, borderRadius: 4, gap: 8 },
-  checkRowPass: { backgroundColor: '#ecfdf5' },
-  checkRowFail: { backgroundColor: '#fef2f2' },
-  checkMark: { fontWeight: '700', fontSize: 16 },
-  detail: { color: '#64748b', fontSize: 11, fontFamily: 'Menlo', marginTop: 2 },
-  discloseBlock: { backgroundColor: '#f1f5f9', padding: 12, borderRadius: 6, gap: 4 },
-  withheldBlock: { marginTop: 6, paddingTop: 6, borderTopWidth: 1, borderTopColor: '#cbd5e1', borderStyle: 'dashed' },
+  flex: { flex: 1 },
+  scroll: { backgroundColor: theme.bg },
+  container: { padding: 16, gap: 12, paddingBottom: 32 },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 10 },
+  heroTitle: { fontSize: 26, fontWeight: '700', color: theme.primary },
+  heroSub: { fontSize: 14, color: theme.textMuted, marginBottom: 4 },
+  scanPanel: {
+    backgroundColor: theme.surface,
+    borderRadius: theme.radius,
+    padding: 20,
+    alignItems: 'center',
+    gap: 10,
+    borderWidth: 1,
+    borderColor: theme.border,
+    ...theme.shadow,
+  },
+  scanIcon: { fontSize: 36 },
+  scanTitle: { fontSize: 16, fontWeight: '600', color: theme.text },
+  muted: { color: theme.textMuted, fontSize: 14, textAlign: 'center' },
+  stepsPanel: {
+    backgroundColor: theme.surface,
+    borderRadius: theme.radius,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: theme.border,
+  },
+  stepRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12 },
+  stepBorder: { borderBottomWidth: 1, borderBottomColor: theme.border },
+  stepNum: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: theme.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepNumText: { color: '#fff', fontWeight: '700', fontSize: 13 },
+  stepText: { flex: 1, fontSize: 14, color: theme.textMuted },
+  sectionLabel: { fontSize: 11, fontWeight: '600', color: theme.textMuted, letterSpacing: 0.5, marginTop: 8 },
+  requestPanel: {
+    backgroundColor: '#eff6ff',
+    borderRadius: theme.radius,
+    padding: 14,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: theme.primary,
+  },
+  requestTitle: { fontWeight: '600', color: theme.primary },
+  selectedWrap: { borderRadius: theme.radius, borderWidth: 2, borderColor: theme.primary },
+  sharePanel: {
+    backgroundColor: theme.surface,
+    borderRadius: theme.radius,
+    padding: 16,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: theme.border,
+  },
+  shareRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 4 },
+  shareLabel: { fontSize: 15, color: theme.text, flex: 1 },
+  btn: {
+    backgroundColor: theme.primary,
+    paddingVertical: 14,
+    borderRadius: 999,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  btnDisabled: { opacity: 0.7 },
+  btnText: { color: '#fff', fontWeight: '600', fontSize: 16 },
+  btnOutline: {
+    borderWidth: 2,
+    borderColor: theme.primary,
+    paddingVertical: 12,
+    borderRadius: 999,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  btnOutlineText: { color: theme.primary, fontWeight: '600' },
+  loadingRow: { flexDirection: 'row', alignItems: 'center', gap: 10, justifyContent: 'center' },
+  emptyIcon: { fontSize: 40 },
+  emptyTitle: { fontSize: 17, fontWeight: '600', color: theme.primary },
+  errorPanel: { backgroundColor: '#fef2f2', padding: 14, borderRadius: theme.radius, gap: 4 },
+  warnPanel: { backgroundColor: '#fffbeb', padding: 14, borderRadius: theme.radius, gap: 4, borderWidth: 1, borderColor: '#f59e0b' },
+  warnTitle: { color: '#b45309', fontWeight: '600' },
+  errorTitle: { color: '#dc2626', fontWeight: '600' },
+  errorMessage: { color: '#991b1b', fontSize: 14, lineHeight: 20 },
+  resultPanel: { gap: 10, marginTop: 8 },
+  summary: { padding: 14, borderRadius: theme.radius },
+  successPanel: { backgroundColor: theme.successBg },
+  successTitle: { color: theme.success, fontWeight: '700' },
+  checkRow: { flexDirection: 'row', gap: 10, padding: 10, borderRadius: 8 },
+  checkPass: { backgroundColor: theme.successBg },
+  checkFail: { backgroundColor: '#fef2f2' },
+  checkStep: { fontSize: 14, color: theme.text, flex: 1 },
 })

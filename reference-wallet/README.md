@@ -109,16 +109,52 @@ seed is loaded into JS for signing). Acceptable for most demos; not for PID/QEAA
 
 ## Demo flow (works identically across all four)
 
+Open **`/demos`** for a hub linking all runnable scenarios.
+
+### Education — demo-university
+
+The web wallet includes a **demo-university** trust domain (`data/trust-domains/demo-university/`) with five CSV-backed degrees.
+
+| Web route | Purpose |
+|-----------|---------|
+| `/issuer/degrees` | Graduate roster |
+| `/issuer/degree/[studentId]` | Degree detail + offer QR (graduate portal) |
+| `/issuer/offer` | Combined issuer console |
+| `/verifier` | Live verifier QR + status |
+| `/verifier/test` | Automated E2E test (no phone) |
+
+1. **Receive** — scan an offer QR from `/issuer/degree/STU-001` (or `/issuer/offer`).
+   Wallet calls `GET /api/demo-issuer/credential?subject=<DID>&studentId=…` and stores the SD-JWT VC.
+2. **Present** — scan the verifier QR from `/verifier`, choose disclosures, tap Share.
+   Wallet signs a key-binding JWT and posts to `/api/demo-verifier/verify`.
+
+### Spatial Web — drone airspace
+
+Two trust domains: **FAA drone registry** (`demo-faa-drone-registry/`) and **SF Bay airspace authority** (`demo-sf-airspace/`). Five drones with registered aircraft photos in `public/drones/` (480×360 JPEG, ≤50 KiB — regenerate from SVG sources with `npm run resize-demo-photos`).
+
+| Web route | Purpose |
+|-----------|---------|
+| `/issuer/faa` | FAA UAS registration roster |
+| `/issuer/faa/[droneId]` | Drone ID credential + aircraft photo + offer QR |
+| `/issuer/airspace` | Airspace activity authorization roster |
+| `/issuer/airspace/[droneId]` | Activity authorization + offer QR |
+| `/airspace/gate` | Gatekeeper — location/activity session + presentation QR |
+
+1. **Receive FAA ID** — scan offer QR from `/issuer/faa/DRONE-001` → `DroneIdentificationCredential` (photo URL + digest claims).
+2. **Receive airspace auth** — scan offer QR from `/issuer/airspace/DRONE-001` → `ActivityAuthorizationCredential`.
+3. **Present at gate** — on `/airspace/gate`, set activity `data-collection` and SF coordinates, open gate QR, scan from **Share** tab. Gate verifies crypto + geographic policy (try LA coords to see denial).
+
+API discovery: `GET /api/demo-issuer/faa/trust-domain`, `GET /api/demo-issuer/spatial/trust-domain`.
+
+**Kotlin equivalent:** `./gradlew :distribution:examples:runSpatialWeb`
+
+### Shared steps (all demos)
+
 1. **Bootstrap** — wallet generates a `did:key:z…` Ed25519 holder identity on first
    run. Stored per the wallet's storage tier.
-2. **Receive** — `GET /api/demo-issuer/credential?subject=<DID>` returns an SD-JWT VC
-   for a Bachelor of Science degree with 6 selectively-disclosable claims.
-3. **Present** — choose disclosures, tap Present. Wallet signs a key-binding JWT,
-   posts the SD-JWT presentation to `/api/demo-verifier/verify`.
-4. **Verify** — verifier returns a structured checklist (issuer signature, disclosure
+2. **Verify outcome** — verifier or gate returns a structured checklist (issuer signature, disclosure
    hashes, KB-JWT signature, audience binding, nonce binding, sd_hash binding,
-   temporal validity) plus the disclosed-vs-withheld breakdown — the "killer demo
-   moment" per the design doc §6.4.
+   temporal validity) plus the disclosed-vs-withheld breakdown (gate also checks location policy).
 
 ## Shared design decisions
 

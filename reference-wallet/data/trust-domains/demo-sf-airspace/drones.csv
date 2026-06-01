@@ -1,0 +1,6 @@
+droneId,callsign,operatorName,activityType,maxAltitudeFt,maxDuration,vct
+DRONE-001,SF-BAY-ALPHA,Bay Area Aerial Surveys LLC,data-collection,400,PT2H,ActivityAuthorizationCredential
+DRONE-002,SF-BAY-BRAVO,Coastal Monitoring Cooperative,monitoring,350,PT4H,ActivityAuthorizationCredential
+DRONE-003,SF-BAY-CHARLIE,Golden Gate Infrastructure Inc,inspection,250,PT1H,ActivityAuthorizationCredential
+DRONE-004,SF-BAY-DELTA,Research UAV Program,data-collection,400,PT3H,ActivityAuthorizationCredential
+DRONE-005,SF-BAY-ECHO,Emergency Response Drones,monitoring,500,PT1H,ActivityAuthorizationCredential

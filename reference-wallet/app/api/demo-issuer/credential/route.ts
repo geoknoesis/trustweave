@@ -1,21 +1,33 @@
 /**
  * Demo issuer credential endpoint — SD-JWT VC profile.
  *
- * Phase 2.5 upgrade from plain VC-JWT to SD-JWT VC (IETF draft-ietf-oauth-sd-jwt-vc).
- * The credential is now returned as `<issuer-jwt>~<disclosure1>~<disclosure2>~...`,
- * with personal claims (name, degree, major, etc.) marked selectively disclosable.
- * The always-visible claims are `issuer` and `vct` (credential type identifier).
+ * Issues credentials from the predefined **demo-university** trust domain.
+ * Degree claims are loaded from the preloaded registrar CSV
+ * (`data/trust-domains/demo-university/degrees.csv`).
+ *
+ * Query params:
+ *   - subject (required): holder did:key
+ *   - studentId (optional): registrar row, defaults to STU-001
  *
  * Format identifier: `vc+sd-jwt` (per draft).
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { issueSdJwtVc } from '@/lib/sdjwt'
 import { getIssuer } from '@/lib/server-keys'
+import {
+  degreeRecordDisclosableNames,
+  degreeRecordToDisclosableClaims,
+  getDemoUniversityTrustDomain,
+  resolveDemoUniversityDegree,
+} from '@/lib/trust-domains/demo-university'
 
 interface CredentialResponse {
   format: 'vc+sd-jwt'
   credential: string
   issuer: string
+  trustDomainId: string
+  studentId: string
+  vct: string
   /** Names of claims the issuer marked as selectively disclosable. */
   selectivelyDisclosable: string[]
 }
@@ -29,21 +41,22 @@ export async function GET(req: NextRequest): Promise<NextResponse<CredentialResp
     )
   }
 
+  const studentIdParam = req.nextUrl.searchParams.get('studentId')
+
+  let degreeRecord
+  try {
+    degreeRecord = resolveDemoUniversityDegree(studentIdParam)
+  } catch (e) {
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : String(e) },
+      { status: 404 },
+    )
+  }
+
+  const selectivelyDisclosable = degreeRecordToDisclosableClaims(degreeRecord)
+  const trustDomain = getDemoUniversityTrustDomain()
   const issuer = getIssuer()
   const now = Math.floor(Date.now() / 1000)
-
-  // What's selectively disclosable vs always visible:
-  // - The holder MUST decide which personal claims to reveal at presentation time.
-  // - `iss`, `iat`, `nbf`, `exp`, `vct`, `sub`, `cnf` always travel with the credential —
-  //   those are credential metadata, not personal data.
-  const selectivelyDisclosable = [
-    { name: 'name', value: 'Demo Holder' },
-    { name: 'degree', value: 'Bachelor of Science' },
-    { name: 'major', value: 'Computer Science' },
-    { name: 'institution', value: 'TrustWeave Demo University' },
-    { name: 'graduationDate', value: '2026-05-29' },
-    { name: 'gpa', value: '3.8' },
-  ]
 
   const sdJwtVc = issueSdJwtVc({
     issuerDid: issuer.did,
@@ -52,9 +65,11 @@ export async function GET(req: NextRequest): Promise<NextResponse<CredentialResp
     holderDid: subject,
     alwaysVisible: {
       jti: `urn:uuid:${crypto.randomUUID()}`,
+      trustDomainId: trustDomain.domainId,
+      studentId: degreeRecord.studentId,
     },
     selectivelyDisclosable,
-    vct: 'BachelorOfScienceDegree',
+    vct: degreeRecord.vct,
     now,
   })
 
@@ -62,6 +77,9 @@ export async function GET(req: NextRequest): Promise<NextResponse<CredentialResp
     format: 'vc+sd-jwt',
     credential: sdJwtVc,
     issuer: issuer.did,
-    selectivelyDisclosable: selectivelyDisclosable.map((c) => c.name),
+    trustDomainId: trustDomain.domainId,
+    studentId: degreeRecord.studentId,
+    vct: degreeRecord.vct,
+    selectivelyDisclosable: degreeRecordDisclosableNames(degreeRecord),
   })
 }

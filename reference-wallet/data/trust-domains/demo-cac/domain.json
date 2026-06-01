@@ -1,0 +1,8 @@
+{
+  "domainId": "demo-cac",
+  "name": "DoD Common Access Card (Demo)",
+  "description": "Demonstration CAC issuer with registered personnel portraits (JPEG, EUDI-sized).",
+  "authorityName": "Defense Manpower Data Center",
+  "authorityContact": "cac-demo@trustweave.example",
+  "defaultPersonnelId": "PERSON-001"
+}

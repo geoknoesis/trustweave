@@ -1,0 +1,6 @@
+studentId,name,degree,major,institution,graduationDate,gpa,vct
+STU-001,Alice Chen,Bachelor of Science,Computer Science,TrustWeave Demo University,2026-05-29,3.8,BachelorOfScienceDegree
+STU-002,Bob Martinez,Master of Science,Data Science,TrustWeave Demo University,2025-12-15,3.9,MasterOfScienceDegree
+STU-003,Carol Okonkwo,Bachelor of Arts,Political Science,TrustWeave Demo University,2024-06-01,3.5,BachelorOfArtsDegree
+STU-004,David Nguyen,Bachelor of Science,Electrical Engineering,TrustWeave Demo University,2026-05-29,3.7,BachelorOfScienceDegree
+STU-005,Elena Rossi,Doctor of Philosophy,Applied Cryptography,TrustWeave Demo University,2023-09-20,4.0,DoctorOfPhilosophyDegree

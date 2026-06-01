@@ -2,260 +2,352 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { CredentialLibraryCard } from '@/components/CredentialLibraryCard'
+import { VerifierQrScanner } from '@/components/VerifierQrScanner'
 import { bootstrap, createPresentation, list, type StoredCredential, type WalletState } from '@/lib/wallet'
+import { humanClaimName } from '@/lib/credential-display'
+import {
+  credentialMatchesRequest,
+  type PresentationRequestParams,
+  type PresentationRequestQrPayload,
+} from '@/lib/presentation-request-qr'
+import {
+  fetchPresentationRequestFromQr,
+  submitPresentationToVerifier,
+  type VerificationResponse,
+} from '@/lib/presentation-client'
+import { isCredentialBoundToHolder } from '@/lib/holder-binding'
 
-interface VerificationCheck {
-  step: string
-  passed: boolean
-  detail?: string
-}
-
-interface VerificationResponse {
-  valid: boolean
-  checks: VerificationCheck[]
-  holder?: string
-  credentials?: Array<{
-    type: string[]
-    issuer: string
-    subject: string
-    disclosedClaims: Record<string, unknown>
-    withheldClaimNames?: string[]
-  }>
-}
+type Phase = 'scan' | 'consent' | 'done'
 
 type Status =
   | { kind: 'idle' }
-  | { kind: 'fetching-request' }
+  | { kind: 'loading-request' }
   | { kind: 'building-vp' }
-  | { kind: 'verifying' }
+  | { kind: 'submitting' }
   | { kind: 'done'; response: VerificationResponse }
   | { kind: 'error'; message: string }
 
 export default function PresentPage() {
   const [state, setState] = useState<WalletState | null>(null)
   const [credentials, setCredentials] = useState<StoredCredential[]>([])
+  const [phase, setPhase] = useState<Phase>('scan')
+  const [verifierQr, setVerifierQr] = useState<PresentationRequestQrPayload | null>(null)
+  const [request, setRequest] = useState<PresentationRequestParams | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [disclose, setDisclose] = useState<Record<string, boolean>>({})
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
+  const [scanError, setScanError] = useState<string | null>(null)
 
   useEffect(() => {
-    const initial = bootstrap()
-    setState(initial)
-    const creds = list()
-    setCredentials(creds)
-    if (creds.length > 0) setSelectedId(creds[0].id)
+    setState(bootstrap())
+    setCredentials(list())
   }, [])
 
-  // Reset disclosure selection when the chosen credential changes.
   useEffect(() => {
     if (!selectedId) return
     const cred = credentials.find((c) => c.id === selectedId)
     if (!cred) return
     const initial: Record<string, boolean> = {}
-    for (const name of cred.selectivelyDisclosable) initial[name] = true  // default: reveal all
+    for (const name of cred.selectivelyDisclosable) initial[name] = true
     setDisclose(initial)
   }, [selectedId, credentials])
 
-  if (!state) {
-    return (
-      <div className="panel">
-        <div className="status-text loading">Initialising wallet…</div>
-      </div>
-    )
-  }
+  useEffect(() => {
+    if (phase !== 'consent' || !state) return
+    const bound = request
+      ? credentials.filter(
+          (c) =>
+            credentialMatchesRequest(c.type, request.acceptedTypes) &&
+            isCredentialBoundToHolder(c, state.holder.did),
+        )
+      : credentials.filter((c) => isCredentialBoundToHolder(c, state.holder.did))
+    if (bound.length === 0) return
+    if (!selectedId || !bound.some((c) => c.id === selectedId)) {
+      setSelectedId(bound[0].id)
+    }
+  }, [phase, state, credentials, request, selectedId])
 
-  const onPresent = async () => {
-    if (!selectedId) return
+  const onVerifierScanned = async (qr: PresentationRequestQrPayload) => {
+    setScanError(null)
+    setStatus({ kind: 'loading-request' })
     try {
-      setStatus({ kind: 'fetching-request' })
-      const reqRes = await fetch('/api/demo-verifier/request')
-      if (!reqRes.ok) throw new Error(`Verifier request failed: HTTP ${reqRes.status}`)
-      const presentationRequest = (await reqRes.json()) as {
-        verifier: string
-        audience: string
-        nonce: string
-        acceptedTypes: string[]
-      }
-
-      setStatus({ kind: 'building-vp' })
-      const discloseNames = Object.entries(disclose).filter(([, v]) => v).map(([k]) => k)
-      const vp = createPresentation(
-        [selectedId],
-        presentationRequest.audience,
-        presentationRequest.nonce,
-        discloseNames,
+      if (!state) throw new Error('Wallet not ready. Go back and try again.')
+      const req = await fetchPresentationRequestFromQr(qr)
+      const matching = credentials.filter(
+        (c) =>
+          credentialMatchesRequest(c.type, req.acceptedTypes) &&
+          isCredentialBoundToHolder(c, state.holder.did),
       )
-
-      setStatus({ kind: 'verifying' })
-      const selected = credentials.find((c) => c.id === selectedId)!
-      const verifyRes = await fetch('/api/demo-verifier/verify', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          presentation: vp,
-          format: selected.format,
-          expectedNonce: presentationRequest.nonce,
-        }),
-      })
-      if (!verifyRes.ok) throw new Error(`Verify failed: HTTP ${verifyRes.status}`)
-      const response = (await verifyRes.json()) as VerificationResponse
-
-      setStatus({ kind: 'done', response })
+      if (matching.length === 0) {
+        const typeMatch = credentials.some((c) => credentialMatchesRequest(c.type, req.acceptedTypes))
+        throw new Error(
+          typeMatch
+            ? 'Your credentials were issued to a different wallet identity. Delete them and scan the issuer QR again.'
+            : 'You have no credentials that match what this verifier accepts.',
+        )
+      }
+      setVerifierQr(qr)
+      setRequest(req)
+      setSelectedId(matching[0].id)
+      setPhase('consent')
+      setStatus({ kind: 'idle' })
     } catch (e) {
       setStatus({ kind: 'error', message: e instanceof Error ? e.message : String(e) })
     }
   }
 
-  if (credentials.length === 0) {
+  const onShare = async () => {
+    if (!state) {
+      setStatus({ kind: 'error', message: 'Wallet not ready. Go back and try again.' })
+      return
+    }
+    if (!verifierQr) {
+      setStatus({ kind: 'error', message: 'Scan a verifier QR first.' })
+      return
+    }
+    if (!selectedId) {
+      setStatus({ kind: 'error', message: 'Select a credential to share.' })
+      return
+    }
+    const selected = credentials.find((c) => c.id === selectedId)
+    if (!selected) {
+      setStatus({ kind: 'error', message: 'Selected credential is no longer in your wallet.' })
+      return
+    }
+    if (!isCredentialBoundToHolder(selected, state.holder.did)) {
+      setStatus({
+        kind: 'error',
+        message:
+          'This credential belongs to a different wallet identity. Delete it and scan the issuer QR again.',
+      })
+      return
+    }
+    try {
+      setStatus({ kind: 'building-vp' })
+      const req = verifierQr.presentationRequest
+        ?? await fetchPresentationRequestFromQr(verifierQr)
+      setRequest(req)
+      const discloseNames = Object.entries(disclose).filter(([, v]) => v).map(([k]) => k)
+      const vp = await createPresentation([selectedId], req.audience, req.nonce, discloseNames)
+      setStatus({ kind: 'submitting' })
+      const response = await submitPresentationToVerifier(
+        verifierQr,
+        vp,
+        selected.format,
+        req.nonce,
+      )
+      setStatus({ kind: 'done', response })
+      setPhase('done')
+    } catch (e) {
+      setStatus({ kind: 'error', message: e instanceof Error ? e.message : String(e) })
+    }
+  }
+
+  const resetFlow = () => {
+    setPhase('scan')
+    setVerifierQr(null)
+    setRequest(null)
+    setSelectedId(null)
+    setStatus({ kind: 'idle' })
+    setScanError(null)
+  }
+
+  if (!state) {
     return (
       <div className="panel">
-        <h2>Present a credential</h2>
-        <div className="empty">
-          <div className="icon">📭</div>
-          <div>You have no credentials to present.</div>
-          <div style={{ marginTop: '1rem' }}>
-            <Link href="/receive" className="btn">
-              Receive one first
-            </Link>
-          </div>
-        </div>
+        <div className="status-text loading">Opening your wallet…</div>
       </div>
     )
   }
 
-  const selectedCred = credentials.find((c) => c.id === selectedId)
-  const disclosableNames = selectedCred?.selectivelyDisclosable ?? []
-  const isSdJwt = selectedCred?.format === 'vc+sd-jwt'
+  if (credentials.length === 0) {
+    return (
+      <>
+        <div className="page-hero">
+          <h2>Share credential</h2>
+          <p>Scan a verifier&apos;s QR code to share a credential securely.</p>
+        </div>
+        <div className="panel empty-library">
+          <div className="icon">📤</div>
+          <h3>Nothing to share yet</h3>
+          <p>Add a credential to your library first.</p>
+          <Link href="/receive" className="btn">Add credential</Link>
+        </div>
+      </>
+    )
+  }
+
+  const matchingCreds = request
+    ? credentials.filter(
+        (c) =>
+          credentialMatchesRequest(c.type, request.acceptedTypes) &&
+          isCredentialBoundToHolder(c, state.holder.did),
+      )
+    : credentials.filter((c) => isCredentialBoundToHolder(c, state.holder.did))
+  const selectedCred = matchingCreds.find((c) => c.id === selectedId)
+  const canShare = Boolean(selectedCred && isCredentialBoundToHolder(selectedCred, state.holder.did))
+  const inFlight = status.kind === 'building-vp' || status.kind === 'submitting' || status.kind === 'loading-request'
+
+  if (phase === 'scan') {
+    return (
+      <>
+        <div className="page-hero">
+          <h2>Share credential</h2>
+          <p>Scan the QR code displayed by the verifier — like Europass / EUDI wallets.</p>
+        </div>
+        <div className="panel">
+          <div className="scan-hero">
+            <div className="scan-icon">📤</div>
+            <strong>Scan verifier QR</strong>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: '0.35rem 0 0' }}>
+              Open <Link href="/verifier">Demo verifier</Link> on a screen, then scan below.
+            </p>
+          </div>
+          <VerifierQrScanner onScan={onVerifierScanned} onError={setScanError} />
+          {scanError && <div className="callout warning">{scanError}</div>}
+          {status.kind === 'loading-request' && (
+            <div className="status-text loading">Reading verifier request…</div>
+          )}
+          {status.kind === 'error' && (
+            <div className="callout danger">
+              <strong>Could not connect to verifier</strong>
+              <div style={{ marginTop: '0.25rem' }}>{status.message}</div>
+            </div>
+          )}
+          <ol className="step-list">
+            <li>Verifier shows a QR on their screen.</li>
+            <li>You scan it here with your wallet.</li>
+            <li>You review and approve what to share.</li>
+          </ol>
+        </div>
+      </>
+    )
+  }
 
   return (
     <>
-      <div className="panel">
-        <h2>Present a credential</h2>
-        <p style={{ color: 'var(--text-muted)' }}>
-          The wallet will build a Verifiable Presentation containing the selected credential, signed by
-          your holder DID, and send it to the demo verifier. The verifier&apos;s checklist appears below.
-        </p>
+      <div className="page-hero">
+        <h2>Review & share</h2>
+        <p>The verifier is requesting a credential. Choose what to disclose.</p>
+      </div>
 
-        <h3>Choose a credential</h3>
-        {credentials.map((c) => (
-          <label
+      {request && (
+        <div className="panel callout info">
+          <strong>Verifier request</strong>
+          <div style={{ fontSize: '0.88rem', marginTop: '0.35rem' }}>
+            Accepts: {request.acceptedTypes.join(', ') || 'any credential'}
+          </div>
+        </div>
+      )}
+
+      <div className="panel">
+        <h3 style={{ marginTop: 0 }}>Select credential</h3>
+        {matchingCreds.map((c) => (
+          <CredentialLibraryCard
             key={c.id}
-            className="credential-card"
-            style={{ cursor: 'pointer', border: selectedId === c.id ? '2px solid var(--primary)' : undefined }}
-          >
-            <input
-              type="radio"
-              name="cred"
-              checked={selectedId === c.id}
-              onChange={() => setSelectedId(c.id)}
-              style={{ marginRight: '0.5rem' }}
-            />
-            <div className="icon">🎓</div>
-            <div className="body">
-              <div className="title">{c.preview.title} <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>({c.format})</span></div>
-              {c.preview.subtitle && <div className="subtitle">{c.preview.subtitle}</div>}
-            </div>
-          </label>
+            cred={c}
+            selected={selectedId === c.id}
+            onSelect={() => setSelectedId(c.id)}
+          />
         ))}
 
-        {isSdJwt && disclosableNames.length > 0 && (
+        {selectedCred && selectedCred.format === 'vc+sd-jwt' && selectedCred.selectivelyDisclosable.length > 0 && (
           <>
-            <h3>Disclose to verifier</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem' }}>
-              Tick the claims you&apos;re willing to reveal. Unticked claims stay hashed inside the
-              credential — the verifier sees only that the issuer signed something, not what.
-            </p>
-            <div style={{ background: 'var(--surface-alt)', borderRadius: '6px', padding: '0.85rem 1rem' }}>
-              {disclosableNames.map((name) => (
-                <label key={name} style={{ display: 'flex', alignItems: 'center', padding: '0.3rem 0', cursor: 'pointer' }}>
+            <h3>Choose what to share</h3>
+            <div style={{ background: 'var(--surface-alt)', borderRadius: '8px', padding: '0.5rem 1rem' }}>
+              {selectedCred.selectivelyDisclosable.map((name) => (
+                <div key={name} className="share-option">
                   <input
                     type="checkbox"
+                    id={`share-${name}`}
                     checked={disclose[name] ?? false}
                     onChange={(e) => setDisclose({ ...disclose, [name]: e.target.checked })}
-                    style={{ marginRight: '0.6rem' }}
                   />
-                  <code style={{ color: disclose[name] ? 'var(--success)' : 'var(--text-muted)' }}>{name}</code>
-                </label>
+                  <label htmlFor={`share-${name}`}>{humanClaimName(name)}</label>
+                </div>
               ))}
             </div>
           </>
         )}
 
         <div className="button-row">
-          <button onClick={onPresent} disabled={!selectedId || status.kind === 'fetching-request' || status.kind === 'building-vp' || status.kind === 'verifying'}>
-            {status.kind === 'idle' || status.kind === 'done' || status.kind === 'error' ? 'Present to demo verifier' : statusLabel(status)}
+          {status.kind === 'error' && (
+            <div className="callout danger" style={{ marginBottom: '0.75rem' }}>
+              <strong>Sharing failed</strong>
+              <div style={{ marginTop: '0.25rem' }}>{status.message}</div>
+            </div>
+          )}
+          <button onClick={onShare} disabled={!canShare || inFlight}>
+            {inFlight ? statusLabel(status) : 'Share with verifier'}
+          </button>
+          <button type="button" className="secondary" onClick={resetFlow} disabled={inFlight}>
+            Scan another QR
           </button>
         </div>
 
-        {(status.kind === 'fetching-request' || status.kind === 'building-vp' || status.kind === 'verifying') && (
-          <div className="status-text loading">{statusLabel(status)}</div>
-        )}
-
-        {status.kind === 'error' && (
-          <div className="callout danger">
-            <strong>Failed:</strong> {status.message}
+        {matchingCreds.length === 0 && request && (
+          <div className="callout warning" style={{ marginTop: '0.75rem' }}>
+            No credentials in your wallet match this verifier request. Delete old credentials and
+            scan the issuer QR again to receive a fresh copy for this wallet.
           </div>
         )}
       </div>
 
-      {status.kind === 'done' && (
-        <div className="panel">
-          <h2>Verification result</h2>
-          <div className={`callout ${status.response.valid ? 'success' : 'danger'}`}>
-            <strong>{status.response.valid ? '✓ Presentation verified.' : '✗ Verification failed.'}</strong>
-          </div>
-
-          <h3>Checklist</h3>
-          <ul className="check-list">
-            {status.response.checks.map((c, i) => (
-              <li key={i} className={c.passed ? 'pass' : 'fail'}>
-                <div className="marker">{c.passed ? '✓' : '✗'}</div>
-                <div>
-                  <div>{c.step}</div>
-                  {c.detail && <div className="detail">{c.detail}</div>}
-                </div>
-              </li>
-            ))}
-          </ul>
-
-          {status.response.credentials && status.response.credentials.length > 0 && (
-            <>
-              <h3>What the verifier saw</h3>
-              {status.response.credentials.map((cred, i) => (
-                <div key={i} className="disclosure-block">
-                  <div style={{ marginBottom: '0.5rem' }}>
-                    <span className="claim-key">type:</span>{' '}
-                    <span className="claim-value">{cred.type.join(', ')}</span>
-                  </div>
-                  {Object.entries(cred.disclosedClaims).map(([k, v]) => (
-                    <div key={k}>
-                      <span className="claim-key">{k}:</span>{' '}
-                      <span className="claim-value">
-                        {typeof v === 'object' ? JSON.stringify(v) : String(v)}
-                      </span>
-                    </div>
-                  ))}
-                  {cred.withheldClaimNames && cred.withheldClaimNames.length > 0 && (
-                    <div style={{ marginTop: '0.75rem', paddingTop: '0.5rem', borderTop: '1px dashed var(--border)' }}>
-                      <span className="claim-key" style={{ color: 'var(--text-muted)' }}>withheld:</span>{' '}
-                      <span style={{ color: 'var(--text-muted)' }}>{cred.withheldClaimNames.join(', ')}</span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </>
-          )}
-        </div>
+      {phase === 'done' && status.kind === 'done' && (
+        <VerificationResultPanel response={status.response} onDone={resetFlow} />
       )}
     </>
   )
 }
 
+function VerificationResultPanel({
+  response,
+  onDone,
+}: {
+  response: VerificationResponse
+  onDone: () => void
+}) {
+  return (
+    <div className="panel">
+      <h2 style={{ marginTop: 0 }}>Verification result</h2>
+      <div className={`callout ${response.valid ? 'success' : 'danger'}`}>
+        <strong>{response.valid ? '✓ Credential verified successfully.' : '✗ Verification could not be completed.'}</strong>
+      </div>
+      <ul className="check-list">
+        {response.checks.map((c, i) => (
+          <li key={i} className={c.passed ? 'pass' : 'fail'}>
+            <div className="marker">{c.passed ? '✓' : '✗'}</div>
+            <div>
+              <div>{c.step}</div>
+              {c.detail && <div className="detail">{c.detail}</div>}
+            </div>
+          </li>
+        ))}
+      </ul>
+      {response.credentials?.map((cred, i) => (
+        <div key={i} className="disclosure-block">
+          <div className="label">What was shared</div>
+          {Object.entries(cred.disclosedClaims).map(([k, v]) => (
+            <div key={k}>
+              <span className="claim-key">{humanClaimName(k)}:</span>{' '}
+              {typeof v === 'object' ? JSON.stringify(v) : String(v)}
+            </div>
+          ))}
+        </div>
+      ))}
+      <button type="button" className="secondary" onClick={onDone} style={{ marginTop: '1rem' }}>
+        Done
+      </button>
+    </div>
+  )
+}
+
 function statusLabel(s: Status): string {
   switch (s.kind) {
-    case 'fetching-request': return 'Fetching verifier request…'
-    case 'building-vp': return 'Building presentation…'
-    case 'verifying': return 'Verifying…'
+    case 'loading-request': return 'Reading verifier request…'
+    case 'building-vp': return 'Preparing your credential…'
+    case 'submitting': return 'Sending to verifier…'
     default: return ''
   }
 }

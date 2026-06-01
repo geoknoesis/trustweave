@@ -2,10 +2,15 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { CredentialDetailPanel } from '@/components/CredentialDetailPanel'
+import { CredentialLibraryCard } from '@/components/CredentialLibraryCard'
+import { HolderDidQr } from '@/components/HolderDidQr'
 import { bootstrap, deleteCredential, resetWallet, type WalletState } from '@/lib/wallet'
+import type { StoredCredential } from '@/lib/storage'
 
 export default function HomePage() {
   const [state, setState] = useState<WalletState | null>(null)
+  const [detailCred, setDetailCred] = useState<StoredCredential | null>(null)
 
   useEffect(() => {
     setState(bootstrap())
@@ -14,90 +19,85 @@ export default function HomePage() {
   if (!state) {
     return (
       <div className="panel">
-        <div className="status-text loading">Initialising wallet…</div>
+        <div className="status-text loading">Opening your wallet…</div>
       </div>
     )
   }
 
   const { holder, credentials } = state
+  const count = credentials.length
 
   const onDelete = (id: string) => {
-    if (!confirm('Delete this credential? This cannot be undone.')) return
+    if (!confirm('Remove this credential from your wallet?')) return
     deleteCredential(id)
-    setState({ holder, credentials: state.credentials.filter((c) => c.id !== id) })
+    setDetailCred(null)
+    setState({ holder, credentials: credentials.filter((c) => c.id !== id) })
   }
 
   const onReset = () => {
-    if (!confirm('Reset the wallet? This wipes your holder identity AND every stored credential.')) return
+    if (!confirm('Reset your wallet? This removes all credentials and your digital identity.')) return
     resetWallet()
+    setDetailCred(null)
     setState(bootstrap())
   }
 
   return (
     <>
-      <div className="panel">
-        <h2>Your wallet</h2>
-        <div className="identity-card">
-          <div className="label">Holder DID</div>
-          {holder.did}
-        </div>
-        <div className="status-text">
-          Bootstrapped {new Date(holder.createdAt).toLocaleString()}. Keys live in this browser&apos;s
-          localStorage (Phase 1 only; Phase 2 mobile uses Secure Enclave).
-        </div>
-      </div>
-
-      <div className="panel">
-        <h2>Credentials ({credentials.length})</h2>
-        {credentials.length === 0 ? (
-          <div className="empty">
-            <div className="icon">📭</div>
-            <div>No credentials yet.</div>
-            <div style={{ marginTop: '1rem' }}>
-              <Link href="/receive" className="btn">
-                Receive a demo credential
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <>
-            {credentials.map((c) => (
-              <div key={c.id} className="credential-card">
-                <div className="icon">🎓</div>
-                <div className="body">
-                  <div className="title">{c.preview.title}</div>
-                  {c.preview.subtitle && <div className="subtitle">{c.preview.subtitle}</div>}
-                  <div className="issuer">
-                    issued by {c.issuerDid.slice(0, 30)}…
-                  </div>
-                </div>
-                <button className="secondary" onClick={() => onDelete(c.id)}>
-                  Delete
-                </button>
-              </div>
-            ))}
-            <div className="button-row">
-              <Link href="/receive" className="btn">
-                Receive another
-              </Link>
-              <Link href="/present" className="btn">
-                Present
-              </Link>
-            </div>
-          </>
-        )}
-      </div>
-
-      <div className="panel">
-        <h3>Danger zone</h3>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: '0 0 0.75rem 0' }}>
-          Wipe the wallet — irrecoverable. Use this if storage is corrupted, you want to test the
-          first-run flow again, or you&apos;re done demoing.
+      <div className="page-hero">
+        <h2>My credentials</h2>
+        <p>
+          {count === 0
+            ? 'Your personal library of verified credentials.'
+            : `${count} credential${count === 1 ? '' : 's'} stored securely on this device.`}
         </p>
-        <button className="danger" onClick={onReset}>
+      </div>
+
+      {count === 0 ? (
+        <div className="panel empty-library">
+          <div className="icon">📚</div>
+          <h3>Your library is empty</h3>
+          <p>
+            Add your first credential by scanning a QR code from an issuer — try the{' '}
+            <Link href="/demos">Spatial Web drone demo</Link> (FAA ID + airspace gate) or{' '}
+            <Link href="/issuer/degree/STU-001">demo university degrees</Link>.
+          </p>
+          <Link href="/receive" className="btn">
+            Add credential
+          </Link>
+        </div>
+      ) : (
+        <>
+          <div className="fab-row">
+            <Link href="/receive" className="btn">Add credential</Link>
+            <Link href="/present" className="btn secondary">Share credential</Link>
+          </div>
+          <div style={{ marginTop: '1rem' }}>
+            {credentials.map((c) => (
+              <CredentialLibraryCard key={c.id} cred={c} onSelect={() => setDetailCred(c)} />
+            ))}
+          </div>
+        </>
+      )}
+
+      <details className="identity-section">
+        <summary>Your digital identity</summary>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', margin: '0 0 0.75rem' }}>
+          Show this QR when a verifier needs to identify you before you share a credential.
+        </p>
+        <HolderDidQr did={holder.did} />
+        <div className="identity-value" style={{ marginTop: '0.75rem' }}>{holder.did}</div>
+        <button type="button" className="detail-delete" style={{ marginTop: '1rem' }} onClick={onReset}>
           Reset wallet
         </button>
-      </div>
+      </details>
+
+      {detailCred && (
+        <CredentialDetailPanel
+          cred={detailCred}
+          onClose={() => setDetailCred(null)}
+          onDelete={() => onDelete(detailCred.id)}
+        />
+      )}
     </>
   )
 }

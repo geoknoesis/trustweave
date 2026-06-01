@@ -1,0 +1,8 @@
+{
+  "domainId": "demo-faa-drone-registry",
+  "name": "FAA UAS Registration (Demo)",
+  "description": "Demonstration FAA registry issuing DroneIdentificationCredentials with registered aircraft photos.",
+  "authorityName": "Federal Aviation Administration",
+  "authorityContact": "registry@demo-faa.trustweave.example",
+  "defaultDroneId": "DRONE-001"
+}

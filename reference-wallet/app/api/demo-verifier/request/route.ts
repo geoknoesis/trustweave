@@ -9,6 +9,9 @@
  * request_uri or wallet redirect dance.
  */
 import { NextResponse } from 'next/server'
+import { cacAcceptedCredentialTypes } from '@/lib/trust-domains/demo-cac'
+import { demoUniversityAcceptedTypes } from '@/lib/trust-domains/demo-university'
+import { faaAcceptedCredentialTypes } from '@/lib/trust-domains/demo-faa-drone-registry'
 import { getVerifier } from '@/lib/server-keys'
 
 interface PresentationRequestResponse {
@@ -20,10 +23,17 @@ interface PresentationRequestResponse {
 
 export async function GET(): Promise<NextResponse<PresentationRequestResponse>> {
   const verifier = getVerifier()
+  const acceptedTypes = [
+    ...new Set([
+      ...demoUniversityAcceptedTypes(),
+      ...cacAcceptedCredentialTypes(),
+      ...faaAcceptedCredentialTypes(),
+    ]),
+  ].sort()
   return NextResponse.json({
     verifier: verifier.did,
     audience: verifier.did,
     nonce: crypto.randomUUID(),
-    acceptedTypes: ['BachelorOfScienceDegree'],
+    acceptedTypes,
   })
 }

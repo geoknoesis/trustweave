@@ -1,0 +1,6 @@
+personnelId,dodId,name,rank,branch,portraitFile,vct
+PERSON-001,1234567890,"Smith, John",COL,Army,subjects/PERSON-001.jpg,CommonAccessCardCredential
+PERSON-002,2345678901,"Garcia, Maria",MAJ,Air Force,subjects/PERSON-002.jpg,CommonAccessCardCredential
+PERSON-003,3456789012,"Chen, Wei",CPT,Navy,subjects/PERSON-003.jpg,CommonAccessCardCredential
+PERSON-004,4567890123,"Johnson, Aisha",LT,Marines,subjects/PERSON-004.jpg,CommonAccessCardCredential
+PERSON-005,5678901234,"Mueller, Hans",CDR,Coast Guard,subjects/PERSON-005.jpg,CommonAccessCardCredential

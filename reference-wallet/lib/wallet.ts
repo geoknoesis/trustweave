@@ -16,18 +16,29 @@ import {
   b64uEncode,
   b64uDecode,
   b64uDecodeString,
+  signEd25519,
+  b64uEncodeString,
 } from './crypto'
-import { decodeSdJwtVc, presentSdJwtVc } from './sdjwt'
+import { decodeSdJwtVc, parseDisclosure } from './sdjwt'
+import { sha256 } from '@noble/hashes/sha256'
+import {
+  buildPlaintextDisclosure,
+  decryptClaimJwe,
+  isClaimJwePayload,
+} from './claim-jwe'
 import {
   loadHolder,
   saveHolder,
   loadCredentials,
-  addCredential,
+  upsertCredential,
   deleteCredential as deleteCredFromStorage,
   resetWallet as resetWalletStorage,
   type HolderIdentity,
   type StoredCredential,
 } from './storage'
+import { credentialBusinessKey } from './credential-dedup'
+import { assertCredentialBoundToHolder, isCredentialBoundToHolder } from './holder-binding'
+import { randomUuid } from './uuid'
 
 export interface WalletState {
   holder: HolderIdentity
@@ -36,22 +47,57 @@ export interface WalletState {
 
 /** Bootstrap. Idempotent — generates a holder identity on first run. */
 export function bootstrap(): WalletState {
-  let holder = loadHolder()
-  if (!holder) {
-    const keyPair = generateEd25519KeyPair()
-    holder = {
-      did: publicKeyToDidKey(keyPair.publicKey),
-      publicKey: b64uEncode(keyPair.publicKey),
-      privateKey: b64uEncode(keyPair.privateKey),
-      createdAt: new Date().toISOString(),
-    }
-    saveHolder(holder)
-  }
+  const holder = loadOrCreateHolder()
+  pruneCredentialsNotBoundToHolder(holder.did)
   return { holder, credentials: loadCredentials() }
+}
+
+function loadOrCreateHolder(): HolderIdentity {
+  const existing = loadHolder()
+  if (existing) {
+    const derivedDid = publicKeyToDidKey(b64uDecode(existing.publicKey))
+    if (derivedDid !== existing.did) {
+      throw new Error('Wallet identity is corrupted. Reset wallet and start again.')
+    }
+    return existing
+  }
+
+  if (loadCredentials().length > 0) {
+    throw new Error(
+      'Wallet identity was lost but credentials remain. Reset wallet, then Add → scan issuer QR again.',
+    )
+  }
+
+  const keyPair = generateEd25519KeyPair()
+  const holder: HolderIdentity = {
+    did: publicKeyToDidKey(keyPair.publicKey),
+    publicKey: b64uEncode(keyPair.publicKey),
+    privateKey: b64uEncode(keyPair.privateKey),
+    createdAt: new Date().toISOString(),
+  }
+  saveHolder(holder)
+  return holder
+}
+
+function pruneCredentialsNotBoundToHolder(holderDid: string): void {
+  for (const cred of loadCredentials()) {
+    if (!isCredentialBoundToHolder(cred, holderDid)) {
+      deleteCredFromStorage(cred.id)
+    }
+  }
+}
+
+export interface StoreResult {
+  credential: StoredCredential
+  /** True when an existing wallet record was updated instead of creating a new one. */
+  replaced: boolean
 }
 
 /**
  * Store a received credential. Accepts either VC-JWT or SD-JWT VC.
+ *
+ * Re-scanning or re-receiving the same logical credential (same issuer, subject, type,
+ * and identifying claims) updates the existing record instead of adding a duplicate.
  *
  * @param credential the credential string (compact JWS or SD-JWT VC compact form)
  * @param format media type identifier
@@ -62,12 +108,13 @@ export function store(
   credential: string,
   format: StoredCredential['format'],
   selectivelyDisclosable: string[] = [],
-): StoredCredential {
+): StoreResult {
+  const holder = loadOrCreateHolder()
   const meta = format === 'vc+sd-jwt'
     ? extractSdJwtMeta(credential)
     : extractVcJwtMeta(credential)
   const cred: StoredCredential = {
-    id: crypto.randomUUID(),
+    id: randomUuid(),
     format,
     credential,
     receivedAt: new Date().toISOString(),
@@ -77,8 +124,28 @@ export function store(
     preview: meta.preview,
     selectivelyDisclosable,
   }
-  addCredential(cred)
-  return cred
+  const result = upsertCredential(cred)
+  pruneStaleCredentialsForBusinessIdentity(cred)
+  pruneCredentialsNotBoundToHolder(holder.did)
+  if (!isCredentialBoundToHolder(result.credential, holder.did)) {
+    deleteCredFromStorage(result.credential.id)
+    throw new Error('Credential was not issued to this wallet. Scan the issuer QR again.')
+  }
+  return result
+}
+
+/** Drop older copies of the same credential issued to a previous wallet identity. */
+function pruneStaleCredentialsForBusinessIdentity(latest: StoredCredential): void {
+  const businessKey = credentialBusinessKey(latest)
+  for (const existing of loadCredentials()) {
+    if (existing.id === latest.id) continue
+    if (
+      credentialBusinessKey(existing) === businessKey &&
+      existing.subjectDid !== latest.subjectDid
+    ) {
+      deleteCredFromStorage(existing.id)
+    }
+  }
 }
 
 export function list(): StoredCredential[] {
@@ -112,12 +179,12 @@ export function resetWallet(): void {
  *   discloses nothing — verifier sees only the credential type + issuer + holder
  *   binding. Ignored for VC-JWT presentations (all claims always disclosed).
  */
-export function createPresentation(
+export async function createPresentation(
   credentialIds: string[],
   verifierUri: string,
   challenge: string,
   disclose: string[] = [],
-): string {
+): Promise<string> {
   const holder = loadHolder()
   if (!holder) throw new Error('Wallet not bootstrapped')
   const creds = loadCredentials().filter((c) => credentialIds.includes(c.id))
@@ -128,7 +195,8 @@ export function createPresentation(
 
   // SD-JWT VC: spec-compliant single-credential path with KB-JWT.
   if (creds.length === 1 && creds[0].format === 'vc+sd-jwt') {
-    return presentSdJwtVc({
+    assertCredentialBoundToHolder(creds[0].credential, creds[0].format, holder.did)
+    return presentSdJwtVcWithDecryption({
       sdJwtVc: creds[0].credential,
       selectDisclose: disclose,
       holderPrivateKey: privateKey,
@@ -155,6 +223,52 @@ export function createPresentation(
     },
   }
   return signJws(payload, privateKey, `${holder.did}#${holder.did.slice('did:key:'.length)}`)
+}
+
+/** Present SD-JWT VC; decrypts JWE claim values to plaintext when sharing (Option A). */
+async function presentSdJwtVcWithDecryption(args: {
+  sdJwtVc: string
+  selectDisclose: string[]
+  holderPrivateKey: Uint8Array
+  holderDid: string
+  audience: string
+  nonce: string
+  now: number
+}): Promise<string> {
+  const parts = args.sdJwtVc.split('~').filter((p) => p.length > 0)
+  if (parts.length < 1) throw new Error('Empty SD-JWT VC')
+  const issuerJwt = parts[0]
+  const allDisclosures = parts.slice(1)
+
+  const selected: string[] = []
+  for (const d of allDisclosures) {
+    const [, name, value] = parseDisclosure(d)
+    if (!args.selectDisclose.includes(name)) continue
+    if (isClaimJwePayload(value)) {
+      const plaintext = await decryptClaimJwe(value, args.holderPrivateKey)
+      selected.push(buildPlaintextDisclosure(name, plaintext))
+    } else {
+      selected.push(d)
+    }
+  }
+
+  const prefix = [issuerJwt, ...selected, ''].join('~')
+  const sdHash = b64uEncode(sha256(new TextEncoder().encode(prefix)))
+
+  const kbPayload = {
+    iat: args.now,
+    aud: args.audience,
+    nonce: args.nonce,
+    sd_hash: sdHash,
+  }
+  const header = { alg: 'EdDSA', typ: 'kb+jwt', kid: args.holderDid }
+  const encodedHeader = b64uEncodeString(JSON.stringify(header))
+  const encodedPayload = b64uEncodeString(JSON.stringify(kbPayload))
+  const signingInput = `${encodedHeader}.${encodedPayload}`
+  const signature = signEd25519(signingInput, args.holderPrivateKey)
+  const kbJwt = `${signingInput}.${b64uEncode(signature)}`
+
+  return prefix + kbJwt
 }
 
 // ----- internal helpers -----
@@ -194,15 +308,31 @@ function extractSdJwtMeta(sdJwtVc: string): CredentialMeta {
   // time the verifier may only see a subset.
   const disclosureMap: Record<string, unknown> = {}
   for (const d of decoded.disclosures) disclosureMap[d.name] = d.value
+  if (decoded.issuerPayload.registrationNumber) {
+    disclosureMap.registrationNumber = decoded.issuerPayload.registrationNumber
+  }
+  if (decoded.issuerPayload.personnelId) {
+    disclosureMap.personnelId = decoded.issuerPayload.personnelId
+  }
+  const title = vct === 'ActivityAuthorizationCredential' && disclosureMap.callsign
+    ? `Airspace: ${disclosureMap.callsign}`
+    : vct === 'DroneIdentificationCredential'
+      ? `FAA: ${disclosureMap.registrationNumber ?? disclosureMap.callsign ?? 'Drone ID'}`
+      : vct === 'CommonAccessCardCredential'
+        ? `CAC: ${disclosureMap.name ?? disclosureMap.personnelId ?? 'Personnel'}`
+        : vct
   const subtitle = String(
-    disclosureMap.name ?? disclosureMap.degree ?? disclosureMap.title ?? '',
+    disclosureMap.callsign ?? disclosureMap.name ?? disclosureMap.degree ?? disclosureMap.droneId
+      ?? disclosureMap.rank
+      ?? (disclosureMap.make && disclosureMap.model ? `${disclosureMap.make} ${disclosureMap.model}` : '')
+      ?? '',
   ) || undefined
 
   return {
     issuerDid,
     subjectDid,
     types: [vct],
-    preview: { title: vct, subtitle },
+    preview: { title, subtitle },
   }
 }
 

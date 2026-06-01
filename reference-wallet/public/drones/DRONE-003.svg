@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-label="DRONE-003 SF-BAY-CHARLIE">
+  <rect width="320" height="240" fill="#0f172a"/>
+  <ellipse cx="160" cy="120" rx="90" ry="28" fill="#581c87" opacity="0.35"/>
+  <g fill="#a855f7" stroke="#d8b4fe" stroke-width="2">
+    <circle cx="70" cy="70" r="28"/><circle cx="250" cy="70" r="28"/>
+    <circle cx="70" cy="170" r="28"/><circle cx="250" cy="170" r="28"/>
+    <rect x="120" y="105" width="80" height="30" rx="8" fill="#7e22ce"/>
+    <path d="M160 105 L160 85 L175 95 Z" fill="#c084fc"/>
+  </g>
+  <text x="160" y="225" text-anchor="middle" fill="#e2e8f0" font-family="system-ui,sans-serif" font-size="14">DRONE-003 - SF-BAY-CHARLIE</text>
+</svg>

@@ -1,7 +1,5 @@
 /**
  * Browser localStorage adapter for the reference wallet.
- *
- * Phase 1 → 2.5: storage shape extended to remember which disclosures the issuer
  * said are selectively-disclosable. The wallet uses that list to drive the
  * presentation consent UI (checkbox per disclosable claim).
  *
@@ -11,6 +9,8 @@
  * any production wallet. Phase 2.5 moves the holder key behind WebAuthn-bound
  * non-extractable WebCrypto keys for the web build.
  */
+
+import { credentialDedupKey } from './credential-dedup'
 
 const HOLDER_KEY = 'trustweave-wallet-holder'
 const CREDENTIALS_KEY = 'trustweave-wallet-credentials'
@@ -92,6 +92,27 @@ export function addCredential(cred: StoredCredential): void {
   const all = loadCredentials()
   all.push(cred)
   saveCredentials(all)
+}
+
+/** Insert or replace a credential with the same logical identity (issuer, subject, type, and stable claims). */
+export function upsertCredential(cred: StoredCredential): { credential: StoredCredential; replaced: boolean } {
+  const all = loadCredentials()
+  const key = credentialDedupKey(cred)
+  const idx = all.findIndex((c) => credentialDedupKey(c) === key)
+  if (idx >= 0) {
+    const updated: StoredCredential = {
+      ...all[idx],
+      ...cred,
+      id: all[idx].id,
+      receivedAt: new Date().toISOString(),
+    }
+    all[idx] = updated
+    saveCredentials(all)
+    return { credential: updated, replaced: true }
+  }
+  all.push(cred)
+  saveCredentials(all)
+  return { credential: cred, replaced: false }
 }
 
 export function deleteCredential(id: string): void {

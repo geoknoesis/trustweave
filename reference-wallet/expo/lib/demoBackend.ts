@@ -7,6 +7,11 @@
  * and re-running `npx expo start`.
  */
 import Constants from 'expo-constants'
+import {
+  claimIncomingCredentialOffer,
+  type IncomingCredentialOffer,
+  type WalletClaimResponse,
+} from './credentialOfferIngress'
 
 const baseUrl: string =
   (Constants.expoConfig?.extra?.demoBackendBaseUrl as string | undefined) ??
@@ -16,7 +21,34 @@ export interface CredentialOffer {
   format: 'vc+jwt' | 'vc+sd-jwt'
   credential: string
   issuer: string
+  trustDomainId?: string
+  studentId?: string
+  vct?: string
   selectivelyDisclosable?: string[]
+}
+
+export interface TrustDomainInfo {
+  domainId: string
+  name: string
+  description: string
+  country: string
+  registrarContact: string
+  defaultStudentId: string
+}
+
+export interface DegreeSummary {
+  studentId: string
+  name: string
+  degree: string
+  major: string
+  vct: string
+}
+
+export interface TrustDomainDiscovery {
+  issuerDid: string
+  domain: TrustDomainInfo
+  degrees: DegreeSummary[]
+  acceptedCredentialTypes: string[]
 }
 
 export interface PresentationRequestParams {
@@ -47,16 +79,31 @@ export interface VerificationResponse {
   credentials?: VerifiedCredentialView[]
 }
 
-export async function receiveCredential(subjectDid: string): Promise<CredentialOffer> {
-  const res = await fetch(
-    `${baseUrl}/api/demo-issuer/credential?subject=${encodeURIComponent(subjectDid)}`,
-  )
+export async function fetchTrustDomain(): Promise<TrustDomainDiscovery> {
+  const res = await fetch(`${baseUrl}/api/demo-issuer/trust-domain`)
+  if (!res.ok) throw new Error(`Trust domain HTTP ${res.status}`)
+  return (await res.json()) as TrustDomainDiscovery
+}
+
+export async function receiveCredential(subjectDid: string, studentId?: string): Promise<CredentialOffer> {
+  const params = new URLSearchParams({ subject: subjectDid })
+  if (studentId) params.set('studentId', studentId)
+  const res = await fetch(`${baseUrl}/api/demo-issuer/credential?${params}`)
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as { error?: string }
     throw new Error(body.error ?? `Issuer HTTP ${res.status}`)
   }
   return (await res.json()) as CredentialOffer
 }
+
+export async function claimCredentialOffer(
+  parsed: IncomingCredentialOffer,
+  holderDid: string,
+): Promise<WalletClaimResponse> {
+  return claimIncomingCredentialOffer(parsed, holderDid, baseUrl)
+}
+
+export { parseIncomingCredentialQr, type IncomingCredentialOffer } from './credentialOfferIngress'
 
 export async function fetchPresentationRequest(): Promise<PresentationRequestParams> {
   const res = await fetch(`${baseUrl}/api/demo-verifier/request`)

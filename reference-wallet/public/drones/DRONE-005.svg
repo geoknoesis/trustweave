@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-label="DRONE-005 SF-BAY-ECHO">
+  <rect width="320" height="240" fill="#0f172a"/>
+  <ellipse cx="160" cy="120" rx="90" ry="28" fill="#7f1d1d" opacity="0.35"/>
+  <g fill="#ef4444" stroke="#fca5a5" stroke-width="2">
+    <circle cx="70" cy="70" r="28"/><circle cx="250" cy="70" r="28"/>
+    <circle cx="70" cy="170" r="28"/><circle cx="250" cy="170" r="28"/>
+    <rect x="120" y="105" width="80" height="30" rx="8" fill="#b91c1c"/>
+    <path d="M160 105 L160 85 L175 95 Z" fill="#f87171"/>
+  </g>
+  <text x="160" y="225" text-anchor="middle" fill="#e2e8f0" font-family="system-ui,sans-serif" font-size="14">DRONE-005 - SF-BAY-ECHO</text>
+</svg>

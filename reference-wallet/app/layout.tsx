@@ -3,8 +3,8 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 
 export const metadata = {
-  title: 'TrustWeave Reference Wallet',
-  description: 'Walking-skeleton holder wallet demo for the TrustWeave Wallet SDK',
+  title: 'TrustWeave Wallet',
+  description: 'Store, view, and share your verified digital credentials',
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -14,13 +14,21 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <header className="app-header">
           <div className="container">
             <div>
-              <h1>TrustWeave Reference Wallet</h1>
-              <div className="subtitle">Phase 1 walking skeleton · not a product</div>
+              <h1>TrustWeave Wallet</h1>
+              <div className="subtitle">Your digital credentials library</div>
             </div>
             <nav>
-              <Link href="/">Wallet</Link>
-              <Link href="/receive">Receive</Link>
-              <Link href="/present">Present</Link>
+              <Link href="/">My credentials</Link>
+              <Link href="/demos">Demos</Link>
+              <Link href="/receive">Add</Link>
+              <Link href="/present">Share</Link>
+              <Link href="/verifier">Verifier</Link>
+              <Link href="/airspace/gate">Airspace gate</Link>
+              <Link href="/issuer/faa">FAA registry</Link>
+              <Link href="/issuer/cac">CAC roster</Link>
+              <Link href="/issuer/airspace">Drones</Link>
+              <Link href="/issuer/degrees">Degrees</Link>
+              <Link href="/issuer/offer">Issuer</Link>
             </nav>
           </div>
         </header>
@@ -31,7 +39,25 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               github.com/geoknoesis/trustweave
             </a>
             {' · '}
-            <a href="/api/demo-issuer/credential?subject=did:key:z6MkpTHR8VNsBxYAAWHut2Geadd9jSwuBV8xRoAnwWsdvktH" target="_blank" rel="noreferrer">
+            <Link href="/demos">demos</Link>
+            {' · '}
+            <a href="/api/demo-issuer/cac/trust-domain" target="_blank" rel="noreferrer">
+              CAC API
+            </a>
+            {' · '}
+            <a href="/api/demo-issuer/faa/trust-domain" target="_blank" rel="noreferrer">
+              FAA registry API
+            </a>
+            {' · '}
+            <a href="/api/demo-issuer/spatial/trust-domain" target="_blank" rel="noreferrer">
+              airspace API
+            </a>
+            {' · '}
+            <a href="/api/demo-issuer/trust-domain" target="_blank" rel="noreferrer">
+              university API
+            </a>
+            {' · '}
+            <a href="/api/demo-issuer/credential?subject=did:key:z6MkpTHR8VNsBxYAAWHut2Geadd9jSwuBV8xRoAnwWsdvktH&studentId=STU-001" target="_blank" rel="noreferrer">
               demo issuer
             </a>
             {' · '}

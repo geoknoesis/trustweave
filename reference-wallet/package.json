@@ -8,16 +8,21 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "resize-demo-photos": "python scripts/resize-demo-photos.py",
+    "generate-subject-portraits": "python scripts/generate-subject-portraits.py"
   },
   "dependencies": {
+    "@noble/curves": "^1.9.0",
+    "@noble/ed25519": "2.1.0",
+    "@noble/hashes": "1.4.0",
+    "bs58": "6.0.0",
+    "html5-qrcode": "^2.3.8",
+    "jose": "5.6.3",
     "next": "14.2.5",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "jose": "5.6.3",
-    "@noble/ed25519": "2.1.0",
-    "@noble/hashes": "1.4.0",
-    "bs58": "6.0.0"
+    "react-qr-code": "^2.0.15"
   },
   "devDependencies": {
     "@types/node": "20.14.10",

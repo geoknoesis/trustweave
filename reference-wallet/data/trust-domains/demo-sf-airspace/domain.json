@@ -1,0 +1,14 @@
+{
+  "domainId": "demo-sf-airspace",
+  "name": "San Francisco Bay Controlled Airspace",
+  "description": "Predefined demonstration spatial domain — drone roster preloaded at startup.",
+  "authorityContact": "utm@demo-sf-airspace.trustweave.example",
+  "defaultDroneId": "DRONE-001",
+  "boundary": {
+    "minLat": 37.5,
+    "maxLat": 38.0,
+    "minLon": -122.6,
+    "maxLon": -122.2
+  },
+  "allowedActivities": ["data-collection", "monitoring", "inspection"]
+}

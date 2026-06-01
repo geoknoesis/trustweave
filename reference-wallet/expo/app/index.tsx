@@ -1,12 +1,18 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { Link, useFocusEffect } from 'expo-router'
+import { CredentialDetailModal } from '@/components/CredentialDetailModal'
+import { CredentialLibraryCard } from '@/components/CredentialLibraryCard'
+import { HolderDidQr } from '@/components/HolderDidQr'
 import { bootstrap, deleteCredential, list, resetWallet, type WalletState } from '@/lib/wallet'
 import type { StoredCredential } from '@/lib/storage'
+import { theme } from '@/lib/credentialDisplay'
 
 export default function HomeScreen() {
   const [state, setState] = useState<WalletState | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [detailCred, setDetailCred] = useState<StoredCredential | null>(null)
+  const [showIdentity, setShowIdentity] = useState(false)
 
   const refresh = useCallback(async () => {
     try {
@@ -22,38 +28,35 @@ export default function HomeScreen() {
     refresh()
   }, [refresh])
 
-  // Refresh when the tab regains focus (so a Receive in another tab shows up here).
   useFocusEffect(useCallback(() => {
     list()
-      .then((creds) => {
-        setState((prev) => (prev ? { ...prev, credentials: creds } : prev))
-      })
-      .catch((e) => {
-        setError(e instanceof Error ? e.message : String(e))
-      })
+      .then((creds) => setState((prev) => (prev ? { ...prev, credentials: creds } : prev)))
+      .catch((e) => setError(e instanceof Error ? e.message : String(e)))
   }, []))
 
   const onDelete = (id: string) =>
-    Alert.alert('Delete credential?', 'This cannot be undone.', [
+    Alert.alert('Remove credential?', 'This removes it from your wallet on this device.', [
       { text: 'Cancel', style: 'cancel' },
       {
-        text: 'Delete',
+        text: 'Remove',
         style: 'destructive',
         onPress: async () => {
           await deleteCredential(id)
+          setDetailCred(null)
           refresh()
         },
       },
     ])
 
   const onReset = () =>
-    Alert.alert('Reset wallet?', 'Wipes your holder identity AND every stored credential.', [
+    Alert.alert('Reset wallet?', 'This removes all credentials and your digital identity.', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Reset',
         style: 'destructive',
         onPress: async () => {
           await resetWallet()
+          setShowIdentity(false)
           refresh()
         },
       },
@@ -61,98 +64,147 @@ export default function HomeScreen() {
 
   if (error) {
     return (
-      <View style={s.center}>
-        <Text style={s.errorTitle}>Bootstrap failed</Text>
+      <View style={[s.center, s.flex]}>
+        <Text style={s.errorTitle}>Could not open wallet</Text>
         <Text style={s.errorBody}>{error}</Text>
       </View>
     )
   }
   if (!state) {
-    return <View style={s.center}><Text>Initialising wallet…</Text></View>
+    return (
+      <View style={[s.center, s.flex]}>
+        <Text style={s.muted}>Opening your wallet…</Text>
+      </View>
+    )
   }
 
-  return (
-    <ScrollView style={s.scroll} contentContainerStyle={s.container}>
-      <View style={s.panel}>
-        <Text style={s.h2}>Your wallet</Text>
-        <View style={s.identity}>
-          <Text style={s.label}>HOLDER DID</Text>
-          <Text style={s.mono}>{state.holder.did}</Text>
-        </View>
-        <Text style={s.muted}>
-          🔒 Key in expo-secure-store (Keychain on iOS, EncryptedSharedPreferences on Android).
-          The Ed25519 seed itself is loaded into JS for signing — that's the React Native
-          trade-off. For hardware-bound Ed25519 see the native Android wallet's Phase 2.5b.
-        </Text>
-      </View>
+  const count = state.credentials.length
 
-      <View style={s.panel}>
-        <Text style={s.h2}>Credentials ({state.credentials.length})</Text>
-        {state.credentials.length === 0 ? (
-          <View style={s.empty}>
-            <Text style={s.emptyIcon}>📭</Text>
-            <Text style={s.muted}>No credentials yet.</Text>
+  return (
+    <>
+      <ScrollView style={[s.scroll, s.flex]} contentContainerStyle={s.container}>
+        <View style={s.hero}>
+          <Text style={s.heroTitle}>My credentials</Text>
+          <Text style={s.heroSub}>
+            {count === 0
+              ? 'Your personal library of verified credentials.'
+              : `${count} credential${count === 1 ? '' : 's'} stored on this device.`}
+          </Text>
+        </View>
+
+        {count === 0 ? (
+          <View style={s.emptyPanel}>
+            <Text style={s.emptyIcon}>📚</Text>
+            <Text style={s.emptyTitle}>Your library is empty</Text>
+            <Text style={s.muted}>
+              Scan a QR code from an issuer to add your first credential — like Europass stores digital diplomas.
+            </Text>
             <Link href="/receive" asChild>
-              <TouchableOpacity style={s.btn}><Text style={s.btnText}>Receive a demo credential</Text></TouchableOpacity>
+              <TouchableOpacity style={s.btn}><Text style={s.btnText}>Add credential</Text></TouchableOpacity>
             </Link>
           </View>
         ) : (
-          state.credentials.map((c) => (
-            <CredCard key={c.id} cred={c} onDelete={() => onDelete(c.id)} />
-          ))
+          <>
+            <View style={s.actionRow}>
+              <Link href="/receive" asChild>
+                <TouchableOpacity style={s.btn}><Text style={s.btnText}>Add</Text></TouchableOpacity>
+              </Link>
+              <Link href="/present" asChild>
+                <TouchableOpacity style={s.btnOutline}><Text style={s.btnOutlineText}>Share</Text></TouchableOpacity>
+              </Link>
+            </View>
+            {state.credentials.map((c) => (
+              <CredentialLibraryCard key={c.id} cred={c} onPress={() => setDetailCred(c)} />
+            ))}
+          </>
         )}
-      </View>
 
-      <View style={s.panel}>
-        <Text style={s.h3}>Danger zone</Text>
-        <Text style={s.muted}>Wipe the wallet — irrecoverable.</Text>
-        <TouchableOpacity style={s.btnDanger} onPress={onReset}>
-          <Text style={s.btnText}>Reset wallet</Text>
+        <TouchableOpacity
+          style={s.identityToggle}
+          onPress={() => setShowIdentity((v) => !v)}
+        >
+          <Text style={s.identityToggleText}>
+            {showIdentity ? '▾' : '▸'} Your digital identity
+          </Text>
         </TouchableOpacity>
-      </View>
-    </ScrollView>
-  )
-}
+        {showIdentity && (
+          <View style={s.identityPanel}>
+            <Text style={s.muted}>
+              Show this QR when someone needs to identify you before you share a credential.
+            </Text>
+            <HolderDidQr did={state.holder.did} />
+            <Text style={s.mono}>{state.holder.did}</Text>
+            <TouchableOpacity onPress={onReset} style={s.resetLink}>
+              <Text style={s.resetText}>Reset wallet</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </ScrollView>
 
-function CredCard({ cred, onDelete }: { cred: StoredCredential; onDelete: () => void }) {
-  return (
-    <View style={s.credCard}>
-      <Text style={s.credIcon}>🎓</Text>
-      <View style={{ flex: 1 }}>
-        <Text style={s.credTitle}>{cred.preview.title} <Text style={s.credFormat}>({cred.format})</Text></Text>
-        {cred.preview.subtitle && <Text style={s.credSubtitle}>{cred.preview.subtitle}</Text>}
-        <Text style={s.credIssuer}>issued by {cred.issuerDid.slice(0, 30)}…</Text>
-      </View>
-      <TouchableOpacity onPress={onDelete}>
-        <Text style={s.deleteIcon}>🗑️</Text>
-      </TouchableOpacity>
-    </View>
+      <CredentialDetailModal
+        cred={detailCred}
+        visible={detailCred !== null}
+        onClose={() => setDetailCred(null)}
+        onDelete={() => detailCred && onDelete(detailCred.id)}
+      />
+    </>
   )
 }
 
 const s = StyleSheet.create({
-  scroll: { backgroundColor: '#f8fafc' },
-  container: { padding: 16, gap: 16 },
+  flex: { flex: 1 },
+  scroll: { backgroundColor: theme.bg },
+  container: { padding: 16, paddingBottom: 32 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  panel: { backgroundColor: '#ffffff', borderRadius: 8, padding: 16, gap: 8, borderWidth: 1, borderColor: '#e2e8f0' },
-  h2: { color: '#1e3a8a', fontSize: 18, fontWeight: '600' },
-  h3: { color: '#1e3a8a', fontSize: 16, fontWeight: '600' },
-  label: { color: '#64748b', fontSize: 11, letterSpacing: 0.5, textTransform: 'uppercase' },
-  mono: { fontFamily: 'Menlo', fontSize: 12, color: '#1f2937' },
-  muted: { color: '#64748b', fontSize: 13 },
-  identity: { backgroundColor: '#f1f5f9', borderLeftWidth: 4, borderLeftColor: '#0d9488', padding: 12, borderRadius: 6, gap: 4 },
-  empty: { alignItems: 'center', paddingVertical: 24, gap: 8 },
-  emptyIcon: { fontSize: 32 },
-  btn: { backgroundColor: '#1e3a8a', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 6, marginTop: 8 },
-  btnDanger: { backgroundColor: '#dc2626', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 6, alignSelf: 'flex-start', marginTop: 4 },
-  btnText: { color: '#ffffff', fontWeight: '500' },
-  credCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f1f5f9', padding: 12, borderRadius: 6, gap: 12 },
-  credIcon: { fontSize: 28 },
-  credTitle: { color: '#1e3a8a', fontWeight: '600' },
-  credFormat: { fontSize: 10, color: '#64748b', fontWeight: '400' },
-  credSubtitle: { color: '#1f2937', fontSize: 13 },
-  credIssuer: { color: '#64748b', fontSize: 11, fontFamily: 'Menlo' },
-  deleteIcon: { fontSize: 20 },
+  hero: { marginBottom: 16, paddingTop: 4 },
+  heroTitle: { fontSize: 26, fontWeight: '700', color: theme.primary },
+  heroSub: { fontSize: 14, color: theme.textMuted, marginTop: 4 },
+  emptyPanel: {
+    backgroundColor: theme.surface,
+    borderRadius: theme.radius,
+    padding: 28,
+    alignItems: 'center',
+    gap: 10,
+    borderWidth: 1,
+    borderColor: theme.border,
+    ...theme.shadow,
+  },
+  emptyIcon: { fontSize: 40 },
+  emptyTitle: { fontSize: 17, fontWeight: '600', color: theme.primary },
+  muted: { color: theme.textMuted, fontSize: 14, textAlign: 'center' },
+  actionRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
+  btn: {
+    backgroundColor: theme.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 11,
+    borderRadius: 999,
+    alignItems: 'center',
+    minWidth: 100,
+  },
+  btnText: { color: '#ffffff', fontWeight: '600' },
+  btnOutline: {
+    borderWidth: 2,
+    borderColor: theme.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 9,
+    borderRadius: 999,
+    alignItems: 'center',
+    minWidth: 100,
+  },
+  btnOutlineText: { color: theme.primary, fontWeight: '600' },
+  identityToggle: { marginTop: 20, paddingVertical: 12 },
+  identityToggleText: { color: theme.primary, fontWeight: '600', fontSize: 15 },
+  identityPanel: {
+    backgroundColor: theme.surface,
+    borderRadius: theme.radius,
+    padding: 16,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: theme.border,
+  },
+  mono: { fontFamily: 'Menlo', fontSize: 10, color: theme.textMuted },
+  resetLink: { alignSelf: 'center', paddingVertical: 8 },
+  resetText: { color: '#dc2626', fontSize: 14, fontWeight: '500' },
   errorTitle: { color: '#dc2626', fontWeight: '600', fontSize: 16 },
-  errorBody: { color: '#64748b', marginTop: 4, textAlign: 'center' },
+  errorBody: { color: theme.textMuted, marginTop: 4, textAlign: 'center' },
 })

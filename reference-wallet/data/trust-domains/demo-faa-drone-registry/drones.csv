@@ -1,0 +1,6 @@
+droneId,registrationNumber,make,model,serialNumber,weightClass,callsign,photoFile,vct
+DRONE-001,FA3N8X2K91,DJI,Mavic 3 Enterprise,SN-M3E-88421,Category 2,SF-BAY-ALPHA,drones/DRONE-001.jpg,DroneIdentificationCredential
+DRONE-002,FA3P4M7R22,Autel,Evo Max 4T,SN-EM4T-10293,Category 2,SF-BAY-BRAVO,drones/DRONE-002.jpg,DroneIdentificationCredential
+DRONE-003,FA3Q1K9T55,Skydio,X10D,SN-X10D-44017,Category 2,SF-BAY-CHARLIE,drones/DRONE-003.jpg,DroneIdentificationCredential
+DRONE-004,FA3R6H2W88,Parrot,ANAFI USA,SN-AUSA-77102,Category 1,SF-BAY-DELTA,drones/DRONE-004.jpg,DroneIdentificationCredential
+DRONE-005,FA3S0L5Y33,Freefly,Astro,SN-ASTRO-55901,Category 2,SF-BAY-ECHO,drones/DRONE-005.jpg,DroneIdentificationCredential

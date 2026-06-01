@@ -1,0 +1,8 @@
+{
+  "domainId": "demo-university",
+  "name": "TrustWeave Demo University",
+  "description": "Predefined demonstration trust domain — registrar CSV preloaded at startup.",
+  "country": "US",
+  "registrarContact": "registrar@demo-university.trustweave.example",
+  "defaultStudentId": "STU-001"
+}

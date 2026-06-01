@@ -5,6 +5,11 @@ build/
 *.tsbuildinfo
 .env.local
 .env.*.local
+.demo-server-keys.json
 .DS_Store
 npm-debug.log*
 yarn-error.log*
+
+# Expo local cache and temp export output (generated build artifacts)
+.expo/
+.tmp-export/

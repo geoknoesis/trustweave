@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 480" role="img" aria-label="PERSON-002 Garcia, Maria">
+  <rect width="360" height="480" fill="#e2e8f0"/>
+  <ellipse cx="180" cy="168" rx="78" ry="92" fill="#c68642"/>
+  <ellipse cx="180" cy="395" rx="118" ry="75" fill="#0369a1"/>
+  <rect x="0" y="430" width="360" height="50" fill="#0f172a"/>
+  <text x="180" y="460" text-anchor="middle" fill="#f8fafc" font-family="system-ui,sans-serif" font-size="12">PERSON-002 - Garcia, Maria</text>
+</svg>

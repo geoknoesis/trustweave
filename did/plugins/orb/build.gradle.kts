@@ -11,6 +11,10 @@ dependencies {
     implementation(project(":did:plugins:sidetree-core"))
     implementation(project(":credentials:credential-api"))
     implementation(project(":kms:kms-core"))
+    // Anchor SPI types — AnchorRef / AnchorResult / PaymentContext / TokenAmount /
+    // AssetRef.OperatorCredit are surfaced by OrbAnchorClient so the Trusted
+    // Domain Manager can account for operator credits.
+    implementation(project(":anchors:anchor-core"))
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)

@@ -35,6 +35,14 @@ package org.trustweave.did.orb
  *                        `--allowed-origins` lists `host.docker.internal:48326`).
  *                        Whatever value you pass MUST also appear in Orb's
  *                        `--allowed-origins`.
+ * @property operatorId Stable identifier of the Orb node operator. Used to
+ *                      build the [org.trustweave.anchor.payment.AssetRef.OperatorCredit]
+ *                      asset reference surfaced through fee estimation and
+ *                      anchor results. Defaults to the host component of
+ *                      [baseUrl] (or [baseUrl] itself when no host can be
+ *                      parsed). Operators with multiple base URLs (blue/green,
+ *                      Docker host bridging) should set this explicitly so
+ *                      credit accounting remains stable.
  */
 data class OrbDidConfig(
     val baseUrl: String,
@@ -44,6 +52,7 @@ data class OrbDidConfig(
     val authHeader: Pair<String, String>? = null,
     val timeoutSeconds: Long = 30L,
     val anchorOrigin: String? = null,
+    val operatorId: String? = null,
 ) {
 
     init {
@@ -58,6 +67,24 @@ data class OrbDidConfig(
 
     /** Fully qualified URL for the identifiers endpoint (without DID suffix). */
     val identifiersUrl: String get() = "${baseUrl.trimEnd('/')}$identifiersPath"
+
+    /**
+     * Effective operator id — explicit [operatorId] when set, otherwise the
+     * host component of [baseUrl]. Falls back to the trimmed [baseUrl] when
+     * URI parsing fails (defensive; init already rejects blank values).
+     */
+    val effectiveOperatorId: String
+        get() = operatorId ?: runCatching { java.net.URI(baseUrl).host }
+            .getOrNull()
+            ?.takeIf { it.isNotBlank() }
+            ?: baseUrl.trimEnd('/')
+
+    /**
+     * CAIP-2-style chain identifier for this Orb node. Synthesised as
+     * `orb:<operator-id>` so fee accounting and ledger entries stay scoped
+     * per operator.
+     */
+    val chainId: String get() = "orb:$effectiveOperatorId"
 
     companion object {
         const val DEFAULT_NAMESPACE: String = "did:orb"
@@ -87,6 +114,8 @@ data class OrbDidConfig(
                 identifiersPath = map["identifiersPath"] as? String ?: DEFAULT_IDENTIFIERS_PATH,
                 authHeader = authHeader,
                 timeoutSeconds = (map["timeoutSeconds"] as? Number)?.toLong() ?: 30L,
+                anchorOrigin = map["anchorOrigin"] as? String,
+                operatorId = map["operatorId"] as? String,
             )
         }
     }

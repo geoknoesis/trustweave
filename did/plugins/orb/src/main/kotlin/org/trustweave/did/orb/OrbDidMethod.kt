@@ -397,4 +397,13 @@ class OrbDidMethod(
      * Internal access to the underlying Sidetree client for tests and advanced users.
      */
     internal val sidetreeClient: SidetreeOrbClient get() = sidetree
+
+    /**
+     * Anchoring facade that surfaces Orb's `OperatorCredit` cost model so a
+     * Trusted Domain Manager can account for Sidetree submissions. The Orb
+     * node operator pays the underlying chain — this client only meters
+     * operator credits (one per Sidetree operation) and enforces
+     * [org.trustweave.anchor.payment.PaymentContext.maxFee].
+     */
+    val anchorClient: OrbAnchorClient = OrbAnchorClient(sidetree, config)
 }

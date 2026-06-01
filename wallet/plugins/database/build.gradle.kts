@@ -16,7 +16,7 @@ dependencies {
     // JDBC drivers
     implementation("org.postgresql:postgresql:42.7.1")
     implementation("com.mysql:mysql-connector-j:8.2.0")
-    implementation("com.h2database:h2:2.2.224")
+    implementation("com.h2database:h2:2.4.240")
 
     // Connection pooling
     implementation("com.zaxxer:HikariCP:5.1.0")

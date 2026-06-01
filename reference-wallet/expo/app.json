@@ -32,6 +32,12 @@
         {
           "cameraPermission": "Allow TrustWeave Wallet to scan degree offer QR codes from the issuer."
         }
+      ],
+      [
+        "react-native-nfc-manager",
+        {
+          "nfcPermission": "Allow TrustWeave Wallet to read a verifier NFC tag to start a presentation."
+        }
       ]
     ],
     "experiments": {

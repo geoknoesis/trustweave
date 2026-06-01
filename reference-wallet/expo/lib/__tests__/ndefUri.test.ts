@@ -34,4 +34,9 @@ describe('decodeNdefTextPayload', () => {
   it('returns null on empty payload', () => {
     expect(decodeNdefTextPayload([])).toBeNull()
   })
+
+  it('returns null when the language length exceeds the payload', () => {
+    // status byte claims a 5-byte language code, but only 2 bytes follow
+    expect(decodeNdefTextPayload([0x05, ...bytesOf('ab')])).toBeNull()
+  })
 })

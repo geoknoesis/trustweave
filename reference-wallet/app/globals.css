@@ -170,6 +170,13 @@ h3 { color: var(--primary); font-size: 1.05rem; margin: 1rem 0 0.5rem 0; font-we
 }
 .detail-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); font-weight: 600; margin-bottom: 0.35rem; }
 .detail-claims { margin: 0; padding-left: 1.25rem; color: var(--text); }
+.detail-fields { margin: 0; display: grid; gap: 0.6rem; }
+.detail-field { display: grid; gap: 0.1rem; }
+.detail-field-name { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); font-weight: 600; display: flex; align-items: center; gap: 0.4rem; }
+.detail-field-value { margin: 0; color: var(--text); font-size: 0.95rem; word-break: break-word; }
+.detail-nested { border-left: 2px solid var(--border); padding-left: 0.6rem; }
+.detail-group > .detail-field-name { color: var(--text); font-size: 0.78rem; }
+.detail-field-tag { text-transform: none; letter-spacing: 0; font-size: 0.62rem; font-weight: 600; color: var(--primary); background: rgba(0,51,153,0.08); border-radius: 999px; padding: 0.05rem 0.4rem; }
 .detail-delete { background: none; border: none; color: var(--danger); font-weight: 500; cursor: pointer; margin: 1rem auto; display: block; padding: 0.5rem 1rem; }
 
 .scan-hero {

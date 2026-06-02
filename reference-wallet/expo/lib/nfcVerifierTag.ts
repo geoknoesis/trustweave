@@ -13,7 +13,8 @@ async function ensureStarted(): Promise<boolean> {
     await NfcManager.start()
     started = true
     return true
-  } catch {
+  } catch (e) {
+    if (__DEV__) console.warn('[nfc] NfcManager.start() failed:', e)
     return false
   }
 }
@@ -44,15 +45,17 @@ export async function readVerifierTagRaw(): Promise<string> {
     const records = tag?.ndefMessage ?? []
     for (const rec of records) {
       const payload = (rec.payload ?? []) as number[]
-      // NDEF type "U" (0x55) = URI record; "T" (0x54) = Text record.
-      const type = (rec.type ?? []) as number[]
-      const typeChar = type.length === 1 ? type[0] : 0
+      // Recognise NDEF well-known records only: type "U" (URI) or "T" (Text).
+      // react-native-nfc-manager may surface `type` as a byte array or a string.
+      const rawType = rec.type as number[] | string | undefined
+      const typeByte = Array.isArray(rawType) && rawType.length === 1 ? rawType[0] : 0
+      const typeStr = typeof rawType === 'string' ? rawType : ''
       const decoded =
-        typeChar === 0x55
+        typeByte === 0x55 || typeStr === 'U'
           ? decodeNdefUriPayload(payload)
-          : typeChar === 0x54
+          : typeByte === 0x54 || typeStr === 'T'
             ? decodeNdefTextPayload(payload)
-            : (decodeNdefUriPayload(payload) ?? decodeNdefTextPayload(payload))
+            : null
       if (decoded && decoded.trim()) return decoded.trim()
     }
     throw new Error('This tag has no verifier link on it.')

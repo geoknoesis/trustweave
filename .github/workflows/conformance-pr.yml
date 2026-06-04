@@ -1,4 +1,4 @@
-﻿name: Conformance Tests (PR)
+name: Conformance Tests (PR)
 
 on:
   pull_request:
@@ -29,7 +29,7 @@ jobs:
         run: ./gradlew :distribution:conformance:conformanceTest
       - name: Upload conformance report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: conformance-report-pr-${{ github.run_number }}
           path: distribution/conformance/build/reports/conformance/

@@ -107,6 +107,7 @@ class IssuanceDslTest {
                 issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDidId, keyId = issuerKey.id.value)
+            withTestClaimContexts() // Define ad-hoc test claims in the credential @context
         }.getOrThrow()
 
         assertNotNull(issuedCredential)
@@ -141,6 +142,7 @@ class IssuanceDslTest {
         val issuedCredential = trustWeave.issue {
             credential(credential)
             signedBy(issuerDid = issuerDidId, keyId = issuerKey.id.value)
+            withTestClaimContexts() // Define ad-hoc test claims in the credential @context
         }.getOrThrow()
 
         assertNotNull(issuedCredential)

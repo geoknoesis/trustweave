@@ -36,6 +36,8 @@ import java.nio.charset.StandardCharsets
  * ```
  * val options = AlgorandOptions(
  *     algodUrl = "https://testnet-api.algonode.cloud",
+ *     // Base64 of either the 32-byte Ed25519 seed or the 64-byte
+ *     // exported secret key (seed || public key, e.g. JS SDK `account.sk`).
  *     privateKey = "base64-encoded-key"
  * )
  * val client = AlgorandBlockchainAnchorClient(chainId, options)
@@ -85,12 +87,32 @@ class AlgorandBlockchainAnchorClient(
         val port = url.port.takeIf { it != -1 } ?: url.defaultPort
         algodClient = AlgodClient(url.host, port, algodToken)
 
-        // Initialize account if private key is provided
-        account = (options["privateKey"] as? String)?.let { privateKeyHex ->
+        // Initialize account if private key is provided.
+        // A present-but-invalid private key is a configuration error and must fail
+        // closed instead of silently degrading to the in-memory test fallback.
+        account = (options["privateKey"] as? String)?.let { encodedKey ->
             try {
-                Account(Encoder.decodeFromBase64(privateKeyHex))
+                // Decode strictly: the SDK's lenient decoder + seed-based Account
+                // constructor accept almost any input, so garbage keys would
+                // otherwise produce a "valid" account for the wrong address.
+                // Accepted formats: 32-byte Ed25519 seed, or the 64-byte exported
+                // secret key (seed || public key) produced by common Algorand
+                // tooling (JS SDK `account.sk`, `algokey`) — the seed is its
+                // first 32 bytes.
+                val decoded = java.util.Base64.getDecoder().decode(encodedKey)
+                require(decoded.size == 32 || decoded.size == 64) {
+                    "decoded key must be a 32-byte Ed25519 seed or 64-byte exported secret key, " +
+                        "got ${decoded.size} bytes"
+                }
+                Account(decoded.copyOf(32))
             } catch (e: Exception) {
-                null // Account creation failed, will use in-memory storage
+                throw BlockchainException.ConfigurationFailed(
+                    chainId = chainId,
+                    configKey = "privateKey",
+                    reason = "Invalid Algorand private key (expected base64 of a 32-byte seed " +
+                        "or 64-byte exported secret key): ${e.message ?: "Unknown error"}",
+                    cause = e
+                )
             }
         }
     }
@@ -194,7 +216,8 @@ class AlgorandBlockchainAnchorClient(
                     operation = "writePayload",
                     payloadSize = payloadBytes.size.toLong(),
                     reason = "Failed to anchor payload to ${getBlockchainName()}: ${e.message ?: "Unknown error"}",
-                ).apply { initCause(e) }
+                    cause = e,
+                )
             }
         }
     }

@@ -126,10 +126,15 @@ class IndyBlockchainAnchorClientWireTest {
     fun `canSubmitTransaction is false without signing key`() {
         val client = IndyBlockchainAnchorClient(
             chainId = IndyBlockchainAnchorClient.BCOVRIN_TESTNET,
-            options = mapOf("did" to "V4SGRU86Z58d6TV7PBUe6f")
+            options = mapOf(
+                "did" to "V4SGRU86Z58d6TV7PBUe6f",
+                org.trustweave.anchor.AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE to true
+            )
         )
-        // Indirect: with no signer the abstract base falls back to in-memory storage,
-        // so a write succeeds and returns a synthetic hash with "indy_test_" prefix.
+        // Indirect: with no signer and the in-memory test mode explicitly enabled,
+        // a write succeeds and returns a synthetic hash with "indy_test_" prefix.
+        // Without the opt-in flag the same write fails closed (see
+        // IndyBlockchainAnchorClientTest).
         val payload = buildJsonObject { put("k", JsonPrimitive("v")) }
         val result = runBlocking { client.writePayload(payload) }
         assertTrue(result.ref.txHash.startsWith("indy_test_"))

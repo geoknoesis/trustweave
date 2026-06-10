@@ -31,16 +31,15 @@ class BlockchainExceptionsTest {
     @Test
     fun `test BlockchainException TransactionFailed with cause`() {
         val cause = RuntimeException("Underlying error")
-        // BlockchainException extends TrustWeaveException which extends Exception
-        // Exception.initCause can only be called if cause is null
-        // Since we can't set cause in constructor, we test the exception structure
         val exception = BlockchainException.TransactionFailed(
             chainId = "algorand:testnet",
-            reason = "Transaction failed"
+            reason = "Transaction failed",
+            cause = cause
         )
 
         assertTrue(exception.message.contains("[Chain: algorand:testnet]"))
         assertTrue(exception.message.contains("Transaction failed"))
+        assertSame(cause, exception.cause)
     }
 
     @Test

@@ -213,28 +213,23 @@ class S3MessageArchiver(
         return messages
     }
 
-    private suspend fun uploadToS3(key: String, data: ByteArray) {
-        // Upload to S3 using AWS SDK
-        // Implementation depends on S3 client
-        // Example:
-        // val request = PutObjectRequest.builder()
-        //     .bucket(bucketName)
-        //     .key(key)
-        //     .build()
-        // s3Client.putObject(request, RequestBody.fromBytes(data))
-    }
+    // Fail closed: the previous stubs silently dropped uploads and returned empty downloads,
+    // so archiveMessages reported durable storage that never happened. Wire a real AWS S3
+    // client integration before using this archiver.
+    private suspend fun uploadToS3(key: String, data: ByteArray): Unit =
+        throw UnsupportedOperationException(
+            "S3MessageArchiver requires an AWS S3 client integration; upload of '$key' is not implemented."
+        )
 
-    private suspend fun downloadFromS3(key: String): ByteArray {
-        // Download from S3 using AWS SDK
-        // Implementation depends on S3 client
-        return ByteArray(0) // Placeholder
-    }
+    private suspend fun downloadFromS3(key: String): ByteArray =
+        throw UnsupportedOperationException(
+            "S3MessageArchiver requires an AWS S3 client integration; download of '$key' is not implemented."
+        )
 
-    private suspend fun listS3Objects(prefix: String): List<String> {
-        // List objects in S3 with prefix
-        // Implementation depends on S3 client
-        return emptyList() // Placeholder
-    }
+    private suspend fun listS3Objects(prefix: String): List<String> =
+        throw UnsupportedOperationException(
+            "S3MessageArchiver requires an AWS S3 client integration; listing '$prefix' is not implemented."
+        )
 
     private suspend fun markAsArchived(messageIds: List<String>) {
         // Update database to mark messages as archived

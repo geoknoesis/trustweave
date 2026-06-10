@@ -29,13 +29,6 @@ import org.trustweave.kms.results.SignResult
 import org.trustweave.did.model.VerificationMethod
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSHeader
-import com.nimbusds.jose.JWSObject
-import com.nimbusds.jose.Payload
-import com.nimbusds.jose.crypto.Ed25519Signer
-import com.nimbusds.jose.crypto.ECDSASigner
-import com.nimbusds.jose.jwk.Curve
-import com.nimbusds.jose.jwk.ECKey
-import com.nimbusds.jose.jwk.OctetKeyPair
 import com.nimbusds.jose.util.Base64URL
 import kotlinx.serialization.json.*
 import kotlinx.datetime.Clock
@@ -102,30 +95,41 @@ internal class VcLdProofEngine(
         
         // Generate credential ID if not provided (must be consistent between document building and credential object)
         val credentialId = request.id ?: CredentialId("urn:uuid:${UUID.randomUUID()}")
-        
+
+        val requestedSuite = request.proofOptions?.additionalOptions?.get("proofType")
+            ?.toString()?.removeSurrounding("\"")
+            ?: CredentialConstants.ProofTypes.ED25519_SIGNATURE_2020
+
+        val proofSuiteContext = if (requestedSuite == CredentialConstants.ProofTypes.JSON_WEB_SIGNATURE_2020) {
+            CredentialConstants.SecuritySuites.JSON_WEB_SIGNATURE_2020_V1
+        } else {
+            CredentialConstants.SecuritySuites.ED25519_2020_V1
+        }
+
+        // Resolve the credential's @context: contexts declared by the request are preserved
+        // (claim terms must be defined or canonicalization fails closed), the proof-suite
+        // context is appended only if absent.
+        val contexts = JsonLdDocumentBuilder.resolveContexts(request, proofSuiteContext)
+
         // Build VC document for canonicalization (must use same ID that will be in the credential object)
-        val vcDocument = JsonLdDocumentBuilder.build(request, credentialId.value)
-        
+        val vcDocument = JsonLdDocumentBuilder.build(request, credentialId.value, contexts)
+
         // Canonicalize document (without proof)
         val canonicalDocument = canonicalizationPort.canonicalize(vcDocument)
         logger.debug("Canonicalized document for signing: length={}", canonicalDocument.length)
-        
-        // Generate signature using KMS
-        val signature = signDocument(canonicalDocument, keyId)
-        logger.debug("Generated signature for VC-LD credential: prefix={}", signature.take(20))
-        
+
         // Get verification method ID
         // request.issuerKeyId?.value might already be a full verification method ID (did:key:...#key-1)
         // or just a fragment (key-1). getVerificationMethod handles both cases.
         val verificationMethodIdString = request.issuerKeyId?.value
             ?: throw IllegalArgumentException("issuerKeyId is required")
-        
+
         val verificationMethod = if (verificationMethodIdString.contains("#") && verificationMethodIdString.startsWith("did:")) {
             verificationMethodIdString
         } else {
             vmResolver.buildVerificationMethodId(issuerIri.value, verificationMethodIdString)
         }
-        
+
         // Create Linked Data Proof
         val proofPurpose = request.proofOptions?.purpose?.standardValue ?: CredentialConstants.ProofPurposes.ASSERTION_METHOD
         val proofCreated = Clock.System.now()
@@ -133,18 +137,29 @@ internal class VcLdProofEngine(
             request.proofOptions?.challenge?.let { put("challenge", JsonPrimitive(it)) }
             request.proofOptions?.domain?.let { put("domain", JsonPrimitive(it)) }
         }
-        
-        val requestedSuite = request.proofOptions?.additionalOptions?.get("proofType")
-            ?.toString()?.removeSurrounding("\"")
-            ?: CredentialConstants.ProofTypes.ED25519_SIGNATURE_2020
+
+        // W3C Data Integrity: the signature must also cover the canonicalized proof options
+        // (proof node without proofValue/jws) so that challenge, domain, created,
+        // proofPurpose and verificationMethod cannot be rewritten after signing.
+        val proofOptionsDocument = ProofEngineUtils.buildProofOptionsDocument(
+            context = contexts,
+            proofType = requestedSuite,
+            created = proofCreated.toString(),
+            verificationMethod = verificationMethod,
+            proofPurpose = proofPurpose,
+            additionalProperties = additionalProperties
+        )
+        val canonicalProofOptions = canonicalizationPort.canonicalize(proofOptionsDocument)
+        val signingPayload = ProofEngineUtils.composeDataIntegrityPayload(canonicalProofOptions, canonicalDocument)
 
         // JsonWebSignature2020 uses a JWS-based proofValue; all other suites use base64url raw bytes
         val finalSignature = if (requestedSuite == CredentialConstants.ProofTypes.JSON_WEB_SIGNATURE_2020) {
-            signDocumentAsJws(canonicalDocument, keyId, request.proofOptions
+            signPayloadAsJws(signingPayload, keyId, request.proofOptions
                 ?.additionalOptions?.get("jwsAlgorithm")?.toString()?.removeSurrounding("\"") ?: "EdDSA")
         } else {
-            signature
+            signPayload(signingPayload, keyId)
         }
+        logger.debug("Generated signature for VC-LD credential: prefix={}", finalSignature.take(20))
 
         val linkedDataProof = CredentialProof.LinkedDataProof(
             type = requestedSuite,
@@ -154,13 +169,10 @@ internal class VcLdProofEngine(
             proofValue = finalSignature,
             additionalProperties = additionalProperties
         )
-        
-        // Build VerifiableCredential
+
+        // Build VerifiableCredential (context must match the signed canonical document)
         return VerifiableCredential(
-            context = listOf(
-                CredentialConstants.VcContexts.VC_1_1,
-                CredentialConstants.SecuritySuites.ED25519_2020_V1
-            ),
+            context = contexts,
             id = credentialId,
             type = request.type,
             issuer = request.issuer,
@@ -189,20 +201,47 @@ internal class VcLdProofEngine(
         return try {
             // Extract issuer IRI
             val issuerIri = extractIssuerIri(credential)
-            
-            // Resolve verification method
-            val verificationMethod = vmResolver.resolve(issuerIri, proof.verificationMethod)
+
+            // Enforce proof purpose: credential proofs must be assertions. A proof created
+            // for another purpose (e.g. keyAgreement) must not be accepted here.
+            val expectedPurpose = CredentialConstants.ProofPurposes.ASSERTION_METHOD
+            if (proof.proofPurpose != expectedPurpose) {
+                return createInvalidProofResult(
+                    credential,
+                    "Proof purpose '${proof.proofPurpose}' is not acceptable for credential " +
+                        "verification; expected '$expectedPurpose'",
+                    "proofPurpose must be '$expectedPurpose' for credential proofs"
+                )
+            }
+
+            // Resolve verification method; it must be authorized for assertionMethod in the
+            // issuer's DID document.
+            val verificationMethod = vmResolver.resolve(issuerIri, proof.verificationMethod, expectedPurpose)
                 ?: return createInvalidIssuerResult(credential, issuerIri)
 
             // Canonicalize document
             val canonical = canonicalizationPort.canonicalize(
                 JsonLdDocumentBuilder.buildWithoutProof(credential)
             )
-            logger.debug("Verifying VC-LD credential: canonicalLength={}, verificationMethod={}, publicKeyJwkPresent={}", 
+            logger.debug("Verifying VC-LD credential: canonicalLength={}, verificationMethod={}, publicKeyJwkPresent={}",
                 canonical.length, proof.verificationMethod, verificationMethod.publicKeyJwk != null)
-            
+
+            // Reconstruct and canonicalize the proof options (proof without proofValue/jws):
+            // the signature covers SHA-256(proof options) || SHA-256(document), so tampering
+            // with challenge, domain, created, proofPurpose or verificationMethod fails here.
+            val proofOptionsDocument = ProofEngineUtils.buildProofOptionsDocument(
+                context = credential.context,
+                proofType = proof.type,
+                created = proof.created.toString(),
+                verificationMethod = proof.verificationMethod,
+                proofPurpose = proof.proofPurpose,
+                additionalProperties = proof.additionalProperties
+            )
+            val canonicalProofOptions = canonicalizationPort.canonicalize(proofOptionsDocument)
+            val verificationPayload = ProofEngineUtils.composeDataIntegrityPayload(canonicalProofOptions, canonical)
+
             // Verify signature
-            if (!verifyCredentialSignature(canonical, proof, verificationMethod)) {
+            if (!verifyCredentialSignature(verificationPayload, proof, verificationMethod)) {
                 return createInvalidProofResult(
                     credential,
                     "Linked Data Proof signature verification failed",
@@ -256,11 +295,11 @@ internal class VcLdProofEngine(
         }
 
     private fun verifyCredentialSignature(
-        canonical: String,
+        payload: ByteArray,
         proof: CredentialProof.LinkedDataProof,
         verificationMethod: VerificationMethod
     ): Boolean {
-        val isValid = verifySignature(canonical, proof.proofValue, verificationMethod, proof.type)
+        val isValid = verifySignature(payload, proof.proofValue, verificationMethod, proof.type)
         logger.debug("VC-LD signature verification result: isValid={}", isValid)
         return isValid
     }
@@ -328,8 +367,14 @@ internal class VcLdProofEngine(
         return VerificationResult.Invalid.InvalidIssuer(
             credential = credential,
             issuerIri = issuerIri,
-            reason = "Could not resolve issuer IRI or get verification key",
-            errors = listOf("Failed to resolve issuer: ${issuerIri.value}"),
+            reason = "Could not resolve issuer IRI, find the proof's verification method, or the " +
+                "verification method is not authorized for the " +
+                "'${CredentialConstants.ProofPurposes.ASSERTION_METHOD}' proof purpose in the " +
+                "issuer's DID document",
+            errors = listOf(
+                "Failed to resolve issuer '${issuerIri.value}' or its verification method is not " +
+                    "listed under '${CredentialConstants.ProofPurposes.ASSERTION_METHOD}'"
+            ),
             warnings = emptyList()
         )
     }
@@ -385,8 +430,8 @@ internal class VcLdProofEngine(
     override fun isReady(): Boolean = true
     
     
-    private suspend fun signDocument(canonical: String, keyId: String): String {
-        logger.debug("Signing document: keyId={}, canonicalLength={}", keyId, canonical.length)
+    private suspend fun signPayload(payload: ByteArray, keyId: String): String {
+        logger.debug("Signing payload: keyId={}, payloadLength={}", keyId, payload.size)
         // Get signer function if available (preferred), otherwise get KMS and create signer
         val signer = getSignerFunction() ?: run {
             val kms = getKms() ?: throw IllegalStateException(
@@ -394,27 +439,27 @@ internal class VcLdProofEngine(
             )
             createKmsSigner(kms)
         }
-        
-        // Sign canonical document
-        val canonicalBytes = canonical.toByteArray(Charsets.UTF_8)
-        val signatureBytes = signer(canonicalBytes, keyId)
-        logger.debug("Signed document: keyId={}, signatureLength={}", keyId, signatureBytes.size)
-        
+
+        // Sign the composed Data Integrity payload
+        val signatureBytes = signer(payload, keyId)
+        logger.debug("Signed payload: keyId={}, signatureLength={}", keyId, signatureBytes.size)
+
         // Return base64url-encoded signature
         return Base64.getUrlEncoder().withoutPadding().encodeToString(signatureBytes)
     }
-    
+
     /**
      * Verify Linked Data Proof signature via [SignatureVerificationPort].
      *
-     * @param canonical The canonicalized document (without proof)
+     * @param payload The composed Data Integrity payload
+     *   (`SHA-256(canonical proof options) || SHA-256(canonical document)`)
      * @param proofValue The base64url-encoded signature
      * @param verificationMethod The verification method from DID document
      * @param proofType The proof type (e.g., "Ed25519Signature2020")
      * @return True if signature is valid, false otherwise
      */
     private fun verifySignature(
-        canonical: String,
+        payload: ByteArray,
         proofValue: String,
         verificationMethod: VerificationMethod,
         proofType: String
@@ -425,12 +470,10 @@ internal class VcLdProofEngine(
             return false
         }
 
-        val documentBytes = canonical.toByteArray(Charsets.UTF_8)
-
         // JsonWebSignature2020: proofValue is a detached JWS (header..signature, no payload in middle)
         if (proofType == CredentialConstants.ProofTypes.JSON_WEB_SIGNATURE_2020) {
             logger.debug("Verifying JsonWebSignature2020 detached JWS")
-            return jwsVerificationAdapter.verifyDetachedJws(proofValue, documentBytes, verificationMethod)
+            return jwsVerificationAdapter.verifyDetachedJws(proofValue, payload, verificationMethod)
         }
 
         val signatureBytes = try {
@@ -440,15 +483,15 @@ internal class VcLdProofEngine(
             return false
         }
 
-        logger.debug("Verifying signature: signatureLength={}, documentLength={}", signatureBytes.size, documentBytes.size)
-        return signatureVerificationPort.verify(documentBytes, signatureBytes, verificationMethod, proofType)
+        logger.debug("Verifying signature: signatureLength={}, payloadLength={}", signatureBytes.size, payload.size)
+        return signatureVerificationPort.verify(payload, signatureBytes, verificationMethod, proofType)
     }
 
     /**
      * Sign using detached JWS (JsonWebSignature2020 proof type).
      * Returns the compact JWS with empty second segment: `<header>..<signature>`.
      */
-    private suspend fun signDocumentAsJws(canonical: String, keyId: String, algorithm: String): String {
+    private suspend fun signPayloadAsJws(payload: ByteArray, keyId: String, algorithm: String): String {
         val kms = getKms() ?: throw IllegalStateException("KMS required for JsonWebSignature2020 signing")
         val jwsAlgorithm = when (algorithm.uppercase()) {
             "EDDSA", "ED25519" -> JWSAlgorithm.EdDSA
@@ -458,8 +501,7 @@ internal class VcLdProofEngine(
             else -> JWSAlgorithm.EdDSA
         }
         val header = JWSHeader.Builder(jwsAlgorithm).build()
-        val payloadBytes = canonical.toByteArray(Charsets.UTF_8)
-        val signingInput = "${header.toBase64URL()}.${Base64URL.encode(payloadBytes)}"
+        val signingInput = "${header.toBase64URL()}.${Base64URL.encode(payload)}"
             .toByteArray(Charsets.UTF_8)
         val signResult = kms.sign(KeyId(keyId), signingInput)
         val sigBytes = when (signResult) {

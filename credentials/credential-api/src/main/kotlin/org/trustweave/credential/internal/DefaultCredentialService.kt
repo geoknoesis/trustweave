@@ -309,27 +309,32 @@ internal class DefaultCredentialService(
                         val verificationMethod = PresentationVerification.resolvePresentationProofVerificationMethod(
                             holderIri = holderIri,
                             verificationMethodId = proof.verificationMethod,
-                            didResolver = didResolver
+                            didResolver = didResolver,
+                            declaredProofPurpose = proof.proofPurpose
                         )
 
                         if (verificationMethod == null) {
                             return VerificationResult.Invalid.InvalidProof(
                                 credential = null,
-                                reason = "Presentation proof verification failed: could not resolve holder DID or get verification key for '${holderIri.value}'",
-                                errors = listOf("Failed to resolve holder: ${holderIri.value}")
+                                reason = "Presentation proof verification failed: could not resolve holder DID, " +
+                                    "get verification key for '${holderIri.value}', or the proof's verification " +
+                                    "method/proofPurpose is not authorized for 'authentication'",
+                                errors = listOf(
+                                    "Failed to resolve holder '${holderIri.value}' or its verification method is " +
+                                        "not authorized for the 'authentication' proof purpose"
+                                )
                             )
                         }
 
                         // Build presentation document without proof for canonicalization
                         val vpDocument = buildPresentationDocumentWithoutProof(presentation)
-                        val canonical = canonicalizePresentationDocument(vpDocument)
 
-                        // Verify signature
+                        // Verify signature (covers canonicalized proof options + document,
+                        // per W3C Data Integrity)
                         val isValid = PresentationVerification.verifyPresentationSignature(
-                            canonical = canonical,
-                            proofValue = proof.proofValue,
-                            verificationMethod = verificationMethod,
-                            proofType = proof.type
+                            vpDocument = vpDocument,
+                            proof = proof,
+                            verificationMethod = verificationMethod
                         )
 
                         if (!isValid) {
@@ -347,7 +352,13 @@ internal class DefaultCredentialService(
                         // was vacuous and has been removed.
                         if (options.enforceHolderBinding) {
                             val holderDid = presentation.holder.value
-                            if (!proof.verificationMethod.startsWith(holderDid)) {
+                            // F-08: exact DID equality of the pre-fragment part — a prefix
+                            // check would let 'did:example:abcdef#key-1' satisfy holder
+                            // 'did:example:abc'.
+                            if (!PresentationVerification.verificationMethodBelongsToHolder(
+                                    proof.verificationMethod, holderDid
+                                )
+                            ) {
                                 return VerificationResult.Invalid.InvalidProof(
                                     credential = null,
                                     reason = "Presentation proof verificationMethod '${proof.verificationMethod}' " +
@@ -362,12 +373,17 @@ internal class DefaultCredentialService(
                             errors = listOf("Non-DID holder IRI cannot be verified: ${holderIri.value}")
                         )
                     }
-                } else if (presentation.proof is org.trustweave.credential.model.vc.CredentialProof.SdJwtVcProof) {
-                    return VerificationResult.Invalid.InvalidProof(
-                        credential = presentation.verifiableCredential.first(),
-                        reason = "SD-JWT-VC presentation proof verification is not implemented",
-                        errors = listOf("SD-JWT-VC presentation proof verification is not supported")
-                    )
+                } else if (presentationProof is org.trustweave.credential.model.vc.CredentialProof.SdJwtVcProof) {
+                    // SD-JWT-VC presentations carry holder binding as a Key Binding JWT
+                    // (KB-JWT) appended to the compact SD-JWT. Verify its signature against
+                    // the holder's DID keys, plus sd_hash/iat. The KB-JWT nonce/aud are
+                    // checked against expectedChallenge/expectedDomain further below.
+                    PresentationVerification.verifySdJwtKeyBinding(
+                        presentation = presentation,
+                        proof = presentationProof,
+                        options = options,
+                        didResolver = didResolver
+                    )?.let { return it }
                 } else {
                     val proofTypeName = presentation.proof!!::class.simpleName
                     return VerificationResult.Invalid.InvalidProof(
@@ -476,20 +492,6 @@ internal class DefaultCredentialService(
             }
         }
     }
-    
-    /**
-     * Canonicalize presentation document using JSON-LD.
-     * 
-     * Converts the presentation document to canonical N-Quads format for signature verification.
-     * 
-     * @param document The presentation document JSON (without proof)
-     * @return Canonicalized document as string
-     */
-    private fun canonicalizePresentationDocument(document: kotlinx.serialization.json.JsonObject): String {
-        // Use same canonicalization as VC-LD (JSON-LD)
-        return JsonLdUtils.canonicalizeDocument(document, json)
-    }
-    
     
     override suspend fun status(
         credential: VerifiableCredential,

@@ -93,12 +93,33 @@ class KmsCreationOptionsTest {
         builder.property("key1", "value1")
         builder.property("key2", "value2")
         builder.property("key3", null)
-        
+
         val options = builder.build()
         assertEquals(3, options.additionalProperties.size)
         assertEquals("value1", options.additionalProperties["key1"])
         assertEquals("value2", options.additionalProperties["key2"])
         assertTrue(options.additionalProperties.containsKey("key3"))
+    }
+
+    @Test
+    fun `test toString redacts additionalProperties values`() {
+        val secret = "super-secret-access-key"
+        val options = KmsCreationOptions(
+            priority = 5,
+            additionalProperties = mapOf(
+                "secretAccessKey" to secret,
+                "region" to "us-east-1"
+            )
+        )
+
+        val rendered = options.toString()
+        assertFalse(rendered.contains(secret), "toString must not leak secret values")
+        assertFalse(rendered.contains("us-east-1"), "all property values are redacted")
+        assertTrue(rendered.contains("secretAccessKey=***"), "keys remain visible")
+        assertTrue(rendered.contains("priority=5"))
+        // equality and toMap still expose real values
+        assertEquals(options, options.copy())
+        assertEquals(secret, options.toMap()["secretAccessKey"])
     }
 }
 

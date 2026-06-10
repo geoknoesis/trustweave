@@ -16,6 +16,7 @@ import org.trustweave.did.exception.DidException
 import org.trustweave.wallet.exception.WalletException
 import org.trustweave.anchor.exceptions.BlockchainException
 import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.anchor.AbstractBlockchainAnchorClient
 import org.trustweave.anchor.indy.IndyBlockchainAnchorClient
 import org.trustweave.anchor.indy.IndyIntegration
 import org.trustweave.did.identifiers.extractKeyId
@@ -53,11 +54,11 @@ fun main() = runBlocking {
     val chainId = IndyBlockchainAnchorClient.BCOVRIN_TESTNET
 
     // Create TrustWeave instance with Indy blockchain client
-    // Using in-memory fallback mode (empty options) for testing
+    // Using opt-in in-memory test mode (no real ledger writes) for this example
     // In production, provide: walletName, walletKey, did, poolEndpoint
     val indyClient = IndyBlockchainAnchorClient(
         chainId = chainId,
-        options = emptyMap() // In-memory fallback mode for testing
+        options = mapOf(AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE to true)
     )
     val trustweave = TrustWeave.build {
         keys {

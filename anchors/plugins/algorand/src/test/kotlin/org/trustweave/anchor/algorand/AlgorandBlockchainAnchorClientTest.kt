@@ -1,6 +1,8 @@
 package org.trustweave.anchor.algorand
 
+import org.trustweave.anchor.AbstractBlockchainAnchorClient
 import org.trustweave.anchor.AnchorRef
+import org.trustweave.anchor.exceptions.BlockchainException
 import org.trustweave.anchor.payment.FeeStrategy
 import org.trustweave.anchor.payment.PaymentContext
 import org.trustweave.core.exception.TrustWeaveException
@@ -8,6 +10,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -25,8 +28,11 @@ class AlgorandBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `should write and read payload`() = runBlocking {
-        val client = AlgorandBlockchainAnchorClient(AlgorandBlockchainAnchorClient.TESTNET)
+    fun `should write and read payload in opt-in in-memory test mode`() = runBlocking {
+        val client = AlgorandBlockchainAnchorClient(
+            AlgorandBlockchainAnchorClient.TESTNET,
+            mapOf(AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE to true)
+        )
         val payload = buildJsonObject {
             put("test", "data")
             put("number", 42)
@@ -61,7 +67,10 @@ class AlgorandBlockchainAnchorClientTest {
 
     @Test
     fun `unmanaged PaymentContext delegates to legacy write and leaves fee unset`() = runBlocking<Unit> {
-        val client = AlgorandBlockchainAnchorClient(AlgorandBlockchainAnchorClient.TESTNET)
+        val client = AlgorandBlockchainAnchorClient(
+            AlgorandBlockchainAnchorClient.TESTNET,
+            mapOf(AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE to true)
+        )
         val payload = buildJsonObject { put("ctx", "unmanaged") }
         val ctx = PaymentContext.unmanaged(AlgorandBlockchainAnchorClient.TESTNET)
 
@@ -91,6 +100,59 @@ class AlgorandBlockchainAnchorClientTest {
             assertNotNull(e.message)
             assertTrue(e.message!!.contains("PaymentContext.chainId"))
         }
+    }
+
+    @Test
+    fun `should fail closed on write without credentials when test mode is off`() = runBlocking<Unit> {
+        val client = AlgorandBlockchainAnchorClient(AlgorandBlockchainAnchorClient.TESTNET)
+        val payload = buildJsonObject { put("test", "data") }
+
+        assertFailsWith<BlockchainException.ConfigurationFailed> {
+            client.writePayload(payload)
+        }
+    }
+
+    @Test
+    fun `should reject invalid private key with configuration error`() {
+        val exception = assertFailsWith<BlockchainException.ConfigurationFailed> {
+            AlgorandBlockchainAnchorClient(
+                AlgorandBlockchainAnchorClient.TESTNET,
+                mapOf("privateKey" to "!!!not-base64!!!")
+            )
+        }
+        assertNotNull(exception.cause, "Parse failure must be carried as the cause")
+    }
+
+    @Test
+    fun `should reject private key with wrong decoded length`() {
+        val exception = assertFailsWith<BlockchainException.ConfigurationFailed> {
+            AlgorandBlockchainAnchorClient(
+                AlgorandBlockchainAnchorClient.TESTNET,
+                mapOf("privateKey" to java.util.Base64.getEncoder().encodeToString(ByteArray(16)))
+            )
+        }
+        assertNotNull(exception.cause, "Length failure must be carried as the cause")
+    }
+
+    @Test
+    fun `should accept 32-byte seed and 64-byte exported secret key`() {
+        val seed = ByteArray(32) { it.toByte() }
+        val account = com.algorand.algosdk.account.Account(seed)
+        // Exported secret key format used by common Algorand tooling: seed || public key.
+        val exported = seed + account.address.bytes
+
+        assertNotNull(
+            AlgorandBlockchainAnchorClient(
+                AlgorandBlockchainAnchorClient.TESTNET,
+                mapOf("privateKey" to java.util.Base64.getEncoder().encodeToString(seed))
+            )
+        )
+        assertNotNull(
+            AlgorandBlockchainAnchorClient(
+                AlgorandBlockchainAnchorClient.TESTNET,
+                mapOf("privateKey" to java.util.Base64.getEncoder().encodeToString(exported))
+            )
+        )
     }
 
     @Test

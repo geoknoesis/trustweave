@@ -161,67 +161,110 @@ class PresentationVerificationTest {
     
     @Test
     fun `test verifyPresentationSignature with blank proofValue`() {
-        val canonical = "test document"
-        val proofValue = ""
-        // For this test, we just need to verify the early return on blank proofValue
-        // We'll use a real VerificationMethod if we can construct one, otherwise skip
-        val proofType = CredentialConstants.ProofTypes.ED25519_SIGNATURE_2020
-        
-        // This will fail early due to blank proofValue, so we don't need a real VerificationMethod
-        // We'll need to create a minimal VerificationMethod though
-        try {
-            val did = org.trustweave.did.identifiers.Did("did:key:test")
-            val vmId = org.trustweave.did.identifiers.VerificationMethodId.parse("did:key:test#key-1", did)
-            val verificationMethod = org.trustweave.did.model.VerificationMethod(
-                id = vmId,
-                type = "Ed25519VerificationKey2020",
-                controller = did
-            )
-            
-            val result = PresentationVerification.verifyPresentationSignature(
-                canonical = canonical,
-                proofValue = proofValue,
-                verificationMethod = verificationMethod,
-                proofType = proofType
-            )
-            
-            assertTrue(!result, "Should fail with blank proofValue")
-        } catch (e: Exception) {
-            // If we can't construct VerificationMethod in test, that's okay - the function will still work
-            // in production. This is just a unit test limitation.
-        }
+        val verificationMethod = createTestVerificationMethod()
+        val proof = createTestLinkedDataProof(
+            proofValue = "",
+            proofType = CredentialConstants.ProofTypes.ED25519_SIGNATURE_2020
+        )
+
+        val result = PresentationVerification.verifyPresentationSignature(
+            vpDocument = createTestVpDocument(),
+            proof = proof,
+            verificationMethod = verificationMethod
+        )
+
+        assertTrue(!result, "Should fail with blank proofValue")
     }
-    
+
     @Test
     fun `test verifyPresentationSignature with unsupported proof type`() {
-        val canonical = "test document"
-        val proofValue = "valid-signature"
-        val proofType = "UnsupportedProofType"
-        
-        try {
-            val did = org.trustweave.did.identifiers.Did("did:key:test")
-            val vmId = org.trustweave.did.identifiers.VerificationMethodId.parse("did:key:test#key-1", did)
-            val verificationMethod = org.trustweave.did.model.VerificationMethod(
-                id = vmId,
-                type = "Ed25519VerificationKey2020",
-                controller = did
-            )
-            
-            val result = PresentationVerification.verifyPresentationSignature(
-                canonical = canonical,
-                proofValue = proofValue,
-                verificationMethod = verificationMethod,
-                proofType = proofType
-            )
-            
-            assertTrue(!result, "Should fail with unsupported proof type")
-        } catch (e: Exception) {
-            // Test limitation - construction might fail
-        }
+        val verificationMethod = createTestVerificationMethod()
+        val proof = createTestLinkedDataProof(
+            proofValue = "valid-signature",
+            proofType = "UnsupportedProofType"
+        )
+
+        val result = PresentationVerification.verifyPresentationSignature(
+            vpDocument = createTestVpDocument(),
+            proof = proof,
+            verificationMethod = verificationMethod
+        )
+
+        assertTrue(!result, "Should fail with unsupported proof type")
     }
-    
+
+    @Test
+    fun `test verifyPresentationSignature with garbage signature fails closed`() {
+        val verificationMethod = createTestVerificationMethod()
+        val proof = createTestLinkedDataProof(
+            proofValue = "not-a-real-signature",
+            proofType = CredentialConstants.ProofTypes.ED25519_SIGNATURE_2020
+        )
+
+        val result = PresentationVerification.verifyPresentationSignature(
+            vpDocument = createTestVpDocument(),
+            proof = proof,
+            verificationMethod = verificationMethod
+        )
+
+        assertTrue(!result, "Should fail with an invalid signature value")
+    }
+
+    @Test
+    fun `test resolvePresentationProofVerificationMethod rejects non-authentication purpose`() = kotlinx.coroutines.runBlocking {
+        val didResolver = object : org.trustweave.did.resolver.DidResolver {
+            override suspend fun resolve(did: org.trustweave.did.identifiers.Did): org.trustweave.did.resolver.DidResolutionResult {
+                throw NotImplementedError("Resolution must not be reached for a rejected proof purpose")
+            }
+        }
+
+        val result = PresentationVerification.resolvePresentationProofVerificationMethod(
+            holderIri = Iri("did:key:test"),
+            verificationMethodId = "did:key:test#key-1",
+            didResolver = didResolver,
+            declaredProofPurpose = "keyAgreement"
+        )
+
+        assertNull(result, "A presentation proof with proofPurpose != 'authentication' must be rejected")
+    }
+
     // Helper functions
-    
+
+    private fun createTestVerificationMethod(): org.trustweave.did.model.VerificationMethod {
+        val did = org.trustweave.did.identifiers.Did("did:key:test")
+        val vmId = org.trustweave.did.identifiers.VerificationMethodId.parse("did:key:test#key-1", did)
+        return org.trustweave.did.model.VerificationMethod(
+            id = vmId,
+            type = "Ed25519VerificationKey2020",
+            controller = did
+        )
+    }
+
+    private fun createTestVpDocument(): kotlinx.serialization.json.JsonObject =
+        kotlinx.serialization.json.buildJsonObject {
+            put("@context", kotlinx.serialization.json.buildJsonArray {
+                add(kotlinx.serialization.json.JsonPrimitive(CredentialConstants.VcContexts.VC_1_1))
+                add(kotlinx.serialization.json.JsonPrimitive(CredentialConstants.SecuritySuites.ED25519_2020_V1))
+            })
+            put("type", kotlinx.serialization.json.buildJsonArray {
+                add(kotlinx.serialization.json.JsonPrimitive("VerifiablePresentation"))
+            })
+            put("holder", kotlinx.serialization.json.JsonPrimitive("did:key:test"))
+        }
+
+    private fun createTestLinkedDataProof(
+        proofValue: String,
+        proofType: String
+    ): org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof =
+        org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof(
+            type = proofType,
+            created = Clock.System.now(),
+            verificationMethod = "did:key:test#key-1",
+            proofPurpose = "authentication",
+            proofValue = proofValue,
+            additionalProperties = emptyMap()
+        )
+
     private fun createTestPresentation(
         challenge: String? = null,
         domain: String? = null

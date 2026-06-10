@@ -19,6 +19,10 @@ import org.trustweave.credential.spi.proof.ProofEngine
 import org.trustweave.credential.spi.proof.ProofEngineCapabilities
 import org.trustweave.credential.spi.proof.ProofEngineConfig
 import org.trustweave.core.identifiers.Iri
+import org.trustweave.core.util.decodeBase58
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.model.VerificationMethod
+import org.trustweave.did.resolver.DidResolutionResult
 import java.util.UUID
 
 /**
@@ -29,20 +33,28 @@ import java.util.UUID
  *
  * **Capabilities:**
  * - Issuance: signs all credential claims as a BBS+ signature over the claim set
- * - Verification: re-derives commitment from the public key embedded in the proof
+ * - Verification: verifies the BBS+ signature against the public key resolved from the
+ *   issuer's DID document (never from key material embedded in the proof itself)
  * - Presentation: derives a ZK proof disclosing only the requested subset of claims
  *
- * **Configuration via [ProofEngineConfig.properties]:**
- * | Key           | Type               | Description                              |
- * |---------------|--------------------|------------------------------------------|
- * | `keyPair`     | [Bls12381KeyPair]  | Signing key pair (required for issuance) |
+ * **Configuration via [ProofEngineConfig]:**
+ * | Key           | Type               | Description                                       |
+ * |---------------|--------------------|---------------------------------------------------|
+ * | `keyPair`     | [Bls12381KeyPair]  | Signing key pair (required for issuance)          |
+ * | `didResolver` | `DidResolver`      | Issuer DID resolver (required for verification);  |
+ * |               |                    | also accepted via [ProofEngineConfig.didResolver] |
  *
  * If no `keyPair` is provided a fresh ephemeral key is generated on first `issue()` call
  * (useful for unit tests).
  *
- * **Verification key resolution order:**
- * 1. Configured `keyPair` — if `verificationMethod` ends with the configured key ID
- * 2. Base64url-encoded 96-byte public key after the `#` fragment in the verification method
+ * **Verification key binding (fail-closed):**
+ * 1. The proof's `verificationMethod` must be a DID URL rooted in the credential's issuer DID
+ * 2. The issuer DID is resolved via the configured `didResolver`; without a resolver
+ *    verification always fails
+ * 3. The verification method must be embedded in the resolved DID document's
+ *    `verificationMethod` list and referenced by its `assertionMethod` relationship
+ * 4. The BLS12-381 G2 public key is extracted from that entry (`publicKeyMultibase`
+ *    or `publicKeyJwk.x`); key bytes embedded in the proof are never trusted
  */
 class Bbs2023ProofEngine(
     private val config: ProofEngineConfig = ProofEngineConfig(),
@@ -106,8 +118,8 @@ class Bbs2023ProofEngine(
 
         val proofValue = BbsCryptoSuite.encodeBase64Url(signatureBytes)
 
-        // Embed the public key (base64url) as part of the verification method fragment so
-        // that `verify()` can recover it without a DID resolver.
+        // Reference the issuer's key by its identifier. Verifiers must resolve the actual
+        // public key from the issuer's DID document — never from this string.
         val verificationMethod = buildVerificationMethodId(request.issuer, keyPair)
         val created = Clock.System.now()
 
@@ -173,12 +185,16 @@ class Bbs2023ProofEngine(
                 )
             }
 
-            val publicKey = resolvePublicKey(proof.verificationMethod)
-                ?: return VerificationResult.Invalid.InvalidIssuer(
+            val publicKey = when (val resolution = resolveIssuerPublicKey(credential, proof.verificationMethod)) {
+                is IssuerKeyResolution.Resolved -> resolution.publicKey
+                is IssuerKeyResolution.InvalidBinding -> return invalidProof(credential, resolution.reason)
+                is IssuerKeyResolution.IssuerFailure -> return VerificationResult.Invalid.InvalidIssuer(
                     credential = credential,
                     issuerIri = issuerIri(credential),
-                    reason = "Could not resolve BLS12-381 public key from: ${proof.verificationMethod}",
+                    reason = resolution.reason,
+                    errors = listOf(resolution.reason),
                 )
+            }
 
             val messages = encodeClaimsAsMessages(credential.credentialSubject)
             val valid = BbsCryptoSuite.verify(
@@ -204,6 +220,9 @@ class Bbs2023ProofEngine(
             } else {
                 invalidProof(credential, "BBS+ signature verification failed")
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // Preserve structured cancellation (e.g. from the suspend DID resolver call).
+            throw e
         } catch (e: Exception) {
             logger.error(
                 "BBS-2023 verification error for credential {}: {}",
@@ -277,59 +296,158 @@ class Bbs2023ProofEngine(
     /**
      * Build the verification method ID string for a credential proof.
      *
-     * Embeds the public key as a base64url fragment so that [resolvePublicKey] can recover it
-     * without needing a live DID resolver.
+     * The ID references the issuer's key by its [Bls12381KeyPair.keyId]; it intentionally
+     * carries no key material. Verifiers resolve the public key from the issuer's DID
+     * document entry with this ID.
      *
-     * Format: `{issuerIri}#bbs-{publicKeyBase64url}`
+     * Format: `{issuerIri}#{keyId}` (or `keyId` as-is when it is already a DID URL rooted
+     * in the issuer IRI).
      */
     private fun buildVerificationMethodId(issuer: Issuer, keyPair: Bls12381KeyPair): String {
         val issuerIriValue = when (issuer) {
             is Issuer.IriIssuer -> issuer.id.value
             is Issuer.ObjectIssuer -> issuer.id.value
         }
-        val pkFragment = keyPair.publicKeyBase64Url
-        return "$issuerIriValue#bbs-$pkFragment"
+        val keyId = keyPair.keyId
+        return when {
+            keyId.startsWith("$issuerIriValue#") -> keyId
+            keyId.startsWith("#") -> "$issuerIriValue$keyId"
+            else -> "$issuerIriValue#$keyId"
+        }
     }
 
     /**
-     * Attempt to recover the 96-byte BLS12-381 public key from a verification method string.
-     *
-     * Resolution order:
-     * 1. If the verification method ends with the active key pair's public key fragment, return
-     *    the active key pair's public key directly (most reliable for self-issued credentials).
-     * 2. Parse the fragment after `#bbs-` as a base64url-encoded 96-byte public key.
+     * Outcome of resolving the issuer-bound BBS verification key.
      */
-    private fun resolvePublicKey(verificationMethod: String): ByteArray? {
-        // 1. Match against the engine's own active key pair
-        val kp = activeKeyPair
-        val expectedFragment = "bbs-${kp.publicKeyBase64Url}"
-        if (verificationMethod.endsWith(expectedFragment)) {
-            return kp.publicKeyBytes
+    private sealed interface IssuerKeyResolution {
+        /** Key successfully resolved from the issuer's DID document. */
+        class Resolved(val publicKey: ByteArray) : IssuerKeyResolution
+
+        /** The proof's verification method is not bound to the credential issuer. */
+        data class InvalidBinding(val reason: String) : IssuerKeyResolution
+
+        /** The issuer DID could not be resolved or does not authorize the key. */
+        data class IssuerFailure(val reason: String) : IssuerKeyResolution
+    }
+
+    /**
+     * Resolve the BLS12-381 public key for [verificationMethod] from the credential issuer's
+     * DID document.
+     *
+     * Security properties (fail-closed):
+     * - The verification method must be rooted in the credential's issuer DID — a proof
+     *   pointing at any other controller is rejected outright.
+     * - The key bytes always come from the resolved DID document, never from the
+     *   verification method string in the attacker-controlled proof.
+     * - The verification method must appear in the DID document's `verificationMethod`
+     *   list **and** be referenced by its `assertionMethod` relationship.
+     * - If no [org.trustweave.did.resolver.DidResolver] is configured, or resolution fails,
+     *   verification fails.
+     */
+    private suspend fun resolveIssuerPublicKey(
+        credential: VerifiableCredential,
+        verificationMethod: String,
+    ): IssuerKeyResolution {
+        val issuer = issuerIri(credential)
+
+        val controller = verificationMethod.substringBefore('#', missingDelimiterValue = "")
+        if (controller.isEmpty() || !verificationMethod.contains('#')) {
+            return IssuerKeyResolution.InvalidBinding(
+                "Proof verificationMethod must be a DID URL with a fragment, got: $verificationMethod",
+            )
+        }
+        if (controller != issuer.value) {
+            return IssuerKeyResolution.InvalidBinding(
+                "Proof verificationMethod '$verificationMethod' is not rooted in " +
+                    "issuer DID '${issuer.value}'",
+            )
         }
 
-        // 2. Try to decode #bbs-<base64url> fragment
-        if (verificationMethod.contains("#bbs-")) {
-            val pkBase64 = verificationMethod.substringAfter("#bbs-")
-            return try {
-                val decoded = BbsCryptoSuite.decodeBase64Url(pkBase64)
-                if (decoded.size == 96) decoded else null
-            } catch (_: Exception) {
-                null
-            }
+        val resolver = config.getDidResolver()
+            ?: return IssuerKeyResolution.IssuerFailure(
+                "No DID resolver configured for BBS-2023 verification; cannot resolve issuer " +
+                    "'${issuer.value}' — failing closed. Provide a DidResolver via " +
+                    "ProofEngineConfig.didResolver or properties[\"didResolver\"].",
+            )
+
+        val issuerDid = try {
+            Did(controller)
+        } catch (e: IllegalArgumentException) {
+            return IssuerKeyResolution.IssuerFailure(
+                "Issuer '$controller' is not a valid DID and cannot be resolved: ${e.message}",
+            )
         }
 
-        // 3. Try the raw fragment (older format) as base64url → 96 bytes
-        val fragment = if (verificationMethod.contains("#")) {
-            verificationMethod.substringAfter("#")
-        } else {
-            verificationMethod
+        val document = when (val resolution = resolver.resolve(issuerDid)) {
+            is DidResolutionResult.Success -> resolution.document
+            is DidResolutionResult.Failure -> return IssuerKeyResolution.IssuerFailure(
+                "Failed to resolve issuer DID '${issuerDid.value}': $resolution",
+            )
         }
-        return try {
-            val decoded = BbsCryptoSuite.decodeBase64Url(fragment)
-            if (decoded.size == 96) decoded else null
+
+        val methodEntry = document.verificationMethod.firstOrNull { it.id.value == verificationMethod }
+            ?: return IssuerKeyResolution.IssuerFailure(
+                "Issuer DID document '${issuerDid.value}' does not contain " +
+                    "verification method '$verificationMethod'",
+            )
+
+        val authorizedForAssertion = document.assertionMethod.any { it.value == verificationMethod }
+        if (!authorizedForAssertion) {
+            return IssuerKeyResolution.IssuerFailure(
+                "Verification method '$verificationMethod' is not referenced by assertionMethod " +
+                    "in issuer DID document '${issuerDid.value}'",
+            )
+        }
+
+        val publicKey = extractBlsPublicKey(methodEntry)
+            ?: return IssuerKeyResolution.IssuerFailure(
+                "Could not extract a $BLS_G2_PUBLIC_KEY_SIZE-byte BLS12-381 G2 public key from " +
+                    "verification method '$verificationMethod' in issuer DID document " +
+                    "'${issuerDid.value}' (expected publicKeyMultibase or publicKeyJwk.x)",
+            )
+
+        return IssuerKeyResolution.Resolved(publicKey)
+    }
+
+    /**
+     * Extract the 96-byte compressed G2 public key from a DID document verification method.
+     *
+     * Supported representations:
+     * - `publicKeyMultibase`: `z` (base58btc) or `u` (base64url, no padding) multibase,
+     *   with or without the `bls12_381-g2-pub` multicodec prefix (`0xeb 0x01`)
+     * - `publicKeyJwk`: JWK with the raw key in the base64url `x` coordinate
+     */
+    private fun extractBlsPublicKey(method: VerificationMethod): ByteArray? {
+        method.publicKeyMultibase
+            ?.let { decodeMultibase(it) }
+            ?.let { stripBls12381G2MulticodecPrefix(it) }
+            ?.let { return it }
+
+        val jwkX = method.publicKeyJwk?.get("x") as? String ?: return null
+        val decoded = try {
+            BbsCryptoSuite.decodeBase64Url(jwkX)
         } catch (_: Exception) {
             null
         }
+        return decoded?.takeIf { it.size == BLS_G2_PUBLIC_KEY_SIZE }
+    }
+
+    private fun decodeMultibase(value: String): ByteArray? = try {
+        when {
+            value.startsWith("z") -> value.substring(1).decodeBase58()
+            value.startsWith("u") -> BbsCryptoSuite.decodeBase64Url(value.substring(1))
+            else -> null
+        }
+    } catch (_: Exception) {
+        null
+    }
+
+    private fun stripBls12381G2MulticodecPrefix(bytes: ByteArray): ByteArray? = when {
+        bytes.size == BLS_G2_PUBLIC_KEY_SIZE -> bytes
+        bytes.size == BLS_G2_PUBLIC_KEY_SIZE + 2 &&
+            bytes[0] == MULTICODEC_BLS12_381_G2_PUB_PREFIX[0] &&
+            bytes[1] == MULTICODEC_BLS12_381_G2_PUB_PREFIX[1] -> bytes.copyOfRange(2, bytes.size)
+        else -> null
     }
 
     private fun deriveCredentialProof(
@@ -407,4 +525,12 @@ class Bbs2023ProofEngine(
             is Issuer.IriIssuer -> issuer.id
             is Issuer.ObjectIssuer -> issuer.id
         }
+
+    companion object {
+        /** Size in bytes of a compressed BLS12-381 G2 public key. */
+        const val BLS_G2_PUBLIC_KEY_SIZE = 96
+
+        /** Multicodec varint prefix for `bls12_381-g2-pub` (0xeb), per the multicodec table. */
+        private val MULTICODEC_BLS12_381_G2_PUB_PREFIX = byteArrayOf(0xEB.toByte(), 0x01)
+    }
 }

@@ -10,10 +10,14 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
 
 /**
- * Selects between [DidCommCrypto] (non-standard placeholder for local experiments) and
- * [DidCommCryptoDidcomm] (didcomm-java / DIDComm v2).
+ * Adapter over [DidCommCryptoDidcomm] (didcomm-java / DIDComm v2).
  *
  * When [useDidcommJava] is true, [secretResolver] must be non-null.
+ *
+ * When [useDidcommJava] is false the adapter is **fail-closed**: every encrypt/decrypt call
+ * throws [UnsupportedOperationException]. The former placeholder crypto ([DidCommCrypto]) used a
+ * constant shared secret and has been removed; there is no configuration of this adapter that
+ * produces ciphertext without real key material.
  */
 class DidCommCryptoAdapter(
     private val kms: KeyManagementService,
@@ -22,7 +26,7 @@ class DidCommCryptoAdapter(
     private val secretResolver: SecretResolver? = null,
 ) : DidCommCryptoInterface {
 
-    private val placeholderCrypto = DidCommCrypto(kms, resolveDid)
+    private val failClosedCrypto = DidCommCrypto(kms, resolveDid)
     private val didcommCrypto: DidCommCryptoDidcomm? =
         if (useDidcommJava && secretResolver != null) DidCommCryptoDidcomm(kms, resolveDid, secretResolver) else null
 
@@ -63,9 +67,10 @@ class DidCommCryptoAdapter(
             return didcommCrypto
                 ?: throw IllegalStateException(
                     "DIDComm Java crypto requires a non-null SecretResolver. " +
-                        "Use DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(...) for placeholder mode.",
+                        "Supply one, e.g. DidCommFactory.createInMemoryService(kms, resolveDid, secretResolver).",
                 )
         }
-        return placeholderCrypto
+        // Fail closed: placeholder crypto has been removed; this instance throws on every operation.
+        return failClosedCrypto
     }
 }

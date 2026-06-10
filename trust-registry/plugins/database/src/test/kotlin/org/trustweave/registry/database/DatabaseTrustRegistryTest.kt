@@ -84,7 +84,15 @@ class DatabaseTrustRegistryTest {
     }
 
     @Test
-    fun `getAccreditationStatus returns PENDING for unknown DID`() = runBlocking {
-        assertEquals(AccreditationStatus.PENDING, registry.getAccreditationStatus("did:key:nobody"))
+    fun `getAccreditationStatus returns UNKNOWN for unregistered DID`() = runBlocking {
+        assertEquals(AccreditationStatus.UNKNOWN, registry.getAccreditationStatus("did:key:nobody"))
+    }
+
+    @Test
+    fun `getAccreditationStatus reflects registered and revoked DIDs`() = runBlocking {
+        registry.registerIssuer(IssuerRegistration("did:key:status-issuer", "Status Issuer"))
+        assertEquals(AccreditationStatus.ACTIVE, registry.getAccreditationStatus("did:key:status-issuer"))
+        registry.revokeIssuer("did:key:status-issuer")
+        assertEquals(AccreditationStatus.REVOKED, registry.getAccreditationStatus("did:key:status-issuer"))
     }
 }

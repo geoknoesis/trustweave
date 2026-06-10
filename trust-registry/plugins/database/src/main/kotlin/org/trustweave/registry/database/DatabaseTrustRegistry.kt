@@ -209,7 +209,7 @@ class DatabaseTrustRegistry(private val dataSource: DataSource) : TrustRegistry 
     }
 
     override suspend fun getAccreditationStatus(did: String): AccreditationStatus =
-        getIssuer(did)?.status ?: getVerifier(did)?.status ?: AccreditationStatus.PENDING
+        getIssuer(did)?.status ?: getVerifier(did)?.status ?: AccreditationStatus.UNKNOWN
 
     override suspend fun listCredentialTypes(): List<String> =
         listIssuers().flatMap { it.credentialTypes }.distinct().sorted()

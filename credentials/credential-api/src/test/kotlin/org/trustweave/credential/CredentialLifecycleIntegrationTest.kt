@@ -43,7 +43,39 @@ import kotlin.test.assertEquals
  * - Error handling for invalid credentials
  */
 class CredentialLifecycleIntegrationTest {
-    
+
+    companion object {
+        /**
+         * Claims must be defined JSON-LD terms or issuance fails closed (dropped-claims
+         * guard). Register a test vocabulary and reference it from the credential's
+         * @context via the "contexts" proof option.
+         */
+        private const val TEST_CLAIMS_CONTEXT_URL = "https://trustweave.example/contexts/lifecycle-test/v1"
+
+        init {
+            org.trustweave.credential.internal.JsonLdContextLoader.registerContext(
+                TEST_CLAIMS_CONTEXT_URL,
+                """
+                {
+                  "@context": {
+                    "degree": "https://example.org/vocab#degree",
+                    "name": "https://schema.org/name",
+                    "university": "https://example.org/vocab#university",
+                    "index": "https://example.org/vocab#index"
+                  }
+                }
+                """.trimIndent()
+            )
+        }
+
+        private fun testClaimsProofOptions() = org.trustweave.credential.proof.proofOptions {
+            option(
+                org.trustweave.credential.proof.internal.engines.JsonLdDocumentBuilder.CONTEXTS_OPTION,
+                listOf(TEST_CLAIMS_CONTEXT_URL)
+            )
+        }
+    }
+
     @Test
     fun `test full credential lifecycle - issue and verify`() = runBlocking {
         // Setup: Create KMS and DID method
@@ -89,7 +121,6 @@ class CredentialLifecycleIntegrationTest {
                 id = Iri(holderDid.value),
                 claims = mapOf(
                     "degree" to buildJsonObject {
-                        put("type", "BachelorDegree")
                         put("name", "Bachelor of Science in Computer Science")
                         put("university", "Example University")
                     }
@@ -100,7 +131,8 @@ class CredentialLifecycleIntegrationTest {
                 CredentialType.fromString("DegreeCredential")
             ),
             issuedAt = Clock.System.now(),
-            validUntil = Clock.System.now().plus(3650.days)
+            validUntil = Clock.System.now().plus(3650.days),
+            proofOptions = testClaimsProofOptions()
         )
         
         val issuanceResult = credentialService.issue(issuanceRequest)
@@ -239,7 +271,8 @@ class CredentialLifecycleIntegrationTest {
                     claims = mapOf("index" to JsonPrimitive(index.toString()))
                 ),
                 type = listOf(CredentialType.fromString("VerifiableCredential")),
-                issuedAt = Clock.System.now()
+                issuedAt = Clock.System.now(),
+                proofOptions = testClaimsProofOptions()
             )
             
             val result = credentialService.issue(request)

@@ -134,10 +134,21 @@ fun main() = runBlocking {
 ### Verification
 
 `verify` returns a `VerificationResult` sealed type. Use `assertIs` / `when` to branch.
+The engine must be constructed with a `DidResolver` that can resolve the issuer's DID
+document — otherwise every verification fails closed.
 
 ```kotlin
 import org.trustweave.credential.requests.VerificationOptions
 import org.trustweave.credential.results.VerificationResult
+import org.trustweave.credential.spi.proof.ProofEngineConfig
+import org.trustweave.did.resolver.DidResolver
+
+val engine = Bbs2023ProofEngine(
+    ProofEngineConfig(
+        properties = mapOf("keyPair" to keyPair),
+        didResolver = didResolver, // e.g. TrustWeave's DID resolution service
+    ),
+)
 
 val result = engine.verify(credential, VerificationOptions())
 when (result) {
@@ -146,11 +157,18 @@ when (result) {
 }
 ```
 
-The engine recovers the BLS12-381 public key from the proof's `verificationMethod` URL. Two forms
-are accepted:
+Verification resolves the BLS12-381 public key from the **issuer's DID document** via the
+configured `DidResolver` (`ProofEngineConfig.didResolver` or the `didResolver` property) and
+fails closed:
 
-1. A fragment matching the engine's active key pair (`...#bbs-<base64url-pk>` written by `issue`).
-2. Any `#bbs-<base64url>` or raw `#<base64url>` fragment that decodes to a 96-byte key.
+1. The proof's `verificationMethod` must be a DID URL rooted in the credential's issuer DID.
+2. The issuer DID is resolved; the verification method must appear in the DID document's
+   `verificationMethod` list and be referenced by `assertionMethod`.
+3. The key is read from that entry's `publicKeyMultibase` (`z`/`u`, with or without the
+   `bls12_381-g2-pub` multicodec prefix) or `publicKeyJwk.x`.
+
+Key bytes embedded in the proof's `verificationMethod` fragment are **never** trusted, and
+verification always fails when no resolver is configured or resolution fails.
 
 ### Selective Disclosure / Proof Derivation
 
@@ -206,7 +224,7 @@ so simply having the JAR on the classpath makes the engine discoverable by Trust
 | Key            | Type                  | Description                                          |
 |----------------|-----------------------|------------------------------------------------------|
 | `keyPair`      | `Bls12381KeyPair`     | BLS12-381 key pair used for signing and derivation.  |
-| `didResolver`  | `DidResolver`         | Resolver consulted during verification (optional).   |
+| `didResolver`  | `DidResolver`         | Issuer DID resolver; required for verification.      |
 
 ```kotlin
 import org.trustweave.credential.bbs.Bbs2023ProofEngineProvider
@@ -226,8 +244,8 @@ val engine = provider.create(mapOf("keyPair" to BbsCryptoSuite.generateKeyPair("
   canonicalisation. Two credentials with semantically equivalent but textually different claim
   values will not produce the same signature.
 - `predicates = false`: range/comparison predicates over disclosed claims are not yet supported.
-- Public-key resolution falls back to a base64url fragment embedded in `verificationMethod`; a
-  full DID-document resolver path is not wired in this engine.
+- Verification requires a configured `DidResolver`; without one, every `verify` call fails
+  closed with `VerificationResult.Invalid.InvalidIssuer`.
 
 ## References
 

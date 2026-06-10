@@ -1,11 +1,14 @@
 package org.trustweave.anchor.polygon
 
+import org.trustweave.anchor.AbstractBlockchainAnchorClient
 import org.trustweave.anchor.AnchorRef
+import org.trustweave.anchor.exceptions.BlockchainException
 import org.trustweave.core.exception.TrustWeaveException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -22,8 +25,11 @@ class PolygonBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `should write and read payload`() = runBlocking {
-        val client = PolygonBlockchainAnchorClient(PolygonBlockchainAnchorClient.MUMBAI)
+    fun `should write and read payload in opt-in in-memory test mode`() = runBlocking {
+        val client = PolygonBlockchainAnchorClient(
+            PolygonBlockchainAnchorClient.MUMBAI,
+            mapOf(AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE to true)
+        )
         val payload = buildJsonObject {
             put("test", "data")
             put("number", 42)
@@ -54,6 +60,27 @@ class PolygonBlockchainAnchorClientTest {
         } catch (e: TrustWeaveException.NotFound) {
             assertNotNull(e.message)
         }
+    }
+
+    @Test
+    fun `should fail closed on write without credentials when test mode is off`() = runBlocking<Unit> {
+        val client = PolygonBlockchainAnchorClient(PolygonBlockchainAnchorClient.MUMBAI)
+        val payload = buildJsonObject { put("test", "data") }
+
+        assertFailsWith<BlockchainException.ConfigurationFailed> {
+            client.writePayload(payload)
+        }
+    }
+
+    @Test
+    fun `should reject invalid private key with configuration error`() {
+        val exception = assertFailsWith<BlockchainException.ConfigurationFailed> {
+            PolygonBlockchainAnchorClient(
+                PolygonBlockchainAnchorClient.MUMBAI,
+                mapOf("privateKey" to "not-a-valid-key")
+            )
+        }
+        assertNotNull(exception.cause, "Parse failure must be carried as the cause")
     }
 
     @Test

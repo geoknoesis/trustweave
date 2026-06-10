@@ -196,18 +196,15 @@ class VcLdProofEngineTest {
     private fun createValidIssuanceRequest(): IssuanceRequest {
         val issuerDid = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
         val subjectDid = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
-        
+
         return IssuanceRequest(
             format = ProofSuiteId.VC_LD,
             issuer = Issuer.fromDid(issuerDid),
             issuerKeyId = VerificationMethodId.parse("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK#key-1"),
-            credentialSubject = CredentialSubject.fromDid(
-                subjectDid,
-                claims = mapOf(
-                    "name" to JsonPrimitive("John Doe"),
-                    "email" to JsonPrimitive("john@example.com")
-                )
-            ),
+            // No additional claims: arbitrary claims now require a declared @context that
+            // defines them (fail-closed dropped-claims guard); these tests target the
+            // KMS-not-configured signing path, which runs after canonicalization.
+            credentialSubject = CredentialSubject.fromDid(subjectDid),
             type = listOf(CredentialType.VerifiableCredential, CredentialType.Custom("PersonCredential")),
             issuedAt = Clock.System.now(),
             validUntil = Clock.System.now().plus(kotlin.time.Duration.parse("PT${86400 * 365}S")) // 1 year

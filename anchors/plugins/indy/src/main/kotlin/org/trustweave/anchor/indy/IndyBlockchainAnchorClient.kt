@@ -40,8 +40,10 @@ import java.nio.charset.StandardCharsets
  * | `walletName`     | optional            | Reserved for future wallet-backed signing                   |
  * | `walletKey`      | optional            | Reserved for future wallet-backed signing                   |
  *
- * Without `signingKeySeed` the client falls back to in-memory storage so unit tests
- * and example code can run without a live pool.
+ * Without `signingKeySeed` the client fails closed on writes. For unit tests and
+ * example code that must run without a live pool, explicitly opt in to the in-memory
+ * fallback via `options["inMemoryTestMode"] = true` (see
+ * [AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE]).
  */
 class IndyBlockchainAnchorClient(
     chainId: String,
@@ -100,10 +102,21 @@ class IndyBlockchainAnchorClient(
 
         val seedB58 = (options["signingKeySeed"] as? String)?.takeIf { it.isNotBlank() }
         val signingKeyB58 = (options["signingKey"] as? String)?.takeIf { it.isNotBlank() }
-        signer = when {
-            seedB58 != null -> IndySigner.fromBase58Seed(seedB58)
-            signingKeyB58 != null -> IndySigner.fromBase58SigningKey(signingKeyB58)
-            else -> null
+        signer = try {
+            when {
+                seedB58 != null -> IndySigner.fromBase58Seed(seedB58)
+                signingKeyB58 != null -> IndySigner.fromBase58SigningKey(signingKeyB58)
+                else -> null
+            }
+        } catch (e: Exception) {
+            // Present-but-invalid signing material is a configuration error and
+            // must fail closed, consistently with the other anchor plugins.
+            throw BlockchainException.ConfigurationFailed(
+                chainId = chainId,
+                configKey = if (seedB58 != null) "signingKeySeed" else "signingKey",
+                reason = "Invalid Indy signing key material (expected base58): ${e.message ?: "Unknown error"}",
+                cause = e
+            )
         }
 
         val (client, owned) = when {
@@ -162,8 +175,9 @@ class IndyBlockchainAnchorClient(
             throw BlockchainException.ConnectionFailed(
                 chainId = chainId,
                 endpoint = poolEndpoint,
-                reason = "Failed to submit ATTRIB to Indy pool: ${t.message}"
-            ).apply { initCause(t) }
+                reason = "Failed to submit ATTRIB to Indy pool: ${t.message}",
+                cause = t
+            )
         }
 
         IndyRequestCodec.parseWriteReply(reply)
@@ -190,8 +204,9 @@ class IndyBlockchainAnchorClient(
             throw BlockchainException.ConnectionFailed(
                 chainId = chainId,
                 endpoint = poolEndpoint,
-                reason = "Failed to query GET_ATTRIB from Indy pool: ${t.message}"
-            ).apply { initCause(t) }
+                reason = "Failed to query GET_ATTRIB from Indy pool: ${t.message}",
+                cause = t
+            )
         }
 
         val parsed = IndyRequestCodec.parseGetAttribResponse(reply)

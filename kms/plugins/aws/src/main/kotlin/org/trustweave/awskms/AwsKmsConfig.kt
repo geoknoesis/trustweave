@@ -36,6 +36,26 @@ data class AwsKmsConfig(
         }
     }
 
+    /**
+     * Redacts credential material so the config can be logged safely.
+     *
+     * Overrides the data-class `toString()` which would otherwise print
+     * [secretAccessKey] and [sessionToken] verbatim into any log statement.
+     * Non-sensitive fields remain readable for debugging.
+     */
+    override fun toString(): String {
+        return "AwsKmsConfig(" +
+            "region=$region, " +
+            "accessKeyId=$accessKeyId, " +
+            "secretAccessKey=${redact(secretAccessKey)}, " +
+            "sessionToken=${redact(sessionToken)}, " +
+            "endpointOverride=$endpointOverride, " +
+            "pendingWindowInDays=$pendingWindowInDays, " +
+            "cacheTtlSeconds=$cacheTtlSeconds)"
+    }
+
+    private fun redact(value: String?): String = if (value == null) "null" else "***"
+
     companion object {
         /**
          * Creates a builder for AwsKmsConfig.

@@ -305,6 +305,7 @@ class TrustRegistryDslComprehensiveTest {
                 issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDid, keyId = keyId)
+            withTestClaimContexts() // Define ad-hoc test claims in the credential @context
         }.getOrThrow()
 
         val result = trustWeave.verify {

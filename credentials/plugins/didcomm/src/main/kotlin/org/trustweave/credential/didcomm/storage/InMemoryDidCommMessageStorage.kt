@@ -108,8 +108,14 @@ class InMemoryDidCommMessageStorage : DidCommMessageStorage {
     }
 
     override fun setEncryption(encryption: org.trustweave.credential.didcomm.storage.encryption.MessageEncryption?) {
-        // In-memory storage doesn't support encryption
-        // Encryption should be handled at database level
+        // Fail closed: silently ignoring the request would keep messages in plaintext while the
+        // caller believes they are encrypted at rest.
+        if (encryption != null) {
+            throw UnsupportedOperationException(
+                "Message encryption at rest is not supported by InMemoryDidCommMessageStorage; " +
+                    "use a database-backed storage with encryption support."
+            )
+        }
     }
 
     private val archivedMessages: MutableSet<String> = ConcurrentHashMap.newKeySet()

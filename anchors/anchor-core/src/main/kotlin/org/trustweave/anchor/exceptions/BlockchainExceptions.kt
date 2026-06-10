@@ -20,7 +20,8 @@ sealed class BlockchainException(
         val operation: String? = null,
         val payloadSize: Long? = null,
         val gasUsed: Long? = null,
-        val reason: String
+        val reason: String,
+        override val cause: Throwable? = null
     ) : BlockchainException(
         code = "BLOCKCHAIN_TRANSACTION_FAILED",
         message = buildString {
@@ -36,13 +37,15 @@ sealed class BlockchainException(
             "payloadSize" to payloadSize,
             "gasUsed" to gasUsed,
             "reason" to reason
-        ).filterValues { it != null }
+        ).filterValues { it != null },
+        cause = cause
     )
 
     data class ConnectionFailed(
         val chainId: String? = null,
         val endpoint: String? = null,
-        val reason: String
+        val reason: String,
+        override val cause: Throwable? = null
     ) : BlockchainException(
         code = "BLOCKCHAIN_CONNECTION_FAILED",
         message = buildString {
@@ -54,13 +57,15 @@ sealed class BlockchainException(
             "chainId" to chainId,
             "endpoint" to endpoint,
             "reason" to reason
-        ).filterValues { it != null }
+        ).filterValues { it != null },
+        cause = cause
     )
 
     data class ConfigurationFailed(
         val chainId: String? = null,
         val configKey: String? = null,
-        val reason: String
+        val reason: String,
+        override val cause: Throwable? = null
     ) : BlockchainException(
         code = "BLOCKCHAIN_CONFIGURATION_FAILED",
         message = buildString {
@@ -72,7 +77,8 @@ sealed class BlockchainException(
             "chainId" to chainId,
             "configKey" to configKey,
             "reason" to reason
-        ).filterValues { it != null }
+        ).filterValues { it != null },
+        cause = cause
     )
 
     data class UnsupportedOperation(

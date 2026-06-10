@@ -15,6 +15,7 @@ import org.trustweave.testkit.services.TestkitWalletFactory
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.credential
 import org.trustweave.trust.dsl.createTestCredentialService
+import org.trustweave.trust.dsl.withTestClaimContexts
 import org.trustweave.trust.types.PresentationResult
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
@@ -72,6 +73,7 @@ class WalletPresentationFromWalletResultTest {
                 issued(Clock.System.now())
             }
             signedBy(issuer)
+            withTestClaimContexts() // Define ad-hoc test claims in the credential @context
         }.getOrThrow()
         val wallet = tw.wallet {
             holder("did:key:holder")

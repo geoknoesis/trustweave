@@ -15,10 +15,11 @@ import java.util.concurrent.ConcurrentHashMap
 class AbstractBlockchainAnchorClientTest {
 
     @Test
-    fun `test writePayload with fallback mode`() = runBlocking {
+    fun `test writePayload with opt-in in-memory test mode`() = runBlocking {
         val client = TestBlockchainAnchorClient(
             chainId = "algorand:testnet",
-            canSubmit = false
+            canSubmit = false,
+            inMemoryTestMode = true
         )
 
         val payload = buildJsonObject {
@@ -31,6 +32,28 @@ class AbstractBlockchainAnchorClientTest {
         assertEquals("algorand:testnet", result.ref.chainId)
         assertNotNull(result.ref.txHash)
         assertTrue(result.ref.txHash.startsWith("test_tx_"))
+        // In-memory references must be clearly marked as test-mode artifacts
+        assertEquals("true", result.ref.extra[AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE])
+    }
+
+    @Test
+    fun `test writePayload fails closed without credentials when test mode is off`() = runBlocking {
+        val client = TestBlockchainAnchorClient(
+            chainId = "algorand:testnet",
+            canSubmit = false
+        )
+
+        val payload = buildJsonObject {
+            put("data", "test")
+        }
+
+        val exception = assertFailsWith<BlockchainException.ConfigurationFailed> {
+            client.writePayload(payload)
+        }
+        assertTrue(
+            exception.message.contains(AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE),
+            "Error should explain how to opt in to the test fallback"
+        )
     }
 
     @Test
@@ -56,7 +79,8 @@ class AbstractBlockchainAnchorClientTest {
     fun `test writePayload with contract address`() = runBlocking {
         val client = TestBlockchainAnchorClient(
             chainId = "algorand:testnet",
-            contractAddress = "app-123"
+            contractAddress = "app-123",
+            inMemoryTestMode = true
         )
 
         val payload = buildJsonObject {
@@ -70,7 +94,7 @@ class AbstractBlockchainAnchorClientTest {
 
     @Test
     fun `test writePayload with custom media type`() = runBlocking {
-        val client = TestBlockchainAnchorClient("algorand:testnet")
+        val client = TestBlockchainAnchorClient("algorand:testnet", inMemoryTestMode = true)
 
         val payload = buildJsonObject {
             put("data", "test")
@@ -84,8 +108,8 @@ class AbstractBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test readPayload from fallback storage`() = runBlocking {
-        val client = TestBlockchainAnchorClient("algorand:testnet")
+    fun `test readPayload roundtrip from in-memory storage when test mode is on`() = runBlocking {
+        val client = TestBlockchainAnchorClient("algorand:testnet", inMemoryTestMode = true)
 
         val payload = buildJsonObject {
             put("data", "test")
@@ -130,6 +154,7 @@ class AbstractBlockchainAnchorClientTest {
     fun `test writePayload handles exceptions`() = runBlocking {
         val client = TestBlockchainAnchorClient(
             chainId = "algorand:testnet",
+            canSubmit = true,
             throwOnSubmit = true
         )
 
@@ -144,7 +169,7 @@ class AbstractBlockchainAnchorClientTest {
 
     @Test
     fun `test buildAnchorRef with extra metadata`() = runBlocking {
-        val client = TestBlockchainAnchorClient("algorand:testnet")
+        val client = TestBlockchainAnchorClient("algorand:testnet", inMemoryTestMode = true)
 
         val payload = buildJsonObject {
             put("data", "test")
@@ -162,10 +187,15 @@ class AbstractBlockchainAnchorClientTest {
         chainId: String,
         private val canSubmit: Boolean = false,
         private val contractAddress: String? = null,
-        private val throwOnSubmit: Boolean = false
+        private val throwOnSubmit: Boolean = false,
+        inMemoryTestMode: Boolean = false
     ) : AbstractBlockchainAnchorClient(
         chainId = chainId,
-        options = mapOf("contractAddress" to contractAddress, "appId" to contractAddress)
+        options = mapOf(
+            "contractAddress" to contractAddress,
+            "appId" to contractAddress,
+            AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE to inMemoryTestMode
+        )
     ) {
         private val realStorage = ConcurrentHashMap<String, AnchorResult>()
         private var realTxCounter = 0

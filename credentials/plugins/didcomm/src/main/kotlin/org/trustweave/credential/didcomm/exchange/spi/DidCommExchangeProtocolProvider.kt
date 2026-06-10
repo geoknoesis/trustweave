@@ -21,8 +21,10 @@ import org.trustweave.kms.KeyManagementService
  * org.trustweave.credential.didcomm.exchange.spi.DidCommExchangeProtocolProvider
  * ```
  *
- * **Crypto:** Option `useProductionCrypto` defaults to `false` (placeholder crypto). Set it to `true` only with a
- * non-null `secretResolver` (didcomm-java); otherwise [create] throws [IllegalArgumentException].
+ * **Crypto:** A non-null `secretResolver` (didcomm-java) is required; otherwise [create] throws
+ * [IllegalArgumentException]. The legacy option `useProductionCrypto` is only accepted as `true`
+ * (its former default `false` selected placeholder crypto, which has been removed); passing
+ * `false` throws [UnsupportedOperationException].
  */
 class DidCommExchangeProtocolProvider : CredentialExchangeProtocolProvider {
     override val name = "didcomm"
@@ -41,25 +43,22 @@ class DidCommExchangeProtocolProvider : CredentialExchangeProtocolProvider {
         val resolveDid = options["resolveDid"] as? (suspend (String) -> DidDocument?)
             ?: return null
 
-        val secretResolver = options["secretResolver"] as? SecretResolver
-        val useProductionCrypto = options["useProductionCrypto"] as? Boolean ?: false
-        if (useProductionCrypto && secretResolver == null) {
-            throw IllegalArgumentException(
-                "useProductionCrypto=true requires secretResolver (didcomm-java). " +
-                    "Set useProductionCrypto=false or omit it for placeholder crypto, or supply secretResolver.",
+        val useProductionCrypto = options["useProductionCrypto"] as? Boolean ?: true
+        if (!useProductionCrypto) {
+            throw UnsupportedOperationException(
+                "useProductionCrypto=false is no longer supported: placeholder DIDComm crypto has " +
+                    "been removed. DIDComm encryption requires an ECDH-capable crypto provider; " +
+                    "supply a secretResolver (didcomm-java).",
             )
         }
 
-        val didCommService =
-            if (useProductionCrypto) {
-                DidCommFactory.createInMemoryService(
-                    kms,
-                    resolveDid,
-                    checkNotNull(secretResolver) { "secretResolver required when useProductionCrypto is true" },
-                )
-            } else {
-                DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms, resolveDid)
-            }
+        val secretResolver = options["secretResolver"] as? SecretResolver
+            ?: throw IllegalArgumentException(
+                "DIDComm exchange protocol requires a 'secretResolver' option (didcomm-java) " +
+                    "supplying JWK private key material for the key IDs used in pack/unpack.",
+            )
+
+        val didCommService = DidCommFactory.createInMemoryService(kms, resolveDid, secretResolver)
 
         return DidCommExchangeProtocol(didCommService)
     }

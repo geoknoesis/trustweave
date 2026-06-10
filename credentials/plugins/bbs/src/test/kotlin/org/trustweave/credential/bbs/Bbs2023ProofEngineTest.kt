@@ -12,6 +12,13 @@ import org.trustweave.credential.requests.PresentationRequest
 import org.trustweave.credential.requests.VerificationOptions
 import org.trustweave.credential.results.VerificationResult
 import org.trustweave.credential.spi.proof.ProofEngineConfig
+import org.trustweave.core.util.encodeBase58
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.VerificationMethodId
+import org.trustweave.did.model.DidDocument
+import org.trustweave.did.model.VerificationMethod
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidResolver
 import org.trustweave.testkit.proof.ProofEngineTestData
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -36,13 +43,63 @@ class Bbs2023ProofEngineTest {
         "gpa" to JsonPrimitive("3.8"),
     )
 
-    private fun buildEngine(keyPair: Bls12381KeyPair? = null): Bbs2023ProofEngine {
-        val config = if (keyPair != null) {
-            ProofEngineConfig(properties = mapOf("keyPair" to keyPair))
-        } else {
-            ProofEngineConfig()
+    private fun buildEngine(
+        keyPair: Bls12381KeyPair? = null,
+        resolver: DidResolver? = null,
+    ): Bbs2023ProofEngine {
+        val properties = buildMap<String, Any> {
+            if (keyPair != null) put("keyPair", keyPair)
         }
-        return Bbs2023ProofEngine(config)
+        return Bbs2023ProofEngine(ProofEngineConfig(properties = properties, didResolver = resolver))
+    }
+
+    /** Verification method ID the engine produces at issuance: `{issuer}#{keyId}`. */
+    private fun vmIdFor(keyPair: Bls12381KeyPair, did: String = issuerDid): String =
+        "$did#${keyPair.keyId}"
+
+    /** Multibase (base58btc) encoding of the public key with the bls12_381-g2-pub multicodec prefix. */
+    private fun multibaseFor(keyPair: Bls12381KeyPair): String =
+        "z" + (byteArrayOf(0xEB.toByte(), 0x01) + keyPair.publicKeyBytes).encodeBase58()
+
+    private fun didDocumentFor(
+        did: String,
+        vmId: String,
+        keyPair: Bls12381KeyPair,
+        includeVerificationMethod: Boolean = true,
+        authorizeAssertion: Boolean = true,
+        publicKeyJwk: Map<String, Any?>? = null,
+    ): DidDocument {
+        val verificationMethodId = VerificationMethodId.parse(vmId)
+        return DidDocument(
+            id = Did(did),
+            verificationMethod = if (includeVerificationMethod) {
+                listOf(
+                    VerificationMethod(
+                        id = verificationMethodId,
+                        type = "Bls12381G2Key2020",
+                        controller = Did(did),
+                        publicKeyJwk = publicKeyJwk,
+                        publicKeyMultibase = if (publicKeyJwk == null) multibaseFor(keyPair) else null,
+                    ),
+                )
+            } else {
+                emptyList()
+            },
+            assertionMethod = if (authorizeAssertion) listOf(verificationMethodId) else emptyList(),
+        )
+    }
+
+    private fun resolverFor(vararg documents: DidDocument): DidResolver =
+        DidResolver { did ->
+            documents.firstOrNull { it.id.value == did.value }
+                ?.let { DidResolutionResult.Success(it) }
+                ?: DidResolutionResult.Failure.NotFound(did)
+        }
+
+    /** Resolver + engine wired so the issuer's DID document authorizes [keyPair] for assertions. */
+    private fun engineWithIssuerResolver(keyPair: Bls12381KeyPair): Bbs2023ProofEngine {
+        val document = didDocumentFor(issuerDid, vmIdFor(keyPair), keyPair)
+        return buildEngine(keyPair, resolverFor(document))
     }
 
     private fun buildRequest(
@@ -155,12 +212,33 @@ class Bbs2023ProofEngineTest {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `verify returns Valid for freshly issued credential`() = runTest {
+    fun `verify returns Valid for freshly issued credential with key resolved from issuer DID document`() = runTest {
         val kp = BbsCryptoSuite.generateKeyPair("bbs-key-4")
-        val engine = buildEngine(kp)
+        val engine = engineWithIssuerResolver(kp)
         val request = buildRequest(kp)
 
         val vc = engine.issue(request)
+        val result = engine.verify(vc, VerificationOptions())
+
+        assertIs<VerificationResult.Valid>(result, "Expected Valid but got $result")
+    }
+
+    @Test
+    fun `verify returns Valid when issuer DID document carries the key as publicKeyJwk`() = runTest {
+        val kp = BbsCryptoSuite.generateKeyPair("bbs-key-jwk")
+        val document = didDocumentFor(
+            did = issuerDid,
+            vmId = vmIdFor(kp),
+            keyPair = kp,
+            publicKeyJwk = mapOf(
+                "kty" to "OKP",
+                "crv" to "Bls12381G2",
+                "x" to kp.publicKeyBase64Url,
+            ),
+        )
+        val engine = buildEngine(kp, resolverFor(document))
+
+        val vc = engine.issue(buildRequest(kp))
         val result = engine.verify(vc, VerificationOptions())
 
         assertIs<VerificationResult.Valid>(result, "Expected Valid but got $result")
@@ -187,7 +265,7 @@ class Bbs2023ProofEngineTest {
     @Test
     fun `verify returns InvalidProof for tampered claim`() = runTest {
         val kp = BbsCryptoSuite.generateKeyPair("bbs-key-6")
-        val engine = buildEngine(kp)
+        val engine = engineWithIssuerResolver(kp)
         val request = buildRequest(kp)
 
         val vc = engine.issue(request)
@@ -219,6 +297,130 @@ class Bbs2023ProofEngineTest {
 
         val result = engine.verify(badVc, VerificationOptions())
         assertIs<VerificationResult.Invalid.InvalidProof>(result)
+    }
+
+    // -------------------------------------------------------------------------
+    // Issuer key binding tests (P0: key must come from the issuer DID document,
+    // never from the attacker-controlled proof)
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `verify fails when proof verificationMethod is not rooted in the issuer DID`() = runTest {
+        val kp = BbsCryptoSuite.generateKeyPair("bbs-binding-1")
+        // Attacker controls subjectDid and its DID document, which legitimately
+        // authorizes the attacker's key — but the credential claims issuerDid.
+        val attackerDoc = didDocumentFor(subjectDid, vmIdFor(kp, did = subjectDid), kp)
+        val issuerDoc = didDocumentFor(issuerDid, vmIdFor(kp), kp)
+        val engine = buildEngine(kp, resolverFor(issuerDoc, attackerDoc))
+
+        val vc = engine.issue(buildRequest(kp))
+        val proof = vc.proof as CredentialProof.LinkedDataProof
+        val forged = vc.copy(
+            proof = proof.copy(verificationMethod = vmIdFor(kp, did = subjectDid)),
+        )
+
+        val result = engine.verify(forged, VerificationOptions())
+        val invalid = assertIs<VerificationResult.Invalid.InvalidProof>(
+            result,
+            "Proof bound to a foreign DID must be rejected even if that DID resolves",
+        )
+        assertTrue(
+            "not rooted in" in invalid.reason,
+            "Failure reason should explain the issuer binding violation, got: ${invalid.reason}",
+        )
+    }
+
+    @Test
+    fun `verify fails when issuer DID document does not contain the verification method`() = runTest {
+        // Attacker signs with their own key, claiming issuerDid as issuer. The proof's
+        // verificationMethod is rooted in issuerDid, but the real issuer DID document
+        // only lists the legitimate issuer key.
+        val attackerKp = BbsCryptoSuite.generateKeyPair("attacker-key")
+        val legitimateKp = BbsCryptoSuite.generateKeyPair("issuer-key")
+        val issuerDoc = didDocumentFor(issuerDid, vmIdFor(legitimateKp), legitimateKp)
+        val engine = buildEngine(attackerKp, resolverFor(issuerDoc))
+
+        val forged = engine.issue(buildRequest(attackerKp))
+
+        val result = engine.verify(forged, VerificationOptions())
+        val invalid = assertIs<VerificationResult.Invalid.InvalidIssuer>(
+            result,
+            "Credential signed with a key absent from the issuer DID document must be rejected",
+        )
+        assertTrue(
+            "does not contain" in invalid.reason,
+            "Failure reason should mention the missing verification method, got: ${invalid.reason}",
+        )
+    }
+
+    @Test
+    fun `verify fails when verification method is not referenced by assertionMethod`() = runTest {
+        val kp = BbsCryptoSuite.generateKeyPair("bbs-binding-3")
+        val document = didDocumentFor(issuerDid, vmIdFor(kp), kp, authorizeAssertion = false)
+        val engine = buildEngine(kp, resolverFor(document))
+
+        val vc = engine.issue(buildRequest(kp))
+
+        val result = engine.verify(vc, VerificationOptions())
+        val invalid = assertIs<VerificationResult.Invalid.InvalidIssuer>(result)
+        assertTrue(
+            "assertionMethod" in invalid.reason,
+            "Failure reason should mention the missing assertionMethod reference, got: ${invalid.reason}",
+        )
+    }
+
+    @Test
+    fun `verify fails closed when no DID resolver is configured`() = runTest {
+        val kp = BbsCryptoSuite.generateKeyPair("bbs-binding-4")
+        val engine = buildEngine(kp, resolver = null)
+
+        val vc = engine.issue(buildRequest(kp))
+
+        val result = engine.verify(vc, VerificationOptions())
+        val invalid = assertIs<VerificationResult.Invalid.InvalidIssuer>(
+            result,
+            "Verification without a resolver must fail closed, never trust proof-embedded keys",
+        )
+        assertTrue(
+            "No DID resolver configured" in invalid.reason,
+            "Failure reason should explain the missing resolver, got: ${invalid.reason}",
+        )
+    }
+
+    @Test
+    fun `verify fails when issuer DID does not resolve`() = runTest {
+        val kp = BbsCryptoSuite.generateKeyPair("bbs-binding-5")
+        val engine = buildEngine(kp, resolverFor(/* no documents */))
+
+        val vc = engine.issue(buildRequest(kp))
+
+        val result = engine.verify(vc, VerificationOptions())
+        assertIs<VerificationResult.Invalid.InvalidIssuer>(result)
+    }
+
+    @Test
+    fun `verify rejects legacy proofs embedding the public key in the verificationMethod fragment`() = runTest {
+        // Regression for the original exploit: an attacker mints a credential claiming
+        // issuerDid and smuggles their own 96-byte public key into the fragment
+        // (`#bbs-<base64url>`). The key bytes in the proof must never be trusted.
+        val attackerKp = BbsCryptoSuite.generateKeyPair("legacy-attacker-key")
+        val legitimateKp = BbsCryptoSuite.generateKeyPair("legacy-issuer-key")
+        val issuerDoc = didDocumentFor(issuerDid, vmIdFor(legitimateKp), legitimateKp)
+        val engine = buildEngine(attackerKp, resolverFor(issuerDoc))
+
+        val vc = engine.issue(buildRequest(attackerKp))
+        val proof = vc.proof as CredentialProof.LinkedDataProof
+        val forged = vc.copy(
+            proof = proof.copy(
+                verificationMethod = "$issuerDid#bbs-${attackerKp.publicKeyBase64Url}",
+            ),
+        )
+
+        val result = engine.verify(forged, VerificationOptions())
+        assertIs<VerificationResult.Invalid>(
+            result,
+            "Proof-embedded key bytes must never be decoded and trusted",
+        )
     }
 
     // -------------------------------------------------------------------------
@@ -311,12 +513,15 @@ class Bbs2023ProofEngineTest {
     }
 
     @Test
-    fun `Bbs2023ProofEngineProvider passes keyPair through options`() = runTest {
+    fun `Bbs2023ProofEngineProvider passes keyPair and didResolver through options`() = runTest {
         val kp = BbsCryptoSuite.generateKeyPair("provider-key-1")
+        val resolver = resolverFor(didDocumentFor(issuerDid, vmIdFor(kp), kp))
         val provider = Bbs2023ProofEngineProvider()
-        val engine = provider.create(mapOf("keyPair" to kp)) as Bbs2023ProofEngine
+        val engine = provider.create(
+            mapOf("keyPair" to kp, "didResolver" to resolver),
+        ) as Bbs2023ProofEngine
 
-        // Issue a credential to prove the key pair was wired in
+        // Issue a credential to prove the key pair and resolver were wired in
         val request = buildRequest(kp)
         val vc = engine.issue(request)
         val result = engine.verify(vc, VerificationOptions())

@@ -8,6 +8,7 @@ group = "org.trustweave.credentials"
 dependencies {
     implementation(project(":credentials:credential-api"))
     implementation(project(":common"))
+    implementation(project(":did:did-core"))
     implementation(project(":kms:kms-core"))
     implementation(libs.bouncycastle.prov)
     implementation(libs.bouncycastle.pkix)

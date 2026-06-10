@@ -3,38 +3,45 @@ package org.trustweave.credential.internal
 import com.github.jsonldjava.core.JsonLdOptions
 import com.github.jsonldjava.core.JsonLdProcessor
 import kotlinx.serialization.json.*
+import org.trustweave.core.exception.SerializationException
 
 /**
  * JSON-LD utility functions for canonicalization and document conversion.
- * 
+ *
  * This utility object centralizes JSON-LD operations used throughout the credential API,
  * particularly for VC-LD (Verifiable Credentials Linked Data) proof generation and verification.
- * 
+ *
  * **Key Operations:**
  * - JSON object to Map conversion for jsonld-java library compatibility
- * - JSON-LD canonicalization to N-Quads format
- * - Document normalization for signature verification
- * 
- * **Usage:**
- * ```kotlin
- * // Convert JsonObject to Map for jsonld-java
- * val map = JsonLdUtils.jsonObjectToMap(jsonObject)
- * 
- * // Canonicalize document for signing
- * val canonical = JsonLdUtils.canonicalizeDocument(map)
- * ```
- * 
+ * - JSON-LD canonicalization (URDNA2015) to N-Quads format
+ * - Dropped-claims detection for `credentialSubject` properties
+ *
+ * **Security properties (fail-closed):**
+ * - Canonicalization failures **throw** — there is no fallback to plain JSON serialization.
+ *   A non-deterministic or empty signing input would silently weaken every signature.
+ * - Canonicalization that produces no RDF statements throws, because an empty signing
+ *   input covers nothing.
+ * - If `credentialSubject` properties (at any nesting depth) are not defined by the
+ *   document's `@context`, JSON-LD silently drops them from the canonical form, leaving
+ *   them unsigned. [canonicalizeDocument] detects this and throws.
+ * - Remote `@context` URLs are not fetched over the network by default; see
+ *   [JsonLdContextLoader].
+ *
  * **Note:** This is an internal utility and should not be used directly by API consumers.
  * It is used by proof engines for VC-LD operations.
  */
 internal object JsonLdUtils {
+
+    /** Expanded IRI of `credentialSubject` (identical in the VC 1.1 and VC 2.0 vocabularies). */
+    private const val CREDENTIAL_SUBJECT_IRI = "https://www.w3.org/2018/credentials#credentialSubject"
+
     /**
      * Convert a kotlinx.serialization.json.JsonObject to a Map for jsonld-java library.
-     * 
+     *
      * Recursively converts all JSON elements to their Java equivalents.
      * This conversion is necessary because the jsonld-java library expects Java Map structures
      * rather than Kotlin JsonObject/JsonElement types.
-     * 
+     *
      * **Conversion Algorithm:**
      * 1. JsonPrimitive values are converted to their Java equivalents:
      *    - Strings: remain as String
@@ -44,23 +51,7 @@ internal object JsonLdUtils {
      * 2. JsonArray values are converted to List<Any> by recursively processing each element
      * 3. JsonObject values are recursively converted using this same function
      * 4. JsonNull values are converted to String representation
-     * 
-     * **Performance Considerations:**
-     * - This is a recursive operation that processes the entire JSON tree
-     * - For large documents, this conversion may be memory-intensive
-     * - The recursive nature means deeply nested structures may impact performance
-     * 
-     * **Example:**
-     * ```kotlin
-     * val jsonObject = buildJsonObject {
-     *     put("name", "John")
-     *     put("age", 30)
-     *     put("active", true)
-     * }
-     * val map = JsonLdUtils.jsonObjectToMap(jsonObject)
-     * // Result: mapOf("name" to "John", "age" to 30L, "active" to true)
-     * ```
-     * 
+     *
      * @param jsonObject The JSON object to convert
      * @return Map representation suitable for jsonld-java
      */
@@ -89,86 +80,187 @@ internal object JsonLdUtils {
             }
         }
     }
-    
+
     /**
-     * Canonicalize a JSON-LD document to N-Quads format.
-     * 
-     * Uses JSON-LD normalization (RFC 8785) to create a canonical form of the document.
+     * Canonicalize a JSON-LD document to N-Quads format using URDNA2015.
+     *
      * This canonicalization is essential for signature generation and verification, as it
      * ensures that semantically equivalent JSON-LD documents produce identical byte sequences.
-     * 
-     * **Canonicalization Algorithm:**
-     * 1. Convert JsonObject to Map format (required by jsonld-java library)
-     * 2. Configure JsonLdOptions with N-Quads format output
-     * 3. Perform normalization using JsonLdProcessor.normalize()
-     * 4. If normalization fails or returns empty, fall back to JSON serialization
-     * 5. Validate that the canonicalized document does not exceed size limits
-     * 
-     * **Security Considerations:**
-     * - Size validation prevents DoS attacks from extremely large canonicalized documents
-     * - The canonicalization process may expand the document size (N-Quads format)
-     * - Maximum size limit is enforced to prevent memory exhaustion
-     * 
-     * **Error Handling:**
-     * - Validation exceptions (size limit exceeded) are re-thrown immediately
-     * - Other exceptions trigger fallback to JSON serialization
-     * - Fallback output is also validated for size limits
-     * 
-     * **Performance Notes:**
-     * - JSON-LD canonicalization can be CPU-intensive for complex documents
-     * - The recursive Map conversion adds overhead
-     * - Size validation occurs after canonicalization to catch all cases
-     * 
-     * @param document The JSON object to canonicalize
-     * @param json Json instance for fallback serialization
+     *
+     * **Fail-closed behaviour:**
+     * - Throws [SerializationException.EncodeFailed] if canonicalization fails for any
+     *   reason (e.g. unresolvable `@context`). There is **no** fallback to plain JSON
+     *   serialization: a fallback would make the signing input non-deterministic and mask
+     *   context resolution failures.
+     * - Throws [SerializationException.EncodeFailed] if canonicalization produces no RDF
+     *   statements — an empty canonical form would mean the signature covers nothing.
+     * - Throws [SerializationException.EncodeFailed] if `credentialSubject` properties
+     *   (including nested ones) were dropped because they are not defined in the
+     *   document's `@context` (such claims would not be covered by the signature).
+     * - Throws [IllegalArgumentException] if the canonical form exceeds
+     *   [SecurityConstants.MAX_CANONICALIZED_DOCUMENT_SIZE_BYTES] (DoS protection).
+     *
+     * Remote contexts are resolved through [JsonLdContextLoader] (offline-first, remote
+     * fetching disabled by default).
+     *
+     * @param document The JSON-LD document to canonicalize
      * @return Canonicalized document as N-Quads string
-     * @throws IllegalArgumentException if canonicalized document exceeds maximum size
      */
-    fun canonicalizeDocument(document: JsonObject, json: Json): String {
-        return try {
-            // Step 1: Convert JsonObject to Map (required by jsonld-java)
-            val documentMap = jsonObjectToMap(document)
-            
-            // Step 2: Configure JSON-LD normalization options
-            val options = JsonLdOptions()
-            options.format = CredentialConstants.JsonLdFormats.N_QUADS
-            
-            // Step 3: Perform JSON-LD canonicalization to N-Quads format
-            val canonical = JsonLdProcessor.normalize(documentMap, options)
-            
-            // Step 4: Use canonicalized form if valid, otherwise fall back to JSON serialization
-            val canonicalString = canonical?.toString()?.takeIf { it.isNotBlank() }
-                ?: json.encodeToString(JsonObject.serializer(), document)
-            
-            // Step 5: Validate canonicalized document size to prevent DoS attacks
-            val canonicalBytes = canonicalString.toByteArray(Charsets.UTF_8)
-            if (canonicalBytes.size > SecurityConstants.MAX_CANONICALIZED_DOCUMENT_SIZE_BYTES) {
-                throw IllegalArgumentException(
-                    "Canonicalized document exceeds maximum size of " +
+    fun canonicalizeDocument(document: JsonObject): String {
+        val documentMap = jsonObjectToMap(document)
+
+        val canonical = try {
+            JsonLdProcessor.normalize(documentMap, newJsonLdOptions())?.toString()
+        } catch (e: Exception) {
+            throw SerializationException.EncodeFailed(
+                element = "json-ld-document",
+                reason = "JSON-LD canonicalization (URDNA2015) failed: ${e.message}"
+            )
+        }
+
+        if (canonical.isNullOrBlank()) {
+            throw SerializationException.EncodeFailed(
+                element = "json-ld-document",
+                reason = "JSON-LD canonicalization produced no RDF statements; the document's " +
+                    "@context is missing or does not define any of its terms. Refusing to sign or " +
+                    "verify an empty canonical form."
+            )
+        }
+
+        // DoS protection: enforce canonical document size limit.
+        val canonicalBytes = canonical.toByteArray(Charsets.UTF_8)
+        if (canonicalBytes.size > SecurityConstants.MAX_CANONICALIZED_DOCUMENT_SIZE_BYTES) {
+            throw IllegalArgumentException(
+                "Canonicalized document exceeds maximum size of " +
                     "${SecurityConstants.MAX_CANONICALIZED_DOCUMENT_SIZE_BYTES} bytes: " +
                     "${canonicalBytes.size} bytes"
-                )
-            }
-            
-            canonicalString
-        } catch (e: IllegalArgumentException) {
-            // Re-throw validation exceptions (size limit exceeded)
-            throw e
+            )
+        }
+
+        // Fail closed if @context silently dropped credentialSubject claims.
+        verifyCredentialSubjectClaimsPreserved(document, documentMap)
+
+        return canonical
+    }
+
+    /**
+     * Detect `credentialSubject` claims that were silently dropped by JSON-LD processing.
+     *
+     * JSON-LD expansion removes properties whose terms are not defined by the active
+     * `@context`. Such properties would be absent from the canonical N-Quads and therefore
+     * **not covered by the signature** — an attacker could tamper with them freely.
+     *
+     * This guard expands the document and checks that every `credentialSubject` property
+     * (other than `id`/`type`), **at any nesting depth** (nested objects and arrays
+     * included), is represented in the expanded output. It throws
+     * [SerializationException.EncodeFailed] when one or more claims were dropped.
+     *
+     * Fail-closed: a `credentialSubject` that is present but is neither a JSON object nor
+     * an array of objects also throws — its claims cannot be checked for dropped terms.
+     */
+    private fun verifyCredentialSubjectClaimsPreserved(document: JsonObject, documentMap: Map<String, Any>) {
+        val subject = document["credentialSubject"] ?: return
+        if (subject !is JsonObject && subject !is JsonArray) {
+            throw SerializationException.EncodeFailed(
+                element = "credentialSubject",
+                reason = "credentialSubject must be a JSON object (or an array of objects), got " +
+                    "${subject::class.simpleName}. Refusing to sign or verify a document whose " +
+                    "subject claims cannot be checked against the @context for dropped terms."
+            )
+        }
+
+        val claimNames = mutableListOf<String>()
+        collectDeclaredClaimNames(subject, claimNames)
+        if (claimNames.isEmpty()) return
+
+        val expanded = try {
+            JsonLdProcessor.expand(documentMap, newJsonLdOptions())
         } catch (e: Exception) {
-            // Fallback: use JSON serialization if canonicalization fails
-            val fallback = json.encodeToString(JsonObject.serializer(), document)
-            val fallbackBytes = fallback.toByteArray(Charsets.UTF_8)
-            
-            // Validate fallback size as well
-            if (fallbackBytes.size > SecurityConstants.MAX_CANONICALIZED_DOCUMENT_SIZE_BYTES) {
-                throw IllegalArgumentException(
-                    "Document (fallback serialization) exceeds maximum size of " +
-                    "${SecurityConstants.MAX_CANONICALIZED_DOCUMENT_SIZE_BYTES} bytes: " +
-                    "${fallbackBytes.size} bytes"
-                )
-            }
-            fallback
+            throw SerializationException.EncodeFailed(
+                element = "credentialSubject",
+                reason = "JSON-LD expansion failed while checking for dropped claims: ${e.message}"
+            )
+        }
+
+        val expandedPropertyCount = countExpandedSubjectProperties(expanded)
+        if (expandedPropertyCount < claimNames.size) {
+            throw SerializationException.EncodeFailed(
+                element = "credentialSubject",
+                reason = "JSON-LD canonicalization dropped credentialSubject claims: " +
+                    "${claimNames.size} claim(s) declared (${claimNames.sorted()}, nested claims " +
+                    "included) but only $expandedPropertyCount survived JSON-LD expansion. Claims " +
+                    "whose terms are not defined in the credential's @context are silently removed " +
+                    "and would NOT be covered by the proof signature. Declare an @context that " +
+                    "defines every credentialSubject term (e.g. register a context via " +
+                    "JsonLdContextLoader and reference it from the credential's @context)."
+            )
         }
     }
-}
 
+    /**
+     * Recursively collect the names of all claim properties (excluding `id`, `type` and
+     * JSON-LD keywords) declared on the `credentialSubject`, including properties of
+     * nested objects and of objects inside arrays.
+     */
+    private fun collectDeclaredClaimNames(element: JsonElement, into: MutableList<String>) {
+        when (element) {
+            is JsonObject -> element.forEach { (key, value) ->
+                if (key != "id" && key != "type" && !key.startsWith("@")) {
+                    into.add(key)
+                }
+                collectDeclaredClaimNames(value, into)
+            }
+            is JsonArray -> element.forEach { collectDeclaredClaimNames(it, into) }
+            else -> {}
+        }
+    }
+
+    /**
+     * Count the non-keyword properties on the expanded `credentialSubject` node(s),
+     * recursing into nested node objects and value lists so dropped nested terms are
+     * detected as well.
+     */
+    private fun countExpandedSubjectProperties(expanded: Any?): Int {
+        val subjectNodes = mutableListOf<Map<*, *>>()
+        collectSubjectNodes(expanded, subjectNodes)
+        return subjectNodes.sumOf { node -> countExpandedNodeProperties(node) }
+    }
+
+    /**
+     * Recursively count non-keyword (`@`-prefixed) property keys of an expanded JSON-LD
+     * node, including the properties of nested nodes.
+     */
+    private fun countExpandedNodeProperties(element: Any?): Int = when (element) {
+        is Map<*, *> -> element.entries.sumOf { (key, value) ->
+            val self = if (key is String && !key.startsWith("@")) 1 else 0
+            self + countExpandedNodeProperties(value)
+        }
+        is List<*> -> element.sumOf { countExpandedNodeProperties(it) }
+        else -> 0
+    }
+
+    private fun collectSubjectNodes(element: Any?, into: MutableList<Map<*, *>>) {
+        when (element) {
+            is List<*> -> element.forEach { collectSubjectNodes(it, into) }
+            is Map<*, *> -> {
+                val subjectValue = element[CREDENTIAL_SUBJECT_IRI]
+                if (subjectValue is List<*>) {
+                    subjectValue.filterIsInstance<Map<*, *>>().forEach { into.add(it) }
+                } else if (subjectValue is Map<*, *>) {
+                    into.add(subjectValue)
+                }
+                element.values.forEach { value ->
+                    if (value !== subjectValue) collectSubjectNodes(value, into)
+                }
+            }
+            else -> {}
+        }
+    }
+
+    private fun newJsonLdOptions(): JsonLdOptions {
+        val options = JsonLdOptions()
+        options.format = CredentialConstants.JsonLdFormats.N_QUADS
+        options.documentLoader = JsonLdContextLoader.createDocumentLoader()
+        return options
+    }
+}

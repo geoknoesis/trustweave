@@ -109,7 +109,7 @@ class InMemoryTrustRegistry : TrustRegistry {
     }
 
     override suspend fun getAccreditationStatus(did: String): AccreditationStatus =
-        issuers[did]?.status ?: verifiers[did]?.status ?: AccreditationStatus.PENDING
+        issuers[did]?.status ?: verifiers[did]?.status ?: AccreditationStatus.UNKNOWN
 
     override suspend fun listCredentialTypes(): List<String> =
         issuers.values.flatMap { it.credentialTypes }.distinct().sorted()

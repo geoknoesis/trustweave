@@ -65,8 +65,15 @@ data class VerifierUpdate(
     val metadata: Map<String, String>? = null,
 )
 
+/**
+ * Accreditation status of a registry participant.
+ *
+ * [UNKNOWN] means the DID has never been registered — it is distinct from
+ * [PENDING] (registered, awaiting approval) and MUST NOT be treated as such
+ * by authorization decisions.
+ */
 @Serializable
-enum class AccreditationStatus { ACTIVE, REVOKED, SUSPENDED, PENDING }
+enum class AccreditationStatus { ACTIVE, REVOKED, SUSPENDED, PENDING, UNKNOWN }
 
 @Serializable
 data class RegistryFilter(

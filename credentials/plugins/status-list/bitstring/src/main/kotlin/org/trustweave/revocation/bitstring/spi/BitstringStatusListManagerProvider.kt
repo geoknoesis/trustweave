@@ -19,6 +19,12 @@ import com.zaxxer.hikari.HikariDataSource
  * Callers must inject a [KeyManagementService] before calling [create], or set the
  * `trustweave.statuslist.jdbc.*` system properties. The [kms] property can be set
  * programmatically after construction.
+ *
+ * Note: managers created via this provider have no proof engine / issuer signing key
+ * configured, so they support status tracking (assign/revoke/check) but
+ * `buildStatusListVc` fails closed with a ConfigException. To publish signed status
+ * list credentials, construct the manager via [BitstringStatusListManagerFactory]
+ * with a `proofEngine` and `issuerKeyId`.
  */
 class BitstringStatusListManagerProvider : StatusListRegistryFactory {
 

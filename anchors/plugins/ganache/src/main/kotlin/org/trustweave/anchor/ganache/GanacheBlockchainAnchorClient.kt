@@ -84,8 +84,9 @@ class GanacheBlockchainAnchorClient(
             throw BlockchainException.ConfigurationFailed(
                 chainId = chainId,
                 configKey = "privateKey",
-                reason = "Invalid private key format: ${e.message ?: "Unknown error"}"
-            ).apply { initCause(e) }
+                reason = "Invalid private key format: ${e.message ?: "Unknown error"}",
+                cause = e
+            )
         }
 
         val chainIdNum = chainId.substringAfter(":").toLongOrNull() ?: 1337L

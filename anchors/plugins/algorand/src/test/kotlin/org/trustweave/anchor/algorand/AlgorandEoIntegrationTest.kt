@@ -35,8 +35,9 @@ class AlgorandEoIntegrationTest {
         val anchorClient = AlgorandBlockchainAnchorClient(
             chainId = chainId,
             options = mapOf(
-                // Use testnet defaults - no credentials needed for in-memory fallback
-                // In production, provide "algodUrl" and "privateKey" for real transactions
+                // Explicitly opt in to the in-memory test fallback - no credentials needed.
+                // In production, provide "algodUrl" and "privateKey" for real transactions.
+                org.trustweave.anchor.AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE to true
             )
         )
 
@@ -265,7 +266,13 @@ class AlgorandEoIntegrationTest {
     @Test
     fun `test Algorand blockchain anchoring for EO dataset`() = runBlocking {
         val chainId = AlgorandBlockchainAnchorClient.TESTNET
-        val anchorClient = AlgorandBlockchainAnchorClient(chainId, emptyMap())
+        val anchorClient = AlgorandBlockchainAnchorClient(
+            chainId = chainId,
+            options = mapOf(
+                // Explicitly opt in to the in-memory test fallback - no credentials needed.
+                org.trustweave.anchor.AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE to true
+            )
+        )
 
         // Create a simple EO dataset digest payload
         val digestPayload = buildJsonObject {

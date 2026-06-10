@@ -14,6 +14,11 @@ import java.util.UUID
  * Supports local file storage with encryption for wallet data.
  * Suitable for desktop and mobile applications.
  *
+ * The optional `encryptionKey` property must be a Base64-encoded AES key that decodes
+ * to 16, 24, or 32 bytes (AES-128/192/256); invalid keys are rejected at creation.
+ * Credentials are encrypted with AES-GCM (see [FileWallet] for the on-disk format).
+ * When the key is omitted, credentials are stored in plaintext and a warning is logged.
+ *
  * **Example:**
  * ```kotlin
  * val factory = FileWalletFactory()
@@ -23,7 +28,7 @@ import java.util.UUID
  *     options = WalletCreationOptions(
  *         storagePath = "/path/to/wallet/data",
  *         additionalProperties = mapOf(
- *             "encryptionKey" to "base64-encoded-key"
+ *             "encryptionKey" to "base64-encoded-16/24/32-byte-key"
  *         )
  *     )
  * )

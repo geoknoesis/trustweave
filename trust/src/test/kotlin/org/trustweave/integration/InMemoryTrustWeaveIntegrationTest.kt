@@ -162,6 +162,7 @@ class InMemoryTrustWeaveIntegrationTest {
                 issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDid, keyId = keyId) // MUST match key in DID document
+            withTestClaimContexts() // Define ad-hoc test claims in the credential @context
         }.getOrThrow()
 
         assertNotNull(credential, "Credential should be issued")
@@ -261,6 +262,7 @@ class InMemoryTrustWeaveIntegrationTest {
                 issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDid, keyId = keyId)
+            withTestClaimContexts() // Define ad-hoc test claims in the credential @context
             withRevocation() // Enable revocation status list
         }.getOrThrow()
 
@@ -337,6 +339,7 @@ class InMemoryTrustWeaveIntegrationTest {
                 issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDid, keyId = keyId)
+            withTestClaimContexts() // Define ad-hoc test claims in the credential @context
         }.getOrThrow()
 
         // Create wallet for holder
@@ -419,6 +422,7 @@ class InMemoryTrustWeaveIntegrationTest {
                 issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+            withTestClaimContexts() // Define ad-hoc test claims in the credential @context
         }.getOrThrow()
 
         val credential2 = trustWeave.issue {
@@ -433,6 +437,7 @@ class InMemoryTrustWeaveIntegrationTest {
                 issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+            withTestClaimContexts() // Define ad-hoc test claims in the credential @context
         }.getOrThrow()
 
         // Create wallet and store credentials
@@ -530,6 +535,7 @@ class InMemoryTrustWeaveIntegrationTest {
                 issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDid, keyId = keyId)
+            withTestClaimContexts() // Define ad-hoc test claims in the credential @context
         }.getOrThrow()
 
         assertNotNull(credential, "Credential should be issued with updated DID")
@@ -594,6 +600,7 @@ class InMemoryTrustWeaveIntegrationTest {
                 issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDid, keyId = keyId)
+            withTestClaimContexts() // Define ad-hoc test claims in the credential @context
             // Note: anchor() function not available in current DSL
         }.getOrThrow()
 
@@ -675,6 +682,7 @@ class InMemoryTrustWeaveIntegrationTest {
                 issued(Clock.System.now())
             }
             signedBy(issuerDid = issuerDid, keyId = keyId)
+            withTestClaimContexts() // Define ad-hoc test claims in the credential @context
             // Note: anchor() function not available in current DSL
         }.getOrThrow()
 

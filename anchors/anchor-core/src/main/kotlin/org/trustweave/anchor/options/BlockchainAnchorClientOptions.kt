@@ -121,7 +121,9 @@ sealed class BlockchainAnchorClientOptions {
  *
  * @param algodUrl Optional Algod API URL (defaults to network-specific endpoint)
  * @param algodToken Optional Algod API token (defaults to empty string)
- * @param privateKey Optional private key in base64 format (required for real transactions)
+ * @param privateKey Optional private key in base64 format (required for real transactions).
+ *   Accepts either the 32-byte Ed25519 seed or the 64-byte exported secret key
+ *   (seed || public key, e.g. JS SDK `account.sk` / `algokey` output)
  * @param appId Optional Algorand application ID for contract interactions
  */
 data class AlgorandOptions(

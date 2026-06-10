@@ -11,6 +11,7 @@ import org.trustweave.did.resolver.DidResolver
 import org.trustweave.kms.results.SignResult
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.trust.dsl.createTestCredentialService
+import org.trustweave.trust.dsl.withTestClaimContexts
 import org.trustweave.trust.dsl.credential.issueBatch
 import org.trustweave.trust.dsl.credential.presentationResult
 import org.trustweave.trust.dsl.credential.verifyBatch
@@ -91,6 +92,7 @@ class TrustWeaveProductionApiContractTest {
                 }
             }
             signedBy(issuer)
+            withTestClaimContexts() // Define ad-hoc test claims in the credential @context
         }
         val credential = assertIs<IssuanceResult.Success>(issued).credential
 

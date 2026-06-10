@@ -7,7 +7,8 @@ import kotlinx.serialization.json.JsonObject
 /**
  * Interface for DIDComm cryptographic operations.
  *
- * Allows switching between placeholder development crypto and didcomm-java ([DidCommCryptoDidcomm]).
+ * Implemented by [DidCommCryptoDidcomm] (didcomm-java, real crypto) and [DidCommCrypto]
+ * (fail-closed stand-in that throws when no ECDH-capable provider is configured).
  */
 interface DidCommCryptoInterface {
     /**

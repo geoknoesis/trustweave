@@ -1,17 +1,22 @@
 package org.trustweave.anchor.indy
 
 import org.trustweave.anchor.*
+import org.trustweave.anchor.exceptions.BlockchainException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
 /**
  * Tests for IndyBlockchainAnchorClient.
- * Note: These tests use in-memory fallback mode (no wallet required).
+ * Note: These tests opt in to the in-memory test mode (no wallet required).
  */
 class IndyBlockchainAnchorClientTest {
+
+    private val testModeOptions =
+        mapOf(AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE to true)
 
     @Test
     fun `should create client with testnet chain ID`() = runBlocking {
@@ -23,10 +28,10 @@ class IndyBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `should anchor payload using in-memory fallback`() = runBlocking {
+    fun `should anchor payload using opt-in in-memory test mode`() = runBlocking {
         val client = IndyBlockchainAnchorClient(
             chainId = IndyBlockchainAnchorClient.BCOVRIN_TESTNET,
-            options = emptyMap()
+            options = testModeOptions
         )
 
         val payload = buildJsonObject {
@@ -40,10 +45,24 @@ class IndyBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `should read anchored payload`() = runBlocking {
+    fun `should fail closed on write without signer when test mode is off`() = runBlocking<Unit> {
         val client = IndyBlockchainAnchorClient(
             chainId = IndyBlockchainAnchorClient.BCOVRIN_TESTNET,
             options = emptyMap()
+        )
+
+        val payload = buildJsonObject { put("test", "data") }
+
+        assertFailsWith<BlockchainException.ConfigurationFailed> {
+            client.writePayload(payload)
+        }
+    }
+
+    @Test
+    fun `should read anchored payload`() = runBlocking {
+        val client = IndyBlockchainAnchorClient(
+            chainId = IndyBlockchainAnchorClient.BCOVRIN_TESTNET,
+            options = testModeOptions
         )
 
         val payload = buildJsonObject {
@@ -60,7 +79,7 @@ class IndyBlockchainAnchorClientTest {
     fun `should handle custom chain ID`() = runBlocking {
         val client = IndyBlockchainAnchorClient(
             chainId = "indy:testnet:custom-pool",
-            options = mapOf("poolEndpoint" to "https://custom.pool.example.com")
+            options = mapOf("poolEndpoint" to "https://custom.pool.example.com") + testModeOptions
         )
 
         val payload = buildJsonObject {

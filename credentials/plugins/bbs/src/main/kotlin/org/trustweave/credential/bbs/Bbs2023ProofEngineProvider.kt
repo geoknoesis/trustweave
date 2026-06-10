@@ -16,7 +16,8 @@ import org.trustweave.credential.spi.proof.ProofEngineProvider
  * | Key          | Type               | Description                               |
  * |--------------|--------------------|-------------------------------------------|
  * | `keyPair`    | [Bls12381KeyPair]  | BLS12-381 key pair for signing/derivation |
- * | `didResolver`| `DidResolver`      | Resolver used during verification         |
+ * | `didResolver`| `DidResolver`      | Issuer DID resolver; required for         |
+ * |              |                    | verification (verify fails closed without)|
  */
 class Bbs2023ProofEngineProvider : ProofEngineProvider {
 

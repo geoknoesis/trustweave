@@ -10,10 +10,19 @@ import kotlinx.serialization.json.Json
 import org.trustweave.core.serialization.SerializationModule
 import org.trustweave.registry.TrustRegistry
 
+/**
+ * Embedded HTTP server exposing a [TrustRegistry].
+ *
+ * @param apiToken bearer token required on mutating routes
+ *   (`Authorization: Bearer <token>`). When null (the default), all
+ *   mutating routes are disabled and respond 503 — the server fails
+ *   closed. Read-only routes are always available.
+ */
 class TrustRegistryServer(
     private val registry: TrustRegistry,
     private val port: Int = 8081,
     private val host: String = "0.0.0.0",
+    private val apiToken: String? = null,
 ) {
     private var server: NettyApplicationEngine? = null
 
@@ -37,7 +46,7 @@ class TrustRegistryServer(
             })
         }
         routing {
-            configureTrustRegistryRoutes(registry)
+            configureTrustRegistryRoutes(registry, apiToken)
         }
     }
 }

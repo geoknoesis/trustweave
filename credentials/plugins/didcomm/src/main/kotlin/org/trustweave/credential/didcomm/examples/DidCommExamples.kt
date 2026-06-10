@@ -1,6 +1,14 @@
 package org.trustweave.credential.didcomm.examples
 
+import com.nimbusds.jose.jwk.Curve
+import com.nimbusds.jose.jwk.OctetKeyPair
+import com.nimbusds.jose.jwk.gen.OctetKeyPairGenerator
+import org.didcommx.didcomm.common.VerificationMaterial
+import org.didcommx.didcomm.common.VerificationMaterialFormat
+import org.didcommx.didcomm.common.VerificationMethodType
+import org.didcommx.didcomm.secret.Secret
 import org.trustweave.credential.didcomm.*
+import org.trustweave.credential.didcomm.crypto.interop.MapSecretResolver
 import org.trustweave.credential.didcomm.protocol.*
 import org.trustweave.credential.didcomm.utils.findKeyAgreementKey
 import org.trustweave.credential.didcomm.utils.hasDidCommService
@@ -14,6 +22,10 @@ import kotlinx.coroutines.runBlocking
 
 /**
  * Example usage of DIDComm V2 for credential exchange.
+ *
+ * The examples generate real X25519 key-agreement key pairs and register the private JWKs in a
+ * [MapSecretResolver] so that didcomm-java performs real ECDH-based encryption. Placeholder
+ * crypto is not available; DIDComm encryption always requires real key material.
  */
 object DidCommExamples {
 
@@ -25,30 +37,23 @@ object DidCommExamples {
         val issuerDid = "did:key:issuer"
         val holderDid = "did:key:holder"
 
-        // Mock DID resolution
-        val resolveDid: suspend (String) -> DidDocument? = { didStr ->
-            val did = Did(didStr)
-            val vmId = VerificationMethodId.parse("$didStr#key-1", did)
-            DidDocument(
-                id = did,
-                verificationMethod = listOf(
-                    VerificationMethod(
-                        id = vmId,
-                        type = "Ed25519VerificationKey2020",
-                        controller = did,
-                        publicKeyJwk = mapOf(
-                            "kty" to "OKP",
-                            "crv" to "Ed25519",
-                            "x" to "test-key"
-                        )
-                    )
-                ),
-                keyAgreement = listOf(vmId)
-            )
-        }
+        // Real X25519 key agreement keys for both parties
+        val issuerKeyPair = generateX25519KeyPair()
+        val holderKeyPair = generateX25519KeyPair()
 
-        // Create DIDComm service
-        val didcomm = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms, resolveDid)
+        val documents = mapOf(
+            issuerDid to didDocumentFor(issuerDid, issuerKeyPair),
+            holderDid to didDocumentFor(holderDid, holderKeyPair),
+        )
+        val resolveDid: suspend (String) -> DidDocument? = { didStr -> documents[didStr] }
+
+        // Private key material for pack/unpack (in production, load from secure storage)
+        val secretResolver = MapSecretResolver()
+        secretResolver.put("$issuerDid#key-1", secretFor("$issuerDid#key-1", issuerKeyPair))
+        secretResolver.put("$holderDid#key-1", secretFor("$holderDid#key-1", holderKeyPair))
+
+        // Create DIDComm service with real (didcomm-java) crypto
+        val didcomm = DidCommFactory.createInMemoryService(kms, resolveDid, secretResolver)
 
         // Step 1: Issuer creates credential offer
         val preview = org.trustweave.credential.exchange.model.CredentialPreview(
@@ -104,24 +109,20 @@ object DidCommExamples {
         val aliceDid = "did:key:alice"
         val bobDid = "did:key:bob"
 
-        val resolveDid: suspend (String) -> DidDocument? = { didStr ->
-            val did = Did(didStr)
-            val vmId = VerificationMethodId.parse("$didStr#key-1", did)
-            DidDocument(
-                id = did,
-                verificationMethod = listOf(
-                    VerificationMethod(
-                        id = vmId,
-                        type = "Ed25519VerificationKey2020",
-                        controller = did,
-                        publicKeyJwk = mapOf("kty" to "OKP", "crv" to "Ed25519", "x" to "test")
-                    )
-                ),
-                keyAgreement = listOf(vmId)
-            )
-        }
+        val aliceKeyPair = generateX25519KeyPair()
+        val bobKeyPair = generateX25519KeyPair()
 
-        val didcomm = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms, resolveDid)
+        val documents = mapOf(
+            aliceDid to didDocumentFor(aliceDid, aliceKeyPair),
+            bobDid to didDocumentFor(bobDid, bobKeyPair),
+        )
+        val resolveDid: suspend (String) -> DidDocument? = { didStr -> documents[didStr] }
+
+        val secretResolver = MapSecretResolver()
+        secretResolver.put("$aliceDid#key-1", secretFor("$aliceDid#key-1", aliceKeyPair))
+        secretResolver.put("$bobDid#key-1", secretFor("$bobDid#key-1", bobKeyPair))
+
+        val didcomm = DidCommFactory.createInMemoryService(kms, resolveDid, secretResolver)
 
         // Alice sends message to Bob
         val message = BasicMessageProtocol.createBasicMessage(
@@ -181,5 +182,35 @@ object DidCommExamples {
         val endpoint = document.getDidCommServiceEndpoint()
         println("Service endpoint: $endpoint")
     }
-}
 
+    private fun generateX25519KeyPair(): OctetKeyPair =
+        OctetKeyPairGenerator(Curve.X25519).generate()
+
+    private fun didDocumentFor(didStr: String, keyPair: OctetKeyPair): DidDocument {
+        val did = Did(didStr)
+        val vmId = VerificationMethodId.parse("$didStr#key-1", did)
+        return DidDocument(
+            id = did,
+            verificationMethod = listOf(
+                VerificationMethod(
+                    id = vmId,
+                    type = "JsonWebKey2020",
+                    controller = did,
+                    publicKeyJwk = mapOf(
+                        "kty" to keyPair.keyType.value,
+                        "crv" to keyPair.curve.name,
+                        "x" to keyPair.x.toString()
+                    )
+                )
+            ),
+            keyAgreement = listOf(vmId)
+        )
+    }
+
+    private fun secretFor(kid: String, keyPair: OctetKeyPair): Secret =
+        Secret(
+            kid,
+            VerificationMethodType.JSON_WEB_KEY_2020,
+            VerificationMaterial(VerificationMaterialFormat.JWK, keyPair.toJSONString())
+        )
+}

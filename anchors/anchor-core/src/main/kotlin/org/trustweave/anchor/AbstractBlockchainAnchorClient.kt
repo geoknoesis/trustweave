@@ -12,10 +12,17 @@ import java.util.concurrent.ConcurrentHashMap
  * Abstract base class for blockchain anchor client implementations.
  *
  * Provides common functionality shared across blockchain adapters:
- * - In-memory fallback storage for testing
+ * - Strictly opt-in in-memory test fallback (see [OPTION_IN_MEMORY_TEST_MODE])
  * - Common error handling patterns
  * - AnchorRef construction helpers
  * - Transaction hash generation utilities
+ *
+ * **Fail-closed behavior**: when the client has no usable chain credentials/connection
+ * ([canSubmitTransaction] returns false) and [inMemoryTestMode] is not enabled,
+ * [writePayload] throws [BlockchainException.ConfigurationFailed] instead of fabricating
+ * a transaction hash. The in-memory fallback is ONLY active when the caller explicitly
+ * opts in via `options["inMemoryTestMode"] = true` — it is intended for tests and demos,
+ * never production: payloads are NOT anchored on any chain.
  *
  * Subclasses should implement:
  * - [canSubmitTransaction]: Check if credentials are available for real transactions
@@ -23,15 +30,36 @@ import java.util.concurrent.ConcurrentHashMap
  * - [readTransactionFromBlockchain]: Read transaction from actual blockchain
  * - [getContractAddress]: Get contract address from options (if applicable)
  * - [buildExtraMetadata]: Build extra metadata for AnchorRef
- * - [generateTestTxHash]: Generate test transaction hash for fallback mode
+ * - [generateTestTxHash]: Generate test transaction hash for in-memory test mode
  */
 abstract class AbstractBlockchainAnchorClient(
     protected val chainId: String,
     protected val options: Map<String, Any?>
 ) : BlockchainAnchorClient {
 
+    companion object {
+        /**
+         * Options key that explicitly enables the in-memory test fallback.
+         * Accepts `true` (Boolean) or `"true"` (String). Defaults to disabled.
+         *
+         * Also used as the key in [AnchorRef.extra] marking references produced by the
+         * in-memory fallback, so fabricated references are distinguishable from real ones.
+         */
+        const val OPTION_IN_MEMORY_TEST_MODE: String = "inMemoryTestMode"
+    }
+
     /**
-     * In-memory storage for fallback mode (when credentials are not available).
+     * Whether the in-memory test fallback is enabled. Strictly opt-in (defaults to false).
+     * When false and no chain credentials/connection are configured, write/read operations
+     * fail with [BlockchainException.ConfigurationFailed] instead of silently fabricating
+     * transaction hashes.
+     */
+    protected val inMemoryTestMode: Boolean =
+        options[OPTION_IN_MEMORY_TEST_MODE] == true ||
+            (options[OPTION_IN_MEMORY_TEST_MODE] as? String)?.toBoolean() == true
+
+    /**
+     * In-memory storage for the opt-in test mode (see [OPTION_IN_MEMORY_TEST_MODE]).
      * Used for testing without requiring actual blockchain credentials.
      */
     protected val storage = ConcurrentHashMap<String, AnchorResult>()
@@ -82,7 +110,7 @@ abstract class AbstractBlockchainAnchorClient(
     }
 
     /**
-     * Generates a test transaction hash for fallback mode.
+     * Generates a test transaction hash for the opt-in in-memory test mode.
      * Should be unique and identifiable as a test hash.
      */
     protected abstract fun generateTestTxHash(): String
@@ -100,39 +128,47 @@ abstract class AbstractBlockchainAnchorClient(
         val payloadBytes = payloadJson.toByteArray(StandardCharsets.UTF_8)
 
         try {
-            // Submit transaction to blockchain or use fallback storage
-            val txHash = if (canSubmitTransaction()) {
-                submitTransactionToBlockchain(payloadBytes)
-            } else {
-                // Fallback to in-memory storage for testing without credentials
-                val hash = generateTestTxHash()
-                val ref = buildAnchorRef(
-                    txHash = hash,
-                    contract = getContractAddress(),
-                    extra = buildExtraMetadata(mediaType)
+            when {
+                canSubmitTransaction() -> {
+                    val txHash = submitTransactionToBlockchain(payloadBytes)
+                    AnchorResult(
+                        ref = buildAnchorRef(
+                            txHash = txHash,
+                            contract = getContractAddress(),
+                            extra = buildExtraMetadata(mediaType)
+                        ),
+                        payload = payload,
+                        mediaType = mediaType,
+                        timestamp = System.currentTimeMillis() / 1000
+                    )
+                }
+                inMemoryTestMode -> {
+                    // Opt-in in-memory storage for testing without credentials.
+                    // References are marked so they are never mistaken for real anchors.
+                    val hash = generateTestTxHash()
+                    val result = AnchorResult(
+                        ref = buildAnchorRef(
+                            txHash = hash,
+                            contract = getContractAddress(),
+                            extra = buildExtraMetadata(mediaType) +
+                                (OPTION_IN_MEMORY_TEST_MODE to "true")
+                        ),
+                        payload = payload,
+                        mediaType = mediaType,
+                        timestamp = System.currentTimeMillis() / 1000
+                    )
+                    storage[hash] = result
+                    result
+                }
+                else -> throw BlockchainException.ConfigurationFailed(
+                    chainId = chainId,
+                    reason = "No usable ${getBlockchainName()} credentials/connection configured " +
+                        "for $chainId; refusing to fabricate an anchor. Provide chain credentials " +
+                        "in options, or explicitly opt in to the in-memory test fallback with " +
+                        "'$OPTION_IN_MEMORY_TEST_MODE' = true (tests/demos only — payloads are " +
+                        "NOT anchored on-chain)."
                 )
-                val result = AnchorResult(
-                    ref = ref,
-                    payload = payload,
-                    mediaType = mediaType,
-                    timestamp = System.currentTimeMillis() / 1000
-                )
-                storage[hash] = result
-                hash
             }
-
-            val ref = buildAnchorRef(
-                txHash = txHash,
-                contract = getContractAddress(),
-                extra = buildExtraMetadata(mediaType)
-            )
-
-            AnchorResult(
-                ref = ref,
-                payload = payload,
-                mediaType = mediaType,
-                timestamp = System.currentTimeMillis() / 1000
-            )
         } catch (e: CoreTrustWeaveException) {
             throw e
         } catch (e: Exception) {
@@ -140,45 +176,31 @@ abstract class AbstractBlockchainAnchorClient(
                 chainId = chainId,
                 operation = "writePayload",
                 payloadSize = payloadBytes.size.toLong(),
-                reason = "Failed to anchor payload to ${getBlockchainName()}: ${e.message ?: "Unknown error"}"
-            ).apply { initCause(e) }
+                reason = "Failed to anchor payload to ${getBlockchainName()}: ${e.message ?: "Unknown error"}",
+                cause = e
+            )
         }
     }
 
     override suspend fun readPayload(ref: AnchorRef): AnchorResult = withContext(Dispatchers.IO) {
+        validateChainId(ref.chainId)
+
+        // Read from the blockchain; the in-memory storage is consulted ONLY when the
+        // opt-in test mode is enabled, so chain errors are never masked in production.
         try {
-            validateChainId(ref.chainId)
-
-            // Try to read from blockchain first, fallback to storage
-            val result = try {
-                readTransactionFromBlockchain(ref.txHash)
-            } catch (e: CoreTrustWeaveException.NotFound) {
-                // Fallback to in-memory storage
-                storage[ref.txHash] ?: throw CoreTrustWeaveException.NotFound(
-                    resource = "Transaction ${ref.txHash}"
-                )
-            } catch (e: Exception) {
-                // Try storage fallback for other exceptions too
-                storage[ref.txHash] ?: throw BlockchainException.TransactionFailed(
-                chainId = chainId,
-                txHash = ref.txHash,
-                operation = "readPayload",
-                reason = "Failed to read payload from ${getBlockchainName()}: ${e.message ?: "Unknown error"}"
-            ).apply { initCause(e) }
-            }
-
-            result
-        } catch (e: CoreTrustWeaveException.NotFound) {
-            throw e
-        } catch (e: CoreTrustWeaveException) {
-            throw e
+            readTransactionFromBlockchain(ref.txHash)
         } catch (e: Exception) {
-            throw BlockchainException.TransactionFailed(
-                chainId = chainId,
-                txHash = ref.txHash,
-                operation = "readPayload",
-                reason = "Failed to read payload from ${getBlockchainName()}: ${e.message ?: "Unknown error"}"
-            ).apply { initCause(e) }
+            val fromTestStorage = if (inMemoryTestMode) storage[ref.txHash] else null
+            fromTestStorage ?: when (e) {
+                is CoreTrustWeaveException -> throw e
+                else -> throw BlockchainException.TransactionFailed(
+                    chainId = chainId,
+                    txHash = ref.txHash,
+                    operation = "readPayload",
+                    reason = "Failed to read payload from ${getBlockchainName()}: ${e.message ?: "Unknown error"}",
+                    cause = e
+                )
+            }
         }
     }
 

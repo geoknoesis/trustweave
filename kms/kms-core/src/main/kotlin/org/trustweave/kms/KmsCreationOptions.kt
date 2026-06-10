@@ -30,6 +30,17 @@ data class KmsCreationOptions(
         map.putAll(additionalProperties)
         return map
     }
+
+    /**
+     * [additionalProperties] routinely carries provider credentials
+     * (e.g. `secretAccessKey`, `sessionToken`), so values are redacted.
+     * Keys remain visible for debugging.
+     */
+    override fun toString(): String {
+        val redacted = additionalProperties.keys.joinToString(", ") { "$it=***" }
+        return "KmsCreationOptions(enabled=$enabled, priority=$priority, " +
+            "additionalProperties={$redacted})"
+    }
 }
 
 /**

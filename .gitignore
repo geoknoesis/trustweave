@@ -61,10 +61,11 @@ build/nodejs/
 build/npm/
 
 # Internal documentation (development notes, reviews, implementation details)
+# NOTE: must not match Kotlin `internal` source packages — keep these rules doc-scoped.
 .internal/
 **/.internal/
 docs/internal/
-internal/
+/internal/
 docs/_site/internal/
 docs/_site/
 

@@ -2,19 +2,29 @@ package org.trustweave.credential.proof.internal.engines
 
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.core.identifiers.KeyId
+import org.trustweave.credential.internal.CredentialConstants
+import org.trustweave.credential.internal.SecurityConstants
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
+import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidResolver
 import org.trustweave.did.resolver.DidResolutionResult
-import com.nimbusds.jose.crypto.Ed25519Verifier
-import com.nimbusds.jose.jwk.OctetKeyPair
+import com.nimbusds.jose.JWSAlgorithm
+import com.nimbusds.jwt.SignedJWT
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier
 import org.bouncycastle.asn1.DERBitString
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import java.security.MessageDigest
 import java.security.PublicKey
 import java.security.KeyFactory
 import java.security.Security
@@ -69,16 +79,26 @@ internal object ProofEngineUtils {
     
     /**
      * Resolve verification method from DID document.
-     * 
+     *
+     * When [expectedProofPurpose] is provided, the resolved verification method must be
+     * referenced (or embedded) in the corresponding verification relationship array of the
+     * DID document (e.g. `assertionMethod` for credential proofs, `authentication` for
+     * presentation proofs). A key that is present in `verificationMethod` but not
+     * authorized for the expected purpose (e.g. a `keyAgreement`-only key) is rejected.
+     *
      * @param issuerIri The issuer IRI (must be a DID)
      * @param verificationMethodId The verification method ID (can be full or fragment)
      * @param didResolver The DID resolver to use
-     * @return The verification method, or null if resolution fails
+     * @param expectedProofPurpose Optional proof purpose the verification method must be
+     *   authorized for (one of the W3C verification relationship names)
+     * @return The verification method, or null if resolution fails or the method is not
+     *   authorized for [expectedProofPurpose]
      */
     suspend fun resolveVerificationMethod(
         issuerIri: Iri,
         verificationMethodId: String?,
-        didResolver: DidResolver?
+        didResolver: DidResolver?,
+        expectedProofPurpose: String? = null
     ): VerificationMethod? {
         logger.debug("Resolving verification method: issuerIri={}, verificationMethodId={}, didResolverPresent={}", 
             issuerIri.value, verificationMethodId, didResolver != null)
@@ -134,17 +154,113 @@ internal object ProofEngineUtils {
             
             if (found == null) {
                 logger.warn("Could not find matching verification method: vmId={}", vmId.value)
-            } else {
-                logger.debug("Found verification method: vmId={}", found.id.value)
+                return null
             }
-            
+            logger.debug("Found verification method: vmId={}", found.id.value)
+
+            // Enforce proof purpose authorization: the verification method must be listed
+            // in the DID document's relationship array for the expected purpose.
+            if (expectedProofPurpose != null &&
+                !isAuthorizedForPurpose(document, found, expectedProofPurpose)
+            ) {
+                logger.warn(
+                    "Verification method {} is not authorized for proof purpose '{}' in DID document {}",
+                    found.id.value, expectedProofPurpose, document.id.value
+                )
+                return null
+            }
+
             return found
         } catch (e: Exception) {
             logger.error("Exception while resolving verification method: issuerIri={}, error={}", issuerIri.value, e.message, e)
             return null
         }
     }
-    
+
+    /**
+     * Check whether [verificationMethod] is referenced in the verification relationship
+     * array of [document] that corresponds to [proofPurpose].
+     *
+     * Unknown proof purposes are rejected (fail closed).
+     */
+    fun isAuthorizedForPurpose(
+        document: DidDocument,
+        verificationMethod: VerificationMethod,
+        proofPurpose: String
+    ): Boolean {
+        val relationship = when (proofPurpose) {
+            CredentialConstants.ProofPurposes.ASSERTION_METHOD -> document.assertionMethod
+            CredentialConstants.ProofPurposes.AUTHENTICATION -> document.authentication
+            "keyAgreement" -> document.keyAgreement
+            "capabilityInvocation" -> document.capabilityInvocation
+            "capabilityDelegation" -> document.capabilityDelegation
+            else -> {
+                logger.warn("Unknown proof purpose '{}' — rejecting", proofPurpose)
+                return false
+            }
+        }
+        return relationship.any { it == verificationMethod.id || it.value == verificationMethod.id.value }
+    }
+
+    /**
+     * Compose the W3C Data Integrity signing payload:
+     * `SHA-256(canonical proof options) || SHA-256(canonical document)`.
+     *
+     * Covering the canonicalized proof options (the proof node without `proofValue`/`jws`)
+     * binds `challenge`, `domain`, `created`, `proofPurpose` and `verificationMethod` to
+     * the signature, preventing replay attacks that rewrite those fields on a captured
+     * credential or presentation.
+     *
+     * @param canonicalProofOptions Canonical N-Quads of the proof options document
+     * @param canonicalDocument Canonical N-Quads of the secured document (without proof)
+     * @return The 64-byte payload to sign or verify
+     */
+    fun composeDataIntegrityPayload(canonicalProofOptions: String, canonicalDocument: String): ByteArray {
+        val digest = MessageDigest.getInstance("SHA-256")
+        val proofOptionsHash = digest.digest(canonicalProofOptions.toByteArray(Charsets.UTF_8))
+        val documentHash = digest.digest(canonicalDocument.toByteArray(Charsets.UTF_8))
+        return proofOptionsHash + documentHash
+    }
+
+    /**
+     * Build the proof options document — the proof node without `proofValue`/`jws` —
+     * for canonicalization, per the W3C Data Integrity specification.
+     *
+     * The document carries the secured document's `@context` so the proof terms
+     * (`created`, `proofPurpose`, `verificationMethod`, `challenge`, `domain`) are defined
+     * by the proof-suite context that the secured document already declares.
+     *
+     * @param context The `@context` list of the secured document
+     * @param proofType The proof suite type (e.g. "Ed25519Signature2020")
+     * @param created The proof creation timestamp (ISO 8601)
+     * @param verificationMethod The verification method reference
+     * @param proofPurpose The proof purpose
+     * @param additionalProperties Additional proof properties (e.g. challenge, domain);
+     *   `proofValue` and `jws` entries are excluded
+     * @return The proof options document
+     */
+    fun buildProofOptionsDocument(
+        context: List<String>,
+        proofType: String,
+        created: String,
+        verificationMethod: String,
+        proofPurpose: String,
+        additionalProperties: Map<String, JsonElement> = emptyMap()
+    ): JsonObject = buildJsonObject {
+        put("@context", buildJsonArray {
+            context.forEach { add(it) }
+        })
+        put("type", proofType)
+        put("created", created)
+        put("verificationMethod", verificationMethod)
+        put("proofPurpose", proofPurpose)
+        additionalProperties.forEach { (key, value) ->
+            if (key != "proofValue" && key != "jws") {
+                put(key, value)
+            }
+        }
+    }
+
     /**
      * Extract public key from verification method.
      * 
@@ -328,48 +444,43 @@ internal object ProofEngineUtils {
     }
     
     /**
-     * Create Ed25519 verifier from public key for JWT verification.
-     * 
-     * @param publicKey The Ed25519 public key
-     * @return Ed25519Verifier instance, or null if creation fails
+     * Verify an EdDSA (Ed25519) JWS signature using the Java Security API.
+     *
+     * Verifies the JWS signing input (`BASE64URL(header) || '.' || BASE64URL(payload)`)
+     * against the signature using the public key extracted from [verificationMethod].
+     *
+     * This intentionally avoids Nimbus' `Ed25519Verifier`, which requires the OPTIONAL
+     * `com.google.crypto.tink` dependency at runtime — not declared by this module — and
+     * would otherwise throw [NoClassDefFoundError] during verification.
+     *
+     * Fail-closed: any error (wrong `alg` header, unsupported key, malformed signature)
+     * yields `false`.
+     *
+     * @param signedJwt The parsed signed JWT
+     * @param verificationMethod The verification method holding the Ed25519 public key
+     * @return true if the signature is valid, false otherwise
      */
-    fun createEd25519Verifier(publicKey: PublicKey): Ed25519Verifier? {
-        return try {
-            // Extract raw 32-byte Ed25519 public key from PublicKey
-            val publicKeyBytes = publicKey.encoded
-            val rawKey = if (publicKeyBytes.size >= 44 && publicKeyBytes[0] == 0x30.toByte()) {
-                // Ed25519 public key in DER: 30 2A 30 05 06 03 2B 65 70 03 21 00 [32 bytes]
-                publicKeyBytes.sliceArray(12 until 44)
-            } else {
-                publicKeyBytes.takeLast(32).toByteArray()
-            }
-            
-            if (rawKey.size != 32) return null
-            
-            // Create JWK map for Ed25519
-            val jwkMap = mapOf(
-                "kty" to "OKP",
-                "crv" to "Ed25519",
-                "x" to Base64.getUrlEncoder().withoutPadding().encodeToString(rawKey)
-            )
-            
-            // Parse JWK map to OctetKeyPair
-            val okp = OctetKeyPair.parse(jwkMap)
-            Ed25519Verifier(okp)
-        } catch (e: Exception) {
-            null
+    fun verifyEd25519Jws(
+        signedJwt: SignedJWT,
+        verificationMethod: VerificationMethod
+    ): Boolean {
+        // Reject algorithm confusion: only EdDSA is acceptable for Ed25519 keys.
+        if (signedJwt.header.algorithm != JWSAlgorithm.EdDSA) {
+            return false
         }
-    }
-    
-    /**
-     * Create Ed25519 verifier from verification method.
-     * 
-     * @param verificationMethod The verification method
-     * @return Ed25519Verifier instance, or null if creation fails
-     */
-    fun createEd25519Verifier(verificationMethod: VerificationMethod): Ed25519Verifier? {
-        val publicKey = extractPublicKey(verificationMethod) ?: return null
-        return createEd25519Verifier(publicKey)
+        val publicKey = extractPublicKey(verificationMethod) ?: return false
+        return try {
+            val signatureBytes = signedJwt.signature.decode()
+            if (signatureBytes.size != SecurityConstants.ED25519_SIGNATURE_LENGTH_BYTES) {
+                return false
+            }
+            val signature = java.security.Signature.getInstance("Ed25519")
+            signature.initVerify(publicKey)
+            signature.update(signedJwt.signingInput)
+            signature.verify(signatureBytes)
+        } catch (e: Exception) {
+            false
+        }
     }
 }
 

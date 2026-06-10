@@ -41,8 +41,15 @@ class PostgresDidCommMessageStorage(
     }
 
     override fun setEncryption(encryption: MessageEncryption?) {
-        // Note: Encryption is set in constructor
-        // To change encryption, create a new storage instance
+        // Encryption is fixed at construction; silently ignoring a requested
+        // encryption change would leave messages stored with different
+        // guarantees than the caller believes. Fail closed instead.
+        if (encryption !== this.encryption) {
+            throw UnsupportedOperationException(
+                "PostgresDidCommMessageStorage encryption is set at construction and cannot be changed; " +
+                    "create a new storage instance with the desired MessageEncryption."
+            )
+        }
     }
 
     private val archivedMessages = mutableSetOf<String>()

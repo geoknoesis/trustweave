@@ -43,8 +43,16 @@ object DidCommFactory {
     }
 
     /**
-     * Creates a DIDComm service using **placeholder** crypto (not interoperable; for quick local tests only).
+     * Creates a DIDComm service whose crypto is **fail-closed**: every encrypt/decrypt throws
+     * [UnsupportedOperationException]. Storage-only operations still work.
+     *
+     * The placeholder crypto this method used to wire produced ciphertext from a constant shared
+     * secret and has been removed. Use [createInMemoryService] with a [SecretResolver] instead.
      */
+    @Deprecated(
+        message = "Placeholder crypto has been removed; the returned service fails closed on " +
+            "encrypt/decrypt. Use createInMemoryService(kms, resolveDid, secretResolver) instead.",
+    )
     fun createInMemoryServiceWithPlaceholderCrypto(
         kms: KeyManagementService,
         resolveDid: suspend (String) -> DidDocument?,
@@ -89,8 +97,16 @@ object DidCommFactory {
     }
 
     /**
-     * Creates a DIDComm packer with placeholder crypto.
+     * Creates a DIDComm packer whose crypto is **fail-closed**: every encrypt/decrypt throws
+     * [UnsupportedOperationException]. Plaintext (unencrypted) pack/unpack still works.
+     *
+     * The placeholder crypto this method used to wire produced ciphertext from a constant shared
+     * secret and has been removed. Use [createPacker] with a [SecretResolver] instead.
      */
+    @Deprecated(
+        message = "Placeholder crypto has been removed; the returned packer fails closed on " +
+            "encrypt/decrypt. Use createPacker(kms, resolveDid, secretResolver) instead.",
+    )
     fun createPackerWithPlaceholderCrypto(
         kms: KeyManagementService,
         resolveDid: suspend (String) -> DidDocument?,

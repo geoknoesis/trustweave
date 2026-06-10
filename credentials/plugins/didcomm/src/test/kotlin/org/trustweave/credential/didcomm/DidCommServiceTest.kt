@@ -1,5 +1,6 @@
 package org.trustweave.credential.didcomm
 
+import org.trustweave.credential.didcomm.crypto.interop.MapSecretResolver
 import org.trustweave.credential.didcomm.models.DidCommMessage
 import org.trustweave.credential.didcomm.models.DidCommMessageTypes
 import org.trustweave.credential.didcomm.protocol.BasicMessageProtocol
@@ -88,7 +89,8 @@ class DidCommServiceTest {
             )
         }
 
-        val service = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms, resolveDid)
+        // Storage-only test; the empty secret resolver is never consulted.
+        val service = DidCommFactory.createInMemoryService(kms, resolveDid, MapSecretResolver())
 
         val message = BasicMessageProtocol.createBasicMessage(
             fromDid = "did:key:alice",
@@ -129,7 +131,8 @@ class DidCommServiceTest {
             )
         }
 
-        val service = DidCommFactory.createInMemoryServiceWithPlaceholderCrypto(kms, resolveDid)
+        // Storage-only test; the empty secret resolver is never consulted.
+        val service = DidCommFactory.createInMemoryService(kms, resolveDid, MapSecretResolver())
 
         val thid = "thread-123"
 

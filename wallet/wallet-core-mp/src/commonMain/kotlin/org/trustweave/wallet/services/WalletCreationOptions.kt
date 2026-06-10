@@ -13,7 +13,24 @@ data class WalletCreationOptions(
     val enableOrganization: Boolean = false,
     val enablePresentation: Boolean = false,
     val additionalProperties: Map<String, Any?> = emptyMap()
-)
+) {
+    /**
+     * Log-safe representation. [encryptionKey] and every value in
+     * [additionalProperties] are redacted because provider-specific options
+     * routinely carry secrets (encryption keys, database passwords, tokens);
+     * only the property keys are printed.
+     */
+    override fun toString(): String {
+        val redactedProperties = additionalProperties.keys.joinToString(", ") { "$it=***" }
+        return "WalletCreationOptions(" +
+            "label=$label, " +
+            "storagePath=$storagePath, " +
+            "encryptionKey=${if (encryptionKey == null) "null" else "***"}, " +
+            "enableOrganization=$enableOrganization, " +
+            "enablePresentation=$enablePresentation, " +
+            "additionalProperties={$redactedProperties})"
+    }
+}
 
 /**
  * Fluent builder used by DSLs to configure [WalletCreationOptions].

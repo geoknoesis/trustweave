@@ -11,6 +11,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.trustweave.anchor.AbstractBlockchainAnchorClient
 import org.trustweave.anchor.AnchorRef
 import org.trustweave.anchor.exceptions.BlockchainException
 import org.trustweave.core.exception.TrustWeaveException
@@ -32,13 +33,15 @@ class CardanoBlockchainAnchorClientTest {
         server.shutdown()
     }
 
-    private fun client(): CardanoBlockchainAnchorClient {
+    private fun client(inMemoryTestMode: Boolean = false): CardanoBlockchainAnchorClient {
         val cfg = CardanoAnchorConfig(
             blockfrostProjectId = "preview-test",
             network = CardanoNetwork.Preview,
             blockfrostBaseUrlOverride = server.url("/api/v0").toString().trimEnd('/'),
         )
-        return CardanoBlockchainAnchorClient(CardanoBlockchainAnchorClient.PREVIEW, cfg)
+        val options = cfg.toMap() +
+            mapOf(AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE to inMemoryTestMode)
+        return CardanoBlockchainAnchorClient(CardanoBlockchainAnchorClient.PREVIEW, options, cfg)
     }
 
     @Test
@@ -60,8 +63,8 @@ class CardanoBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `writePayload uses in-memory fallback when no submitter configured`() = runBlocking {
-        client().use { c ->
+    fun `writePayload uses in-memory fallback when no submitter configured and test mode is on`() = runBlocking {
+        client(inMemoryTestMode = true).use { c ->
             val payload = buildJsonObject {
                 put("kind", JsonPrimitive("test"))
                 put("nonce", JsonPrimitive(42))
@@ -78,6 +81,17 @@ class CardanoBlockchainAnchorClientTest {
     }
 
     @Test
+    fun `writePayload fails closed when no submitter configured and test mode is off`() = runBlocking {
+        client().use { c ->
+            val payload = buildJsonObject { put("kind", JsonPrimitive("test")) }
+            assertThrows<BlockchainException.ConfigurationFailed> {
+                runBlocking { c.writePayload(payload) }
+            }
+            Unit
+        }
+    }
+
+    @Test
     fun `readPayload returns NotFound on 404`() = runBlocking {
         server.enqueue(MockResponse().setResponseCode(404).setBody("""{"status_code":404,"error":"Not Found","message":"x"}"""))
         client().use { c ->
@@ -85,8 +99,8 @@ class CardanoBlockchainAnchorClientTest {
                 chainId = CardanoBlockchainAnchorClient.PREVIEW,
                 txHash = "00".repeat(32),
             )
-            // AbstractBlockchainAnchorClient.readPayload falls back to in-memory cache for NotFound,
-            // which is also empty → it must still raise NotFound.
+            // Test mode is off, so AbstractBlockchainAnchorClient.readPayload must surface
+            // the chain's NotFound directly (no in-memory fallback).
             assertThrows<TrustWeaveException.NotFound> {
                 runBlocking { c.readPayload(ref) }
             }

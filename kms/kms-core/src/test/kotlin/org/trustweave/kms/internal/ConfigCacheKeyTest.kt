@@ -2,7 +2,9 @@ package org.trustweave.kms.internal
 
 import org.trustweave.kms.KmsCreationOptions
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 import kotlin.test.Test
 
 /**
@@ -151,6 +153,52 @@ class ConfigCacheKeyTest {
 
         assertEquals(key1, key2, "Keys should be stable across multiple calls")
         assertEquals(key2, key3, "Keys should be stable across multiple calls")
+    }
+
+    @Test
+    fun `should not embed raw secret values in the key`() {
+        val secret = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+        val password = "p4ssw0rd-very-secret"
+        val token = "FwoGZXIvYXdzEXAMPLESESSIONTOKEN"
+
+        val key = ConfigCacheKey.create(
+            "aws",
+            mapOf(
+                "region" to "us-east-1",
+                "secretAccessKey" to secret,
+                "sessionToken" to token,
+                "nested" to mapOf("password" to password)
+            )
+        )
+
+        assertFalse(key.contains(secret), "Cache key must not contain the raw secret access key")
+        assertFalse(key.contains(token), "Cache key must not contain the raw session token")
+        assertFalse(key.contains(password), "Cache key must not contain nested secret values")
+        // No option value may appear in plain text — only the provider prefix is readable.
+        assertFalse(key.contains("us-east-1"), "Cache key must not contain raw option values")
+    }
+
+    @Test
+    fun `should not embed secrets from typed configuration in the key`() {
+        val secret = "typed-options-secret-value"
+        val options = KmsCreationOptions(
+            enabled = true,
+            additionalProperties = mapOf("secretAccessKey" to secret)
+        )
+
+        val key = ConfigCacheKey.create("aws", options)
+
+        assertFalse(key.contains(secret), "Cache key must not contain secrets from typed options")
+    }
+
+    @Test
+    fun `should keep readable provider prefix followed by hex digest`() {
+        val key = ConfigCacheKey.create("aws", mapOf("region" to "us-east-1"))
+
+        assertTrue(key.startsWith("aws:"), "Provider name should remain a readable prefix")
+        val digest = key.removePrefix("aws:")
+        assertEquals(64, digest.length, "Config part should be a SHA-256 hex digest")
+        assertTrue(digest.all { it in '0'..'9' || it in 'a'..'f' }, "Digest should be lowercase hex")
     }
 }
 

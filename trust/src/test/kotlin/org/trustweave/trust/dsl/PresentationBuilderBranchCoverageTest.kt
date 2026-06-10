@@ -61,6 +61,7 @@ class PresentationBuilderBranchCoverageTest {
                 issued(Clock.System.now())
             }
             signedBy(issuerDid = Did(issuerDid), keyId = keyId)
+            withTestClaimContexts() // Define ad-hoc test claims in the credential @context
         }.getOrThrow()
     }
 

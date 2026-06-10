@@ -68,26 +68,29 @@ class PolygonBlockchainAnchorClient(
         }
         web3j = Web3j.build(HttpService(rpcUrl))
 
-        // Initialize transaction manager if credentials are provided
+        // Initialize transaction manager if credentials are provided.
+        // A present-but-invalid private key is a configuration error and must fail
+        // closed instead of silently degrading to the in-memory test fallback.
         val creds = (options["privateKey"] as? String)?.let { privateKeyHex ->
             try {
                 org.web3j.crypto.Credentials.create(privateKeyHex.removePrefix("0x"))
             } catch (e: Exception) {
-                null
+                throw BlockchainException.ConfigurationFailed(
+                    chainId = chainId,
+                    configKey = "privateKey",
+                    reason = "Invalid Polygon private key: ${e.message ?: "Unknown error"}",
+                    cause = e
+                )
             }
         }
         credentials = creds
         transactionManager = creds?.let {
-            try {
-                val chainIdLong = when (chainId) {
-                    MAINNET -> 137L
-                    MUMBAI -> 80001L
-                    else -> throw IllegalArgumentException("Unsupported chain: $chainId")
-                }
-                RawTransactionManager(web3j, it, chainIdLong)
-            } catch (e: Exception) {
-                null
+            val chainIdLong = when (chainId) {
+                MAINNET -> 137L
+                MUMBAI -> 80001L
+                else -> throw IllegalArgumentException("Unsupported chain: $chainId")
             }
+            RawTransactionManager(web3j, it, chainIdLong)
         }
     }
 

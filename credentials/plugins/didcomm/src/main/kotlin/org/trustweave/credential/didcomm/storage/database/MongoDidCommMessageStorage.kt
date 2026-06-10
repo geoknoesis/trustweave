@@ -376,8 +376,15 @@ class MongoDidCommMessageStorage(
     }
 
     override fun setEncryption(encryption: org.trustweave.credential.didcomm.storage.encryption.MessageEncryption?) {
-        // MongoDB encryption would be implemented similarly to PostgreSQL
-        // For now, encryption is not implemented for MongoDB
+        // Fail closed: silently ignoring the request would store messages in plaintext while the
+        // caller believes they are encrypted at rest.
+        if (encryption != null) {
+            throw UnsupportedOperationException(
+                "Message encryption at rest is not implemented for MongoDB storage; " +
+                    "messages would be stored in plaintext. Use PostgresDidCommMessageStorage " +
+                    "or do not configure MessageEncryption for this backend."
+            )
+        }
     }
 
     override suspend fun markAsArchived(messageIds: List<String>, archiveId: String) = withContext(Dispatchers.IO) {

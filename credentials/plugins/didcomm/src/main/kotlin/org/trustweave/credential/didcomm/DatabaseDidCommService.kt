@@ -57,14 +57,16 @@ class DatabaseDidCommService(
         packedMessage: String,
         recipientDid: String,
         recipientKeyId: String,
-        senderDid: String?
+        senderDid: String?,
+        requireSigned: Boolean
     ): DidCommMessage = withContext(Dispatchers.IO) {
         // Unpack the message
         val message = packer.unpack(
             packedMessage = packedMessage,
             recipientDid = recipientDid,
             recipientKeyId = recipientKeyId,
-            senderDid = senderDid
+            senderDid = senderDid,
+            requireSigned = requireSigned
         )
 
         // Store the received message

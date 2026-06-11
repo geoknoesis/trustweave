@@ -44,13 +44,19 @@ interface DidCommService {
      * @param recipientDid Recipient DID
      * @param recipientKeyId Recipient key ID
      * @param senderDid Expected sender DID (optional, for verification)
+     * @param requireSigned When true, plain messages without a `signatures` array are rejected
+     *   instead of being accepted as "unsigned" (defends against signature stripping).
+     *   Encrypted messages satisfy the requirement only when AuthCrypt decryption
+     *   cryptographically authenticates the expected sender; anonymously encrypted (anoncrypt)
+     *   messages are rejected because anoncrypt does not authenticate the sender. Default: false.
      * @return Unpacked message
      */
     suspend fun receiveMessage(
         packedMessage: String,
         recipientDid: String,
         recipientKeyId: String,
-        senderDid: String? = null
+        senderDid: String? = null,
+        requireSigned: Boolean = false
     ): DidCommMessage
 
     /**
@@ -131,14 +137,16 @@ class InMemoryDidCommService(
         packedMessage: String,
         recipientDid: String,
         recipientKeyId: String,
-        senderDid: String?
+        senderDid: String?,
+        requireSigned: Boolean
     ): DidCommMessage = withContext(Dispatchers.IO) {
         // Unpack the message
         val message = packer.unpack(
             packedMessage = packedMessage,
             recipientDid = recipientDid,
             recipientKeyId = recipientKeyId,
-            senderDid = senderDid
+            senderDid = senderDid,
+            requireSigned = requireSigned
         )
 
         // Store the received message

@@ -11,6 +11,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.datetime)
+    // Lifecycle/teardown diagnostics in DefaultPluginRegistry
+    implementation(libs.slf4j.api)
     // Test dependencies are standardized in root build.gradle.kts
 }
 

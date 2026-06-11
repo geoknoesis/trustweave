@@ -77,9 +77,7 @@ object PresentationDefinitionMatcher {
                             else -> "vc+sd-jwt"
                         }
                     }
-                    creds.first().proof is CredentialProof.MdocProof -> "mso_mdoc"
-                    creds.first().proof is CredentialProof.SdJwtVcProof -> "vc+sd-jwt"
-                    else -> "ldp_vc"
+                    else -> credentialFormatOf(creds.first())
                 }
                 DescriptorMap(
                     id = descriptorId,
@@ -98,6 +96,17 @@ object PresentationDefinitionMatcher {
     // -------------------------------------------------------------------------
     // Internal
     // -------------------------------------------------------------------------
+
+    /**
+     * Maps a credential's proof type to its registered OID4VP format identifier
+     * (OID4VP v1.0 Appendix B): `jwt_vc_json`, `ldp_vc`, `vc+sd-jwt`, `mso_mdoc`.
+     */
+    private fun credentialFormatOf(credential: VerifiableCredential): String = when (credential.proof) {
+        is CredentialProof.SdJwtVcProof -> "vc+sd-jwt"
+        is CredentialProof.MdocProof -> "mso_mdoc"
+        is CredentialProof.JwtProof -> "jwt_vc_json"
+        else -> "ldp_vc"
+    }
 
     private fun matchDescriptor(
         descriptor: InputDescriptor,

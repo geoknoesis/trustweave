@@ -29,13 +29,39 @@ sealed class PluginException(
 
     data class InitializationFailed(
         val pluginId: String,
-        val reason: String
+        val reason: String,
+        override val cause: Throwable? = null
     ) : PluginException(
         code = "PLUGIN_INITIALIZATION_FAILED",
         message = "Plugin '$pluginId' failed to initialize: $reason",
         context = mapOf(
             "pluginId" to pluginId,
             "reason" to reason
+        ),
+        cause = cause
+    )
+
+    /**
+     * A required [org.trustweave.core.plugin.PluginDependency.versionRange] is not
+     * satisfied by the version of an already-registered dependency.
+     *
+     * Only thrown for non-optional dependencies; optional dependency mismatches are
+     * logged as warnings instead.
+     */
+    data class DependencyVersionMismatch(
+        val pluginId: String,
+        val dependencyId: String,
+        val requiredRange: String,
+        val actualVersion: String
+    ) : PluginException(
+        code = "PLUGIN_DEPENDENCY_VERSION_MISMATCH",
+        message = "Plugin '$pluginId' requires dependency '$dependencyId' version in range " +
+            "'$requiredRange', but version '$actualVersion' is registered",
+        context = mapOf(
+            "pluginId" to pluginId,
+            "dependencyId" to dependencyId,
+            "requiredRange" to requiredRange,
+            "actualVersion" to actualVersion
         )
     )
 

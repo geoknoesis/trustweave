@@ -181,22 +181,125 @@ class PeerDidMethodTest {
         val codes = did.removePrefix("did:peer:2").split(".").filter { it.isNotEmpty() }.map { it[0] }
         assertEquals(listOf('V', 'A', 'I', 'D'), codes, "encoded segments: $did")
 
-        // Stored document reflects the requested purposes
-        assertEquals(1, document.authentication.size)
-        assertEquals(1, document.assertionMethod.size)
-        assertEquals(1, document.capabilityInvocation.size)
-        assertEquals(1, document.capabilityDelegation.size)
+        // Stored document reflects the requested purposes with spec VM ids (#key-N)
+        assertEquals(4, document.verificationMethod.size, "one VM per purpose segment")
+        assertEquals(listOf("$did#key-1"), document.authentication.map { it.value })
+        assertEquals(listOf("$did#key-2"), document.assertionMethod.map { it.value })
+        assertEquals(listOf("$did#key-3"), document.capabilityInvocation.map { it.value })
+        assertEquals(listOf("$did#key-4"), document.capabilityDelegation.map { it.value })
 
-        // Fresh instance: decode from the DID string yields the same relationships
+        // Fresh instance: decode from the DID string yields the IDENTICAL relationships
         val result = newMethod().resolveDid(document.id)
         assertTrue(result is DidResolutionResult.Success)
         val resolved = (result as DidResolutionResult.Success).document
         assertEquals(4, resolved.verificationMethod.size, "one VM per purpose segment")
-        assertEquals(1, resolved.authentication.size)
-        assertEquals(1, resolved.assertionMethod.size)
-        assertEquals(1, resolved.capabilityInvocation.size)
-        assertEquals(1, resolved.capabilityDelegation.size)
+        assertEquals(
+            document.verificationMethod.map { it.id.value },
+            resolved.verificationMethod.map { it.id.value }
+        )
+        assertEquals(document.authentication.map { it.value }, resolved.authentication.map { it.value })
+        assertEquals(document.assertionMethod.map { it.value }, resolved.assertionMethod.map { it.value })
+        assertEquals(
+            document.capabilityInvocation.map { it.value },
+            resolved.capabilityInvocation.map { it.value }
+        )
+        assertEquals(
+            document.capabilityDelegation.map { it.value },
+            resolved.capabilityDelegation.map { it.value }
+        )
         assertTrue(resolved.keyAgreement.isEmpty())
+    }
+
+    @Test
+    fun `numalgo2 stored document is identical to what a third party resolves`() = runBlocking {
+        // AUTH + ASSERTION: the reviewer-flagged divergence — stored doc used to carry
+        // ONE VM named #<kmsKeyId> in both relationships, while external parsers derive
+        // one VM PER segment (#key-1, #key-2), each in exactly one relationship.
+        val document = newMethod().createDid(
+            didCreationOptions {
+                algorithm = KeyAlgorithm.ED25519
+                forAuthentication()
+                forAssertion()
+            }
+        )
+        val did = document.id.value
+
+        // Stored document must use spec VM ids, one per segment
+        assertEquals(
+            listOf("$did#key-1", "$did#key-2"),
+            document.verificationMethod.map { it.id.value }
+        )
+        assertEquals(listOf("$did#key-1"), document.authentication.map { it.value })
+        assertEquals(listOf("$did#key-2"), document.assertionMethod.map { it.value })
+
+        // Fresh PeerDidMethod instance (no shared cache) — relationship IDS must match
+        val result = newMethod().resolveDid(document.id)
+        assertTrue(result is DidResolutionResult.Success)
+        val resolved = (result as DidResolutionResult.Success).document
+
+        assertEquals(
+            document.verificationMethod.map { it.id.value },
+            resolved.verificationMethod.map { it.id.value }
+        )
+        assertEquals(document.authentication.map { it.value }, resolved.authentication.map { it.value })
+        assertEquals(document.assertionMethod.map { it.value }, resolved.assertionMethod.map { it.value })
+        assertEquals(document.keyAgreement.map { it.value }, resolved.keyAgreement.map { it.value })
+        assertEquals(
+            document.capabilityInvocation.map { it.value },
+            resolved.capabilityInvocation.map { it.value }
+        )
+        assertEquals(
+            document.capabilityDelegation.map { it.value },
+            resolved.capabilityDelegation.map { it.value }
+        )
+        assertEquals(
+            document.service.map { it.id },
+            resolved.service.map { it.id }
+        )
+    }
+
+    @Test
+    fun `numalgo2 KEY_AGREEMENT-only creation is consistent between stored and resolved`() = runBlocking {
+        // KEY_AGREEMENT is not encodable for the single signing key, so the encoder
+        // falls back to `.V`. The stored document must agree with what the world
+        // resolves: authentication = [#key-1], keyAgreement empty.
+        val document = newMethod().createDid(
+            didCreationOptions {
+                algorithm = KeyAlgorithm.ED25519
+                forKeyAgreement()
+            }
+        )
+        val did = document.id.value
+        val codes = did.removePrefix("did:peer:2").split(".").filter { it.isNotEmpty() }.map { it[0] }
+        assertEquals(listOf('V'), codes, "fallback .V segment expected: $did")
+
+        assertEquals(listOf("$did#key-1"), document.authentication.map { it.value })
+        assertTrue(document.keyAgreement.isEmpty(), "single signing key cannot serve keyAgreement")
+
+        val result = newMethod().resolveDid(document.id)
+        assertTrue(result is DidResolutionResult.Success)
+        val resolved = (result as DidResolutionResult.Success).document
+        assertEquals(document.authentication.map { it.value }, resolved.authentication.map { it.value })
+        assertEquals(document.keyAgreement.map { it.value }, resolved.keyAgreement.map { it.value })
+    }
+
+    @Test
+    fun `numalgo2 stored service id matches the spec parser convention`() = runBlocking {
+        val document = newMethod().createDid(
+            didCreationOptions {
+                algorithm = KeyAlgorithm.ED25519
+                property("serviceEndpoint", "https://example.com/didcomm")
+            }
+        )
+        val did = document.id.value
+
+        // Parser convention: first service id is `#service` — stored doc must match
+        assertEquals(listOf("$did#service"), document.service.map { it.id })
+
+        val result = newMethod().resolveDid(document.id)
+        assertTrue(result is DidResolutionResult.Success)
+        val resolved = (result as DidResolutionResult.Success).document
+        assertEquals(document.service.map { it.id }, resolved.service.map { it.id })
     }
 
     @Test
@@ -249,10 +352,22 @@ class PeerDidMethodTest {
         )
 
         assertTrue(document.id.value.startsWith("did:peer:0z"))
+        val did = document.id.value
+
+        // Stored document must use the parser's VM id convention (#key-1)
+        assertEquals(listOf("$did#key-1"), document.verificationMethod.map { it.id.value })
 
         val result = newMethod().resolveDid(document.id)
         assertTrue(result is DidResolutionResult.Success)
         val resolved = (result as DidResolutionResult.Success).document
         assertTrue(resolved.verificationMethod.firstOrNull()?.publicKeyMultibase != null)
+
+        // Stored and externally-resolved documents must be identical (ids, not counts)
+        assertEquals(
+            document.verificationMethod.map { it.id.value },
+            resolved.verificationMethod.map { it.id.value }
+        )
+        assertEquals(document.authentication.map { it.value }, resolved.authentication.map { it.value })
+        assertEquals(document.assertionMethod.map { it.value }, resolved.assertionMethod.map { it.value })
     }
 }

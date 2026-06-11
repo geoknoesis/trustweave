@@ -207,9 +207,11 @@ class InMemoryWallet(
     }
 
     override suspend fun removeFromCollection(credentialId: String, collectionId: String): Boolean {
-        credentialCollections[credentialId]?.remove(collectionId)
-        collectionCredentials[collectionId]?.remove(credentialId)
-        return true
+        // Contract (CredentialOrganization): true only if an existing membership was removed;
+        // false for unknown credential, unknown collection, or non-member.
+        val removedFromCredentialSide = credentialCollections[credentialId]?.remove(collectionId) ?: false
+        val removedFromCollectionSide = collectionCredentials[collectionId]?.remove(credentialId) ?: false
+        return removedFromCredentialSide || removedFromCollectionSide
     }
 
     override suspend fun getCredentialsInCollection(collectionId: String): List<VerifiableCredential> {
@@ -227,6 +229,10 @@ class InMemoryWallet(
     }
 
     override suspend fun untagCredential(credentialId: String, tags: Set<String>): Boolean {
+        // Contract (CredentialOrganization): false if the credential is not found.
+        if (!credentials.containsKey(credentialId) && !archivedCredentials.containsKey(credentialId)) {
+            return false
+        }
         credentialTags[credentialId]?.removeAll(tags)
         updateMetadata(credentialId) { it.copy(tags = credentialTags[credentialId] ?: emptySet()) }
         return true

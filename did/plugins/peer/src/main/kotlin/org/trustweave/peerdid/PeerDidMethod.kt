@@ -58,35 +58,21 @@ class PeerDidMethod(
                 else -> throw IllegalArgumentException("Unsupported numalgo: ${config.numalgo}")
             }
 
-            val verificationMethod = DidMethodUtils.createVerificationMethod(
-                did = did,
-                keyHandle = keyHandle,
-                algorithm = options.algorithm
-            )
-
-            val service = if (serviceEndpoint != null) {
-                listOf(DidService(
-                    id = "$did#didcomm",
-                    type = listOf("DIDCommMessaging"),
-                    serviceEndpoint = ServiceEndpoint.Url(serviceEndpoint)
-                ))
-            } else emptyList()
-
-            // Build verification relationships from the requested purposes so the stored
-            // document matches the did:peer:2 purpose-code semantics (V → authentication,
-            // A → assertionMethod, I → capabilityInvocation, D → capabilityDelegation).
-            val didObj = Did(did)
-            val vmIds = listOf(verificationMethod.id)
-            val purposes = options.purposes
-            val document = DidDocument(
-                id = didObj,
-                verificationMethod = listOf(verificationMethod),
-                authentication = if (KeyPurpose.AUTHENTICATION in purposes) vmIds else emptyList(),
-                assertionMethod = if (KeyPurpose.ASSERTION in purposes) vmIds else emptyList(),
-                capabilityInvocation = if (KeyPurpose.CAPABILITY_INVOCATION in purposes) vmIds else emptyList(),
-                capabilityDelegation = if (KeyPurpose.CAPABILITY_DELEGATION in purposes) vmIds else emptyList(),
-                service = service
-            )
+            // Single source of truth: for the self-describing numalgos (0 and 2), derive
+            // the stored document by running the SAME parser any third party uses on the
+            // DID string. This guarantees the creator's stored document is identical to
+            // what spec-compliant external resolvers produce (VM ids #key-N, purpose-code
+            // relationships) — proofs referencing the stored VM ids verify everywhere.
+            // Numalgo 1 cannot be derived from the DID string (it encodes only a hash of
+            // the genesis document), so its document is built directly.
+            val document = when (config.numalgo) {
+                PeerDidConfig.NUMALGO_0, PeerDidConfig.NUMALGO_2 ->
+                    resolveEmbeddedDocument(did) ?: throw TrustWeaveException.Unknown(
+                        code = "CREATE_FAILED",
+                        message = "Generated did:peer is not parseable by its own resolver: $did"
+                    )
+                else -> buildNumalgo1Document(did, keyHandle, options, serviceEndpoint)
+            }
 
             storeDocument(document.id, document)
             document
@@ -212,8 +198,10 @@ class PeerDidMethod(
      * The single generated signing key is emitted once per requested purpose.
      * [KeyPurpose.KEY_AGREEMENT] (`E`) is intentionally NOT encoded here: key agreement
      * requires a separate X25519 key, which this single-key creation flow does not
-     * generate. If no encodable purpose is requested, `.V` is emitted so the DID
-     * remains resolvable.
+     * generate. If no encodable purpose is requested (e.g. KEY_AGREEMENT-only), `.V`
+     * is emitted so the DID remains resolvable — the resulting document (stored AND
+     * externally resolved, since both come from the same parser) therefore carries
+     * `authentication = [#key-1]` and an empty `keyAgreement`.
      */
     private fun generateNumalgo2Did(
         keyHandle: KeyHandle,
@@ -477,6 +465,47 @@ class PeerDidMethod(
     private fun extractNumalgo(didString: String): Int? {
         val after = didString.substringAfter("did:peer:")
         return after.firstOrNull()?.digitToIntOrNull()
+    }
+
+    /**
+     * Builds the stored document for a numalgo-1 DID.
+     *
+     * Numalgo 1 is the only numalgo whose document cannot be re-derived from the DID
+     * string (the DID encodes a multihash of the genesis document), so the creator's
+     * document is authoritative and is built directly from the creation options.
+     */
+    private fun buildNumalgo1Document(
+        did: String,
+        keyHandle: KeyHandle,
+        options: DidCreationOptions,
+        serviceEndpoint: String?
+    ): DidDocument {
+        val verificationMethod = DidMethodUtils.createVerificationMethod(
+            did = did,
+            keyHandle = keyHandle,
+            algorithm = options.algorithm
+        )
+        val service = if (serviceEndpoint != null) {
+            listOf(
+                DidService(
+                    id = "$did#didcomm",
+                    type = listOf("DIDCommMessaging"),
+                    serviceEndpoint = ServiceEndpoint.Url(serviceEndpoint)
+                )
+            )
+        } else emptyList()
+
+        val vmIds = listOf(verificationMethod.id)
+        val purposes = options.purposes
+        return DidDocument(
+            id = Did(did),
+            verificationMethod = listOf(verificationMethod),
+            authentication = if (KeyPurpose.AUTHENTICATION in purposes) vmIds else emptyList(),
+            assertionMethod = if (KeyPurpose.ASSERTION in purposes) vmIds else emptyList(),
+            capabilityInvocation = if (KeyPurpose.CAPABILITY_INVOCATION in purposes) vmIds else emptyList(),
+            capabilityDelegation = if (KeyPurpose.CAPABILITY_DELEGATION in purposes) vmIds else emptyList(),
+            service = service
+        )
     }
 
     private fun buildMinimalDocument(

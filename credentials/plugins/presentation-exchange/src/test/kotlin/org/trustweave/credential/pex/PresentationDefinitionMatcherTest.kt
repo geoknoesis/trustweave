@@ -9,6 +9,7 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.credential.model.CredentialType
+import org.trustweave.credential.model.vc.CredentialProof
 import org.trustweave.credential.model.vc.CredentialSubject
 import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.vc.VerifiableCredential
@@ -113,6 +114,53 @@ class PresentationDefinitionMatcherTest {
         assertTrue(encoded.contains("\"jwt_vp\""))
         assertTrue(encoded.contains("\"vc+sd-jwt\""))
         assertTrue(encoded.contains("\"mso_mdoc\""))
+    }
+
+    @Test
+    fun `Format round-trips legacy jwt_vc and jwt_vp spellings`() {
+        val json = Json { encodeDefaults = false }
+        val legacy = """{"jwt_vc":{"alg":["EdDSA"]},"jwt_vp":{"alg":["ES256"]}}"""
+
+        val decoded = json.decodeFromString(Format.serializer(), legacy)
+
+        assertEquals(AlgorithmConstraint(listOf("EdDSA")), decoded.jwtVc)
+        assertEquals(AlgorithmConstraint(listOf("ES256")), decoded.jwtVp)
+        assertNull(decoded.jwtVcJson)
+        assertNull(decoded.jwtVpJson)
+
+        val encoded = json.encodeToString(Format.serializer(), decoded)
+        assertTrue(encoded.contains("\"jwt_vc\""))
+        assertTrue(encoded.contains("\"jwt_vp\""))
+        assertEquals(decoded, json.decodeFromString(Format.serializer(), encoded))
+    }
+
+    @Test
+    fun `Format round-trips OID4VP jwt_vc_json and jwt_vp_json spellings`() {
+        val json = Json { encodeDefaults = false }
+        val oid4vp = """{"jwt_vc_json":{"alg":["EdDSA"]},"jwt_vp_json":{"alg":["ES256"]}}"""
+
+        val decoded = json.decodeFromString(Format.serializer(), oid4vp)
+
+        assertEquals(AlgorithmConstraint(listOf("EdDSA")), decoded.jwtVcJson)
+        assertEquals(AlgorithmConstraint(listOf("ES256")), decoded.jwtVpJson)
+        assertNull(decoded.jwtVc)
+        assertNull(decoded.jwtVp)
+
+        val encoded = json.encodeToString(Format.serializer(), decoded)
+        assertTrue(encoded.contains("\"jwt_vc_json\""))
+        assertTrue(encoded.contains("\"jwt_vp_json\""))
+        assertEquals(decoded, json.decodeFromString(Format.serializer(), encoded))
+    }
+
+    @Test
+    fun `Format accepts both spellings in the same definition`() {
+        val json = Json { encodeDefaults = false }
+        val mixed = """{"jwt_vc":{"alg":["EdDSA"]},"jwt_vc_json":{"alg":["ES256"]}}"""
+
+        val decoded = json.decodeFromString(Format.serializer(), mixed)
+
+        assertEquals(AlgorithmConstraint(listOf("EdDSA")), decoded.jwtVc)
+        assertEquals(AlgorithmConstraint(listOf("ES256")), decoded.jwtVcJson)
     }
 
     @Test
@@ -333,6 +381,40 @@ class PresentationDefinitionMatcherTest {
         assertEquals("id-a", submission.descriptorMap.first().id)
         assertEquals("ldp_vc", submission.descriptorMap.first().format)
         assertNull(submission.descriptorMap.first().pathNested)
+    }
+
+    @Test
+    fun `buildSubmission maps each proof type to its OID4VP format identifier`() {
+        val definition = PresentationDefinition(
+            id = "pd-formats",
+            inputDescriptors = listOf(InputDescriptor(id = "id-fmt")),
+        )
+        val expectedFormatByProof = mapOf<CredentialProof?, String>(
+            null to "ldp_vc",
+            CredentialProof.LinkedDataProof(
+                type = "Ed25519Signature2020",
+                created = Clock.System.now(),
+                verificationMethod = "did:example:issuer#key-1",
+                proofPurpose = "assertionMethod",
+                proofValue = "zSignature",
+            ) to "ldp_vc",
+            CredentialProof.JwtProof(jwt = "eyJhbGciOiJFZERTQSJ9.e30.sig") to "jwt_vc_json",
+            CredentialProof.SdJwtVcProof(sdJwtVc = "eyJhbGciOiJFUzI1NiJ9.e30.sig~") to "vc+sd-jwt",
+            CredentialProof.MdocProof(deviceResponse = byteArrayOf(1, 2, 3), docType = "org.iso.18013.5.1.mDL") to "mso_mdoc",
+        )
+
+        expectedFormatByProof.forEach { (proof, expectedFormat) ->
+            val credential = makeCredential("EducationCredential").copy(proof = proof)
+            val submission = PresentationDefinitionMatcher.buildSubmission(
+                definition,
+                mapOf("id-fmt" to listOf(credential)),
+            )
+            assertEquals(
+                expectedFormat,
+                submission.descriptorMap.single().format,
+                "Unexpected format for proof type ${proof?.let { it::class.simpleName } ?: "null"}",
+            )
+        }
     }
 
     @Test

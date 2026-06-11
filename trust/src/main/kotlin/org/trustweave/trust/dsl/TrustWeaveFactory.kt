@@ -134,6 +134,19 @@ internal object TrustWeaveFactory {
             ioDispatcher = state.ioDispatcher,
             smartContractService = state.smartContractService,
             trustedDomainManager = trustedDomainManager,
+            // Ownership drives TrustWeave.close(): only components this factory created
+            // are closed by the facade; caller-injected ones remain caller-owned.
+            ownership = ComponentOwnership(
+                ownsKms = state.kms == null,
+                ownsCredentialService = state.credentialService == null &&
+                    resolvedCredentialService != null,
+                ownsRevocationManager = resolvedRevocationManager != null,
+                ownsTrustRegistry = resolvedTrustRegistry != null,
+                // Every method present at this point was created during this build
+                // (SPI auto-registration or did { method(...) } resolution); methods the
+                // caller registers later via getDidRegistry() are not snapshotted here.
+                ownedDidMethods = didRegistry.getAllMethods().values.toList(),
+            ),
         )
     }
 

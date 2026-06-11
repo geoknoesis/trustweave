@@ -1,5 +1,7 @@
 package org.trustweave.core.plugin
 
+import kotlinx.coroutines.runBlocking
+import org.slf4j.LoggerFactory
 import org.trustweave.core.exception.PluginException
 import org.trustweave.core.exception.TrustWeaveException
 import java.util.concurrent.ConcurrentHashMap
@@ -19,15 +21,27 @@ internal interface PluginRegistry {
     /**
      * Register a plugin with metadata.
      *
+     * If [instance] implements [PluginLifecycle], `initialize(metadata.configuration)`
+     * and `start()` are invoked before the plugin becomes visible; a failure rolls the
+     * registration back and propagates as [org.trustweave.core.exception.PluginException.InitializationFailed].
+     *
      * @param metadata Plugin metadata describing capabilities
      * @param instance Plugin instance
      * @throws org.trustweave.core.exception.PluginException.BlankId if plugin ID is blank
      * @throws org.trustweave.core.exception.PluginException.AlreadyRegistered if plugin is already registered
+     * @throws org.trustweave.core.exception.PluginException.InitializationFailed if the plugin's lifecycle
+     *   initialization fails
+     * @throws org.trustweave.core.exception.PluginException.DependencyVersionMismatch if a required
+     *   dependency is registered with a version outside the declared range
      */
     fun register(metadata: PluginMetadata, instance: Any)
 
     /**
      * Unregister a plugin.
+     *
+     * If the registered instance implements [PluginLifecycle], `stop()` and `cleanup()`
+     * are invoked after the plugin has been retracted; teardown failures are logged and
+     * never propagated.
      *
      * @param pluginId Plugin ID to unregister
      */
@@ -119,9 +133,27 @@ internal interface PluginRegistry {
 /**
  * Internal default implementation of [PluginRegistry] interface.
  *
+ * **Lifecycle:** instances implementing [PluginLifecycle] receive
+ * [PluginLifecycle.initialize] + [PluginLifecycle.start] during [register] (a plugin
+ * that fails either never becomes visible — the registration is rolled back and a
+ * [PluginException.InitializationFailed] propagates), and [PluginLifecycle.stop] +
+ * [PluginLifecycle.cleanup] during [unregister]/[clear] (teardown failures are logged,
+ * never propagated, so unregistration always completes). Lifecycle methods run inside
+ * the mutation lock via [runBlocking]; they must not re-enter this registry.
+ *
+ * **Dependency version ranges:** at [register] time, each declared
+ * [PluginDependency.versionRange] is checked against the version of the dependency
+ * *if it is already registered*. A violated range fails registration for required
+ * dependencies ([PluginException.DependencyVersionMismatch]) and logs a warning for
+ * optional ones. Limitations (the dependency model defines no resolution phase):
+ * dependencies that register later are not re-validated, missing dependencies are not
+ * an error, and unparseable ranges/versions are logged and skipped.
+ *
  * @suppress This is an internal API
  */
 internal class DefaultPluginRegistry : PluginRegistry {
+
+    private val logger = LoggerFactory.getLogger(DefaultPluginRegistry::class.java)
 
     /**
      * Guards all multi-map mutations (register/unregister/clear) so they are atomic
@@ -160,6 +192,8 @@ internal class DefaultPluginRegistry : PluginRegistry {
                 )
             }
 
+            checkDependencyVersionRanges(metadata)
+
             // Populate instance state and indexes BEFORE publishing metadata, so a
             // concurrent reader that observes getMetadata(id) != null is guaranteed
             // to also observe the instance via getInstance(id, ...).
@@ -175,8 +209,126 @@ internal class DefaultPluginRegistry : PluginRegistry {
                 ConcurrentHashMap.newKeySet()
             }.add(metadata.id)
 
+            // Drive the plugin lifecycle BEFORE publishing metadata: a plugin that
+            // fails initialize()/start() must never become visible. On failure the
+            // partial registration above is rolled back and a PluginException
+            // propagates to the caller.
+            if (instance is PluginLifecycle) {
+                try {
+                    runBlocking {
+                        if (!instance.initialize(metadata.configuration)) {
+                            throw PluginException.InitializationFailed(
+                                pluginId = metadata.id,
+                                reason = "initialize() returned false"
+                            )
+                        }
+                        if (!instance.start()) {
+                            throw PluginException.InitializationFailed(
+                                pluginId = metadata.id,
+                                reason = "start() returned false"
+                            )
+                        }
+                    }
+                } catch (t: Throwable) {
+                    rollbackRegistration(metadata)
+                    when (t) {
+                        is Error -> throw t // OOM/StackOverflow etc. must propagate as-is
+                        is PluginException -> throw t
+                        else -> throw PluginException.InitializationFailed(
+                            pluginId = metadata.id,
+                            reason = t.message ?: t::class.simpleName ?: "Unknown error",
+                            cause = t
+                        )
+                    }
+                }
+            }
+
             // Publish last: metadata visibility is the signal that the plugin is registered.
             plugins[metadata.id] = metadata
+        }
+    }
+
+    /**
+     * Undo the instance/index population performed by [register] before a lifecycle
+     * failure. Must be called while holding [mutationLock]; metadata was never
+     * published, so readers cannot have observed the plugin.
+     */
+    private fun rollbackRegistration(metadata: PluginMetadata) {
+        instances.remove(metadata.id)
+        instanceTypes.remove(metadata.id)
+        metadata.capabilities.features.forEach { capability ->
+            capabilityIndex.computeIfPresent(capability) { _, ids ->
+                ids.remove(metadata.id)
+                if (ids.isEmpty()) null else ids
+            }
+        }
+        providerIndex.computeIfPresent(metadata.provider) { _, ids ->
+            ids.remove(metadata.id)
+            if (ids.isEmpty()) null else ids
+        }
+    }
+
+    /**
+     * Validate declared dependency version ranges against already-registered plugins.
+     * See the class KDoc for semantics and limitations. Must be called while holding
+     * [mutationLock].
+     */
+    private fun checkDependencyVersionRanges(metadata: PluginMetadata) {
+        for (dependency in metadata.dependencies) {
+            val range = dependency.versionRange ?: continue
+            // The model has no resolution phase: dependencies may legitimately
+            // register later, so an absent dependency is not checkable here.
+            val depMetadata = plugins[dependency.pluginId] ?: continue
+            when (PluginVersions.satisfies(depMetadata.version, range)) {
+                true -> Unit
+                false -> {
+                    if (dependency.isOptional) {
+                        logger.warn(
+                            "Plugin '{}' optional dependency '{}' version '{}' is outside " +
+                                "declared range '{}'; continuing because the dependency is optional",
+                            metadata.id, dependency.pluginId, depMetadata.version, range
+                        )
+                    } else {
+                        throw PluginException.DependencyVersionMismatch(
+                            pluginId = metadata.id,
+                            dependencyId = dependency.pluginId,
+                            requiredRange = range,
+                            actualVersion = depMetadata.version
+                        )
+                    }
+                }
+                null -> logger.warn(
+                    "Plugin '{}' dependency '{}' declares version range '{}' that cannot be " +
+                        "parsed against version '{}'; range enforcement skipped",
+                    metadata.id, dependency.pluginId, range, depMetadata.version
+                )
+            }
+        }
+    }
+
+    /**
+     * Drive [PluginLifecycle.stop] + [PluginLifecycle.cleanup] after a plugin has been
+     * retracted. Teardown failures must never break unregistration: every exception is
+     * logged and swallowed, and cleanup() still runs when stop() fails.
+     */
+    private fun teardownQuietly(pluginId: String, lifecycle: PluginLifecycle) {
+        try {
+            runBlocking {
+                try {
+                    if (!lifecycle.stop()) {
+                        logger.warn("Plugin '{}' stop() returned false during unregistration", pluginId)
+                    }
+                } catch (e: Exception) {
+                    logger.warn("Plugin '{}' stop() failed during unregistration; continuing with cleanup", pluginId, e)
+                }
+                try {
+                    lifecycle.cleanup()
+                } catch (e: Exception) {
+                    logger.warn("Plugin '{}' cleanup() failed during unregistration", pluginId, e)
+                }
+            }
+        } catch (e: Exception) {
+            logger.warn("Plugin '{}' lifecycle teardown failed during unregistration", pluginId, e)
         }
     }
 
@@ -204,8 +356,14 @@ internal class DefaultPluginRegistry : PluginRegistry {
                 if (ids.isEmpty()) null else ids
             }
 
-            instances.remove(pluginId)
+            val instance = instances.remove(pluginId)
             instanceTypes.remove(pluginId)
+
+            // Teardown AFTER full retraction: the plugin is no longer observable, and
+            // any stop()/cleanup() failure is logged but never breaks unregistration.
+            if (instance is PluginLifecycle) {
+                teardownQuietly(pluginId, instance)
+            }
         }
     }
 
@@ -278,6 +436,12 @@ internal class DefaultPluginRegistry : PluginRegistry {
 
     override fun clear() {
         synchronized(mutationLock) {
+            // Snapshot lifecycle-bearing instances before retraction so they can be
+            // torn down once they are no longer observable.
+            val lifecycleInstances = instances.mapNotNull { (id, instance) ->
+                (instance as? PluginLifecycle)?.let { id to it }
+            }
+
             // Retract metadata first (mirrors unregister) so readers never observe
             // metadata without a corresponding instance.
             plugins.clear()
@@ -285,6 +449,11 @@ internal class DefaultPluginRegistry : PluginRegistry {
             providerIndex.clear()
             instances.clear()
             instanceTypes.clear()
+
+            // Teardown after retraction; failures are logged, never propagated.
+            lifecycleInstances.forEach { (id, lifecycle) ->
+                teardownQuietly(id, lifecycle)
+            }
         }
     }
 

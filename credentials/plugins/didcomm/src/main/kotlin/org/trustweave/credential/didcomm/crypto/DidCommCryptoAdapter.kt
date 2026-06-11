@@ -45,7 +45,7 @@ class DidCommCryptoAdapter(
         recipientDid: String,
         recipientKeyId: String,
         senderDid: String,
-    ): JsonObject = withContext(Dispatchers.IO) {
+    ): DidCommDecryptResult = withContext(Dispatchers.IO) {
         crypto().decrypt(envelope, recipientDid, recipientKeyId, senderDid)
     }
 
@@ -57,7 +57,7 @@ class DidCommCryptoAdapter(
         recipientDid: String,
         recipientKeyId: String,
         senderDid: String,
-    ): JsonObject = withContext(Dispatchers.IO) {
+    ): DidCommDecryptResult = withContext(Dispatchers.IO) {
         val envelope = DidCommEnvelopeJson.packedJsonToEnvelope(packedMessage)
         crypto().decrypt(envelope, recipientDid, recipientKeyId, senderDid)
     }

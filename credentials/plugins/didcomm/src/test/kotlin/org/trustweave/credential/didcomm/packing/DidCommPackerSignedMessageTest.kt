@@ -26,6 +26,7 @@ import java.util.Base64
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 /**
  * Verifies that signed plain messages are actually verified on unpack:
@@ -259,5 +260,178 @@ class DidCommPackerSignedMessageTest {
         val unpacked = packer.unpack(packed, bobDid, bobVm)
         assertEquals(message.id, unpacked.id)
         assertEquals("no claim", BasicMessageProtocol.extractContent(unpacked))
+    }
+
+    // --- requireSigned: signature stripping must be detectable -------------------------------
+
+    private fun stripSignatures(packed: String): String {
+        val stripped = JsonObject(
+            Json.parseToJsonElement(packed).jsonObject.filterKeys { it != "signatures" },
+        )
+        return Json.encodeToString(JsonObject.serializer(), stripped)
+    }
+
+    @Test
+    fun strippedSignaturesWithRequireSignedAreRejected() = runBlocking {
+        val packer = packerWith()
+        val packed = packSigned(packer, BasicMessageProtocol.createBasicMessage(aliceDid, bobDid, "strip me"))
+
+        val ex = assertFailsWith<DidCommException.UnpackingFailed> {
+            packer.unpack(
+                stripSignatures(packed),
+                bobDid,
+                bobVm,
+                senderDid = aliceDid,
+                requireSigned = true,
+            )
+        }
+        assertTrue(ex.reason.contains("requireSigned"), "Unexpected reason: ${ex.reason}")
+    }
+
+    @Test
+    fun unsignedMessageWithRequireSignedIsRejected() = runBlocking {
+        val packer = packerWith()
+        val message = BasicMessageProtocol.createBasicMessage(aliceDid, bobDid, "never signed")
+        val packed = packer.pack(
+            message = message,
+            fromDid = aliceDid,
+            fromKeyId = aliceVm,
+            toDid = bobDid,
+            toKeyId = bobVm,
+            encrypt = false,
+            sign = false,
+        )
+
+        assertFailsWith<DidCommException.UnpackingFailed> {
+            packer.unpack(packed, bobDid, bobVm, requireSigned = true)
+        }
+        Unit
+    }
+
+    @Test
+    fun strippedSignaturesWithoutRequireSignedStillUnpack() = runBlocking {
+        // Default behavior is unchanged: without requireSigned, a stripped message is
+        // indistinguishable from a legitimately unsigned one and still unpacks.
+        val packer = packerWith()
+        val message = BasicMessageProtocol.createBasicMessage(aliceDid, bobDid, "stripped quietly")
+        val packed = packSigned(packer, message)
+
+        val unpacked = packer.unpack(stripSignatures(packed), bobDid, bobVm)
+        assertEquals(message.id, unpacked.id)
+    }
+
+    @Test
+    fun signedMessageWithRequireSignedSurfacesVerifiedSigner() = runBlocking {
+        val packer = packerWith()
+        val message = BasicMessageProtocol.createBasicMessage(aliceDid, bobDid, "prove it")
+        val packed = packSigned(packer, message)
+
+        val result = packer.unpackToResult(packed, bobDid, bobVm, senderDid = aliceDid, requireSigned = true)
+        assertEquals(message.id, result.message.id)
+        assertEquals(listOf(aliceDid), result.verifiedSignerDids)
+        assertEquals(aliceDid, result.verifiedSignerDid)
+    }
+
+    @Test
+    fun unsignedMessageSurfacesNoVerifiedSigner() = runBlocking {
+        val packer = packerWith()
+        val message = BasicMessageProtocol.createBasicMessage(aliceDid, bobDid, "no claim")
+        val packed = packer.pack(
+            message = message,
+            fromDid = aliceDid,
+            fromKeyId = aliceVm,
+            toDid = bobDid,
+            toKeyId = bobVm,
+            encrypt = false,
+            sign = false,
+        )
+
+        val result = packer.unpackToResult(packed, bobDid, bobVm)
+        assertEquals(message.id, result.message.id)
+        assertTrue(result.verifiedSignerDids.isEmpty())
+        assertEquals(null, result.verifiedSignerDid)
+    }
+
+    // --- JWS header hygiene: 'crit' and 'b64' must be rejected -------------------------------
+
+    private fun b64url(bytes: ByteArray): String =
+        Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
+
+    /**
+     * Builds a plain message carrying a JWS that is *correctly signed* by alice over the exact
+     * signing input the verifier reconstructs, but with an attacker-chosen protected header.
+     * This isolates header-hygiene checks from ordinary signature-verification failures.
+     */
+    private suspend fun forgeSignedWithHeader(message: DidCommMessage, headerJson: String): String {
+        val packer = packerWith()
+        val plain = packer.pack(
+            message = message,
+            fromDid = aliceDid,
+            fromKeyId = aliceVm,
+            toDid = bobDid,
+            toKeyId = bobVm,
+            encrypt = false,
+            sign = false,
+        )
+        val headerBase64 = b64url(headerJson.toByteArray(Charsets.UTF_8))
+        val payloadBase64 = b64url(plain.toByteArray(Charsets.UTF_8))
+        val signature = signer("$headerBase64.$payloadBase64".toByteArray(Charsets.US_ASCII), aliceVm)
+        val signed = JsonObject(
+            Json.parseToJsonElement(plain).jsonObject.toMutableMap().apply {
+                put(
+                    "signatures",
+                    buildJsonArray {
+                        add(
+                            buildJsonObject {
+                                put("protected", headerBase64)
+                                put("signature", b64url(signature))
+                            },
+                        )
+                    },
+                )
+            },
+        )
+        return Json.encodeToString(JsonObject.serializer(), signed)
+    }
+
+    @Test
+    fun manuallySignedMessageWithCleanHeaderVerifies() = runBlocking {
+        // Control for the header-hygiene tests: the forge helper produces an otherwise-valid JWS.
+        val message = BasicMessageProtocol.createBasicMessage(aliceDid, bobDid, "control")
+        val forged = forgeSignedWithHeader(
+            message,
+            """{"alg":"EdDSA","typ":"JWS","kid":"$aliceVm"}""",
+        )
+
+        val result = packerWith().unpackToResult(forged, bobDid, bobVm, senderDid = aliceDid, requireSigned = true)
+        assertEquals(aliceDid, result.verifiedSignerDid)
+    }
+
+    @Test
+    fun critHeaderIsRejected() = runBlocking {
+        val message = BasicMessageProtocol.createBasicMessage(aliceDid, bobDid, "crit")
+        val forged = forgeSignedWithHeader(
+            message,
+            """{"alg":"EdDSA","typ":"JWS","kid":"$aliceVm","crit":["b64"],"b64":true}""",
+        )
+
+        val ex = assertFailsWith<DidCommException.UnpackingFailed> {
+            packerWith().unpack(forged, bobDid, bobVm, senderDid = aliceDid)
+        }
+        assertTrue(ex.reason.contains("crit"), "Unexpected reason: ${ex.reason}")
+    }
+
+    @Test
+    fun b64FalseIsRejected() = runBlocking {
+        val message = BasicMessageProtocol.createBasicMessage(aliceDid, bobDid, "b64")
+        val forged = forgeSignedWithHeader(
+            message,
+            """{"alg":"EdDSA","typ":"JWS","kid":"$aliceVm","b64":false}""",
+        )
+
+        val ex = assertFailsWith<DidCommException.UnpackingFailed> {
+            packerWith().unpack(forged, bobDid, bobVm, senderDid = aliceDid)
+        }
+        assertTrue(ex.reason.contains("b64"), "Unexpected reason: ${ex.reason}")
     }
 }

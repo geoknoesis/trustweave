@@ -33,7 +33,17 @@ import java.util.Base64
  * Signed plain messages are verified on unpack: the signer's Ed25519 public key is resolved
  * from its DID document via [resolveDid] and every entry in the `signatures` array must verify,
  * otherwise [DidCommException.UnpackingFailed] is thrown (fail closed). Unsigned plain messages
- * make no authenticity claim and are returned as-is.
+ * make no authenticity claim and are returned as-is — unless `requireSigned` is set, in which
+ * case plain messages without signatures are rejected (signature stripping is otherwise
+ * indistinguishable from a legitimately unsigned message).
+ *
+ * Encrypted envelopes come in two flavors with very different authenticity guarantees:
+ * - **AuthCrypt (ECDH-1PU)** authenticates the sender cryptographically; the authenticated sender
+ *   DID is surfaced via [UnpackResult.authenticatedSenderDid] and satisfies `requireSigned`.
+ * - **AnonCrypt (ECDH-ES)** does NOT authenticate the sender — anyone holding the recipient's
+ *   public key can produce such an envelope with an arbitrary plaintext `from`. AnonCrypt
+ *   envelopes unpack only when no sender expectation is given and `requireSigned` is `false`;
+ *   they are rejected otherwise.
  */
 class DidCommPacker(
     private val crypto: DidCommCryptoInterface,
@@ -132,61 +142,136 @@ class DidCommPacker(
      * @param recipientDid Recipient DID
      * @param recipientKeyId Recipient key ID
      * @param senderDid Expected sender DID (for verification)
+     * @param requireSigned When `true`, plain messages WITHOUT a `signatures` array are rejected
+     *   with [DidCommException.UnpackingFailed] instead of being returned as "unsigned" —
+     *   this makes signature stripping detectable. Encrypted messages satisfy the requirement
+     *   ONLY when AuthCrypt (ECDH-1PU) decryption cryptographically authenticates the expected
+     *   sender; anonymously encrypted (AnonCrypt / ECDH-ES) envelopes are rejected because
+     *   anoncrypt does not authenticate the sender — its plaintext `from` is attacker-controlled.
+     *   Default: `false` (backward compatible).
      * @return Unpacked message
      */
     suspend fun unpack(
         packedMessage: String,
         recipientDid: String,
         recipientKeyId: String,
-        senderDid: String? = null
-    ): DidCommMessage = withContext(Dispatchers.IO) {
+        senderDid: String? = null,
+        requireSigned: Boolean = false
+    ): DidCommMessage = unpackToResult(
+        packedMessage = packedMessage,
+        recipientDid = recipientDid,
+        recipientKeyId = recipientKeyId,
+        senderDid = senderDid,
+        requireSigned = requireSigned
+    ).message
+
+    /**
+     * Unpacks a received message and reports the authentication outcome.
+     *
+     * Same semantics as [unpack], but the returned [UnpackResult] additionally carries the
+     * DID(s) whose JWS signatures were cryptographically verified during unpacking
+     * ([UnpackResult.verifiedSignerDids]) and, for AuthCrypt envelopes, the sender DID that
+     * decryption cryptographically authenticated ([UnpackResult.authenticatedSenderDid]),
+     * so callers can distinguish "verified" from "legitimately unsigned / anonymous" messages.
+     */
+    suspend fun unpackToResult(
+        packedMessage: String,
+        recipientDid: String,
+        recipientKeyId: String,
+        senderDid: String? = null,
+        requireSigned: Boolean = false
+    ): UnpackResult = withContext(Dispatchers.IO) {
         val json = Json.parseToJsonElement(packedMessage)
 
         // Check if it's an encrypted envelope
         if (json.jsonObject.containsKey("ciphertext")) {
-            // Encrypted message
+            // Encrypted message. The expected sender is the caller-supplied [senderDid], falling
+            // back to the envelope's `skid` protected header (present for AuthCrypt). A pure
+            // AnonCrypt envelope has neither and is decrypted anonymously (no sender claim).
             val envelope = parseEnvelope(json.jsonObject)
-
             val resolvedSenderDid = senderDid ?: extractSenderDid(envelope)
-                ?: throw IllegalArgumentException("Cannot determine sender DID")
 
-            val decryptedJson = crypto.decrypt(
-                envelope = envelope,
-                recipientDid = recipientDid,
-                recipientKeyId = recipientKeyId,
-                senderDid = resolvedSenderDid
-            )
+            val decrypted = try {
+                crypto.decrypt(
+                    envelope = envelope,
+                    recipientDid = recipientDid,
+                    recipientKeyId = recipientKeyId,
+                    senderDid = resolvedSenderDid ?: ""
+                )
+            } catch (e: IllegalArgumentException) {
+                // Sender-binding violations (e.g. expected sender vs anoncrypt, or vs a different
+                // cryptographic sender) surface as UnpackingFailed like every other unpack failure.
+                throw DidCommException.UnpackingFailed(
+                    reason = e.message ?: "DIDComm decryption rejected the envelope",
+                    cause = e
+                )
+            }
 
-            // Parse decrypted message (verifying any nested signatures)
-            verifyAndParsePlainMessage(decryptedJson, resolvedSenderDid)
+            // `requireSigned` for an encrypted envelope is satisfied ONLY when decryption
+            // cryptographically authenticated the sender (AuthCrypt / ECDH-1PU). Anonymous
+            // encryption (AnonCrypt / ECDH-ES) does NOT authenticate: anyone with the
+            // recipient's public key can forge such an envelope with an arbitrary plaintext
+            // `from`, so it can never satisfy the requirement.
+            val authenticatedSenderDid = decrypted.authenticatedSenderDid
+            if (requireSigned) {
+                if (authenticatedSenderDid == null) {
+                    signatureFailure(
+                        "anonymous encryption does not authenticate the sender; signature required " +
+                            "(requireSigned=true) - use AuthCrypt or a signed message"
+                    )
+                }
+                // Defense in depth: crypto.decrypt already enforced this when an expectation was given.
+                if (resolvedSenderDid != null && authenticatedSenderDid != resolvedSenderDid) {
+                    signatureFailure(
+                        "authenticated envelope sender '$authenticatedSenderDid' does not match " +
+                            "expected sender '$resolvedSenderDid'"
+                    )
+                }
+            }
+
+            // Parse the decrypted message, verifying any nested signatures (fail closed).
+            verifyAndParsePlainMessage(
+                decrypted.message,
+                expectedSenderDid = resolvedSenderDid ?: authenticatedSenderDid,
+                requireSigned = false
+            ).copy(authenticatedSenderDid = authenticatedSenderDid)
         } else {
             // Plain message (verified when it carries signatures)
-            verifyAndParsePlainMessage(json.jsonObject, senderDid)
+            verifyAndParsePlainMessage(json.jsonObject, senderDid, requireSigned)
         }
     }
 
     /**
      * Verifies the `signatures` array (when present) and parses the plain message.
      *
-     * Unsigned messages (no `signatures` key) are parsed as before — they make no claim.
-     * Messages that do carry signatures fail closed on any verification problem.
+     * Unsigned messages (no `signatures` key) are parsed as before — they make no claim —
+     * unless [requireSigned] is set, in which case they are rejected. Messages that do carry
+     * signatures fail closed on any verification problem.
      */
     private suspend fun verifyAndParsePlainMessage(
         json: JsonObject,
-        expectedSenderDid: String?
-    ): DidCommMessage {
+        expectedSenderDid: String?,
+        requireSigned: Boolean
+    ): UnpackResult {
         val signatures = json["signatures"]
-        if (signatures != null) {
-            verifySignatures(json, signatures, expectedSenderDid)
-        }
-        return parseMessage(json)
+            ?: if (requireSigned) {
+                signatureFailure(
+                    "Message carries no 'signatures' but a signed message is required " +
+                        "(requireSigned=true); signatures may have been stripped"
+                )
+            } else {
+                return UnpackResult(parseMessage(json), verifiedSignerDids = emptyList())
+            }
+        val verifiedSigners = verifySignatures(json, signatures, expectedSenderDid)
+        return UnpackResult(parseMessage(json), verifiedSignerDids = verifiedSigners)
     }
 
+    /** Verifies every signature entry; returns the distinct DIDs whose signatures verified. */
     private suspend fun verifySignatures(
         json: JsonObject,
         signatures: JsonElement,
         expectedSenderDid: String?
-    ) {
+    ): List<String> {
         val entries = (signatures as? JsonArray)?.takeIf { it.isNotEmpty() }
             ?: signatureFailure("'signatures' must be a non-empty JSON array")
 
@@ -198,17 +283,18 @@ class DidCommPacker(
         val payloadBase64 = Base64.getUrlEncoder().withoutPadding().encodeToString(payloadBytes)
         val fromDid = (json["from"] as? JsonPrimitive)?.contentOrNull
 
-        entries.forEach { entry ->
+        return entries.map { entry ->
             verifySignatureEntry(entry, payloadBase64, fromDid, expectedSenderDid)
-        }
+        }.distinct()
     }
 
+    /** Verifies a single signature entry; returns the verified signer's DID. */
     private suspend fun verifySignatureEntry(
         entry: JsonElement,
         payloadBase64: String,
         fromDid: String?,
         expectedSenderDid: String?
-    ) {
+    ): String {
         val obj = entry as? JsonObject
             ?: signatureFailure("Signature entry is not a JSON object")
         val protectedBase64 = (obj["protected"] as? JsonPrimitive)?.contentOrNull
@@ -222,6 +308,24 @@ class DidCommPacker(
             ).jsonObject
         } catch (e: Exception) {
             signatureFailure("Cannot decode the protected JWS header", e)
+        }
+
+        // RFC 7515 §4.1.11: a verifier MUST reject a JWS whose 'crit' lists extensions it does
+        // not process — we process none, so any 'crit' (even an empty or malformed one) fails.
+        if (header.containsKey("crit")) {
+            signatureFailure(
+                "Protected JWS header contains 'crit' but no JWS extensions are supported (RFC 7515 §4.1.11)"
+            )
+        }
+        // RFC 7797 unencoded payloads ('b64': false) are not supported; only an explicit
+        // boolean true (the RFC 7515 default) is tolerated, anything else fails closed.
+        header["b64"]?.let { b64 ->
+            val isBooleanTrue = b64 is JsonPrimitive && !b64.isString && b64.booleanOrNull == true
+            if (!isBooleanTrue) {
+                signatureFailure(
+                    "Protected JWS header sets 'b64' to a non-true value; unencoded payloads (RFC 7797) are not supported"
+                )
+            }
         }
 
         val alg = (header["alg"] as? JsonPrimitive)?.contentOrNull
@@ -270,6 +374,7 @@ class DidCommPacker(
         if (!verified) {
             signatureFailure("Signature verification failed for kid '$kid'")
         }
+        return signerDid
     }
 
     private fun signatureFailure(reason: String, cause: Throwable? = null): Nothing =
@@ -475,6 +580,30 @@ class DidCommPacker(
             }
         }
     }
+}
+
+/**
+ * Result of [DidCommPacker.unpackToResult]: the unpacked message plus the authentication outcome,
+ * so callers can distinguish a verified signed / sender-authenticated message from a legitimately
+ * unsigned or anonymous one.
+ *
+ * @property message The unpacked DIDComm message
+ * @property verifiedSignerDids DIDs whose JWS signatures were cryptographically verified during
+ *   unpacking. Empty when the message carried no `signatures` array (unsigned plain message, or
+ *   an encrypted message — see [authenticatedSenderDid] for envelope-level authentication).
+ * @property authenticatedSenderDid DID of the sender authenticated by AuthCrypt (ECDH-1PU)
+ *   decryption, derived from the sender key the key agreement actually used — never from the
+ *   plaintext `from` header. `null` for plain messages and for anonymously encrypted (AnonCrypt)
+ *   envelopes, which do not authenticate their sender.
+ */
+data class UnpackResult(
+    val message: DidCommMessage,
+    val verifiedSignerDids: List<String> = emptyList(),
+    val authenticatedSenderDid: String? = null
+) {
+    /** Convenience accessor: the verified signer DID when exactly one DID signed, else `null`. */
+    val verifiedSignerDid: String?
+        get() = verifiedSignerDids.singleOrNull()
 }
 
 /**

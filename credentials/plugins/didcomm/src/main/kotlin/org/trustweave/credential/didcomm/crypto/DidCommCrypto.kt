@@ -45,7 +45,7 @@ class DidCommCrypto(
         recipientDid: String,
         recipientKeyId: String,
         senderDid: String
-    ): JsonObject = failClosed()
+    ): DidCommDecryptResult = failClosed()
 
     private fun failClosed(): Nothing =
         throw UnsupportedOperationException(

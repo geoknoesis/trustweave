@@ -2,7 +2,13 @@ package org.trustweave.credential.oidc4vp
 
 import org.trustweave.core.identifiers.KeyId
 import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.core.util.decodeBase58
 import org.trustweave.credential.exchange.exception.ExchangeException
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.model.DidDocument
+import org.trustweave.did.model.VerificationMethod
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidResolver
 import org.trustweave.credential.model.vc.CredentialProof
 import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.vc.VerifiableCredential
@@ -19,6 +25,7 @@ import org.trustweave.credential.pex.PresentationDefinitionMatcher
 import org.trustweave.credential.pex.PresentationSubmission
 import org.trustweave.kms.KeyManagementService
 import org.trustweave.kms.results.SignResult
+import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSVerifier
 import com.nimbusds.jose.crypto.ECDSAVerifier
 import com.nimbusds.jose.crypto.Ed25519Verifier
@@ -36,6 +43,9 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 import okhttp3.*
 import java.net.URLDecoder
+import java.security.KeyFactory
+import java.security.PublicKey
+import java.security.spec.X509EncodedKeySpec
 import java.util.*
 import java.util.Base64
 
@@ -81,6 +91,21 @@ private val lenientJson = Json { ignoreUnknownKeys = true }
 
 private const val W3C_CREDENTIALS_V1_CONTEXT = "https://www.w3.org/2018/credentials/v1"
 
+/** Raw Ed25519 public key length in bytes (RFC 8032). */
+private const val ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES = 32
+
+/** Ed25519 signature length in bytes (RFC 8032). */
+private const val ED25519_SIGNATURE_LENGTH_BYTES = 64
+
+/**
+ * Fixed DER prefix of an Ed25519 SubjectPublicKeyInfo (RFC 8410):
+ * `SEQUENCE(SEQUENCE(OID 1.3.101.112), BIT STRING(0x00 || raw 32-byte key))`.
+ * Appending the raw key bytes yields an X.509-encoded public key consumable by JCA.
+ */
+private val ED25519_SPKI_PREFIX = byteArrayOf(
+    0x30, 0x2A, 0x30, 0x05, 0x06, 0x03, 0x2B, 0x65, 0x70, 0x03, 0x21, 0x00,
+)
+
 /**
  * Json configuration for serializing credential/presentation models into vp_token JSON.
  *
@@ -117,6 +142,18 @@ class Oidc4VpService(
      * restarts or share state across nodes.
      */
     val sessionStore: SessionStore = InMemorySessionStore(),
+    /**
+     * Resolver used to pin request-object signing keys to the verifier's DID document
+     * when the `client_id` scheme is `did` (or the `client_id` itself is a DID).
+     *
+     * When a signed JWT request object is received for a DID `client_id`, the JWS
+     * signature MUST verify against a key from the independently resolved DID document —
+     * the self-attested `client_metadata.jwks` embedded in the request is ignored.
+     *
+     * Fail-closed: a signed request object with a DID `client_id` is REJECTED when this
+     * resolver is `null`, because the verifier identity cannot be authenticated.
+     */
+    val didResolver: DidResolver? = null,
 ) {
     @Volatile private var metadata: VerifierMetadata? = null
 
@@ -199,7 +236,11 @@ class Oidc4VpService(
             //   URL query parameters MUST NOT override or fill in request parameters.
             // - Plain JSON request: fetched values take precedence, URL params fill gaps.
             val authorizationRequest = if (requestUri != null) {
-                val (fetched, fromSignedRequestObject) = fetchAuthorizationRequest(requestUri)
+                val (fetched, fromSignedRequestObject) = fetchAuthorizationRequest(
+                    requestUri = requestUri,
+                    urlClientId = urlRequest.clientId,
+                    urlClientIdScheme = queryParams["client_id_scheme"]?.let { ClientIdScheme.fromString(it) },
+                )
                 if (fromSignedRequestObject) {
                     fetched.copy(requestUri = requestUri)
                 } else {
@@ -372,9 +413,19 @@ class Oidc4VpService(
      * The response may be a plain JSON document or a JWT request object
      * (`application/oauth-authz-req+jwt`). JWT request objects must be signed —
      * unsigned (`alg: none`) request objects are rejected, and the signature is
-     * verified against the verifier keys in `client_metadata.jwks` when present.
+     * verified per the request's `client_id` scheme (see [parseRequestObjectJwt]).
+     *
+     * @param urlClientId `client_id` from the authorization URL query parameters, used as
+     *   an additional DID-scheme signal (the signed request object's claims remain
+     *   authoritative for the resulting [AuthorizationRequest])
+     * @param urlClientIdScheme `client_id_scheme` from the authorization URL query
+     *   parameters, used as an additional DID-scheme signal
      */
-    private suspend fun fetchAuthorizationRequest(requestUri: String): FetchedAuthorizationRequest {
+    private suspend fun fetchAuthorizationRequest(
+        requestUri: String,
+        urlClientId: String? = null,
+        urlClientIdScheme: ClientIdScheme? = null,
+    ): FetchedAuthorizationRequest {
         val request = Request.Builder()
             .url(requestUri)
             .get()
@@ -403,7 +454,7 @@ class Oidc4VpService(
             )
         } else {
             FetchedAuthorizationRequest(
-                request = parseRequestObjectJwt(trimmed, requestUri),
+                request = parseRequestObjectJwt(trimmed, requestUri, urlClientId, urlClientIdScheme),
                 fromSignedRequestObject = true,
             )
         }
@@ -415,22 +466,36 @@ class Oidc4VpService(
      * Security:
      * - `alg: none` (unsigned) request objects are refused.
      * - Encrypted request objects are not supported and refused.
-     * - When the request object carries verifier keys (`client_metadata.jwks`), the JWS
-     *   signature MUST verify against one of them; otherwise the request is rejected.
-     * - Without resolvable keys the claims are accepted unverified (best effort) —
-     *   trust then rests on the TLS channel to the request_uri host.
+     * - **DID client_id scheme — key resolution is pinned.** When `client_id_scheme` is
+     *   `did` or the `client_id` is a DID (either signal, from the request object claims
+     *   or the authorization URL), the JWS signature MUST verify against a verification
+     *   method from the CLIENT's DID document, resolved independently via [didResolver].
+     *   The self-attested `client_metadata.jwks` is NOT consulted. If no [didResolver] is
+     *   configured, the request is rejected (fail closed). Supported key material:
+     *   Ed25519 (`publicKeyJwk` OKP or `publicKeyMultibase`, verified via JCA) and
+     *   EC P-256 (`publicKeyJwk`, verified via Nimbus).
+     * - For non-DID client_ids: when the request object carries verifier keys
+     *   (`client_metadata.jwks`), the JWS signature MUST verify against one of them;
+     *   otherwise the request is rejected. Without resolvable keys the claims are
+     *   accepted unverified (best effort) — trust then rests on the TLS channel to the
+     *   request_uri host.
      *
-     * **Known limitation — `client_metadata.jwks` is self-attested.** The JWK Set used for
-     * signature verification is carried inside the request object itself, so a successful
-     * verification only proves internal consistency: whoever minted the request object
-     * controls both the keys and the signature. It does NOT authenticate the verifier.
-     * Real trust requires resolving signing keys pinned by the `client_id` scheme — e.g.
-     * DID resolution of the `client_id` for `client_id_scheme=did`, or X.509 SAN/chain
-     * validation for `x509_san_dns` / `verifier_attestation` — which is not implemented
-     * here yet. Until then, trust in the request content ultimately rests on the TLS
-     * channel to the request_uri host.
+     * **Known limitation — non-DID schemes still rely on self-attested keys.** For
+     * non-DID client_ids the JWK Set used for signature verification is carried inside
+     * the request object itself, so a successful verification only proves internal
+     * consistency: whoever minted the request object controls both the keys and the
+     * signature. It does NOT authenticate the verifier. The DID scheme is now pinned via
+     * independent DID resolution (see above); X.509 SAN/chain validation for
+     * `x509_san_dns` / `x509_san_uri` / `verifier_attestation` remains unsupported. For
+     * those schemes, trust in the request content ultimately rests on the TLS channel to
+     * the request_uri host.
      */
-    private fun parseRequestObjectJwt(jwtString: String, requestUri: String): AuthorizationRequest {
+    private suspend fun parseRequestObjectJwt(
+        jwtString: String,
+        requestUri: String,
+        urlClientId: String? = null,
+        urlClientIdScheme: ClientIdScheme? = null,
+    ): AuthorizationRequest {
         val jwt = try {
             JWTParser.parse(jwtString)
         } catch (e: Exception) {
@@ -454,15 +519,248 @@ class Oidc4VpService(
 
         val claimsJson = lenientJson.parseToJsonElement(signedJwt.payload.toString()).jsonObject
 
-        val jwks = (claimsJson["client_metadata"] as? JsonObject)
-            ?.get("jwks")
-            ?.let { runCatching { JWKSet.parse(it.toString()) }.getOrNull() }
+        val claimClientId = (claimsJson["client_id"] as? JsonPrimitive)?.contentOrNull
+        val claimClientIdScheme = (claimsJson["client_id_scheme"] as? JsonPrimitive)?.contentOrNull
+            ?.let { ClientIdScheme.fromString(it) }
 
-        if (jwks != null && jwks.keys.isNotEmpty()) {
-            verifyRequestObjectSignature(signedJwt, jwks, requestUri)
+        // DID-scheme signals: an explicit client_id_scheme=did (claims or URL) or a
+        // client_id that is itself a DID (claims, or URL when the claims carry none).
+        val effectiveClientId = claimClientId ?: urlClientId
+        val didPinned = claimClientIdScheme == ClientIdScheme.DID ||
+            urlClientIdScheme == ClientIdScheme.DID ||
+            effectiveClientId?.startsWith("did:") == true
+
+        if (didPinned) {
+            // Keys MUST come from the client's independently resolved DID document.
+            // The self-attested client_metadata.jwks is intentionally NOT consulted.
+            verifyRequestObjectAgainstClientDid(signedJwt, effectiveClientId, requestUri)
+        } else {
+            val jwks = (claimsJson["client_metadata"] as? JsonObject)
+                ?.get("jwks")
+                ?.let { runCatching { JWKSet.parse(it.toString()) }.getOrNull() }
+
+            if (jwks != null && jwks.keys.isNotEmpty()) {
+                verifyRequestObjectSignature(signedJwt, jwks, requestUri)
+            }
         }
 
         return buildAuthorizationRequestFromJson(claimsJson)
+    }
+
+    /**
+     * Verifies a signed request object against the client's DID document
+     * (OID4VP `client_id_scheme=did`).
+     *
+     * Fail-closed at every step:
+     * - no [didResolver] configured → reject (the verifier identity cannot be pinned);
+     * - `client_id` absent or not a valid DID → reject;
+     * - DID resolution fails → reject;
+     * - no verification method matches the JWS `kid` (or, when `kid` is absent, no
+     *   `authentication`-authorized verification method) → reject;
+     * - signature does not verify against any candidate key → reject.
+     *
+     * @throws Oidc4VpException.AuthorizationRequestFetchFailed on any of the above
+     */
+    private suspend fun verifyRequestObjectAgainstClientDid(
+        jwt: SignedJWT,
+        clientId: String?,
+        requestUri: String,
+    ) {
+        fun reject(reason: String): Nothing = throw Oidc4VpException.AuthorizationRequestFetchFailed(
+            requestUri = requestUri,
+            reason = reason,
+        )
+
+        if (clientId == null || !clientId.startsWith("did:")) {
+            reject("client_id_scheme is 'did' but client_id '${clientId ?: "<absent>"}' is not a DID")
+        }
+
+        val resolver = didResolver
+            ?: reject(
+                "Signed request object with DID client_id '$clientId' cannot be verified: " +
+                    "no DidResolver is configured on Oidc4VpService. Configure a DidResolver " +
+                    "to pin request-object signing keys to the verifier's DID document " +
+                    "(rejecting per fail-closed policy)."
+            )
+
+        val did = try {
+            Did(clientId)
+        } catch (e: IllegalArgumentException) {
+            reject("client_id '$clientId' is not a valid DID: ${e.message}")
+        }
+
+        val document = when (val result = resolver.resolve(did)) {
+            is DidResolutionResult.Success -> result.document
+            else -> reject(
+                "DID resolution of client_id '$clientId' failed (${result.javaClass.simpleName}) — " +
+                    "request object signing key cannot be pinned"
+            )
+        }
+
+        // Request-object signing is an authentication act: regardless of how the key is
+        // selected (kid or not), it must be authorized under the DID document's
+        // `authentication` relationship — a key listed only under e.g. assertionMethod
+        // or keyAgreement must not authenticate the verifier.
+        val authenticationAuthorized = document.verificationMethod
+            .filter { vm -> document.authentication.any { it.value == vm.id.value } }
+        val kid = jwt.header.keyID
+        val candidates = if (kid != null) {
+            authenticationAuthorized.filter { vm -> verificationMethodMatchesKid(vm, kid) }
+                .ifEmpty {
+                    reject(
+                        "No authentication-authorized verification method matching kid '$kid' " +
+                            "found in DID document of client_id '$clientId'"
+                    )
+                }
+        } else {
+            authenticationAuthorized.ifEmpty {
+                reject(
+                    "Request object has no kid and DID document of client_id '$clientId' " +
+                        "has no authentication-authorized verification method"
+                )
+            }
+        }
+
+        val verified = candidates.any { vm ->
+            runCatching { verifyJwsWithVerificationMethod(jwt, vm) }.getOrDefault(false)
+        }
+        if (!verified) {
+            reject(
+                "Request object signature verification failed against the DID document keys " +
+                    "of client_id '$clientId'"
+            )
+        }
+    }
+
+    /**
+     * Matches a DID document verification method against a JWS `kid`, which may be a full
+     * DID URL (`did:ex:123#key-1`), a relative fragment (`#key-1`), or a bare key id
+     * (`key-1`).
+     */
+    private fun verificationMethodMatchesKid(vm: VerificationMethod, kid: String): Boolean {
+        val vmId = vm.id.value
+        return when {
+            kid.startsWith("did:") -> vmId == kid
+            kid.startsWith("#") -> vmId.endsWith(kid)
+            else -> vmId.endsWith("#$kid")
+        }
+    }
+
+    /**
+     * Verifies the JWS of a request object against a DID document verification method.
+     *
+     * Algorithm/key-type confusion is rejected:
+     * - `EdDSA` → Ed25519 key from `publicKeyJwk` (OKP/Ed25519) or `publicKeyMultibase`,
+     *   verified via JCA (avoids Nimbus' optional Tink dependency for Ed25519);
+     * - `ES256` → EC P-256 key from `publicKeyJwk`, verified via Nimbus [ECDSAVerifier].
+     *
+     * Any other algorithm, missing/unsupported key material, or verification error yields
+     * `false` (fail-closed).
+     */
+    private fun verifyJwsWithVerificationMethod(jwt: SignedJWT, vm: VerificationMethod): Boolean =
+        when (jwt.header.algorithm) {
+            JWSAlgorithm.EdDSA -> {
+                val publicKey = extractEd25519PublicKey(vm)
+                if (publicKey == null) {
+                    false
+                } else {
+                    try {
+                        val signatureBytes = jwt.signature.decode()
+                        if (signatureBytes.size != ED25519_SIGNATURE_LENGTH_BYTES) {
+                            false
+                        } else {
+                            val signature = java.security.Signature.getInstance("Ed25519")
+                            signature.initVerify(publicKey)
+                            signature.update(jwt.signingInput)
+                            signature.verify(signatureBytes)
+                        }
+                    } catch (_: Exception) {
+                        false
+                    }
+                }
+            }
+            JWSAlgorithm.ES256 -> {
+                try {
+                    val jwkMap = vm.publicKeyJwk
+                        ?.filterValues { it != null }
+                        ?.mapValues { (_, value) -> value as Any }
+                    if (jwkMap == null) {
+                        false
+                    } else {
+                        val jwk = JWK.parse(jwkMap)
+                        val ecKey = jwk as? ECKey
+                        if (ecKey == null || ecKey.curve != com.nimbusds.jose.jwk.Curve.P_256) {
+                            false
+                        } else {
+                            jwt.verify(ECDSAVerifier(ecKey.toPublicJWK()))
+                        }
+                    }
+                } catch (_: Exception) {
+                    false
+                }
+            }
+            else -> false
+        }
+
+    /**
+     * Extracts an Ed25519 [PublicKey] from a verification method's `publicKeyJwk`
+     * (OKP/Ed25519) or `publicKeyMultibase` (base58btc `z` prefix; multicodec
+     * `ed25519-pub` `0xED 0x01` + 32 bytes, or raw 32 bytes).
+     *
+     * Mirrors `ProofEngineUtils` in credential-api, but constructs the key via the
+     * standard RFC 8410 SubjectPublicKeyInfo prefix + JCA `KeyFactory` (no BouncyCastle
+     * dependency in this module). Returns `null` on any failure (fail-closed).
+     */
+    private fun extractEd25519PublicKey(vm: VerificationMethod): PublicKey? {
+        vm.publicKeyJwk?.let { jwkMap ->
+            val kty = jwkMap["kty"] as? String ?: return null
+            if (kty != "OKP" || jwkMap["crv"] as? String != "Ed25519") return null
+            val x = jwkMap["x"] as? String ?: return null
+            val raw = try {
+                Base64.getUrlDecoder().decode(x)
+            } catch (_: IllegalArgumentException) {
+                return null
+            }
+            return createEd25519PublicKey(raw)
+        }
+
+        vm.publicKeyMultibase?.let { multibase ->
+            if (multibase.length < 2) return null
+            val decoded = try {
+                when (multibase[0]) {
+                    'z' -> multibase.substring(1).decodeBase58()
+                    'u' -> Base64.getUrlDecoder().decode(multibase.substring(1))
+                    else -> return null
+                }
+            } catch (_: Exception) {
+                return null
+            }
+            val raw = when {
+                decoded.size == ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES + 2 &&
+                    decoded[0] == 0xED.toByte() && decoded[1] == 0x01.toByte() ->
+                    decoded.copyOfRange(2, decoded.size)
+                decoded.size == ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES -> decoded
+                else -> return null
+            }
+            return createEd25519PublicKey(raw)
+        }
+
+        return null
+    }
+
+    /**
+     * Constructs an Ed25519 [PublicKey] from raw 32-byte key material by prepending the
+     * fixed RFC 8410 SubjectPublicKeyInfo DER prefix and going through the JCA
+     * `KeyFactory`. Returns `null` on failure (fail-closed).
+     */
+    private fun createEd25519PublicKey(rawKeyBytes: ByteArray): PublicKey? {
+        if (rawKeyBytes.size != ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES) return null
+        return try {
+            val spki = ED25519_SPKI_PREFIX + rawKeyBytes
+            KeyFactory.getInstance("Ed25519").generatePublic(X509EncodedKeySpec(spki))
+        } catch (_: Exception) {
+            null
+        }
     }
 
     /**

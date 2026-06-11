@@ -87,11 +87,17 @@ data class DescriptorMap(
 
 /**
  * Supported credential/proof format constraints for a [PresentationDefinition] or [InputDescriptor].
+ *
+ * Both the legacy DIF PEX identifiers (`jwt_vc`, `jwt_vp`) and the OID4VP v1.0 registered
+ * identifiers (`jwt_vc_json`, `jwt_vp_json`) are supported, as presentation definitions in
+ * the wild use either spelling.
  */
 @Serializable
 data class Format(
     @SerialName("jwt_vc") val jwtVc: AlgorithmConstraint? = null,
+    @SerialName("jwt_vc_json") val jwtVcJson: AlgorithmConstraint? = null,
     @SerialName("jwt_vp") val jwtVp: AlgorithmConstraint? = null,
+    @SerialName("jwt_vp_json") val jwtVpJson: AlgorithmConstraint? = null,
     @SerialName("ldp_vc") val ldpVc: ProofTypeConstraint? = null,
     @SerialName("ldp_vp") val ldpVp: ProofTypeConstraint? = null,
     @SerialName("vc+sd-jwt") val sdJwtVc: AlgorithmConstraint? = null,

@@ -13,8 +13,6 @@ import org.web3j.protocol.core.DefaultBlockParameter
 import org.web3j.protocol.core.DefaultBlockParameterName
 import org.web3j.protocol.core.methods.response.TransactionReceipt
 import org.web3j.protocol.http.HttpService
-import org.web3j.tx.RawTransactionManager
-import org.web3j.tx.TransactionManager
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 
@@ -42,7 +40,8 @@ data class EvmChainConfig(
  * Shared base class for EVM-compatible blockchain anchor clients.
  *
  * Anchoring on an EVM chain is identical everywhere: the payload is carried as
- * calldata on a zero-value self-send, signed locally (legacy raw transaction) and
+ * calldata on a zero-value self-send, signed locally with EIP-155 replay
+ * protection (the signature encodes [EvmChainConfig.numericChainId]) and
  * submitted via `eth_sendRawTransaction`, then confirmed by polling
  * `eth_getTransactionReceipt`. This class holds that whole pipeline once:
  *
@@ -54,7 +53,7 @@ data class EvmChainConfig(
  * - gas-limit derivation via the overridable [deriveGasLimit] strategy
  *   (default: intrinsic calldata gas via [EvmGas.txGasLimit]; chains where
  *   `eth_estimateGas` is authoritative override it using [tryEstimateGas])
- * - legacy raw-transaction build/sign/send ([submitTransaction])
+ * - EIP-155 raw-transaction build/sign/send ([submitTransaction], [signWithChainId])
  * - receipt polling bounded by the confirmation options ([waitForReceipt])
  * - receipt-based fee computation ([computeActualFee])
  * - payload reads via `eth_getTransactionByHash` with real block timestamps
@@ -109,9 +108,11 @@ abstract class AbstractEvmAnchorClient(
         }
     }
 
-    /** EIP-155 transaction manager for [credentials], or null when read-only. */
-    protected val transactionManager: TransactionManager? =
-        credentials?.let { RawTransactionManager(web3j, it, chain.numericChainId) }
+    /**
+     * The numeric chain id every transaction from this client is signed with
+     * (EIP-155 replay protection). Always [EvmChainConfig.numericChainId].
+     */
+    val eip155ChainId: Long get() = chain.numericChainId
 
     override fun canSubmitTransaction(): Boolean = credentials != null
 
@@ -200,8 +201,8 @@ abstract class AbstractEvmAnchorClient(
     }
 
     /**
-     * Builds, signs and submits a legacy raw transaction carrying [data] as calldata
-     * (zero-value self-send) and waits for on-chain confirmation.
+     * Builds, signs ([signWithChainId]) and submits a raw transaction carrying [data]
+     * as calldata (zero-value self-send) and waits for on-chain confirmation.
      *
      * `eth_sendRawTransaction` only means the node accepted the tx into its pool —
      * the receipt wait ensures dropped or reverted txs are never reported as
@@ -228,7 +229,7 @@ abstract class AbstractEvmAnchorClient(
             org.web3j.utils.Numeric.toHexString(data)
         )
 
-        val signedTransaction = org.web3j.crypto.TransactionEncoder.signMessage(rawTransaction, creds)
+        val signedTransaction = signWithChainId(rawTransaction, creds)
         val hexValue = org.web3j.utils.Numeric.toHexString(signedTransaction)
 
         val ethSendTransaction = web3j.ethSendRawTransaction(hexValue).send()
@@ -246,6 +247,22 @@ abstract class AbstractEvmAnchorClient(
 
         return waitForReceipt(ethSendTransaction.transactionHash, data.size.toLong())
     }
+
+    /**
+     * Signs [rawTransaction] with EIP-155 replay protection: the signature's
+     * recovery value encodes [eip155ChainId] (`v = chainId * 2 + 35 + recId`),
+     * so the signed bytes are valid ONLY on this chain and cannot be replayed
+     * on another EVM network where the sender has funds.
+     *
+     * Never use the chain-agnostic legacy overload
+     * `TransactionEncoder.signMessage(rawTransaction, credentials)` — its
+     * signature (v = 27/28) is replayable on every EVM chain.
+     */
+    internal fun signWithChainId(
+        rawTransaction: org.web3j.crypto.RawTransaction,
+        creds: org.web3j.crypto.Credentials,
+    ): ByteArray =
+        org.web3j.crypto.TransactionEncoder.signMessage(rawTransaction, chain.numericChainId, creds)
 
     /**
      * Polls `eth_getTransactionReceipt` until the transaction is mined, bounded by

@@ -84,6 +84,7 @@ class TrustWeaveConfig internal constructor(
     val smartContractService: SmartContractService? = null,
     val schemaRegistry: SchemaRegistry? = null,
     val trustedDomainManager: TrustedDomainManager? = null,
+    internal val ownership: ComponentOwnership = ComponentOwnership(),
 ) {
     /**
      * Copy with overridden credential service and/or revocation manager (e.g. tests sharing one manager).
@@ -108,6 +109,14 @@ class TrustWeaveConfig internal constructor(
         smartContractService = smartContractService,
         schemaRegistry = schemaRegistry,
         trustedDomainManager = trustedDomainManager,
+        // A component swapped in via copy() was created by the caller, so the facade
+        // must no longer treat it as owned (it would otherwise close it).
+        ownership = ownership.copy(
+            ownsCredentialService = ownership.ownsCredentialService &&
+                credentialService === this.credentialService,
+            ownsRevocationManager = ownership.ownsRevocationManager &&
+                revocationManager === this.revocationManager,
+        ),
     )
 
     /**
@@ -331,6 +340,34 @@ class TrustWeaveConfig internal constructor(
     }
 
 }
+
+/**
+ * Records which components were created by [TrustWeaveFactory] (and are therefore owned
+ * by the facade, which closes them in [org.trustweave.trust.TrustWeave.close]) versus
+ * components injected by the caller (caller-owned; never closed by the facade).
+ *
+ * Defaults preserve the historical close() behavior for configs constructed directly
+ * (tests): the KMS is closed, optional services are not.
+ *
+ * @param ownsKms true when the factory resolved the KMS from a provider name (as opposed
+ *   to a caller-supplied instance via `keys { custom(...) }` / `customKms(...)`)
+ * @param ownsCredentialService true when the factory created the credential service (no
+ *   `credentialService(...)` was supplied)
+ * @param ownsRevocationManager true when the factory created the revocation manager from
+ *   a `revocation { ... }` provider name
+ * @param ownsTrustRegistry true when the trust registry instance was created during build
+ *   (via the configured [org.trustweave.trust.services.TrustRegistryFactory])
+ * @param ownedDidMethods snapshot of DID method instances created during build (SPI
+ *   auto-registration and `did { method(...) }` resolution); methods registered by the
+ *   caller after construction are caller-owned and excluded
+ */
+internal data class ComponentOwnership(
+    val ownsKms: Boolean = true,
+    val ownsCredentialService: Boolean = false,
+    val ownsRevocationManager: Boolean = false,
+    val ownsTrustRegistry: Boolean = false,
+    val ownedDidMethods: List<org.trustweave.did.DidMethod> = emptyList(),
+)
 
 /**
  * DSL function to create a TrustWeave configuration.

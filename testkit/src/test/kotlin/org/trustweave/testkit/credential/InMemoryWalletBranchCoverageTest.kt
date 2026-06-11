@@ -351,6 +351,43 @@ class InMemoryWalletBranchCoverageTest {
         assertFalse(result)
     }
 
+    // ========== removeFromCollection() Branch Coverage ==========
+    // Mirrors DatabaseWalletTest: true only when an existing membership is removed.
+
+    @Test
+    fun `test branch removeFromCollection removes membership then returns false on repeat`() = runBlocking {
+        val collectionId = wallet.createCollection("Test Collection", "Description")
+        wallet.store(createTestCredential(id = "cred-coll"))
+        assertTrue(wallet.addToCollection("cred-coll", collectionId))
+
+        assertTrue(wallet.removeFromCollection("cred-coll", collectionId))
+        // Second removal: credential is no longer a member
+        assertFalse(wallet.removeFromCollection("cred-coll", collectionId))
+        assertTrue(wallet.getCredentialsInCollection(collectionId).isEmpty())
+    }
+
+    @Test
+    fun `test branch removeFromCollection returns false for unknown credential`() = runBlocking {
+        val collectionId = wallet.createCollection("Test Collection", "Description")
+
+        assertFalse(wallet.removeFromCollection("nonexistent", collectionId))
+    }
+
+    @Test
+    fun `test branch removeFromCollection returns false for unknown collection`() = runBlocking {
+        wallet.store(createTestCredential(id = "cred-1"))
+
+        assertFalse(wallet.removeFromCollection("cred-1", "nonexistent"))
+    }
+
+    @Test
+    fun `test branch removeFromCollection returns false for non-member credential`() = runBlocking {
+        val collectionId = wallet.createCollection("Test Collection", "Description")
+        wallet.store(createTestCredential(id = "cred-not-member"))
+
+        assertFalse(wallet.removeFromCollection("cred-not-member", collectionId))
+    }
+
     // ========== getCredentialsInCollection() Branch Coverage ==========
 
     @Test
@@ -383,6 +420,47 @@ class InMemoryWalletBranchCoverageTest {
         val result = wallet.tagCredential("nonexistent", setOf("tag1"))
 
         assertFalse(result)
+    }
+
+    // ========== untagCredential() Branch Coverage ==========
+    // Mirrors DatabaseWalletTest: false for an unknown credential, true otherwise.
+
+    @Test
+    fun `test branch untagCredential returns false when credential not found`() = runBlocking {
+        val result = wallet.untagCredential("nonexistent", setOf("tag1"))
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun `test branch tagCredential then untagCredential round-trips`() = runBlocking {
+        wallet.store(createTestCredential(id = "cred-tags"))
+
+        assertTrue(wallet.tagCredential("cred-tags", setOf("important", "work")))
+        assertEquals(setOf("important", "work"), wallet.getTags("cred-tags"))
+
+        assertTrue(wallet.untagCredential("cred-tags", setOf("important")))
+        assertEquals(setOf("work"), wallet.getTags("cred-tags"))
+        assertEquals(setOf("work"), wallet.getMetadata("cred-tags")?.tags)
+    }
+
+    @Test
+    fun `test branch untagCredential returns true for known credential without matching tags`() = runBlocking {
+        wallet.store(createTestCredential(id = "cred-untagged"))
+
+        // Credential exists but carries none of the requested tags — still true,
+        // matching DatabaseWallet semantics (false only for unknown credential).
+        assertTrue(wallet.untagCredential("cred-untagged", setOf("absent-tag")))
+    }
+
+    @Test
+    fun `test branch untagCredential works on archived credential`() = runBlocking {
+        wallet.store(createTestCredential(id = "cred-arch-tag"))
+        wallet.tagCredential("cred-arch-tag", setOf("keep", "drop"))
+        wallet.archive("cred-arch-tag")
+
+        assertTrue(wallet.untagCredential("cred-arch-tag", setOf("drop")))
+        assertEquals(setOf("keep"), wallet.getTags("cred-arch-tag"))
     }
 
     // ========== getTags() Branch Coverage ==========

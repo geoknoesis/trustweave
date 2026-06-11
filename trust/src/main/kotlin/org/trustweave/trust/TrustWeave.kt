@@ -37,7 +37,10 @@ import org.trustweave.trust.types.VerifierIdentity
 import org.trustweave.trust.types.WalletCreationResult
 import org.trustweave.trust.types.TrustPath
 import org.trustweave.trust.internal.placeholderCredentialForUnconfiguredVerification
+import org.trustweave.core.plugin.PluginLifecycle
+import kotlinx.coroutines.runBlocking
 import java.io.Closeable
+import java.util.concurrent.atomic.AtomicBoolean
 import org.trustweave.trust.services.CredentialIssuanceService
 import org.trustweave.trust.services.CredentialVerificationService
 import org.trustweave.trust.services.CredentialRevocationService
@@ -630,11 +633,34 @@ class TrustWeave internal constructor(
         block: RevocationBuilder.() -> Unit
     ): Boolean = revocationService.revoke(timeout, block)
 
+    /** Guards [close] so repeated calls are no-ops (idempotent close). */
+    private val closed = AtomicBoolean(false)
+
     /**
      * Close and cleanup resources held by this TrustWeave instance.
      *
-     * This method should be called when the TrustWeave instance is no longer needed
-     * to ensure proper cleanup of resources like KMS connections, blockchain clients, etc.
+     * **Ownership semantics** — only components the facade *created* during
+     * `TrustWeave.build { ... }` are closed; components injected by the caller remain
+     * caller-owned and are never touched:
+     * - **Closed when factory-created:** KMS (when resolved from a `keys { provider(...) }`
+     *   name), credential service, revocation manager, trust registry (the instance the
+     *   configured `TrustRegistryFactory` created during build), DID method instances
+     *   registered during build, blockchain anchor clients resolved from `anchor { ... }`,
+     *   the trusted domain manager, and the internal KMS service adapter.
+     * - **Never closed (caller-owned):** a KMS supplied via `keys { custom(...) }` /
+     *   `customKms(...)`, a credential service supplied via `credentialService(...)`,
+     *   the wallet factory (always supplied via `factories(...)`), wallets returned by
+     *   `wallet { ... }` (handed to the caller, never retained), and DID methods the
+     *   caller registers via [getDidRegistry] after construction.
+     *
+     * For each owned component, [AutoCloseable.close] is invoked when implemented;
+     * otherwise, if the component implements [PluginLifecycle], `stop()` + `cleanup()`
+     * are driven (blocking).
+     *
+     * **Error handling:** exceptions thrown by individual components are logged and do
+     * not prevent the remaining components from being closed; in keeping with the
+     * previous behavior of this method, close() itself never throws. Calling close()
+     * more than once is a no-op.
      *
      * **Example:**
      * ```kotlin
@@ -647,38 +673,73 @@ class TrustWeave internal constructor(
      * ```
      */
     override fun close() {
-        logger.debug("Closing TrustWeave instance: ${config.name}")
-        
-        // Close KMS if it implements Closeable
-        try {
-            (config.kms as? Closeable)?.close()
-        } catch (e: Exception) {
-            logger.warn("Error closing KMS: ${e.message}", e)
+        if (!closed.compareAndSet(false, true)) {
+            logger.debug("TrustWeave instance already closed: ${config.name}")
+            return
         }
-        
-        // Close blockchain clients
+        logger.debug("Closing TrustWeave instance: ${config.name}")
+
+        val ownership = config.ownership
+
+        // DID method instances created during build (caller-registered methods are
+        // intentionally absent from this snapshot).
+        ownership.ownedDidMethods.forEach { method ->
+            closeComponent("DID method ${method.javaClass.simpleName}", method)
+        }
+
+        if (ownership.ownsCredentialService) {
+            closeComponent("credential service", config.credentialService)
+        }
+        if (ownership.ownsRevocationManager) {
+            closeComponent("revocation manager", config.revocationManager)
+        }
+        if (ownership.ownsTrustRegistry) {
+            closeComponent("trust registry", config.trustRegistry)
+        }
+
+        // Factory-built when domain { ... } is configured.
+        closeComponent("trusted domain manager", config.trustedDomainManager)
+
+        // Anchor clients are resolved by the factory from anchor { ... } configuration.
         try {
-            config.blockchainRegistry.getAllClients().values
-                .filterIsInstance<Closeable>()
-                .forEach { client ->
+            config.blockchainRegistry.getAllClients().values.forEach { client ->
+                closeComponent("blockchain client ${client.javaClass.simpleName}", client)
+            }
+        } catch (e: Exception) {
+            logger.warn("Error enumerating blockchain clients during close: ${e.message}", e)
+        }
+
+        if (ownership.ownsKms) {
+            closeComponent("KMS", config.kms)
+        }
+        // The KmsService adapter is always factory-created (DefaultKmsService).
+        closeComponent("KMS service", config.kmsService)
+
+        logger.debug("TrustWeave instance closed: ${config.name}")
+    }
+
+    /**
+     * Close a single owned component, preferring [AutoCloseable.close] and falling back
+     * to [PluginLifecycle] `stop()` + `cleanup()`. Failures are logged, never propagated,
+     * so every remaining component still gets closed.
+     */
+    private fun closeComponent(name: String, component: Any?) {
+        if (component == null) return
+        try {
+            when (component) {
+                is AutoCloseable -> component.close()
+                is PluginLifecycle -> runBlocking {
                     try {
-                        client.close()
-                    } catch (e: Exception) {
-                        logger.warn("Error closing blockchain client: ${e.message}", e)
+                        component.stop()
+                    } finally {
+                        component.cleanup()
                     }
                 }
+                else -> Unit
+            }
         } catch (e: Exception) {
-            logger.warn("Error closing blockchain clients: ${e.message}", e)
+            logger.warn("Error closing $name: ${e.message}", e)
         }
-        
-        // Close KMS service if it implements Closeable
-        try {
-            (config.kmsService as? Closeable)?.close()
-        } catch (e: Exception) {
-            logger.warn("Error closing KMS service: ${e.message}", e)
-        }
-        
-        logger.debug("TrustWeave instance closed: ${config.name}")
     }
 
     /**

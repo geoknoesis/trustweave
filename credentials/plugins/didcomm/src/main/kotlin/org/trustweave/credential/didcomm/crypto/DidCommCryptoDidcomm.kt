@@ -21,6 +21,10 @@ import kotlinx.serialization.json.JsonObject
  * Requires a [SecretResolver] that can supply private keys for the sender and recipient key IDs used in
  * [encrypt]/[decrypt]. Resolve DID documents with [resolveDid]; they are converted via [TrustWeaveDidDocMapper].
  *
+ * **Sender authentication:** [decrypt] binds the expected `senderDid` to the *cryptographic* sender
+ * reported by didcomm-java's unpack metadata (`encryptedFrom`, set only for AuthCrypt) — never to the
+ * plaintext `from` header alone, which is attacker-controlled under anonymous (AnonCrypt) encryption.
+ *
  * **Mediators:** [PackEncryptedParams] uses `forward(false)` so messages are not wrapped for mediators by default.
  * Enable forwarding in a custom integration if you use mediators.
  *
@@ -64,7 +68,7 @@ class DidCommCryptoDidcomm(
         recipientDid: String,
         recipientKeyId: String,
         senderDid: String,
-    ): JsonObject = withContext(Dispatchers.IO) {
+    ): DidCommDecryptResult = withContext(Dispatchers.IO) {
         val packed = DidCommEnvelopeJson.envelopeToPackedJson(envelope)
         val params = UnpackParams.Builder(packed)
             .unwrapReWrappingForward(false)
@@ -73,19 +77,46 @@ class DidCommCryptoDidcomm(
             .build()
         val result = didComm.unpack(params)
         val msg = result.message
+        val metadata = result.metadata
+
+        // didcomm-java 0.3.2 sets `Metadata.encryptedFrom` (the sender key id the ECDH-1PU key
+        // agreement actually used) ONLY on the AuthCrypt unpack path, which also sets
+        // `authenticated`. AnonCrypt (ECDH-ES) sets `anonymousSender` and never `encryptedFrom`:
+        // its plaintext `from` is attacker-controlled and must not be trusted for authentication.
+        val authenticatedSenderDid: String? =
+            if (metadata.authenticated) metadata.encryptedFrom?.substringBefore("#") else null
+
+        // Plaintext-consistency guard: under AuthCrypt, DIDComm v2 requires the message `from`
+        // to correspond to the `skid` used for key agreement.
+        val unpackedFrom = msg.from
+        if (authenticatedSenderDid != null && unpackedFrom != null && unpackedFrom != authenticatedSenderDid) {
+            throw IllegalArgumentException(
+                "DIDComm plaintext 'from' ('$unpackedFrom') does not match the cryptographically " +
+                    "authenticated sender '$authenticatedSenderDid'"
+            )
+        }
+
         if (senderDid.isNotBlank()) {
-            val unpackedFrom = msg.from
-            if (unpackedFrom == null) {
+            if (authenticatedSenderDid == null) {
                 throw IllegalArgumentException(
-                    "Expected authenticated message from '$senderDid' but received anonymous (anoncrypt) message"
+                    "Expected authenticated message from '$senderDid' but the envelope is anonymous " +
+                        "(anoncrypt does not authenticate the sender)"
                 )
             }
-            if (unpackedFrom != senderDid) {
+            if (authenticatedSenderDid != senderDid) {
                 throw IllegalArgumentException(
-                    "DIDComm decrypted message from '$unpackedFrom' does not match expected senderDid '$senderDid'"
+                    "DIDComm envelope cryptographic sender '$authenticatedSenderDid' does not match " +
+                        "expected senderDid '$senderDid'"
+                )
+            }
+            // Additional guard (kept from the plaintext-only check this replaces): an AuthCrypt
+            // message without a `from` violates the DIDComm v2 spec — fail closed.
+            if (unpackedFrom == null) {
+                throw IllegalArgumentException(
+                    "Expected authenticated message from '$senderDid' but the decrypted message carries no 'from'"
                 )
             }
         }
-        msg.toJsonObject()
+        DidCommDecryptResult(msg.toJsonObject(), authenticatedSenderDid)
     }
 }

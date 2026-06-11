@@ -460,8 +460,10 @@ internal class VcLdProofEngine(
         val signatureBytes = signer(payload, keyId)
         logger.debug("Signed payload: keyId={}, signatureLength={}", keyId, signatureBytes.size)
 
-        // Return base64url-encoded signature
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(signatureBytes)
+        // Ed25519Signature2020 REQUIRES proofValue to be multibase base58-btc ('z' prefix).
+        // Earlier versions emitted raw base64url, which external conformant verifiers
+        // reject; verification still accepts that legacy form (decodeEd25519ProofValue).
+        return ProofEngineUtils.encodeEd25519ProofValue(signatureBytes)
     }
 
     /**
@@ -469,7 +471,7 @@ internal class VcLdProofEngine(
      *
      * @param payload The composed Data Integrity payload
      *   (`SHA-256(canonical proof options) || SHA-256(canonical document)`)
-     * @param proofValue The base64url-encoded signature
+     * @param proofValue The encoded signature (multibase `z`/`u`, or legacy raw base64url)
      * @param verificationMethod The verification method from DID document
      * @param proofType The proof type (e.g., "Ed25519Signature2020")
      * @return True if signature is valid, false otherwise
@@ -492,10 +494,12 @@ internal class VcLdProofEngine(
             return jwsVerificationAdapter.verifyDetachedJws(proofValue, payload, verificationMethod)
         }
 
-        val signatureBytes = try {
-            Base64.getUrlDecoder().decode(proofValue)
-        } catch (e: Exception) {
-            logger.error("Failed to decode signature: error={}", e.message, e)
+        // Ed25519Signature2020 proofValue is multibase base58-btc ('z' prefix) per the
+        // suite specification; 'u' (base64url multibase) and legacy raw base64url
+        // (issued by earlier TrustWeave versions) are also accepted.
+        val signatureBytes = ProofEngineUtils.decodeEd25519ProofValue(proofValue)
+        if (signatureBytes == null) {
+            logger.error("Failed to decode proofValue (not multibase base58-btc/base64url, nor raw base64url)")
             return false
         }
 

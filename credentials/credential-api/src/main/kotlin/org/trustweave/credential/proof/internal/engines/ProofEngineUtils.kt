@@ -3,6 +3,7 @@ package org.trustweave.credential.proof.internal.engines
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.core.identifiers.KeyId
 import org.trustweave.core.util.decodeBase58
+import org.trustweave.core.util.encodeBase58
 import org.trustweave.credential.internal.CredentialConstants
 import org.trustweave.credential.internal.SecurityConstants
 import org.trustweave.kms.util.EcdsaSignatureCodec
@@ -121,6 +122,56 @@ internal object ProofEngineUtils {
                     "nor a DER-encoded SEQUENCE: got ${signature.size} bytes"
             )
         }
+    }
+
+    /**
+     * Encode a raw Ed25519 signature as the `proofValue` of an `Ed25519Signature2020`
+     * proof: **multibase base58-btc** (`z` prefix), as REQUIRED by the
+     * Ed25519Signature2020 suite definition (vc-di-eddsa, "Proof Representations":
+     * "The value of the proofValue property MUST be ... base-58-btc ... multibase").
+     *
+     * Interop note: this library previously emitted raw base64url (no multibase prefix),
+     * which conformant external verifiers reject. [decodeEd25519ProofValue] still accepts
+     * that legacy form so previously issued credentials keep verifying.
+     */
+    fun encodeEd25519ProofValue(signature: ByteArray): String = "z" + signature.encodeBase58()
+
+    /**
+     * Decode the `proofValue` of an `Ed25519Signature2020` proof to raw signature bytes.
+     *
+     * Spec-conformant values are multibase: `z` (base58-btc, REQUIRED by the suite) or
+     * `u` (base64url-no-pad, the general Data Integrity multibase alternative). Raw
+     * base64url without a multibase prefix is accepted for backward compatibility with
+     * credentials issued by earlier TrustWeave versions.
+     *
+     * Because a legacy raw-base64url value can coincidentally start with `z`/`u`, every
+     * plausible decoding is attempted and the one yielding a well-formed Ed25519
+     * signature ([SecurityConstants.ED25519_SIGNATURE_LENGTH_BYTES] bytes) is preferred;
+     * signature verification remains the final authority. Returns `null` (fail-closed)
+     * if nothing decodes.
+     */
+    fun decodeEd25519ProofValue(proofValue: String): ByteArray? {
+        val candidates = mutableListOf<ByteArray>()
+        fun attempt(decoder: () -> ByteArray) {
+            try {
+                candidates += decoder()
+            } catch (_: Exception) {
+                // Not decodable in this encoding — try the next candidate.
+            }
+        }
+        when {
+            proofValue.startsWith("z") -> {
+                attempt { proofValue.substring(1).decodeBase58() }
+                attempt { Base64.getUrlDecoder().decode(proofValue) } // legacy raw base64url
+            }
+            proofValue.startsWith("u") -> {
+                attempt { Base64.getUrlDecoder().decode(proofValue.substring(1)) }
+                attempt { Base64.getUrlDecoder().decode(proofValue) } // legacy raw base64url
+            }
+            else -> attempt { Base64.getUrlDecoder().decode(proofValue) }
+        }
+        return candidates.firstOrNull { it.size == SecurityConstants.ED25519_SIGNATURE_LENGTH_BYTES }
+            ?: candidates.firstOrNull()
     }
 
     /**

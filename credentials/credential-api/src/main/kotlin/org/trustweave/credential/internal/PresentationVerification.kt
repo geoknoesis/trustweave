@@ -259,16 +259,10 @@ internal object PresentationVerification {
             // Extract public key from verification method
             val publicKey = ProofEngineUtils.extractPublicKey(verificationMethod) ?: return false
 
-            // Decode signature (base64url)
-            val signatureBytes = try {
-                Base64.getUrlDecoder().decode(proof.proofValue)
-            } catch (e: IllegalArgumentException) {
-                // Invalid base64url encoding
-                return false
-            } catch (e: Exception) {
-                // Other decoding errors
-                return false
-            }
+            // Decode signature: multibase base58-btc ('z', spec form) / base64url ('u'),
+            // with legacy raw base64url accepted for backward compatibility.
+            val signatureBytes = ProofEngineUtils.decodeEd25519ProofValue(proof.proofValue)
+                ?: return false
 
             // Validate signature length (Ed25519 signatures are always 64 bytes)
             if (signatureBytes.size != SecurityConstants.ED25519_SIGNATURE_LENGTH_BYTES) {

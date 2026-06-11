@@ -1,0 +1,2 @@
+org.trustweave.trust.spi.BrokenSpiIsolationDidMethodProvider
+org.trustweave.trust.spi.WorkingSpiIsolationDidMethodProvider

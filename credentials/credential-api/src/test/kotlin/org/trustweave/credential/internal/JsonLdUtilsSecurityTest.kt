@@ -213,6 +213,64 @@ class JsonLdUtilsSecurityTest {
     }
 
     @Test
+    fun `test dropped claim is caught even when an extra expanding term masks the property count`() {
+        // Masking attempt against a count-based guard: the context maps "type" to a REGULAR
+        // property (not the @type keyword), so it expands to a counted property even though
+        // the declared-claim collector ignores "type" (and "id"). Under a property-count
+        // comparison the extra expanded property would compensate for the dropped "secret"
+        // claim (2 declared names: degree+secret vs 2 expanded properties: customType+degree).
+        // The name-based guard must still catch the drop.
+        val document = buildJsonObject {
+            put("@context", buildJsonObject {
+                put("credentialSubject", "https://www.w3.org/2018/credentials#credentialSubject")
+                put("type", "https://example.org/vocab#customType")
+                put("degree", "https://example.org/vocab#degree")
+            })
+            put("credentialSubject", buildJsonObject {
+                put("type", "Masking")
+                put("degree", "Bachelor of Science")
+                put("secret", "silently-dropped")
+            })
+        }
+
+        val exception = assertFailsWith<SerializationException> {
+            JsonLdUtils.canonicalizeDocument(document)
+        }
+        assertTrue(
+            exception.message?.contains("secret") == true,
+            "Error should name the dropped claim despite the masking term, got: ${exception.message}"
+        )
+        assertTrue(
+            exception.message?.contains("@context") == true,
+            "Error should instruct the caller to declare a proper @context"
+        )
+    }
+
+    @Test
+    fun `test context dropping the credentialSubject term entirely fails closed`() {
+        // The context defines the subject's claims but NOT credentialSubject itself: the
+        // whole subject node is dropped at expansion and cannot be located after the
+        // round-trip. The guard must fail closed rather than conclude nothing is missing.
+        val document = buildJsonObject {
+            put("@context", buildJsonObject {
+                put("degree", "https://example.org/vocab#degree")
+            })
+            put("degree", "outer")
+            put("credentialSubject", buildJsonObject {
+                put("degree", "Bachelor of Science")
+            })
+        }
+
+        val exception = assertFailsWith<SerializationException> {
+            JsonLdUtils.canonicalizeDocument(document)
+        }
+        assertTrue(
+            exception.message?.contains("credentialSubject") == true,
+            "Error should mention credentialSubject, got: ${exception.message}"
+        )
+    }
+
+    @Test
     fun `test non-object credentialSubject fails closed`() {
         // A credentialSubject that is not a JSON object (or array of objects) cannot be
         // checked for dropped claims; the guard must throw rather than return silently.

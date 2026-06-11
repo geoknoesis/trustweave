@@ -368,9 +368,12 @@ class TrustWeave internal constructor(
      *
      * Public so consumers can, for example, register a real DID method bound to the same KMS that
      * signs credentials (`getDidRegistry().register(KeyDidMethod(getKms()!!))`).
+     *
+     * The return type stays nullable for source compatibility with existing callers, but the
+     * configured KMS is always non-null.
      */
     fun getKms(): KeyManagementService? {
-        return config.kms as? KeyManagementService
+        return config.kms
     }
 
     /**
@@ -624,9 +627,17 @@ class TrustWeave internal constructor(
     /**
      * Revoke a credential using the configured TrustWeave instance.
      *
+     * **Timeout semantics:** a revocation that exceeds [timeout] throws
+     * [org.trustweave.core.exception.TrustWeaveException.OperationTimedOut] — the `Boolean`
+     * return cannot honestly express a timeout (mapping it to `false` would silently report
+     * an unknown outcome as "not revoked"). On timeout, the revocation outcome is unknown;
+     * re-check the credential's status before retrying.
+     *
      * @param timeout Maximum time to wait for revocation (default: 10 seconds)
      * @param block DSL block for specifying revocation parameters
      * @return true if revocation succeeded
+     * @throws org.trustweave.core.exception.TrustWeaveException.OperationTimedOut if the
+     *   operation exceeds [timeout]
      */
     suspend fun revoke(
         timeout: Duration = 10.seconds,

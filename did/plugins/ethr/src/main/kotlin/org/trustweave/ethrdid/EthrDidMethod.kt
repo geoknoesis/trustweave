@@ -9,8 +9,10 @@ import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.base.AbstractBlockchainDidMethod
 import org.trustweave.did.base.DidMethodUtils
 import org.trustweave.kms.KeyManagementService
+import org.trustweave.kms.results.GetPublicKeyResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.web3j.crypto.Keys
 import org.web3j.protocol.Web3j
 import org.web3j.protocol.core.methods.response.TransactionReceipt
 import org.web3j.protocol.http.HttpService
@@ -18,14 +20,27 @@ import org.web3j.tx.RawTransactionManager
 import org.web3j.tx.TransactionManager
 import org.web3j.utils.Numeric
 import java.math.BigInteger
+import java.util.Base64
 
 /**
  * Implementation of did:ethr method for Ethereum blockchain.
  *
+ * **⚠️ EXPERIMENTAL — NOT SPEC-COMPLIANT ⚠️**
+ *
+ * This implementation does NOT resolve DIDs through the ERC-1056 (`EthereumDIDRegistry`)
+ * contract that the did:ethr specification is built on. Resolution relies on TrustWeave's
+ * generic blockchain anchoring plus a local in-memory cache, so DIDs created by other
+ * did:ethr implementations will generally not resolve here, and DIDs created here are not
+ * visible to standard ethr-did resolvers. Use for experimentation only.
+ *
+ * What IS real: Ethereum addresses are derived correctly from the secp256k1 public key
+ * (Keccak-256 over the 64-byte uncompressed key, last 20 bytes, EIP-55 checksummed), so
+ * the `did:ethr:0x...` identifiers themselves are genuine Ethereum addresses.
+ *
  * did:ethr uses Ethereum addresses as DID identifiers:
  * - Format: `did:ethr:{network}:{address}` or `did:ethr:{address}`
  * - Stores DID documents on Ethereum blockchain via anchoring
- * - Can integrate with ERC1056 registry contract for standard resolution
+ * - Requires secp256k1 keys (other algorithms cannot derive an Ethereum address)
  *
  * **Example Usage:**
  * ```kotlin
@@ -110,18 +125,19 @@ class EthrDidMethod(
 
     override suspend fun createDid(options: DidCreationOptions): DidDocument = withContext(Dispatchers.IO) {
         try {
-            // For did:ethr, we need to derive an Ethereum address from a key
-            // Generate a secp256k1 key (Ethereum-compatible)
+            // For did:ethr, we need to derive an Ethereum address from a key.
+            // Only secp256k1 keys can produce an Ethereum address.
             val algorithm = options.algorithm.algorithmName
-            if (algorithm.uppercase() != "SECP256K1" && algorithm.uppercase() != "ED25519") {
-                throw IllegalArgumentException("did:ethr requires secp256k1 or Ed25519 algorithm")
+            if (algorithm.uppercase() != "SECP256K1") {
+                throw IllegalArgumentException(
+                    "did:ethr requires the secp256k1 algorithm: Ethereum addresses are derived " +
+                        "from secp256k1 public keys. Requested: $algorithm"
+                )
             }
 
             val keyHandle = generateKey(algorithm, options.additionalProperties)
 
-            // Derive Ethereum address from key
-            // Note: In a full implementation, we'd derive the address from the public key
-            // For now, we use a simplified approach
+            // Derive the Ethereum address from the secp256k1 public key (Keccak-256)
             val ethereumAddress = deriveEthereumAddress(keyHandle)
 
             // Build DID identifier
@@ -291,23 +307,85 @@ class EthrDidMethod(
     }
 
     /**
-     * Derives an Ethereum address from a key handle.
+     * Derives the Ethereum address for a secp256k1 key handle.
      *
-     * In a full implementation, this would properly derive the address from the public key.
-     * For now, we use a simplified approach.
+     * Standard Ethereum address derivation: Keccak-256 over the 64-byte uncompressed
+     * secp256k1 public key (`x || y`, without the `0x04` prefix), last 20 bytes,
+     * EIP-55 checksummed and `0x`-prefixed (via web3j [Keys]).
+     *
+     * The public key coordinates are read from the KMS key handle's JWK; if the handle
+     * does not carry one, it is fetched from the KMS.
+     *
+     * @throws IllegalArgumentException if the key is not a secp256k1 key
+     * @throws TrustWeaveException.Unknown if the KMS does not expose a usable public key JWK
      */
-    private fun deriveEthereumAddress(keyHandle: org.trustweave.kms.KeyHandle): String {
-        // For secp256k1 keys, derive Ethereum address from public key
-        // In a full implementation, we'd:
-        // 1. Extract public key from JWK
-        // 2. Compute Keccak-256 hash
-        // 3. Take last 20 bytes
-        // 4. Prepend 0x
+    private suspend fun deriveEthereumAddress(keyHandle: org.trustweave.kms.KeyHandle): String {
+        if (!keyHandle.algorithm.equals("secp256k1", ignoreCase = true)) {
+            throw IllegalArgumentException(
+                "did:ethr requires a secp256k1 key to derive an Ethereum address, " +
+                    "but key '${keyHandle.id.value}' uses algorithm '${keyHandle.algorithm}'"
+            )
+        }
 
-        // Simplified: generate address from key ID
-        // This is for demonstration - real implementation needs proper address derivation
-        val keyIdHash = keyHandle.id.hashCode().toString(16).take(40).padStart(40, '0')
-        return "0x$keyIdHash"
+        val jwk = keyHandle.publicKeyJwk
+            ?: when (val result = kms.getPublicKey(keyHandle.id)) {
+                is GetPublicKeyResult.Success -> result.keyHandle.publicKeyJwk
+                is GetPublicKeyResult.Failure -> null
+            }
+            ?: throw TrustWeaveException.Unknown(
+                code = "ETHR_ADDRESS_DERIVATION_FAILED",
+                message = "Cannot derive Ethereum address: the KMS did not expose a public key " +
+                    "JWK for key '${keyHandle.id.value}'"
+            )
+
+        val kty = jwk["kty"] as? String
+        val crv = jwk["crv"] as? String
+        if (!"EC".equals(kty, ignoreCase = true) || !"secp256k1".equals(crv, ignoreCase = true)) {
+            throw TrustWeaveException.Unknown(
+                code = "ETHR_ADDRESS_DERIVATION_FAILED",
+                message = "Cannot derive Ethereum address: expected an EC/secp256k1 JWK for key " +
+                    "'${keyHandle.id.value}', got kty='$kty', crv='$crv'"
+            )
+        }
+
+        val x = decodeJwkCoordinate(jwk["x"], "x", keyHandle.id.value)
+        val y = decodeJwkCoordinate(jwk["y"], "y", keyHandle.id.value)
+
+        // Uncompressed public key without the 0x04 prefix: x || y (64 bytes).
+        // Keys.getAddress = last 20 bytes of Keccak-256 over those 64 bytes.
+        val publicKey = BigInteger(1, x + y)
+        return Keys.toChecksumAddress(Keys.getAddress(publicKey))
+    }
+
+    /**
+     * Decodes a base64url JWK EC coordinate, validating it fits the secp256k1 32-byte field.
+     */
+    private fun decodeJwkCoordinate(value: Any?, name: String, keyId: String): ByteArray {
+        val encoded = value as? String
+            ?: throw TrustWeaveException.Unknown(
+                code = "ETHR_ADDRESS_DERIVATION_FAILED",
+                message = "Cannot derive Ethereum address: JWK for key '$keyId' is missing " +
+                    "the '$name' coordinate"
+            )
+        val bytes = try {
+            Base64.getUrlDecoder().decode(encoded)
+        } catch (e: IllegalArgumentException) {
+            throw TrustWeaveException.Unknown(
+                code = "ETHR_ADDRESS_DERIVATION_FAILED",
+                message = "Cannot derive Ethereum address: JWK '$name' coordinate of key " +
+                    "'$keyId' is not valid base64url",
+                cause = e
+            )
+        }
+        if (bytes.size > 32) {
+            throw TrustWeaveException.Unknown(
+                code = "ETHR_ADDRESS_DERIVATION_FAILED",
+                message = "Cannot derive Ethereum address: JWK '$name' coordinate of key " +
+                    "'$keyId' is ${bytes.size} bytes, expected at most 32 for secp256k1"
+            )
+        }
+        // Left-pad to the 32-byte field width.
+        return if (bytes.size == 32) bytes else ByteArray(32 - bytes.size) + bytes
     }
 
     /**

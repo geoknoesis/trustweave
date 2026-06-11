@@ -11,30 +11,31 @@ import org.trustweave.kms.results.SignResult
 /**
  * Entrust nShield HSM implementation of KeyManagementService.
  *
- * **⚠️ EXPERIMENTAL - NOT YET IMPLEMENTED ⚠️**
+ * **STUB — NOT IMPLEMENTED.**
  *
- * This plugin is a placeholder and will throw [UnsupportedOperationException] if used.
- * Entrust nShield HSM integration requires access to Entrust SDK and HSM access.
+ * No operation works. Per the [KeyManagementService] never-throw contract, every
+ * operation returns the corresponding `*Result.Failure` with a "not implemented"
+ * reason instead of throwing. Nothing is ever generated, signed, or stored.
  *
- * **Status**: Implementation pending.
+ * A real implementation would require the Entrust nShield SDK and HSM access,
+ * neither of which exists here.
  *
- * **Supported Algorithms** (when implemented):
- * - Ed25519, secp256k1, P-256, P-384, P-521
- * - RSA-2048, RSA-3072, RSA-4096
+ * [SUPPORTED_ALGORITHMS] documents what a real implementation is expected to
+ * support — currently none of them work.
  */
 class EntrustKeyManagementService(
-    private val config: EntrustKmsConfig
+    @Suppress("unused") private val config: EntrustKmsConfig
 ) : KeyManagementService {
 
-    init {
-        throw UnsupportedOperationException(
-            "Entrust nShield KMS plugin is not yet implemented. " +
-            "This plugin requires Entrust SDK and HSM access. " +
-            "See https://github.org.trustweave/trustweave/issues for implementation status."
-        )
-    }
-
     companion object {
+        private const val NOT_IMPLEMENTED =
+            "Entrust nShield KMS plugin is a stub and is not implemented " +
+                "(requires the Entrust SDK and HSM access)"
+
+        /**
+         * Algorithms a real implementation is expected to support.
+         * **None of them work** — this plugin is a stub.
+         */
         val SUPPORTED_ALGORITHMS = setOf(
             Algorithm.Ed25519,
             Algorithm.Secp256k1,
@@ -52,24 +53,29 @@ class EntrustKeyManagementService(
     override suspend fun generateKey(
         algorithm: Algorithm,
         options: Map<String, Any?>
-    ): GenerateKeyResult {
-        throw UnsupportedOperationException("Entrust nShield KMS plugin is not yet implemented")
-    }
+    ): GenerateKeyResult = GenerateKeyResult.Failure.Error(
+        algorithm = algorithm,
+        reason = NOT_IMPLEMENTED
+    )
 
-    override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult {
-        throw UnsupportedOperationException("Entrust nShield KMS plugin is not yet implemented")
-    }
+    override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult =
+        GetPublicKeyResult.Failure.Error(
+            keyId = keyId,
+            reason = NOT_IMPLEMENTED
+        )
 
     override suspend fun sign(
         keyId: KeyId,
         data: ByteArray,
         algorithm: Algorithm?
-    ): SignResult {
-        throw UnsupportedOperationException("Entrust nShield KMS plugin is not yet implemented")
-    }
+    ): SignResult = SignResult.Failure.Error(
+        keyId = keyId,
+        reason = NOT_IMPLEMENTED
+    )
 
-    override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult {
-        throw UnsupportedOperationException("Entrust nShield KMS plugin is not yet implemented")
-    }
+    override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult =
+        DeleteKeyResult.Failure.Error(
+            keyId = keyId,
+            reason = NOT_IMPLEMENTED
+        )
 }
-

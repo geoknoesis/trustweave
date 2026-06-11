@@ -12,54 +12,53 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * Implementation of did:tz method (Tezos).
+ * **STUB — NOT IMPLEMENTED.** Skeleton for the did:tz method (Tezos).
  *
- * did:tz uses Tezos blockchain to anchor DID documents:
+ * No operation works: [createDid] throws and [resolveDid] returns a not-implemented
+ * resolution failure. A real implementation would require Tezos SDK and smart contract
+ * integration, neither of which exists here.
+ *
+ * This class is intentionally NOT registered for ServiceLoader discovery (no
+ * `META-INF/services` entry), so it never silently masquerades as a working DID method.
+ * It can only be instantiated explicitly.
+ *
+ * did:tz (when implemented) uses the Tezos blockchain to anchor DID documents:
  * - Format: `did:tz:{network}:{address}`
  * - Documents stored on Tezos blockchain via smart contracts
- * - Supports Tezos mainnet and testnet
- *
- * **Note:** This is a placeholder implementation. Full implementation requires
- * Tezos SDK and smart contract integration.
  */
 class TezosDidMethod(
     kms: KeyManagementService
 ) : AbstractDidMethod("tz", kms) {
 
     override suspend fun createDid(options: DidCreationOptions): DidDocument = withContext(Dispatchers.IO) {
-        // TODO: Implement Tezos DID creation
-        // 1. Generate keys using KMS
-        // 2. Create DID document
-        // 3. Deploy smart contract or store on Tezos blockchain
-        // 4. Return DID with Tezos address
-
         throw TrustWeaveException.Unknown(
             code = "TEZOS_NOT_IMPLEMENTED",
-            message =
-            "Tezos DID method requires Tezos SDK integration. " +
-            "Structure is ready for implementation."
+            message = "did:tz is a stub and is not implemented: DID creation would require " +
+                "Tezos SDK and smart contract integration, which does not exist."
         )
     }
 
     override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
-
-            // TODO: Implement Tezos DID resolution
-            // 1. Extract network and address from DID
-            // 2. Query Tezos blockchain for DID document
-            // 3. Parse and return DID document
-
-            throw TrustWeaveException.Unknown(
-                code = "TEZOS_NOT_IMPLEMENTED",
-                message = "Tezos DID resolution requires Tezos SDK integration. " +
-                "Structure is ready for implementation."
-            )
-        } catch (e: TrustWeaveException) {
-            DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
         } catch (e: Exception) {
-            DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
+            return@withContext DidMethodUtils.createErrorResolutionResult(
+                "invalidDid",
+                e.message,
+                method,
+                did.value
+            )
         }
+
+        // Honest not-implemented failure (internal-error class), never "invalidDid":
+        // the DID may be perfectly valid — this stub simply cannot resolve anything.
+        DidMethodUtils.createErrorResolutionResult(
+            "notImplemented",
+            "did:tz is a stub and is not implemented: resolution would require Tezos SDK " +
+                "integration, which does not exist.",
+            method,
+            did.value
+        )
     }
 }
 

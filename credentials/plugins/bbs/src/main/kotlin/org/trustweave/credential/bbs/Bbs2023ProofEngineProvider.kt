@@ -15,7 +15,8 @@ import org.trustweave.credential.spi.proof.ProofEngineProvider
  * **Options (passed as `options` map):**
  * | Key          | Type               | Description                               |
  * |--------------|--------------------|-------------------------------------------|
- * | `keyPair`    | [Bls12381KeyPair]  | BLS12-381 key pair for signing/derivation |
+ * | `keyPair`    | [Bls12381KeyPair]  | BLS12-381 signing key pair; required for  |
+ * |              |                    | issuance (issue fails closed without it)  |
  * | `didResolver`| `DidResolver`      | Issuer DID resolver; required for         |
  * |              |                    | verification (verify fails closed without)|
  */

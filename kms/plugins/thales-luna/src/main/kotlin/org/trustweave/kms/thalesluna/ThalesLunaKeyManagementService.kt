@@ -11,30 +11,31 @@ import org.trustweave.kms.results.SignResult
 /**
  * Thales Luna Network HSM implementation of KeyManagementService.
  *
- * **⚠️ EXPERIMENTAL - NOT YET IMPLEMENTED ⚠️**
+ * **STUB — NOT IMPLEMENTED.**
  *
- * This plugin is a placeholder and will throw [UnsupportedOperationException] if used.
- * Thales Luna HSM integration requires access to Thales Luna SDK and HSM access.
+ * No operation works. Per the [KeyManagementService] never-throw contract, every
+ * operation returns the corresponding `*Result.Failure` with a "not implemented"
+ * reason instead of throwing. Nothing is ever generated, signed, or stored.
  *
- * **Status**: Implementation pending.
+ * A real implementation would require the Thales Luna SDK and HSM access,
+ * neither of which exists here.
  *
- * **Supported Algorithms** (when implemented):
- * - Ed25519, secp256k1, P-256, P-384, P-521
- * - RSA-2048, RSA-3072, RSA-4096
+ * [SUPPORTED_ALGORITHMS] documents what a real implementation is expected to
+ * support — currently none of them work.
  */
 class ThalesLunaKeyManagementService(
-    private val config: ThalesLunaKmsConfig
+    @Suppress("unused") private val config: ThalesLunaKmsConfig
 ) : KeyManagementService {
 
-    init {
-        throw UnsupportedOperationException(
-            "Thales Luna KMS plugin is not yet implemented. " +
-            "This plugin requires Thales Luna SDK and HSM access. " +
-            "See https://github.org.trustweave/trustweave/issues for implementation status."
-        )
-    }
-
     companion object {
+        private const val NOT_IMPLEMENTED =
+            "Thales Luna KMS plugin is a stub and is not implemented " +
+                "(requires the Thales Luna SDK and HSM access)"
+
+        /**
+         * Algorithms a real implementation is expected to support.
+         * **None of them work** — this plugin is a stub.
+         */
         val SUPPORTED_ALGORITHMS = setOf(
             Algorithm.Ed25519,
             Algorithm.Secp256k1,
@@ -52,24 +53,29 @@ class ThalesLunaKeyManagementService(
     override suspend fun generateKey(
         algorithm: Algorithm,
         options: Map<String, Any?>
-    ): GenerateKeyResult {
-        throw UnsupportedOperationException("Thales Luna KMS plugin is not yet implemented")
-    }
+    ): GenerateKeyResult = GenerateKeyResult.Failure.Error(
+        algorithm = algorithm,
+        reason = NOT_IMPLEMENTED
+    )
 
-    override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult {
-        throw UnsupportedOperationException("Thales Luna KMS plugin is not yet implemented")
-    }
+    override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult =
+        GetPublicKeyResult.Failure.Error(
+            keyId = keyId,
+            reason = NOT_IMPLEMENTED
+        )
 
     override suspend fun sign(
         keyId: KeyId,
         data: ByteArray,
         algorithm: Algorithm?
-    ): SignResult {
-        throw UnsupportedOperationException("Thales Luna KMS plugin is not yet implemented")
-    }
+    ): SignResult = SignResult.Failure.Error(
+        keyId = keyId,
+        reason = NOT_IMPLEMENTED
+    )
 
-    override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult {
-        throw UnsupportedOperationException("Thales Luna KMS plugin is not yet implemented")
-    }
+    override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult =
+        DeleteKeyResult.Failure.Error(
+            keyId = keyId,
+            reason = NOT_IMPLEMENTED
+        )
 }
-

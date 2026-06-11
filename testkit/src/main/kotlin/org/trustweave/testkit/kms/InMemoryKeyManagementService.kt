@@ -3,10 +3,14 @@ package org.trustweave.testkit.kms
 import org.trustweave.core.identifiers.KeyId
 import org.trustweave.kms.*
 import org.trustweave.kms.results.*
+import org.trustweave.kms.util.EcdsaSignatureCodec
+import java.math.BigInteger
 import java.security.*
+import java.security.interfaces.ECPublicKey
 import java.security.spec.*
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
 import org.bouncycastle.jce.ECNamedCurveTable
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec
@@ -14,6 +18,14 @@ import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec
 /**
  * In-memory implementation of KeyManagementService for testing.
  * Generates and stores keys in memory using Java crypto APIs.
+ *
+ * Conforms to the [KeyManagementService] contract the same way the production
+ * `kms:plugins:inmemory` provider does:
+ * - EC signatures are returned in IEEE P1363 form (raw `r || s`), with low-s
+ *   normalization for secp256k1, via [EcdsaSignatureCodec.normalize].
+ * - secp256k1 JWKs carry the real affine `x`/`y` coordinates of the public key
+ *   (not bytes sliced out of the DER/SPKI encoding).
+ * - Algorithm compatibility follows [Algorithm.isCompatibleWith].
  */
 class InMemoryKeyManagementService : KeyManagementService {
 
@@ -55,46 +67,7 @@ class InMemoryKeyManagementService : KeyManagementService {
 
             keys[keyId] = keyPair
 
-            val publicKeyJwk = when (algorithm) {
-                is Algorithm.Ed25519 -> {
-                    // Extract raw 32 bytes from DER-encoded public key
-                    // Ed25519 public key in DER format: 30 2A 30 05 06 03 2B 65 70 03 21 00 [32 bytes]
-                    // The raw key is at bytes 12-44 (12 byte header + 32 byte key)
-                    val encoded = keyPair.public.encoded
-                    val rawKey = if (encoded.size >= 44 && encoded[0] == 0x30.toByte()) {
-                        // Standard DER format: extract bytes 12-44 (32 bytes)
-                        encoded.sliceArray(12 until 44)
-                    } else if (encoded.size >= 32) {
-                        // Fallback: extract last 32 bytes
-                        encoded.sliceArray((encoded.size - 32) until encoded.size)
-                    } else {
-                        return GenerateKeyResult.Failure.Error(
-                            algorithm = algorithm,
-                            reason = "Invalid Ed25519 public key encoding: expected at least 32 bytes, got ${encoded.size}"
-                        )
-                    }
-
-                    if (rawKey.size != 32) {
-                        return GenerateKeyResult.Failure.Error(
-                            algorithm = algorithm,
-                            reason = "Expected 32-byte Ed25519 public key, but got ${rawKey.size} bytes from encoded key of size ${encoded.size}"
-                        )
-                    }
-
-                    mapOf(
-                        "kty" to "OKP",
-                        "crv" to "Ed25519",
-                        "x" to Base64.getUrlEncoder().withoutPadding().encodeToString(rawKey)
-                    )
-                }
-                is Algorithm.Secp256k1 -> mapOf(
-                    "kty" to "EC",
-                    "crv" to "secp256k1",
-                    "x" to Base64.getUrlEncoder().withoutPadding().encodeToString(keyPair.public.encoded.take(32).toByteArray()),
-                    "y" to Base64.getUrlEncoder().withoutPadding().encodeToString(keyPair.public.encoded.drop(32).take(32).toByteArray())
-                )
-                else -> emptyMap()
-            }
+            val publicKeyJwk = publicKeyToJwk(keyPair.public, algorithm)
 
             val handle = KeyHandle(
                 id = keyId,
@@ -183,7 +156,10 @@ class InMemoryKeyManagementService : KeyManagementService {
                     update(data)
                 }.sign()
             }
-            SignResult.Success(signature)
+            // JCA ECDSA emits ASN.1 DER; the KeyManagementService contract requires P1363
+            // (raw r||s) with low-s for secp256k1, so normalize before returning — exactly
+            // like the production kms:plugins:inmemory provider.
+            SignResult.Success(EcdsaSignatureCodec.normalize(signature, effectiveAlgorithm))
         } catch (e: Exception) {
             SignResult.Failure.Error(
                 keyId = keyId,
@@ -206,16 +182,13 @@ class InMemoryKeyManagementService : KeyManagementService {
 
     /**
      * Checks if two algorithms are compatible for signing.
+     *
+     * Delegates to [Algorithm.isCompatibleWith] so the testkit KMS agrees with the
+     * canonical compatibility rules (in particular, RSA variants with different key
+     * sizes are NOT interchangeable).
      */
     private fun isAlgorithmCompatible(requested: Algorithm, key: Algorithm): Boolean {
-        // Same algorithm is always compatible
-        if (requested == key) return true
-        
-        // For RSA, any RSA variant can sign with any other RSA variant (same key type)
-        if (requested is Algorithm.RSA && key is Algorithm.RSA) return true
-        
-        // For ECC, algorithms must match exactly
-        return false
+        return requested.isCompatibleWith(key)
     }
 
     /**
@@ -224,6 +197,85 @@ class InMemoryKeyManagementService : KeyManagementService {
     fun clear() {
         keys.clear()
         keyMetadata.clear()
+    }
+
+    /**
+     * Converts a public key to JWK format.
+     *
+     * Ported from the production `kms:plugins:inmemory` provider so the testkit KMS
+     * produces the same, correct JWKs:
+     * - Ed25519: raw 32-byte key extracted from the SPKI structure (BouncyCastle ASN.1
+     *   parsing, not byte-offset slicing).
+     * - secp256k1: real affine x/y coordinates from the [ECPublicKey] point, as unsigned
+     *   big-endian 32-byte values.
+     *
+     * @throws IllegalArgumentException if the key cannot be converted
+     */
+    private fun publicKeyToJwk(publicKey: PublicKey, algorithm: Algorithm): Map<String, Any?> {
+        return when (algorithm) {
+            is Algorithm.Ed25519 -> {
+                val publicKeyBytes = publicKey.encoded
+                val rawKey = when {
+                    publicKeyBytes.size >= 44 && publicKeyBytes[0] == 0x30.toByte() -> {
+                        val spki = SubjectPublicKeyInfo.getInstance(publicKeyBytes)
+                        spki.publicKeyData.bytes
+                    }
+                    publicKeyBytes.size == 32 && publicKey.algorithm == "Ed25519" -> {
+                        publicKeyBytes
+                    }
+                    else -> throw IllegalArgumentException(
+                        "Cannot extract Ed25519 raw key bytes: unexpected encoding " +
+                            "(algorithm=${publicKey.algorithm}, size=${publicKeyBytes.size})"
+                    )
+                }
+                mapOf(
+                    "kty" to "OKP",
+                    "crv" to "Ed25519",
+                    "x" to Base64.getUrlEncoder().withoutPadding().encodeToString(rawKey)
+                )
+            }
+            is Algorithm.Secp256k1 -> {
+                val ecPublicKey = publicKey as? ECPublicKey
+                    ?: throw IllegalArgumentException(
+                        "Expected EC public key for algorithm ${algorithm.name}"
+                    )
+
+                val point = ecPublicKey.w
+                val x = toUnsignedFixedWidth(point.affineX, 32)
+                val y = toUnsignedFixedWidth(point.affineY, 32)
+
+                mapOf(
+                    "kty" to "EC",
+                    "crv" to "secp256k1",
+                    "x" to Base64.getUrlEncoder().withoutPadding().encodeToString(x),
+                    "y" to Base64.getUrlEncoder().withoutPadding().encodeToString(y)
+                )
+            }
+            else -> throw IllegalArgumentException(
+                "Unsupported algorithm for JWK conversion: ${algorithm.name}"
+            )
+        }
+    }
+
+    /**
+     * Converts a [BigInteger] to an unsigned, big-endian, fixed-length byte array.
+     *
+     * `BigInteger.toByteArray()` prepends a 0x00 sign byte for positive values whose MSB
+     * is set; strip it before right-aligning into the fixed-length result.
+     */
+    private fun toUnsignedFixedWidth(bigInt: BigInteger, length: Int): ByteArray {
+        val signed = bigInt.toByteArray()
+        val bytes = if (signed.isNotEmpty() && signed[0] == 0.toByte()) {
+            signed.copyOfRange(1, signed.size)
+        } else {
+            signed
+        }
+        require(bytes.size <= length) {
+            "EC coordinate too large after sign-byte strip: ${bytes.size} > $length"
+        }
+        val result = ByteArray(length)
+        System.arraycopy(bytes, 0, result, length - bytes.size, bytes.size)
+        return result
     }
 
     private fun generateEd25519KeyPair(): KeyPair {

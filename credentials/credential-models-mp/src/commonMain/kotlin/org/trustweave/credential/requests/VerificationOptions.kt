@@ -60,6 +60,26 @@ data class VerificationOptions(
     val expectedDomain: String? = null,
     /** Format-specific or engine-specific verification parameters (e.g. `sessionTranscript` for mDL). */
     val additionalOptions: Map<String, Any?> = emptyMap(),
-    /** When true, each credential's credentialSubject.id must match the presentation holder. Opt-in; defaults to false. */
+    /**
+     * Envelope-level holder binding checks (opt-in; defaults to false):
+     * - each presented credential's `credentialSubject.id` must match the presentation
+     *   holder, and
+     * - for LD-proof presentations, the proof's `verificationMethod` must belong to the
+     *   holder DID.
+     * Requires [verifyPresentationProof] to be true (enforced; the holder field is
+     * meaningless without a verified presentation proof).
+     *
+     * **Note — SD-JWT cryptographic holder binding is NOT gated by this option.**
+     * When a presented SD-JWT credential carries an issuer-signed `cnf` claim (emitted
+     * automatically at issuance whenever the credential subject id is a DID), the Key
+     * Binding JWT is ALWAYS required to be signed by the `cnf`-designated DID's
+     * authentication key, and the presentation `holder` must equal that DID — regardless
+     * of this option's value. This option's default remains false because flipping it
+     * globally would reject legitimate flows with no holder binding (e.g. LD-proof
+     * presentations of credentials about third-party subjects, or bearer credentials).
+     * Legacy SD-JWT credentials without `cnf` only get the weaker envelope-holder
+     * binding; verifiers that require subject-equals-holder semantics for such
+     * credentials should opt in here.
+     */
     val enforceHolderBinding: Boolean = false,
 )

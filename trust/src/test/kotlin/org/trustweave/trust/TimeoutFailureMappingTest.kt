@@ -1,11 +1,18 @@
 package org.trustweave.trust
 
+import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.credential.identifiers.StatusListId
 import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.credential.revocation.CredentialRevocationManager
+import org.trustweave.credential.revocation.RevocationManagers
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.DidMethod
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidResolver
 import org.trustweave.kms.results.SignResult
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
@@ -23,6 +30,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
@@ -216,6 +225,121 @@ class TimeoutFailureMappingTest {
 
         val failure = assertIs<IssuanceResult.Failure.AdapterError>(result)
         assertTrue(failure.reason.contains("timed out"), "Unexpected reason: ${failure.reason}")
+    }
+
+    @Test
+    fun `verify exceeding timeout returns Invalid instead of throwing`() = runBlocking {
+        // The credential service resolves issuer DIDs through the facade's registry, so
+        // installing a slow "key" method after issuance makes verification (and only
+        // verification) exceed its timeout.
+        val kmsRef = kms
+        var facade: TrustWeave? = null
+        val registryBackedResolver = DidResolver { did ->
+            requireNotNull(facade).getDidRegistry().resolve(did.value)
+        }
+        val verifyingTrustWeave = TrustWeave.build {
+            keys {
+                custom(kmsRef)
+                signer { data, keyId ->
+                    when (val result = kmsRef.sign(org.trustweave.core.identifiers.KeyId(keyId), data)) {
+                        is SignResult.Success -> result.signature
+                        else -> throw IllegalStateException("Signing failed: $result")
+                    }
+                }
+            }
+            did {
+                method("key") { algorithm("Ed25519") }
+            }
+            credentialService(
+                createTestCredentialService(kms = kmsRef, didResolver = registryBackedResolver)
+            )
+        }
+        facade = verifyingTrustWeave
+        val issuerDid = verifyingTrustWeave.createDid { method("key"); algorithm("Ed25519") }.getOrThrowDid()
+
+        val credential = verifyingTrustWeave.issue {
+            credential {
+                type("TestCredential")
+                issuer(issuerDid)
+                subject {
+                    id("did:key:subject")
+                    "test" to "value"
+                }
+                issued(Clock.System.now())
+            }
+            signedBy(issuerDid)
+            withTestClaimContexts()
+        }.getOrThrow()
+
+        // Issuance done — now every resolution is slow, so verification times out.
+        verifyingTrustWeave.getDidRegistry().register(SlowDidMethod(DidKeyMockMethod(kms), slowFor))
+
+        val result = verifyingTrustWeave.verify(credential, timeout = shortTimeout)
+
+        val invalid = assertIs<VerificationResult.Invalid.InvalidProof>(result)
+        assertEquals(credential, invalid.credential, "Timeout result must retain the request credential")
+        assertTrue(invalid.reason.contains("timed out"), "Unexpected reason: ${invalid.reason}")
+        assertTrue(invalid.errors.any { it.contains("timed out") }, "Unexpected errors: ${invalid.errors}")
+    }
+
+    /**
+     * Delays [CredentialRevocationManager.revokeCredential] so revocation timeouts fire
+     * deterministically; all other operations delegate to the default in-memory manager.
+     */
+    private class SlowRevocationManager(
+        private val slowFor: Duration,
+        private val started: CompletableDeferred<Unit>? = null,
+        private val delegate: CredentialRevocationManager = RevocationManagers.default()
+    ) : CredentialRevocationManager by delegate {
+        override suspend fun revokeCredential(credentialId: String, statusListId: StatusListId): Boolean {
+            started?.complete(Unit)
+            delay(slowFor)
+            return delegate.revokeCredential(credentialId, statusListId)
+        }
+    }
+
+    @Test
+    fun `revoke exceeding timeout throws OperationTimedOut instead of leaking TimeoutCancellationException`() =
+        runBlocking<Unit> {
+            // revoke() returns Boolean, which cannot express a timeout honestly (false would
+            // silently misreport an unknown outcome as "not revoked"), so the contract is a
+            // typed TrustWeaveException.OperationTimedOut instead.
+            val slowTrustWeave = TrustWeave.from(
+                trustWeave.configuration.copy(revocationManager = SlowRevocationManager(slowFor))
+            )
+
+            val exception = assertFailsWith<TrustWeaveException.OperationTimedOut> {
+                slowTrustWeave.revoke(timeout = shortTimeout) {
+                    credential("cred-timeout-test")
+                    statusList("list-timeout-test")
+                }
+            }
+            assertEquals("OPERATION_TIMED_OUT", exception.code)
+            assertTrue(exception.message.contains("timed out"), "Unexpected message: ${exception.message}")
+            assertIs<kotlinx.coroutines.TimeoutCancellationException>(exception.cause)
+        }
+
+    @Test
+    fun `revoke cancellation still propagates and is not mapped to OperationTimedOut`() = runBlocking {
+        val started = CompletableDeferred<Unit>()
+        val slowTrustWeave = TrustWeave.from(
+            trustWeave.configuration.copy(revocationManager = SlowRevocationManager(slowFor, started))
+        )
+
+        var completedNormally = false
+        val job = launch {
+            slowTrustWeave.revoke(timeout = 60.seconds) {
+                credential("cred-cancel-test")
+                statusList("list-cancel-test")
+            }
+            completedNormally = true
+        }
+
+        started.await()
+        job.cancelAndJoin()
+
+        assertTrue(job.isCancelled, "Job should be cancelled")
+        assertFalse(completedNormally, "Cancellation must propagate, not be mapped to a result/exception")
     }
 
     @Test

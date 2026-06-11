@@ -5,9 +5,12 @@ import org.trustweave.anchor.payment.PaymentDeprecation
 import org.trustweave.anchor.spi.BlockchainAnchorClientProvider
 
 /**
- * SPI provider for StarkNet blockchain anchor client.
+ * SPI provider for the StarkNet blockchain anchor client.
  *
- * Automatically discovered via Java ServiceLoader when the module is on the classpath.
+ * **STUB — NOT IMPLEMENTED.** [StarkNetBlockchainAnchorClient] is a non-functional
+ * skeleton (it never submits or reads chain transactions), so this provider is
+ * intentionally NOT registered in `META-INF/services` and is never picked up by
+ * ServiceLoader discovery. It exists only for explicit, opt-in construction.
  */
 class StarkNetIntegration : BlockchainAnchorClientProvider {
     override val name: String = "starknet"

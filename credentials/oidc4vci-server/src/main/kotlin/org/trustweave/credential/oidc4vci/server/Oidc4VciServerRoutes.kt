@@ -44,6 +44,8 @@ fun Routing.configureOidc4VciServerRoutes(service: Oidc4VciIssuerService) {
                     put("access_token", tr.accessToken)
                     put("token_type", tr.tokenType)
                     put("expires_in", tr.expiresIn)
+                    put("c_nonce", tr.cNonce)
+                    put("c_nonce_expires_in", tr.cNonceExpiresIn)
                 })
             }
             .onFailure { call.respond(HttpStatusCode.BadRequest, buildJsonObject {
@@ -62,17 +64,32 @@ fun Routing.configureOidc4VciServerRoutes(service: Oidc4VciIssuerService) {
         val format = body["format"]?.jsonPrimitive?.contentOrNull ?: "jwt_vc_json"
         val types = body["credential_definition"]?.jsonObject?.get("type")?.jsonArray
             ?.mapNotNull { it.jsonPrimitive.contentOrNull } ?: emptyList()
-        runCatching { service.issueCredential(accessToken, format, types) }
+        // OID4VCI v1.0 §7.2: proof of possession — { "proof": { "proof_type": "jwt", "jwt": "..." } }
+        val proofJwt = (body["proof"] as? JsonObject)?.get("jwt")?.jsonPrimitive?.contentOrNull
+        runCatching { service.issueCredential(accessToken, format, types, proofJwt) }
             .onSuccess { resp ->
                 if (resp.credential != null)
                     call.respond(buildJsonObject {
                         put("credential", resp.credential)
                         put("format", resp.format ?: format)
+                        resp.cNonce?.let { put("c_nonce", it) }
+                        resp.cNonceExpiresIn?.let { put("c_nonce_expires_in", it) }
                     })
                 else
                     call.respond(buildJsonObject { resp.transactionId?.let { put("transaction_id", it) } })
             }
-            .onFailure { call.respond(HttpStatusCode.Unauthorized, buildJsonObject { put("error", "invalid_token") }) }
+            .onFailure { e ->
+                when (e) {
+                    // §7.3.1: invalid_proof MUST carry a fresh c_nonce so the wallet can retry
+                    is InvalidProofException -> call.respond(HttpStatusCode.BadRequest, buildJsonObject {
+                        put("error", "invalid_proof")
+                        e.message?.let { m -> put("error_description", m) }
+                        put("c_nonce", e.freshCNonce)
+                        put("c_nonce_expires_in", e.cNonceExpiresIn)
+                    })
+                    else -> call.respond(HttpStatusCode.Unauthorized, buildJsonObject { put("error", "invalid_token") })
+                }
+            }
     }
 
     post("/deferred_credential") {

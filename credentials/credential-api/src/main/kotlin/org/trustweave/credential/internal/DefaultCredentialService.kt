@@ -395,6 +395,18 @@ internal class DefaultCredentialService(
             }
         }
 
+        // cnf holder binding (RFC 7800 / SD-JWT VC) — enforced unconditionally, for EVERY
+        // presentation proof format, whenever the (now verified) presentation embeds an
+        // SD-JWT credential whose issuer-signed JWT carries `cnf`: the authenticated
+        // presentation holder must be the cnf-designated DID. Without this, an attacker
+        // could wrap a stolen cnf-bound credential in e.g. an LD-proof presentation signed
+        // with their own key. The SD-JWT KB-JWT path additionally requires the KB-JWT to be
+        // signed by the cnf DID (PresentationVerification.verifySdJwtKeyBinding). Only
+        // legacy cnf-less credentials are exempt (weaker envelope-holder binding).
+        if (options.verifyPresentationProof) {
+            PresentationVerification.verifyCnfHolderBinding(presentation)?.let { return it }
+        }
+
         // Guard: holder binding is meaningless without presentation proof verification — the
         // holder field can be trivially forged if the presentation signature is not checked.
         if (options.enforceHolderBinding && !options.verifyPresentationProof) {

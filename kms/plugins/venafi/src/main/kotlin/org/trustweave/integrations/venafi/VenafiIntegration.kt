@@ -3,29 +3,19 @@ package org.trustweave.integrations.venafi
 import org.trustweave.core.exception.TrustWeaveException
 
 /**
- * Venafi integration for trustweave.
+ * **PLACEHOLDER — NOT A KMS, NOT IMPLEMENTED.**
  *
- * Provides integration with Venafi for:
+ * Despite living under `kms/plugins/venafi`, this module provides **no
+ * `KeyManagementService` implementation at all** — there is no key generation, signing,
+ * or key storage here, and nothing is registered for SPI discovery. This single class is
+ * a non-functional sketch of a future Venafi certificate-lifecycle integration; its only
+ * method throws a not-implemented error.
+ *
+ * What a real integration might eventually cover:
  * - Certificate lifecycle management
- * - Key management integration
  * - Credential issuance with Venafi certificates
  *
- * **Note:** This is a placeholder implementation. Full implementation requires
- * Venafi API integration.
- *
- * **Example:**
- * ```kotlin
- * val integration = VenafiIntegration(
- *     baseUrl = "https://api.venafi.com",
- *     apiKey = "api-key"
- * )
- *
- * // Issue credential with Venafi certificate
- * val credential = integration.issueCredentialWithCertificate(
- *     certificateId = "cert-123",
- *     credentialType = "IdentityCredential"
- * )
- * ```
+ * Do not depend on this module expecting KMS capabilities.
  */
 class VenafiIntegration(
     val baseUrl: String,
@@ -47,10 +37,10 @@ class VenafiIntegration(
         certificateId: String,
         credentialType: String
     ): Any {
-        // TODO: Implement Venafi credential issuance
         throw TrustWeaveException.Unknown(
-            message = "Venafi integration requires Venafi API implementation. " +
-            "Structure is ready for implementation."
+            code = "VENAFI_NOT_IMPLEMENTED",
+            message = "The Venafi integration is a placeholder and is not implemented: " +
+                "no Venafi API client exists in this module."
         )
     }
 }

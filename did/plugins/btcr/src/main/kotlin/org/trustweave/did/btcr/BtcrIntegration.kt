@@ -7,7 +7,9 @@ import org.trustweave.did.base.AbstractDidMethodProvider
 /**
  * SPI provider for did:btcr (Bitcoin Reference) method.
  *
- * Automatically discovered via Java ServiceLoader when the module is on the classpath.
+ * **STUB — NOT IMPLEMENTED.** [BtcrDidMethod] is a non-functional skeleton, so this
+ * provider is intentionally NOT registered in `META-INF/services` and is never picked up
+ * by ServiceLoader discovery. It exists only for explicit, opt-in construction.
  */
 class BtcrIntegration : AbstractDidMethodProvider() {
 

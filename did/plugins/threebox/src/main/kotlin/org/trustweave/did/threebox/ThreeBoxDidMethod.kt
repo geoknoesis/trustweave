@@ -12,64 +12,54 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * Implementation of did:3 method (3Box/Identity).
+ * **STUB — NOT IMPLEMENTED.** Skeleton for the did:3 method (3Box/Identity).
  *
- * did:3 uses IPFS for decentralized storage of DID documents:
+ * No operation works: [createDid] throws and [resolveDid] returns a not-implemented
+ * resolution failure. A real implementation would require IPFS integration and
+ * 3Box/Identity protocol support, neither of which exists here.
+ *
+ * This class is intentionally NOT registered for ServiceLoader discovery (no
+ * `META-INF/services` entry), so it never silently masquerades as a working DID method.
+ * It can only be instantiated explicitly.
+ *
+ * did:3 (when implemented) uses IPFS for decentralized storage of DID documents:
  * - Format: `did:3:{ipfs-hash}`
  * - Documents stored on IPFS
  * - No blockchain required
- * - Supports decentralized identity storage
- *
- * **Note:** This is a placeholder implementation. Full implementation requires
- * IPFS integration and 3Box/Identity protocol support.
- *
- * **Example Usage:**
- * ```kotlin
- * val kms = InMemoryKeyManagementService()
- * val method = ThreeBoxDidMethod(kms)
- *
- * val document = method.createDid()
- * val result = method.resolveDid(document.id)
- * ```
  */
 class ThreeBoxDidMethod(
     kms: KeyManagementService
 ) : AbstractDidMethod("3", kms) {
 
     override suspend fun createDid(options: DidCreationOptions): DidDocument = withContext(Dispatchers.IO) {
-        // TODO: Implement 3Box/Identity DID creation
-        // 1. Generate keys using KMS
-        // 2. Create DID document
-        // 3. Store document on IPFS
-        // 4. Return DID with IPFS hash
-
         throw TrustWeaveException.Unknown(
             code = "THREEBOX_NOT_IMPLEMENTED",
-            message =
-            "3Box/Identity DID method requires IPFS integration. " +
-            "Structure is ready for implementation."
+            message = "did:3 is a stub and is not implemented: DID creation would require " +
+                "IPFS and 3Box/Identity protocol integration, which does not exist."
         )
     }
 
     override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
-
-            // TODO: Implement 3Box/Identity DID resolution
-            // 1. Extract IPFS hash from DID
-            // 2. Retrieve document from IPFS
-            // 3. Parse and return DID document
-
-            throw TrustWeaveException.Unknown(
-                code = "THREEBOX_NOT_IMPLEMENTED",
-                message = "3Box/Identity DID resolution requires IPFS integration. " +
-                "Structure is ready for implementation."
-            )
-        } catch (e: TrustWeaveException) {
-            DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
         } catch (e: Exception) {
-            DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
+            return@withContext DidMethodUtils.createErrorResolutionResult(
+                "invalidDid",
+                e.message,
+                method,
+                did.value
+            )
         }
+
+        // Honest not-implemented failure (internal-error class), never "invalidDid":
+        // the DID may be perfectly valid — this stub simply cannot resolve anything.
+        DidMethodUtils.createErrorResolutionResult(
+            "notImplemented",
+            "did:3 is a stub and is not implemented: resolution would require IPFS " +
+                "integration, which does not exist.",
+            method,
+            did.value
+        )
     }
 }
 

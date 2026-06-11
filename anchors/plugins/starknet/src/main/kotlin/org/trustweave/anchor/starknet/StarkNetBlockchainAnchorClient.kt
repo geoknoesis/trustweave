@@ -3,22 +3,27 @@ package org.trustweave.anchor.starknet
 import org.trustweave.anchor.*
 import org.trustweave.anchor.exceptions.BlockchainException
 
-import org.trustweave.core.exception.TrustWeaveException
-import kotlinx.serialization.json.*
-
 /**
- * StarkNet blockchain anchor client implementation.
+ * **STUB — NOT IMPLEMENTED.** Skeleton for a StarkNet blockchain anchor client.
  *
- * Supports StarkNet mainnet and testnet chains.
- * Uses StarkNet's Cairo-based smart contracts to store payload data.
+ * No real chain interaction exists: [canSubmitTransaction] always returns `false`, so
+ * the [AbstractBlockchainAnchorClient] fail-closed path governs — [writePayload] fails
+ * with a configuration error unless the caller explicitly opts into the in-memory test
+ * mode (`options["inMemoryTestMode"] = true`), and nothing is ever anchored on StarkNet
+ * regardless of which credentials are supplied. [readPayload] likewise cannot read from
+ * the chain.
+ *
+ * This class is intentionally NOT registered for ServiceLoader discovery (no
+ * `META-INF/services` entry), so it never silently masquerades as a working anchor
+ * client. It can only be instantiated explicitly.
+ *
+ * A real implementation would require a StarkNet SDK and a Cairo storage contract
+ * (StarkNet is Cairo-based, not EVM), neither of which exists here.
  *
  * Chain ID format: "starknet:<network>"
  * Examples:
  * - "starknet:mainnet" (StarkNet mainnet)
  * - "starknet:testnet" (StarkNet testnet)
- *
- * **Note:** StarkNet uses Cairo (not EVM), so requires different SDK and approach.
- * This implementation provides the structure for StarkNet integration.
  *
  * **Example:**
  * ```kotlin
@@ -57,39 +62,33 @@ class StarkNetBlockchainAnchorClient(
     }
 
     override protected fun canSubmitTransaction(): Boolean {
-        // Check if credentials and contract are provided
-        return options["rpcUrl"] != null &&
-               options["privateKey"] != null &&
-               options["contractAddress"] != null
+        // Always false: transaction submission is NOT implemented. Returning true based on
+        // the presence of credentials would route writePayload into submitTransactionToBlockchain
+        // and fail after pretending to be a working client. With false, the base class's
+        // fail-closed / opt-in in-memory test-mode path governs instead.
+        return false
     }
 
     override protected suspend fun submitTransactionToBlockchain(
         payloadBytes: ByteArray
     ): String {
-        // TODO: Implement StarkNet transaction submission
-        // This requires:
-        // 1. Connect to StarkNet node via RPC
-        // 2. Create Cairo contract call to store payload
-        // 3. Sign and submit transaction
-        // 4. Return transaction hash
-
-        throw TrustWeaveException.Unknown(
-            message = "StarkNet blockchain anchoring requires StarkNet SDK and Cairo contract. " +
-            "Structure is ready for implementation."
+        // Unreachable through the base class while canSubmitTransaction() is false;
+        // kept as an honest guard in case a subclass or future change reaches it.
+        throw BlockchainException.UnsupportedOperation(
+            chainId = chainId,
+            operation = "submitTransaction",
+            reason = "The StarkNet anchor client is a stub and is not implemented: " +
+                "transaction submission would require a StarkNet SDK and a Cairo storage " +
+                "contract, neither of which exists."
         )
     }
 
     override protected suspend fun readTransactionFromBlockchain(txHash: String): AnchorResult {
-        // TODO: Implement StarkNet transaction reading
-        // This requires:
-        // 1. Connect to StarkNet node via RPC
-        // 2. Get transaction by hash
-        // 3. Read data from contract storage
-        // 4. Parse and return AnchorResult
-
-        throw TrustWeaveException.Unknown(
-            message = "StarkNet blockchain reading requires StarkNet SDK. " +
-            "Structure is ready for implementation."
+        throw BlockchainException.UnsupportedOperation(
+            chainId = chainId,
+            operation = "readTransaction",
+            reason = "The StarkNet anchor client is a stub and is not implemented: " +
+                "reading transactions would require a StarkNet SDK, which does not exist."
         )
     }
 

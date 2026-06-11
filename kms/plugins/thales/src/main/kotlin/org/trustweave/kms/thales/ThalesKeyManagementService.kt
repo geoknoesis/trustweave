@@ -27,10 +27,16 @@ import java.util.Base64
 /**
  * Thales CipherTrust Manager implementation of KeyManagementService.
  *
- * Supports all Thales CipherTrust-compatible algorithms:
- * - Ed25519, secp256k1, P-256/P-384/P-521, RSA-2048/3072/4096
+ * **⚠️ EXPERIMENTAL — UNVERIFIED AGAINST A REAL ENDPOINT ⚠️**
  *
- * Uses Thales CipherTrust Manager REST API for key operations.
+ * This implementation was written against the public Thales CipherTrust Manager REST API
+ * documentation but has never been validated against a live CipherTrust Manager instance.
+ * Request/response shapes, endpoint paths and algorithm mappings may not match actual
+ * server behavior. Do not use in production without integration-testing against a real
+ * CipherTrust Manager deployment first.
+ *
+ * Algorithms this code was written to target (unverified):
+ * - Ed25519, secp256k1, P-256/P-384/P-521, RSA-2048/3072/4096
  */
 class ThalesKeyManagementService(
     private val config: ThalesKmsConfig,

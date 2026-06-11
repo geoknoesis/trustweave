@@ -1,7 +1,10 @@
 package org.trustweave.credential.bbs
 
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.JsonUnquotedLiteral
+import org.trustweave.core.exception.ConfigException
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.CredentialProof
@@ -22,6 +25,7 @@ import org.trustweave.did.resolver.DidResolver
 import org.trustweave.testkit.proof.ProofEngineTestData
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
@@ -182,7 +186,10 @@ class Bbs2023ProofEngineTest {
     }
 
     @Test
-    fun `issue with no configured key pair uses ephemeral key`() = runTest {
+    fun `issue with no configured key pair fails closed with ConfigException`() = runTest {
+        // P0 pattern (same as the bitstring status list fix): signing keys are never
+        // fabricated — an ephemeral issuer key that no verifier can resolve from a DID
+        // document would produce permanently unverifiable credentials.
         val engine = buildEngine(keyPair = null)
         val request = IssuanceRequest(
             format = ProofSuiteId.BBS_2023,
@@ -190,9 +197,12 @@ class Bbs2023ProofEngineTest {
             credentialSubject = CredentialSubject.fromIri(subjectDid, claims = testClaims),
             type = listOf(CredentialType.VerifiableCredential),
         )
-        // Should succeed without throwing
-        val vc = engine.issue(request)
-        assertNotNull(vc.proof)
+
+        val ex = assertFailsWith<ConfigException> { engine.issue(request) }
+        assertTrue(
+            "keyPair" in ex.message.orEmpty(),
+            "Error should point at the missing keyPair configuration, got: ${ex.message}",
+        )
     }
 
     @Test
@@ -424,76 +434,110 @@ class Bbs2023ProofEngineTest {
     }
 
     // -------------------------------------------------------------------------
-    // Presentation / selective disclosure tests
+    // Claim message encoding tests (regression for the key=value collision forgery)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Regression for the encoding-collision claim forgery: under the legacy `"key=value"`
+     * encoding the claim sets `{"a": b=c}` and `{"a=b": c}` (unquoted literals) produced
+     * the IDENTICAL signed message `a=b=c`, so a signature over one verified against the
+     * other. The length-prefixed encoding is injective, so the signature must no longer
+     * cross-verify in either direction.
+     */
+    @OptIn(ExperimentalSerializationApi::class)
+    @Test
+    fun `claims ambiguous under legacy key=value encoding do not cross-verify`() = runTest {
+        val kp = BbsCryptoSuite.generateKeyPair("bbs-collision-key")
+        val engine = engineWithIssuerResolver(kp)
+
+        // Both rendered "a=b=c" under the legacy encoding.
+        val claimsA = mapOf("a" to JsonUnquotedLiteral("b=c"))
+        val claimsB = mapOf("a=b" to JsonUnquotedLiteral("c"))
+
+        val vcA = engine.issue(buildRequest(kp, claimsA))
+        val vcB = engine.issue(buildRequest(kp, claimsB))
+
+        // Each credential verifies against its own claims...
+        assertIs<VerificationResult.Valid>(engine.verify(vcA, VerificationOptions()))
+        assertIs<VerificationResult.Valid>(engine.verify(vcB, VerificationOptions()))
+
+        // ...but A's signature must not verify B's claims (and vice versa): the signed
+        // message sets are now different.
+        val forgedAtoB = vcA.copy(
+            credentialSubject = vcA.credentialSubject.copy(claims = claimsB),
+        )
+        assertIs<VerificationResult.Invalid.InvalidProof>(
+            engine.verify(forgedAtoB, VerificationOptions()),
+            "Signature over {a: b=c} must not verify {a=b: c}",
+        )
+
+        val forgedBtoA = vcB.copy(
+            credentialSubject = vcB.credentialSubject.copy(claims = claimsA),
+        )
+        assertIs<VerificationResult.Invalid.InvalidProof>(
+            engine.verify(forgedBtoA, VerificationOptions()),
+            "Signature over {a=b: c} must not verify {a: b=c}",
+        )
+    }
+
+    // -------------------------------------------------------------------------
+    // Presentation / derived proof tests — the underlying HMAC emulation cannot
+    // produce or verify real BBS derived proofs, so the engine fails honestly
+    // in both directions instead of emitting/accepting unverifiable pseudo-proofs.
     // -------------------------------------------------------------------------
 
     @Test
-    fun `createPresentation with all claims disclosed succeeds`() = runTest {
+    fun `createPresentation fails fast because the BBS emulation cannot derive real proofs`() = runTest {
         val kp = BbsCryptoSuite.generateKeyPair("bbs-key-8")
-        val engine = buildEngine(kp)
+        val engine = engineWithIssuerResolver(kp)
         val vc = engine.issue(buildRequest(kp))
 
-        val request = PresentationRequest(disclosedClaims = null)  // null = all
-        val vp = engine.createPresentation(listOf(vc), request)
-
-        assertEquals(1, vp.verifiableCredential.size)
-        // All 4 claims should still be present
-        assertEquals(4, vp.verifiableCredential.first().credentialSubject.claims.size)
+        val request = PresentationRequest(disclosedClaims = setOf("givenName"))
+        val ex = assertFailsWith<UnsupportedOperationException> {
+            engine.createPresentation(listOf(vc), request)
+        }
+        assertTrue(
+            "not supported by the underlying BBS implementation" in ex.message.orEmpty(),
+            "Failure must honestly explain the missing BBS capability, got: ${ex.message}",
+        )
     }
 
     @Test
-    fun `createPresentation with selective disclosure hides non-disclosed claims`() = runTest {
+    fun `engine capabilities do not advertise selective disclosure or presentations`() {
+        val capabilities = buildEngine().capabilities
+        assertFalse(capabilities.selectiveDisclosure, "selectiveDisclosure must not be advertised")
+        assertFalse(capabilities.zeroKnowledge, "zeroKnowledge must not be advertised")
+        assertFalse(capabilities.presentation, "presentation must not be advertised")
+    }
+
+    @Test
+    fun `verify rejects bbs-2023-derived proofs with an explicit unsupported reason`() = runTest {
         val kp = BbsCryptoSuite.generateKeyPair("bbs-key-9")
-        val engine = buildEngine(kp)
+        val engine = engineWithIssuerResolver(kp)
         val vc = engine.issue(buildRequest(kp))
 
-        // Disclose only givenName and degree
-        val request = PresentationRequest(disclosedClaims = setOf("givenName", "degree"))
-        val vp = engine.createPresentation(listOf(vc), request)
-
-        val presentedClaims = vp.verifiableCredential.first().credentialSubject.claims
-        assertEquals(
-            setOf("givenName", "degree"),
-            presentedClaims.keys,
-            "Only disclosed claims should be present in the presentation",
+        // Simulate a derived presentation produced by an earlier release.
+        val proof = vc.proof as CredentialProof.LinkedDataProof
+        val derivedVc = vc.copy(
+            proof = proof.copy(
+                additionalProperties = mapOf(
+                    "cryptosuite" to JsonPrimitive("bbs-2023-derived"),
+                    "disclosedIndices" to JsonPrimitive("0,1"),
+                ),
+            ),
         )
-        assertFalse("familyName" in presentedClaims, "familyName should not be disclosed")
-        assertFalse("gpa" in presentedClaims, "gpa should not be disclosed")
-    }
 
-    @Test
-    fun `createPresentation derived proof does not contain original BBS signature`() = runTest {
-        val kp = BbsCryptoSuite.generateKeyPair("bbs-key-10")
-        val engine = buildEngine(kp)
-        val vc = engine.issue(buildRequest(kp))
-
-        val originalProofValue = (vc.proof as CredentialProof.LinkedDataProof).proofValue
-
-        val request = PresentationRequest(disclosedClaims = setOf("givenName"))
-        val vp = engine.createPresentation(listOf(vc), request)
-
-        val derivedProofValue =
-            (vp.verifiableCredential.first().proof as CredentialProof.LinkedDataProof).proofValue
-
-        assertFalse(
-            derivedProofValue == originalProofValue,
-            "Derived proof value should differ from the original BBS+ signature",
+        val result = engine.verify(derivedVc, VerificationOptions())
+        val invalid = assertIs<VerificationResult.Invalid.InvalidProof>(result)
+        assertTrue(
+            "not supported by the underlying BBS implementation" in invalid.reason,
+            "Derived proofs must be rejected with the explicit unsupported reason, " +
+                "not a generic cryptosuite mismatch; got: ${invalid.reason}",
         )
-    }
-
-    @Test
-    fun `createPresentation derived proof has bbs-2023-derived cryptosuite`() = runTest {
-        val kp = BbsCryptoSuite.generateKeyPair("bbs-key-11")
-        val engine = buildEngine(kp)
-        val vc = engine.issue(buildRequest(kp))
-
-        val request = PresentationRequest(disclosedClaims = setOf("givenName"))
-        val vp = engine.createPresentation(listOf(vc), request)
-
-        val derivedProof =
-            vp.verifiableCredential.first().proof as CredentialProof.LinkedDataProof
-        val cryptosuite = (derivedProof.additionalProperties["cryptosuite"] as JsonPrimitive).content
-        assertEquals("bbs-2023-derived", cryptosuite)
+        assertTrue(
+            "bbs-2023-derived" in invalid.reason,
+            "Reason should name the rejected cryptosuite, got: ${invalid.reason}",
+        )
     }
 
     // -------------------------------------------------------------------------

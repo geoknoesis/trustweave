@@ -207,7 +207,13 @@ object BbsCryptoSuite {
      * Derive a ZK proof from a BBS+ signature that discloses only the messages at [disclosed].
      *
      * The derived proof is a fresh randomised commitment over the disclosed messages and the
-     * public key; it can be verified with [verifyDerivedProof] without the original signature.
+     * public key.
+     *
+     * **Not a real BBS proof.** This emulation cannot perform BLS12-381 pairing-based proof
+     * derivation; the resulting bytes are a one-way HMAC commitment that **no verifier can
+     * cryptographically validate** ([verifyDerivedProof] performs structural checks only).
+     * [Bbs2023ProofEngine] therefore refuses to build presentations from it and rejects
+     * `bbs-2023-derived` proofs at verification time.
      */
     fun deriveProof(
         signature: ByteArray,
@@ -242,10 +248,15 @@ object BbsCryptoSuite {
     }
 
     /**
-     * Verify a derived (selective disclosure) proof.
+     * Structurally check a derived (selective disclosure) proof.
      *
-     * Confirms that the [derivedProof] was generated from [publicKey] and that the
-     * [disclosedMessages] match what was committed to.
+     * **This is NOT cryptographic verification.** The proof bytes are a one-way expansion
+     * of an HMAC commitment whose inputs (the random `r1`) are not recoverable, so this
+     * method can only check sizes, compare [disclosedMessages] against the messages carried
+     * in the in-memory [derivedProof] object, and confirm the proof bytes are non-zero —
+     * any well-sized non-zero blob passes. It exists only for emulation-interface symmetry;
+     * callers must not treat a `true` result as proof validity. [Bbs2023ProofEngine]
+     * accordingly rejects derived proofs outright.
      */
     fun verifyDerivedProof(
         publicKey: ByteArray,

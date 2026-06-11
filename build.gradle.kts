@@ -233,6 +233,17 @@ subprojects {
                 apply(plugin = "maven-publish")
             }
 
+            // Publish -sources and -javadoc jars alongside the binary jar (Maven Central
+            // requires both; IDEs use the sources jar for navigation). Kotlin-only modules
+            // have no Java sources, so the javadoc task is NO-SOURCE and the -javadoc jar
+            // is empty — accepted practice for Kotlin libraries without pulling Dokka into
+            // the build. Both jars are added as variants of the "java" component, so the
+            // existing from(components["java"]) publication picks them up automatically.
+            extensions.findByType<org.gradle.api.plugins.JavaPluginExtension>()?.apply {
+                withSourcesJar()
+                withJavadocJar()
+            }
+
             // Configure Maven publishing
             configure<org.gradle.api.publish.PublishingExtension> {
                 publications {

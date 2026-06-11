@@ -5,7 +5,6 @@ import kotlinx.serialization.json.JsonPrimitive
 import org.slf4j.LoggerFactory
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.identifiers.CredentialId
-import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.CredentialProof
 import org.trustweave.credential.model.vc.CredentialSubject
 import org.trustweave.credential.model.vc.Issuer
@@ -18,6 +17,7 @@ import org.trustweave.credential.results.VerificationResult
 import org.trustweave.credential.spi.proof.ProofEngine
 import org.trustweave.credential.spi.proof.ProofEngineCapabilities
 import org.trustweave.credential.spi.proof.ProofEngineConfig
+import org.trustweave.core.exception.ConfigException
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.core.util.decodeBase58
 import org.trustweave.did.identifiers.Did
@@ -28,14 +28,15 @@ import java.util.UUID
 /**
  * W3C Data Integrity BBS Cryptosuite 2023 proof engine.
  *
- * Implements selective-disclosure and zero-knowledge proofs using the BBS-2023 cryptosuite
- * specification over the BLS12-381 curve.
+ * Implements base BBS-2023 credential signing and verification following the W3C BBS-2023
+ * cryptosuite data formats over the BLS12-381 curve. Selective-disclosure derived proofs
+ * are NOT supported by the underlying BBS implementation (see below).
  *
  * **Capabilities:**
  * - Issuance: signs all credential claims as a BBS+ signature over the claim set
  * - Verification: verifies the BBS+ signature against the public key resolved from the
  *   issuer's DID document (never from key material embedded in the proof itself)
- * - Presentation: derives a ZK proof disclosing only the requested subset of claims
+ * - Presentation / selective disclosure: **not supported** — see below
  *
  * **Configuration via [ProofEngineConfig]:**
  * | Key           | Type               | Description                                       |
@@ -44,8 +45,27 @@ import java.util.UUID
  * | `didResolver` | `DidResolver`      | Issuer DID resolver (required for verification);  |
  * |               |                    | also accepted via [ProofEngineConfig.didResolver] |
  *
- * If no `keyPair` is provided a fresh ephemeral key is generated on first `issue()` call
- * (useful for unit tests).
+ * If no `keyPair` is configured, [issue] fails with a [ConfigException]. Signing keys are
+ * never fabricated: a credential signed with an ephemeral key that is published in no DID
+ * document is permanently unverifiable by any third party. Verification is unaffected — it
+ * resolves the issuer key from the issuer's DID document.
+ *
+ * **Claim message encoding (breaking change, security fix):** each claim is signed as the
+ * injective byte message `len(keyBytes) || keyBytes || len(valueBytes) || valueBytes`
+ * (4-byte big-endian lengths, UTF-8 bytes); see [encodeClaimsAsMessages]. Earlier releases
+ * signed the ambiguous string `"key=value"`, under which distinct claim pairs such as
+ * `("a", "b=c")` and `("a=b", "c")` produced the same signed message and could be swapped
+ * without invalidating the signature (claim forgery). Credentials issued with the legacy
+ * encoding intentionally no longer verify — their signatures never unambiguously committed
+ * to the claims and were forgeable.
+ *
+ * **Derived proofs / presentations are not supported:** the underlying BBS implementation
+ * ([BbsCryptoSuite]) is an HMAC-based emulation — no real BLS12-381 pairing library is on
+ * the classpath — and it cannot produce or cryptographically verify unlinkable derived
+ * proofs (its `verifyDerivedProof` accepts any non-zero proof bytes). Therefore
+ * [createPresentation] fails fast with [UnsupportedOperationException] instead of emitting
+ * unverifiable pseudo-proofs, and [verify] rejects `cryptosuite=bbs-2023-derived` proofs
+ * with an explicit "not supported by the underlying BBS implementation" reason.
  *
  * **Verification key binding (fail-closed):**
  * 1. The proof's `verificationMethod` must be a DID URL rooted in the credential's issuer DID
@@ -63,30 +83,26 @@ class Bbs2023ProofEngine(
     private val logger = LoggerFactory.getLogger(Bbs2023ProofEngine::class.java)
 
     /**
-     * Lazily-initialised ephemeral key — created only when no explicit key pair is configured.
-     * Stored as a property so that a single engine instance uses the same ephemeral key for
-     * both `issue()` and `verify()`.
+     * The explicitly configured signing key pair, or `null` when the engine is
+     * verification-only. Ephemeral keys are never generated: an issuer key that no
+     * verifier can resolve from a DID document produces permanently unverifiable
+     * credentials, so [issue] fails fast instead.
      */
-    private val activeKeyPair: Bls12381KeyPair by lazy {
-        (config.properties["keyPair"] as? Bls12381KeyPair)
-            ?: run {
-                logger.warn(
-                    "No BLS12-381 key pair configured; generating ephemeral key for BBS-2023 engine. " +
-                        "Set config.properties[\"keyPair\"] for production use.",
-                )
-                BbsCryptoSuite.generateKeyPair("urn:bbs:ephemeral:${UUID.randomUUID()}")
-            }
-    }
+    private val configuredKeyPair: Bls12381KeyPair? =
+        config.properties["keyPair"] as? Bls12381KeyPair
 
     override val format = ProofSuiteId.BBS_2023
     override val formatName = "W3C Data Integrity BBS Cryptosuite 2023"
     override val formatVersion = "1.0"
 
+    // Selective disclosure / ZK / presentation are advertised as unsupported: the
+    // HMAC-based BbsCryptoSuite emulation cannot produce or verify real BBS derived
+    // proofs, and this engine refuses to emit unverifiable pseudo-proofs (see class KDoc).
     override val capabilities = ProofEngineCapabilities(
-        selectiveDisclosure = true,
-        zeroKnowledge = true,
+        selectiveDisclosure = false,
+        zeroKnowledge = false,
         revocation = true,
-        presentation = true,
+        presentation = false,
         predicates = false,
     )
 
@@ -94,14 +110,28 @@ class Bbs2023ProofEngine(
     // Issue
     // -------------------------------------------------------------------------
 
+    /**
+     * Issue a BBS-2023 credential signed with the configured issuer key pair.
+     *
+     * @throws ConfigException if no `keyPair` is configured — ephemeral signing keys are
+     *   never fabricated, because a credential signed with a key absent from every DID
+     *   document can never be verified by anyone
+     */
     override suspend fun issue(request: IssuanceRequest): VerifiableCredential {
         require(request.format == format) {
             "Request format ${request.format.value} does not match engine format ${format.value}"
         }
 
-        val keyPair = activeKeyPair
+        val keyPair = configuredKeyPair ?: throw ConfigException.InvalidFormat(
+            parseError = "No BLS12-381 key pair configured for BBS-2023 issuance. " +
+                "Provide config.properties[\"keyPair\"] (a Bls12381KeyPair whose public key " +
+                "is published in the issuer's DID document). Ephemeral signing keys are " +
+                "never fabricated: a credential signed with a key that no verifier can " +
+                "resolve is permanently unverifiable.",
+            field = "keyPair",
+        )
 
-        // Encode each claim as a message: "key=value" UTF-8 bytes
+        // Encode each claim as an injective length-prefixed message (see encodeClaimsAsMessages)
         val messages = encodeClaimsAsMessages(request.credentialSubject)
 
         logger.debug(
@@ -130,7 +160,7 @@ class Bbs2023ProofEngine(
             proofPurpose = "assertionMethod",
             proofValue = proofValue,
             additionalProperties = mapOf(
-                "cryptosuite" to JsonPrimitive("bbs-2023"),
+                "cryptosuite" to JsonPrimitive(BASE_CRYPTOSUITE),
             ),
         )
 
@@ -168,10 +198,24 @@ class Bbs2023ProofEngine(
 
         val cryptosuite = proof.additionalProperties["cryptosuite"]
             ?.let { (it as? JsonPrimitive)?.content }
-        if (cryptosuite != "bbs-2023") {
+        if (cryptosuite == DERIVED_CRYPTOSUITE) {
+            // Honest, explicit rejection (not a generic cryptosuite mismatch): the
+            // underlying BBS implementation is an HMAC-based emulation without real
+            // BLS12-381 pairings and cannot cryptographically verify derived proofs.
             return invalidProof(
                 credential,
-                "Expected cryptosuite=bbs-2023 but got: $cryptosuite",
+                "Derived-proof verification (cryptosuite=$DERIVED_CRYPTOSUITE) is not " +
+                    "supported by the underlying BBS implementation: BbsCryptoSuite is an " +
+                    "HMAC-based emulation without real BLS12-381 pairing operations and " +
+                    "cannot cryptographically verify unlinkable derived proofs. This engine " +
+                    "also refuses to create such proofs (createPresentation fails fast). " +
+                    "Integrate a real BBS library to enable selective disclosure.",
+            )
+        }
+        if (cryptosuite != BASE_CRYPTOSUITE) {
+            return invalidProof(
+                credential,
+                "Expected cryptosuite=$BASE_CRYPTOSUITE but got: $cryptosuite",
             )
         }
 
@@ -213,7 +257,7 @@ class Bbs2023ProofEngine(
                     issuedAt = credential.issuanceDate ?: credential.validFrom ?: kotlinx.datetime.Clock.System.now(),
                     expiresAt = credential.expirationDate ?: credential.validUntil,
                     formatMetadata = mapOf(
-                        "cryptosuite" to JsonPrimitive("bbs-2023"),
+                        "cryptosuite" to JsonPrimitive(BASE_CRYPTOSUITE),
                         "verificationMethod" to JsonPrimitive(proof.verificationMethod),
                     ),
                 )
@@ -233,35 +277,34 @@ class Bbs2023ProofEngine(
     }
 
     // -------------------------------------------------------------------------
-    // Create presentation (selective disclosure)
+    // Create presentation (selective disclosure) — unsupported, fails fast
     // -------------------------------------------------------------------------
 
+    /**
+     * BBS selective-disclosure presentations are **not supported** by this engine.
+     *
+     * Real BBS proof derivation requires the original signature plus the ISSUER's public
+     * key and BLS12-381 pairing operations. The underlying implementation
+     * ([BbsCryptoSuite]) is an HMAC-based emulation: the "derived proofs" it can produce
+     * are not real BBS proofs — no verifier (including this engine) can cryptographically
+     * validate them, and its `verifyDerivedProof` accepts any non-zero proof bytes.
+     * Earlier releases silently derived such pseudo-proofs (and additionally keyed them
+     * with the HOLDER's key instead of the issuer's); this method now fails fast instead
+     * of emitting unverifiable presentations.
+     *
+     * @throws UnsupportedOperationException always
+     */
     override suspend fun createPresentation(
         credentials: List<VerifiableCredential>,
         request: PresentationRequest,
     ): VerifiablePresentation {
-        require(credentials.isNotEmpty()) { "At least one credential is required for a presentation" }
-
-        val keyPair = activeKeyPair
-        val disclosedClaimNames: Set<String>? = request.disclosedClaims
-
-        val derivedCredentials = credentials.map { vc ->
-            deriveCredentialProof(vc, keyPair, disclosedClaimNames)
-        }
-
-        val holder = derivedCredentials.first().credentialSubject.id
-            ?: throw IllegalArgumentException("Cannot create presentation: credential subject has no id")
-
-        return VerifiablePresentation(
-            context = listOf(
-                "https://www.w3.org/2018/credentials/v1",
-                "https://w3id.org/security/bbs/v1",
-            ),
-            type = listOf(CredentialType.Custom("VerifiablePresentation")),
-            holder = holder,
-            verifiableCredential = derivedCredentials,
-            challenge = request.proofOptions?.challenge,
-            domain = request.proofOptions?.domain,
+        throw UnsupportedOperationException(
+            "BBS-2023 derived-proof presentations are not supported by the underlying BBS " +
+                "implementation: BbsCryptoSuite is an HMAC-based emulation without real " +
+                "BLS12-381 pairing operations, so the derived proofs it would produce are " +
+                "not verifiable BBS proofs (no verifier can cryptographically validate " +
+                "them). Failing fast instead of emitting unverifiable presentations. " +
+                "Integrate a real BBS/BLS12-381 library to enable selective disclosure.",
         )
     }
 
@@ -284,14 +327,48 @@ class Bbs2023ProofEngine(
     // -------------------------------------------------------------------------
 
     /**
-     * Encode a [CredentialSubject]'s claims as UTF-8 byte messages for BBS+ signing.
+     * Encode a [CredentialSubject]'s claims as byte messages for BBS+ signing.
      *
-     * Each entry is serialised as `"key=value"` with keys sorted for determinism.
+     * Each entry (keys sorted for determinism) is encoded injectively as:
+     *
+     * ```
+     * len(keyBytes) || keyBytes || len(valueBytes) || valueBytes
+     * ```
+     *
+     * where `len(x)` is the length of `x` as an unsigned 4-byte big-endian integer,
+     * `keyBytes` is the UTF-8 encoding of the claim key, and `valueBytes` is the UTF-8
+     * encoding of the claim value's canonical JSON serialisation
+     * ([kotlinx.serialization.json.JsonElement.toString]). Because every component is
+     * length-prefixed, the encoding is injective: distinct `(key, value)` pairs always
+     * produce distinct messages, so a signature commits unambiguously to each claim.
+     *
+     * **Breaking change (security fix):** earlier releases encoded each claim as the
+     * ambiguous UTF-8 string `"key=value"`, under which distinct claim pairs — e.g.
+     * `("a", "b=c")` and `("a=b", "c")` — could produce identical signed messages,
+     * allowing claim forgery without invalidating the signature. Credentials issued with
+     * the legacy encoding intentionally no longer verify: their signatures never
+     * unambiguously committed to the claims and were forgeable.
      */
     private fun encodeClaimsAsMessages(subject: CredentialSubject): List<ByteArray> =
         subject.claims.entries.sortedBy { it.key }.map { (k, v) ->
-            "$k=${v}".toByteArray(Charsets.UTF_8)
+            encodeClaimMessage(k, v.toString())
         }
+
+    /** Injective `len || key || len || value` encoding of a single claim (see above). */
+    private fun encodeClaimMessage(key: String, value: String): ByteArray {
+        val keyBytes = key.toByteArray(Charsets.UTF_8)
+        val valueBytes = value.toByteArray(Charsets.UTF_8)
+        return bigEndianLength(keyBytes.size) + keyBytes +
+            bigEndianLength(valueBytes.size) + valueBytes
+    }
+
+    /** Encode [size] as an unsigned 4-byte big-endian length prefix. */
+    private fun bigEndianLength(size: Int): ByteArray = byteArrayOf(
+        (size ushr 24).toByte(),
+        (size ushr 16).toByte(),
+        (size ushr 8).toByte(),
+        size.toByte(),
+    )
 
     /**
      * Build the verification method ID string for a credential proof.
@@ -450,66 +527,6 @@ class Bbs2023ProofEngine(
         else -> null
     }
 
-    private fun deriveCredentialProof(
-        vc: VerifiableCredential,
-        keyPair: Bls12381KeyPair,
-        disclosedClaimNames: Set<String>?,
-    ): VerifiableCredential {
-        val originalProof = vc.proof as? CredentialProof.LinkedDataProof
-            ?: return vc  // No BBS proof to derive from — return as-is
-
-        val allClaims = vc.credentialSubject.claims
-        val allMessages = encodeClaimsAsMessages(vc.credentialSubject)
-        val claimKeys = allClaims.keys.sorted()
-
-        val disclosedIndices: Set<Int> = if (disclosedClaimNames == null) {
-            claimKeys.indices.toSet()
-        } else {
-            claimKeys.mapIndexedNotNull { idx, key ->
-                if (key in disclosedClaimNames) idx else null
-            }.toSet()
-        }
-
-        val signatureBytes = try {
-            BbsCryptoSuite.decodeBase64Url(originalProof.proofValue)
-        } catch (_: Exception) {
-            return vc
-        }
-        if (signatureBytes.size != BbsCryptoSuite.SIGNATURE_SIZE) return vc
-
-        val derivedProof = BbsCryptoSuite.deriveProof(
-            signature = signatureBytes,
-            publicKey = keyPair.publicKeyBytes,
-            messages = allMessages.ifEmpty { listOf(byteArrayOf(0x00)) },
-            disclosed = disclosedIndices,
-        )
-
-        val disclosedClaims = if (disclosedClaimNames != null) {
-            allClaims.filterKeys { it in disclosedClaimNames }
-        } else {
-            allClaims
-        }
-        val filteredSubject = vc.credentialSubject.copy(claims = disclosedClaims)
-
-        val derivedProofValue = BbsCryptoSuite.encodeBase64Url(derivedProof.proofBytes)
-        val derivedLinkedDataProof = CredentialProof.LinkedDataProof(
-            type = "DataIntegrityProof",
-            created = Clock.System.now(),
-            verificationMethod = originalProof.verificationMethod,
-            proofPurpose = "assertionMethod",
-            proofValue = derivedProofValue,
-            additionalProperties = mapOf(
-                "cryptosuite" to JsonPrimitive("bbs-2023-derived"),
-                "disclosedIndices" to JsonPrimitive(disclosedIndices.sorted().joinToString(",")),
-            ),
-        )
-
-        return vc.copy(
-            credentialSubject = filteredSubject,
-            proof = derivedLinkedDataProof,
-        )
-    }
-
     private fun invalidProof(
         vc: VerifiableCredential,
         reason: String,
@@ -527,6 +544,16 @@ class Bbs2023ProofEngine(
         }
 
     companion object {
+        /** Data Integrity cryptosuite identifier for base BBS-2023 proofs. */
+        const val BASE_CRYPTOSUITE = "bbs-2023"
+
+        /**
+         * Cryptosuite identifier earlier releases stamped on derived (selective-disclosure)
+         * proofs. Such proofs are explicitly rejected by [verify]: the underlying
+         * HMAC-emulated [BbsCryptoSuite] cannot cryptographically verify them.
+         */
+        const val DERIVED_CRYPTOSUITE = "bbs-2023-derived"
+
         /** Size in bytes of a compressed BLS12-381 G2 public key. */
         const val BLS_G2_PUBLIC_KEY_SIZE = 96
 

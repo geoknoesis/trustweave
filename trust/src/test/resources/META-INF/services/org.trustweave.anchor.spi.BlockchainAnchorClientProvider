@@ -1,0 +1,2 @@
+org.trustweave.trust.spi.BrokenSpiIsolationAnchorClientProvider
+org.trustweave.trust.spi.WorkingSpiIsolationAnchorClientProvider

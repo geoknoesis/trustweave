@@ -12,65 +12,54 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * Implementation of did:btcr method (Bitcoin Reference).
+ * **STUB — NOT IMPLEMENTED.** Skeleton for the did:btcr method (Bitcoin Reference).
  *
- * did:btcr uses Bitcoin blockchain to anchor DID documents:
+ * No operation works: [createDid] throws and [resolveDid] returns a not-implemented
+ * resolution failure. A real implementation would require Bitcoin node access and
+ * OP_RETURN transaction handling, neither of which exists here.
+ *
+ * This class is intentionally NOT registered for ServiceLoader discovery (no
+ * `META-INF/services` entry), so it never silently masquerades as a working DID method.
+ * It can only be instantiated explicitly.
+ *
+ * did:btcr (when implemented) uses the Bitcoin blockchain to anchor DID documents:
  * - Format: `did:btcr:{tx-index}`
  * - Documents anchored to Bitcoin blockchain via OP_RETURN
  * - Uses Bitcoin transaction index for DID identifier
- * - Supports Bitcoin mainnet and testnet
- *
- * **Note:** This is a placeholder implementation. Full implementation requires
- * Bitcoin node access and OP_RETURN transaction handling.
- *
- * **Example Usage:**
- * ```kotlin
- * val kms = InMemoryKeyManagementService()
- * val method = BtcrDidMethod(kms)
- *
- * val document = method.createDid()
- * val result = method.resolveDid(document.id)
- * ```
  */
 class BtcrDidMethod(
     kms: KeyManagementService
 ) : AbstractDidMethod("btcr", kms) {
 
     override suspend fun createDid(options: DidCreationOptions): DidDocument = withContext(Dispatchers.IO) {
-        // TODO: Implement Bitcoin Reference DID creation
-        // 1. Generate keys using KMS
-        // 2. Create DID document
-        // 3. Create Bitcoin transaction with OP_RETURN containing document hash
-        // 4. Return DID with transaction index
-
         throw TrustWeaveException.Unknown(
             code = "BTCR_NOT_IMPLEMENTED",
-            message = "Bitcoin Reference DID method requires Bitcoin node integration. " +
-            "Structure is ready for implementation."
+            message = "did:btcr is a stub and is not implemented: DID creation would require " +
+                "Bitcoin node integration (OP_RETURN anchoring), which does not exist."
         )
     }
 
     override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
-
-            // TODO: Implement Bitcoin Reference DID resolution
-            // 1. Extract transaction index from DID
-            // 2. Get transaction from Bitcoin blockchain
-            // 3. Extract document hash from OP_RETURN
-            // 4. Resolve document from IPFS or other storage
-            // 5. Parse and return DID document
-
-            throw TrustWeaveException.Unknown(
-                code = "BTCR_NOT_IMPLEMENTED",
-                message = "Bitcoin Reference DID resolution requires Bitcoin node integration. " +
-                "Structure is ready for implementation."
-            )
-        } catch (e: TrustWeaveException) {
-            DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
         } catch (e: Exception) {
-            DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
+            return@withContext DidMethodUtils.createErrorResolutionResult(
+                "invalidDid",
+                e.message,
+                method,
+                did.value
+            )
         }
+
+        // Honest not-implemented failure (internal-error class), never "invalidDid":
+        // the DID may be perfectly valid — this stub simply cannot resolve anything.
+        DidMethodUtils.createErrorResolutionResult(
+            "notImplemented",
+            "did:btcr is a stub and is not implemented: resolution would require Bitcoin " +
+                "node integration, which does not exist.",
+            method,
+            did.value
+        )
     }
 }
 

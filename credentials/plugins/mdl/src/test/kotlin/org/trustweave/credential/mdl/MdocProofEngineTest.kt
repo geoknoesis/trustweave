@@ -43,7 +43,7 @@ class MdocProofEngineTest {
     private val holderDid = Did("did:example:holder")
 
     @BeforeEach
-    fun setup() = runBlocking {
+    fun setup() = runBlocking<Unit> {
         kms = InMemoryKeyManagementService()
         engine = MdocProofEngine(kms)
 
@@ -53,7 +53,7 @@ class MdocProofEngineTest {
     }
 
     @Test
-    fun `issue produces VerifiableCredential with MdocProof`() = runBlocking {
+    fun `issue produces VerifiableCredential with MdocProof`() = runBlocking<Unit> {
         val request = buildIssuanceRequest()
         val vc = engine.issue(request)
 
@@ -66,7 +66,7 @@ class MdocProofEngineTest {
     }
 
     @Test
-    fun `issued credential encodes all claims in IssuerSignedItems`() = runBlocking {
+    fun `issued credential encodes all claims in IssuerSignedItems`() = runBlocking<Unit> {
         val request = buildIssuanceRequest()
         val vc = engine.issue(request)
 
@@ -84,7 +84,7 @@ class MdocProofEngineTest {
     }
 
     @Test
-    fun `MSO valueDigests match re-encoded IssuerSignedItem digests`() = runBlocking {
+    fun `MSO valueDigests match re-encoded IssuerSignedItem digests`() = runBlocking<Unit> {
         val request = buildIssuanceRequest()
         val vc = engine.issue(request)
 
@@ -125,7 +125,7 @@ class MdocProofEngineTest {
     }
 
     @Test
-    fun `createPresentation wraps credential in VerifiablePresentation`() = runBlocking {
+    fun `createPresentation wraps credential in VerifiablePresentation`() = runBlocking<Unit> {
         val request = buildIssuanceRequest()
         val vc = engine.issue(request)
 
@@ -136,7 +136,7 @@ class MdocProofEngineTest {
     }
 
     @Test
-    fun `createPresentation with selective disclosure filters claims`() = runBlocking {
+    fun `createPresentation with selective disclosure filters claims`() = runBlocking<Unit> {
         val request = buildIssuanceRequest()
         val vc = engine.issue(request)
 

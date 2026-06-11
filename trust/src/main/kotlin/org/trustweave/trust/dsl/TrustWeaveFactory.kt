@@ -23,9 +23,11 @@ import org.trustweave.trust.dsl.builders.AnchorConfig
 import org.trustweave.trust.dsl.builders.DidMethodConfig
 import org.trustweave.trust.dsl.builders.DomainConfig
 import org.trustweave.trust.services.DefaultKmsService
+import org.trustweave.trust.services.DefaultTrustRegistryFactory
 import org.trustweave.trust.services.TrustRegistryFactory
 import org.trustweave.anchor.BlockchainAnchorRegistry
 import org.slf4j.LoggerFactory
+import java.util.ServiceConfigurationError
 import java.util.ServiceLoader
 
 /**
@@ -239,12 +241,25 @@ internal object TrustWeaveFactory {
         val existing = didRegistry[methodName]
         if (existing != null) return existing
 
-        val providers = ServiceLoader.load(DidMethodProvider::class.java)
-        for (provider in providers) {
-            if (methodName in provider.supportedMethods && provider.hasRequiredEnvironmentVariables()) {
-                val method = provider.create(methodName, config.toOptions(kms))
-                if (method != null) return method
+        for (provider in loadProvidersIsolated(DidMethodProvider::class.java)) {
+            val method = try {
+                if (methodName in provider.supportedMethods && provider.hasRequiredEnvironmentVariables()) {
+                    provider.create(methodName, config.toOptions(kms))
+                } else {
+                    null
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // One broken provider must not prevent the remaining providers from being
+                // tried (mirrors DidMethodRegistry.autoRegister's collecting behavior).
+                logger.warn(
+                    "DidMethodProvider {} failed for method '{}': {} — skipping",
+                    provider::class.java.name, methodName, e.message ?: e::class.java.simpleName, e
+                )
+                null
             }
+            if (method != null) return method
         }
 
         throw IllegalStateException(
@@ -259,21 +274,74 @@ internal object TrustWeaveFactory {
     ): BlockchainAnchorClient {
         val providerName = config.provider ?: chainId.substringBefore(":")
 
-        val providers = ServiceLoader.load(BlockchainAnchorClientProvider::class.java)
-        val provider = providers.find {
-            it.name == providerName &&
-            (chainId in it.supportedChains || it.supportedChains.isEmpty()) &&
-            it.hasRequiredEnvironmentVariables()
-        } ?: throw IllegalStateException(
+        var sawMatchingProvider = false
+        for (provider in loadProvidersIsolated(BlockchainAnchorClientProvider::class.java)) {
+            val client = try {
+                val matches = provider.name == providerName &&
+                    (chainId in provider.supportedChains || provider.supportedChains.isEmpty()) &&
+                    provider.hasRequiredEnvironmentVariables()
+                if (matches) {
+                    sawMatchingProvider = true
+                    provider.create(chainId, config.options)
+                } else {
+                    null
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // Skip broken providers so one bad SPI registration is not fatal.
+                logger.warn(
+                    "BlockchainAnchorClientProvider {} failed for chain '{}': {} — skipping",
+                    provider::class.java.name, chainId, e.message ?: e::class.java.simpleName, e
+                )
+                null
+            }
+            if (client != null) return client
+        }
+
+        if (sawMatchingProvider) {
+            throw IllegalStateException(
+                "Provider '$providerName' does not support chain '$chainId' " +
+                "(create returned null or failed for every matching provider)."
+            )
+        }
+        throw IllegalStateException(
             "Anchor provider '$providerName' not found for chain '$chainId'. " +
             "Ensure the provider is on the classpath."
         )
+    }
 
-        return provider.create(chainId, config.options)
-            ?: throw IllegalStateException(
-                "Provider '$providerName' does not support chain '$chainId'. " +
-                "Supported chains: ${provider.supportedChains}"
-            )
+    /**
+     * Loads SPI providers with per-provider error isolation: a provider whose class cannot
+     * be loaded/instantiated ([ServiceConfigurationError]) is logged and skipped instead of
+     * aborting discovery. If the underlying iteration itself becomes poisoned (e.g. a
+     * malformed `META-INF/services` file makes `hasNext` fail), the providers discovered so
+     * far are returned rather than failing the whole build.
+     */
+    private fun <T : Any> loadProvidersIsolated(serviceClass: Class<T>): List<T> {
+        val providers = mutableListOf<T>()
+        val iterator = ServiceLoader.load(serviceClass).iterator()
+        while (true) {
+            val hasNext = try {
+                iterator.hasNext()
+            } catch (e: ServiceConfigurationError) {
+                logger.warn(
+                    "SPI discovery for {} aborted after {} provider(s): {}",
+                    serviceClass.simpleName, providers.size, e.message, e
+                )
+                false
+            }
+            if (!hasNext) break
+            try {
+                providers += iterator.next()
+            } catch (e: ServiceConfigurationError) {
+                logger.warn(
+                    "Skipping broken {} SPI provider: {}",
+                    serviceClass.simpleName, e.message, e
+                )
+            }
+        }
+        return providers
     }
 
     private fun resolveRevocationManager(
@@ -294,9 +362,15 @@ internal object TrustWeaveFactory {
         providerName: String,
         factory: TrustRegistryFactory?
     ): TrustRegistry {
-        val f = factory ?: throw IllegalStateException(
-            "TrustRegistry factory is required. Provide it via Builder.factories(trustRegistryFactory = ...)"
-        )
+        // No factory supplied: fall back to the built-in in-memory registry for the
+        // in-memory provider names so `TrustWeave.quickStart()` works out of the box.
+        val f = factory ?: when (providerName) {
+            in DefaultTrustRegistryFactory.IN_MEMORY_PROVIDERS -> DefaultTrustRegistryFactory
+            else -> throw IllegalStateException(
+                "TrustRegistry factory is required for provider '$providerName'. " +
+                    "Provide it via Builder.factories(trustRegistryFactory = ...)"
+            )
+        }
         return f.create(providerName)
     }
 

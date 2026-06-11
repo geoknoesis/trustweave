@@ -144,24 +144,33 @@ internal object ProofEngineUtils {
      * base64url without a multibase prefix is accepted for backward compatibility with
      * credentials issued by earlier TrustWeave versions.
      *
-     * Because a legacy raw-base64url value can coincidentally start with `z`/`u`, every
-     * plausible decoding is attempted and the one yielding a well-formed Ed25519
-     * signature ([SecurityConstants.ED25519_SIGNATURE_LENGTH_BYTES] bytes) is preferred;
-     * signature verification remains the final authority. Returns `null` (fail-closed)
-     * if nothing decodes.
+     * Because a legacy raw-base64url value can coincidentally start with `z`/`u`, the
+     * plausible decodings are attempted in canonical-first order (multibase `z`, then
+     * multibase `u`, then legacy raw base64url). **Every accepted decoding must yield
+     * exactly [SecurityConstants.ED25519_SIGNATURE_LENGTH_BYTES] (64) bytes** — a
+     * decoding of any other length is rejected outright and never returned, so callers
+     * can never be handed a malformed candidate. Returns `null` (fail-closed) if no
+     * decoding yields a well-formed Ed25519 signature; signature verification remains
+     * the final authority on the returned bytes.
      */
     fun decodeEd25519ProofValue(proofValue: String): ByteArray? {
         val candidates = mutableListOf<ByteArray>()
         fun attempt(decoder: () -> ByteArray) {
-            try {
-                candidates += decoder()
+            val decoded = try {
+                decoder()
             } catch (_: Exception) {
                 // Not decodable in this encoding — try the next candidate.
+                return
+            }
+            // Canonicality: only an exactly-64-byte decoding is a plausible Ed25519
+            // signature; anything else is rejected, not passed along.
+            if (decoded.size == SecurityConstants.ED25519_SIGNATURE_LENGTH_BYTES) {
+                candidates += decoded
             }
         }
         when {
             proofValue.startsWith("z") -> {
-                attempt { proofValue.substring(1).decodeBase58() }
+                attempt { proofValue.substring(1).decodeBase58() } // canonical (suite-required)
                 attempt { Base64.getUrlDecoder().decode(proofValue) } // legacy raw base64url
             }
             proofValue.startsWith("u") -> {
@@ -170,8 +179,7 @@ internal object ProofEngineUtils {
             }
             else -> attempt { Base64.getUrlDecoder().decode(proofValue) }
         }
-        return candidates.firstOrNull { it.size == SecurityConstants.ED25519_SIGNATURE_LENGTH_BYTES }
-            ?: candidates.firstOrNull()
+        return candidates.firstOrNull()
     }
 
     /**

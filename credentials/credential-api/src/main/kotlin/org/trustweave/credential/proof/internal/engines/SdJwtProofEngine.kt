@@ -46,7 +46,9 @@ import java.time.Instant as JavaInstant
  * selective disclosure support. Each credential subject claim is individually disclosable:
  *
  * - **Issue**: Claims are replaced by `_sd` hashes in the JWT; the raw disclosure strings
- *   are stored in [CredentialProof.SdJwtVcProof.disclosures].
+ *   are stored in [CredentialProof.SdJwtVcProof.disclosures]. When the credential subject
+ *   id is a DID, a `cnf` claim (RFC 7800, kid-style) binds the credential to that holder
+ *   DID for presentation-time key binding.
  * - **Verify**: Disclosure hashes are verified against the `_sd` array in the JWT claims.
  * - **Present**: Holder selects which disclosures to reveal; a Key Binding JWT (KB-JWT)
  *   is appended when a `challenge` is provided in [ProofOptions].
@@ -114,6 +116,19 @@ internal class SdJwtProofEngine(
 
         request.validUntil?.let {
             claimsBuilder.expirationTime(Date.from(JavaInstant.ofEpochSecond(it.epochSeconds)))
+        }
+
+        // Holder binding (RFC 7800 / SD-JWT VC): when the issuance request identifies the
+        // holder — a DID-valued credentialSubject.id — embed a `cnf` claim with kid-style
+        // binding to that DID. Presentation verification then REQUIRES the Key Binding JWT
+        // to be signed by an authentication-authorized key of this DID, regardless of what
+        // the (unsigned, attacker-rewritable) presentation envelope claims the holder is.
+        // When no holder DID is known (subject id absent or not a DID), `cnf` is omitted
+        // and presentations of the credential fall back to the weaker envelope-holder
+        // binding (see PresentationVerification.verifySdJwtKeyBinding). JWK-style `cnf`
+        // binding is not emitted: issuance requests carry no holder JWK.
+        request.credentialSubject.id?.takeIf { it.isDid }?.let { holder ->
+            claimsBuilder.claim("cnf", mapOf("kid" to holder.value))
         }
 
         val header = JWSHeader.Builder(JWSAlgorithm.EdDSA).keyID(keyId).build()

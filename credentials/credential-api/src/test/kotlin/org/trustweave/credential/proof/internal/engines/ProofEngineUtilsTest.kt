@@ -415,6 +415,60 @@ class ProofEngineUtilsTest {
         }
     }
 
+    // --- decodeEd25519ProofValue canonicality ---------------------------------------------
+
+    @Test
+    fun `decodeEd25519ProofValue accepts canonical multibase z encoding of exactly 64 bytes`() {
+        val signature = ByteArray(64) { it.toByte() }
+        val encoded = ProofEngineUtils.encodeEd25519ProofValue(signature)
+
+        assertTrue(encoded.startsWith("z"), "Canonical encoding must be multibase base58-btc")
+        assertContentEquals(signature, ProofEngineUtils.decodeEd25519ProofValue(encoded))
+    }
+
+    @Test
+    fun `decodeEd25519ProofValue accepts multibase u and legacy raw base64url of exactly 64 bytes`() {
+        val signature = ByteArray(64) { (it * 3).toByte() }
+        val b64 = Base64.getUrlEncoder().withoutPadding().encodeToString(signature)
+
+        assertContentEquals(
+            signature, ProofEngineUtils.decodeEd25519ProofValue("u$b64"),
+            "Multibase 'u' (base64url) must be accepted at 64 bytes"
+        )
+        assertContentEquals(
+            signature, ProofEngineUtils.decodeEd25519ProofValue(b64),
+            "Legacy raw base64url must be accepted at 64 bytes"
+        )
+    }
+
+    @Test
+    fun `decodeEd25519ProofValue rejects wrong-length candidates in every encoding`() {
+        val b64 = Base64.getUrlEncoder().withoutPadding()
+        for (length in listOf(0, 1, 32, 63, 65, 128)) {
+            val bytes = ByteArray(length) { 0x11 }
+            assertNull(
+                ProofEngineUtils.decodeEd25519ProofValue("z" + bytes.encodeBase58()),
+                "multibase z decoding of $length bytes must be rejected (not 64)"
+            )
+            assertNull(
+                ProofEngineUtils.decodeEd25519ProofValue("u" + b64.encodeToString(bytes)),
+                "multibase u decoding of $length bytes must be rejected (not 64)"
+            )
+            // Avoid raw values that coincidentally start with the multibase prefixes:
+            // 0x11-filled arrays encode to base64url starting with 'E'.
+            assertNull(
+                ProofEngineUtils.decodeEd25519ProofValue(b64.encodeToString(bytes)),
+                "legacy raw base64url decoding of $length bytes must be rejected (not 64)"
+            )
+        }
+    }
+
+    @Test
+    fun `decodeEd25519ProofValue fails closed on undecodable input`() {
+        assertNull(ProofEngineUtils.decodeEd25519ProofValue("z!!!not-base58!!!"))
+        assertNull(ProofEngineUtils.decodeEd25519ProofValue("u%%%not-base64url%%%"))
+    }
+
     // --- helpers ------------------------------------------------------------------------
 
     private fun multibaseVerificationMethod(multibase: String): VerificationMethod =

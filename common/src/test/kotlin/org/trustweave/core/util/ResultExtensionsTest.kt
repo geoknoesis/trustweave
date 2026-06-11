@@ -1,9 +1,17 @@
 package org.trustweave.core.util
 
 import org.trustweave.core.exception.TrustWeaveException
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.yield
 import org.junit.jupiter.api.Test
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.test.*
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Comprehensive tests for ResultExtensions.
@@ -330,6 +338,94 @@ class ResultExtensionsTest {
 
         assertTrue(combined.isFailure)
         assertNotNull(combined.exceptionOrNull())
+    }
+
+    // ===== Cancellation guards: helpers must never capture CancellationException =====
+
+    @Test
+    fun `trustweaveCatching rethrows CancellationException instead of capturing it`() = runBlocking {
+        assertFailsWith<CancellationException> {
+            trustweaveCatching<String> {
+                throw CancellationException("cancelled")
+            }
+        }
+        Unit
+    }
+
+    @Test
+    fun `trustweaveCatching rethrows timeout from enclosing withTimeout`() = runBlocking {
+        // An enclosing withTimeout cancels the body with TimeoutCancellationException;
+        // capturing it in a Result would break the timeout. It must propagate.
+        assertFailsWith<TimeoutCancellationException> {
+            withTimeout(50.milliseconds) {
+                trustweaveCatching {
+                    delay(10_000)
+                    "unreachable"
+                }
+            }
+        }
+        Unit
+    }
+
+    @Test
+    fun `trustweaveCatching does not capture cancellation of the calling coroutine`() = runBlocking {
+        var capturedCancellation = false
+        val job = launch {
+            val result = trustweaveCatching { delay(10_000) }
+            // Unreachable when cancellation propagates correctly; reaching it means the
+            // CancellationException was captured into the Result.
+            capturedCancellation = result.isFailure
+        }
+        yield() // let the job suspend inside delay
+        job.cancelAndJoin()
+        assertTrue(job.isCancelled)
+        assertFalse(capturedCancellation, "trustweaveCatching captured cancellation into a Result")
+    }
+
+    @Test
+    fun `mapSequential rethrows CancellationException from transform`() = runBlocking {
+        assertFailsWith<CancellationException> {
+            listOf(1, 2, 3).mapSequential<Int, Int> {
+                throw CancellationException("cancelled")
+            }
+        }
+        Unit
+    }
+
+    @Test
+    fun `mapSequential does not capture cancellation of the calling coroutine`() = runBlocking {
+        var capturedCancellation = false
+        val job = launch {
+            val result = listOf(1, 2, 3).mapSequential {
+                delay(10_000)
+                Result.success(it)
+            }
+            capturedCancellation = result.isFailure
+        }
+        yield()
+        job.cancelAndJoin()
+        assertTrue(job.isCancelled)
+        assertFalse(capturedCancellation, "mapSequential captured cancellation into a Result")
+    }
+
+    @Test
+    fun `combine rethrows CancellationException held in a failed Result`() {
+        val results = listOf(Result.failure<Int>(CancellationException("cancelled")))
+
+        assertFailsWith<CancellationException> {
+            results.combine { it.sum() }
+        }
+    }
+
+    @Test
+    fun `getOrThrowException rethrows CancellationException without conversion`() {
+        val cancellation = CancellationException("cancelled")
+        val result: Result<String> = Result.failure(cancellation)
+
+        val thrown = assertFailsWith<CancellationException> {
+            result.getOrThrowException()
+        }
+        assertSame(cancellation, thrown)
     }
 }
 

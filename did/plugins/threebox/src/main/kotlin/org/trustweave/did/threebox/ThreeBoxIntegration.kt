@@ -7,7 +7,9 @@ import org.trustweave.did.base.AbstractDidMethodProvider
 /**
  * SPI provider for did:3 (3Box/Identity) method.
  *
- * Automatically discovered via Java ServiceLoader when the module is on the classpath.
+ * **STUB — NOT IMPLEMENTED.** [ThreeBoxDidMethod] is a non-functional skeleton, so this
+ * provider is intentionally NOT registered in `META-INF/services` and is never picked up
+ * by ServiceLoader discovery. It exists only for explicit, opt-in construction.
  */
 class ThreeBoxIntegration : AbstractDidMethodProvider() {
 

@@ -26,10 +26,15 @@ import java.util.Base64
 /**
  * Fortanix Data Security Manager (DSM) implementation of KeyManagementService.
  *
- * Supports all Fortanix DSM-compatible algorithms:
- * - Ed25519, secp256k1, P-256/P-384/P-521, RSA-2048/3072/4096
+ * **⚠️ EXPERIMENTAL — UNVERIFIED AGAINST A REAL ENDPOINT ⚠️**
  *
- * Uses Fortanix DSM REST API for key operations.
+ * This implementation was written against the public Fortanix DSM REST API documentation
+ * but has never been validated against a live DSM instance. Request/response shapes,
+ * endpoint paths and algorithm mappings may not match actual server behavior. Do not use
+ * in production without integration-testing against a real Fortanix DSM deployment first.
+ *
+ * Algorithms this code was written to target (unverified):
+ * - Ed25519, secp256k1, P-256/P-384/P-521, RSA-2048/3072/4096
  */
 class FortanixKeyManagementService(
     private val config: FortanixKmsConfig,

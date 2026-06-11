@@ -7,13 +7,19 @@ plugins {
 
 dependencies {
     implementation(kotlin("reflect"))
-    implementation(project(":common"))         // Root-level common (exceptions, common utilities, JSON)
-    implementation(project(":credentials:credential-api"))  // Credential DSLs and services
-    implementation(project(":wallet:wallet-core"))      // Wallet interfaces and DSLs
-    implementation(project(":anchors:anchor-core"))     // BlockchainAnchorClientFactory
-    implementation(project(":did:did-core"))         // DID DSLs and services
-    implementation(project(":kms:kms-core"))         // KMS service interfaces
-    implementation(project(":contract"))              // Smart contract services
+    // The facade's public API exposes types from all five domain core modules plus common
+    // (e.g. TrustWeave.verify returns credential-api's VerificationResult, getKms() returns
+    // kms-core's KeyManagementService, blockchains is anchor-core's BlockchainService,
+    // contracts is contract's SmartContractService, getWalletFactory() is wallet-core's
+    // WalletFactory, and TrustWeaveException/ConfigException come from common). They must be
+    // `api` so consumers get them on their compile classpath transitively.
+    api(project(":common"))         // Root-level common (exceptions, common utilities, JSON)
+    api(project(":credentials:credential-api"))  // Credential DSLs and services
+    api(project(":wallet:wallet-core"))      // Wallet interfaces and DSLs
+    api(project(":anchors:anchor-core"))     // BlockchainAnchorClientFactory
+    api(project(":did:did-core"))         // DID DSLs and services
+    api(project(":kms:kms-core"))         // KMS service interfaces
+    api(project(":contract"))              // Smart contract services
     compileOnly(project(":credentials:plugins:status-list:database"))  // StatusListManagerFactory (compileOnly to avoid circular dependency)
 
     // JAdES DSL extensions — plugin-specific types referenced only by the optional
@@ -25,14 +31,15 @@ dependencies {
     compileOnly(project(":signatures:trust-lists"))
     compileOnly(project(":signatures:tsa-core"))
 
-    // Kotlin Coroutines
-    implementation(libs.kotlinx.coroutines.core)
+    // Kotlin Coroutines — CoroutineDispatcher appears in public signatures
+    // (TrustWeave.inMemory, Builder.dispatcher), so consumers need it at compile time.
+    api(libs.kotlinx.coroutines.core)
 
-    // Kotlinx Serialization
-    implementation(libs.kotlinx.serialization.json)
-    
-    // Kotlinx DateTime
-    implementation(libs.kotlinx.datetime)
+    // Kotlinx Serialization — JsonElement appears in public signatures (anchorThroughDomain).
+    api(libs.kotlinx.serialization.json)
+
+    // Kotlinx DateTime — Instant appears in public types (TrustAnchorMetadata, TrustPath.Verified).
+    api(libs.kotlinx.datetime)
     
     // CredentialBuilder logs directly via org.slf4j.LoggerFactory, so slf4j-api must be on the
     // runtime classpath (implementation, not compileOnly). Apps still supply the binding.

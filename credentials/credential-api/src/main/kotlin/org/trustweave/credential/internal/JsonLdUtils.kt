@@ -137,13 +137,24 @@ internal object JsonLdUtils {
      * `@context`. Such properties would be absent from the canonical N-Quads and therefore
      * **not covered by the signature** — an attacker could tamper with them freely.
      *
-     * This guard expands the document and checks that every `credentialSubject` property
-     * (other than `id`/`type`), **at any nesting depth** (nested objects and arrays
-     * included), is represented in the expanded output. It throws
-     * [SerializationException.EncodeFailed] when one or more claims were dropped.
+     * **Name-based check:** the document is round-tripped through JSON-LD
+     * expansion + compaction against its own `@context`, and every declared
+     * `credentialSubject` claim NAME (other than `id`/`type`, **at any nesting depth**,
+     * arrays included, counted as a multiset) must survive the round-trip. A dropped term
+     * never reappears after compaction, so it is detected by name — a property-count
+     * comparison is NOT used, because a term that expands into additional properties
+     * (e.g. a context that maps `type` to a regular property the declared-name collector
+     * ignores) could otherwise mask a dropped term. Throws
+     * [SerializationException.EncodeFailed], naming the missing claims, when one or more
+     * claims were dropped.
      *
-     * Fail-closed: a `credentialSubject` that is present but is neither a JSON object nor
-     * an array of objects also throws — its claims cannot be checked for dropped terms.
+     * Fail-closed:
+     * - a `credentialSubject` that is present but is neither a JSON object nor an array
+     *   of objects throws — its claims cannot be checked for dropped terms;
+     * - a round-trip in which the `credentialSubject` node itself cannot be located
+     *   (e.g. the context does not define `credentialSubject` at all) throws;
+     * - a context that compacts a declared term back to a *different* alias also throws
+     *   (the claim cannot be proven preserved by name).
      */
     private fun verifyCredentialSubjectClaimsPreserved(
         document: JsonObject,
@@ -159,32 +170,56 @@ internal object JsonLdUtils {
             )
         }
 
-        val claimNames = mutableListOf<String>()
-        collectDeclaredClaimNames(subject, claimNames)
-        if (claimNames.isEmpty()) return
+        val declaredNames = mutableListOf<String>()
+        collectDeclaredClaimNames(subject, declaredNames)
+        if (declaredNames.isEmpty()) return
 
-        val expanded: jakarta.json.JsonArray = try {
-            JsonLd.expand(JsonDocument.of(jakartaDocument))
+        // Round-trip the document through expansion + compaction against its own @context.
+        // Terms not defined by the @context are dropped at expansion and cannot reappear
+        // at compaction; defined terms compact back to their original names.
+        val contextValue: JsonValue = jakartaDocument["@context"] ?: JsonValue.EMPTY_JSON_OBJECT
+        val compacted: jakarta.json.JsonObject = try {
+            val contextDocument = JsonDocument.of(
+                Json.createObjectBuilder().add("@context", contextValue).build()
+            )
+            JsonLd.compact(JsonDocument.of(jakartaDocument), contextDocument)
                 .loader(JsonLdContextLoader.createDocumentLoader())
+                .compactToRelative(false)
                 .get()
         } catch (e: Exception) {
             throw SerializationException.EncodeFailed(
                 element = "credentialSubject",
-                reason = "JSON-LD expansion failed while checking for dropped claims: ${e.message}"
+                reason = "JSON-LD compaction failed while checking for dropped claims: ${e.message}"
             )
         }
 
-        val expandedPropertyCount = countExpandedSubjectProperties(expanded)
-        if (expandedPropertyCount < claimNames.size) {
+        // Note: when every claim was dropped (or the credentialSubject term itself is not
+        // defined), the subject node may compact away entirely (e.g. to a bare IRI string)
+        // — zero located nodes then simply means zero surviving claim names, and every
+        // declared claim is reported missing below.
+        val subjectNodes = mutableListOf<jakarta.json.JsonObject>()
+        collectCompactedSubjectNodes(compacted, subjectNodes)
+
+        val survivingNames = mutableListOf<String>()
+        subjectNodes.forEach { collectCompactedClaimNames(it, survivingNames) }
+
+        // Multiset comparison by NAME: every declared occurrence of a claim name must be
+        // matched by a surviving occurrence. Extra surviving properties cannot mask a
+        // missing name.
+        val survivingCounts = survivingNames.groupingBy { it }.eachCount()
+        val missing = declaredNames.groupingBy { it }.eachCount()
+            .filter { (name, declaredCount) -> (survivingCounts[name] ?: 0) < declaredCount }
+            .keys
+        if (missing.isNotEmpty()) {
             throw SerializationException.EncodeFailed(
                 element = "credentialSubject",
                 reason = "JSON-LD canonicalization dropped credentialSubject claims: " +
-                    "${claimNames.size} claim(s) declared (${claimNames.sorted()}, nested claims " +
-                    "included) but only $expandedPropertyCount survived JSON-LD expansion. Claims " +
-                    "whose terms are not defined in the credential's @context are silently removed " +
-                    "and would NOT be covered by the proof signature. Declare an @context that " +
-                    "defines every credentialSubject term (e.g. register a context via " +
-                    "JsonLdContextLoader and reference it from the credential's @context)."
+                    "${missing.sorted()} (declared, nested claims included, but absent after a " +
+                    "JSON-LD expansion/compaction round-trip). Claims whose terms are not defined " +
+                    "in the credential's @context are silently removed and would NOT be covered " +
+                    "by the proof signature. Declare an @context that defines every " +
+                    "credentialSubject term (e.g. register a context via JsonLdContextLoader and " +
+                    "reference it from the credential's @context)."
             )
         }
     }
@@ -208,35 +243,40 @@ internal object JsonLdUtils {
     }
 
     /**
-     * Count the non-keyword properties on the expanded `credentialSubject` node(s),
-     * recursing into nested node objects and value lists so dropped nested terms are
-     * detected as well.
+     * Mirror of [collectDeclaredClaimNames] for the jakarta.json representation produced
+     * by JSON-LD compaction: recursively collect non-`id`/`type`, non-keyword property
+     * names of the compacted subject node(s).
      */
-    private fun countExpandedSubjectProperties(expanded: JsonValue?): Int {
-        val subjectNodes = mutableListOf<jakarta.json.JsonObject>()
-        collectSubjectNodes(expanded, subjectNodes)
-        return subjectNodes.sumOf { node -> countExpandedNodeProperties(node) }
+    private fun collectCompactedClaimNames(value: JsonValue?, into: MutableList<String>) {
+        when (value?.valueType) {
+            JsonValue.ValueType.OBJECT -> value.asJsonObject().forEach { (key, nested) ->
+                if (key != "id" && key != "type" && !key.startsWith("@")) {
+                    into.add(key)
+                }
+                collectCompactedClaimNames(nested, into)
+            }
+            JsonValue.ValueType.ARRAY -> value.asJsonArray().forEach {
+                collectCompactedClaimNames(it, into)
+            }
+            else -> {}
+        }
     }
 
     /**
-     * Recursively count non-keyword (`@`-prefixed) property keys of an expanded JSON-LD
-     * node, including the properties of nested nodes.
+     * Locate the `credentialSubject` node(s) in a compacted document: matched by the
+     * compacted term name `credentialSubject` or by the full expanded IRI (when the
+     * context does not define the term).
      */
-    private fun countExpandedNodeProperties(value: JsonValue?): Int = when (value?.valueType) {
-        JsonValue.ValueType.OBJECT -> value.asJsonObject().entries.sumOf { (key, nested) ->
-            val self = if (!key.startsWith("@")) 1 else 0
-            self + countExpandedNodeProperties(nested)
-        }
-        JsonValue.ValueType.ARRAY -> value.asJsonArray().sumOf { countExpandedNodeProperties(it) }
-        else -> 0
-    }
-
-    private fun collectSubjectNodes(value: JsonValue?, into: MutableList<jakarta.json.JsonObject>) {
+    private fun collectCompactedSubjectNodes(
+        value: JsonValue?,
+        into: MutableList<jakarta.json.JsonObject>
+    ) {
         when (value?.valueType) {
-            JsonValue.ValueType.ARRAY -> value.asJsonArray().forEach { collectSubjectNodes(it, into) }
+            JsonValue.ValueType.ARRAY ->
+                value.asJsonArray().forEach { collectCompactedSubjectNodes(it, into) }
             JsonValue.ValueType.OBJECT -> {
                 val obj = value.asJsonObject()
-                val subjectValue = obj[CREDENTIAL_SUBJECT_IRI]
+                val subjectValue = obj["credentialSubject"] ?: obj[CREDENTIAL_SUBJECT_IRI]
                 when (subjectValue?.valueType) {
                     JsonValue.ValueType.ARRAY -> subjectValue.asJsonArray().forEach { node ->
                         if (node.valueType == JsonValue.ValueType.OBJECT) into.add(node.asJsonObject())
@@ -245,7 +285,7 @@ internal object JsonLdUtils {
                     else -> {}
                 }
                 obj.values.forEach { nested ->
-                    if (nested !== subjectValue) collectSubjectNodes(nested, into)
+                    if (nested !== subjectValue) collectCompactedSubjectNodes(nested, into)
                 }
             }
             else -> {}

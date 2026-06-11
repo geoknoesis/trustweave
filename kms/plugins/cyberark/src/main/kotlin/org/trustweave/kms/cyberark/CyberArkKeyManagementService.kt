@@ -27,13 +27,26 @@ import java.security.Signature
 import java.util.Base64
 
 /**
- * CyberArk Conjur implementation of KeyManagementService.
+ * Software KMS backed by CyberArk Conjur secret storage — **NOT an HSM integration**.
  *
- * Note: Conjur is primarily a secrets management system. This implementation
- * generates keys locally and stores them in Conjur as secrets. For signing,
- * keys are retrieved from Conjur and operations are performed locally.
+ * **⚠️ EXPERIMENTAL — SOFTWARE KEYS, NOT HSM-GRADE ⚠️**
  *
- * Supports all standard cryptographic algorithms.
+ * Be clear about what this actually does: Conjur is a secrets manager, not a key
+ * management service or HSM. This implementation:
+ * - generates key pairs **locally in this JVM** with standard Java crypto,
+ * - stores the **plaintext private key material** in Conjur as an ordinary secret,
+ * - pulls the private key **back into process memory on every sign operation** and
+ *   signs locally.
+ *
+ * Private keys therefore exist in this process's memory (and transit the network to/from
+ * Conjur) — none of the non-exportability, tamper-resistance, or attestation guarantees
+ * of an HSM or cloud KMS apply. The security level is "software keys protected by Conjur
+ * access control". It has also not been validated against a live Conjur deployment.
+ *
+ * For hardware-backed or non-exportable keys use a real KMS/HSM provider
+ * (AWS KMS, Azure Key Vault, Google Cloud KMS, PKCS#11, ...).
+ *
+ * Supports all standard cryptographic algorithms (locally generated).
  */
 class CyberArkKeyManagementService(
     private val config: CyberArkKmsConfig,

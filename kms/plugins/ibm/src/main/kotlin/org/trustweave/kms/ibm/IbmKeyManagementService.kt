@@ -28,7 +28,17 @@ import java.util.UUID
 /**
  * IBM Key Protect / Hyper Protect Crypto Services implementation of KeyManagementService.
  *
- * Supports all IBM Key Protect-compatible algorithms:
+ * **⚠️ EXPERIMENTAL — UNVERIFIED AGAINST A REAL ENDPOINT ⚠️**
+ *
+ * This implementation has never been validated against a live IBM service. Worse, the
+ * REST API it targets (asymmetric key generation, `/sign` operations and public-key
+ * export on Key Protect-style endpoints) **does not exist in IBM Key Protect** — Key
+ * Protect manages symmetric root/standard keys and does not offer asymmetric signing
+ * APIs of this shape. Asymmetric signing on IBM Cloud requires Hyper Protect Crypto
+ * Services (GREP11/EP11), which this code does not speak. Expect every call against a
+ * real IBM endpoint to fail. Do not use in production.
+ *
+ * Algorithms this code was written to target (unverified):
  * - Ed25519
  * - secp256k1
  * - P-256, P-384, P-521 (EC:secp256r1/384r1/521r1)

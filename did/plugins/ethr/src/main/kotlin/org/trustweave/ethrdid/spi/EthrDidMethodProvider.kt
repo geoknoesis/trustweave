@@ -11,6 +11,10 @@ import org.trustweave.ethrdid.EthrDidMethod
  * SPI provider for did:ethr method.
  *
  * Automatically discovers did:ethr method when this module is on the classpath.
+ *
+ * **⚠️ EXPERIMENTAL.** See [EthrDidMethod]: address derivation is real (Keccak-256 over
+ * the secp256k1 public key), but there is no ERC-1056 registry resolution — DIDs are
+ * resolved via TrustWeave anchoring only, not the standard did:ethr protocol.
  */
 class EthrDidMethodProvider : AbstractDidMethodProvider() {
 

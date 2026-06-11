@@ -32,6 +32,10 @@ suspend fun TrustWeave.Companion.quickStart(): TrustWeave = inMemory()
  * In-memory TrustWeave (KMS, did:key, optional in-memory trust registry and anchor).
  *
  * Prefer [quickStart] for documentation-facing examples; both resolve to the same configuration.
+ *
+ * When [trustRegistryFactory] is null (the default), the built-in in-memory trust registry
+ * backs the `trust { provider("inMemory") }` configuration, so a bare `quickStart()` works
+ * without any factories.
  */
 suspend fun TrustWeave.Companion.inMemory(
     chainId: String? = null,

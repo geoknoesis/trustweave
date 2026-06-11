@@ -140,6 +140,32 @@ open class TrustWeaveException(
         override val context: Map<String, Any?> = emptyMap(),
         override val cause: Throwable? = null
     ) : TrustWeaveException(code, message, context, cause)
+
+    /**
+     * An operation exceeded its configured timeout.
+     *
+     * Thrown by facade operations whose return type cannot honestly express a timeout
+     * (e.g. a `Boolean` revocation result, where mapping a timeout to `false` would
+     * silently misreport an unknown outcome as "not revoked"). The underlying
+     * [kotlinx.coroutines.TimeoutCancellationException] is carried as [cause]; callers
+     * must treat the operation outcome as **unknown**, not failed.
+     *
+     * @param operation Human-readable name of the operation that timed out
+     * @param timeout The configured timeout, rendered as a string (e.g. "10s")
+     */
+    data class OperationTimedOut(
+        val operation: String,
+        val timeout: String,
+        override val cause: Throwable? = null
+    ) : TrustWeaveException(
+        code = "OPERATION_TIMED_OUT",
+        message = "Operation '$operation' timed out after $timeout; its outcome is unknown",
+        context = mapOf(
+            "operation" to operation,
+            "timeout" to timeout
+        ),
+        cause = cause
+    )
 }
 
 /**

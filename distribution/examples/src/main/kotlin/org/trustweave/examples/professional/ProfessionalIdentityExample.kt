@@ -1,5 +1,6 @@
 package org.trustweave.examples.professional
 
+import org.trustweave.examples.ExampleContexts
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.types.getOrThrow
@@ -166,6 +167,7 @@ fun main() = runBlocking {
 
     // Issue credentials using new DSL with revocation support
     val bachelorDegree = trustWeave.issue {
+        additionalOption(ExampleContexts.OPTION_KEY, ExampleContexts.contexts)
         credential {
             id("https://example.edu/credentials/bachelor-${professionalDid.value.substringAfterLast(":")}")
             type(CredentialType.Education, CredentialType.Custom("BachelorDegreeCredential"))
@@ -186,6 +188,7 @@ fun main() = runBlocking {
     val bachelorId = requireNotNull(bachelorStored.id) { "Credential must have an id" }
 
     val masterDegree = trustWeave.issue {
+        additionalOption(ExampleContexts.OPTION_KEY, ExampleContexts.contexts)
         credential {
             id("https://example.edu/credentials/master-${professionalDid.value.substringAfterLast(":")}")
             type(CredentialType.Education, CredentialType.Custom("MasterDegreeCredential"))

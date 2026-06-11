@@ -1,5 +1,6 @@
 package org.trustweave.examples.national
 
+import org.trustweave.examples.ExampleContexts
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.types.getOrThrow
@@ -197,6 +198,7 @@ fun main() = runBlocking {
     println("    - Academic Year: 2024-2025")
 
     val enrollmentCredential = trustweave.issue {
+        additionalOption(ExampleContexts.OPTION_KEY, ExampleContexts.contexts)
         credential {
             type("AlgeroPassCredential", "EnrollmentCredential", "EducationCredential")
             issuer(authorityDid)
@@ -306,6 +308,7 @@ fun main() = runBlocking {
     println("    - Semester: Fall 2024")
 
     val achievementCredential = trustweave.issue {
+        additionalOption(ExampleContexts.OPTION_KEY, ExampleContexts.contexts)
         credential {
             type("AlgeroPassCredential", "AchievementCredential", "EducationCredential")
             issuer(authorityDid)

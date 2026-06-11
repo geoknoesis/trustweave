@@ -1,6 +1,8 @@
 package org.trustweave.examples.spatial
 
 import kotlinx.coroutines.runBlocking
+import org.trustweave.examples.ExampleContexts
+import org.trustweave.testkit.services.TestkitWalletFactory
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -63,6 +65,7 @@ suspend fun runSpatialWebDroneDemo(printSteps: Boolean = false): SpatialWebDrone
     step("Step 1: Configuring TrustWeave...")
     val kms = InMemoryKeyManagementService()
     val trustWeave = TrustWeave.build {
+        factories(walletFactory = TestkitWalletFactory())
         keys { custom(kms) }
         did { method(KEY) {} }
         anchor { chain("algorand:testnet") { inMemory() } }
@@ -82,6 +85,7 @@ suspend fun runSpatialWebDroneDemo(printSteps: Boolean = false): SpatialWebDrone
 
     step("\nStep 3: FAA issues drone identification credential (with photo metadata)...")
     val identificationCredential = trustWeave.issue {
+        additionalOption(ExampleContexts.OPTION_KEY, ExampleContexts.contexts)
         credential {
             id("https://demo-faa.trustweave.example/registry/${droneDid.value.substringAfterLast(":")}")
             type("VerifiableCredential", "DroneIdentificationCredential")
@@ -113,6 +117,7 @@ suspend fun runSpatialWebDroneDemo(printSteps: Boolean = false): SpatialWebDrone
 
     step("\nStep 5: Issuing activity authorization credential to drone...")
     val issuedCredential = trustWeave.issue {
+        additionalOption(ExampleContexts.OPTION_KEY, ExampleContexts.contexts)
         credential {
             id("https://demo-sf-airspace.trustweave.example/authorizations/${droneDid.value.substringAfterLast(":")}")
             type("VerifiableCredential", "ActivityAuthorizationCredential", "SpatialWebCredential")

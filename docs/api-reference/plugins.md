@@ -112,6 +112,12 @@ Credential plugins provide format support (SD-JWT VC, mdoc / mDL, BBS+), status 
 | **mDL / mdoc** | `org.trustweave:credentials-plugins-mdl` | ISO/IEC 18013-5 mobile driving licence (mdoc) format |
 | **JAdES (credential proof)** | `org.trustweave:credentials-plugins-jades` | ETSI JAdES JSON Advanced Electronic Signature proofs on credentials |
 
+### Agent authorization (agentic commerce)
+
+| Plugin | Module ID | Documentation | Description |
+|--------|-----------|---------------|-------------|
+| **Verifiable Intent** | `org.trustweave:credentials-plugins-verifiable-intent` | [Verifiable Intent Plugin](features/verifiable-intent.md) | Mastercard/Google Verifiable Intent — layered SD-JWT/ES256 delegation chain proving what a user authorized an AI agent to do |
+
 ### Status / revocation
 
 | Plugin | Module ID | Description |

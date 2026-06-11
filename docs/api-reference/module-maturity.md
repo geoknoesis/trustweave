@@ -51,6 +51,7 @@ Newer plugin families that ship in `settings.gradle.kts` but are evolving:
 - Credentials formats / proofs: `credentials:plugins:bbs`, `credentials:plugins:mdl`, `credentials:plugins:eudiw`
 - Exchange / discovery: `credentials:plugins:siop`, `credentials:plugins:presentation-exchange`, `credentials:plugins:openid-federation`
 - Status lists: `credentials:plugins:status-list:bitstring`, `credentials:plugins:status-list:token`, `credentials:plugins:status-list:publishing`, `credentials:plugins:status-list:server`
+- Agent authorization: `credentials:plugins:verifiable-intent`
 
 Until each carries its own GA notice, treat the above as **Experimental**.
 

@@ -34,7 +34,7 @@ Optional plugin modules must be added explicitly if needed. These include:
 - ❌ KMS plugins (`kms:plugins:aws`, `kms:plugins:azure`, `kms:plugins:inmemory`, …)
 - ❌ Blockchain anchor plugins (`anchors:plugins:algorand`, `anchors:plugins:polygon`, `anchors:plugins:ethereum`, `anchors:plugins:ganache`, `anchors:plugins:indy`, …)
 - ❌ Wallet storage plugins (`wallet:plugins:database`, `wallet:plugins:file`, `wallet:plugins:cloud`)
-- ❌ Credential protocol/format plugins (`credentials:plugins:oidc4vci`, `credentials:plugins:oidc4vp`, `credentials:plugins:didcomm`, `credentials:plugins:chapi`, `credentials:plugins:presentation-exchange`, `credentials:plugins:siop`, `credentials:plugins:mdl`, `credentials:plugins:bbs`, `credentials:plugins:openid-federation`, `credentials:plugins:eudiw`, `credentials:plugins:status-list:*`, `credentials:plugins:anchor`, `credentials:plugins:platforms:*`)
+- ❌ Credential protocol/format plugins (`credentials:plugins:oidc4vci`, `credentials:plugins:oidc4vp`, `credentials:plugins:didcomm`, `credentials:plugins:chapi`, `credentials:plugins:presentation-exchange`, `credentials:plugins:siop`, `credentials:plugins:mdl`, `credentials:plugins:bbs`, `credentials:plugins:verifiable-intent`, `credentials:plugins:openid-federation`, `credentials:plugins:eudiw`, `credentials:plugins:status-list:*`, `credentials:plugins:anchor`, `credentials:plugins:platforms:*`)
 
 ### Adding Optional Modules
 

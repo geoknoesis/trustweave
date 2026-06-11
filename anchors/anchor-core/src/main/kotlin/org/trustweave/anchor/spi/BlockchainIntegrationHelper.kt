@@ -19,7 +19,7 @@ import java.util.ServiceLoader
  * val chains = BlockchainIntegrationHelper.setup(
  *     providerName = "polygon",
  *     chainIds = listOf("eip155:137"),
- *     defaultChainIds = listOf("eip155:80001"),
+ *     defaultChainIds = listOf("eip155:80002"),
  *     options = options
  * )
  * ```

@@ -8,6 +8,9 @@ import org.trustweave.credential.revocation.CredentialRevocationManager
 import org.trustweave.did.resolver.DidResolver
 import org.trustweave.trust.dsl.credential.IssuanceBuilder
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlin.time.Duration
@@ -36,17 +39,28 @@ class CredentialIssuanceService(
     suspend fun issue(
         timeout: Duration = 30.seconds,
         block: IssuanceBuilder.() -> Unit
-    ): IssuanceResult = withTimeout(timeout) {
-        withContext(ioDispatcher) {
-            val builder = IssuanceBuilder(
-                credentialService = credentialService,
-                revocationManager = revocationManager,
-                defaultProofSuite = defaultProofType.toProofSuiteId(),
-                ioDispatcher = ioDispatcher,
-                didResolver = didResolver
-            )
-            builder.block()
-            builder.build()
+    ): IssuanceResult = try {
+        withTimeout(timeout) {
+            withContext(ioDispatcher) {
+                val builder = IssuanceBuilder(
+                    credentialService = credentialService,
+                    revocationManager = revocationManager,
+                    defaultProofSuite = defaultProofType.toProofSuiteId(),
+                    ioDispatcher = ioDispatcher,
+                    didResolver = didResolver
+                )
+                builder.block()
+                builder.build()
+            }
         }
+    } catch (e: TimeoutCancellationException) {
+        // Map OUR timeout to the sealed failure contract. If the surrounding coroutine
+        // was itself cancelled (parent cancellation / enclosing timeout), propagate it.
+        currentCoroutineContext().ensureActive()
+        IssuanceResult.Failure.AdapterError(
+            format = defaultProofType.toProofSuiteId(),
+            reason = "Credential issuance timed out after $timeout",
+            cause = e
+        )
     }
 }

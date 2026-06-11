@@ -1,5 +1,6 @@
 package org.trustweave.core.plugin
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.core.exception.ProviderException
 import org.trustweave.core.exception.TrustWeaveException
 
@@ -60,6 +61,13 @@ internal class ProviderChain<T>(
             try {
                 return operation(provider)
             } catch (e: Throwable) {
+                // Critical: Never treat coroutine cancellation as a provider failure.
+                // If the calling coroutine is cancelled (parent cancelled, timeout, etc.)
+                // the cancellation must propagate immediately — continuing with the next
+                // provider would ignore structured-concurrency semantics.
+                if (e is CancellationException) {
+                    throw e
+                }
                 // Critical: Don't catch Error types (OutOfMemoryError, StackOverflowError, etc.).
                 // These represent serious JVM-level problems that should propagate immediately
                 // rather than being treated as recoverable provider failures. Attempting to

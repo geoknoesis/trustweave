@@ -123,15 +123,25 @@ internal interface PluginRegistry {
  */
 internal class DefaultPluginRegistry : PluginRegistry {
 
+    /**
+     * Guards all multi-map mutations (register/unregister/clear) so they are atomic
+     * with respect to readers. Reads stay lock-free on the ConcurrentHashMaps; the
+     * mutation order below (populate instances first, publish metadata last on register;
+     * retract metadata first, remove instances last on unregister) guarantees the
+     * invariant "metadata visible ⇒ instance visible". Registration is not a hot path,
+     * so a single lock is fine.
+     */
+    private val mutationLock = Any()
+
     private val plugins = ConcurrentHashMap<String, PluginMetadata>()
     private val instances = ConcurrentHashMap<String, Any>()
     // Store runtime class information for each instance to enable type-safe retrieval
     private val instanceTypes = ConcurrentHashMap<String, Class<*>>()
-    
+
     // Index capabilities for O(1) lookup instead of O(n) filtering
     // Maps capability name -> set of plugin IDs that support it
     private val capabilityIndex = ConcurrentHashMap<String, MutableSet<String>>()
-    
+
     // Index providers for O(1) lookup instead of O(n) filtering
     // Maps provider name -> set of plugin IDs from that provider
     private val providerIndex = ConcurrentHashMap<String, MutableSet<String>>()
@@ -141,49 +151,62 @@ internal class DefaultPluginRegistry : PluginRegistry {
             throw PluginException.BlankId
         }
 
-        // putIfAbsent returns the existing value if key exists, null otherwise.
-        // This provides atomic check-and-set semantics.
-        val existing = plugins.putIfAbsent(metadata.id, metadata)
-        if (existing != null) {
-            throw PluginException.AlreadyRegistered(
-                pluginId = metadata.id,
-                existingPlugin = existing.name
-            )
-        }
-        // Only add to instances map if plugin registration succeeded.
-        instances[metadata.id] = instance
-        // Store the runtime class for type-safe retrieval
-        instanceTypes[metadata.id] = instance.javaClass
-        
-        // Update capability index for O(1) lookups
-        metadata.capabilities.features.forEach { capability ->
-            capabilityIndex.computeIfAbsent(capability) { 
-                ConcurrentHashMap.newKeySet() 
+        synchronized(mutationLock) {
+            val existing = plugins[metadata.id]
+            if (existing != null) {
+                throw PluginException.AlreadyRegistered(
+                    pluginId = metadata.id,
+                    existingPlugin = existing.name
+                )
+            }
+
+            // Populate instance state and indexes BEFORE publishing metadata, so a
+            // concurrent reader that observes getMetadata(id) != null is guaranteed
+            // to also observe the instance via getInstance(id, ...).
+            instances[metadata.id] = instance
+            instanceTypes[metadata.id] = instance.javaClass
+
+            metadata.capabilities.features.forEach { capability ->
+                capabilityIndex.computeIfAbsent(capability) {
+                    ConcurrentHashMap.newKeySet()
+                }.add(metadata.id)
+            }
+            providerIndex.computeIfAbsent(metadata.provider) {
+                ConcurrentHashMap.newKeySet()
             }.add(metadata.id)
+
+            // Publish last: metadata visibility is the signal that the plugin is registered.
+            plugins[metadata.id] = metadata
         }
-        
-        // Update provider index for O(1) lookups
-        providerIndex.computeIfAbsent(metadata.provider) { 
-            ConcurrentHashMap.newKeySet() 
-        }.add(metadata.id)
     }
 
     override fun unregister(pluginId: String) {
         require(pluginId.isNotBlank()) { "Plugin ID cannot be blank" }
-        // Idempotent operation: silently return if plugin not found
-        val metadata = plugins[pluginId] ?: return
-        
-        plugins.remove(pluginId)
-        instances.remove(pluginId)
-        instanceTypes.remove(pluginId)
-        
-        // Remove from capability index
-        metadata.capabilities.features.forEach { capability ->
-            capabilityIndex[capability]?.remove(pluginId)
+        synchronized(mutationLock) {
+            // Idempotent operation: silently return if plugin not found
+            val metadata = plugins[pluginId] ?: return
+
+            // Mirror of register: retract metadata FIRST so readers never observe
+            // metadata for a plugin whose instance has already been removed.
+            plugins.remove(pluginId)
+
+            // Remove from capability index, pruning empty sets to avoid unbounded growth.
+            metadata.capabilities.features.forEach { capability ->
+                capabilityIndex.computeIfPresent(capability) { _, ids ->
+                    ids.remove(pluginId)
+                    if (ids.isEmpty()) null else ids
+                }
+            }
+
+            // Remove from provider index, pruning empty sets.
+            providerIndex.computeIfPresent(metadata.provider) { _, ids ->
+                ids.remove(pluginId)
+                if (ids.isEmpty()) null else ids
+            }
+
+            instances.remove(pluginId)
+            instanceTypes.remove(pluginId)
         }
-        
-        // Remove from provider index
-        providerIndex[metadata.provider]?.remove(pluginId)
     }
 
     override fun getMetadata(pluginId: String): PluginMetadata? {
@@ -254,11 +277,15 @@ internal class DefaultPluginRegistry : PluginRegistry {
     }
 
     override fun clear() {
-        plugins.clear()
-        instances.clear()
-        instanceTypes.clear()
-        capabilityIndex.clear()
-        providerIndex.clear()
+        synchronized(mutationLock) {
+            // Retract metadata first (mirrors unregister) so readers never observe
+            // metadata without a corresponding instance.
+            plugins.clear()
+            capabilityIndex.clear()
+            providerIndex.clear()
+            instances.clear()
+            instanceTypes.clear()
+        }
     }
 
     override fun isRegistered(pluginId: String): Boolean {

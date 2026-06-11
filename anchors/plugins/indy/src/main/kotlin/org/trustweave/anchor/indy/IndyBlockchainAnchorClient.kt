@@ -244,7 +244,7 @@ class IndyBlockchainAnchorClient(
     }
 
     override protected fun generateTestTxHash(): String {
-        return "indy_test_${System.currentTimeMillis()}_${(0..1_000_000).random()}"
+        return "indy_test_${uniqueTestHashSuffix()}"
     }
 
     override protected fun getBlockchainName(): String = "Indy"

@@ -194,7 +194,7 @@ class CardanoBlockchainAnchorClient internal constructor(
         "label" to config.metadataLabel.toString(),
     )
 
-    override fun generateTestTxHash(): String = "cardano_test_${System.currentTimeMillis()}_${(0..1_000_000).random()}"
+    override fun generateTestTxHash(): String = "cardano_test_${uniqueTestHashSuffix()}"
 
     override fun getBlockchainName(): String = "Cardano"
 

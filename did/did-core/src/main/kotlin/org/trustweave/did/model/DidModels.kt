@@ -84,6 +84,8 @@ data class DidDocument(
  *
  * @param created ISO 8601 timestamp when the DID document was created
  * @param updated ISO 8601 timestamp when the DID document was last updated
+ * @param deactivated Whether the DID has been deactivated (W3C DID Core §7.3).
+ *        Defaults to false so existing serialized metadata stays wire-compatible.
  * @param versionId Version identifier for the DID document
  * @param nextUpdate ISO 8601 timestamp indicating when to check for updates
  * @param canonicalId Canonical form of the DID identifier (typed)
@@ -93,6 +95,7 @@ data class DidDocument(
 data class DidDocumentMetadata(
     @Contextual val created: kotlinx.datetime.Instant? = null,
     @Contextual val updated: kotlinx.datetime.Instant? = null,
+    val deactivated: Boolean = false,
     val versionId: String? = null,
     @Contextual val nextUpdate: kotlinx.datetime.Instant? = null,
     val canonicalId: Did? = null,

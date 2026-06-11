@@ -11,6 +11,7 @@ import org.trustweave.kms.results.SignResult
 import org.trustweave.kms.JwkKeys
 import org.trustweave.kms.JwkKeyTypes
 import org.trustweave.kms.KmsOptionKeys
+import org.trustweave.kms.util.EcdsaSignatureCodec
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
@@ -340,9 +341,14 @@ class InMemoryKeyManagementService(
                 )
             }
 
-            val signature = signData(keyPair.private, data, signingAlgorithm)
-            
-            logger.debug("Successfully signed data: keyId={}, algorithm={}, dataSize={}, signatureSize={}", 
+            // JCA ECDSA emits ASN.1 DER; the KeyManagementService contract requires P1363
+            // (raw r||s) with low-s for secp256k1, so normalize before returning.
+            val signature = EcdsaSignatureCodec.normalize(
+                signData(keyPair.private, data, signingAlgorithm),
+                signingAlgorithm
+            )
+
+            logger.debug("Successfully signed data: keyId={}, algorithm={}, dataSize={}, signatureSize={}",
                 keyId.value, signingAlgorithm.name, data.size, signature.size)
 
             SignResult.Success(signature)

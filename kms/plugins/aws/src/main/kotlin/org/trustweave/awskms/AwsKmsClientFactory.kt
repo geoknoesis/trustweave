@@ -2,6 +2,7 @@ package org.trustweave.awskms
 
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
+import software.amazon.awssdk.auth.credentials.AwsSessionCredentials
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration
@@ -42,18 +43,24 @@ object AwsKmsClientFactory {
     /**
      * Creates credentials provider based on configuration.
      *
-     * If access key and secret are provided, uses static credentials.
+     * If access key and secret are provided, uses static credentials — session credentials
+     * (including the session token) when [AwsKmsConfig.sessionToken] is set, basic credentials
+     * otherwise. Temporary STS credentials are rejected by AWS without their session token, so
+     * dropping it would cause authentication failures.
      * Otherwise, uses default credential provider chain (IAM roles, environment, etc.).
+     *
+     * Internal for testability.
      *
      * @param config AWS KMS configuration
      * @return Credentials provider
      */
-    private fun createCredentialsProvider(config: AwsKmsConfig): AwsCredentialsProvider {
+    internal fun createCredentialsProvider(config: AwsKmsConfig): AwsCredentialsProvider {
         return if (config.accessKeyId != null && config.secretAccessKey != null) {
             val credentials = if (config.sessionToken != null) {
-                AwsBasicCredentials.create(
+                AwsSessionCredentials.create(
                     config.accessKeyId,
-                    config.secretAccessKey
+                    config.secretAccessKey,
+                    config.sessionToken
                 )
             } else {
                 AwsBasicCredentials.create(

@@ -13,9 +13,8 @@ dependencies {
     implementation(libs.kotlinx.datetime)
 
 
-    // JDBC drivers
+    // JDBC drivers (PostgreSQL and H2 — MySQL is not supported, see DatabaseWallet KDoc)
     implementation("org.postgresql:postgresql:42.7.1")
-    implementation("com.mysql:mysql-connector-j:8.2.0")
     implementation("com.h2database:h2:2.2.224")
 
     // Connection pooling

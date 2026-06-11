@@ -18,9 +18,11 @@ import org.trustweave.trust.domain.TrustedDomainManager
 import org.trustweave.trust.domain.treasury.ChainAccount
 import org.trustweave.trust.domain.treasury.InMemoryChainAccount
 import org.trustweave.trust.domain.treasury.InMemoryDomainTreasury
+import org.trustweave.core.exception.ConfigException
 import org.trustweave.trust.dsl.builders.AnchorConfig
 import org.trustweave.trust.dsl.builders.DidMethodConfig
 import org.trustweave.trust.dsl.builders.DomainConfig
+import org.trustweave.trust.services.DefaultKmsService
 import org.trustweave.trust.services.TrustRegistryFactory
 import org.trustweave.anchor.BlockchainAnchorRegistry
 import org.slf4j.LoggerFactory
@@ -125,7 +127,9 @@ internal object TrustWeaveFactory {
             revocationManager = resolvedRevocationManager,
             trustRegistry = resolvedTrustRegistry,
             walletFactory = state.walletFactory,
-            kmsService = null,
+            // Derive the KmsService adapter from the same KMS the keys { } block resolved,
+            // so facade operations that need it (e.g. rotateKey) work without extra setup.
+            kmsService = DefaultKmsService(),
             defaultDidMethod = defaultDidMethod,
             ioDispatcher = state.ioDispatcher,
             smartContractService = state.smartContractService,
@@ -190,10 +194,13 @@ internal object TrustWeaveFactory {
         val kms = try {
             KeyManagementServices.create(providerName, mapOf("algorithm" to algorithm))
         } catch (e: IllegalArgumentException) {
-            throw IllegalStateException(
-                "KMS provider '$providerName' not found. " +
-                "Available providers: ${KeyManagementServices.availableProviders()}. " +
-                "Ensure the provider is on the classpath."
+            throw ConfigException.UnsupportedValue(
+                field = "keys.provider",
+                value = providerName,
+                reason = "KMS provider not found. " +
+                    "Available providers: ${KeyManagementServices.availableProviders()}. " +
+                    "Ensure the provider is on the classpath.",
+                cause = e
             )
         }
         val signer: suspend (ByteArray, String) -> ByteArray = { data, keyId ->
@@ -257,9 +264,18 @@ internal object TrustWeaveFactory {
     }
 
     private fun resolveRevocationManager(
-        @Suppress("UNUSED_PARAMETER") providerName: String
-    ): CredentialRevocationManager =
-        org.trustweave.credential.revocation.RevocationManagers.default()
+        providerName: String
+    ): CredentialRevocationManager = when (providerName) {
+        "inMemory", "in-memory", "default" ->
+            org.trustweave.credential.revocation.RevocationManagers.default()
+        else -> throw ConfigException.UnsupportedValue(
+            field = "revocation.provider",
+            value = providerName,
+            reason = "Named revocation providers are not yet supported. " +
+                "Use \"inMemory\" for the default in-memory manager, or wire a custom " +
+                "CredentialRevocationManager programmatically."
+        )
+    }
 
     private suspend fun resolveTrustRegistry(
         providerName: String,

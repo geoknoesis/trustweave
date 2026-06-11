@@ -142,7 +142,19 @@ class InMemoryWallet(
         val builder = CredentialQueryBuilder()
         builder.query()
         val predicate = builder.toPredicate()
-        return credentials.values.filter(predicate)
+        // Tag/collection filters are wallet-level metadata keyed by the stored
+        // credential id, so filter on entries (id -> credential) rather than values.
+        // Semantics: a credential must carry ALL requested tags and belong to ALL
+        // requested collections (AND, consistent with predicate chaining).
+        return credentials.entries
+            .filter { (id, _) ->
+                builder.requestedTags.all { tag -> credentialTags[id]?.contains(tag) == true } &&
+                    builder.requestedCollections.all { collectionId ->
+                        credentialCollections[id]?.contains(collectionId) == true
+                    }
+            }
+            .map { it.value }
+            .filter(predicate)
     }
 
     // Organization implementation

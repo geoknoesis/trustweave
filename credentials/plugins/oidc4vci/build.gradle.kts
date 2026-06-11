@@ -25,5 +25,9 @@ dependencies {
 
     // Test dependencies
     testImplementation(project(":testkit"))
+    testImplementation(libs.kotlinx.datetime)
+
+    // MockWebServer for HTTP mocking
+    testImplementation(libs.mockwebserver)
 }
 

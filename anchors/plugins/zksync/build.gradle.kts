@@ -10,6 +10,7 @@ dependencies {
     implementation(project(":credentials:credential-api"))
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.slf4j.api)
 
     // Web3j for Ethereum-compatible chains (zkSync is EVM-compatible)
     implementation("org.web3j:core:4.9.8")

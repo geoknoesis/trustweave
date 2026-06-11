@@ -1,5 +1,10 @@
 package org.trustweave.credential.oidc4vci.qr
 
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+
 /**
  * QR code generator for credential and presentation URLs.
  *
@@ -23,7 +28,10 @@ package org.trustweave.credential.oidc4vci.qr
 object QrCodeGenerator {
 
     /**
-     * Generates an OIDC4VCI credential offer URL.
+     * Generates an OIDC4VCI credential offer URL (OID4VCI v1.0 §4.1).
+     *
+     * The offer is carried either by reference in a `credential_offer_uri` parameter or
+     * by value as URL-encoded JSON in a single `credential_offer` parameter.
      *
      * @param credentialIssuer The credential issuer URL
      * @param credentialConfigurationIds List of credential configuration IDs
@@ -35,18 +43,19 @@ object QrCodeGenerator {
         credentialConfigurationIds: List<String> = emptyList(),
         credentialOfferUri: String? = null
     ): String {
-        val params = mutableListOf<String>()
-
-        if (credentialOfferUri != null) {
-            params.add("credential_offer_uri=${encode(credentialOfferUri)}")
+        val param = if (credentialOfferUri != null) {
+            "credential_offer_uri=${encode(credentialOfferUri)}"
         } else {
-            params.add("credential_issuer=${encode(credentialIssuer)}")
-            if (credentialConfigurationIds.isNotEmpty()) {
-                params.add("credential_configuration_ids=${encode(credentialConfigurationIds.joinToString(","))}")
+            val offerJson = buildJsonObject {
+                put("credential_issuer", credentialIssuer)
+                if (credentialConfigurationIds.isNotEmpty()) {
+                    put("credential_configuration_ids", JsonArray(credentialConfigurationIds.map { JsonPrimitive(it) }))
+                }
             }
+            "credential_offer=${encode(offerJson.toString())}"
         }
 
-        return "openid-credential-offer://?${params.joinToString("&")}"
+        return "openid-credential-offer://?$param"
     }
 
     /**

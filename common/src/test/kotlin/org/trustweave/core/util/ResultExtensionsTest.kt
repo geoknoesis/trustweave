@@ -162,6 +162,10 @@ class ResultExtensionsTest {
         assertEquals(emptyList<Int>(), result.getOrNull())
     }
 
+    // onSuccess / onFailure resolve to the Kotlin stdlib implementations.
+    // The local redefinitions in ResultExtensions.kt were removed: they shadowed the
+    // stdlib and skipped null success values (`getOrNull()?.let(action)`).
+
     @Test
     fun `test onSuccess executes action on success`() {
         var executed = false
@@ -176,6 +180,21 @@ class ResultExtensionsTest {
         // Result.onSuccess returns the same Result instance for chaining
         assertEquals(result.isSuccess, returned.isSuccess)
         assertEquals(result.getOrNull(), returned.getOrNull())
+    }
+
+    @Test
+    fun `test onSuccess executes action for null success value`() {
+        // Regression: the removed local extension used `getOrNull()?.let(action)`,
+        // which silently skipped a successful Result holding null.
+        var executed = false
+        val result: Result<String?> = Result.success(null)
+
+        result.onSuccess {
+            executed = true
+            assertNull(it)
+        }
+
+        assertTrue(executed)
     }
 
     @Test

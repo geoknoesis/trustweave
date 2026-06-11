@@ -1,6 +1,11 @@
 package org.trustweave.core.plugin
 
 import org.trustweave.core.exception.ProviderException
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -246,6 +251,48 @@ class ProviderChainTest {
 
         // Should succeed with second provider
         assertEquals("PROVIDER-2", result)
+    }
+
+    @Test
+    fun `test execute rethrows CancellationException instead of trying next provider`() = runBlocking {
+        var secondAttempted = false
+        val chain = ProviderChain(listOf("first", "second"))
+
+        assertFailsWith<CancellationException> {
+            chain.execute { provider ->
+                if (provider == "first") {
+                    throw CancellationException("cancelled")
+                }
+                secondAttempted = true
+                provider
+            }
+        }
+
+        assertFalse(secondAttempted, "Chain must not continue with next provider after cancellation")
+    }
+
+    @Test
+    fun `test execute propagates cancellation of the calling coroutine`() = runBlocking {
+        val firstStarted = CompletableDeferred<Unit>()
+        var secondAttempted = false
+        val chain = ProviderChain(listOf("first", "second"))
+
+        val job = launch {
+            chain.execute { provider ->
+                if (provider == "first") {
+                    firstStarted.complete(Unit)
+                    awaitCancellation()
+                }
+                secondAttempted = true
+                provider
+            }
+        }
+
+        firstStarted.await()
+        job.cancelAndJoin()
+
+        assertTrue(job.isCancelled)
+        assertFalse(secondAttempted, "Cancelled chain must not fall through to the next provider")
     }
 
     private class TestProvider(val name: String, val shouldFail: Boolean = false) {

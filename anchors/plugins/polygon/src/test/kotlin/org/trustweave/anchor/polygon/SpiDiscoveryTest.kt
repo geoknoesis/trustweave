@@ -19,7 +19,7 @@ class SpiDiscoveryTest {
         assertNotNull(polygonProvider, "Polygon blockchain provider should be discoverable via SPI")
         assertEquals("polygon", polygonProvider?.name)
         assertNotNull(polygonProvider?.supportedChains)
-        assertNotNull(polygonProvider?.create(PolygonBlockchainAnchorClient.MUMBAI))
+        assertNotNull(polygonProvider?.create(PolygonBlockchainAnchorClient.AMOY))
     }
 }
 

@@ -169,6 +169,25 @@ interface KeyManagementService {
      * Returns a [SignResult] for type-safe error handling.
      * Key not found and unsupported algorithm are expected failures.
      *
+     * **Signature format contract.** All implementations MUST return signatures in the
+     * following canonical encodings, regardless of what the backing provider emits natively:
+     *
+     * - **ECDSA** (P-256, P-384, P-521, secp256k1): IEEE P1363 form — raw fixed-width
+     *   `r || s` — 64, 96, 132, and 64 bytes respectively. Providers whose backends emit
+     *   ASN.1 DER (JCA, AWS KMS, Google Cloud KMS, Vault `asn1`, PKCS#11, ...) must transcode
+     *   via [org.trustweave.kms.util.EcdsaSignatureCodec] before returning.
+     * - **secp256k1** signatures are additionally normalized to **low-s** (`s <= n/2`) so they
+     *   are accepted by Ethereum (EIP-2) and Bitcoin.
+     * - **Ed25519**: raw 64-byte signature (RFC 8032).
+     * - **RSA**: RSASSA-PKCS1-v1_5 (PKCS#1 v1.5) signature.
+     *
+     * **Backward compatibility for verifiers.** Signatures produced by versions prior to this
+     * contract may be DER-encoded. Verification code SHOULD accept both encodings during the
+     * transition by detecting DER via
+     * [org.trustweave.kms.util.EcdsaSignatureCodec.isDer] and transcoding as needed
+     * ([org.trustweave.kms.util.EcdsaSignatureCodec.p1363ToDer] converts to the DER form JCA
+     * `Signature.verify` expects).
+     *
      * **Example Usage:**
      * ```kotlin
      * when (val result = kms.sign(keyId, data, algorithm)) {

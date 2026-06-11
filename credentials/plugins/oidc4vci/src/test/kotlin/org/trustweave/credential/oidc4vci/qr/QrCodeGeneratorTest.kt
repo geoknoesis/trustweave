@@ -13,11 +13,15 @@ class QrCodeGeneratorTest {
             credentialIssuer = "https://issuer.example.com",
             credentialConfigurationIds = listOf("PersonCredential", "EducationCredential")
         )
-        assertTrue(url.startsWith("openid-credential-offer://"))
-        assertTrue(url.contains("credential_issuer="))
-        assertTrue(url.contains("credential_configuration_ids="))
-        assertTrue(url.contains("PersonCredential"))
-        assertTrue(url.contains("EducationCredential"))
+        assertTrue(url.startsWith("openid-credential-offer://?credential_offer="))
+
+        // The credential_offer parameter carries the whole offer as URL-encoded JSON
+        val encodedOffer = url.substringAfter("credential_offer=")
+        val offerJson = java.net.URLDecoder.decode(encodedOffer, "UTF-8")
+        assertTrue(offerJson.contains("\"credential_issuer\":\"https://issuer.example.com\""))
+        assertTrue(offerJson.contains("\"credential_configuration_ids\""))
+        assertTrue(offerJson.contains("PersonCredential"))
+        assertTrue(offerJson.contains("EducationCredential"))
     }
 
     @Test
@@ -39,9 +43,12 @@ class QrCodeGeneratorTest {
             credentialIssuer = "https://issuer.example.com",
             credentialConfigurationIds = emptyList()
         )
-        assertTrue(url.startsWith("openid-credential-offer://"))
-        assertTrue(url.contains("credential_issuer="))
-        assertFalse(url.contains("credential_configuration_ids="))
+        assertTrue(url.startsWith("openid-credential-offer://?credential_offer="))
+
+        val encodedOffer = url.substringAfter("credential_offer=")
+        val offerJson = java.net.URLDecoder.decode(encodedOffer, "UTF-8")
+        assertTrue(offerJson.contains("\"credential_issuer\""))
+        assertFalse(offerJson.contains("credential_configuration_ids"))
     }
 
     @Test

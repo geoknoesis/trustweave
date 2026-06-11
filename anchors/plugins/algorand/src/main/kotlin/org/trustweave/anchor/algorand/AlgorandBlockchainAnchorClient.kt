@@ -6,9 +6,10 @@ import com.algorand.algosdk.transaction.Transaction
 import com.algorand.algosdk.transaction.TxGroup
 import com.algorand.algosdk.util.Encoder
 import com.algorand.algosdk.v2.client.common.AlgodClient
+import com.algorand.algosdk.v2.client.common.IndexerClient
 import com.algorand.algosdk.v2.client.model.PendingTransactionResponse
-import com.algorand.algosdk.v2.client.model.TransactionResponse
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 import org.trustweave.anchor.*
@@ -42,6 +43,18 @@ import java.nio.charset.StandardCharsets
  * )
  * val client = AlgorandBlockchainAnchorClient(chainId, options)
  * ```
+ *
+ * **Reading historical anchors**: algod's pending-transaction endpoint only tracks
+ * recently submitted transactions (roughly until they age out of the node's pending
+ * window after confirmation). To read historical anchors, configure an Algorand
+ * Indexer via the `indexerUrl` (and optional `indexerToken`) options; [readPayload]
+ * then resolves transactions through the indexer and reports the actual on-chain
+ * round time as the anchor timestamp. Without an indexer, reads of older
+ * transactions fail with `NotFound` and the timestamp is left unset.
+ *
+ * **Confirmation**: writes wait for the transaction to be confirmed
+ * (confirmed-round > 0), bounded by the `confirmationTimeoutMs` option
+ * (default 30s).
  */
 class AlgorandBlockchainAnchorClient(
     chainId: String,
@@ -68,6 +81,12 @@ class AlgorandBlockchainAnchorClient(
     private val algodClient: AlgodClient
     private val account: Account?
 
+    /**
+     * Optional Algorand Indexer client used for reads of historical anchors;
+     * configured via the `indexerUrl` / `indexerToken` options.
+     */
+    private val indexerClient: IndexerClient?
+
     init {
         require(chainId.startsWith("algorand:")) {
             "Invalid chain ID for Algorand: $chainId"
@@ -86,6 +105,13 @@ class AlgorandBlockchainAnchorClient(
         val url = java.net.URI.create(algodUrl).toURL()
         val port = url.port.takeIf { it != -1 } ?: url.defaultPort
         algodClient = AlgodClient(url.host, port, algodToken)
+
+        // Optional Indexer client for historical reads.
+        indexerClient = (options["indexerUrl"] as? String)?.let { indexerUrl ->
+            val indexer = java.net.URI.create(indexerUrl).toURL()
+            val indexerPort = indexer.port.takeIf { it != -1 } ?: indexer.defaultPort
+            IndexerClient(indexer.host, indexerPort, options["indexerToken"] as? String ?: "")
+        }
 
         // Initialize account if private key is provided.
         // A present-but-invalid private key is a configuration error and must fail
@@ -234,7 +260,7 @@ class AlgorandBlockchainAnchorClient(
      * [AnchorResult.fee] reports the combined fee charged on chain, and
      * [AnchorResult.payerAddress] is the sponsor address (not the sender).
      */
-    private fun submitSponsored(
+    private suspend fun submitSponsored(
         payload: JsonElement,
         payloadBytes: ByteArray,
         mediaType: String,
@@ -290,12 +316,16 @@ class AlgorandBlockchainAnchorClient(
             )
         }
 
-        val txid = extractTxid(response.body())
+        val txid = response.body()?.txId
             ?: throw BlockchainException.TransactionFailed(
                 reason = "Failed to get transaction ID from Algorand response (sponsored group)",
                 chainId = chainId,
                 operation = "writePayload",
             )
+
+        // Submission only means the node accepted the group into its pool — wait
+        // for on-chain confirmation so dropped/rejected groups never report success.
+        waitForConfirmation(txid)
 
         val totalFee = (dataTxn.fee ?: BigInteger.ZERO) + (sponsorTxn.fee ?: BigInteger.ZERO)
 
@@ -311,21 +341,6 @@ class AlgorandBlockchainAnchorClient(
             fee = TokenAmount(chainId, AssetRef.Native, totalFee),
             payerAddress = sponsor.address,
         )
-    }
-
-    private fun extractTxid(responseBody: Any?): String? {
-        if (responseBody == null) return null
-        return try {
-            when {
-                responseBody.javaClass.methods.any { it.name == "getTxid" } ->
-                    responseBody.javaClass.getMethod("getTxid").invoke(responseBody) as? String
-                responseBody.javaClass.methods.any { it.name == "txid" && it.parameterCount == 0 } ->
-                    responseBody.javaClass.getMethod("txid").invoke(responseBody) as? String
-                else -> null
-            }
-        } catch (e: Exception) {
-            null
-        }
     }
 
     override protected suspend fun readTransactionFromBlockchain(txHash: String): AnchorResult {
@@ -344,7 +359,7 @@ class AlgorandBlockchainAnchorClient(
     }
 
     override protected fun generateTestTxHash(): String {
-        return "algo_test_${System.currentTimeMillis()}_${(0..1000000).random()}"
+        return "algo_test_${uniqueTestHashSuffix()}"
     }
 
     override protected fun getBlockchainName(): String {
@@ -380,68 +395,95 @@ class AlgorandBlockchainAnchorClient(
             )
         }
 
-        val txid = extractTxid(response.body())
+        val txid = response.body()?.txId
             ?: throw BlockchainException.TransactionFailed(
                 reason = "Failed to get transaction ID from Algorand response",
                 chainId = chainId,
                 operation = "submitTransaction",
             )
 
+        // Submission only means the node accepted the tx into its pool — wait for
+        // on-chain confirmation so dropped/rejected txs never report success.
+        waitForConfirmation(txid)
+
         return txid to feeMicroAlgos
     }
 
-    private suspend fun readTransactionFromBlockchainImpl(txHash: String): AnchorResult {
-        val txInfo = algodClient.PendingTransactionInformation(txHash).execute().body()
-            ?: throw TrustWeaveException.NotFound(resource = "Transaction not found: $txHash")
-
-        // Use proper SDK API methods instead of reflection
-        val transaction: TransactionResponse? = try {
-            // PendingTransactionResponse should have a transaction property
-            // Try to get transaction using proper API
-            txInfo.javaClass.methods.find { it.name == "getTransaction" }?.invoke(txInfo) as? TransactionResponse
-                ?: txInfo.javaClass.methods.find { it.name == "transaction" && it.parameterCount == 0 }?.invoke(txInfo) as? TransactionResponse
-        } catch (e: Exception) {
-            null
-        }
-
-        if (transaction == null) {
-            throw TrustWeaveException.NotFound(resource = "Transaction not found: $txHash")
-        }
-
-        // Extract note from transaction
-        val note: ByteArray? = try {
-            // Try to get note using proper API methods
-            when {
-                transaction.javaClass.methods.any { it.name == "getNote" } -> {
-                    transaction.javaClass.getMethod("getNote").invoke(transaction) as? ByteArray
+    /**
+     * Polls the node's pending-transaction endpoint until the transaction is
+     * confirmed (confirmed-round > 0), bounded by [confirmationTimeoutMs]
+     * (option [OPTION_CONFIRMATION_TIMEOUT_MS]). Throws
+     * [BlockchainException.TransactionFailed] if the node rejects the transaction
+     * (pool error) or the timeout elapses.
+     */
+    private suspend fun waitForConfirmation(txid: String): PendingTransactionResponse {
+        val deadline = System.currentTimeMillis() + confirmationTimeoutMs
+        while (true) {
+            val pending = try {
+                algodClient.PendingTransactionInformation(txid).execute().body()
+            } catch (e: Exception) {
+                null
+            }
+            if (pending != null) {
+                val poolError = pending.poolError
+                if (!poolError.isNullOrBlank()) {
+                    throw BlockchainException.TransactionFailed(
+                        chainId = chainId,
+                        txHash = txid,
+                        operation = "submitTransaction",
+                        reason = "Transaction rejected by Algorand node: $poolError"
+                    )
                 }
-                transaction.javaClass.methods.any { it.name == "note" && it.parameterCount == 0 } -> {
-                    transaction.javaClass.getMethod("note").invoke(transaction) as? ByteArray
-                }
-                else -> {
-                    null
+                if ((pending.confirmedRound ?: 0L) > 0L) {
+                    return pending
                 }
             }
-        } catch (e: Exception) {
-            null
+            if (System.currentTimeMillis() >= deadline) {
+                throw BlockchainException.TransactionFailed(
+                    chainId = chainId,
+                    txHash = txid,
+                    operation = "submitTransaction",
+                    reason = "Transaction not confirmed within $confirmationTimeoutMs ms " +
+                        "(configure via '$OPTION_CONFIRMATION_TIMEOUT_MS' option)"
+                )
+            }
+            delay(confirmationPollIntervalMs)
         }
+    }
 
-        if (note == null) {
-            throw TrustWeaveException.NotFound(
-                resource = "Transaction note not found: $txHash. Transaction may not contain note data."
+    private suspend fun readTransactionFromBlockchainImpl(txHash: String): AnchorResult {
+        return if (indexerClient != null) {
+            readFromIndexer(indexerClient, txHash)
+        } else {
+            readFromAlgodPendingPool(txHash)
+        }
+    }
+
+    /**
+     * Resolves a transaction through the configured Algorand Indexer.
+     * The anchor timestamp is the actual on-chain round time.
+     */
+    private fun readFromIndexer(indexer: IndexerClient, txHash: String): AnchorResult {
+        val response = try {
+            indexer.lookupTransaction(txHash).execute()
+        } catch (e: Exception) {
+            throw BlockchainException.TransactionFailed(
+                chainId = chainId,
+                txHash = txHash,
+                operation = "readPayload",
+                reason = "Failed to query Algorand indexer: ${e.message ?: "Unknown error"}",
+                cause = e
             )
         }
+        val transaction = response.takeIf { it.isSuccessful }?.body()?.transaction
+            ?: throw TrustWeaveException.NotFound(resource = "Transaction not found on Algorand indexer: $txHash")
 
-        val payloadJson = String(note, StandardCharsets.UTF_8)
-        val payload = Json.parseToJsonElement(payloadJson)
+        val note = transaction.note
+            ?: throw TrustWeaveException.NotFound(
+                resource = "Transaction note not found: $txHash. Transaction may not contain note data."
+            )
 
-        // Extract confirmed round using proper API
-        val confirmedRound: Long? = try {
-            txInfo.javaClass.methods.find { it.name == "getConfirmedRound" }?.invoke(txInfo) as? Long
-                ?: txInfo.javaClass.methods.find { it.name == "confirmedRound" && it.parameterCount == 0 }?.invoke(txInfo) as? Long
-        } catch (e: Exception) {
-            null
-        }
+        val payload = Json.parseToJsonElement(String(note, StandardCharsets.UTF_8))
 
         return AnchorResult(
             ref = buildAnchorRef(
@@ -450,7 +492,46 @@ class AlgorandBlockchainAnchorClient(
             ),
             payload = payload,
             mediaType = "application/json",
-            timestamp = confirmedRound?.let { System.currentTimeMillis() / 1000 }
+            // Actual on-chain round time (epoch seconds) from the indexer.
+            timestamp = transaction.roundTime
+        )
+    }
+
+    /**
+     * Resolves a transaction through algod's pending-transaction endpoint.
+     * This only serves recently submitted transactions; configure `indexerUrl`
+     * for historical lookups.
+     */
+    private fun readFromAlgodPendingPool(txHash: String): AnchorResult {
+        val txInfo = try {
+            algodClient.PendingTransactionInformation(txHash).execute().body()
+        } catch (e: Exception) {
+            null
+        } ?: throw TrustWeaveException.NotFound(
+            resource = "Transaction not found via algod pending-transaction endpoint: $txHash. " +
+                "Without an 'indexerUrl' option, reads can only resolve recently submitted " +
+                "transactions still tracked by the node; configure an Algorand Indexer for " +
+                "historical lookups."
+        )
+
+        val note = txInfo.txn?.tx?.note
+            ?: throw TrustWeaveException.NotFound(
+                resource = "Transaction note not found: $txHash. Transaction may not contain note data."
+            )
+
+        val payload = Json.parseToJsonElement(String(note, StandardCharsets.UTF_8))
+
+        return AnchorResult(
+            ref = buildAnchorRef(
+                txHash = txHash,
+                contract = getContractAddress()
+            ),
+            payload = payload,
+            mediaType = "application/json",
+            // The pending-transaction response carries no block time; leave the
+            // timestamp unset rather than fabricating one. Configure 'indexerUrl'
+            // to get the actual round time.
+            timestamp = null
         )
     }
 }

@@ -7,11 +7,14 @@ import com.nimbusds.jose.crypto.ECDSAVerifier
 import com.nimbusds.jose.jwk.Curve
 import com.nimbusds.jose.jwk.ECKey
 import com.nimbusds.jose.util.Base64URL
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.trustweave.credential.internal.SecurityConstants
 import org.trustweave.credential.proof.internal.engines.ProofEngineUtils
 import org.trustweave.credential.spi.proof.SignatureVerificationPort
 import org.trustweave.did.model.VerificationMethod
 import org.slf4j.LoggerFactory
+import java.security.Provider
+import java.security.Security
 
 /**
  * [SignatureVerificationPort] for the JsonWebSignature2020 W3C Data Integrity cryptosuite.
@@ -20,7 +23,9 @@ import org.slf4j.LoggerFactory
  * `<header>..<signature>` — where the payload (the canonicalized document) is detached and
  * must be re-attached before verification.
  *
- * Supports ES256, ES384, ES512 (ECDSA on P-256/P-384/P-521) and EdDSA (Ed25519).
+ * Supports ES256, ES256K, ES384, ES512 (ECDSA on P-256/secp256k1/P-384/P-521) and
+ * EdDSA (Ed25519). ES256K uses the Bouncy Castle provider because secp256k1 was removed
+ * from the JDK's built-in SunEC provider (JDK 16+).
  *
  * EdDSA verification intentionally uses the Java Security API (`Signature("Ed25519")`)
  * instead of Nimbus' `Ed25519Verifier`: the latter requires the OPTIONAL
@@ -62,7 +67,9 @@ internal class DefaultJsonWebSignature2020Adapter : SignatureVerificationPort {
             when {
                 header.algorithm == JWSAlgorithm.EdDSA ->
                     verifyEd25519(parts[0], payloadBase64, parts[2], verificationMethod)
-                header.algorithm in setOf(JWSAlgorithm.ES256, JWSAlgorithm.ES384, JWSAlgorithm.ES512) -> {
+                header.algorithm in setOf(
+                    JWSAlgorithm.ES256, JWSAlgorithm.ES256K, JWSAlgorithm.ES384, JWSAlgorithm.ES512
+                ) -> {
                     val jwsObject = JWSObject.parse("${parts[0]}.$payloadBase64.${parts[2]}")
                     val verifier = buildEcdsaVerifier(header.algorithm, verificationMethod) ?: return false
                     jwsObject.verify(verifier)
@@ -125,6 +132,7 @@ internal class DefaultJsonWebSignature2020Adapter : SignatureVerificationPort {
         } else {
             val curve = when (algorithm) {
                 JWSAlgorithm.ES256 -> Curve.P_256
+                JWSAlgorithm.ES256K -> Curve.SECP256K1
                 JWSAlgorithm.ES384 -> Curve.P_384
                 else -> Curve.P_521
             }
@@ -134,11 +142,29 @@ internal class DefaultJsonWebSignature2020Adapter : SignatureVerificationPort {
                 null
             } else {
                 val ecKey = ECKey.Builder(curve, Base64URL(x), Base64URL(y)).build()
-                ECDSAVerifier(ecKey.toECPublicKey())
+                if (algorithm == JWSAlgorithm.ES256K) {
+                    // secp256k1 was removed from the JDK's SunEC provider (JDK 16+):
+                    // both key construction and signature verification must go through
+                    // Bouncy Castle (bcprov is a declared dependency of this module).
+                    val bc = bouncyCastleProvider()
+                    ECDSAVerifier(ecKey.toECPublicKey(bc)).apply { jcaContext.provider = bc }
+                } else {
+                    ECDSAVerifier(ecKey.toECPublicKey())
+                }
             }
         }
     } catch (e: Exception) {
         logger.error("Failed to build ECDSA JWS verifier: {}", e.message, e)
         null
+    }
+
+    /**
+     * Return the registered Bouncy Castle JCA provider, registering it if necessary.
+     */
+    private fun bouncyCastleProvider(): Provider {
+        Security.getProvider(BouncyCastleProvider.PROVIDER_NAME)?.let { return it }
+        val provider = BouncyCastleProvider()
+        Security.addProvider(provider)
+        return provider
     }
 }

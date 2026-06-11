@@ -58,8 +58,9 @@ class AwsS3Wallet(
                 .key(key)
                 .build()
 
-            val response = s3Client.getObject(request)
-            response.readAllBytes()
+            // ResponseInputStream holds the underlying HTTP connection — it MUST be
+            // closed after reading, otherwise the connection pool is exhausted.
+            s3Client.getObject(request).use { it.readAllBytes() }
         } catch (e: NoSuchKeyException) {
             null
         } catch (e: Exception) {
@@ -76,20 +77,35 @@ class AwsS3Wallet(
 
             s3Client.deleteObject(request)
             true
-        } catch (e: Exception) {
+        } catch (e: NoSuchKeyException) {
+            // Missing key means "nothing to delete" — not a storage failure.
             false
+        } catch (e: Exception) {
+            // Auth failures, networking errors, etc. must NOT be reported as
+            // "not found" — propagate them as storage errors.
+            throw RuntimeException("Failed to delete from S3: ${e.message}", e)
         }
     }
 
     override suspend fun listKeys(prefix: String): List<String> = withContext(Dispatchers.IO) {
         try {
-            val request = ListObjectsV2Request.builder()
-                .bucket(bucketName)
-                .prefix(prefix)
-                .build()
+            // S3 returns at most 1000 keys per ListObjectsV2 call. Follow the
+            // continuation token until the listing is complete; otherwise wallets
+            // with >1000 credentials are silently truncated.
+            val keys = mutableListOf<String>()
+            var continuationToken: String? = null
+            do {
+                val request = ListObjectsV2Request.builder()
+                    .bucket(bucketName)
+                    .prefix(prefix)
+                    .continuationToken(continuationToken)
+                    .build()
 
-            val response = s3Client.listObjectsV2(request)
-            response.contents().map { it.key() }
+                val response = s3Client.listObjectsV2(request)
+                response.contents().forEach { keys.add(it.key()) }
+                continuationToken = if (response.isTruncated == true) response.nextContinuationToken() else null
+            } while (continuationToken != null)
+            keys
         } catch (e: Exception) {
             throw RuntimeException("Failed to list keys from S3: ${e.message}", e)
         }

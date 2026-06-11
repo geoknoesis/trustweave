@@ -68,7 +68,7 @@ abstract class CloudWallet(
 
     // CredentialStorage implementation
     override suspend fun store(credential: VerifiableCredential): String = withContext(Dispatchers.IO) {
-        val id = credential.id ?: UUID.randomUUID().toString()
+        val id = credential.id?.value ?: UUID.randomUUID().toString()
         val credentialJson = json.encodeToString(VerifiableCredential.serializer(), credential)
 
         val key = "$credentialsPath/$id.json"
@@ -79,7 +79,7 @@ abstract class CloudWallet(
         val existingMetadata = download(metadataKey)
         if (existingMetadata == null) {
             val metadata = buildJsonObject {
-                put("credentialId", id as String)
+                put("credentialId", id)
                 put("createdAt", Clock.System.now().toString())
                 put("updatedAt", Clock.System.now().toString())
                 put("notes", JsonNull)
@@ -89,7 +89,7 @@ abstract class CloudWallet(
             upload(metadataKey, json.encodeToString(JsonObject.serializer(), metadata).toByteArray(Charsets.UTF_8))
         }
 
-        id as String
+        id
     }
 
     override suspend fun get(credentialId: String): VerifiableCredential? = withContext(Dispatchers.IO) {
@@ -138,6 +138,18 @@ abstract class CloudWallet(
     override suspend fun query(query: CredentialQueryBuilder.() -> Unit): List<VerifiableCredential> = withContext(Dispatchers.IO) {
         val builder = CredentialQueryBuilder()
         builder.query()
+
+        // CloudWallet stores no queryable tag/collection data, so byTag/byCollection
+        // cannot be honored. Failing loudly is required by the CredentialQueryBuilder
+        // contract — silently returning unfiltered credentials would feed wrong
+        // candidates into presentation selection.
+        if (builder.requestedTags.isNotEmpty() || builder.requestedCollections.isNotEmpty()) {
+            throw UnsupportedOperationException(
+                "CloudWallet does not support byTag/byCollection query filters " +
+                    "(requested tags=${builder.requestedTags}, collections=${builder.requestedCollections}). " +
+                    "Use a wallet with CredentialTagging/CredentialCollections support instead."
+            )
+        }
 
         val predicate = builder.toPredicate()
         val allCredentials = list(null)

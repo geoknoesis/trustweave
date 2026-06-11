@@ -1,5 +1,6 @@
 package org.trustweave.trust.dsl
 
+import org.trustweave.core.exception.ConfigException
 import org.trustweave.did.model.DidDocument
 import org.trustweave.kms.KeyHandle
 import org.trustweave.kms.results.SignResult
@@ -84,9 +85,9 @@ class TrustWeaveConfigBranchCoverageTest {
                 }
             }
             assertNotNull(trustWeaveConfig.configuration.kms)
-        } catch (e: IllegalStateException) {
+        } catch (e: ConfigException.UnsupportedValue) {
             // Provider not available - expected in test environment
-            assertTrue(e.message?.contains("not found") == true)
+            assertTrue(e.message.contains("not found"))
         }
     }
 
@@ -108,7 +109,7 @@ class TrustWeaveConfigBranchCoverageTest {
 
     @Test
     fun `test branch KMS error when provider not found`() = runBlocking {
-        assertFailsWith<IllegalStateException> {
+        val exception = assertFailsWith<ConfigException.UnsupportedValue> {
             trustWeave {
                 keys {
                     provider("nonexistent-provider")
@@ -118,6 +119,10 @@ class TrustWeaveConfigBranchCoverageTest {
                 }
             }
         }
+        assertEquals("keys.provider", exception.field)
+        assertEquals("nonexistent-provider", exception.value)
+        // The original lookup failure must be preserved as the cause.
+        assertNotNull(exception.cause)
     }
 
     @Test
@@ -572,6 +577,93 @@ class TrustWeaveConfigBranchCoverageTest {
 
         assertNotNull(trustWeaveConfig)
         assertTrue(trustWeaveConfig.configuration.didMethods.containsKey("key"))
+    }
+
+    // ========== Revocation Provider Branches ==========
+
+    @Test
+    fun `test branch revocation provider inMemory is honored`() = runBlocking {
+        val trustWeaveConfig = TrustWeave.build {
+            keys {
+                provider("inMemory")
+            }
+            did {
+                method("key") {}
+            }
+            revocation { provider("inMemory") }
+        }
+
+        assertNotNull(trustWeaveConfig.configuration.revocationManager)
+    }
+
+    @Test
+    fun `test branch revocation provider default alias is honored`() = runBlocking {
+        val trustWeaveConfig = TrustWeave.build {
+            keys {
+                provider("inMemory")
+            }
+            did {
+                method("key") {}
+            }
+            revocation("default")
+        }
+
+        assertNotNull(trustWeaveConfig.configuration.revocationManager)
+    }
+
+    @Test
+    fun `test branch unknown revocation provider fails instead of being silently ignored`() = runBlocking {
+        val exception = assertFailsWith<ConfigException.UnsupportedValue> {
+            TrustWeave.build {
+                keys {
+                    provider("inMemory")
+                }
+                did {
+                    method("key") {}
+                }
+                revocation("redis")
+            }
+        }
+
+        assertEquals("revocation.provider", exception.field)
+        assertEquals("redis", exception.value)
+        assertTrue(exception.message.contains("not yet supported"))
+    }
+
+    // ========== Schema Config Branches ==========
+
+    @Test
+    fun `test branch schemas with default JSON_SCHEMA format is accepted`() = runBlocking {
+        val trustWeaveConfig = TrustWeave.build {
+            keys {
+                provider("inMemory")
+            }
+            did {
+                method("key") {}
+            }
+            schemas(defaultFormat = org.trustweave.credential.model.SchemaFormat.JSON_SCHEMA)
+        }
+
+        assertNotNull(trustWeaveConfig)
+    }
+
+    @Test
+    fun `test branch schemas with non-default format fails instead of being silently ignored`() = runBlocking {
+        val exception = assertFailsWith<ConfigException.UnsupportedValue> {
+            TrustWeave.build {
+                keys {
+                    provider("inMemory")
+                }
+                did {
+                    method("key") {}
+                }
+                schemas(defaultFormat = org.trustweave.credential.model.SchemaFormat.SHACL)
+            }
+        }
+
+        assertEquals("schemas.defaultFormat", exception.field)
+        assertEquals("SHACL", exception.value)
+        assertTrue(exception.message.contains("not yet supported"))
     }
 
     @Test

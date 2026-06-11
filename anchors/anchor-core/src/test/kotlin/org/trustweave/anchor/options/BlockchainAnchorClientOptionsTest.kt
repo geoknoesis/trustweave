@@ -168,6 +168,20 @@ class BlockchainAnchorClientOptionsTest {
     }
 
     @Test
+    fun `test AlgorandOptions round-trips indexer settings`() {
+        val options = AlgorandOptions(
+            algodUrl = "https://testnet-api.algonode.cloud",
+            indexerUrl = "https://testnet-idx.algonode.cloud",
+            indexerToken = "token"
+        )
+
+        val map = options.toMap()
+        assertEquals("https://testnet-idx.algonode.cloud", map["indexerUrl"])
+        assertEquals("token", map["indexerToken"])
+        assertEquals(options, AlgorandOptions.fromMap(map))
+    }
+
+    @Test
     fun `test fromMap with Polygon chain ID`() {
         val map = mapOf("rpcUrl" to "https://polygon-rpc.com")
 
@@ -178,10 +192,10 @@ class BlockchainAnchorClientOptionsTest {
     }
 
     @Test
-    fun `test fromMap with Mumbai chain ID`() {
-        val map = mapOf("rpcUrl" to "https://mumbai-rpc.com")
+    fun `test fromMap with Amoy chain ID`() {
+        val map = mapOf("rpcUrl" to "https://rpc-amoy.polygon.technology")
 
-        val options = BlockchainAnchorClientOptions.fromMap("eip155:80001", map)
+        val options = BlockchainAnchorClientOptions.fromMap("eip155:80002", map)
 
         assertTrue(options is PolygonOptions)
     }

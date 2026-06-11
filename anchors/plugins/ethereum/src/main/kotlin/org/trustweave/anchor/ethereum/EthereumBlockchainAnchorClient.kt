@@ -1,9 +1,11 @@
 package org.trustweave.anchor.ethereum
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 import org.trustweave.anchor.*
+import org.trustweave.anchor.evm.EvmGas
 import org.trustweave.anchor.exceptions.BlockchainException
 import org.trustweave.anchor.exceptions.TreasuryException
 import org.trustweave.anchor.payment.AssetRef
@@ -13,6 +15,8 @@ import org.trustweave.anchor.payment.TokenAmount
 import org.trustweave.anchor.payment.isUnmanaged
 import org.trustweave.core.exception.TrustWeaveException
 import org.web3j.protocol.Web3j
+import org.web3j.protocol.core.DefaultBlockParameter
+import org.web3j.protocol.core.methods.response.TransactionReceipt
 import org.web3j.protocol.http.HttpService
 import org.web3j.tx.RawTransactionManager
 import org.web3j.tx.TransactionManager
@@ -100,7 +104,7 @@ class EthereumBlockchainAnchorClient(
     }
 
     override protected suspend fun submitTransactionToBlockchain(payloadBytes: ByteArray): String {
-        return submitTransaction(payloadBytes)
+        return submitTransaction(payloadBytes).transactionHash
     }
 
     override protected suspend fun readTransactionFromBlockchain(txHash: String): AnchorResult {
@@ -124,7 +128,7 @@ class EthereumBlockchainAnchorClient(
     }
 
     override protected fun generateTestTxHash(): String {
-        return "0x${(0..1000000).random().toString(16).padStart(64, '0')}"
+        return "0x${uniqueTestHashHex()}"
     }
 
     override protected fun getBlockchainName(): String {
@@ -134,7 +138,8 @@ class EthereumBlockchainAnchorClient(
     override suspend fun estimate(op: OperationDescriptor): TokenAmount = withContext(Dispatchers.IO) {
         val gasPrice = web3j.ethGasPrice().send().gasPrice
         val gasLimit = op.contractCall?.let {
-            // Best-effort calldata-based gas size; fall back to default on failure.
+            // eth_estimateGas is authoritative for contract calls; fall back to
+            // calldata math (never a blanket multi-million default) on failure.
             try {
                 val from = credentials?.address ?: "0x0000000000000000000000000000000000000000"
                 val tx = org.web3j.protocol.core.methods.request.Transaction.createFunctionCallTransaction(
@@ -148,9 +153,19 @@ class EthereumBlockchainAnchorClient(
                 )
                 web3j.ethEstimateGas(tx).send().amountUsed
             } catch (_: Exception) {
-                org.web3j.tx.gas.DefaultGasProvider.GAS_LIMIT
+                EvmGas.txGasLimit(it.callData)
             }
-        } ?: org.web3j.tx.gas.DefaultGasProvider.GAS_LIMIT
+        } ?: run {
+            // Plain anchor tx: a data-carrying value transfer costs exactly the
+            // intrinsic gas of its calldata — size it from the payload bytes.
+            val payloadBytes = op.payload?.let {
+                Json.encodeToString(JsonElement.serializer(), it).toByteArray(StandardCharsets.UTF_8)
+            }
+            when {
+                payloadBytes != null -> EvmGas.txGasLimit(payloadBytes)
+                else -> EvmGas.txGasLimitForSize(op.payloadSizeBytes ?: 0L)
+            }
+        }
 
         val gasCost = gasPrice.multiply(gasLimit)
         val valueWei = op.contractCall?.value?.amount ?: BigInteger.ZERO
@@ -193,12 +208,12 @@ class EthereumBlockchainAnchorClient(
             try {
                 val creds = credentials
                     ?: throw IllegalStateException("Credentials not configured. Provide 'privateKey' in options.")
-                val txHash = submitTransaction(payloadBytes)
-                val feePaid = computeActualFee(txHash)
+                val receipt = submitTransaction(payloadBytes)
+                val feePaid = computeActualFee(receipt)
 
                 AnchorResult(
                     ref = buildAnchorRef(
-                        txHash = txHash,
+                        txHash = receipt.transactionHash,
                         contract = getContractAddress(),
                         extra = buildExtraMetadata(mediaType),
                     ),
@@ -222,42 +237,38 @@ class EthereumBlockchainAnchorClient(
         }
     }
 
-    private fun computeActualFee(txHash: String): TokenAmount? = try {
-        val receiptOpt = web3j.ethGetTransactionReceipt(txHash).send().transactionReceipt
-        if (receiptOpt.isPresent) {
-            val receipt = receiptOpt.get()
-            val gasUsed = receipt.gasUsed ?: BigInteger.ZERO
-            // effectiveGasPrice — exposed by EIP-1559 receipts; fall back to tx gasPrice.
-            val effectivePrice = try {
-                val getter = receipt.javaClass.getMethod("getEffectiveGasPrice")
-                (getter.invoke(receipt) as? String)
-                    ?.let { org.web3j.utils.Numeric.decodeQuantity(it) }
-            } catch (_: Exception) {
-                null
-            } ?: run {
-                web3j.ethGetTransactionByHash(txHash).send().transaction.orElse(null)?.gasPrice
-                    ?: BigInteger.ZERO
-            }
-            TokenAmount(chainId, AssetRef.Native, gasUsed.multiply(effectivePrice))
-        } else {
-            null
-        }
+    /**
+     * Computes the fee actually paid from the confirmed [receipt].
+     * `effectiveGasPrice` is populated on EIP-1559 chains; falls back to the
+     * transaction's gas price otherwise.
+     */
+    private fun computeActualFee(receipt: TransactionReceipt): TokenAmount? = try {
+        val gasUsed = receipt.gasUsed ?: BigInteger.ZERO
+        val effectivePrice = receipt.effectiveGasPrice
+            ?.let { org.web3j.utils.Numeric.decodeQuantity(it) }
+            ?: web3j.ethGetTransactionByHash(receipt.transactionHash).send()
+                .transaction.orElse(null)?.gasPrice
+            ?: BigInteger.ZERO
+        TokenAmount(chainId, AssetRef.Native, gasUsed.multiply(effectivePrice))
     } catch (_: Exception) {
         null
     }
 
-    private suspend fun submitTransaction(data: ByteArray): String {
+    private suspend fun submitTransaction(data: ByteArray): TransactionReceipt {
         val creds = credentials ?: throw IllegalStateException("Credentials not configured. Provide 'privateKey' in options.")
 
         val gasPrice = web3j.ethGasPrice().send().gasPrice
-        val nonce = web3j.ethGetTransactionCount(creds.address, org.web3j.protocol.core.DefaultBlockParameterName.LATEST)
+        // PENDING (not LATEST) so rapid successive anchors don't reuse a nonce.
+        val nonce = web3j.ethGetTransactionCount(creds.address, org.web3j.protocol.core.DefaultBlockParameterName.PENDING)
             .send().transactionCount
 
-        val transaction = org.web3j.tx.gas.DefaultGasProvider()
+        // An anchor is a data-carrying value transfer: its cost is the intrinsic
+        // calldata gas (+10% margin), not a blanket multi-million default limit.
+        val gasLimit = EvmGas.txGasLimit(data)
         val rawTransaction = org.web3j.crypto.RawTransaction.createTransaction(
             nonce,
             gasPrice,
-            transaction.gasLimit,
+            gasLimit,
             creds.address, // Send to self
             BigInteger.ZERO,
             org.web3j.utils.Numeric.toHexString(data)
@@ -274,12 +285,55 @@ class EthereumBlockchainAnchorClient(
                 txHash = null,
                 operation = "submitTransaction",
                 payloadSize = data.size.toLong(),
-                gasUsed = transaction.gasLimit?.toLong(),
+                gasUsed = gasLimit.toLong(),
                 reason = "Transaction failed: ${error?.message ?: "Unknown error"}"
             )
         }
 
-        return ethSendTransaction.transactionHash
+        // eth_sendRawTransaction only means the node accepted the tx into its pool —
+        // wait for on-chain confirmation so dropped or reverted txs are never
+        // reported as successful anchors.
+        return waitForReceipt(ethSendTransaction.transactionHash, data.size.toLong())
+    }
+
+    /**
+     * Polls `eth_getTransactionReceipt` until the transaction is mined, bounded by
+     * [confirmationTimeoutMs] (option [OPTION_CONFIRMATION_TIMEOUT_MS]). Throws
+     * [BlockchainException.TransactionFailed] on revert or timeout.
+     */
+    private suspend fun waitForReceipt(txHash: String, payloadSize: Long): TransactionReceipt {
+        val deadline = System.currentTimeMillis() + confirmationTimeoutMs
+        while (true) {
+            val receipt = web3j.ethGetTransactionReceipt(txHash).send().transactionReceipt.orElse(null)
+            if (receipt != null) {
+                if (!receipt.isStatusOK) {
+                    throw BlockchainException.TransactionFailed(
+                        chainId = chainId,
+                        txHash = txHash,
+                        operation = "submitTransaction",
+                        payloadSize = payloadSize,
+                        gasUsed = try {
+                            receipt.gasUsed?.toLong()
+                        } catch (_: Exception) {
+                            null
+                        },
+                        reason = "Transaction reverted on chain (status=${receipt.status})"
+                    )
+                }
+                return receipt
+            }
+            if (System.currentTimeMillis() >= deadline) {
+                throw BlockchainException.TransactionFailed(
+                    chainId = chainId,
+                    txHash = txHash,
+                    operation = "submitTransaction",
+                    payloadSize = payloadSize,
+                    reason = "Transaction not confirmed within $confirmationTimeoutMs ms " +
+                        "(configure via '$OPTION_CONFIRMATION_TIMEOUT_MS' option)"
+                )
+            }
+            delay(confirmationPollIntervalMs)
+        }
     }
 
     private suspend fun readTransactionFromBlockchainImpl(txHash: String): AnchorResult {
@@ -305,8 +359,13 @@ class EthereumBlockchainAnchorClient(
         val payloadJson = String(dataBytes, StandardCharsets.UTF_8)
         val payload = Json.parseToJsonElement(payloadJson)
 
-        val blockNumber = try {
-            receipt.blockNumber?.toLong()
+        // Use the actual block timestamp (one extra RPC call); if it cannot be
+        // resolved, leave the timestamp unset rather than fabricating one.
+        val blockTimestamp = try {
+            receipt.blockNumber?.let { blockNumber ->
+                web3j.ethGetBlockByNumber(DefaultBlockParameter.valueOf(blockNumber), false)
+                    .send().block?.timestamp?.toLong()
+            }
         } catch (e: Exception) {
             null
         }
@@ -318,7 +377,7 @@ class EthereumBlockchainAnchorClient(
             ),
             payload = payload,
             mediaType = "application/json",
-            timestamp = blockNumber?.let { System.currentTimeMillis() / 1000 }
+            timestamp = blockTimestamp
         )
     }
 

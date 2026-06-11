@@ -2,18 +2,23 @@ package org.trustweave.testkit
 
 import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.anchor.BlockchainAnchorRegistry
+import org.trustweave.anchor.spi.BlockchainAnchorClientProvider
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.KeyAlgorithm
 import org.trustweave.did.DidMethod
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.registry.DidMethodRegistry
 import org.trustweave.did.didCreationOptions
+import org.trustweave.did.spi.DidMethodProvider
+import org.trustweave.kms.spi.KeyManagementServiceProvider
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import org.slf4j.LoggerFactory
+import java.util.ServiceLoader
 
 /**
  * Comprehensive test fixture builder for TrustWeave tests.
@@ -44,6 +49,8 @@ import kotlinx.serialization.json.put
  * ```
  */
 import org.trustweave.kms.KeyManagementService
+
+private val logger = LoggerFactory.getLogger(TrustWeaveTestFixture::class.java)
 
 class TrustWeaveTestFixture private constructor(
     private val kms: KeyManagementService,
@@ -204,18 +211,27 @@ class TrustWeaveTestFixture private constructor(
          * Attempts to load the plugin via SPI if available, otherwise uses mock.
          *
          * @param methodName The DID method name (e.g., "key", "web", "ion")
-         * @param config Optional configuration map for the plugin
+         * @param config Optional configuration map for the plugin (currently unused by SPI loading)
          * @return This builder
          */
         fun withDidMethodPlugin(methodName: String, config: Map<String, Any> = emptyMap()): Builder {
             val kmsInstance = kms ?: InMemoryKeyManagementService()
 
-            // Try to load via SPI first
+            // Try to load via SPI first; fall back to the in-memory mock with a clear warning.
             val didMethod = try {
-                loadDidMethodViaSpi(methodName, kmsInstance, config)
+                loadDidMethodViaSpi(methodName)
             } catch (e: Exception) {
-                // Fall back to mock if SPI fails
+                logger.warn(
+                    "SPI loading of DID method '{}' failed ({}); falling back to in-memory test double",
+                    methodName, e.toString(), e
+                )
                 null
+            }
+            if (didMethod == null) {
+                logger.warn(
+                    "No SPI DidMethodProvider available for DID method '{}'; falling back to in-memory test double",
+                    methodName
+                )
             }
 
             this.didMethod = didMethod ?: when (methodName) {
@@ -240,11 +256,20 @@ class TrustWeaveTestFixture private constructor(
             val kmsInstance = try {
                 loadKmsViaSpi(providerName, config)
             } catch (e: Exception) {
-                // Fall back to in-memory if SPI fails
-                InMemoryKeyManagementService()
+                logger.warn(
+                    "SPI loading of KMS provider '{}' failed ({}); falling back to InMemoryKeyManagementService",
+                    providerName, e.toString(), e
+                )
+                null
+            }
+            if (kmsInstance == null) {
+                logger.warn(
+                    "No SPI KeyManagementServiceProvider named '{}' available; falling back to InMemoryKeyManagementService",
+                    providerName
+                )
             }
 
-            this.kms = kmsInstance
+            this.kms = kmsInstance ?: InMemoryKeyManagementService()
             return this
         }
 
@@ -258,89 +283,82 @@ class TrustWeaveTestFixture private constructor(
          */
         fun withChainPlugin(chainId: String, config: Map<String, Any> = emptyMap()): Builder {
             val client = try {
-                loadChainClientViaSpi(chainId, config) ?: InMemoryBlockchainAnchorClient(chainId)
+                loadChainClientViaSpi(chainId, config)
             } catch (e: Exception) {
-                // Fall back to in-memory if SPI fails
-                InMemoryBlockchainAnchorClient(chainId)
+                logger.warn(
+                    "SPI loading of anchor client for chain '{}' failed ({}); falling back to InMemoryBlockchainAnchorClient",
+                    chainId, e.toString(), e
+                )
+                null
+            }
+            if (client == null) {
+                logger.warn(
+                    "No SPI BlockchainAnchorClientProvider available for chain '{}'; falling back to InMemoryBlockchainAnchorClient",
+                    chainId
+                )
             }
 
-            blockchainClients[chainId] = client
+            blockchainClients[chainId] = client ?: InMemoryBlockchainAnchorClient(chainId)
             return this
         }
 
         /**
-         * Helper to load DID method via SPI.
+         * Loads a DID method via typed [ServiceLoader] lookup of [DidMethodProvider].
+         *
+         * @return The first matching DID method, or null if no provider supports [methodName]
          */
-        private fun loadDidMethodViaSpi(
-            methodName: String,
-            kms: KeyManagementService,
-            config: Map<String, Any>
-        ): DidMethod? {
-            return try {
-                val providerClass = Class.forName("org.trustweave.did.spi.DidMethodProvider")
-                val serviceLoader = java.util.ServiceLoader.load(providerClass)
-
-                for (provider in serviceLoader) {
-                    val createMethod = providerClass.getMethod("create", String::class.java, DidCreationOptions::class.java)
-                    val options = DidCreationOptions()
-                    val method = createMethod.invoke(provider, methodName, options) as? DidMethod
+        private fun loadDidMethodViaSpi(methodName: String): DidMethod? {
+            val providers = ServiceLoader.load(DidMethodProvider::class.java)
+            for (provider in providers) {
+                if (methodName in provider.supportedMethods && provider.hasRequiredEnvironmentVariables()) {
+                    val method = provider.create(methodName, DidCreationOptions())
                     if (method != null) {
                         return method
                     }
                 }
-                null
-            } catch (e: Exception) {
-                null
             }
+            return null
         }
 
         /**
-         * Helper to load KMS via SPI.
+         * Loads a KMS via typed [ServiceLoader] lookup of [KeyManagementServiceProvider].
+         *
+         * @return The KMS from the provider named [providerName], or null if not found
          */
         private fun loadKmsViaSpi(
             providerName: String,
             config: Map<String, Any>
         ): KeyManagementService? {
-            return try {
-                val providerClass = Class.forName("org.trustweave.kms.spi.KeyManagementServiceProvider")
-                val serviceLoader = java.util.ServiceLoader.load(providerClass)
-
-                for (provider in serviceLoader) {
-                    val nameMethod = providerClass.getMethod("getName")
-                    val providerNameValue = nameMethod.invoke(provider) as? String
-                    if (providerNameValue == providerName) {
-                        val createMethod = providerClass.getMethod("create", Map::class.java)
-                        return createMethod.invoke(provider, config) as? KeyManagementService
-                    }
-                }
-                null
-            } catch (e: Exception) {
-                null
-            }
+            val providers = ServiceLoader.load(KeyManagementServiceProvider::class.java)
+            // Guard on required environment variables like the DID/chain loaders do:
+            // cloud KMS clients often construct lazily and would otherwise be handed
+            // back broken (no credentials) without triggering the fallback path.
+            return providers
+                .firstOrNull { it.name == providerName && it.hasRequiredEnvironmentVariables() }
+                ?.create(config)
         }
 
         /**
-         * Helper to load chain client via SPI.
+         * Loads a blockchain anchor client via typed [ServiceLoader] lookup of
+         * [BlockchainAnchorClientProvider].
+         *
+         * @return The first client created for [chainId], or null if no provider supports it
          */
         private fun loadChainClientViaSpi(
             chainId: String,
             config: Map<String, Any>
         ): BlockchainAnchorClient? {
-            return try {
-                val providerClass = Class.forName("org.trustweave.anchor.spi.BlockchainAnchorClientProvider")
-                val serviceLoader = java.util.ServiceLoader.load(providerClass)
-
-                for (provider in serviceLoader) {
-                    val createMethod = providerClass.getMethod("create", String::class.java, Map::class.java)
-                    val client = createMethod.invoke(provider, chainId, config) as? BlockchainAnchorClient
-                    if (client != null) {
-                        return client
-                    }
+            val providers = ServiceLoader.load(BlockchainAnchorClientProvider::class.java)
+            for (provider in providers) {
+                if (!provider.hasRequiredEnvironmentVariables()) {
+                    continue
                 }
-                null
-            } catch (e: Exception) {
-                null
+                val client = provider.create(chainId, config)
+                if (client != null) {
+                    return client
+                }
             }
+            return null
         }
 
         /**

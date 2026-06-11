@@ -20,7 +20,9 @@ import java.nio.charset.StandardCharsets
  *
  * did:web resolves DID documents from HTTPS URLs:
  * - Format: `did:web:{domain}` or `did:web:{domain}:{path}`
- * - Document URL: `https://{domain}{path}/.well-known/did.json`
+ * - Bare domain: `did:web:example.com` → `https://example.com/.well-known/did.json`
+ * - With path: `did:web:example.com:user:alice` → `https://example.com/user/alice/did.json`
+ * - With port (percent-encoded): `did:web:example.com%3A8080:user` → `https://example.com:8080/user/did.json`
  *
  * **Example Usage:**
  * ```kotlin
@@ -55,6 +57,18 @@ class WebDidMethod(
         const val DEFAULT_DOCUMENT_PATH = "/.well-known/did.json"
 
         /**
+         * Characters that must never appear in a percent-decoded HOST segment.
+         * `:` is deliberately allowed (port separator, `%3A`).
+         */
+        private const val HOST_FORBIDDEN_CHARS = "@/?#"
+
+        /**
+         * Characters that must never appear in a percent-decoded PATH segment.
+         * `@` is legal inside a URL path, so it is allowed here.
+         */
+        private const val PATH_FORBIDDEN_CHARS = "/?#"
+
+        /**
          * Creates a WebDidMethod with default configuration.
          */
         fun create(
@@ -65,17 +79,22 @@ class WebDidMethod(
         }
     }
 
-    override fun getDocumentUrl(did: String): String {
-        val (domain, path) = parseWebDid(did)
+    /**
+     * Transforms a did:web identifier into its DID document URL per the W3C spec:
+     * - `did:web:example.com` → `https://example.com/.well-known/did.json`
+     * - `did:web:example.com:user:alice` → `https://example.com/user/alice/did.json`
+     * - `did:web:example.com%3A8080:user` → `https://example.com:8080/user/did.json`
+     *
+     * The `/.well-known/` location applies ONLY to bare-domain DIDs; path-based DIDs
+     * use `{path}/did.json`. Method-specific-id segments are percent-decoded before
+     * URL construction, which is how ports are expressed (`%3A` → `:`).
+     */
+    public override fun getDocumentUrl(did: String): String {
+        val (domain, pathSegments) = parseWebDid(did)
         val normalizedDomain = DidMethodUtils.normalizeDomain(domain)
 
-        // Build URL according to W3C spec
-        // For did:web:example.com, URL is https://example.com/.well-known/did.json
-        // For did:web:example.com:user:alice, URL is https://example.com/user/alice/.well-known/did.json
-        val urlPath = if (path != null && path.isNotBlank()) {
-            // Replace colons with slashes in path
-            val pathParts = path.split(":")
-            "/${pathParts.joinToString("/")}${config.documentPath}"
+        val urlPath = if (pathSegments.isNotEmpty()) {
+            "/${pathSegments.joinToString("/")}/did.json"
         } else {
             config.documentPath
         }
@@ -97,13 +116,14 @@ class WebDidMethod(
             }
 
             val request = createPublishRequest(url, document)
-            val response = executeRequest(request)
-
-            if (!response.isSuccessful) {
-                throw TrustWeaveException.Unknown(
-                    code = "HTTP_ERROR",
-                    message = "Failed to publish DID document: HTTP ${response.code} ${response.message}"
-                )
+            // Close the response on every path to avoid leaking the OkHttp connection.
+            executeRequest(request).use { response ->
+                if (!response.isSuccessful) {
+                    throw TrustWeaveException.Unknown(
+                        code = "HTTP_ERROR",
+                        message = "Failed to publish DID document: HTTP ${response.code} ${response.message}"
+                    )
+                }
             }
 
             true
@@ -267,12 +287,26 @@ class WebDidMethod(
     }
 
     /**
-     * Parses a did:web identifier into domain and path components.
+     * Parses a did:web identifier into domain and percent-decoded path segments.
+     *
+     * Per the W3C did:web spec, the method-specific identifier is split on `:` and
+     * each segment is percent-decoded before URL construction. This is what allows
+     * a port to be expressed: `did:web:example.com%3A8080` → host `example.com:8080`.
+     *
+     * Security: because the decoded segments are concatenated into an
+     * `https://{host}{path}` URL, percent-decoding must not be allowed to introduce
+     * URL metacharacters. In the host segment only `:` (the port separator) may be
+     * introduced — a decoded host containing `@` (userinfo trick: `did:web:foo%40evil.com`
+     * would fetch from `evil.com`), `/`, `?`, `#`, whitespace, or control characters is
+     * rejected. Decoded path segments must not contain `/`, `?`, `#`, or control
+     * characters (`%2F` would otherwise inject extra path levels, e.g. `..%2F` traversal).
      *
      * @param did The DID string (e.g., "did:web:example.com" or "did:web:example.com:user:alice")
-     * @return Pair of (domain, path) where path may be null
+     * @return Pair of (domain, pathSegments) where pathSegments may be empty
+     * @throws IllegalArgumentException if the DID is malformed or a decoded segment
+     *         contains forbidden URL metacharacters
      */
-    private fun parseWebDid(did: String): Pair<String, String?> {
+    private fun parseWebDid(did: String): Pair<String, List<String>> {
         val parsed = DidMethodUtils.parseDid(did)
             ?: throw IllegalArgumentException("Invalid DID format: $did")
 
@@ -280,17 +314,32 @@ class WebDidMethod(
             throw IllegalArgumentException("Not a did:web DID: $did")
         }
 
-        val identifier = parsed.second
-
-        // Check if identifier contains path (colons after domain)
-        val colonIndex = identifier.indexOf(':')
-        return if (colonIndex >= 0) {
-            val domain = identifier.substring(0, colonIndex)
-            val path = identifier.substring(colonIndex + 1)
-            domain to path
-        } else {
-            identifier to null
+        val rawSegments = parsed.second.split(":")
+        if (rawSegments.any { it.isEmpty() }) {
+            throw IllegalArgumentException(
+                "Invalid did:web DID: empty method-specific-id segment in $did"
+            )
         }
+
+        val segments = rawSegments.map { DidMethodUtils.percentDecode(it) }
+
+        val host = segments.first()
+        if (host.any { it in HOST_FORBIDDEN_CHARS || it.isWhitespace() || it.isISOControl() }) {
+            throw IllegalArgumentException(
+                "Invalid did:web DID: decoded host segment contains forbidden URL characters: $did"
+            )
+        }
+
+        val pathSegments = segments.drop(1)
+        pathSegments.forEach { segment ->
+            if (segment.any { it in PATH_FORBIDDEN_CHARS || it.isISOControl() }) {
+                throw IllegalArgumentException(
+                    "Invalid did:web DID: decoded path segment contains forbidden URL characters: $did"
+                )
+            }
+        }
+
+        return host to pathSegments
     }
 }
 

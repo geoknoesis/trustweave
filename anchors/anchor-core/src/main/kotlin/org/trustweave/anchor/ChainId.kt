@@ -69,53 +69,85 @@ sealed class ChainId {
     }
 
     /**
-     * Ethereum/Polygon chain identifiers (EIP-155).
+     * EVM chain identifiers (EIP-155).
+     *
+     * The predefined entries mirror the chains shipped as TrustWeave anchor plugins
+     * (ethereum, polygon, base, arbitrum, optimism, zksync, ganache).
+     *
+     * Note: Mumbai (80001) was decommissioned in 2024 and has been replaced by
+     * [AmoyTestnet] (80002).
      */
-    sealed class Eip155 : ChainId() {
-        object PolygonMainnet : Eip155() {
-            override fun toString() = "eip155:137"
-            override fun getNamespace() = "eip155"
-        }
+    sealed class Eip155(val chainNumber: Int) : ChainId() {
+        final override fun toString() = "eip155:$chainNumber"
 
-        object MumbaiTestnet : Eip155() {
-            override fun toString() = "eip155:80001"
-            override fun getNamespace() = "eip155"
-        }
+        final override fun getNamespace() = "eip155"
 
-        object GanacheLocal : Eip155() {
-            override fun toString() = "eip155:1337"
-            override fun getNamespace() = "eip155"
-        }
+        object EthereumMainnet : Eip155(1)
+
+        object SepoliaTestnet : Eip155(11155111)
+
+        object OptimismMainnet : Eip155(10)
+
+        object OptimismSepoliaTestnet : Eip155(11155420)
+
+        object PolygonMainnet : Eip155(137)
+
+        object AmoyTestnet : Eip155(80002)
+
+        object ZkSyncEraMainnet : Eip155(324)
+
+        object ZkSyncEraSepoliaTestnet : Eip155(300)
+
+        object BaseMainnet : Eip155(8453)
+
+        object BaseSepoliaTestnet : Eip155(84532)
+
+        object ArbitrumOneMainnet : Eip155(42161)
+
+        object ArbitrumSepoliaTestnet : Eip155(421614)
+
+        object GanacheLocal : Eip155(1337)
 
         companion object {
             /**
-             * Creates an EIP-155 chain ID from a string or chain number.
+             * All predefined EIP-155 chain IDs (one per chain shipped as an anchor plugin).
+             */
+            @JvmStatic
+            val all: List<Eip155> = listOf(
+                EthereumMainnet,
+                SepoliaTestnet,
+                OptimismMainnet,
+                OptimismSepoliaTestnet,
+                PolygonMainnet,
+                AmoyTestnet,
+                ZkSyncEraMainnet,
+                ZkSyncEraSepoliaTestnet,
+                BaseMainnet,
+                BaseSepoliaTestnet,
+                ArbitrumOneMainnet,
+                ArbitrumSepoliaTestnet,
+                GanacheLocal
+            )
+
+            private val byChainNumber: Map<Int, Eip155> = all.associateBy { it.chainNumber }
+
+            /**
+             * Creates an EIP-155 chain ID from a string.
              *
-             * @param chainId The chain ID string (e.g., "eip155:137") or number (e.g., 137)
+             * @param chainId The chain ID string (e.g., "eip155:137")
              * @return The corresponding ChainId, or null if invalid
              */
             @JvmStatic
             fun fromString(chainId: String): Eip155? {
-                return when (chainId) {
-                    "eip155:137" -> PolygonMainnet
-                    "eip155:80001" -> MumbaiTestnet
-                    "eip155:1337" -> GanacheLocal
-                    else -> null
-                }
+                if (!chainId.startsWith("eip155:")) return null
+                return chainId.removePrefix("eip155:").toIntOrNull()?.let { byChainNumber[it] }
             }
 
             /**
-             * Creates an EIP-155 chain ID from a chain number.
+             * Creates an EIP-155 chain ID from a chain number (e.g., 137).
              */
             @JvmStatic
-            fun fromChainNumber(chainNumber: Int): Eip155? {
-                return when (chainNumber) {
-                    137 -> PolygonMainnet
-                    80001 -> MumbaiTestnet
-                    1337 -> GanacheLocal
-                    else -> null
-                }
-            }
+            fun fromChainNumber(chainNumber: Int): Eip155? = byChainNumber[chainNumber]
         }
     }
 

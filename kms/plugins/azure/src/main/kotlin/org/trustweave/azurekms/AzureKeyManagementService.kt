@@ -10,6 +10,7 @@ import org.trustweave.kms.results.GenerateKeyResult
 import org.trustweave.kms.results.GetPublicKeyResult
 import org.trustweave.kms.results.SignResult
 import org.trustweave.kms.KmsOptionKeys
+import org.trustweave.kms.util.EcdsaSignatureCodec
 import org.trustweave.kms.util.KmsInputValidator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runInterruptible
@@ -372,7 +373,11 @@ class AzureKeyManagementService(
 
             val digest = prehashForAzure(data, azureSignatureAlgorithm)
             val signResult = runInterruptible { cryptographyClient.sign(azureSignatureAlgorithm, digest) }
-            SignResult.Success(signResult.signature)
+            // The Azure SDK already returns ECDSA signatures in P1363 (raw r||s) form, matching
+            // the KeyManagementService contract. normalize() passes P1363 through unchanged and
+            // only applies low-s normalization for secp256k1 (ES256K), as required by the
+            // contract (EIP-2 / Bitcoin compatibility).
+            SignResult.Success(EcdsaSignatureCodec.normalize(signResult.signature, signingAlgorithm))
         } catch (e: ResourceNotFoundException) {
             logger.debug("Key not found for signing in Azure Key Vault: ${keyId.value}", mapOf(
                 "keyId" to keyId.value,

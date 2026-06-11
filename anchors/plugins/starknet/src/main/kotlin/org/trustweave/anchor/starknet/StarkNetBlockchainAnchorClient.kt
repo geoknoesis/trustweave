@@ -111,8 +111,8 @@ class StarkNetBlockchainAnchorClient(
     }
 
     override protected fun generateTestTxHash(): String {
-        // Generate a test transaction hash (64 hex characters)
-        return "0x${(0..1000000).random().toString(16).padStart(64, '0')}"
+        // Generate a unique test transaction hash (64 hex characters)
+        return "0x${uniqueTestHashHex()}"
     }
 
     override protected fun getBlockchainName(): String {

@@ -67,6 +67,7 @@ object DidMethodUtils {
     fun algorithmToVerificationMethodType(algorithm: String): String {
         return when (algorithm.uppercase()) {
             "ED25519" -> "Ed25519VerificationKey2020"
+            "X25519" -> "X25519KeyAgreementKey2020"
             "SECP256K1" -> "EcdsaSecp256k1VerificationKey2019"
             "P-256", "P256" -> "EcdsaSecp256r1VerificationKey2019"
             "P-384", "P384" -> "EcdsaSecp384r1VerificationKey2019"
@@ -178,20 +179,23 @@ object DidMethodUtils {
      * @param method The DID method name
      * @param created Optional creation timestamp (defaults to now)
      * @param updated Optional update timestamp (defaults to now)
+     * @param deactivated Whether the DID has been deactivated (defaults to false)
      * @return DidResolutionResult.Success
      */
     fun createSuccessResolutionResult(
         document: DidDocument,
         method: String,
         created: Instant? = null,
-        updated: Instant? = null
+        updated: Instant? = null,
+        deactivated: Boolean = false
     ): DidResolutionResult {
         val now = Clock.System.now()
         return DidResolutionResult.Success(
             document = document,
             documentMetadata = DidDocumentMetadata(
                 created = created ?: now,
-                updated = updated ?: now
+                updated = updated ?: now,
+                deactivated = deactivated
             ),
             resolutionMetadata = DidResolutionMetadata(
                 pattern = method,
@@ -246,9 +250,59 @@ object DidMethodUtils {
     }
 
     /**
+     * Percent-decodes a single did:web method-specific-id segment (RFC 3986 §2.1).
+     *
+     * Per the W3C did:web specification, each colon-separated segment of the
+     * method-specific identifier MUST be percent-decoded before constructing the
+     * HTTPS URL. This is what allows ports to be expressed:
+     * `did:web:example.com%3A8080` → host `example.com:8080`.
+     *
+     * @param segment The raw (possibly percent-encoded) segment
+     * @return The decoded segment (UTF-8)
+     * @throws IllegalArgumentException if the segment contains a malformed percent-encoding
+     */
+    fun percentDecode(segment: String): String {
+        if ('%' !in segment) return segment
+        // Strict RFC 3986 hex digit — String.toIntOrNull(16) must NOT be used here
+        // because it accepts a sign ("%+3" would decode as 0x03).
+        fun hexDigit(c: Char): Int = when (c) {
+            in '0'..'9' -> c - '0'
+            in 'a'..'f' -> c - 'a' + 10
+            in 'A'..'F' -> c - 'A' + 10
+            else -> throw IllegalArgumentException("Malformed percent-encoding in segment: $segment")
+        }
+        val out = StringBuilder()
+        val byteBuffer = java.io.ByteArrayOutputStream()
+        fun flushBytes() {
+            if (byteBuffer.size() > 0) {
+                out.append(byteBuffer.toByteArray().toString(Charsets.UTF_8))
+                byteBuffer.reset()
+            }
+        }
+        var i = 0
+        while (i < segment.length) {
+            val c = segment[i]
+            if (c == '%') {
+                require(i + 2 < segment.length) { "Malformed percent-encoding in segment: $segment" }
+                val value = (hexDigit(segment[i + 1]) shl 4) or hexDigit(segment[i + 2])
+                byteBuffer.write(value)
+                i += 3
+            } else {
+                flushBytes()
+                out.append(c)
+                i++
+            }
+        }
+        flushBytes()
+        return out.toString()
+    }
+
+    /**
      * Normalizes a domain name for did:web.
      *
-     * Converts domain to lowercase and validates format.
+     * Converts domain to lowercase and validates format. The domain may include
+     * a port (`example.com:8080`); the port separator is percent-encoded by
+     * [buildWebDid] when the DID identifier is constructed.
      *
      * @param domain The domain name
      * @return Normalized domain name
@@ -272,12 +326,16 @@ object DidMethodUtils {
     /**
      * Builds a did:web identifier from a domain.
      *
-     * @param domain The domain name (e.g., "example.com")
+     * Per the W3C did:web specification, a port separator in the host must be
+     * percent-encoded so it is not confused with the path delimiter:
+     * `example.com:8080` → `did:web:example.com%3A8080`.
+     *
+     * @param domain The domain name, optionally with port (e.g., "example.com", "example.com:8080")
      * @param path Optional path (e.g., "user:alice")
-     * @return DID string (e.g., "did:web:example.com:user:alice")
+     * @return DID string (e.g., "did:web:example.com:user:alice", "did:web:example.com%3A8080")
      */
     fun buildWebDid(domain: String, path: String? = null): String {
-        val normalized = normalizeDomain(domain)
+        val normalized = normalizeDomain(domain).replace(":", "%3A")
         return if (path != null && path.isNotBlank()) {
             "did:web:$normalized:$path"
         } else {
@@ -291,11 +349,15 @@ object DidMethodUtils {
      * Returns the 2-byte multicodec prefix for [algorithm].
      *
      * Supports the algorithms used by did:key and did:peer.
+     * Prefixes are the varint encodings from the multicodec table:
+     * `ed25519-pub` (0xed), `x25519-pub` (0xec), `secp256k1-pub` (0xe7),
+     * `p256-pub` (0x1200), `p384-pub` (0x1201), `p521-pub` (0x1202).
      *
      * @throws IllegalArgumentException if the algorithm has no known multicodec prefix.
      */
     fun getMulticodecPrefix(algorithm: String): ByteArray = when (algorithm.uppercase()) {
         "ED25519"  -> byteArrayOf(0xed.toByte(), 0x01)
+        "X25519"   -> byteArrayOf(0xec.toByte(), 0x01)
         "SECP256K1" -> byteArrayOf(0xe7.toByte(), 0x01)
         "P-256"    -> byteArrayOf(0x80.toByte(), 0x24)
         "P-384"    -> byteArrayOf(0x81.toByte(), 0x24)
@@ -314,6 +376,7 @@ object DidMethodUtils {
         val b2 = prefixedKey[1].toInt() and 0xFF
         val algorithm = when {
             b1 == 0xed && b2 == 0x01 -> "ED25519"
+            b1 == 0xec && b2 == 0x01 -> "X25519"
             b1 == 0xe7 && b2 == 0x01 -> "SECP256K1"
             b1 == 0x80 && b2 == 0x24 -> "P-256"
             b1 == 0x81 && b2 == 0x24 -> "P-384"
@@ -321,6 +384,133 @@ object DidMethodUtils {
             else -> return null
         }
         return algorithm to prefixedKey.sliceArray(2 until prefixedKey.size)
+    }
+
+    // ──────────────────────────── EC point compression ────────────────────────────
+
+    /**
+     * Domain parameters for the short-Weierstrass curves supported by did:key
+     * (y² = x³ + ax + b over GF(p)). All four primes satisfy p ≡ 3 (mod 4),
+     * so a modular square root is `c^((p+1)/4) mod p`.
+     */
+    private class EcCurveParams(
+        val p: java.math.BigInteger,
+        val a: java.math.BigInteger,
+        val b: java.math.BigInteger,
+        val coordinateSize: Int
+    )
+
+    private val ecCurves: Map<String, EcCurveParams> by lazy {
+        fun big(hex: String) = java.math.BigInteger(hex, 16)
+        val three = java.math.BigInteger.valueOf(3)
+        val pK1 = big("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F")
+        val p256 = big("FFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF")
+        val p384 = big("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFF0000000000000000FFFFFFFF")
+        val p521 = java.math.BigInteger.ONE.shiftLeft(521).subtract(java.math.BigInteger.ONE)
+        mapOf(
+            "SECP256K1" to EcCurveParams(pK1, java.math.BigInteger.ZERO, java.math.BigInteger.valueOf(7), 32),
+            "P-256" to EcCurveParams(
+                p256,
+                p256.subtract(three),
+                big("5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B"),
+                32
+            ),
+            "P-384" to EcCurveParams(
+                p384,
+                p384.subtract(three),
+                big("B3312FA7E23EE7E4988E056BE3F82D19181D9C6EFE8141120314088F5013875AC656398D8A2ED19D2A85C8EDD3EC2AEF"),
+                48
+            ),
+            "P-521" to EcCurveParams(
+                p521,
+                p521.subtract(three),
+                big("0051953EB9618E1C9A1F929A21A0B68540EEA2DA725B99B315F3B8B489918EF109E156193951EC7E937B1652C0BD3BB1BF073573DF883D2C34F1EF451FD46B503F00"),
+                66
+            )
+        )
+    }
+
+    /**
+     * Returns the field-element (coordinate) size in bytes for [algorithm],
+     * or `null` if it is not a supported short-Weierstrass EC algorithm.
+     */
+    fun ecCoordinateSize(algorithm: String): Int? = ecCurves[algorithm.uppercase()]?.coordinateSize
+
+    /**
+     * Compresses an EC public key point to SEC1 compressed form (`0x02/0x03 || x`),
+     * as required by the multicodec table for `secp256k1-pub`, `p256-pub`,
+     * `p384-pub` and `p521-pub`.
+     *
+     * Accepts either an uncompressed point (`0x04 || x || y`) or an
+     * already-compressed point (returned unchanged).
+     *
+     * @throws IllegalArgumentException if [algorithm] is not a supported EC curve
+     *         or [point] is not a valid SEC1 encoding
+     */
+    fun compressEcPublicKey(algorithm: String, point: ByteArray): ByteArray {
+        val curve = ecCurves[algorithm.uppercase()]
+            ?: throw IllegalArgumentException("Not a supported EC algorithm: $algorithm")
+        val size = curve.coordinateSize
+        return when {
+            point.size == size + 1 && (point[0] == 0x02.toByte() || point[0] == 0x03.toByte()) -> point
+            point.size == 2 * size + 1 && point[0] == 0x04.toByte() -> {
+                val x = point.copyOfRange(1, 1 + size)
+                val yIsOdd = (point[point.size - 1].toInt() and 1) == 1
+                byteArrayOf(if (yIsOdd) 0x03 else 0x02) + x
+            }
+            else -> throw IllegalArgumentException(
+                "Invalid SEC1 point encoding for $algorithm: ${point.size} bytes"
+            )
+        }
+    }
+
+    /**
+     * Decompresses an EC public key point to SEC1 uncompressed form (`0x04 || x || y`).
+     *
+     * Accepts a compressed point (`0x02/0x03 || x`, decompressed by solving
+     * y² = x³ + ax + b over GF(p)) or a legacy uncompressed point (returned
+     * unchanged, for backward compatibility with pre-spec did:key encodings).
+     *
+     * @throws IllegalArgumentException if [algorithm] is not a supported EC curve,
+     *         [point] is not a valid SEC1 encoding, or x is not on the curve
+     */
+    fun decompressEcPublicKey(algorithm: String, point: ByteArray): ByteArray {
+        val curve = ecCurves[algorithm.uppercase()]
+            ?: throw IllegalArgumentException("Not a supported EC algorithm: $algorithm")
+        val size = curve.coordinateSize
+        return when {
+            point.size == 2 * size + 1 && point[0] == 0x04.toByte() -> point
+            point.size == size + 1 && (point[0] == 0x02.toByte() || point[0] == 0x03.toByte()) -> {
+                val p = curve.p
+                val x = java.math.BigInteger(1, point.copyOfRange(1, 1 + size))
+                require(x < p) { "EC point x coordinate out of range for $algorithm" }
+                // rhs = x³ + ax + b (mod p)
+                val rhs = x.multiply(x).multiply(x).add(curve.a.multiply(x)).add(curve.b).mod(p)
+                // p ≡ 3 (mod 4) for all supported curves → sqrt(c) = c^((p+1)/4) mod p
+                var y = rhs.modPow(p.add(java.math.BigInteger.ONE).shiftRight(2), p)
+                if (y.multiply(y).mod(p) != rhs) {
+                    throw IllegalArgumentException("Invalid EC point: x is not on curve $algorithm")
+                }
+                val wantOdd = point[0] == 0x03.toByte()
+                if (y.testBit(0) != wantOdd) {
+                    y = p.subtract(y)
+                }
+                byteArrayOf(0x04) + x.toFixedBytes(size) + y.toFixedBytes(size)
+            }
+            else -> throw IllegalArgumentException(
+                "Invalid SEC1 point encoding for $algorithm: ${point.size} bytes"
+            )
+        }
+    }
+
+    private fun java.math.BigInteger.toFixedBytes(size: Int): ByteArray {
+        val raw = toByteArray()
+        return when {
+            raw.size == size -> raw
+            raw.size == size + 1 && raw[0] == 0.toByte() -> raw.copyOfRange(1, raw.size)
+            raw.size < size -> ByteArray(size - raw.size) + raw
+            else -> throw IllegalArgumentException("Value does not fit in $size bytes")
+        }
     }
 }
 

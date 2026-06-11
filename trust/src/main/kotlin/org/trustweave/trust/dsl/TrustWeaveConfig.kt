@@ -2,6 +2,7 @@ package org.trustweave.trust.dsl
 
 import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.anchor.BlockchainAnchorRegistry
+import org.trustweave.core.exception.ConfigException
 import org.trustweave.credential.CredentialService
 import org.trustweave.credential.model.ProofType
 import org.trustweave.credential.model.SchemaFormat
@@ -254,6 +255,9 @@ class TrustWeaveConfig internal constructor(
          * @throws UnsupportedOperationException if autoValidate is true, as automatic schema
          *   validation is not yet implemented. Use [SchemaValidatorRegistry] directly for schema
          *   validation, accessible via [TrustWeave.registerSchema].
+         * @throws org.trustweave.core.exception.ConfigException.UnsupportedValue if defaultFormat
+         *   is anything other than [SchemaFormat.JSON_SCHEMA]; alternative default schema formats
+         *   are not yet supported and would otherwise be silently ignored.
          */
         fun schemas(
             autoValidate: Boolean = false,
@@ -263,6 +267,14 @@ class TrustWeaveConfig internal constructor(
                 throw UnsupportedOperationException(
                     "Automatic schema validation (autoValidate=true) is not yet implemented. " +
                     "Register schemas manually using trustWeave.registerSchema { ... } instead."
+                )
+            }
+            if (defaultFormat != SchemaFormat.JSON_SCHEMA) {
+                throw ConfigException.UnsupportedValue(
+                    field = "schemas.defaultFormat",
+                    value = defaultFormat.name,
+                    reason = "Configurable default schema formats are not yet supported; " +
+                        "only SchemaFormat.JSON_SCHEMA is available."
                 )
             }
         }

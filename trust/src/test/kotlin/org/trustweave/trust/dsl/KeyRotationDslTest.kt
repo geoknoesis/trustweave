@@ -1,10 +1,11 @@
 package org.trustweave.trust.dsl
 
+import org.trustweave.trust.types.DidResult
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
+import org.trustweave.testkit.services.TestkitTrustRegistryFactory
 import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.dsl.credential.DidMethods
-import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.inMemory
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -41,6 +42,36 @@ class KeyRotationDslTest {
         }
     }
 
+    private fun DidResult.requireSuccess(): DidResult.Success {
+        assertIs<DidResult.Success>(this, "Expected successful key rotation but got: $this")
+        return this
+    }
+
+    @Test
+    fun `test rotateKey succeeds with quickStart config`() = runBlocking {
+        // Facade-level regression test: the factory must wire a KmsService so
+        // rotateKey is usable out of the box (it used to always fail with
+        // "KmsService is not configured"). TrustWeave.inMemory is the configuration
+        // quickStart() aliases; the testkit trust-registry factory is supplied because
+        // no SPI TrustRegistryFactory is on the test classpath.
+        val quickStartTrustWeave = TrustWeave.inMemory(
+            trustRegistryFactory = TestkitTrustRegistryFactory()
+        )
+        val did = quickStartTrustWeave.createDid {
+            method("key")
+            algorithm("Ed25519")
+        }.getOrThrowDid()
+
+        val result = quickStartTrustWeave.rotateKey {
+            did(did.value)
+            algorithm("Ed25519")
+        }
+
+        val success = result.requireSuccess()
+        assertEquals(did.value, success.did.value)
+        assertTrue(success.document.verificationMethod.isNotEmpty())
+    }
+
     @Test
     fun `test rotateKey`() = runBlocking {
         // Create initial DID
@@ -50,21 +81,25 @@ class KeyRotationDslTest {
         }.getOrThrowDid()
 
         // Rotate key
-        val updatedDoc = trustWeave.rotateKey {
+        val result = trustWeave.rotateKey {
             did(did.value)
             algorithm("Ed25519")
         }
 
-        assertNotNull(updatedDoc)
+        result.requireSuccess()
     }
 
     @Test
-    fun `test rotateKey without DID throws exception`() = runBlocking {
-        assertFailsWith<IllegalStateException> {
-            trustWeave.rotateKey {
-                algorithm("Ed25519")
-            }
+    fun `test rotateKey without DID returns failure`() = runBlocking {
+        val result = trustWeave.rotateKey {
+            algorithm("Ed25519")
         }
+
+        val failure = assertIs<DidResult.Failure.UpdateFailed>(result)
+        assertTrue(
+            failure.reason.contains("DID is required"),
+            "Expected 'DID is required' failure but got: ${failure.reason}"
+        )
     }
 
     @Test
@@ -74,13 +109,13 @@ class KeyRotationDslTest {
             algorithm("Ed25519")
         }.getOrThrowDid()
 
-        val updatedDoc = trustWeave.rotateKey {
+        val result = trustWeave.rotateKey {
             did(did.value)
             algorithm("Ed25519")
             removeOldKey("key-1")
         }
 
-        assertNotNull(updatedDoc)
+        result.requireSuccess()
     }
 
     @Test
@@ -90,29 +125,33 @@ class KeyRotationDslTest {
             algorithm("Ed25519")
         }.getOrThrowDid()
 
-        val updatedDoc = trustWeave.rotateKey {
+        val result = trustWeave.rotateKey {
             did(did.value)
             // Method should be auto-detected
             algorithm("Ed25519")
         }
 
-        assertNotNull(updatedDoc)
+        result.requireSuccess()
     }
 
     @Test
-    fun `test rotateKey with unconfigured method throws exception`() = runBlocking {
+    fun `test rotateKey with unconfigured method returns failure`() = runBlocking {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
         }.getOrThrowDid()
 
-        assertFailsWith<IllegalStateException> {
-            trustWeave.rotateKey {
-                did(did.value)
-                method("web") // Not configured
-                algorithm("Ed25519")
-            }
+        val result = trustWeave.rotateKey {
+            did(did.value)
+            method("web") // Not configured
+            algorithm("Ed25519")
         }
+
+        val failure = assertIs<DidResult.Failure.UpdateFailed>(result)
+        assertTrue(
+            failure.reason.contains("not configured"),
+            "Expected 'not configured' failure but got: ${failure.reason}"
+        )
     }
 
     @Test
@@ -122,12 +161,12 @@ class KeyRotationDslTest {
             algorithm("Ed25519")
         }.getOrThrowDid()
 
-        val updatedDoc = trustWeave.rotateKey {
+        val result = trustWeave.rotateKey {
             did(did.value)
             algorithm("Ed25519")
         }
 
-        assertNotNull(updatedDoc)
+        result.requireSuccess()
     }
 
     @Test
@@ -137,15 +176,13 @@ class KeyRotationDslTest {
             algorithm("Ed25519")
         }.getOrThrowDid()
 
-        val updatedDoc = trustWeave.rotateKey {
+        val result = trustWeave.rotateKey {
             did(did.value)
             algorithm("Ed25519")
             removeOldKey("key-1")
             removeOldKey("key-2")
         }
 
-        assertNotNull(updatedDoc)
+        result.requireSuccess()
     }
 }
-
-

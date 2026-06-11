@@ -51,6 +51,21 @@ class DidDocumentMetadataTest {
     }
 
     @Test
+    fun `test DidDocumentMetadata deactivated defaults to false`() {
+        assertEquals(false, DidDocumentMetadata().deactivated)
+    }
+
+    @Test
+    fun `test DidDocumentMetadata deactivated can be set`() {
+        val metadata = DidDocumentMetadata(deactivated = true)
+        assertTrue(metadata.deactivated)
+
+        // copy() preserves the flag alongside other fields
+        val updated = metadata.copy(updated = Clock.System.now())
+        assertTrue(updated.deactivated)
+    }
+
+    @Test
     fun `test DidDocumentMetadata with Instant serialization`() {
         val now = Clock.System.now()
         val metadata = DidDocumentMetadata(

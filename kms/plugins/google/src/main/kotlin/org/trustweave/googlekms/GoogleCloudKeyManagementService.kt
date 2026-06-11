@@ -11,6 +11,7 @@ import org.trustweave.kms.results.GetPublicKeyResult
 import org.trustweave.kms.results.SignResult
 import org.trustweave.kms.KmsOptionKeys
 import org.trustweave.googlekms.GcpKmsOptionKeys
+import org.trustweave.kms.util.EcdsaSignatureCodec
 import org.trustweave.kms.util.KmsInputValidator
 import org.trustweave.core.plugin.PluginLifecycle
 import com.google.api.gax.rpc.NotFoundException
@@ -363,7 +364,15 @@ class GoogleCloudKeyManagementService(
                 .build()
 
             val signResponse = kmsClient.asymmetricSign(signRequest)
-            SignResult.Success(signResponse.signature.toByteArray())
+            // Google Cloud KMS returns ECDSA signatures in ASN.1 DER; the KeyManagementService
+            // contract requires P1363 (raw r||s) with low-s for secp256k1, so normalize before
+            // returning. RSA signatures pass through unchanged.
+            SignResult.Success(
+                EcdsaSignatureCodec.normalize(
+                    signResponse.signature.toByteArray(),
+                    algorithm ?: keyAlgorithm
+                )
+            )
         } catch (e: NotFoundException) {
             logger.debug("Key not found in Google Cloud KMS during signing: keyId={}", keyId.value)
             SignResult.Failure.KeyNotFound(keyId = keyId)

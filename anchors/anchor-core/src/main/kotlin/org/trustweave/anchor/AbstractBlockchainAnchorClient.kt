@@ -6,7 +6,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 import java.nio.charset.StandardCharsets
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Abstract base class for blockchain anchor client implementations.
@@ -46,6 +48,31 @@ abstract class AbstractBlockchainAnchorClient(
          * in-memory fallback, so fabricated references are distinguishable from real ones.
          */
         const val OPTION_IN_MEMORY_TEST_MODE: String = "inMemoryTestMode"
+
+        /**
+         * Options key bounding how long write operations wait for on-chain confirmation
+         * before failing (milliseconds). Accepts a [Number] or a numeric [String].
+         */
+        const val OPTION_CONFIRMATION_TIMEOUT_MS: String = "confirmationTimeoutMs"
+
+        /**
+         * Options key controlling the confirmation poll interval (milliseconds).
+         * Accepts a [Number] or a numeric [String].
+         */
+        const val OPTION_CONFIRMATION_POLL_INTERVAL_MS: String = "confirmationPollIntervalMs"
+
+        /** Default confirmation wait timeout: 30 seconds. */
+        const val DEFAULT_CONFIRMATION_TIMEOUT_MS: Long = 30_000L
+
+        /** Default confirmation poll interval: 1 second. */
+        const val DEFAULT_CONFIRMATION_POLL_INTERVAL_MS: Long = 1_000L
+
+        /**
+         * Process-wide monotonic counter mixed into fabricated test transaction hashes so
+         * two test anchors created in the same process can never collide (a purely random
+         * small-range component could).
+         */
+        private val TEST_TX_HASH_COUNTER = AtomicLong()
     }
 
     /**
@@ -57,6 +84,27 @@ abstract class AbstractBlockchainAnchorClient(
     protected val inMemoryTestMode: Boolean =
         options[OPTION_IN_MEMORY_TEST_MODE] == true ||
             (options[OPTION_IN_MEMORY_TEST_MODE] as? String)?.toBoolean() == true
+
+    /**
+     * How long write operations wait for on-chain confirmation before failing,
+     * in milliseconds (see [OPTION_CONFIRMATION_TIMEOUT_MS]).
+     */
+    protected val confirmationTimeoutMs: Long =
+        longOption(OPTION_CONFIRMATION_TIMEOUT_MS, DEFAULT_CONFIRMATION_TIMEOUT_MS)
+
+    /**
+     * Interval between confirmation polls, in milliseconds
+     * (see [OPTION_CONFIRMATION_POLL_INTERVAL_MS]).
+     */
+    protected val confirmationPollIntervalMs: Long =
+        longOption(OPTION_CONFIRMATION_POLL_INTERVAL_MS, DEFAULT_CONFIRMATION_POLL_INTERVAL_MS)
+
+    private fun longOption(key: String, default: Long): Long =
+        when (val value = options[key]) {
+            is Number -> value.toLong()
+            is String -> value.toLongOrNull() ?: default
+            else -> default
+        }
 
     /**
      * In-memory storage for the opt-in test mode (see [OPTION_IN_MEMORY_TEST_MODE]).
@@ -111,9 +159,34 @@ abstract class AbstractBlockchainAnchorClient(
 
     /**
      * Generates a test transaction hash for the opt-in in-memory test mode.
-     * Should be unique and identifiable as a test hash.
+     * Should be unique and identifiable as a test hash. Implementations should build
+     * on [uniqueTestHashSuffix] or [uniqueTestHashHex] so fabricated hashes never collide.
      */
     protected abstract fun generateTestTxHash(): String
+
+    /**
+     * Returns a process-unique suffix for fabricated test transaction hashes:
+     * a monotonically increasing counter plus a random UUID component. The counter
+     * guarantees collision-freedom within the process; the UUID across processes.
+     */
+    protected fun uniqueTestHashSuffix(): String =
+        "${TEST_TX_HASH_COUNTER.incrementAndGet()}_${UUID.randomUUID().toString().replace("-", "")}"
+
+    /**
+     * Returns a process-unique fixed-length lowercase hex string (default 64 chars,
+     * the width of an EVM transaction hash). The leading 16 hex chars encode the
+     * process-wide counter, so two fabricated hashes can never collide; the remainder
+     * is random UUID entropy.
+     *
+     * @param length Desired hex length; must be at least 16 so the counter is preserved.
+     */
+    protected fun uniqueTestHashHex(length: Int = 64): String {
+        require(length >= 16) { "length must be >= 16 to preserve the uniqueness counter" }
+        val counterHex = TEST_TX_HASH_COUNTER.incrementAndGet().toString(16).padStart(16, '0')
+        val entropy = UUID.randomUUID().toString().replace("-", "") +
+            UUID.randomUUID().toString().replace("-", "")
+        return (counterHex + entropy).take(length).padEnd(length, '0')
+    }
 
     /**
      * Gets the blockchain name for error messages.

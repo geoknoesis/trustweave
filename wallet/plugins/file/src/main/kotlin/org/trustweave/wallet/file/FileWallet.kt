@@ -261,6 +261,18 @@ class FileWallet(
         val builder = CredentialQueryBuilder()
         builder.query()
 
+        // FileWallet stores no queryable tag/collection data, so byTag/byCollection
+        // cannot be honored. Failing loudly is required by the CredentialQueryBuilder
+        // contract — silently returning unfiltered credentials would feed wrong
+        // candidates into presentation selection.
+        if (builder.requestedTags.isNotEmpty() || builder.requestedCollections.isNotEmpty()) {
+            throw UnsupportedOperationException(
+                "FileWallet does not support byTag/byCollection query filters " +
+                    "(requested tags=${builder.requestedTags}, collections=${builder.requestedCollections}). " +
+                    "Use a wallet with CredentialTagging/CredentialCollections support instead."
+            )
+        }
+
         val predicate = builder.toPredicate()
         val allCredentials = list(null)
         allCredentials.filter(predicate)

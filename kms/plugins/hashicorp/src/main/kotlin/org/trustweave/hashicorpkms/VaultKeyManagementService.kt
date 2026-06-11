@@ -12,6 +12,7 @@ import org.trustweave.kms.results.GetPublicKeyResult
 import org.trustweave.kms.results.SignResult
 import org.trustweave.kms.KmsOptionKeys
 import org.trustweave.hashicorpkms.HashiCorpKmsOptionKeys
+import org.trustweave.kms.util.EcdsaSignatureCodec
 import org.trustweave.kms.util.KmsErrorHandler
 import org.trustweave.kms.util.KmsInputValidator
 import kotlinx.coroutines.Dispatchers
@@ -354,9 +355,15 @@ class VaultKeyManagementService(
             val signatureBase64 = signature.substringAfter(":")
                 .substringAfter(":")
 
-            val signatureBytes = Base64.getDecoder().decode(signatureBase64)
-            
-            logger.debug("Successfully signed data: keyId={}, algorithm={}, dataSize={}, signatureSize={}", 
+            // marshaling_algorithm=asn1 makes Vault return ECDSA signatures in DER; the
+            // KeyManagementService contract requires P1363 (raw r||s) with low-s for
+            // secp256k1, so normalize before returning. Ed25519/RSA pass through unchanged.
+            val signatureBytes = EcdsaSignatureCodec.normalize(
+                Base64.getDecoder().decode(signatureBase64),
+                signingAlgorithm
+            )
+
+            logger.debug("Successfully signed data: keyId={}, algorithm={}, dataSize={}, signatureSize={}",
                 keyId.value, signingAlgorithm.name, data.size, signatureBytes.size)
 
             SignResult.Success(signatureBytes)

@@ -35,7 +35,7 @@ class VcLdProofEngineTest {
     fun `test engine properties`() {
         assertEquals(ProofSuiteId.VC_LD, engine.format)
         assertEquals("Verifiable Credentials (Linked Data)", engine.formatName)
-        assertEquals("2.0", engine.formatVersion)
+        assertEquals("1.1, 2.0", engine.formatVersion)
         assertTrue(engine.capabilities.selectiveDisclosure)
         assertFalse(engine.capabilities.zeroKnowledge)
         assertTrue(engine.capabilities.revocation)

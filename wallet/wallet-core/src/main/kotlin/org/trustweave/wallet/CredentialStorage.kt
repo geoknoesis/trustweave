@@ -232,7 +232,12 @@ class CredentialQueryBuilder {
      *
      * Tags are wallet-level metadata not embedded in the credential itself.
      * Wallet implementations that support CredentialTagging must check
-     * [requestedTags] after applying the standard predicate.
+     * [requestedTags] after applying the standard predicate. Calling [byTag]
+     * multiple times narrows the result: a credential must carry ALL requested tags.
+     *
+     * Implementations that do not store tag data must throw
+     * [UnsupportedOperationException] when [requestedTags] is non-empty —
+     * silently ignoring the filter and returning all credentials is never acceptable.
      */
     fun byTag(tag: String) {
         requestedTags.add(tag)
@@ -243,7 +248,13 @@ class CredentialQueryBuilder {
      *
      * Collections are wallet-level metadata not embedded in the credential itself.
      * Wallet implementations that support CredentialCollections must check
-     * [requestedCollections] after applying the standard predicate.
+     * [requestedCollections] after applying the standard predicate. Calling
+     * [byCollection] multiple times narrows the result: a credential must belong
+     * to ALL requested collections.
+     *
+     * Implementations that do not store collection data must throw
+     * [UnsupportedOperationException] when [requestedCollections] is non-empty —
+     * silently ignoring the filter and returning all credentials is never acceptable.
      */
     fun byCollection(collectionId: String) {
         requestedCollections.add(collectionId)

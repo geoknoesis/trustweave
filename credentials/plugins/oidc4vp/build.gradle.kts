@@ -8,7 +8,10 @@ group = "org.trustweave.credentials"
 dependencies {
     // Credential API and exchange API
     implementation(project(":credentials:credential-api"))
-    
+
+    // DIF Presentation Exchange matcher (presentation_submission construction)
+    implementation(project(":credentials:plugins:presentation-exchange"))
+
     implementation(project(":did:did-core"))
     implementation(project(":kms:kms-core"))
     implementation(project(":common"))

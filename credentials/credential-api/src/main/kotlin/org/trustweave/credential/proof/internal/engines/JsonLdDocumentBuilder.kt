@@ -28,10 +28,14 @@ internal object JsonLdDocumentBuilder {
      * Resolve the `@context` list for a credential being issued.
      *
      * Preserves the contexts declared by the request (via the [CONTEXTS_OPTION] proof
-     * option) in order, prepends the W3C VC base context when the request does not declare
-     * one itself, and appends [proofSuiteContext] only if it is absent. Declared contexts
-     * are never discarded — dropping them would silently remove the term definitions of
-     * `credentialSubject` claims from the signed canonical form.
+     * option), places the W3C VC base context first (per the VC Data Model, the base
+     * context MUST be the first entry of `@context`; VC 1.1 is the default when the request
+     * declares none), and appends [proofSuiteContext] only if it is absent. Declared
+     * contexts are never discarded — dropping them would silently remove the term
+     * definitions of `credentialSubject` claims from the signed canonical form.
+     *
+     * A request targets VC 2.0 by declaring [CredentialConstants.VcContexts.VC_2_0] in its
+     * declared contexts.
      *
      * @param request The issuance request
      * @param proofSuiteContext The security-suite context required by the proof type
@@ -41,17 +45,25 @@ internal object JsonLdDocumentBuilder {
         val declared = (request.proofOptions?.additionalOptions?.get(CONTEXTS_OPTION) as? List<*>)
             ?.filterIsInstance<String>()
             .orEmpty()
+        val baseContext = declared.firstOrNull {
+            it == CredentialConstants.VcContexts.VC_1_1 || it == CredentialConstants.VcContexts.VC_2_0
+        } ?: CredentialConstants.VcContexts.VC_1_1
         return buildList {
-            if (declared.none {
-                    it == CredentialConstants.VcContexts.VC_1_1 || it == CredentialConstants.VcContexts.VC_2_0
-                }
-            ) {
-                add(CredentialConstants.VcContexts.VC_1_1)
-            }
+            add(baseContext)
             declared.forEach { context -> if (context !in this) add(context) }
             if (proofSuiteContext !in this) add(proofSuiteContext)
         }
     }
+
+    /**
+     * Whether [contexts] declares a pure W3C VC 2.0 credential: the v2 base context is
+     * present and the v1.1 base context is not. Dual-context credentials are treated as
+     * VC 1.1 for field emission, mirroring the version rules used by credential validation
+     * (`CredentialValidation` / `DefaultCredentialService.status`).
+     */
+    fun isPureVc2(contexts: List<String>): Boolean =
+        CredentialConstants.VcContexts.VC_2_0 in contexts &&
+            CredentialConstants.VcContexts.VC_1_1 !in contexts
 
     /**
      * Build a JSON-LD document from an [IssuanceRequest] for signing.
@@ -75,9 +87,17 @@ internal object JsonLdDocumentBuilder {
                 request.type.forEach { type -> add(type.value) }
             })
             put("issuer", issuerIri)
-            put("issuanceDate", request.issuedAt.toString())
-            request.validFrom?.let { put("validFrom", it.toString()) }
-            request.validUntil?.let { put("expirationDate", it.toString()) }
+            // VC-version-aware temporal fields: the VC 2.0 vocabulary defines only
+            // validFrom/validUntil (issuanceDate/expirationDate would be dropped by the
+            // v2 @context and left unsigned); VC 1.1 keeps issuanceDate/expirationDate.
+            if (isPureVc2(contexts)) {
+                put("validFrom", (request.validFrom ?: request.issuedAt).toString())
+                request.validUntil?.let { put("validUntil", it.toString()) }
+            } else {
+                put("issuanceDate", request.issuedAt.toString())
+                request.validFrom?.let { put("validFrom", it.toString()) }
+                request.validUntil?.let { put("expirationDate", it.toString()) }
+            }
             put("credentialSubject", buildJsonObject {
                 request.credentialSubject.id?.let { put("id", it.value) }
                 request.credentialSubject.claims.entries.forEach { (key, value) ->
@@ -120,6 +140,7 @@ internal object JsonLdDocumentBuilder {
             credential.issuanceDate?.let { put("issuanceDate", it.toString()) }
             credential.validFrom?.let { put("validFrom", it.toString()) }
             credential.expirationDate?.let { put("expirationDate", it.toString()) }
+            credential.validUntil?.let { put("validUntil", it.toString()) }
             put("credentialSubject", buildJsonObject {
                 credential.credentialSubject.id?.let { put("id", it.value) }
                 credential.credentialSubject.claims.entries.forEach { (key, value) ->

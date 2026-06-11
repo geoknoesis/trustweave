@@ -31,26 +31,51 @@ class ChainIdTest {
 
     @Test
     fun `test EIP-155 chain IDs`() {
+        assertEquals("eip155:1", ChainId.Eip155.EthereumMainnet.toString())
+        assertEquals("eip155:11155111", ChainId.Eip155.SepoliaTestnet.toString())
+        assertEquals("eip155:10", ChainId.Eip155.OptimismMainnet.toString())
+        assertEquals("eip155:11155420", ChainId.Eip155.OptimismSepoliaTestnet.toString())
         assertEquals("eip155:137", ChainId.Eip155.PolygonMainnet.toString())
-        assertEquals("eip155:80001", ChainId.Eip155.MumbaiTestnet.toString())
+        assertEquals("eip155:80002", ChainId.Eip155.AmoyTestnet.toString())
+        assertEquals("eip155:324", ChainId.Eip155.ZkSyncEraMainnet.toString())
+        assertEquals("eip155:300", ChainId.Eip155.ZkSyncEraSepoliaTestnet.toString())
+        assertEquals("eip155:8453", ChainId.Eip155.BaseMainnet.toString())
+        assertEquals("eip155:84532", ChainId.Eip155.BaseSepoliaTestnet.toString())
+        assertEquals("eip155:42161", ChainId.Eip155.ArbitrumOneMainnet.toString())
+        assertEquals("eip155:421614", ChainId.Eip155.ArbitrumSepoliaTestnet.toString())
         assertEquals("eip155:1337", ChainId.Eip155.GanacheLocal.toString())
         assertEquals("eip155", ChainId.Eip155.PolygonMainnet.getNamespace())
     }
 
     @Test
     fun `test EIP-155 fromString`() {
+        assertEquals(ChainId.Eip155.EthereumMainnet, ChainId.Eip155.fromString("eip155:1"))
         assertEquals(ChainId.Eip155.PolygonMainnet, ChainId.Eip155.fromString("eip155:137"))
-        assertEquals(ChainId.Eip155.MumbaiTestnet, ChainId.Eip155.fromString("eip155:80001"))
+        assertEquals(ChainId.Eip155.AmoyTestnet, ChainId.Eip155.fromString("eip155:80002"))
         assertEquals(ChainId.Eip155.GanacheLocal, ChainId.Eip155.fromString("eip155:1337"))
         assertNull(ChainId.Eip155.fromString("eip155:999"))
+        // Mumbai was decommissioned in 2024 and replaced by Amoy
+        assertNull(ChainId.Eip155.fromString("eip155:80001"))
+        assertNull(ChainId.Eip155.fromString("algorand:testnet"))
     }
 
     @Test
     fun `test EIP-155 fromChainNumber`() {
+        assertEquals(ChainId.Eip155.EthereumMainnet, ChainId.Eip155.fromChainNumber(1))
         assertEquals(ChainId.Eip155.PolygonMainnet, ChainId.Eip155.fromChainNumber(137))
-        assertEquals(ChainId.Eip155.MumbaiTestnet, ChainId.Eip155.fromChainNumber(80001))
+        assertEquals(ChainId.Eip155.AmoyTestnet, ChainId.Eip155.fromChainNumber(80002))
         assertEquals(ChainId.Eip155.GanacheLocal, ChainId.Eip155.fromChainNumber(1337))
         assertNull(ChainId.Eip155.fromChainNumber(999))
+        // Mumbai was decommissioned in 2024 and replaced by Amoy
+        assertNull(ChainId.Eip155.fromChainNumber(80001))
+    }
+
+    @Test
+    fun `test EIP-155 all entries round-trip through fromString`() {
+        for (entry in ChainId.Eip155.all) {
+            assertEquals(entry, ChainId.Eip155.fromString(entry.toString()))
+            assertEquals(entry, ChainId.Eip155.fromChainNumber(entry.chainNumber))
+        }
     }
 
     @Test

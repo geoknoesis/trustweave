@@ -45,11 +45,30 @@ import kotlinx.datetime.Clock
  * println("Total credentials: ${stats.totalCredentials}")
  * ```
  */
-interface Wallet : CredentialStorage {
+interface Wallet : CredentialStorage, AutoCloseable {
     /**
      * Wallet identifier (DID or UUID).
      */
     val walletId: String
+
+    /**
+     * Release resources owned by this wallet (e.g. connection pools).
+     *
+     * The default implementation is a no-op so existing implementations remain
+     * source- and binary-compatible. Implementations that own closeable resources
+     * (such as a connection pool they created) should override this. Wallets that
+     * were handed externally managed resources must NOT close them here.
+     *
+     * **Example**:
+     * ```kotlin
+     * factory.create(...).use { wallet ->
+     *     wallet.store(credential)
+     * } // pool owned by the wallet is closed here
+     * ```
+     */
+    override fun close() {
+        // Default: nothing to release.
+    }
 
     /**
      * Wallet capabilities for runtime discovery.

@@ -60,6 +60,48 @@ class AwsKmsConfigTest {
     }
 
     @Test
+    fun `fromMap defaults cacheTtlSeconds when absent instead of caching forever`() {
+        val config = AwsKmsConfig.fromMap(mapOf(AwsKmsOptionKeys.REGION to "us-east-1"))
+
+        assertEquals(
+            AwsKmsConfig.DEFAULT_CACHE_TTL_SECONDS,
+            config.cacheTtlSeconds,
+            "Absent cacheTtlSeconds must fall back to the default TTL, not null (cache-forever)"
+        )
+    }
+
+    @Test
+    fun `fromMap honors an explicit cacheTtlSeconds value`() {
+        val config = AwsKmsConfig.fromMap(
+            mapOf(
+                AwsKmsOptionKeys.REGION to "us-east-1",
+                "cacheTtlSeconds" to 42
+            )
+        )
+
+        assertEquals(42L, config.cacheTtlSeconds)
+    }
+
+    @Test
+    fun `builder still allows explicit null TTL (cache forever) as programmatic opt-in`() {
+        val config = AwsKmsConfig.builder()
+            .region("us-east-1")
+            .cacheTtlSeconds(null)
+            .build()
+
+        assertEquals(null, config.cacheTtlSeconds)
+    }
+
+    @Test
+    fun `builder defaults cacheTtlSeconds to the shared default`() {
+        val config = AwsKmsConfig.builder()
+            .region("us-east-1")
+            .build()
+
+        assertEquals(AwsKmsConfig.DEFAULT_CACHE_TTL_SECONDS, config.cacheTtlSeconds)
+    }
+
+    @Test
     fun `copy preserves equality and redaction`() {
         val secret = "another-secret-value"
         val config = AwsKmsConfig(region = "us-east-1", secretAccessKey = secret)

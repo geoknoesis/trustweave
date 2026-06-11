@@ -55,6 +55,13 @@ class BitcoinBlockchainAnchorClient(
 
         // OP_RETURN data limit (80 bytes)
         private const val OP_RETURN_MAX_SIZE = 80
+
+        /**
+         * Flat transaction fee in satoshis. Hardcoded for now; making this
+         * configurable (or rate-based via `estimatesmartfee`) is a follow-up.
+         * All fee/change arithmetic is integer satoshis — never floating point.
+         */
+        private const val FEE_SATS = 1_000L
     }
 
     private val networkParams: NetworkParameters
@@ -99,6 +106,7 @@ class BitcoinBlockchainAnchorClient(
                options["rpcPassword"] != null
     }
 
+    @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
     override protected suspend fun submitTransactionToBlockchain(
         payloadBytes: ByteArray
     ): String = withContext(Dispatchers.IO) {
@@ -147,14 +155,24 @@ class BitcoinBlockchainAnchorClient(
         // Build transaction outputs
         // OP_RETURN output: data in hex
         val opReturnHex = Utils.HEX.encode(payloadBytes)
+        // All amount math is integer satoshis; BTC decimals only appear (exactly)
+        // at the JSON-RPC boundary.
+        val totalInputSats = utxos.sumOf { it.amountSats }
+        if (totalInputSats < FEE_SATS) {
+            throw BlockchainException.TransactionFailed(
+                reason = "Insufficient funds: inputs total $totalInputSats sats, flat fee is $FEE_SATS sats",
+                chainId = chainId,
+                txHash = null,
+                operation = "submitTransaction",
+                payloadSize = payloadBytes.size.toLong()
+            )
+        }
+        val changeSats = totalInputSats - FEE_SATS
         val outputs = buildJsonObject {
             put("data", opReturnHex)
-            // Add change output if needed
-            val totalInput = utxos.sumOf { it.amount }
-            val fee = 1000L // Estimated fee in satoshis
-            val changeAmount = (totalInput - fee) / 100_000_000.0 // Convert back to BTC
-            if (changeAmount > 0) {
-                put(address, changeAmount)
+            if (changeSats > 0) {
+                // Exact decimal BTC value (plain notation, never floating point).
+                put(address, JsonUnquotedLiteral(BitcoinAmounts.satoshisToBtcString(changeSats)))
             }
         }
 
@@ -164,10 +182,9 @@ class BitcoinBlockchainAnchorClient(
         // Sign transaction
         val privateKey = options["privateKey"] as? String
             ?: throw IllegalStateException("Private key required for signing Bitcoin transactions")
-        val signedTx = rpcCall("signrawtransactionwithkey", listOf(rawTx, listOf(privateKey)))
+        val signedTxJson = rpcCallJson("signrawtransactionwithkey", listOf(rawTx, listOf(privateKey))).jsonObject
 
         // Extract signed transaction hex
-        val signedTxJson = Json.parseToJsonElement(signedTx).jsonObject
         val signedTxHex = signedTxJson["hex"]?.jsonPrimitive?.content
             ?: throw TrustWeaveException.Unknown(message = "Failed to sign transaction")
 
@@ -213,9 +230,10 @@ class BitcoinBlockchainAnchorClient(
         val payloadJson = String(opReturnData, StandardCharsets.UTF_8)
         val payload = Json.parseToJsonElement(payloadJson)
 
-        // Get block information
+        // Use the actual block timestamp; unconfirmed (mempool) transactions have
+        // none, so leave it unset rather than fabricating one.
         val blockHash = getTransactionBlockHash(txHash)
-        val blockNumber = blockHash?.let { getBlockHeight(it) }
+        val blockTime = blockHash?.let { getBlockTime(it) }
 
         AnchorResult(
             ref = buildAnchorRef(
@@ -224,7 +242,7 @@ class BitcoinBlockchainAnchorClient(
             ),
             payload = payload,
             mediaType = "application/json",
-            timestamp = blockNumber?.let { System.currentTimeMillis() / 1000 }
+            timestamp = blockTime
         )
     }
 
@@ -242,8 +260,8 @@ class BitcoinBlockchainAnchorClient(
     }
 
     override protected fun generateTestTxHash(): String {
-        // Generate a test transaction hash (64 hex characters)
-        return "0x${(0..1000000).random().toString(16).padStart(64, '0')}"
+        // Generate a unique test transaction hash (64 hex characters, like a Bitcoin txid)
+        return uniqueTestHashHex()
     }
 
     override protected fun getBlockchainName(): String {
@@ -251,9 +269,11 @@ class BitcoinBlockchainAnchorClient(
     }
 
     /**
-     * Bitcoin RPC call helper.
+     * Bitcoin RPC call helper returning the raw `result` element. Use this for
+     * methods whose result is a JSON object or array (`listunspent`, `getblock`,
+     * `signrawtransactionwithkey`, verbose `getrawtransaction`, …).
      */
-    private suspend fun rpcCall(method: String, params: List<Any?>): String = withContext(Dispatchers.IO) {
+    private suspend fun rpcCallJson(method: String, params: List<Any?>): JsonElement = withContext(Dispatchers.IO) {
         val requestBody = buildJsonObject {
             put("jsonrpc", "1.0")
             put("id", "TrustWeave")
@@ -261,27 +281,29 @@ class BitcoinBlockchainAnchorClient(
             put("params", buildJsonArray {
                 params.forEach { param ->
                     when (param) {
+                        is JsonElement -> add(param)
                         is String -> add(param)
                         is Number -> add(param)
                         is Boolean -> add(param)
                         is List<*> -> {
-                            // Handle list of addresses or other lists
+                            // Handle list of addresses, keys, or pre-built JSON elements
                             add(buildJsonArray {
                                 param.forEach { item ->
                                     when (item) {
+                                        is JsonElement -> add(item)
                                         is String -> add(item)
                                         is Number -> add(item)
                                         is Boolean -> add(item)
-                        is Map<*, *> -> {
-                            // Handle map (for transaction inputs)
-                            @Suppress("UNCHECKED_CAST")
-                            val mapItem = item as? Map<String, Any?>
-                            add(buildJsonObject {
-                                mapItem?.forEach { (key, value) ->
-                                    put(key, value.toString())
-                                }
-                            })
-                        }
+                                        is Map<*, *> -> {
+                                            // Handle map (for transaction inputs)
+                                            @Suppress("UNCHECKED_CAST")
+                                            val mapItem = item as? Map<String, Any?>
+                                            add(buildJsonObject {
+                                                mapItem?.forEach { (key, value) ->
+                                                    put(key, value.toString())
+                                                }
+                                            })
+                                        }
                                         else -> add(item.toString())
                                     }
                                 }
@@ -327,19 +349,26 @@ class BitcoinBlockchainAnchorClient(
             throw TrustWeaveException.Unknown(message = "Bitcoin RPC error: ${error.jsonObject["message"]?.jsonPrimitive?.content ?: "Unknown error"}")
         }
 
-        jsonResponse["result"]?.jsonPrimitive?.content
+        jsonResponse["result"]?.takeIf { it !is JsonNull }
             ?: throw TrustWeaveException.Unknown(message = "No result in Bitcoin RPC response")
     }
 
     /**
-     * Get unspent transaction outputs.
+     * Bitcoin RPC call helper for methods whose result is a primitive
+     * (e.g. `createrawtransaction`, `sendrawtransaction`, `getrawtransaction`).
+     */
+    private suspend fun rpcCall(method: String, params: List<Any?>): String =
+        rpcCallJson(method, params).jsonPrimitive.content
+
+    /**
+     * Get unspent transaction outputs. Amounts are parsed exactly into Long
+     * satoshis (the RPC reports decimal BTC).
      */
     private suspend fun getUnspentOutputs(): List<UtxoInfo> {
         val address = options["address"] as? String
             ?: throw IllegalStateException("Bitcoin address required for transaction creation")
 
-        val result = rpcCall("listunspent", listOf(0, 9999999, listOf(address)))
-        val utxosJson = Json.parseToJsonElement(result).jsonArray
+        val utxosJson = rpcCallJson("listunspent", listOf(0, 9999999, listOf(address))).jsonArray
 
         return utxosJson.map { utxoJson ->
             val utxo = utxoJson.jsonObject
@@ -349,7 +378,8 @@ class BitcoinBlockchainAnchorClient(
                 scriptPubKey = ScriptPubKey(
                     hex = utxo["scriptPubKey"]?.jsonPrimitive?.content ?: ""
                 ),
-                amount = ((utxo["amount"]?.jsonPrimitive?.double ?: 0.0) * 100_000_000).toLong() // Convert to satoshis
+                amountSats = utxo["amount"]?.jsonPrimitive?.content
+                    ?.let { BitcoinAmounts.btcToSatoshis(it) } ?: 0L
             )
         }
     }
@@ -369,12 +399,11 @@ class BitcoinBlockchainAnchorClient(
     }
 
     /**
-     * Get transaction block hash.
+     * Get transaction block hash (null while the transaction is unconfirmed).
      */
     private suspend fun getTransactionBlockHash(txHash: String): String? {
         return try {
-            val result = rpcCall("getrawtransaction", listOf(txHash, 1))
-            val txJson = Json.parseToJsonElement(result).jsonObject
+            val txJson = rpcCallJson("getrawtransaction", listOf(txHash, 1)).jsonObject
             txJson["blockhash"]?.jsonPrimitive?.content
         } catch (e: Exception) {
             null
@@ -382,26 +411,25 @@ class BitcoinBlockchainAnchorClient(
     }
 
     /**
-     * Get block height from block hash.
+     * Get the block timestamp (epoch seconds) from a block hash.
      */
-    private suspend fun getBlockHeight(blockHash: String): Long? {
+    private suspend fun getBlockTime(blockHash: String): Long? {
         return try {
-            val result = rpcCall("getblock", listOf(blockHash))
-            val blockJson = Json.parseToJsonElement(result).jsonObject
-            blockJson["height"]?.jsonPrimitive?.long
+            val blockJson = rpcCallJson("getblock", listOf(blockHash)).jsonObject
+            blockJson["time"]?.jsonPrimitive?.long
         } catch (e: Exception) {
             null
         }
     }
 
     /**
-     * UTXO information.
+     * UTXO information. [amountSats] is the output value in integer satoshis.
      */
     private data class UtxoInfo(
         val txid: String,
         val vout: Int,
         val scriptPubKey: ScriptPubKey,
-        val amount: Long
+        val amountSats: Long
     )
 
     private data class ScriptPubKey(
@@ -411,5 +439,32 @@ class BitcoinBlockchainAnchorClient(
     override fun close() {
         httpClient.dispatcher.executorService.shutdown()
     }
+}
+
+/**
+ * Exact Bitcoin amount conversions. All wallet math in this plugin is integer
+ * satoshis end-to-end; decimal BTC strings only appear at the JSON-RPC boundary.
+ */
+internal object BitcoinAmounts {
+
+    /** Number of satoshis in one BTC. */
+    const val SATOSHIS_PER_BTC: Long = 100_000_000L
+
+    /**
+     * Parses a decimal BTC amount (raw JSON number text, e.g. `"0.00012345"`)
+     * into Long satoshis, exactly.
+     *
+     * @throws ArithmeticException if the value has more than 8 decimal places
+     *   or does not fit in a Long
+     */
+    fun btcToSatoshis(btc: String): Long =
+        java.math.BigDecimal(btc).movePointRight(8).longValueExact()
+
+    /**
+     * Formats satoshis as a plain decimal BTC string (never scientific
+     * notation, never floating point).
+     */
+    fun satoshisToBtcString(satoshis: Long): String =
+        java.math.BigDecimal.valueOf(satoshis).movePointLeft(8).stripTrailingZeros().toPlainString()
 }
 

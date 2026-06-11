@@ -125,25 +125,27 @@ abstract class AbstractWebDidMethod(
                 .addHeader("Accept", "application/json")
                 .build()
 
-            val response = httpClient.newCall(request).execute()
-
-            if (!response.isSuccessful) {
-                if (response.code == 404) {
-                    throw TrustWeaveException.NotFound(
-                        message = "DID document not found at: $url"
+            // Close the response on every path (including non-2xx) to avoid leaking
+            // the underlying OkHttp connection.
+            val jsonString = httpClient.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    if (response.code == 404) {
+                        throw TrustWeaveException.NotFound(
+                            message = "DID document not found at: $url"
+                        )
+                    }
+                    throw org.trustweave.core.exception.TrustWeaveException.Unknown(
+                        message = "Failed to resolve DID document: HTTP ${response.code} ${response.message}",
+                        context = mapOf("statusCode" to response.code, "url" to url, "method" to method)
                     )
                 }
-                throw org.trustweave.core.exception.TrustWeaveException.Unknown(
-                    message = "Failed to resolve DID document: HTTP ${response.code} ${response.message}",
-                    context = mapOf("statusCode" to response.code, "url" to url, "method" to method)
-                )
-            }
 
-            val body = response.body ?: throw SerializationException.InvalidJson(
-                parseError = "Empty response body",
-                jsonString = null
-            )
-            val jsonString = body.string()
+                val body = response.body ?: throw SerializationException.InvalidJson(
+                    parseError = "Empty response body",
+                    jsonString = null
+                )
+                body.string()
+            }
 
             // Parse JSON to DidDocument
             val json = Json.parseToJsonElement(jsonString)
@@ -173,7 +175,8 @@ abstract class AbstractWebDidMethod(
                     stored,
                     method,
                     getDocumentMetadata(did)?.created,
-                    getDocumentMetadata(did)?.updated
+                    getDocumentMetadata(did)?.updated,
+                    getDocumentMetadata(did)?.deactivated ?: false
                 )
             }
 
@@ -250,9 +253,13 @@ abstract class AbstractWebDidMethod(
             val success = publishDocument(url, deactivatedDocument)
 
             if (success) {
-                // Remove from local storage
-                documents.remove(didString)
-                documentMetadata.remove(didString)
+                // Keep the deactivated document locally and flag the metadata as
+                // deactivated (W3C DID Core §7.3) so subsequent resolutions can
+                // surface the deactivation instead of silently "losing" the DID.
+                val now = Clock.System.now()
+                documents[didString] = deactivatedDocument
+                documentMetadata[didString] = (documentMetadata[didString] ?: DidDocumentMetadata(created = now))
+                    .copy(updated = now, deactivated = true)
             }
 
             success

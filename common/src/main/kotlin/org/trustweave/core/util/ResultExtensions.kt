@@ -113,48 +113,8 @@ suspend inline fun <T> trustweaveCatching(
     block()
 }.mapError { it.toTrustWeaveException() }
 
-/**
- * Utility functions for TrustWeave operations.
- */
-
-/**
- * Executes the given action if this Result is a success.
- *
- * **Example:**
- * ```kotlin
- * result
- *     .onSuccess { value -> println("Success: $value") }
- *     .onFailure { error -> println("Error: ${error.message}") }
- * ```
- *
- * @param action Action to execute with the success value
- * @return This Result for chaining
- */
-inline fun <T> Result<T>.onSuccess(action: (value: T) -> Unit): Result<T> {
-    if (isSuccess) {
-        getOrNull()?.let(action)
-    }
-    return this
-}
-
-/**
- * Executes the given action if this Result is a failure.
- *
- * **Example:**
- * ```kotlin
- * result
- *     .onSuccess { value -> println("Success: $value") }
- *     .onFailure { error -> println("Error: ${error.message}") }
- * ```
- *
- * @param action Action to execute with the failure exception
- * @return This Result for chaining
- */
-inline fun <T> Result<T>.onFailure(action: (exception: Throwable) -> Unit): Result<T> {
-    if (isFailure) {
-        exceptionOrNull()?.let(action)
-    }
-    return this
-}
-
+// Note: this file intentionally does NOT define `Result.onSuccess` / `Result.onFailure`.
+// The Kotlin standard library already provides them; redefining them here shadowed the
+// stdlib versions inside this package and silently skipped `null` success values
+// (`getOrNull()?.let(action)`). Use the stdlib `kotlin.onSuccess` / `kotlin.onFailure`.
 

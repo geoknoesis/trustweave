@@ -11,6 +11,7 @@ import org.trustweave.kms.results.DeleteKeyResult
 import org.trustweave.kms.results.GenerateKeyResult
 import org.trustweave.kms.results.GetPublicKeyResult
 import org.trustweave.kms.results.SignResult
+import org.trustweave.kms.util.EcdsaSignatureCodec
 import java.math.BigInteger
 import java.security.KeyPairGenerator
 import java.security.KeyStore
@@ -198,8 +199,8 @@ class Pkcs11KeyManagementService(
             // JCA key type. Note: PKCS#11 has no concept of "key default signing algorithm"
             // beyond key type, and the algorithm is *not* persisted on the token in a way the
             // JCA layer exposes — so we conservatively map the JCA key type to a deterministic
-            // SHA-256 scheme. Callers that need RSA-PSS or SHA-384 must pass the algorithm
-            // explicitly.
+            // SHA-256 scheme. Callers that need curve- or key-size-matched hashes (SHA-384 for
+            // P-384/RSA-3072, SHA-512 for P-521/RSA-4096) must pass the algorithm explicitly.
             val signatureScheme = signatureSchemeFor(algorithm, privateKey.algorithm)
                 ?: return@withContext SignResult.Failure.UnsupportedAlgorithm(
                     keyId = keyId,
@@ -213,7 +214,22 @@ class Pkcs11KeyManagementService(
             signer.initSign(privateKey)
             signer.update(data)
             val signature = signer.sign()
-            SignResult.Success(signature)
+            // JCA/PKCS#11 ECDSA emits ASN.1 DER; the KeyManagementService contract requires
+            // P1363 (raw r||s). Derive the field size from the requested algorithm or, when the
+            // caller passed no algorithm, from the EC key parameters reported by the token.
+            val normalized = if (signatureScheme.contains("ECDSA")) {
+                val fieldSizeBytes = algorithm?.let { EcdsaSignatureCodec.fieldSizeBytes(it) }
+                    ?: (privateKey as? java.security.interfaces.ECKey)
+                        ?.params?.curve?.field?.fieldSize?.let { (it + 7) / 8 }
+                if (fieldSizeBytes != null && EcdsaSignatureCodec.isDer(signature)) {
+                    EcdsaSignatureCodec.derToP1363(signature, fieldSizeBytes)
+                } else {
+                    signature
+                }
+            } else {
+                signature
+            }
+            SignResult.Success(normalized)
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -266,30 +282,6 @@ class Pkcs11KeyManagementService(
                     cause = e,
                 )
             }
-        }
-    }
-
-    /**
-     * Resolves the JCA signature scheme name for the given (optional) requested algorithm and
-     * the JCA key-type string reported by the token.
-     */
-    private fun signatureSchemeFor(requested: Algorithm?, keyType: String): String? {
-        if (requested != null) {
-            return when (requested) {
-                Algorithm.Ed25519 -> "Ed25519"
-                Algorithm.P256, Algorithm.P384, Algorithm.P521 -> "SHA256withECDSA"
-                is Algorithm.RSA -> "SHA256withRSAandMGF1" // RSA-PSS with MGF1; eIDAS-friendly default
-                Algorithm.Secp256k1 -> null
-                Algorithm.BLS12_381 -> null
-                is Algorithm.Custom -> null
-            }
-        }
-        // Fall back to JCA key type
-        return when (keyType.uppercase()) {
-            "ED25519", "EDDSA" -> "Ed25519"
-            "EC" -> "SHA256withECDSA"
-            "RSA" -> "SHA256withRSAandMGF1"
-            else -> null
         }
     }
 
@@ -385,6 +377,44 @@ class Pkcs11KeyManagementService(
          * If absent, a random UUID is used. See [KeyId].
          */
         const val OPTION_LABEL: String = "label"
+
+        /**
+         * Resolves the JCA signature scheme name for the given (optional) requested algorithm and
+         * the JCA key-type string reported by the token.
+         *
+         * Schemes follow the [KeyManagementService.sign] contract:
+         * - ECDSA uses the hash that matches the curve (SHA-256/384/512 for P-256/384/521).
+         * - RSA uses PKCS#1 v1.5 (`SHAxxxwithRSA`), with the hash sized to the key
+         *   (2048→SHA-256, 3072→SHA-384, 4096→SHA-512) — consistent with the other KMS plugins.
+         *
+         * Internal for testability (mapping-level unit tests do not require an HSM).
+         */
+        internal fun signatureSchemeFor(requested: Algorithm?, keyType: String): String? {
+            if (requested != null) {
+                return when (requested) {
+                    Algorithm.Ed25519 -> "Ed25519"
+                    Algorithm.P256 -> "SHA256withECDSA"
+                    Algorithm.P384 -> "SHA384withECDSA"
+                    Algorithm.P521 -> "SHA512withECDSA"
+                    is Algorithm.RSA -> when (requested.rsaKeySize) {
+                        2048 -> "SHA256withRSA"
+                        3072 -> "SHA384withRSA"
+                        4096 -> "SHA512withRSA"
+                        else -> null
+                    }
+                    Algorithm.Secp256k1 -> null
+                    Algorithm.BLS12_381 -> null
+                    is Algorithm.Custom -> null
+                }
+            }
+            // Fall back to JCA key type
+            return when (keyType.uppercase()) {
+                "ED25519", "EDDSA" -> "Ed25519"
+                "EC" -> "SHA256withECDSA"
+                "RSA" -> "SHA256withRSA"
+                else -> null
+            }
+        }
 
         /**
          * Installs (or reuses) a SunPKCS11 provider for the given configuration.

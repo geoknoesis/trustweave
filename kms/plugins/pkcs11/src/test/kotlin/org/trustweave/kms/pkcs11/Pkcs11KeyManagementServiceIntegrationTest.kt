@@ -17,6 +17,7 @@ import org.trustweave.kms.results.DeleteKeyResult
 import org.trustweave.kms.results.GenerateKeyResult
 import org.trustweave.kms.results.GetPublicKeyResult
 import org.trustweave.kms.results.SignResult
+import org.trustweave.kms.util.EcdsaSignatureCodec
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
@@ -180,15 +181,23 @@ class Pkcs11KeyManagementServiceIntegrationTest {
         assertNotNull(signature)
         assertTrue(signature.isNotEmpty(), "signature must be non-empty")
 
+        // The KeyManagementService contract mandates P1363 (raw r||s) for ECDSA: 64 bytes
+        // for P-256.
+        assertEquals(64, signature.size, "P-256 signature must be 64-byte P1363 (raw r||s)")
+
         // Verify against the public key stored on the token. The KMS SPI does not return
         // the raw PublicKey, so we read it from the same PKCS#11 keystore directly.
+        // JCA's SHA256withECDSA verifier expects DER, so transcode P1363 → DER first.
         val publicKey = keyStore.getCertificate(label)?.publicKey
             ?: error("PKCS#11 token did not return a certificate for label '$label'")
 
         val verifier = Signature.getInstance("SHA256withECDSA")
         verifier.initVerify(publicKey)
         verifier.update(data)
-        assertTrue(verifier.verify(signature), "signature must verify against the PKCS#11 public key")
+        assertTrue(
+            verifier.verify(EcdsaSignatureCodec.p1363ToDer(signature)),
+            "signature must verify against the PKCS#11 public key"
+        )
     }
 
     @Test

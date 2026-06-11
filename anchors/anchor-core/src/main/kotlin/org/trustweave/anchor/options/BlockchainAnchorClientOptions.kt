@@ -125,12 +125,18 @@ sealed class BlockchainAnchorClientOptions {
  *   Accepts either the 32-byte Ed25519 seed or the 64-byte exported secret key
  *   (seed || public key, e.g. JS SDK `account.sk` / `algokey` output)
  * @param appId Optional Algorand application ID for contract interactions
+ * @param indexerUrl Optional Algorand Indexer URL. Required for reading historical
+ *   anchors — without it, reads can only resolve recently submitted transactions
+ *   still tracked by the node's pending-transaction endpoint
+ * @param indexerToken Optional Algorand Indexer API token (defaults to empty string)
  */
 data class AlgorandOptions(
     val algodUrl: String? = null,
     val algodToken: String? = null,
     val privateKey: String? = null,
-    val appId: String? = null
+    val appId: String? = null,
+    val indexerUrl: String? = null,
+    val indexerToken: String? = null
 ) : BlockchainAnchorClientOptions() {
 
     override fun toMap(): Map<String, Any?> = buildMap {
@@ -138,6 +144,8 @@ data class AlgorandOptions(
         algodToken?.let { put("algodToken", it) }
         privateKey?.let { put("privateKey", it) }
         appId?.let { put("appId", it) }
+        indexerUrl?.let { put("indexerUrl", it) }
+        indexerToken?.let { put("indexerToken", it) }
     }
 
     companion object {
@@ -147,7 +155,9 @@ data class AlgorandOptions(
                 algodUrl = map["algodUrl"] as? String,
                 algodToken = map["algodToken"] as? String,
                 privateKey = map["privateKey"] as? String,
-                appId = map["appId"] as? String
+                appId = map["appId"] as? String,
+                indexerUrl = map["indexerUrl"] as? String,
+                indexerToken = map["indexerToken"] as? String
             )
         }
     }

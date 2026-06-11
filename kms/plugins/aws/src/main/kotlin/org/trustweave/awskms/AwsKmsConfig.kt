@@ -24,7 +24,15 @@ data class AwsKmsConfig(
     val sessionToken: String? = null,
     val endpointOverride: String? = null,
     val pendingWindowInDays: Int? = null,
-    val cacheTtlSeconds: Long? = 300 // Default 5 minutes
+    /**
+     * TTL for the key-metadata cache in seconds. Defaults to
+     * [DEFAULT_CACHE_TTL_SECONDS] (5 minutes). An explicit `null` means
+     * "cache forever" (entries never expire) and must be opted into
+     * programmatically via the constructor or [Builder.cacheTtlSeconds] —
+     * [fromMap] and [fromEnvironment] always fall back to the default when
+     * the option is absent or unparsable.
+     */
+    val cacheTtlSeconds: Long? = DEFAULT_CACHE_TTL_SECONDS
 ) {
     init {
         require(region.isNotBlank()) { "AWS region must be specified" }
@@ -58,6 +66,16 @@ data class AwsKmsConfig(
 
     companion object {
         /**
+         * Default key-metadata cache TTL (5 minutes).
+         *
+         * Used whenever a TTL is not explicitly provided. In particular, [fromMap] and
+         * [fromEnvironment] fall back to this value when the option is absent — previously
+         * an absent option resulted in `cacheTtlSeconds = null`, which silently caches key
+         * metadata (including key state) forever.
+         */
+        const val DEFAULT_CACHE_TTL_SECONDS: Long = 300
+
+        /**
          * Creates a builder for AwsKmsConfig.
          */
         fun builder(): Builder = Builder()
@@ -84,7 +102,11 @@ data class AwsKmsConfig(
                 .secretAccessKey(System.getenv("AWS_SECRET_ACCESS_KEY"))
                 .sessionToken(System.getenv("AWS_SESSION_TOKEN"))
                 .pendingWindowInDays(System.getenv("AWS_KMS_PENDING_WINDOW_DAYS")?.toIntOrNull())
-                .cacheTtlSeconds(System.getenv("AWS_KMS_CACHE_TTL_SECONDS")?.toLongOrNull())
+                // Absent/unparsable env var must keep the default TTL, not disable expiry.
+                .cacheTtlSeconds(
+                    System.getenv("AWS_KMS_CACHE_TTL_SECONDS")?.toLongOrNull()
+                        ?: DEFAULT_CACHE_TTL_SECONDS
+                )
                 .build()
         }
 
@@ -106,7 +128,11 @@ data class AwsKmsConfig(
                 .sessionToken(options[AwsKmsOptionKeys.SESSION_TOKEN] as? String)
                 .endpointOverride(options[AwsKmsOptionKeys.ENDPOINT_OVERRIDE] as? String)
                 .pendingWindowInDays(options[AwsKmsOptionKeys.PENDING_WINDOW_IN_DAYS] as? Int)
-                .cacheTtlSeconds((options["cacheTtlSeconds"] as? Number)?.toLong())
+                // Absent/non-numeric option must keep the default TTL, not disable expiry.
+                // "Cache forever" (null) is only available programmatically via the builder.
+                .cacheTtlSeconds(
+                    (options["cacheTtlSeconds"] as? Number)?.toLong() ?: DEFAULT_CACHE_TTL_SECONDS
+                )
                 .build()
         }
     }
@@ -121,7 +147,7 @@ data class AwsKmsConfig(
         private var sessionToken: String? = null
         private var endpointOverride: String? = null
         private var pendingWindowInDays: Int? = null
-        private var cacheTtlSeconds: Long? = 300
+        private var cacheTtlSeconds: Long? = DEFAULT_CACHE_TTL_SECONDS
 
         fun region(region: String): Builder {
             this.region = region

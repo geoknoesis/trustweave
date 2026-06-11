@@ -12,6 +12,7 @@ import org.trustweave.kms.results.GenerateKeyResult
 import org.trustweave.kms.results.GetPublicKeyResult
 import org.trustweave.kms.results.SignResult
 import org.trustweave.kms.results.DeleteKeyResult
+import org.trustweave.kms.util.EcdsaSignatureCodec
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -289,7 +290,15 @@ class ThalesKeyManagementService(
                     cause = null
                 )
 
-            SignResult.Success(Base64.getDecoder().decode(signatureBase64))
+            // Thales CipherTrust returns ECDSA signatures in ASN.1 DER; the KeyManagementService
+            // contract requires P1363 (raw r||s) with low-s for secp256k1. normalize() detects
+            // DER and transcodes; non-DER payloads of the expected P1363 size pass through.
+            SignResult.Success(
+                EcdsaSignatureCodec.normalize(
+                    Base64.getDecoder().decode(signatureBase64),
+                    signingAlgorithm
+                )
+            )
         } catch (e: Exception) {
             SignResult.Failure.Error(
                 keyId = keyId,

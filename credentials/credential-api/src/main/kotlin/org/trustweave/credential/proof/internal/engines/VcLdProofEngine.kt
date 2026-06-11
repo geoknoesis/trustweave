@@ -39,7 +39,11 @@ import org.slf4j.LoggerFactory
 /**
  * VC-LD (Verifiable Credentials Linked Data) proof engine.
  *
- * Supports W3C Verifiable Credentials 2.0 with Linked Data Proofs.
+ * Supports the W3C Verifiable Credentials Data Model 1.1 and 2.0 with Linked Data Proofs.
+ * Issuance targets VC 1.1 by default; a request targets VC 2.0 by declaring the
+ * `https://www.w3.org/ns/credentials/v2` base context via the
+ * [JsonLdDocumentBuilder.CONTEXTS_OPTION] proof option. VC 2.0 credentials are emitted with
+ * `validFrom`/`validUntil` instead of `issuanceDate`/`expirationDate`.
  * Uses JSON-LD canonicalization and various signature suites.
  *
  * Infrastructure concerns (JSON-LD library, java.security) are accessed through
@@ -66,7 +70,12 @@ internal class VcLdProofEngine(
     
     override val format = ProofSuiteId.VC_LD
     override val formatName = "Verifiable Credentials (Linked Data)"
-    override val formatVersion = "2.0"
+
+    /**
+     * Supported W3C VC Data Model versions. Issuance emits VC 1.1 by default and VC 2.0
+     * when the request declares the v2 base context (see [issue]); verification accepts both.
+     */
+    override val formatVersion = "1.1, 2.0"
     
     override val capabilities = ProofEngineCapabilities(
         selectiveDisclosure = true,
@@ -170,16 +179,23 @@ internal class VcLdProofEngine(
             additionalProperties = additionalProperties
         )
 
-        // Build VerifiableCredential (context must match the signed canonical document)
+        // Build VerifiableCredential (context must match the signed canonical document).
+        // VC version honesty: a pure VC 2.0 credential carries validFrom/validUntil
+        // (issuanceDate/expirationDate do not exist in the v2 vocabulary); VC 1.1 (and
+        // dual-context) credentials keep issuanceDate/expirationDate. The same rule is
+        // applied by JsonLdDocumentBuilder.build so the credential matches the signed
+        // canonical document field-for-field.
+        val isVc2 = JsonLdDocumentBuilder.isPureVc2(contexts)
         return VerifiableCredential(
             context = contexts,
             id = credentialId,
             type = request.type,
             issuer = request.issuer,
-            issuanceDate = request.issuedAt,
-            validFrom = request.validFrom,
+            issuanceDate = if (isVc2) null else request.issuedAt,
+            validFrom = if (isVc2) request.validFrom ?: request.issuedAt else request.validFrom,
             credentialSubject = request.credentialSubject,
-            expirationDate = request.validUntil,
+            expirationDate = if (isVc2) null else request.validUntil,
+            validUntil = if (isVc2) request.validUntil else null,
             credentialStatus = request.credentialStatus,
             credentialSchema = request.credentialSchema,
             evidence = request.evidence,
@@ -496,6 +512,7 @@ internal class VcLdProofEngine(
         val jwsAlgorithm = when (algorithm.uppercase()) {
             "EDDSA", "ED25519" -> JWSAlgorithm.EdDSA
             "ES256" -> JWSAlgorithm.ES256
+            "ES256K", "SECP256K1" -> JWSAlgorithm.ES256K
             "ES384" -> JWSAlgorithm.ES384
             "ES512" -> JWSAlgorithm.ES512
             else -> JWSAlgorithm.EdDSA
@@ -510,8 +527,18 @@ internal class VcLdProofEngine(
             is SignResult.Failure.UnsupportedAlgorithm -> throw IllegalStateException("Unsupported algorithm")
             is SignResult.Failure.Error -> throw IllegalStateException("Sign error: ${signResult.reason}")
         }
+        // RFC 7518 §3.4: the JWS signature segment of an ECDSA algorithm MUST be the raw
+        // IEEE P1363 r||s form. The KMS contract is P1363 for EC keys, but providers built
+        // before that contract (and many backends) emit ASN.1 DER — embedding DER raw would
+        // produce a JWS that can never verify. Transcode DER input; P1363 passes through.
+        // Ed25519 signatures are already the raw 64-byte RFC 8032 form and are not touched.
+        val jwsSignatureBytes = if (ProofEngineUtils.isEcdsaJwsAlgorithm(jwsAlgorithm)) {
+            ProofEngineUtils.ensureP1363EcdsaJwsSignature(sigBytes, jwsAlgorithm)
+        } else {
+            sigBytes
+        }
         // Detached JWS: header..signature (empty payload segment)
-        return "${header.toBase64URL()}..${Base64URL.encode(sigBytes)}"
+        return "${header.toBase64URL()}..${Base64URL.encode(jwsSignatureBytes)}"
     }
     
     private fun getKms(): KeyManagementService? {

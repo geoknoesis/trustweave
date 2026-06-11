@@ -51,8 +51,14 @@ class KeyDidMethod(
             val algorithm = options.algorithm.algorithmName
             val keyHandle = generateKey(algorithm, options.additionalProperties)
 
-            // Get public key bytes
-            val publicKeyBytes = getPublicKeyBytes(keyHandle, algorithm)
+            // Get public key bytes. The multicodec table (secp256k1-pub, p256-pub, ...)
+            // requires COMPRESSED SEC1 points for EC keys, so normalize before prefixing.
+            val rawPublicKeyBytes = getPublicKeyBytes(keyHandle, algorithm)
+            val publicKeyBytes = if (DidMethodUtils.ecCoordinateSize(algorithm) != null) {
+                DidMethodUtils.compressEcPublicKey(algorithm, rawPublicKeyBytes)
+            } else {
+                rawPublicKeyBytes
+            }
 
             // Create multicodec prefix based on algorithm
             val multicodecPrefix = getMulticodecPrefix(algorithm)
@@ -173,11 +179,15 @@ class KeyDidMethod(
                     publicKeyJwk = buildJwkFromBytes(algorithm, publicKeyBytes)
                 )
 
+                // X25519 keys are key-agreement-only (DIDComm encryption); signature
+                // algorithms get authentication/assertion relationships instead.
+                val isKeyAgreementOnly = algorithm.uppercase() == "X25519"
                 val document = DidMethodUtils.buildDidDocument(
                     did = didStr,
                     verificationMethod = listOf(verificationMethod),
-                    authentication = listOf(vmIdStr),
-                    assertionMethod = listOf(vmIdStr)
+                    authentication = if (isKeyAgreementOnly) emptyList() else listOf(vmIdStr),
+                    assertionMethod = if (isKeyAgreementOnly) null else listOf(vmIdStr),
+                    keyAgreement = if (isKeyAgreementOnly) listOf(vmIdStr) else null
                 )
 
                 // Cache the derived document (already inside the lock, writes directly).
@@ -312,7 +322,14 @@ class KeyDidMethod(
 
     /**
      * Builds a JWK map from raw public key bytes and algorithm name.
-     * Returns null for unsupported algorithms (publicKeyMultibase is the primary representation).
+     *
+     * EC keys are expected in SEC1 COMPRESSED form (0x02/0x03 prefix) per the
+     * multicodec table; compliant compressed keys from other stacks are
+     * decompressed by solving the curve equation. Legacy uncompressed
+     * (0x04-prefixed) input is still accepted for backward compatibility.
+     *
+     * Returns null for unsupported algorithms or malformed points
+     * (publicKeyMultibase is the primary representation).
      */
     private fun buildJwkFromBytes(algorithm: String, publicKeyBytes: ByteArray): Map<String, Any?>? {
         val b64url = java.util.Base64.getUrlEncoder().withoutPadding()
@@ -322,50 +339,28 @@ class KeyDidMethod(
                 "crv" to "Ed25519",
                 "x" to b64url.encodeToString(publicKeyBytes)
             )
-            "SECP256K1" -> {
-                // Expect uncompressed point: 0x04 || x(32) || y(32)
-                if (publicKeyBytes.size >= 65 && publicKeyBytes[0] == 0x04.toByte()) {
-                    mapOf(
-                        "kty" to "EC",
-                        "crv" to "secp256k1",
-                        "x" to b64url.encodeToString(publicKeyBytes.sliceArray(1..32)),
-                        "y" to b64url.encodeToString(publicKeyBytes.sliceArray(33..64))
-                    )
-                } else null
-            }
-            "P-256" -> {
-                if (publicKeyBytes.size >= 65 && publicKeyBytes[0] == 0x04.toByte()) {
-                    mapOf(
-                        "kty" to "EC",
-                        "crv" to "P-256",
-                        "x" to b64url.encodeToString(publicKeyBytes.sliceArray(1..32)),
-                        "y" to b64url.encodeToString(publicKeyBytes.sliceArray(33..64))
-                    )
-                } else null
-            }
-            "P-384" -> {
-                if (publicKeyBytes.size >= 97 && publicKeyBytes[0] == 0x04.toByte()) {
-                    val x = publicKeyBytes.sliceArray(1..48)
-                    val y = publicKeyBytes.sliceArray(49..96)
-                    mapOf(
-                        "kty" to "EC",
-                        "crv" to "P-384",
-                        "x" to b64url.encodeToString(x),
-                        "y" to b64url.encodeToString(y)
-                    )
-                } else null
-            }
-            "P-521" -> {
-                if (publicKeyBytes.size >= 133 && publicKeyBytes[0] == 0x04.toByte()) {
-                    val x = publicKeyBytes.sliceArray(1..66)
-                    val y = publicKeyBytes.sliceArray(67..132)
-                    mapOf(
-                        "kty" to "EC",
-                        "crv" to "P-521",
-                        "x" to b64url.encodeToString(x),
-                        "y" to b64url.encodeToString(y)
-                    )
-                } else null
+            "X25519" -> mapOf(
+                "kty" to "OKP",
+                "crv" to "X25519",
+                "x" to b64url.encodeToString(publicKeyBytes)
+            )
+            "SECP256K1", "P-256", "P-384", "P-521" -> {
+                val coordSize = DidMethodUtils.ecCoordinateSize(algorithm) ?: return null
+                val uncompressed = try {
+                    DidMethodUtils.decompressEcPublicKey(algorithm, publicKeyBytes)
+                } catch (e: IllegalArgumentException) {
+                    return null
+                }
+                val crv = when (algorithm.uppercase()) {
+                    "SECP256K1" -> "secp256k1"
+                    else -> algorithm.uppercase()
+                }
+                mapOf(
+                    "kty" to "EC",
+                    "crv" to crv,
+                    "x" to b64url.encodeToString(uncompressed.sliceArray(1..coordSize)),
+                    "y" to b64url.encodeToString(uncompressed.sliceArray(coordSize + 1..2 * coordSize))
+                )
             }
             else -> null
         }

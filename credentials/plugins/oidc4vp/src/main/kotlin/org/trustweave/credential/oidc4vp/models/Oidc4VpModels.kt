@@ -113,10 +113,19 @@ data class AuthorizationRequest(
     val state: String? = null,
     val responseMode: String? = null,
     val dcqlQuery: DcqlQuery? = null,
+    /** Verifier metadata supplied in the request (`client_metadata`, OID4VP v1.0 §5.1). */
+    val clientMetadata: JsonObject? = null,
 ) {
     /** The effective response endpoint: response_uri for direct_post, redirect_uri otherwise. */
     val effectiveResponseEndpoint: String?
         get() = responseUri ?: redirectUri
+
+    /**
+     * The audience for the holder's VP token: the verifier's `client_id` when present,
+     * otherwise the response endpoint (`response_uri`/`redirect_uri`).
+     */
+    val audience: String?
+        get() = clientId ?: effectiveResponseEndpoint
 }
 
 /**

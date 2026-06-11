@@ -19,6 +19,9 @@ import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.trust.types.DidResult
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlin.time.Duration
@@ -51,14 +54,24 @@ class DidManagementService(
         method: String? = null,
         timeout: Duration = 10.seconds,
         block: DidBuilder.() -> Unit = {}
-    ): DidCreationResult = withTimeout(timeout) {
-        withContext(ioDispatcher) {
-            val resolvedMethod = method ?: defaultDidMethod ?: "key"
-            val builder = DidBuilder(didContext, ioDispatcher)
-            builder.method(resolvedMethod)
-            builder.block()
-            builder.build()
+    ): DidCreationResult = try {
+        withTimeout(timeout) {
+            withContext(ioDispatcher) {
+                val resolvedMethod = method ?: defaultDidMethod ?: "key"
+                val builder = DidBuilder(didContext, ioDispatcher)
+                builder.method(resolvedMethod)
+                builder.block()
+                builder.build()
+            }
         }
+    } catch (e: TimeoutCancellationException) {
+        // Map OUR timeout to the sealed failure contract; propagate real cancellation
+        // (parent cancelled / enclosing timeout) untouched.
+        currentCoroutineContext().ensureActive()
+        DidCreationResult.Failure.Other(
+            reason = "DID creation timed out after $timeout",
+            cause = e
+        )
     }
 
     /**
@@ -130,19 +143,29 @@ class DidManagementService(
     suspend fun resolveDid(
         did: String,
         timeout: Duration = 30.seconds
-    ): DidResolutionResult = withTimeout(timeout) {
-        withContext(ioDispatcher) {
-            try {
-                didRegistry.resolve(did)
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                DidResolutionResult.Failure.ResolutionError(
-                    did = Did(did),
-                    reason = e.message ?: "Unknown resolution error",
-                    cause = e
-                )
+    ): DidResolutionResult = try {
+        withTimeout(timeout) {
+            withContext(ioDispatcher) {
+                try {
+                    didRegistry.resolve(did)
+                } catch (e: Exception) {
+                    if (e is CancellationException) throw e
+                    DidResolutionResult.Failure.ResolutionError(
+                        did = Did(did),
+                        reason = e.message ?: "Unknown resolution error",
+                        cause = e
+                    )
+                }
             }
         }
+    } catch (e: TimeoutCancellationException) {
+        // Map OUR timeout to the sealed failure contract; propagate real cancellation.
+        currentCoroutineContext().ensureActive()
+        DidResolutionResult.Failure.ResolutionError(
+            did = Did(did),
+            reason = "DID resolution timed out after $timeout",
+            cause = e
+        )
     }
 
     /**
@@ -177,6 +200,15 @@ class DidManagementService(
         }
         val did = document.id
         DidResult.Success(did = did, document = document)
+    } catch (e: TimeoutCancellationException) {
+        // Map OUR timeout to the sealed failure contract BEFORE the generic
+        // CancellationException rethrow; propagate real cancellation untouched.
+        currentCoroutineContext().ensureActive()
+        DidResult.Failure.UpdateFailed(
+            did = null,
+            reason = "DID update timed out after $timeout",
+            cause = e
+        )
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
@@ -197,12 +229,22 @@ class DidManagementService(
     suspend fun delegate(
         timeout: Duration = 30.seconds,
         block: suspend DelegationBuilder.() -> Unit
-    ): DelegationChainResult = withTimeout(timeout) {
-        withContext(ioDispatcher) {
-            val builder = DelegationBuilder(didContext)
-            builder.block()
-            builder.verify()
+    ): DelegationChainResult = try {
+        withTimeout(timeout) {
+            withContext(ioDispatcher) {
+                val builder = DelegationBuilder(didContext)
+                builder.block()
+                builder.verify()
+            }
         }
+    } catch (e: TimeoutCancellationException) {
+        // Map OUR timeout to the result contract; propagate real cancellation.
+        currentCoroutineContext().ensureActive()
+        DelegationChainResult(
+            valid = false,
+            path = emptyList(),
+            errors = listOf("Delegation verification timed out after $timeout")
+        )
     }
 
     /**
@@ -229,6 +271,15 @@ class DidManagementService(
         }
         val did = document.id
         DidResult.Success(did = did, document = document)
+    } catch (e: TimeoutCancellationException) {
+        // Map OUR timeout to the sealed failure contract BEFORE the generic
+        // CancellationException rethrow; propagate real cancellation untouched.
+        currentCoroutineContext().ensureActive()
+        DidResult.Failure.UpdateFailed(
+            did = null,
+            reason = "Key rotation timed out after $timeout",
+            cause = e
+        )
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {

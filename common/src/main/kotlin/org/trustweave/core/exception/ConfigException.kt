@@ -45,4 +45,26 @@ sealed class ConfigException(
             "field" to field
         ).filterValues { it != null } + (jsonString?.let { mapOf("jsonString" to it) } ?: emptyMap())
     )
+
+    /**
+     * A configuration value was provided that this build does not support
+     * (e.g. an unknown provider name, or a feature that is not yet implemented).
+     *
+     * Raised instead of silently ignoring the value, so misconfiguration fails fast.
+     */
+    data class UnsupportedValue(
+        val field: String,
+        val value: String,
+        val reason: String,
+        override val cause: Throwable? = null
+    ) : ConfigException(
+        code = "CONFIG_UNSUPPORTED_VALUE",
+        message = "Unsupported configuration value for '$field': '$value'. $reason",
+        context = mapOf(
+            "field" to field,
+            "value" to value,
+            "reason" to reason
+        ),
+        cause = cause
+    )
 }

@@ -27,6 +27,9 @@ dependencies {
     // BouncyCastle for secp256k1 support
     implementation(libs.bouncycastle.prov)
 
+    // TrustWeaveTestFixture logs SPI-fallback warnings via slf4j
+    implementation(libs.slf4j.api)
+
     // JUnit for test base classes
     api(libs.junit.jupiter)
 

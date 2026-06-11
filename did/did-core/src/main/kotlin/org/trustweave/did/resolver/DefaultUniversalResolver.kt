@@ -443,6 +443,7 @@ class DefaultUniversalResolver(
         val updated = metadataJson["updated"]?.jsonPrimitive?.content?.let {
             try { Instant.parse(it) } catch (e: Exception) { null }
         }
+        val deactivated = metadataJson["deactivated"]?.jsonPrimitive?.booleanOrNull ?: false
         val versionId = metadataJson["versionId"]?.jsonPrimitive?.content
         val nextUpdate = metadataJson["nextUpdate"]?.jsonPrimitive?.content?.let {
             try { Instant.parse(it) } catch (e: Exception) { null }
@@ -453,6 +454,7 @@ class DefaultUniversalResolver(
         return DidDocumentMetadata(
             created = created,
             updated = updated,
+            deactivated = deactivated,
             versionId = versionId,
             nextUpdate = nextUpdate,
             canonicalId = canonicalId,

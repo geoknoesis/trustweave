@@ -2,8 +2,10 @@ package org.trustweave.credential.proof.internal.engines
 
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.core.identifiers.KeyId
+import org.trustweave.core.util.decodeBase58
 import org.trustweave.credential.internal.CredentialConstants
 import org.trustweave.credential.internal.SecurityConstants
+import org.trustweave.kms.util.EcdsaSignatureCodec
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
@@ -61,9 +63,66 @@ import org.slf4j.LoggerFactory
  * mechanisms for key extraction.
  */
 internal object ProofEngineUtils {
-    
+
     private val logger = LoggerFactory.getLogger(ProofEngineUtils::class.java)
-    
+
+    /** Raw Ed25519 public key length in bytes (RFC 8032). */
+    private const val ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES = 32
+
+    /** Multicodec `ed25519-pub` prefix (varint 0xED 0x01), as used by did:key / Multikey. */
+    private val MULTICODEC_ED25519_PUB_PREFIX = byteArrayOf(0xED.toByte(), 0x01)
+
+    /**
+     * EC field element size in bytes per ECDSA JWS algorithm
+     * (P1363 `r || s` signature length is twice this).
+     */
+    private val ECDSA_JWS_FIELD_SIZE_BYTES: Map<JWSAlgorithm, Int> = mapOf(
+        JWSAlgorithm.ES256 to 32,
+        JWSAlgorithm.ES256K to 32,
+        JWSAlgorithm.ES384 to 48,
+        JWSAlgorithm.ES512 to 66
+    )
+
+    /**
+     * Whether [algorithm] is an ECDSA JWS algorithm (ES256, ES256K, ES384, ES512) whose
+     * JWS signature segment must be IEEE P1363 (`r || s`) encoded per RFC 7518 §3.4.
+     */
+    fun isEcdsaJwsAlgorithm(algorithm: JWSAlgorithm): Boolean =
+        algorithm in ECDSA_JWS_FIELD_SIZE_BYTES
+
+    /**
+     * Normalize an ECDSA signature to the IEEE P1363 (`r || s`) form required by JWS
+     * (RFC 7518 §3.4).
+     *
+     * The KMS contract requires providers to return P1363 for EC keys, but providers built
+     * before that contract (and many backends: JCA, AWS KMS, Google Cloud KMS, ...) emit
+     * ASN.1 DER. This function makes the JWS path robust to both encodings:
+     *
+     * - Input already of the expected P1363 length passes through unchanged.
+     * - DER-encoded input (`0x30` SEQUENCE with a structurally valid length) is transcoded
+     *   to fixed-width `r || s`.
+     * - Anything else throws — embedding it would produce a JWS that can never verify.
+     *
+     * @param signature The signature bytes returned by the signer
+     * @param algorithm The ECDSA JWS algorithm the signature was produced for
+     * @return The P1363-encoded signature
+     * @throws IllegalArgumentException if [algorithm] is not an ECDSA JWS algorithm
+     * @throws IllegalStateException if the signature is neither P1363-sized nor valid DER
+     */
+    fun ensureP1363EcdsaJwsSignature(signature: ByteArray, algorithm: JWSAlgorithm): ByteArray {
+        val fieldSize = ECDSA_JWS_FIELD_SIZE_BYTES[algorithm]
+            ?: throw IllegalArgumentException("Not an ECDSA JWS algorithm: ${algorithm.name}")
+        val expectedLength = fieldSize * 2
+        return when {
+            signature.size == expectedLength -> signature
+            EcdsaSignatureCodec.isDer(signature) -> EcdsaSignatureCodec.derToP1363(signature, fieldSize)
+            else -> throw IllegalStateException(
+                "ECDSA signature for ${algorithm.name} is neither P1363 ($expectedLength bytes) " +
+                    "nor a DER-encoded SEQUENCE: got ${signature.size} bytes"
+            )
+        }
+    }
+
     /**
      * Extract key ID from VerificationMethodId.
      * Handles both formats: "did:example:issuer#key-1" and "key-1"
@@ -328,71 +387,13 @@ internal object ProofEngineUtils {
                     // Ed25519
                     val crv = jwkMap["crv"] as? String
                     if (crv != "Ed25519") return null
-                    
+
                     val x = jwkMap["x"] as? String ?: return null
                     val xBytes = Base64.getUrlDecoder().decode(x)
-                    
-                    if (xBytes.size != 32) return null
-                    
-                    // Approach 1: Use BouncyCastle Ed25519PublicKeyParameters - most reliable
-                    try {
-                        // Ensure BouncyCastle provider is registered
-                        if (Security.getProvider("BC") == null) {
-                            Security.addProvider(BouncyCastleProvider())
-                        }
-                        
-                        // Create Ed25519 public key parameters from raw bytes
-                        val publicKeyParams = Ed25519PublicKeyParameters(xBytes, 0)
-                        
-                        // Convert BouncyCastle parameters to Java PublicKey using SubjectPublicKeyInfo
-                        // This is the standard ASN.1 encoding for Ed25519 public keys
-                        // Ed25519 OID: 1.3.101.112 (from RFC 8410)
-                        val ed25519Oid = org.bouncycastle.asn1.ASN1ObjectIdentifier("1.3.101.112")
-                        val algorithmIdentifier = AlgorithmIdentifier(ed25519Oid)
-                        val subjectPublicKey = DERBitString(publicKeyParams.encoded)
-                        val subjectPublicKeyInfo = SubjectPublicKeyInfo(algorithmIdentifier, subjectPublicKey)
-                        val derEncoded = subjectPublicKeyInfo.encoded
-                        
-                        // Use KeyFactory with X509EncodedKeySpec (which expects SubjectPublicKeyInfo format)
-                        val keyFactory = KeyFactory.getInstance("Ed25519", "BC")
-                        val keySpec = X509EncodedKeySpec(derEncoded)
-                        val publicKey = keyFactory.generatePublic(keySpec)
-                        logger.debug("Successfully extracted Ed25519 public key using BouncyCastle")
-                        return publicKey
-                    } catch (e: Exception) {
-                        logger.debug("BouncyCastle approach failed: error={}", e.message)
-                        // Fall through to Java built-in approach
-                    }
-                    
-                    // Approach 2: Use Java's built-in EdECPublicKeySpec (Java 15+)
-                    // EdECPublicKeySpec constructor is (NamedParameterSpec, EdECPoint)
-                    // EdECPoint constructor is (boolean odd, BigInteger coordinate)
-                    try {
-                        val keyFactory = KeyFactory.getInstance("Ed25519")
-                        val paramsClass = Class.forName("java.security.spec.NamedParameterSpec")
-                        val ed25519Field = paramsClass.getField("ED25519")
-                        val params = ed25519Field.get(null)
-                        
-                        // Create EdECPoint: For Ed25519, the 32 bytes are the y coordinate
-                        // The last bit indicates the odd flag for compressed point representation
-                        val odd = (xBytes.last().toInt() and 1) != 0
-                        val coordinate = java.math.BigInteger(1, xBytes) // Positive BigInteger
-                        
-                        val edecPointClass = Class.forName("java.security.spec.EdECPoint")
-                        val edecPointConstructor = edecPointClass.getConstructor(Boolean::class.java, java.math.BigInteger::class.java)
-                        val edecPoint = edecPointConstructor.newInstance(odd, coordinate)
-                        
-                        val keySpecClass = Class.forName("java.security.spec.EdECPublicKeySpec")
-                        val keySpecConstructor = keySpecClass.getConstructor(paramsClass, edecPointClass)
-                        val keySpec = keySpecConstructor.newInstance(params, edecPoint)
-                        
-                        val publicKey = keyFactory.generatePublic(keySpec as java.security.spec.KeySpec)
-                        logger.debug("Successfully created Ed25519 public key using EdECPublicKeySpec")
-                        publicKey
-                    } catch (e: Exception) {
-                        logger.warn("EdECPublicKeySpec approach also failed: error={}", e.message)
-                        null
-                    }
+
+                    if (xBytes.size != ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES) return null
+
+                    createEd25519PublicKey(xBytes)
                 }
                 else -> null
             }
@@ -403,46 +404,157 @@ internal object ProofEngineUtils {
     
     /**
      * Extract public key from multibase-encoded string.
-     * 
+     *
      * Parses a multibase-encoded public key string and extracts the corresponding Java PublicKey.
      * Multibase encoding uses a single character prefix to indicate the base encoding scheme,
      * followed by the base-encoded key data.
-     * 
+     *
      * **Supported Multibase Encodings:**
-     * - **base58-btc** (prefix 'z'): Most common for Ed25519 keys in DID documents
-     * - Additional encodings may be supported via extensions
-     * 
-     * **Extraction Algorithm:**
-     * 1. Extract multibase prefix (first character)
-     * 2. Decode the base-encoded portion based on prefix
-     * 3. Validate key length (Ed25519 requires 32 bytes)
-     * 4. Convert raw bytes to Java PublicKey using BouncyCastle
-     * 
-     * **Key Format:**
-     * - Ed25519 keys are 32 bytes in length
-     * - Multibase format: `{prefix}{base-encoded-key}`
-     * - Example: `z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK`
-     * 
-     * **Error Handling:**
-     * - Returns null if multibase prefix is unsupported
-     * - Returns null if key length is incorrect
-     * - Returns null if key conversion fails
-     * - Logs warnings for debugging purposes
-     * 
-     * **Current Status:**
-     * Multibase decoding is not yet implemented. This function returns null for multibase-encoded keys.
-     * JWK format (via `publicKeyJwk`) is preferred and fully supported.
-     * 
-     * @param multibase The multibase-encoded key string
-     * @param keyType The key type (used for validation)
-     * @return The extracted PublicKey, or null if extraction fails or format is not yet supported
+     * - **base58-btc** (prefix 'z'): the encoding used by did:key / Ed25519VerificationKey2020 /
+     *   Multikey documents (e.g. `z6Mk...` values)
+     * - **base64url, no padding** (prefix 'u')
+     *
+     * **Supported Key Material:**
+     * - Ed25519 public keys with the multicodec `ed25519-pub` prefix (`0xED 0x01` + 32 bytes)
+     * - Raw 32-byte Ed25519 public keys without a multicodec prefix
+     *
+     * Other multicodec prefixes (e.g. `secp256k1-pub`, `p256-pub`) are rejected: returning a
+     * key of the wrong type would fail verification anyway, and failing here keeps the
+     * behaviour explicit (fail-closed).
+     *
+     * **Error Handling (all fail-closed, returning null):**
+     * - Unsupported multibase prefix
+     * - Malformed base58/base64url payload
+     * - Unsupported multicodec prefix or wrong key length
+     * - Key construction failure
+     *
+     * @param multibase The multibase-encoded key string (e.g. `z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK`)
+     * @param keyType The verification method type (used for logging only; the multicodec
+     *   prefix in the decoded bytes is authoritative)
+     * @return The extracted PublicKey, or null if extraction fails
      */
     private fun extractPublicKeyFromMultibase(multibase: String, keyType: String): PublicKey? {
-        // Multibase decoding requires base58btc decoding library
-        // For now, return null - JWK format is preferred
-        return null
+        if (multibase.length < 2) {
+            logger.warn("Multibase value too short to contain a key: length={}", multibase.length)
+            return null
+        }
+
+        val decoded = try {
+            when (multibase[0]) {
+                'z' -> multibase.substring(1).decodeBase58()
+                'u' -> Base64.getUrlDecoder().decode(multibase.substring(1))
+                else -> {
+                    logger.warn(
+                        "Unsupported multibase prefix '{}' for key type {}; only 'z' (base58btc) " +
+                            "and 'u' (base64url) are supported",
+                        multibase[0], keyType
+                    )
+                    return null
+                }
+            }
+        } catch (e: Exception) {
+            logger.warn("Failed to decode multibase key payload: error={}", e.message)
+            return null
+        }
+
+        val rawKey = when {
+            decoded.size == ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES + MULTICODEC_ED25519_PUB_PREFIX.size &&
+                decoded[0] == MULTICODEC_ED25519_PUB_PREFIX[0] &&
+                decoded[1] == MULTICODEC_ED25519_PUB_PREFIX[1] ->
+                decoded.copyOfRange(MULTICODEC_ED25519_PUB_PREFIX.size, decoded.size)
+
+            decoded.size == ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES -> decoded
+
+            else -> {
+                logger.warn(
+                    "Multibase key is not an Ed25519 public key (decoded {} bytes, key type {}); " +
+                        "expected multicodec ed25519-pub (0xED 0x01) + 32 bytes, or raw 32 bytes",
+                    decoded.size, keyType
+                )
+                return null
+            }
+        }
+
+        return createEd25519PublicKey(rawKey)
     }
-    
+
+    /**
+     * Construct a [PublicKey] from a raw 32-byte Ed25519 public key.
+     *
+     * Tries BouncyCastle first (most reliable), falling back to the JDK's built-in
+     * `EdECPublicKeySpec` (Java 15+). Returns null on failure (fail-closed).
+     *
+     * @param rawKeyBytes The raw 32-byte Ed25519 public key
+     * @return The PublicKey, or null if construction fails
+     */
+    private fun createEd25519PublicKey(rawKeyBytes: ByteArray): PublicKey? {
+        if (rawKeyBytes.size != ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES) {
+            logger.warn("Invalid Ed25519 raw public key length: {}", rawKeyBytes.size)
+            return null
+        }
+
+        // Approach 1: Use BouncyCastle Ed25519PublicKeyParameters - most reliable
+        try {
+            // Ensure BouncyCastle provider is registered
+            if (Security.getProvider("BC") == null) {
+                Security.addProvider(BouncyCastleProvider())
+            }
+
+            // Create Ed25519 public key parameters from raw bytes
+            val publicKeyParams = Ed25519PublicKeyParameters(rawKeyBytes, 0)
+
+            // Convert BouncyCastle parameters to Java PublicKey using SubjectPublicKeyInfo
+            // This is the standard ASN.1 encoding for Ed25519 public keys
+            // Ed25519 OID: 1.3.101.112 (from RFC 8410)
+            val ed25519Oid = org.bouncycastle.asn1.ASN1ObjectIdentifier("1.3.101.112")
+            val algorithmIdentifier = AlgorithmIdentifier(ed25519Oid)
+            val subjectPublicKey = DERBitString(publicKeyParams.encoded)
+            val subjectPublicKeyInfo = SubjectPublicKeyInfo(algorithmIdentifier, subjectPublicKey)
+            val derEncoded = subjectPublicKeyInfo.encoded
+
+            // Use KeyFactory with X509EncodedKeySpec (which expects SubjectPublicKeyInfo format)
+            val keyFactory = KeyFactory.getInstance("Ed25519", "BC")
+            val keySpec = X509EncodedKeySpec(derEncoded)
+            val publicKey = keyFactory.generatePublic(keySpec)
+            logger.debug("Successfully extracted Ed25519 public key using BouncyCastle")
+            return publicKey
+        } catch (e: Exception) {
+            logger.debug("BouncyCastle approach failed: error={}", e.message)
+            // Fall through to Java built-in approach
+        }
+
+        // Approach 2: Use Java's built-in EdECPublicKeySpec (Java 15+)
+        // EdECPublicKeySpec constructor is (NamedParameterSpec, EdECPoint)
+        // EdECPoint constructor is (boolean odd, BigInteger coordinate)
+        return try {
+            val keyFactory = KeyFactory.getInstance("Ed25519")
+            val paramsClass = Class.forName("java.security.spec.NamedParameterSpec")
+            val ed25519Field = paramsClass.getField("ED25519")
+            val params = ed25519Field.get(null)
+
+            // Create EdECPoint: For Ed25519, the 32 bytes are the y coordinate
+            // The last bit indicates the odd flag for compressed point representation
+            val odd = (rawKeyBytes.last().toInt() and 1) != 0
+            val coordinate = java.math.BigInteger(1, rawKeyBytes) // Positive BigInteger
+
+            val edecPointClass = Class.forName("java.security.spec.EdECPoint")
+            val edecPointConstructor = edecPointClass.getConstructor(Boolean::class.java, java.math.BigInteger::class.java)
+            val edecPoint = edecPointConstructor.newInstance(odd, coordinate)
+
+            val keySpecClass = Class.forName("java.security.spec.EdECPublicKeySpec")
+            val keySpecConstructor = keySpecClass.getConstructor(paramsClass, edecPointClass)
+            val keySpec = keySpecConstructor.newInstance(params, edecPoint)
+
+            val publicKey = keyFactory.generatePublic(keySpec as java.security.spec.KeySpec)
+            logger.debug("Successfully created Ed25519 public key using EdECPublicKeySpec")
+            publicKey
+        } catch (e: Exception) {
+            logger.warn("EdECPublicKeySpec approach also failed: error={}", e.message)
+            null
+        }
+    }
+
+
     /**
      * Verify an EdDSA (Ed25519) JWS signature using the Java Security API.
      *

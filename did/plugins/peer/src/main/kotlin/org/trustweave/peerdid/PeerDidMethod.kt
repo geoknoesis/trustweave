@@ -16,9 +16,15 @@ import org.trustweave.did.base.AbstractDidMethod
 import org.trustweave.did.base.DidMethodUtils
 import org.trustweave.kms.KeyHandle
 import org.trustweave.kms.KeyManagementService
+import org.trustweave.did.model.parseServiceTypesFromJson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import java.security.MessageDigest
 import java.util.Base64
 
@@ -27,8 +33,9 @@ import java.util.Base64
  *
  * Implements [DID Peer Specification](https://identity.foundation/peer-did-method-spec/):
  * - **Numalgo 0**: `did:peer:0{mb-multicodec-pubkey}` — genesis key encodes the DID (self-certifying)
- * - **Numalgo 1**: `did:peer:1{mb-sha256-genesis-doc}` — hash of genesis document
+ * - **Numalgo 1**: `did:peer:1{mb-multihash-genesis-doc}` — multihash (0x12 0x20 + SHA-256) of genesis document
  * - **Numalgo 2**: `did:peer:2{.X{mb}}*` — multiple keys/services encoded as segments
+ *   (`.S` service segments are unpadded base64url of abbreviated service JSON)
  */
 class PeerDidMethod(
     kms: KeyManagementService,
@@ -167,14 +174,21 @@ class PeerDidMethod(
     }
 
     /**
-     * Numalgo 1: `did:peer:1{mb}` — multibase-encoded SHA-256 hash of the genesis document bytes.
+     * Numalgo 1: `did:peer:1{mb}` — multibase-encoded MULTIHASH of the genesis document bytes.
+     *
+     * Per the did:peer spec the encoded numeric basis is a multihash, i.e. the
+     * SHA-256 digest prefixed with the multihash header `0x12` (sha2-256) and
+     * `0x20` (32-byte digest length) — not a raw SHA-256 hash.
      */
     private fun generateNumalgo1Did(keyHandle: KeyHandle, algorithm: String, serviceEndpoint: String?): String {
-        // Build a minimal genesis document (id placeholder stripped before hashing)
+        // Build a minimal genesis document (id placeholder stripped before hashing).
+        // Serialize via the canonical JSON producer — DidDocument.serializer() cannot
+        // handle the @Contextual publicKeyJwk map without a registered module.
         val genesisDoc = buildMinimalDocument(keyHandle, algorithm, "did:peer:1:genesis", serviceEndpoint)
-        val docJson = Json { prettyPrint = false }.encodeToString(DidDocument.serializer(), genesisDoc)
+        val docJson = documentToJsonElement(genesisDoc).toString()
         val hash = MessageDigest.getInstance("SHA-256").digest(docJson.toByteArray(Charsets.UTF_8))
-        val mb = "z" + encodeBase58(hash)
+        val multihash = byteArrayOf(0x12, 0x20) + hash
+        val mb = "z" + encodeBase58(multihash)
         return "did:peer:1$mb"
     }
 
@@ -184,7 +198,7 @@ class PeerDidMethod(
      * Segment labels:
      * - `V` = verificationMethod / authentication key
      * - `E` = key agreement key (encryption)
-     * - `S` = service (base58btc-encoded JSON service object)
+     * - `S` = service (`base64url(abbreviated-service-json)`, per spec — NOT multibase)
      */
     private fun generateNumalgo2Did(keyHandle: KeyHandle, algorithm: String, serviceEndpoint: String?): String {
         val publicKeyBytes = extractPublicKeyBytes(keyHandle, algorithm)
@@ -195,13 +209,27 @@ class PeerDidMethod(
         sb.append(".V").append(keyMb) // verification / authentication
 
         if (serviceEndpoint != null) {
-            // Encode service as abbreviated JSON → base58btc
-            val serviceJson = """{"t":"dm","s":"$serviceEndpoint"}"""
-            val serviceMb = "z" + encodeBase58(serviceJson.toByteArray(Charsets.UTF_8))
-            sb.append(".S").append(serviceMb)
+            sb.append(".S").append(encodeServiceSegment(serviceEndpoint))
         }
 
         return sb.toString()
+    }
+
+    /**
+     * Encodes a did:peer:2 service segment per spec: the service JSON with
+     * abbreviated keys (`type`→`t`, `serviceEndpoint`→`s`, `routingKeys`→`r`,
+     * `accept`→`a`, type value `DIDCommMessaging`→`dm`) encoded as unpadded
+     * base64url — `.S<base64url(json)>`.
+     */
+    private fun encodeServiceSegment(serviceEndpoint: String): String {
+        val abbreviated = JsonObject(
+            mapOf(
+                "t" to JsonPrimitive("dm"),
+                "s" to JsonPrimitive(serviceEndpoint)
+            )
+        )
+        return Base64.getUrlEncoder().withoutPadding()
+            .encodeToString(abbreviated.toString().toByteArray(Charsets.UTF_8))
     }
 
     // ─── Embedded document resolution ───────────────────────────────────────────
@@ -254,6 +282,7 @@ class PeerDidMethod(
         val services = mutableListOf<DidService>()
         val didObj = Did(didString)
         var keyIndex = 1
+        var serviceIndex = 0
 
         for (segment in segments) {
             if (segment.length < 2) continue
@@ -286,18 +315,10 @@ class PeerDidMethod(
                     keyIndex++
                 }
                 'S' -> {
-                    if (!mb.startsWith("z")) continue
-                    val serviceBytes = decodeBase58(mb.substring(1))
-                    val serviceJson = serviceBytes.toString(Charsets.UTF_8)
-                    // Parse abbreviated {"t":"dm","s":"<endpoint>"} format
-                    val endpoint = Regex(""""s"\s*:\s*"([^"]+)"""").find(serviceJson)?.groupValues?.get(1)
-                    if (endpoint != null) {
-                        services.add(DidService(
-                            id = "$didString#didcomm",
-                            type = listOf("DIDCommMessaging"),
-                            serviceEndpoint = ServiceEndpoint.Url(endpoint)
-                        ))
-                    }
+                    val serviceJson = decodeServiceSegment(mb) ?: continue
+                    val service = parseServiceSegmentJson(didString, serviceJson, serviceIndex) ?: continue
+                    services.add(service)
+                    serviceIndex++
                 }
             }
         }
@@ -311,6 +332,112 @@ class PeerDidMethod(
             keyAgreement = keyAgreement.map { VerificationMethodId.parse(it, didObj) },
             assertionMethod = authentication.map { VerificationMethodId.parse(it, didObj) },
             service = services
+        )
+    }
+
+    // ─── Service segment encoding/decoding ──────────────────────────────────────
+
+    /**
+     * Decodes a did:peer:2 `.S` segment to its JSON string.
+     *
+     * Per spec the segment is unpadded base64url. Legacy 'z'-prefixed base58btc
+     * segments (produced by earlier versions of this plugin) are still accepted.
+     * Returns null if the segment cannot be decoded.
+     */
+    private fun decodeServiceSegment(segment: String): String? = try {
+        val bytes = if (segment.startsWith("z")) {
+            // Legacy non-spec encoding (multibase base58btc) — backward compatibility
+            decodeBase58(segment.substring(1))
+        } else {
+            Base64.getUrlDecoder().decode(segment)
+        }
+        bytes.toString(Charsets.UTF_8)
+    } catch (e: IllegalArgumentException) {
+        null
+    }
+
+    /**
+     * Parses an abbreviated did:peer:2 service JSON into a [DidService], expanding
+     * the spec abbreviations: `t`→`type` (value `dm`→`DIDCommMessaging`),
+     * `s`→`serviceEndpoint`, `r`→`routingKeys`, `a`→`accept`.
+     *
+     * Service ids follow the spec convention: `#service` for the first service,
+     * `#service-1`, `#service-2`, ... for subsequent ones.
+     *
+     * Returns null if the JSON is malformed or lacks type/serviceEndpoint.
+     */
+    private fun parseServiceSegmentJson(didString: String, json: String, index: Int): DidService? {
+        val parsed = try {
+            expandServiceAbbreviations(Json.parseToJsonElement(json))
+        } catch (e: Exception) {
+            return null
+        }
+        val expanded = parsed as? JsonObject ?: return null
+
+        val types = parseServiceTypesFromJson(expanded["type"]) ?: return null
+        val endpointElement = expanded["serviceEndpoint"] ?: return null
+        val endpointValue = jsonElementToValue(endpointElement) ?: return null
+
+        // Legacy abbreviated form carries routingKeys/accept at the top level next
+        // to a string endpoint; fold them into an object endpoint so they survive.
+        val routingKeys = (expanded["routingKeys"] as? JsonArray)
+            ?.mapNotNull { (it as? JsonPrimitive)?.content }
+        val accept = (expanded["accept"] as? JsonArray)
+            ?.mapNotNull { (it as? JsonPrimitive)?.content }
+        val serviceEndpoint = if ((routingKeys != null || accept != null) && endpointValue is String) {
+            ServiceEndpoint.ObjectEndpoint(
+                buildMap {
+                    put("uri", endpointValue)
+                    routingKeys?.let { put("routingKeys", it) }
+                    accept?.let { put("accept", it) }
+                }
+            )
+        } else {
+            ServiceEndpoint.ofOrNull(endpointValue) ?: return null
+        }
+
+        val id = if (index == 0) "$didString#service" else "$didString#service-$index"
+        return DidService(id = id, type = types, serviceEndpoint = serviceEndpoint)
+    }
+
+    /**
+     * Recursively expands did:peer:2 service abbreviations in a JSON tree.
+     */
+    private fun expandServiceAbbreviations(element: JsonElement): JsonElement = when (element) {
+        is JsonObject -> JsonObject(
+            element.entries.associate { (key, value) ->
+                val expandedKey = SERVICE_KEY_ABBREVIATIONS[key] ?: key
+                val expandedValue = if (expandedKey == "type" && value is JsonPrimitive && value.isString) {
+                    JsonPrimitive(SERVICE_TYPE_ABBREVIATIONS[value.content] ?: value.content)
+                } else {
+                    expandServiceAbbreviations(value)
+                }
+                expandedKey to expandedValue
+            }
+        )
+        is JsonArray -> JsonArray(element.map { expandServiceAbbreviations(it) })
+        else -> element
+    }
+
+    /**
+     * Converts a JsonElement to plain Kotlin values (String/Map/List) for [ServiceEndpoint.ofOrNull].
+     */
+    private fun jsonElementToValue(element: JsonElement): Any? = when (element) {
+        is JsonNull -> null
+        is JsonPrimitive -> element.content
+        is JsonObject -> element.entries.associate { it.key to jsonElementToValue(it.value) }
+        is JsonArray -> element.map { jsonElementToValue(it) }
+    }
+
+    private companion object {
+        val SERVICE_KEY_ABBREVIATIONS = mapOf(
+            "t" to "type",
+            "s" to "serviceEndpoint",
+            "r" to "routingKeys",
+            "a" to "accept"
+        )
+        val SERVICE_TYPE_ABBREVIATIONS = mapOf(
+            "dm" to "DIDCommMessaging"
         )
     }
 

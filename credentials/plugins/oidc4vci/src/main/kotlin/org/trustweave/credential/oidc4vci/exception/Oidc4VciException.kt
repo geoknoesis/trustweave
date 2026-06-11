@@ -100,5 +100,26 @@ sealed class Oidc4VciException(
         ).filterValues { it != null },
         cause = cause
     )
+
+    /**
+     * Exception thrown when a credential offer URI cannot be parsed (OID4VCI v1.0 §4.1).
+     *
+     * @param offerUri The offer URI (or credential_offer_uri) that failed to parse
+     * @param reason The reason parsing failed
+     * @param cause The underlying exception
+     */
+    data class OfferParseFailed(
+        val offerUri: String,
+        val reason: String,
+        override val cause: Throwable? = null
+    ) : Oidc4VciException(
+        code = "OIDC4VCI_OFFER_PARSE_FAILED",
+        message = "Failed to parse OIDC4VCI credential offer '$offerUri': $reason",
+        context = mapOf(
+            "offerUri" to offerUri,
+            "reason" to reason
+        ),
+        cause = cause
+    )
 }
 

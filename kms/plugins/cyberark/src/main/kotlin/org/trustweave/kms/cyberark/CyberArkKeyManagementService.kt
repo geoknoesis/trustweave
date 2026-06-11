@@ -12,6 +12,7 @@ import org.trustweave.kms.results.GenerateKeyResult
 import org.trustweave.kms.results.GetPublicKeyResult
 import org.trustweave.kms.results.SignResult
 import org.trustweave.kms.results.DeleteKeyResult
+import org.trustweave.kms.util.EcdsaSignatureCodec
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -298,8 +299,13 @@ class CyberArkKeyManagementService(
                 }
             }
 
-            // Sign data locally using the private key
-            val signature = signWithPrivateKey(privateKeyBytes, data, signingAlgorithm)
+            // Sign data locally using the private key.
+            // JCA ECDSA emits ASN.1 DER; the KeyManagementService contract requires P1363
+            // (raw r||s) with low-s for secp256k1, so normalize before returning.
+            val signature = EcdsaSignatureCodec.normalize(
+                signWithPrivateKey(privateKeyBytes, data, signingAlgorithm),
+                signingAlgorithm
+            )
             SignResult.Success(signature)
         } catch (e: Exception) {
             SignResult.Failure.Error(
@@ -333,8 +339,10 @@ class CyberArkKeyManagementService(
         val signature = Signature.getInstance(
             when (algorithm) {
                 is Algorithm.Ed25519 -> "Ed25519"
-                is Algorithm.Secp256k1, is Algorithm.P256, is Algorithm.P384, is Algorithm.P521 ->
-                    "SHA256withECDSA"
+                // Hash strength must match the curve, consistent with the other KMS plugins.
+                is Algorithm.Secp256k1, is Algorithm.P256 -> "SHA256withECDSA"
+                is Algorithm.P384 -> "SHA384withECDSA"
+                is Algorithm.P521 -> "SHA512withECDSA"
                 is Algorithm.RSA -> "SHA256withRSA"
                 else -> throw IllegalArgumentException("Unsupported algorithm: ${algorithm.name}")
             }

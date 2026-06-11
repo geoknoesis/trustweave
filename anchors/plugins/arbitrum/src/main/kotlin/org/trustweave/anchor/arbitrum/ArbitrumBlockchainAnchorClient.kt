@@ -1,11 +1,16 @@
 package org.trustweave.anchor.arbitrum
 
 import org.trustweave.anchor.*
+import org.trustweave.anchor.evm.EvmGas
 import org.trustweave.anchor.exceptions.BlockchainException
 
 import org.trustweave.core.exception.TrustWeaveException
+import kotlinx.coroutines.delay
 import kotlinx.serialization.json.*
+import org.slf4j.LoggerFactory
 import org.web3j.protocol.Web3j
+import org.web3j.protocol.core.DefaultBlockParameter
+import org.web3j.protocol.core.methods.response.TransactionReceipt
 import org.web3j.protocol.http.HttpService
 import org.web3j.tx.RawTransactionManager
 import org.web3j.tx.TransactionManager
@@ -39,6 +44,41 @@ class ArbitrumBlockchainAnchorClient(
         // Network RPC endpoints
         private const val MAINNET_RPC_URL = "https://arb1.arbitrum.io/rpc"
         private const val ARBITRUM_SEPOLIA_RPC_URL = "https://sepolia-rollup.arbitrum.io/rpc"
+
+        // Safety margin applied on top of eth_estimateGas, in percent. Arbitrum's
+        // L1 calldata-posting component (gasUsedForL1) moves with L1 gas prices
+        // between estimation and execution, so leave generous headroom.
+        internal const val ESTIMATE_GAS_MARGIN_PERCENT = 20
+
+        private val logger = LoggerFactory.getLogger(ArbitrumBlockchainAnchorClient::class.java)
+
+        /**
+         * Derives the transaction gas limit from an `eth_estimateGas` result:
+         * estimate +[ESTIMATE_GAS_MARGIN_PERCENT]% margin, floored at the Ethereum
+         * intrinsic gas (the protocol minimum for tx validity).
+         *
+         * When estimation failed ([estimatedGas] is null), falls back to
+         * [EvmGas.txGasLimit] — which is likely too low on Arbitrum Nitro, where
+         * the L1 calldata-posting component (`gasUsedForL1`) is charged inside
+         * `gasUsed`, so actual usage routinely exceeds intrinsic+10% — and logs
+         * a warning.
+         */
+        internal fun gasLimitFrom(estimatedGas: BigInteger?, data: ByteArray): BigInteger {
+            if (estimatedGas == null) {
+                val fallback = EvmGas.txGasLimit(data)
+                logger.warn(
+                    "eth_estimateGas failed; falling back to Ethereum intrinsic gas limit {} — " +
+                        "this is likely too low on Arbitrum Nitro (the L1 calldata-posting component " +
+                        "is charged inside gasUsed) and the transaction may run out of gas.",
+                    fallback
+                )
+                return fallback
+            }
+            return maxOf(
+                EvmGas.withMargin(estimatedGas, ESTIMATE_GAS_MARGIN_PERCENT),
+                EvmGas.intrinsicGas(data)
+            )
+        }
     }
 
     private val web3j: Web3j
@@ -117,7 +157,7 @@ class ArbitrumBlockchainAnchorClient(
     }
 
     override protected fun generateTestTxHash(): String {
-        return "0x${(0..1000000).random().toString(16).padStart(64, '0')}"
+        return "0x${uniqueTestHashHex()}"
     }
 
     override protected fun getBlockchainName(): String {
@@ -128,14 +168,19 @@ class ArbitrumBlockchainAnchorClient(
         val creds = credentials ?: throw IllegalStateException("Credentials not configured. Provide 'privateKey' in options.")
 
         val gasPrice = web3j.ethGasPrice().send().gasPrice
-        val nonce = web3j.ethGetTransactionCount(creds.address, org.web3j.protocol.core.DefaultBlockParameterName.LATEST)
+        // PENDING (not LATEST) so rapid successive anchors don't reuse a nonce.
+        val nonce = web3j.ethGetTransactionCount(creds.address, org.web3j.protocol.core.DefaultBlockParameterName.PENDING)
             .send().transactionCount
 
-        val transaction = org.web3j.tx.gas.DefaultGasProvider()
+        // Arbitrum Nitro charges the L1 calldata-posting component (gasUsedForL1)
+        // inside gasUsed, so the Ethereum intrinsic calldata gas routinely falls
+        // short here. eth_estimateGas is authoritative; add headroom for L2
+        // variability and fall back to intrinsic gas only if estimation fails.
+        val gasLimit = estimateGasLimit(data, creds.address)
         val rawTransaction = org.web3j.crypto.RawTransaction.createTransaction(
             nonce,
             gasPrice,
-            transaction.gasLimit,
+            gasLimit,
             creds.address, // Send to self
             BigInteger.ZERO,
             org.web3j.utils.Numeric.toHexString(data)
@@ -153,11 +198,78 @@ class ArbitrumBlockchainAnchorClient(
                 txHash = null,
                 operation = "submitTransaction",
                 payloadSize = data.size.toLong(),
-                gasUsed = transaction.gasLimit?.toLong()
+                gasUsed = gasLimit.toLong()
             )
         }
 
-        return ethSendTransaction.transactionHash
+        // eth_sendRawTransaction only means the node accepted the tx into its pool —
+        // wait for on-chain confirmation so dropped or reverted txs are never
+        // reported as successful anchors.
+        return waitForReceipt(ethSendTransaction.transactionHash, data.size.toLong()).transactionHash
+    }
+
+    /**
+     * Asks the node how much gas the anchor transaction needs via `eth_estimateGas`
+     * (the authoritative source on Arbitrum Nitro) and derives the gas limit through
+     * [gasLimitFrom]; a failed or empty estimation yields the intrinsic-gas fallback.
+     */
+    private fun estimateGasLimit(data: ByteArray, from: String): BigInteger {
+        val estimated = try {
+            val tx = org.web3j.protocol.core.methods.request.Transaction.createFunctionCallTransaction(
+                from,
+                null,
+                null,
+                null,
+                from, // Anchors are data-carrying self-sends
+                BigInteger.ZERO,
+                org.web3j.utils.Numeric.toHexString(data)
+            )
+            val response = web3j.ethEstimateGas(tx).send()
+            if (response.hasError() || response.result == null) null else response.amountUsed
+        } catch (_: Exception) {
+            null
+        }
+        return gasLimitFrom(estimated, data)
+    }
+
+    /**
+     * Polls `eth_getTransactionReceipt` until the transaction is mined, bounded by
+     * [confirmationTimeoutMs] (option [OPTION_CONFIRMATION_TIMEOUT_MS]). Throws
+     * [BlockchainException.TransactionFailed] on revert or timeout.
+     */
+    private suspend fun waitForReceipt(txHash: String, payloadSize: Long): TransactionReceipt {
+        val deadline = System.currentTimeMillis() + confirmationTimeoutMs
+        while (true) {
+            val receipt = web3j.ethGetTransactionReceipt(txHash).send().transactionReceipt.orElse(null)
+            if (receipt != null) {
+                if (!receipt.isStatusOK) {
+                    throw BlockchainException.TransactionFailed(
+                        chainId = chainId,
+                        txHash = txHash,
+                        operation = "submitTransaction",
+                        payloadSize = payloadSize,
+                        gasUsed = try {
+                            receipt.gasUsed?.toLong()
+                        } catch (_: Exception) {
+                            null
+                        },
+                        reason = "Transaction reverted on chain (status=${receipt.status})"
+                    )
+                }
+                return receipt
+            }
+            if (System.currentTimeMillis() >= deadline) {
+                throw BlockchainException.TransactionFailed(
+                    chainId = chainId,
+                    txHash = txHash,
+                    operation = "submitTransaction",
+                    payloadSize = payloadSize,
+                    reason = "Transaction not confirmed within $confirmationTimeoutMs ms " +
+                        "(configure via '$OPTION_CONFIRMATION_TIMEOUT_MS' option)"
+                )
+            }
+            delay(confirmationPollIntervalMs)
+        }
     }
 
     private suspend fun readTransactionFromBlockchainImpl(txHash: String): AnchorResult {
@@ -179,8 +291,13 @@ class ArbitrumBlockchainAnchorClient(
         val payloadJson = String(dataBytes, StandardCharsets.UTF_8)
         val payload = Json.parseToJsonElement(payloadJson)
 
-        val blockNumber = try {
-            receipt.blockNumber?.toLong()
+        // Use the actual block timestamp (one extra RPC call); if it cannot be
+        // resolved, leave the timestamp unset rather than fabricating one.
+        val blockTimestamp = try {
+            receipt.blockNumber?.let { blockNumber ->
+                web3j.ethGetBlockByNumber(DefaultBlockParameter.valueOf(blockNumber), false)
+                    .send().block?.timestamp?.toLong()
+            }
         } catch (e: Exception) {
             null
         }
@@ -192,7 +309,7 @@ class ArbitrumBlockchainAnchorClient(
             ),
             payload = payload,
             mediaType = "application/json",
-            timestamp = blockNumber?.let { System.currentTimeMillis() / 1000 }
+            timestamp = blockTimestamp
         )
     }
 

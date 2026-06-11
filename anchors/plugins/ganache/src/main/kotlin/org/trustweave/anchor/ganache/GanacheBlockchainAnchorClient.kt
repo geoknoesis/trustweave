@@ -1,12 +1,16 @@
 package org.trustweave.anchor.ganache
 
 import org.trustweave.anchor.*
+import org.trustweave.anchor.evm.EvmGas
 import org.trustweave.anchor.exceptions.BlockchainException
 import org.trustweave.anchor.options.GanacheOptions
 
 import org.trustweave.core.exception.TrustWeaveException
+import kotlinx.coroutines.delay
 import kotlinx.serialization.json.*
 import org.web3j.protocol.Web3j
+import org.web3j.protocol.core.DefaultBlockParameter
+import org.web3j.protocol.core.methods.response.TransactionReceipt
 import org.web3j.protocol.http.HttpService
 import org.web3j.tx.RawTransactionManager
 import org.web3j.tx.TransactionManager
@@ -117,7 +121,7 @@ class GanacheBlockchainAnchorClient(
     }
 
     override protected fun generateTestTxHash(): String {
-        return "ganache_test_${System.currentTimeMillis()}_${(0..1000000).random()}"
+        return "ganache_test_${uniqueTestHashSuffix()}"
     }
 
     override protected fun getBlockchainName(): String {
@@ -126,27 +130,15 @@ class GanacheBlockchainAnchorClient(
 
     private suspend fun submitTransaction(data: ByteArray): String {
         val gasPrice = web3j.ethGasPrice().send().gasPrice
+        // PENDING (not LATEST) so rapid successive anchors don't reuse a nonce.
         val nonce = web3j.ethGetTransactionCount(
             credentials.address,
-            org.web3j.protocol.core.DefaultBlockParameterName.LATEST
+            org.web3j.protocol.core.DefaultBlockParameterName.PENDING
         ).send().transactionCount
 
-        // Use a higher gas limit for data transactions
-        // Ganache container is configured with --gasLimit 12000000
-        // Use block gas limit (which should be 12M) or fallback to 10M
-        val blockGasLimit = try {
-            web3j.ethGetBlockByNumber(
-                org.web3j.protocol.core.DefaultBlockParameterName.LATEST,
-                false
-            ).send().block.gasLimit
-        } catch (e: Exception) {
-            // Fallback to 10M if we can't get block gas limit
-            java.math.BigInteger.valueOf(10_000_000)
-        }
-
-        // Use block gas limit, but ensure it's at least 8M
-        val minGasLimit = java.math.BigInteger.valueOf(8_000_000)
-        val gasLimit = if (blockGasLimit.compareTo(minGasLimit) > 0) blockGasLimit else minGasLimit
+        // An anchor is a data-carrying value transfer: its cost is the intrinsic
+        // calldata gas (+10% margin), not the block gas limit.
+        val gasLimit = EvmGas.txGasLimit(data)
 
         val rawTransaction = org.web3j.crypto.RawTransaction.createTransaction(
             nonce,
@@ -171,7 +163,50 @@ class GanacheBlockchainAnchorClient(
             )
         }
 
-        return ethSendTransaction.transactionHash
+        // eth_sendRawTransaction only means the node accepted the tx into its pool —
+        // wait for on-chain confirmation so dropped or reverted txs are never
+        // reported as successful anchors (Ganache instamines, so this is fast).
+        return waitForReceipt(ethSendTransaction.transactionHash, data.size.toLong()).transactionHash
+    }
+
+    /**
+     * Polls `eth_getTransactionReceipt` until the transaction is mined, bounded by
+     * [confirmationTimeoutMs] (option [OPTION_CONFIRMATION_TIMEOUT_MS]). Throws
+     * [BlockchainException.TransactionFailed] on revert or timeout.
+     */
+    private suspend fun waitForReceipt(txHash: String, payloadSize: Long): TransactionReceipt {
+        val deadline = System.currentTimeMillis() + confirmationTimeoutMs
+        while (true) {
+            val receipt = web3j.ethGetTransactionReceipt(txHash).send().transactionReceipt.orElse(null)
+            if (receipt != null) {
+                if (!receipt.isStatusOK) {
+                    throw BlockchainException.TransactionFailed(
+                        chainId = chainId,
+                        txHash = txHash,
+                        operation = "submitTransaction",
+                        payloadSize = payloadSize,
+                        gasUsed = try {
+                            receipt.gasUsed?.toLong()
+                        } catch (_: Exception) {
+                            null
+                        },
+                        reason = "Transaction reverted on chain (status=${receipt.status})"
+                    )
+                }
+                return receipt
+            }
+            if (System.currentTimeMillis() >= deadline) {
+                throw BlockchainException.TransactionFailed(
+                    chainId = chainId,
+                    txHash = txHash,
+                    operation = "submitTransaction",
+                    payloadSize = payloadSize,
+                    reason = "Transaction not confirmed within $confirmationTimeoutMs ms " +
+                        "(configure via '$OPTION_CONFIRMATION_TIMEOUT_MS' option)"
+                )
+            }
+            delay(confirmationPollIntervalMs)
+        }
     }
 
     private suspend fun readTransactionFromBlockchainImpl(txHash: String): AnchorResult {
@@ -193,8 +228,13 @@ class GanacheBlockchainAnchorClient(
         val payloadJson = String(dataBytes, StandardCharsets.UTF_8)
         val payload = Json.parseToJsonElement(payloadJson)
 
-        val blockNumber = try {
-            receipt.blockNumber?.toLong()
+        // Use the actual block timestamp (one extra RPC call); if it cannot be
+        // resolved, leave the timestamp unset rather than fabricating one.
+        val blockTimestamp = try {
+            receipt.blockNumber?.let { blockNumber ->
+                web3j.ethGetBlockByNumber(DefaultBlockParameter.valueOf(blockNumber), false)
+                    .send().block?.timestamp?.toLong()
+            }
         } catch (e: Exception) {
             null
         }
@@ -206,7 +246,7 @@ class GanacheBlockchainAnchorClient(
             ),
             payload = payload,
             mediaType = "application/json",
-            timestamp = blockNumber?.let { System.currentTimeMillis() / 1000 }
+            timestamp = blockTimestamp
         )
     }
 

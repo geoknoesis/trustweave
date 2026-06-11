@@ -1,11 +1,77 @@
 package org.trustweave.credential.qr
 
+import java.net.URLEncoder
 import kotlin.test.*
 
 /**
  * Tests for QR Code Parser.
  */
 class QrCodeParserTest {
+
+    private val offerByValueJson =
+        """
+        {
+          "credential_issuer": "https://issuer.example.com",
+          "credential_configuration_ids": ["PersonCredential", "EducationCredential"],
+          "grants": {
+            "urn:ietf:params:oauth:grant-type:pre-authorized_code": {
+              "pre-authorized_code": "code-123",
+              "tx_code": { "input_mode": "numeric", "length": 4 }
+            }
+          }
+        }
+        """.trimIndent()
+
+    @Test
+    fun `test parse credential offer URL with single credential_offer JSON parameter`() {
+        val url = "openid-credential-offer://?credential_offer=" + URLEncoder.encode(offerByValueJson, "UTF-8")
+
+        val result = QrCodeParser.parse(url)
+
+        assertTrue(result is QrCodeContent.CredentialOffer, "Expected CredentialOffer, got ${result::class.simpleName}")
+        val offer: QrCodeContent.CredentialOffer = result
+        assertEquals("https://issuer.example.com", offer.credentialIssuer)
+        assertEquals(listOf("PersonCredential", "EducationCredential"), offer.credentialConfigurationIds)
+        assertNull(offer.credentialOfferUri, "Offer-by-value has no by-reference URI")
+        assertEquals(url, offer.rawUrl)
+
+        val grantsJson = offer.grantsJson
+        assertNotNull(grantsJson, "grants must be extracted from the credential_offer JSON")
+        assertTrue(grantsJson.contains("urn:ietf:params:oauth:grant-type:pre-authorized_code"))
+        assertTrue(grantsJson.contains("code-123"))
+    }
+
+    @Test
+    fun `test parse HTTP URL with credential_offer parameter`() {
+        val url = "https://wallet.example.com/offer?credential_offer=" +
+            URLEncoder.encode(offerByValueJson, "UTF-8")
+
+        val result = QrCodeParser.parse(url)
+
+        assertTrue(result is QrCodeContent.CredentialOffer, "Expected CredentialOffer for HTTP URL with credential_offer")
+        val offer: QrCodeContent.CredentialOffer = result
+        assertEquals("https://issuer.example.com", offer.credentialIssuer)
+        assertEquals(listOf("PersonCredential", "EducationCredential"), offer.credentialConfigurationIds)
+    }
+
+    @Test
+    fun `test parse credential_offer with malformed JSON throws exception`() {
+        val url = "openid-credential-offer://?credential_offer=not-a-json-object"
+
+        assertFailsWith<IllegalArgumentException> {
+            QrCodeParser.parse(url)
+        }
+    }
+
+    @Test
+    fun `test parse credential_offer JSON without credential_issuer throws exception`() {
+        val url = "openid-credential-offer://?credential_offer=" +
+            URLEncoder.encode("""{"credential_configuration_ids":["PersonCredential"]}""", "UTF-8")
+
+        assertFailsWith<IllegalArgumentException> {
+            QrCodeParser.parse(url)
+        }
+    }
 
     @Test
     fun `test parse credential offer URL with credential_issuer`() {

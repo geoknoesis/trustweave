@@ -11,6 +11,7 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
 import kotlinx.datetime.toJavaInstant
 import org.slf4j.LoggerFactory
+import java.sql.Connection
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -18,7 +19,15 @@ import javax.sql.DataSource
  * Database-backed wallet implementation.
  *
  * Stores credentials, collections, tags, and metadata in a relational database.
- * Supports PostgreSQL, MySQL, and H2 databases.
+ * Supports PostgreSQL (via `INSERT ... ON CONFLICT ... DO UPDATE`) and H2
+ * (via standard SQL `MERGE`). MySQL is NOT supported: it implements neither
+ * the PostgreSQL upsert syntax nor standard SQL MERGE.
+ *
+ * **Resource ownership:** when [ownsDataSource] is true (e.g. wallets built by
+ * [DatabaseWalletFactory], which creates a dedicated connection pool), [close]
+ * shuts the pool down. When a [DataSource] is injected by the caller,
+ * [ownsDataSource] must be false and [close] is a no-op — the caller manages
+ * the pool's lifecycle.
  *
  * **Example:**
  * ```kotlin
@@ -34,7 +43,8 @@ class DatabaseWallet(
     override val walletId: String,
     val walletDid: String,
     val holderDid: String,
-    private val dataSource: DataSource
+    private val dataSource: DataSource,
+    private val ownsDataSource: Boolean = false
 ) : Wallet, CredentialStorage {
 
     private val json = Json {
@@ -49,14 +59,18 @@ class DatabaseWallet(
         /**
          * Factory function that initializes the database schema before returning the wallet.
          * Use this instead of the constructor to ensure schema errors are wrapped as [WalletException.StorageError].
+         *
+         * @param ownsDataSource true if the returned wallet owns [dataSource] and must
+         *   close it in [DatabaseWallet.close]; false (default) when the caller manages it.
          */
         fun create(
             walletId: String,
             walletDid: String,
             holderDid: String,
             dataSource: DataSource,
+            ownsDataSource: Boolean = false,
         ): DatabaseWallet {
-            val wallet = DatabaseWallet(walletId, walletDid, holderDid, dataSource)
+            val wallet = DatabaseWallet(walletId, walletDid, holderDid, dataSource, ownsDataSource)
             try {
                 wallet.initializeSchema()
             } catch (e: Exception) {
@@ -151,6 +165,30 @@ class DatabaseWallet(
         }
     }
 
+    /**
+     * Dialect probe for upsert statements. PostgreSQL gets `ON CONFLICT … DO UPDATE`;
+     * everything else (H2 in particular) gets standard SQL `MERGE` — H2 rejects
+     * `ON CONFLICT` even in PostgreSQL compatibility mode.
+     */
+    private fun isPostgreSql(conn: Connection): Boolean =
+        conn.metaData.databaseProductName?.contains("PostgreSQL", ignoreCase = true) == true
+
+    /**
+     * Acquires a connection, mapping acquisition failures (e.g. the pool was
+     * closed via [close]) to [WalletException.StorageError] so callers see the
+     * structured wallet error contract instead of a raw [java.sql.SQLException].
+     */
+    private fun acquireConnection(operation: String): Connection =
+        try {
+            dataSource.connection
+        } catch (e: java.sql.SQLException) {
+            throw WalletException.StorageError(
+                operation = operation,
+                reason = "Failed to acquire database connection (is the wallet closed?): ${e.message}",
+                cause = e
+            )
+        }
+
     // CredentialStorage implementation
     override suspend fun store(credential: VerifiableCredential): String = withContext(Dispatchers.IO) {
         val rawId = credential.id?.value ?: UUID.randomUUID().toString()
@@ -171,29 +209,47 @@ class DatabaseWallet(
         }
         val credentialJson = json.encodeToString(VerifiableCredential.serializer(), credential)
 
-        dataSource.connection.use { conn ->
+        acquireConnection("store").use { conn ->
             val savedAutoCommit = conn.autoCommit
             conn.autoCommit = false
             try {
                 // Upsert: a single atomic statement avoids a race condition where two concurrent
                 // store() calls both see alreadyExists=false and both attempt INSERT, which would
                 // cause a primary-key constraint violation on the second call.
-                // H2 2.x and PostgreSQL both support the ON CONFLICT … DO UPDATE syntax.
-                val upsertCount = conn.prepareStatement("""
+                // Dialect note: PostgreSQL uses ON CONFLICT … DO UPDATE (its MERGE support only
+                // arrived in PG 15 and has weaker concurrency guarantees); H2 does not parse
+                // ON CONFLICT at all (not even in MODE=PostgreSQL), so it gets a standard SQL
+                // MERGE with identical semantics. Both variants update 0 rows when the id is
+                // already owned by a different wallet, which the conflict check below relies on.
+                val upsertSql = if (isPostgreSql(conn)) {
+                    """
                     INSERT INTO credentials (id, wallet_id, credential_data, archived)
                     VALUES (?, ?, ?, FALSE)
                     ON CONFLICT (id) DO UPDATE
                         SET credential_data = EXCLUDED.credential_data
                         WHERE credentials.wallet_id = EXCLUDED.wallet_id
-                """).use { upsertStmt ->
+                    """
+                } else {
+                    """
+                    MERGE INTO credentials c
+                    USING (VALUES (?, ?, ?)) AS src(id, wallet_id, credential_data)
+                    ON c.id = src.id
+                    WHEN MATCHED AND c.wallet_id = src.wallet_id THEN
+                        UPDATE SET credential_data = src.credential_data
+                    WHEN NOT MATCHED THEN
+                        INSERT (id, wallet_id, credential_data, archived)
+                        VALUES (src.id, src.wallet_id, src.credential_data, FALSE)
+                    """
+                }
+                val upsertCount = conn.prepareStatement(upsertSql).use { upsertStmt ->
                     upsertStmt.setString(1, safeId)
                     upsertStmt.setString(2, walletId)
                     upsertStmt.setString(3, credentialJson)
                     upsertStmt.executeUpdate()
                 }
 
-                // If 0 rows were affected, the ON CONFLICT DO UPDATE was skipped because
-                // credentials.wallet_id != EXCLUDED.wallet_id — meaning the credential ID already
+                // If 0 rows were affected, the conditional update was skipped because the
+                // existing row's wallet_id differs from ours — meaning the credential ID already
                 // belongs to a different wallet. Fail immediately; a subsequent SELECT would
                 // introduce a TOCTOU race and still produce an ambiguous result.
                 if (upsertCount == 0) {
@@ -210,11 +266,25 @@ class DatabaseWallet(
                 // nothing on a new credential (the UPDATE matched 0 rows) and on a re-store the
                 // INSERT was skipped by DO NOTHING even though updated_at had just been bumped —
                 // effectively the two statements were semantically inverted.
-                conn.prepareStatement("""
+                val metadataSql = if (isPostgreSql(conn)) {
+                    """
                     INSERT INTO credential_metadata (credential_id, created_at, updated_at)
                     VALUES (?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                     ON CONFLICT (credential_id) DO UPDATE SET updated_at = EXCLUDED.updated_at
-                """).use { metadataStmt ->
+                    """
+                } else {
+                    """
+                    MERGE INTO credential_metadata m
+                    USING (VALUES (?)) AS src(credential_id)
+                    ON m.credential_id = src.credential_id
+                    WHEN MATCHED THEN
+                        UPDATE SET updated_at = CURRENT_TIMESTAMP
+                    WHEN NOT MATCHED THEN
+                        INSERT (credential_id, created_at, updated_at)
+                        VALUES (src.credential_id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    """
+                }
+                conn.prepareStatement(metadataSql).use { metadataStmt ->
                     metadataStmt.setString(1, safeId)
                     metadataStmt.executeUpdate()
                 }
@@ -333,7 +403,7 @@ class DatabaseWallet(
                 reason = "Credential ID contains invalid characters"
             )
         }
-        dataSource.connection.use { conn ->
+        acquireConnection("delete").use { conn ->
             val savedAutoCommit = conn.autoCommit
             conn.autoCommit = false
             try {
@@ -368,15 +438,75 @@ class DatabaseWallet(
         builder.query()
 
         val predicate = builder.toPredicate()
-        val allCredentials = list(null)  // note: limited to 1000 rows
-        if (allCredentials.size >= 1000) {
-            logger.warn(
-                "query() fetched {} credentials from list() — results may be truncated at 1000. " +
-                    "Implement SQL predicate pushdown for complete results.",
-                allCredentials.size
+        val requestedTags = builder.requestedTags
+        val requestedCollections = builder.requestedCollections
+
+        try {
+            val rawResults = mutableListOf<VerifiableCredential>()
+
+            dataSource.connection.use { conn ->
+                // Tag/collection filters are pushed down to SQL because tags and
+                // collections are wallet-level metadata stored in the credential_tags /
+                // credential_collections tables, keyed by the database credential id —
+                // they cannot be evaluated against the credential JSON in memory.
+                // Semantics: a credential must carry ALL requested tags and belong to
+                // ALL requested collections (AND, consistent with predicate chaining).
+                val sql = buildString {
+                    append("SELECT credential_data FROM credentials WHERE wallet_id = ? AND archived = FALSE")
+                    if (requestedTags.isNotEmpty()) {
+                        val placeholders = requestedTags.joinToString(", ") { "?" }
+                        append(
+                            " AND id IN (SELECT credential_id FROM credential_tags WHERE tag IN ($placeholders)" +
+                                " GROUP BY credential_id HAVING COUNT(DISTINCT tag) = ?)"
+                        )
+                    }
+                    if (requestedCollections.isNotEmpty()) {
+                        val placeholders = requestedCollections.joinToString(", ") { "?" }
+                        append(
+                            " AND id IN (SELECT credential_id FROM credential_collections WHERE collection_id IN ($placeholders)" +
+                                " GROUP BY credential_id HAVING COUNT(DISTINCT collection_id) = ?)"
+                        )
+                    }
+                    append(" LIMIT 1000")
+                }
+
+                conn.prepareStatement(sql).use { stmt ->
+                    var index = 1
+                    stmt.setString(index++, walletId)
+                    requestedTags.forEach { stmt.setString(index++, it) }
+                    if (requestedTags.isNotEmpty()) {
+                        stmt.setInt(index++, requestedTags.size)
+                    }
+                    requestedCollections.forEach { stmt.setString(index++, it) }
+                    if (requestedCollections.isNotEmpty()) {
+                        stmt.setInt(index++, requestedCollections.size)
+                    }
+                    stmt.executeQuery().use { rs ->
+                        while (rs.next()) {
+                            val credentialJson = rs.getString("credential_data")
+                            rawResults.add(json.decodeFromString(VerifiableCredential.serializer(), credentialJson))
+                        }
+                    }
+                }
+            }
+
+            if (rawResults.size >= 1000) {
+                logger.warn(
+                    "query() fetched {} credentials — results may be truncated at 1000. " +
+                        "Implement full SQL predicate pushdown for complete results.",
+                    rawResults.size
+                )
+            }
+
+            rawResults.filter(predicate)
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            throw WalletException.StorageError(
+                operation = "query",
+                reason = "Failed to query credentials: ${e.message}",
+                cause = e
             )
         }
-        allCredentials.filter(predicate)
     }
 
     /**
@@ -457,6 +587,27 @@ class DatabaseWallet(
                 reason = "Failed to retrieve wallet statistics: ${e.message}",
                 cause = e
             )
+        }
+    }
+
+    /**
+     * Close the connection pool — but only when this wallet owns it.
+     *
+     * Wallets created by [DatabaseWalletFactory] own their pool ([ownsDataSource] = true);
+     * wallets constructed with an externally managed [DataSource] must not close it.
+     * Idempotent: closing an already-closed pool is a no-op for HikariCP.
+     */
+    override fun close() {
+        if (ownsDataSource && dataSource is AutoCloseable) {
+            try {
+                dataSource.close()
+            } catch (e: Exception) {
+                throw WalletException.StorageError(
+                    operation = "close",
+                    reason = "Failed to close wallet-owned DataSource: ${e.message}",
+                    cause = e
+                )
+            }
         }
     }
 }

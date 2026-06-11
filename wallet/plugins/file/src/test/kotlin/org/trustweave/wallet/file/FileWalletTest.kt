@@ -226,6 +226,51 @@ class FileWalletTest {
         }
     }
 
+    // ========== Query tag/collection filters ==========
+
+    @Test
+    fun `query with byTag throws instead of silently returning all credentials`() {
+        runBlocking {
+            val dir = tempDir.resolve("query-by-tag")
+            val wallet = wallet(dir)
+            wallet.store(credential())
+
+            val exception = assertFailsWith<UnsupportedOperationException> {
+                wallet.query { byTag("important") }
+            }
+            assertTrue(exception.message!!.contains("byTag"))
+        }
+    }
+
+    @Test
+    fun `query with byCollection throws instead of silently returning all credentials`() {
+        runBlocking {
+            val dir = tempDir.resolve("query-by-collection")
+            val wallet = wallet(dir)
+            wallet.store(credential())
+
+            assertFailsWith<UnsupportedOperationException> {
+                wallet.query { byCollection("collection-1") }
+            }
+        }
+    }
+
+    @Test
+    fun `query without tag or collection filters still works`() {
+        runBlocking {
+            val dir = tempDir.resolve("query-plain")
+            val wallet = wallet(dir)
+            val stored = credential()
+            wallet.store(stored)
+
+            val results = wallet.query { byIssuer(issuerDid) }
+            assertEquals(listOf(stored.id?.value), results.map { it.id?.value })
+
+            val noMatch = wallet.query { byIssuer("did:key:someoneElse") }
+            assertTrue(noMatch.isEmpty())
+        }
+    }
+
     // ========== Plaintext fallback ==========
 
     @Test

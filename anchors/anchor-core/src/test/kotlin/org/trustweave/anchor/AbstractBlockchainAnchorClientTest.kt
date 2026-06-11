@@ -180,6 +180,45 @@ class AbstractBlockchainAnchorClientTest {
         assertTrue(result.ref.extra.containsKey("mediaType"))
     }
 
+    @Test
+    fun `test fabricated test hashes never collide`() {
+        val clientA = HashProbeClient()
+        val clientB = HashProbeClient()
+
+        val suffixes = (1..10_000).map { if (it % 2 == 0) clientA.suffix() else clientB.suffix() }
+        assertEquals(suffixes.size, suffixes.toSet().size, "uniqueTestHashSuffix must never collide")
+
+        val hexes = (1..10_000).map { if (it % 2 == 0) clientA.hex() else clientB.hex() }
+        assertEquals(hexes.size, hexes.toSet().size, "uniqueTestHashHex must never collide")
+        hexes.forEach { hex ->
+            assertEquals(64, hex.length)
+            assertTrue(hex.all { it in '0'..'9' || it in 'a'..'f' }, "expected lowercase hex, got: $hex")
+        }
+
+        assertFailsWith<IllegalArgumentException> { clientA.hex(8) }
+    }
+
+    /**
+     * Minimal concrete client exposing the protected test-hash helpers.
+     */
+    private class HashProbeClient : AbstractBlockchainAnchorClient("algorand:testnet", emptyMap()) {
+        fun suffix(): String = uniqueTestHashSuffix()
+
+        fun hex(length: Int = 64): String = uniqueTestHashHex(length)
+
+        override fun canSubmitTransaction(): Boolean = false
+
+        override suspend fun submitTransactionToBlockchain(payloadBytes: ByteArray): String =
+            throw UnsupportedOperationException()
+
+        override suspend fun readTransactionFromBlockchain(txHash: String): AnchorResult =
+            throw TrustWeaveException.NotFound("not supported")
+
+        override fun generateTestTxHash(): String = "probe_${uniqueTestHashSuffix()}"
+
+        override fun getBlockchainName(): String = "Probe"
+    }
+
     /**
      * Test implementation of AbstractBlockchainAnchorClient.
      */

@@ -14,20 +14,20 @@ import kotlin.test.assertTrue
 
 /**
  * Unit tests for Polygon blockchain anchor client.
- * All tests use Mumbai testnet only for safety.
+ * All tests use Amoy testnet only for safety.
  */
 class PolygonBlockchainAnchorClientTest {
 
     @Test
-    fun `should create client for Mumbai testnet`() = runBlocking {
-        val client = PolygonBlockchainAnchorClient(PolygonBlockchainAnchorClient.MUMBAI)
+    fun `should create client for Amoy testnet`() = runBlocking {
+        val client = PolygonBlockchainAnchorClient(PolygonBlockchainAnchorClient.AMOY)
         assertNotNull(client)
     }
 
     @Test
     fun `should write and read payload in opt-in in-memory test mode`() = runBlocking {
         val client = PolygonBlockchainAnchorClient(
-            PolygonBlockchainAnchorClient.MUMBAI,
+            PolygonBlockchainAnchorClient.AMOY,
             mapOf(AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE to true)
         )
         val payload = buildJsonObject {
@@ -37,7 +37,7 @@ class PolygonBlockchainAnchorClientTest {
 
         val result = client.writePayload(payload)
         assertNotNull(result.ref)
-        assertEquals(PolygonBlockchainAnchorClient.MUMBAI, result.ref.chainId)
+        assertEquals(PolygonBlockchainAnchorClient.AMOY, result.ref.chainId)
         assertTrue(result.ref.txHash.startsWith("0x"))
         assertEquals(payload, result.payload)
 
@@ -47,10 +47,26 @@ class PolygonBlockchainAnchorClientTest {
     }
 
     @Test
+    fun `should generate collision-free test hashes in in-memory test mode`() = runBlocking {
+        val client = PolygonBlockchainAnchorClient(
+            PolygonBlockchainAnchorClient.AMOY,
+            mapOf(AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE to true)
+        )
+        val payload = buildJsonObject { put("test", "data") }
+
+        val hashes = (1..200).map { client.writePayload(payload).ref.txHash }
+
+        assertEquals(hashes.size, hashes.toSet().size, "fabricated test hashes must never collide")
+        hashes.forEach { hash ->
+            assertTrue(hash.startsWith("0x") && hash.length == 66, "expected 0x-prefixed 32-byte hash, got $hash")
+        }
+    }
+
+    @Test
     fun `should throw NotFoundException for non-existent transaction`() = runBlocking {
-        val client = PolygonBlockchainAnchorClient(PolygonBlockchainAnchorClient.MUMBAI)
+        val client = PolygonBlockchainAnchorClient(PolygonBlockchainAnchorClient.AMOY)
         val ref = AnchorRef(
-            chainId = PolygonBlockchainAnchorClient.MUMBAI,
+            chainId = PolygonBlockchainAnchorClient.AMOY,
             txHash = "0x0000000000000000000000000000000000000000000000000000000000000000"
         )
 
@@ -64,7 +80,7 @@ class PolygonBlockchainAnchorClientTest {
 
     @Test
     fun `should fail closed on write without credentials when test mode is off`() = runBlocking<Unit> {
-        val client = PolygonBlockchainAnchorClient(PolygonBlockchainAnchorClient.MUMBAI)
+        val client = PolygonBlockchainAnchorClient(PolygonBlockchainAnchorClient.AMOY)
         val payload = buildJsonObject { put("test", "data") }
 
         assertFailsWith<BlockchainException.ConfigurationFailed> {
@@ -76,7 +92,7 @@ class PolygonBlockchainAnchorClientTest {
     fun `should reject invalid private key with configuration error`() {
         val exception = assertFailsWith<BlockchainException.ConfigurationFailed> {
             PolygonBlockchainAnchorClient(
-                PolygonBlockchainAnchorClient.MUMBAI,
+                PolygonBlockchainAnchorClient.AMOY,
                 mapOf("privateKey" to "not-a-valid-key")
             )
         }
@@ -113,9 +129,9 @@ class PolygonBlockchainAnchorClientProviderTest {
         val provider = PolygonBlockchainAnchorClientProvider()
         assertEquals("polygon", provider.name)
         assertTrue(provider.supportedChains.contains(PolygonBlockchainAnchorClient.MAINNET))
-        assertTrue(provider.supportedChains.contains(PolygonBlockchainAnchorClient.MUMBAI))
+        assertTrue(provider.supportedChains.contains(PolygonBlockchainAnchorClient.AMOY))
 
-        val testnetClient = provider.create(PolygonBlockchainAnchorClient.MUMBAI)
+        val testnetClient = provider.create(PolygonBlockchainAnchorClient.AMOY)
         assertNotNull(testnetClient)
     }
 
@@ -134,21 +150,21 @@ class PolygonIntegrationTest {
         val result = PolygonIntegration.discoverAndRegister()
         assertTrue(result.registeredChains.isNotEmpty())
         assertTrue(result.registeredChains.contains(PolygonBlockchainAnchorClient.MAINNET))
-        assertTrue(result.registeredChains.contains(PolygonBlockchainAnchorClient.MUMBAI))
+        assertTrue(result.registeredChains.contains(PolygonBlockchainAnchorClient.AMOY))
 
-        val testnetClient = result.registry.get(PolygonBlockchainAnchorClient.MUMBAI)
+        val testnetClient = result.registry.get(PolygonBlockchainAnchorClient.AMOY)
         assertNotNull(testnetClient)
     }
 
     @Test
-    fun `should setup Mumbai testnet chain for testing`() {
+    fun `should setup Amoy testnet chain for testing`() {
         val result = PolygonIntegration.setup(
-            chainIds = listOf(PolygonBlockchainAnchorClient.MUMBAI)
+            chainIds = listOf(PolygonBlockchainAnchorClient.AMOY)
         )
         assertEquals(1, result.registeredChains.size)
-        assertEquals(PolygonBlockchainAnchorClient.MUMBAI, result.registeredChains[0])
+        assertEquals(PolygonBlockchainAnchorClient.AMOY, result.registeredChains[0])
 
-        val client = result.registry.get(PolygonBlockchainAnchorClient.MUMBAI)
+        val client = result.registry.get(PolygonBlockchainAnchorClient.AMOY)
         assertNotNull(client)
     }
 }

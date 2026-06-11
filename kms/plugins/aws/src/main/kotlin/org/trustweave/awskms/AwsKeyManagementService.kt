@@ -11,6 +11,7 @@ import org.trustweave.kms.results.GetPublicKeyResult
 import org.trustweave.kms.results.SignResult
 import org.trustweave.kms.KmsOptionKeys
 import org.trustweave.awskms.AwsKmsOptionKeys
+import org.trustweave.kms.util.EcdsaSignatureCodec
 import org.trustweave.kms.util.KmsInputValidator
 import org.trustweave.kms.util.CacheEntry
 import kotlinx.coroutines.Dispatchers
@@ -406,10 +407,21 @@ class AwsKeyManagementService(
             // MessageType.RAW.  The guard must be before the algorithm dispatch so that RSA
             // payloads exceeding the limit are caught with a clear message rather than failing
             // at AWS with a confusing InvalidRequestException.
+            //
+            // NOTE: do NOT advise callers to pre-hash. This service always sends
+            // MessageType.RAW, so AWS hashes the payload server-side; a pre-hashed payload
+            // would be hashed AGAIN and the signature would never verify. Supporting
+            // MessageType.DIGEST safely would require an explicit caller opt-in, and the
+            // KeyManagementService.sign() API has no per-call options parameter — so payloads
+            // over 4096 bytes are simply not signable through this provider today.
             if (data.size > 4096) {
                 return@withContext SignResult.Failure.Error(
                     keyId = keyId,
-                    reason = "Payload size ${data.size} bytes exceeds AWS KMS 4096-byte RAW signing limit. Pre-hash the data before calling sign()."
+                    reason = "Payload size ${data.size} bytes exceeds the AWS KMS 4096-byte limit for " +
+                        "raw-message signing. AWS KMS hashes the payload internally (MessageType.RAW); " +
+                        "do NOT pre-hash — a pre-hashed payload would be double-hashed and the " +
+                        "signature would not verify. Payloads larger than 4096 bytes cannot be " +
+                        "signed through this provider."
                 )
             }
 
@@ -426,7 +438,12 @@ class AwsKeyManagementService(
                 .build()
 
             val signResponse = runInterruptible { kmsClient.sign(signRequest) }
-            SignResult.Success(signResponse.signature().asByteArray())
+            // AWS KMS returns ECDSA signatures in ASN.1 DER; the KeyManagementService contract
+            // requires P1363 (raw r||s) with low-s for secp256k1, so normalize before returning.
+            // RSA signatures pass through unchanged.
+            SignResult.Success(
+                EcdsaSignatureCodec.normalize(signResponse.signature().asByteArray(), signingAlgorithm)
+            )
         } catch (e: AwsServiceException) {
             val requestId = e.requestId()
             if (e.statusCode() == 404 || e.awsErrorDetails()?.errorCode() == "NotFoundException") {

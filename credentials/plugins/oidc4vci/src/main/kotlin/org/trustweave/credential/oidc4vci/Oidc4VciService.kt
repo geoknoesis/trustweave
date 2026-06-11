@@ -14,6 +14,8 @@ import kotlinx.serialization.json.*
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.net.URLDecoder
+import java.net.URLEncoder
 import java.util.*
 import java.util.Base64
 import java.util.concurrent.ConcurrentHashMap
@@ -52,10 +54,25 @@ class Oidc4VciService(
     private val kms: KeyManagementService,
     private val httpClient: OkHttpClient = OkHttpClient()
 ) {
+    companion object {
+        /** Pre-authorized code grant type — OID4VCI v1.0 §4.1.1. */
+        const val PRE_AUTHORIZED_CODE_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:pre-authorized_code"
+    }
+
     private val offers = ConcurrentHashMap<String, Oidc4VciOffer>()
     private val requests = ConcurrentHashMap<String, Oidc4VciCredentialRequest>()
     private val accessTokens = ConcurrentHashMap<String, String>() // requestId -> accessToken
+    private val cNonces = ConcurrentHashMap<String, String>() // requestId -> c_nonce from token/credential endpoint
     @Volatile private var metadata: CredentialIssuerMetadata? = null
+
+    /** Access token + proof-of-possession nonce returned by the token endpoint (OID4VCI v1.0 §6.2). */
+    private data class TokenResponse(val accessToken: String, val cNonce: String?)
+
+    /**
+     * Internal signal: credential endpoint rejected the proof and supplied a fresh `c_nonce`
+     * (OID4VCI v1.0 §7.3.1 `invalid_proof`). The caller retries once with the new nonce.
+     */
+    private class FreshNonceRequired(val cNonce: String, reason: String) : RuntimeException(reason)
 
     init {
         // Fetch metadata on initialization
@@ -83,9 +100,8 @@ class Oidc4VciService(
     ): Oidc4VciOffer = withContext(Dispatchers.IO) {
         val offerId = UUID.randomUUID().toString()
 
-        // Create credential offer URI
-        // Format: openid-credential-offer://?credential_offer_uri=<url>
-        // or: openid-credential-offer://?credential_issuer=<issuer>&credential_configuration_ids=<ids>
+        // Create credential offer URI (OID4VCI v1.0 §4.1)
+        // Format: openid-credential-offer://?credential_offer=<url-encoded JSON>
         val offerUri = buildCredentialOfferUri(
             credentialIssuer = credentialIssuer,
             credentialTypes = credentialTypes,
@@ -143,21 +159,30 @@ class Oidc4VciService(
 
         val requestId = UUID.randomUUID().toString()
 
-        // Step 1: Exchange authorization code for access token (if using auth code flow)
-        val accessToken = if (authorizationCode != null && redirectUri != null) {
-            exchangeAuthorizationCodeForToken(
+        // Step 1: Exchange the grant for an access token.
+        // - Authorization code flow: requires authorizationCode + redirectUri
+        // - Pre-authorized code flow: the pre-authorized code comes from the offer's grants
+        //   (OID4VCI v1.0 §6.1), optionally accompanied by the holder-supplied tx_code value.
+        val preAuthorizedCode = extractPreAuthorizedCode(offer.grants)
+        val tokenResponse = when {
+            authorizationCode != null && redirectUri != null -> exchangeAuthorizationCodeForToken(
                 authorizationCode = authorizationCode,
                 redirectUri = redirectUri,
                 tokenEndpoint = issuerMetadata.tokenEndpoint
             )
-        } else {
-            // Pre-authorized code flow or direct token
-            null // Will be obtained during credential request
+            preAuthorizedCode != null -> exchangePreAuthorizedCodeForToken(
+                preAuthorizedCode = preAuthorizedCode,
+                txCodeValue = txCodeValue,
+                tokenEndpoint = issuerMetadata.tokenEndpoint
+            )
+            else -> null
         }
 
-        if (accessToken != null) {
-            accessTokens[requestId] = accessToken
+        if (tokenResponse != null) {
+            accessTokens[requestId] = tokenResponse.accessToken
+            tokenResponse.cNonce?.let { cNonces[requestId] = it }
         }
+        val accessToken = tokenResponse?.accessToken
 
         val request = Oidc4VciCredentialRequest(
             requestId = requestId,
@@ -215,19 +240,55 @@ class Oidc4VciService(
                 credentialIssuer = request.credentialIssuer
             )
 
-        // Step 1: Create credential request with proof of possession
-        val credentialRequest = createCredentialRequestPayload(
-            credentialTypes = request.credentialTypes,
-            holderDid = holderDid,
-            keyId = "$holderDid#key-1" // In production, get actual key ID
-        )
+        val keyId = "$holderDid#key-1" // In production, get actual key ID
+        // aud of the proof-of-possession JWT is the credential issuer identifier (OID4VCI v1.0 §7.2.1.1)
+        val proofAudience = issuerMetadata.credentialIssuer
 
-        // Step 2: Send credential request to credential endpoint
-        val credentialResponse = requestCredentialFromIssuer(
-            credentialEndpoint = issuerMetadata.credentialEndpoint,
-            accessToken = accessToken,
-            credentialRequest = credentialRequest
-        )
+        // Step 1: Create credential request with proof of possession using the c_nonce
+        // returned by the token endpoint (OID4VCI v1.0 §7.2.1.1).
+        // Step 2: Send credential request to credential endpoint. If the issuer rejects the
+        // proof and supplies a fresh c_nonce (§7.3.1 invalid_proof), retry once with it.
+        val credentialResponse = try {
+            requestCredentialFromIssuer(
+                credentialEndpoint = issuerMetadata.credentialEndpoint,
+                accessToken = accessToken,
+                credentialRequest = createCredentialRequestPayload(
+                    credentialTypes = request.credentialTypes,
+                    holderDid = holderDid,
+                    keyId = keyId,
+                    audience = proofAudience,
+                    cNonce = cNonces[requestId]
+                )
+            )
+        } catch (e: FreshNonceRequired) {
+            cNonces[requestId] = e.cNonce
+            try {
+                requestCredentialFromIssuer(
+                    credentialEndpoint = issuerMetadata.credentialEndpoint,
+                    accessToken = accessToken,
+                    credentialRequest = createCredentialRequestPayload(
+                        credentialTypes = request.credentialTypes,
+                        holderDid = holderDid,
+                        keyId = keyId,
+                        audience = proofAudience,
+                        cNonce = e.cNonce
+                    )
+                )
+            } catch (retry: FreshNonceRequired) {
+                // The retry is attempted exactly once. A second invalid_proof must surface as
+                // a public typed exception — FreshNonceRequired is a private signal and must
+                // never escape issueCredential.
+                throw Oidc4VciException.CredentialRequestFailed(
+                    reason = "Credential endpoint rejected the proof of possession again " +
+                        "after retrying with a fresh c_nonce: ${retry.message}",
+                    credentialIssuer = issuerMetadata.credentialEndpoint,
+                    cause = retry
+                )
+            }
+        }
+
+        // Issuer may rotate the c_nonce in a successful response (OID4VCI v1.0 §7.3)
+        (credentialResponse["c_nonce"] as? String)?.let { cNonces[requestId] = it }
 
         val issueId = UUID.randomUUID().toString()
 
@@ -449,13 +510,41 @@ class Oidc4VciService(
         authorizationCode: String,
         redirectUri: String,
         tokenEndpoint: String
-    ): String {
+    ): TokenResponse {
         val requestBody = FormBody.Builder()
             .add("grant_type", "authorization_code")
             .add("code", authorizationCode)
             .add("redirect_uri", redirectUri)
             .build()
 
+        return executeTokenRequest(tokenEndpoint, requestBody)
+    }
+
+    /**
+     * Exchanges a pre-authorized code for an access token (OID4VCI v1.0 §6.1).
+     *
+     * Sends `grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code` with the
+     * `pre-authorized_code` from the credential offer and the holder-supplied `tx_code`
+     * value when the offer required one (§4.1.1).
+     */
+    private suspend fun exchangePreAuthorizedCodeForToken(
+        preAuthorizedCode: String,
+        txCodeValue: String?,
+        tokenEndpoint: String
+    ): TokenResponse {
+        val requestBody = FormBody.Builder()
+            .add("grant_type", PRE_AUTHORIZED_CODE_GRANT_TYPE)
+            .add("pre-authorized_code", preAuthorizedCode)
+            .apply { txCodeValue?.let { add("tx_code", it) } }
+            .build()
+
+        return executeTokenRequest(tokenEndpoint, requestBody)
+    }
+
+    /**
+     * POSTs a token request and parses `access_token` + optional `c_nonce` from the response.
+     */
+    private fun executeTokenRequest(tokenEndpoint: String, requestBody: FormBody): TokenResponse {
         val request = Request.Builder()
             .url(tokenEndpoint)
             .post(requestBody)
@@ -480,12 +569,30 @@ class Oidc4VciService(
         val json = Json { ignoreUnknownKeys = true }
         val tokenResponse = json.parseToJsonElement(body).jsonObject
 
-        return tokenResponse["access_token"]?.jsonPrimitive?.content
+        val accessToken = tokenResponse["access_token"]?.jsonPrimitive?.content
             ?: throw Oidc4VciException.TokenExchangeFailed(
                 reason = "Missing access_token in token response",
                 credentialIssuer = tokenEndpoint
             )
+
+        return TokenResponse(
+            accessToken = accessToken,
+            cNonce = tokenResponse["c_nonce"]?.jsonPrimitive?.contentOrNull
+        )
     }
+
+    /**
+     * Extracts the pre-authorized code from a credential offer's grants map
+     * (`grants["urn:ietf:params:oauth:grant-type:pre-authorized_code"]["pre-authorized_code"]`).
+     */
+    private fun extractPreAuthorizedCode(grants: Map<String, Any?>): String? =
+        when (val grant = grants[PRE_AUTHORIZED_CODE_GRANT_TYPE]) {
+            is String -> grant
+            is Map<*, *> -> grant["pre-authorized_code"] as? String
+            is JsonObject -> (grant["pre-authorized_code"] as? JsonPrimitive)?.contentOrNull
+            is JsonPrimitive -> grant.contentOrNull
+            else -> null
+        }
 
     /**
      * Creates credential request payload with proof of possession.
@@ -493,11 +600,12 @@ class Oidc4VciService(
     private suspend fun createCredentialRequestPayload(
         credentialTypes: List<String>,
         holderDid: String,
-        keyId: String
+        keyId: String,
+        audience: String,
+        cNonce: String?
     ): JsonObject {
-        // Create proof of possession (JWT)
-        // In production, this would be a proper JWT signed with holder's key
-        val proofJwt = createProofOfPossessionJwt(holderDid, keyId)
+        // Create proof of possession (JWT) signed with the holder's key
+        val proofJwt = createProofOfPossessionJwt(holderDid, keyId, audience, cNonce)
 
         return buildJsonObject {
             put("format", "vc+sd-jwt") // or "jwt_vc_json" or "ldp_vc"
@@ -512,16 +620,21 @@ class Oidc4VciService(
     }
 
     /**
-     * Creates a proof of possession JWT.
-     * In production, this should be properly signed with holder's private key.
+     * Creates a proof of possession JWT (OID4VCI v1.0 §7.2.1.1).
+     *
+     * The `nonce` claim carries the `c_nonce` issued by the token endpoint (or the most recent
+     * one returned by the credential endpoint); the `aud` claim is the credential issuer
+     * identifier. The JOSE `alg` is `EdDSA` (RFC 8037) for Ed25519 keys.
      */
     private suspend fun createProofOfPossessionJwt(
         holderDid: String,
-        keyId: String
+        keyId: String,
+        audience: String,
+        cNonce: String?
     ): String {
         // Create JWT header
         val header = buildJsonObject {
-            put("alg", "Ed25519")
+            put("alg", "EdDSA")
             put("typ", "openid4vci-proof+jwt")
             put("kid", keyId)
         }
@@ -530,10 +643,10 @@ class Oidc4VciService(
         val now = System.currentTimeMillis() / 1000
         val payload = buildJsonObject {
             put("iss", holderDid)
-            put("aud", credentialIssuerUrl)
+            put("aud", audience)
             put("iat", now)
             put("exp", now + 3600) // 1 hour expiration
-            put("nonce", UUID.randomUUID().toString())
+            cNonce?.let { put("nonce", it) }
         }
 
         // Encode header and payload
@@ -584,23 +697,39 @@ class Oidc4VciService(
                 credentialIssuer = credentialEndpoint
             )
 
+        val jsonParser = Json { ignoreUnknownKeys = true }
+
         if (!response.isSuccessful) {
+            // OID4VCI v1.0 §7.3.1: an invalid_proof error may carry a fresh c_nonce the
+            // wallet must use for its next proof of possession. Only that specific error
+            // code triggers a retry — a stray c_nonce in an unrelated error response
+            // (e.g. HTTP 500) must not.
+            val errorJson = runCatching { jsonParser.parseToJsonElement(body).jsonObject }.getOrNull()
+            val errorCode = errorJson?.get("error")?.jsonPrimitive?.contentOrNull
+            val freshNonce = errorJson?.get("c_nonce")?.jsonPrimitive?.contentOrNull
+            if (errorCode == "invalid_proof" && freshNonce != null) {
+                throw FreshNonceRequired(freshNonce, "HTTP ${response.code}: $body")
+            }
             throw Oidc4VciException.CredentialRequestFailed(
                 reason = "HTTP ${response.code}: $body",
                 credentialIssuer = credentialEndpoint
             )
         }
 
-        val jsonParser = Json { ignoreUnknownKeys = true }
         val credentialResponse = jsonParser.parseToJsonElement(body).jsonObject
 
         return credentialResponse.toMap()
     }
 
     /**
-     * Builds a credential offer URI.
+     * Builds a credential offer URI (OID4VCI v1.0 §4.1).
      *
-     * Includes `tx_code` JSON in the offer when [txCode] is non-null (OID4VCI v1.0 §4.1.1).
+     * The offer is a single URL-encoded JSON object carried in the `credential_offer`
+     * query parameter:
+     * `openid-credential-offer://?credential_offer=%7B%22credential_issuer%22...%7D`
+     *
+     * When [txCode] is non-null it is embedded in the pre-authorized code grant object
+     * (`grants["urn:ietf:params:oauth:grant-type:pre-authorized_code"].tx_code`, §4.1.1).
      */
     private fun buildCredentialOfferUri(
         credentialIssuer: String,
@@ -608,22 +737,196 @@ class Oidc4VciService(
         grants: Map<String, Any?>,
         txCode: TxCode? = null,
     ): String {
-        // Build query parameters
-        val params = mutableListOf<String>()
-        params.add("credential_issuer=$credentialIssuer")
-        params.add("credential_configuration_ids=${credentialTypes.joinToString(",")}")
-
-        grants.forEach { (key, value) ->
-            params.add("$key=$value")
+        val grantsJson = buildMap<String, JsonElement> {
+            grants.forEach { (key, value) -> put(key, anyToJsonElement(value)) }
+            if (txCode != null) {
+                val json = Json { encodeDefaults = false }
+                val txCodeJson = json.encodeToJsonElement(TxCode.serializer(), txCode)
+                val preAuthGrant = (get(PRE_AUTHORIZED_CODE_GRANT_TYPE) as? JsonObject) ?: JsonObject(emptyMap())
+                put(PRE_AUTHORIZED_CODE_GRANT_TYPE, JsonObject(preAuthGrant + ("tx_code" to txCodeJson)))
+            }
         }
 
-        if (txCode != null) {
-            val json = Json { encodeDefaults = false }
-            val txCodeJson = json.encodeToString(TxCode.serializer(), txCode)
-            params.add("tx_code=${java.net.URLEncoder.encode(txCodeJson, "UTF-8")}")
+        val offerJson = buildJsonObject {
+            put("credential_issuer", credentialIssuer)
+            put("credential_configuration_ids", JsonArray(credentialTypes.map { JsonPrimitive(it) }))
+            if (grantsJson.isNotEmpty()) {
+                put("grants", JsonObject(grantsJson))
+            }
         }
 
-        return "openid-credential-offer://?${params.joinToString("&")}"
+        val encodedOffer = URLEncoder.encode(
+            Json.encodeToString(JsonObject.serializer(), offerJson),
+            "UTF-8"
+        )
+        return "openid-credential-offer://?credential_offer=$encodedOffer"
+    }
+
+    /**
+     * Parses a credential offer URI (OID4VCI v1.0 §4.1) — the symmetric counterpart of
+     * [createCredentialOffer]'s URI generation.
+     *
+     * Supports both offer-by-value (`credential_offer=<url-encoded JSON>`) and
+     * offer-by-reference (`credential_offer_uri=<https URL>`, fetched via HTTP GET).
+     *
+     * The parsed offer is registered so it can be used with [createCredentialRequest].
+     *
+     * @param offerUri Offer URI, e.g. from a scanned QR code
+     * @return The parsed (and registered) [Oidc4VciOffer]
+     */
+    suspend fun parseCredentialOfferUri(offerUri: String): Oidc4VciOffer = withContext(Dispatchers.IO) {
+        val queryParams = parseQueryParameters(offerUri.substringAfter("?", ""))
+
+        val offerJsonString = queryParams["credential_offer"]
+            ?: queryParams["credential_offer_uri"]?.let { fetchCredentialOfferByReference(it) }
+            ?: throw Oidc4VciException.OfferParseFailed(
+                offerUri = offerUri,
+                reason = "Missing 'credential_offer' or 'credential_offer_uri' query parameter"
+            )
+
+        val offerJson = runCatching {
+            Json.parseToJsonElement(offerJsonString).jsonObject
+        }.getOrElse {
+            throw Oidc4VciException.OfferParseFailed(
+                offerUri = offerUri,
+                reason = "credential_offer is not a valid JSON object: ${it.message}"
+            )
+        }
+
+        val credentialIssuer = offerJson["credential_issuer"]?.jsonPrimitive?.contentOrNull
+            ?: throw Oidc4VciException.OfferParseFailed(
+                offerUri = offerUri,
+                reason = "Missing 'credential_issuer' in credential_offer"
+            )
+
+        val credentialConfigurationIds = offerJson["credential_configuration_ids"]?.jsonArray
+            ?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }
+            ?: emptyList()
+
+        val grantsJson = offerJson["grants"] as? JsonObject
+        val txCode = (grantsJson?.get(PRE_AUTHORIZED_CODE_GRANT_TYPE) as? JsonObject)
+            ?.get("tx_code")
+            ?.let { element ->
+                runCatching {
+                    Json { ignoreUnknownKeys = true }.decodeFromJsonElement(TxCode.serializer(), element)
+                }.getOrNull()
+            }
+
+        val offer = Oidc4VciOffer(
+            offerId = UUID.randomUUID().toString(),
+            credentialIssuer = credentialIssuer,
+            credentialTypes = credentialConfigurationIds,
+            offerUri = offerUri,
+            grants = grantsJson?.toMap() ?: emptyMap(),
+            txCode = txCode,
+        )
+
+        offers[offer.offerId] = offer
+        offer
+    }
+
+    /**
+     * Fetches a credential offer JSON document by reference (`credential_offer_uri`).
+     *
+     * Only `https` URIs are accepted; plain `http` is allowed exclusively for loopback
+     * hosts (`localhost`, `127.0.0.1`, `::1`) to support local development and tests.
+     * This prevents a malicious offer from steering the wallet to cleartext or
+     * link-local/metadata endpoints (e.g. `http://169.254.169.254/...`).
+     */
+    private fun fetchCredentialOfferByReference(credentialOfferUri: String): String {
+        requireHttpsOfferUri(credentialOfferUri)
+
+        val request = try {
+            Request.Builder()
+                .url(credentialOfferUri)
+                .get()
+                .build()
+        } catch (e: IllegalArgumentException) {
+            // OkHttp rejects non-HTTP(S) or otherwise malformed URLs with an IAE —
+            // surface it as a typed parse failure instead of a raw runtime exception.
+            throw Oidc4VciException.OfferParseFailed(
+                offerUri = credentialOfferUri,
+                reason = "Invalid credential_offer_uri: ${e.message}",
+                cause = e
+            )
+        }
+
+        val response = httpClient.newCall(request).execute()
+        val body = response.body?.string()
+            ?: throw Oidc4VciException.OfferParseFailed(
+                offerUri = credentialOfferUri,
+                reason = "Empty response body from credential_offer_uri"
+            )
+
+        if (!response.isSuccessful) {
+            throw Oidc4VciException.OfferParseFailed(
+                offerUri = credentialOfferUri,
+                reason = "HTTP ${response.code}: $body"
+            )
+        }
+
+        return body
+    }
+
+    /**
+     * Enforces the https-only policy for `credential_offer_uri` (http allowed for loopback).
+     *
+     * @throws Oidc4VciException.OfferParseFailed when the URI is malformed, uses a
+     *   non-http(s) scheme, or uses http against a non-loopback host
+     */
+    private fun requireHttpsOfferUri(credentialOfferUri: String) {
+        val uri = runCatching { java.net.URI(credentialOfferUri) }.getOrElse {
+            throw Oidc4VciException.OfferParseFailed(
+                offerUri = credentialOfferUri,
+                reason = "credential_offer_uri is not a valid URI: ${it.message}"
+            )
+        }
+        val scheme = uri.scheme?.lowercase()
+        if (scheme == "https") return
+        if (scheme == "http" && isLoopbackHost(uri.host?.lowercase())) return
+        throw Oidc4VciException.OfferParseFailed(
+            offerUri = credentialOfferUri,
+            reason = "credential_offer_uri must use https (got scheme '${scheme ?: "none"}'); " +
+                "plain http is only allowed for localhost/127.0.0.1"
+        )
+    }
+
+    /**
+     * `true` when [host] is loopback (localhost / 127.0.0.1 / ::1). Falls back to address
+     * resolution for other loopback-mapped names; IP literals resolve without a DNS lookup.
+     */
+    private fun isLoopbackHost(host: String?): Boolean {
+        if (host == null) return false
+        if (host == "localhost" || host == "127.0.0.1" || host == "::1" || host == "[::1]") return true
+        return runCatching { java.net.InetAddress.getByName(host).isLoopbackAddress }.getOrDefault(false)
+    }
+
+    /**
+     * Parses query parameters from a URL query string.
+     */
+    private fun parseQueryParameters(query: String): Map<String, String> {
+        if (query.isBlank()) return emptyMap()
+
+        return query.split("&").associate { param ->
+            val parts = param.split("=", limit = 2)
+            val key = URLDecoder.decode(parts[0], "UTF-8")
+            val value = if (parts.size > 1) URLDecoder.decode(parts[1], "UTF-8") else ""
+            key to value
+        }
+    }
+
+    /**
+     * Converts an arbitrary grants value into a [JsonElement] for offer serialization.
+     */
+    private fun anyToJsonElement(value: Any?): JsonElement = when (value) {
+        null -> JsonNull
+        is JsonElement -> value
+        is String -> JsonPrimitive(value)
+        is Number -> JsonPrimitive(value)
+        is Boolean -> JsonPrimitive(value)
+        is Map<*, *> -> JsonObject(value.entries.associate { (k, v) -> k.toString() to anyToJsonElement(v) })
+        is List<*> -> JsonArray(value.map { anyToJsonElement(it) })
+        else -> JsonPrimitive(value.toString())
     }
 
     /**

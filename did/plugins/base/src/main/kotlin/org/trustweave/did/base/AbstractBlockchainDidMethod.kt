@@ -154,7 +154,8 @@ abstract class AbstractBlockchainDidMethod(
                             stored,
                             method,
                             metadata?.created,
-                            metadata?.updated
+                            metadata?.updated,
+                            metadata?.deactivated ?: false
                         )
                     }
 
@@ -191,7 +192,8 @@ abstract class AbstractBlockchainDidMethod(
                         stored,
                         method,
                         metadata?.created,
-                        metadata?.updated
+                        metadata?.updated,
+                        metadata?.deactivated ?: false
                     )
                 }
 
@@ -257,9 +259,13 @@ abstract class AbstractBlockchainDidMethod(
             // Anchor deactivated document
             anchorDocument(deactivatedDocument)
 
-            // Remove from local storage
-            documents.remove(did)
-            documentMetadata.remove(did)
+            // Keep the deactivated document locally and flag the metadata as
+            // deactivated (W3C DID Core §7.3) so subsequent resolutions can
+            // surface the deactivation instead of silently "losing" the DID.
+            val now = kotlinx.datetime.Clock.System.now()
+            documents[did] = deactivatedDocument
+            documentMetadata[did] = (documentMetadata[did] ?: DidDocumentMetadata(created = now))
+                .copy(updated = now, deactivated = true)
 
             return true
         } catch (e: Exception) {

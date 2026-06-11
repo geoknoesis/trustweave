@@ -9,6 +9,7 @@ import org.trustweave.kms.results.GenerateKeyResult
 import org.trustweave.kms.results.GetPublicKeyResult
 import org.trustweave.kms.results.SignResult
 import org.trustweave.kms.KmsOptionKeys
+import org.trustweave.kms.util.EcdsaSignatureCodec
 import org.trustweave.kms.util.KmsErrorHandler
 import org.trustweave.kms.util.KmsInputValidator
 import kotlinx.coroutines.Dispatchers
@@ -471,9 +472,15 @@ class IbmKeyManagementService(
                     reason = "Signature not found in response"
                 )
 
-            val signature = Base64.getDecoder().decode(signatureBase64)
-            
-            logger.debug("Successfully signed data: keyId={}, algorithm={}, dataSize={}, signatureSize={}", 
+            // IBM Key Protect returns ECDSA signatures in ASN.1 DER; the KeyManagementService
+            // contract requires P1363 (raw r||s) with low-s for secp256k1. normalize() detects
+            // DER and transcodes; non-DER payloads of the expected P1363 size pass through.
+            val signature = EcdsaSignatureCodec.normalize(
+                Base64.getDecoder().decode(signatureBase64),
+                signingAlgorithm
+            )
+
+            logger.debug("Successfully signed data: keyId={}, algorithm={}, dataSize={}, signatureSize={}",
                 keyId.value, signingAlgorithm.name, data.size, signature.size)
 
             SignResult.Success(signature)

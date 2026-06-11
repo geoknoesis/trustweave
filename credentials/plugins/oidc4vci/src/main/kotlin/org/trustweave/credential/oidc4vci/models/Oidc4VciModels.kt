@@ -145,12 +145,26 @@ data class BatchCredentialResponse(
 data class CredentialIssuerMetadata(
     @SerialName("credential_issuer")
     val credentialIssuer: String,
+    /** Single authorization server (pre-final OID4VCI drafts). Prefer [authorizationServers]. */
     @SerialName("authorization_server")
     val authorizationServer: String? = null,
+    /**
+     * Authorization servers backing this credential issuer — OID4VCI v1.0 §11.2.3.
+     *
+     * The token endpoint lives in the authorization server's own metadata
+     * (`{as}/.well-known/oauth-authorization-server`, RFC 8414), not here.
+     */
+    @SerialName("authorization_servers")
+    val authorizationServers: List<String>? = null,
     @SerialName("credential_endpoint")
     val credentialEndpoint: String,
+    /**
+     * Inline token endpoint. Non-standard for OID4VCI v1.0 (the token endpoint belongs to
+     * the authorization server's metadata) but kept optional for backward compatibility
+     * with issuers that advertise it directly.
+     */
     @SerialName("token_endpoint")
-    val tokenEndpoint: String,
+    val tokenEndpoint: String? = null,
     @SerialName("batch_credential_endpoint")
     val batchCredentialEndpoint: String? = null,
     @SerialName("deferred_credential_endpoint")
@@ -160,6 +174,19 @@ data class CredentialIssuerMetadata(
     @SerialName("credential_configurations_supported")
     val credentialConfigurationsSupported: Map<String, CredentialConfiguration> = emptyMap(),
     val display: List<Display>? = null,
+)
+
+/**
+ * Minimal OAuth 2.0 Authorization Server Metadata (RFC 8414), as fetched from
+ * `{authorization_server}/.well-known/oauth-authorization-server`.
+ *
+ * Only the fields needed to drive the OID4VCI token exchange are modeled.
+ */
+@Serializable
+data class AuthorizationServerMetadata(
+    val issuer: String? = null,
+    @SerialName("token_endpoint")
+    val tokenEndpoint: String? = null,
 )
 
 /**

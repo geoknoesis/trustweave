@@ -55,6 +55,9 @@ class FileWalletTest {
     private fun credentialFiles(walletDir: Path): List<Path> =
         Files.list(walletDir.resolve("credentials")).use { stream -> stream.toList() }
 
+    private fun metadataFiles(walletDir: Path): List<Path> =
+        Files.list(walletDir.resolve("metadata")).use { stream -> stream.toList() }
+
     // ========== Encryption ==========
 
     @Test
@@ -130,6 +133,55 @@ class FileWalletTest {
                 setOf(first.id?.value, second.id?.value),
                 listed.map { it.id?.value }.toSet()
             )
+        }
+    }
+
+    // ========== Metadata sidecar encryption ==========
+
+    @Test
+    fun `encrypted wallet does not leak the credential id in the metadata sidecar`() {
+        runBlocking {
+            val dir = tempDir.resolve("metadata-encrypted")
+            val wallet = wallet(dir)
+            val credentialId = "urn:uuid:pii-bearing-${UUID.randomUUID()}"
+
+            wallet.store(credential(id = credentialId))
+
+            val sidecar = metadataFiles(dir).single()
+            val onDisk = String(Files.readAllBytes(sidecar), Charsets.ISO_8859_1)
+            // Neither the raw credential id nor the plaintext JSON structure may appear
+            assertFalse(onDisk.contains(credentialId))
+            assertFalse(onDisk.contains("credentialId"))
+            assertFalse(onDisk.contains("createdAt"))
+        }
+    }
+
+    @Test
+    fun `plaintext wallet keeps a readable metadata sidecar`() {
+        runBlocking {
+            val dir = tempDir.resolve("metadata-plaintext")
+            val wallet = wallet(dir, encryptionKey = null)
+            val credentialId = "urn:uuid:plain-${UUID.randomUUID()}"
+
+            wallet.store(credential(id = credentialId))
+
+            val sidecar = metadataFiles(dir).single()
+            val onDisk = String(Files.readAllBytes(sidecar), Charsets.UTF_8)
+            assertTrue(onDisk.contains(credentialId))
+            assertTrue(onDisk.contains("credentialId"))
+        }
+    }
+
+    @Test
+    fun `delete removes the encrypted metadata sidecar`() {
+        runBlocking {
+            val dir = tempDir.resolve("metadata-delete")
+            val wallet = wallet(dir)
+            val id = wallet.store(credential())
+
+            assertEquals(1, metadataFiles(dir).size)
+            assertTrue(wallet.delete(id))
+            assertTrue(metadataFiles(dir).isEmpty())
         }
     }
 

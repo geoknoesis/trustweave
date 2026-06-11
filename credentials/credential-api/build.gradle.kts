@@ -20,8 +20,14 @@ dependencies {
     implementation(libs.kotlinx.datetime)
 
     // Proof engine dependencies (built-in)
-    // JSON-LD for VC-LD canonicalization
-    implementation(libs.jsonld.java)
+    // JSON-LD 1.1 processing (expansion, toRdf) for VC-LD canonicalization
+    implementation(libs.titanium.json.ld)
+    // RDF Dataset Canonicalization (RDFC-1.0 / URDNA2015) over the toRdf output
+    implementation(libs.titanium.rdfc)
+    // jakarta.json API + provider required by titanium at compile time and runtime
+    implementation(libs.jakarta.json)
+    // Logging (was previously provided transitively by jsonld-java)
+    implementation(libs.slf4j.api)
     // Cryptographic libraries for LD-Proof signatures
     implementation(libs.bouncycastle.prov)
     // JWT library for SD-JWT-VC

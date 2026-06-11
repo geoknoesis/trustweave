@@ -54,7 +54,7 @@ class PeerDidMethod(
             val did = when (config.numalgo) {
                 PeerDidConfig.NUMALGO_0 -> generateNumalgo0Did(keyHandle, algorithm)
                 PeerDidConfig.NUMALGO_1 -> generateNumalgo1Did(keyHandle, algorithm, serviceEndpoint)
-                PeerDidConfig.NUMALGO_2 -> generateNumalgo2Did(keyHandle, algorithm, serviceEndpoint)
+                PeerDidConfig.NUMALGO_2 -> generateNumalgo2Did(keyHandle, algorithm, serviceEndpoint, options.purposes)
                 else -> throw IllegalArgumentException("Unsupported numalgo: ${config.numalgo}")
             }
 
@@ -72,13 +72,19 @@ class PeerDidMethod(
                 ))
             } else emptyList()
 
-            val document = DidMethodUtils.buildDidDocument(
-                did = did,
+            // Build verification relationships from the requested purposes so the stored
+            // document matches the did:peer:2 purpose-code semantics (V → authentication,
+            // A → assertionMethod, I → capabilityInvocation, D → capabilityDelegation).
+            val didObj = Did(did)
+            val vmIds = listOf(verificationMethod.id)
+            val purposes = options.purposes
+            val document = DidDocument(
+                id = didObj,
                 verificationMethod = listOf(verificationMethod),
-                authentication = listOf(verificationMethod.id.value),
-                assertionMethod = if (options.purposes.contains(KeyPurpose.ASSERTION)) {
-                    listOf(verificationMethod.id.value)
-                } else null,
+                authentication = if (KeyPurpose.AUTHENTICATION in purposes) vmIds else emptyList(),
+                assertionMethod = if (KeyPurpose.ASSERTION in purposes) vmIds else emptyList(),
+                capabilityInvocation = if (KeyPurpose.CAPABILITY_INVOCATION in purposes) vmIds else emptyList(),
+                capabilityDelegation = if (KeyPurpose.CAPABILITY_DELEGATION in purposes) vmIds else emptyList(),
                 service = service
             )
 
@@ -195,18 +201,41 @@ class PeerDidMethod(
     /**
      * Numalgo 2: `did:peer:2{.X{mb}}*` — multiple keys/services as labelled segments.
      *
-     * Segment labels:
-     * - `V` = verificationMethod / authentication key
-     * - `E` = key agreement key (encryption)
+     * Segment purpose codes per the did:peer spec:
+     * - `V` = authentication
+     * - `A` = assertionMethod
+     * - `E` = keyAgreement (encryption)
+     * - `I` = capabilityInvocation
+     * - `D` = capabilityDelegation
      * - `S` = service (`base64url(abbreviated-service-json)`, per spec — NOT multibase)
+     *
+     * The single generated signing key is emitted once per requested purpose.
+     * [KeyPurpose.KEY_AGREEMENT] (`E`) is intentionally NOT encoded here: key agreement
+     * requires a separate X25519 key, which this single-key creation flow does not
+     * generate. If no encodable purpose is requested, `.V` is emitted so the DID
+     * remains resolvable.
      */
-    private fun generateNumalgo2Did(keyHandle: KeyHandle, algorithm: String, serviceEndpoint: String?): String {
+    private fun generateNumalgo2Did(
+        keyHandle: KeyHandle,
+        algorithm: String,
+        serviceEndpoint: String?,
+        purposes: List<KeyPurpose>
+    ): String {
         val publicKeyBytes = extractPublicKeyBytes(keyHandle, algorithm)
         val prefixed = getMulticodecPrefix(algorithm) + publicKeyBytes
         val keyMb = "z" + encodeBase58(prefixed)
 
+        val codes = buildList {
+            if (KeyPurpose.AUTHENTICATION in purposes) add('V')
+            if (KeyPurpose.ASSERTION in purposes) add('A')
+            if (KeyPurpose.CAPABILITY_INVOCATION in purposes) add('I')
+            if (KeyPurpose.CAPABILITY_DELEGATION in purposes) add('D')
+        }.ifEmpty { listOf('V') }
+
         val sb = StringBuilder("did:peer:2")
-        sb.append(".V").append(keyMb) // verification / authentication
+        for (code in codes) {
+            sb.append('.').append(code).append(keyMb)
+        }
 
         if (serviceEndpoint != null) {
             sb.append(".S").append(encodeServiceSegment(serviceEndpoint))
@@ -277,8 +306,11 @@ class PeerDidMethod(
         if (segments.isEmpty()) return null
 
         val verificationMethods = mutableListOf<VerificationMethod>()
-        val authentication = mutableListOf<String>()
-        val keyAgreement = mutableListOf<String>()
+        val authentication = mutableListOf<VerificationMethodId>()
+        val assertionMethod = mutableListOf<VerificationMethodId>()
+        val keyAgreement = mutableListOf<VerificationMethodId>()
+        val capabilityInvocation = mutableListOf<VerificationMethodId>()
+        val capabilityDelegation = mutableListOf<VerificationMethodId>()
         val services = mutableListOf<DidService>()
         val didObj = Did(didString)
         var keyIndex = 1
@@ -290,7 +322,10 @@ class PeerDidMethod(
             val mb = segment.substring(1)
 
             when (purpose) {
-                'V', 'A' -> {
+                // Key purpose codes per the did:peer spec:
+                // V → authentication, A → assertionMethod, E → keyAgreement,
+                // I → capabilityInvocation, D → capabilityDelegation
+                'V', 'A', 'E', 'I', 'D' -> {
                     if (!mb.startsWith("z")) continue
                     val prefixedBytes = decodeBase58(mb.substring(1))
                     val (algorithm, _) = parseMulticodecKey(prefixedBytes) ?: continue
@@ -299,19 +334,13 @@ class PeerDidMethod(
                     verificationMethods.add(VerificationMethod(
                         id = vmId, type = vmType, controller = didObj, publicKeyMultibase = mb
                     ))
-                    authentication.add(vmId.value)
-                    keyIndex++
-                }
-                'E' -> {
-                    if (!mb.startsWith("z")) continue
-                    val prefixedBytes = decodeBase58(mb.substring(1))
-                    val (algorithm, _) = parseMulticodecKey(prefixedBytes) ?: continue
-                    val vmType = DidMethodUtils.algorithmToVerificationMethodType(algorithm)
-                    val vmId = VerificationMethodId.parse("$didString#key-$keyIndex", didObj)
-                    verificationMethods.add(VerificationMethod(
-                        id = vmId, type = vmType, controller = didObj, publicKeyMultibase = mb
-                    ))
-                    keyAgreement.add(vmId.value)
+                    when (purpose) {
+                        'V' -> authentication.add(vmId)
+                        'A' -> assertionMethod.add(vmId)
+                        'E' -> keyAgreement.add(vmId)
+                        'I' -> capabilityInvocation.add(vmId)
+                        'D' -> capabilityDelegation.add(vmId)
+                    }
                     keyIndex++
                 }
                 'S' -> {
@@ -328,9 +357,11 @@ class PeerDidMethod(
         return DidDocument(
             id = didObj,
             verificationMethod = verificationMethods,
-            authentication = authentication.map { VerificationMethodId.parse(it, didObj) },
-            keyAgreement = keyAgreement.map { VerificationMethodId.parse(it, didObj) },
-            assertionMethod = authentication.map { VerificationMethodId.parse(it, didObj) },
+            authentication = authentication,
+            assertionMethod = assertionMethod,
+            keyAgreement = keyAgreement,
+            capabilityInvocation = capabilityInvocation,
+            capabilityDelegation = capabilityDelegation,
             service = services
         )
     }

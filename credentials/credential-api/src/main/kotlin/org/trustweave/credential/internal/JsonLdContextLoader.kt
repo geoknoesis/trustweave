@@ -1,9 +1,14 @@
 package org.trustweave.credential.internal
 
-import com.github.jsonldjava.core.DocumentLoader
-import com.github.jsonldjava.core.JsonLdError
-import com.github.jsonldjava.core.RemoteDocument
-import com.github.jsonldjava.utils.JsonUtils
+import com.apicatalog.jsonld.JsonLdError
+import com.apicatalog.jsonld.JsonLdErrorCode
+import com.apicatalog.jsonld.document.Document
+import com.apicatalog.jsonld.document.JsonDocument
+import com.apicatalog.jsonld.loader.DocumentLoader
+import com.apicatalog.jsonld.loader.DocumentLoaderOptions
+import com.apicatalog.jsonld.loader.SchemeRouter
+import java.io.StringReader
+import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -21,13 +26,10 @@ import java.util.concurrent.ConcurrentHashMap
  * 3. **Disables remote context fetching by default.** It can be re-enabled explicitly by
  *    setting the system property [ALLOW_REMOTE_CONTEXTS_PROPERTY] to `true`.
  *
- * **Note on the bundled context files:** the jsonld-java library only implements JSON-LD
- * 1.0 context processing and rejects the official W3C context documents outright (they use
- * JSON-LD 1.1 features such as `@version`, `@protected`, type-scoped contexts and `@json`).
- * The bundled resources are therefore JSON-LD 1.0-compatible derivations of the official
- * documents: every term-to-IRI mapping is preserved, with type-scoped term definitions
- * flattened to the top level and 1.1-only keywords removed. Signing and verification both
- * use these same bundled contexts, so canonicalization is deterministic and self-consistent.
+ * The bundled context files are the **official, unmodified W3C context documents**
+ * (JSON-LD 1.1). They are processed by titanium-json-ld, a conformant JSON-LD 1.1
+ * processor, so the canonical N-Quads produced here are interoperable with other
+ * conformant verifiers.
  */
 internal object JsonLdContextLoader {
 
@@ -47,17 +49,19 @@ internal object JsonLdContextLoader {
         CredentialConstants.SecuritySuites.DATA_INTEGRITY_V2 to "$RESOURCE_BASE/data-integrity-v2.jsonld"
     )
 
-    private val bundledContexts: Map<String, Any> by lazy {
+    private val bundledContexts: Map<String, Document> by lazy {
         bundledContextResources.mapValues { (url, resourcePath) ->
             val stream = JsonLdContextLoader::class.java.getResourceAsStream(resourcePath)
                 ?: throw IllegalStateException(
                     "Bundled JSON-LD context resource not found on classpath: $resourcePath (for $url)"
                 )
-            stream.use { JsonUtils.fromInputStream(it) }
+            stream.use { input ->
+                JsonDocument.of(input).also { it.documentUrl = URI.create(url) }
+            }
         }
     }
 
-    private val registeredContexts = ConcurrentHashMap<String, Any>()
+    private val registeredContexts = ConcurrentHashMap<String, Document>()
 
     /**
      * Register an additional JSON-LD context document so it can be resolved offline.
@@ -69,32 +73,37 @@ internal object JsonLdContextLoader {
      * @param contextJson The full JSON context document as a string
      */
     fun registerContext(url: String, contextJson: String) {
-        registeredContexts[url] = JsonUtils.fromString(contextJson)
+        registeredContexts[url] = JsonDocument.of(StringReader(contextJson)).also {
+            it.documentUrl = URI.create(url)
+        }
     }
 
     /**
      * Create a [DocumentLoader] that resolves bundled and registered contexts offline
      * and refuses remote fetching unless explicitly enabled.
      */
-    fun createDocumentLoader(): DocumentLoader = OfflineFirstDocumentLoader()
+    fun createDocumentLoader(): DocumentLoader = OfflineFirstDocumentLoader
 
     private fun isRemoteLoadingAllowed(): Boolean =
         System.getProperty(ALLOW_REMOTE_CONTEXTS_PROPERTY)?.equals("true", ignoreCase = true) == true
 
-    private class OfflineFirstDocumentLoader : DocumentLoader() {
-        override fun loadDocument(url: String): RemoteDocument {
-            JsonLdContextLoader.bundledContexts[url]?.let { return RemoteDocument(url, it) }
-            JsonLdContextLoader.registeredContexts[url]?.let { return RemoteDocument(url, it) }
+    private object OfflineFirstDocumentLoader : DocumentLoader {
+        override fun loadDocument(url: URI, options: DocumentLoaderOptions): Document {
+            val key = url.toString()
+            JsonLdContextLoader.bundledContexts[key]?.let { return it }
+            JsonLdContextLoader.registeredContexts[key]?.let { return it }
             if (!JsonLdContextLoader.isRemoteLoadingAllowed()) {
                 throw JsonLdError(
-                    JsonLdError.Error.LOADING_REMOTE_CONTEXT_FAILED,
+                    JsonLdErrorCode.LOADING_REMOTE_CONTEXT_FAILED,
                     "Remote JSON-LD context loading is disabled for security. Context '$url' is not " +
                         "bundled and has not been registered. Register it via " +
-                        "JsonLdContextLoader.registerContext(url, json) or set the system property " +
+                        "JsonLdContexts.register(url, json) or set the system property " +
                         "-D${JsonLdContextLoader.ALLOW_REMOTE_CONTEXTS_PROPERTY}=true to allow remote fetching."
                 )
             }
-            return super.loadDocument(url)
+            // Explicitly enabled remote loading: delegate to titanium's default scheme
+            // router (HTTP/HTTPS via java.net.http, file URIs via FileLoader).
+            return SchemeRouter.defaultInstance().loadDocument(url, options)
         }
     }
 }

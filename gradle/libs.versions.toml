@@ -36,7 +36,9 @@ hikaricp = "7.0.2"
 bouncycastle = "1.84"
 nimbus-jose-jwt = "9.48"
 cbor-java = "4.5.4"
-jsonld-java = "0.13.6"
+titanium-json-ld = "1.7.0"
+titanium-rdfc = "3.0.0"
+jakarta-json = "2.0.1"
 
 # Cloud SDKs
 aws-sdk-bom = "2.43.0"
@@ -110,7 +112,9 @@ bouncycastle-prov = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = 
 bouncycastle-pkix = { module = "org.bouncycastle:bcpkix-jdk18on", version.ref = "bouncycastle" }
 nimbus-jose-jwt = { module = "com.nimbusds:nimbus-jose-jwt", version.ref = "nimbus-jose-jwt" }
 cbor-java = { module = "com.upokecenter:cbor", version.ref = "cbor-java" }
-jsonld-java = { module = "com.github.jsonld-java:jsonld-java", version.ref = "jsonld-java" }
+titanium-json-ld = { module = "com.apicatalog:titanium-json-ld", version.ref = "titanium-json-ld" }
+titanium-rdfc = { module = "com.apicatalog:titanium-rdfc", version.ref = "titanium-rdfc" }
+jakarta-json = { module = "org.glassfish:jakarta.json", version.ref = "jakarta-json" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 
 # Cloud SDKs (BOMs)

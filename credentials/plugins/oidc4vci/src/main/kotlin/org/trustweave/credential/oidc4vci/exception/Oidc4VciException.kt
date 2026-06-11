@@ -102,6 +102,32 @@ sealed class Oidc4VciException(
     )
 
     /**
+     * Exception thrown when no token endpoint can be resolved for a credential issuer.
+     *
+     * Per OID4VCI v1.0 the token endpoint lives in the authorization server's metadata
+     * (`authorization_servers` in the issuer metadata → RFC 8414 AS metadata). This is
+     * thrown when the issuer metadata carries neither an inline `token_endpoint` nor a
+     * resolvable authorization server, or the AS metadata lacks a `token_endpoint`.
+     *
+     * @param credentialIssuer The credential issuer URL
+     * @param reason The reason resolution failed
+     * @param cause The underlying exception
+     */
+    data class TokenEndpointResolutionFailed(
+        val credentialIssuer: String,
+        val reason: String,
+        override val cause: Throwable? = null
+    ) : Oidc4VciException(
+        code = "OIDC4VCI_TOKEN_ENDPOINT_RESOLUTION_FAILED",
+        message = "Failed to resolve OIDC4VCI token endpoint for '$credentialIssuer': $reason",
+        context = mapOf(
+            "credentialIssuer" to credentialIssuer,
+            "reason" to reason
+        ),
+        cause = cause
+    )
+
+    /**
      * Exception thrown when a credential offer URI cannot be parsed (OID4VCI v1.0 §4.1).
      *
      * @param offerUri The offer URI (or credential_offer_uri) that failed to parse

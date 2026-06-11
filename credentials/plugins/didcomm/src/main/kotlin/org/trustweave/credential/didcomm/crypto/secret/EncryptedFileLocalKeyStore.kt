@@ -281,27 +281,45 @@ class EncryptedFileLocalKeyStore(
 
 /**
  * Factory for creating EncryptedFileLocalKeyStore with password.
+ *
+ * The PBKDF2 salt is random (16 bytes from [java.security.SecureRandom]), generated on first
+ * use and persisted next to the key store in `<keyFile>.salt` (format: 4-byte magic `TWS1` +
+ * 16 salt bytes). Subsequent opens load the persisted salt.
+ *
+ * Legacy stores created by older versions derived the salt deterministically from the file
+ * path, which is insecure. They cannot be distinguished from a tampered store (the salt file
+ * format did not exist), so opening a non-empty key store without a salt file **fails closed**
+ * with a clear "regenerate the key store" error instead of silently reusing the weak salt.
  */
 object EncryptedFileLocalKeyStoreFactory {
+
+    /** Default PBKDF2-HMAC-SHA256 iteration count (OWASP recommendation: >= 210,000). */
+    const val DEFAULT_PBKDF2_ITERATIONS = 210_000
+
+    /** Magic marker + format version ("TWS1") prefixed to the persisted salt file. */
+    private val SALT_FILE_MAGIC = byteArrayOf(0x54, 0x57, 0x53, 0x31)
+
+    private const val SALT_LENGTH_BYTES = 16
+
     /**
      * Creates an encrypted file key store from a password.
      *
      * @param keyFile File to store keys
      * @param password Password for encryption
-     * @param salt Salt for key derivation (optional, will be generated and stored)
-     * @param iterations PBKDF2 iterations (default: 100,000)
+     * @param salt Salt for key derivation (optional; when omitted, a random salt is generated
+     *   on first use and persisted in `<keyFile>.salt`, then reloaded on subsequent opens)
+     * @param iterations PBKDF2 iterations (default: [DEFAULT_PBKDF2_ITERATIONS])
      * @return EncryptedFileLocalKeyStore instance
+     * @throws IllegalStateException if the salt file is corrupt, or if [keyFile] is a legacy
+     *   store without a salt file (regenerate the key store in that case)
      */
     fun create(
         keyFile: File,
         password: CharArray,
         salt: ByteArray? = null,
-        iterations: Int = 100000
+        iterations: Int = DEFAULT_PBKDF2_ITERATIONS
     ): EncryptedFileLocalKeyStore {
-        // For production, salt should be stored securely or derived deterministically
-        // For now, we'll use a fixed salt derived from file path (not ideal, but functional)
-        // In production, use a proper key management system
-        val actualSalt = salt ?: deriveSaltFromFile(keyFile)
+        val actualSalt = salt ?: loadOrCreateSalt(keyFile)
 
         val masterKey = MasterKeyDerivation.deriveKey(
             password = password,
@@ -312,16 +330,51 @@ object EncryptedFileLocalKeyStoreFactory {
         return EncryptedFileLocalKeyStore(keyFile, masterKey)
     }
 
+    /** The sidecar file holding the persisted PBKDF2 salt for [keyFile]. */
+    fun saltFileFor(keyFile: File): File = File(keyFile.parent, "${keyFile.name}.salt")
+
     /**
-     * Derives a deterministic salt from file path.
+     * Loads the persisted salt, or generates and persists a fresh random one for a new store.
      *
-     * Note: This is a simplified approach. In production, use a proper
-     * key management system or store salt separately.
+     * Fails closed when the salt file is corrupt or when an existing (legacy) key store has
+     * no salt file — legacy stores used a path-derived salt and must be regenerated.
      */
-    private fun deriveSaltFromFile(file: File): ByteArray {
-        // Use file path hash as salt (deterministic but not ideal)
-        val pathHash = file.absolutePath.hashCode().toString()
-        return pathHash.toByteArray(Charsets.UTF_8).sliceArray(0 until 16.coerceAtMost(pathHash.length))
+    private fun loadOrCreateSalt(keyFile: File): ByteArray {
+        val saltFile = saltFileFor(keyFile)
+        if (saltFile.exists()) {
+            val content = saltFile.readBytes()
+            val valid = content.size == SALT_FILE_MAGIC.size + SALT_LENGTH_BYTES &&
+                content.sliceArray(SALT_FILE_MAGIC.indices).contentEquals(SALT_FILE_MAGIC)
+            if (!valid) {
+                throw IllegalStateException(
+                    "Salt file '${saltFile.absolutePath}' is corrupt or has an unknown format. " +
+                        "Restore it from backup, or delete both the salt file and the key store file " +
+                        "'${keyFile.absolutePath}' to regenerate the key store (stored keys will be lost)."
+                )
+            }
+            return content.copyOfRange(SALT_FILE_MAGIC.size, content.size)
+        }
+
+        if (keyFile.exists() && keyFile.length() > 0L) {
+            throw IllegalStateException(
+                "Key store file '${keyFile.absolutePath}' exists but has no salt file " +
+                    "('${saltFile.name}'). It was likely created by an older version that derived " +
+                    "the PBKDF2 salt from the file path, which is insecure and no longer supported. " +
+                    "Regenerate the key store: re-store the secrets into a new file " +
+                    "(or delete the legacy file to start fresh)."
+            )
+        }
+
+        // Fresh store: generate a random salt and persist it before any keys are written.
+        val newSalt = MasterKeyDerivation.generateSalt(SALT_LENGTH_BYTES)
+        saltFile.parentFile?.mkdirs()
+        val tempFile = File(saltFile.parent, "${saltFile.name}.tmp")
+        tempFile.writeBytes(SALT_FILE_MAGIC + newSalt)
+        if (!tempFile.renameTo(saltFile)) {
+            tempFile.delete()
+            throw IllegalStateException("Failed to persist salt file '${saltFile.absolutePath}'")
+        }
+        return newSalt
     }
 }
 

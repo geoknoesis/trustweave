@@ -27,7 +27,8 @@ import java.util.Base64
  * Stores credentials, collections, tags, and metadata in local filesystem.
  * Supports optional encryption for sensitive data.
  *
- * **Encryption format:** credentials are encrypted with AES/GCM/NoPadding using a
+ * **Encryption format:** credentials and their metadata sidecars are encrypted with
+ * AES/GCM/NoPadding using a
  * random 12-byte IV per write and a 128-bit authentication tag. The on-disk blob is
  * `[1-byte format version][12-byte IV][ciphertext + tag]`. Any tampering with the
  * stored bytes is detected during decryption and surfaces as a
@@ -176,7 +177,9 @@ class FileWallet(
 
         Files.write(credentialFile, content, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)
 
-        // Initialize metadata if not exists
+        // Initialize metadata if not exists. The sidecar embeds the raw credential id
+        // (ids can be PII-bearing URNs), so it is protected with the same AES-GCM
+        // scheme as the credential file whenever an encryption key is configured.
         val metadataFile = resolveDataFile(metadataDir, id)
         if (!Files.exists(metadataFile)) {
             val metadata = buildJsonObject {
@@ -187,7 +190,13 @@ class FileWallet(
                 put("tags", buildJsonArray { })
                 put("metadata", buildJsonObject { })
             }
-            Files.write(metadataFile, json.encodeToString(JsonObject.serializer(), metadata).toByteArray(Charsets.UTF_8), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
+            val metadataJson = json.encodeToString(JsonObject.serializer(), metadata)
+            val metadataContent = if (secretKey != null) {
+                encrypt(metadataJson)
+            } else {
+                metadataJson.toByteArray(Charsets.UTF_8)
+            }
+            Files.write(metadataFile, metadataContent, StandardOpenOption.CREATE, StandardOpenOption.WRITE)
         }
 
         id

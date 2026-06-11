@@ -18,6 +18,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -56,43 +57,6 @@ class DatabaseWalletTest {
             issuanceDate = Clock.System.now(),
             proof = null
         )
-
-    /** DatabaseWallet exposes no tagging API yet, so tag rows are inserted directly. */
-    private fun tagCredential(dataSource: DataSource, credentialId: String, vararg tags: String) {
-        dataSource.connection.use { conn ->
-            tags.forEach { tag ->
-                conn.prepareStatement("INSERT INTO credential_tags (credential_id, tag) VALUES (?, ?)").use { stmt ->
-                    stmt.setString(1, credentialId)
-                    stmt.setString(2, tag)
-                    stmt.executeUpdate()
-                }
-            }
-        }
-    }
-
-    /** DatabaseWallet exposes no collections API yet, so collection rows are inserted directly. */
-    private fun createCollection(dataSource: DataSource, collectionId: String, walletId: String = "wallet-test") {
-        dataSource.connection.use { conn ->
-            conn.prepareStatement("INSERT INTO collections (id, wallet_id, name) VALUES (?, ?, ?)").use { stmt ->
-                stmt.setString(1, collectionId)
-                stmt.setString(2, walletId)
-                stmt.setString(3, "Collection $collectionId")
-                stmt.executeUpdate()
-            }
-        }
-    }
-
-    private fun addToCollection(dataSource: DataSource, credentialId: String, collectionId: String) {
-        dataSource.connection.use { conn ->
-            conn.prepareStatement(
-                "INSERT INTO credential_collections (credential_id, collection_id) VALUES (?, ?)"
-            ).use { stmt ->
-                stmt.setString(1, credentialId)
-                stmt.setString(2, collectionId)
-                stmt.executeUpdate()
-            }
-        }
-    }
 
     // ========== Sanity ==========
 
@@ -154,7 +118,7 @@ class DatabaseWalletTest {
                 val wallet = newWallet(dataSource)
                 wallet.store(credential("cred-tagged"))
                 wallet.store(credential("cred-untagged"))
-                tagCredential(dataSource, "cred-tagged", "important")
+                assertTrue(wallet.tagCredential("cred-tagged", setOf("important")))
 
                 val results = wallet.query { byTag("important") }
 
@@ -185,8 +149,8 @@ class DatabaseWalletTest {
                 val wallet = newWallet(dataSource)
                 wallet.store(credential("cred-both"))
                 wallet.store(credential("cred-one"))
-                tagCredential(dataSource, "cred-both", "a", "b")
-                tagCredential(dataSource, "cred-one", "a")
+                wallet.tagCredential("cred-both", setOf("a", "b"))
+                wallet.tagCredential("cred-one", setOf("a"))
 
                 val results = wallet.query {
                     byTag("a")
@@ -205,10 +169,10 @@ class DatabaseWalletTest {
                 val wallet = newWallet(dataSource)
                 wallet.store(credential("cred-in"))
                 wallet.store(credential("cred-out"))
-                createCollection(dataSource, "collection-1")
-                addToCollection(dataSource, "cred-in", "collection-1")
+                val collectionId = wallet.createCollection("Collection 1")
+                assertTrue(wallet.addToCollection("cred-in", collectionId))
 
-                val results = wallet.query { byCollection("collection-1") }
+                val results = wallet.query { byCollection(collectionId) }
 
                 assertEquals(listOf("cred-in"), results.map { it.id?.value })
             }
@@ -222,8 +186,8 @@ class DatabaseWalletTest {
                 val wallet = newWallet(dataSource)
                 wallet.store(credential("cred-match", type = "PersonCredential"))
                 wallet.store(credential("cred-wrong-type", type = "DegreeCredential"))
-                tagCredential(dataSource, "cred-match", "important")
-                tagCredential(dataSource, "cred-wrong-type", "important")
+                wallet.tagCredential("cred-match", setOf("important"))
+                wallet.tagCredential("cred-wrong-type", setOf("important"))
 
                 val results = wallet.query {
                     byTag("important")
@@ -246,6 +210,210 @@ class DatabaseWalletTest {
                 val results = wallet.query { byIssuer(issuerDid) }
 
                 assertEquals(setOf("cred-1", "cred-2"), results.map { it.id?.value }.toSet())
+            }
+        }
+    }
+
+    // ========== Tagging write API (CredentialTagging) ==========
+
+    @Test
+    fun `tagCredential then untagCredential round-trips through query byTag`() {
+        runBlocking {
+            newDataSource().use { dataSource ->
+                val wallet = newWallet(dataSource)
+                wallet.store(credential("cred-lifecycle"))
+
+                assertTrue(wallet.tagCredential("cred-lifecycle", setOf("important", "work")))
+                assertEquals(setOf("important", "work"), wallet.getTags("cred-lifecycle"))
+                assertEquals(listOf("cred-lifecycle"), wallet.query { byTag("important") }.map { it.id?.value })
+                assertEquals(listOf("cred-lifecycle"), wallet.findByTag("work").map { it.id?.value })
+
+                assertTrue(wallet.untagCredential("cred-lifecycle", setOf("important")))
+                assertEquals(setOf("work"), wallet.getTags("cred-lifecycle"))
+                assertTrue(wallet.query { byTag("important") }.isEmpty())
+                assertEquals(setOf("work"), wallet.getAllTags())
+            }
+        }
+    }
+
+    @Test
+    fun `tagCredential is idempotent`() {
+        runBlocking {
+            newDataSource().use { dataSource ->
+                val wallet = newWallet(dataSource)
+                wallet.store(credential("cred-idempotent"))
+
+                assertTrue(wallet.tagCredential("cred-idempotent", setOf("dup")))
+                assertTrue(wallet.tagCredential("cred-idempotent", setOf("dup")))
+
+                assertEquals(setOf("dup"), wallet.getTags("cred-idempotent"))
+            }
+        }
+    }
+
+    @Test
+    fun `tagCredential returns false for an unknown credential`() {
+        runBlocking {
+            newDataSource().use { dataSource ->
+                val wallet = newWallet(dataSource)
+
+                assertFalse(wallet.tagCredential("no-such-credential", setOf("tag")))
+                assertFalse(wallet.untagCredential("no-such-credential", setOf("tag")))
+            }
+        }
+    }
+
+    @Test
+    fun `tags are isolated between wallets sharing the same database`() {
+        runBlocking {
+            newDataSource().use { dataSource ->
+                val walletA = newWallet(dataSource)
+                val walletB = DatabaseWallet.create(
+                    walletId = "wallet-other",
+                    walletDid = "did:key:z6MkOtherWallet",
+                    holderDid = "did:key:z6MkOtherHolder",
+                    dataSource = dataSource
+                )
+                walletA.store(credential("cred-a"))
+                walletA.tagCredential("cred-a", setOf("shared-tag"))
+
+                // Wallet B cannot tag, see, or find wallet A's credential
+                assertFalse(walletB.tagCredential("cred-a", setOf("hijack")))
+                assertTrue(walletB.getTags("cred-a").isEmpty())
+                assertTrue(walletB.getAllTags().isEmpty())
+                assertTrue(walletB.findByTag("shared-tag").isEmpty())
+                assertTrue(walletB.query { byTag("shared-tag") }.isEmpty())
+
+                // Wallet A still sees its own tag
+                assertEquals(setOf("shared-tag"), walletA.getAllTags())
+            }
+        }
+    }
+
+    // ========== Metadata write API (CredentialTagging) ==========
+
+    @Test
+    fun `addMetadata merges values and getMetadata returns notes and tags`() {
+        runBlocking {
+            newDataSource().use { dataSource ->
+                val wallet = newWallet(dataSource)
+                wallet.store(credential("cred-meta"))
+                wallet.tagCredential("cred-meta", setOf("meta-tag"))
+
+                assertTrue(wallet.addMetadata("cred-meta", mapOf("source" to "issuer.com", "attempt" to 1L)))
+                assertTrue(wallet.addMetadata("cred-meta", mapOf("attempt" to 2L)))
+                assertTrue(wallet.updateNotes("cred-meta", "some notes"))
+
+                val metadata = wallet.getMetadata("cred-meta")
+                assertNotNull(metadata)
+                assertEquals("cred-meta", metadata.credentialId)
+                assertEquals("some notes", metadata.notes)
+                assertEquals(setOf("meta-tag"), metadata.tags)
+                assertEquals("issuer.com", metadata.metadata["source"])
+                assertEquals(2L, metadata.metadata["attempt"])
+
+                assertFalse(wallet.addMetadata("no-such-credential", mapOf("k" to "v")))
+                assertNull(wallet.getMetadata("no-such-credential"))
+            }
+        }
+    }
+
+    // ========== Collections write API (CredentialCollections) ==========
+
+    @Test
+    fun `collection lifecycle - create add list remove delete`() {
+        runBlocking {
+            newDataSource().use { dataSource ->
+                val wallet = newWallet(dataSource)
+                wallet.store(credential("cred-coll"))
+
+                val collectionId = wallet.createCollection("Work", "Work credentials")
+                val collection = wallet.getCollection(collectionId)
+                assertNotNull(collection)
+                assertEquals("Work", collection.name)
+                assertEquals("Work credentials", collection.description)
+                assertEquals(0, collection.credentialCount)
+
+                assertTrue(wallet.addToCollection("cred-coll", collectionId))
+                // Idempotent re-add
+                assertTrue(wallet.addToCollection("cred-coll", collectionId))
+                assertEquals(1, wallet.getCollection(collectionId)?.credentialCount)
+                assertEquals(
+                    listOf("cred-coll"),
+                    wallet.getCredentialsInCollection(collectionId).map { it.id?.value }
+                )
+                assertEquals(listOf(collectionId), wallet.listCollections().map { it.id })
+
+                assertTrue(wallet.removeFromCollection("cred-coll", collectionId))
+                assertFalse(wallet.removeFromCollection("cred-coll", collectionId))
+                assertTrue(wallet.getCredentialsInCollection(collectionId).isEmpty())
+
+                assertTrue(wallet.deleteCollection(collectionId))
+                assertNull(wallet.getCollection(collectionId))
+                assertFalse(wallet.deleteCollection(collectionId))
+            }
+        }
+    }
+
+    @Test
+    fun `addToCollection returns false for unknown credential or collection`() {
+        runBlocking {
+            newDataSource().use { dataSource ->
+                val wallet = newWallet(dataSource)
+                wallet.store(credential("cred-known"))
+                val collectionId = wallet.createCollection("Known")
+
+                assertFalse(wallet.addToCollection("no-such-credential", collectionId))
+                assertFalse(wallet.addToCollection("cred-known", "no-such-collection"))
+            }
+        }
+    }
+
+    @Test
+    fun `collections are isolated between wallets sharing the same database`() {
+        runBlocking {
+            newDataSource().use { dataSource ->
+                val walletA = newWallet(dataSource)
+                val walletB = DatabaseWallet.create(
+                    walletId = "wallet-other",
+                    walletDid = "did:key:z6MkOtherWallet",
+                    holderDid = "did:key:z6MkOtherHolder",
+                    dataSource = dataSource
+                )
+                walletA.store(credential("cred-a"))
+                val collectionA = walletA.createCollection("A's collection")
+                walletA.addToCollection("cred-a", collectionA)
+
+                // Wallet B sees neither the collection nor its contents
+                assertNull(walletB.getCollection(collectionA))
+                assertTrue(walletB.listCollections().isEmpty())
+                assertTrue(walletB.getCredentialsInCollection(collectionA).isEmpty())
+                assertTrue(walletB.query { byCollection(collectionA) }.isEmpty())
+
+                // Wallet B cannot mutate A's collection
+                assertFalse(walletB.addToCollection("cred-a", collectionA))
+                assertFalse(walletB.removeFromCollection("cred-a", collectionA))
+                assertFalse(walletB.deleteCollection(collectionA))
+                assertEquals(1, walletA.getCollection(collectionA)?.credentialCount)
+            }
+        }
+    }
+
+    @Test
+    fun `deleting a credential cleans up its tags and collection memberships`() {
+        runBlocking {
+            newDataSource().use { dataSource ->
+                val wallet = newWallet(dataSource)
+                wallet.store(credential("cred-cascade"))
+                val collectionId = wallet.createCollection("Cascade")
+                wallet.addToCollection("cred-cascade", collectionId)
+                wallet.tagCredential("cred-cascade", setOf("cascade-tag"))
+
+                assertTrue(wallet.delete("cred-cascade"))
+
+                assertTrue(wallet.getAllTags().isEmpty())
+                assertEquals(0, wallet.getCollection(collectionId)?.credentialCount)
+                assertTrue(wallet.getCredentialsInCollection(collectionId).isEmpty())
             }
         }
     }

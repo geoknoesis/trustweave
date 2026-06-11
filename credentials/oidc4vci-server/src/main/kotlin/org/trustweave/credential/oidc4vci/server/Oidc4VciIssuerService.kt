@@ -1,6 +1,9 @@
 ﻿package org.trustweave.credential.oidc4vci.server
 
+import kotlinx.serialization.json.*
+import org.trustweave.credential.oidc4vci.Oidc4VciService
 import org.trustweave.credential.oidc4vci.models.*
+import java.net.URLEncoder
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -33,14 +36,46 @@ class Oidc4VciIssuerService(
     fun createOffer(credentialTypes: List<String>, txCode: TxCode? = null, txCodeValue: String? = null): CreateOfferResponse {
         val preAuthCode = UUID.randomUUID().toString()
         pendingOffers[preAuthCode] = OfferState(credentialTypes, txCode, txCodeValue)
-        val offerUri = buildString {
-            append("openid-credential-offer://?credential_issuer=")
-            append(java.net.URLEncoder.encode(baseUrl, "UTF-8"))
-            append("&grants=%7B%22urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Apre-authorized_code%22%3A%7B%22pre-authorized_code%22%3A%22")
-            append(preAuthCode)
-            append("%22%7D%7D")
+        return CreateOfferResponse(buildCredentialOfferUri(credentialTypes, preAuthCode, txCode), preAuthCode)
+    }
+
+    /**
+     * Builds a spec-format credential offer URI (OID4VCI v1.0 §4.1): a single
+     * `credential_offer` query parameter carrying the URL-encoded offer JSON, with the
+     * pre-authorized code grant (and `tx_code` requirement, §4.1.1) embedded in `grants`.
+     *
+     * Mirrors the wallet-side parser/builder in
+     * [org.trustweave.credential.oidc4vci.Oidc4VciService].
+     */
+    private fun buildCredentialOfferUri(
+        credentialTypes: List<String>,
+        preAuthCode: String,
+        txCode: TxCode?,
+    ): String {
+        val preAuthGrant = buildJsonObject {
+            put("pre-authorized_code", preAuthCode)
+            if (txCode != null) {
+                // encodeDefaults so the defaulted input_mode ("numeric") is still emitted
+                // in the offer; explicitNulls=false drops absent length/description.
+                val json = Json {
+                    encodeDefaults = true
+                    explicitNulls = false
+                }
+                put("tx_code", json.encodeToJsonElement(TxCode.serializer(), txCode))
+            }
         }
-        return CreateOfferResponse(offerUri, preAuthCode)
+        val offerJson = buildJsonObject {
+            put("credential_issuer", baseUrl)
+            put("credential_configuration_ids", JsonArray(credentialTypes.map { JsonPrimitive(it) }))
+            put("grants", buildJsonObject {
+                put(Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE, preAuthGrant)
+            })
+        }
+        val encodedOffer = URLEncoder.encode(
+            Json.encodeToString(JsonObject.serializer(), offerJson),
+            "UTF-8"
+        )
+        return "openid-credential-offer://?credential_offer=$encodedOffer"
     }
 
     fun exchangePreAuthCode(preAuthCode: String, txCodeValue: String?): TokenResponse {

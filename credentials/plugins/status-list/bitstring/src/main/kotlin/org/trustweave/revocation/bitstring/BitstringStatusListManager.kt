@@ -437,21 +437,24 @@ class BitstringStatusListManager(
         dataSource.connection.use { conn ->
             conn.autoCommit = false
             try {
-                // Lock the status list row and re-read encoded_list INSIDE this transaction:
-                // decoding a pre-transaction snapshot would let a concurrent update be
-                // silently overwritten (lost update).
-                val bitSet = decodeBitSet(lockAndReadEncodedList(statusListId.toString(), conn))
+                // Lock the status list row and re-read encoded_list AND size INSIDE this
+                // transaction: decoding a pre-transaction snapshot would let a concurrent
+                // update be silently overwritten (lost update), and re-encoding at a stale
+                // size would truncate a concurrently expanded tail region.
+                val locked = lockAndReadStatusList(statusListId.toString(), conn)
+                val lockedRow = row.copy(size = locked.size, encodedList = locked.encodedList)
+                val bitSet = decodeBitSet(locked.encodedList)
                 val results = mutableMapOf<String, Boolean>()
 
                 for (credentialId in credentialIds) {
-                    val entryIndex = getOrAssignIndex(credentialId, statusListId.toString(), row, conn)
-                    requireIndexInRange(entryIndex, row, statusListId)
-                    val bitIndex = if (row.bitsPerEntry == 2) entryIndex * 2 else entryIndex
+                    val entryIndex = getOrAssignIndex(credentialId, statusListId.toString(), lockedRow, conn)
+                    requireIndexInRange(entryIndex, lockedRow, statusListId)
+                    val bitIndex = if (lockedRow.bitsPerEntry == 2) entryIndex * 2 else entryIndex
                     bitSet.set(bitIndex, true)
                     results[credentialId] = true
                 }
 
-                val newEncodedList = encodeBitSet(bitSet, row.size)
+                val newEncodedList = encodeBitSet(bitSet, locked.size)
                 persistEncodedList(statusListId.toString(), newEncodedList, conn)
 
                 conn.commit()
@@ -475,6 +478,21 @@ class BitstringStatusListManager(
         }
     }
 
+    /**
+     * Apply a batch of status updates in a single transaction.
+     *
+     * Concurrency: the status list row is locked and both `encoded_list` and `size`
+     * are re-read INSIDE the write transaction via [lockAndReadStatusList], so
+     * concurrent writers serialize on the row instead of overwriting each other's
+     * bits from a stale pre-transaction snapshot (lost update), and the re-encode
+     * uses the locked size so a concurrent [expandStatusList] is never truncated
+     * back to the stale pre-transaction size.
+     *
+     * Index validation deliberately uses the pre-transaction size: indices valid
+     * against the old size remain valid under the lock (size only grows), and
+     * validating before the transaction lets RANGE_ERROR surface as-is without
+     * writing anything for a partially invalid batch.
+     */
     override suspend fun updateStatusListBatch(
         statusListId: StatusListId,
         updates: List<StatusUpdate>
@@ -483,26 +501,56 @@ class BitstringStatusListManager(
             ?: throw IllegalArgumentException("Status list not found: $statusListId")
 
         val purpose = parsePurpose(row.purpose)
-        val bitSet = decodeBitSet(row.encodedList)
-
+        // Validate every index before opening the transaction so RANGE_ERROR surfaces
+        // as-is and nothing is written for a partially invalid batch.
         for (update in updates) {
             requireIndexInRange(update.index, row, statusListId)
-            if (row.bitsPerEntry == 2) {
-                update.revoked?.let { bitSet.set(update.index * 2, it) }
-                update.suspended?.let { bitSet.set(update.index * 2 + 1, it) }
-            } else {
-                when {
-                    update.revoked != null && purpose == StatusPurpose.REVOCATION ->
-                        bitSet.set(update.index, update.revoked!!)
-                    update.suspended != null && purpose == StatusPurpose.SUSPENSION ->
-                        bitSet.set(update.index, update.suspended!!)
-                }
-            }
         }
 
-        val newEncodedList = encodeBitSet(bitSet, row.size)
         dataSource.connection.use { conn ->
-            persistEncodedList(statusListId.toString(), newEncodedList, conn)
+            conn.autoCommit = false
+            try {
+                // Lock the status list row and re-read encoded_list AND size INSIDE this
+                // transaction: decoding a pre-transaction snapshot would let a concurrent
+                // update be silently overwritten (lost update), and re-encoding at a stale
+                // size would truncate a concurrently expanded tail region.
+                val locked = lockAndReadStatusList(statusListId.toString(), conn)
+                val bitSet = decodeBitSet(locked.encodedList)
+
+                for (update in updates) {
+                    if (row.bitsPerEntry == 2) {
+                        update.revoked?.let { bitSet.set(update.index * 2, it) }
+                        update.suspended?.let { bitSet.set(update.index * 2 + 1, it) }
+                    } else {
+                        when {
+                            update.revoked != null && purpose == StatusPurpose.REVOCATION ->
+                                bitSet.set(update.index, update.revoked!!)
+                            update.suspended != null && purpose == StatusPurpose.SUSPENSION ->
+                                bitSet.set(update.index, update.suspended!!)
+                        }
+                    }
+                }
+
+                val newEncodedList = encodeBitSet(bitSet, locked.size)
+                persistEncodedList(statusListId.toString(), newEncodedList, conn)
+                conn.commit()
+            } catch (e: CancellationException) {
+                conn.rollback()
+                throw e
+            } catch (e: Exception) {
+                conn.rollback()
+                logger.error(
+                    "Failed to apply batch status updates to bitstring status list {}: {}",
+                    statusListId,
+                    e.message,
+                    e
+                )
+                throw TrustWeaveException.InvalidState(
+                    message = "Failed to apply batch status updates to bitstring status list " +
+                        "$statusListId: ${e.message}",
+                    cause = e
+                )
+            }
         }
     }
 
@@ -608,27 +656,43 @@ class BitstringStatusListManager(
         }
     }
 
+    /**
+     * Grow the status list by [additionalSize] bits, preserving all existing bits.
+     *
+     * Concurrency: the status list row is locked and both `encoded_list` and `size`
+     * are re-read INSIDE the write transaction via [lockAndReadStatusList], so a
+     * concurrent status update or expansion committed after the initial existence
+     * check is never overwritten from a stale snapshot (lost update / size rollback).
+     *
+     * The expanded list is re-encoded through [encodeBitSet], so the multibase `u`
+     * prefix and MSB-first bit ordering of `encodedList` are preserved.
+     */
     override suspend fun expandStatusList(
         statusListId: StatusListId,
         additionalSize: Int
     ) = withContext(Dispatchers.IO) {
-        val row = loadStatusListRow(statusListId.toString())
-            ?: throw IllegalArgumentException("Status list not found: $statusListId")
-
-        val currentBitSet = decodeBitSet(row.encodedList)
-        val currentSize = row.size
-        val newSize = currentSize + additionalSize
-        val newBitSet = BitSet(newSize)
-
-        for (i in 0 until currentSize) {
-            if (currentBitSet.get(i)) newBitSet.set(i, true)
+        if (loadStatusListRow(statusListId.toString()) == null) {
+            throw IllegalArgumentException("Status list not found: $statusListId")
         }
-
-        val newEncodedList = encodeBitSet(newBitSet, newSize)
 
         dataSource.connection.use { conn ->
             conn.autoCommit = false
             try {
+                // Lock the status list row and re-read encoded_list AND size INSIDE this
+                // transaction: expanding a pre-transaction snapshot would silently discard
+                // bits set by a concurrent writer (lost update), and a stale size would
+                // undo a concurrent expansion committed after the existence check above.
+                val locked = lockAndReadStatusList(statusListId.toString(), conn)
+                val currentBitSet = decodeBitSet(locked.encodedList)
+                val currentSize = locked.size
+
+                val newSize = currentSize + additionalSize
+                val newBitSet = BitSet(newSize)
+                for (i in 0 until currentSize) {
+                    if (currentBitSet.get(i)) newBitSet.set(i, true)
+                }
+
+                val newEncodedList = encodeBitSet(newBitSet, newSize)
                 persistEncodedList(statusListId.toString(), newEncodedList, conn)
                 conn.prepareStatement(
                     "UPDATE bitstring_status_lists SET size = ? WHERE id = ?"
@@ -771,13 +835,15 @@ class BitstringStatusListManager(
         return dataSource.connection.use { conn ->
             conn.autoCommit = false
             try {
-                // Lock the status list row and re-read encoded_list INSIDE this transaction:
-                // decoding a pre-transaction snapshot would let a concurrent update be
-                // silently overwritten (lost update).
-                val encodedList = lockAndReadEncodedList(statusListId, conn)
-                val entryIndex = getOrAssignIndex(credentialId, statusListId, row, conn)
-                requireIndexInRange(entryIndex, row, StatusListId(statusListId))
-                val bitSet = decodeBitSet(encodedList)
+                // Lock the status list row and re-read encoded_list AND size INSIDE this
+                // transaction: decoding a pre-transaction snapshot would let a concurrent
+                // update be silently overwritten (lost update), and re-encoding at a stale
+                // size would truncate a concurrently expanded tail region.
+                val locked = lockAndReadStatusList(statusListId, conn)
+                val lockedRow = row.copy(size = locked.size, encodedList = locked.encodedList)
+                val entryIndex = getOrAssignIndex(credentialId, statusListId, lockedRow, conn)
+                requireIndexInRange(entryIndex, lockedRow, StatusListId(statusListId))
+                val bitSet = decodeBitSet(locked.encodedList)
 
                 if (row.bitsPerEntry == 2) {
                     revoked?.let { bitSet.set(entryIndex * 2, it) }
@@ -787,7 +853,7 @@ class BitstringStatusListManager(
                     suspended?.let { bitSet.set(entryIndex, it) }
                 }
 
-                val newEncodedList = encodeBitSet(bitSet, row.size)
+                val newEncodedList = encodeBitSet(bitSet, locked.size)
                 persistEncodedList(statusListId, newEncodedList, conn)
                 conn.commit()
                 true
@@ -905,18 +971,36 @@ class BitstringStatusListManager(
     }
 
     /**
-     * Re-read `encoded_list` with a row lock inside the caller's open transaction, so
-     * concurrent writers serialize on the status list row instead of overwriting each
-     * other's bits from a stale snapshot read before the transaction began.
+     * The authoritative `(encoded_list, size)` pair of a status list row, read under
+     * a `SELECT ... FOR UPDATE` row lock inside an open write transaction.
      */
-    private fun lockAndReadEncodedList(statusListId: String, conn: Connection): String {
+    private data class LockedStatusListState(
+        val encodedList: String,
+        val size: Int
+    )
+
+    /**
+     * Re-read `encoded_list` AND `size` with a row lock inside the caller's open
+     * transaction, so concurrent writers serialize on the status list row instead of
+     * working from a stale snapshot read before the transaction began. Re-reading both
+     * columns together prevents two distinct lost-update hazards:
+     *
+     * - stale `encoded_list`: a concurrent status update would be silently overwritten;
+     * - stale `size`: re-encoding at a pre-transaction size after a concurrent
+     *   [expandStatusList] would truncate the expanded tail region (and any bits a
+     *   third party set there), shrinking `encoded_list` below the committed `size`.
+     */
+    private fun lockAndReadStatusList(statusListId: String, conn: Connection): LockedStatusListState {
         val rs = conn.prepareStatement(
-            "SELECT encoded_list FROM bitstring_status_lists WHERE id = ? FOR UPDATE"
+            "SELECT encoded_list, size FROM bitstring_status_lists WHERE id = ? FOR UPDATE"
         ).apply {
             setString(1, statusListId)
         }.executeQuery()
         if (!rs.next()) throw statusListUnavailable(StatusListId(statusListId))
-        return rs.getString("encoded_list")
+        return LockedStatusListState(
+            encodedList = rs.getString("encoded_list"),
+            size = rs.getInt("size")
+        )
     }
 
     private fun persistEncodedList(statusListId: String, encodedList: String, conn: Connection) {

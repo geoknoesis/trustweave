@@ -65,6 +65,9 @@ class Oidc4VciService(
     private val cNonces = ConcurrentHashMap<String, String>() // requestId -> c_nonce from token/credential endpoint
     @Volatile private var metadata: CredentialIssuerMetadata? = null
 
+    /** Token endpoint resolved from the authorization server's RFC 8414 metadata (cached). */
+    @Volatile private var resolvedTokenEndpoint: String? = null
+
     /** Access token + proof-of-possession nonce returned by the token endpoint (OID4VCI v1.0 §6.2). */
     private data class TokenResponse(val accessToken: String, val cNonce: String?)
 
@@ -168,12 +171,12 @@ class Oidc4VciService(
             authorizationCode != null && redirectUri != null -> exchangeAuthorizationCodeForToken(
                 authorizationCode = authorizationCode,
                 redirectUri = redirectUri,
-                tokenEndpoint = issuerMetadata.tokenEndpoint
+                tokenEndpoint = resolveTokenEndpoint(issuerMetadata)
             )
             preAuthorizedCode != null -> exchangePreAuthorizedCodeForToken(
                 preAuthorizedCode = preAuthorizedCode,
                 txCodeValue = txCodeValue,
-                tokenEndpoint = issuerMetadata.tokenEndpoint
+                tokenEndpoint = resolveTokenEndpoint(issuerMetadata)
             )
             else -> null
         }
@@ -504,6 +507,135 @@ class Oidc4VciService(
     }
 
     /**
+     * Resolves the token endpoint for a credential issuer (OID4VCI v1.0 §6).
+     *
+     * Resolution order:
+     * 1. Inline `token_endpoint` in the credential issuer metadata — non-standard but kept
+     *    for backward compatibility with issuers that advertise it directly.
+     * 2. The first entry of `authorization_servers` (falling back to the legacy singular
+     *    `authorization_server`): fetch its RFC 8414 metadata from
+     *    `{as}/.well-known/oauth-authorization-server` and use its `token_endpoint`.
+     * 3. Neither available → [Oidc4VciException.TokenEndpointResolutionFailed].
+     *
+     * **Security:** both the authorization-server URL and any token endpoint (inline or
+     * AS-resolved) must satisfy the https-or-loopback policy — the token request carries
+     * the pre-authorized code and the holder's `tx_code` PIN, so it must never be steered
+     * to a cleartext or link-local/metadata endpoint by attacker-supplied metadata.
+     * The AS-resolved endpoint is validated *before* it is cached.
+     */
+    private fun resolveTokenEndpoint(issuerMetadata: CredentialIssuerMetadata): String {
+        issuerMetadata.tokenEndpoint?.let { inlineEndpoint ->
+            requireHttpsOrLoopback(inlineEndpoint) { reason ->
+                Oidc4VciException.TokenEndpointResolutionFailed(
+                    credentialIssuer = issuerMetadata.credentialIssuer,
+                    reason = "Inline token_endpoint '$inlineEndpoint' $reason"
+                )
+            }
+            return inlineEndpoint
+        }
+        resolvedTokenEndpoint?.let { return it }
+
+        val authorizationServer = issuerMetadata.authorizationServers?.firstOrNull()
+            ?: issuerMetadata.authorizationServer
+            ?: throw Oidc4VciException.TokenEndpointResolutionFailed(
+                credentialIssuer = issuerMetadata.credentialIssuer,
+                reason = "Issuer metadata carries neither 'token_endpoint' nor 'authorization_servers'"
+            )
+
+        val asMetadata = fetchAuthorizationServerMetadata(authorizationServer)
+        val tokenEndpoint = asMetadata.tokenEndpoint
+            ?: throw Oidc4VciException.TokenEndpointResolutionFailed(
+                credentialIssuer = issuerMetadata.credentialIssuer,
+                reason = "Authorization server metadata at '$authorizationServer' has no 'token_endpoint'"
+            )
+
+        requireHttpsOrLoopback(tokenEndpoint) { reason ->
+            Oidc4VciException.TokenEndpointResolutionFailed(
+                credentialIssuer = issuerMetadata.credentialIssuer,
+                reason = "token_endpoint '$tokenEndpoint' resolved from authorization server " +
+                    "'$authorizationServer' $reason"
+            )
+        }
+
+        resolvedTokenEndpoint = tokenEndpoint
+        return tokenEndpoint
+    }
+
+    /**
+     * Fetches OAuth 2.0 Authorization Server Metadata (RFC 8414) for [authorizationServer].
+     *
+     * **Security:**
+     * - The authorization-server URL must satisfy the https-or-loopback policy *before*
+     *   any network call — `authorization_servers` is attacker-suppliable via offer QR codes.
+     * - The returned metadata's `issuer` MUST equal the URL the metadata was requested for
+     *   (RFC 8414 §3.3, modulo trailing-slash normalization) — the standard defense against
+     *   authorization-server mix-up attacks.
+     */
+    private fun fetchAuthorizationServerMetadata(authorizationServer: String): AuthorizationServerMetadata {
+        requireHttpsOrLoopback(authorizationServer) { reason ->
+            Oidc4VciException.TokenEndpointResolutionFailed(
+                credentialIssuer = authorizationServer,
+                reason = "Authorization server URL $reason"
+            )
+        }
+
+        val request = Request.Builder()
+            .url(authorizationServerMetadataUrl(authorizationServer))
+            .get()
+            .build()
+
+        val response = httpClient.newCall(request).execute()
+        val body = response.body?.string()
+            ?: throw Oidc4VciException.TokenEndpointResolutionFailed(
+                credentialIssuer = authorizationServer,
+                reason = "Empty response body from authorization server metadata endpoint"
+            )
+
+        if (!response.isSuccessful) {
+            throw Oidc4VciException.TokenEndpointResolutionFailed(
+                credentialIssuer = authorizationServer,
+                reason = "Authorization server metadata fetch failed: HTTP ${response.code}: $body"
+            )
+        }
+
+        val json = Json { ignoreUnknownKeys = true }
+        val asMetadata = try {
+            json.decodeFromString<AuthorizationServerMetadata>(body)
+        } catch (e: Exception) {
+            throw Oidc4VciException.TokenEndpointResolutionFailed(
+                credentialIssuer = authorizationServer,
+                reason = "Authorization server metadata is not valid JSON: ${e.message}",
+                cause = e
+            )
+        }
+
+        // RFC 8414 §3.3: the metadata's issuer must be identical to the authorization
+        // server URL the metadata was retrieved for (mix-up attack defense).
+        if (asMetadata.issuer?.trimEnd('/') != authorizationServer.trimEnd('/')) {
+            throw Oidc4VciException.TokenEndpointResolutionFailed(
+                credentialIssuer = authorizationServer,
+                reason = "RFC 8414 issuer mismatch: metadata 'issuer' is " +
+                    "'${asMetadata.issuer ?: "absent"}' but the metadata was requested for " +
+                    "'$authorizationServer'"
+            )
+        }
+
+        return asMetadata
+    }
+
+    /**
+     * Builds the RFC 8414 §3.1 well-known metadata URL for [authorizationServer]:
+     * the well-known segment is inserted *between host and path*, e.g. issuer
+     * `https://host/tenant` → `https://host/.well-known/oauth-authorization-server/tenant`
+     * (NOT appended after the path).
+     */
+    private fun authorizationServerMetadataUrl(authorizationServer: String): String {
+        val uri = java.net.URI(authorizationServer)
+        val pathSuffix = uri.rawPath?.trimEnd('/').orEmpty()
+        return "${uri.scheme}://${uri.rawAuthority}/.well-known/oauth-authorization-server$pathSuffix"
+    }
+
+    /**
      * Exchanges authorization code for access token.
      */
     private suspend fun exchangeAuthorizationCodeForToken(
@@ -771,6 +903,12 @@ class Oidc4VciService(
      *
      * The parsed offer is registered so it can be used with [createCredentialRequest].
      *
+     * **Security:** one service instance is bound to one credential issuer
+     * ([credentialIssuerUrl]). An offer whose `credential_issuer` names a *different*
+     * issuer is rejected (modulo trailing-slash normalization) — otherwise an
+     * attacker-supplied QR code could poison this instance's pinned metadata and
+     * token-endpoint caches with endpoints belonging to another issuer.
+     *
      * @param offerUri Offer URI, e.g. from a scanned QR code
      * @return The parsed (and registered) [Oidc4VciOffer]
      */
@@ -798,6 +936,19 @@ class Oidc4VciService(
                 offerUri = offerUri,
                 reason = "Missing 'credential_issuer' in credential_offer"
             )
+
+        // Cross-issuer cache guard: this instance's metadata / resolvedTokenEndpoint
+        // caches are pinned to credentialIssuerUrl. Registering an offer for another
+        // issuer would let those pinned caches serve the wrong issuer's endpoints
+        // (token-endpoint confusion). One service instance == one issuer.
+        if (credentialIssuer.trimEnd('/') != credentialIssuerUrl.trimEnd('/')) {
+            throw Oidc4VciException.OfferParseFailed(
+                offerUri = offerUri,
+                reason = "credential_offer is for issuer '$credentialIssuer' but this service " +
+                    "instance is configured for '$credentialIssuerUrl'; cross-issuer offers " +
+                    "are rejected"
+            )
+        }
 
         val credentialConfigurationIds = offerJson["credential_configuration_ids"]?.jsonArray
             ?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }
@@ -874,21 +1025,49 @@ class Oidc4VciService(
      * @throws Oidc4VciException.OfferParseFailed when the URI is malformed, uses a
      *   non-http(s) scheme, or uses http against a non-loopback host
      */
-    private fun requireHttpsOfferUri(credentialOfferUri: String) {
-        val uri = runCatching { java.net.URI(credentialOfferUri) }.getOrElse {
-            throw Oidc4VciException.OfferParseFailed(
+    private fun requireHttpsOfferUri(credentialOfferUri: String) =
+        requireHttpsOrLoopback(credentialOfferUri) { reason ->
+            Oidc4VciException.OfferParseFailed(
                 offerUri = credentialOfferUri,
-                reason = "credential_offer_uri is not a valid URI: ${it.message}"
+                reason = "credential_offer_uri $reason"
             )
         }
+
+    /**
+     * Enforces the https-or-loopback URL policy: `https` is always allowed; plain `http`
+     * is allowed exclusively for loopback hosts (`localhost`, `127.0.0.1`, `::1`) to
+     * support local development and tests. Everything else — including non-http(s)
+     * schemes and malformed URIs — is a violation.
+     *
+     * This protects every URL an attacker can steer via offer QR codes or fetched
+     * metadata (credential_offer_uri, authorization server URLs, token endpoints) from
+     * pointing at cleartext or link-local/metadata endpoints (e.g. `http://169.254.169.254/`).
+     *
+     * @param onViolation builds the *typed* exception to throw; receives a human-readable
+     *   reason fragment (e.g. "must use https (got scheme 'http'); ...")
+     */
+    private inline fun requireHttpsOrLoopback(
+        url: String,
+        onViolation: (reason: String) -> Oidc4VciException,
+    ) {
+        val violation = httpsOrLoopbackViolation(url) ?: return
+        throw onViolation(violation)
+    }
+
+    /**
+     * Returns the policy-violation reason for [url], or `null` when the URL satisfies
+     * the https-or-loopback policy. Performs no network I/O (IP literals are checked
+     * without DNS resolution).
+     */
+    private fun httpsOrLoopbackViolation(url: String): String? {
+        val uri = runCatching { java.net.URI(url) }.getOrElse {
+            return "is not a valid URI: ${it.message}"
+        }
         val scheme = uri.scheme?.lowercase()
-        if (scheme == "https") return
-        if (scheme == "http" && isLoopbackHost(uri.host?.lowercase())) return
-        throw Oidc4VciException.OfferParseFailed(
-            offerUri = credentialOfferUri,
-            reason = "credential_offer_uri must use https (got scheme '${scheme ?: "none"}'); " +
-                "plain http is only allowed for localhost/127.0.0.1"
-        )
+        if (scheme == "https") return null
+        if (scheme == "http" && isLoopbackHost(uri.host?.lowercase())) return null
+        return "must use https (got scheme '${scheme ?: "none"}'); " +
+            "plain http is only allowed for localhost/127.0.0.1"
     }
 
     /**

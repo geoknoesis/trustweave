@@ -214,9 +214,88 @@ class Oidc4VpServiceTest {
                 .setBody("{\"status\":\"success\"}")
                 .setHeader("Content-Type", "application/json")
         )
-        
+
         // Submit the response (should not throw)
         service.submitPermissionResponse(permissionResponse)
+
+        // direct_post (OID4VP v1.0 §7.2): the response MUST be form-encoded
+        mockWebServer.takeRequest() // request_uri fetch
+        val directPost = mockWebServer.takeRequest()
+        assertEquals("POST", directPost.method)
+        assertTrue(
+            directPost.getHeader("Content-Type")!!.startsWith("application/x-www-form-urlencoded"),
+            "direct_post must be application/x-www-form-urlencoded, got: ${directPost.getHeader("Content-Type")}"
+        )
+
+        val formParams = parseFormBody(directPost.body.readUtf8())
+        assertEquals(permissionResponse.vpToken, formParams["vp_token"], "vp_token must be a form field")
+        assertEquals("test-state", formParams["state"], "state must be a form field")
+        assertFalse(
+            formParams.containsKey("presentation_submission"),
+            "No presentation_submission form field without a presentation definition"
+        )
+    }
+
+    @Test
+    fun `submitPermissionResponse sends presentation_submission as a JSON form field`() = runBlocking {
+        val requestUri = "${mockWebServer.url("/request")}"
+        val responseUri = "${mockWebServer.url("/response")}"
+
+        val presentationDefinition = buildJsonObject {
+            put("id", "pd-1")
+            put("input_descriptors", Json.parseToJsonElement(
+                """[ { "id": "desc-name", "constraints": { "fields": [ { "path": ["$.credentialSubject.name"] } ] } } ]"""
+            ))
+        }
+        val authRequestJson = buildJsonObject {
+            put("response_uri", responseUri)
+            put("client_id", "test-client")
+            put("nonce", "test-nonce-123")
+            put("state", "test-state")
+            put("presentation_definition", presentationDefinition)
+        }
+        mockWebServer.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setBody(authRequestJson.toString())
+                .setHeader("Content-Type", "application/json")
+        )
+
+        val permissionRequest = service.parseAuthorizationUrl(
+            "openid4vp://authorize?client_id=test-client&request_uri=$requestUri"
+        )
+        val permissionResponse = service.createPermissionResponse(
+            permissionRequest = permissionRequest,
+            selectedCredentials = listOf(
+                PresentableCredential("cred-1", createTestCredential(), "PersonCredential")
+            ),
+            holderDid = holderDid,
+            keyId = keyId
+        )
+        assertNotNull(permissionResponse.presentationSubmission)
+
+        mockWebServer.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setBody("{}")
+                .setHeader("Content-Type", "application/json")
+        )
+        service.submitPermissionResponse(permissionResponse)
+
+        mockWebServer.takeRequest() // request_uri fetch
+        val directPost = mockWebServer.takeRequest()
+        assertTrue(directPost.getHeader("Content-Type")!!.startsWith("application/x-www-form-urlencoded"))
+
+        val formParams = parseFormBody(directPost.body.readUtf8())
+        val submissionField = formParams["presentation_submission"]
+        assertNotNull(submissionField, "presentation_submission must be a form field")
+        // The form value must be the JSON serialization of the submission
+        val submissionJson = Json.parseToJsonElement(submissionField).jsonObject
+        assertEquals("pd-1", submissionJson["definition_id"]!!.jsonPrimitive.content)
+        assertEquals(
+            "desc-name",
+            submissionJson["descriptor_map"]!!.jsonArray[0].jsonObject["id"]!!.jsonPrimitive.content
+        )
     }
 
     // ========== fetchVerifierMetadata Tests ==========
@@ -436,6 +515,75 @@ class Oidc4VpServiceTest {
         assertNull(permissionResponse.presentationSubmission)
     }
 
+    @Test
+    fun `jwt-proof credential uses registered jwt_vc_json format identifier`() = runBlocking {
+        val presentationDefinition = Json.parseToJsonElement(
+            """
+            {
+              "id": "pd-1",
+              "input_descriptors": [
+                {
+                  "id": "desc-name",
+                  "constraints": { "fields": [ { "path": ["$.credentialSubject.name"] } ] }
+                }
+              ]
+            }
+            """.trimIndent()
+        ).jsonObject
+
+        val jwtCredential = createTestCredential().copy(
+            proof = org.trustweave.credential.model.vc.CredentialProof.JwtProof(jwt = "a.b.c")
+        )
+
+        val permissionResponse = service.createPermissionResponse(
+            permissionRequest = createTestPermissionRequest(presentationDefinition),
+            selectedCredentials = listOf(
+                PresentableCredential("cred-1", jwtCredential, "PersonCredential")
+            ),
+            holderDid = holderDid,
+            keyId = keyId
+        )
+
+        val descriptor = permissionResponse.presentationSubmission!!["descriptor_map"]!!.jsonArray[0].jsonObject
+        assertEquals(
+            "jwt_vc_json",
+            descriptor["format"]!!.jsonPrimitive.content,
+            "OID4VP registers jwt_vc_json, not the legacy jwt_vc identifier"
+        )
+    }
+
+    @Test
+    fun `required input descriptor with no matching credential throws RequiredCredentialMissing`() = runBlocking {
+        // No submission_requirements → every input descriptor is required (PEX v2.0)
+        val presentationDefinition = Json.parseToJsonElement(
+            """
+            {
+              "id": "pd-1",
+              "input_descriptors": [
+                {
+                  "id": "desc-passport",
+                  "constraints": { "fields": [ { "path": ["$.credentialSubject.passportNumber"] } ] }
+                }
+              ]
+            }
+            """.trimIndent()
+        ).jsonObject
+
+        val exception = assertFailsWith<Oidc4VpException.RequiredCredentialMissing> {
+            service.createPermissionResponse(
+                permissionRequest = createTestPermissionRequest(presentationDefinition),
+                selectedCredentials = listOf(
+                    // Only carries "name" — cannot satisfy desc-passport
+                    PresentableCredential("cred-1", createTestCredential(), "PersonCredential")
+                ),
+                holderDid = holderDid,
+                keyId = keyId
+            )
+        }
+        assertEquals("pd-1", exception.definitionId)
+        assertEquals(listOf("desc-passport"), exception.descriptorIds)
+    }
+
     // ========== Request object Tests ==========
 
     @Test
@@ -544,6 +692,15 @@ class Oidc4VpServiceTest {
         val decoded = String(Base64.getUrlDecoder().decode(part), Charsets.UTF_8)
         return Json.parseToJsonElement(decoded).jsonObject
     }
+
+    /** Parses an application/x-www-form-urlencoded body into decoded key/value pairs. */
+    private fun parseFormBody(body: String): Map<String, String> =
+        body.split("&").filter { it.isNotBlank() }.associate { param ->
+            val parts = param.split("=", limit = 2)
+            val key = java.net.URLDecoder.decode(parts[0], "UTF-8")
+            val value = if (parts.size > 1) java.net.URLDecoder.decode(parts[1], "UTF-8") else ""
+            key to value
+        }
 
     private fun createTestPermissionRequest(
         presentationDefinition: JsonObject? = null,

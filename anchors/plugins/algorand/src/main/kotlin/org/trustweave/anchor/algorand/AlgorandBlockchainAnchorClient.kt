@@ -174,8 +174,16 @@ class AlgorandBlockchainAnchorClient(
             "PaymentContext.chainId (${ctx.chainId}) does not match client chainId ($chainId)"
         }
 
-        val payloadJson = Json.encodeToString(JsonElement.serializer(), payload)
-        val payloadBytes = payloadJson.toByteArray(StandardCharsets.UTF_8)
+        // No account + opt-in test mode: fall back to the base in-memory write path,
+        // which honours payload mode (digest envelope) and never touches the network.
+        if (!canSubmitTransaction() && inMemoryTestMode) {
+            return writePayload(payload, mediaType)
+        }
+
+        // In digest payload mode the envelope — not the raw payload — is what goes
+        // on-chain, so estimation and submission must both use the anchored bytes
+        // (see AbstractBlockchainAnchorClient.encodeAnchoredBytes).
+        val submittedBytes = encodeAnchoredBytes(payload, mediaType)
 
         // For Sponsored, resolve the sponsor first so an unknown sponsor fails
         // closed before we touch the network.
@@ -191,8 +199,10 @@ class AlgorandBlockchainAnchorClient(
             OperationDescriptor(
                 kind = "anchor.writePayload",
                 chainId = chainId,
-                payload = payload,
-                payloadSizeBytes = payloadBytes.size.toLong(),
+                // In digest mode the payload never leaves the caller's custody —
+                // estimation sees only the anchored byte size.
+                payload = if (digestPayloadMode) null else payload,
+                payloadSizeBytes = submittedBytes.size.toLong(),
             ),
         )
         ctx.maxFee?.let { cap ->
@@ -213,18 +223,18 @@ class AlgorandBlockchainAnchorClient(
                 when (ctx.feeStrategy) {
                     is FeeStrategy.Sponsored -> submitSponsored(
                         payload = payload,
-                        payloadBytes = payloadBytes,
+                        anchoredBytes = submittedBytes,
                         mediaType = mediaType,
                         senderAccount = acct,
                         sponsor = sponsor!!,
                     )
                     else -> {
-                        val (txHash, feeMicroAlgos) = submitTransaction(payloadBytes)
+                        val (txHash, feeMicroAlgos) = submitTransaction(submittedBytes)
                         AnchorResult(
                             ref = buildAnchorRef(
                                 txHash = txHash,
                                 contract = getContractAddress(),
-                                extra = buildExtraMetadata(mediaType),
+                                extra = anchorExtraMetadata(mediaType),
                             ),
                             payload = payload,
                             mediaType = mediaType,
@@ -240,7 +250,7 @@ class AlgorandBlockchainAnchorClient(
                 throw BlockchainException.TransactionFailed(
                     chainId = chainId,
                     operation = "writePayload",
-                    payloadSize = payloadBytes.size.toLong(),
+                    payloadSize = submittedBytes.size.toLong(),
                     reason = "Failed to anchor payload to ${getBlockchainName()}: ${e.message ?: "Unknown error"}",
                     cause = e,
                 )
@@ -259,10 +269,14 @@ class AlgorandBlockchainAnchorClient(
      *
      * [AnchorResult.fee] reports the combined fee charged on chain, and
      * [AnchorResult.payerAddress] is the sponsor address (not the sender).
+     *
+     * @param anchoredBytes the exact bytes to anchor in the data txn note — already
+     *   routed through [encodeAnchoredBytes], so in digest payload mode this is the
+     *   digest envelope, never the raw payload
      */
     private suspend fun submitSponsored(
         payload: JsonElement,
-        payloadBytes: ByteArray,
+        anchoredBytes: ByteArray,
         mediaType: String,
         senderAccount: Account,
         sponsor: SponsorEntry,
@@ -282,7 +296,7 @@ class AlgorandBlockchainAnchorClient(
             .sender(senderAccount.address)
             .receiver(senderAccount.address)
             .amount(0)
-            .note(payloadBytes)
+            .note(anchoredBytes)
             .suggestedParams(params)
             .flatFee(0L)
             .build()
@@ -333,7 +347,9 @@ class AlgorandBlockchainAnchorClient(
             ref = buildAnchorRef(
                 txHash = txid,
                 contract = getContractAddress(),
-                extra = buildExtraMetadata(mediaType) + ("sponsor" to sponsor.address),
+                // Digest-mode aware: anchorExtraMetadata adds the payloadMode=digest
+                // marker on top of the Algorand metadata (network, mediaType).
+                extra = anchorExtraMetadata(mediaType) + ("sponsor" to sponsor.address),
             ),
             payload = payload,
             mediaType = mediaType,

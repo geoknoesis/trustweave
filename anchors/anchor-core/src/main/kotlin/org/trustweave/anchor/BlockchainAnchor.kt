@@ -4,7 +4,11 @@ import org.trustweave.anchor.payment.OperationDescriptor
 import org.trustweave.anchor.payment.PaymentContext
 import org.trustweave.anchor.payment.TokenAmount
 import org.trustweave.core.exception.TrustWeaveException
+import kotlinx.coroutines.CancellationException
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.jsonObject
+import java.nio.charset.StandardCharsets
 
 /**
  * Reference to a blockchain anchor (CAIP-2-style chain identifier + transaction reference).
@@ -108,4 +112,46 @@ interface BlockchainAnchorClient {
      * @throws TrustWeaveException.NotFound if the anchor reference does not exist
      */
     suspend fun readPayload(ref: AnchorRef): AnchorResult
+
+    /**
+     * Verifies that [payload] is the payload anchored at [ref], enabling third-party
+     * verification of an anchor without trusting the presenter.
+     *
+     * The on-chain data for [ref] is read and compared:
+     * - **Digest anchors** (an [AnchorDigest] envelope on-chain — see
+     *   [AbstractBlockchainAnchorClient.OPTION_PAYLOAD_MODE]): the SHA-256 digest is
+     *   recomputed over the UTF-8 bytes of [payload] exactly as serialized by the
+     *   write path (`Json.encodeToString(JsonElement.serializer(), payload)` — no
+     *   canonicalization) and compared against the anchored digest. A structurally
+     *   equal payload with a different key order serializes to different bytes and
+     *   does NOT verify.
+     * - **Full anchors**: the anchored JSON is compared structurally
+     *   (JsonElement equality, not string equality), so key order is irrelevant.
+     *
+     * Returns `false` — never throws — when the anchor does not exist or the chain
+     * read fails for any reason ([CancellationException] is rethrown so coroutine
+     * cancellation is preserved); a `false` result therefore means
+     * "not verifiable", not necessarily "tampered".
+     *
+     * @param payload the off-chain payload to verify, exactly as originally anchored
+     * @param ref the anchor reference to verify against
+     * @return `true` iff the on-chain data attests to [payload]
+     */
+    suspend fun verifyAnchor(payload: JsonElement, ref: AnchorRef): Boolean {
+        val onChain = try {
+            readPayload(ref)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            return false
+        }
+        val anchored = onChain.payload
+        return if (AnchorDigest.isEnvelope(anchored)) {
+            val payloadBytes = Json.encodeToString(JsonElement.serializer(), payload)
+                .toByteArray(StandardCharsets.UTF_8)
+            AnchorDigest.matches(anchored.jsonObject, payloadBytes)
+        } else {
+            anchored == payload
+        }
+    }
 }

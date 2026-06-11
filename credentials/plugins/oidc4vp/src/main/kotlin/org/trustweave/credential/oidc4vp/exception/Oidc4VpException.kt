@@ -120,6 +120,30 @@ sealed class Oidc4VpException(
     )
 
     /**
+     * Exception thrown when a presentation definition contains required input descriptors
+     * that no selected credential satisfies.
+     *
+     * Per DIF Presentation Exchange v2.0, when `submission_requirements` is absent every
+     * input descriptor is required — a partial submission would be rejected by the
+     * verifier, so the holder is told up front which descriptors are unsatisfied.
+     *
+     * @param definitionId The presentation definition id
+     * @param descriptorIds The ids of the required input descriptors with no matching credential
+     */
+    data class RequiredCredentialMissing(
+        val definitionId: String,
+        val descriptorIds: List<String>,
+    ) : Oidc4VpException(
+        code = "OIDC4VP_REQUIRED_CREDENTIAL_MISSING",
+        message = "No selected credential satisfies required input descriptor(s) " +
+            "[${descriptorIds.joinToString(", ")}] of presentation definition '$definitionId'",
+        context = mapOf(
+            "definitionId" to definitionId,
+            "descriptorIds" to descriptorIds
+        ),
+    )
+
+    /**
      * Exception thrown when an authorization request violates the HAIP profile.
      *
      * @param violations List of HAIP violations found in the request

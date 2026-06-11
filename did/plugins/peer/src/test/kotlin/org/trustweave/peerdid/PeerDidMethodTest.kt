@@ -20,6 +20,8 @@ import kotlin.test.assertTrue
  * - did:peer:2 service segments must be unpadded base64url of abbreviated JSON (not multibase)
  * - abbreviation expansion (t/s/r/a, dm → DIDCommMessaging)
  * - did:peer:2 `.E` segments (X25519 key agreement) must be parsed, not dropped
+ * - did:peer:2 purpose codes: V → authentication, A → assertionMethod, E → keyAgreement,
+ *   I → capabilityInvocation, D → capabilityDelegation, S → service
  * - did:peer:1 numeric basis must be a multihash (0x12 0x20 + SHA-256)
  */
 class PeerDidMethodTest {
@@ -93,6 +95,10 @@ class PeerDidMethodTest {
         val kaVm = document.verificationMethod.first { it.id == document.keyAgreement.first() }
         assertEquals("X25519KeyAgreementKey2020", kaVm.type)
 
+        // Per spec, .V keys map to authentication ONLY — the fixture has no .A
+        // segment, so assertionMethod must be empty (no V→assertionMethod mirroring).
+        assertTrue(document.assertionMethod.isEmpty(), ".V keys must not be mirrored into assertionMethod")
+
         // Service with expanded abbreviations
         assertEquals(1, document.service.size)
         val service = document.service.first()
@@ -103,6 +109,94 @@ class PeerDidMethodTest {
         assertEquals("https://example.com/endpoint", data["uri"])
         assertEquals(listOf("did:example:somemediator#somekey"), data["routingKeys"])
         assertEquals(listOf("didcomm/v2", "didcomm/aip2;env=rfc587"), data["accept"])
+    }
+
+    @Test
+    fun `numalgo2 all six purpose codes are decoded to the correct relationships`() = runBlocking {
+        // Synthetic keys: distinct Ed25519 keys for V/A/I/D, an X25519 key for E.
+        fun ed25519Mb(seed: Int) =
+            "z" + (byteArrayOf(0xed.toByte(), 0x01) + ByteArray(32) { (it + seed).toByte() }).encodeBase58()
+        val x25519Mb =
+            "z" + (byteArrayOf(0xec.toByte(), 0x01) + ByteArray(32) { (it + 99).toByte() }).encodeBase58()
+        val serviceSegment = Base64.getUrlEncoder().withoutPadding().encodeToString(
+            """{"t":"dm","s":"https://example.com/endpoint"}""".toByteArray(Charsets.UTF_8)
+        )
+
+        val did = Did(
+            "did:peer:2" +
+                ".V${ed25519Mb(1)}" +
+                ".A${ed25519Mb(2)}" +
+                ".E$x25519Mb" +
+                ".I${ed25519Mb(3)}" +
+                ".D${ed25519Mb(4)}" +
+                ".S$serviceSegment"
+        )
+
+        val result = newMethod().resolveDid(did)
+        assertTrue(result is DidResolutionResult.Success, "all-codes DID must resolve: $result")
+        val document = (result as DidResolutionResult.Success).document
+
+        assertEquals(5, document.verificationMethod.size)
+        assertEquals(1, document.authentication.size, "V → authentication")
+        assertEquals(1, document.assertionMethod.size, "A → assertionMethod")
+        assertEquals(1, document.keyAgreement.size, "E → keyAgreement")
+        assertEquals(1, document.capabilityInvocation.size, "I → capabilityInvocation")
+        assertEquals(1, document.capabilityDelegation.size, "D → capabilityDelegation")
+        assertEquals(1, document.service.size)
+
+        // Relationships must reference distinct verification methods, in segment order
+        assertEquals("$did#key-1", document.authentication.first().value)
+        assertEquals("$did#key-2", document.assertionMethod.first().value)
+        assertEquals("$did#key-3", document.keyAgreement.first().value)
+        assertEquals("$did#key-4", document.capabilityInvocation.first().value)
+        assertEquals("$did#key-5", document.capabilityDelegation.first().value)
+    }
+
+    @Test
+    fun `numalgo2 A segment maps to assertionMethod not authentication`() = runBlocking {
+        val keyMb = "z" + (byteArrayOf(0xed.toByte(), 0x01) + ByteArray(32) { (it + 7).toByte() }).encodeBase58()
+        val did = Did("did:peer:2.A$keyMb")
+
+        val result = newMethod().resolveDid(did)
+        assertTrue(result is DidResolutionResult.Success)
+        val document = (result as DidResolutionResult.Success).document
+
+        assertEquals(1, document.assertionMethod.size)
+        assertTrue(document.authentication.isEmpty(), ".A key must not appear in authentication")
+    }
+
+    @Test
+    fun `numalgo2 createDid encodes I and D purpose segments and round-trips`() = runBlocking {
+        val document = newMethod().createDid(
+            didCreationOptions {
+                algorithm = KeyAlgorithm.ED25519
+                forAuthentication()
+                forAssertion()
+                forCapabilityInvocation()
+                forCapabilityDelegation()
+            }
+        )
+
+        val did = document.id.value
+        val codes = did.removePrefix("did:peer:2").split(".").filter { it.isNotEmpty() }.map { it[0] }
+        assertEquals(listOf('V', 'A', 'I', 'D'), codes, "encoded segments: $did")
+
+        // Stored document reflects the requested purposes
+        assertEquals(1, document.authentication.size)
+        assertEquals(1, document.assertionMethod.size)
+        assertEquals(1, document.capabilityInvocation.size)
+        assertEquals(1, document.capabilityDelegation.size)
+
+        // Fresh instance: decode from the DID string yields the same relationships
+        val result = newMethod().resolveDid(document.id)
+        assertTrue(result is DidResolutionResult.Success)
+        val resolved = (result as DidResolutionResult.Success).document
+        assertEquals(4, resolved.verificationMethod.size, "one VM per purpose segment")
+        assertEquals(1, resolved.authentication.size)
+        assertEquals(1, resolved.assertionMethod.size)
+        assertEquals(1, resolved.capabilityInvocation.size)
+        assertEquals(1, resolved.capabilityDelegation.size)
+        assertTrue(resolved.keyAgreement.isEmpty())
     }
 
     @Test

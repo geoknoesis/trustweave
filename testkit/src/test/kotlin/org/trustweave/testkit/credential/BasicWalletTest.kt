@@ -215,6 +215,26 @@ class BasicWalletTest {
     }
 
     @Test
+    fun `test query with byTag throws instead of silently returning all credentials`() = runBlocking {
+        wallet.store(createTestCredential("cred-1"))
+
+        val exception = assertFailsWith<UnsupportedOperationException> {
+            wallet.query { byTag("important") }
+        }
+        assertTrue(exception.message!!.contains("byTag"))
+    }
+
+    @Test
+    fun `test query with byCollection throws instead of silently returning all credentials`() = runBlocking {
+        wallet.store(createTestCredential("cred-1"))
+
+        val exception = assertFailsWith<UnsupportedOperationException> {
+            wallet.query { byCollection("collection-1") }
+        }
+        assertTrue(exception.message!!.contains("byCollection"))
+    }
+
+    @Test
     fun `test clear all credentials`() = runBlocking {
         wallet.store(createTestCredential("cred-1"))
         wallet.store(createTestCredential("cred-2"))

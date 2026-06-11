@@ -35,8 +35,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 import okhttp3.*
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.RequestBody.Companion.toRequestBody
 import java.net.URLDecoder
 import java.util.*
 import java.util.Base64
@@ -333,21 +331,22 @@ class Oidc4VpService(
                 verifierUrl = request.verifierUrl ?: "unknown"
             )
         
-        // Create response payload
-        val responseBody = buildJsonObject {
-            put("vp_token", permissionResponse.vpToken)
-            permissionResponse.state?.let { put("state", it) }
-            permissionResponse.presentationSubmission?.let { put("presentation_submission", it) }
-        }
-        
-        val json = Json { prettyPrint = false; encodeDefaults = false }
-        val requestBody = json.encodeToString(JsonObject.serializer(), responseBody)
-            .toRequestBody("application/json".toMediaType())
-        
+        // OID4VP direct_post response mode (v1.0 §7.2): the Authorization Response is
+        // posted as application/x-www-form-urlencoded form parameters. vp_token and state
+        // are plain form values; presentation_submission is its JSON serialization.
+        val formBody = FormBody.Builder()
+            .add("vp_token", permissionResponse.vpToken)
+            .apply {
+                permissionResponse.presentationSubmission?.let {
+                    add("presentation_submission", it.toString())
+                }
+                permissionResponse.state?.let { add("state", it) }
+            }
+            .build()
+
         val httpRequest = Request.Builder()
             .url(responseUri)
-            .post(requestBody)
-            .addHeader("Content-Type", "application/json")
+            .post(formBody)
             .build()
         
         val response = httpClient.newCall(httpRequest).execute()
@@ -733,14 +732,20 @@ class Oidc4VpService(
      * mapping each input descriptor to the satisfying credential's position in the
      * vp_token's `verifiableCredential` array.
      *
-     * Returns `null` when there is no presentation definition, it cannot be decoded,
-     * or no descriptor is satisfied by the supplied credentials.
+     * Returns `null` when there is no presentation definition or it cannot be decoded.
+     *
+     * Per DIF PEX v2.0, when a presentation definition carries no `submission_requirements`
+     * every input descriptor is required. If any descriptor is not satisfied by the
+     * supplied credentials, a [Oidc4VpException.RequiredCredentialMissing] is thrown so
+     * the holder gets a clear error instead of a silently partial submission. When
+     * `submission_requirements` are present, unmatched descriptors are tolerated (the
+     * requirements may only demand a subset) and simply omitted from the descriptor map.
      */
     private fun buildPresentationSubmission(
         presentationDefinition: JsonObject?,
         credentials: List<VerifiableCredential>,
     ): JsonObject? {
-        if (presentationDefinition == null || credentials.isEmpty()) return null
+        if (presentationDefinition == null) return null
 
         val definition = try {
             lenientJson.decodeFromJsonElement<PresentationDefinition>(presentationDefinition)
@@ -749,6 +754,19 @@ class Oidc4VpService(
         }
 
         val matches = PresentationDefinitionMatcher.match(definition, credentials)
+
+        // submission_requirements absent → all input descriptors are required (PEX v2.0 §4.2)
+        if (definition.submissionRequirements.isNullOrEmpty()) {
+            val unmatched = definition.inputDescriptors
+                .filter { matches[it.id].isNullOrEmpty() }
+                .map { it.id }
+            if (unmatched.isNotEmpty()) {
+                throw Oidc4VpException.RequiredCredentialMissing(
+                    definitionId = definition.id,
+                    descriptorIds = unmatched,
+                )
+            }
+        }
 
         val descriptorMap = definition.inputDescriptors.mapNotNull { descriptor ->
             val matched = matches[descriptor.id]?.firstOrNull() ?: return@mapNotNull null
@@ -770,11 +788,14 @@ class Oidc4VpService(
         return lenientJson.encodeToJsonElement(PresentationSubmission.serializer(), submission).jsonObject
     }
 
-    /** Maps a credential's proof type to its DIF PEX format identifier. */
+    /**
+     * Maps a credential's proof type to its registered OID4VP format identifier
+     * (OID4VP v1.0 Appendix B): `jwt_vc_json`, `ldp_vc`, `vc+sd-jwt`, `mso_mdoc`.
+     */
     private fun credentialFormatOf(credential: VerifiableCredential): String = when (credential.proof) {
         is CredentialProof.SdJwtVcProof -> "vc+sd-jwt"
         is CredentialProof.MdocProof -> "mso_mdoc"
-        is CredentialProof.JwtProof -> "jwt_vc"
+        is CredentialProof.JwtProof -> "jwt_vc_json"
         else -> "ldp_vc"
     }
 

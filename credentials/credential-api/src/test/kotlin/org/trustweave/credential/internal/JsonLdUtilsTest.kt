@@ -11,6 +11,9 @@ import kotlin.test.assertFailsWith
 /**
  * Comprehensive tests for JsonLdUtils.
  *
+ * Canonicalization is JSON-LD 1.1 expansion + toRdf (titanium-json-ld) followed by
+ * RDFC-1.0/URDNA2015 canonical N-Quads (titanium-rdfc) over the official W3C contexts.
+ *
  * Canonicalization is fail-closed: documents that cannot be canonicalized (missing or
  * unresolvable @context, no RDF statements, dropped credentialSubject claims) throw
  * [SerializationException] instead of silently falling back to plain JSON serialization.
@@ -18,23 +21,23 @@ import kotlin.test.assertFailsWith
 class JsonLdUtilsTest {
 
     @Test
-    fun `test jsonObjectToMap with simple object`() {
+    fun `test toJakartaObject with simple object`() {
         val jsonObject = buildJsonObject {
             put("name", "John")
             put("age", 30)
             put("active", true)
         }
 
-        val result = JsonLdUtils.jsonObjectToMap(jsonObject)
+        val result = JsonLdUtils.toJakartaObject(jsonObject)
 
         assertEquals(3, result.size)
-        assertEquals("John", result["name"])
-        assertEquals(30L, result["age"]) // Numbers become Long
-        assertEquals(true, result["active"])
+        assertEquals("John", result.getString("name"))
+        assertEquals(30, result.getInt("age"))
+        assertEquals(true, result.getBoolean("active"))
     }
 
     @Test
-    fun `test jsonObjectToMap with nested object`() {
+    fun `test toJakartaObject with nested object`() {
         val jsonObject = buildJsonObject {
             put("person", buildJsonObject {
                 put("name", "John")
@@ -42,16 +45,15 @@ class JsonLdUtilsTest {
             })
         }
 
-        val result = JsonLdUtils.jsonObjectToMap(jsonObject)
+        val result = JsonLdUtils.toJakartaObject(jsonObject)
 
-        assertTrue(result["person"] is Map<*, *>)
-        val personMap = result["person"] as Map<*, *>
-        assertEquals("John", personMap["name"])
-        assertEquals(30L, personMap["age"])
+        val personObject = result.getJsonObject("person")
+        assertEquals("John", personObject.getString("name"))
+        assertEquals(30, personObject.getInt("age"))
     }
 
     @Test
-    fun `test jsonObjectToMap with array`() {
+    fun `test toJakartaObject with array preserves element types`() {
         val jsonObject = buildJsonObject {
             put("items", buildJsonArray {
                 add("item1")
@@ -60,18 +62,17 @@ class JsonLdUtilsTest {
             })
         }
 
-        val result = JsonLdUtils.jsonObjectToMap(jsonObject)
+        val result = JsonLdUtils.toJakartaObject(jsonObject)
 
-        assertTrue(result["items"] is List<*>)
-        val itemsList = result["items"] as List<*>
-        assertEquals(3, itemsList.size)
-        assertEquals("item1", itemsList[0])
-        assertEquals("item2", itemsList[1])
-        assertEquals("42", itemsList[2]) // Numbers in arrays become strings
+        val itemsArray = result.getJsonArray("items")
+        assertEquals(3, itemsArray.size)
+        assertEquals("item1", itemsArray.getString(0))
+        assertEquals("item2", itemsArray.getString(1))
+        assertEquals(42, itemsArray.getInt(2))
     }
 
     @Test
-    fun `test jsonObjectToMap with number types`() {
+    fun `test toJakartaObject with number types`() {
         val jsonObject = buildJsonObject {
             put("int", 42)
             put("long", 123456789L)
@@ -79,12 +80,12 @@ class JsonLdUtilsTest {
             put("stringNumber", "123")
         }
 
-        val result = JsonLdUtils.jsonObjectToMap(jsonObject)
+        val result = JsonLdUtils.toJakartaObject(jsonObject)
 
-        assertEquals(42L, result["int"])
-        assertEquals(123456789L, result["long"])
-        assertEquals(3.14, result["double"])
-        assertEquals("123", result["stringNumber"])
+        assertEquals(42, result.getInt("int"))
+        assertEquals(123456789L, result.getJsonNumber("long").longValue())
+        assertEquals(3.14, result.getJsonNumber("double").doubleValue())
+        assertEquals("123", result.getString("stringNumber"))
     }
 
     @Test
@@ -113,6 +114,43 @@ class JsonLdUtilsTest {
         // The claim must be covered by the canonical N-Quads
         assertTrue(result.contains("https://schema.org/name"), "Claim term should appear in N-Quads")
         assertTrue(result.contains("John Doe"), "Claim value should appear in N-Quads")
+        // RDFC-1.0 canonical blank node labels use the c14n prefix
+        assertTrue(result.contains("_:c14n0"), "Blank nodes must carry canonical c14n labels")
+    }
+
+    @Test
+    fun `test canonicalizeDocument is deterministic regardless of property order`() {
+        val claimsContext = buildJsonObject { put("name", "https://schema.org/name") }
+        val document = buildJsonObject {
+            put("@context", buildJsonArray {
+                add("https://www.w3.org/2018/credentials/v1")
+                add(claimsContext)
+            })
+            put("type", buildJsonArray { add("VerifiableCredential") })
+            put("issuer", "did:key:test")
+            put("credentialSubject", buildJsonObject {
+                put("id", "did:key:subject")
+                put("name", "John Doe")
+            })
+        }
+        val reordered = buildJsonObject {
+            put("credentialSubject", buildJsonObject {
+                put("name", "John Doe")
+                put("id", "did:key:subject")
+            })
+            put("issuer", "did:key:test")
+            put("type", buildJsonArray { add("VerifiableCredential") })
+            put("@context", buildJsonArray {
+                add("https://www.w3.org/2018/credentials/v1")
+                add(claimsContext)
+            })
+        }
+
+        assertEquals(
+            JsonLdUtils.canonicalizeDocument(document),
+            JsonLdUtils.canonicalizeDocument(reordered),
+            "URDNA2015 canonical N-Quads must be independent of JSON property order"
+        )
     }
 
     @Test
@@ -240,35 +278,36 @@ class JsonLdUtilsTest {
     }
 
     @Test
-    fun `test jsonObjectToMap with boolean values`() {
+    fun `test toJakartaObject with boolean values`() {
         val jsonObject = buildJsonObject {
             put("trueValue", true)
             put("falseValue", false)
         }
 
-        val result = JsonLdUtils.jsonObjectToMap(jsonObject)
+        val result = JsonLdUtils.toJakartaObject(jsonObject)
 
-        assertEquals(true, result["trueValue"])
-        assertEquals(false, result["falseValue"])
+        assertEquals(true, result.getBoolean("trueValue"))
+        assertEquals(false, result.getBoolean("falseValue"))
     }
 
     @Test
-    fun `test jsonObjectToMap with null handling`() {
+    fun `test toJakartaObject with null handling`() {
         val jsonObject = buildJsonObject {
             put("nullValue", JsonNull)
             put("stringValue", "test")
         }
 
-        val result = JsonLdUtils.jsonObjectToMap(jsonObject)
+        val result = JsonLdUtils.toJakartaObject(jsonObject)
 
-        // JsonNull should be handled (converted to string or handled appropriately)
+        // JSON null must survive the conversion as a JSON null, not be dropped
         assertNotNull(result)
         assertEquals(2, result.size)
-        assertEquals("test", result["stringValue"])
+        assertTrue(result.isNull("nullValue"))
+        assertEquals("test", result.getString("stringValue"))
     }
 
     @Test
-    fun `test jsonObjectToMap with deep nesting`() {
+    fun `test toJakartaObject with deep nesting`() {
         val jsonObject = buildJsonObject {
             put("level1", buildJsonObject {
                 put("level2", buildJsonObject {
@@ -279,14 +318,9 @@ class JsonLdUtilsTest {
             })
         }
 
-        val result = JsonLdUtils.jsonObjectToMap(jsonObject)
+        val result = JsonLdUtils.toJakartaObject(jsonObject)
 
-        assertTrue(result["level1"] is Map<*, *>)
-        val level1 = result["level1"] as Map<*, *>
-        assertTrue(level1["level2"] is Map<*, *>)
-        val level2 = level1["level2"] as Map<*, *>
-        assertTrue(level2["level3"] is Map<*, *>)
-        val level3 = level2["level3"] as Map<*, *>
-        assertEquals("deep", level3["value"])
+        val deep = result.getJsonObject("level1").getJsonObject("level2").getJsonObject("level3")
+        assertEquals("deep", deep.getString("value"))
     }
 }

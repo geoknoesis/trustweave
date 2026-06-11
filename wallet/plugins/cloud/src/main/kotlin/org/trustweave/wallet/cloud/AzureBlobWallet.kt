@@ -5,6 +5,7 @@ import com.azure.storage.blob.BlobContainerClient
 import com.azure.storage.blob.BlobServiceClient
 import com.azure.storage.blob.BlobServiceClientBuilder
 import com.azure.storage.blob.models.BlobItem
+import com.azure.storage.blob.models.BlobStorageException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -73,15 +74,22 @@ class AzureBlobWallet(
 
     override suspend fun deleteFromStorage(key: String): Boolean = withContext(Dispatchers.IO) {
         try {
+            // Delete directly and rely on the service's 404 instead of a racy
+            // exists() pre-check (TOCTOU between exists() and delete()).
             val blobClient: BlobClient = containerClient.getBlobClient(key)
-            if (!blobClient.exists()) {
-                return@withContext false
-            }
-
             blobClient.delete()
             true
+        } catch (e: BlobStorageException) {
+            if (e.statusCode == 404) {
+                // Missing blob means "nothing to delete" — not a storage failure.
+                false
+            } else {
+                // Auth failures, networking errors, etc. must NOT be reported as
+                // "not found" — propagate them as storage errors.
+                throw RuntimeException("Failed to delete from Azure Blob Storage: ${e.message}", e)
+            }
         } catch (e: Exception) {
-            false
+            throw RuntimeException("Failed to delete from Azure Blob Storage: ${e.message}", e)
         }
     }
 

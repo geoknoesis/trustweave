@@ -1,9 +1,17 @@
 package org.trustweave.credential.internal
 
-import com.github.jsonldjava.core.JsonLdOptions
-import com.github.jsonldjava.core.JsonLdProcessor
-import kotlinx.serialization.json.*
+import com.apicatalog.jsonld.JsonLd
+import com.apicatalog.jsonld.document.JsonDocument
+import com.apicatalog.rdf.canon.RdfCanon
+import com.apicatalog.rdf.nquads.NQuadsWriter
+import jakarta.json.Json
+import jakarta.json.JsonValue
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import org.trustweave.core.exception.SerializationException
+import java.io.StringReader
+import java.io.StringWriter
 
 /**
  * JSON-LD utility functions for canonicalization and document conversion.
@@ -12,8 +20,10 @@ import org.trustweave.core.exception.SerializationException
  * particularly for VC-LD (Verifiable Credentials Linked Data) proof generation and verification.
  *
  * **Key Operations:**
- * - JSON object to Map conversion for jsonld-java library compatibility
- * - JSON-LD canonicalization (URDNA2015) to N-Quads format
+ * - JSON-LD 1.1 expansion and RDF serialization via titanium-json-ld (a conformant
+ *   JSON-LD 1.1 processor)
+ * - RDF Dataset Canonicalization (RDFC-1.0, formerly URDNA2015) via titanium-rdfc,
+ *   producing canonical N-Quads
  * - Dropped-claims detection for `credentialSubject` properties
  *
  * **Security properties (fail-closed):**
@@ -25,7 +35,8 @@ import org.trustweave.core.exception.SerializationException
  *   document's `@context`, JSON-LD silently drops them from the canonical form, leaving
  *   them unsigned. [canonicalizeDocument] detects this and throws.
  * - Remote `@context` URLs are not fetched over the network by default; see
- *   [JsonLdContextLoader].
+ *   [JsonLdContextLoader]. The bundled W3C contexts are the official, unmodified 1.1
+ *   documents, so canonical bytes are interoperable with conformant verifiers.
  *
  * **Note:** This is an internal utility and should not be used directly by API consumers.
  * It is used by proof engines for VC-LD operations.
@@ -35,57 +46,27 @@ internal object JsonLdUtils {
     /** Expanded IRI of `credentialSubject` (identical in the VC 1.1 and VC 2.0 vocabularies). */
     private const val CREDENTIAL_SUBJECT_IRI = "https://www.w3.org/2018/credentials#credentialSubject"
 
-    /**
-     * Convert a kotlinx.serialization.json.JsonObject to a Map for jsonld-java library.
-     *
-     * Recursively converts all JSON elements to their Java equivalents.
-     * This conversion is necessary because the jsonld-java library expects Java Map structures
-     * rather than Kotlin JsonObject/JsonElement types.
-     *
-     * **Conversion Algorithm:**
-     * 1. JsonPrimitive values are converted to their Java equivalents:
-     *    - Strings: remain as String
-     *    - Booleans: converted to Boolean
-     *    - Numbers: converted to Long (integers) or Double (floating-point)
-     *    - Other primitives: converted to String via content
-     * 2. JsonArray values are converted to List<Any> by recursively processing each element
-     * 3. JsonObject values are recursively converted using this same function
-     * 4. JsonNull values are converted to String representation
-     *
-     * @param jsonObject The JSON object to convert
-     * @return Map representation suitable for jsonld-java
-     */
-    fun jsonObjectToMap(jsonObject: JsonObject): Map<String, Any> {
-        return jsonObject.entries.associate { (key, value) ->
-            key to when (value) {
-                is JsonPrimitive -> {
-                    when {
-                        value.isString -> value.content
-                        value.booleanOrNull != null -> value.boolean
-                        value.longOrNull != null -> value.long
-                        value.doubleOrNull != null -> value.double
-                        else -> value.content
-                    }
-                }
-                is JsonArray -> value.map { element ->
-                    when (element) {
-                        is JsonPrimitive -> element.content
-                        is JsonObject -> jsonObjectToMap(element)
-                        is JsonArray -> element.toString() // Handle nested arrays
-                        is JsonNull -> element.toString()
-                    }
-                }
-                is JsonObject -> jsonObjectToMap(value)
-                is JsonNull -> value.toString()
-            }
-        }
-    }
+    /** Hash algorithm used by RDFC-1.0 canonicalization (the specification default). */
+    private const val RDF_CANON_HASH_ALGORITHM = "SHA-256"
 
     /**
-     * Canonicalize a JSON-LD document to N-Quads format using URDNA2015.
+     * Convert a kotlinx.serialization [JsonObject] into the jakarta.json representation
+     * consumed by the titanium JSON-LD processor.
      *
-     * This canonicalization is essential for signature generation and verification, as it
-     * ensures that semantically equivalent JSON-LD documents produce identical byte sequences.
+     * The conversion round-trips through the serialized JSON text, which preserves every
+     * value exactly as it would appear on the wire (numbers, booleans, nulls, nesting).
+     */
+    fun toJakartaObject(document: JsonObject): jakarta.json.JsonObject =
+        Json.createReader(StringReader(document.toString())).use { it.readObject() }
+
+    /**
+     * Canonicalize a JSON-LD document to canonical N-Quads using RDFC-1.0 (URDNA2015).
+     *
+     * The document is deserialized to RDF (JSON-LD 1.1 `toRdf`) and the resulting dataset
+     * is canonicalized with the RDF Dataset Canonicalization algorithm. This is essential
+     * for signature generation and verification, as it ensures that semantically equivalent
+     * JSON-LD documents produce identical byte sequences — and, because the official W3C
+     * 1.1 contexts are used, the bytes are interoperable with conformant verifiers.
      *
      * **Fail-closed behaviour:**
      * - Throws [SerializationException.EncodeFailed] if canonicalization fails for any
@@ -107,18 +88,24 @@ internal object JsonLdUtils {
      * @return Canonicalized document as N-Quads string
      */
     fun canonicalizeDocument(document: JsonObject): String {
-        val documentMap = jsonObjectToMap(document)
+        val jakartaDocument = toJakartaObject(document)
 
         val canonical = try {
-            JsonLdProcessor.normalize(documentMap, newJsonLdOptions())?.toString()
+            val canon = RdfCanon.create(RDF_CANON_HASH_ALGORITHM)
+            JsonLd.toRdf(JsonDocument.of(jakartaDocument))
+                .loader(JsonLdContextLoader.createDocumentLoader())
+                .provide(canon)
+            val writer = StringWriter()
+            canon.provide(NQuadsWriter(writer))
+            writer.toString()
         } catch (e: Exception) {
             throw SerializationException.EncodeFailed(
                 element = "json-ld-document",
-                reason = "JSON-LD canonicalization (URDNA2015) failed: ${e.message}"
+                reason = "JSON-LD canonicalization (RDFC-1.0/URDNA2015) failed: ${e.message}"
             )
         }
 
-        if (canonical.isNullOrBlank()) {
+        if (canonical.isBlank()) {
             throw SerializationException.EncodeFailed(
                 element = "json-ld-document",
                 reason = "JSON-LD canonicalization produced no RDF statements; the document's " +
@@ -138,7 +125,7 @@ internal object JsonLdUtils {
         }
 
         // Fail closed if @context silently dropped credentialSubject claims.
-        verifyCredentialSubjectClaimsPreserved(document, documentMap)
+        verifyCredentialSubjectClaimsPreserved(document, jakartaDocument)
 
         return canonical
     }
@@ -158,7 +145,10 @@ internal object JsonLdUtils {
      * Fail-closed: a `credentialSubject` that is present but is neither a JSON object nor
      * an array of objects also throws — its claims cannot be checked for dropped terms.
      */
-    private fun verifyCredentialSubjectClaimsPreserved(document: JsonObject, documentMap: Map<String, Any>) {
+    private fun verifyCredentialSubjectClaimsPreserved(
+        document: JsonObject,
+        jakartaDocument: jakarta.json.JsonObject
+    ) {
         val subject = document["credentialSubject"] ?: return
         if (subject !is JsonObject && subject !is JsonArray) {
             throw SerializationException.EncodeFailed(
@@ -173,8 +163,10 @@ internal object JsonLdUtils {
         collectDeclaredClaimNames(subject, claimNames)
         if (claimNames.isEmpty()) return
 
-        val expanded = try {
-            JsonLdProcessor.expand(documentMap, newJsonLdOptions())
+        val expanded: jakarta.json.JsonArray = try {
+            JsonLd.expand(JsonDocument.of(jakartaDocument))
+                .loader(JsonLdContextLoader.createDocumentLoader())
+                .get()
         } catch (e: Exception) {
             throw SerializationException.EncodeFailed(
                 element = "credentialSubject",
@@ -220,8 +212,8 @@ internal object JsonLdUtils {
      * recursing into nested node objects and value lists so dropped nested terms are
      * detected as well.
      */
-    private fun countExpandedSubjectProperties(expanded: Any?): Int {
-        val subjectNodes = mutableListOf<Map<*, *>>()
+    private fun countExpandedSubjectProperties(expanded: JsonValue?): Int {
+        val subjectNodes = mutableListOf<jakarta.json.JsonObject>()
         collectSubjectNodes(expanded, subjectNodes)
         return subjectNodes.sumOf { node -> countExpandedNodeProperties(node) }
     }
@@ -230,37 +222,33 @@ internal object JsonLdUtils {
      * Recursively count non-keyword (`@`-prefixed) property keys of an expanded JSON-LD
      * node, including the properties of nested nodes.
      */
-    private fun countExpandedNodeProperties(element: Any?): Int = when (element) {
-        is Map<*, *> -> element.entries.sumOf { (key, value) ->
-            val self = if (key is String && !key.startsWith("@")) 1 else 0
-            self + countExpandedNodeProperties(value)
+    private fun countExpandedNodeProperties(value: JsonValue?): Int = when (value?.valueType) {
+        JsonValue.ValueType.OBJECT -> value.asJsonObject().entries.sumOf { (key, nested) ->
+            val self = if (!key.startsWith("@")) 1 else 0
+            self + countExpandedNodeProperties(nested)
         }
-        is List<*> -> element.sumOf { countExpandedNodeProperties(it) }
+        JsonValue.ValueType.ARRAY -> value.asJsonArray().sumOf { countExpandedNodeProperties(it) }
         else -> 0
     }
 
-    private fun collectSubjectNodes(element: Any?, into: MutableList<Map<*, *>>) {
-        when (element) {
-            is List<*> -> element.forEach { collectSubjectNodes(it, into) }
-            is Map<*, *> -> {
-                val subjectValue = element[CREDENTIAL_SUBJECT_IRI]
-                if (subjectValue is List<*>) {
-                    subjectValue.filterIsInstance<Map<*, *>>().forEach { into.add(it) }
-                } else if (subjectValue is Map<*, *>) {
-                    into.add(subjectValue)
+    private fun collectSubjectNodes(value: JsonValue?, into: MutableList<jakarta.json.JsonObject>) {
+        when (value?.valueType) {
+            JsonValue.ValueType.ARRAY -> value.asJsonArray().forEach { collectSubjectNodes(it, into) }
+            JsonValue.ValueType.OBJECT -> {
+                val obj = value.asJsonObject()
+                val subjectValue = obj[CREDENTIAL_SUBJECT_IRI]
+                when (subjectValue?.valueType) {
+                    JsonValue.ValueType.ARRAY -> subjectValue.asJsonArray().forEach { node ->
+                        if (node.valueType == JsonValue.ValueType.OBJECT) into.add(node.asJsonObject())
+                    }
+                    JsonValue.ValueType.OBJECT -> into.add(subjectValue.asJsonObject())
+                    else -> {}
                 }
-                element.values.forEach { value ->
-                    if (value !== subjectValue) collectSubjectNodes(value, into)
+                obj.values.forEach { nested ->
+                    if (nested !== subjectValue) collectSubjectNodes(nested, into)
                 }
             }
             else -> {}
         }
-    }
-
-    private fun newJsonLdOptions(): JsonLdOptions {
-        val options = JsonLdOptions()
-        options.format = CredentialConstants.JsonLdFormats.N_QUADS
-        options.documentLoader = JsonLdContextLoader.createDocumentLoader()
-        return options
     }
 }

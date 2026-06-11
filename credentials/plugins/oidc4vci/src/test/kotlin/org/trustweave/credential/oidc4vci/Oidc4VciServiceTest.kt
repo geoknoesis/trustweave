@@ -92,7 +92,7 @@ class Oidc4VciServiceTest {
     }
 
     @Test
-    fun `pre-authorized code flow without token leaves issueCredential failing with TokenExchangeFailed`() = runBlocking {
+    fun `pre-authorized code flow without token leaves issueCredential failing with TokenExchangeFailed`() = runBlocking<Unit> {
         // Offer without any grant — no token can be obtained
         val offer = service.createCredentialOffer(
             issuerDid = issuerDid,
@@ -260,6 +260,284 @@ class Oidc4VciServiceTest {
         assertEquals(3, mockWebServer.requestCount, "No retry: metadata + token + a single credential call")
     }
 
+    // ========== Token endpoint discovery (OID4VCI §11.2.3 / RFC 8414) ==========
+
+    @Test
+    fun `token endpoint is discovered from authorization server metadata when not inline`() = runBlocking {
+        val offer = service.createCredentialOffer(
+            issuerDid = issuerDid,
+            credentialTypes = listOf("PersonCredential"),
+            credentialIssuer = issuerUrl,
+            grants = mapOf(
+                Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123")
+            ),
+        )
+
+        // Issuer metadata without token_endpoint, delegating to an authorization server
+        mockWebServer.enqueue(
+            jsonResponse(buildJsonObject {
+                put("credential_issuer", issuerUrl)
+                put("credential_endpoint", "$issuerUrl/credential")
+                put("authorization_servers", JsonArray(listOf(JsonPrimitive(issuerUrl))))
+            }.toString())
+        )
+        // RFC 8414 authorization server metadata carrying the token endpoint
+        mockWebServer.enqueue(
+            jsonResponse(buildJsonObject {
+                put("issuer", issuerUrl)
+                put("token_endpoint", "$issuerUrl/as-token")
+            }.toString())
+        )
+        enqueueTokenResponse(accessToken = "tok-as", cNonce = null)
+
+        val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+        assertEquals("tok-as", request.accessToken)
+
+        mockWebServer.takeRequest() // issuer metadata
+        val asMetadataRequest = mockWebServer.takeRequest()
+        assertEquals(
+            "/.well-known/oauth-authorization-server",
+            asMetadataRequest.path,
+            "AS metadata must be fetched from the RFC 8414 well-known path"
+        )
+        val tokenRequest = mockWebServer.takeRequest()
+        assertEquals("/as-token", tokenRequest.path, "Token exchange must hit the AS metadata token_endpoint")
+    }
+
+    @Test
+    fun `inline token_endpoint takes precedence and skips AS metadata discovery`() = runBlocking {
+        val offer = service.createCredentialOffer(
+            issuerDid = issuerDid,
+            credentialTypes = listOf("PersonCredential"),
+            credentialIssuer = issuerUrl,
+            grants = mapOf(
+                Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123")
+            ),
+        )
+
+        // Legacy issuer metadata with an inline token_endpoint AND authorization_servers
+        mockWebServer.enqueue(
+            jsonResponse(buildJsonObject {
+                put("credential_issuer", issuerUrl)
+                put("credential_endpoint", "$issuerUrl/credential")
+                put("token_endpoint", "$issuerUrl/token")
+                put("authorization_servers", JsonArray(listOf(JsonPrimitive("https://as.example.com"))))
+            }.toString())
+        )
+        enqueueTokenResponse(accessToken = "tok-inline", cNonce = null)
+
+        val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+        assertEquals("tok-inline", request.accessToken)
+
+        assertEquals(2, mockWebServer.requestCount, "Inline token_endpoint must not trigger an AS metadata fetch")
+        mockWebServer.takeRequest() // issuer metadata
+        assertEquals("/token", mockWebServer.takeRequest().path)
+    }
+
+    @Test
+    fun `missing token_endpoint and authorization_servers fails with TokenEndpointResolutionFailed`() = runBlocking<Unit> {
+        val offer = service.createCredentialOffer(
+            issuerDid = issuerDid,
+            credentialTypes = listOf("PersonCredential"),
+            credentialIssuer = issuerUrl,
+            grants = mapOf(
+                Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123")
+            ),
+        )
+
+        // Issuer metadata with neither token_endpoint nor authorization_servers
+        mockWebServer.enqueue(
+            jsonResponse(buildJsonObject {
+                put("credential_issuer", issuerUrl)
+                put("credential_endpoint", "$issuerUrl/credential")
+            }.toString())
+        )
+
+        assertFailsWith<Oidc4VciException.TokenEndpointResolutionFailed> {
+            service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+        }
+    }
+
+    @Test
+    fun `AS metadata without token_endpoint fails with TokenEndpointResolutionFailed`() = runBlocking<Unit> {
+        val offer = service.createCredentialOffer(
+            issuerDid = issuerDid,
+            credentialTypes = listOf("PersonCredential"),
+            credentialIssuer = issuerUrl,
+            grants = mapOf(
+                Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123")
+            ),
+        )
+
+        mockWebServer.enqueue(
+            jsonResponse(buildJsonObject {
+                put("credential_issuer", issuerUrl)
+                put("credential_endpoint", "$issuerUrl/credential")
+                put("authorization_servers", JsonArray(listOf(JsonPrimitive(issuerUrl))))
+            }.toString())
+        )
+        // AS metadata lacking token_endpoint
+        mockWebServer.enqueue(jsonResponse(buildJsonObject { put("issuer", issuerUrl) }.toString()))
+
+        assertFailsWith<Oidc4VciException.TokenEndpointResolutionFailed> {
+            service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+        }
+    }
+
+    // ========== Token endpoint discovery: https-or-loopback + RFC 8414 hardening ==========
+
+    @Test
+    fun `authorization server URL over http to a non-loopback host is rejected without fetching it`() = runBlocking {
+        val offer = createPreAuthOffer()
+
+        // Issuer metadata steering AS discovery to a cleartext metadata-service address
+        mockWebServer.enqueue(
+            jsonResponse(buildJsonObject {
+                put("credential_issuer", issuerUrl)
+                put("credential_endpoint", "$issuerUrl/credential")
+                put("authorization_servers", JsonArray(listOf(JsonPrimitive("http://169.254.169.254"))))
+            }.toString())
+        )
+
+        assertFailsWith<Oidc4VciException.TokenEndpointResolutionFailed> {
+            service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+        }
+        assertEquals(
+            1, mockWebServer.requestCount,
+            "Only the issuer metadata fetch is allowed; the rejected AS URL must never be contacted"
+        )
+    }
+
+    @Test
+    fun `inline token_endpoint over http to a non-loopback host is rejected without a token call`() = runBlocking {
+        val offer = createPreAuthOffer()
+
+        mockWebServer.enqueue(
+            jsonResponse(buildJsonObject {
+                put("credential_issuer", issuerUrl)
+                put("credential_endpoint", "$issuerUrl/credential")
+                put("token_endpoint", "http://attacker.example.com/token")
+            }.toString())
+        )
+
+        assertFailsWith<Oidc4VciException.TokenEndpointResolutionFailed> {
+            service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+        }
+        assertEquals(1, mockWebServer.requestCount, "No token request may be sent to a rejected endpoint")
+    }
+
+    @Test
+    fun `AS-resolved token_endpoint over http to a non-loopback host is rejected before use`() = runBlocking {
+        val offer = createPreAuthOffer()
+
+        mockWebServer.enqueue(
+            jsonResponse(buildJsonObject {
+                put("credential_issuer", issuerUrl)
+                put("credential_endpoint", "$issuerUrl/credential")
+                put("authorization_servers", JsonArray(listOf(JsonPrimitive(issuerUrl))))
+            }.toString())
+        )
+        // AS metadata passes the RFC 8414 issuer check but advertises a cleartext token endpoint
+        mockWebServer.enqueue(
+            jsonResponse(buildJsonObject {
+                put("issuer", issuerUrl)
+                put("token_endpoint", "http://attacker.example.com/token")
+            }.toString())
+        )
+
+        assertFailsWith<Oidc4VciException.TokenEndpointResolutionFailed> {
+            service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+        }
+        assertEquals(
+            2, mockWebServer.requestCount,
+            "Issuer metadata + AS metadata only; the rejected token endpoint must never be called"
+        )
+    }
+
+    @Test
+    fun `AS metadata with mismatching issuer is rejected per RFC 8414`() = runBlocking {
+        val offer = createPreAuthOffer()
+
+        mockWebServer.enqueue(
+            jsonResponse(buildJsonObject {
+                put("credential_issuer", issuerUrl)
+                put("credential_endpoint", "$issuerUrl/credential")
+                put("authorization_servers", JsonArray(listOf(JsonPrimitive(issuerUrl))))
+            }.toString())
+        )
+        // Mix-up attack shape: metadata fetched from issuerUrl claims to be another issuer
+        mockWebServer.enqueue(
+            jsonResponse(buildJsonObject {
+                put("issuer", "https://evil.example.com")
+                put("token_endpoint", "$issuerUrl/as-token")
+            }.toString())
+        )
+
+        val failure = assertFailsWith<Oidc4VciException.TokenEndpointResolutionFailed> {
+            service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+        }
+        assertTrue(
+            failure.reason.contains("issuer mismatch"),
+            "Failure must name the RFC 8414 issuer mismatch, got: ${failure.reason}"
+        )
+        assertEquals(2, mockWebServer.requestCount, "No token request after an issuer mismatch")
+    }
+
+    @Test
+    fun `AS metadata issuer differing only by trailing slash is accepted`() = runBlocking {
+        val offer = createPreAuthOffer()
+
+        mockWebServer.enqueue(
+            jsonResponse(buildJsonObject {
+                put("credential_issuer", issuerUrl)
+                put("credential_endpoint", "$issuerUrl/credential")
+                put("authorization_servers", JsonArray(listOf(JsonPrimitive(issuerUrl))))
+            }.toString())
+        )
+        mockWebServer.enqueue(
+            jsonResponse(buildJsonObject {
+                put("issuer", "$issuerUrl/") // trailing slash only
+                put("token_endpoint", "$issuerUrl/as-token")
+            }.toString())
+        )
+        enqueueTokenResponse(accessToken = "tok-slash", cNonce = null)
+
+        val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+        assertEquals("tok-slash", request.accessToken)
+    }
+
+    @Test
+    fun `path-bearing authorization server URL puts the well-known segment between host and path`() = runBlocking {
+        val offer = createPreAuthOffer()
+
+        // AS identifier with a path component (multi-tenant issuer)
+        val authorizationServer = "$issuerUrl/tenants/acme"
+        mockWebServer.enqueue(
+            jsonResponse(buildJsonObject {
+                put("credential_issuer", issuerUrl)
+                put("credential_endpoint", "$issuerUrl/credential")
+                put("authorization_servers", JsonArray(listOf(JsonPrimitive(authorizationServer))))
+            }.toString())
+        )
+        mockWebServer.enqueue(
+            jsonResponse(buildJsonObject {
+                put("issuer", authorizationServer)
+                put("token_endpoint", "$issuerUrl/as-token")
+            }.toString())
+        )
+        enqueueTokenResponse(accessToken = "tok-tenant", cNonce = null)
+
+        val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+        assertEquals("tok-tenant", request.accessToken)
+
+        mockWebServer.takeRequest() // issuer metadata
+        assertEquals(
+            "/.well-known/oauth-authorization-server/tenants/acme",
+            mockWebServer.takeRequest().path,
+            "RFC 8414 §3.1: well-known segment goes between host and path, not after the path"
+        )
+    }
+
     // ========== credential_offer URI round-trip ==========
 
     @Test
@@ -304,10 +582,31 @@ class Oidc4VciServiceTest {
     }
 
     @Test
-    fun `parseCredentialOfferUri rejects URIs without credential_offer`() = runBlocking {
+    fun `parseCredentialOfferUri rejects URIs without credential_offer`() = runBlocking<Unit> {
         assertFailsWith<Oidc4VciException.OfferParseFailed> {
             service.parseCredentialOfferUri("openid-credential-offer://?credential_issuer=$issuerUrl")
         }
+    }
+
+    @Test
+    fun `parseCredentialOfferUri rejects offers for a different credential issuer`() = runBlocking {
+        // One service instance == one issuer: a scanned offer naming a foreign issuer
+        // must not poison this instance's pinned metadata / token-endpoint caches.
+        val foreignOfferUri = offerUriFor(credentialIssuer = "https://other-issuer.example.com")
+
+        val failure = assertFailsWith<Oidc4VciException.OfferParseFailed> {
+            service.parseCredentialOfferUri(foreignOfferUri)
+        }
+        assertTrue(
+            failure.reason.contains("cross-issuer"),
+            "Failure must name the cross-issuer rejection, got: ${failure.reason}"
+        )
+    }
+
+    @Test
+    fun `parseCredentialOfferUri accepts the configured issuer with a trailing slash`() = runBlocking {
+        val parsed = service.parseCredentialOfferUri(offerUriFor(credentialIssuer = "$issuerUrl/"))
+        assertEquals("$issuerUrl/", parsed.credentialIssuer)
     }
 
     // ========== credential_offer_uri https enforcement ==========
@@ -324,7 +623,7 @@ class Oidc4VciServiceTest {
     }
 
     @Test
-    fun `credential_offer_uri with absurd scheme is rejected as OfferParseFailed`() = runBlocking {
+    fun `credential_offer_uri with absurd scheme is rejected as OfferParseFailed`() = runBlocking<Unit> {
         assertFailsWith<Oidc4VciException.OfferParseFailed> {
             service.parseCredentialOfferUri(
                 "openid-credential-offer://?credential_offer_uri=ftp://issuer.example.com/offer"
@@ -351,6 +650,26 @@ class Oidc4VciServiceTest {
     }
 
     // ========== Helpers ==========
+
+    /** Creates an offer for [issuerUrl] carrying a pre-authorized code grant. */
+    private suspend fun createPreAuthOffer() = service.createCredentialOffer(
+        issuerDid = issuerDid,
+        credentialTypes = listOf("PersonCredential"),
+        credentialIssuer = issuerUrl,
+        grants = mapOf(
+            Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123")
+        ),
+    )
+
+    /** Builds an offer-by-value URI whose `credential_offer` names [credentialIssuer]. */
+    private fun offerUriFor(credentialIssuer: String): String {
+        val offerJson = buildJsonObject {
+            put("credential_issuer", credentialIssuer)
+            put("credential_configuration_ids", JsonArray(listOf(JsonPrimitive("PersonCredential"))))
+        }
+        val encoded = java.net.URLEncoder.encode(offerJson.toString(), "UTF-8")
+        return "openid-credential-offer://?credential_offer=$encoded"
+    }
 
     private fun enqueueMetadata() {
         val metadataJson = buildJsonObject {

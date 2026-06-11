@@ -20,10 +20,16 @@ import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonPrimitive
+import java.io.ByteArrayOutputStream
 import java.util.Base64
 import java.util.zip.GZIPInputStream
+import java.util.zip.GZIPOutputStream
 import javax.sql.DataSource
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -149,6 +155,14 @@ class BitstringStatusListManagerTest {
     private fun decodeRawBitstring(encodedList: String): ByteArray {
         val gzipped = Base64.getUrlDecoder().decode(encodedList.removePrefix("u"))
         return GZIPInputStream(gzipped.inputStream()).use { it.readBytes() }
+    }
+
+    private fun encodeRawBitstring(bytes: ByteArray): String {
+        val gzipped = ByteArrayOutputStream().use { baos ->
+            GZIPOutputStream(baos).use { gzip -> gzip.write(bytes) }
+            baos.toByteArray()
+        }
+        return "u" + Base64.getUrlEncoder().withoutPadding().encodeToString(gzipped)
     }
 
     // -------------------------------------------------------------------------
@@ -666,4 +680,367 @@ class BitstringStatusListManagerTest {
             "Expansion must add to the (minimum-coerced) size"
         )
     }
+
+    @Test
+    fun `expandStatusList applied twice accumulates size`() = runBlocking {
+        val statusListId = manager.createStatusList(
+            issuerDid = issuerDid,
+            purpose = StatusPurpose.REVOCATION
+        )
+        manager.expandStatusList(statusListId, additionalSize = 64)
+        manager.expandStatusList(statusListId, additionalSize = 64)
+
+        val metadata = manager.getStatusList(statusListId)
+        assertNotNull(metadata)
+        assertEquals(
+            BitstringStatusListManager.MIN_STATUS_LIST_SIZE_BITS + 128,
+            metadata.size,
+            "Each expansion must build on the size committed by the previous one"
+        )
+    }
+
+    @Test
+    fun `expandStatusList preserves the multibase prefix MSB-first bit order and existing bits`() = runBlocking {
+        val statusListId = manager.createStatusList(
+            issuerDid = issuerDid,
+            purpose = StatusPurpose.REVOCATION
+        )
+        manager.updateStatusListBatch(
+            statusListId,
+            listOf(
+                StatusUpdate(index = 0, revoked = true),
+                StatusUpdate(index = 7, revoked = true),
+                StatusUpdate(index = 8, revoked = true)
+            )
+        )
+
+        manager.expandStatusList(statusListId, additionalSize = 64)
+
+        val encodedList = readEncodedList(statusListId)
+        assertTrue(encodedList.startsWith("u"), "Expanded encodedList must keep the multibase 'u' prefix")
+        assertFalse(encodedList.contains('='), "Expanded encodedList must stay base64url without padding")
+
+        val raw = decodeRawBitstring(encodedList)
+        assertEquals(
+            (BitstringStatusListManager.MIN_STATUS_LIST_SIZE_BITS + 64) / 8,
+            raw.size,
+            "Expanded bitstring must cover the new size"
+        )
+        assertEquals(
+            0x81.toByte(),
+            raw[0],
+            "Expansion must keep MSB-first packing: index 0 = 0x80, index 7 = 0x01"
+        )
+        assertEquals(0x80.toByte(), raw[1], "Index 8 must still be the left-most bit of byte 1")
+
+        // Round-trip through the read path after expansion
+        assertTrue(manager.checkStatusByIndex(statusListId, 0).revoked)
+        assertTrue(manager.checkStatusByIndex(statusListId, 7).revoked)
+        assertTrue(manager.checkStatusByIndex(statusListId, 8).revoked)
+        assertFalse(manager.checkStatusByIndex(statusListId, 9).revoked)
+    }
+
+    // -------------------------------------------------------------------------
+    // Concurrency: lost-update protection (row lock + in-transaction re-read)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Holds the status list row lock (the same `SELECT ... FOR UPDATE` the manager's
+     * write paths take), runs [operation] concurrently, then — while the lock is still
+     * held — revokes index 0 directly and commits, releasing the lock.
+     *
+     * A correct implementation re-reads `encoded_list` INSIDE its write transaction
+     * under the row lock, so it must observe the committed index-0 revocation no matter
+     * when it started. The pre-fix implementations read a snapshot before their write
+     * transaction and would overwrite (lose) the index-0 bit.
+     */
+    private suspend fun withRowLockedAndIndexZeroRevoked(
+        statusListId: StatusListId,
+        operation: suspend () -> Unit
+    ): Unit = coroutineScope {
+        dataSource.connection.use { conn ->
+            conn.autoCommit = false
+            try {
+                val lockedEncodedList = conn.prepareStatement(
+                    "SELECT encoded_list FROM bitstring_status_lists WHERE id = ? FOR UPDATE"
+                ).apply {
+                    setString(1, statusListId.toString())
+                }.executeQuery().let { rs ->
+                    check(rs.next()) { "Status list not found: $statusListId" }
+                    rs.getString("encoded_list")
+                }
+
+                // Start the manager operation while the lock is held; it must block on
+                // its locked re-read instead of decoding a stale snapshot.
+                val concurrentOperation = async(Dispatchers.IO) { operation() }
+
+                // Give a (broken) unlocked implementation time to take its stale snapshot.
+                delay(250)
+
+                // Concurrent writer revokes index 0 (MSB-first: left-most bit of byte 0)
+                // and commits, releasing the row lock.
+                val raw = decodeRawBitstring(lockedEncodedList)
+                raw[0] = (raw[0].toInt() or 0x80).toByte()
+                conn.prepareStatement(
+                    "UPDATE bitstring_status_lists SET encoded_list = ? WHERE id = ?"
+                ).apply {
+                    setString(1, encodeRawBitstring(raw))
+                    setString(2, statusListId.toString())
+                }.executeUpdate()
+                conn.commit()
+
+                concurrentOperation.await()
+            } catch (e: Exception) {
+                conn.rollback()
+                throw e
+            }
+        }
+    }
+
+    @Test
+    fun `updateStatusListBatch does not lose an interleaved concurrent update`() = runBlocking {
+        val statusListId = manager.createStatusList(
+            issuerDid = issuerDid,
+            purpose = StatusPurpose.REVOCATION
+        )
+
+        withRowLockedAndIndexZeroRevoked(statusListId) {
+            manager.updateStatusListBatch(
+                statusListId,
+                listOf(StatusUpdate(index = 1, revoked = true))
+            )
+        }
+
+        assertTrue(
+            manager.checkStatusByIndex(statusListId, 0).revoked,
+            "The interleaved index-0 revocation must not be overwritten by the batch write"
+        )
+        assertTrue(
+            manager.checkStatusByIndex(statusListId, 1).revoked,
+            "The batch update itself must be applied"
+        )
+    }
+
+    @Test
+    fun `expandStatusList does not lose an interleaved concurrent update`() = runBlocking {
+        val statusListId = manager.createStatusList(
+            issuerDid = issuerDid,
+            purpose = StatusPurpose.REVOCATION
+        )
+
+        withRowLockedAndIndexZeroRevoked(statusListId) {
+            manager.expandStatusList(statusListId, additionalSize = 64)
+        }
+
+        assertTrue(
+            manager.checkStatusByIndex(statusListId, 0).revoked,
+            "The interleaved index-0 revocation must survive the expansion"
+        )
+        val metadata = manager.getStatusList(statusListId)
+        assertNotNull(metadata)
+        assertEquals(
+            BitstringStatusListManager.MIN_STATUS_LIST_SIZE_BITS + 64,
+            metadata.size,
+            "Expansion must still grow the size"
+        )
+        assertTrue(
+            readEncodedList(statusListId).startsWith("u"),
+            "Expanded encodedList must keep the multibase 'u' prefix"
+        )
+    }
+
+    // -------------------------------------------------------------------------
+    // Concurrency: stale-size truncation protection (locked size re-read)
+    // -------------------------------------------------------------------------
+
+    private fun readSize(statusListId: StatusListId): Int =
+        dataSource.connection.use { conn ->
+            conn.prepareStatement(
+                "SELECT size FROM bitstring_status_lists WHERE id = ?"
+            ).apply {
+                setString(1, statusListId.toString())
+            }.executeQuery().let { rs ->
+                check(rs.next()) { "Status list not found: $statusListId" }
+                rs.getInt("size")
+            }
+        }
+
+    /**
+     * Holds the status list row lock (the same `SELECT ... FOR UPDATE` the manager's
+     * write paths take), runs [operation] concurrently, then — while the lock is still
+     * held — expands the list by 64 bits, revokes the FIRST TAIL bit (index = old size)
+     * directly, commits both `encoded_list` and `size`, and releases the lock.
+     *
+     * A correct implementation re-reads `size` together with `encoded_list` UNDER the
+     * row lock and re-encodes at that locked size, so the expanded tail (including its
+     * revoked bit) survives. A broken implementation re-encoding at the stale
+     * pre-transaction size would TRUNCATE the tail: the size column would say S+64
+     * while `encoded_list` covers only S bits, and the tail revocation would read
+     * back fail-open as "not revoked".
+     *
+     * @return the index of the tail bit revoked by the concurrent expansion
+     */
+    private suspend fun withRowLockedAndTailGrownAndRevoked(
+        statusListId: StatusListId,
+        operation: suspend () -> Unit
+    ): Int = coroutineScope {
+        dataSource.connection.use { conn ->
+            conn.autoCommit = false
+            try {
+                val rs = conn.prepareStatement(
+                    "SELECT encoded_list, size FROM bitstring_status_lists WHERE id = ? FOR UPDATE"
+                ).apply {
+                    setString(1, statusListId.toString())
+                }.executeQuery()
+                check(rs.next()) { "Status list not found: $statusListId" }
+                val lockedEncodedList = rs.getString("encoded_list")
+                val lockedSize = rs.getInt("size")
+
+                // Start the manager operation while the lock is held; it must block on
+                // its locked re-read instead of working from a stale snapshot.
+                val concurrentOperation = async(Dispatchers.IO) { operation() }
+
+                // Give a (broken) stale-size implementation time to take its
+                // pre-transaction snapshot of the row.
+                delay(250)
+
+                // Concurrent expansion: grow by 64 bits, revoke the first tail bit
+                // (index = old size; MSB-first packing), commit and release the lock.
+                val newSize = lockedSize + 64
+                val grown = decodeRawBitstring(lockedEncodedList).copyOf((newSize + 7) / 8)
+                grown[lockedSize / 8] =
+                    (grown[lockedSize / 8].toInt() or (1 shl (7 - (lockedSize % 8)))).toByte()
+                conn.prepareStatement(
+                    "UPDATE bitstring_status_lists SET encoded_list = ?, size = ? WHERE id = ?"
+                ).apply {
+                    setString(1, encodeRawBitstring(grown))
+                    setInt(2, newSize)
+                    setString(3, statusListId.toString())
+                }.executeUpdate()
+                conn.commit()
+
+                concurrentOperation.await()
+                lockedSize
+            } catch (e: Exception) {
+                conn.rollback()
+                throw e
+            }
+        }
+    }
+
+    private suspend fun assertTailSurvived(
+        statusListId: StatusListId,
+        tailIndex: Int,
+        expectedSizeBits: Int
+    ) {
+        assertEquals(
+            expectedSizeBits,
+            readSize(statusListId),
+            "The concurrently expanded size must not be rolled back"
+        )
+        assertEquals(
+            (expectedSizeBits + 7) / 8,
+            decodeRawBitstring(readEncodedList(statusListId)).size,
+            "Re-encode must cover the expanded size, not truncate to the stale pre-transaction size"
+        )
+        assertTrue(
+            manager.checkStatusByIndex(statusListId, tailIndex).revoked,
+            "The tail bit revoked by the concurrent expansion must survive the re-encode " +
+                "(a truncated list would read it back fail-open as not revoked)"
+        )
+    }
+
+    @Test
+    fun `updateStatusListBatch re-encodes at the locked size and does not truncate a concurrent expansion`() =
+        runBlocking {
+            val statusListId = manager.createStatusList(
+                issuerDid = issuerDid,
+                purpose = StatusPurpose.REVOCATION
+            )
+
+            val tailIndex = withRowLockedAndTailGrownAndRevoked(statusListId) {
+                manager.updateStatusListBatch(
+                    statusListId,
+                    listOf(StatusUpdate(index = 1, revoked = true))
+                )
+            }
+
+            assertTrue(
+                manager.checkStatusByIndex(statusListId, 1).revoked,
+                "The batch update itself must be applied"
+            )
+            assertTailSurvived(
+                statusListId,
+                tailIndex,
+                expectedSizeBits = BitstringStatusListManager.MIN_STATUS_LIST_SIZE_BITS + 64
+            )
+        }
+
+    @Test
+    fun `revokeCredential re-encodes at the locked size and does not truncate a concurrent expansion`() =
+        runBlocking {
+            val statusListId = manager.createStatusList(
+                issuerDid = issuerDid,
+                purpose = StatusPurpose.REVOCATION
+            )
+            manager.assignCredentialIndex("stale-size-cred", statusListId)
+
+            val tailIndex = withRowLockedAndTailGrownAndRevoked(statusListId) {
+                manager.revokeCredential("stale-size-cred", statusListId)
+            }
+
+            assertTrue(
+                manager.checkStatusByCredentialId("stale-size-cred", statusListId).revoked,
+                "The revocation itself must be applied"
+            )
+            assertTailSurvived(
+                statusListId,
+                tailIndex,
+                expectedSizeBits = BitstringStatusListManager.MIN_STATUS_LIST_SIZE_BITS + 64
+            )
+        }
+
+    @Test
+    fun `revokeCredentials re-encodes at the locked size and does not truncate a concurrent expansion`() =
+        runBlocking {
+            val statusListId = manager.createStatusList(
+                issuerDid = issuerDid,
+                purpose = StatusPurpose.REVOCATION
+            )
+            manager.assignCredentialIndex("stale-size-batch", statusListId)
+
+            val tailIndex = withRowLockedAndTailGrownAndRevoked(statusListId) {
+                manager.revokeCredentials(listOf("stale-size-batch"), statusListId)
+            }
+
+            assertTrue(
+                manager.checkStatusByCredentialId("stale-size-batch", statusListId).revoked,
+                "The batch revocation itself must be applied"
+            )
+            assertTailSurvived(
+                statusListId,
+                tailIndex,
+                expectedSizeBits = BitstringStatusListManager.MIN_STATUS_LIST_SIZE_BITS + 64
+            )
+        }
+
+    @Test
+    fun `expandStatusList builds on the locked size and does not truncate a concurrent expansion`() =
+        runBlocking {
+            val statusListId = manager.createStatusList(
+                issuerDid = issuerDid,
+                purpose = StatusPurpose.REVOCATION
+            )
+
+            val tailIndex = withRowLockedAndTailGrownAndRevoked(statusListId) {
+                manager.expandStatusList(statusListId, additionalSize = 64)
+            }
+
+            // The concurrent +64 expansion AND this method's own +64 must both apply.
+            assertTailSurvived(
+                statusListId,
+                tailIndex,
+                expectedSizeBits = BitstringStatusListManager.MIN_STATUS_LIST_SIZE_BITS + 128
+            )
+        }
 }

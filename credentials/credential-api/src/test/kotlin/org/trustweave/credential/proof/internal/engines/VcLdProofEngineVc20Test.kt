@@ -1,5 +1,6 @@
 package org.trustweave.credential.proof.internal.engines
 
+import org.trustweave.core.exception.SerializationException
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.internal.CredentialConstants
@@ -25,6 +26,7 @@ import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -172,6 +174,52 @@ class VcLdProofEngineVc20Test {
                 ((result as? VerificationResult.Invalid)?.errors ?: emptyList<String>())
         )
     }
+
+    // --- Dual-context credentials (both VC 1.1 and VC 2.0 base contexts) ---------------
+
+    @Test
+    fun `dual-context credentials are treated as VC 1_1 for field emission`() {
+        // Version trichotomy: only a *pure* v2 context list selects the VC 2.0 field
+        // mapping; declaring both base contexts keeps the credential on the 1.1 path
+        // (issuanceDate/expirationDate), mirroring CredentialValidation's fallback rules.
+        assertFalse(
+            JsonLdDocumentBuilder.isPureVc2(
+                listOf(
+                    CredentialConstants.VcContexts.VC_1_1,
+                    CredentialConstants.VcContexts.VC_2_0
+                )
+            ),
+            "A credential declaring BOTH base contexts must use the VC 1.1 field mapping"
+        )
+    }
+
+    @Test
+    fun `dual-context issuance fails closed - the official W3C v1 and v2 contexts are incompatible`(): Unit =
+        runBlocking {
+            // The official W3C context documents both mark their terms @protected, and the
+            // two define different (type-scoped) term definitions for VerifiableCredential.
+            // A conformant JSON-LD 1.1 processor therefore rejects a document that declares
+            // both with PROTECTED_TERM_REDEFINITION — there is no interoperable canonical
+            // form for a dual-context credential. Canonicalization must fail closed (no
+            // plain-JSON fallback), so issuance throws instead of signing bytes that no
+            // conformant verifier could ever reproduce.
+            val rig = TestRig()
+            val exception = assertFailsWith<SerializationException> {
+                rig.engine.issue(
+                    rig.issuanceRequest(
+                        contexts = listOf(
+                            CredentialConstants.VcContexts.VC_1_1,
+                            CredentialConstants.VcContexts.VC_2_0,
+                            TEST_CONTEXT_URL
+                        )
+                    )
+                )
+            }
+            assertTrue(
+                exception.message?.contains("canonicalization", ignoreCase = true) == true,
+                "Failure must be a fail-closed canonicalization error, got: ${exception.message}"
+            )
+        }
 
     @Test
     fun `tampering with validUntil on a VC 2_0 credential fails verification`() = runBlocking {

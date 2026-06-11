@@ -6,14 +6,12 @@ plugins {
 group = "org.trustweave.chains"
 dependencies {
     implementation(project(":common"))
-    implementation(project(":anchors:anchor-core"))
+    // Shared EVM anchor base (exposes anchor-core and web3j transitively)
+    api(project(":anchors:plugins:evm-base"))
     implementation(project(":credentials:credential-api"))
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.slf4j.api)
-
-    // Web3j for Ethereum-compatible chains (zkSync is EVM-compatible)
-    implementation("org.web3j:core:4.9.8")
 
     // HTTP client for zkSync API
     implementation(libs.okhttp)

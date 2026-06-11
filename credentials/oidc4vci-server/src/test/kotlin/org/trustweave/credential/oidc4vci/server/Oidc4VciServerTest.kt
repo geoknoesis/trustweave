@@ -5,8 +5,10 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import kotlinx.serialization.json.*
+import java.net.URLDecoder
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class Oidc4VciServerTest {
@@ -24,6 +26,12 @@ class Oidc4VciServerTest {
         block()
     }
 
+    /** Extracts and decodes the credential_offer JSON from a spec-format offer URI. */
+    private fun decodeCredentialOffer(offerUri: String): JsonObject {
+        val encoded = offerUri.substringAfter("credential_offer=")
+        return Json.parseToJsonElement(URLDecoder.decode(encoded, "UTF-8")).jsonObject
+    }
+
     @Test
     fun `GET well-known returns metadata with credential_endpoint`() = testOidc {
         val response = client.get("/.well-known/openid-credential-issuer")
@@ -34,7 +42,7 @@ class Oidc4VciServerTest {
     }
 
     @Test
-    fun `POST api-offer returns offer_uri starting with openid-credential-offer`() = testOidc {
+    fun `POST api-offer returns spec-format offer with a single credential_offer parameter`() = testOidc {
         val response = client.post("/api/offer") {
             contentType(ContentType.Application.Json)
             setBody("""{"credentialTypes":["UniversityDegreeCredential"]}""")
@@ -42,7 +50,54 @@ class Oidc4VciServerTest {
         assertEquals(HttpStatusCode.Created, response.status)
         val body = Json.parseToJsonElement(response.bodyAsText()).jsonObject
         val offerUri = body["offer_uri"]?.jsonPrimitive?.content ?: ""
-        assertTrue(offerUri.startsWith("openid-credential-offer://"))
+        val preAuthCode = body["pre_authorized_code"]?.jsonPrimitive?.content ?: ""
+
+        // OID4VCI v1.0 §4.1: a single credential_offer query parameter carrying URL-encoded JSON
+        assertTrue(
+            offerUri.startsWith("openid-credential-offer://?credential_offer="),
+            "Offer must be carried in a single credential_offer parameter, got: $offerUri"
+        )
+        assertFalse(offerUri.contains("credential_issuer="), "Raw top-level params are not spec-compliant")
+        assertFalse(offerUri.contains("&grants="), "grants must be embedded in the credential_offer JSON")
+
+        val offerJson = decodeCredentialOffer(offerUri)
+        assertEquals("https://issuer.example.com", offerJson["credential_issuer"]?.jsonPrimitive?.content)
+        assertEquals(
+            listOf("UniversityDegreeCredential"),
+            offerJson["credential_configuration_ids"]?.jsonArray?.map { it.jsonPrimitive.content }
+        )
+        val preAuthGrant = offerJson["grants"]!!
+            .jsonObject["urn:ietf:params:oauth:grant-type:pre-authorized_code"]!!.jsonObject
+        assertEquals(preAuthCode, preAuthGrant["pre-authorized_code"]?.jsonPrimitive?.content)
+        assertFalse(preAuthGrant.containsKey("tx_code"), "No tx_code object when the offer requires none")
+    }
+
+    @Test
+    fun `POST api-offer embeds tx_code requirement in the pre-authorized grant`() = testOidc {
+        val response = client.post("/api/offer") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                """
+                {
+                  "credentialTypes": ["UniversityDegreeCredential"],
+                  "txCode": {"input_mode": "numeric", "length": 4, "description": "PIN from SMS"},
+                  "txCodeValue": "1234"
+                }
+                """.trimIndent()
+            )
+        }
+        assertEquals(HttpStatusCode.Created, response.status)
+        val body = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+        val offerUri = body["offer_uri"]?.jsonPrimitive?.content ?: ""
+
+        val offerJson = decodeCredentialOffer(offerUri)
+        val txCode = offerJson["grants"]!!
+            .jsonObject["urn:ietf:params:oauth:grant-type:pre-authorized_code"]!!
+            .jsonObject["tx_code"]?.jsonObject
+        assertTrue(txCode != null, "tx_code object must be embedded in the pre-authorized grant")
+        assertEquals("numeric", txCode["input_mode"]?.jsonPrimitive?.content)
+        assertEquals(4, txCode["length"]?.jsonPrimitive?.content?.toInt())
+        assertEquals("PIN from SMS", txCode["description"]?.jsonPrimitive?.content)
     }
 
     @Test

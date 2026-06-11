@@ -481,11 +481,16 @@ internal object ProofEngineUtils {
     /**
      * Construct a [PublicKey] from a raw 32-byte Ed25519 public key.
      *
-     * Tries BouncyCastle first (most reliable), falling back to the JDK's built-in
-     * `EdECPublicKeySpec` (Java 15+). Returns null on failure (fail-closed).
+     * Uses BouncyCastle to wrap the raw key in the standard ASN.1
+     * `SubjectPublicKeyInfo` encoding (RFC 8410) and constructs the key through the
+     * BC `KeyFactory`. There is intentionally **no** secondary code path: a previous
+     * hand-rolled `EdECPublicKeySpec` fallback decoded the RFC 8032 little-endian
+     * point bytes with the wrong endianness/sign-bit handling and could construct a
+     * key that fails to verify genuine signatures. Fail closed instead: if
+     * BouncyCastle cannot construct the key, return null.
      *
      * @param rawKeyBytes The raw 32-byte Ed25519 public key
-     * @return The PublicKey, or null if construction fails
+     * @return The PublicKey, or null if construction fails (fail-closed)
      */
     private fun createEd25519PublicKey(rawKeyBytes: ByteArray): PublicKey? {
         if (rawKeyBytes.size != ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES) {
@@ -493,8 +498,7 @@ internal object ProofEngineUtils {
             return null
         }
 
-        // Approach 1: Use BouncyCastle Ed25519PublicKeyParameters - most reliable
-        try {
+        return try {
             // Ensure BouncyCastle provider is registered
             if (Security.getProvider("BC") == null) {
                 Security.addProvider(BouncyCastleProvider())
@@ -515,41 +519,9 @@ internal object ProofEngineUtils {
             // Use KeyFactory with X509EncodedKeySpec (which expects SubjectPublicKeyInfo format)
             val keyFactory = KeyFactory.getInstance("Ed25519", "BC")
             val keySpec = X509EncodedKeySpec(derEncoded)
-            val publicKey = keyFactory.generatePublic(keySpec)
-            logger.debug("Successfully extracted Ed25519 public key using BouncyCastle")
-            return publicKey
+            keyFactory.generatePublic(keySpec)
         } catch (e: Exception) {
-            logger.debug("BouncyCastle approach failed: error={}", e.message)
-            // Fall through to Java built-in approach
-        }
-
-        // Approach 2: Use Java's built-in EdECPublicKeySpec (Java 15+)
-        // EdECPublicKeySpec constructor is (NamedParameterSpec, EdECPoint)
-        // EdECPoint constructor is (boolean odd, BigInteger coordinate)
-        return try {
-            val keyFactory = KeyFactory.getInstance("Ed25519")
-            val paramsClass = Class.forName("java.security.spec.NamedParameterSpec")
-            val ed25519Field = paramsClass.getField("ED25519")
-            val params = ed25519Field.get(null)
-
-            // Create EdECPoint: For Ed25519, the 32 bytes are the y coordinate
-            // The last bit indicates the odd flag for compressed point representation
-            val odd = (rawKeyBytes.last().toInt() and 1) != 0
-            val coordinate = java.math.BigInteger(1, rawKeyBytes) // Positive BigInteger
-
-            val edecPointClass = Class.forName("java.security.spec.EdECPoint")
-            val edecPointConstructor = edecPointClass.getConstructor(Boolean::class.java, java.math.BigInteger::class.java)
-            val edecPoint = edecPointConstructor.newInstance(odd, coordinate)
-
-            val keySpecClass = Class.forName("java.security.spec.EdECPublicKeySpec")
-            val keySpecConstructor = keySpecClass.getConstructor(paramsClass, edecPointClass)
-            val keySpec = keySpecConstructor.newInstance(params, edecPoint)
-
-            val publicKey = keyFactory.generatePublic(keySpec as java.security.spec.KeySpec)
-            logger.debug("Successfully created Ed25519 public key using EdECPublicKeySpec")
-            publicKey
-        } catch (e: Exception) {
-            logger.warn("EdECPublicKeySpec approach also failed: error={}", e.message)
+            logger.warn("Failed to construct Ed25519 public key via BouncyCastle (fail-closed): {}", e.message)
             null
         }
     }

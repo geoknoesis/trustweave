@@ -4,6 +4,7 @@ import com.google.cloud.storage.Blob
 import com.google.cloud.storage.BlobId
 import com.google.cloud.storage.BlobInfo
 import com.google.cloud.storage.Storage
+import com.google.cloud.storage.StorageException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -61,10 +62,21 @@ class GoogleCloudStorageWallet(
 
     override suspend fun deleteFromStorage(key: String): Boolean = withContext(Dispatchers.IO) {
         try {
+            // Storage.delete returns false when the blob does not exist —
+            // "nothing to delete" is not a storage failure.
             val blobId = BlobId.of(bucketName, key)
             storage.delete(blobId)
+        } catch (e: StorageException) {
+            if (e.code == 404) {
+                // Not-found surfaced as an exception (e.g. generation-precondition variants).
+                false
+            } else {
+                // Auth failures, networking errors, etc. must NOT be reported as
+                // "not found" — propagate them as storage errors.
+                throw RuntimeException("Failed to delete from Google Cloud Storage: ${e.message}", e)
+            }
         } catch (e: Exception) {
-            false
+            throw RuntimeException("Failed to delete from Google Cloud Storage: ${e.message}", e)
         }
     }
 

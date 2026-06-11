@@ -1,13 +1,20 @@
 package org.trustweave.credential.didcomm.packing
 
+import org.trustweave.core.util.decodeBase58
 import org.trustweave.credential.didcomm.crypto.DidCommCryptoInterface
+import org.trustweave.credential.didcomm.exception.DidCommException
 import org.trustweave.credential.didcomm.models.DidCommEnvelope
 import org.trustweave.credential.didcomm.models.DidCommMessage
 import org.trustweave.did.model.DidDocument
+import org.trustweave.did.model.VerificationMethod
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 import kotlinx.serialization.json.putJsonArray
+import java.security.KeyFactory
+import java.security.PublicKey
+import java.security.Signature
+import java.security.spec.X509EncodedKeySpec
 import java.util.*
 import java.util.Base64
 
@@ -21,13 +28,32 @@ import java.util.Base64
  * Following DIDComm V2 specification:
  * - Messages use JWM (JSON Web Message) format
  * - Encryption uses ECDH-1PU (AuthCrypt) or ECDH-ES (AnonCrypt)
- * - Messages can be signed using JWS
+ * - Messages can be signed using JWS (`alg: EdDSA` over the JWS signing input)
+ *
+ * Signed plain messages are verified on unpack: the signer's Ed25519 public key is resolved
+ * from its DID document via [resolveDid] and every entry in the `signatures` array must verify,
+ * otherwise [DidCommException.UnpackingFailed] is thrown (fail closed). Unsigned plain messages
+ * make no authenticity claim and are returned as-is.
  */
 class DidCommPacker(
     private val crypto: DidCommCryptoInterface,
     private val resolveDid: suspend (String) -> DidDocument?,
     private val signer: suspend (ByteArray, String) -> ByteArray // Signer for plain messages
 ) {
+    private companion object {
+        const val JWS_ALG_EDDSA = "EdDSA"
+        const val ED25519_RAW_KEY_LENGTH_BYTES = 32
+        const val ED25519_SIGNATURE_LENGTH_BYTES = 64
+
+        /** X.509 SubjectPublicKeyInfo prefix for a raw Ed25519 public key (RFC 8410). */
+        val ED25519_SPKI_PREFIX = byteArrayOf(
+            0x30, 0x2A, 0x30, 0x05, 0x06, 0x03, 0x2B, 0x65, 0x70, 0x03, 0x21, 0x00,
+        )
+    }
+
+    /** Compact, deterministic JSON used for JWS payload bytes on both sign and verify. */
+    private val compactJson = Json { prettyPrint = false; encodeDefaults = false }
+
     /**
      * Packs a message for sending.
      *
@@ -97,6 +123,11 @@ class DidCommPacker(
     /**
      * Unpacks a received message.
      *
+     * Plain messages that carry a `signatures` array are verified before being returned:
+     * every signature must be a valid `EdDSA` JWS by a key resolvable from the signer's
+     * DID document, and the signer must match the message `from` / [senderDid] when present.
+     * Any verification failure throws [DidCommException.UnpackingFailed] (fail closed).
+     *
      * @param packedMessage The packed message (JSON string)
      * @param recipientDid Recipient DID
      * @param recipientKeyId Recipient key ID
@@ -126,11 +157,174 @@ class DidCommPacker(
                 senderDid = resolvedSenderDid
             )
 
-            // Parse decrypted message
-            parseMessage(decryptedJson)
+            // Parse decrypted message (verifying any nested signatures)
+            verifyAndParsePlainMessage(decryptedJson, resolvedSenderDid)
         } else {
-            // Plain message
-            parseMessage(json.jsonObject)
+            // Plain message (verified when it carries signatures)
+            verifyAndParsePlainMessage(json.jsonObject, senderDid)
+        }
+    }
+
+    /**
+     * Verifies the `signatures` array (when present) and parses the plain message.
+     *
+     * Unsigned messages (no `signatures` key) are parsed as before — they make no claim.
+     * Messages that do carry signatures fail closed on any verification problem.
+     */
+    private suspend fun verifyAndParsePlainMessage(
+        json: JsonObject,
+        expectedSenderDid: String?
+    ): DidCommMessage {
+        val signatures = json["signatures"]
+        if (signatures != null) {
+            verifySignatures(json, signatures, expectedSenderDid)
+        }
+        return parseMessage(json)
+    }
+
+    private suspend fun verifySignatures(
+        json: JsonObject,
+        signatures: JsonElement,
+        expectedSenderDid: String?
+    ) {
+        val entries = (signatures as? JsonArray)?.takeIf { it.isNotEmpty() }
+            ?: signatureFailure("'signatures' must be a non-empty JSON array")
+
+        // Reconstruct the signed payload: the message without its 'signatures' field,
+        // re-encoded with the same compact JSON used at signing time.
+        val payloadJson = JsonObject(json.filterKeys { it != "signatures" })
+        val payloadBytes = compactJson.encodeToString(JsonObject.serializer(), payloadJson)
+            .toByteArray(Charsets.UTF_8)
+        val payloadBase64 = Base64.getUrlEncoder().withoutPadding().encodeToString(payloadBytes)
+        val fromDid = (json["from"] as? JsonPrimitive)?.contentOrNull
+
+        entries.forEach { entry ->
+            verifySignatureEntry(entry, payloadBase64, fromDid, expectedSenderDid)
+        }
+    }
+
+    private suspend fun verifySignatureEntry(
+        entry: JsonElement,
+        payloadBase64: String,
+        fromDid: String?,
+        expectedSenderDid: String?
+    ) {
+        val obj = entry as? JsonObject
+            ?: signatureFailure("Signature entry is not a JSON object")
+        val protectedBase64 = (obj["protected"] as? JsonPrimitive)?.contentOrNull
+            ?: signatureFailure("Signature entry is missing the 'protected' header")
+        val signatureBase64 = (obj["signature"] as? JsonPrimitive)?.contentOrNull
+            ?: signatureFailure("Signature entry is missing the 'signature' value")
+
+        val header = try {
+            Json.parseToJsonElement(
+                String(Base64.getUrlDecoder().decode(protectedBase64), Charsets.UTF_8)
+            ).jsonObject
+        } catch (e: Exception) {
+            signatureFailure("Cannot decode the protected JWS header", e)
+        }
+
+        val alg = (header["alg"] as? JsonPrimitive)?.contentOrNull
+        if (alg != JWS_ALG_EDDSA) {
+            signatureFailure("Unsupported or missing JWS 'alg' ('${alg ?: "absent"}'); only '$JWS_ALG_EDDSA' is accepted")
+        }
+        val kid = (header["kid"] as? JsonPrimitive)?.contentOrNull
+            ?: signatureFailure("Protected JWS header is missing 'kid'")
+
+        val signerDid = kid.substringBefore("#")
+        if (expectedSenderDid != null && signerDid != expectedSenderDid) {
+            signatureFailure("Signature kid '$kid' does not belong to expected sender '$expectedSenderDid'")
+        }
+        if (fromDid != null && signerDid != fromDid) {
+            signatureFailure("Signature kid '$kid' does not belong to message sender '$fromDid'")
+        }
+
+        val signerDoc = resolveDid(signerDid)
+            ?: signatureFailure("Cannot resolve signer DID '$signerDid' to verify the message signature")
+        val verificationMethod = signerDoc.verificationMethod.firstOrNull {
+            normalizeKeyRef(it.id.value, signerDoc.id.value) == normalizeKeyRef(kid, signerDid)
+        } ?: signatureFailure("Signer DID document '$signerDid' has no verification method '$kid'")
+
+        val publicKey = extractEd25519PublicKey(verificationMethod)
+            ?: signatureFailure("Verification method '$kid' carries no usable Ed25519 public key")
+
+        val signatureBytes = try {
+            Base64.getUrlDecoder().decode(signatureBase64)
+        } catch (e: IllegalArgumentException) {
+            signatureFailure("Signature is not valid base64url", e)
+        }
+        if (signatureBytes.size != ED25519_SIGNATURE_LENGTH_BYTES) {
+            signatureFailure("Invalid Ed25519 signature length: ${signatureBytes.size}")
+        }
+
+        val signingInput = "$protectedBase64.$payloadBase64".toByteArray(Charsets.US_ASCII)
+        val verified = try {
+            Signature.getInstance("Ed25519").run {
+                initVerify(publicKey)
+                update(signingInput)
+                verify(signatureBytes)
+            }
+        } catch (e: Exception) {
+            false
+        }
+        if (!verified) {
+            signatureFailure("Signature verification failed for kid '$kid'")
+        }
+    }
+
+    private fun signatureFailure(reason: String, cause: Throwable? = null): Nothing =
+        throw DidCommException.UnpackingFailed(reason = reason, cause = cause)
+
+    private fun normalizeKeyRef(keyRef: String, did: String): String =
+        if (keyRef.startsWith("#")) "$did$keyRef" else keyRef
+
+    /**
+     * Extracts an Ed25519 [PublicKey] from a verification method's `publicKeyJwk`
+     * (OKP/Ed25519) or `publicKeyMultibase` (base58btc, optionally multicodec-prefixed).
+     */
+    private fun extractEd25519PublicKey(vm: VerificationMethod): PublicKey? {
+        val raw = vm.publicKeyJwk?.let { jwk ->
+            val kty = jwk["kty"] as? String
+            val crv = jwk["crv"] as? String
+            val x = jwk["x"] as? String
+            if (kty == "OKP" && crv == "Ed25519" && x != null) {
+                try {
+                    Base64.getUrlDecoder().decode(x)
+                } catch (e: IllegalArgumentException) {
+                    null
+                }
+            } else {
+                null
+            }
+        } ?: vm.publicKeyMultibase?.let { decodeMultibaseEd25519(it, vm.type) }
+
+        return raw?.let { rawEd25519ToPublicKey(it) }
+    }
+
+    private fun decodeMultibaseEd25519(multibase: String, vmType: String): ByteArray? {
+        if (!multibase.startsWith("z")) return null
+        val decoded = try {
+            multibase.substring(1).decodeBase58()
+        } catch (e: Exception) {
+            return null
+        }
+        return when {
+            decoded.size == ED25519_RAW_KEY_LENGTH_BYTES + 2 &&
+                decoded[0] == 0xED.toByte() && decoded[1] == 0x01.toByte() ->
+                decoded.copyOfRange(2, decoded.size)
+            decoded.size == ED25519_RAW_KEY_LENGTH_BYTES &&
+                vmType.contains("Ed25519", ignoreCase = true) -> decoded
+            else -> null
+        }
+    }
+
+    private fun rawEd25519ToPublicKey(raw: ByteArray): PublicKey? {
+        if (raw.size != ED25519_RAW_KEY_LENGTH_BYTES) return null
+        return try {
+            KeyFactory.getInstance("Ed25519")
+                .generatePublic(X509EncodedKeySpec(ED25519_SPKI_PREFIX + raw))
+        } catch (e: Exception) {
+            null
         }
     }
 
@@ -238,30 +432,32 @@ class DidCommPacker(
     /**
      * Signs a plain message using JWS (JSON Web Signature).
      *
-     * Creates a compact JWS format: header.payload.signature
+     * The Ed25519 signature is computed over the JWS signing input
+     * `ASCII(BASE64URL(protected) || '.' || BASE64URL(payload))` with `alg: EdDSA`,
+     * where the payload is the compact JSON encoding of the message (without `signatures`).
      */
     private suspend fun signMessage(
         messageJson: JsonObject,
         fromDid: String,
         fromKeyId: String
     ): JsonObject {
-        val json = Json { prettyPrint = false; encodeDefaults = false }
-        val messageBytes = json.encodeToString(JsonObject.serializer(), messageJson).toByteArray(Charsets.UTF_8)
+        val messageBytes = compactJson.encodeToString(JsonObject.serializer(), messageJson).toByteArray(Charsets.UTF_8)
 
-        // Sign using provided signer
-        val signature = signer(messageBytes, fromKeyId)
-
-        // Create JWS compact format
+        // Protected JWS header; EdDSA is the JOSE algorithm identifier for Ed25519 (RFC 8037).
         val header = buildJsonObject {
-            put("alg", "Ed25519") // Default algorithm, should be determined from key
+            put("alg", JWS_ALG_EDDSA)
             put("typ", "JWS")
             put("kid", fromKeyId)
         }
 
         val headerBase64 = Base64.getUrlEncoder().withoutPadding()
-            .encodeToString(json.encodeToString(JsonObject.serializer(), header).toByteArray(Charsets.UTF_8))
+            .encodeToString(compactJson.encodeToString(JsonObject.serializer(), header).toByteArray(Charsets.UTF_8))
         val payloadBase64 = Base64.getUrlEncoder().withoutPadding()
             .encodeToString(messageBytes)
+
+        // Sign the JWS signing input using the provided signer
+        val signingInput = "$headerBase64.$payloadBase64".toByteArray(Charsets.US_ASCII)
+        val signature = signer(signingInput, fromKeyId)
         val signatureBase64 = Base64.getUrlEncoder().withoutPadding()
             .encodeToString(signature)
 

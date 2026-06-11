@@ -14,6 +14,7 @@ import com.nimbusds.jwt.SignedJWT
 import kotlinx.serialization.json.*
 import java.util.Base64
 import java.security.PublicKey
+import kotlin.time.Duration.Companion.minutes
 import org.slf4j.LoggerFactory
 
 // Helper: extract a String field from the proof's additionalProperties (LinkedDataProof),
@@ -35,6 +36,23 @@ private fun CredentialProof?.proofStringField(field: String): String? = when (th
 internal object PresentationVerification {
 
     private val logger = LoggerFactory.getLogger(PresentationVerification::class.java)
+
+    /**
+     * Key under [VerificationOptions.additionalOptions] carrying the maximum accepted age
+     * of an SD-JWT Key Binding JWT, as a [kotlin.time.Duration].
+     *
+     * A KB-JWT proves *fresh* possession of the holder's key; an arbitrarily old `iat`
+     * would let a captured presentation be replayed indefinitely (subject only to the
+     * nonce policy of the verifier). When the option is absent,
+     * [DEFAULT_KB_JWT_MAX_AGE] applies. The verifier's `clockSkewTolerance` is added on
+     * top of the max age.
+     *
+     * Example: `VerificationOptions(additionalOptions = mapOf("kbJwtMaxAge" to 5.minutes))`
+     */
+    const val KB_JWT_MAX_AGE_OPTION = "kbJwtMaxAge"
+
+    /** Default maximum accepted age of a KB-JWT `iat` (see [KB_JWT_MAX_AGE_OPTION]). */
+    val DEFAULT_KB_JWT_MAX_AGE: kotlin.time.Duration = 10.minutes
 
     /**
      * Verify challenge if required.
@@ -440,7 +458,46 @@ internal object PresentationVerification {
             )
         }
 
+        // iat must also be fresh: an old-but-valid KB-JWT is a replay vector. The max age
+        // is configurable via the KB_JWT_MAX_AGE_OPTION additional option (default
+        // DEFAULT_KB_JWT_MAX_AGE), with clockSkewTolerance added on top.
+        val maxAge = kbJwtMaxAge(options)
+        if (iatInstant < now.minus(maxAge).minus(options.clockSkewTolerance)) {
+            return VerificationResult.Invalid.InvalidProof(
+                credential = firstCredential,
+                reason = "Key Binding JWT 'iat' is too old (max age $maxAge)",
+                errors = listOf(
+                    "KB-JWT iat $iatInstant is older than $now minus $maxAge max age " +
+                        "and ${options.clockSkewTolerance} skew; the presentation may be a replay. " +
+                        "Verifiers can tune this via VerificationOptions.additionalOptions" +
+                        "[\"$KB_JWT_MAX_AGE_OPTION\"]"
+                )
+            )
+        }
+
         return null
+    }
+
+    /**
+     * Resolve the effective KB-JWT max age from [options]: the
+     * [KB_JWT_MAX_AGE_OPTION] additional option when it carries a positive
+     * [kotlin.time.Duration], otherwise [DEFAULT_KB_JWT_MAX_AGE].
+     *
+     * A present-but-invalid value (wrong type, or zero/negative) throws instead of
+     * silently falling back: a verifier intending a stricter policy must not be
+     * weakened to the default without noticing.
+     */
+    internal fun kbJwtMaxAge(options: VerificationOptions): kotlin.time.Duration {
+        val raw = options.additionalOptions[KB_JWT_MAX_AGE_OPTION] ?: return DEFAULT_KB_JWT_MAX_AGE
+        val configured = raw as? kotlin.time.Duration
+            ?: throw IllegalArgumentException(
+                "Verification option '$KB_JWT_MAX_AGE_OPTION' must be a kotlin.time.Duration, " +
+                    "got ${raw::class.simpleName}"
+            )
+        require(configured.isPositive()) {
+            "Verification option '$KB_JWT_MAX_AGE_OPTION' must be positive, got $configured"
+        }
+        return configured
     }
 
     /**

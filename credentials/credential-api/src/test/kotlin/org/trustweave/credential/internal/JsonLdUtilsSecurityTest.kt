@@ -235,7 +235,7 @@ class JsonLdUtilsSecurityTest {
     }
 
     @Test
-    fun `test jsonObjectToMap with deeply nested structure`() {
+    fun `test toJakartaObject with deeply nested structure`() {
         // Create a deeply nested JSON object
         var nested = buildJsonObject {
             put("value", "leaf")
@@ -249,13 +249,13 @@ class JsonLdUtilsSecurityTest {
         }
 
         // Should handle deep nesting without stack overflow
-        val result = JsonLdUtils.jsonObjectToMap(nested)
+        val result = JsonLdUtils.toJakartaObject(nested)
         assertNotNull(result)
         assertTrue(result.containsKey("nested"))
     }
 
     @Test
-    fun `test jsonObjectToMap with very large array`() {
+    fun `test toJakartaObject with very large array`() {
         // Create a JSON object with a very large array
         val largeArray = buildJsonArray {
             repeat(1000) {
@@ -268,15 +268,13 @@ class JsonLdUtilsSecurityTest {
         }
 
         // Should handle large arrays
-        val result = JsonLdUtils.jsonObjectToMap(document)
+        val result = JsonLdUtils.toJakartaObject(document)
         assertNotNull(result)
-        val items = result["items"]
-        assertTrue(items is List<*>)
-        assertTrue((items as List<*>).size == 1000)
+        assertTrue(result.getJsonArray("items").size == 1000)
     }
 
     @Test
-    fun `test jsonObjectToMap with many fields`() {
+    fun `test toJakartaObject with many fields`() {
         // Create a JSON object with many fields
         val document = buildJsonObject {
             repeat(100) {
@@ -285,7 +283,7 @@ class JsonLdUtilsSecurityTest {
         }
 
         // Should handle many fields
-        val result = JsonLdUtils.jsonObjectToMap(document)
+        val result = JsonLdUtils.toJakartaObject(document)
         assertNotNull(result)
         assertTrue(result.size == 100)
     }

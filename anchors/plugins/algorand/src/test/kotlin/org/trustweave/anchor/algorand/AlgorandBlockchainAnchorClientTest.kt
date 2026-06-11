@@ -1,6 +1,7 @@
 package org.trustweave.anchor.algorand
 
 import org.trustweave.anchor.AbstractBlockchainAnchorClient
+import org.trustweave.anchor.AnchorDigest
 import org.trustweave.anchor.AnchorRef
 import org.trustweave.anchor.exceptions.BlockchainException
 import org.trustweave.anchor.payment.FeeStrategy
@@ -11,6 +12,7 @@ import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -80,6 +82,48 @@ class AlgorandBlockchainAnchorClientTest {
         assertTrue(result.ref.txHash.startsWith("algo_"))
         assertNull(result.fee, "unmanaged path must not populate fee")
         assertNull(result.payerAddress, "unmanaged path must not populate payerAddress")
+    }
+
+    @Test
+    fun `managed write in digest mode anchors only the digest envelope`() = runBlocking<Unit> {
+        val client = AlgorandBlockchainAnchorClient(
+            AlgorandBlockchainAnchorClient.TESTNET,
+            mapOf(
+                AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE to true,
+                AbstractBlockchainAnchorClient.OPTION_PAYLOAD_MODE
+                    to AbstractBlockchainAnchorClient.PAYLOAD_MODE_DIGEST,
+            )
+        )
+        val payload = buildJsonObject {
+            put("id", "credential-1")
+            put("subject", buildJsonObject { put("name", "Alice") })
+        }
+        val ctx = PaymentContext(
+            domainId = "domain.test",
+            payerDid = "did:example:payer",
+            chainId = AlgorandBlockchainAnchorClient.TESTNET,
+            feeStrategy = FeeStrategy.DomainPays,
+        )
+
+        val result = client.writePayload(payload, ctx)
+
+        // The managed path must mark digest-mode refs exactly like the unmanaged one.
+        assertEquals(
+            AbstractBlockchainAnchorClient.PAYLOAD_MODE_DIGEST,
+            result.ref.extra[AbstractBlockchainAnchorClient.OPTION_PAYLOAD_MODE]
+        )
+        assertEquals(payload, result.payload, "write result echoes the caller payload")
+
+        // What was stored on-(fake-)chain is the digest envelope: payload content
+        // (PII) must be absent from the anchored bytes.
+        val read = client.readPayload(result.ref)
+        assertTrue(AnchorDigest.isEnvelope(read.payload), "anchored data must be a digest envelope")
+        val anchoredJson = Json.encodeToString(JsonElement.serializer(), read.payload)
+        assertFalse(anchoredJson.contains("Alice"), "payload content must never be anchored in digest mode")
+        assertFalse(anchoredJson.contains("credential-1"), "payload content must never be anchored in digest mode")
+
+        // Third-party verification against the off-chain payload still succeeds.
+        assertTrue(client.verifyAnchor(payload, result.ref))
     }
 
     @Test

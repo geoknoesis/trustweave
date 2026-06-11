@@ -1,6 +1,7 @@
 package org.trustweave.anchor.polygon
 
 import org.trustweave.anchor.AbstractBlockchainAnchorClient
+import org.trustweave.anchor.AnchorDigest
 import org.trustweave.anchor.AnchorRef
 import org.trustweave.anchor.exceptions.BlockchainException
 import org.trustweave.core.exception.TrustWeaveException
@@ -60,6 +61,58 @@ class PolygonBlockchainAnchorClientTest {
         hashes.forEach { hash ->
             assertTrue(hash.startsWith("0x") && hash.length == 66, "expected 0x-prefixed 32-byte hash, got $hash")
         }
+    }
+
+    @Test
+    fun `should anchor digest envelope and verify in digest payload mode`() = runBlocking {
+        val client = PolygonBlockchainAnchorClient(
+            PolygonBlockchainAnchorClient.AMOY,
+            mapOf(
+                AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE to true,
+                AbstractBlockchainAnchorClient.OPTION_PAYLOAD_MODE to
+                    AbstractBlockchainAnchorClient.PAYLOAD_MODE_DIGEST
+            )
+        )
+        val payload = buildJsonObject { put("ssn", "123-45-6789") }
+
+        val result = client.writePayload(payload)
+        assertEquals(payload, result.payload, "write result echoes the caller payload")
+        assertEquals(
+            AbstractBlockchainAnchorClient.PAYLOAD_MODE_DIGEST,
+            result.ref.extra[AbstractBlockchainAnchorClient.OPTION_PAYLOAD_MODE]
+        )
+
+        // Reads return the digest envelope — the payload itself is never on-chain.
+        val readResult = client.readPayload(result.ref)
+        assertTrue(AnchorDigest.isEnvelope(readResult.payload))
+
+        // Third-party verification: original payload verifies, tampered does not.
+        assertTrue(client.verifyAnchor(payload, result.ref))
+        val tampered = buildJsonObject { put("ssn", "999-99-9999") }
+        assertEquals(false, client.verifyAnchor(tampered, result.ref))
+    }
+
+    @Test
+    fun `should verify full-mode anchors structurally`() = runBlocking {
+        val client = PolygonBlockchainAnchorClient(
+            PolygonBlockchainAnchorClient.AMOY,
+            mapOf(AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE to true)
+        )
+        val payload = buildJsonObject {
+            put("a", 1)
+            put("b", 2)
+        }
+
+        val result = client.writePayload(payload)
+
+        assertTrue(client.verifyAnchor(payload, result.ref))
+        // Structural comparison: key order does not matter in full mode.
+        val reordered = buildJsonObject {
+            put("b", 2)
+            put("a", 1)
+        }
+        assertTrue(client.verifyAnchor(reordered, result.ref))
+        assertEquals(false, client.verifyAnchor(buildJsonObject { put("a", 1) }, result.ref))
     }
 
     @Test

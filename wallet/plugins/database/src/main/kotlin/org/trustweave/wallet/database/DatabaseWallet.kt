@@ -10,6 +10,7 @@ import kotlinx.serialization.json.*
 import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
 import kotlinx.datetime.toJavaInstant
+import kotlinx.datetime.toKotlinInstant
 import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.util.UUID
@@ -22,6 +23,10 @@ import javax.sql.DataSource
  * Supports PostgreSQL (via `INSERT ... ON CONFLICT ... DO UPDATE`) and H2
  * (via standard SQL `MERGE`). MySQL is NOT supported: it implements neither
  * the PostgreSQL upsert syntax nor standard SQL MERGE.
+ *
+ * Implements [CredentialOrganization] (collections + tagging): tags and collection
+ * memberships are stored in the `credential_tags` / `credential_collections` tables,
+ * are wallet-scoped, and feed the `byTag` / `byCollection` query filters.
  *
  * **Resource ownership:** when [ownsDataSource] is true (e.g. wallets built by
  * [DatabaseWalletFactory], which creates a dedicated connection pool), [close]
@@ -45,7 +50,7 @@ class DatabaseWallet(
     val holderDid: String,
     private val dataSource: DataSource,
     private val ownsDataSource: Boolean = false
-) : Wallet, CredentialStorage {
+) : Wallet, CredentialStorage, CredentialOrganization {
 
     private val json = Json {
         prettyPrint = false
@@ -266,28 +271,7 @@ class DatabaseWallet(
                 // nothing on a new credential (the UPDATE matched 0 rows) and on a re-store the
                 // INSERT was skipped by DO NOTHING even though updated_at had just been bumped —
                 // effectively the two statements were semantically inverted.
-                val metadataSql = if (isPostgreSql(conn)) {
-                    """
-                    INSERT INTO credential_metadata (credential_id, created_at, updated_at)
-                    VALUES (?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                    ON CONFLICT (credential_id) DO UPDATE SET updated_at = EXCLUDED.updated_at
-                    """
-                } else {
-                    """
-                    MERGE INTO credential_metadata m
-                    USING (VALUES (?)) AS src(credential_id)
-                    ON m.credential_id = src.credential_id
-                    WHEN MATCHED THEN
-                        UPDATE SET updated_at = CURRENT_TIMESTAMP
-                    WHEN NOT MATCHED THEN
-                        INSERT (credential_id, created_at, updated_at)
-                        VALUES (src.credential_id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                    """
-                }
-                conn.prepareStatement(metadataSql).use { metadataStmt ->
-                    metadataStmt.setString(1, safeId)
-                    metadataStmt.executeUpdate()
-                }
+                upsertMetadataRow(conn, safeId)
 
                 conn.commit()
                 safeId
@@ -506,6 +490,523 @@ class DatabaseWallet(
                 reason = "Failed to query credentials: ${e.message}",
                 cause = e
             )
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // CredentialOrganization implementation (collections + tagging)
+    //
+    // All operations are wallet-scoped: tags and collection memberships are only
+    // visible/mutable through the wallet that owns the underlying credential row
+    // (credential ids are globally unique primary keys, so junction rows are
+    // scoped via joins against credentials.wallet_id).
+    // -------------------------------------------------------------------------
+
+    /**
+     * Wraps [block] so failures surface as [WalletException.StorageError] with the
+     * structured wallet error contract, consistent with the CredentialStorage methods.
+     */
+    private inline fun <T> withStorageErrorHandling(operation: String, block: () -> T): T =
+        try {
+            block()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: WalletException) {
+            throw e
+        } catch (e: Exception) {
+            throw WalletException.StorageError(
+                operation = operation,
+                reason = "Failed to $operation: ${e.message}",
+                cause = e
+            )
+        }
+
+    /** True when [credentialId] exists in THIS wallet (active or archived). */
+    private fun credentialExists(conn: Connection, credentialId: String): Boolean =
+        conn.prepareStatement("SELECT 1 FROM credentials WHERE id = ? AND wallet_id = ?").use { stmt ->
+            stmt.setString(1, credentialId)
+            stmt.setString(2, walletId)
+            stmt.executeQuery().use { it.next() }
+        }
+
+    /** True when [collectionId] exists and belongs to THIS wallet. */
+    private fun collectionExists(conn: Connection, collectionId: String): Boolean =
+        conn.prepareStatement("SELECT 1 FROM collections WHERE id = ? AND wallet_id = ?").use { stmt ->
+            stmt.setString(1, collectionId)
+            stmt.setString(2, walletId)
+            stmt.executeQuery().use { it.next() }
+        }
+
+    /**
+     * Ensure a `credential_metadata` row exists for [credentialId]: insert with
+     * created_at + updated_at on new rows; on conflict only bump updated_at,
+     * preserving the original created_at (and any existing notes/metadata).
+     */
+    private fun upsertMetadataRow(conn: Connection, credentialId: String) {
+        val metadataSql = if (isPostgreSql(conn)) {
+            """
+            INSERT INTO credential_metadata (credential_id, created_at, updated_at)
+            VALUES (?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            ON CONFLICT (credential_id) DO UPDATE SET updated_at = EXCLUDED.updated_at
+            """
+        } else {
+            """
+            MERGE INTO credential_metadata m
+            USING (VALUES (?)) AS src(credential_id)
+            ON m.credential_id = src.credential_id
+            WHEN MATCHED THEN
+                UPDATE SET updated_at = CURRENT_TIMESTAMP
+            WHEN NOT MATCHED THEN
+                INSERT (credential_id, created_at, updated_at)
+                VALUES (src.credential_id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            """
+        }
+        conn.prepareStatement(metadataSql).use { metadataStmt ->
+            metadataStmt.setString(1, credentialId)
+            metadataStmt.executeUpdate()
+        }
+    }
+
+    /** Serialize a metadata map to JSON. Non-primitive values are stored via toString(). */
+    private fun metadataMapToJson(metadata: Map<String, Any>): String {
+        val obj = buildJsonObject {
+            metadata.forEach { (key, value) ->
+                when (value) {
+                    is String -> put(key, value)
+                    is Boolean -> put(key, value)
+                    is Number -> put(key, JsonPrimitive(value))
+                    is JsonElement -> put(key, value)
+                    else -> put(key, value.toString())
+                }
+            }
+        }
+        return json.encodeToString(JsonObject.serializer(), obj)
+    }
+
+    /** Deserialize a metadata JSON column back into a map of primitives. */
+    private fun metadataJsonToMap(metadataJson: String?): Map<String, Any> {
+        if (metadataJson.isNullOrBlank()) return emptyMap()
+        val obj = json.decodeFromString(JsonObject.serializer(), metadataJson)
+        return obj.mapValues { (_, value) ->
+            when {
+                value is JsonPrimitive && value.isString -> value.content
+                value is JsonPrimitive && value.booleanOrNull != null -> value.booleanOrNull as Any
+                value is JsonPrimitive && value.longOrNull != null -> value.longOrNull as Any
+                value is JsonPrimitive && value.doubleOrNull != null -> value.doubleOrNull as Any
+                else -> value
+            }
+        }
+    }
+
+    private fun java.sql.ResultSet.instantOrNow(column: String): Instant =
+        getTimestamp(column)?.toInstant()?.toKotlinInstant() ?: Clock.System.now()
+
+    // ----- CredentialCollections -----
+
+    override suspend fun createCollection(name: String, description: String?): String = withContext(Dispatchers.IO) {
+        withStorageErrorHandling("createCollection") {
+            val id = UUID.randomUUID().toString()
+            acquireConnection("createCollection").use { conn ->
+                conn.prepareStatement(
+                    "INSERT INTO collections (id, wallet_id, name, description) VALUES (?, ?, ?, ?)"
+                ).use { stmt ->
+                    stmt.setString(1, id)
+                    stmt.setString(2, walletId)
+                    stmt.setString(3, name)
+                    stmt.setString(4, description)
+                    stmt.executeUpdate()
+                }
+            }
+            id
+        }
+    }
+
+    override suspend fun getCollection(collectionId: String): CredentialCollection? = withContext(Dispatchers.IO) {
+        withStorageErrorHandling("getCollection") {
+            acquireConnection("getCollection").use { conn ->
+                conn.prepareStatement(
+                    """
+                    SELECT c.id, c.name, c.description, c.created_at,
+                           (SELECT COUNT(*) FROM credential_collections cc WHERE cc.collection_id = c.id) AS credential_count
+                    FROM collections c
+                    WHERE c.id = ? AND c.wallet_id = ?
+                    """
+                ).use { stmt ->
+                    stmt.setString(1, collectionId)
+                    stmt.setString(2, walletId)
+                    stmt.executeQuery().use { rs ->
+                        if (rs.next()) {
+                            CredentialCollection(
+                                id = rs.getString("id"),
+                                name = rs.getString("name"),
+                                description = rs.getString("description"),
+                                createdAt = rs.instantOrNow("created_at"),
+                                credentialCount = rs.getInt("credential_count")
+                            )
+                        } else {
+                            null
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun listCollections(): List<CredentialCollection> = withContext(Dispatchers.IO) {
+        withStorageErrorHandling("listCollections") {
+            acquireConnection("listCollections").use { conn ->
+                conn.prepareStatement(
+                    """
+                    SELECT c.id, c.name, c.description, c.created_at,
+                           (SELECT COUNT(*) FROM credential_collections cc WHERE cc.collection_id = c.id) AS credential_count
+                    FROM collections c
+                    WHERE c.wallet_id = ?
+                    """
+                ).use { stmt ->
+                    stmt.setString(1, walletId)
+                    stmt.executeQuery().use { rs ->
+                        val collections = mutableListOf<CredentialCollection>()
+                        while (rs.next()) {
+                            collections.add(
+                                CredentialCollection(
+                                    id = rs.getString("id"),
+                                    name = rs.getString("name"),
+                                    description = rs.getString("description"),
+                                    createdAt = rs.instantOrNow("created_at"),
+                                    credentialCount = rs.getInt("credential_count")
+                                )
+                            )
+                        }
+                        collections
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun deleteCollection(collectionId: String): Boolean = withContext(Dispatchers.IO) {
+        withStorageErrorHandling("deleteCollection") {
+            acquireConnection("deleteCollection").use { conn ->
+                // Junction rows are removed by the ON DELETE CASCADE foreign key.
+                conn.prepareStatement("DELETE FROM collections WHERE id = ? AND wallet_id = ?").use { stmt ->
+                    stmt.setString(1, collectionId)
+                    stmt.setString(2, walletId)
+                    stmt.executeUpdate() > 0
+                }
+            }
+        }
+    }
+
+    override suspend fun addToCollection(credentialId: String, collectionId: String): Boolean = withContext(Dispatchers.IO) {
+        withStorageErrorHandling("addToCollection") {
+            acquireConnection("addToCollection").use { conn ->
+                if (!credentialExists(conn, credentialId) || !collectionExists(conn, collectionId)) {
+                    return@use false
+                }
+                // Idempotent insert: re-adding an existing membership is a no-op, not an error.
+                val sql = if (isPostgreSql(conn)) {
+                    """
+                    INSERT INTO credential_collections (credential_id, collection_id)
+                    VALUES (?, ?)
+                    ON CONFLICT DO NOTHING
+                    """
+                } else {
+                    """
+                    MERGE INTO credential_collections cc
+                    USING (VALUES (?, ?)) AS src(credential_id, collection_id)
+                    ON cc.credential_id = src.credential_id AND cc.collection_id = src.collection_id
+                    WHEN NOT MATCHED THEN
+                        INSERT (credential_id, collection_id) VALUES (src.credential_id, src.collection_id)
+                    """
+                }
+                conn.prepareStatement(sql).use { stmt ->
+                    stmt.setString(1, credentialId)
+                    stmt.setString(2, collectionId)
+                    stmt.executeUpdate()
+                }
+                true
+            }
+        }
+    }
+
+    override suspend fun removeFromCollection(credentialId: String, collectionId: String): Boolean = withContext(Dispatchers.IO) {
+        withStorageErrorHandling("removeFromCollection") {
+            acquireConnection("removeFromCollection").use { conn ->
+                // Scoped to this wallet's collections so another wallet cannot detach memberships.
+                conn.prepareStatement(
+                    """
+                    DELETE FROM credential_collections
+                    WHERE credential_id = ? AND collection_id = ?
+                      AND collection_id IN (SELECT id FROM collections WHERE wallet_id = ?)
+                    """
+                ).use { stmt ->
+                    stmt.setString(1, credentialId)
+                    stmt.setString(2, collectionId)
+                    stmt.setString(3, walletId)
+                    stmt.executeUpdate() > 0
+                }
+            }
+        }
+    }
+
+    override suspend fun getCredentialsInCollection(collectionId: String): List<VerifiableCredential> = withContext(Dispatchers.IO) {
+        withStorageErrorHandling("getCredentialsInCollection") {
+            acquireConnection("getCredentialsInCollection").use { conn ->
+                conn.prepareStatement(
+                    """
+                    SELECT cr.credential_data FROM credentials cr
+                    JOIN credential_collections cc ON cc.credential_id = cr.id
+                    WHERE cc.collection_id = ? AND cr.wallet_id = ?
+                    """
+                ).use { stmt ->
+                    stmt.setString(1, collectionId)
+                    stmt.setString(2, walletId)
+                    stmt.executeQuery().use { rs ->
+                        val credentials = mutableListOf<VerifiableCredential>()
+                        while (rs.next()) {
+                            credentials.add(
+                                json.decodeFromString(VerifiableCredential.serializer(), rs.getString("credential_data"))
+                            )
+                        }
+                        credentials
+                    }
+                }
+            }
+        }
+    }
+
+    // ----- CredentialTagging -----
+
+    override suspend fun tagCredential(credentialId: String, tags: Set<String>): Boolean = withContext(Dispatchers.IO) {
+        withStorageErrorHandling("tagCredential") {
+            acquireConnection("tagCredential").use { conn ->
+                if (!credentialExists(conn, credentialId)) {
+                    return@use false
+                }
+                val savedAutoCommit = conn.autoCommit
+                conn.autoCommit = false
+                try {
+                    // Idempotent insert per tag: re-tagging is a no-op, not a PK violation.
+                    val sql = if (isPostgreSql(conn)) {
+                        """
+                        INSERT INTO credential_tags (credential_id, tag)
+                        VALUES (?, ?)
+                        ON CONFLICT DO NOTHING
+                        """
+                    } else {
+                        """
+                        MERGE INTO credential_tags t
+                        USING (VALUES (?, ?)) AS src(credential_id, tag)
+                        ON t.credential_id = src.credential_id AND t.tag = src.tag
+                        WHEN NOT MATCHED THEN
+                            INSERT (credential_id, tag) VALUES (src.credential_id, src.tag)
+                        """
+                    }
+                    conn.prepareStatement(sql).use { stmt ->
+                        tags.forEach { tag ->
+                            stmt.setString(1, credentialId)
+                            stmt.setString(2, tag)
+                            stmt.executeUpdate()
+                        }
+                    }
+                    conn.commit()
+                    true
+                } catch (e: Exception) {
+                    runCatching { conn.rollback() }
+                    throw e
+                } finally {
+                    conn.autoCommit = savedAutoCommit
+                }
+            }
+        }
+    }
+
+    override suspend fun untagCredential(credentialId: String, tags: Set<String>): Boolean = withContext(Dispatchers.IO) {
+        withStorageErrorHandling("untagCredential") {
+            acquireConnection("untagCredential").use { conn ->
+                if (!credentialExists(conn, credentialId)) {
+                    return@use false
+                }
+                if (tags.isEmpty()) {
+                    return@use true
+                }
+                val placeholders = tags.joinToString(", ") { "?" }
+                conn.prepareStatement(
+                    "DELETE FROM credential_tags WHERE credential_id = ? AND tag IN ($placeholders)"
+                ).use { stmt ->
+                    var index = 1
+                    stmt.setString(index++, credentialId)
+                    tags.forEach { stmt.setString(index++, it) }
+                    stmt.executeUpdate()
+                }
+                true
+            }
+        }
+    }
+
+    override suspend fun getTags(credentialId: String): Set<String> = withContext(Dispatchers.IO) {
+        withStorageErrorHandling("getTags") {
+            acquireConnection("getTags").use { conn ->
+                readTags(conn, credentialId)
+            }
+        }
+    }
+
+    private fun readTags(conn: Connection, credentialId: String): Set<String> =
+        conn.prepareStatement(
+            """
+            SELECT ct.tag FROM credential_tags ct
+            JOIN credentials c ON c.id = ct.credential_id
+            WHERE ct.credential_id = ? AND c.wallet_id = ?
+            """
+        ).use { stmt ->
+            stmt.setString(1, credentialId)
+            stmt.setString(2, walletId)
+            stmt.executeQuery().use { rs ->
+                val tags = mutableSetOf<String>()
+                while (rs.next()) {
+                    tags.add(rs.getString("tag"))
+                }
+                tags
+            }
+        }
+
+    override suspend fun getAllTags(): Set<String> = withContext(Dispatchers.IO) {
+        withStorageErrorHandling("getAllTags") {
+            acquireConnection("getAllTags").use { conn ->
+                conn.prepareStatement(
+                    """
+                    SELECT DISTINCT ct.tag FROM credential_tags ct
+                    JOIN credentials c ON c.id = ct.credential_id
+                    WHERE c.wallet_id = ?
+                    """
+                ).use { stmt ->
+                    stmt.setString(1, walletId)
+                    stmt.executeQuery().use { rs ->
+                        val tags = mutableSetOf<String>()
+                        while (rs.next()) {
+                            tags.add(rs.getString("tag"))
+                        }
+                        tags
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun findByTag(tag: String): List<VerifiableCredential> = withContext(Dispatchers.IO) {
+        withStorageErrorHandling("findByTag") {
+            acquireConnection("findByTag").use { conn ->
+                conn.prepareStatement(
+                    """
+                    SELECT c.credential_data FROM credentials c
+                    JOIN credential_tags ct ON ct.credential_id = c.id
+                    WHERE ct.tag = ? AND c.wallet_id = ?
+                    """
+                ).use { stmt ->
+                    stmt.setString(1, tag)
+                    stmt.setString(2, walletId)
+                    stmt.executeQuery().use { rs ->
+                        val credentials = mutableListOf<VerifiableCredential>()
+                        while (rs.next()) {
+                            credentials.add(
+                                json.decodeFromString(VerifiableCredential.serializer(), rs.getString("credential_data"))
+                            )
+                        }
+                        credentials
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun addMetadata(credentialId: String, metadata: Map<String, Any>): Boolean = withContext(Dispatchers.IO) {
+        withStorageErrorHandling("addMetadata") {
+            acquireConnection("addMetadata").use { conn ->
+                if (!credentialExists(conn, credentialId)) {
+                    return@use false
+                }
+                val savedAutoCommit = conn.autoCommit
+                conn.autoCommit = false
+                try {
+                    upsertMetadataRow(conn, credentialId)
+                    // Merge with existing metadata (new keys win), mirroring InMemoryWallet.
+                    // FOR UPDATE: the read-modify-write must hold the row lock, or two
+                    // concurrent addMetadata calls can lose each other's keys.
+                    val existing = conn.prepareStatement(
+                        "SELECT metadata_json FROM credential_metadata WHERE credential_id = ? FOR UPDATE"
+                    ).use { stmt ->
+                        stmt.setString(1, credentialId)
+                        stmt.executeQuery().use { rs -> if (rs.next()) rs.getString("metadata_json") else null }
+                    }
+                    val merged = metadataJsonToMap(existing) + metadata
+                    conn.prepareStatement(
+                        "UPDATE credential_metadata SET metadata_json = ?, updated_at = CURRENT_TIMESTAMP WHERE credential_id = ?"
+                    ).use { stmt ->
+                        stmt.setString(1, metadataMapToJson(merged))
+                        stmt.setString(2, credentialId)
+                        stmt.executeUpdate()
+                    }
+                    conn.commit()
+                    true
+                } catch (e: Exception) {
+                    runCatching { conn.rollback() }
+                    throw e
+                } finally {
+                    conn.autoCommit = savedAutoCommit
+                }
+            }
+        }
+    }
+
+    override suspend fun getMetadata(credentialId: String): CredentialMetadata? = withContext(Dispatchers.IO) {
+        withStorageErrorHandling("getMetadata") {
+            acquireConnection("getMetadata").use { conn ->
+                conn.prepareStatement(
+                    """
+                    SELECT m.notes, m.metadata_json, m.created_at, m.updated_at
+                    FROM credential_metadata m
+                    JOIN credentials c ON c.id = m.credential_id
+                    WHERE m.credential_id = ? AND c.wallet_id = ?
+                    """
+                ).use { stmt ->
+                    stmt.setString(1, credentialId)
+                    stmt.setString(2, walletId)
+                    stmt.executeQuery().use { rs ->
+                        if (rs.next()) {
+                            CredentialMetadata(
+                                credentialId = credentialId,
+                                notes = rs.getString("notes"),
+                                tags = readTags(conn, credentialId),
+                                metadata = metadataJsonToMap(rs.getString("metadata_json")),
+                                createdAt = rs.instantOrNow("created_at"),
+                                updatedAt = rs.instantOrNow("updated_at")
+                            )
+                        } else {
+                            null
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun updateNotes(credentialId: String, notes: String?): Boolean = withContext(Dispatchers.IO) {
+        withStorageErrorHandling("updateNotes") {
+            acquireConnection("updateNotes").use { conn ->
+                if (!credentialExists(conn, credentialId)) {
+                    return@use false
+                }
+                upsertMetadataRow(conn, credentialId)
+                conn.prepareStatement(
+                    "UPDATE credential_metadata SET notes = ?, updated_at = CURRENT_TIMESTAMP WHERE credential_id = ?"
+                ).use { stmt ->
+                    stmt.setString(1, notes)
+                    stmt.setString(2, credentialId)
+                    stmt.executeUpdate()
+                }
+                true
+            }
         }
     }
 

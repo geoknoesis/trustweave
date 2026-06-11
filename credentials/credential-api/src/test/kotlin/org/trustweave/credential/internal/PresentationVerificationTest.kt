@@ -17,12 +17,51 @@ import kotlin.test.assertNull
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 /**
  * Comprehensive tests for PresentationVerification utility.
  */
 class PresentationVerificationTest {
-    
+
+    @Test
+    fun `kbJwtMaxAge defaults to 10 minutes when not configured`() {
+        val options = VerificationOptions()
+
+        assertEquals(
+            PresentationVerification.DEFAULT_KB_JWT_MAX_AGE,
+            PresentationVerification.kbJwtMaxAge(options),
+            "Default KB-JWT max age must apply when the option is absent"
+        )
+        assertEquals(kotlin.time.Duration.parse("PT10M"), PresentationVerification.DEFAULT_KB_JWT_MAX_AGE)
+    }
+
+    @Test
+    fun `kbJwtMaxAge honours a configured Duration`() {
+        val options = VerificationOptions(
+            additionalOptions = mapOf(
+                PresentationVerification.KB_JWT_MAX_AGE_OPTION to kotlin.time.Duration.parse("PT2M")
+            )
+        )
+
+        assertEquals(kotlin.time.Duration.parse("PT2M"), PresentationVerification.kbJwtMaxAge(options))
+    }
+
+    @Test
+    fun `kbJwtMaxAge rejects non-positive or non-Duration values`() {
+        // A present-but-invalid value must fail loudly: a verifier intending a
+        // stricter policy must not be silently weakened to the default.
+        val zero = VerificationOptions(
+            additionalOptions = mapOf(PresentationVerification.KB_JWT_MAX_AGE_OPTION to kotlin.time.Duration.ZERO)
+        )
+        val wrongType = VerificationOptions(
+            additionalOptions = mapOf(PresentationVerification.KB_JWT_MAX_AGE_OPTION to 600)
+        )
+
+        assertFailsWith<IllegalArgumentException> { PresentationVerification.kbJwtMaxAge(zero) }
+        assertFailsWith<IllegalArgumentException> { PresentationVerification.kbJwtMaxAge(wrongType) }
+    }
+
     @Test
     fun `test verifyChallenge with verifyChallenge disabled`() {
         val presentation = createTestPresentation(challenge = "test-challenge")

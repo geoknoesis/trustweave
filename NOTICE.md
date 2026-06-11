@@ -63,9 +63,17 @@ components are used in TrustWeave and are subject to their respective licenses.
   - Website: https://connect2id.com/products/nimbus-jose-jwt
 
 #### JSON-LD Processing
-- **jsonld-java** - Copyright 2013-2025 Digital Bazaar, Inc.
-  - License: BSD 3-Clause License
-  - Website: https://github.com/jsonld-java/jsonld-java
+- **Titanium JSON-LD** - Copyright APICATALOG / Filip Kolarik
+  - License: Apache License 2.0
+  - Website: https://github.com/filip26/titanium-json-ld
+
+- **Titanium RDFC (RDF Dataset Canonicalization)** - Copyright APICATALOG / Filip Kolarik
+  - License: Apache License 2.0
+  - Website: https://github.com/filip26/titanium-rdf-canon
+
+- **Jakarta JSON Processing (Eclipse GlassFish)** - Copyright Eclipse Foundation
+  - License: Eclipse Public License 2.0 OR GPL v2.0 with Classpath Exception
+  - Website: https://github.com/eclipse-ee4j/jsonp
 
 ### Blockchain Integration Libraries
 
@@ -165,7 +173,7 @@ Most third-party dependencies use permissive open-source licenses compatible wit
 
 - **Apache License 2.0** - Used by most dependencies (Kotlin, Ktor, Jackson, etc.)
 - **MIT License** - Used by some dependencies (BouncyCastle, Algorand SDK, etc.)
-- **BSD Licenses** - Used by some dependencies (PostgreSQL JDBC, jsonld-java)
+- **BSD Licenses** - Used by some dependencies (PostgreSQL JDBC)
 - **EPL 1.0 / MPL 2.0** - Used by H2 Database
 - **Eclipse Public License 2.0** - Used by JUnit 5
 - **GPL v2.0 with FOSS Exception** - MySQL Connector/J (can be used under FOSS exception)

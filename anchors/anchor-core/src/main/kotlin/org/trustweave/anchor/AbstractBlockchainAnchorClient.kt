@@ -68,6 +68,31 @@ abstract class AbstractBlockchainAnchorClient(
         const val DEFAULT_CONFIRMATION_POLL_INTERVAL_MS: Long = 1_000L
 
         /**
+         * Options key selecting what is anchored on-chain. Accepts [PAYLOAD_MODE_FULL]
+         * (default) or [PAYLOAD_MODE_DIGEST]; any other value fails closed with
+         * [BlockchainException.ConfigurationFailed] at construction.
+         *
+         * In digest mode, the on-chain data is a compact [AnchorDigest] envelope —
+         * `{"alg":"SHA-256","digest":"<base64url(sha256(payload bytes))>","mediaType":…}` —
+         * instead of the full payload JSON, so payload content (PII, business data)
+         * never goes on-chain. Payload bytes are the UTF-8 of the payload JSON exactly
+         * as serialized by this write path (`Json.encodeToString(JsonElement.serializer(),
+         * payload)`); no canonicalization is applied. [readPayload] consequently returns
+         * the envelope, not the original payload, and marks the reference with
+         * `extra["payloadMode"] = "digest"`. Use [BlockchainAnchorClient.verifyAnchor]
+         * with the off-chain payload to verify the anchor.
+         *
+         * Also used as the key in [AnchorRef.extra] marking digest-mode anchors.
+         */
+        const val OPTION_PAYLOAD_MODE: String = "payloadMode"
+
+        /** [OPTION_PAYLOAD_MODE] value: anchor the full payload JSON (default). */
+        const val PAYLOAD_MODE_FULL: String = "full"
+
+        /** [OPTION_PAYLOAD_MODE] value: anchor only a SHA-256 digest envelope. */
+        const val PAYLOAD_MODE_DIGEST: String = "digest"
+
+        /**
          * Process-wide monotonic counter mixed into fabricated test transaction hashes so
          * two test anchors created in the same process can never collide (a purely random
          * small-range component could).
@@ -104,6 +129,52 @@ abstract class AbstractBlockchainAnchorClient(
             is Number -> value.toLong()
             is String -> value.toLongOrNull() ?: default
             else -> default
+        }
+
+    /**
+     * The configured payload mode (see [OPTION_PAYLOAD_MODE]); defaults to
+     * [PAYLOAD_MODE_FULL]. Unknown values fail closed at construction.
+     */
+    protected val payloadMode: String =
+        when (val value = options[OPTION_PAYLOAD_MODE]) {
+            null -> PAYLOAD_MODE_FULL
+            PAYLOAD_MODE_FULL, PAYLOAD_MODE_DIGEST -> value as String
+            else -> throw BlockchainException.ConfigurationFailed(
+                chainId = chainId,
+                configKey = OPTION_PAYLOAD_MODE,
+                reason = "Unsupported payload mode '$value'; use '$PAYLOAD_MODE_FULL' " +
+                    "(anchor the full payload JSON) or '$PAYLOAD_MODE_DIGEST' " +
+                    "(anchor only a SHA-256 digest envelope)."
+            )
+        }
+
+    /** Whether this client anchors digest envelopes instead of full payloads. */
+    protected val digestPayloadMode: Boolean = payloadMode == PAYLOAD_MODE_DIGEST
+
+    /**
+     * The exact bytes anchored on-chain for [payload]: the UTF-8 of the payload JSON
+     * in full mode, or the UTF-8 of the [AnchorDigest] envelope in digest mode.
+     * Subclasses with their own submit paths (e.g. payment-aware overrides of
+     * [writePayload]) must route payload serialization through this helper so all
+     * write paths honour [OPTION_PAYLOAD_MODE].
+     */
+    protected fun encodeAnchoredBytes(payload: JsonElement, mediaType: String): ByteArray {
+        val payloadBytes = Json.encodeToString(JsonElement.serializer(), payload)
+            .toByteArray(StandardCharsets.UTF_8)
+        if (!digestPayloadMode) return payloadBytes
+        return Json.encodeToString(JsonElement.serializer(), AnchorDigest.envelope(payloadBytes, mediaType))
+            .toByteArray(StandardCharsets.UTF_8)
+    }
+
+    /**
+     * [buildExtraMetadata] plus the digest-mode marker
+     * (`payloadMode = digest`) when [digestPayloadMode] is enabled.
+     */
+    protected fun anchorExtraMetadata(mediaType: String): Map<String, String> =
+        if (digestPayloadMode) {
+            buildExtraMetadata(mediaType) + (OPTION_PAYLOAD_MODE to PAYLOAD_MODE_DIGEST)
+        } else {
+            buildExtraMetadata(mediaType)
         }
 
     /**
@@ -199,16 +270,24 @@ abstract class AbstractBlockchainAnchorClient(
     ): AnchorResult = withContext(Dispatchers.IO) {
         val payloadJson = Json.encodeToString(JsonElement.serializer(), payload)
         val payloadBytes = payloadJson.toByteArray(StandardCharsets.UTF_8)
+        // In digest mode the on-chain data is the compact digest envelope, never the
+        // payload itself. The digest is computed over the exact bytes the full-payload
+        // path would have anchored (UTF-8 of the serialized payload JSON above).
+        val envelope: JsonElement? =
+            if (digestPayloadMode) AnchorDigest.envelope(payloadBytes, mediaType) else null
+        val submittedBytes = envelope
+            ?.let { Json.encodeToString(JsonElement.serializer(), it).toByteArray(StandardCharsets.UTF_8) }
+            ?: payloadBytes
 
         try {
             when {
                 canSubmitTransaction() -> {
-                    val txHash = submitTransactionToBlockchain(payloadBytes)
+                    val txHash = submitTransactionToBlockchain(submittedBytes)
                     AnchorResult(
                         ref = buildAnchorRef(
                             txHash = txHash,
                             contract = getContractAddress(),
-                            extra = buildExtraMetadata(mediaType)
+                            extra = anchorExtraMetadata(mediaType)
                         ),
                         payload = payload,
                         mediaType = mediaType,
@@ -223,14 +302,16 @@ abstract class AbstractBlockchainAnchorClient(
                         ref = buildAnchorRef(
                             txHash = hash,
                             contract = getContractAddress(),
-                            extra = buildExtraMetadata(mediaType) +
+                            extra = anchorExtraMetadata(mediaType) +
                                 (OPTION_IN_MEMORY_TEST_MODE to "true")
                         ),
                         payload = payload,
                         mediaType = mediaType,
                         timestamp = System.currentTimeMillis() / 1000
                     )
-                    storage[hash] = result
+                    // The stored copy mirrors what a real chain read would return: in
+                    // digest mode only the envelope is recoverable from the chain.
+                    storage[hash] = if (envelope != null) result.copy(payload = envelope) else result
                     result
                 }
                 else -> throw BlockchainException.ConfigurationFailed(
@@ -248,7 +329,7 @@ abstract class AbstractBlockchainAnchorClient(
             throw BlockchainException.TransactionFailed(
                 chainId = chainId,
                 operation = "writePayload",
-                payloadSize = payloadBytes.size.toLong(),
+                payloadSize = submittedBytes.size.toLong(),
                 reason = "Failed to anchor payload to ${getBlockchainName()}: ${e.message ?: "Unknown error"}",
                 cause = e
             )
@@ -260,7 +341,7 @@ abstract class AbstractBlockchainAnchorClient(
 
         // Read from the blockchain; the in-memory storage is consulted ONLY when the
         // opt-in test mode is enabled, so chain errors are never masked in production.
-        try {
+        val result = try {
             readTransactionFromBlockchain(ref.txHash)
         } catch (e: Exception) {
             val fromTestStorage = if (inMemoryTestMode) storage[ref.txHash] else null
@@ -274,6 +355,21 @@ abstract class AbstractBlockchainAnchorClient(
                     cause = e
                 )
             }
+        }
+
+        // Digest-mode anchors cannot recover the original payload — the result carries
+        // the envelope. Mark the reference so callers can tell the two modes apart
+        // (chain reads rebuild the ref from scratch, losing the write-time marker).
+        if (AnchorDigest.isEnvelope(result.payload) &&
+            result.ref.extra[OPTION_PAYLOAD_MODE] != PAYLOAD_MODE_DIGEST
+        ) {
+            result.copy(
+                ref = result.ref.copy(
+                    extra = result.ref.extra + (OPTION_PAYLOAD_MODE to PAYLOAD_MODE_DIGEST)
+                )
+            )
+        } else {
+            result
         }
     }
 

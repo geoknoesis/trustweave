@@ -98,7 +98,7 @@ data class EncryptedData(
  * Derives master key from password using PBKDF2.
  *
  * Uses PBKDF2 with HMAC-SHA256 for key derivation.
- * Recommended iterations: 100,000+ for production.
+ * Recommended iterations: 210,000+ for production (OWASP guidance for PBKDF2-HMAC-SHA256).
  */
 object MasterKeyDerivation {
     /**
@@ -106,13 +106,13 @@ object MasterKeyDerivation {
      *
      * @param password Password to derive key from
      * @param salt Salt for key derivation (should be random, 16+ bytes)
-     * @param iterations Number of PBKDF2 iterations (recommended: 100,000+)
+     * @param iterations Number of PBKDF2 iterations (recommended: 210,000+)
      * @return Derived key (256 bits / 32 bytes)
      */
     fun deriveKey(
         password: CharArray,
         salt: ByteArray,
-        iterations: Int = 100000
+        iterations: Int = 210_000
     ): ByteArray {
         val keySpec: KeySpec = PBEKeySpec(
             password,

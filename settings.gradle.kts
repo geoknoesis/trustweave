@@ -80,6 +80,7 @@ include("kms:plugins:venafi")
 
 // Anchors domain
 include("anchors:anchor-core")
+include("anchors:plugins:evm-base")
 include("anchors:plugins:algorand")
 include("anchors:plugins:polygon")
 include("anchors:plugins:ethereum")

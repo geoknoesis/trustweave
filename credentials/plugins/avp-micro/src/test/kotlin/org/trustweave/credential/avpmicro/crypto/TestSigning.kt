@@ -41,4 +41,7 @@ object TestSigning {
         val did = didKey(label)
         return "$did#${did.removePrefix("did:key:")}"
     }
+
+    fun sign(document: kotlinx.serialization.json.JsonObject, label: String, created: String) =
+        EcdsaJcs2022.sign(document, seedKey(label), verificationMethod(label), created)
 }

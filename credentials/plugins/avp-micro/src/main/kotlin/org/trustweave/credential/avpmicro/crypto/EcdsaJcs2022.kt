@@ -4,11 +4,20 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
+import org.bouncycastle.crypto.digests.SHA256Digest
+import org.bouncycastle.crypto.params.ECDomainParameters
+import org.bouncycastle.crypto.params.ECPrivateKeyParameters
+import org.bouncycastle.crypto.signers.ECDSASigner
+import org.bouncycastle.crypto.signers.HMacDSAKCalculator
+import org.bouncycastle.jce.ECNamedCurveTable
 import org.trustweave.core.util.decodeBase58
+import org.trustweave.core.util.encodeBase58
 import org.trustweave.kms.util.EcdsaSignatureCodec
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.security.Signature
+import java.security.interfaces.ECPrivateKey
 import java.security.interfaces.ECPublicKey
 
 object EcdsaJcs2022 {
@@ -20,15 +29,71 @@ object EcdsaJcs2022 {
 
     /** The 64-byte input the spec signs: sha256(JCS(proofConfig)) || sha256(JCS(unsecuredDoc)). */
     fun verifyData(document: JsonObject): ByteArray {
-        val proof = document["proof"]?.jsonObject ?: error("document has no proof object")
+        val proof = document.getValue("proof").jsonObject
         val proofConfig = buildJsonObject {
             for ((k, v) in proof) if (k != "proofValue") put(k, v)
             document["@context"]?.let { put("@context", it) }
         }
-        val cfgHash = sha256(Jcs.canonicalize(proofConfig))
+        return hashData(JsonObject(document.filterKeys { it != "proof" }), proofConfig)
+    }
+
+    private fun hashData(unsecured: JsonObject, proofConfig: JsonObject): ByteArray =
+        sha256(Jcs.canonicalize(proofConfig)) + sha256(Jcs.canonicalize(unsecured))
+
+    /**
+     * Produce an `ecdsa-jcs-2022` Data Integrity proof over [document] (any existing `proof`
+     * is replaced). Deterministic RFC 6979 + canonical low-s; raw R‖S; multibase base58btc.
+     */
+    fun sign(
+        document: JsonObject,
+        privateKey: ECPrivateKey,
+        verificationMethod: String,
+        created: String,
+        proofPurpose: String = "assertionMethod",
+    ): JsonObject {
         val unsecured = JsonObject(document.filterKeys { it != "proof" })
-        val docHash = sha256(Jcs.canonicalize(unsecured))
-        return cfgHash + docHash
+        val proofConfig = buildJsonObject {
+            put("type", "DataIntegrityProof")
+            put("cryptosuite", "ecdsa-jcs-2022")
+            put("created", created)
+            put("verificationMethod", verificationMethod)
+            put("proofPurpose", proofPurpose)
+            unsecured["@context"]?.let { put("@context", it) }
+        }
+        val raw = signRaw(privateKey, hashData(unsecured, proofConfig))
+        val proof = buildJsonObject {
+            put("type", "DataIntegrityProof")
+            put("cryptosuite", "ecdsa-jcs-2022")
+            put("created", created)
+            put("verificationMethod", verificationMethod)
+            put("proofPurpose", proofPurpose)
+            put("proofValue", "z" + raw.encodeBase58())
+        }
+        return JsonObject(unsecured.toMutableMap().apply { put("proof", proof) })
+    }
+
+    private fun signRaw(privateKey: ECPrivateKey, hashData: ByteArray): ByteArray {
+        val curve = ECNamedCurveTable.getParameterSpec("secp256r1")
+        val domain = ECDomainParameters(curve.curve, curve.g, curve.n, curve.h)
+        val signer = ECDSASigner(HMacDSAKCalculator(SHA256Digest()))
+        signer.init(true, ECPrivateKeyParameters(privateKey.s, domain))
+        val e = sha256(hashData) // ECDSA(SHA-256) signs SHA-256 of the message, matching the spec
+        val sig = signer.generateSignature(e)
+        val r = sig[0]
+        var s = sig[1]
+        val halfN = curve.n.shiftRight(1)
+        if (s > halfN) s = curve.n.subtract(s) // canonical low-s
+        return toFixed32(r) + toFixed32(s)
+    }
+
+    private fun toFixed32(v: BigInteger): ByteArray {
+        val b = v.toByteArray()
+        return when {
+            b.size == 32 -> b
+            b.size == 33 && b[0].toInt() == 0 -> b.copyOfRange(1, 33)
+            b.size < 32 -> ByteArray(32 - b.size) + b
+            else -> b.copyOfRange(b.size - 32, b.size)
+        }
     }
 
     /** Verify with an explicitly supplied key. */

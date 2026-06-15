@@ -7,10 +7,10 @@ import java.util.concurrent.ConcurrentHashMap
 
 /** Replay guard: a (credentialId, nonce) pair may be presented at most once. */
 class NonceStore {
-    private val seen = ConcurrentHashMap.newKeySet<String>()
-    private fun k(credentialId: String, nonce: String) = "$credentialId $nonce"
-    fun seen(credentialId: String, nonce: String) = seen.contains(k(credentialId, nonce))
-    fun record(credentialId: String, nonce: String) { seen.add(k(credentialId, nonce)) }
+    private val recorded = ConcurrentHashMap.newKeySet<String>()
+    private fun k(credentialId: String, nonce: String) = "$credentialId$nonce"
+    fun seen(credentialId: String, nonce: String) = recorded.contains(k(credentialId, nonce))
+    fun record(credentialId: String, nonce: String) { recorded.add(k(credentialId, nonce)) }
 }
 
 /** Single-use: an authorization id may be consumed at most once. */
@@ -24,7 +24,7 @@ class ConsumptionLedger {
 class DailyBudgetLedger {
     private val spend = ConcurrentHashMap<String, BigDecimal>()
     private fun utcDate(at: Instant) = at.atZone(ZoneOffset.UTC).toLocalDate().toString()
-    private fun k(agent: String, cred: String, at: Instant) = "$agent $cred ${utcDate(at)}"
+    private fun k(agent: String, cred: String, at: Instant) = "$agent$cred${utcDate(at)}"
     fun spentToday(agent: String, cred: String, at: Instant): BigDecimal =
         spend[k(agent, cred, at)] ?: BigDecimal.ZERO
     fun add(agent: String, cred: String, amount: BigDecimal, at: Instant) {

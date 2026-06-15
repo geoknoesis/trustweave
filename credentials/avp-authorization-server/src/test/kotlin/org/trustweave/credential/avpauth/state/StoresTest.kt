@@ -14,6 +14,7 @@ class StoresTest {
         s.record("k", "n1")
         assertTrue(s.seen("k", "n1"))
         assertFalse(s.seen("k", "n2"))
+        assertFalse(s.seen("k2", "n1")) // same nonce, different credential -> not seen
     }
 
     @Test fun `consumption ledger is single-use`() {

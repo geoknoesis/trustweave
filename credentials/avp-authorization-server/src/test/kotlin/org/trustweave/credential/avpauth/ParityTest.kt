@@ -10,11 +10,18 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
+/**
+ * Cross-stack parity: the genuine signed vector from the Python harness (avp-micro-spec)
+ * produces the AVP-Micro single-use verdict (allow once, then NONCE_REUSE) when driven
+ * through the Kotlin engine directly. Guards behavioural alignment with sim.py.
+ */
 class ParityTest {
     private val now = Instant.parse("2026-03-25T21:30:30Z")
     private fun vector() =
         Json.parseToJsonElement(
-            this::class.java.getResource("/vectors/02-payment-authorization.json")!!.readText()
+            requireNotNull(
+                this::class.java.getResource("/vectors/02-payment-authorization.json")
+            ) { "Test vector /vectors/02-payment-authorization.json missing from test resources" }.readText()
         ).jsonObject
 
     @Test fun `genuine vector allowed once then single-use rejected`() = runTest {

@@ -28,11 +28,11 @@ class AuthorizationEngine(
     private val locks = ConcurrentHashMap<String, Mutex>()
     private fun lockFor(credentialId: String) = locks.computeIfAbsent(credentialId) { Mutex() }
 
-    suspend fun decide(authorization: JsonObject): AuthorizationVerdict {
+    suspend fun decide(authorization: JsonObject, quote: JsonObject? = null): AuthorizationVerdict {
         val now = clock()
 
-        // 1. stateless gate (proofs + spending constraints); reuse the parsed view on success
-        val result = AvpMicro.verifyPayment(authorization, now)
+        // 1. stateless gate (proofs + spending constraints + quote binding); reuse the parsed view
+        val result = AvpMicro.verifyPayment(authorization, now, quote = quote)
         if (result is PaymentVerificationResult.Invalid)
             return AuthorizationVerdict.Reject(result.reason.name, result.detail)
         val view = (result as PaymentVerificationResult.Valid).view

@@ -1,6 +1,30 @@
 package org.trustweave.credential.avpmicro
 
-/** Facade for AVP-Micro stateless verification. Filled in by later tasks. */
+import kotlinx.serialization.json.JsonObject
+import org.trustweave.credential.avpmicro.verification.PaymentVerificationResult
+import org.trustweave.credential.avpmicro.verification.PaymentVerifier
+import org.trustweave.credential.avpmicro.verification.StatusResolver
+import java.math.BigDecimal
+import java.time.Instant
+
+/** AVP-Micro stateless verification facade. */
 object AvpMicro {
     internal const val CRYPTOSUITE = "ecdsa-jcs-2022"
+
+    /** Verify proofs + spending constraints of a self-contained PaymentAuthorization. */
+    fun verifyPayment(
+        authorization: JsonObject,
+        now: Instant,
+        clockSkewSeconds: Long = 300,
+        statusResolver: StatusResolver? = null,
+    ): PaymentVerificationResult =
+        PaymentVerifier.verify(authorization, now, clockSkewSeconds, statusResolver)
+
+    /** Test/use hook: run the checklist with an injected amount (keeps the genuine signature valid). */
+    fun checkConstraints(
+        authorization: JsonObject,
+        now: Instant,
+        amountOverride: BigDecimal? = null,
+    ): PaymentVerificationResult =
+        PaymentVerifier.verify(authorization, now, amountOverride = amountOverride)
 }

@@ -17,8 +17,9 @@ object AvpMicro {
         now: Instant,
         clockSkewSeconds: Long = 300,
         statusResolver: StatusResolver? = null,
+        quote: JsonObject? = null,
     ): PaymentVerificationResult =
-        PaymentVerifier.verify(authorization, now, clockSkewSeconds, statusResolver)
+        PaymentVerifier.verify(authorization, now, clockSkewSeconds, statusResolver, quote = quote)
 
     /** Test/use hook: run the checklist with an injected amount (keeps the genuine signature valid). */
     fun checkConstraints(

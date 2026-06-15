@@ -47,4 +47,25 @@ class PaymentVerifierTest {
         val r = AvpMicro.verifyPayment(JsonObject(emptyMap()), now)
         assertEquals(VerificationFailure.MALFORMED_REQUEST, (r as PaymentVerificationResult.Invalid).reason)
     }
+
+    @Test
+    fun `valid authorization with matching quote passes`() {
+        val r = AvpMicro.verifyPayment(Vectors.paymentAuthorization, now, quote = Vectors.paymentQuote)
+        assertTrue(r is PaymentVerificationResult.Valid, "expected Valid, got $r")
+    }
+
+    @Test
+    fun `tampered quote fails with QUOTE_PROOF_INVALID`() {
+        val tamperedQuote = JsonObject(
+            Vectors.paymentQuote.toMutableMap().apply { put("amount", JsonPrimitive("0.002")) }
+        )
+        val r = AvpMicro.verifyPayment(Vectors.paymentAuthorization, now, quote = tamperedQuote)
+        assertEquals(VerificationFailure.QUOTE_PROOF_INVALID, (r as PaymentVerificationResult.Invalid).reason)
+    }
+
+    @Test
+    fun `no quote supplied still verifies caps only`() {
+        val r = AvpMicro.verifyPayment(Vectors.paymentAuthorization, now)
+        assertTrue(r is PaymentVerificationResult.Valid)
+    }
 }

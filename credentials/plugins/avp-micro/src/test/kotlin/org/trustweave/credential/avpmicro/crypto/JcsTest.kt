@@ -22,4 +22,20 @@ class JcsTest {
     fun `escapes control characters and quotes minimally`() {
         assertEquals(""""a\tb\"c\\d"""", canon(""""a\tb\"c\\d""""))
     }
+
+    @Test
+    fun `escapes line terminators`() {
+        // U+2028 and U+2029 must be escaped per RFC 8785
+        assertEquals(""""  """", canon(""""  """"))
+    }
+
+    @Test
+    fun `emits boolean and null verbatim`() {
+        assertEquals("""{"a":true,"b":false,"c":null}""", canon("""{"a":true,"b":false,"c":null}"""))
+    }
+
+    @Test
+    fun `emits integer verbatim`() {
+        assertEquals("""{"n":42}""", canon("""{"n":42}"""))
+    }
 }

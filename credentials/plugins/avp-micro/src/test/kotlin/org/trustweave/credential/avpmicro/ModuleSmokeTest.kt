@@ -1,5 +1,6 @@
 package org.trustweave.credential.avpmicro
 
+import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -9,12 +10,11 @@ class ModuleSmokeTest {
         assertEquals("ecdsa-jcs-2022", AvpMicro.CRYPTOSUITE)
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     fun `vectors load`() {
-        kotlin.test.assertEquals(
+        assertEquals(
             "PaymentAuthorization",
-            (org.trustweave.credential.avpmicro.Vectors.paymentAuthorization["type"]
-                as kotlinx.serialization.json.JsonPrimitive).content,
+            (Vectors.paymentAuthorization["type"] as JsonPrimitive).content,
         )
     }
 }

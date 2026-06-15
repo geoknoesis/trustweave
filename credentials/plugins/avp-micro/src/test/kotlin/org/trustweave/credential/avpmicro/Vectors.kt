@@ -8,7 +8,7 @@ object Vectors {
     private fun load(name: String): JsonObject {
         val text = requireNotNull(this::class.java.getResourceAsStream("/vectors/$name")) {
             "missing test resource /vectors/$name"
-        }.bufferedReader().use { it.readText() }
+        }.bufferedReader(Charsets.UTF_8).use { it.readText() }
         return Json.parseToJsonElement(text).jsonObject
     }
 

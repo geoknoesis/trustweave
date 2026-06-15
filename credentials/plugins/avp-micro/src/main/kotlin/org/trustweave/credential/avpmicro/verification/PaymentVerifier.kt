@@ -95,6 +95,8 @@ object PaymentVerifier {
         }
         if (view.quoteDigest != Digests.jcsDigest(quote))
             return fail(VerificationFailure.QUOTE_MISMATCH, "quoteDigest does not match the supplied quote")
+        if (view.requestHash == null || q.requestHash == null)
+            return fail(VerificationFailure.QUOTE_MISMATCH, "missing required requestHash")
         if (view.payee != q.payee || view.requestHash != q.requestHash)
             return fail(VerificationFailure.QUOTE_MISMATCH, "payee/requestHash differ from quote")
         if (view.amount.compareTo(q.amount) != 0 || view.currency != q.currency)

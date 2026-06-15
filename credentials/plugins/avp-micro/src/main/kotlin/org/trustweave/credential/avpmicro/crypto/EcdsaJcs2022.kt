@@ -36,15 +36,19 @@ object EcdsaJcs2022 {
             for ((k, v) in proof) if (k != "proofValue") put(k, v)
             document["@context"]?.let { put("@context", it) }
         }
-        return hashData(JsonObject(document.filterKeys { it != "proof" }), proofConfig)
+        return hashData(proofConfig, JsonObject(document.filterKeys { it != "proof" }))
     }
 
-    private fun hashData(unsecured: JsonObject, proofConfig: JsonObject): ByteArray =
+    private fun hashData(proofConfig: JsonObject, unsecured: JsonObject): ByteArray =
         sha256(Jcs.canonicalize(proofConfig)) + sha256(Jcs.canonicalize(unsecured))
 
     /**
      * Produce an `ecdsa-jcs-2022` Data Integrity proof over [document] (any existing `proof`
      * is replaced). Deterministic RFC 6979 + canonical low-s; raw R‖S; multibase base58btc.
+     *
+     * WARNING: signs with a raw [ECPrivateKey], bypassing KeyManagementService audit/HSM
+     * controls. Intended for test fixtures and credential-issuance tooling only — production
+     * payment flows must sign via KeyManagementService.
      */
     fun sign(
         document: JsonObject,
@@ -64,7 +68,7 @@ object EcdsaJcs2022 {
         val proofConfig = JsonObject(base.toMutableMap().apply {
             unsecured["@context"]?.let { put("@context", it) }
         })
-        val raw = signRaw(privateKey, hashData(unsecured, proofConfig))
+        val raw = signRaw(privateKey, hashData(proofConfig, unsecured))
         val proof = JsonObject(base.toMutableMap().apply {
             put("proofValue", JsonPrimitive("z" + raw.encodeBase58()))
         })
@@ -101,8 +105,10 @@ object EcdsaJcs2022 {
         if (!pv.startsWith("z")) return false
         val raw = try { pv.substring(1).decodeBase58() } catch (e: Exception) { return false }
         if (raw.size != 64) return false
+        val r = BigInteger(1, raw.copyOfRange(0, 32))
+        if (r < BigInteger.ONE || r >= P256_N) return false
         val s = BigInteger(1, raw.copyOfRange(32, 64))
-        if (s > P256_HALF_N) return false // spec mandates canonical low-s
+        if (s < BigInteger.ONE || s > P256_HALF_N) return false // canonical low-s; s in [1, n/2]
         val der = EcdsaSignatureCodec.p1363ToDer(raw)
         return try {
             // SHA256withECDSA hashes verifyData again (i.e. signs SHA-256(hashData)),

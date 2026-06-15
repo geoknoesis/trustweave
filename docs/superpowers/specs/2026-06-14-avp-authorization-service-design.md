@@ -211,12 +211,32 @@ plugin's tests.
 
 ## 10. Deferred (explicitly out of scope for this slice)
 
-- Persistence (DB-backed stores), API-key auth, usage metering/billing, multi-region.
+- **Quote binding.** This slice verifies the authorization's own `ecdsa-jcs-2022` proof, the
+  embedded `SpendingAuthorizationCredential`, and the spending constraints — but it does
+  **not** verify the authorization against a payee-signed `PaymentQuote`. The
+  `quoteDigest` / `requestHash` / amount / payee / settlement-routing equalities that
+  `sim.py` enforces are **not** checked here, so a verified `allow` attests "the agent
+  authorized a payment within its credential's caps," not "the payment matches a quoted
+  price/route." The endpoint accepts a self-contained `PaymentAuthorization`; binding it to
+  a fetched, payee-signed quote is a follow-up for the deployable iteration.
+- **Issuer trust.** Credential verification establishes *self-consistency only* — "this
+  `did:key` signed this credential" — not that the issuer is **trusted**. There is no issuer
+  allowlist / trust registry, so a self-issued `SpendingAuthorizationCredential` with
+  arbitrary caps (where `payer == subject`) would pass. Trusted-issuer enforcement is
+  product #2 (hosted trust infrastructure) territory and is deliberately out of scope here.
+  *Valid signature ≠ trusted issuer.*
+- Persistence (DB-backed stores) — note the per-credential `Mutex` lock map in
+  `AuthorizationEngine` is also unbounded in-memory alongside the three stores. Plus API-key
+  auth, usage metering/billing, multi-region.
 - Streaming / metered sessions (`UsageSession`, `UsageAccrual`,
   `SessionBudgetAuthorization`).
 - Issuance DSL, `PaymentReceipt`, and the SD-JWT-VC interop bridge (covered by the broader
   approved `avp-micro` plugin design).
 - The settlement step (value movement) — out of scope by AVP-Micro definition.
+
+A structurally-incomplete (but parseable) request is reported as `400 INVALID_REQUEST`
+(the engine's internal `MALFORMED_REQUEST` verdict is mapped to 400 at the route), keeping
+the 200 `reject` space for genuine authorization decisions only.
 
 ## 11. Deliverables summary
 

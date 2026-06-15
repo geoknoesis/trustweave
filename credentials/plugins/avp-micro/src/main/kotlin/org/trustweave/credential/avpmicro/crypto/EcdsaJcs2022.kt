@@ -1,6 +1,7 @@
 package org.trustweave.credential.avpmicro.crypto
 
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -26,10 +27,11 @@ object EcdsaJcs2022 {
     // P-256 group order n, and n/2 for the canonical low-s check.
     private val P256_N = BigInteger("ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551", 16)
     private val P256_HALF_N = P256_N.shiftRight(1)
+    private val secp256r1 = ECNamedCurveTable.getParameterSpec("secp256r1")
 
     /** The 64-byte input the spec signs: sha256(JCS(proofConfig)) || sha256(JCS(unsecuredDoc)). */
     fun verifyData(document: JsonObject): ByteArray {
-        val proof = document.getValue("proof").jsonObject
+        val proof = document["proof"]?.jsonObject ?: error("document has no proof object")
         val proofConfig = buildJsonObject {
             for ((k, v) in proof) if (k != "proofValue") put(k, v)
             document["@context"]?.let { put("@context", it) }
@@ -52,37 +54,32 @@ object EcdsaJcs2022 {
         proofPurpose: String = "assertionMethod",
     ): JsonObject {
         val unsecured = JsonObject(document.filterKeys { it != "proof" })
-        val proofConfig = buildJsonObject {
+        val base = buildJsonObject {
             put("type", "DataIntegrityProof")
             put("cryptosuite", "ecdsa-jcs-2022")
             put("created", created)
             put("verificationMethod", verificationMethod)
             put("proofPurpose", proofPurpose)
+        }
+        val proofConfig = JsonObject(base.toMutableMap().apply {
             unsecured["@context"]?.let { put("@context", it) }
-        }
+        })
         val raw = signRaw(privateKey, hashData(unsecured, proofConfig))
-        val proof = buildJsonObject {
-            put("type", "DataIntegrityProof")
-            put("cryptosuite", "ecdsa-jcs-2022")
-            put("created", created)
-            put("verificationMethod", verificationMethod)
-            put("proofPurpose", proofPurpose)
-            put("proofValue", "z" + raw.encodeBase58())
-        }
+        val proof = JsonObject(base.toMutableMap().apply {
+            put("proofValue", JsonPrimitive("z" + raw.encodeBase58()))
+        })
         return JsonObject(unsecured.toMutableMap().apply { put("proof", proof) })
     }
 
     private fun signRaw(privateKey: ECPrivateKey, hashData: ByteArray): ByteArray {
-        val curve = ECNamedCurveTable.getParameterSpec("secp256r1")
-        val domain = ECDomainParameters(curve.curve, curve.g, curve.n, curve.h)
+        val domain = ECDomainParameters(secp256r1.curve, secp256r1.g, secp256r1.n, secp256r1.h)
         val signer = ECDSASigner(HMacDSAKCalculator(SHA256Digest()))
         signer.init(true, ECPrivateKeyParameters(privateKey.s, domain))
         val e = sha256(hashData) // ECDSA(SHA-256) signs SHA-256 of the message, matching the spec
         val sig = signer.generateSignature(e)
         val r = sig[0]
         var s = sig[1]
-        val halfN = curve.n.shiftRight(1)
-        if (s > halfN) s = curve.n.subtract(s) // canonical low-s
+        if (s > P256_HALF_N) s = P256_N.subtract(s) // canonical low-s, using the validated constants
         return toFixed32(r) + toFixed32(s)
     }
 
@@ -92,7 +89,7 @@ object EcdsaJcs2022 {
             b.size == 32 -> b
             b.size == 33 && b[0].toInt() == 0 -> b.copyOfRange(1, 33)
             b.size < 32 -> ByteArray(32 - b.size) + b
-            else -> b.copyOfRange(b.size - 32, b.size)
+            else -> error("unreachable: a P-256 scalar serializes to at most 33 bytes, got ${b.size}")
         }
     }
 

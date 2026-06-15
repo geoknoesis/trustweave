@@ -1,7 +1,6 @@
 package org.trustweave.credential.avpmicro.crypto
 
 import org.trustweave.credential.avpmicro.Vectors
-import java.security.MessageDigest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

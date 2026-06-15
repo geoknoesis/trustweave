@@ -27,6 +27,7 @@ object P256DidKey {
             init(ECGenParameterSpec("secp256r1"))
         }.getParameterSpec(ECParameterSpec::class.java)
         val spec = ECPublicKeySpec(ECPoint(x, y), params)
-        return KeyFactory.getInstance("EC").generatePublic(spec) as ECPublicKey
+        return KeyFactory.getInstance("EC").generatePublic(spec) as? ECPublicKey
+            ?: throw IllegalStateException("EC KeyFactory returned a non-EC public key")
     }
 }

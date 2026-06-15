@@ -3,6 +3,7 @@ package org.trustweave.credential.avpmicro.crypto
 import java.math.BigInteger
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class P256DidKeyTest {
     private val vm =
@@ -14,5 +15,7 @@ class P256DidKeyTest {
         val key = P256DidKey.publicKeyFrom(vm)
         val expectedX = BigInteger("c81809c0db9c2cd636eae025100cfdba1bcb33b8d3ca487c475ec7f55759b629", 16)
         assertEquals(expectedX, key.w.affineX)
+        // compressed point prefix was 0x03 → Y is odd; confirms decompression chose the right parity
+        assertTrue(key.w.affineY.testBit(0))
     }
 }

@@ -20,7 +20,7 @@ object EcdsaJcs2022 {
 
     /** The 64-byte input the spec signs: sha256(JCS(proofConfig)) || sha256(JCS(unsecuredDoc)). */
     fun verifyData(document: JsonObject): ByteArray {
-        val proof = document.getValue("proof").jsonObject
+        val proof = document["proof"]?.jsonObject ?: error("document has no proof object")
         val proofConfig = buildJsonObject {
             for ((k, v) in proof) if (k != "proofValue") put(k, v)
             document["@context"]?.let { put("@context", it) }
@@ -43,6 +43,8 @@ object EcdsaJcs2022 {
         if (s > P256_HALF_N) return false // spec mandates canonical low-s
         val der = EcdsaSignatureCodec.p1363ToDer(raw)
         return try {
+            // SHA256withECDSA hashes verifyData again (i.e. signs SHA-256(hashData)),
+            // matching the Python spec's ec.ECDSA(hashes.SHA256()). Do NOT switch to NONEwithECDSA.
             Signature.getInstance("SHA256withECDSA").run {
                 initVerify(publicKey)
                 update(verifyData(document))

@@ -2,6 +2,7 @@ package org.trustweave.credential.avpmicro.crypto
 
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
 import org.trustweave.credential.avpmicro.Vectors
 import kotlin.test.Test
 import kotlin.test.assertFalse
@@ -23,5 +24,14 @@ class EcdsaJcs2022VerifyTest {
         val doc = Vectors.paymentAuthorization
         val tampered = JsonObject(doc.toMutableMap().apply { put("amount", JsonPrimitive("999.00")) })
         assertFalse(EcdsaJcs2022.verify(tampered))
+    }
+
+    @Test
+    fun `rejects a non-multibase proofValue`() {
+        val doc = Vectors.paymentAuthorization
+        val proof = doc.getValue("proof").jsonObject
+        val badProof = JsonObject(proof.toMutableMap().apply { put("proofValue", JsonPrimitive("xnotmultibase")) })
+        val bad = JsonObject(doc.toMutableMap().apply { put("proof", badProof) })
+        assertFalse(EcdsaJcs2022.verify(bad))
     }
 }

@@ -68,4 +68,13 @@ class HttpTest {
         }
         assertEquals(HttpStatusCode.BadRequest, r.status)
     }
+
+    @Test fun `non-object authorization field returns 400`() = testApplication {
+        application { configureAuthorization(AuthorizationEngine(clock = { now })) }
+        val r = client.post("/v1/authorizations/verify") {
+            contentType(ContentType.Application.Json)
+            setBody("""{"authorization":42,"quote":$quote}""")
+        }
+        assertEquals(HttpStatusCode.BadRequest, r.status)
+    }
 }

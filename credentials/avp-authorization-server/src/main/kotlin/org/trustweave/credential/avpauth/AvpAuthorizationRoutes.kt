@@ -8,6 +8,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import org.trustweave.credential.avpauth.dto.ErrorResponse
 import org.trustweave.credential.avpauth.dto.VerifyResponse
@@ -32,8 +33,8 @@ fun Routing.authorizationRoutes(engine: AuthorizationEngine) {
             call.respond(HttpStatusCode.BadRequest, ErrorResponse("INVALID_REQUEST", e.message ?: "malformed JSON"))
             return@post
         }
-        val authorization = parsed["authorization"]?.jsonObject
-        val quote = parsed["quote"]?.jsonObject
+        val authorization = parsed["authorization"] as? JsonObject
+        val quote = parsed["quote"] as? JsonObject
         if (authorization == null || quote == null) {
             call.respond(
                 HttpStatusCode.BadRequest,

@@ -50,4 +50,12 @@ class HttpTest {
         }
         assertEquals(HttpStatusCode.BadRequest, res.status)
     }
+
+    @Test fun `structurally incomplete authorization returns 400`() = testApplication {
+        application { configureAuthorization(AuthorizationEngine(clock = { now })) }
+        val res = client.post("/v1/authorizations/verify") {
+            contentType(ContentType.Application.Json); setBody("""{"type":"PaymentAuthorization"}""")
+        }
+        assertEquals(HttpStatusCode.BadRequest, res.status)
+    }
 }

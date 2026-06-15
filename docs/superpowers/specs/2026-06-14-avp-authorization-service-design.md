@@ -209,16 +209,33 @@ aligned.
 Fixtures use `testkit` + `kms:plugins:inmemory`, consistent with the Verifiable Intent
 plugin's tests.
 
+## 10a. Quote binding — IMPLEMENTED (follow-up, branch `feat/avp-quote-binding`)
+
+Quote binding (originally deferred) is now implemented per `docs/superpowers/plans/2026-06-15-avp-quote-binding.md`:
+the verifier checks the authorization against the payee-signed `PaymentQuote` — quote proof
+valid + signed by its payee, quote fresh, `authz.quoteDigest == jcsDigest(quote)` (proof
+stripped, matching `avp_crypto.py::jcs_digest`), and the authorization's own
+`payee`/`requestHash`/`amount`/`currency`/`settlementMethod`/`settlementTarget` equal the
+quote's — mirroring `sim.py`. The endpoint body is now `{ authorization, quote }` with both
+required.
+
+Notes / residual follow-ups:
+- **Enforced at the transport boundary.** `verifyQuoteBinding` runs only when a quote is
+  supplied; `AvpMicro.verifyPayment`/`AuthorizationEngine.decide` keep `quote` optional. The
+  guarantee that an `allow` is quote-bound holds because the HTTP route *requires* the quote.
+  Any future non-HTTP caller of the engine/library must pass the quote itself.
+- **Value-mismatch negatives need the signer.** `QUOTE_MISMATCH`-by-digest, `AMOUNT_MISMATCH`,
+  and settlement-mismatch tests need a validly-signed-but-divergent quote — deferred to the
+  deterministic `ecdsa-jcs-2022` signer (same blocker as the `SUBJECT_MISMATCH`/`CURRENCY`/
+  `PAYEE` verifier gaps). Shipped coverage: the `jcsDigest` KAT, the happy path, and
+  tampered-quote → `QUOTE_PROOF_INVALID`.
+- **Payer binding (hardening candidate).** The quote's `payer` is not yet bound to the
+  authorization's `payer`. `sim.py` doesn't bind it either (so adding it would diverge from
+  the reference), and `requestHash` + the credential-subject==payer check make exploitation
+  hard, but binding `quote.payer == authz.payer` is a clean future hardening.
+
 ## 10. Deferred (explicitly out of scope for this slice)
 
-- **Quote binding.** This slice verifies the authorization's own `ecdsa-jcs-2022` proof, the
-  embedded `SpendingAuthorizationCredential`, and the spending constraints — but it does
-  **not** verify the authorization against a payee-signed `PaymentQuote`. The
-  `quoteDigest` / `requestHash` / amount / payee / settlement-routing equalities that
-  `sim.py` enforces are **not** checked here, so a verified `allow` attests "the agent
-  authorized a payment within its credential's caps," not "the payment matches a quoted
-  price/route." The endpoint accepts a self-contained `PaymentAuthorization`; binding it to
-  a fetched, payee-signed quote is a follow-up for the deployable iteration.
 - **Issuer trust.** Credential verification establishes *self-consistency only* — "this
   `did:key` signed this credential" — not that the issuer is **trusted**. There is no issuer
   allowlist / trust registry, so a self-issued `SpendingAuthorizationCredential` with

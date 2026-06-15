@@ -17,7 +17,7 @@ Given the authorization `A` (self-contained, credential embedded in `vp`) and th
 1. `EcdsaJcs2022.verify(Q)` — quote proof valid → else `QUOTE_PROOF_INVALID`.
 2. `controllerOf(Q) == Q.payee` — the payee signed its own quote → else `QUOTE_PROOF_INVALID`.
 3. `Q.expires > now` (± skew) → else `QUOTE_EXPIRED`.
-4. `A.quoteDigest == jcsDigest(Q)` → else `QUOTE_MISMATCH`. **`jcsDigest` is over the WHOLE signed quote, including its `proof`** (unlike proof verification, which strips the proof). Format: `"sha-256:" + base64url_nopad(sha256(JCS(Q)))`.
+4. `A.quoteDigest == jcsDigest(Q)` → else `QUOTE_MISMATCH`. **`jcsDigest` is over the *unsecured* quote — the `proof` key is stripped before canonicalizing** (matching `avp_crypto.py::jcs_digest`; the quote's signature is verified separately in step 1). Format: `"sha-256:" + base64url_nopad(sha256(JCS(Q_without_proof)))`. The KAT enforces this byte-exactly.
 5. `A.payee == Q.payee` and `A.requestHash == Q.requestHash` → else `QUOTE_MISMATCH`.
 6. `A.amount == Q.amount` and `A.currency == Q.currency` → else `AMOUNT_MISMATCH`.
 7. `A.settlementMethod == Q.settlementMethod` and `A.settlementTarget == Q.settlementTarget` → else `QUOTE_MISMATCH`.
@@ -88,9 +88,10 @@ import java.util.Base64
 
 /** AVP-Micro content digests. Format matches avp_crypto.py::jcs_digest. */
 object Digests {
-    /** `"sha-256:" + base64url-nopad(sha256(JCS(obj)))` over the WHOLE object (proof included). */
+    /** `"sha-256:" + base64url-nopad(sha256(JCS(obj_without_proof)))` — strips `proof` like jcs_digest. */
     fun jcsDigest(obj: JsonObject): String {
-        val hash = MessageDigest.getInstance("SHA-256").digest(Jcs.canonicalize(obj))
+        val unsecured = JsonObject(obj.filterKeys { it != "proof" })
+        val hash = MessageDigest.getInstance("SHA-256").digest(Jcs.canonicalize(unsecured))
         return "sha-256:" + Base64.getUrlEncoder().withoutPadding().encodeToString(hash)
     }
 }

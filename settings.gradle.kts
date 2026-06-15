@@ -118,6 +118,7 @@ include("credentials:plugins:bbs")
 include("credentials:plugins:verifiable-intent")
 include("credentials:plugins:eudiw")
 include("credentials:plugins:jades")
+include("credentials:plugins:avp-micro")
 include("credentials:oidc4vci-server")
 include("credentials:vc-api-server")
 

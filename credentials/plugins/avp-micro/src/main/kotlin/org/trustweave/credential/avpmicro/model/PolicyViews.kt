@@ -35,6 +35,9 @@ class AuthorizationView(val raw: JsonObject) {
     val nonce: String = raw.getValue("nonce").jsonPrimitive.content
     val id: String = raw.str("id") ?: nonce
     val quoteDigest: String? = raw.str("quoteDigest")
+    val requestHash: String? = raw.str("requestHash")
+    val settlementMethod: String? = raw.str("settlementMethod")
+    val settlementTarget: String? = raw.str("settlementTarget")
 
     val embeddedCredential: JsonObject =
         raw.getValue("vp").jsonObject.getValue("verifiableCredential").jsonArray.first().jsonObject
@@ -43,4 +46,16 @@ class AuthorizationView(val raw: JsonObject) {
     companion object {
         fun from(document: JsonObject) = AuthorizationView(document)
     }
+}
+
+/** Read-only view over a payee-signed PaymentQuote. */
+class QuoteView(val raw: JsonObject) {
+    val payer: String? = raw.str("payer")
+    val payee: String = raw.getValue("payee").jsonPrimitive.content
+    val amount: BigDecimal = BigDecimal(raw.getValue("amount").jsonPrimitive.content)
+    val currency: String = raw.getValue("currency").jsonPrimitive.content
+    val requestHash: String? = raw.str("requestHash")
+    val settlementMethod: String? = raw.str("settlementMethod")
+    val settlementTarget: String? = raw.str("settlementTarget")
+    val expires: Instant? = raw.str("expires")?.let(Instant::parse)
 }

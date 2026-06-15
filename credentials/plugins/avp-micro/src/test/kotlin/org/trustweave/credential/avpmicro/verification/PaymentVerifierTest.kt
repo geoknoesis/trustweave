@@ -41,4 +41,10 @@ class PaymentVerifierTest {
         val r = AvpMicro.verifyPayment(tampered, now)
         assertEquals(VerificationFailure.AUTHORIZATION_PROOF_INVALID, (r as PaymentVerificationResult.Invalid).reason)
     }
+
+    @Test
+    fun `malformed authorization fails with MALFORMED_REQUEST`() {
+        val r = AvpMicro.verifyPayment(JsonObject(emptyMap()), now)
+        assertEquals(VerificationFailure.MALFORMED_REQUEST, (r as PaymentVerificationResult.Invalid).reason)
+    }
 }

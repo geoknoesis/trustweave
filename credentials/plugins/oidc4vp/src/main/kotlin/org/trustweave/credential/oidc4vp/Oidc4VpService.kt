@@ -122,7 +122,7 @@ private val vpJson = Json {
 
 class Oidc4VpService(
     private val kms: KeyManagementService,
-    private val httpClient: OkHttpClient = OkHttpClient(),
+    private val httpClient: OkHttpClient = org.trustweave.core.net.ssrfGuardedOkHttpClient(),
     /**
      * When `true`, [parseAuthorizationUrl] enforces HAIP constraints:
      * - `client_id_scheme` must be `did`, `x509_san_dns`, or `verifier_attestation`

@@ -33,7 +33,7 @@ class SiopV2ExchangeProtocolProvider : CredentialExchangeProtocolProvider {
             ?: throw IllegalArgumentException("Missing 'kms' in options")
 
         val httpClient = options["httpClient"] as? OkHttpClient
-            ?: OkHttpClient()
+            ?: org.trustweave.core.net.ssrfGuardedOkHttpClient()
 
         val siopV2Service = SiopV2Service(
             kms = kms,

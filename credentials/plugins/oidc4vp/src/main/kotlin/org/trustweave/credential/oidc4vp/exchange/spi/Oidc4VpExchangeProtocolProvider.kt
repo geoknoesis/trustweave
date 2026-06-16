@@ -34,7 +34,7 @@ class Oidc4VpExchangeProtocolProvider : CredentialExchangeProtocolProvider {
             ?: throw IllegalArgumentException("Missing 'kms' in options")
 
         val httpClient = options["httpClient"] as? OkHttpClient
-            ?: OkHttpClient()
+            ?: org.trustweave.core.net.ssrfGuardedOkHttpClient()
 
         // Optional: pins request-object signing keys to the verifier's DID document
         // for client_id_scheme=did (fail-closed without it for DID client_ids).

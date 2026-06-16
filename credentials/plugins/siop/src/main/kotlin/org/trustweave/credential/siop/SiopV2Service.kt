@@ -68,7 +68,7 @@ private val ED25519_SPKI_PREFIX = byteArrayOf(
 class SiopV2Service(
     private val kms: KeyManagementService,
     private val config: SiopV2Config = SiopV2Config(),
-    private val httpClient: OkHttpClient = OkHttpClient(),
+    private val httpClient: OkHttpClient = org.trustweave.core.net.ssrfGuardedOkHttpClient(),
     /**
      * Resolver used to pin request-object signing keys to the verifier's DID document
      * when the request's `client_id` is a DID (or `client_id_scheme=did`).

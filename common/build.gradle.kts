@@ -13,6 +13,8 @@ dependencies {
     implementation(libs.kotlinx.datetime)
     // Lifecycle/teardown diagnostics in DefaultPluginRegistry
     implementation(libs.slf4j.api)
+    // OkHttp Dns guard for SSRF-safe outbound clients (org.trustweave.core.net)
+    implementation(libs.okhttp)
     // Test dependencies are standardized in root build.gradle.kts
 }
 

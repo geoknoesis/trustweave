@@ -36,7 +36,7 @@ class Oidc4VciExchangeProtocolProvider : CredentialExchangeProtocolProvider {
             ?: throw IllegalArgumentException("Missing 'kms' in options")
 
         val httpClient = options["httpClient"] as? OkHttpClient
-            ?: OkHttpClient()
+            ?: org.trustweave.core.net.ssrfGuardedOkHttpClient()
 
         val oidc4vciService = Oidc4VciService(
             credentialIssuerUrl = credentialIssuerUrl,

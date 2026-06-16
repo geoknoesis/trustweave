@@ -52,7 +52,7 @@ import java.util.concurrent.ConcurrentHashMap
 class Oidc4VciService(
     private val credentialIssuerUrl: String,
     private val kms: KeyManagementService,
-    private val httpClient: OkHttpClient = OkHttpClient()
+    private val httpClient: OkHttpClient = org.trustweave.core.net.ssrfGuardedOkHttpClient()
 ) {
     companion object {
         /** Pre-authorized code grant type — OID4VCI v1.0 §4.1.1. */

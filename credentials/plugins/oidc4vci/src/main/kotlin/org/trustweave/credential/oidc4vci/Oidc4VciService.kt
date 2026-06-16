@@ -146,10 +146,23 @@ class Oidc4VciService(
         offerId: String,
         redirectUri: String? = null,
         authorizationCode: String? = null,
+        codeVerifier: String? = null,
         txCodeValue: String? = null,
     ): Oidc4VciCredentialRequest = withContext(Dispatchers.IO) {
         val offer = offers[offerId]
             ?: throw TrustWeaveException.NotFound(resource = "OIDC4VCI offer: $offerId")
+
+        // PKCE is mandatory for the authorization_code flow (OAuth 2.1 / OID4VCI §3.4): the caller
+        // must supply the code_verifier whose code_challenge bound the authorization request, so an
+        // intercepted authorization code cannot be replayed by another client. Fail closed.
+        if (authorizationCode != null && redirectUri != null && codeVerifier.isNullOrBlank()) {
+            throw IllegalArgumentException(
+                "PKCE code_verifier is required for the authorization_code flow (OAuth 2.1 / OID4VCI). " +
+                    "Generate it with Pkce.generateCodeVerifier(), send Pkce.codeChallengeS256(verifier) " +
+                    "as code_challenge (code_challenge_method=S256) on the authorization request, then " +
+                    "pass the same verifier here.",
+            )
+        }
 
         // Fetch credential issuer metadata if not cached
         if (metadata == null) {
@@ -171,6 +184,7 @@ class Oidc4VciService(
             authorizationCode != null && redirectUri != null -> exchangeAuthorizationCodeForToken(
                 authorizationCode = authorizationCode,
                 redirectUri = redirectUri,
+                codeVerifier = codeVerifier,
                 tokenEndpoint = resolveTokenEndpoint(issuerMetadata)
             )
             preAuthorizedCode != null -> exchangePreAuthorizedCodeForToken(
@@ -641,12 +655,14 @@ class Oidc4VciService(
     private suspend fun exchangeAuthorizationCodeForToken(
         authorizationCode: String,
         redirectUri: String,
+        codeVerifier: String?,
         tokenEndpoint: String
     ): TokenResponse {
         val requestBody = FormBody.Builder()
             .add("grant_type", "authorization_code")
             .add("code", authorizationCode)
             .add("redirect_uri", redirectUri)
+            .apply { codeVerifier?.let { add("code_verifier", it) } }
             .build()
 
         return executeTokenRequest(tokenEndpoint, requestBody)

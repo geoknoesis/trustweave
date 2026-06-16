@@ -109,6 +109,66 @@ class Oidc4VciServiceTest {
         }
     }
 
+    // ========== Authorization-code flow PKCE (RFC 7636) ==========
+
+    @Test
+    fun `Pkce S256 challenge matches the RFC 7636 known-answer vector`() {
+        // RFC 7636 Appendix B.
+        assertEquals(
+            "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
+            Pkce.codeChallengeS256("dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"),
+        )
+        val verifier = Pkce.generateCodeVerifier()
+        assertEquals(43, verifier.length, "a 32-byte base64url verifier is 43 chars")
+        assertTrue(verifier != Pkce.generateCodeVerifier(), "verifiers must be unpredictable")
+    }
+
+    @Test
+    fun `authorization-code flow without a PKCE code_verifier is rejected`() = runBlocking {
+        val offer = service.createCredentialOffer(
+            issuerDid = issuerDid,
+            credentialTypes = listOf("PersonCredential"),
+            credentialIssuer = issuerUrl,
+        )
+        val ex = assertFailsWith<IllegalArgumentException> {
+            service.createCredentialRequest(
+                holderDid = holderDid,
+                offerId = offer.offerId,
+                redirectUri = "https://wallet.example/cb",
+                authorizationCode = "auth-xyz",
+            )
+        }
+        assertTrue(
+            ex.message?.contains("code_verifier", ignoreCase = true) == true,
+            "rejection must be the PKCE check, got: ${ex.message}",
+        )
+    }
+
+    @Test
+    fun `authorization-code flow sends the PKCE code_verifier to the token endpoint`() = runBlocking {
+        val offer = service.createCredentialOffer(
+            issuerDid = issuerDid,
+            credentialTypes = listOf("PersonCredential"),
+            credentialIssuer = issuerUrl,
+        )
+        enqueueMetadata()
+        enqueueTokenResponse(accessToken = "tok-1", cNonce = "nonce-abc")
+
+        val verifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+        service.createCredentialRequest(
+            holderDid = holderDid,
+            offerId = offer.offerId,
+            redirectUri = "https://wallet.example/cb",
+            authorizationCode = "auth-xyz",
+            codeVerifier = verifier,
+        )
+
+        mockWebServer.takeRequest() // metadata fetch
+        val tokenBody = mockWebServer.takeRequest().body.readUtf8()
+        assertTrue(tokenBody.contains("grant_type=authorization_code"), "got: $tokenBody")
+        assertTrue(tokenBody.contains("code_verifier=$verifier"), "code_verifier must be sent, got: $tokenBody")
+    }
+
     // ========== c_nonce threading + EdDSA alg ==========
 
     @Test

@@ -2,6 +2,7 @@ package org.trustweave.did.base
 
 import org.trustweave.core.exception.SerializationException
 import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.core.net.PrivateNetworkGuard
 import org.trustweave.did.*
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
@@ -104,6 +105,27 @@ abstract class AbstractWebDidMethod(
     }
 
     /**
+     * SSRF guard for resolution. A did:web identifier's host is attacker-controlled (it comes from
+     * the DID being resolved, e.g. an issuer or holder DID), so reject any host that resolves to a
+     * loopback / private / link-local / cloud-metadata address before opening a connection.
+     *
+     * @throws TrustWeaveException.Unknown if the host is disallowed or unresolvable.
+     */
+    protected fun assertHostAllowed(url: String) {
+        val host = try {
+            URL(url).host
+        } catch (e: Exception) {
+            throw IllegalArgumentException("Invalid URL: $url", e)
+        }
+        PrivateNetworkGuard.rejectionReason(host)?.let { reason ->
+            throw TrustWeaveException.Unknown(
+                message = "did:web SSRF guard rejected resolution: $reason",
+                context = mapOf("url" to url, "method" to method)
+            )
+        }
+    }
+
+    /**
      * Resolves a DID document from an HTTP endpoint.
      *
      * @param did The DID to resolve
@@ -118,6 +140,7 @@ abstract class AbstractWebDidMethod(
         try {
             val url = getDocumentUrl(didString)
             validateHttps(url)
+            assertHostAllowed(url)
 
             val request = Request.Builder()
                 .url(url)
@@ -144,7 +167,16 @@ abstract class AbstractWebDidMethod(
                     parseError = "Empty response body",
                     jsonString = null
                 )
-                body.string()
+                // Cap the body to avoid a memory-exhaustion DoS from a malicious/compromised host.
+                val maxResponseBytes = 1 * 1024 * 1024 // 1 MB
+                val bytes = body.byteStream().readNBytes(maxResponseBytes + 1)
+                if (bytes.size > maxResponseBytes) {
+                    throw TrustWeaveException.Unknown(
+                        message = "DID document exceeds maximum allowed size ($maxResponseBytes bytes) at: $url",
+                        context = mapOf("url" to url, "method" to method)
+                    )
+                }
+                String(bytes, Charsets.UTF_8)
             }
 
             // Parse JSON to DidDocument

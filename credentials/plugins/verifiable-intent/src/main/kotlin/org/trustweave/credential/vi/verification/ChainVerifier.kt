@@ -177,6 +177,18 @@ internal object ChainVerifier {
         }
         val agentKid = Cnf.kid(agentJwk)
 
+        // An L3 fulfilment is only meaningful against its authorizing L2 open mandate. A malicious
+        // agent can selectively present an L2 that withholds an open mandate (so it resolves to
+        // null), which would otherwise silently skip that side's constraint / payee /
+        // payment_instrument / pair-identity checks below. Refuse such a chain — fail closed rather
+        // than accept an unconstrained L3.
+        if (l3Payment != null && payment == null) {
+            return fail("L3 payment presented without its authorizing L2 payment mandate", performed)
+        }
+        if (l3Checkout != null && checkout == null) {
+            return fail("L3 checkout presented without its authorizing L2 checkout mandate", performed)
+        }
+
         // --- Verify supplied L3s ---
         var l3PaymentResolved: JsonObject? = null
         var l3CheckoutResolved: JsonObject? = null
@@ -195,7 +207,9 @@ internal object ChainVerifier {
                     ?.mapNotNull { it as? JsonObject }?.map(Constraint::parse) ?: emptyList()
                 val fulfillment = finalMandate(resolved, Vct.PAYMENT_FINAL)
                     ?: return fail("L3a missing final payment mandate", performed)
-                val cr = ConstraintChecker.check(constraints, fulfillment, strictness, isOpenMandate = true)
+                val cr = ConstraintChecker.check(
+                    constraints, fulfillment, strictness, isOpenMandate = true, disclosuresByHash = discByHash,
+                )
                 performed += cr.checked.map { "constraint:$it" }
                 if (!cr.satisfied) return fail("Constraints not satisfied: ${cr.violations}", performed)
                 performed += "constraints_satisfied"

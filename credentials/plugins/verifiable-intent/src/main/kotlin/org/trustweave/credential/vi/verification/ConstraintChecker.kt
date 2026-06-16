@@ -3,6 +3,7 @@ package org.trustweave.credential.vi.verification
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.intOrNull
+import org.trustweave.credential.vi.crypto.Disclosures
 import org.trustweave.credential.vi.crypto.contentOrNull
 import org.trustweave.credential.vi.model.Constraint
 
@@ -35,6 +36,7 @@ public object ConstraintChecker {
         fulfillment: JsonObject,
         mode: StrictnessMode = StrictnessMode.PERMISSIVE,
         isOpenMandate: Boolean = false,
+        disclosuresByHash: Map<String, String> = emptyMap(),
     ): ConstraintCheckResult {
         var satisfied = true
         val violations = mutableListOf<String>()
@@ -49,11 +51,13 @@ public object ConstraintChecker {
                 }
                 is Constraint.AllowedPayees -> {
                     checked += c.type
-                    matchAllowlist(c.allowed, fulfillment["payee"] as? JsonObject)?.let { satisfied = false; violations += it }
+                    matchAllowlist(c.allowed, fulfillment["payee"] as? JsonObject, disclosuresByHash, isOpenMandate)
+                        ?.let { satisfied = false; violations += it }
                 }
                 is Constraint.AllowedMerchants -> {
                     checked += c.type
-                    matchAllowlist(c.allowed, fulfillment["merchant"] as? JsonObject)?.let { satisfied = false; violations += it }
+                    matchAllowlist(c.allowed, fulfillment["merchant"] as? JsonObject, disclosuresByHash, isOpenMandate)
+                        ?.let { satisfied = false; violations += it }
                 }
                 is Constraint.LineItems -> checked += c.type // TODO: port acceptable-id + quantity-cap matching
                 is Constraint.Reference,
@@ -85,13 +89,51 @@ public object ConstraintChecker {
         return null
     }
 
-    /** Returns a violation string, or null if satisfied/skipped. Mirrors the reference SD-ref skip. */
-    private fun matchAllowlist(allowed: List<JsonObject>, target: JsonObject?): String? {
+    /**
+     * Returns a violation string, or null if the target is allowed.
+     *
+     * Allowlist entries are either inline objects or SD-references (`{"...": digest}`) whose payee/
+     * merchant value is disclosed separately. References are resolved against [disclosuresByHash]
+     * (the L2 disclosures the verifier holds). If the target matches a resolvable entry it is
+     * allowed. If it matches none and some entries could not be resolved, the allowlist cannot be
+     * fully evaluated: for an [isOpenMandate] this would leave payee/merchant authority unbounded —
+     * and an agent could disable the constraint just by withholding the disclosures — so we fail
+     * closed rather than pass vacuously.
+     */
+    private fun matchAllowlist(
+        allowed: List<JsonObject>,
+        target: JsonObject?,
+        disclosuresByHash: Map<String, String>,
+        isOpenMandate: Boolean,
+    ): String? {
         if (target == null) return "Missing target object in fulfillment"
-        val inline = allowed.filter { !it.containsKey("...") && (it["id"] != null || it["name"] != null) }
-        if (inline.isEmpty()) return null // entire allowlist is SD refs — resolved out-of-band; skip
-        val match = inline.any { matches(it, target) }
-        return if (match) null else "Target not in allowlist (id=${target["id"]?.contentOrNull()})"
+
+        val candidates = mutableListOf<JsonObject>()
+        var unresolvedRefs = 0
+        for (entry in allowed) {
+            val ref = entry["..."]?.contentOrNull()
+            when {
+                ref != null -> {
+                    val disclosed = disclosuresByHash[ref]?.let { Disclosures.parse(it)?.value as? JsonObject }
+                    if (disclosed != null) candidates += disclosed else unresolvedRefs++
+                }
+                entry["id"] != null || entry["name"] != null -> candidates += entry
+            }
+        }
+
+        if (candidates.any { matches(it, target) }) return null // explicitly allowed
+
+        if (unresolvedRefs > 0) {
+            // Non-empty allowlist that could not be fully evaluated (entries withheld).
+            return if (isOpenMandate) {
+                "Allowlist could not be evaluated against the presented disclosures " +
+                    "($unresolvedRefs undisclosed entr${if (unresolvedRefs == 1) "y" else "ies"})"
+            } else {
+                null
+            }
+        }
+        if (candidates.isEmpty()) return null // empty allowlist constrains nothing
+        return "Target not in allowlist (id=${target["id"]?.contentOrNull()})"
     }
 
     private fun matches(candidate: JsonObject, target: JsonObject): Boolean {

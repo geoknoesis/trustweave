@@ -11,6 +11,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Test
 import org.trustweave.credential.vi.crypto.KmsEs256Signer
+import org.trustweave.credential.vi.crypto.selectivePresentation
 import org.trustweave.credential.vi.crypto.sha256B64Url
 import org.trustweave.credential.vi.issuance.ViAgent
 import org.trustweave.credential.vi.issuance.ViIssuer
@@ -46,7 +47,11 @@ class IssuanceRoundTripTest {
      * Issues a full autonomous chain (L1, L2 with both open mandates, L3a + L3b) for a payment of
      * [amount] minor units against an amount_range of [10000, 40000], and verifies it.
      */
-    private suspend fun runAutonomous(amount: Int, cardId: String?): ChainVerificationResult {
+    private suspend fun runAutonomous(
+        amount: Int,
+        cardId: String?,
+        withholdPaymentMandateFromL2: Boolean = false,
+    ): ChainVerificationResult {
         val issuer = generate()
         val user = generate()
         val agent = generate()
@@ -155,8 +160,17 @@ class IssuanceRoundTripTest {
             iss = "https://agent.example", signer = agentSigner, agentKid = "agent-key-1",
         )
 
+        // An honest holder presents the full L2 (both mandates). A malicious agent can instead
+        // selectively present only the checkout mandate — withholding the payment-open mandate that
+        // carries the amount/payee constraints — while still routing the payment disclosure into L3a.
+        val presentedL2 = if (withholdPaymentMandateFromL2) {
+            selectivePresentation(l2.baseJwt, listOf(checkNotNull(l2.checkoutDiscB64)))
+        } else {
+            l2.compact
+        }
+
         return VerifiableIntent.verifyChain(
-            l1 = l1, l2 = l2.compact, issuerJwk = issuerJwk,
+            l1 = l1, l2 = presentedL2, issuerJwk = issuerJwk,
             l3Payment = l3a.compact, l2RoutedForPayment = l3a.routedL2,
             l3Checkout = l3b.compact, l2RoutedForCheckout = l3b.routedL2,
             now = now + 60,
@@ -182,6 +196,20 @@ class IssuanceRoundTripTest {
             val result = runAutonomous(amount = 99_999, cardId = null) // exceeds max 40000
             result.valid shouldBe false
             result.errors.joinToString() stringShouldContain "exceeds maximum"
+        }
+    }
+
+    @Test
+    fun `L3 payment presented without its L2 payment mandate is rejected (constraint-bypass guard)`() {
+        runBlocking {
+            // H1: the agent withholds the payment-open mandate from the presented L2 (so the verifier
+            // resolves payment == null), yet still presents an over-budget L3a payment plus a routed
+            // L2 that includes the payment disclosure. Without a guard, amount_range / payee allowlist
+            // / payment_instrument cross-check / pair-identity binding are all silently skipped and the
+            // over-budget payment is accepted. The chain MUST be rejected.
+            val result = runAutonomous(amount = 99_999, cardId = null, withholdPaymentMandateFromL2 = true)
+            result.valid shouldBe false
+            result.errors.joinToString() stringShouldContain "payment mandate"
         }
     }
 

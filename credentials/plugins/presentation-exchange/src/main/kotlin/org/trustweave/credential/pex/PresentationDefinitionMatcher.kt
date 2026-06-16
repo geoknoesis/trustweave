@@ -228,7 +228,9 @@ object PresentationDefinitionMatcher {
             }
             filter["pattern"]?.let { el ->
                 val pattern = (el as? JsonPrimitive)?.content ?: return@let
-                if (!Regex(pattern).containsMatchIn(str)) return false
+                // `pattern` is attacker-controlled (verifier-supplied); evaluate it under a bounded,
+                // ReDoS-resistant guard rather than the raw backtracking engine.
+                if (!SafeRegex.containsMatch(pattern, str)) return false
             }
         }
 

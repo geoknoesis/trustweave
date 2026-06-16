@@ -167,6 +167,33 @@ class Oidc4VpServiceTest {
         assertEquals(3, parts.size, "VP token should be a valid JWT with 3 parts")
     }
 
+    @Test
+    fun `createPermissionResponse refuses field minimization instead of silently over-disclosing`() {
+        // A caller asks to disclose only the "name" field. Field-level selective disclosure is not
+        // implemented (it would require SD-JWT/BBS; dropping claims would break a VC-LD proof), so
+        // the request must be refused rather than silently sending the entire credential.
+        val presentable = PresentableCredential(
+            credentialId = "cred-1",
+            credential = createTestCredential(),
+            credentialType = "PersonCredential",
+        )
+        val ex = assertFailsWith<UnsupportedOperationException> {
+            runBlocking {
+                service.createPermissionResponse(
+                    permissionRequest = createTestPermissionRequest(),
+                    selectedCredentials = listOf(presentable),
+                    selectedFields = listOf(listOf("name")),
+                    holderDid = holderDid,
+                    keyId = keyId,
+                )
+            }
+        }
+        assertTrue(
+            ex.message?.contains("selective disclosure", ignoreCase = true) == true,
+            "expected an explicit unsupported-selective-disclosure error, got: ${ex.message}",
+        )
+    }
+
     // ========== submitPermissionResponse Tests ==========
 
     @Test

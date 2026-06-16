@@ -327,6 +327,19 @@ class Oidc4VpService(
         keyId: String,
         presentation: VerifiablePresentation? = null
     ): PermissionResponse = withContext(Dispatchers.IO) {
+        // Field-level selective disclosure (selectedFields) is NOT implemented: the credential is
+        // embedded whole in the vp_token (see credentialToW3cJson). Honoring a field subset would
+        // require SD-JWT/BBS derivation, and simply dropping claims from an embedded VC-LD credential
+        // would invalidate its data-integrity proof. So when a caller requests minimization, refuse
+        // rather than silently disclose the entire credential.
+        if (selectedFields.any { it.isNotEmpty() }) {
+            throw UnsupportedOperationException(
+                "Field-level selective disclosure (selectedFields) is not supported: the full " +
+                    "credential would be disclosed. Omit selectedFields to disclose the full " +
+                    "credential explicitly, or present an SD-JWT credential. Refusing to silently " +
+                    "over-disclose.",
+            )
+        }
         val authorizationRequest = permissionRequest.authorizationRequest
 
         // Credentials embedded in the vp_token, in array order — presentation_submission

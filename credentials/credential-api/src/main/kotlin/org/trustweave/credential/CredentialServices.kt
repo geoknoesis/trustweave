@@ -102,6 +102,19 @@ fun credentialService(
  */
 object CredentialServices {
     /**
+     * Public factory for the production VC-LD proof engine (Ed25519Signature2020 by default),
+     * for callers (e.g. the status-list manager) that need a bare [org.trustweave.credential.spi.proof.ProofEngine]
+     * rather than a full CredentialService. [signer] signs (data, keyId) -> signature, typically via a KMS.
+     */
+    fun vcLdProofEngine(
+        didResolver: DidResolver,
+        signer: suspend (ByteArray, String) -> ByteArray,
+    ): org.trustweave.credential.spi.proof.ProofEngine = VcLdProofEngine(
+        ProofEngineConfig(didResolver = didResolver, properties = mapOf("signer" to signer)),
+    )
+
+
+    /**
      * Creates a credential service with specified proof formats and KMS.
      * 
      * @param kms Key management service for signing operations

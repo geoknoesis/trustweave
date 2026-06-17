@@ -3,6 +3,7 @@ package org.trustweave.revocation.bitstring
 import org.trustweave.core.exception.ConfigException
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.core.identifiers.KeyId
+import org.trustweave.credential.CredentialServices
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.identifiers.StatusListId
 import org.trustweave.credential.model.StatusPurpose
@@ -17,6 +18,10 @@ import org.trustweave.credential.spi.proof.ProofEngine
 import org.trustweave.credential.spi.proof.ProofEngineCapabilities
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.kms.Algorithm
+import org.trustweave.kms.results.SignResult
+import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
@@ -610,6 +615,113 @@ class BitstringStatusListManagerTest {
             signing.buildStatusListVc(statusListId)
         }
         assertEquals("STATUS_LIST_VC_ISSUER_MISMATCH", ex.code)
+    }
+
+    /**
+     * Regression test for the bug where [BitstringStatusListManager.buildStatusListVc] assembled
+     * the [IssuanceRequest] without the VC 2.0 base context
+     * (`https://www.w3.org/ns/credentials/v2`).  The Bitstring Status List vocabulary terms
+     * (`BitstringStatusList`, `statusPurpose`, `encodedList`) are defined exclusively in the
+     * VC 2.0 context; without it the JSON-LD canonicalizer silently drops them as undefined
+     * terms.  The [RecordingProofEngine] double used by all other signing tests skips
+     * canonicalization, so it never exercised that path.
+     *
+     * This test wires the REAL [CredentialServices.vcLdProofEngine] (backed by the testkit
+     * [InMemoryKeyManagementService]) so that [buildStatusListVc] performs actual
+     * JSON-LD canonicalization and Ed25519 signing.  The resulting VC must:
+     *   - carry a real [CredentialProof.LinkedDataProof] (not the "ztest-signature" stub),
+     *   - reference the correct issuer verification method,
+     *   - include `https://www.w3.org/ns/credentials/v2` in its context, and
+     *   - preserve the `encodedList` claim in the credential subject.
+     *
+     * Without the fix (i.e., when `buildStatusListVc` omits the VC 2.0 context from the
+     * `IssuanceRequest`) the real engine's canonicalization drops `encodedList` as an
+     * undefined term, so the last assertion fails.
+     */
+    @Test
+    fun `buildStatusListVc signs a real VC under the VC 2_0 context via the production proof engine`() = runBlocking {
+        // 1. Provision a real Ed25519 issuer key via the testkit KMS + DidKeyMockMethod.
+        //    DidKeyMockMethod stores the DID document in-memory and can resolve it later.
+        val realKms = InMemoryKeyManagementService()
+        val didMethod = DidKeyMockMethod(realKms)
+        val issuerDoc = didMethod.createDid()   // generates Ed25519 key, stores DID document
+        val realIssuerDid = issuerDoc.id.value  // "did:key:z<uuid>"
+        val realVmId = issuerDoc.verificationMethod.first().id  // VerificationMethodId
+
+        // 2. Build a DidResolver that delegates to the mock method for the issuer DID.
+        val didResolver = org.trustweave.did.resolver.DidResolver { did ->
+            didMethod.resolveDid(did)
+        }
+
+        // 3. Build a signer lambda that bridges the KMS.
+        //    ProofEngineUtils.extractKeyId extracts the fragment after '#' from the full
+        //    VerificationMethodId string, which equals the KMS KeyId.value generated above.
+        val signer: suspend (ByteArray, String) -> ByteArray = { data, keyId ->
+            val result = realKms.sign(KeyId(keyId), data)
+            check(result is SignResult.Success) { "KMS signing failed: $result" }
+            result.signature
+        }
+
+        // 4. Build the REAL VcLdProofEngine via the public factory.
+        val realEngine = CredentialServices.vcLdProofEngine(didResolver, signer)
+
+        // 5. Create a BitstringStatusListManager with the real engine and the real issuer.
+        val realManager = BitstringStatusListManagerFactory.create(
+            dataSource = dataSource,
+            kms = realKms,
+            issuerDid = realIssuerDid,
+            bitsPerEntry = 1,
+            proofEngine = realEngine,
+            issuerKeyId = realVmId
+        )
+
+        // 6. Create a status list, assign a credential, and revoke it so encodedList is non-trivial.
+        val statusListId = realManager.createStatusList(realIssuerDid, StatusPurpose.REVOCATION)
+        realManager.assignCredentialIndex("urn:cred:regression-1", statusListId, null)
+        realManager.revokeCredential("urn:cred:regression-1", statusListId)
+
+        // 7. Invoke the production signing path.
+        //    Without the fix (missing VC 2.0 context) the engine's JSON-LD canonicalization
+        //    silently drops `encodedList` as an undefined term; this call either throws or
+        //    produces a VC missing the claim — both of which fail the assertions below.
+        val vc = realManager.buildStatusListVc(statusListId)
+
+        // --- Proof is a real LinkedDataProof, not the RecordingProofEngine stub ---
+        val proof = vc.proof as? CredentialProof.LinkedDataProof
+        assertNotNull(proof, "buildStatusListVc must produce a LinkedDataProof via the real engine")
+        assertFalse(
+            proof.proofValue == "ztest-signature",
+            "proofValue must be a real Ed25519 signature, not the RecordingProofEngine stub"
+        )
+        assertTrue(
+            proof.proofValue.startsWith("z"),
+            "Ed25519Signature2020 proofValue must be multibase base58-btc ('z' prefix)"
+        )
+        assertEquals(
+            realVmId.value,
+            proof.verificationMethod,
+            "verificationMethod must reference the real issuer key"
+        )
+
+        // --- VC context must include the VC 2.0 base URL ---
+        assertTrue(
+            vc.context.contains("https://www.w3.org/ns/credentials/v2"),
+            "VC context must contain 'https://www.w3.org/ns/credentials/v2'; got: ${vc.context}"
+        )
+
+        // --- encodedList must survive JSON-LD canonicalization (regression guard) ---
+        //     This assertion would fail without the fix because the old code omitted the
+        //     VC 2.0 context and the canonicalizer dropped all Bitstring-vocabulary terms.
+        val encodedList = (vc.credentialSubject.claims["encodedList"] as? JsonPrimitive)?.content
+        assertNotNull(
+            encodedList,
+            "credentialSubject must contain 'encodedList' after real JSON-LD canonicalization " +
+                "(this assertion fails without the VC 2.0 context fix)"
+        )
+        assertTrue(
+            encodedList.startsWith("u"),
+            "encodedList must carry the multibase base64url 'u' prefix"
+        )
     }
 
     // -------------------------------------------------------------------------

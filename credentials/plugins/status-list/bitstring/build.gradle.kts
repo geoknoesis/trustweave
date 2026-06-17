@@ -26,4 +26,5 @@ dependencies {
     implementation(libs.slf4j.api)
 
     testImplementation(project(":testkit"))
+    testImplementation(project(":did:did-core"))
 }

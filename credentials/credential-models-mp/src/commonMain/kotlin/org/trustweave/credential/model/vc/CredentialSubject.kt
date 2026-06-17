@@ -2,8 +2,22 @@ package org.trustweave.credential.model.vc
 
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.did.identifiers.Did
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonEncoder
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 
 /**
  * VC Credential Subject - contains an optional IRI id (DID, URI, URN, etc.) and claims.
@@ -38,7 +52,7 @@ import kotlinx.serialization.json.JsonElement
  * val anon = CredentialSubject(id = null, claims = mapOf(...))
  * ```
  */
-@Serializable
+@Serializable(with = CredentialSubjectSerializer::class)
 data class CredentialSubject(
     val id: Iri? = null, // Subject IRI (DID, URI, URN, etc.) - optional per W3C VC 2.0 §4.4
     val claims: Map<String, JsonElement> = emptyMap() // Additional claims
@@ -90,6 +104,49 @@ data class CredentialSubject(
         fun fromIri(iri: Iri, claims: Map<String, JsonElement> = emptyMap()): CredentialSubject {
             return CredentialSubject(id = iri, claims = claims)
         }
+    }
+}
+
+/**
+ * Symmetric JSON serializer for [CredentialSubject].
+ *
+ * The W3C VC Data Model requires `credentialSubject` to carry its claims **flattened**
+ * at the top level (alongside an optional `id`), e.g.
+ * `{"id":"did:example:s","name":"Jane","degree":"BS"}`. The default generated serializer
+ * would instead nest them under `"claims": {...}`, which external verifiers reject.
+ *
+ * - **serialize:** emits `id` (only when non-null) as a plain IRI string, then each entry of
+ *   `claims` at the top level. A claim literally named `"id"` is skipped so it cannot collide
+ *   with / duplicate the subject id key.
+ * - **deserialize:** reads the JSON object, lifts `id` out (as `Iri`), and collects every other
+ *   key into `claims`. This is the symmetric counterpart so flattened VCs round-trip and incoming
+ *   flattened claims are no longer silently dropped.
+ *
+ * JSON-only: everything in the SDK funnels through `Json.encodeToJsonElement` (including the CBOR
+ * path via Jackson), so a JSON-targeted serializer is sufficient.
+ */
+@OptIn(ExperimentalSerializationApi::class)
+object CredentialSubjectSerializer : KSerializer<CredentialSubject> {
+    override val descriptor: SerialDescriptor =
+        buildClassSerialDescriptor("org.trustweave.credential.model.vc.CredentialSubject")
+
+    override fun serialize(encoder: Encoder, value: CredentialSubject) {
+        val jsonEncoder = encoder as? JsonEncoder
+            ?: throw SerializationException("CredentialSubject can only be serialized to JSON")
+        val obj = buildJsonObject {
+            value.id?.let { put("id", it.value) }
+            value.claims.forEach { (k, v) -> if (k != "id") put(k, v) }
+        }
+        jsonEncoder.encodeJsonElement(obj)
+    }
+
+    override fun deserialize(decoder: Decoder): CredentialSubject {
+        val jsonDecoder = decoder as? JsonDecoder
+            ?: throw SerializationException("CredentialSubject can only be deserialized from JSON")
+        val obj = jsonDecoder.decodeJsonElement().jsonObject
+        val id = obj["id"]?.jsonPrimitive?.contentOrNull?.let { Iri(it) }
+        val claims = obj.filterKeys { it != "id" }
+        return CredentialSubject(id = id, claims = claims)
     }
 }
 

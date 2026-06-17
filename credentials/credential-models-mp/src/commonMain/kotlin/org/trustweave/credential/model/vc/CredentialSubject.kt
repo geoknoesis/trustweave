@@ -13,10 +13,10 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonEncoder
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
 /**
@@ -122,8 +122,9 @@ data class CredentialSubject(
  *   key into `claims`. This is the symmetric counterpart so flattened VCs round-trip and incoming
  *   flattened claims are no longer silently dropped.
  *
- * JSON-only: everything in the SDK funnels through `Json.encodeToJsonElement` (including the CBOR
- * path via Jackson), so a JSON-targeted serializer is sufficient.
+ * JSON-only: every wire-format path (`toJsonLd` / `toJwt` / `toCbor` / VC-API) serializes via
+ * kotlinx `Json` first, so a JSON-targeted serializer suffices; the CBOR step (Jackson) merely
+ * re-encodes the already-flattened JSON.
  */
 @OptIn(ExperimentalSerializationApi::class)
 object CredentialSubjectSerializer : KSerializer<CredentialSubject> {
@@ -143,8 +144,26 @@ object CredentialSubjectSerializer : KSerializer<CredentialSubject> {
     override fun deserialize(decoder: Decoder): CredentialSubject {
         val jsonDecoder = decoder as? JsonDecoder
             ?: throw SerializationException("CredentialSubject can only be deserialized from JSON")
-        val obj = jsonDecoder.decodeJsonElement().jsonObject
-        val id = obj["id"]?.jsonPrimitive?.contentOrNull?.let { Iri(it) }
+        val element = jsonDecoder.decodeJsonElement()
+        val obj = element as? JsonObject
+            ?: throw SerializationException(
+                "credentialSubject must be a JSON object; an array of subjects is not supported",
+            )
+        val id = when (val idEl = obj["id"]) {
+            null, JsonNull -> null
+            is JsonPrimitive -> if (idEl.isString) {
+                try {
+                    Iri(idEl.content)
+                } catch (e: IllegalArgumentException) {
+                    throw SerializationException("credentialSubject.id is not a valid IRI: ${idEl.content}", e)
+                }
+            } else {
+                throw SerializationException("credentialSubject.id must be a string IRI")
+            }
+            else -> throw SerializationException(
+                "credentialSubject.id must be a string IRI, got ${idEl::class.simpleName}",
+            )
+        }
         val claims = obj.filterKeys { it != "id" }
         return CredentialSubject(id = id, claims = claims)
     }

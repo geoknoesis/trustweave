@@ -4,13 +4,20 @@ import org.trustweave.core.identifiers.Iri
 import org.trustweave.core.serialization.SerializationModule
 import org.trustweave.credential.model.CredentialType
 import kotlinx.datetime.Instant
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -120,6 +127,17 @@ class CredentialSubjectSerializerTest {
         // The subject id wins; the colliding claim key must not duplicate or override it.
         assertEquals("did:example:s", (obj["id"] as JsonPrimitive).content)
         assertEquals("Jane", (obj["name"] as JsonPrimitive).content)
+
+        // Documented/intended lossiness: "id" is reserved for the subject IRI, so a claim
+        // literally named "id" does NOT survive a serialize -> deserialize round-trip. On the
+        // way back in, the top-level "id" is lifted into CredentialSubject.id, never claims.
+        val decoded = json.decodeFromString(CredentialSubject.serializer(), obj.toString())
+        assertEquals(Iri("did:example:s"), decoded.id)
+        assertFalse(
+            decoded.claims.containsKey("id"),
+            "a claim named 'id' is intentionally lossy across a round-trip (reserved for subject IRI)",
+        )
+        assertEquals("Jane", (decoded.claims["name"] as JsonPrimitive).content)
     }
 
     @Test
@@ -168,5 +186,148 @@ class CredentialSubjectSerializerTest {
         assertEquals(vc.credentialSubject.id, decoded.credentialSubject.id)
         assertTrue(decoded.credentialSubject.claims.containsKey("name"))
         assertEquals("Jane", (decoded.credentialSubject.claims["name"] as JsonPrimitive).content)
+    }
+
+    // --- FIX 1: guarded deserialize throws SerializationException on malformed input ---
+
+    @Test
+    fun `deserialize throws SerializationException when credentialSubject is a JSON array`() {
+        assertFailsWith<SerializationException> {
+            json.decodeFromString(
+                CredentialSubject.serializer(),
+                """[{"id":"did:example:s"}]""",
+            )
+        }
+    }
+
+    @Test
+    fun `deserialize throws SerializationException when id is a JSON object`() {
+        assertFailsWith<SerializationException> {
+            json.decodeFromString(
+                CredentialSubject.serializer(),
+                """{"id":{"nested":"value"}}""",
+            )
+        }
+    }
+
+    @Test
+    fun `deserialize throws SerializationException when id is a JSON number`() {
+        assertFailsWith<SerializationException> {
+            json.decodeFromString(
+                CredentialSubject.serializer(),
+                """{"id":42}""",
+            )
+        }
+    }
+
+    @Test
+    fun `deserialize throws SerializationException when id is a non-IRI blank string`() {
+        // Blank string -> Iri(...) init throws IllegalArgumentException, must surface as SerializationException.
+        assertFailsWith<SerializationException> {
+            json.decodeFromString(
+                CredentialSubject.serializer(),
+                """{"id":""}""",
+            )
+        }
+        // Malformed (non-IRI) string -> same.
+        assertFailsWith<SerializationException> {
+            json.decodeFromString(
+                CredentialSubject.serializer(),
+                """{"id":"not a valid iri"}""",
+            )
+        }
+    }
+
+    @Test
+    fun `deserialize treats explicit JSON null id as null id`() {
+        val decoded = json.decodeFromString(
+            CredentialSubject.serializer(),
+            """{"id":null,"name":"Anon"}""",
+        )
+
+        assertNull(decoded.id, "explicit JSON null id must decode to null, not throw")
+        assertEquals("Anon", (decoded.claims["name"] as JsonPrimitive).content)
+        assertFalse(decoded.claims.containsKey("id"), "id must not leak into claims")
+    }
+
+    // --- FIX 2: structured (non-primitive) claim values round-trip (the actual bug scenario) ---
+
+    @Test
+    fun `serialize flattens structured object and array claims at top level`() {
+        val subject = CredentialSubject(
+            id = Iri("did:example:s"),
+            claims = mapOf(
+                "degree" to buildJsonObject {
+                    put("type", JsonPrimitive("BachelorDegree"))
+                    put("name", JsonPrimitive("BS CS"))
+                },
+                "roles" to buildJsonArray {
+                    add(JsonPrimitive("admin"))
+                    add(JsonPrimitive("user"))
+                },
+            ),
+        )
+
+        val obj = json.encodeToJsonElement(subject).jsonObject
+
+        assertEquals(setOf("id", "degree", "roles"), obj.keys, "structured claims must flatten to top level")
+        assertFalse(obj.containsKey("claims"), "claims must not be nested under 'claims'")
+
+        val degree = obj["degree"] as JsonObject
+        assertEquals("BachelorDegree", (degree["type"] as JsonPrimitive).content)
+        assertEquals("BS CS", (degree["name"] as JsonPrimitive).content)
+
+        val roles = obj["roles"] as JsonArray
+        assertEquals(2, roles.size)
+        assertEquals("admin", (roles[0] as JsonPrimitive).content)
+        assertEquals("user", (roles[1] as JsonPrimitive).content)
+    }
+
+    @Test
+    fun `round trip preserves structured object and array claims with structural equality`() {
+        val original = CredentialSubject(
+            id = Iri("did:example:s"),
+            claims = mapOf(
+                "degree" to buildJsonObject {
+                    put("type", JsonPrimitive("BachelorDegree"))
+                    put("name", JsonPrimitive("BS CS"))
+                },
+                "roles" to buildJsonArray {
+                    add(JsonPrimitive("admin"))
+                    add(JsonPrimitive("user"))
+                },
+            ),
+        )
+
+        val encoded = json.encodeToString(CredentialSubject.serializer(), original)
+        val decoded = json.decodeFromString(CredentialSubject.serializer(), encoded)
+
+        assertEquals(original, decoded, "structured claims must round-trip with structural equality")
+    }
+
+    // --- FIX 3: empty-claims edge cases ---
+
+    @Test
+    fun `id with empty claims serializes to just the id key and round-trips`() {
+        val subject = CredentialSubject(id = Iri("did:example:s"), claims = emptyMap())
+
+        val encoded = json.encodeToString(CredentialSubject.serializer(), subject)
+        assertEquals("""{"id":"did:example:s"}""", encoded)
+
+        val decoded = json.decodeFromString(CredentialSubject.serializer(), encoded)
+        assertEquals(subject, decoded)
+    }
+
+    @Test
+    fun `null id with empty claims serializes to empty object and round-trips`() {
+        val subject = CredentialSubject(id = null, claims = emptyMap())
+
+        val encoded = json.encodeToString(CredentialSubject.serializer(), subject)
+        assertEquals("{}", encoded)
+
+        val decoded = json.decodeFromString(CredentialSubject.serializer(), encoded)
+        assertEquals(subject, decoded)
+        assertNull(decoded.id)
+        assertTrue(decoded.claims.isEmpty())
     }
 }

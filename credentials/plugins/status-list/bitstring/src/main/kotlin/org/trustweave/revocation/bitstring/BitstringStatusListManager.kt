@@ -6,6 +6,8 @@ import org.trustweave.credential.model.StatusPurpose
 import org.trustweave.credential.model.vc.CredentialSubject
 import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.jsonld.JsonLdContexts
+import org.trustweave.credential.proof.ProofOptions
 import org.trustweave.credential.requests.IssuanceRequest
 import org.trustweave.credential.revocation.CredentialRevocationManager
 import org.trustweave.credential.revocation.RevocationStatus
@@ -98,6 +100,14 @@ class BitstringStatusListManager(
 
         /** Multibase prefix for base64url-no-pad, required on `encodedList` by the spec. */
         private const val MULTIBASE_BASE64URL_NO_PAD_PREFIX: String = "u"
+
+        /**
+         * W3C VC 2.0 base context. It is the context that defines the Bitstring Status List
+         * terms (`BitstringStatusList`, `statusPurpose`, `encodedList`); the status list VC is
+         * issued under it so those subject claims survive JSON-LD canonicalization and are
+         * covered by the proof signature.
+         */
+        private const val VC_2_0_CONTEXT: String = "https://www.w3.org/ns/credentials/v2"
 
         /**
          * Maximum attempts to claim a free index when concurrent writers race on the
@@ -774,6 +784,15 @@ class BitstringStatusListManager(
             type = listOf(
                 CredentialType.VerifiableCredential,
                 CredentialType.Custom("BitstringStatusListCredential")
+            ),
+            // The W3C Bitstring Status List terms (BitstringStatusList, statusPurpose,
+            // encodedList) are defined only in the VC 2.0 base context. Declare it so the
+            // proof engine does not drop these subject claims at JSON-LD canonicalization
+            // (which would otherwise fail closed, since dropped claims are not signed).
+            proofOptions = ProofOptions(
+                additionalOptions = mapOf(
+                    JsonLdContexts.CONTEXTS_PROOF_OPTION to listOf(VC_2_0_CONTEXT)
+                )
             )
         )
 

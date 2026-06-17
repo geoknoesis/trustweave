@@ -34,7 +34,7 @@ hikaricp = "7.0.2"
 
 # Security
 bouncycastle = "1.84"
-nimbus-jose-jwt = "9.48"
+nimbus-jose-jwt = "10.9"
 cbor-java = "4.5.4"
 titanium-json-ld = "1.7.0"
 titanium-rdfc = "3.0.0"

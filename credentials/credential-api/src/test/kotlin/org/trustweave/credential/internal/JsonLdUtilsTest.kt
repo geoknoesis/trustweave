@@ -4,6 +4,7 @@ import kotlinx.serialization.json.*
 import org.trustweave.core.exception.SerializationException
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.test.assertFailsWith
@@ -275,6 +276,166 @@ class JsonLdUtilsTest {
         assertNotNull(result)
         assertTrue(result.isNotBlank())
         assertTrue(result.contains("https://example.org/vocab#degree"))
+    }
+
+    /**
+     * Build a VC document whose `credentialSubject` carries [subjectId] (or no id when null)
+     * and a single defined claim term, so the only thing that can fail canonicalization is
+     * the relative-IRI subject-id guard (the claim term is always defined by the @context).
+     */
+    private fun vcWithSubjectId(subjectId: String?) = buildJsonObject {
+        put("@context", buildJsonArray {
+            add("https://www.w3.org/2018/credentials/v1")
+            add(buildJsonObject { put("name", "https://schema.org/name") })
+        })
+        put("type", buildJsonArray { add("VerifiableCredential") })
+        put("issuer", "did:key:test")
+        put("credentialSubject", buildJsonObject {
+            if (subjectId != null) put("id", subjectId)
+            put("name", "John Doe")
+        })
+    }
+
+    @Test
+    fun `canonicalizeDocument rejects a relative-IRI credentialSubject id - bare uuid`() {
+        // A bare UUID has no scheme. JsonLd.toRdf drops every triple whose subject is a
+        // relative IRI, so statusPurpose/encodedList (or any claim) would be UNSIGNED while
+        // the credential still verifies. Must fail closed.
+        val document = vcWithSubjectId("9bc8be44-1234-5678-9abc-def012345678")
+
+        val exception = assertFailsWith<SerializationException> {
+            JsonLdUtils.canonicalizeDocument(document)
+        }
+        assertTrue(
+            exception.message?.contains("relative", ignoreCase = true) == true ||
+                exception.message?.contains("absolute", ignoreCase = true) == true,
+            "Error should explain the relative/absolute subject-id requirement, got: ${exception.message}"
+        )
+    }
+
+    @Test
+    fun `canonicalizeDocument rejects a fragment-only credentialSubject id`() {
+        // A fragment-only reference (#foo) has no scheme either.
+        val document = vcWithSubjectId("#subject")
+
+        assertFailsWith<SerializationException> {
+            JsonLdUtils.canonicalizeDocument(document)
+        }
+    }
+
+    @Test
+    fun `canonicalizeDocument rejects a bare path credentialSubject id`() {
+        // A bare path (abc/def) before any colon also has no scheme.
+        val document = vcWithSubjectId("subjects/123")
+
+        assertFailsWith<SerializationException> {
+            JsonLdUtils.canonicalizeDocument(document)
+        }
+    }
+
+    @Test
+    fun `canonicalizeDocument accepts an absolute urn-uuid credentialSubject id`() {
+        val document = vcWithSubjectId("urn:uuid:9bc8be44-1234-5678-9abc-def012345678")
+        val result = JsonLdUtils.canonicalizeDocument(document)
+        assertTrue(result.isNotBlank())
+    }
+
+    @Test
+    fun `canonicalizeDocument accepts an absolute https credentialSubject id`() {
+        val document = vcWithSubjectId("https://example.com/subjects/123")
+        val result = JsonLdUtils.canonicalizeDocument(document)
+        assertTrue(result.isNotBlank())
+    }
+
+    @Test
+    fun `canonicalizeDocument accepts an absolute did credentialSubject id`() {
+        val document = vcWithSubjectId("did:key:z6MkSubject")
+        val result = JsonLdUtils.canonicalizeDocument(document)
+        assertTrue(result.isNotBlank())
+    }
+
+    @Test
+    fun `canonicalizeDocument accepts a credentialSubject with no id - anonymous blank node`() {
+        // An anonymous subject is valid VC 2.0; it becomes a blank node whose triples ARE
+        // emitted and signed. Must NOT be rejected by the relative-IRI guard.
+        val document = vcWithSubjectId(null)
+        val result = JsonLdUtils.canonicalizeDocument(document)
+        assertTrue(result.isNotBlank())
+    }
+
+    @Test
+    fun `canonicalizeDocument relative-IRI guard does not reject a JSON null credentialSubject id`() {
+        // A JSON-null id is an anonymous subject; the relative-IRI guard must NOT reject it.
+        // (An explicit "id": null is a degenerate input the broader claims-preserved round-trip
+        // does not support, so the whole canonicalization may still fail for that orthogonal
+        // reason — but never with the relative-IRI message, which is what this test pins down.)
+        val document = buildJsonObject {
+            put("@context", buildJsonArray {
+                add("https://www.w3.org/2018/credentials/v1")
+                add(buildJsonObject { put("name", "https://schema.org/name") })
+            })
+            put("type", buildJsonArray { add("VerifiableCredential") })
+            put("issuer", "did:key:test")
+            put("credentialSubject", buildJsonObject {
+                put("id", JsonNull)
+                put("name", "John Doe")
+            })
+        }
+        val message = try {
+            JsonLdUtils.canonicalizeDocument(document)
+            null
+        } catch (e: SerializationException) {
+            e.message
+        }
+        if (message != null) {
+            assertFalse(
+                message.contains("relative IRI"),
+                "The relative-IRI guard must not reject a JSON-null (anonymous) subject id; got: $message"
+            )
+        }
+    }
+
+    @Test
+    fun `canonicalizeDocument rejects a relative id in any subject of a credentialSubject array`() {
+        val document = buildJsonObject {
+            put("@context", buildJsonArray {
+                add("https://www.w3.org/2018/credentials/v1")
+                add(buildJsonObject { put("name", "https://schema.org/name") })
+            })
+            put("type", buildJsonArray { add("VerifiableCredential") })
+            put("issuer", "did:key:test")
+            put("credentialSubject", buildJsonArray {
+                add(buildJsonObject {
+                    put("id", "did:key:z6MkSubject")
+                    put("name", "Alice")
+                })
+                add(buildJsonObject {
+                    put("id", "9bc8be44-relative")
+                    put("name", "Bob")
+                })
+            })
+        }
+
+        assertFailsWith<SerializationException> {
+            JsonLdUtils.canonicalizeDocument(document)
+        }
+    }
+
+    @Test
+    fun `canonicalizeDocument with no credentialSubject does not throw on the subject-id guard`() {
+        // Proof configs / presentations canonicalized here have no credentialSubject; the
+        // guard must do nothing.
+        val document = buildJsonObject {
+            put("@context", buildJsonArray {
+                add("https://www.w3.org/2018/credentials/v1")
+                add(buildJsonObject { put("name", "https://schema.org/name") })
+            })
+            put("type", buildJsonArray { add("VerifiableCredential") })
+            put("issuer", "did:key:test")
+            put("name", "no subject here")
+        }
+        val result = JsonLdUtils.canonicalizeDocument(document)
+        assertTrue(result.isNotBlank())
     }
 
     @Test

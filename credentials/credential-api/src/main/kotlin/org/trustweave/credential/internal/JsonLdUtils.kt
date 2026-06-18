@@ -8,7 +8,9 @@ import jakarta.json.Json
 import jakarta.json.JsonValue
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import org.trustweave.core.exception.SerializationException
 import java.io.StringReader
 import java.io.StringWriter
@@ -127,7 +129,63 @@ internal object JsonLdUtils {
         // Fail closed if @context silently dropped credentialSubject claims.
         verifyCredentialSubjectClaimsPreserved(document, jakartaDocument)
 
+        // Fail closed if a credentialSubject.id is a relative IRI: JsonLd.toRdf drops every
+        // triple whose subject is a relative IRI, leaving the subject's claims unsigned.
+        verifyCredentialSubjectIdIsAbsolute(document)
+
         return canonical
+    }
+
+    /**
+     * Fail closed when a `credentialSubject.id` is a *relative* IRI.
+     *
+     * RDFC-1.0 canonicalization runs JSON-LD `toRdf`, which **drops every RDF triple whose
+     * subject is a relative IRI** (a string with no scheme, e.g. a bare UUID `9bc8be44-...`,
+     * a fragment-only `#foo`, or a bare path `subjects/123`). The subject's claims would then
+     * be absent from the canonical N-Quads — **not covered by the proof signature** — even
+     * though the credential still verifies. That is forgeable claim/revocation data.
+     *
+     * Rules (precise to avoid false positives):
+     * - `credentialSubject` absent → nothing to check (e.g. proof configs / presentations).
+     * - `credentialSubject` object → check its `id`; array of subjects → check each element.
+     * - `id` absent or JSON null → ALLOWED: an anonymous subject is valid VC 2.0 and becomes
+     *   a blank node whose triples ARE emitted and signed.
+     * - `id` a string → it MUST be absolute, i.e. carry a scheme (`http:`, `https:`, `did:`,
+     *   `urn:`, …). A scheme is a colon that precedes any slash. Otherwise throws
+     *   [SerializationException.EncodeFailed].
+     */
+    private fun verifyCredentialSubjectIdIsAbsolute(document: JsonObject) {
+        when (val subject = document["credentialSubject"]) {
+            null -> return
+            is JsonObject -> requireAbsoluteSubjectId(subject)
+            is JsonArray -> subject.forEach { element ->
+                if (element is JsonObject) requireAbsoluteSubjectId(element)
+            }
+            else -> {} // non-object/array subjects are handled by the claims-preserved check
+        }
+    }
+
+    /** Throw if [subject]'s `id` is present, a non-null JSON string, and a relative IRI. */
+    private fun requireAbsoluteSubjectId(subject: JsonObject) {
+        val idElement = subject["id"] ?: return
+        if (idElement is JsonNull) return
+        val idValue = (idElement as? JsonPrimitive)?.takeIf { it.isString }?.content ?: return
+
+        val c = idValue.indexOf(':')
+        val s = idValue.indexOf('/')
+        val hasScheme = c > 0 && (s < 0 || c < s)
+        if (!hasScheme) {
+            throw SerializationException.EncodeFailed(
+                element = "credentialSubject.id",
+                reason = "credentialSubject.id '$idValue' is a relative IRI (no scheme). " +
+                    "JSON-LD RDFC-1.0 canonicalization (JsonLd.toRdf) drops every triple whose " +
+                    "subject is a relative IRI, so this subject's claims would NOT be covered by " +
+                    "the proof signature (the credential would still verify, making the claims " +
+                    "forgeable). Use an absolute IRI for credentialSubject.id (e.g. http:, " +
+                    "https:, did:, or urn:uuid:), or omit it to mint an anonymous (blank-node) " +
+                    "subject whose triples are signed."
+            )
+        }
     }
 
     /**

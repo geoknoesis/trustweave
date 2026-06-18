@@ -132,7 +132,38 @@ class BitstringStatusListManager(
         require(bitsPerEntry == 1 || bitsPerEntry == 2) {
             "bitsPerEntry must be 1 or 2, got $bitsPerEntry"
         }
+        baseUrl?.let { validateBaseUrl(it) }
         initializeSchema()
+    }
+
+    /**
+     * Fail fast on a misconfigured [baseUrl].
+     *
+     * The status list VC's `credentialSubject.id` is derived as `"<baseUrl>/<statusListId>"`.
+     * If [baseUrl] is not a valid absolute http(s) URL (e.g. `"my host:8080"`), that derived id
+     * is a syntactically-invalid IRI — JSON-LD `toRdf` would DROP the subject's triples, leaving
+     * `statusPurpose`/`encodedList` UNSIGNED while the VC still verifies (forgeable revocation
+     * data). Rejecting at construction time keeps the bypass closed before any VC is issued.
+     */
+    private fun validateBaseUrl(baseUrl: String) {
+        val uri = try {
+            java.net.URI(baseUrl)
+        } catch (e: java.net.URISyntaxException) {
+            throw IllegalArgumentException(
+                "baseUrl must be a valid absolute http(s) URL; '$baseUrl' is not a valid URI " +
+                    "(${e.reason}). The status list VC's credentialSubject.id is derived from it " +
+                    "as \"<baseUrl>/<id>\"; a malformed baseUrl would yield an invalid IRI whose " +
+                    "triples JSON-LD toRdf drops, leaving the status (encodedList) unsigned."
+            )
+        }
+        val scheme = uri.scheme?.lowercase()
+        require(uri.isAbsolute && (scheme == "http" || scheme == "https")) {
+            "baseUrl must be a valid absolute http(s) URL; '$baseUrl' is not " +
+                "(scheme='${uri.scheme}'). The status list VC's credentialSubject.id is derived " +
+                "from it as \"<baseUrl>/<id>\"; a non-http(s) or relative baseUrl would yield an " +
+                "invalid/relative IRI whose triples JSON-LD toRdf drops, leaving the status " +
+                "(encodedList) unsigned."
+        }
     }
 
     // -------------------------------------------------------------------------

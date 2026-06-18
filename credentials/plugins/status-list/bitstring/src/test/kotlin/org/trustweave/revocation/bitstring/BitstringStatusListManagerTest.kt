@@ -771,6 +771,133 @@ class BitstringStatusListManagerTest {
         )
     }
 
+    /**
+     * End-to-end proof that the revocation data (`encodedList`) is COVERED by the signature.
+     *
+     * Wires the REAL production proof engine (same setup as the regression test above), builds a
+     * signed status list VC after revoking an index, VERIFIES the proof is Valid, then TAMPERS the
+     * `credentialSubject.encodedList` (flips the revoked bit) and re-verifies. The second
+     * verification MUST be Invalid — that is the whole point of the relative/invalid-IRI guard:
+     * the subject's claims are inside the signed canonical N-Quads, so any change to `encodedList`
+     * breaks the signature.
+     */
+    @Test
+    fun `tampering encodedList breaks the real proof - revocation data is signed`() = runBlocking {
+        // 1-4. Provision a real Ed25519 issuer + the production VcLdProofEngine.
+        val realKms = InMemoryKeyManagementService()
+        val didMethod = DidKeyMockMethod(realKms)
+        val issuerDoc = didMethod.createDid()
+        val realIssuerDid = issuerDoc.id.value
+        val realVmId = issuerDoc.verificationMethod.first().id
+        val didResolver = org.trustweave.did.resolver.DidResolver { did -> didMethod.resolveDid(did) }
+        val signer: suspend (ByteArray, String) -> ByteArray = { data, keyId ->
+            val result = realKms.sign(KeyId(keyId), data)
+            check(result is SignResult.Success) { "KMS signing failed: $result" }
+            result.signature
+        }
+        val realEngine = CredentialServices.vcLdProofEngine(didResolver, signer)
+
+        // 5-6. Create a status list, revoke an index, build the SIGNED status VC.
+        val realManager = BitstringStatusListManagerFactory.create(
+            dataSource = dataSource,
+            kms = realKms,
+            issuerDid = realIssuerDid,
+            bitsPerEntry = 1,
+            proofEngine = realEngine,
+            issuerKeyId = realVmId
+        )
+        val statusListId = realManager.createStatusList(realIssuerDid, StatusPurpose.REVOCATION)
+        realManager.assignCredentialIndex("urn:cred:tamper-1", statusListId, null)
+        realManager.revokeCredential("urn:cred:tamper-1", statusListId)
+        val signedVc = realManager.buildStatusListVc(statusListId)
+
+        // 7. Verify the untouched VC: the proof MUST be Valid (revocation data is covered).
+        val validResult = realEngine.verify(signedVc, VerificationOptions())
+        assertTrue(
+            validResult is VerificationResult.Valid,
+            "The freshly signed status list VC must verify as Valid; got: $validResult"
+        )
+
+        // 8. TAMPER credentialSubject.encodedList: flip the revoked bit (index 0, byte 0, MSB).
+        //    A verifier that DID cover the subject's claims will now reject the proof.
+        val originalEncoded = (signedVc.credentialSubject.claims["encodedList"] as JsonPrimitive).content
+        val rawBytes = decodeRawBitstring(originalEncoded)
+        rawBytes[0] = (rawBytes[0].toInt() xor 0x80).toByte() // un-revoke index 0
+        val tamperedEncoded = encodeRawBitstring(rawBytes)
+        assertFalse(
+            tamperedEncoded == originalEncoded,
+            "Tampering must actually change the encodedList value"
+        )
+        val tamperedClaims = signedVc.credentialSubject.claims.toMutableMap().apply {
+            put("encodedList", JsonPrimitive(tamperedEncoded))
+        }
+        val tamperedVc = signedVc.copy(
+            credentialSubject = signedVc.credentialSubject.copy(claims = tamperedClaims)
+        )
+
+        // 9. Re-verify the tampered VC: the proof MUST now be Invalid.
+        val tamperedResult = realEngine.verify(tamperedVc, VerificationOptions())
+        assertTrue(
+            tamperedResult is VerificationResult.Invalid,
+            "Tampering credentialSubject.encodedList MUST break the proof (revocation data is " +
+                "signed); got: $tamperedResult"
+        )
+    }
+
+    // -------------------------------------------------------------------------
+    // baseUrl validation (fail fast at construction)
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `factory rejects a malformed baseUrl at construction`() {
+        // "my host:8080" -> derived subject id "my host:8080/<id>" is an invalid IRI whose
+        // triples JsonLd.toRdf drops, re-opening the unsigned-claims hole. Must fail fast.
+        val ex = assertFailsWith<IllegalArgumentException> {
+            BitstringStatusListManagerFactory.create(
+                dataSource = dataSource,
+                kms = kms,
+                issuerDid = issuerDid,
+                baseUrl = "my host:8080"
+            )
+        }
+        assertTrue(
+            ex.message?.contains("baseUrl") == true,
+            "Rejection must name baseUrl: ${ex.message}"
+        )
+    }
+
+    @Test
+    fun `factory rejects a non-http(s) baseUrl at construction`() {
+        // A urn: scheme is a valid absolute IRI but is NOT a publishable status-list location;
+        // and "<urn>/<id>" is not where a verifier would dereference the list. Reject it.
+        assertFailsWith<IllegalArgumentException> {
+            BitstringStatusListManagerFactory.create(
+                dataSource = dataSource,
+                kms = kms,
+                issuerDid = issuerDid,
+                baseUrl = "urn:uuid:not-a-url"
+            )
+        }
+    }
+
+    @Test
+    fun `factory accepts a valid https baseUrl and yields baseUrl-prefixed subject id`() = runBlocking {
+        val engine = RecordingProofEngine()
+        val signing = signingManager(engine, baseUrl = "https://issuer.example.com/status")
+
+        val statusListId = signing.createStatusList(
+            issuerDid = issuerDid,
+            purpose = StatusPurpose.REVOCATION
+        )
+        val vc = signing.buildStatusListVc(statusListId)
+
+        assertEquals(
+            "https://issuer.example.com/status/$statusListId",
+            vc.credentialSubject.id?.value,
+            "A valid https baseUrl must yield \"<baseUrl>/<id>\""
+        )
+    }
+
     // -------------------------------------------------------------------------
     // Statistics & metadata
     // -------------------------------------------------------------------------

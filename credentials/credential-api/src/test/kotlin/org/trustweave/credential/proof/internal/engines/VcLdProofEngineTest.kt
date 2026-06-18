@@ -156,6 +156,53 @@ class VcLdProofEngineTest {
     }
 
     @Test
+    fun `verify fails closed for a credential whose subject id is an invalid IRI`() = runBlocking {
+        // Security regression: a credentialSubject.id like "urn:has space" is accepted by Iri()
+        // (its regex allows the space) but JsonLd.toRdf drops every triple whose subject is not
+        // a usable absolute IRI, so the subject's claims would be UNSIGNED. The canonicalization
+        // guard now rejects such ids; the verify path must surface that as a fail-CLOSED
+        // VerificationResult.Invalid, NEVER an uncaught exception or a Valid result.
+        val invalidSubjectCredential = createValidCredential().copy(
+            credentialSubject = CredentialSubject.fromIri(
+                "urn:has space",
+                claims = mapOf("name" to JsonPrimitive("Mallory"))
+            )
+        )
+
+        val result = engine.verify(invalidSubjectCredential, VerificationOptions())
+
+        assertTrue(
+            result is VerificationResult.Invalid,
+            "A credential with a toRdf-droppable subject id must fail closed (Invalid), got: $result"
+        )
+    }
+
+    @Test
+    fun `verify canonicalization input rejects an invalid subject id - signing input guard is in the verify path`() {
+        // Prove the guard is on the exact code path verify() uses to build its signing input:
+        // DefaultJsonLdCanonicalizationAdapter.canonicalize delegates to
+        // JsonLdUtils.canonicalizeDocument, which throws for a subject id toRdf would drop.
+        val adapter =
+            org.trustweave.credential.internal.infrastructure.DefaultJsonLdCanonicalizationAdapter()
+        val docWithInvalidSubjectId = buildJsonObject {
+            put("@context", buildJsonArray {
+                add("https://www.w3.org/2018/credentials/v1")
+                add(buildJsonObject { put("name", "https://schema.org/name") })
+            })
+            put("type", buildJsonArray { add("VerifiableCredential") })
+            put("issuer", "did:key:test")
+            put("credentialSubject", buildJsonObject {
+                put("id", "urn:has space")
+                put("name", "Mallory")
+            })
+        }
+
+        assertFailsWith<org.trustweave.core.exception.SerializationException> {
+            adapter.canonicalize(docWithInvalidSubjectId)
+        }
+    }
+
+    @Test
     fun `test createPresentation`() = runBlocking {
         val credentials = listOf(createValidCredential())
         val request = PresentationRequest()

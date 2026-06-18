@@ -422,6 +422,80 @@ class JsonLdUtilsTest {
     }
 
     @Test
+    fun `canonicalizeDocument rejects syntactically-invalid (not just relative) credentialSubject ids`() {
+        // The original guard only checked for a scheme *delimiter* (a colon before any slash).
+        // But JsonLd.toRdf also drops triples for any SYNTACTICALLY INVALID IRI: "urn:has space"
+        // has a colon (old guard passed it) but is not a usable absolute IRI, so toRdf drops the
+        // subject's triples and its claims go UNSIGNED while the credential still verifies.
+        // Every value below MUST fail closed.
+        val mustReject = listOf(
+            "9bc8be44-1234",        // bare uuid (no scheme)
+            "#subject",             // fragment-only
+            "subjects/123",         // bare path
+            "//host/path",          // network-path reference (no scheme)
+            ":foo",                 // empty scheme
+            "urn:has space",        // colon present but illegal space -> invalid IRI
+            "urn:uuid:with space",  // illegal space
+            "did:key:abc def",      // illegal space
+            "http://exa mple/x",    // illegal space in authority
+            "urn:a\"b",             // illegal double-quote
+            "urn:a^b",              // illegal caret
+            "urn:a`b",              // illegal backtick
+            "urn:a{b}",             // illegal braces
+            "urn:a|b",              // illegal pipe
+            "urn:a\\b"              // illegal backslash
+        )
+        for (id in mustReject) {
+            assertFailsWith<SerializationException>(
+                "credentialSubject.id '$id' must be rejected (toRdf would drop its triples), " +
+                    "but canonicalization did not throw"
+            ) {
+                JsonLdUtils.canonicalizeDocument(vcWithSubjectId(id))
+            }
+        }
+    }
+
+    @Test
+    fun `canonicalizeDocument accepts valid absolute credentialSubject ids`() {
+        val mustAccept = listOf(
+            "urn:uuid:9bc8be44-7abc-4d29-a8f8-1e2c3d4e5f6a",
+            "https://example.com/status-lists/t/9bc8be44",
+            "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
+        )
+        for (id in mustAccept) {
+            val result = JsonLdUtils.canonicalizeDocument(vcWithSubjectId(id))
+            assertTrue(result.isNotBlank(), "credentialSubject.id '$id' should canonicalize, but result was blank")
+        }
+    }
+
+    @Test
+    fun `canonicalizeDocument rejects an invalid (non-relative) id in any subject of a credentialSubject array`() {
+        // The array path must also reject syntactically-invalid (not merely relative) ids.
+        val document = buildJsonObject {
+            put("@context", buildJsonArray {
+                add("https://www.w3.org/2018/credentials/v1")
+                add(buildJsonObject { put("name", "https://schema.org/name") })
+            })
+            put("type", buildJsonArray { add("VerifiableCredential") })
+            put("issuer", "did:key:test")
+            put("credentialSubject", buildJsonArray {
+                add(buildJsonObject {
+                    put("id", "did:key:z6MkSubject")
+                    put("name", "Alice")
+                })
+                add(buildJsonObject {
+                    put("id", "urn:has space")
+                    put("name", "Bob")
+                })
+            })
+        }
+
+        assertFailsWith<SerializationException> {
+            JsonLdUtils.canonicalizeDocument(document)
+        }
+    }
+
+    @Test
     fun `canonicalizeDocument with no credentialSubject does not throw on the subject-id guard`() {
         // Proof configs / presentations canonicalized here have no credentialSubject; the
         // guard must do nothing.

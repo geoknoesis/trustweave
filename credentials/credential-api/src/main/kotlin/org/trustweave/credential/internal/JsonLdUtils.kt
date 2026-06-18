@@ -2,6 +2,7 @@ package org.trustweave.credential.internal
 
 import com.apicatalog.jsonld.JsonLd
 import com.apicatalog.jsonld.document.JsonDocument
+import com.apicatalog.jsonld.uri.UriUtils
 import com.apicatalog.rdf.canon.RdfCanon
 import com.apicatalog.rdf.nquads.NQuadsWriter
 import jakarta.json.Json
@@ -137,21 +138,33 @@ internal object JsonLdUtils {
     }
 
     /**
-     * Fail closed when a `credentialSubject.id` is a *relative* IRI.
+     * Fail closed when a `credentialSubject.id` is not a *valid absolute* IRI.
      *
      * RDFC-1.0 canonicalization runs JSON-LD `toRdf`, which **drops every RDF triple whose
-     * subject is a relative IRI** (a string with no scheme, e.g. a bare UUID `9bc8be44-...`,
-     * a fragment-only `#foo`, or a bare path `subjects/123`). The subject's claims would then
-     * be absent from the canonical N-Quads — **not covered by the proof signature** — even
-     * though the credential still verifies. That is forgeable claim/revocation data.
+     * subject is not a usable absolute IRI**. That covers two distinct failure modes:
+     * - a *relative* IRI — a string with no scheme, e.g. a bare UUID `9bc8be44-...`, a
+     *   fragment-only `#foo`, a bare path `subjects/123`, or a network-path `//host/path`; and
+     * - a *syntactically invalid* IRI — one that carries a scheme delimiter (a colon) but is
+     *   still not a legal IRI, e.g. `urn:has space`, `did:key:abc def`, `urn:a^b`, `urn:a|b`.
+     *   These slip past a naive "colon before any slash" scheme heuristic, yet `toRdf` drops
+     *   their triples just the same.
+     *
+     * In either case the subject's claims would be absent from the canonical N-Quads — **not
+     * covered by the proof signature** — even though the credential still verifies. That is
+     * forgeable claim/revocation data.
+     *
+     * The check uses titanium's own [UriUtils.isAbsoluteUri], which is exactly the predicate
+     * `toRdf` applies when deciding whether a subject IRI is usable, so the guard cannot drift
+     * from the canonicaliser's behaviour (no false accepts of an id `toRdf` would silently
+     * drop, no false rejects of an id `toRdf` would keep).
      *
      * Rules (precise to avoid false positives):
      * - `credentialSubject` absent → nothing to check (e.g. proof configs / presentations).
      * - `credentialSubject` object → check its `id`; array of subjects → check each element.
      * - `id` absent or JSON null → ALLOWED: an anonymous subject is valid VC 2.0 and becomes
      *   a blank node whose triples ARE emitted and signed.
-     * - `id` a string → it MUST be absolute, i.e. carry a scheme (`http:`, `https:`, `did:`,
-     *   `urn:`, …). A scheme is a colon that precedes any slash. Otherwise throws
+     * - `id` a string → it MUST be a valid absolute IRI (`http:`, `https:`, `did:`,
+     *   `urn:uuid:`, …) per [UriUtils.isAbsoluteUri]. Otherwise throws
      *   [SerializationException.EncodeFailed].
      */
     private fun verifyCredentialSubjectIdIsAbsolute(document: JsonObject) {
@@ -165,25 +178,32 @@ internal object JsonLdUtils {
         }
     }
 
-    /** Throw if [subject]'s `id` is present, a non-null JSON string, and a relative IRI. */
+    /**
+     * Throw if [subject]'s `id` is present, a non-null JSON string, and not a valid absolute
+     * IRI. "Valid absolute" is judged by titanium's [UriUtils.isAbsoluteUri] — the same
+     * predicate `toRdf` uses — so this rejects BOTH relative IRIs (no scheme, e.g. a bare
+     * UUID or `#fragment`) AND syntactically-invalid IRIs that carry a colon but are not legal
+     * (e.g. `urn:has space`, `urn:a^b`). Both classes have their subject triples dropped by
+     * `toRdf`, leaving the subject's claims unsigned.
+     */
     private fun requireAbsoluteSubjectId(subject: JsonObject) {
         val idElement = subject["id"] ?: return
         if (idElement is JsonNull) return
         val idValue = (idElement as? JsonPrimitive)?.takeIf { it.isString }?.content ?: return
 
-        val c = idValue.indexOf(':')
-        val s = idValue.indexOf('/')
-        val hasScheme = c > 0 && (s < 0 || c < s)
-        if (!hasScheme) {
+        if (!UriUtils.isAbsoluteUri(idValue)) {
             throw SerializationException.EncodeFailed(
                 element = "credentialSubject.id",
-                reason = "credentialSubject.id '$idValue' is a relative IRI (no scheme). " +
+                reason = "credentialSubject.id must be a valid absolute IRI; '$idValue' is not — " +
+                    "toRdf would drop its triples, leaving the subject's claims unsigned. " +
                     "JSON-LD RDFC-1.0 canonicalization (JsonLd.toRdf) drops every triple whose " +
-                    "subject is a relative IRI, so this subject's claims would NOT be covered by " +
-                    "the proof signature (the credential would still verify, making the claims " +
-                    "forgeable). Use an absolute IRI for credentialSubject.id (e.g. http:, " +
-                    "https:, did:, or urn:uuid:), or omit it to mint an anonymous (blank-node) " +
-                    "subject whose triples are signed."
+                    "subject is not a usable absolute IRI — this covers relative IRIs (no scheme, " +
+                    "e.g. a bare UUID or '#fragment') AND syntactically-invalid IRIs that carry a " +
+                    "colon but are not legal (e.g. 'urn:has space', 'urn:a^b'). The subject's " +
+                    "claims would then NOT be covered by the proof signature (the credential would " +
+                    "still verify, making the claims forgeable). Use a valid absolute IRI for " +
+                    "credentialSubject.id (e.g. http:, https:, did:, or urn:uuid:), or omit it to " +
+                    "mint an anonymous (blank-node) subject whose triples are signed."
             )
         }
     }

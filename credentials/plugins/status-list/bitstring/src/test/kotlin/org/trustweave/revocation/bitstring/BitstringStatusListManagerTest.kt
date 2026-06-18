@@ -124,14 +124,16 @@ class BitstringStatusListManagerTest {
 
     private fun signingManager(
         engine: ProofEngine,
-        keyId: VerificationMethodId = issuerKeyId
+        keyId: VerificationMethodId = issuerKeyId,
+        baseUrl: String? = null
     ): BitstringStatusListManager = BitstringStatusListManagerFactory.create(
         dataSource = dataSource,
         kms = kms,
         issuerDid = issuerDid,
         bitsPerEntry = 1,
         proofEngine = engine,
-        issuerKeyId = keyId
+        issuerKeyId = keyId,
+        baseUrl = baseUrl
     )
 
     private fun readEncodedList(statusListId: StatusListId): String =
@@ -582,6 +584,51 @@ class BitstringStatusListManagerTest {
             "Manager must delegate signing to the proof engine with the configured key"
         )
     }
+
+    @Test
+    fun `buildStatusListVc emits an absolute urn-uuid credentialSubject id when no baseUrl is configured`() =
+        runBlocking {
+            // SECURITY: a relative-IRI credentialSubject.id (a bare UUID with no scheme) is
+            // dropped by JsonLd.toRdf, leaving statusPurpose/encodedList UNSIGNED. The manager
+            // must therefore default to an ABSOLUTE IRI (urn:uuid:<id>) whose triples are signed.
+            val engine = RecordingProofEngine()
+            val signing = signingManager(engine)
+
+            val statusListId = signing.createStatusList(
+                issuerDid = issuerDid,
+                purpose = StatusPurpose.REVOCATION
+            )
+            val vc = signing.buildStatusListVc(statusListId)
+
+            val subjectId = vc.credentialSubject.id?.value
+            assertNotNull(subjectId, "credentialSubject must carry an id")
+            assertEquals(
+                "urn:uuid:$statusListId",
+                subjectId,
+                "Without a baseUrl the subject id must be the absolute urn:uuid: form of the status list id"
+            )
+        }
+
+    @Test
+    fun `buildStatusListVc emits a baseUrl-prefixed absolute credentialSubject id when a baseUrl is configured`() =
+        runBlocking {
+            val engine = RecordingProofEngine()
+            val signing = signingManager(engine, baseUrl = "https://issuer.example.com/status/")
+
+            val statusListId = signing.createStatusList(
+                issuerDid = issuerDid,
+                purpose = StatusPurpose.REVOCATION
+            )
+            val vc = signing.buildStatusListVc(statusListId)
+
+            val subjectId = vc.credentialSubject.id?.value
+            assertNotNull(subjectId, "credentialSubject must carry an id")
+            assertEquals(
+                "https://issuer.example.com/status/$statusListId",
+                subjectId,
+                "With a baseUrl the subject id must be the absolute <baseUrl>/<id> URL (trailing slash trimmed)"
+            )
+        }
 
     @Test
     fun `buildStatusListVc refuses to sign when the configured key belongs to a different DID`() = runBlocking {

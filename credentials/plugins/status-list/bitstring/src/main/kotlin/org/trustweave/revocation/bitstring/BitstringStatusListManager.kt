@@ -82,6 +82,10 @@ import javax.sql.DataSource
  * @param bitsPerEntry 1 for single-purpose lists, 2 for combined revocation + suspension
  * @param proofEngine Proof engine (wired to the issuer's KMS) used to sign status list VCs
  * @param issuerKeyId Issuer verification method used as the signing key for status list VCs
+ * @param baseUrl Optional base URL where status list VCs are published. When set, the status
+ *   list VC's `credentialSubject.id` is `"<baseUrl>/<statusListId>"` (an absolute http(s) URL);
+ *   when null it defaults to `"urn:uuid:<statusListId>"`. Either way the id is an ABSOLUTE IRI,
+ *   so the subject's triples survive JSON-LD canonicalization and are covered by the signature.
  */
 class BitstringStatusListManager(
     private val dataSource: DataSource,
@@ -89,7 +93,8 @@ class BitstringStatusListManager(
     private val issuerDid: String,
     private val bitsPerEntry: Int = 1,
     private val proofEngine: ProofEngine? = null,
-    private val issuerKeyId: VerificationMethodId? = null
+    private val issuerKeyId: VerificationMethodId? = null,
+    private val baseUrl: String? = null
 ) : CredentialRevocationManager {
 
     companion object {
@@ -773,12 +778,23 @@ class BitstringStatusListManager(
             put("encodedList", row.encodedList)
         }
 
+        // SECURITY: the credentialSubject.id MUST be an ABSOLUTE IRI. JSON-LD RDFC-1.0
+        // canonicalization (JsonLd.toRdf) DROPS every triple whose subject is a relative IRI;
+        // a bare status-list id (e.g. a raw UUID with no scheme) would therefore leave the
+        // subject's statusPurpose/encodedList triples UNSIGNED while the VC still verifies —
+        // forgeable revocation data. We always derive an absolute IRI:
+        //   - baseUrl set  -> "<baseUrl>/<id>" (an absolute http(s) URL where the list is hosted)
+        //   - baseUrl null -> "urn:uuid:<id>"  (StatusListId is a UUID by default; urn:uuid is
+        //                      an absolute IRI whose triples ARE emitted and signed)
+        val subjectId = baseUrl?.let { "${it.trimEnd('/')}/$statusListId" }
+            ?: "urn:uuid:$statusListId"
+
         val request = IssuanceRequest(
             format = engine.format,
             issuer = Issuer.from(row.issuerDid),
             issuerKeyId = signingKeyId,
             credentialSubject = CredentialSubject.fromIri(
-                Iri(statusListId.toString()),
+                Iri(subjectId),
                 claims = subjectClaims
             ),
             type = listOf(

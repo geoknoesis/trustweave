@@ -32,6 +32,10 @@ object BitstringStatusListManagerFactory {
      * @param proofEngine [ProofEngine] used to sign status list VCs with the issuer's real key;
      *   if omitted, building/publishing signed status list VCs fails with a ConfigException
      * @param issuerKeyId Issuer verification method ID used as the signing key for status list VCs
+     * @param baseUrl Optional base URL where status list VCs are published; when set, the VC's
+     *   `credentialSubject.id` becomes `"<baseUrl>/<statusListId>"`, otherwise it defaults to
+     *   `"urn:uuid:<statusListId>"`. Either way the id is an absolute IRI so the subject's
+     *   triples are covered by the proof signature.
      * @return Configured [BitstringStatusListManager]
      */
     fun create(
@@ -40,13 +44,15 @@ object BitstringStatusListManagerFactory {
         issuerDid: String,
         bitsPerEntry: Int = 1,
         proofEngine: ProofEngine? = null,
-        issuerKeyId: VerificationMethodId? = null
+        issuerKeyId: VerificationMethodId? = null,
+        baseUrl: String? = null
     ): BitstringStatusListManager = BitstringStatusListManager(
         dataSource = dataSource,
         kms = kms,
         issuerDid = issuerDid,
         bitsPerEntry = bitsPerEntry,
         proofEngine = proofEngine,
-        issuerKeyId = issuerKeyId
+        issuerKeyId = issuerKeyId,
+        baseUrl = baseUrl
     )
 }

@@ -10,7 +10,6 @@ keywords:
   - dependencies
   - prerequisites
 redirect_from:
-  - /getting-started/installation/
   - /tutorials/getting-started/installation/
 ---
 

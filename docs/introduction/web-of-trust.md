@@ -3,7 +3,6 @@ title: "The Web of Trust: Foundation for Decentralized Trust"
 nav_order: 60
 parent: Introduction
 redirect_from:
-  - /introduction/web-of-trust/
   - /core-concepts/introduction/web-of-trust/
 ---
 

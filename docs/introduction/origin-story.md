@@ -9,7 +9,6 @@ keywords:
   - motivation
   - frustration
 redirect_from:
-  - /introduction/origin-story/
   - /core-concepts/introduction/origin-story/
 ---
 

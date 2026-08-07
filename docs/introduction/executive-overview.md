@@ -3,7 +3,6 @@ title: "Executive Overview: TrustWeave"
 nav_order: 70
 parent: Introduction
 redirect_from:
-  - /introduction/executive-overview/
   - /core-concepts/introduction/executive-overview/
 ---
 

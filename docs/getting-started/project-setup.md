@@ -3,7 +3,6 @@ title: Project Setup
 nav_order: 30
 parent: Getting Started
 redirect_from:
-  - /getting-started/project-setup/
   - /tutorials/getting-started/project-setup/
 ---
 

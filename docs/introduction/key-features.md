@@ -10,7 +10,6 @@ keywords:
   - did-method-agnostic
   - kms-agnostic
 redirect_from:
-  - /introduction/key-features/
   - /core-concepts/introduction/key-features/
 ---
 

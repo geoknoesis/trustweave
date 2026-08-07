@@ -4,7 +4,6 @@ parent: API Reference
 nav_order: 90
 redirect_from:
   - /plugins/
-  - /api-reference/plugins/
 ---
 
 # Supported Plugins

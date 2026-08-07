@@ -9,7 +9,6 @@ keywords:
   - examples
   - production
 redirect_from:
-  - /getting-started/common-patterns/
   - /tutorials/getting-started/common-patterns/
 ---
 

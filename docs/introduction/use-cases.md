@@ -12,7 +12,6 @@ keywords:
   - education
   - iot
 redirect_from:
-  - /introduction/use-cases/
   - /core-concepts/introduction/use-cases/
 ---
 

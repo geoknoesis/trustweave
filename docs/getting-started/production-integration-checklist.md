@@ -8,7 +8,6 @@ keywords:
   - logging
   - security
 redirect_from:
-  - /getting-started/production-integration-checklist/
   - /tutorials/getting-started/production-integration-checklist/
 ---
 

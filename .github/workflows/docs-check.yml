@@ -30,7 +30,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Setup Kotlin
-        uses: fwilhe2/setup-kotlin@v1
+        uses: fwilhe2/setup-kotlin@v2
         with:
           kotlin-version: '2.2.21'
 

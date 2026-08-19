@@ -310,12 +310,22 @@ class DefaultUniversalResolver(
                     // §4.4/§12.1: 410 means the DID exists but has been deactivated. This is not
                     // an error — no error object is attached to the resolution metadata. The body
                     // may carry the upstream didDocumentMetadata; parse it best-effort but always
-                    // force deactivated = true regardless of what (if anything) parsed.
+                    // force deactivated = true regardless of what (if anything) parsed. Same
+                    // read-one-extra-byte-and-compare oversized-body guard shape as the 200
+                    // branch, but an oversized body degrades to the default here instead of
+                    // failing resolution — the 410 status itself already establishes
+                    // deactivation, so a body we can't/won't fully buffer must not downgrade
+                    // that to an error.
                     val documentMetadata = try {
-                        val body = String(bodyStream.readNBytes(MAX_RESPONSE_BYTES), Charsets.UTF_8)
-                        parseJsonResponse(body)
-                            ?.let { protocolAdapter.extractDocumentMetadata(it) }
-                            ?.let { parseDidDocumentMetadata(it) }
+                        val bytes = bodyStream.readNBytes(MAX_RESPONSE_BYTES + 1)
+                        if (bytes.size > MAX_RESPONSE_BYTES) {
+                            null
+                        } else {
+                            val body = String(bytes, Charsets.UTF_8)
+                            parseJsonResponse(body)
+                                ?.let { protocolAdapter.extractDocumentMetadata(it) }
+                                ?.let { parseDidDocumentMetadata(it) }
+                        }
                     } catch (_: kotlinx.serialization.SerializationException) {
                         null
                     } ?: DidDocumentMetadata(deactivated = true)

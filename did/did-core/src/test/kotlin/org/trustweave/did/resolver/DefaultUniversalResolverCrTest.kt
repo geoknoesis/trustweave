@@ -170,4 +170,43 @@ class DefaultUniversalResolverCrTest {
             server.stop(0)
         }
     }
+
+    // ─── Fix round 1: valid JSON with an explicit `null` field (JsonNull, not absent) must not
+    // crash resolution. `JsonNull` is a real JsonElement, so `?.jsonObject`-style extraction
+    // invokes on it (the safe call does not short-circuit) and throws IllegalArgumentException —
+    // a different failure mode than the malformed-JSON-syntax case above, which throws
+    // SerializationException and was already handled. Both StandardUniversalResolverAdapter and
+    // GodiddyProtocolAdapter now use `as? JsonObject` so this degrades to null instead. ───
+
+    @Test
+    fun `HTTP 410 with explicit null metadata field still produces Deactivated`() = runBlocking {
+        val server = startServer(410, """{"didDocumentMetadata":null}""")
+        try {
+            val resolver = DefaultUniversalResolver(baseUrl = "http://localhost:${server.address.port}", timeout = 5)
+
+            val result = resolver.resolveDid("did:example:deactivated-null-metadata")
+
+            assertTrue(result is DidResolutionResult.Deactivated, "expected Deactivated, got $result")
+            assertTrue(result.documentMetadata.deactivated)
+        } finally {
+            server.stop(0)
+        }
+    }
+
+    @Test
+    fun `HTTP 200 with explicit null metadata field does not crash resolution`() = runBlocking {
+        val server = startServer(200, """{"didDocumentMetadata":null}""")
+        try {
+            val resolver = DefaultUniversalResolver(baseUrl = "http://localhost:${server.address.port}", timeout = 5)
+
+            // No "didDocument" key is present either, so this resolves to NotFound rather than
+            // throwing — the point of this test is that it returns a DidResolutionResult at all
+            // instead of DidException.DidResolutionFailed escaping from the JsonNull cast.
+            val result = resolver.resolveDid("did:example:no-document-null-metadata")
+
+            assertTrue(result is DidResolutionResult.Failure.NotFound, "expected NotFound, got $result")
+        } finally {
+            server.stop(0)
+        }
+    }
 }

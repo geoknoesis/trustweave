@@ -75,12 +75,22 @@ fun UniversalResolver.asDidResolver(): DidResolver = DidResolver { did ->
     } catch (e: kotlinx.coroutines.CancellationException) {
         throw e
     } catch (e: DidException) {
+        // Map the exception subtype to its §11 error type so the RFC 9457 object asserts the
+        // correct condition instead of always claiming INTERNAL_ERROR (HTTP 500) — §12.1
+        // requires 400 for an invalid DID and 404 for not-found.
+        val error = when (e) {
+            is DidException.DidNotFound -> DidResolutionError.notFound(e.message ?: "DID not found")
+            is DidException.InvalidDidFormat -> DidResolutionError.invalidDid(e.message ?: "Invalid DID")
+            is DidException.DidMethodNotRegistered ->
+                DidResolutionError.methodNotSupported(e.message ?: "DID method not registered")
+            else -> DidResolutionError.internalError(e.message ?: "Universal resolver error")
+        }
         DidResolutionResult.Failure.ResolutionError(
             did = did,
             reason = e.message ?: "Universal resolver error",
             cause = e,
             resolutionMetadata = DidResolutionMetadata(
-                error = DidResolutionError.internalError(e.message ?: "Universal resolver error")
+                error = error
             )
         )
     } catch (e: Exception) {

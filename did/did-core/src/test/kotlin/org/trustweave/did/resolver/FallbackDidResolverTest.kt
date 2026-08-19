@@ -1,5 +1,6 @@
 package org.trustweave.did.resolver
 
+import org.trustweave.did.exception.DidException
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import kotlinx.coroutines.runBlocking
@@ -143,5 +144,43 @@ class FallbackDidResolverTest {
         assertTrue(first is DidResolutionResult.Success)
         assertSame(first, second)
         assertEquals(1, fallback.calls, "fallback success must be served from cache afterwards")
+    }
+
+    // ─── asDidResolver() DidException mapping ───
+    //
+    // A DidException thrown by the wrapped UniversalResolver must be reflected as the matching
+    // §11 error type, not always INTERNAL_ERROR (which maps to HTTP 500 where §12.1 requires
+    // 400/404).
+
+    private fun throwingUniversalResolver(exception: DidException): UniversalResolver =
+        object : UniversalResolver {
+            override val baseUrl: String = "https://resolver.example"
+            override suspend fun resolveDid(did: String): DidResolutionResult = throw exception
+            override suspend fun getSupportedMethods(): List<String>? = null
+        }
+
+    @Test
+    fun `asDidResolver surfaces NOT_FOUND for DidException DidNotFound`() = runBlocking {
+        val did = Did("did:test:missing")
+        val resolver = throwingUniversalResolver(DidException.DidNotFound(did = did)).asDidResolver()
+
+        val result = resolver.resolve(did)
+
+        assertTrue(result is DidResolutionResult.Failure.ResolutionError)
+        val metadata = (result as DidResolutionResult.Failure.ResolutionError).resolutionMetadata
+        assertEquals(DidErrorType.NOT_FOUND, metadata.error?.type)
+    }
+
+    @Test
+    fun `asDidResolver surfaces INVALID_DID for DidException InvalidDidFormat`() = runBlocking {
+        val did = Did("did:test:example")
+        val exception = DidException.InvalidDidFormat(did = did.value, reason = "malformed identifier")
+        val resolver = throwingUniversalResolver(exception).asDidResolver()
+
+        val result = resolver.resolve(did)
+
+        assertTrue(result is DidResolutionResult.Failure.ResolutionError)
+        val metadata = (result as DidResolutionResult.Failure.ResolutionError).resolutionMetadata
+        assertEquals(DidErrorType.INVALID_DID, metadata.error?.type)
     }
 }

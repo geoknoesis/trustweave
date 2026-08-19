@@ -10,6 +10,7 @@ import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolutionMetadata
 import org.trustweave.did.resolver.DidResolutionError
+import org.trustweave.did.resolver.DidErrorType
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.*
@@ -188,12 +189,11 @@ class DidMethodInterfaceContractTest {
                     return DidResolutionResult.Failure.NotFound(
                         did = did,
                         reason = "deactivated",
-                        // "deactivated" was never a recognized error code (v0.3 or CR); this
-                        // mock's Failure.NotFound branch maps to notFound, consistent with the
-                        // sibling not-in-map branch immediately below. No assertion in this
-                        // file exercises this branch's error value directly.
+                        // Under this CR, deactivation is not an error (§4.4); "deactivated" is
+                        // not a recognized legacy code either, so fromLegacyCode's else branch
+                        // faithfully prefixes it rather than collapsing it into NOT_FOUND.
                         resolutionMetadata = DidResolutionMetadata(
-                            error = DidResolutionError.notFound("deactivated")
+                            error = DidResolutionError.of(DidErrorType.fromLegacyCode("deactivated"), "deactivated")
                         )
                     )
                 }

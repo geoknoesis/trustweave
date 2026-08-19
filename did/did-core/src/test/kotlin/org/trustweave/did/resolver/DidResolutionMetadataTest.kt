@@ -83,4 +83,72 @@ class DidResolutionMetadataTest {
         val json = DidResolutionMetadata(proof = listOf(proof)).toJson()
         assertTrue(json.containsKey("proof"))
     }
+
+    // ─── Regression: legacy errorMessage must survive alongside a legacy error code ───
+
+    @Test
+    fun `fromMap preserves the sibling errorMessage sentence for a legacy string error`() {
+        val metadata = DidResolutionMetadata.fromMap(
+            mapOf(
+                "error" to "notFound",
+                "errorMessage" to "DID did:x:y does not exist"
+            )
+        )
+        assertEquals(DidErrorType.NOT_FOUND, metadata.error?.type)
+        assertEquals("DID did:x:y does not exist", metadata.error?.detail)
+    }
+
+    @Test
+    fun `fromMap upgrades a standalone errorMessage with no error member to an internal error`() {
+        val metadata = DidResolutionMetadata.fromMap(mapOf("errorMessage" to "driver exploded"))
+        assertEquals(DidErrorType.INTERNAL_ERROR, metadata.error?.type)
+        assertEquals("driver exploded", metadata.error?.detail)
+    }
+
+    // ─── Round-trip ───
+
+    @Test
+    fun `toMap then fromMap round-trip preserves error type, contentType and properties`() {
+        val original = DidResolutionMetadata(
+            contentType = "application/did+json",
+            error = DidResolutionError.invalidDid("malformed identifier"),
+            properties = mapOf("blockNumber" to "42")
+        )
+        val roundTripped = DidResolutionMetadata.fromMap(original.toMap())
+
+        assertEquals(original.contentType, roundTripped.contentType)
+        assertEquals(original.error?.type, roundTripped.error?.type)
+        assertEquals(original.properties, roundTripped.properties)
+    }
+
+    // ─── D4: both parsers accept the legacy string error form ───
+
+    @Test
+    fun `fromJson accepts a legacy string error`() {
+        val json = buildJsonObject { put("error", "notFound") }
+        val metadata = DidResolutionMetadata.fromJson(json)
+        assertEquals(DidErrorType.NOT_FOUND, metadata.error?.type)
+    }
+
+    // ─── Malformed input degrades instead of throwing ───
+
+    @Test
+    fun `fromJson degrades an object-valued contentType instead of throwing`() {
+        val json = buildJsonObject { put("contentType", buildJsonObject { put("nested", "value") }) }
+        val metadata = DidResolutionMetadata.fromJson(json)
+        assertEquals("application/did", metadata.contentType)
+    }
+
+    @Test
+    fun `fromJson degrades a malformed retrieved timestamp instead of throwing`() {
+        val json = buildJsonObject { put("retrieved", "yesterday") }
+        val metadata = DidResolutionMetadata.fromJson(json)
+        assertNull(metadata.retrieved)
+    }
+
+    @Test
+    fun `fromMap degrades a malformed retrieved timestamp instead of throwing`() {
+        val metadata = DidResolutionMetadata.fromMap(mapOf("retrieved" to "yesterday"))
+        assertNull(metadata.retrieved)
+    }
 }

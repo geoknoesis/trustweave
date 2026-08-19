@@ -7,7 +7,6 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
 import org.trustweave.did.representation.DidMediaTypes
@@ -67,7 +66,9 @@ data class DidResolutionMetadata(
         driverUrl?.let { put("driverUrl", it) }
         duration?.let { put("duration", it) }
         retrieved?.let { put("retrieved", it.toXmlDateTime()) }
-        properties.forEach { (key, value) -> put(key, JsonPrimitive(value)) }
+        // Guard against a property named after a real member (e.g. "error", "contentType")
+        // clobbering the value already written above.
+        properties.forEach { (key, value) -> if (key !in KNOWN_KEYS) put(key, JsonPrimitive(value)) }
     }
 
     /** Flat map view; timestamps use the §3.1 datetime format. */
@@ -79,7 +80,8 @@ data class DidResolutionMetadata(
         driverUrl?.let { put("driverUrl", it) }
         duration?.let { put("duration", it) }
         retrieved?.let { put("retrieved", it.toXmlDateTime()) }
-        if (properties.isNotEmpty()) putAll(properties)
+        val safeProperties = properties.filterKeys { it !in KNOWN_KEYS }
+        if (safeProperties.isNotEmpty()) putAll(safeProperties)
     }
 
     companion object {
@@ -97,25 +99,37 @@ data class DidResolutionMetadata(
         fun fromMap(map: Map<String, Any?>): DidResolutionMetadata {
             val rawError = map["error"]
             val error = when (rawError) {
-                null -> null
-                is JsonObject -> DidResolutionError.fromJson(rawError)
-                is String -> DidResolutionError.fromJson(JsonPrimitive(rawError))
+                null ->
+                    // No structured error code, but an upstream response can still carry a
+                    // bare human-readable errorMessage with no sibling error member. Treat
+                    // that as an internal error rather than dropping the text.
+                    (map["errorMessage"] as? String)?.let { DidResolutionError.internalError(it) }
+                is JsonObject -> DidResolutionError.fromJson(rawError)?.let { parsed ->
+                    // The CR object form may omit `detail`; a legacy response carries its
+                    // human-readable text in a sibling errorMessage member instead.
+                    if (parsed.detail == null) parsed.copy(detail = map["errorMessage"] as? String) else parsed
+                }
+                is String ->
+                    // The v0.3 bare-string form has no room for a detail of its own — the
+                    // human-readable sentence lives in the sibling errorMessage member.
+                    DidResolutionError.of(
+                        DidErrorType.fromLegacyCode(rawError),
+                        (map["errorMessage"] as? String) ?: rawError
+                    )
                 is Map<*, *> -> {
-                    val type = rawError["type"]?.toString()
+                    val type = rawError["type"].asPlainString()
                     type?.let {
+                        val resolvedType = DidErrorType.fromLegacyCode(it)
                         DidResolutionError(
-                            type = DidErrorType.fromLegacyCode(it),
-                            title = rawError["title"]?.toString()
-                                ?: DidErrorType.title(DidErrorType.fromLegacyCode(it)),
-                            detail = rawError["detail"]?.toString()
+                            type = resolvedType,
+                            title = rawError["title"].asPlainString()
+                                ?: DidErrorType.title(resolvedType),
+                            detail = rawError["detail"].asPlainString()
                                 ?: map["errorMessage"] as? String
                         )
                     }
                 }
                 else -> null
-            }?.let { parsed ->
-                // A legacy response carries its human-readable text in a sibling errorMessage member.
-                if (parsed.detail == null) parsed.copy(detail = map["errorMessage"] as? String) else parsed
             }
 
             return DidResolutionMetadata(
@@ -125,7 +139,8 @@ data class DidResolutionMetadata(
                 pattern = map["pattern"] as? String,
                 driverUrl = map["driverUrl"] as? String,
                 duration = (map["duration"] as? Number)?.toLong(),
-                retrieved = (map["retrieved"] as? String)?.let { Instant.parse(it) },
+                retrieved = (map["retrieved"] as? String)
+                    ?.let { runCatching { Instant.parse(it) }.getOrNull() },
                 properties = (map["properties"] as? Map<*, *>)
                     ?.mapNotNull { (k, v) -> (k as? String)?.let { it to (v?.toString() ?: "") } }
                     ?.toMap()
@@ -135,6 +150,13 @@ data class DidResolutionMetadata(
             )
         }
 
+        /** Reads a loosely-typed map value as plain text, accepting both `String` and `JsonPrimitive`. */
+        private fun Any?.asPlainString(): String? = when (this) {
+            is String -> this
+            is JsonPrimitive -> this.contentOrNull
+            else -> null
+        }
+
         /**
          * Builds metadata from a §4.2 JSON structure.
          *
@@ -142,13 +164,17 @@ data class DidResolutionMetadata(
          * so `as? String` casts would silently drop every member.
          */
         fun fromJson(json: JsonObject): DidResolutionMetadata = DidResolutionMetadata(
-            contentType = json["contentType"]?.jsonPrimitive?.contentOrNull ?: DidMediaTypes.DID,
+            // `as? JsonPrimitive` (rather than the `.jsonPrimitive` extension) degrades to null
+            // instead of throwing IllegalArgumentException when a third-party driver sends an
+            // object/array-valued member where a primitive is expected.
+            contentType = (json["contentType"] as? JsonPrimitive)?.contentOrNull ?: DidMediaTypes.DID,
             error = DidResolutionError.fromJson(json["error"]),
             proof = (json["proof"] as? JsonArray)?.filterIsInstance<JsonObject>() ?: emptyList(),
-            pattern = json["pattern"]?.jsonPrimitive?.contentOrNull,
-            driverUrl = json["driverUrl"]?.jsonPrimitive?.contentOrNull,
-            duration = json["duration"]?.jsonPrimitive?.longOrNull,
-            retrieved = json["retrieved"]?.jsonPrimitive?.contentOrNull?.let { Instant.parse(it) },
+            pattern = (json["pattern"] as? JsonPrimitive)?.contentOrNull,
+            driverUrl = (json["driverUrl"] as? JsonPrimitive)?.contentOrNull,
+            duration = (json["duration"] as? JsonPrimitive)?.longOrNull,
+            retrieved = (json["retrieved"] as? JsonPrimitive)?.contentOrNull
+                ?.let { runCatching { Instant.parse(it) }.getOrNull() },
             properties = json.entries
                 .filter { it.key !in KNOWN_KEYS }
                 .mapNotNull { (k, v) -> (v as? JsonPrimitive)?.content?.let { k to it } }

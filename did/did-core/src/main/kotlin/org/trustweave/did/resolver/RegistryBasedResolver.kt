@@ -101,12 +101,22 @@ class RegistryBasedResolver(
                 "did" to didString
             )
             properties.putAll(e.context.mapValues { it.value?.toString() ?: "" })
+            // Map the exception subtype to its §11 error type so the RFC 9457 object asserts
+            // the correct condition instead of always claiming INTERNAL_ERROR (HTTP 500) —
+            // §12.1 requires 400 for an invalid DID and 404 for not-found.
+            val error = when (e) {
+                is DidException.DidNotFound -> DidResolutionError.notFound(e.message ?: "DID not found")
+                is DidException.InvalidDidFormat -> DidResolutionError.invalidDid(e.message ?: "Invalid DID")
+                is DidException.DidMethodNotRegistered ->
+                    DidResolutionError.methodNotSupported(e.message ?: "DID method not registered")
+                else -> DidResolutionError.internalError(e.message ?: "Unknown error")
+            }
             return DidResolutionResult.Failure.ResolutionError(
                 did = did,
                 reason = e.message ?: "Unknown error",
                 cause = e,
                 resolutionMetadata = DidResolutionMetadata(
-                    error = DidResolutionError.internalError(e.message ?: "Unknown error"),
+                    error = error,
                     properties = properties
                 )
             )

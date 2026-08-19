@@ -274,8 +274,11 @@ class DefaultUniversalResolver(
                             resolutionMetadata = resolutionMetadata
                         )
                     } else {
+                        // Prefer the human-readable detail/title over the raw §11 type URL —
+                        // `error?.type` is a machine identifier (e.g.
+                        // "https://www.w3.org/ns/did#NOT_FOUND"), not failure text.
                         val upstreamReason = resolutionMetadata.error?.detail
-                            ?: resolutionMetadata.error?.type
+                            ?: resolutionMetadata.error?.title
                             ?: "DID document not found in response"
                         DidResolutionResult.Failure.NotFound(
                             did = Did(did),

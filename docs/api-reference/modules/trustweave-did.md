@@ -163,7 +163,7 @@ val docOrDefault = did.resolveOrDefault(resolver, defaultDocument) // same deact
 into `null` / the default value. A deactivated DID is a revoked identity, not an absent one, so
 both throw `DidException.DidResolutionFailed` in that case — converging with `resolveOrThrow`.
 Catch that exception explicitly if the DID you're resolving might legitimately be deactivated;
-see [Migrating to DID Resolution 1.0](../../releases/did-resolution-1.0-migration.md#7-resolveornull--resolveordefault-now-throw-for-a-deactivated-did).
+see [Migrating to DID Resolution 1.0](../../releases/did-resolution-1.0-migration.md#8-resolveornull--resolveordefault-now-throw-for-a-deactivated-did).
 
 **What this does:** Provides a unified interface for resolving DIDs across different methods with automatic retry and fluent API support.
 

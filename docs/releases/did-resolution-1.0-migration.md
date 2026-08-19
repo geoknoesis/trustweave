@@ -8,7 +8,7 @@ Presentation Exchange, and deactivated-DID-verification suites — 37 tests acro
 total, enforced by a hard floor in the conformance test listener.
 
 This release contains breaking changes. Read this whole document before upgrading — several of
-the changes interact (in particular #2 and #7 below).
+the changes interact (in particular #2 and #8 below).
 
 ## 1. Errors are objects, not strings
 
@@ -49,7 +49,7 @@ Per §4.4, a deactivated DID resolves to **no document at all** — the caller l
 deactivation only from `documentMetadata.deactivated`. This is deliberate: conflating "revoked"
 with "never registered" is the defect this migration exists to remove, and it is why every
 DID method now produces `Deactivated` via the shared
-`DidMethodUtils.createSuccessResolutionResult` factory (see #9) instead of returning a `Success`
+`DidMethodUtils.createSuccessResolutionResult` factory (see #10) instead of returning a `Success`
 result whose metadata happens to say `deactivated: true`.
 
 ```kotlin
@@ -74,7 +74,23 @@ merely absent instead of actively untrusted.
 representation (`REPRESENTATION_NOT_SUPPORTED`). Exhaustive `when` over `Failure` needs a new
 branch alongside `NotFound`, `InvalidFormat`, `MethodNotRegistered`, and `ResolutionError`.
 
-## 4. Resolution options
+## 4. The map-based constructors and `resolutionMetadataMap` accessors are removed
+
+`DidResolutionMetadata`'s map-based secondary constructors and its `resolutionMetadataMap`
+accessors are gone. Use `DidResolutionMetadata.fromMap(map)` / `.fromJson(json)` to build one from
+a loosely-typed map or JSON object, and `.toMap()` / `.toJson()` to go the other way.
+
+Removing the constructors is a compile error you can't miss. The part that isn't: the map's
+*shape* also changed. `map["error"]` is now a `JsonObject` (the RFC 9457 error, serialized via
+`DidResolutionError.toJson()`) rather than a `String`, and `map["errorMessage"]` doesn't exist in
+the map at all — `toMap()`/`toJson()` never emit that key. Code left over from the old shape that
+does `(map["error"] as? String)` or `(map["errorMessage"] as? String)` **still compiles** against
+the new output; the cast just silently degrades to `null` instead of failing loudly or returning
+the error text. If anything in your codebase serializes `DidResolutionMetadata` to a map/JSON and
+reads it back with hand-rolled `as?` casts instead of `fromMap`/`fromJson`, audit it specifically
+— this is exactly the kind of change the type checker won't catch for you.
+
+## 5. Resolution options
 
 `DidResolver.resolve` and `DidMethod.resolveDid` gained a two-argument overload that accepts
 `ResolutionOptions` (`accept`, `expandRelativeUrls`, `versionId`, `versionTime`, `noCache`,
@@ -85,14 +101,14 @@ options and returns `OptionsError` for anything method-specific (`versionId`, `v
 the two-argument `resolveDid`. **No shipped method currently does** — see "Not yet implemented"
 below.
 
-## 5. Media types
+## 6. Media types
 
 The default `contentType` on `DidResolutionMetadata` changed from `application/did+ld+json` to
 `application/did` (`DidMediaTypes.DID`). The legacy `application/did+ld+json` and
 `application/did+json` types remain accepted on input (`DidMediaTypes.SUPPORTED_DOCUMENT_TYPES`)
 and can still be requested explicitly via `ResolutionOptions.accept`.
 
-## 6. Metadata property moves
+## 7. Metadata property moves
 
 `nextUpdate`, `nextVersionId`, `canonicalId`, and `equivalentId` are §4.3 **document** metadata,
 not §4.2 **resolution** metadata. They moved from `DidResolutionMetadata` to
@@ -101,7 +117,7 @@ on document metadata; resolution metadata has its own separate `proof` list for 
 proofs). Code that read `result.resolutionMetadata.canonicalId` (etc.) must now read
 `result.documentMetadata.canonicalId`.
 
-## 7. `resolveOrNull` / `resolveOrDefault` now throw for a deactivated DID
+## 8. `resolveOrNull` / `resolveOrDefault` now throw for a deactivated DID
 
 `Did.resolveOrThrow`, `Did.resolveOrNull`, and `Did.resolveOrDefault` (in
 `org.trustweave.did.dsl`) all now treat a deactivated DID the same way: they throw
@@ -125,7 +141,7 @@ If your code calls `resolveOrNull` or `resolveOrDefault` on a DID that might leg
 deactivated, wrap the call and handle `DidException.DidResolutionFailed` explicitly instead of
 relying on a `null` check.
 
-## 8. `DidUrl.path` and `DidUrl.fragment` semantics changed
+## 9. `DidUrl.path` and `DidUrl.fragment` semantics changed
 
 `DidUrl` (`org.trustweave.did.identifiers`, re-exported by `did-core`) now splits its components
 in RFC 3986 order: `did` → `path` → `query` → `fragment`. Previously, `path` and `fragment` did
@@ -148,7 +164,7 @@ named accessors for the registered parameters: `service`, `serviceType`, `relati
 `DidUrl` is public, `@Serializable`, and re-exported by `did-core`, so consumers outside this
 repository may be affected even though there are no in-repo callers of `path`/`fragment` today.
 
-## 9. Deactivated DIDs no longer yield a document from any DID method
+## 10. Deactivated DIDs no longer yield a document from any DID method
 
 Every DID method that uses the shared `DidMethodUtils.createSuccessResolutionResult` factory
 (all first-party plugins: cheqd, ebsi, ens, ethr, ion, jwk, key, orb, peer, plc, polygon, sol,
@@ -158,7 +174,7 @@ implementation that constructs `DidResolutionResult.Success` directly for a deac
 (rather than using the shared factory), update it to return `Deactivated` — see
 [Creating Custom Adapters](../api-reference/advanced/custom-adapters.md).
 
-## 10. Timestamps
+## 11. Timestamps
 
 All resolution and document metadata timestamps (`retrieved`, `created`, `updated`,
 `nextUpdate`, `versionTime`) serialize as UTC XML datetimes without sub-second precision, per
@@ -169,7 +185,7 @@ All resolution and document metadata timestamps (`retrieved`, `created`, `update
 Being explicit about scope, because it's part of the deliverable:
 
 - **DID URL dereferencing (§5, §10)** — the WG has marked both sections **Feature at Risk**.
-  `DidUrl` now parses path, query, fragment, and the §3 DID parameters (see #8), but there is no
+  `DidUrl` now parses path, query, fragment, and the §3 DID parameters (see #9), but there is no
   `dereference(didUrl, options)` function. Fragment dereferencing, service-endpoint construction
   from `service` + `relativeRef`, the `application/did-url-dereferencing` envelope, and the
   §13.6 dereferencing-cycle guard are all unimplemented. A follow-on plan exists for this once

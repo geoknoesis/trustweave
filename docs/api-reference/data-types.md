@@ -160,6 +160,13 @@ The map-based `DidResolutionMetadata` constructors and `resolutionMetadataMap` a
 been removed; use `DidResolutionMetadata.fromMap(map)` / `.fromJson(json)` to parse, and
 `.toMap()` / `.toJson()` to serialize.
 
+**The map's shape changed too, silently.** In `.toMap()` output, `map["error"]` is now a
+`JsonObject` (not a `String`), and `map["errorMessage"]` no longer exists at all. Old code doing
+`map["error"] as? String` or `map["errorMessage"] as? String` still **compiles** against the new
+shape — it just degrades to `null` with no error. There is no compiler warning for this one;
+migrate any hand-rolled map-reading code to `fromMap`/`fromJson` rather than relying on `as?`
+casts over the raw map.
+
 ### DidCreationOptions
 
 Options for creating DIDs (`org.trustweave.did.DidCreationOptions`).

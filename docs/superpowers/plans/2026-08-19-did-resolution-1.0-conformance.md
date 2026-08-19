@@ -20,6 +20,13 @@
 - Gradle on this machine must be run with `--max-workers 3` or lower; higher parallelism destabilises the build box.
 - Use `testkit` in-memory doubles (`InMemoryKeyManagementService`, `DidKeyMockMethod`) in tests — never Mockito for these types.
 - Conventional Commits are required. Use `feat(did-core):`, `fix(did-core):`, `test(conformance):` prefixes.
+- **Stage explicit paths. Never `git add -A`, `git add .`, or `git commit -a`.** This repository
+  carries pre-existing uncommitted and untracked files that belong to unrelated in-progress work;
+  a wildcard stage would sweep them into this branch's history.
+- **Every task must leave `:did:did-core` compiling with its own tests green.** Gradle compiles a
+  module's whole main source set before running any of its tests, so a task that breaks a sibling
+  file in the same module cannot run its own test. Where a task changes a shared signature, that
+  task also migrates the same-module call sites it breaks — it does not defer them.
 - Do not touch §5 (DID URL dereferencing) or §12.1 (HTTP binding) behaviour in this plan — they are separate conformance classes with their own follow-on plans. Task 15 lands only the DID URL *parsing* they both need, which §13.4 versioned resolution requires anyway.
 
 ---
@@ -654,6 +661,17 @@ git commit -m "feat(did-core): centralize DID media types and default to applica
 **Files:**
 - Modify: `did/did-core/src/main/kotlin/org/trustweave/did/resolver/DidResolutionMetadata.kt` (whole file)
 - Test: `did/did-core/src/test/kotlin/org/trustweave/did/resolver/DidResolutionMetadataTest.kt`
+- Modify (same-module migration, required by the Global Constraint on green modules):
+  - `did/did-core/src/main/kotlin/org/trustweave/did/resolver/DidResolutionResult.kt` — the four
+    default `error = "…"` / `errorMessage = …` values in the `Failure` subtypes
+  - `did/did-core/src/main/kotlin/org/trustweave/did/resolver/RegistryBasedResolver.kt:73,111,122`
+  - `did/did-core/src/main/kotlin/org/trustweave/did/resolver/DefaultUniversalResolver.kt:237,251,293,312`
+  - `did/did-core/src/main/kotlin/org/trustweave/did/resolver/DecentralizedResolutionStrategy.kt:127`
+  - `did/did-core/src/main/kotlin/org/trustweave/did/resolver/FallbackDidResolver.kt:84`
+  - the `did-core` tests that assert on the old string error:
+    `DidDocumentMetadataComprehensiveTest.kt`, `DidMethodEdgeCasesTest.kt`,
+    `DidMethodInterfaceContractTest.kt`, `DidModelsBranchCoverageTest.kt`,
+    `DidModelsEdgeCasesTest.kt`
 
 **Interfaces:**
 - Consumes: `DidResolutionError`, `DidErrorType` (Task 1); `XmlDateTimeSerializer` (Task 2); `DidMediaTypes` (Task 3).
@@ -923,12 +941,38 @@ data class DidResolutionMetadata(
 }
 ```
 
+- [ ] **Step 3b: Migrate the same-module call sites so `:did:did-core` compiles**
+
+Changing `error` from `String?` to `DidResolutionError?` and dropping the `errorMessage`
+parameter breaks eight files in this module. Gradle compiles the whole main source set before
+running any test, so the Step 1 test cannot run until these are fixed. Apply this rewrite at each
+site listed in **Files** above:
+
+```kotlin
+// Before
+DidResolutionMetadata(error = "notFound", errorMessage = "DID not found")
+// After
+DidResolutionMetadata(error = DidResolutionError.notFound("DID not found"))
+```
+
+Factory per legacy code: `notFound` → `notFound`, `invalidDid`/`invalidDidFormat` → `invalidDid`,
+`methodNotSupported` → `methodNotSupported`, `resolutionError` → `internalError`. Where a site
+passed only `errorMessage` with no `error` (`FallbackDidResolver.kt:84`), use
+`DidResolutionError.internalError(<the message>)`.
+
+For `did-core` tests asserting the old shape, `assertEquals("notFound", md.error)` becomes
+`assertEquals(DidErrorType.NOT_FOUND, md.error?.type)`.
+
+Leave `resolutionMetadataMap` and the map-based secondary constructors in
+`DidResolutionResult.kt` alone — Task 7 removes them.
+
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `./gradlew :did:did-core:test --tests "org.trustweave.did.resolver.DidResolutionMetadataTest" --max-workers 3`
-Expected: PASS, 9 tests. The rest of `:did:did-core` will not compile yet — Task 8 fixes the fallout.
+Run: `./gradlew :did:did-core:test --max-workers 3`
+Expected: PASS — the new `DidResolutionMetadataTest` green (9 tests) and the whole `did-core`
+module suite still green.
 
-- [ ] **Step 5: Commit (compilation of dependents is repaired in Task 8)**
+- [ ] **Step 5: Commit**
 
 ```bash
 ./gradlew ktlintFormat --max-workers 3
@@ -1759,7 +1803,9 @@ resolves to a `Success` with a document become assertions on `DidResolutionResul
 
 ```bash
 ./gradlew ktlintFormat --max-workers 3
-git add -A
+# Stage explicit trees only. NEVER `git add -A` here: the repo carries unrelated untracked work.
+git add did/ credentials/ trust/ kms/ testkit/ distribution/
+git status --short   # confirm nothing outside those trees is staged
 git commit -m "refactor: migrate all resolution call sites to the DID Resolution 1.0 result model"
 ```
 
@@ -2911,9 +2957,9 @@ Fix the split order to `did` → `path` → `query` → `fragment`, per RFC 3986
 
 - [ ] **Step 1: Write the failing test**
 
-Create `did/did-identifiers-mp/src/commonTest/kotlin/org/trustweave/did/identifiers/DidUrlParsingTest.kt`
-(if `commonTest` does not yet exist for this module, create the source directory and add
-`kotlin("test")` to its `commonTest` dependencies in `did/did-identifiers-mp/build.gradle.kts`):
+Create `did/did-identifiers-mp/src/commonTest/kotlin/org/trustweave/did/identifiers/DidUrlParsingTest.kt`.
+The module's `build.gradle.kts` already configures a `commonTest` source set with
+`libs.kotlin.test`, so only the directory and file are needed — no build-file change.
 
 ```kotlin
 package org.trustweave.did.identifiers
@@ -2968,6 +3014,11 @@ class DidUrlParsingTest {
     @Test
     fun `percent-encoded unreserved characters are decoded in parameter values`() {
         assertEquals("a b", DidUrl("did:example:123?x=a%20b").parameters["x"])
+    }
+
+    @Test
+    fun `multi-byte percent-encoded characters decode as UTF-8`() {
+        assertEquals("café", DidUrl("did:example:123?x=caf%C3%A9").parameters["x"])
     }
 
     @Test
@@ -3078,25 +3129,40 @@ value class DidUrl(val value: String) {
     val versionTime: String? get() = parameters["versionTime"]
 }
 
-/** Decodes percent-encoded octets in a DID URL query component. */
+/**
+ * Decodes percent-encoded octets in a DID URL query component.
+ *
+ * Percent-escapes are accumulated as a byte sequence and decoded as UTF-8, so multi-byte
+ * characters (`%C3%A9` -> `e-acute`) survive. Decoding each escape independently as a char would
+ * corrupt them. An escape that is not valid hex is left literal.
+ */
 private fun percentDecode(raw: String): String {
     if (!raw.contains('%')) return raw
     val out = StringBuilder(raw.length)
+    val pending = ArrayList<Byte>()
+
+    fun flush() {
+        if (pending.isEmpty()) return
+        out.append(pending.toByteArray().decodeToString())
+        pending.clear()
+    }
+
     var i = 0
     while (i < raw.length) {
         val c = raw[i]
         if (c == '%' && i + 2 < raw.length) {
-            val hex = raw.substring(i + 1, i + 3)
-            val code = hex.toIntOrNull(16)
+            val code = raw.substring(i + 1, i + 3).toIntOrNull(16)
             if (code != null) {
-                out.append(code.toChar())
+                pending.add(code.toByte())
                 i += 3
                 continue
             }
         }
+        flush()
         out.append(c)
         i++
     }
+    flush()
     return out.toString()
 }
 ```

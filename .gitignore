@@ -71,3 +71,6 @@ docs/_site/
 
 # Local docs HTML preview output
 docs_html/
+
+# Superpowers SDD scratch workspace (ledgers, briefs, review packages)
+.superpowers/

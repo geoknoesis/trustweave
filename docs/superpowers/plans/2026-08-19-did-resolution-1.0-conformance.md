@@ -2448,26 +2448,74 @@ git commit -m "feat(did-core): implement the section 4.4 DID resolution algorith
 ### Task 12: Deactivated DIDs stop returning a document
 
 **Files:**
-- Modify: `did/plugins/base/src/main/kotlin/org/trustweave/did/base/AbstractWebDidMethod.kt:200-220`
-- Modify: `did/plugins/base/src/main/kotlin/org/trustweave/did/base/AbstractBlockchainDidMethod.kt:150-200`
+- Modify: `did/plugins/base/src/main/kotlin/org/trustweave/did/base/DidMethodUtils.kt:185-205`
+  (`createSuccessResolutionResult` — the shared factory)
+- Test: `did/plugins/base/src/test/kotlin/org/trustweave/did/base/DidMethodUtilsSpecComplianceTest.kt` (add tests)
 - Test: `did/plugins/base/src/test/kotlin/org/trustweave/did/base/AbstractBlockchainDidMethodTest.kt` (add a test)
-- Test: `did/plugins/base/src/test/kotlin/org/trustweave/did/base/AbstractWebDidMethodSsrfTest.kt` (add a test)
 
 **Interfaces:**
 - Consumes: `DidResolutionResult.Deactivated` (Task 7).
-- Produces: no new API; both abstract methods now return `Deactivated` instead of `Success` when
-  `documentMetadata.deactivated` is true.
+- Produces: no new API. `createSuccessResolutionResult` returns `Deactivated` instead of `Success`
+  when its `deactivated` argument is true.
 
-**Fixture note:** both test files already declare a private concrete subclass —
-`AbstractBlockchainDidMethodTest.TestBlockchainDidMethod(kms, anchorClient, txHashLookup)` with
-helpers `anchor(document)` and `deactivate(did, deactivatedDocument)`, and
-`AbstractWebDidMethodSsrfTest.TestWebDidMethod(kms)`. Add the new tests **inside those files** so
-the fixtures are reused; do not create a third test class.
+**Why this file and not the two abstract base classes:** a survey of the codebase found that
+`DidMethodUtils.createSuccessResolutionResult(document, method, created, updated, deactivated)` is
+the single shared factory that builds every method's success result — 31 call sites across 16
+files (`AbstractWebDidMethod`, `AbstractBlockchainDidMethod`, and the cheqd, ebsi, ens, ethr, ion,
+jwk, key, orb, peer, plc, polygon and sol plugins). It already receives the `deactivated` flag and
+already puts it into `DidDocumentMetadata`. Branching there fixes every DID method at once.
+Patching the two abstract base classes individually — as an earlier draft of this plan proposed —
+would have left the twelve concrete plugins still returning a document for a deactivated DID.
+
+Task 11 independently converts any `Success` whose `documentMetadata.deactivated` is true into
+`Deactivated` at the resolver layer. That is deliberate defence in depth: it catches methods that
+build their result without going through this factory.
 
 - [ ] **Step 1: Write the failing tests**
 
-Add to `AbstractBlockchainDidMethodTest`, using the same `kms`, anchor-client and `document(DID)`
-helpers its existing tests use:
+Add to `did/plugins/base/src/test/kotlin/org/trustweave/did/base/DidMethodUtilsSpecComplianceTest.kt`,
+following the fixture and import style already in that file:
+
+```kotlin
+    @Test
+    fun `createSuccessResolutionResult returns Deactivated when the DID is deactivated`() {
+        val document = DidMethodUtils.buildDidDocument(
+            did = "did:testchain:abc123",
+            verificationMethod = emptyList()
+        )
+        val result = DidMethodUtils.createSuccessResolutionResult(
+            document = document,
+            method = "testchain",
+            deactivated = true
+        )
+
+        assertTrue(result is DidResolutionResult.Deactivated, "Expected Deactivated, got $result")
+        assertTrue(result.documentMetadata.deactivated)
+        assertEquals(document.id, result.did)
+    }
+
+    @Test
+    fun `createSuccessResolutionResult returns Success when the DID is live`() {
+        val document = DidMethodUtils.buildDidDocument(
+            did = "did:testchain:abc123",
+            verificationMethod = emptyList()
+        )
+        val result = DidMethodUtils.createSuccessResolutionResult(
+            document = document,
+            method = "testchain"
+        )
+
+        assertTrue(result is DidResolutionResult.Success, "Expected Success, got $result")
+        assertFalse(result.documentMetadata.deactivated)
+    }
+```
+
+If `DidMethodUtils.buildDidDocument` has a different signature in this codebase, read the file and
+use whatever the existing tests in `DidMethodUtilsSpecComplianceTest` already use to build a
+document — the assertions target the result type, not the document's contents.
+
+Add to `AbstractBlockchainDidMethodTest`, reusing the `TestBlockchainDidMethod(kms, anchorClient,
+txHashLookup)` fixture and the `document(DID)` helper its existing tests already use:
 
 ```kotlin
     @Test
@@ -2481,72 +2529,74 @@ helpers its existing tests use:
 
         assertTrue(result is DidResolutionResult.Deactivated, "Expected Deactivated, got $result")
         assertTrue(result.documentMetadata.deactivated)
-        assertNull((result as? DidResolutionResult.Success)?.document)
     }
 ```
 
-If the existing tests build their anchor client inline rather than via a field named
-`anchorClient`, construct it the same way here instead of referencing a field that does not exist.
-
-Add to `AbstractWebDidMethodSsrfTest`, mirroring how its existing tests drive `TestWebDidMethod`:
-
-```kotlin
-    @Test
-    fun `a deactivated web DID resolves to Deactivated with no document`() = runBlocking {
-        val method = TestWebDidMethod(kms)
-        val doc = method.createDid(DidCreationOptions())
-        method.deactivateDid(doc.id)
-
-        val result = method.resolveDid(doc.id)
-
-        assertTrue(result is DidResolutionResult.Deactivated, "Expected Deactivated, got $result")
-        assertTrue(result.documentMetadata.deactivated)
-    }
-```
-
-`TestWebDidMethod.createDid` currently throws `UnsupportedOperationException`; change that
-override to delegate to the base class's create path (or to publish a fixture document via
-`publishDocument`) so the deactivation flow can run. Keep the change inside the test fixture.
+If that test file builds its anchor client inline rather than holding it in a field named
+`anchorClient`, construct it here the same way rather than referencing a field that does not exist.
 
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `./gradlew :did:plugins:base:test --max-workers 3`
 Expected: FAIL — "Expected Deactivated, got Success(...)" from both new tests.
 
-- [ ] **Step 3: Change `AbstractBlockchainDidMethod`**
+- [ ] **Step 3: Branch the shared factory**
 
-At each of the two `resolveDid` return sites (around lines 158 and 196), the code currently builds
-a `DidResolutionResult.Success` with `deactivated = metadata?.deactivated ?: false`. Hoist the flag
-and branch:
+In `did/plugins/base/src/main/kotlin/org/trustweave/did/base/DidMethodUtils.kt`, replace the body
+of `createSuccessResolutionResult` (lines 185-205) with:
 
 ```kotlin
-val documentMetadata = (metadata ?: DidDocumentMetadata()).copy(
-    deactivated = metadata?.deactivated ?: false
-)
-return if (documentMetadata.deactivated) {
-    DidResolutionResult.Deactivated(did = did, documentMetadata = documentMetadata)
-} else {
-    DidResolutionResult.Success(document = document, documentMetadata = documentMetadata)
-}
+    fun createSuccessResolutionResult(
+        document: DidDocument,
+        method: String,
+        created: Instant? = null,
+        updated: Instant? = null,
+        deactivated: Boolean = false
+    ): DidResolutionResult {
+        val now = Clock.System.now()
+        val documentMetadata = DidDocumentMetadata(
+            created = created ?: now,
+            updated = updated ?: now,
+            deactivated = deactivated
+        )
+        val resolutionMetadata = DidResolutionMetadata(
+            pattern = method,
+            properties = mapOf("driver" to "TrustWeave")
+        )
+
+        // DID Resolution 1.0 §4.4: a deactivated DID resolves to no document at all. The caller
+        // learns of the deactivation from documentMetadata.
+        return if (deactivated) {
+            DidResolutionResult.Deactivated(
+                did = document.id,
+                documentMetadata = documentMetadata,
+                resolutionMetadata = resolutionMetadata
+            )
+        } else {
+            DidResolutionResult.Success(
+                document = document,
+                documentMetadata = documentMetadata,
+                resolutionMetadata = resolutionMetadata
+            )
+        }
+    }
 ```
 
-- [ ] **Step 4: Change `AbstractWebDidMethod`**
+Update the function's KDoc to state that it returns `Deactivated` when `deactivated` is true.
 
-Apply the same branch at the `resolveDid` return site (around line 211), using
-`getDocumentMetadata(did)` as the metadata source that is already read there.
-
-- [ ] **Step 5: Run tests to verify they pass**
+- [ ] **Step 4: Run tests to verify they pass**
 
 Run: `./gradlew :did:plugins:base:test --max-workers 3`
 Expected: PASS. Existing tests that asserted a document came back for a deactivated DID must be
-updated to assert `DidResolutionResult.Deactivated` — that behaviour change is the point of this task.
+updated to assert `DidResolutionResult.Deactivated` — that behaviour change is the point of this
+task, and any such test is evidence the old behaviour was relied upon.
 
-- [ ] **Step 6: Run the dependent plugin suites**
+- [ ] **Step 5: Run the dependent plugin suites**
 
-Run: `./gradlew :did:plugins:web:test :did:plugins:ethr:test :did:plugins:orb:test --max-workers 3`
+Run: `./gradlew :did:plugins:web:test :did:plugins:ethr:test :did:plugins:orb:test :did:plugins:key:test :did:plugins:peer:test --max-workers 3`
 Expected: PASS.
 
-- [ ] **Step 7: Format and commit**
+- [ ] **Step 6: Format and commit**
 
 ```bash
 ./gradlew ktlintFormat --max-workers 3

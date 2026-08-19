@@ -234,8 +234,9 @@ class DefaultUniversalResolver(
                             reason = "Malformed JSON in resolver response: ${e.message}",
                             cause = e,
                             resolutionMetadata = DidResolutionMetadata(
-                                error = "resolutionError",
-                                errorMessage = "Malformed JSON in resolver response: ${e.message}"
+                                error = DidResolutionError.internalError(
+                                    "Malformed JSON in resolver response: ${e.message}"
+                                )
                             )
                         )
                     }
@@ -248,8 +249,7 @@ class DefaultUniversalResolver(
                             reason = "Resolver response is not a JSON object",
                             cause = null,
                             resolutionMetadata = DidResolutionMetadata(
-                                error = "resolutionError",
-                                errorMessage = "Resolver response is not a JSON object"
+                                error = DidResolutionError.internalError("Resolver response is not a JSON object")
                             )
                         )
                     }
@@ -274,8 +274,8 @@ class DefaultUniversalResolver(
                             resolutionMetadata = resolutionMetadata
                         )
                     } else {
-                        val upstreamReason = resolutionMetadata.errorMessage
-                            ?: resolutionMetadata.error
+                        val upstreamReason = resolutionMetadata.error?.detail
+                            ?: resolutionMetadata.error?.type
                             ?: "DID document not found in response"
                         DidResolutionResult.Failure.NotFound(
                             did = Did(did),
@@ -290,8 +290,7 @@ class DefaultUniversalResolver(
                         did = Did(did),
                         reason = "DID not found",
                         resolutionMetadata = DidResolutionMetadata(
-                            error = "notFound",
-                            errorMessage = "DID not found",
+                            error = DidResolutionError.notFound("DID not found"),
                             properties = mapOf("provider" to protocolAdapter.providerName)
                         )
                     )
@@ -309,8 +308,7 @@ class DefaultUniversalResolver(
                         reason = "HTTP $statusCode",
                         cause = null,
                         resolutionMetadata = DidResolutionMetadata(
-                            error = "resolutionError",
-                            errorMessage = "HTTP $statusCode",
+                            error = DidResolutionError.internalError("HTTP $statusCode"),
                             properties = mapOf(
                                 "statusCode" to statusCode.toString(),
                                 "provider" to protocolAdapter.providerName

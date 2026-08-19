@@ -70,8 +70,7 @@ class RegistryBasedResolver(
                     method = did.method,
                     availableMethods = registry.getAllMethodNames(),
                     resolutionMetadata = DidResolutionMetadata(
-                        error = "methodNotSupported",
-                        errorMessage = "DID method '${did.method}' is not registered",
+                        error = DidResolutionError.methodNotSupported("DID method '${did.method}' is not registered"),
                         properties = mapOf("did" to didString)
                     )
                 )
@@ -107,8 +106,7 @@ class RegistryBasedResolver(
                 reason = e.message ?: "Unknown error",
                 cause = e,
                 resolutionMetadata = DidResolutionMetadata(
-                    error = e.code,
-                    errorMessage = e.message ?: "Unknown error",
+                    error = DidResolutionError.internalError(e.message ?: "Unknown error"),
                     properties = properties
                 )
             )
@@ -119,8 +117,7 @@ class RegistryBasedResolver(
                 reason = e.message ?: "Unknown error during resolution",
                 cause = e,
                 resolutionMetadata = DidResolutionMetadata(
-                    error = "resolutionError",
-                    errorMessage = e.message ?: "Unknown error during resolution"
+                    error = DidResolutionError.internalError(e.message ?: "Unknown error during resolution")
                 )
             )
         }

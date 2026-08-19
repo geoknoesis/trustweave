@@ -7,6 +7,8 @@ import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolutionMetadata
+import org.trustweave.did.resolver.DidResolutionError
+import org.trustweave.did.resolver.DidErrorType
 import org.trustweave.did.registry.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 import org.trustweave.did.DidCreationOptions
@@ -202,8 +204,7 @@ class DidMethodEdgeCasesTest {
                 did = did,
                 reason = "notFound",
                 resolutionMetadata = DidResolutionMetadata(
-                    error = "notFound",
-                    errorMessage = "notFound"
+                    error = DidResolutionError.notFound("notFound")
                 )
             )
 
@@ -216,7 +217,7 @@ class DidMethodEdgeCasesTest {
         val result = registry.resolve("did:test:nonexistent")
 
         assertTrue(result is DidResolutionResult.Failure.NotFound)
-        assertEquals("notFound", result.resolutionMetadata.error)
+        assertEquals(DidErrorType.NOT_FOUND, result.resolutionMetadata.error?.type)
     }
 
     @Test

@@ -9,6 +9,7 @@ import org.trustweave.did.model.ServiceEndpoint
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolutionMetadata
+import org.trustweave.did.resolver.DidResolutionError
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.*
@@ -187,9 +188,12 @@ class DidMethodInterfaceContractTest {
                     return DidResolutionResult.Failure.NotFound(
                         did = did,
                         reason = "deactivated",
+                        // "deactivated" was never a recognized error code (v0.3 or CR); this
+                        // mock's Failure.NotFound branch maps to notFound, consistent with the
+                        // sibling not-in-map branch immediately below. No assertion in this
+                        // file exercises this branch's error value directly.
                         resolutionMetadata = DidResolutionMetadata(
-                            error = "deactivated",
-                            errorMessage = "deactivated"
+                            error = DidResolutionError.notFound("deactivated")
                         )
                     )
                 }
@@ -206,8 +210,7 @@ class DidMethodInterfaceContractTest {
                         did = did,
                         reason = "notFound",
                         resolutionMetadata = DidResolutionMetadata(
-                            error = "notFound",
-                            errorMessage = "notFound"
+                            error = DidResolutionError.notFound("notFound")
                         )
                     )
                 }

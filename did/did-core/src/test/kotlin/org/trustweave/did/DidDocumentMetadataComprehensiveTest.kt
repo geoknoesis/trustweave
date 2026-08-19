@@ -5,6 +5,8 @@ import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolutionMetadata
+import org.trustweave.did.resolver.DidResolutionError
+import org.trustweave.did.resolver.DidErrorType
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -151,13 +153,12 @@ class DidDocumentMetadataComprehensiveTest {
             did = Did("did:key:test"),
             reason = "notFound",
             resolutionMetadata = DidResolutionMetadata(
-                error = "notFound",
-                errorMessage = "DID not found"
+                error = DidResolutionError.notFound("DID not found")
             )
         )
 
         assertTrue(result is DidResolutionResult.Failure.NotFound)
-        assertEquals("notFound", result.resolutionMetadata.error)
+        assertEquals(DidErrorType.NOT_FOUND, result.resolutionMetadata.error?.type)
     }
 }
 

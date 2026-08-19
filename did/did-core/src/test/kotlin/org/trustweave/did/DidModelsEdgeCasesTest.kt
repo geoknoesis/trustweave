@@ -10,6 +10,8 @@ import org.trustweave.did.model.ServiceEndpoint
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolutionMetadata
+import org.trustweave.did.resolver.DidResolutionError
+import org.trustweave.did.resolver.DidErrorType
 import kotlin.test.*
 import kotlinx.datetime.Instant
 
@@ -257,13 +259,12 @@ class DidModelsEdgeCasesTest {
         val result = DidResolutionResult.Failure.NotFound(
             did = Did("did:key:test"),
             resolutionMetadata = DidResolutionMetadata(
-                error = "notFound",
-                errorMessage = "DID not found in registry"
+                error = DidResolutionError.notFound("DID not found in registry")
             )
         )
 
         assertTrue(result is DidResolutionResult.Failure.NotFound)
-        assertEquals("notFound", result.resolutionMetadata.error)
+        assertEquals(DidErrorType.NOT_FOUND, result.resolutionMetadata.error?.type)
     }
 
     @Test

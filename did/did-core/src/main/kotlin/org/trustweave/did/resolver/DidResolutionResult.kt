@@ -75,8 +75,7 @@ sealed class DidResolutionResult {
             val did: Did,
             val reason: String? = null,
             val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata(
-                error = "notFound",
-                errorMessage = reason ?: "DID not found"
+                error = DidResolutionError.notFound(reason ?: "DID not found")
             )
         ) : Failure() {
             /**
@@ -106,8 +105,7 @@ sealed class DidResolutionResult {
             val did: String,
             val reason: String,
             val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata(
-                error = "invalidDid",
-                errorMessage = reason
+                error = DidResolutionError.invalidDid(reason)
             )
         ) : Failure() {
             constructor(
@@ -134,8 +132,7 @@ sealed class DidResolutionResult {
             val method: String,
             val availableMethods: List<String> = emptyList(),
             val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata(
-                error = "methodNotSupported",
-                errorMessage = "DID method '$method' is not registered"
+                error = DidResolutionError.methodNotSupported("DID method '$method' is not registered")
             )
         ) : Failure() {
             constructor(
@@ -164,8 +161,7 @@ sealed class DidResolutionResult {
             val reason: String,
             val cause: Throwable? = null,
             val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata(
-                error = "resolutionError",
-                errorMessage = reason
+                error = DidResolutionError.internalError(reason)
             )
         ) : Failure() {
             constructor(

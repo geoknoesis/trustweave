@@ -1,0 +1,86 @@
+package org.trustweave.did.resolver
+
+import kotlinx.datetime.Instant
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.put
+import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+
+class DidResolutionMetadataTest {
+
+    @Test
+    fun `default content type is application-did`() {
+        assertEquals("application/did", DidResolutionMetadata().contentType)
+    }
+
+    @Test
+    fun `error serializes as an RFC 9457 object`() {
+        val metadata = DidResolutionMetadata(error = DidResolutionError.notFound("no such DID"))
+        val json = metadata.toJson()
+        assertEquals(
+            JsonPrimitive("https://www.w3.org/ns/did#NOT_FOUND"),
+            json["error"]!!.jsonObject["type"]
+        )
+        assertEquals(JsonPrimitive("no such DID"), json["error"]!!.jsonObject["detail"])
+    }
+
+    @Test
+    fun `retrieved timestamp is truncated to whole seconds`() {
+        val metadata = DidResolutionMetadata(retrieved = Instant.parse("2024-06-01T19:07:24.987Z"))
+        assertEquals("2024-06-01T19:07:24Z", metadata.toMap()["retrieved"])
+    }
+
+    @Test
+    fun `fromMap upgrades a legacy string error code`() {
+        val metadata = DidResolutionMetadata.fromMap(mapOf("error" to "notFound"))
+        assertEquals(DidErrorType.NOT_FOUND, metadata.error?.type)
+    }
+
+    @Test
+    fun `fromJson parses a CR error object`() {
+        val json = buildJsonObject {
+            put("contentType", "application/did")
+            put(
+                "error",
+                buildJsonObject {
+                    put("type", "https://www.w3.org/ns/did#METHOD_NOT_SUPPORTED")
+                    put("detail", "did:nope is unknown")
+                }
+            )
+        }
+        val metadata = DidResolutionMetadata.fromJson(json)
+        assertEquals(DidErrorType.METHOD_NOT_SUPPORTED, metadata.error?.type)
+        assertEquals("did:nope is unknown", metadata.error?.detail)
+    }
+
+    @Test
+    fun `unknown members are preserved in properties`() {
+        val metadata = DidResolutionMetadata.fromMap(mapOf("blockNumber" to 42))
+        assertEquals("42", metadata.properties["blockNumber"])
+    }
+
+    @Test
+    fun `toMap omits absent members`() {
+        val map = DidResolutionMetadata().toMap()
+        assertEquals(setOf("contentType"), map.keys)
+        assertNull(map["error"])
+    }
+
+    @Test
+    fun `deprecated errorMessage reads the error detail`() {
+        @Suppress("DEPRECATION")
+        val message = DidResolutionMetadata(error = DidResolutionError.internalError("boom")).errorMessage
+        assertEquals("boom", message)
+    }
+
+    @Test
+    fun `proof entries round-trip through toJson`() {
+        val proof = buildJsonObject { put("type", "DataIntegrityProof") }
+        val json = DidResolutionMetadata(proof = listOf(proof)).toJson()
+        assertTrue(json.containsKey("proof"))
+    }
+}

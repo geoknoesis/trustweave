@@ -80,8 +80,7 @@ fun UniversalResolver.asDidResolver(): DidResolver = DidResolver { did ->
             reason = e.message ?: "Universal resolver error",
             cause = e,
             resolutionMetadata = DidResolutionMetadata(
-                error = e.code,
-                errorMessage = e.message ?: "Universal resolver error"
+                error = DidResolutionError.internalError(e.message ?: "Universal resolver error")
             )
         )
     } catch (e: Exception) {

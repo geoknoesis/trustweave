@@ -124,8 +124,7 @@ class ResolutionFallbackStrategy(
             did = did,
             reason = "All resolution attempts failed: ${errors.joinToString(", ")}",
             resolutionMetadata = DidResolutionMetadata(
-                error = "resolutionError",
-                errorMessage = "All resolution attempts failed",
+                error = DidResolutionError.internalError("All resolution attempts failed"),
                 properties = mapOf("attemptedResolvers" to resolvers.size.toString())
             )
         )

@@ -10,6 +10,9 @@ package org.trustweave.conformance
  *  - [VcDataModel20ConformanceTest]    W3C VC Data Model 2.0 (@Tag("vc-data-model-2.0"))
  *  - [DidCore11ConformanceTest]        W3C DID Core 1.1     (@Tag("did-core-1.1"))
  *  - [PresentationExchangeConformanceTest] DIF PEx v2       (@Tag("presentation-exchange"))
+ *  - [DidResolution10ConformanceTest]  W3C DID Resolution 1.0 (@Tag("did-resolution-1.0"))
+ *  - [DeactivatedDidVerificationTest]  Deactivated-DID verification-path regression guard
+ *                                      (@Tag("did-resolution-1.0"))
  *
  * To run only a specific suite subset:
  *   ./gradlew :distribution:conformance:conformanceTest

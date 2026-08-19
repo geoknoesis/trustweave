@@ -2899,10 +2899,39 @@ and pass `nextVersionId = nextVersionId` into the `DidDocumentMetadata(...)` con
 Run: `./gradlew :did:did-core:test --tests "org.trustweave.did.resolver.DefaultUniversalResolver*" --max-workers 3`
 Expected: PASS.
 
-- [ ] **Step 8: Apply the same `nextVersionId` parse to the GoDiddy resolver**
+- [ ] **Step 8: Fix the GoDiddy resolver — `nextVersionId` parse AND the deactivated mapping**
 
-In `did/plugins/godiddy/src/main/kotlin/org/trustweave/godiddy/resolver/GodiddyResolver.kt:231-241`,
-add the identical `nextVersionId` extraction and constructor argument.
+Two changes in `did/plugins/godiddy/src/main/kotlin/org/trustweave/godiddy/resolver/GodiddyResolver.kt`:
+
+1. Around `:231-241`, add the identical `nextVersionId` extraction and constructor argument.
+
+2. Around `:93-105`, fix a producer-side conflation found during Task 8's review. When the upstream
+   Universal Resolver returns a deactivated DID — `didDocument: null` together with
+   `didDocumentMetadata.deactivated: true` — the current code falls through to
+   `DidResolutionResult.Failure.NotFound(reason = "Document conversion failed")`. So this resolver
+   can **never** emit `Deactivated`, the §12.1 HTTP 410 distinction is lost, the revocation signal
+   is downgraded to "unknown DID", and the reason string is actively misleading.
+
+   Check `documentMetadata.deactivated` **before** the `NotFound` fallback:
+
+   ```kotlin
+   if (document == null) {
+       return@withContext if (documentMetadata.deactivated) {
+           DidResolutionResult.Deactivated(
+               did = Did(did),
+               documentMetadata = documentMetadata,
+               resolutionMetadata = resolutionMetadata
+           )
+       } else {
+           DidResolutionResult.Failure.NotFound(did = Did(did), reason = "…")
+       }
+   }
+   ```
+
+   Adapt to the surrounding code's actual variable names and control flow — the point is the
+   deactivation check precedes the not-found fallback.
+
+   Add a test serving a deactivated upstream body and asserting `DidResolutionResult.Deactivated`.
 
 Run: `./gradlew :did:plugins:godiddy:test --max-workers 3`
 Expected: PASS.
@@ -3337,6 +3366,33 @@ class DidResolution10ConformanceTest {
     }
 }
 ```
+
+- [ ] **Step 1b: Add verification-path deactivation regression tests**
+
+Task 8's review surfaced a real gap: the security rule this whole migration hinges on — that a
+deactivated DID is a **verification failure**, never "document missing" — has **zero regression
+protection** outside `did-core`. Ten call sites in `credential-api`, `bbs`, `oidc4vp`, `siop` and
+`trust` were migrated by hand and verified by review, but no test would catch a future refactor
+flipping one of them back to a permissive path.
+
+This module already depends on `:credentials:credential-api`, so it can host that protection. Add a
+second class beside the conformance suite:
+
+`distribution/conformance/src/conformanceTest/kotlin/org/trustweave/conformance/DeactivatedDidVerificationTest.kt`
+
+Tag it `@Tag("conformance")` and `@Tag("did-resolution-1.0")`. Using a `DidResolver` test double
+that returns `DidResolutionResult.Deactivated` for a known DID, assert that each of these rejects
+rather than proceeding:
+
+- `CredentialServiceDidExtensions.issueForDid` — rejects with a failure naming deactivation
+- `CredentialServiceDidExtensions.verifyIssuerDid` — returns false
+- `ProofEngineUtils`' issuer-key resolution — yields no key (and therefore a verification failure
+  at its caller, not a skipped check)
+
+Read each function's real signature before writing the test; construct the doubles with `testkit`
+in-memory implementations rather than mocks, matching how `DidCore11ConformanceTest` builds its
+fixtures. If a function's dependencies make it impractical to drive from this module, cover the ones
+you can and state plainly in your report which you could not and why — do not fake a passing test.
 
 - [ ] **Step 2: Register the suite**
 

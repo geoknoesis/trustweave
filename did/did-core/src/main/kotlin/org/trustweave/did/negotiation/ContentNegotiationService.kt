@@ -1,6 +1,7 @@
 package org.trustweave.did.negotiation
 
 import org.trustweave.did.model.DidDocument
+import org.trustweave.did.representation.DidMediaTypes
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
 
@@ -11,8 +12,9 @@ import kotlinx.serialization.encodeToString
  * with different clients and use cases.
  *
  * **Supported Content Types:**
- * - `application/did+ld+json` (default) - JSON-LD format with full context
- * - `application/did+json` - Plain JSON format without JSON-LD processing
+ * - `application/did` (default) - DID 1.1 / DID Resolution 1.0 media type
+ * - `application/did+ld+json` - JSON-LD format with full context (legacy, DID Core 1.0)
+ * - `application/did+json` - Plain JSON format without JSON-LD processing (legacy, DID Core 1.0)
  * - `application/did+cbor` - CBOR format for compact representation
  * - `application/json` - Fallback JSON format
  *
@@ -37,7 +39,7 @@ interface ContentNegotiationService {
      */
     suspend fun negotiateContentType(
         acceptHeader: String?,
-        defaultType: String = "application/did+ld+json"
+        defaultType: String = DidMediaTypes.DID
     ): String
     
     /**
@@ -71,15 +73,11 @@ interface ContentNegotiationService {
 class DefaultContentNegotiationService : ContentNegotiationService {
     
     companion object {
-        val SUPPORTED_TYPES = listOf(
-            "application/did+ld+json",
-            "application/did+json",
-            "application/json"
-        )
+        val SUPPORTED_TYPES: List<String> = DidMediaTypes.SUPPORTED_DOCUMENT_TYPES
         // CBOR (application/did+cbor) is not yet implemented. Add here once a CBOR
         // serialization library (e.g. Jackson CBOR) is wired in.
     }
-    
+
     override suspend fun negotiateContentType(
         acceptHeader: String?,
         defaultType: String
@@ -87,24 +85,25 @@ class DefaultContentNegotiationService : ContentNegotiationService {
         if (acceptHeader == null) {
             return defaultType
         }
-        
+
         // Parse Accept header (simplified - full implementation would handle q-values)
         val acceptedTypes = parseAcceptHeader(acceptHeader)
-        
+
         // Find best match
-        return acceptedTypes.firstOrNull { type ->
-            SUPPORTED_TYPES.contains(type)
-        } ?: defaultType
+        return acceptedTypes.firstOrNull { DidMediaTypes.isSupportedDocumentType(it) }
+            ?.let { DidMediaTypes.normalize(it) }
+            ?: defaultType
     }
     
     override suspend fun serializeDocument(
         document: DidDocument,
         contentType: String
     ): ByteArray {
-        return when (contentType) {
-            "application/did+ld+json",
-            "application/did+json",
-            "application/json" -> {
+        return when (DidMediaTypes.normalize(contentType)) {
+            DidMediaTypes.DID,
+            DidMediaTypes.DID_LD_JSON,
+            DidMediaTypes.DID_JSON,
+            DidMediaTypes.JSON -> {
                 Json {
                     prettyPrint = false
                     encodeDefaults = false
@@ -123,10 +122,11 @@ class DefaultContentNegotiationService : ContentNegotiationService {
         data: ByteArray,
         contentType: String
     ): DidDocument {
-        return when (contentType) {
-            "application/did+ld+json",
-            "application/did+json",
-            "application/json" -> {
+        return when (DidMediaTypes.normalize(contentType)) {
+            DidMediaTypes.DID,
+            DidMediaTypes.DID_LD_JSON,
+            DidMediaTypes.DID_JSON,
+            DidMediaTypes.JSON -> {
                 Json.decodeFromString(
                     org.trustweave.did.model.DidDocument.serializer(),
                     data.toString(Charsets.UTF_8)
@@ -142,12 +142,8 @@ class DefaultContentNegotiationService : ContentNegotiationService {
         return accept.split(',')
             .map { it.trim().split(';')[0].trim() }
             .sortedByDescending { type ->
-                when (type) {
-                    "application/did+ld+json" -> 3
-                    "application/did+json" -> 2
-                    "application/json" -> 1
-                    else -> 0
-                }
+                val index = DidMediaTypes.SUPPORTED_DOCUMENT_TYPES.indexOf(DidMediaTypes.normalize(type))
+                if (index < 0) -1 else DidMediaTypes.SUPPORTED_DOCUMENT_TYPES.size - index
             }
     }
 }

@@ -328,6 +328,16 @@ class DefaultUniversalResolver(
                         }
                     } catch (_: kotlinx.serialization.SerializationException) {
                         null
+                    } catch (_: IllegalArgumentException) {
+                        // Belt-and-braces backstop: parseJsonResponse/extractDocumentMetadata/
+                        // parseDidDocumentMetadata are all now guarded against wrong-shaped and
+                        // JsonNull-valued fields (see parseDidDocumentMetadata's kdoc), so this
+                        // should not fire today. It stays because this exact call chain has
+                        // already had two unguarded-cast regressions found one level apart across
+                        // two review rounds — the one property that must hold unconditionally is
+                        // "410 always yields Deactivated", and that guarantee should not depend on
+                        // every downstream helper staying perfectly guarded as this code evolves.
+                        null
                     } ?: DidDocumentMetadata(deactivated = true)
 
                     DidResolutionResult.Deactivated(
@@ -495,24 +505,40 @@ class DefaultUniversalResolver(
 
     /**
      * Parses DID document metadata from JSON.
+     *
+     * Every field extraction is guarded against both a wrong-shaped value (e.g. an object where
+     * a primitive is expected) and an explicit JSON `null` sub-field. `as? JsonPrimitive`/
+     * `as? JsonArray` (rather than the `.jsonPrimitive`/`.jsonArray` extensions) degrade to
+     * Kotlin `null` instead of throwing for a wrong-shaped value; `.contentOrNull` (rather than
+     * `.content`) degrades to Kotlin `null` instead of the literal string `"null"` for a
+     * `JsonNull` value — `JsonNull` is itself a `JsonPrimitive` subtype, so `.jsonPrimitive`
+     * alone does not catch it the way `.jsonObject`/`.jsonArray` reject it. `Did(...)` is
+     * wrapped in try/catch, mirroring the existing `Instant.parse` pattern below, since a
+     * `null`-turned-`"null"` (or any other non-DID string) would otherwise throw uncaught.
      */
     private fun parseDidDocumentMetadata(metadataJson: JsonObject?): DidDocumentMetadata {
         if (metadataJson == null) return DidDocumentMetadata()
 
-        val created = metadataJson["created"]?.jsonPrimitive?.content?.let {
+        val created = (metadataJson["created"] as? JsonPrimitive)?.contentOrNull?.let {
             try { Instant.parse(it) } catch (e: Exception) { null }
         }
-        val updated = metadataJson["updated"]?.jsonPrimitive?.content?.let {
+        val updated = (metadataJson["updated"] as? JsonPrimitive)?.contentOrNull?.let {
             try { Instant.parse(it) } catch (e: Exception) { null }
         }
-        val deactivated = metadataJson["deactivated"]?.jsonPrimitive?.booleanOrNull ?: false
-        val versionId = metadataJson["versionId"]?.jsonPrimitive?.content
-        val nextUpdate = metadataJson["nextUpdate"]?.jsonPrimitive?.content?.let {
+        val deactivated = (metadataJson["deactivated"] as? JsonPrimitive)?.booleanOrNull ?: false
+        val versionId = (metadataJson["versionId"] as? JsonPrimitive)?.contentOrNull
+        val nextUpdate = (metadataJson["nextUpdate"] as? JsonPrimitive)?.contentOrNull?.let {
             try { Instant.parse(it) } catch (e: Exception) { null }
         }
-        val nextVersionId = metadataJson["nextVersionId"]?.jsonPrimitive?.content
-        val canonicalId = metadataJson["canonicalId"]?.jsonPrimitive?.content?.let { Did(it) }
-        val equivalentId = metadataJson["equivalentId"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content?.let { Did(it) } } ?: emptyList()
+        val nextVersionId = (metadataJson["nextVersionId"] as? JsonPrimitive)?.contentOrNull
+        val canonicalId = (metadataJson["canonicalId"] as? JsonPrimitive)?.contentOrNull?.let {
+            try { Did(it) } catch (e: Exception) { null }
+        }
+        val equivalentId = (metadataJson["equivalentId"] as? JsonArray)?.mapNotNull { element ->
+            (element as? JsonPrimitive)?.contentOrNull?.let { id ->
+                try { Did(id) } catch (e: Exception) { null }
+            }
+        } ?: emptyList()
 
         return DidDocumentMetadata(
             created = created,
@@ -538,6 +564,11 @@ class DefaultUniversalResolver(
      */
     private fun convertJsonElement(element: JsonElement): Any? {
         return when (element) {
+            // `JsonNull` is itself a `JsonPrimitive` subtype, so this branch must be checked
+            // before `is JsonPrimitive` below — otherwise it is unreachable dead code and a
+            // genuine JSON null silently becomes the literal string "null" via the `else ->
+            // element.content` fallback in the JsonPrimitive branch.
+            is JsonNull -> null
             is JsonPrimitive -> {
                 when {
                     element.isString -> element.content
@@ -549,7 +580,6 @@ class DefaultUniversalResolver(
             }
             is JsonArray -> element.map { convertJsonElement(it) }
             is JsonObject -> element.entries.associate { it.key to convertJsonElement(it.value) }
-            is JsonNull -> null
         }
     }
 

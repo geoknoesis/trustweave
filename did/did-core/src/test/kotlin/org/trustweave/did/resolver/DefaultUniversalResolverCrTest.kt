@@ -209,4 +209,50 @@ class DefaultUniversalResolverCrTest {
             server.stop(0)
         }
     }
+
+    // ─── Fix round 2: the same JsonNull problem one JSON level deeper. `didDocumentMetadata`
+    // itself is now guarded (round 1), but its *sub-fields* were not: `parseDidDocumentMetadata`
+    // used `?.jsonPrimitive`/`?.jsonArray` per field. `deactivated: null` alone does not actually
+    // crash (JsonNull is itself a JsonPrimitive, so `.jsonPrimitive` succeeds on it and
+    // `.booleanOrNull` degrades gracefully) — verified empirically before writing this test. The
+    // two fields that do crash pre-fix are `canonicalId` (JsonNull's `.content` is the literal
+    // string "null", which `Did("null")` then rejects) and `equivalentId` (`.jsonArray` throws on
+    // JsonNull the same way `.jsonObject` did). This test includes `deactivated: null` — the
+    // literal shape requested in review — alongside those two, so it both matches what was asked
+    // and gives genuine RED coverage. ───
+
+    @Test
+    fun `HTTP 410 with null-valued metadata sub-fields still produces Deactivated`() = runBlocking {
+        val body = """{"didDocumentMetadata":{"deactivated":null,"canonicalId":null,"equivalentId":null}}"""
+        val server = startServer(410, body)
+        try {
+            val resolver = DefaultUniversalResolver(baseUrl = "http://localhost:${server.address.port}", timeout = 5)
+
+            val result = resolver.resolveDid("did:example:deactivated-null-subfields")
+
+            assertTrue(result is DidResolutionResult.Deactivated, "expected Deactivated, got $result")
+            assertTrue(result.documentMetadata.deactivated)
+        } finally {
+            server.stop(0)
+        }
+    }
+
+    @Test
+    fun `HTTP 200 with null-valued metadata sub-fields does not crash resolution`() = runBlocking {
+        val body =
+            """{"didDocument":{"id":"did:example:200-null-subfields"},""" +
+                """"didDocumentMetadata":{"deactivated":null,"canonicalId":null,"equivalentId":null,"versionId":null}}"""
+        val server = startServer(200, body)
+        try {
+            val resolver = DefaultUniversalResolver(baseUrl = "http://localhost:${server.address.port}", timeout = 5)
+
+            val result = resolver.resolveDid("did:example:200-null-subfields")
+
+            assertTrue(result is DidResolutionResult.Success, "expected Success, got $result")
+            assertEquals(null, result.documentMetadata.canonicalId)
+            assertEquals(null, result.documentMetadata.versionId)
+        } finally {
+            server.stop(0)
+        }
+    }
 }

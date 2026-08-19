@@ -33,6 +33,12 @@ class RelativeUrlExpansionTest {
     }
 
     @Test
+    fun `a query service id is expanded against the document id without an inserted separator`() {
+        val expanded = documentWithService("?foo=bar").expandRelativeDidUrls()
+        assertEquals("did:example:123456789abcdefghi?foo=bar", expanded.service.first().id)
+    }
+
+    @Test
     fun `an absolute DID URL service id is unchanged`() {
         val expanded = documentWithService("did:example:other#vcs").expandRelativeDidUrls()
         assertEquals("did:example:other#vcs", expanded.service.first().id)

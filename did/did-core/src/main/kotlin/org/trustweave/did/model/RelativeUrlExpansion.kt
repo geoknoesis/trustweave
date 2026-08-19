@@ -35,5 +35,6 @@ private fun String.isRelativeDidUrl(): Boolean {
 private fun expandAgainst(baseDid: String, relative: String): String = when {
     relative.startsWith("#") -> baseDid + relative
     relative.startsWith("/") -> baseDid + relative
+    relative.startsWith("?") -> baseDid + relative
     else -> "$baseDid/$relative"
 }

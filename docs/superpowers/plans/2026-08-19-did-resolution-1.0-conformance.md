@@ -2753,125 +2753,51 @@ git commit -m "feat(did-core): serialize the section 9 DID resolution result env
 - Consumes: `DidErrorType`, `DidResolutionError` (Task 1); `DidResolutionResult.Deactivated` (Task 7); `DidMediaTypes` (Task 3).
 - Produces: no new public API. Behaviour: `Accept: application/did-resolution`; HTTP 410 → `Deactivated`; other non-2xx statuses map through the §12.1 table to the matching error type; upstream `didDocumentMetadata.nextVersionId` is parsed.
 
-- [ ] **Step 1: Add the MockWebServer test dependency**
+- [ ] **Step 1: Reuse the existing HTTP test fixture — do NOT add MockWebServer**
 
-`did/did-core` has no HTTP test fixture today (`DefaultUniversalResolverTest` only exercises URL
-validation and adapter parsing). Add MockWebServer, which is already in the version catalog as
-`libs.mockwebserver` and used by `anchors/plugins/cardano` and `credentials/plugins/oidc4vci`.
+An earlier draft of this plan told you to add `libs.mockwebserver` to `did/did-core/build.gradle.kts`.
+**Do not.** Task 4's fix rounds already built a JDK `com.sun.net.httpserver.HttpServer` fixture
+inside `did/did-core/src/test/kotlin/org/trustweave/did/resolver/DefaultUniversalResolverTest.kt`
+— the exact file this task extends. It binds port 0 (ephemeral, no collision), registers the
+context path `/1.0/identifiers/` that `StandardUniversalResolverAdapter.buildResolveUrl` actually
+produces, stops the server in a `finally` block, and drives the real `HttpClient.sendAsync` path.
 
-In `did/did-core/build.gradle.kts`, inside `dependencies`, add:
+Read that existing test before writing anything and reuse its helper shape. Adding a second HTTP
+mocking technology to the same test class for the same purpose would be gratuitous.
 
-```kotlin
-    testImplementation(libs.mockwebserver)
-```
+- [ ] **Step 2: Write the failing tests**
 
-- [ ] **Step 2: Write the failing test**
-
-Create `did/did-core/src/test/kotlin/org/trustweave/did/resolver/DefaultUniversalResolverCrTest.kt`.
-
+Add these cases to `DefaultUniversalResolverTest.kt`, in the style of the existing HttpServer test.
 Note `DefaultUniversalResolver`'s constructor validates `baseUrl` against `^https?://[^/]+`, so the
-base URL must have **no trailing slash** — use `"http://localhost:${server.port}"`, not
-`server.url("/").toString()`.
+base URL must carry **no trailing slash** — build it as `"http://localhost:${server.address.port}"`.
 
-```kotlin
-package org.trustweave.did.resolver
+Cases to cover:
 
-import kotlinx.coroutines.runBlocking
-import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.MockWebServer
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+1. **The resolve request asks for `application/did-resolution`.** Capture the inbound `Accept`
+   header in the handler and assert it equals `application/did-resolution`.
+2. **HTTP 410 maps to `Deactivated`.** Serve status 410 with body
+   `{"didDocument":null,"didDocumentMetadata":{"deactivated":true}}`; assert the result is
+   `DidResolutionResult.Deactivated` and `documentMetadata.deactivated` is true.
+3. **HTTP 501 maps to `METHOD_NOT_SUPPORTED`.** Serve 501; assert `result.errorType` is
+   `DidErrorType.METHOD_NOT_SUPPORTED`.
+4. **HTTP 400 maps to `INVALID_DID`.** Serve 400; assert `result.errorType` is
+   `DidErrorType.INVALID_DID`.
+5. **A legacy string error in a 200 body is upgraded.** Serve
+   `{"didResolutionMetadata":{"error":"notFound"},"didDocumentMetadata":{}}`; assert
+   `result.errorType` is `DidErrorType.NOT_FOUND`.
+6. **Upstream `nextVersionId` lands in document metadata.** Serve a 200 body whose
+   `didDocumentMetadata` carries `{"versionId":"3","nextVersionId":"4"}` alongside a valid
+   `didDocument`; assert `(result as DidResolutionResult.Success).documentMetadata.nextVersionId`
+   is `"4"`.
 
-class DefaultUniversalResolverCrTest {
+`RetryConfig.retryableStatusCodes` does not contain 400, 410 or 501, so one response per test is
+correct. If a test reports an unexpected extra request, serve the same response again rather than
+weakening the assertion.
 
-    private lateinit var server: MockWebServer
+- [ ] **Step 3: Run tests to verify they fail**
 
-    private val baseUrl: String get() = "http://localhost:${server.port}"
-
-    private val successBody = """
-        {"didDocument":{"@context":"https://www.w3.org/ns/did/v1","id":"did:example:123"},
-         "didDocumentMetadata":{},
-         "didResolutionMetadata":{"contentType":"application/did"}}
-    """.trimIndent()
-
-    @BeforeEach
-    fun setUp() {
-        server = MockWebServer().apply { start() }
-    }
-
-    @AfterEach
-    fun tearDown() {
-        server.shutdown()
-    }
-
-    private fun enqueue(status: Int, body: String) {
-        server.enqueue(MockResponse().setResponseCode(status).setBody(body))
-    }
-
-    @Test
-    fun `the resolve request asks for application-did-resolution`() = runBlocking {
-        enqueue(200, successBody)
-        DefaultUniversalResolver(baseUrl).resolveDid("did:example:123")
-        assertEquals("application/did-resolution", server.takeRequest().getHeader("Accept"))
-    }
-
-    @Test
-    fun `HTTP 410 maps to Deactivated`() = runBlocking {
-        enqueue(410, """{"didDocument":null,"didDocumentMetadata":{"deactivated":true}}""")
-        val result = DefaultUniversalResolver(baseUrl).resolveDid("did:example:123")
-        assertTrue(result is DidResolutionResult.Deactivated, "Expected Deactivated, got $result")
-        assertTrue(result.documentMetadata.deactivated)
-    }
-
-    @Test
-    fun `HTTP 501 maps to METHOD_NOT_SUPPORTED`() = runBlocking {
-        enqueue(501, "")
-        val result = DefaultUniversalResolver(baseUrl).resolveDid("did:nope:123")
-        assertEquals(DidErrorType.METHOD_NOT_SUPPORTED, result.errorType)
-    }
-
-    @Test
-    fun `HTTP 400 maps to INVALID_DID`() = runBlocking {
-        enqueue(400, "")
-        val result = DefaultUniversalResolver(baseUrl).resolveDid("did:example:123")
-        assertEquals(DidErrorType.INVALID_DID, result.errorType)
-    }
-
-    @Test
-    fun `a legacy string error in the body is upgraded to a type URI`() = runBlocking {
-        enqueue(200, """{"didResolutionMetadata":{"error":"notFound"},"didDocumentMetadata":{}}""")
-        val result = DefaultUniversalResolver(baseUrl).resolveDid("did:example:123")
-        assertEquals(DidErrorType.NOT_FOUND, result.errorType)
-    }
-
-    @Test
-    fun `upstream nextVersionId lands in document metadata`() = runBlocking {
-        enqueue(
-            200,
-            """
-            {"didDocument":{"@context":"https://www.w3.org/ns/did/v1","id":"did:example:123"},
-             "didDocumentMetadata":{"versionId":"3","nextVersionId":"4"},
-             "didResolutionMetadata":{"contentType":"application/did"}}
-            """.trimIndent()
-        )
-        val result = DefaultUniversalResolver(baseUrl).resolveDid("did:example:123")
-        assertEquals("4", (result as DidResolutionResult.Success).documentMetadata.nextVersionId)
-    }
-}
-```
-
-`DefaultUniversalResolver`'s retry policy retries some 5xx statuses; 400/410/501 are not in
-`RetryConfig.retryableStatusCodes`, so one enqueued response per test is correct. If a test
-reports an unexpected extra request, enqueue the same response twice rather than weakening the
-assertion.
-
-- [ ] **Step 3: Run test to verify it fails**
-
-Run: `./gradlew :did:did-core:test --tests "org.trustweave.did.resolver.DefaultUniversalResolverCrTest" --max-workers 3`
-Expected: FAIL — Accept is `application/json`, 410 and 501 fall into the generic error branch.
+Run: `./gradlew :did:did-core:test --tests "org.trustweave.did.resolver.DefaultUniversalResolverTest" --max-workers 3`
+Expected: FAIL — Accept is `application/json`, and 410/501/400 all fall into the generic error branch.
 
 - [ ] **Step 4: Change the request Accept header**
 

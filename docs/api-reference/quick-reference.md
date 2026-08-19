@@ -86,6 +86,7 @@ import org.trustweave.did.resolver.errorMessage
 
 when (val res = trustWeave.resolveDid(Did("did:key:example"))) {
     is DidResolutionResult.Success -> println(res.document.id)
+    is DidResolutionResult.Deactivated -> println("Deactivated: ${res.did.value}")
     is DidResolutionResult.Failure -> println(res.errorMessage)
 }
 ```

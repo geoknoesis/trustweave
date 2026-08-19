@@ -248,6 +248,7 @@ import org.trustweave.did.resolver.DidResolutionResult
 
 val didDocument: DidDocument? = when (val r = trustWeave.resolveDid(Did("did:key:…"))) {
     is DidResolutionResult.Success -> r.document
+    is DidResolutionResult.Deactivated -> null
     is DidResolutionResult.Failure -> null
 }
 
@@ -257,6 +258,11 @@ didDocument?.verificationMethod?.first()
 // Elvis for defaults
 val method = didDocument?.verificationMethod?.first() ?: throw NotFoundException()
 ```
+
+Collapsing `Deactivated` to `null` here is fine for a "do I have a document" check, but it throws
+away the distinction between "never registered" and "revoked." Code that uses the document for
+verification or authorization should branch on `Deactivated` separately and reject it, rather
+than treating a `null` document as merely absent.
 
 ### Extension Functions
 

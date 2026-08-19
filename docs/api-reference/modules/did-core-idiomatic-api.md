@@ -71,13 +71,16 @@ registry["new"] = NewDidMethod()
 
 ### DidResolutionResult extensions
 
-`DidResolutionResult` is a **sealed class** (not `Result<T>`). Use **`when`**, **`resolveOrNull` / `resolveOrThrow`** on **`Did`**, or the small **`did-core`** helpers below.
+`DidResolutionResult` is a **sealed class** (not `Result<T>`) with three top-level cases —
+`Success`, `Deactivated`, and `Failure` — since the DID Resolution 1.0 migration. Use **`when`**,
+**`resolveOrNull` / `resolveOrThrow`** on **`Did`**, or the small **`did-core`** helpers below.
 
 ```kotlin
 import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.did.resolver.errorCode
+import org.trustweave.did.resolver.errorType
 import org.trustweave.did.resolver.errorMessage
 import org.trustweave.did.resolver.hasError
+import org.trustweave.did.resolver.isDeactivated
 import org.trustweave.did.resolver.isNotFound
 import org.trustweave.did.resolver.isSuccess
 
@@ -85,20 +88,22 @@ val result: DidResolutionResult = // ... from resolver.resolve(did)
 
 // Diagnostics
 if (result.isSuccess) { /* ... */ }
-if (result.hasError) {
+if (result.isDeactivated) { /* treat as revoked, not "not found" */ }
+if (result.hasError) {   // true only for Failure — deactivation is NOT an error
     println(result.errorMessage)
-    println(result.errorCode)
+    println(result.errorType)  // the RFC 9457 error type URI, e.g. DidErrorType.NOT_FOUND
 }
 if (result.isNotFound) { /* ... */ }
 
-// Document extraction
+// Document extraction — `documentOrNull` is also available as a built-in extension
 val documentOrNull: DidDocument? = when (result) {
     is DidResolutionResult.Success -> result.document
-    else -> null
+    else -> null   // Deactivated and Failure both have no document
 }
 
 val message = when (result) {
     is DidResolutionResult.Success -> "Success: ${result.document.id}"
+    is DidResolutionResult.Deactivated -> "Deactivated: ${result.did.value}"
     is DidResolutionResult.Failure -> "Failed: ${result.errorMessage}"
 }
 ```
@@ -119,6 +124,10 @@ val resolver: DidResolver = // ... resolver
 val document = did.resolveOrThrow(resolver)
 val doc = did.resolveOrNull(resolver)
 val docOrDefault = did.resolveOrDefault(resolver, defaultDocument)
+
+// Deactivation: resolveOrNull/resolveOrDefault do NOT fold a deactivated DID into
+// null/the default — a revoked identity is not an absent one. Both throw
+// DidException.DidResolutionFailed in that case, matching resolveOrThrow.
 
 // With callback
 did.resolveWith(resolver) { document ->
@@ -218,6 +227,7 @@ val resolver = universalResolver("https://dev.uniresolver.io") {
     retry { maxRetries = 3 }
 }
 val document = Did("did:key:123").resolveOrNull(resolver)
+// null for not-found/invalid/error; throws DidException.DidResolutionFailed if deactivated
 ```
 
 ## Best Practices

@@ -106,9 +106,10 @@ val rotated = trustWeave.rotateKey {
     did("did:key:example")
 }
 
-// Resolve → DidResolutionResult (sealed)
+// Resolve → DidResolutionResult (sealed: Success / Deactivated / Failure)
 when (val resolution = trustWeave.resolveDid(did)) {
     is DidResolutionResult.Success -> { /* use resolution.document */ }
+    is DidResolutionResult.Deactivated -> { /* reject as revoked — §4.4, not "not found" */ }
     is DidResolutionResult.Failure -> { /* handle */ }
 }
 ```

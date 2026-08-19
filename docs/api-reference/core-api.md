@@ -343,7 +343,10 @@ suspend fun resolveDid(did: Did, timeout: Duration = 30.seconds): DidResolutionR
 
 **Access via:** `trustWeave.resolveDid(...)` (implements `DidResolver.resolve` for `Did`).
 
-**Returns:** Sealed `DidResolutionResult` — use `DidResolutionResult.Success` for the `DidDocument` and metadata; failures are separate variants (not a nullable `document`).
+**Returns:** Sealed `DidResolutionResult` — use `DidResolutionResult.Success` for the `DidDocument`
+and metadata; a deactivated DID resolves to `DidResolutionResult.Deactivated` with **no**
+document (§4.4 — not folded into `Failure`); other failures are separate `Failure` variants (not
+a nullable `document`).
 
 **Example:**
 ```kotlin
@@ -351,6 +354,7 @@ import org.trustweave.did.resolver.DidResolutionResult
 
 when (val res = trustWeave.resolveDid("did:key:z6Mk...")) {
     is DidResolutionResult.Success -> println("Resolved: ${res.document.id}")
+    is DidResolutionResult.Deactivated -> println("Deactivated: ${res.did.value}")
     is DidResolutionResult.Failure -> println("Resolution failed")
 }
 ```

@@ -13,7 +13,11 @@ This document is the placeholder for the **W3C DID test suite** implementation r
 
 - **Conforming consumer**: Parsing of DID document JSON per DID 1.1 §6.2.2 (shared `DidDocumentJsonParser`), including `controller`, `alsoKnownAs`, embedded verification methods (normalized on ingest), service type (string or array), relative refs.
 - **Conforming producer**: Serialization of DID documents per §6.2.1/§6.2.3 via `DidDocumentJsonProducer` (v1.1 @context, `application/did`, controller, alsoKnownAs, service type, verification relationships).
-- **Resolver**: Resolution output aligns with DID Resolution v0.3 (document + resolutionMetadata + documentMetadata); full dereference API not yet implemented.
+- **Resolver**: Resolution output aligns with [DID Resolution 1.0 CR](https://www.w3.org/TR/2026/CR-did-resolution-1.0-20260806/)
+  §4 (sealed `Success` / `Deactivated` / `Failure` result, `resolutionMetadata`,
+  `documentMetadata`); see [Migrating to DID Resolution 1.0](../../releases/did-resolution-1.0-migration.md)
+  for the full list of changes. DID URL dereferencing (§5, §10 — Feature at Risk) and the §12.1
+  HTTP(S) binding server side are not yet implemented.
 
 ## Running the W3C DID test suite
 
@@ -41,4 +45,5 @@ Until TrustWeave is added as an implementation in the W3C suite, **TrustWeave-sp
 | Embedded VMs in relationships | Normalized on ingest (strategy B); parser merges into verificationMethod. |
 | @context v1.1 | DidDocumentJsonProducer uses https://www.w3.org/ns/did/v1.1 as first context. |
 | application/did | APPLICATION_DID_MEDIA_TYPE; toBytesWithMediaType(). |
-| Resolution metadata | DidResolutionResult.Success carries document, documentMetadata, resolutionMetadata. |
+| Resolution metadata | `DidResolutionResult.Success` carries document, documentMetadata, resolutionMetadata; `Deactivated` (§4.4) carries no document; `Failure` subtypes (`NotFound`, `InvalidFormat`, `MethodNotRegistered`, `ResolutionError`, `OptionsError`) each carry an RFC 9457 `DidResolutionError`. |
+| Conformance suite | `distribution:conformance`'s `DidResolution10ConformanceTest` (16 tests) plus `DeactivatedDidVerificationTest` (3 tests) — part of a 37-test, 5-suite floor enforced at conformance-test time. |

@@ -31,7 +31,7 @@ TrustWeave is a Kotlin library for decentralized identity and trust management. 
 
 | Domain | Core Module | What it does |
 |---|---|---|
-| **DID** | `did:did-core` | DID CRUD, resolution, batch ops, registrar |
+| **DID** | `did:did-core` | DID CRUD, resolution (W3C DID Resolution 1.0 CR), batch ops, registrar |
 | **Wallet** | `wallet:wallet-core` | Credential storage, presentation, lifecycle |
 | **KMS** | `kms:kms-core` | Key management (sign, verify, generate) |
 | **Anchors** | `anchors:anchor-core` | Blockchain anchoring for DIDs/credentials |

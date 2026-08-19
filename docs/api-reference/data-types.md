@@ -114,26 +114,51 @@ data class VerifiablePresentation(
 
 ### DidResolutionResult
 
-Sealed result of DID resolution (`org.trustweave.did.resolver.DidResolutionResult`). Use an exhaustive **`when`**—there is no single nullable **`document`** on one flat type.
+Sealed result of DID resolution per [DID Resolution 1.0](https://www.w3.org/TR/2026/CR-did-resolution-1.0-20260806/) §4
+(`org.trustweave.did.resolver.DidResolutionResult`). Use an exhaustive **`when`**—there is no
+single nullable **`document`** on one flat type, and as of the DID Resolution 1.0 migration there
+are **three** top-level cases, not two:
 
 - **`Success`** — **`document`** (**`DidDocument`**, always present), **`documentMetadata`**, **`resolutionMetadata`**
-- **`Failure`** (sealed) — **`NotFound`** (**`did`**, optional **`reason`**), **`InvalidFormat`** (invalid DID string, **`reason`**), **`MethodNotRegistered`** (**`method`**, **`availableMethods`**), **`ResolutionError`** (**`did`**, **`reason`**, optional **`cause`**)
+- **`Deactivated`** — the DID exists but is deactivated (§4.4); carries **`did`**, **`documentMetadata`** (with `deactivated = true`), **`resolutionMetadata`**, and **no document**. This is a sibling of `Success`/`Failure`, not a `Failure` subtype — treat it as "must not be used", not as "not found".
+- **`Failure`** (sealed) — **`NotFound`** (**`did`**, optional **`reason`**), **`InvalidFormat`** (invalid DID string, **`reason`**), **`MethodNotRegistered`** (**`method`**, **`availableMethods`**), **`ResolutionError`** (**`did`**, **`reason`**, optional **`cause`**), **`OptionsError`** (**`did`**, **`reason`**, **`errorType`** — unsupported/invalid `ResolutionOptions` or representation, §4.4 steps 3–4)
 
 ```kotlin
 import org.trustweave.did.resolver.DidResolutionResult
 
 when (val result = trustWeave.resolveDid(did)) {
     is DidResolutionResult.Success -> result.document
+    is DidResolutionResult.Deactivated -> { /* reject as revoked, not "not found" */ result }
     is DidResolutionResult.Failure.NotFound -> { /* … */ result }
     is DidResolutionResult.Failure.InvalidFormat -> { /* … */ result }
     is DidResolutionResult.Failure.MethodNotRegistered -> { /* … */ result }
     is DidResolutionResult.Failure.ResolutionError -> { /* … */ result }
+    is DidResolutionResult.Failure.OptionsError -> { /* … */ result }
 }
 ```
 
+See [Migrating to DID Resolution 1.0](../releases/did-resolution-1.0-migration.md) for why
+`Deactivated` is a separate case and not folded into `Failure` or `Success`.
+
 ### DidResolutionMetadata
 
-Structured resolution metadata (`org.trustweave.did.resolver.DidResolutionMetadata`): **`contentType`**, optional W3C-style **`error`** / **`errorMessage`**, **`pattern`**, **`driverUrl`**, **`duration`**, **`retrieved`**, **`canonicalId`**, **`equivalentId`**, **`nextUpdate`**, **`nextVersionId`**, and extensible string **`properties`**. Success and failure results carry metadata on the corresponding **`DidResolutionResult`** subtype.
+Structured §4.2 resolution-process metadata (`org.trustweave.did.resolver.DidResolutionMetadata`):
+**`contentType`** (defaults to `application/did`, not `application/did+ld+json`), an optional
+**`error`** (`DidResolutionError?` — an RFC 9457 object with `type`/`title`/`detail`, not a raw
+string; a deprecated **`errorMessage`** string property derives from `error?.detail`),
+**`proof`**, **`pattern`**, **`driverUrl`**, **`duration`**, **`retrieved`**, and extensible
+string **`properties`**. Success, `Deactivated`, and failure results all carry metadata on the
+corresponding `DidResolutionResult` subtype (`result.resolutionMetadata` from
+`org.trustweave.did.resolver.resolutionMetadata` reads it uniformly across all three).
+
+**`canonicalId`**, **`equivalentId`**, **`nextUpdate`**, and **`nextVersionId`** are **not** on
+`DidResolutionMetadata` — they are §4.3 *document* metadata and live on `DidDocumentMetadata`
+(`result.documentMetadata`), which also carries `created`, `updated`, `deactivated`, `versionId`,
+and `proof`.
+
+The map-based `DidResolutionMetadata` constructors and `resolutionMetadataMap` accessors have
+been removed; use `DidResolutionMetadata.fromMap(map)` / `.fromJson(json)` to parse, and
+`.toMap()` / `.toJson()` to serialize.
 
 ### DidCreationOptions
 

@@ -26,6 +26,14 @@ TrustWeave's adapter architecture allows you to implement custom:
 
 Implement **`org.trustweave.did.DidMethod`** with type-safe **`Did`**, **`VerificationMethod`**, **`VerificationMethodId`**, and sealed **`DidResolutionResult`**. For **`createDid`**, follow **`org.trustweave.testkit.did.DidKeyMockMethod`** (KMS **`GenerateKeyResult`**, document layout).
 
+**Deactivation:** per [DID Resolution 1.0](https://www.w3.org/TR/2026/CR-did-resolution-1.0-20260806/)
+§4.4, `resolveDid` must return `DidResolutionResult.Deactivated` — never `Success` — for a
+deactivated DID; there is no document in that case, even if your backend still has one on file.
+All first-party TrustWeave DID method plugins build this via the shared
+`DidMethodUtils.createSuccessResolutionResult(document, method, deactivated = …)` factory in
+`did:plugins:base`, which picks `Success` or `Deactivated` for you — prefer that over
+constructing `DidResolutionResult` directly if your method has access to it.
+
 ```kotlin
 import org.trustweave.did.DidMethod
 import org.trustweave.did.DidCreationOptions
@@ -47,13 +55,16 @@ class MyCustomDidMethod(
 
     override suspend fun resolveDid(did: Did): DidResolutionResult {
         val document = resolveFromBackend(did)
-        return if (document != null) {
-            DidResolutionResult.Success(
+        return when {
+            document == null -> DidResolutionResult.Failure.NotFound(did = did)
+            isDeactivatedInBackend(did) ->
+                // DID Resolution 1.0 §4.4: a deactivated DID returns NO document, ever —
+                // do not wrap it in Success even though you still have the document data.
+                DidResolutionResult.Deactivated(did = did)
+            else -> DidResolutionResult.Success(
                 document = document,
                 resolutionMetadata = DidResolutionMetadata(contentType = "application/did+json")
             )
-        } else {
-            DidResolutionResult.Failure.NotFound(did = did)
         }
     }
 
@@ -71,6 +82,7 @@ class MyCustomDidMethod(
 
     private fun resolveFromBackend(did: Did): DidDocument? = null // your store
     private fun persistToBackend(did: Did, document: DidDocument) { /* … */ }
+    private fun isDeactivatedInBackend(did: Did): Boolean = false // your store
     private fun deactivateInBackend(did: Did): Boolean = false
 }
 ```

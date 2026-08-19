@@ -522,14 +522,18 @@ if (!validation.isValid()) {
     )
 }
 
-// Now safe to proceed — still handle Failure branches
+// Now safe to proceed — still handle Deactivated and Failure branches
 when (val resolution = trustWeave.resolveDid(userInputDid)) {
     is DidResolutionResult.Success -> { /* use resolution.document */ }
-    is DidResolutionResult.Failure -> { /* NotFound, MethodNotRegistered, … */ }
+    is DidResolutionResult.Deactivated -> { /* reject as revoked — not "not found" */ }
+    is DidResolutionResult.Failure -> { /* NotFound, MethodNotRegistered, OptionsError, … */ }
 }
 ```
 
-**Why:** Early validation improves messages; resolution returns a **sealed `DidResolutionResult`** you should handle explicitly.
+**Why:** Early validation improves messages; resolution returns a **sealed `DidResolutionResult`**
+you should handle explicitly — since the DID Resolution 1.0 migration it has three top-level
+cases (`Success` / `Deactivated` / `Failure`), not two, and `Deactivated` MUST be treated as a
+rejection, not as a missing document.
 
 ### Pitfall 5: Not Handling Specific Error Types
 
@@ -908,6 +912,8 @@ If you wrap facade calls into **`Result`** for resilience libraries, keep the bo
 fun didResolutionToResult(r: DidResolutionResult): Result<DidResolutionResult> =
     when (r) {
         is DidResolutionResult.Success -> Result.success(r)
+        // Deactivated is not a document you can use — fail the circuit, don't succeed with it.
+        is DidResolutionResult.Deactivated -> Result.failure(IllegalStateException("DID is deactivated: ${r.did.value}"))
         is DidResolutionResult.Failure -> Result.failure(IllegalStateException(r.toString()))
     }
 

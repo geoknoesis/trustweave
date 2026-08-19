@@ -19,10 +19,10 @@ import kotlin.time.Duration.Companion.minutes
  *   is already due for an update, so the result is returned but **not cached**.
  *
  * **What is cached:**
- * - Only [DidResolutionResult.Success] results. Failures ([DidResolutionResult.Failure])
- *   are never cached — a transient network error or an unregistered method must not be
- *   sticky, and a later retry may succeed.
- * - Documents whose metadata reports `deactivated = true` ARE cached normally:
+ * - [DidResolutionResult.Success] and [DidResolutionResult.Deactivated] results. Failures
+ *   ([DidResolutionResult.Failure]) are never cached — a transient network error or an
+ *   unregistered method must not be sticky, and a later retry may succeed.
+ * - [DidResolutionResult.Deactivated] is cached exactly like [DidResolutionResult.Success]:
  *   deactivation is terminal per W3C DID Core §7.3, so a cached deactivated result can
  *   never become stale in a way that grants access it shouldn't (the failure mode is
  *   only re-confirming deactivation slightly late, which the TTL already bounds).
@@ -69,9 +69,15 @@ class CachingDidResolver(
     }
 
     private class CacheEntry(
-        val result: DidResolutionResult.Success,
+        val result: DidResolutionResult,
         val expiresAt: Instant
     ) {
+        init {
+            require(result is DidResolutionResult.Success || result is DidResolutionResult.Deactivated) {
+                "CacheEntry only caches Success or Deactivated results, got ${result::class.simpleName}"
+            }
+        }
+
         @Volatile
         var lastAccess: Long = 0
     }
@@ -97,7 +103,7 @@ class CachingDidResolver(
         }
 
         val result = delegate.resolve(did)
-        if (result is DidResolutionResult.Success) {
+        if (result is DidResolutionResult.Success || result is DidResolutionResult.Deactivated) {
             val expiresAt = expiryFor(now, result)
             if (expiresAt > now) {
                 val entry = CacheEntry(result, expiresAt)
@@ -123,11 +129,15 @@ class CachingDidResolver(
     }
 
     /**
-     * Computes the expiry instant for a successful result: `now + ttl`, capped by
+     * Computes the expiry instant for a cacheable ([DidResolutionResult.Success] or
+     * [DidResolutionResult.Deactivated]) result: `now + ttl`, capped by
      * `documentMetadata.nextUpdate` when that is earlier. A `nextUpdate` at or before
      * [now] yields a non-future expiry, which the caller treats as "do not cache".
+     *
+     * Uses the [documentMetadata] extension property (not a member) so it reads correctly
+     * for either variant.
      */
-    private fun expiryFor(now: Instant, result: DidResolutionResult.Success): Instant {
+    private fun expiryFor(now: Instant, result: DidResolutionResult): Instant {
         val ttlExpiry = now + ttl
         val nextUpdate = result.documentMetadata.nextUpdate
         return if (nextUpdate != null && nextUpdate < ttlExpiry) nextUpdate else ttlExpiry

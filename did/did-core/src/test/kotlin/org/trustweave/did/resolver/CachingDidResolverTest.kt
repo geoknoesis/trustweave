@@ -47,12 +47,20 @@ class CachingDidResolverTest {
 
     private fun success(
         did: Did,
-        nextUpdate: Instant? = null,
-        deactivated: Boolean = false
+        nextUpdate: Instant? = null
     ): DidResolutionResult.Success =
         DidResolutionResult.Success(
             document = DidDocument(id = did),
-            documentMetadata = DidDocumentMetadata(nextUpdate = nextUpdate, deactivated = deactivated)
+            documentMetadata = DidDocumentMetadata(nextUpdate = nextUpdate)
+        )
+
+    private fun deactivated(
+        did: Did,
+        nextUpdate: Instant? = null
+    ): DidResolutionResult.Deactivated =
+        DidResolutionResult.Deactivated(
+            did = did,
+            documentMetadata = DidDocumentMetadata(deactivated = true, nextUpdate = nextUpdate)
         )
 
     private fun notFound(did: Did): DidResolutionResult =
@@ -187,18 +195,37 @@ class CachingDidResolverTest {
     }
 
     @Test
-    fun `deactivated documents are cached normally`() = runBlocking {
-        // Deactivation is terminal (W3C DID Core §7.3), so it is safe to cache the
-        // deactivated result like any other success.
+    fun `deactivated results are cached and served without re-hitting the delegate`() = runBlocking {
+        // Deactivation is terminal (W3C DID Core §7.3), so a Deactivated result is cached
+        // exactly like a Success — served from cache on the second lookup.
         val did = Did("did:example:deactivated")
-        val delegate = CountingResolver { success(it, deactivated = true) }
+        val delegate = CountingResolver { deactivated(it) }
         val resolver = CachingDidResolver(delegate, clock = MutableClock(epoch))
 
-        resolver.resolve(did)
+        val first = resolver.resolve(did)
         val second = resolver.resolve(did)
 
-        assertEquals(1, delegate.totalCalls)
-        assertTrue((second as DidResolutionResult.Success).documentMetadata.deactivated)
+        assertEquals(1, delegate.totalCalls, "delegate must be called once")
+        assertSame(first, second, "cached Deactivated instance must be returned")
+        assertTrue((second as DidResolutionResult.Deactivated).documentMetadata.deactivated)
+        assertEquals(1, resolver.size)
+    }
+
+    @Test
+    fun `deactivated entry expires after ttl and delegate is consulted again`() = runBlocking {
+        val did = Did("did:example:deactivated-ttl")
+        val clock = MutableClock(epoch)
+        val delegate = CountingResolver { deactivated(it) }
+        val resolver = CachingDidResolver(delegate, ttl = 5.minutes, clock = clock)
+
+        resolver.resolve(did)
+        clock.advance(4.minutes + 59.seconds)
+        resolver.resolve(did)
+        assertEquals(1, delegate.totalCalls, "entry must still be fresh just before ttl")
+
+        clock.advance(2.seconds) // now past the 5-minute ttl
+        resolver.resolve(did)
+        assertEquals(2, delegate.totalCalls, "expired entry must trigger re-resolution")
     }
 
     // ─── LRU eviction ───

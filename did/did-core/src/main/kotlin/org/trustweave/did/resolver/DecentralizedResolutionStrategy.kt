@@ -43,20 +43,28 @@ class DecentralizedResolutionStrategy(
 ) : DidResolver {
     
     override suspend fun resolve(did: Did): DidResolutionResult {
-        // 1. Try local storage first (fastest, but may be stale)
+        // 1. Try local storage first (fastest, but may be stale). A `Deactivated` verdict (§4.4)
+        // is a terminal, authoritative answer — deactivation cannot be undone (W3C DID Core
+        // §7.3), so it can never be "stale" in the sense that matters here — and short-circuits
+        // unconditionally, without the freshness check that gates `Success`.
         localResolver.resolve(did).takeIf { result ->
-            result is DidResolutionResult.Success && isFresh(result)
+            result is DidResolutionResult.Deactivated ||
+                (result is DidResolutionResult.Success && isFresh(result))
         }?.let { result ->
             return result
         }
-        
-        // 2. Try method-specific resolver (most authoritative)
+
+        // 2. Try method-specific resolver (most authoritative). A `Deactivated` verdict here is
+        // just as authoritative as `Success` — both are terminal answers from the method's own
+        // resolver — so both stop the fallback chain rather than falling through to the
+        // (less-authoritative) universal resolver, which could resurrect a revoked DID's
+        // document.
         methodSpecificResolvers[did.method]?.resolve(did)
-            ?.takeIf { it is DidResolutionResult.Success }
+            ?.takeIf { it is DidResolutionResult.Success || it is DidResolutionResult.Deactivated }
             ?.let { result ->
                 return result
             }
-        
+
         // 3. Fall back to Universal Resolver (decentralized)
         return universalResolver.resolve(did)
     }

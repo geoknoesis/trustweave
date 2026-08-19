@@ -175,14 +175,20 @@ object DidMethodUtils {
     }
 
     /**
-     * Creates a successful DID resolution result.
+     * Creates a DID resolution result for a document that was found on the method's backing
+     * store.
      *
-     * @param document The resolved DID document
+     * Per DID Resolution 1.0 §4.4, a deactivated DID resolves to **no document at all** — the
+     * caller learns of the deactivation from `documentMetadata.deactivated` only. Accordingly,
+     * when [deactivated] is `true` this returns [DidResolutionResult.Deactivated] (which carries
+     * no document); otherwise it returns [DidResolutionResult.Success] carrying [document].
+     *
+     * @param document The resolved DID document (discarded when [deactivated] is true)
      * @param method The DID method name
      * @param created Optional creation timestamp (defaults to now)
      * @param updated Optional update timestamp (defaults to now)
      * @param deactivated Whether the DID has been deactivated (defaults to false)
-     * @return DidResolutionResult.Success
+     * @return [DidResolutionResult.Deactivated] if [deactivated] is true, else [DidResolutionResult.Success]
      */
     fun createSuccessResolutionResult(
         document: DidDocument,
@@ -192,18 +198,31 @@ object DidMethodUtils {
         deactivated: Boolean = false
     ): DidResolutionResult {
         val now = Clock.System.now()
-        return DidResolutionResult.Success(
-            document = document,
-            documentMetadata = DidDocumentMetadata(
-                created = created ?: now,
-                updated = updated ?: now,
-                deactivated = deactivated
-            ),
-            resolutionMetadata = DidResolutionMetadata(
-                pattern = method,
-                properties = mapOf("driver" to "TrustWeave")
-            )
+        val documentMetadata = DidDocumentMetadata(
+            created = created ?: now,
+            updated = updated ?: now,
+            deactivated = deactivated
         )
+        val resolutionMetadata = DidResolutionMetadata(
+            pattern = method,
+            properties = mapOf("driver" to "TrustWeave")
+        )
+
+        // DID Resolution 1.0 §4.4: a deactivated DID resolves to no document at all. The caller
+        // learns of the deactivation from documentMetadata.
+        return if (deactivated) {
+            DidResolutionResult.Deactivated(
+                did = document.id,
+                documentMetadata = documentMetadata,
+                resolutionMetadata = resolutionMetadata
+            )
+        } else {
+            DidResolutionResult.Success(
+                document = document,
+                documentMetadata = documentMetadata,
+                resolutionMetadata = resolutionMetadata
+            )
+        }
     }
 
     /**

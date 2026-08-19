@@ -3,8 +3,10 @@ package org.trustweave.did.base
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.trustweave.did.resolver.DidResolutionResult
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -214,31 +216,64 @@ class DidMethodUtilsSpecComplianceTest {
     @Nested
     inner class ResolutionMetadata {
 
-        @Test
-        fun `createSuccessResolutionResult carries deactivated flag`() {
-            val document = DidMethodUtils.buildDidDocument(
-                did = "did:test:123",
-                verificationMethod = listOf(
-                    DidMethodUtils.createVerificationMethod(
-                        did = "did:test:123",
-                        keyHandle = org.trustweave.kms.KeyHandle(
-                            id = org.trustweave.core.identifiers.KeyId("key-1"),
-                            algorithm = "Ed25519",
-                            publicKeyMultibase = "z6Mk"
-                        ),
-                        algorithm = "Ed25519"
-                    )
+        // buildDidDocument requires at least one verification method, so the DID Resolution
+        // 1.0 tests below build a minimal real document rather than the empty one sketched in
+        // the task brief.
+        private fun testDocument(did: String) = DidMethodUtils.buildDidDocument(
+            did = did,
+            verificationMethod = listOf(
+                DidMethodUtils.createVerificationMethod(
+                    did = did,
+                    keyHandle = org.trustweave.kms.KeyHandle(
+                        id = org.trustweave.core.identifiers.KeyId("key-1"),
+                        algorithm = "Ed25519",
+                        publicKeyMultibase = "z6Mk"
+                    ),
+                    algorithm = "Ed25519"
                 )
             )
+        )
+
+        @Test
+        fun `createSuccessResolutionResult carries deactivated flag`() {
+            val document = testDocument("did:test:123")
 
             val active = DidMethodUtils.createSuccessResolutionResult(document, "test")
-                as org.trustweave.did.resolver.DidResolutionResult.Success
+                as DidResolutionResult.Success
             assertEquals(false, active.documentMetadata.deactivated)
 
+            // DID Resolution 1.0 §4.4: a deactivated DID resolves to Deactivated, not Success —
+            // the caller gets no document, only documentMetadata.deactivated.
             val deactivated = DidMethodUtils.createSuccessResolutionResult(
                 document, "test", deactivated = true
-            ) as org.trustweave.did.resolver.DidResolutionResult.Success
+            ) as DidResolutionResult.Deactivated
             assertTrue(deactivated.documentMetadata.deactivated)
+        }
+
+        @Test
+        fun `createSuccessResolutionResult returns Deactivated when the DID is deactivated`() {
+            val document = testDocument("did:testchain:abc123")
+            val result = DidMethodUtils.createSuccessResolutionResult(
+                document = document,
+                method = "testchain",
+                deactivated = true
+            )
+
+            assertTrue(result is DidResolutionResult.Deactivated, "Expected Deactivated, got $result")
+            assertTrue(result.documentMetadata.deactivated)
+            assertEquals(document.id, result.did)
+        }
+
+        @Test
+        fun `createSuccessResolutionResult returns Success when the DID is live`() {
+            val document = testDocument("did:testchain:abc123")
+            val result = DidMethodUtils.createSuccessResolutionResult(
+                document = document,
+                method = "testchain"
+            )
+
+            assertTrue(result is DidResolutionResult.Success, "Expected Success, got $result")
+            assertFalse(result.documentMetadata.deactivated)
         }
     }
 }

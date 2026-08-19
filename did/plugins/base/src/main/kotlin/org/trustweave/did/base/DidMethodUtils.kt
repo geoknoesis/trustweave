@@ -9,6 +9,8 @@ import org.trustweave.did.model.DidService
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidErrorType
+import org.trustweave.did.resolver.DidResolutionError
 import org.trustweave.did.resolver.DidResolutionMetadata
 import org.trustweave.kms.KeyHandle
 import kotlinx.datetime.Instant
@@ -219,9 +221,11 @@ object DidMethodUtils {
         method: String? = null,
         did: String? = null
     ): DidResolutionResult {
+        // `error` arrives as a legacy camelCase code (e.g. "notFound"). DID Resolution 1.0 §11
+        // requires an RFC 9457 error object whose `type` is an absolute URL, so upgrade the code
+        // rather than passing it through. `errorMessage` is now derived from `detail`.
         val metadata = DidResolutionMetadata(
-            error = error,
-            errorMessage = message,
+            error = DidResolutionError.of(DidErrorType.fromLegacyCode(error), message),
             pattern = method
         )
 

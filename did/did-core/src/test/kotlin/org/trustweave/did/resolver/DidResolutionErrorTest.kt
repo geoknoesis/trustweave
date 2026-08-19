@@ -108,4 +108,25 @@ class DidResolutionErrorTest {
         assertNull(DidResolutionError.fromJson(null))
         assertNull(DidResolutionError.fromJson(JsonNull))
     }
+
+    @Test
+    fun `fromJson returns null for a non-primitive type instead of throwing`() {
+        val json = buildJsonObject {
+            put("type", buildJsonObject { put("nested", "object") })
+        }
+        assertNull(DidResolutionError.fromJson(json))
+    }
+
+    @Test
+    fun `fromJson omits title and detail when they are non-primitive but type is valid`() {
+        val json = buildJsonObject {
+            put("type", DidErrorType.NOT_FOUND)
+            put("title", buildJsonObject { put("nested", "object") })
+            put("detail", buildJsonObject { put("nested", "object") })
+        }
+        val error = DidResolutionError.fromJson(json)
+        assertEquals(DidErrorType.NOT_FOUND, error?.type)
+        assertEquals(DidErrorType.title(DidErrorType.NOT_FOUND), error?.title)
+        assertNull(error?.detail)
+    }
 }

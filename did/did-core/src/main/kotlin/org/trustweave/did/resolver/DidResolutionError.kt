@@ -7,7 +7,6 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
 /**
@@ -74,7 +73,7 @@ object DidErrorType {
 }
 
 /**
- * An error data structure per [RFC 9457][https://www.rfc-editor.org/rfc/rfc9457] as required by
+ * An error data structure per [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) as required by
  * DID Resolution 1.0 §4.2 / §5.2 / §11.
  *
  * @param type absolute URL identifying the error condition; see [DidErrorType]
@@ -134,26 +133,33 @@ data class DidResolutionError(
          * Parses an `error` member from a resolution-metadata JSON structure.
          *
          * Accepts both the CR object form and the legacy v0.3 bare-string form; the legacy
-         * string is preserved as [detail] so upstream diagnostics are not lost.
+         * string is preserved as [detail] so upstream diagnostics are not lost. This is a
+         * defensive parser for untrusted/heterogeneous upstream data (§11: public universal
+         * resolvers still emit legacy strings, and third-party drivers may emit malformed
+         * shapes) — malformed members degrade to `null`/absent rather than throwing, so a
+         * single bad field never crashes the caller.
          */
         fun fromJson(element: JsonElement?): DidResolutionError? = when {
             element == null || element is JsonNull -> null
-            element is JsonPrimitive && element.isString ->
+            element is JsonPrimitive && element.isString -> {
+                val type = DidErrorType.fromLegacyCode(element.content)
                 DidResolutionError(
-                    type = DidErrorType.fromLegacyCode(element.content),
-                    title = DidErrorType.title(DidErrorType.fromLegacyCode(element.content)),
+                    type = type,
+                    title = DidErrorType.title(type),
                     detail = element.content
                 )
+            }
             element is JsonObject -> {
-                val type = element["type"]?.jsonPrimitive?.contentOrNull
-                if (type == null) {
+                val typeValue = (element["type"] as? JsonPrimitive)?.contentOrNull
+                if (typeValue == null) {
                     null
                 } else {
+                    val type = DidErrorType.fromLegacyCode(typeValue)
                     DidResolutionError(
-                        type = DidErrorType.fromLegacyCode(type),
-                        title = element["title"]?.jsonPrimitive?.contentOrNull
-                            ?: DidErrorType.title(DidErrorType.fromLegacyCode(type)),
-                        detail = element["detail"]?.jsonPrimitive?.contentOrNull
+                        type = type,
+                        title = (element["title"] as? JsonPrimitive)?.contentOrNull
+                            ?: DidErrorType.title(type),
+                        detail = (element["detail"] as? JsonPrimitive)?.contentOrNull
                     )
                 }
             }

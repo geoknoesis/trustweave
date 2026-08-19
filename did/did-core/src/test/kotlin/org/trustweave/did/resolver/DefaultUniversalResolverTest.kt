@@ -1,11 +1,13 @@
 package org.trustweave.did.resolver
 
+import com.sun.net.httpserver.HttpServer
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.trustweave.did.exception.DidException
 import org.trustweave.did.identifiers.Did
+import java.net.InetSocketAddress
 import kotlin.test.*
 
 /**
@@ -239,6 +241,36 @@ class DefaultUniversalResolverTest {
     fun `test resolver baseUrl property`() {
         val resolver = DefaultUniversalResolver("https://dev.uniresolver.io")
         assertEquals("https://dev.uniresolver.io", resolver.baseUrl)
+    }
+
+    // ─── Composed effect: a bare errorMessage on a failure response still surfaces as the
+    // reason, even though DidResolutionMetadata.fromMap (fix round 2) no longer synthesizes an
+    // error object for it. This exercises the actual resolveDid() HTTP path end-to-end, which
+    // round 1's tests never did — that gap is why the round-1 regression slipped through. ───
+
+    @Test
+    fun `resolveDid surfaces a bare errorMessage as the NotFound reason`() = runBlocking {
+        val server = HttpServer.create(InetSocketAddress("localhost", 0), 0)
+        try {
+            val body = """{"didResolutionMetadata":{"errorMessage":"DID did:x:y does not exist"}}"""
+                .toByteArray(Charsets.UTF_8)
+            server.createContext("/1.0/identifiers/") { exchange ->
+                exchange.responseHeaders.add("Content-Type", "application/json")
+                exchange.sendResponseHeaders(200, body.size.toLong())
+                exchange.responseBody.use { it.write(body) }
+            }
+            server.start()
+            val baseUrl = "http://localhost:${server.address.port}"
+            val resolver = DefaultUniversalResolver(baseUrl = baseUrl, timeout = 5)
+
+            val result = resolver.resolveDid("did:example:missing")
+
+            assertTrue(result is DidResolutionResult.Failure.NotFound)
+            assertEquals("DID did:x:y does not exist", (result as DidResolutionResult.Failure.NotFound).reason)
+            assertNull(result.resolutionMetadata.error, "no structured error code was in the response")
+        } finally {
+            server.stop(0)
+        }
     }
 }
 

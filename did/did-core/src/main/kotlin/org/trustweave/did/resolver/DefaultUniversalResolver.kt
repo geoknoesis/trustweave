@@ -276,8 +276,15 @@ class DefaultUniversalResolver(
                     } else {
                         // Prefer the human-readable detail/title over the raw §11 type URL —
                         // `error?.type` is a machine identifier (e.g.
-                        // "https://www.w3.org/ns/did#NOT_FOUND"), not failure text.
+                        // "https://www.w3.org/ns/did#NOT_FOUND"), not failure text. Fall back to
+                        // a bare errorMessage straight from the raw map: this branch is already
+                        // committed to a failure (document == null), so — unlike
+                        // DidResolutionMetadata.fromMap, which must stay silent on a bare
+                        // errorMessage to avoid mislabeling a successful resolution — it is safe
+                        // here to treat an upstream errorMessage with no structured error as the
+                        // failure reason.
                         val upstreamReason = resolutionMetadata.error?.detail
+                            ?: (resolutionMetadataMap["errorMessage"] as? String)
                             ?: resolutionMetadata.error?.title
                             ?: "DID document not found in response"
                         DidResolutionResult.Failure.NotFound(

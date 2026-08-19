@@ -99,10 +99,15 @@ class DidResolutionMetadataTest {
     }
 
     @Test
-    fun `fromMap upgrades a standalone errorMessage with no error member to an internal error`() {
+    fun `fromMap leaves error null for a standalone errorMessage with no error member`() {
+        // fromMap is shared and context-free: DefaultUniversalResolver calls it unconditionally
+        // before it knows whether the response is a success or a failure, so synthesizing an
+        // error object here (even INTERNAL_ERROR) would staple a 500-mapped error onto what
+        // might be a successful resolution that merely carries a stray warning. A caller that
+        // is already committed to a failure is responsible for reading a bare errorMessage
+        // itself (see DefaultUniversalResolverTest's composed-effect test).
         val metadata = DidResolutionMetadata.fromMap(mapOf("errorMessage" to "driver exploded"))
-        assertEquals(DidErrorType.INTERNAL_ERROR, metadata.error?.type)
-        assertEquals("driver exploded", metadata.error?.detail)
+        assertNull(metadata.error)
     }
 
     // ─── Round-trip ───

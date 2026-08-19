@@ -183,4 +183,17 @@ class FallbackDidResolverTest {
         val metadata = (result as DidResolutionResult.Failure.ResolutionError).resolutionMetadata
         assertEquals(DidErrorType.INVALID_DID, metadata.error?.type)
     }
+
+    @Test
+    fun `asDidResolver surfaces METHOD_NOT_SUPPORTED for DidException DidMethodNotRegistered`() = runBlocking {
+        val did = Did("did:test:example")
+        val exception = DidException.DidMethodNotRegistered(method = "test", availableMethods = listOf("key"))
+        val resolver = throwingUniversalResolver(exception).asDidResolver()
+
+        val result = resolver.resolve(did)
+
+        assertTrue(result is DidResolutionResult.Failure.ResolutionError)
+        val metadata = (result as DidResolutionResult.Failure.ResolutionError).resolutionMetadata
+        assertEquals(DidErrorType.METHOD_NOT_SUPPORTED, metadata.error?.type)
+    }
 }

@@ -89,4 +89,22 @@ class RegistryBasedResolverTest {
         assertEquals(DidErrorType.INTERNAL_ERROR, metadata.error?.type)
         assertEquals(500, metadata.error?.httpStatus)
     }
+
+    @Test
+    fun `DidException DidMethodNotRegistered surfaces METHOD_NOT_SUPPORTED`() = runBlocking {
+        val did = Did("did:test:example")
+        val registry = DidMethodRegistry()
+        registry.register(
+            throwingMethod(
+                "test",
+                DidException.DidMethodNotRegistered(method = "test", availableMethods = listOf("key"))
+            )
+        )
+
+        val result = RegistryBasedResolver(registry).resolve(did)
+
+        assertTrue(result is DidResolutionResult.Failure.ResolutionError)
+        val metadata = (result as DidResolutionResult.Failure.ResolutionError).resolutionMetadata
+        assertEquals(DidErrorType.METHOD_NOT_SUPPORTED, metadata.error?.type)
+    }
 }

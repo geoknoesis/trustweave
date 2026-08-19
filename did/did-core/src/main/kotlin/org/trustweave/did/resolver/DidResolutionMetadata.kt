@@ -99,11 +99,15 @@ data class DidResolutionMetadata(
         fun fromMap(map: Map<String, Any?>): DidResolutionMetadata {
             val rawError = map["error"]
             val error = when (rawError) {
-                null ->
-                    // No structured error code, but an upstream response can still carry a
-                    // bare human-readable errorMessage with no sibling error member. Treat
-                    // that as an internal error rather than dropping the text.
-                    (map["errorMessage"] as? String)?.let { DidResolutionError.internalError(it) }
+                // No structured error code at all — do not synthesize one from a bare
+                // errorMessage here. This parser is shared and context-free: it is called
+                // unconditionally by callers such as DefaultUniversalResolver before they know
+                // whether the response is a success or a failure, so stapling a synthetic
+                // INTERNAL_ERROR (HTTP 500) onto `error` here could mislabel a successful
+                // resolution that merely carries a stray warning/errorMessage. Callers that are
+                // already committed to a failure and want that sentence as their reason should
+                // read the raw errorMessage member themselves (see DefaultUniversalResolver).
+                null -> null
                 is JsonObject -> DidResolutionError.fromJson(rawError)?.let { parsed ->
                     // The CR object form may omit `detail`; a legacy response carries its
                     // human-readable text in a sibling errorMessage member instead.

@@ -1,6 +1,8 @@
 package org.trustweave.did.resolution
 
 import kotlinx.datetime.Instant
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Test
 import org.trustweave.did.resolver.DidErrorType
 import kotlin.test.assertEquals
@@ -72,5 +74,51 @@ class ResolutionOptionsTest {
         assertTrue(options.expandRelativeUrls)
         assertTrue(options.noCache)
         assertEquals("9001", options.additional["blockHeight"])
+    }
+
+    @Test
+    fun `isEmpty is false when only parseError is set`() {
+        val options = ResolutionOptions.fromQueryParameters(mapOf("versionTime" to "not-a-date"))
+        assertFalse(options.isEmpty())
+    }
+
+    @Test
+    fun `noCache and expandRelativeUrls parse case-insensitively`() {
+        val options = ResolutionOptions.fromQueryParameters(
+            mapOf("expandRelativeUrls" to "TRUE", "noCache" to "True")
+        )
+        assertTrue(options.expandRelativeUrls)
+        assertTrue(options.noCache)
+        assertNull(options.validate())
+    }
+
+    @Test
+    fun `a present but unrecognised boolean yields INVALID_OPTIONS`() {
+        val unrecognisedExpand = ResolutionOptions.fromQueryParameters(mapOf("expandRelativeUrls" to "1"))
+        assertEquals(DidErrorType.INVALID_OPTIONS, unrecognisedExpand.validate()?.type)
+
+        val unrecognisedNoCache = ResolutionOptions.fromQueryParameters(mapOf("noCache" to "yes"))
+        assertEquals(DidErrorType.INVALID_OPTIONS, unrecognisedNoCache.validate()?.type)
+    }
+
+    @Test
+    fun `fromJson with a malformed versionTime is rejected without throwing`() {
+        val json = buildJsonObject { put("versionTime", "not-a-date") }
+        val options = ResolutionOptions.fromJson(json)
+        assertEquals(DidErrorType.INVALID_OPTIONS, options.validate()?.type)
+    }
+
+    @Test
+    fun `fromJson round-trips a well-formed options object`() {
+        val json = buildJsonObject {
+            put("accept", "application/did")
+            put("expandRelativeUrls", "true")
+            put("versionId", "3")
+        }
+        val options = ResolutionOptions.fromJson(json)
+        assertEquals("application/did", options.accept)
+        assertTrue(options.expandRelativeUrls)
+        assertEquals("3", options.versionId)
+        assertNull(options.validate())
     }
 }

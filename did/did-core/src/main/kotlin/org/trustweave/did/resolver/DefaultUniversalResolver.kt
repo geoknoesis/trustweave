@@ -8,6 +8,7 @@ import org.trustweave.did.model.DidService
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.parser.DidDocumentJsonParser
 import org.trustweave.did.exception.DidException
+import org.trustweave.did.representation.DidMediaTypes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.withContext
@@ -204,7 +205,7 @@ class DefaultUniversalResolver(
         val requestBuilder = HttpRequest.newBuilder()
             .uri(uri)
             .timeout(Duration.ofSeconds(timeout.toLong()))
-            .header("Accept", "application/json")
+            .header("Accept", DidMediaTypes.DID_RESOLUTION)
 
         // Use protocol adapter to configure authentication
         protocolAdapter.configureAuth(requestBuilder, apiKey)
@@ -305,6 +306,28 @@ class DefaultUniversalResolver(
                         )
                     )
                 }
+                410 -> {
+                    // §4.4/§12.1: 410 means the DID exists but has been deactivated. This is not
+                    // an error — no error object is attached to the resolution metadata. The body
+                    // may carry the upstream didDocumentMetadata; parse it best-effort but always
+                    // force deactivated = true regardless of what (if anything) parsed.
+                    val documentMetadata = try {
+                        val body = String(bodyStream.readNBytes(MAX_RESPONSE_BYTES), Charsets.UTF_8)
+                        parseJsonResponse(body)
+                            ?.let { protocolAdapter.extractDocumentMetadata(it) }
+                            ?.let { parseDidDocumentMetadata(it) }
+                    } catch (_: kotlinx.serialization.SerializationException) {
+                        null
+                    } ?: DidDocumentMetadata(deactivated = true)
+
+                    DidResolutionResult.Deactivated(
+                        did = Did(did),
+                        documentMetadata = documentMetadata.copy(deactivated = true),
+                        resolutionMetadata = DidResolutionMetadata(
+                            properties = mapOf("provider" to protocolAdapter.providerName)
+                        )
+                    )
+                }
                 else -> {
                     val statusCode = response.statusCode()
                     // Throw for retryable status codes so executeWithRetry can catch and retry
@@ -312,19 +335,40 @@ class DefaultUniversalResolver(
                     if (statusCode in retryConfig.retryableStatusCodes) {
                         throw IOException("Retryable HTTP error: $statusCode")
                     }
-                    // Non-retryable errors (4xx except 404) return immediately; use{} closes the stream
-                    DidResolutionResult.Failure.ResolutionError(
-                        did = Did(did),
-                        reason = "HTTP $statusCode",
-                        cause = null,
-                        resolutionMetadata = DidResolutionMetadata(
-                            error = DidResolutionError.internalError("HTTP $statusCode"),
-                            properties = mapOf(
-                                "statusCode" to statusCode.toString(),
-                                "provider" to protocolAdapter.providerName
+                    // Non-retryable errors map through the §12.1 HTTP status table to the
+                    // matching error type; unmapped statuses fall back to INTERNAL_ERROR.
+                    val errorType = when (statusCode) {
+                        400 -> DidErrorType.INVALID_DID
+                        406 -> DidErrorType.REPRESENTATION_NOT_SUPPORTED
+                        501 -> DidErrorType.METHOD_NOT_SUPPORTED
+                        else -> DidErrorType.INTERNAL_ERROR
+                    }
+                    val detail = "Upstream resolver returned HTTP $statusCode"
+                    if (errorType == DidErrorType.METHOD_NOT_SUPPORTED) {
+                        DidResolutionResult.Failure.MethodNotRegistered(
+                            method = Did(did).method,
+                            resolutionMetadata = DidResolutionMetadata(
+                                error = DidResolutionError.methodNotSupported(detail),
+                                properties = mapOf(
+                                    "statusCode" to statusCode.toString(),
+                                    "provider" to protocolAdapter.providerName
+                                )
                             )
                         )
-                    )
+                    } else {
+                        DidResolutionResult.Failure.ResolutionError(
+                            did = Did(did),
+                            reason = detail,
+                            cause = null,
+                            resolutionMetadata = DidResolutionMetadata(
+                                error = DidResolutionError.of(errorType, detail),
+                                properties = mapOf(
+                                    "statusCode" to statusCode.toString(),
+                                    "provider" to protocolAdapter.providerName
+                                )
+                            )
+                        )
+                    }
                 }
             }
         }
@@ -456,6 +500,7 @@ class DefaultUniversalResolver(
         val nextUpdate = metadataJson["nextUpdate"]?.jsonPrimitive?.content?.let {
             try { Instant.parse(it) } catch (e: Exception) { null }
         }
+        val nextVersionId = metadataJson["nextVersionId"]?.jsonPrimitive?.content
         val canonicalId = metadataJson["canonicalId"]?.jsonPrimitive?.content?.let { Did(it) }
         val equivalentId = metadataJson["equivalentId"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content?.let { Did(it) } } ?: emptyList()
 
@@ -465,6 +510,7 @@ class DefaultUniversalResolver(
             deactivated = deactivated,
             versionId = versionId,
             nextUpdate = nextUpdate,
+            nextVersionId = nextVersionId,
             canonicalId = canonicalId,
             equivalentId = equivalentId
         )

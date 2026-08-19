@@ -77,24 +77,7 @@ class RegistryBasedResolver(
             }
 
             // Use type-safe resolveDid(Did) method
-            val result = method.resolveDid(did)
-            
-            // Convert map-based metadata to structured metadata if needed
-            return when (result) {
-                is DidResolutionResult.Success -> {
-                    if (result.resolutionMetadataMap.isNotEmpty() && 
-                        result.resolutionMetadata.contentType == "application/did+ld+json" &&
-                        result.resolutionMetadata.error == null) {
-                        // Convert from map if needed (backward compatibility)
-                        result.copy(
-                            resolutionMetadata = DidResolutionMetadata.fromMap(result.resolutionMetadataMap)
-                        )
-                    } else {
-                        result
-                    }
-                }
-                else -> result
-            }
+            return method.resolveDid(did)
         } catch (e: DidException) {
             // Convert DidException to resolution result
             val properties = mutableMapOf<String, String>(

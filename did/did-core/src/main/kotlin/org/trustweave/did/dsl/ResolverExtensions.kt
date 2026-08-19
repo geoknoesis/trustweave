@@ -39,6 +39,18 @@ suspend fun DidResolver.resolveOrThrow(did: Did): DidDocument {
             reason = result.reason,
             cause = result.cause
         )
+        is DidResolutionResult.Failure.OptionsError -> throw DidException.DidResolutionFailed(
+            did = result.did ?: did,
+            reason = result.reason
+        )
+        // §4.4: a deactivated DID resolves to no document. resolveOrThrow's whole contract is
+        // "return the document or fail", and callers of resolveOrThrow may use the document for
+        // verification/authorization, so a deactivated DID must fail here rather than silently
+        // being treated as some other kind of missing document.
+        is DidResolutionResult.Deactivated -> throw DidException.DidResolutionFailed(
+            did = result.did,
+            reason = "DID is deactivated"
+        )
     }
 }
 

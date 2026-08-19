@@ -5,157 +5,92 @@ import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
 
 /**
- * Result of DID resolution following W3C DID Core specification.
+ * Result of the DID resolution function per DID Resolution 1.0 §4.
  *
- * Sealed class for exhaustive handling of resolution outcomes.
- * Provides type-safe result handling with detailed error information.
+ * The three outputs of `resolve` — `didDocument`, `didDocumentMetadata` and
+ * `didResolutionMetadata` — are modelled as a sealed hierarchy so that the spec's invariants
+ * hold by construction:
+ *
+ * - [Success] is the only variant carrying a document.
+ * - [Deactivated] carries no document and forces `deactivated = true` (§4.4).
+ * - [Failure] carries no document, empty document metadata, and a non-null RFC 9457 error (§4).
  *
  * **Example Usage:**
  * ```kotlin
- * when (val result = resolver.resolveDid(did)) {
- *     is DidResolutionResult.Success -> {
- *         println("Resolved: ${result.document.id}")
- *     }
- *     is DidResolutionResult.Failure.NotFound -> {
- *         println("DID not found: ${result.did}")
- *     }
- *     is DidResolutionResult.Failure.InvalidFormat -> {
- *         println("Invalid format: ${result.reason}")
- *     }
- *     is DidResolutionResult.Failure.MethodNotRegistered -> {
- *         println("Method not registered: ${result.method}")
- *     }
+ * when (val result = resolver.resolve(did)) {
+ *     is DidResolutionResult.Success -> println(result.document.id)
+ *     is DidResolutionResult.Deactivated -> println("deactivated: ${result.did}")
+ *     is DidResolutionResult.Failure -> println(result.error?.type)
  * }
  * ```
  */
 sealed class DidResolutionResult {
+
     /**
-     * DID resolution succeeded.
+     * Resolution succeeded.
      *
-     * @param document The resolved DID Document
-     * @param documentMetadata Metadata about the document (e.g., created, updated timestamps)
-     * @param resolutionMetadata Additional metadata about the resolution process
+     * @param document the resolved DID document; its `id` equals the DID that was resolved
+     * @param documentMetadata §4.3 document metadata
+     * @param resolutionMetadata §4.2 resolution metadata
      */
     data class Success(
         val document: DidDocument,
         val documentMetadata: DidDocumentMetadata = DidDocumentMetadata(),
         val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata()
+    ) : DidResolutionResult()
+
+    /**
+     * The DID exists but has been deactivated (§4.4).
+     *
+     * Per the spec the resolver returns no document in this case; the caller learns of the
+     * deactivation from [documentMetadata]. This is not an error — the §12.1 binding maps it
+     * to HTTP 410, not to a 4xx error response.
+     */
+    data class Deactivated(
+        val did: Did,
+        val documentMetadata: DidDocumentMetadata = DidDocumentMetadata(deactivated = true),
+        val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata()
     ) : DidResolutionResult() {
-        /**
-         * Backward compatibility: access resolution metadata as map.
-         */
-        val resolutionMetadataMap: Map<String, Any?> get() = resolutionMetadata.toMap()
-        
-        /**
-         * Constructor for backward compatibility with map-based metadata.
-         */
-        constructor(
-            document: DidDocument,
-            documentMetadata: DidDocumentMetadata,
-            resolutionMetadataMap: Map<String, Any?>
-        ) : this(
-            document = document,
-            documentMetadata = documentMetadata,
-            resolutionMetadata = DidResolutionMetadata.fromMap(resolutionMetadataMap)
-        )
+        init {
+            require(documentMetadata.deactivated) {
+                "Deactivated result requires documentMetadata.deactivated = true (§4.4)"
+            }
+        }
     }
 
     /**
-     * DID resolution failed.
+     * Resolution failed. Every variant carries a non-null [DidResolutionMetadata.error].
      */
     sealed class Failure : DidResolutionResult() {
-        /**
-         * DID was not found.
-         *
-         * @param did Type-safe DID identifier that was not found
-         * @param reason Optional reason for the failure
-         * @param resolutionMetadata Additional metadata about the resolution attempt
-         */
+
+        /** §4.4: the DID does not exist. */
         data class NotFound(
             val did: Did,
             val reason: String? = null,
             val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata(
-                error = DidResolutionError.notFound(reason ?: "DID not found")
+                error = DidResolutionError.notFound(reason ?: "DID not found: ${did.value}")
             )
-        ) : Failure() {
-            /**
-             * Backward compatibility constructor.
-             */
-            constructor(
-                did: Did,
-                reason: String?,
-                resolutionMetadataMap: Map<String, Any?>
-            ) : this(
-                did = did,
-                reason = reason,
-                resolutionMetadata = DidResolutionMetadata.fromMap(resolutionMetadataMap)
-            )
-            
-            val resolutionMetadataMap: Map<String, Any?> get() = resolutionMetadata.toMap()
-        }
+        ) : Failure()
 
-        /**
-         * DID format is invalid.
-         *
-         * @param did The invalid DID string (before validation)
-         * @param reason Reason why the format is invalid
-         * @param resolutionMetadata Additional metadata
-         */
+        /** §4.4 step 1: the input does not conform to the DID syntax. */
         data class InvalidFormat(
             val did: String,
             val reason: String,
             val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata(
                 error = DidResolutionError.invalidDid(reason)
             )
-        ) : Failure() {
-            constructor(
-                did: String,
-                reason: String,
-                resolutionMetadataMap: Map<String, Any?>
-            ) : this(
-                did = did,
-                reason = reason,
-                resolutionMetadata = DidResolutionMetadata.fromMap(resolutionMetadataMap)
-            )
-            
-            val resolutionMetadataMap: Map<String, Any?> get() = resolutionMetadata.toMap()
-        }
+        ) : Failure()
 
-        /**
-         * DID method is not registered.
-         *
-         * @param method The method name that is not registered
-         * @param availableMethods List of available method names
-         * @param resolutionMetadata Additional metadata
-         */
+        /** §4.4 step 2: the DID method is not supported by this resolver. */
         data class MethodNotRegistered(
             val method: String,
             val availableMethods: List<String> = emptyList(),
             val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata(
                 error = DidResolutionError.methodNotSupported("DID method '$method' is not registered")
             )
-        ) : Failure() {
-            constructor(
-                method: String,
-                availableMethods: List<String>,
-                resolutionMetadataMap: Map<String, Any?>
-            ) : this(
-                method = method,
-                availableMethods = availableMethods,
-                resolutionMetadata = DidResolutionMetadata.fromMap(resolutionMetadataMap)
-            )
-            
-            val resolutionMetadataMap: Map<String, Any?> get() = resolutionMetadata.toMap()
-        }
+        ) : Failure()
 
-        /**
-         * Resolution failed due to an unexpected error.
-         *
-         * @param did Type-safe DID identifier that failed to resolve
-         * @param reason Error reason
-         * @param cause Optional underlying exception
-         * @param resolutionMetadata Additional metadata
-         */
+        /** §4.4 final step: an unexpected error during resolution. */
         data class ResolutionError(
             val did: Did,
             val reason: String,
@@ -163,21 +98,21 @@ sealed class DidResolutionResult {
             val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata(
                 error = DidResolutionError.internalError(reason)
             )
-        ) : Failure() {
-            constructor(
-                did: Did,
-                reason: String,
-                cause: Throwable?,
-                resolutionMetadataMap: Map<String, Any?>
-            ) : this(
-                did = did,
-                reason = reason,
-                cause = cause,
-                resolutionMetadata = DidResolutionMetadata.fromMap(resolutionMetadataMap)
+        ) : Failure()
+
+        /**
+         * §4.4 steps 3 and 4: a resolution option is unsupported or invalid.
+         *
+         * @param errorType [DidErrorType.FEATURE_NOT_SUPPORTED] (default) or
+         *   [DidErrorType.INVALID_OPTIONS]
+         */
+        data class OptionsError(
+            val did: Did?,
+            val reason: String,
+            val errorType: String = DidErrorType.FEATURE_NOT_SUPPORTED,
+            val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata(
+                error = DidResolutionError.of(errorType, reason)
             )
-            
-            val resolutionMetadataMap: Map<String, Any?> get() = resolutionMetadata.toMap()
-        }
+        ) : Failure()
     }
 }
-

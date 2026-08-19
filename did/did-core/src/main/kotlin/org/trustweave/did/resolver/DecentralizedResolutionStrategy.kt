@@ -100,7 +100,12 @@ class ResolutionFallbackStrategy(
         for (resolver in resolvers) {
             try {
                 val result = resolver.resolve(did)
-                if (result is DidResolutionResult.Success) {
+                // A deactivated DID (§4.4) is an authoritative, terminal answer from this
+                // resolver, not an absence of information — surface it as-is (like Success)
+                // instead of folding it into "errors and retry", so a stale or
+                // less-authoritative fallback resolver cannot silently resurrect a deactivated
+                // DID by returning an older document.
+                if (result is DidResolutionResult.Success || result is DidResolutionResult.Deactivated) {
                     return result
                 } else {
                     errors.add(
@@ -110,6 +115,7 @@ class ResolutionFallbackStrategy(
                                 is DidResolutionResult.Failure.InvalidFormat -> "Invalid format: ${it.reason}"
                                 is DidResolutionResult.Failure.MethodNotRegistered -> "Method not registered: ${it.method}"
                                 is DidResolutionResult.Failure.ResolutionError -> "Resolution error: ${it.reason}"
+                                is DidResolutionResult.Failure.OptionsError -> "Options error: ${it.reason}"
                             }
                         } ?: "Unknown error"
                     )

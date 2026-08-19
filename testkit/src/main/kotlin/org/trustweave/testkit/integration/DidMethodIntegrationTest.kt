@@ -136,16 +136,19 @@ abstract class DidMethodIntegrationTest : BaseIntegrationTest() {
         // - document with deactivated flag
         val resolutionMetadata = when (resolution) {
             is DidResolutionResult.Success -> resolution.resolutionMetadata
+            is DidResolutionResult.Deactivated -> resolution.resolutionMetadata
             is DidResolutionResult.Failure.NotFound -> resolution.resolutionMetadata
             is DidResolutionResult.Failure.InvalidFormat -> resolution.resolutionMetadata
             is DidResolutionResult.Failure.MethodNotRegistered -> resolution.resolutionMetadata
             is DidResolutionResult.Failure.ResolutionError -> resolution.resolutionMetadata
+            is DidResolutionResult.Failure.OptionsError -> resolution.resolutionMetadata
         }
         val resolvedDocument = when (resolution) {
             is DidResolutionResult.Success -> resolution.document
             else -> null
         }
-        val isDeactivated = resolutionMetadata.properties["deactivated"] == "true" ||
+        val isDeactivated = resolution is DidResolutionResult.Deactivated ||
+                           resolutionMetadata.properties["deactivated"] == "true" ||
                            resolvedDocument == null
 
         kotlin.test.assertTrue(

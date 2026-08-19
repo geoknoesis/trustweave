@@ -184,6 +184,27 @@ class PolygonDidMethod(
                             )
                         )
                     }
+                    is DidResolutionResult.Failure.OptionsError -> {
+                        DidResolutionResult.Failure.OptionsError(
+                            did = did,
+                            reason = ethrResult.reason,
+                            errorType = ethrResult.errorType,
+                            resolutionMetadata = ethrResult.resolutionMetadata.copy(
+                                pattern = method,
+                                properties = ethrResult.resolutionMetadata.properties + mapOf("method" to method)
+                            )
+                        )
+                    }
+                    is DidResolutionResult.Deactivated -> {
+                        DidResolutionResult.Deactivated(
+                            did = did,
+                            documentMetadata = ethrResult.documentMetadata,
+                            resolutionMetadata = ethrResult.resolutionMetadata.copy(
+                                pattern = method,
+                                properties = ethrResult.resolutionMetadata.properties + mapOf("method" to method)
+                            )
+                        )
+                    }
                 }
             } catch (e: Exception) {
                 DidMethodUtils.createErrorResolutionResult(

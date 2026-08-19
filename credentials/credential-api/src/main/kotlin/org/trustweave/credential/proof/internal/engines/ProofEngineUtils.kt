@@ -235,7 +235,14 @@ internal object ProofEngineUtils {
                     logger.debug("Successfully resolved DID: verificationMethodsCount={}", resolutionResult.document.verificationMethod.size)
                     resolutionResult.document
                 }
-                else -> {
+                is DidResolutionResult.Deactivated -> {
+                    // §4.4: a deactivated DID resolves to no document. Treat as a resolution
+                    // failure rather than "document missing" — a revoked identity must never be
+                    // usable to satisfy a proof-purpose check.
+                    logger.warn("Issuer DID is deactivated; refusing to resolve verification method: issuerIri={}", issuerIri.value)
+                    return null
+                }
+                is DidResolutionResult.Failure -> {
                     logger.warn("Failed to resolve DID: issuerIri={}, resolutionResult={}", issuerIri.value, resolutionResult.javaClass.simpleName)
                     return null
                 }

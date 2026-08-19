@@ -10,6 +10,7 @@ import org.trustweave.did.model.DidService
 import org.trustweave.did.model.serviceEndpointFromJsonElement
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolutionMetadata
+import org.trustweave.did.resolver.DidResolutionError
 import org.trustweave.did.resolver.UniversalResolver
 import org.trustweave.godiddy.GodiddyClient
 import org.trustweave.godiddy.models.GodiddyResolutionResponse
@@ -55,8 +56,7 @@ class GodiddyResolver(
                     did = Did(did),
                     reason = "notFound",
                     resolutionMetadata = DidResolutionMetadata(
-                        error = "notFound",
-                        errorMessage = "notFound",
+                        error = DidResolutionError.notFound("notFound"),
                         properties = mapOf("provider" to "godiddy")
                     )
                 )

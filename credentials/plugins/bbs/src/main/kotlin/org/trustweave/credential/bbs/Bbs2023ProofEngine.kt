@@ -457,6 +457,10 @@ class Bbs2023ProofEngine(
 
         val document = when (val resolution = resolver.resolve(issuerDid)) {
             is DidResolutionResult.Success -> resolution.document
+            is DidResolutionResult.Deactivated -> return IssuerKeyResolution.IssuerFailure(
+                "Issuer DID '${issuerDid.value}' is deactivated; refusing to verify against a " +
+                    "revoked identity.",
+            )
             is DidResolutionResult.Failure -> return IssuerKeyResolution.IssuerFailure(
                 "Failed to resolve issuer DID '${issuerDid.value}': $resolution",
             )

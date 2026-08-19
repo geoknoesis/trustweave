@@ -8,6 +8,7 @@ import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolutionMetadata
+import org.trustweave.did.resolver.DidResolutionError
 import org.trustweave.kms.Algorithm
 import org.trustweave.kms.KeyManagementService
 import kotlinx.datetime.Instant
@@ -106,8 +107,7 @@ class DidKeyMockMethod(
                 did = did,
                 reason = "DID not found in mock registry",
                 resolutionMetadata = DidResolutionMetadata(
-                    error = "notFound",
-                    errorMessage = "DID not found in mock registry",
+                    error = DidResolutionError.notFound("DID not found in mock registry"),
                     pattern = method,
                     properties = mapOf("mock" to "true")
                 )

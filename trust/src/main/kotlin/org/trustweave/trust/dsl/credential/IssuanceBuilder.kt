@@ -275,13 +275,17 @@ class IssuanceBuilder(
                         reason = "Failed to resolve issuer DID '${resolvedIssuerDid.value}': $errorMessage"
                     )
                 }
-                else -> return@withContext IssuanceResult.Failure.InvalidRequest(
-                    field = "issuerDid",
-                    reason = "Unexpected resolution result for '${resolvedIssuerDid.value}'"
-                )
+                is org.trustweave.did.resolver.DidResolutionResult.Deactivated -> {
+                    // §4.4: a deactivated DID resolves to no document. A revoked issuer
+                    // identity must not be usable to auto-extract a signing key.
+                    return@withContext IssuanceResult.Failure.InvalidRequest(
+                        field = "issuerDid",
+                        reason = "Issuer DID '${resolvedIssuerDid.value}' is deactivated"
+                    )
+                }
             }
         }
-        
+
         // Build verification method ID — normalize resolvedKeyId to just the fragment first so
         // that a full "did:example:abc#key-1" value and a bare "key-1" value both produce the
         // same result and there is no double-# ambiguity.

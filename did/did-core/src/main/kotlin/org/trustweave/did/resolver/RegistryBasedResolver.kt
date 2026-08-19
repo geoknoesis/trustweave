@@ -93,8 +93,10 @@ class RegistryBasedResolver(
             )
         }
 
-        // §4.4 step 3 — is the requested representation supported?
-        val contentType = options.accept?.let { accept ->
+        // §4.4 step 3 — is the requested representation supported? `contentType` is left null
+        // when the caller did not request a representation, so a method's own contentType is
+        // preserved rather than being clobbered with the application/did default below.
+        val contentType: String? = options.accept?.let { accept ->
             if (!DidMediaTypes.isSupportedDocumentType(accept)) {
                 return DidResolutionResult.Failure.OptionsError(
                     did = did,
@@ -103,7 +105,7 @@ class RegistryBasedResolver(
                 )
             }
             DidMediaTypes.normalize(accept)
-        } ?: DidMediaTypes.DID
+        }
 
         // §4.4 step 5 — execute the method's Resolve operation.
         val result = try {
@@ -147,6 +149,17 @@ class RegistryBasedResolver(
 
         if (result !is DidResolutionResult.Success) return result
 
+        // §4.4 — a deactivated DID returns no document. Checked before the id-integrity check
+        // below so a tombstone document — which a method may leave minimal — is still reported
+        // as Deactivated/410 rather than misclassified as INVALID_DID_DOCUMENT.
+        if (result.documentMetadata.deactivated) {
+            return DidResolutionResult.Deactivated(
+                did = did,
+                documentMetadata = result.documentMetadata,
+                resolutionMetadata = result.resolutionMetadata.withContentType(contentType)
+            )
+        }
+
         // §4 — the resolved document's `id` MUST equal the DID that was resolved.
         if (result.document.id != did) {
             return DidResolutionResult.Failure.ResolutionError(
@@ -162,24 +175,19 @@ class RegistryBasedResolver(
             )
         }
 
-        // §4.4 — a deactivated DID returns no document.
-        if (result.documentMetadata.deactivated) {
-            return DidResolutionResult.Deactivated(
-                did = did,
-                documentMetadata = result.documentMetadata,
-                resolutionMetadata = result.resolutionMetadata.copy(contentType = contentType)
-            )
-        }
-
         // §4.4 — expandRelativeUrls post-processing.
         val document =
             if (options.expandRelativeUrls) result.document.expandRelativeDidUrls() else result.document
 
         return result.copy(
             document = document,
-            resolutionMetadata = result.resolutionMetadata.copy(contentType = contentType)
+            resolutionMetadata = result.resolutionMetadata.withContentType(contentType)
         )
     }
+
+    /** Overwrites `contentType` only when the caller explicitly requested a representation. */
+    private fun DidResolutionMetadata.withContentType(contentType: String?): DidResolutionMetadata =
+        if (contentType != null) copy(contentType = contentType) else this
 }
 
 /**

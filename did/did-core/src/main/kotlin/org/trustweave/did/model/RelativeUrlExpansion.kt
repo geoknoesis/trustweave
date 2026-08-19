@@ -7,8 +7,9 @@ package org.trustweave.did.model
  * Verification methods and verification relationships are modelled as
  * [org.trustweave.did.identifiers.VerificationMethodId], which always renders an absolute DID URL,
  * so only [DidService.id] can be relative. A value that already carries a URI scheme is left
- * untouched; a leading `#` is appended to the document `id`; anything else is treated as a
- * relative path reference.
+ * untouched; a leading `#` or `?` is appended to the document `id` per RFC 3986 §5.3 (no inserted
+ * separator, since both are already valid continuations of the base URI); anything else is
+ * treated as a relative path reference.
  *
  * Returns this document unchanged (same instance) when there is nothing to expand.
  */

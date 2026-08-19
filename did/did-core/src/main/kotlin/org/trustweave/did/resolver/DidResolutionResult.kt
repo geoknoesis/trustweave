@@ -101,10 +101,11 @@ sealed class DidResolutionResult {
         ) : Failure()
 
         /**
-         * §4.4 steps 3 and 4: a resolution option is unsupported or invalid.
+         * §4.4 steps 3 and 4: a resolution option is unsupported or invalid, or the requested
+         * representation is not supported.
          *
-         * @param errorType [DidErrorType.FEATURE_NOT_SUPPORTED] (default) or
-         *   [DidErrorType.INVALID_OPTIONS]
+         * @param errorType [DidErrorType.FEATURE_NOT_SUPPORTED] (default), [DidErrorType.INVALID_OPTIONS],
+         *   or [DidErrorType.REPRESENTATION_NOT_SUPPORTED]
          */
         data class OptionsError(
             val did: Did?,

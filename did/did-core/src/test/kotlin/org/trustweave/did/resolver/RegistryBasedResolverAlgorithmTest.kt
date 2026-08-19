@@ -6,6 +6,7 @@ import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.DidMethod
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
+import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.model.DidService
 import org.trustweave.did.model.ServiceEndpoint
 import org.trustweave.did.registry.DidMethodRegistry
@@ -51,6 +52,19 @@ class RegistryBasedResolverAlgorithmTest {
     }
 
     @Test
+    fun `contradictory options plus an unsupported accept still yield INVALID_OPTIONS`() = runBlocking {
+        // Pins the step-4-before-step-3 ordering: without it, the unsupported `accept` below
+        // would be reached first and report REPRESENTATION_NOT_SUPPORTED instead.
+        val resolver = resolverFor(DidDocument(id = did))
+        val options = ResolutionOptions(
+            versionId = "3",
+            versionTime = kotlinx.datetime.Instant.parse("2021-05-10T17:00:00Z"),
+            accept = "application/did+cbor"
+        )
+        assertEquals(DidErrorType.INVALID_OPTIONS, resolver.resolve(did, options).errorType)
+    }
+
+    @Test
     fun `an unsupported accept media type yields REPRESENTATION_NOT_SUPPORTED`() = runBlocking {
         val resolver = resolverFor(DidDocument(id = did))
         val result = resolver.resolve(did, ResolutionOptions(accept = "application/did+cbor"))
@@ -65,10 +79,24 @@ class RegistryBasedResolverAlgorithmTest {
     }
 
     @Test
-    fun `contentType defaults to application-did`() = runBlocking {
-        val resolver = resolverFor(DidDocument(id = did))
-        val result = resolver.resolve(did) as DidResolutionResult.Success
-        assertEquals("application/did", result.resolutionMetadata.contentType)
+    fun `without accept the method's own contentType is preserved`() = runBlocking {
+        // Deliberately returns a contentType other than the application/did default so the
+        // assertion below only holds if the resolver leaves it alone rather than overwriting it.
+        val registry = DidMethodRegistry()
+        registry.register(object : DidMethod {
+            override val method: String = "example"
+            override suspend fun createDid(options: DidCreationOptions): DidDocument = DidDocument(id = did)
+            override suspend fun resolveDid(did: Did): DidResolutionResult =
+                DidResolutionResult.Success(
+                    document = DidDocument(id = did),
+                    resolutionMetadata = DidResolutionMetadata(contentType = "application/did+cbor-vendor")
+                )
+            override suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument): DidDocument =
+                throw UnsupportedOperationException()
+            override suspend fun deactivateDid(did: Did): Boolean = true
+        })
+        val result = RegistryBasedResolver(registry).resolve(did) as DidResolutionResult.Success
+        assertEquals("application/did+cbor-vendor", result.resolutionMetadata.contentType)
     }
 
     @Test
@@ -121,5 +149,29 @@ class RegistryBasedResolverAlgorithmTest {
         val result = RegistryBasedResolver(registry).resolve(did)
         assertEquals(DidErrorType.INTERNAL_ERROR, result.errorType)
         assertTrue(result is DidResolutionResult.Failure)
+    }
+
+    @Test
+    fun `a deactivated DID returns Deactivated with no document exposed`() = runBlocking {
+        val registry = DidMethodRegistry()
+        registry.register(object : DidMethod {
+            override val method: String = "example"
+            override suspend fun createDid(options: DidCreationOptions): DidDocument = DidDocument(id = did)
+            override suspend fun resolveDid(did: Did): DidResolutionResult =
+                DidResolutionResult.Success(
+                    document = DidDocument(id = did),
+                    documentMetadata = DidDocumentMetadata(deactivated = true)
+                )
+            override suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument): DidDocument =
+                throw UnsupportedOperationException()
+            override suspend fun deactivateDid(did: Did): Boolean = true
+        })
+
+        val result = RegistryBasedResolver(registry).resolve(did)
+
+        assertTrue(result is DidResolutionResult.Deactivated)
+        // Deactivated has no `document` property at all — this is a structural guarantee, not
+        // just a runtime check, that a deactivated DID never exposes its (former) document.
+        assertTrue((result as DidResolutionResult.Deactivated).documentMetadata.deactivated)
     }
 }

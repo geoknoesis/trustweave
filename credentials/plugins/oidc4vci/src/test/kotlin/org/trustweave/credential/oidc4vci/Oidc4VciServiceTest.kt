@@ -105,7 +105,7 @@ class Oidc4VciServiceTest {
         assertNull(request.accessToken)
 
         assertFailsWith<Oidc4VciException.TokenExchangeFailed> {
-            service.issueCredential(issuerDid, holderDid, createTestCredential(), request.requestId)
+            service.issueCredential(issuerDid, holderDid, request.requestId)
         }
     }
 
@@ -189,7 +189,7 @@ class Oidc4VciServiceTest {
         )
 
         val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
-        val result = service.issueCredential(issuerDid, holderDid, createTestCredential(), request.requestId)
+        val result = service.issueCredential(issuerDid, holderDid, request.requestId)
         assertNotNull(result.credential)
 
         mockWebServer.takeRequest() // metadata
@@ -242,7 +242,7 @@ class Oidc4VciServiceTest {
         )
 
         val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
-        val result = service.issueCredential(issuerDid, holderDid, createTestCredential(), request.requestId)
+        val result = service.issueCredential(issuerDid, holderDid, request.requestId)
         assertNotNull(result.credential)
 
         mockWebServer.takeRequest() // metadata
@@ -283,7 +283,7 @@ class Oidc4VciServiceTest {
         // Must be the public typed exception — the private FreshNonceRequired signal
         // must not escape issueCredential on the second failure.
         assertFailsWith<Oidc4VciException.CredentialRequestFailed> {
-            service.issueCredential(issuerDid, holderDid, createTestCredential(), request.requestId)
+            service.issueCredential(issuerDid, holderDid, request.requestId)
         }
         assertEquals(4, mockWebServer.requestCount, "Exactly one retry: metadata + token + 2 credential calls")
     }
@@ -315,7 +315,7 @@ class Oidc4VciServiceTest {
 
         val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
         assertFailsWith<Oidc4VciException.CredentialRequestFailed> {
-            service.issueCredential(issuerDid, holderDid, createTestCredential(), request.requestId)
+            service.issueCredential(issuerDid, holderDid, request.requestId)
         }
         assertEquals(3, mockWebServer.requestCount, "No retry: metadata + token + a single credential call")
     }

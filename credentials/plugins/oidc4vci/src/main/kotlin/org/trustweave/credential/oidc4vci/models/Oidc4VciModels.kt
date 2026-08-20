@@ -62,6 +62,16 @@ data class Oidc4VciIssueResult(
 data class DeferredCredentialRequest(
     val transactionId: String,
     val accessToken: String,
+    /**
+     * Issuer DID the deferred credential is verified against. Required once the issuer
+     * actually returns a credential - polling fails closed without it.
+     */
+    val issuerDid: String? = null,
+    /**
+     * Holder DID the deferred credential must be bound to. Required once the issuer
+     * actually returns a credential - polling fails closed without it.
+     */
+    val holderDid: String? = null,
 )
 
 /**

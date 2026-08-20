@@ -2,10 +2,17 @@ package org.trustweave.credential.oidc4vci
 
 import org.trustweave.core.identifiers.KeyId
 import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.credential.CredentialService
+import org.trustweave.credential.credentialService
 import org.trustweave.credential.exchange.exception.ExchangeException
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.oidc4vci.exception.Oidc4VciException
 import org.trustweave.credential.oidc4vci.models.*
+import org.trustweave.credential.requests.RevocationFailurePolicy
+import org.trustweave.credential.requests.VerificationOptions
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.credential.transform.toCredential
+import org.trustweave.did.resolver.DidResolver
 import org.trustweave.kms.KeyManagementService
 import org.trustweave.kms.results.SignResult
 import kotlinx.coroutines.Dispatchers
@@ -52,12 +59,21 @@ import java.util.concurrent.ConcurrentHashMap
 class Oidc4VciService(
     private val credentialIssuerUrl: String,
     private val kms: KeyManagementService,
-    private val httpClient: OkHttpClient = org.trustweave.core.net.ssrfGuardedOkHttpClient()
+    private val httpClient: OkHttpClient = org.trustweave.core.net.ssrfGuardedOkHttpClient(),
+    didResolver: DidResolver? = null
 ) {
     companion object {
         /** Pre-authorized code grant type — OID4VCI v1.0 §4.1.1. */
         const val PRE_AUTHORIZED_CODE_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:pre-authorized_code"
     }
+
+    /**
+     * Holder-side verifier for issuer-returned credentials, built from `didResolver`.
+     *
+     * Null when no resolver was supplied — in that case issuance **fails closed**: a credential
+     * that cannot be verified is never handed back to the wallet.
+     */
+    private val verifier: CredentialService? = didResolver?.let { credentialService(it) }
 
     private val offers = ConcurrentHashMap<String, Oidc4VciOffer>()
     private val requests = ConcurrentHashMap<String, Oidc4VciCredentialRequest>()
@@ -228,14 +244,12 @@ class Oidc4VciService(
      *
      * @param issuerDid Issuer DID
      * @param holderDid Holder DID
-     * @param credential The credential envelope to issue
      * @param requestId Credential request ID
      * @return Issue result (may be deferred)
      */
     suspend fun issueCredential(
         issuerDid: String,
         holderDid: String,
-        credential: VerifiableCredential,
         requestId: String
     ): Oidc4VciIssueResult = withContext(Dispatchers.IO) {
         val request = requests[requestId]
@@ -305,27 +319,128 @@ class Oidc4VciService(
         }
 
         // Issuer may rotate the c_nonce in a successful response (OID4VCI v1.0 §7.3)
-        (credentialResponse["c_nonce"] as? String)?.let { cNonces[requestId] = it }
+        (credentialResponse.native["c_nonce"] as? String)?.let { cNonces[requestId] = it }
 
         val issueId = UUID.randomUUID().toString()
 
         // Deferred issuance: issuer returns transaction_id instead of credential (OID4VCI v1.0 §9)
-        val transactionId = credentialResponse["transaction_id"] as? String
+        val transactionId = credentialResponse.native["transaction_id"] as? String
         return@withContext if (transactionId != null) {
             Oidc4VciIssueResult(
                 issueId = issueId,
                 credential = null,
                 transactionId = transactionId,
-                credentialResponse = credentialResponse,
+                credentialResponse = credentialResponse.native,
             )
         } else {
-            // Immediate issuance — use the credential supplied by the caller
-            // In production, parse credentialResponse and convert to VerifiableCredential
+            // Immediate issuance — parse and cryptographically verify the credential the
+            // issuer actually returned before handing it to the wallet (fails closed).
             Oidc4VciIssueResult(
                 issueId = issueId,
-                credential = credential,
+                credential = verifyIssuedCredential(
+                    response = credentialResponse.raw,
+                    expectedIssuer = issuerDid,
+                    holderDid = holderDid
+                ),
                 transactionId = null,
-                credentialResponse = credentialResponse,
+                credentialResponse = credentialResponse.native,
+            )
+        }
+    }
+
+    /**
+     * Parses and cryptographically verifies the credential the issuer actually returned.
+     *
+     * Fails closed: a missing resolver, an unparseable payload, a failed proof/issuer/revocation
+     * check, or an issuer/holder mismatch all raise
+     * [Oidc4VciException.CredentialVerificationFailed] rather than returning an unverified
+     * credential.
+     *
+     * @param response The raw issuer credential-endpoint response JSON
+     * @param expectedIssuer The issuer DID the offer was pinned to
+     * @param holderDid The holder DID the credential must be bound to
+     * @return The verified credential
+     */
+    private suspend fun verifyIssuedCredential(
+        response: JsonObject,
+        expectedIssuer: String,
+        holderDid: String
+    ): VerifiableCredential {
+        val service = verifier ?: throw Oidc4VciException.CredentialVerificationFailed(
+            reason = "no DID resolver configured; cannot verify the issued credential",
+            credentialIssuer = expectedIssuer
+        )
+        val parsed = parseIssuedCredential(response, expectedIssuer)
+
+        val result = service.verify(
+            parsed,
+            options = VerificationOptions(
+                checkExpiration = true,
+                checkNotBefore = true,
+                resolveIssuerDid = true,
+                revocationFailurePolicy = RevocationFailurePolicy.FAIL_CLOSED
+            )
+        )
+        if (result !is VerificationResult.Valid) {
+            throw Oidc4VciException.CredentialVerificationFailed(
+                reason = "issuer credential failed verification: ${result::class.simpleName}",
+                credentialIssuer = expectedIssuer
+            )
+        }
+        if (parsed.issuer.id.value != expectedIssuer) {
+            throw Oidc4VciException.CredentialVerificationFailed(
+                reason = "credential issuer ${parsed.issuer.id.value} does not match " +
+                    "the offer issuer $expectedIssuer",
+                credentialIssuer = expectedIssuer
+            )
+        }
+        if (parsed.credentialSubject.id?.value != holderDid) {
+            throw Oidc4VciException.CredentialVerificationFailed(
+                reason = "credential subject ${parsed.credentialSubject.id?.value} " +
+                    "is not the holder $holderDid",
+                credentialIssuer = expectedIssuer
+            )
+        }
+        return parsed
+    }
+
+    /**
+     * Parses the `credential` member of an issuer response into a [VerifiableCredential].
+     *
+     * Only VC-LD (JSON-LD) is supported today. Compact representations (JWT / SD-JWT-VC) have no
+     * compact-to-model parser in `credential-api`, so they are rejected rather than trusted.
+     */
+    private suspend fun parseIssuedCredential(
+        response: JsonObject,
+        expectedIssuer: String
+    ): VerifiableCredential {
+        val raw = response["credential"]
+        if (raw == null || raw is JsonNull) {
+            throw Oidc4VciException.CredentialVerificationFailed(
+                reason = "issuer response contained no 'credential'",
+                credentialIssuer = expectedIssuer
+            )
+        }
+        return try {
+            when (raw) {
+                is JsonObject -> raw.toCredential()
+                is JsonPrimitive -> throw Oidc4VciException.CredentialVerificationFailed(
+                    reason = "compact (JWT / SD-JWT-VC) issued credentials are not yet verified; " +
+                        "only VC-LD (JSON-LD) is supported",
+                    credentialIssuer = expectedIssuer
+                )
+                else -> throw Oidc4VciException.CredentialVerificationFailed(
+                    reason = "unsupported 'credential' representation: ${raw::class.simpleName}",
+                    credentialIssuer = expectedIssuer
+                )
+            }
+        } catch (e: Oidc4VciException) {
+            throw e
+        } catch (e: Exception) {
+            throw Oidc4VciException.CredentialVerificationFailed(
+                reason = "failed to parse issued credential: ${e.message}",
+                credentialIssuer = expectedIssuer,
+                cause = e
             )
         }
     }
@@ -382,12 +497,39 @@ class Oidc4VciService(
         }
 
         val jsonParser = Json { ignoreUnknownKeys = true }
-        val credentialResponse = jsonParser.parseToJsonElement(responseBody).jsonObject.toMap()
+        val rawResponse = jsonParser.parseToJsonElement(responseBody).jsonObject
+        val credentialResponse = rawResponse.toMap()
         val newTransactionId = credentialResponse["transaction_id"] as? String
+
+        // The issuer either keeps deferring (transaction_id echoed back) or has now returned the
+        // credential. A returned credential goes through the same fail-closed verification as
+        // immediate issuance - it is never handed back unverified.
+        val rawCredential = rawResponse["credential"]
+        val verifiedCredential = if (rawCredential == null || rawCredential is JsonNull) {
+            null
+        } else {
+            val expectedIssuer = request.issuerDid
+                ?: throw Oidc4VciException.CredentialVerificationFailed(
+                    reason = "deferred endpoint returned a credential but the request carries " +
+                        "no issuerDid to verify it against",
+                    credentialIssuer = deferredEndpoint
+                )
+            val expectedHolder = request.holderDid
+                ?: throw Oidc4VciException.CredentialVerificationFailed(
+                    reason = "deferred endpoint returned a credential but the request carries " +
+                        "no holderDid to verify it against",
+                    credentialIssuer = deferredEndpoint
+                )
+            verifyIssuedCredential(
+                response = rawResponse,
+                expectedIssuer = expectedIssuer,
+                holderDid = expectedHolder
+            )
+        }
 
         Oidc4VciIssueResult(
             issueId = UUID.randomUUID().toString(),
-            credential = null, // Caller is responsible for parsing credential from credentialResponse
+            credential = verifiedCredential,
             transactionId = newTransactionId,
             credentialResponse = credentialResponse,
         )
@@ -826,7 +968,7 @@ class Oidc4VciService(
         credentialEndpoint: String,
         accessToken: String,
         credentialRequest: JsonObject
-    ): Map<String, Any?> {
+    ): IssuerResponse {
         val json = Json { prettyPrint = false; encodeDefaults = false }
         val requestBody = json.encodeToString(JsonObject.serializer(), credentialRequest)
             .toRequestBody("application/json".toMediaType())
@@ -866,7 +1008,7 @@ class Oidc4VciService(
 
         val credentialResponse = jsonParser.parseToJsonElement(body).jsonObject
 
-        return credentialResponse.toMap()
+        return IssuerResponse(raw = credentialResponse, native = credentialResponse.toMap())
     }
 
     /**
@@ -1155,6 +1297,15 @@ class Oidc4VciService(
         val json = Json { ignoreUnknownKeys = true }
         json.decodeFromString<CredentialIssuerMetadata>(body)
     }
+
+    /**
+     * An issuer response in both shapes it is needed in.
+     *
+     * [native] is what [Oidc4VciIssueResult.credentialResponse] exposes, but [toMap] unwraps
+     * JSON to Kotlin natives and cannot round-trip back byte-identically — so proof
+     * verification must read [raw], never the map.
+     */
+    private data class IssuerResponse(val raw: JsonObject, val native: Map<String, Any?>)
 
     /**
      * Converts JsonObject to Map for credential response.

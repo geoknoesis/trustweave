@@ -38,10 +38,15 @@ class Oidc4VciExchangeProtocolProvider : CredentialExchangeProtocolProvider {
         val httpClient = options["httpClient"] as? OkHttpClient
             ?: org.trustweave.core.net.ssrfGuardedOkHttpClient()
 
+        // Without a resolver the service cannot verify issuer-returned credentials and
+        // issuance fails closed, so callers that issue must supply one.
+        val didResolver = options["didResolver"] as? org.trustweave.did.resolver.DidResolver
+
         val oidc4vciService = Oidc4VciService(
             credentialIssuerUrl = credentialIssuerUrl,
             kms = kms,
-            httpClient = httpClient
+            httpClient = httpClient,
+            didResolver = didResolver
         )
 
         return Oidc4VciExchangeProtocol(oidc4vciService)

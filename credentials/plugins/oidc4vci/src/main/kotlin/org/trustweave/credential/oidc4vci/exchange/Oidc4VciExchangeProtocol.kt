@@ -136,12 +136,11 @@ class Oidc4VciExchangeProtocol(
         // Extract request ID
         val requestId = request.requestId.value
 
-        // Issue credential via OIDC4VCI
-        // Note: Oidc4VciService.issueCredential may need updating to accept VerifiableCredential
+        // Issue via OIDC4VCI. The returned credential is the issuer's own, parsed and
+        // cryptographically verified by the service - not the caller's request envelope.
         val issueResult = oidc4vciService.issueCredential(
             issuerDid = issuerDid,
             holderDid = holderDid,
-            credential = request.credential, // May need conversion
             requestId = requestId
         )
 

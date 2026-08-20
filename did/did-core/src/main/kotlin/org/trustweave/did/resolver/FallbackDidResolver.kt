@@ -2,6 +2,7 @@ package org.trustweave.did.resolver
 
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.exception.DidException
+import org.trustweave.did.representation.DidMediaTypes
 import org.trustweave.did.resolution.ResolutionOptions
 
 /**
@@ -82,8 +83,51 @@ class FallbackDidResolver(
  * val resolver = CachingDidResolver(FallbackDidResolver(registry.asResolver(), universal))
  * ```
  */
-fun UniversalResolver.asDidResolver(): DidResolver = DidResolver { did ->
-    try {
+fun UniversalResolver.asDidResolver(): DidResolver = object : DidResolver {
+
+    override suspend fun resolve(did: Did): DidResolutionResult = resolveViaUniversal(did)
+
+    /**
+     * Resolves with DID Resolution 1.0 §4.1 options.
+     *
+     * [UniversalResolver.resolveDid] takes no options at all, so this override applies the same
+     * checks [RegistryBasedResolver] applies before delegating: §4.4 step 4 (options valid), then
+     * §4.4 step 3 for both method-specific options (which this adapter cannot satisfy) and the
+     * requested representation (`accept`) — mirroring [DidMediaTypes.isSupportedDocumentType].
+     * Without this override, [DidResolver]'s two-arg default would silently discard `accept`
+     * and `expandRelativeUrls` before falling through to [resolve], letting an unsupported
+     * `accept` slip through as [DidResolutionResult.Success] instead of failing with
+     * `REPRESENTATION_NOT_SUPPORTED`.
+     */
+    override suspend fun resolve(did: Did, options: ResolutionOptions): DidResolutionResult {
+        options.validate()?.let { error ->
+            return DidResolutionResult.Failure.OptionsError(
+                did = did,
+                reason = error.detail ?: "Invalid resolution options",
+                errorType = error.type
+            )
+        }
+        val unsupported = options.methodSpecificOptions()
+        if (unsupported.isNotEmpty()) {
+            return DidResolutionResult.Failure.OptionsError(
+                did = did,
+                reason = "Resolution options not supported by this resolver: " +
+                    unsupported.sorted().joinToString(", ")
+            )
+        }
+        options.accept?.let { accept ->
+            if (!DidMediaTypes.isSupportedDocumentType(accept)) {
+                return DidResolutionResult.Failure.OptionsError(
+                    did = did,
+                    reason = "Representation not supported: '$accept'",
+                    errorType = DidErrorType.REPRESENTATION_NOT_SUPPORTED
+                )
+            }
+        }
+        return resolveViaUniversal(did)
+    }
+
+    private suspend fun resolveViaUniversal(did: Did): DidResolutionResult = try {
         when (val result = resolveDid(did.value)) {
             // §4.4 defence in depth. The two first-party UniversalResolver implementations
             // (DefaultUniversalResolver, GodiddyResolver) both check documentMetadata.deactivated

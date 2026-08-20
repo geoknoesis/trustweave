@@ -2,7 +2,9 @@ package org.trustweave.godiddy.resolver
 
 import com.sun.net.httpserver.HttpServer
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Test
+import org.trustweave.did.resolver.DidErrorType
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.godiddy.GodiddyClient
 import org.trustweave.godiddy.GodiddyConfig
@@ -89,6 +91,59 @@ class GodiddyResolverCrTest {
 
             assertTrue(result is DidResolutionResult.Success, "expected Success, got $result")
             assertEquals("4", result.documentMetadata.nextVersionId)
+        } finally {
+            client.close()
+            server.stop(0)
+        }
+    }
+
+    // F2: a non-deactivated upstream response whose document fails to convert (e.g. missing the
+    // required `id` field) is an *invalid document the upstream did return* — not "this DID does
+    // not exist". Asserting NOT_FOUND (404) here would be dishonest; INVALID_DID_DOCUMENT (500)
+    // reflects what actually happened.
+    @Test
+    fun `document conversion failure maps to INVALID_DID_DOCUMENT, not NOT_FOUND`() = runBlocking {
+        val body = """{"didDocument":{"noIdField":true},"didDocumentMetadata":{}}"""
+        val server = startServer(body)
+        val client = GodiddyClient(GodiddyConfig(baseUrl = "http://localhost:${server.address.port}"))
+        try {
+            val resolver = GodiddyResolver(client)
+
+            val result = resolver.resolveDid("did:example:unconvertible")
+
+            assertTrue(
+                result is DidResolutionResult.Failure.ResolutionError,
+                "expected Failure.ResolutionError, got $result"
+            )
+            assertEquals(
+                DidErrorType.INVALID_DID_DOCUMENT,
+                (result as DidResolutionResult.Failure.ResolutionError).resolutionMetadata.error?.type
+            )
+        } finally {
+            client.close()
+            server.stop(0)
+        }
+    }
+
+    // F4: DidDocumentMetadata.proof (§4.3) round-trip — GodiddyResolver's own metadata parser
+    // must read `proof` back, not just serialize it out.
+    @Test
+    fun `upstream documentMetadata proof is parsed back`() = runBlocking {
+        val body = """{"didDocument":{"id":"did:example:proofed"},""" +
+            """"didDocumentMetadata":{"proof":[{"type":"DataIntegrityProof","proofValue":"z123"}]}}"""
+        val server = startServer(body)
+        val client = GodiddyClient(GodiddyConfig(baseUrl = "http://localhost:${server.address.port}"))
+        try {
+            val resolver = GodiddyResolver(client)
+
+            val result = resolver.resolveDid("did:example:proofed")
+
+            assertTrue(result is DidResolutionResult.Success, "expected Success, got $result")
+            assertEquals(1, result.documentMetadata.proof.size)
+            assertEquals(
+                "DataIntegrityProof",
+                result.documentMetadata.proof.single()["type"]?.jsonPrimitive?.content
+            )
         } finally {
             client.close()
             server.stop(0)

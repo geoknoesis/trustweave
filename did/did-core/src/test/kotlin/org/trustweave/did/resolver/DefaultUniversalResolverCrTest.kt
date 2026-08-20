@@ -2,6 +2,7 @@ package org.trustweave.did.resolver
 
 import com.sun.net.httpserver.HttpServer
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Test
 import java.net.InetSocketAddress
 import java.util.concurrent.atomic.AtomicReference
@@ -274,6 +275,31 @@ class DefaultUniversalResolverCrTest {
             assertTrue(result is DidResolutionResult.Success, "expected Success, got $result")
             assertEquals(null, result.documentMetadata.canonicalId)
             assertEquals(null, result.documentMetadata.versionId)
+        } finally {
+            server.stop(0)
+        }
+    }
+
+    // ─── F4: DidDocumentMetadata.proof (§4.3) round-trip. toJson() emits `proof`, but
+    // parseDidDocumentMetadata previously never read it back, silently dropping controller/VDR
+    // proofs on a resolved document. ───
+
+    @Test
+    fun `upstream documentMetadata proof is parsed back`() = runBlocking {
+        val body = """{"didDocument":{"id":"did:example:proofed"},""" +
+            """"didDocumentMetadata":{"proof":[{"type":"DataIntegrityProof","proofValue":"z123"}]}}"""
+        val server = startServer(200, body)
+        try {
+            val resolver = DefaultUniversalResolver(baseUrl = "http://localhost:${server.address.port}", timeout = 5)
+
+            val result = resolver.resolveDid("did:example:proofed")
+
+            assertTrue(result is DidResolutionResult.Success, "expected Success, got $result")
+            assertEquals(1, result.documentMetadata.proof.size)
+            assertEquals(
+                "DataIntegrityProof",
+                result.documentMetadata.proof.single()["type"]?.jsonPrimitive?.content
+            )
         } finally {
             server.stop(0)
         }

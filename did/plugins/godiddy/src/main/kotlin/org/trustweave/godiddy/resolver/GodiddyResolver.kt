@@ -118,12 +118,17 @@ class GodiddyResolver(
                 // `resolutionMetadata` here is parsed straight from an upstream body that may
                 // carry no structured error member at all — synthesize one rather than pass
                 // resolutionMetadata through unchanged.
-                DidResolutionResult.Failure.NotFound(
+                //
+                // This is NOT "the DID does not exist" (NOT_FOUND/404): the upstream *did* return
+                // a document, it just failed to convert (e.g. a malformed or incomplete body).
+                // INVALID_DID_DOCUMENT (500) reflects what actually happened, mirroring
+                // RegistryBasedResolver's handling of a structurally invalid resolved document.
+                DidResolutionResult.Failure.ResolutionError(
                     did = Did(did),
                     reason = "Document conversion failed",
                     resolutionMetadata = resolutionMetadata.copy(
                         error = resolutionMetadata.error
-                            ?: DidResolutionError.notFound("Document conversion failed")
+                            ?: DidResolutionError.invalidDidDocument("Document conversion failed")
                     )
                 )
             }
@@ -260,6 +265,9 @@ class GodiddyResolver(
         val nextVersionId = json["nextVersionId"]?.jsonPrimitive?.content
         val canonicalId = json["canonicalId"]?.jsonPrimitive?.content
         val equivalentId = json["equivalentId"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content } ?: emptyList()
+        // §4.3 `proof`: controller/VDR proofs. toJson() has always emitted this; read it back too
+        // so a §9 round-trip does not silently drop it.
+        val proof = (json["proof"] as? JsonArray)?.filterIsInstance<JsonObject>() ?: emptyList()
 
         return DidDocumentMetadata(
             created = created,
@@ -269,7 +277,8 @@ class GodiddyResolver(
             nextUpdate = nextUpdate,
             nextVersionId = nextVersionId,
             canonicalId = canonicalId?.let { Did(it) },
-            equivalentId = equivalentId.map { Did(it) }
+            equivalentId = equivalentId.map { Did(it) },
+            proof = proof
         )
     }
 

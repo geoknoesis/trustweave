@@ -290,6 +290,9 @@ abstract class AbstractBlockchainDidMethod(
             documentMetadata[did] =
                 (documentMetadata[did] ?: DidDocumentMetadata(created = now))
                     .copy(updated = now)
+            // getLastFetched's contract is "last fetched or wrote" — a successful anchor is a
+            // write, so it counts too.
+            lastFetched[did] = now
         }
 
         return txHash
@@ -318,11 +321,18 @@ abstract class AbstractBlockchainDidMethod(
             // deactivated (W3C DID Core §7.3) so subsequent resolutions can
             // surface the deactivation instead of silently "losing" the DID.
             //
-            // Both writes go under updateMutex, the same lock storeDocument takes. This is the
-            // §4.4 security property, not bookkeeping: storeDocument runs on every successful
-            // resolve, reading the existing metadata and writing the merged value back, so a
-            // deactivation written outside the lock could land between that read and that write
-            // and be silently clobbered — and the DID would resolve live again.
+            // Both writes go under updateMutex, the same lock storeDocument takes. This closes
+            // the *concurrent* §4.4 race: storeDocument runs on every successful resolve, reading
+            // the existing metadata and writing the merged value back, so a deactivation written
+            // outside the lock could land between that read and that write and be silently
+            // clobbered by a racing resolver — and the DID would resolve live again.
+            //
+            // It does NOT close a narrower, *sequential* gap in this call: anchorDocument() above
+            // already called storeDocument(), which wrote documents[did] = deactivatedDocument
+            // (key-stripped) and, via putIfAbsent, left any pre-existing documentMetadata[did]
+            // untouched — so a resolve landing between that write and this block still sees
+            // deactivated = false and returns Success (with the already key-stripped document,
+            // not Deactivated). Pre-existing and narrow; not fixed here.
             updateMutex.withLock {
                 val now =
                     kotlinx.datetime.Clock.System
@@ -331,6 +341,7 @@ abstract class AbstractBlockchainDidMethod(
                 documentMetadata[did] =
                     (documentMetadata[did] ?: DidDocumentMetadata(created = now))
                         .copy(updated = now, deactivated = true)
+                lastFetched[did] = now
             }
 
             return true

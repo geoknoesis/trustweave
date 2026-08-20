@@ -299,6 +299,9 @@ abstract class AbstractWebDidMethod(
                         documentMetadata[didString] =
                             (documentMetadata[didString] ?: DidDocumentMetadata(created = now))
                                 .copy(updated = now)
+                        // getLastFetched's contract is "last fetched or wrote" — a successful
+                        // publish is a write, so it counts too.
+                        lastFetched[didString] = now
                     }
                 }
 

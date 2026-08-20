@@ -15,6 +15,15 @@ class DidValidatorTest {
     }
 
     @Test
+    fun rejectsAbsurdlyLongDid() {
+        // did:key method-specific-ids are base58, and base58 decoding is quadratic in length.
+        // An unbounded DID string is a CPU denial-of-service, so the format gate must cap it.
+        val huge = "did:key:z" + "1".repeat(100_000)
+
+        assertFalse(DidValidator.validateFormat(huge).isValid())
+    }
+
+    @Test
     fun validMethodSpecificIdWithColons() {
         assertTrue(DidValidator.validateFormat("did:example:a:b:c").isValid())
         assertTrue(DidValidator.validateFormat("did:plc:abc:def").isValid())

@@ -1,20 +1,20 @@
 package org.trustweave.did.base
 
-import org.trustweave.did.identifiers.Did
-import org.trustweave.did.identifiers.VerificationMethodId
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import org.trustweave.did.*
 import org.trustweave.did.KeyAlgorithm
-import org.trustweave.did.model.VerificationMethod
-import org.trustweave.did.model.DidService
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
-import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.model.DidService
+import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidErrorType
 import org.trustweave.did.resolver.DidResolutionError
 import org.trustweave.did.resolver.DidResolutionMetadata
+import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.kms.KeyHandle
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
 
 /**
  * Common utilities for DID method implementations.
@@ -26,7 +26,6 @@ import kotlinx.datetime.Clock
  * - Resolution metadata helpers
  */
 object DidMethodUtils {
-
     /**
      * Parses a DID string into method and identifier parts.
      *
@@ -51,9 +50,13 @@ object DidMethodUtils {
      * @param expectedMethod The expected method name
      * @throws IllegalArgumentException if the DID doesn't match the method
      */
-    fun validateDidMethod(did: String, expectedMethod: String) {
-        val parsed = parseDid(did)
-            ?: throw IllegalArgumentException("Invalid DID format: $did")
+    fun validateDidMethod(
+        did: String,
+        expectedMethod: String,
+    ) {
+        val parsed =
+            parseDid(did)
+                ?: throw IllegalArgumentException("Invalid DID format: $did")
 
         if (parsed.first != expectedMethod) {
             throw IllegalArgumentException("DID method mismatch: expected $expectedMethod, got ${parsed.first}")
@@ -66,8 +69,8 @@ object DidMethodUtils {
      * @param algorithm Algorithm name (e.g., "Ed25519", "secp256k1")
      * @return Verification method type (e.g., "Ed25519VerificationKey2020")
      */
-    fun algorithmToVerificationMethodType(algorithm: String): String {
-        return when (algorithm.uppercase()) {
+    fun algorithmToVerificationMethodType(algorithm: String): String =
+        when (algorithm.uppercase()) {
             "ED25519" -> "Ed25519VerificationKey2020"
             "X25519" -> "X25519KeyAgreementKey2020"
             "SECP256K1" -> "EcdsaSecp256k1VerificationKey2019"
@@ -77,7 +80,6 @@ object DidMethodUtils {
             "RSA" -> "RsaVerificationKey2018"
             else -> "JsonWebKey2020"
         }
-    }
 
     /**
      * Maps a KeyAlgorithm enum to its verification method type.
@@ -85,9 +87,7 @@ object DidMethodUtils {
      * @param algorithm The KeyAlgorithm enum value
      * @return Verification method type
      */
-    fun algorithmToVerificationMethodType(algorithm: KeyAlgorithm): String {
-        return algorithmToVerificationMethodType(algorithm.algorithmName)
-    }
+    fun algorithmToVerificationMethodType(algorithm: KeyAlgorithm): String = algorithmToVerificationMethodType(algorithm.algorithmName)
 
     /**
      * Creates a verification method reference from a key handle.
@@ -102,7 +102,7 @@ object DidMethodUtils {
         did: String,
         keyHandle: KeyHandle,
         algorithm: String,
-        controller: String? = null
+        controller: String? = null,
     ): VerificationMethod {
         val didObj = Did(did)
         val verificationMethodIdStr = "$did#${keyHandle.id.value}"
@@ -115,7 +115,7 @@ object DidMethodUtils {
             type = verificationMethodType,
             controller = controllerDid,
             publicKeyJwk = keyHandle.publicKeyJwk,
-            publicKeyMultibase = keyHandle.publicKeyMultibase
+            publicKeyMultibase = keyHandle.publicKeyMultibase,
         )
     }
 
@@ -132,10 +132,8 @@ object DidMethodUtils {
         did: String,
         keyHandle: KeyHandle,
         algorithm: KeyAlgorithm,
-        controller: String? = null
-    ): VerificationMethod {
-        return createVerificationMethod(did, keyHandle, algorithm.algorithmName, controller)
-    }
+        controller: String? = null,
+    ): VerificationMethod = createVerificationMethod(did, keyHandle, algorithm.algorithmName, controller)
 
     /**
      * Builds a DID document with standard structure.
@@ -154,7 +152,7 @@ object DidMethodUtils {
         authentication: List<String>? = null,
         assertionMethod: List<String>? = null,
         keyAgreement: List<String>? = null,
-        service: List<DidService>? = null
+        service: List<DidService>? = null,
     ): DidDocument {
         require(verificationMethod.isNotEmpty()) { "DID document must have at least one verification method" }
 
@@ -170,7 +168,7 @@ object DidMethodUtils {
             authentication = auth,
             assertionMethod = assertion,
             keyAgreement = keyAgr,
-            service = service ?: emptyList()
+            service = service ?: emptyList(),
         )
     }
 
@@ -214,13 +212,13 @@ object DidMethodUtils {
             DidResolutionResult.Deactivated(
                 did = document.id,
                 documentMetadata = documentMetadata,
-                resolutionMetadata = resolutionMetadata
+                resolutionMetadata = resolutionMetadata,
             )
         } else {
             DidResolutionResult.Success(
                 document = document,
                 documentMetadata = documentMetadata,
-                resolutionMetadata = resolutionMetadata
+                resolutionMetadata = resolutionMetadata,
             )
         }
     }
@@ -238,37 +236,42 @@ object DidMethodUtils {
         error: String,
         message: String? = null,
         method: String? = null,
-        did: String? = null
+        did: String? = null,
     ): DidResolutionResult {
         // `error` arrives as a legacy camelCase code (e.g. "notFound"). DID Resolution 1.0 §11
         // requires an RFC 9457 error object whose `type` is an absolute URL, so upgrade the code
         // rather than passing it through. `errorMessage` is now derived from `detail`.
-        val metadata = DidResolutionMetadata(
-            error = DidResolutionError.of(DidErrorType.fromLegacyCode(error), message),
-            pattern = method
-        )
+        val metadata =
+            DidResolutionMetadata(
+                error = DidResolutionError.of(DidErrorType.fromLegacyCode(error), message),
+                pattern = method,
+            )
 
         return when (error.lowercase()) {
-            "notfound", "did_not_found" -> DidResolutionResult.Failure.NotFound(
-                did = Did(did ?: "did:unknown:unknown"),
-                reason = message,
-                resolutionMetadata = metadata
-            )
-            "invalidformat", "invalid_did_format", "invaliddid" -> DidResolutionResult.Failure.InvalidFormat(
-                did = did ?: "unknown",
-                reason = message ?: "Invalid DID format",
-                resolutionMetadata = metadata
-            )
-            "methodnotregistered", "method_not_registered" -> DidResolutionResult.Failure.MethodNotRegistered(
-                method = method ?: "unknown",
-                availableMethods = emptyList(),
-                resolutionMetadata = metadata
-            )
-            else -> DidResolutionResult.Failure.ResolutionError(
-                did = Did(did ?: "did:unknown:unknown"),
-                reason = message ?: error,
-                resolutionMetadata = metadata
-            )
+            "notfound", "did_not_found" ->
+                DidResolutionResult.Failure.NotFound(
+                    did = Did(did ?: "did:unknown:unknown"),
+                    reason = message,
+                    resolutionMetadata = metadata,
+                )
+            "invalidformat", "invalid_did_format", "invaliddid" ->
+                DidResolutionResult.Failure.InvalidFormat(
+                    did = did ?: "unknown",
+                    reason = message ?: "Invalid DID format",
+                    resolutionMetadata = metadata,
+                )
+            "methodnotregistered", "method_not_registered" ->
+                DidResolutionResult.Failure.MethodNotRegistered(
+                    method = method ?: "unknown",
+                    availableMethods = emptyList(),
+                    resolutionMetadata = metadata,
+                )
+            else ->
+                DidResolutionResult.Failure.ResolutionError(
+                    did = Did(did ?: "did:unknown:unknown"),
+                    reason = message ?: error,
+                    resolutionMetadata = metadata,
+                )
         }
     }
 
@@ -286,16 +289,19 @@ object DidMethodUtils {
      */
     fun percentDecode(segment: String): String {
         if ('%' !in segment) return segment
+
         // Strict RFC 3986 hex digit — String.toIntOrNull(16) must NOT be used here
         // because it accepts a sign ("%+3" would decode as 0x03).
-        fun hexDigit(c: Char): Int = when (c) {
-            in '0'..'9' -> c - '0'
-            in 'a'..'f' -> c - 'a' + 10
-            in 'A'..'F' -> c - 'A' + 10
-            else -> throw IllegalArgumentException("Malformed percent-encoding in segment: $segment")
-        }
+        fun hexDigit(c: Char): Int =
+            when (c) {
+                in '0'..'9' -> c - '0'
+                in 'a'..'f' -> c - 'a' + 10
+                in 'A'..'F' -> c - 'A' + 10
+                else -> throw IllegalArgumentException("Malformed percent-encoding in segment: $segment")
+            }
         val out = StringBuilder()
         val byteBuffer = java.io.ByteArrayOutputStream()
+
         fun flushBytes() {
             if (byteBuffer.size() > 0) {
                 out.append(byteBuffer.toByteArray().toString(Charsets.UTF_8))
@@ -357,7 +363,10 @@ object DidMethodUtils {
      * @param path Optional path (e.g., "user:alice")
      * @return DID string (e.g., "did:web:example.com:user:alice", "did:web:example.com%3A8080")
      */
-    fun buildWebDid(domain: String, path: String? = null): String {
+    fun buildWebDid(
+        domain: String,
+        path: String? = null,
+    ): String {
         val normalized = normalizeDomain(domain).replace(":", "%3A")
         return if (path != null && path.isNotBlank()) {
             "did:web:$normalized:$path"
@@ -378,35 +387,52 @@ object DidMethodUtils {
      *
      * @throws IllegalArgumentException if the algorithm has no known multicodec prefix.
      */
-    fun getMulticodecPrefix(algorithm: String): ByteArray = when (algorithm.uppercase()) {
-        "ED25519"  -> byteArrayOf(0xed.toByte(), 0x01)
-        "X25519"   -> byteArrayOf(0xec.toByte(), 0x01)
-        "SECP256K1" -> byteArrayOf(0xe7.toByte(), 0x01)
-        "P-256"    -> byteArrayOf(0x80.toByte(), 0x24)
-        "P-384"    -> byteArrayOf(0x81.toByte(), 0x24)
-        "P-521"    -> byteArrayOf(0x82.toByte(), 0x24)
-        else -> throw IllegalArgumentException("No multicodec prefix for algorithm: $algorithm")
-    }
+    fun getMulticodecPrefix(algorithm: String): ByteArray =
+        when (algorithm.uppercase()) {
+            "ED25519" -> byteArrayOf(0xed.toByte(), 0x01)
+            "X25519" -> byteArrayOf(0xec.toByte(), 0x01)
+            "SECP256K1" -> byteArrayOf(0xe7.toByte(), 0x01)
+            "P-256" -> byteArrayOf(0x80.toByte(), 0x24)
+            "P-384" -> byteArrayOf(0x81.toByte(), 0x24)
+            "P-521" -> byteArrayOf(0x82.toByte(), 0x24)
+            else -> throw IllegalArgumentException("No multicodec prefix for algorithm: $algorithm")
+        }
+
+    /** Ed25519 and X25519 public keys are both exactly 32 bytes. */
+    private const val ED25519_PUBLIC_KEY_SIZE = 32
 
     /**
      * Parses a multicodec-prefixed byte array and returns a (algorithm, publicKeyBytes) pair.
      *
-     * Returns `null` if the prefix is not recognised.
+     * Returns `null` if the prefix is not recognised, or if the key body length contradicts the
+     * algorithm the prefix declares.
      */
     fun parseMulticodecKey(prefixedKey: ByteArray): Pair<String, ByteArray>? {
         if (prefixedKey.size < 2) return null
         val b1 = prefixedKey[0].toInt() and 0xFF
         val b2 = prefixedKey[1].toInt() and 0xFF
-        val algorithm = when {
-            b1 == 0xed && b2 == 0x01 -> "ED25519"
-            b1 == 0xec && b2 == 0x01 -> "X25519"
-            b1 == 0xe7 && b2 == 0x01 -> "SECP256K1"
-            b1 == 0x80 && b2 == 0x24 -> "P-256"
-            b1 == 0x81 && b2 == 0x24 -> "P-384"
-            b1 == 0x82 && b2 == 0x24 -> "P-521"
-            else -> return null
-        }
-        return algorithm to prefixedKey.sliceArray(2 until prefixedKey.size)
+        val algorithm =
+            when {
+                b1 == 0xed && b2 == 0x01 -> "ED25519"
+                b1 == 0xec && b2 == 0x01 -> "X25519"
+                b1 == 0xe7 && b2 == 0x01 -> "SECP256K1"
+                b1 == 0x80 && b2 == 0x24 -> "P-256"
+                b1 == 0x81 && b2 == 0x24 -> "P-384"
+                b1 == 0x82 && b2 == 0x24 -> "P-521"
+                else -> return null
+            }
+        val body = prefixedKey.sliceArray(2 until prefixedKey.size)
+        // The multicodec prefix declares the algorithm, so the body length must match it. Without
+        // this, a prefix and a body of any size are accepted and republished as the DID's
+        // verification key. EC bodies are length-checked when the point is decompressed, which
+        // also accepts the legacy uncompressed form, so only the fixed-size curves are checked here.
+        val expected =
+            when (algorithm) {
+                "ED25519", "X25519" -> ED25519_PUBLIC_KEY_SIZE
+                else -> null
+            }
+        if (expected != null && body.size != expected) return null
+        return algorithm to body
     }
 
     // ──────────────────────────── EC point compression ────────────────────────────
@@ -420,7 +446,7 @@ object DidMethodUtils {
         val p: java.math.BigInteger,
         val a: java.math.BigInteger,
         val b: java.math.BigInteger,
-        val coordinateSize: Int
+        val coordinateSize: Int,
     )
 
     private val ecCurves: Map<String, EcCurveParams> by lazy {
@@ -429,27 +455,35 @@ object DidMethodUtils {
         val pK1 = big("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F")
         val p256 = big("FFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF")
         val p384 = big("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFF0000000000000000FFFFFFFF")
-        val p521 = java.math.BigInteger.ONE.shiftLeft(521).subtract(java.math.BigInteger.ONE)
+        val p521 =
+            java.math.BigInteger.ONE
+                .shiftLeft(521)
+                .subtract(java.math.BigInteger.ONE)
         mapOf(
             "SECP256K1" to EcCurveParams(pK1, java.math.BigInteger.ZERO, java.math.BigInteger.valueOf(7), 32),
-            "P-256" to EcCurveParams(
-                p256,
-                p256.subtract(three),
-                big("5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B"),
-                32
-            ),
-            "P-384" to EcCurveParams(
-                p384,
-                p384.subtract(three),
-                big("B3312FA7E23EE7E4988E056BE3F82D19181D9C6EFE8141120314088F5013875AC656398D8A2ED19D2A85C8EDD3EC2AEF"),
-                48
-            ),
-            "P-521" to EcCurveParams(
-                p521,
-                p521.subtract(three),
-                big("0051953EB9618E1C9A1F929A21A0B68540EEA2DA725B99B315F3B8B489918EF109E156193951EC7E937B1652C0BD3BB1BF073573DF883D2C34F1EF451FD46B503F00"),
-                66
-            )
+            "P-256" to
+                EcCurveParams(
+                    p256,
+                    p256.subtract(three),
+                    big("5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B"),
+                    32,
+                ),
+            "P-384" to
+                EcCurveParams(
+                    p384,
+                    p384.subtract(three),
+                    big("B3312FA7E23EE7E4988E056BE3F82D19181D9C6EFE8141120314088F5013875AC656398D8A2ED19D2A85C8EDD3EC2AEF"),
+                    48,
+                ),
+            "P-521" to
+                EcCurveParams(
+                    p521,
+                    p521.subtract(three),
+                    big(
+                        "0051953EB9618E1C9A1F929A21A0B68540EEA2DA725B99B315F3B8B489918EF109E156193951EC7E937B1652C0BD3BB1BF073573DF883D2C34F1EF451FD46B503F00",
+                    ),
+                    66,
+                ),
         )
     }
 
@@ -470,9 +504,13 @@ object DidMethodUtils {
      * @throws IllegalArgumentException if [algorithm] is not a supported EC curve
      *         or [point] is not a valid SEC1 encoding
      */
-    fun compressEcPublicKey(algorithm: String, point: ByteArray): ByteArray {
-        val curve = ecCurves[algorithm.uppercase()]
-            ?: throw IllegalArgumentException("Not a supported EC algorithm: $algorithm")
+    fun compressEcPublicKey(
+        algorithm: String,
+        point: ByteArray,
+    ): ByteArray {
+        val curve =
+            ecCurves[algorithm.uppercase()]
+                ?: throw IllegalArgumentException("Not a supported EC algorithm: $algorithm")
         val size = curve.coordinateSize
         return when {
             point.size == size + 1 && (point[0] == 0x02.toByte() || point[0] == 0x03.toByte()) -> point
@@ -482,7 +520,7 @@ object DidMethodUtils {
                 byteArrayOf(if (yIsOdd) 0x03 else 0x02) + x
             }
             else -> throw IllegalArgumentException(
-                "Invalid SEC1 point encoding for $algorithm: ${point.size} bytes"
+                "Invalid SEC1 point encoding for $algorithm: ${point.size} bytes",
             )
         }
     }
@@ -497,9 +535,13 @@ object DidMethodUtils {
      * @throws IllegalArgumentException if [algorithm] is not a supported EC curve,
      *         [point] is not a valid SEC1 encoding, or x is not on the curve
      */
-    fun decompressEcPublicKey(algorithm: String, point: ByteArray): ByteArray {
-        val curve = ecCurves[algorithm.uppercase()]
-            ?: throw IllegalArgumentException("Not a supported EC algorithm: $algorithm")
+    fun decompressEcPublicKey(
+        algorithm: String,
+        point: ByteArray,
+    ): ByteArray {
+        val curve =
+            ecCurves[algorithm.uppercase()]
+                ?: throw IllegalArgumentException("Not a supported EC algorithm: $algorithm")
         val size = curve.coordinateSize
         return when {
             point.size == 2 * size + 1 && point[0] == 0x04.toByte() -> point
@@ -508,7 +550,13 @@ object DidMethodUtils {
                 val x = java.math.BigInteger(1, point.copyOfRange(1, 1 + size))
                 require(x < p) { "EC point x coordinate out of range for $algorithm" }
                 // rhs = x³ + ax + b (mod p)
-                val rhs = x.multiply(x).multiply(x).add(curve.a.multiply(x)).add(curve.b).mod(p)
+                val rhs =
+                    x
+                        .multiply(x)
+                        .multiply(x)
+                        .add(curve.a.multiply(x))
+                        .add(curve.b)
+                        .mod(p)
                 // p ≡ 3 (mod 4) for all supported curves → sqrt(c) = c^((p+1)/4) mod p
                 var y = rhs.modPow(p.add(java.math.BigInteger.ONE).shiftRight(2), p)
                 if (y.multiply(y).mod(p) != rhs) {
@@ -521,7 +569,7 @@ object DidMethodUtils {
                 byteArrayOf(0x04) + x.toFixedBytes(size) + y.toFixedBytes(size)
             }
             else -> throw IllegalArgumentException(
-                "Invalid SEC1 point encoding for $algorithm: ${point.size} bytes"
+                "Invalid SEC1 point encoding for $algorithm: ${point.size} bytes",
             )
         }
     }
@@ -536,4 +584,3 @@ object DidMethodUtils {
         }
     }
 }
-

@@ -277,26 +277,30 @@ Being explicit about scope, because it's part of the deliverable:
   it back either — a §9 round-trip through that path silently loses a resolver-attached document
   proof. `DidResolutionMetadata` (§4.2 resolution metadata) does **not** have this gap: its own
   `proof` list round-trips correctly through both `fromJson` and `fromMap`.
-- **Resolved: `AbstractWebDidMethod.resolveFromHttp` now honours local deactivation state on
-  every path, not just the offline fallback.** Previously the live-fetch (HTTP-200) path never
-  consulted the `deactivated` flag TrustWeave had recorded locally — it called
+- **Resolved: local deactivation state is now authoritative on every resolution path, for both
+  did:web and blockchain-backed methods — not just their offline/fallback paths.** Both
+  `AbstractWebDidMethod.resolveFromHttp` and `AbstractBlockchainDidMethod.resolveFromBlockchain`
+  had the same gap: their primary success path (a live HTTP 200, or a successful chain read)
+  never consulted the `deactivated` flag TrustWeave had recorded locally — each called
   `DidMethodUtils.createSuccessResolutionResult(document, method)` with no `deactivated` argument,
-  so a did:web DID this instance had deactivated could still resolve to `Success` as long as the
-  endpoint kept serving the document. This is now fixed, with an explicit fail-safe policy:
-  **local deactivation state is authoritative for did:web, even over a live endpoint response.**
-  Once an instance has recorded a did:web DID as deactivated (via `deactivateDocumentOnHttp`),
-  every subsequent `resolveFromHttp` call returns `Deactivated` for that DID — whether the endpoint
-  is unreachable (the pre-existing fallback path) or still serves a live 200 with the
-  still-published document (the ordinary path, fixed here). The CR does not settle where a
-  web-hosted method should learn of deactivation from, and treating the hosted endpoint as
-  authoritative over local state would let a did:web controller — or an attacker who compromises
-  the host after deactivation — silently resurrect a DID TrustWeave believes is dead; a revoked DID
-  must never verify. **Accepted tradeoff**: because deactivation state here is local and is neither
-  fetched from nor propagated to the hosted endpoint, a DID deactivated on one TrustWeave instance
-  still resolves live on another instance that never observed the deactivation. Consumers who need
-  deactivation to be consistent across instances must replicate that state themselves (e.g. via a
-  shared store behind `deactivateDocumentOnHttp`/`getDocumentMetadata`) rather than relying on the
-  hosted document alone.
+  so a DID this instance had deactivated could still resolve to `Success` as long as the remote
+  source (hosted endpoint, or a still-anchored on-chain record) kept serving the document. Both are
+  now fixed, with the same explicit, fail-safe policy: **local deactivation state is authoritative,
+  even over a live remote read.** Once an instance has recorded a DID as deactivated (via
+  `deactivateDocumentOnHttp` for did:web, `deactivateDocumentOnBlockchain` for blockchain-backed
+  methods), every subsequent resolution call returns `Deactivated` for that DID — whether the
+  remote source is unreachable (the pre-existing fallback path) or still returns a live, valid,
+  still-published/still-anchored document (the ordinary path, fixed here). The CR does not settle
+  where a web-hosted or blockchain-backed method should learn of deactivation from, and treating
+  the remote source as authoritative over local state would let a did:web controller, a stale or
+  unpruned on-chain anchor, or an attacker who compromises the host after deactivation, silently
+  resurrect a DID TrustWeave believes is dead; a revoked DID must never verify. **Accepted
+  tradeoff**: because deactivation state here is local and is neither fetched from nor propagated
+  to the remote source, a DID deactivated on one TrustWeave instance still resolves live on another
+  instance that never observed the deactivation. Consumers who need deactivation to be consistent
+  across instances must replicate that state themselves (e.g. via a shared store behind
+  `deactivateDocumentOnHttp`/`deactivateDocumentOnBlockchain` and `getDocumentMetadata`) rather than
+  relying on the remote document/anchor alone.
 
 ## See also
 

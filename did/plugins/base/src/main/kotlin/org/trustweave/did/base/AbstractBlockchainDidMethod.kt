@@ -21,6 +21,20 @@ import kotlinx.serialization.json.*
  * - Document resolution from blockchain
  * - Fallback to in-memory storage for testing
  *
+ * **Local deactivation is authoritative, even over a successful chain read.** The DID
+ * Resolution 1.0 CR does not settle where a blockchain-backed method should learn of
+ * deactivation from, so [resolveFromBlockchain] makes an explicit, fail-safe choice: once this
+ * instance has recorded a DID as deactivated (via [deactivateDocumentOnBlockchain]), every
+ * subsequent resolution returns [DidResolutionResult.Deactivated] for that DID — whether the
+ * chain read fails and falls back to the stored document, or the chain read succeeds and returns
+ * a live, still-anchored (pre-deactivation) document. A revoked DID must never verify; treating
+ * the chain as authoritative over local state would let a stale or unpruned on-chain anchor
+ * silently resurrect a DID TrustWeave believes is dead. The accepted tradeoff is that a DID
+ * deactivated on one instance still resolves live on another instance that never observed the
+ * deactivation, since this state is local and is not propagated to, or re-derived from, the
+ * chain. This mirrors the same rule applied to did:web in
+ * [AbstractWebDidMethod.resolveFromHttp].
+ *
  * Subclasses should implement:
  * - [createDid]: Create a new DID and anchor its document
  * - [resolveDid]: Resolve DID from blockchain
@@ -129,6 +143,13 @@ abstract class AbstractBlockchainDidMethod(
     /**
      * Resolves a DID document from the blockchain.
      *
+     * **Local deactivation is authoritative, even over a successful chain read** (see the class
+     * KDoc above). Once a DID has been recorded as deactivated via
+     * [deactivateDocumentOnBlockchain], this method returns [DidResolutionResult.Deactivated] for
+     * it on every path — the stored-document fallback (no known tx hash, or the chain read
+     * throws) just as much as the ordinary successful chain read below — even if that read
+     * returns a valid, still-anchored document from before the deactivation.
+     *
      * @param did The DID to resolve
      * @param txHash Optional transaction hash (if known)
      * @return DidResolutionResult
@@ -175,10 +196,22 @@ abstract class AbstractBlockchainDidMethod(
                 // Convert JsonElement to DidDocument
                 val document = jsonElementToDocument(result.payload)
 
+                // Local state is authoritative for blockchain-backed methods (see KDoc above):
+                // capture whatever deactivation this instance has already recorded for the DID
+                // *before* storeDocument() below re-caches the freshly read document —
+                // storeDocument unconditionally replaces the stored DidDocumentMetadata, which
+                // would otherwise silently clear a prior deactivation just because the chain
+                // read succeeded.
+                val recordedDeactivated = getDocumentMetadata(did)?.deactivated ?: false
+
                 // Store locally for caching
                 storeDocument(document.id.value, document)
 
-                org.trustweave.did.base.DidMethodUtils.createSuccessResolutionResult(document, method)
+                org.trustweave.did.base.DidMethodUtils.createSuccessResolutionResult(
+                    document,
+                    method,
+                    deactivated = recordedDeactivated
+                )
             } catch (e: TrustWeaveException.NotFound) {
                 throw e
             } catch (e: TrustWeaveException) {

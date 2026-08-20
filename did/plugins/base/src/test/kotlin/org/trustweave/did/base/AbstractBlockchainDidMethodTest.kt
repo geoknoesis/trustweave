@@ -172,4 +172,47 @@ class AbstractBlockchainDidMethodTest {
         assertTrue(result is DidResolutionResult.Deactivated, "Expected Deactivated, got $result")
         assertTrue(result.documentMetadata.deactivated)
     }
+
+    /**
+     * Regression test for `AbstractBlockchainDidMethod.resolveFromBlockchain`'s
+     * local-deactivation-wins resolution rule (see its KDoc): once TrustWeave has recorded a
+     * blockchain-backed DID as deactivated, resolution must return
+     * [DidResolutionResult.Deactivated] even when the chain read itself still succeeds and
+     * returns a valid (pre-deactivation) document — local state is authoritative here, the same
+     * fail-safe rule `AbstractWebDidMethod.resolveFromHttp` applies for did:web.
+     *
+     * The other tests above prove the two *fallback* paths (no tx hash found; chain read throws)
+     * already honour the recorded `deactivated` flag. This test instead pins `findDocumentTxHash`
+     * to the still-readable transaction that anchored the original (active) document, so
+     * `readPayload` succeeds and returns a document — exercising the primary success path at
+     * `resolveFromBlockchain`'s `readPayload`/`jsonElementToDocument` call, which historically
+     * called `createSuccessResolutionResult(document, method)` with no `deactivated` argument.
+     */
+    @Test
+    fun `deactivated blockchain DID resolves to Deactivated even though the chain read still succeeds`() =
+        runBlocking {
+            var activeTxHash: String? = null
+            val method = TestBlockchainDidMethod(
+                InMemoryKeyManagementService(),
+                InMemoryBlockchainAnchorClient(chainId = CHAIN_ID),
+                txHashLookup = { activeTxHash }
+            )
+            val doc = document(DID)
+            // Capture the tx hash of the *original* anchor before deactivation re-anchors a
+            // second (deactivated) document under a new hash — the original entry is never
+            // removed from the in-memory chain, so this hash stays readable afterwards.
+            activeTxHash = method.anchor(doc)
+            method.deactivate(DID, deactivatedCopy(doc))
+
+            val result = method.resolveDid(Did(DID))
+
+            assertTrue(
+                result is DidResolutionResult.Deactivated,
+                "expected Deactivated even though the chain read succeeded, got $result"
+            )
+            assertTrue(
+                result.documentMetadata.deactivated,
+                "resolution must report deactivated = true even on a successful chain read"
+            )
+        }
 }

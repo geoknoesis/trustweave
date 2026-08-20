@@ -149,9 +149,16 @@ abstract class AbstractDidMethod(
      * Useful for methods that need to cache resolved documents.
      *
      * Preserves any existing metadata for this DID (in particular `deactivated` and the
-     * original `created` timestamp) rather than replacing it outright — only `updated` is
-     * bumped. Re-caching a freshly fetched/read document (e.g. on every successful resolve)
-     * must never silently resurrect a DID this instance has recorded as deactivated.
+     * original `created` timestamp) rather than replacing it outright. Re-caching a freshly
+     * fetched/read document (e.g. on every successful resolve) must never silently resurrect a
+     * DID this instance has recorded as deactivated.
+     *
+     * `updated` is bumped to now on every store *unless* the existing metadata already has
+     * `deactivated = true`. Per DID Core §7.3, deactivation is terminal: no Update operation can
+     * follow it, and DID Resolution 1.0 §4.3 defines `updated` as the timestamp of the last
+     * Update operation — not of the last cache-store. `storeDocument` runs on every successful
+     * resolve, not only on writes, so once a DID is deactivated its `updated` stays pinned at the
+     * deactivation time instead of drifting forward to each subsequent resolve's fetch time.
      *
      * @param did The DID identifier (can be Did object or String)
      * @param document The DID document
@@ -177,9 +184,16 @@ abstract class AbstractDidMethod(
         updateMutex.withLock {
             val now = created ?: Clock.System.now()
             documents[didString] = document
+            val existing = documentMetadata[didString]
             documentMetadata[didString] =
-                (documentMetadata[didString] ?: DidDocumentMetadata(created = now))
-                    .copy(updated = now)
+                if (existing?.deactivated == true) {
+                    // DID Core §7.3: deactivation is terminal. No Update operation can follow, so
+                    // `updated` stays pinned at the deactivation time rather than tracking each
+                    // cache-store triggered by a resolve.
+                    existing
+                } else {
+                    (existing ?: DidDocumentMetadata(created = now)).copy(updated = now)
+                }
         }
     }
 

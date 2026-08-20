@@ -1,6 +1,8 @@
 package org.trustweave.did.base
 
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonElement
 import org.junit.jupiter.api.Test
 import org.trustweave.anchor.AnchorRef
@@ -13,7 +15,9 @@ import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.kms.KeyManagementService
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 /**
@@ -217,7 +221,12 @@ class AbstractBlockchainDidMethodTest {
             // second (deactivated) document under a new hash — the original entry is never
             // removed from the in-memory chain, so this hash stays readable afterwards.
             activeTxHash = method.anchor(doc)
+
+            // Bracket the deactivation call with wall-clock reads so the deactivation timestamp
+            // asserted below can be verified against an independent window, not just against itself.
+            val beforeDeactivation = Clock.System.now()
             method.deactivate(DID, deactivatedCopy(doc))
+            val afterDeactivation = Clock.System.now()
 
             val result = method.resolveDid(Did(DID))
 
@@ -229,12 +238,20 @@ class AbstractBlockchainDidMethodTest {
                 result.documentMetadata.deactivated,
                 "resolution must report deactivated = true even on a successful chain read",
             )
+            val deactivationTimestamp = result.documentMetadata.updated
+            assertNotNull(deactivationTimestamp, "Deactivated result must carry the deactivation `updated` timestamp")
+            assertTrue(
+                deactivationTimestamp in beforeDeactivation..afterDeactivation,
+                "expected updated ($deactivationTimestamp) to fall within the deactivation call's " +
+                    "wall-clock window [$beforeDeactivation, $afterDeactivation]",
+            )
 
             // Regression guard: resolveFromBlockchain's success path used to re-cache the
             // freshly-read document via storeDocument(), which unconditionally overwrote the
             // stored DidDocumentMetadata with a fresh (non-deactivated) instance — silently
             // clearing the recorded deactivation after exactly one successful resolve. A second
             // resolve against the still-readable transaction must keep returning Deactivated.
+            delay(10)
             val secondResult = method.resolveDid(Did(DID))
 
             assertTrue(
@@ -244,6 +261,39 @@ class AbstractBlockchainDidMethodTest {
             assertTrue(
                 secondResult.documentMetadata.deactivated,
                 "second resolution must still report deactivated = true",
+            )
+
+            // Deeper regression guard (timestamp fidelity): storeDocument() used to bump `updated`
+            // to "now" on every cache-store, including a plain re-resolve — not just on a real
+            // Update operation. Per DID Core §7.3, deactivation is terminal: no Update operation
+            // can follow it, so `updated` must stay pinned at the deactivation time rather than
+            // drifting forward to each resolve's fetch time. Resolving a THIRD time (spaced apart
+            // in wall-clock time via the delays above/below) is what actually catches the drift —
+            // resolving only twice was the previous round's regression test, and it is exactly why
+            // this defect survived: the pre-storeDocument-fix workaround in resolveFromBlockchain
+            // already made the *first* post-deactivation resolve report the correct timestamp, so a
+            // 2nd resolve alone can't distinguish "pinned" from "drifted once".
+            delay(10)
+            val thirdResult = method.resolveDid(Did(DID))
+
+            assertTrue(
+                thirdResult is DidResolutionResult.Deactivated,
+                "expected Deactivated on a third resolve too, got $thirdResult",
+            )
+            assertTrue(
+                thirdResult.documentMetadata.deactivated,
+                "third resolution must still report deactivated = true",
+            )
+
+            assertEquals(
+                deactivationTimestamp,
+                secondResult.documentMetadata.updated,
+                "updated must stay pinned at the deactivation time across a 2nd resolve, not drift to the read time",
+            )
+            assertEquals(
+                deactivationTimestamp,
+                thirdResult.documentMetadata.updated,
+                "updated must stay pinned at the deactivation time across a 3rd resolve, not drift further",
             )
         }
 }

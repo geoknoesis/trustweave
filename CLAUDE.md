@@ -15,7 +15,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ./gradlew :did:did-core:test                            # Tests for a specific module
 ./gradlew :did:did-core:test --tests "DidMethodTest"    # Single test class
 
-# Code quality — root project only; does not touch module sources, see Coding Conventions below
+# Code quality
 ./gradlew ktlintCheck                                   # Lint check
 ./gradlew ktlintFormat                                  # Auto-format
 

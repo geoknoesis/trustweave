@@ -102,6 +102,32 @@ sealed class Oidc4VciException(
     )
 
     /**
+     * Exception thrown when an issuer-returned credential cannot be verified.
+     *
+     * Raised by [org.trustweave.credential.oidc4vci.Oidc4VciService.issueCredential] when the
+     * credential the issuer actually returned fails to parse, fails cryptographic verification,
+     * or does not bind to the expected issuer/holder. Issuance fails closed rather than handing
+     * an unverified credential to the wallet.
+     *
+     * @param reason The reason verification failed
+     * @param credentialIssuer The credential issuer URL or DID (if available)
+     * @param cause The underlying exception
+     */
+    data class CredentialVerificationFailed(
+        val reason: String,
+        val credentialIssuer: String? = null,
+        override val cause: Throwable? = null
+    ) : Oidc4VciException(
+        code = "OIDC4VCI_CREDENTIAL_VERIFICATION_FAILED",
+        message = "OIDC4VCI credential verification failed: $reason",
+        context = mapOf(
+            "reason" to reason,
+            "credentialIssuer" to credentialIssuer
+        ).filterValues { it != null },
+        cause = cause
+    )
+
+    /**
      * Exception thrown when no token endpoint can be resolved for a credential issuer.
      *
      * Per OID4VCI v1.0 the token endpoint lives in the authorization server's metadata

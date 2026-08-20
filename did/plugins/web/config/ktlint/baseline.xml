@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<baseline version="1.0">
+    <file name="build.gradle.kts">
+        <error line="23" column="1" source="standard:no-consecutive-blank-lines" />
+    </file>
+    <file name="src/main/kotlin/org/trustweave/webdid/WebDidConfig.kt">
+        <error line="22" column="1" source="standard:no-blank-line-in-list" />
+        <error line="28" column="1" source="standard:no-blank-line-in-list" />
+        <error line="33" column="1" source="standard:no-blank-line-in-list" />
+        <error line="38" column="1" source="standard:no-blank-line-in-list" />
+        <error line="42" column="61" source="standard:trailing-comma-on-declaration-site" />
+        <error line="44" column="1" source="standard:no-empty-first-line-in-class-body" />
+        <error line="49" column="37" source="standard:function-expression-body" />
+        <error line="56" column="59" source="standard:function-expression-body" />
+        <error line="62" column="40" source="standard:multiline-expression-wrapping" />
+        <error line="64" column="18" source="standard:trailing-comma-on-call-site" />
+        <error line="71" column="32" source="standard:function-expression-body" />
+        <error line="106" column="22" source="standard:function-signature" />
+        <error line="106" column="35" source="standard:function-signature" />
+        <error line="106" column="46" source="standard:function-signature" />
+        <error line="111" column="35" source="standard:function-expression-body" />
+        <error line="117" column="68" source="standard:trailing-comma-on-call-site" />
+        <error line="123" column="1" source="standard:no-consecutive-blank-lines" />
+    </file>
+    <file name="src/main/kotlin/org/trustweave/webdid/WebDidMethod.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="5" column="1" source="standard:no-wildcard-imports" />
+        <error line="13" column="1" source="standard:no-wildcard-imports" />
+        <error line="14" column="1" source="standard:no-unused-imports" />
+        <error line="15" column="1" source="standard:no-unused-imports" />
+        <error line="16" column="1" source="standard:no-unused-imports" />
+        <error line="50" column="62" source="standard:trailing-comma-on-declaration-site" />
+        <error line="52" column="1" source="standard:no-empty-first-line-in-class-body" />
+        <error line="76" column="54" source="standard:trailing-comma-on-declaration-site" />
+        <error line="77" column="25" source="standard:function-expression-body" />
+        <error line="96" column="23" source="standard:multiline-expression-wrapping" />
+        <error line="112" column="42" source="standard:function-signature" />
+        <error line="112" column="55" source="standard:function-signature" />
+        <error line="112" column="76" source="standard:function-signature" />
+        <error line="112" column="89" source="standard:multiline-expression-wrapping" />
+        <error line="112" column="89" source="standard:function-signature" />
+        <error line="124" column="110" source="standard:trailing-comma-on-call-site" />
+        <error line="136" column="26" source="standard:trailing-comma-on-call-site" />
+        <error line="141" column="80" source="standard:multiline-expression-wrapping" />
+        <error line="141" column="80" source="standard:function-signature" />
+        <error line="144" column="26" source="standard:multiline-expression-wrapping" />
+        <error line="157" column="38" source="standard:multiline-expression-wrapping" />
+        <error line="160" column="46" source="standard:trailing-comma-on-call-site" />
+        <error line="164" column="28" source="standard:multiline-expression-wrapping" />
+        <error line="168" column="35" source="standard:multiline-expression-wrapping" />
+        <error line="170" column="19" source="standard:if-else-wrapping" />
+        <error line="170" column="24" source="standard:if-else-bracing" />
+        <error line="170" column="24" source="standard:if-else-wrapping" />
+        <error line="170" column="24" source="standard:multiline-if-else" />
+        <error line="170" column="28" source="standard:trailing-comma-on-call-site" />
+        <error line="176" column="34" source="standard:multiline-expression-wrapping" />
+        <error line="196" column="26" source="standard:trailing-comma-on-call-site" />
+        <error line="201" column="70" source="standard:multiline-expression-wrapping" />
+        <error line="201" column="70" source="standard:function-signature" />
+        <error line="216" column="46" source="standard:trailing-comma-on-declaration-site" />
+        <error line="217" column="22" source="standard:multiline-expression-wrapping" />
+        <error line="217" column="22" source="standard:function-signature" />
+        <error line="224" column="35" source="standard:multiline-expression-wrapping" />
+        <error line="227" column="67" source="standard:trailing-comma-on-call-site" />
+        <error line="247" column="26" source="standard:trailing-comma-on-call-site" />
+        <error line="252" column="61" source="standard:multiline-expression-wrapping" />
+        <error line="252" column="61" source="standard:function-signature" />
+        <error line="259" column="35" source="standard:multiline-expression-wrapping" />
+        <error line="265" column="39" source="standard:multiline-expression-wrapping" />
+        <error line="271" column="51" source="standard:trailing-comma-on-call-site" />
+        <error line="284" column="26" source="standard:trailing-comma-on-call-site" />
+        <error line="310" column="22" source="standard:multiline-expression-wrapping" />
+        <error line="320" column="80" source="standard:trailing-comma-on-call-site" />
+        <error line="329" column="100" source="standard:trailing-comma-on-call-site" />
+        <error line="337" column="104" source="standard:trailing-comma-on-call-site" />
+        <error line="346" column="1" source="standard:no-consecutive-blank-lines" />
+    </file>
+    <file name="src/main/kotlin/org/trustweave/webdid/spi/WebDidMethodProvider.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="16" column="1" source="standard:no-empty-first-line-in-class-body" />
+        <error line="21" column="25" source="standard:function-signature" />
+        <error line="21" column="45" source="standard:function-signature" />
+        <error line="21" column="72" source="standard:function-signature" />
+        <error line="52" column="25" source="standard:multiline-expression-wrapping" />
+        <error line="61" column="25" source="standard:multiline-expression-wrapping" />
+        <error line="63" column="14" source="standard:trailing-comma-on-call-site" />
+        <error line="68" column="1" source="standard:no-consecutive-blank-lines" />
+    </file>
+    <file name="src/test/kotlin/org/trustweave/webdid/WebDidMethodUrlTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="16" column="1" source="standard:no-empty-first-line-in-class-body" />
+        <error line="23" column="57" source="standard:trailing-comma-on-call-site" />
+        <error line="31" column="68" source="standard:trailing-comma-on-call-site" />
+        <error line="39" column="68" source="standard:trailing-comma-on-call-site" />
+        <error line="47" column="64" source="standard:trailing-comma-on-call-site" />
+        <error line="55" column="69" source="standard:trailing-comma-on-call-site" />
+        <error line="123" column="68" source="standard:trailing-comma-on-call-site" />
+    </file>
+</baseline>

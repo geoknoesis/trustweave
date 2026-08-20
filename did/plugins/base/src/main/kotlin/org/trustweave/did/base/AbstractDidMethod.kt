@@ -62,6 +62,28 @@ abstract class AbstractDidMethod(
      */
     protected val documents = ConcurrentHashMap<String, DidDocument>()
 
+    /**
+     * Guards every mutation of [documents] and [documentMetadata].
+     *
+     * **Invariant: no code may write either map outside this lock.** Both maps are
+     * `ConcurrentHashMap`s, so each individual write is atomic on its own — but the writers do
+     * read-modify-write (read the existing metadata, merge, write back), and [storeDocument] runs
+     * on *every successful resolve*. An unlocked write landing between another writer's read and
+     * its write is therefore silently overwritten. For a deactivation that is a security defect,
+     * not a bookkeeping one: the DID resolves live again, breaking the DID Resolution 1.0 §4.4
+     * guarantee that a deactivated DID resolves to no document.
+     *
+     * The writers held to this invariant are [updateDid], [deactivateDid], [storeDocument],
+     * [AbstractWebDidMethod.updateDocumentOnHttp], [AbstractWebDidMethod.deactivateDocumentOnHttp],
+     * [AbstractBlockchainDidMethod.updateDocumentOnBlockchain],
+     * [AbstractBlockchainDidMethod.deactivateDocumentOnBlockchain] and the inline cache-store in
+     * `KeyDidMethod.resolveDid`.
+     *
+     * The `Mutex` is **not reentrant**: a holder that calls another lock-taking helper
+     * self-deadlocks. Keep remote I/O (HTTP publish, chain anchor) and any call that reaches
+     * [storeDocument] *outside* the critical section — the blockchain helpers in particular call
+     * `anchorDocument()`, which stores, before taking the lock for their own writes.
+     */
     protected val updateMutex = Mutex()
 
     /**

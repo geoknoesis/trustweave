@@ -17,7 +17,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 import java.net.URL
-import kotlinx.datetime.Instant
+import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.Clock
 
 /**
@@ -286,11 +286,19 @@ abstract class AbstractWebDidMethod(
                 val success = publishDocument(url, document)
 
                 if (success) {
-                    // Update local storage
-                    val now = Clock.System.now()
-                    documentMetadata[didString] =
-                        (documentMetadata[didString] ?: DidDocumentMetadata(created = now))
-                            .copy(updated = now)
+                    // Update local storage under updateMutex, the same lock storeDocument takes.
+                    // Writing outside it reopened the lost-update race the lock exists to close: a
+                    // concurrent storeDocument (which runs on *every* successful resolve) reads the
+                    // existing metadata and writes the merged value back, so an unlocked write
+                    // landing in between is silently overwritten. Only the map writes are inside
+                    // the lock — publishDocument() above is network I/O and must not hold it, and
+                    // holding it there would also serialise every resolve behind a remote call.
+                    updateMutex.withLock {
+                        val now = Clock.System.now()
+                        documentMetadata[didString] =
+                            (documentMetadata[didString] ?: DidDocumentMetadata(created = now))
+                                .copy(updated = now)
+                    }
                 }
 
                 success
@@ -329,11 +337,21 @@ abstract class AbstractWebDidMethod(
                     // Keep the deactivated document locally and flag the metadata as
                     // deactivated (W3C DID Core §7.3) so subsequent resolutions can
                     // surface the deactivation instead of silently "losing" the DID.
-                    val now = Clock.System.now()
-                    documents[didString] = deactivatedDocument
-                    documentMetadata[didString] =
-                        (documentMetadata[didString] ?: DidDocumentMetadata(created = now))
-                            .copy(updated = now, deactivated = true)
+                    //
+                    // Both writes go under updateMutex, the same lock storeDocument takes. This is
+                    // the §4.4 security property, not bookkeeping: storeDocument runs on every
+                    // successful resolve, reading the existing metadata and writing the merged
+                    // value back, so a deactivation written outside the lock could land between
+                    // that read and that write and be silently clobbered — and the DID would
+                    // resolve live again. Only the map writes are inside the lock; publishDocument()
+                    // above is network I/O and must not hold it.
+                    updateMutex.withLock {
+                        val now = Clock.System.now()
+                        documents[didString] = deactivatedDocument
+                        documentMetadata[didString] =
+                            (documentMetadata[didString] ?: DidDocumentMetadata(created = now))
+                                .copy(updated = now, deactivated = true)
+                    }
                 }
 
                 success

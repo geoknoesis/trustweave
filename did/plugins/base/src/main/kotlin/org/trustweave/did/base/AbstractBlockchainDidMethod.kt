@@ -11,6 +11,7 @@ import org.trustweave.kms.KeyManagementService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
+import kotlinx.coroutines.sync.withLock
 
 /**
  * Abstract base class for blockchain-based DID method implementations.
@@ -273,16 +274,22 @@ abstract class AbstractBlockchainDidMethod(
     ): String {
         validateDidFormat(Did(did))
 
-        // Anchor updated document
+        // Anchor updated document. Deliberately *outside* updateMutex: anchorDocument() calls
+        // storeDocument(), which takes the same non-reentrant Mutex — wrapping this call would
+        // self-deadlock. It is also remote I/O, which must not hold a lock that every resolve
+        // contends for.
         val txHash = anchorDocument(document)
 
-        // Update local storage
-        val now =
-            kotlinx.datetime.Clock.System
-                .now()
-        documentMetadata[did] =
-            (documentMetadata[did] ?: DidDocumentMetadata(created = now))
-                .copy(updated = now)
+        // Update local storage under updateMutex, the same lock storeDocument takes, so this
+        // write cannot be lost to (or lose to) a concurrent cache-store's read-modify-write.
+        updateMutex.withLock {
+            val now =
+                kotlinx.datetime.Clock.System
+                    .now()
+            documentMetadata[did] =
+                (documentMetadata[did] ?: DidDocumentMetadata(created = now))
+                    .copy(updated = now)
+        }
 
         return txHash
     }
@@ -301,19 +308,29 @@ abstract class AbstractBlockchainDidMethod(
         validateDidFormat(Did(did))
 
         try {
-            // Anchor deactivated document
+            // Anchor deactivated document. Deliberately *outside* updateMutex: anchorDocument()
+            // calls storeDocument(), which takes the same non-reentrant Mutex — wrapping this call
+            // would self-deadlock. It is also remote I/O, which must not hold the lock.
             anchorDocument(deactivatedDocument)
 
             // Keep the deactivated document locally and flag the metadata as
             // deactivated (W3C DID Core §7.3) so subsequent resolutions can
             // surface the deactivation instead of silently "losing" the DID.
-            val now =
-                kotlinx.datetime.Clock.System
-                    .now()
-            documents[did] = deactivatedDocument
-            documentMetadata[did] =
-                (documentMetadata[did] ?: DidDocumentMetadata(created = now))
-                    .copy(updated = now, deactivated = true)
+            //
+            // Both writes go under updateMutex, the same lock storeDocument takes. This is the
+            // §4.4 security property, not bookkeeping: storeDocument runs on every successful
+            // resolve, reading the existing metadata and writing the merged value back, so a
+            // deactivation written outside the lock could land between that read and that write
+            // and be silently clobbered — and the DID would resolve live again.
+            updateMutex.withLock {
+                val now =
+                    kotlinx.datetime.Clock.System
+                        .now()
+                documents[did] = deactivatedDocument
+                documentMetadata[did] =
+                    (documentMetadata[did] ?: DidDocumentMetadata(created = now))
+                        .copy(updated = now, deactivated = true)
+            }
 
             return true
         } catch (e: Exception) {

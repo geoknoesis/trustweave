@@ -1,7 +1,11 @@
 package org.trustweave.did.base
 
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -16,13 +20,16 @@ import org.trustweave.core.identifiers.KeyId
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
+import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.representation.DidDocumentJsonProducer
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.kms.KeyHandle
 import org.trustweave.kms.KeyManagementService
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -58,13 +65,17 @@ class AbstractWebDidMethodDeactivationTest {
     private class TestWebDidMethod(
         kms: KeyManagementService,
         httpClient: OkHttpClient,
+        private val onPublish: () -> Unit = {},
     ) : AbstractWebDidMethod("web", kms, httpClient) {
         override fun getDocumentUrl(did: String): String = "https://${did.substringAfter("did:web:")}/.well-known/did.json"
 
         override suspend fun publishDocument(
             url: String,
             document: DidDocument,
-        ): Boolean = true
+        ): Boolean {
+            onPublish()
+            return true
+        }
 
         override suspend fun createDid(options: DidCreationOptions): DidDocument =
             throw UnsupportedOperationException("not needed for this test")
@@ -75,6 +86,22 @@ class AbstractWebDidMethodDeactivationTest {
             didString: String,
             deactivatedDocument: DidDocument,
         ): Boolean = deactivateDocumentOnHttp(didString, deactivatedDocument)
+
+        suspend fun recordUpdate(
+            didString: String,
+            document: DidDocument,
+        ): Boolean = updateDocumentOnHttp(didString, document)
+
+        /**
+         * Opens the exact critical section `storeDocument` occupies while it reads the existing
+         * metadata and writes the merged value back. Holding it from a test models "another
+         * writer is mid-store" deterministically, without a spin-and-hope loop.
+         */
+        suspend fun openStoreWindow() = updateMutex.lock()
+
+        fun closeStoreWindow() = updateMutex.unlock()
+
+        fun metadataOf(didString: String): DidDocumentMetadata? = getDocumentMetadata(didString)
     }
 
     private fun document(did: String): DidDocument =
@@ -192,6 +219,104 @@ class AbstractWebDidMethodDeactivationTest {
                 deactivationTimestamp,
                 thirdResult.documentMetadata.updated,
                 "updated must stay pinned at the deactivation time across a 3rd resolve, not drift further",
+            )
+        }
+
+    /**
+     * Concurrency regression: `deactivateDocumentOnHttp` used to write `documents` and
+     * `documentMetadata` **without** taking `updateMutex`, even though `storeDocument`'s KDoc
+     * claims the lock "closes a lost-update race: a concurrent deactivateDid can no longer be
+     * missed or clobbered". It could: a deactivation landing between `storeDocument`'s
+     * read-under-lock and its write-under-lock was silently overwritten and the DID resolved live
+     * again — the §4.4 guarantee that a deactivated DID resolves to no document, broken.
+     *
+     * The race is made deterministic rather than raced for: the test holds `updateMutex` itself,
+     * which is precisely the window a concurrent `storeDocument` occupies, and only then lets the
+     * deactivation run. A correctly locked deactivation parks on the mutex and cannot touch either
+     * map; the unlocked version wrote straight through. `publishDocument` signals when the
+     * deactivation has cleared its HTTP step, so by the time the assertions run the only work it
+     * has left is the local write under test.
+     */
+    @Test
+    fun `deactivateDocumentOnHttp waits for an open store window instead of racing it`() =
+        runBlocking {
+            val doc = document(DID)
+            val published = CompletableDeferred<Unit>()
+            val method =
+                TestWebDidMethod(InMemoryKeyManagementService(), liveEndpointClient(doc)) {
+                    published.complete(Unit)
+                }
+
+            // Seed local state with one ordinary resolve, so the DID is cached and active.
+            assertTrue(method.resolveDid(Did(DID)) is DidResolutionResult.Success)
+
+            method.openStoreWindow()
+            val deactivation = launch(Dispatchers.Default) { method.recordDeactivation(DID, doc) }
+            published.await()
+
+            assertNull(
+                withTimeoutOrNull(500) { deactivation.join() },
+                "deactivation must block on updateMutex while a store window is open",
+            )
+            assertFalse(
+                method.metadataOf(DID)?.deactivated ?: false,
+                "deactivation must not write documentMetadata while another writer holds updateMutex",
+            )
+
+            method.closeStoreWindow()
+            deactivation.join()
+
+            assertTrue(
+                method.metadataOf(DID)?.deactivated == true,
+                "deactivation must land once the store window closes",
+            )
+            assertTrue(
+                method.resolveDid(Did(DID)) is DidResolutionResult.Deactivated,
+                "a deactivation that survived the race must keep the DID deactivated (§4.4)",
+            )
+        }
+
+    /**
+     * Same construction as the deactivation test above, for the sibling writer:
+     * `updateDocumentOnHttp` also wrote `documentMetadata` outside `updateMutex`. Its lost-update
+     * window is less severe than deactivation's (a dropped `updated` timestamp rather than a
+     * resurrected DID), but it is the same defect and the same fix.
+     */
+    @Test
+    fun `updateDocumentOnHttp waits for an open store window instead of racing it`() =
+        runBlocking {
+            val doc = document(DID)
+            val published = CompletableDeferred<Unit>()
+            val method =
+                TestWebDidMethod(InMemoryKeyManagementService(), liveEndpointClient(doc)) {
+                    published.complete(Unit)
+                }
+
+            assertTrue(method.resolveDid(Did(DID)) is DidResolutionResult.Success)
+
+            method.openStoreWindow()
+            val updatedBefore = method.metadataOf(DID)?.updated
+            val update = launch(Dispatchers.Default) { method.recordUpdate(DID, doc) }
+            published.await()
+
+            assertNull(
+                withTimeoutOrNull(500) { update.join() },
+                "update must block on updateMutex while a store window is open",
+            )
+            assertEquals(
+                updatedBefore,
+                method.metadataOf(DID)?.updated,
+                "update must not write documentMetadata while another writer holds updateMutex",
+            )
+
+            method.closeStoreWindow()
+            update.join()
+
+            val updatedAfter = method.metadataOf(DID)?.updated
+            assertNotNull(updatedAfter, "an Update operation must record `updated` once the store window closes")
+            assertTrue(
+                updatedBefore == null || updatedAfter > updatedBefore,
+                "the Update operation's timestamp must be the one recorded after the window closed",
             )
         }
 }

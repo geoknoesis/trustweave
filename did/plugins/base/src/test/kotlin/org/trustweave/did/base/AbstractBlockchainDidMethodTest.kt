@@ -110,7 +110,7 @@ class AbstractBlockchainDidMethodTest {
     }
 
     @Test
-    fun `stored-document fallback surfaces deactivated=true after deactivation`() = runBlocking {
+    fun `stored-document fallback surfaces Deactivated after deactivation`() = runBlocking {
         val method = TestBlockchainDidMethod(
             InMemoryKeyManagementService(),
             InMemoryBlockchainAnchorClient(chainId = CHAIN_ID)
@@ -122,7 +122,9 @@ class AbstractBlockchainDidMethodTest {
         // findDocumentTxHash returns null → stored-document fallback path
         val result = method.resolveDid(Did(DID))
 
-        assertTrue(result is DidResolutionResult.Success, "expected successful resolution, got $result")
+        // DID Resolution 1.0 §4.4: a deactivated DID resolves to Deactivated, not Success —
+        // no document comes back, only documentMetadata.deactivated.
+        assertTrue(result is DidResolutionResult.Deactivated, "expected Deactivated resolution, got $result")
         assertTrue(
             result.documentMetadata.deactivated,
             "resolution after deactivation must report deactivated = true"
@@ -130,7 +132,7 @@ class AbstractBlockchainDidMethodTest {
     }
 
     @Test
-    fun `exception fallback surfaces deactivated=true after deactivation`() = runBlocking {
+    fun `exception fallback surfaces Deactivated after deactivation`() = runBlocking {
         // findDocumentTxHash returns a hash, but the chain read blows up →
         // exercises the catch-Exception stored-document fallback path.
         val method = TestBlockchainDidMethod(
@@ -144,10 +146,30 @@ class AbstractBlockchainDidMethodTest {
 
         val result = method.resolveDid(Did(DID))
 
-        assertTrue(result is DidResolutionResult.Success, "expected successful resolution, got $result")
+        // DID Resolution 1.0 §4.4: a deactivated DID resolves to Deactivated, not Success —
+        // no document comes back, only documentMetadata.deactivated.
+        assertTrue(result is DidResolutionResult.Deactivated, "expected Deactivated resolution, got $result")
         assertTrue(
             result.documentMetadata.deactivated,
             "resolution after deactivation must report deactivated = true"
         )
+    }
+
+    @Test
+    fun `a deactivated blockchain DID resolves to Deactivated with no document`() = runBlocking {
+        // Fixture is constructed inline (matching the other tests in this file) rather than via
+        // a `kms`/`anchorClient` field, which this test class does not have.
+        val method = TestBlockchainDidMethod(
+            InMemoryKeyManagementService(),
+            InMemoryBlockchainAnchorClient(chainId = CHAIN_ID)
+        )
+        val doc = document(DID)
+        method.anchor(doc)
+        method.deactivate(DID, doc)
+
+        val result = method.resolveDid(Did(DID))
+
+        assertTrue(result is DidResolutionResult.Deactivated, "Expected Deactivated, got $result")
+        assertTrue(result.documentMetadata.deactivated)
     }
 }

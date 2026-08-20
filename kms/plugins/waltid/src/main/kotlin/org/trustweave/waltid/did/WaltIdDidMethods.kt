@@ -12,6 +12,7 @@ import org.trustweave.did.model.serviceEndpointFromJsonElement
 import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolutionMetadata
+import org.trustweave.did.resolver.DidResolutionError
 import org.trustweave.did.spi.DidMethodProvider
 import org.trustweave.kms.KeyManagementService
 import org.trustweave.kms.results.GenerateKeyResult
@@ -231,8 +232,7 @@ class WaltIdKeyMethod(
                     did = did,
                     reason = "DID not found in cache",
                     resolutionMetadata = DidResolutionMetadata(
-                        error = "notFound",
-                        errorMessage = "DID not found in cache",
+                        error = DidResolutionError.notFound("DID not found in cache"),
                         pattern = method,
                         properties = mapOf("provider" to "waltid")
                     )
@@ -348,8 +348,7 @@ class WaltIdWebMethod(
                     did = did,
                     reason = "DID not found in cache",
                     resolutionMetadata = DidResolutionMetadata(
-                        error = "notFound",
-                        errorMessage = "DID not found in cache",
+                        error = DidResolutionError.notFound("DID not found in cache"),
                         pattern = method,
                         properties = mapOf("provider" to "waltid")
                     )

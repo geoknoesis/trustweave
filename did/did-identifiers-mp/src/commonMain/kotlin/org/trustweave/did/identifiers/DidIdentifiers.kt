@@ -264,24 +264,120 @@ object VerificationMethodIdSerializer : KSerializer<VerificationMethodId> {
 }
 
 /**
- * DID URL with optional path and fragment.
- * Useful for referencing specific resources within a DID document.
+ * A DID URL: `did:method:id[/path][?query][#fragment]`.
+ *
+ * Components are split in RFC 3986 order so a query never leaks into [path] and a fragment never
+ * leaks into [query]. DID parameters defined by DID Resolution 1.0 §3 are exposed by name.
  */
 @Serializable(with = DidUrlSerializer::class)
 @JvmInline
 value class DidUrl(val value: String) {
+
+    /** The DID portion, with path, query and fragment removed. */
     val did: Did
-        get() = Did(value.substringBefore("/").substringBefore("#"))
+        get() = Did(value.substringBefore("#").substringBefore("?").substringBefore("/"))
 
-    val fragment: String?
-        get() = value.substringAfter("#", "").takeIf { it.isNotEmpty() && value.contains("#") }
-
+    /** The path component without its leading `/`, or null when absent. */
     val path: String?
         get() {
-            val withoutFragment = value.substringBefore("#")
-            val parts = withoutFragment.split("/", limit = 2)
-            return parts.getOrNull(1)
+            val beforeQuery = value.substringBefore("#").substringBefore("?")
+            val slash = beforeQuery.indexOf('/')
+            return if (slash < 0) null else beforeQuery.substring(slash + 1).takeIf { it.isNotEmpty() }
         }
+
+    /** The raw query component without its leading `?`, or null when absent. */
+    val query: String?
+        get() {
+            val beforeFragment = value.substringBefore("#")
+            val mark = beforeFragment.indexOf('?')
+            return if (mark < 0) null else beforeFragment.substring(mark + 1).takeIf { it.isNotEmpty() }
+        }
+
+    /** The fragment without its leading `#`, or null when absent. */
+    val fragment: String?
+        get() {
+            val hash = value.indexOf('#')
+            return if (hash < 0) null else value.substring(hash + 1).takeIf { it.isNotEmpty() }
+        }
+
+    /**
+     * DID parameters parsed from [query], with percent-encoded octets decoded.
+     *
+     * When a parameter name repeats, the first occurrence wins; callers that care should check
+     * [hasDuplicateParameters], which §3.2.2 identifies as ambiguous input.
+     */
+    val parameters: Map<String, String>
+        get() = query?.split('&')
+            ?.filter { it.isNotEmpty() }
+            ?.mapNotNull { pair ->
+                val eq = pair.indexOf('=')
+                if (eq <= 0) null else percentDecode(pair.substring(0, eq)) to percentDecode(pair.substring(eq + 1))
+            }
+            ?.reversed()
+            ?.toMap()
+            ?: emptyMap()
+
+    /** True when a parameter name occurs more than once (§3.2.2: ambiguous input). */
+    val hasDuplicateParameters: Boolean
+        get() {
+            val names = query?.split('&')
+                ?.filter { it.isNotEmpty() }
+                ?.map { it.substringBefore('=') }
+                ?: return false
+            return names.size != names.toSet().size
+        }
+
+    /** The `service` DID parameter (§3). */
+    val service: String? get() = parameters["service"]
+
+    /** The `serviceType` DID parameter (§3). */
+    val serviceType: String? get() = parameters["serviceType"]
+
+    /** The `relativeRef` DID parameter (§3). */
+    val relativeRef: String? get() = parameters["relativeRef"]
+
+    /** The `versionId` DID parameter (§3, §13.4). */
+    val versionId: String? get() = parameters["versionId"]
+
+    /** The `versionTime` DID parameter (§3, §13.4), as its raw datetime string. */
+    val versionTime: String? get() = parameters["versionTime"]
+}
+
+/**
+ * Decodes percent-encoded octets in a DID URL query component.
+ *
+ * Percent-escapes are accumulated as a byte sequence and decoded as UTF-8, so multi-byte
+ * characters (`%C3%A9` -> `e-acute`) survive. Decoding each escape independently as a char would
+ * corrupt them. An escape that is not valid hex is left literal.
+ */
+private fun percentDecode(raw: String): String {
+    if (!raw.contains('%')) return raw
+    val out = StringBuilder(raw.length)
+    val pending = ArrayList<Byte>()
+
+    fun flush() {
+        if (pending.isEmpty()) return
+        out.append(pending.toByteArray().decodeToString())
+        pending.clear()
+    }
+
+    var i = 0
+    while (i < raw.length) {
+        val c = raw[i]
+        if (c == '%' && i + 2 < raw.length) {
+            val code = raw.substring(i + 1, i + 3).toIntOrNull(16)
+            if (code != null) {
+                pending.add(code.toByte())
+                i += 3
+                continue
+            }
+        }
+        flush()
+        out.append(c)
+        i++
+    }
+    flush()
+    return out.toString()
 }
 
 object DidUrlSerializer : KSerializer<DidUrl> {

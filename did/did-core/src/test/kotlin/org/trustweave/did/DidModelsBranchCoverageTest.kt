@@ -10,6 +10,8 @@ import org.trustweave.did.model.ServiceEndpoint
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolutionMetadata
+import org.trustweave.did.resolver.DidResolutionError
+import org.trustweave.did.resolver.DidErrorType
 import org.trustweave.did.exception.DidException.InvalidDidFormat
 import org.junit.jupiter.api.Test
 import kotlin.test.*
@@ -189,13 +191,12 @@ class DidModelsBranchCoverageTest {
         val result = DidResolutionResult.Failure.NotFound(
             did = Did("did:key:test"),
             resolutionMetadata = DidResolutionMetadata(
-                error = "notFound",
-                errorMessage = "notFound"
+                error = DidResolutionError.notFound("notFound")
             )
         )
 
         assertTrue(result is DidResolutionResult.Failure.NotFound)
-        assertEquals("notFound", result.resolutionMetadata.error)
+        assertEquals(DidErrorType.NOT_FOUND, result.resolutionMetadata.error?.type)
     }
 
     @Test

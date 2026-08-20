@@ -84,14 +84,23 @@ when (val resolution = trustweave.resolveDid(did)) {
         validateDidDocument(document)  // Your validation
         // Use document
     }
+    is DidResolutionResult.Deactivated -> {
+        // §4.4: the DID exists but was deactivated — this is a revoked identity, not an
+        // absent one. Reject it explicitly; do NOT fall through to failure handling that
+        // just logs "not found", and never treat this the same as Success.
+    }
     is DidResolutionResult.Failure -> {
         // Handle failure - don't trust unverified data
     }
 }
 
-// ❌ Bad: Ignoring sealed DidResolutionResult (failure vs success, error details)
+// ❌ Bad: Ignoring sealed DidResolutionResult (Success vs Deactivated vs Failure, error details)
 val resolution = trustweave.resolveDid(did)
-// No when / no check — cannot tell Success from Failure or validate the document
+// No when / no check — cannot tell Success from Deactivated/Failure or validate the document
+
+// ❌ Also bad: handling only Success/Failure and letting Deactivated silently no-op
+// (a `when` statement over a sealed class does not require exhaustiveness — a missing
+// branch here compiles cleanly and simply does nothing for a revoked DID)
 ```
 
 ### 3. TrustWeave SDK → Blockchain Networks

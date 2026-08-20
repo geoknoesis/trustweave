@@ -103,7 +103,23 @@ suspend fun CredentialService.issueForDid(
                     reason = "Subject DID method not registered: ${resolutionResult.method}"
                 )
             }
-            else -> {
+            is DidResolutionResult.Failure.OptionsError -> {
+                IssuanceResult.Failure.InvalidRequest(
+                    field = "subjectDid",
+                    reason = "Subject DID resolution failed: ${resolutionResult.reason}"
+                )
+            }
+            is DidResolutionResult.Deactivated -> {
+                // §4.4: a deactivated DID resolves to no document. A revoked subject DID must
+                // not be usable as the subject of a newly issued credential.
+                IssuanceResult.Failure.InvalidRequest(
+                    field = "subjectDid",
+                    reason = "Subject DID is deactivated: ${subjectDid.value}"
+                )
+            }
+            is DidResolutionResult.Success -> {
+                // Unreachable: guarded by the `!is Success` check above; kept only so the
+                // `when` stays exhaustive without an `else` catch-all.
                 IssuanceResult.Failure.InvalidRequest(
                     field = "subjectDid",
                     reason = "Subject DID not resolvable: ${subjectDid.value}"
@@ -147,7 +163,10 @@ suspend fun CredentialService.resolveSubjectDid(
             val resolutionResult = didResolver.resolve(did)
             when (resolutionResult) {
                 is DidResolutionResult.Success -> did
-                else -> null
+                // §4.4: a deactivated DID resolves to no document — treat as unresolved, not
+                // as a stand-in for a live subject DID.
+                is DidResolutionResult.Deactivated -> null
+                is DidResolutionResult.Failure -> null
             }
         } catch (e: IllegalArgumentException) {
             null

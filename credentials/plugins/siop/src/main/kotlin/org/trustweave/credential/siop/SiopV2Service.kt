@@ -423,6 +423,13 @@ class SiopV2Service(
 
         val document = when (val result = resolver.resolve(did)) {
             is DidResolutionResult.Success -> result.document
+            // §4.4: a deactivated DID resolves to no document. The request object's signing
+            // key can no longer be pinned to a revoked verifier identity, so reject rather
+            // than treating this as an ordinary "not found".
+            is DidResolutionResult.Deactivated -> reject(
+                "client_id '$clientId' is deactivated — request object signing key cannot be " +
+                    "pinned to a revoked verifier identity",
+            )
             else -> reject(
                 "DID resolution of client_id '$clientId' failed (${result.javaClass.simpleName}) — " +
                     "request object signing key cannot be pinned",

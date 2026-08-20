@@ -3,6 +3,7 @@ package org.trustweave.did
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.MethodCapabilities
+import org.trustweave.did.resolution.ResolutionOptions
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.validation.DidValidator
 
@@ -21,12 +22,39 @@ import org.trustweave.did.validation.DidValidator
  */
 fun interface DidMethodResolver {
     /**
-     * Resolves a DID to its DID Document.
+     * Resolves a DID to its DID Document with empty resolution options.
      *
      * @param did Type-safe DID identifier
      * @return A [org.trustweave.did.resolver.DidResolutionResult] containing the document and metadata
      */
     suspend fun resolveDid(did: Did): DidResolutionResult
+
+    /**
+     * Resolves a DID with DID Resolution 1.0 §4.1 resolution options.
+     *
+     * The default implementation satisfies §4.4 steps 3 and 4 for methods that do not implement
+     * versioning or cache control: invalid options yield INVALID_OPTIONS, unsupported
+     * method-specific options yield FEATURE_NOT_SUPPORTED, and everything else delegates to
+     * [resolveDid]. Methods that support `versionId`, `versionTime` or `noCache` override this.
+     */
+    suspend fun resolveDid(did: Did, options: ResolutionOptions): DidResolutionResult {
+        options.validate()?.let { error ->
+            return DidResolutionResult.Failure.OptionsError(
+                did = did,
+                reason = error.detail ?: "Invalid resolution options",
+                errorType = error.type
+            )
+        }
+        val unsupported = options.methodSpecificOptions()
+        if (unsupported.isNotEmpty()) {
+            return DidResolutionResult.Failure.OptionsError(
+                did = did,
+                reason = "Resolution options not supported by this DID method: " +
+                    unsupported.sorted().joinToString(", ")
+            )
+        }
+        return resolveDid(did)
+    }
 }
 
 /**

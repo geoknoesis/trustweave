@@ -68,18 +68,42 @@ suspend fun Did.resolveOrThrow(resolver: DidResolver): DidDocument {
             reason = result.reason,
             cause = result.cause
         )
+        is DidResolutionResult.Failure.OptionsError -> throw DidException.DidResolutionFailed(
+            did = result.did ?: this,
+            reason = result.reason
+        )
+        // §4.4: a deactivated DID resolves to no document. resolveOrThrow's whole contract is
+        // "return the document or fail", and callers of resolveOrThrow may use the document for
+        // verification/authorization, so a deactivated DID must fail here rather than silently
+        // being treated as some other kind of missing document.
+        is DidResolutionResult.Deactivated -> throw DidException.DidResolutionFailed(
+            did = result.did,
+            reason = "DID is deactivated"
+        )
     }
 }
 
 /**
- * Resolves this DID and returns the document, or null if not found.
+ * Resolves this DID and returns the document, or null if it could not be resolved.
+ *
+ * A deactivated DID (§4.4) is **not** folded into `null`. `null` here means "no usable
+ * document" only for the ordinary not-found/error cases; a deactivated DID is a revoked
+ * identity, not an absent one, and this convenience API's caller may use the returned document
+ * for verification/authorization — so, like [resolveOrThrow], this throws instead of silently
+ * returning `null` for a revoked DID.
  *
  * @param resolver The DID resolver to use
- * @return The resolved DID document, or null if resolution failed
+ * @return The resolved DID document, or null if resolution failed (not found, invalid, etc.)
+ * @throws DidException.DidResolutionFailed if the DID is deactivated
  */
 suspend fun Did.resolveOrNull(resolver: DidResolver): DidDocument? {
     return when (val result = resolveWith(resolver)) {
         is DidResolutionResult.Success -> result.document
+        // §4.4: see the KDoc above — deactivation must not be indistinguishable from "absent".
+        is DidResolutionResult.Deactivated -> throw DidException.DidResolutionFailed(
+            did = result.did,
+            reason = "DID is deactivated"
+        )
         else -> null
     }
 }
@@ -87,9 +111,14 @@ suspend fun Did.resolveOrNull(resolver: DidResolver): DidDocument? {
 /**
  * Resolves this DID and returns the document, or the default value.
  *
+ * A deactivated DID (§4.4) throws rather than yielding [default] — see [resolveOrNull], which
+ * this delegates to.
+ *
  * @param resolver The DID resolver to use
- * @param default The default document to return if resolution fails
+ * @param default The default document to return if resolution failed for a reason other than
+ *   deactivation
  * @return The resolved DID document, or the default if resolution failed
+ * @throws DidException.DidResolutionFailed if the DID is deactivated
  */
 suspend fun Did.resolveOrDefault(
     resolver: DidResolver,

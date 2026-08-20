@@ -52,7 +52,7 @@ The `DidMethod` interface allows you to implement custom DID methods.
 
 ### Interface Definition
 
-Implement **`org.trustweave.did.DidMethod`** in **`did-core`** (it extends **`DidMethodResolver`**). Resolution uses the type-safe **`Did`** identifier and returns sealed **`org.trustweave.did.resolver.DidResolutionResult`** — not a nullable document on a single data class.
+Implement **`org.trustweave.did.DidMethod`** in **`did-core`** (it extends **`DidMethodResolver`**). Resolution uses the type-safe **`Did`** identifier and returns sealed **`org.trustweave.did.resolver.DidResolutionResult`** — not a nullable document on a single data class. Since the [DID Resolution 1.0 migration](../releases/did-resolution-1.0-migration.md), the sealed type has **three** top-level cases: **`Success`**, **`Deactivated`** (§4.4 — a deactivated DID returns no document, ever), and **`Failure`**.
 
 ```kotlin
 // Abbreviated — see did-core for full Javadoc
@@ -70,7 +70,7 @@ interface DidMethod : DidMethodResolver {
 
 **Reference:** Copy from **`org.trustweave.testkit.did.DidKeyMockMethod`** — it shows **`GenerateKeyResult`**, **`VerificationMethodId`**, **`Did`**, **`kotlinx.datetime.Clock`**, and correct **`DidDocument`** construction.
 
-**Resolution** must return **`DidResolutionResult.Success`** or a **`Failure`** subtype (e.g. **`NotFound`**, **`InvalidFormat`**, **`MethodNotRegistered`**, **`ResolutionError`**):
+**Resolution** must return **`DidResolutionResult.Success`**, **`Deactivated`** (for a deactivated DID — never `Success`, even if your backend still has the document), or a **`Failure`** subtype (e.g. **`NotFound`**, **`InvalidFormat`**, **`MethodNotRegistered`**, **`ResolutionError`**, **`OptionsError`**). If your method extends one of the blockchain/web base classes, prefer **`DidMethodUtils.createSuccessResolutionResult`** (in **`did:plugins:base`**), which picks `Success`/`Deactivated` for you from a `deactivated: Boolean` flag:
 
 ```kotlin
 import org.trustweave.did.identifiers.Did

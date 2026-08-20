@@ -4,6 +4,7 @@ import org.trustweave.did.identifiers.Did
 import org.trustweave.did.DidMethod
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.RegistryBasedResolver
 import org.trustweave.did.spi.DidMethodProvider
 import org.trustweave.kms.KeyManagementService
 import java.util.concurrent.ConcurrentHashMap
@@ -94,6 +95,13 @@ class DidMethodRegistry {
     /**
      * Resolves a DID using a registered method.
      *
+     * Delegates to a [RegistryBasedResolver] over this registry (after the syntax check below)
+     * so that the full DID Resolution 1.0 §4.4 algorithm applies from this entry point too:
+     * §4.4 step 2 method lookup, the §4.4 deactivation conversion, and the §4 resolved-document-id
+     * equality check — and any [org.trustweave.did.exception.DidException] a method implementation
+     * throws is converted to a [DidResolutionResult.Failure] rather than escaping, matching the
+     * "return an error result, never raise" contract every other resolver in this module honours.
+     *
      * @param did The DID string to resolve
      * @return DidResolutionResult — returns [DidResolutionResult.Failure.InvalidFormat] for malformed DIDs,
      *   [DidResolutionResult.Failure.MethodNotRegistered] if the method is not registered
@@ -107,13 +115,7 @@ class DidMethodRegistry {
                 reason = e.message ?: "Invalid DID format"
             )
         }
-        val methodName = parsed.method
-        val method = methods[methodName]
-        return method?.resolveDid(parsed)
-            ?: DidResolutionResult.Failure.MethodNotRegistered(
-                method = methodName,
-                availableMethods = methods.keys.toList()
-            )
+        return RegistryBasedResolver(this).resolve(parsed)
     }
 
     /**

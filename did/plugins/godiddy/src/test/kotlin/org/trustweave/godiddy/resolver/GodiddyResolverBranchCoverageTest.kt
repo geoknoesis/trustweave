@@ -45,6 +45,9 @@ class GodiddyResolverBranchCoverageTest {
                 is DidResolutionResult.Success -> {
                     assertNotNull(result.document)
                 }
+                is DidResolutionResult.Deactivated -> {
+                    assertTrue(true) // Expected behavior
+                }
                 is DidResolutionResult.Failure -> {
                     assertTrue(true) // Expected behavior
                 }
@@ -127,6 +130,9 @@ class GodiddyResolverBranchCoverageTest {
             when (result) {
                 is DidResolutionResult.Success -> {
                     assertNotNull(result.document)
+                }
+                is DidResolutionResult.Deactivated -> {
+                    assertTrue(true) // Expected behavior
                 }
                 is DidResolutionResult.Failure -> {
                     assertTrue(true) // Expected behavior

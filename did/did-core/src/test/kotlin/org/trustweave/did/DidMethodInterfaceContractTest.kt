@@ -9,6 +9,8 @@ import org.trustweave.did.model.ServiceEndpoint
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolutionMetadata
+import org.trustweave.did.resolver.DidResolutionError
+import org.trustweave.did.resolver.DidErrorType
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.*
@@ -187,9 +189,11 @@ class DidMethodInterfaceContractTest {
                     return DidResolutionResult.Failure.NotFound(
                         did = did,
                         reason = "deactivated",
+                        // Under this CR, deactivation is not an error (§4.4); "deactivated" is
+                        // not a recognized legacy code either, so fromLegacyCode's else branch
+                        // faithfully prefixes it rather than collapsing it into NOT_FOUND.
                         resolutionMetadata = DidResolutionMetadata(
-                            error = "deactivated",
-                            errorMessage = "deactivated"
+                            error = DidResolutionError.of(DidErrorType.fromLegacyCode("deactivated"), "deactivated")
                         )
                     )
                 }
@@ -206,8 +210,7 @@ class DidMethodInterfaceContractTest {
                         did = did,
                         reason = "notFound",
                         resolutionMetadata = DidResolutionMetadata(
-                            error = "notFound",
-                            errorMessage = "notFound"
+                            error = DidResolutionError.notFound("notFound")
                         )
                     )
                 }

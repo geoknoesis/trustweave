@@ -1,9 +1,17 @@
 package org.trustweave.did.model
 
-import org.trustweave.did.identifiers.Did
-import org.trustweave.did.identifiers.VerificationMethodId
+import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.VerificationMethodId
+import org.trustweave.did.util.XmlDateTimeSerializer
+import org.trustweave.did.util.toXmlDateTime
 
 /**
  * Note: Did class has been moved to org.trustweave.did.identifiers.Did
@@ -80,25 +88,43 @@ data class DidDocument(
 )
 
 /**
- * Metadata about a DID Document following W3C DID Core specification.
+ * DID document metadata per DID Resolution 1.0 §4.3 — metadata about the DID *document*.
  *
- * @param created ISO 8601 timestamp when the DID document was created
- * @param updated ISO 8601 timestamp when the DID document was last updated
- * @param deactivated Whether the DID has been deactivated (W3C DID Core §7.3).
- *        Defaults to false so existing serialized metadata stays wire-compatible.
- * @param versionId Version identifier for the DID document
- * @param nextUpdate ISO 8601 timestamp indicating when to check for updates
- * @param canonicalId Canonical form of the DID identifier (typed)
- * @param equivalentId List of equivalent DID identifiers (typed)
+ * @param created timestamp of the Create operation (SHOULD be present)
+ * @param updated timestamp of the last Update operation (SHOULD be present)
+ * @param deactivated MUST be true when the DID is deactivated; omitted otherwise
+ * @param versionId version of the last Update operation (SHOULD be present)
+ * @param nextUpdate timestamp of the next Update, when this is not the latest version
+ * @param nextVersionId version of the next Update, when this is not the latest version
+ * @param canonicalId the canonical DID for the subject, per the DID method
+ * @param equivalentId DIDs the method guarantees are logically equivalent to `id`
+ * @param proof proofs added by the controller or the verifiable data registry
  */
 @Serializable
 data class DidDocumentMetadata(
-    @Contextual val created: kotlinx.datetime.Instant? = null,
-    @Contextual val updated: kotlinx.datetime.Instant? = null,
+    @Serializable(with = XmlDateTimeSerializer::class) val created: Instant? = null,
+    @Serializable(with = XmlDateTimeSerializer::class) val updated: Instant? = null,
     val deactivated: Boolean = false,
     val versionId: String? = null,
-    @Contextual val nextUpdate: kotlinx.datetime.Instant? = null,
+    @Serializable(with = XmlDateTimeSerializer::class) val nextUpdate: Instant? = null,
+    val nextVersionId: String? = null,
     val canonicalId: Did? = null,
-    val equivalentId: List<Did> = emptyList()
-)
+    val equivalentId: List<Did> = emptyList(),
+    val proof: List<JsonObject> = emptyList()
+) {
+    /** Serializes to the §4.3 JSON structure, omitting absent members. */
+    fun toJson(): JsonObject = buildJsonObject {
+        created?.let { put("created", it.toXmlDateTime()) }
+        updated?.let { put("updated", it.toXmlDateTime()) }
+        if (deactivated) put("deactivated", true)
+        versionId?.let { put("versionId", it) }
+        nextUpdate?.let { put("nextUpdate", it.toXmlDateTime()) }
+        nextVersionId?.let { put("nextVersionId", it) }
+        canonicalId?.let { put("canonicalId", it.value) }
+        if (equivalentId.isNotEmpty()) {
+            put("equivalentId", JsonArray(equivalentId.map { JsonPrimitive(it.value) }))
+        }
+        if (proof.isNotEmpty()) put("proof", JsonArray(proof))
+    }
+}
 

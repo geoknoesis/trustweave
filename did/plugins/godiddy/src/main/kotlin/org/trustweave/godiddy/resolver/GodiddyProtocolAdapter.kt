@@ -44,15 +44,19 @@ class GodiddyProtocolAdapter : UniversalResolverProtocolAdapter {
     override fun extractDidDocument(jsonResponse: JsonObject): JsonObject? {
         // GoDiddy format is the same as standard: { "didDocument": {...}, ... }
         // If "didDocument" key exists, use it; otherwise assume the root is the document
-        return jsonResponse["didDocument"]?.jsonObject ?: jsonResponse
+        // `as?` rather than the `.jsonObject` extension: an explicit JSON null (JsonNull, not
+        // Kotlin null — e.g. a deactivated-DID body's "didDocument": null) would still invoke
+        // `.jsonObject` and throw IllegalArgumentException instead of degrading to null.
+        return (jsonResponse["didDocument"] as? JsonObject) ?: jsonResponse
     }
 
     override fun extractDocumentMetadata(jsonResponse: JsonObject): JsonObject? {
-        return jsonResponse["didDocumentMetadata"]?.jsonObject
+        // See extractDidDocument: `as?` degrades an explicit JSON null to null instead of throwing.
+        return jsonResponse["didDocumentMetadata"] as? JsonObject
     }
 
     override fun extractResolutionMetadata(jsonResponse: JsonObject): JsonObject {
-        return jsonResponse["didResolutionMetadata"]?.jsonObject ?: buildJsonObject { }
+        return (jsonResponse["didResolutionMetadata"] as? JsonObject) ?: buildJsonObject { }
     }
 
     override val providerName: String = "godiddy"

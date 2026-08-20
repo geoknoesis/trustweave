@@ -10,6 +10,7 @@ import org.trustweave.did.model.DidService
 import org.trustweave.did.model.serviceEndpointFromJsonElement
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolutionMetadata
+import org.trustweave.did.resolver.DidResolutionError
 import org.trustweave.did.resolver.UniversalResolver
 import org.trustweave.godiddy.GodiddyClient
 import org.trustweave.godiddy.models.GodiddyResolutionResponse
@@ -55,8 +56,7 @@ class GodiddyResolver(
                     did = Did(did),
                     reason = "notFound",
                     resolutionMetadata = DidResolutionMetadata(
-                        error = "notFound",
-                        errorMessage = "notFound",
+                        error = DidResolutionError.notFound("notFound"),
                         properties = mapOf("provider" to "godiddy")
                     )
                 )
@@ -73,9 +73,12 @@ class GodiddyResolver(
 
             // Universal Resolver returns the DID document directly or wrapped
             // Check if it's a wrapped response or direct document
-            val didDocumentJson = jsonResponse["didDocument"]?.jsonObject ?: jsonResponse
-            val didDocumentMetadata = jsonResponse["didDocumentMetadata"]?.jsonObject
-            val didResolutionMetadata = jsonResponse["didResolutionMetadata"]?.jsonObject
+            // Use `as?` rather than the `.jsonObject` extension: a deactivated DID's response
+            // carries "didDocument": null (JsonNull, not Kotlin null — `?.jsonObject` would
+            // still invoke on it and throw IllegalArgumentException instead of falling through).
+            val didDocumentJson = (jsonResponse["didDocument"] as? JsonObject) ?: jsonResponse
+            val didDocumentMetadata = jsonResponse["didDocumentMetadata"] as? JsonObject
+            val didResolutionMetadata = jsonResponse["didResolutionMetadata"] as? JsonObject
 
             // Convert godiddy response to TrustWeave DidResolutionResult
             val document = try {
@@ -90,17 +93,38 @@ class GodiddyResolver(
                 .plus("provider" to "godiddy")
             val resolutionMetadata = DidResolutionMetadata.fromMap(resolutionMetadataMap)
 
-            if (document != null) {
+            if (documentMetadata.deactivated) {
+                // §4.4/§12.1: deactivation is checked before document-presence. The upstream
+                // Universal Resolver may signal a deactivated DID either with `didDocument: null`
+                // plus `didDocumentMetadata.deactivated: true` (the body a conforming resolver
+                // would send with HTTP 410), or with a *non-null* `didDocument` alongside
+                // `deactivated: true` (the shape a DID Resolution v0.3-era resolver emits).
+                // Checking deactivation first — ahead of the document != null branch below —
+                // means both shapes yield Deactivated, never a Success carrying a revoked
+                // document.
+                DidResolutionResult.Deactivated(
+                    did = Did(did),
+                    documentMetadata = documentMetadata,
+                    resolutionMetadata = resolutionMetadata
+                )
+            } else if (document != null) {
                 DidResolutionResult.Success(
                     document = document,
                     documentMetadata = documentMetadata,
                     resolutionMetadata = resolutionMetadata
                 )
             } else {
+                // §4 / Failure's invariant: every Failure MUST carry a non-null error.
+                // `resolutionMetadata` here is parsed straight from an upstream body that may
+                // carry no structured error member at all — synthesize one rather than pass
+                // resolutionMetadata through unchanged.
                 DidResolutionResult.Failure.NotFound(
                     did = Did(did),
                     reason = "Document conversion failed",
-                    resolutionMetadata = resolutionMetadata
+                    resolutionMetadata = resolutionMetadata.copy(
+                        error = resolutionMetadata.error
+                            ?: DidResolutionError.notFound("Document conversion failed")
+                    )
                 )
             }
         } catch (e: TrustWeaveException) {
@@ -228,18 +252,22 @@ class GodiddyResolver(
         val updated = json["updated"]?.jsonPrimitive?.content?.let {
             try { Instant.parse(it) } catch (e: Exception) { null }
         }
+        val deactivated = json["deactivated"]?.jsonPrimitive?.booleanOrNull ?: false
         val versionId = json["versionId"]?.jsonPrimitive?.content
         val nextUpdate = json["nextUpdate"]?.jsonPrimitive?.content?.let {
             try { Instant.parse(it) } catch (e: Exception) { null }
         }
+        val nextVersionId = json["nextVersionId"]?.jsonPrimitive?.content
         val canonicalId = json["canonicalId"]?.jsonPrimitive?.content
         val equivalentId = json["equivalentId"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content } ?: emptyList()
 
         return DidDocumentMetadata(
             created = created,
             updated = updated,
+            deactivated = deactivated,
             versionId = versionId,
             nextUpdate = nextUpdate,
+            nextVersionId = nextVersionId,
             canonicalId = canonicalId?.let { Did(it) },
             equivalentId = equivalentId.map { Did(it) }
         )

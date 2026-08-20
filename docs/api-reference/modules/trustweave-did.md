@@ -154,9 +154,16 @@ val result2 = universalResolver.resolveDid(did.value)
 
 // Fluent API with extensions (did-core)
 val document = did.resolveOrThrow(resolver)
-val docOrNull = did.resolveOrNull(resolver)
-val docOrDefault = did.resolveOrDefault(resolver, defaultDocument)
+val docOrNull = did.resolveOrNull(resolver)      // null for not-found/invalid/error;
+                                                  // throws DidException.DidResolutionFailed if `did` is deactivated
+val docOrDefault = did.resolveOrDefault(resolver, defaultDocument) // same deactivation throw — see below
 ```
+
+**Deactivation note:** `resolveOrNull` and `resolveOrDefault` do **not** fold a deactivated DID
+into `null` / the default value. A deactivated DID is a revoked identity, not an absent one, so
+both throw `DidException.DidResolutionFailed` in that case — converging with `resolveOrThrow`.
+Catch that exception explicitly if the DID you're resolving might legitimately be deactivated;
+see [Migrating to DID Resolution 1.0](../../releases/did-resolution-1.0-migration.md#8-resolveornull--resolveordefault-now-throw-for-a-deactivated-did).
 
 **What this does:** Provides a unified interface for resolving DIDs across different methods with automatic retry and fluent API support.
 
@@ -187,7 +194,7 @@ The module includes W3C-compliant models for:
 - `DidDocument` – complete DID Document structure
 - `VerificationMethod` – public key and verification methods
 - `DidService` – service endpoints
-- `DidResolutionResult` – resolution response with metadata
+- `DidResolutionResult` – resolution response with metadata (sealed: `Success` / `Deactivated` / `Failure`, per [DID Resolution 1.0](https://www.w3.org/TR/2026/CR-did-resolution-1.0-20260806/))
 - `DidRegistrationResponse` – registration response with job tracking
 - `DidState` – operation state (finished, failed, action, wait)
 - `Secret` – key material for registration operations
@@ -333,11 +340,14 @@ registry["new"] = NewDidMethod()  // Assignment
 // Resolve to document or throw / null (did-core extensions)
 val document = Did("did:key:123").resolveOrThrow(resolver)
 
+// resolveOrNull throws DidException.DidResolutionFailed for a deactivated DID rather than
+// returning null — see the deactivation note above.
 val doc = Did("did:key:123").resolveOrNull(resolver)
 
 // Inspect the sealed result (extensions: errorMessage, isSuccess, …)
 when (val res = Did("did:key:123").resolveWith(resolver)) {
     is DidResolutionResult.Success -> println("Resolved: ${res.document.id}")
+    is DidResolutionResult.Deactivated -> println("Deactivated: ${res.did.value}")
     is DidResolutionResult.Failure -> println("Failed: ${res.errorMessage}")
 }
 ```

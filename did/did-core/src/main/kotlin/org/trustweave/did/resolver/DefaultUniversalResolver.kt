@@ -8,6 +8,7 @@ import org.trustweave.did.model.DidService
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.parser.DidDocumentJsonParser
 import org.trustweave.did.exception.DidException
+import org.trustweave.did.representation.DidMediaTypes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.withContext
@@ -204,7 +205,7 @@ class DefaultUniversalResolver(
         val requestBuilder = HttpRequest.newBuilder()
             .uri(uri)
             .timeout(Duration.ofSeconds(timeout.toLong()))
-            .header("Accept", "application/json")
+            .header("Accept", DidMediaTypes.DID_RESOLUTION)
 
         // Use protocol adapter to configure authentication
         protocolAdapter.configureAuth(requestBuilder, apiKey)
@@ -234,8 +235,9 @@ class DefaultUniversalResolver(
                             reason = "Malformed JSON in resolver response: ${e.message}",
                             cause = e,
                             resolutionMetadata = DidResolutionMetadata(
-                                error = "resolutionError",
-                                errorMessage = "Malformed JSON in resolver response: ${e.message}"
+                                error = DidResolutionError.internalError(
+                                    "Malformed JSON in resolver response: ${e.message}"
+                                )
                             )
                         )
                     }
@@ -248,8 +250,7 @@ class DefaultUniversalResolver(
                             reason = "Resolver response is not a JSON object",
                             cause = null,
                             resolutionMetadata = DidResolutionMetadata(
-                                error = "resolutionError",
-                                errorMessage = "Resolver response is not a JSON object"
+                                error = DidResolutionError.internalError("Resolver response is not a JSON object")
                             )
                         )
                     }
@@ -267,21 +268,57 @@ class DefaultUniversalResolver(
                         resolutionMetadataMap.plus("provider" to protocolAdapter.providerName)
                     )
 
-                    if (document != null) {
-                        DidResolutionResult.Success(
-                            document = document,
-                            documentMetadata = documentMetadata,
-                            resolutionMetadata = resolutionMetadata
-                        )
-                    } else {
-                        val upstreamReason = resolutionMetadata.errorMessage
-                            ?: resolutionMetadata.error
-                            ?: "DID document not found in response"
-                        DidResolutionResult.Failure.NotFound(
-                            did = Did(did),
-                            reason = upstreamReason,
-                            resolutionMetadata = resolutionMetadata
-                        )
+                    when {
+                        // §4.4/§12.1: deactivation is checked before document-presence. An
+                        // upstream HTTP 200 can carry both a non-null `didDocument` and
+                        // `didDocumentMetadata.deactivated: true` — this is exactly the shape a
+                        // DID Resolution v0.3-era resolver emits (a 0.6 client behind a 0.5
+                        // server reproduces it directly), and the CR does not forbid it either.
+                        // Checking deactivation first means that shape still yields Deactivated,
+                        // never a Success carrying a revoked document — the same guarantee the
+                        // 410 branch below already provides, now also on the 200 path.
+                        documentMetadata.deactivated -> {
+                            DidResolutionResult.Deactivated(
+                                did = Did(did),
+                                documentMetadata = documentMetadata.copy(deactivated = true),
+                                resolutionMetadata = resolutionMetadata
+                            )
+                        }
+                        document != null -> {
+                            DidResolutionResult.Success(
+                                document = document,
+                                documentMetadata = documentMetadata,
+                                resolutionMetadata = resolutionMetadata
+                            )
+                        }
+                        else -> {
+                            // Prefer the human-readable detail/title over the raw §11 type URL —
+                            // `error?.type` is a machine identifier (e.g.
+                            // "https://www.w3.org/ns/did#NOT_FOUND"), not failure text. Fall back
+                            // to a bare errorMessage straight from the raw map: this branch is
+                            // already committed to a failure (document == null), so — unlike
+                            // DidResolutionMetadata.fromMap, which must stay silent on a bare
+                            // errorMessage to avoid mislabeling a successful resolution — it is
+                            // safe here to treat an upstream errorMessage with no structured error
+                            // as the failure reason.
+                            val upstreamReason = resolutionMetadata.error?.detail
+                                ?: (resolutionMetadataMap["errorMessage"] as? String)
+                                ?: resolutionMetadata.error?.title
+                                ?: "DID document not found in response"
+                            // §4 / Failure's invariant: every Failure MUST carry a non-null
+                            // error. `resolutionMetadata` here is parsed straight from an
+                            // upstream body that may carry no structured error member at all —
+                            // synthesize one from the reason we just computed rather than pass
+                            // resolutionMetadata through unchanged.
+                            DidResolutionResult.Failure.NotFound(
+                                did = Did(did),
+                                reason = upstreamReason,
+                                resolutionMetadata = resolutionMetadata.copy(
+                                    error = resolutionMetadata.error
+                                        ?: DidResolutionError.notFound(upstreamReason)
+                                )
+                            )
+                        }
                     }
                 }
                 404 -> {
@@ -290,8 +327,49 @@ class DefaultUniversalResolver(
                         did = Did(did),
                         reason = "DID not found",
                         resolutionMetadata = DidResolutionMetadata(
-                            error = "notFound",
-                            errorMessage = "DID not found",
+                            error = DidResolutionError.notFound("DID not found"),
+                            properties = mapOf("provider" to protocolAdapter.providerName)
+                        )
+                    )
+                }
+                410 -> {
+                    // §4.4/§12.1: 410 means the DID exists but has been deactivated. This is not
+                    // an error — no error object is attached to the resolution metadata. The body
+                    // may carry the upstream didDocumentMetadata; parse it best-effort but always
+                    // force deactivated = true regardless of what (if anything) parsed. Same
+                    // read-one-extra-byte-and-compare oversized-body guard shape as the 200
+                    // branch, but an oversized body degrades to the default here instead of
+                    // failing resolution — the 410 status itself already establishes
+                    // deactivation, so a body we can't/won't fully buffer must not downgrade
+                    // that to an error.
+                    val documentMetadata = try {
+                        val bytes = bodyStream.readNBytes(MAX_RESPONSE_BYTES + 1)
+                        if (bytes.size > MAX_RESPONSE_BYTES) {
+                            null
+                        } else {
+                            val body = String(bytes, Charsets.UTF_8)
+                            parseJsonResponse(body)
+                                ?.let { protocolAdapter.extractDocumentMetadata(it) }
+                                ?.let { parseDidDocumentMetadata(it) }
+                        }
+                    } catch (_: kotlinx.serialization.SerializationException) {
+                        null
+                    } catch (_: IllegalArgumentException) {
+                        // Belt-and-braces backstop: parseJsonResponse/extractDocumentMetadata/
+                        // parseDidDocumentMetadata are all now guarded against wrong-shaped and
+                        // JsonNull-valued fields (see parseDidDocumentMetadata's kdoc), so this
+                        // should not fire today. It stays because this exact call chain has
+                        // already had two unguarded-cast regressions found one level apart across
+                        // two review rounds — the one property that must hold unconditionally is
+                        // "410 always yields Deactivated", and that guarantee should not depend on
+                        // every downstream helper staying perfectly guarded as this code evolves.
+                        null
+                    } ?: DidDocumentMetadata(deactivated = true)
+
+                    DidResolutionResult.Deactivated(
+                        did = Did(did),
+                        documentMetadata = documentMetadata.copy(deactivated = true),
+                        resolutionMetadata = DidResolutionMetadata(
                             properties = mapOf("provider" to protocolAdapter.providerName)
                         )
                     )
@@ -303,20 +381,40 @@ class DefaultUniversalResolver(
                     if (statusCode in retryConfig.retryableStatusCodes) {
                         throw IOException("Retryable HTTP error: $statusCode")
                     }
-                    // Non-retryable errors (4xx except 404) return immediately; use{} closes the stream
-                    DidResolutionResult.Failure.ResolutionError(
-                        did = Did(did),
-                        reason = "HTTP $statusCode",
-                        cause = null,
-                        resolutionMetadata = DidResolutionMetadata(
-                            error = "resolutionError",
-                            errorMessage = "HTTP $statusCode",
-                            properties = mapOf(
-                                "statusCode" to statusCode.toString(),
-                                "provider" to protocolAdapter.providerName
+                    // Non-retryable errors map through the §12.1 HTTP status table to the
+                    // matching error type; unmapped statuses fall back to INTERNAL_ERROR.
+                    val errorType = when (statusCode) {
+                        400 -> DidErrorType.INVALID_DID
+                        406 -> DidErrorType.REPRESENTATION_NOT_SUPPORTED
+                        501 -> DidErrorType.METHOD_NOT_SUPPORTED
+                        else -> DidErrorType.INTERNAL_ERROR
+                    }
+                    val detail = "Upstream resolver returned HTTP $statusCode"
+                    if (errorType == DidErrorType.METHOD_NOT_SUPPORTED) {
+                        DidResolutionResult.Failure.MethodNotRegistered(
+                            method = Did(did).method,
+                            resolutionMetadata = DidResolutionMetadata(
+                                error = DidResolutionError.methodNotSupported(detail),
+                                properties = mapOf(
+                                    "statusCode" to statusCode.toString(),
+                                    "provider" to protocolAdapter.providerName
+                                )
                             )
                         )
-                    )
+                    } else {
+                        DidResolutionResult.Failure.ResolutionError(
+                            did = Did(did),
+                            reason = detail,
+                            cause = null,
+                            resolutionMetadata = DidResolutionMetadata(
+                                error = DidResolutionError.of(errorType, detail),
+                                properties = mapOf(
+                                    "statusCode" to statusCode.toString(),
+                                    "provider" to protocolAdapter.providerName
+                                )
+                            )
+                        )
+                    }
                 }
             }
         }
@@ -433,23 +531,40 @@ class DefaultUniversalResolver(
 
     /**
      * Parses DID document metadata from JSON.
+     *
+     * Every field extraction is guarded against both a wrong-shaped value (e.g. an object where
+     * a primitive is expected) and an explicit JSON `null` sub-field. `as? JsonPrimitive`/
+     * `as? JsonArray` (rather than the `.jsonPrimitive`/`.jsonArray` extensions) degrade to
+     * Kotlin `null` instead of throwing for a wrong-shaped value; `.contentOrNull` (rather than
+     * `.content`) degrades to Kotlin `null` instead of the literal string `"null"` for a
+     * `JsonNull` value — `JsonNull` is itself a `JsonPrimitive` subtype, so `.jsonPrimitive`
+     * alone does not catch it the way `.jsonObject`/`.jsonArray` reject it. `Did(...)` is
+     * wrapped in try/catch, mirroring the existing `Instant.parse` pattern below, since a
+     * `null`-turned-`"null"` (or any other non-DID string) would otherwise throw uncaught.
      */
     private fun parseDidDocumentMetadata(metadataJson: JsonObject?): DidDocumentMetadata {
         if (metadataJson == null) return DidDocumentMetadata()
 
-        val created = metadataJson["created"]?.jsonPrimitive?.content?.let {
+        val created = (metadataJson["created"] as? JsonPrimitive)?.contentOrNull?.let {
             try { Instant.parse(it) } catch (e: Exception) { null }
         }
-        val updated = metadataJson["updated"]?.jsonPrimitive?.content?.let {
+        val updated = (metadataJson["updated"] as? JsonPrimitive)?.contentOrNull?.let {
             try { Instant.parse(it) } catch (e: Exception) { null }
         }
-        val deactivated = metadataJson["deactivated"]?.jsonPrimitive?.booleanOrNull ?: false
-        val versionId = metadataJson["versionId"]?.jsonPrimitive?.content
-        val nextUpdate = metadataJson["nextUpdate"]?.jsonPrimitive?.content?.let {
+        val deactivated = (metadataJson["deactivated"] as? JsonPrimitive)?.booleanOrNull ?: false
+        val versionId = (metadataJson["versionId"] as? JsonPrimitive)?.contentOrNull
+        val nextUpdate = (metadataJson["nextUpdate"] as? JsonPrimitive)?.contentOrNull?.let {
             try { Instant.parse(it) } catch (e: Exception) { null }
         }
-        val canonicalId = metadataJson["canonicalId"]?.jsonPrimitive?.content?.let { Did(it) }
-        val equivalentId = metadataJson["equivalentId"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content?.let { Did(it) } } ?: emptyList()
+        val nextVersionId = (metadataJson["nextVersionId"] as? JsonPrimitive)?.contentOrNull
+        val canonicalId = (metadataJson["canonicalId"] as? JsonPrimitive)?.contentOrNull?.let {
+            try { Did(it) } catch (e: Exception) { null }
+        }
+        val equivalentId = (metadataJson["equivalentId"] as? JsonArray)?.mapNotNull { element ->
+            (element as? JsonPrimitive)?.contentOrNull?.let { id ->
+                try { Did(id) } catch (e: Exception) { null }
+            }
+        } ?: emptyList()
 
         return DidDocumentMetadata(
             created = created,
@@ -457,6 +572,7 @@ class DefaultUniversalResolver(
             deactivated = deactivated,
             versionId = versionId,
             nextUpdate = nextUpdate,
+            nextVersionId = nextVersionId,
             canonicalId = canonicalId,
             equivalentId = equivalentId
         )
@@ -474,6 +590,11 @@ class DefaultUniversalResolver(
      */
     private fun convertJsonElement(element: JsonElement): Any? {
         return when (element) {
+            // `JsonNull` is itself a `JsonPrimitive` subtype, so this branch must be checked
+            // before `is JsonPrimitive` below — otherwise it is unreachable dead code and a
+            // genuine JSON null silently becomes the literal string "null" via the `else ->
+            // element.content` fallback in the JsonPrimitive branch.
+            is JsonNull -> null
             is JsonPrimitive -> {
                 when {
                     element.isString -> element.content
@@ -485,7 +606,6 @@ class DefaultUniversalResolver(
             }
             is JsonArray -> element.map { convertJsonElement(it) }
             is JsonObject -> element.entries.associate { it.key to convertJsonElement(it.value) }
-            is JsonNull -> null
         }
     }
 

@@ -1,10 +1,11 @@
 package org.trustweave.did.resolver
 
-import org.trustweave.did.identifiers.Did
-import org.trustweave.did.DidMethod
 import org.trustweave.did.exception.DidException
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.model.expandRelativeDidUrls
 import org.trustweave.did.registry.DidMethodRegistry
-import org.trustweave.did.validation.DidValidator
+import org.trustweave.did.representation.DidMediaTypes
+import org.trustweave.did.resolution.ResolutionOptions
 
 /**
  * Resolver implementation that uses a [DidMethodRegistry] to resolve DIDs.
@@ -35,12 +36,15 @@ import org.trustweave.did.validation.DidValidator
  * registry.register(WebDidMethod())
  *
  * val resolver = RegistryBasedResolver(registry)
- * 
+ *
  * // Resolve a DID
  * val result = resolver.resolve(Did("did:key:z6Mk..."))
  * when (result) {
  *     is DidResolutionResult.Success -> {
  *         println("Resolved: ${result.document.id}")
+ *     }
+ *     is DidResolutionResult.Deactivated -> {
+ *         println("Deactivated: ${result.did}")
  *     }
  *     is DidResolutionResult.Failure.MethodNotRegistered -> {
  *         println("Method not available: ${result.method}")
@@ -57,78 +61,136 @@ class RegistryBasedResolver(
     private val registry: DidMethodRegistry
 ) : DidResolver {
 
-    override suspend fun resolve(did: Did): DidResolutionResult {
-        // DID is already parsed and validated (Did constructor validates)
-        // No need to re-parse or re-validate
-        val didString = did.value
-        
-        try {
-            val method = registry.get(did.method)
+    override suspend fun resolve(did: Did): DidResolutionResult = resolve(did, ResolutionOptions.EMPTY)
 
-            if (method == null) {
-                return DidResolutionResult.Failure.MethodNotRegistered(
-                    method = did.method,
-                    availableMethods = registry.getAllMethodNames(),
-                    resolutionMetadata = DidResolutionMetadata(
-                        error = "methodNotSupported",
-                        errorMessage = "DID method '${did.method}' is not registered",
-                        properties = mapOf("did" to didString)
-                    )
+    /**
+     * Executes the DID Resolution 1.0 §4.4 algorithm.
+     *
+     * Step 1 (DID syntax validation) is enforced by the [Did] constructor and by
+     * [DidMethodRegistry.resolve] for string input, so this method starts at step 2.
+     */
+    override suspend fun resolve(did: Did, options: ResolutionOptions): DidResolutionResult {
+        // §4.4 step 2 — is the DID method supported?
+        val method = registry.get(did.method)
+            ?: return DidResolutionResult.Failure.MethodNotRegistered(
+                method = did.method,
+                availableMethods = registry.getAllMethodNames(),
+                resolutionMetadata = DidResolutionMetadata(
+                    error = DidResolutionError.methodNotSupported(
+                        "DID method '${did.method}' is not registered"
+                    ),
+                    properties = mapOf("did" to did.value)
+                )
+            )
+
+        // §4.4 step 4 — are the options valid? (checked before step 3 so that a contradictory
+        // option set is reported as INVALID_OPTIONS rather than FEATURE_NOT_SUPPORTED)
+        options.validate()?.let { error ->
+            return DidResolutionResult.Failure.OptionsError(
+                did = did,
+                reason = error.detail ?: "Invalid resolution options",
+                errorType = error.type
+            )
+        }
+
+        // §4.4 step 3 — is the requested representation supported? `contentType` is left null
+        // when the caller did not request a representation, so a method's own contentType is
+        // preserved rather than being clobbered with the application/did default below.
+        val contentType: String? = options.accept?.let { accept ->
+            if (!DidMediaTypes.isSupportedDocumentType(accept)) {
+                return DidResolutionResult.Failure.OptionsError(
+                    did = did,
+                    reason = "Representation not supported: '$accept'",
+                    errorType = DidErrorType.REPRESENTATION_NOT_SUPPORTED
                 )
             }
+            DidMediaTypes.normalize(accept)
+        }
 
-            // Use type-safe resolveDid(Did) method
-            val result = method.resolveDid(did)
-            
-            // Convert map-based metadata to structured metadata if needed
-            return when (result) {
-                is DidResolutionResult.Success -> {
-                    if (result.resolutionMetadataMap.isNotEmpty() && 
-                        result.resolutionMetadata.contentType == "application/did+ld+json" &&
-                        result.resolutionMetadata.error == null) {
-                        // Convert from map if needed (backward compatibility)
-                        result.copy(
-                            resolutionMetadata = DidResolutionMetadata.fromMap(result.resolutionMetadataMap)
-                        )
-                    } else {
-                        result
-                    }
-                }
-                else -> result
-            }
+        // §4.4 step 5 — execute the method's Resolve operation.
+        val result = try {
+            method.resolveDid(did, options)
         } catch (e: DidException) {
-            // Convert DidException to resolution result
-            val properties = mutableMapOf<String, String>(
-                "did" to didString
-            )
-            properties.putAll(e.context.mapValues { it.value?.toString() ?: "" })
+            // Map the exception subtype to its §11 error type so the RFC 9457 object asserts
+            // the correct condition instead of always claiming INTERNAL_ERROR (HTTP 500) —
+            // §12.1 requires 400 for an invalid DID and 404 for not-found.
+            val error = when (e) {
+                is DidException.DidNotFound -> DidResolutionError.notFound(e.message ?: "DID not found")
+                is DidException.InvalidDidFormat -> DidResolutionError.invalidDid(e.message ?: "Invalid DID")
+                is DidException.DidMethodNotRegistered ->
+                    DidResolutionError.methodNotSupported(e.message ?: "DID method not registered")
+                else -> DidResolutionError.internalError(e.message ?: "Unknown error")
+            }
             return DidResolutionResult.Failure.ResolutionError(
                 did = did,
                 reason = e.message ?: "Unknown error",
                 cause = e,
                 resolutionMetadata = DidResolutionMetadata(
-                    error = e.code,
-                    errorMessage = e.message ?: "Unknown error",
-                    properties = properties
+                    error = error,
+                    properties = buildMap {
+                        put("did", did.value)
+                        e.context.forEach { (k, v) -> put(k, v?.toString() ?: "") }
+                    }
                 )
             )
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
-            // Unexpected error
             return DidResolutionResult.Failure.ResolutionError(
                 did = did,
                 reason = e.message ?: "Unknown error during resolution",
                 cause = e,
                 resolutionMetadata = DidResolutionMetadata(
-                    error = "resolutionError",
-                    errorMessage = e.message ?: "Unknown error during resolution"
+                    error = DidResolutionError.internalError(e.message ?: "Unknown error during resolution"),
+                    properties = mapOf("did" to did.value)
                 )
             )
         }
+
+        if (result !is DidResolutionResult.Success) return result
+
+        // §4.4 — a deactivated DID returns no document. Checked before the id-integrity check
+        // below so a tombstone document — which a method may leave minimal — is still reported
+        // as Deactivated/410 rather than misclassified as INVALID_DID_DOCUMENT.
+        if (result.documentMetadata.deactivated) {
+            return DidResolutionResult.Deactivated(
+                did = did,
+                documentMetadata = result.documentMetadata,
+                resolutionMetadata = result.resolutionMetadata.withContentType(contentType)
+            )
+        }
+
+        // §4 — the resolved document's `id` MUST equal the DID that was resolved.
+        if (result.document.id != did) {
+            return DidResolutionResult.Failure.ResolutionError(
+                did = did,
+                reason = "Resolved document id '${result.document.id.value}' does not match " +
+                    "requested DID '${did.value}'",
+                resolutionMetadata = DidResolutionMetadata(
+                    error = DidResolutionError.invalidDidDocument(
+                        "Resolved document id '${result.document.id.value}' does not match " +
+                            "requested DID '${did.value}'"
+                    )
+                )
+            )
+        }
+
+        // §4.4 — expandRelativeUrls post-processing.
+        val document =
+            if (options.expandRelativeUrls) result.document.expandRelativeDidUrls() else result.document
+
+        return result.copy(
+            document = document,
+            resolutionMetadata = result.resolutionMetadata.withContentType(contentType)
+        )
     }
+
+    /** Overwrites `contentType` only when the caller explicitly requested a representation. */
+    private fun DidResolutionMetadata.withContentType(contentType: String?): DidResolutionMetadata =
+        if (contentType != null) copy(contentType = contentType) else this
 }
 
 /**
  * Extension function to create a resolver from a registry.
  */
 fun DidMethodRegistry.asResolver(): DidResolver = RegistryBasedResolver(this)
-

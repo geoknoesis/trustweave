@@ -1,7 +1,10 @@
 package org.trustweave.did.resolver
 
+import org.trustweave.did.exception.DidException
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
+import org.trustweave.did.model.DidDocumentMetadata
+import org.trustweave.did.resolution.ResolutionOptions
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -143,5 +146,125 @@ class FallbackDidResolverTest {
         assertTrue(first is DidResolutionResult.Success)
         assertSame(first, second)
         assertEquals(1, fallback.calls, "fallback success must be served from cache afterwards")
+    }
+
+    // ─── asDidResolver() DidException mapping ───
+    //
+    // A DidException thrown by the wrapped UniversalResolver must be reflected as the matching
+    // §11 error type, not always INTERNAL_ERROR (which maps to HTTP 500 where §12.1 requires
+    // 400/404).
+
+    private fun throwingUniversalResolver(exception: DidException): UniversalResolver =
+        object : UniversalResolver {
+            override val baseUrl: String = "https://resolver.example"
+            override suspend fun resolveDid(did: String): DidResolutionResult = throw exception
+            override suspend fun getSupportedMethods(): List<String>? = null
+        }
+
+    @Test
+    fun `asDidResolver surfaces NOT_FOUND for DidException DidNotFound`() = runBlocking {
+        val did = Did("did:test:missing")
+        val resolver = throwingUniversalResolver(DidException.DidNotFound(did = did)).asDidResolver()
+
+        val result = resolver.resolve(did)
+
+        assertTrue(result is DidResolutionResult.Failure.ResolutionError)
+        val metadata = (result as DidResolutionResult.Failure.ResolutionError).resolutionMetadata
+        assertEquals(DidErrorType.NOT_FOUND, metadata.error?.type)
+    }
+
+    @Test
+    fun `asDidResolver surfaces INVALID_DID for DidException InvalidDidFormat`() = runBlocking {
+        val did = Did("did:test:example")
+        val exception = DidException.InvalidDidFormat(did = did.value, reason = "malformed identifier")
+        val resolver = throwingUniversalResolver(exception).asDidResolver()
+
+        val result = resolver.resolve(did)
+
+        assertTrue(result is DidResolutionResult.Failure.ResolutionError)
+        val metadata = (result as DidResolutionResult.Failure.ResolutionError).resolutionMetadata
+        assertEquals(DidErrorType.INVALID_DID, metadata.error?.type)
+    }
+
+    @Test
+    fun `asDidResolver surfaces METHOD_NOT_SUPPORTED for DidException DidMethodNotRegistered`() = runBlocking {
+        val did = Did("did:test:example")
+        val exception = DidException.DidMethodNotRegistered(method = "test", availableMethods = listOf("key"))
+        val resolver = throwingUniversalResolver(exception).asDidResolver()
+
+        val result = resolver.resolve(did)
+
+        assertTrue(result is DidResolutionResult.Failure.ResolutionError)
+        val metadata = (result as DidResolutionResult.Failure.ResolutionError).resolutionMetadata
+        assertEquals(DidErrorType.METHOD_NOT_SUPPORTED, metadata.error?.type)
+    }
+
+    // ─── asDidResolver() §4.4 defence-in-depth normalization ───
+    //
+    // Mirrors the Critical fix in DefaultUniversalResolver / GodiddyResolver: a third-party
+    // UniversalResolver implementation might not itself check documentMetadata.deactivated
+    // before returning Success. asDidResolver() re-checks so this adapter never hands a caller a
+    // Success carrying a revoked document — using a non-null document alongside the deactivated
+    // flag, per the review that flagged every prior deactivation test for using a null document.
+
+    private fun deactivatingUniversalResolver(): UniversalResolver = object : UniversalResolver {
+        override val baseUrl: String = "https://resolver.example"
+        override suspend fun resolveDid(did: String): DidResolutionResult = DidResolutionResult.Success(
+            document = DidDocument(id = Did(did)),
+            documentMetadata = DidDocumentMetadata(deactivated = true)
+        )
+        override suspend fun getSupportedMethods(): List<String>? = null
+    }
+
+    @Test
+    fun `asDidResolver normalizes a Success with deactivated true to Deactivated`() = runBlocking {
+        val did = Did("did:test:still-live")
+        val resolver = deactivatingUniversalResolver().asDidResolver()
+
+        val result = resolver.resolve(did)
+
+        assertTrue(result is DidResolutionResult.Deactivated, "expected Deactivated, got $result")
+        assertTrue(result.documentMetadata.deactivated)
+    }
+
+    // ─── ResolutionOptions forwarding (finding I1) ───
+
+    private class RecordingOptionsResolver(
+        private val handler: (Did) -> DidResolutionResult
+    ) : DidResolver {
+        val optionCalls = mutableListOf<ResolutionOptions>()
+
+        override suspend fun resolve(did: Did): DidResolutionResult = handler(did)
+
+        override suspend fun resolve(did: Did, options: ResolutionOptions): DidResolutionResult {
+            optionCalls.add(options)
+            return handler(did)
+        }
+    }
+
+    @Test
+    fun `resolve with options forwards them to primary`() = runBlocking {
+        val did = Did("did:key:z6Mkexample")
+        val options = ResolutionOptions(accept = "application/did+ld+json")
+        val primary = RecordingOptionsResolver { success(it) }
+        val fallback = RecordingOptionsResolver { success(it) }
+
+        FallbackDidResolver(primary, fallback).resolve(did, options)
+
+        assertEquals(listOf(options), primary.optionCalls)
+        assertEquals(emptyList<ResolutionOptions>(), fallback.optionCalls, "fallback must not run when primary succeeds")
+    }
+
+    @Test
+    fun `resolve with options forwards them to fallback when primary lacks the method`() = runBlocking {
+        val did = Did("did:ion:EiDexample")
+        val options = ResolutionOptions(accept = "application/did+ld+json")
+        val primary = RecordingOptionsResolver { methodNotRegistered(it) }
+        val fallback = RecordingOptionsResolver { success(it) }
+
+        FallbackDidResolver(primary, fallback).resolve(did, options)
+
+        assertEquals(listOf(options), primary.optionCalls)
+        assertEquals(listOf(options), fallback.optionCalls)
     }
 }

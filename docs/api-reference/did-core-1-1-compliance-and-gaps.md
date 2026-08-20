@@ -24,7 +24,7 @@ This document explains how **[Decentralized Identifiers (DIDs) v1.1](https://www
 | Aspect | DID Core **v1.0** (REC, 2022) | DIDs **v1.1** (CR, 2026) |
 |--------|-------------------------------|---------------------------|
 | **Architecture** | DID Core is a single document covering syntax, data model, representations, and (historically) much of the resolution story. | DID 1.1 is **layered on [Controlled Identifiers (CID) v1.0](https://www.w3.org/TR/cid-1.0/)**. DID-specific rules extend CID’s controlled identifier document model. |
-| **Resolution & dereferencing** | Described in DID Core 1.0. | **Normative resolution/dereferencing interfaces and metadata** are pushed to **[DID Resolution v0.3](https://www.w3.org/TR/did-resolution/)**. DID 1.1 focuses on identifiers, documents, and representations. |
+| **Resolution & dereferencing** | Described in DID Core 1.0. | **Normative resolution/dereferencing interfaces and metadata** are pushed to **[DID Resolution 1.0](https://www.w3.org/TR/2026/CR-did-resolution-1.0-20260806/)** (superseding the earlier v0.3 draft). DID 1.1 focuses on identifiers, documents, and representations. |
 | **JSON-LD context** | Documents typically use `https://www.w3.org/ns/did/v1`. | Adds **`https://www.w3.org/ns/did/v1.1`** as the v1.1 vocabulary context; examples in the spec use v1.1. |
 | **Media type** | Multiple representation-related types were discussed over time. | **Consolidated `application/did`** after IANA registration (per DID 1.1 revision history). |
 | **DID syntax (method-specific id)** | Final ABNF evolved across CR phases. | **Explicit ABNF**: `method-specific-id = *( *idchar ":" ) 1*idchar` with `idchar = ALPHA / DIGIT / "." / "-" / "_" / pct-encoded` — i.e. **percent-encoding** and a defined colon pattern. |
@@ -43,7 +43,7 @@ W3C DID 1.1 defines **conforming DIDs**, **conforming DID documents**, **conform
 
 1. **Consumers/producers** that parse and emit documents per the data model and representation rules (e.g. JSON lossless round-trips where applicable).
 2. **DID methods** that satisfy §7 Methods (create, resolve, update, deactivate) per their method specs.
-3. For **resolution**, alignment with **DID Resolution v0.3** where you expose resolver behavior.
+3. For **resolution**, alignment with **[DID Resolution 1.0](https://www.w3.org/TR/2026/CR-did-resolution-1.0-20260806/)** where you expose resolver behavior — see [Migrating to DID Resolution 1.0](../releases/did-resolution-1.0-migration.md) for TrustWeave's current alignment.
 
 TrustWeave is primarily a **Kotlin library**: typed models, validators, Universal Resolver clients, and **pluggable methods**. Claiming **full DID 1.1 compliance** would require:
 
@@ -73,7 +73,7 @@ The following are **known or likely gaps** relative to DID 1.1 + CID 1.0 as a **
 | G5 | **DID syntax validation** | Full **ABNF** including **pct-encoded** octets in method-specific-id. | **Addressed:** **DidValidator** validates per DID 1.1 §3.1 ABNF: method-name (lowercase a-z, 0-9), method-specific-id with idchar (ALPHA/DIGIT/`.`/`-`/`_`/pct-encoded) and colon-separated segments; tests cover pct-encoded and colon rules. |
 | G6 | **Default / advertised context** | Producers should use **v1.1 context** when targeting 1.1. | Defaults remain **`.../did/v1`**; no first-class **“produce as 1.1”** mode. |
 | G7 | **Representation: `application/did`** | DID 1.1 / IANA consolidation. | **Addressed:** **`APPLICATION_DID_MEDIA_TYPE`** and **`DidDocumentJsonProducer.toBytesWithMediaType()`**; centralized serialization; Content-Type `application/did` where applicable. |
-| G8 | **DID Resolution v0.3** | Resolver APIs, metadata, dereferencing, options. | **Partial:** [DidResolutionResult.Success](https://github.com/trustweave/trustweave/blob/main/did/did-core/src/main/kotlin/org/trustweave/did/resolver/DidResolutionResult.kt) carries `document`, `documentMetadata`, `resolutionMetadata` (aligns with resolve output). [ResolutionOptions](https://github.com/trustweave/trustweave/blob/main/did/did-core/src/main/kotlin/org/trustweave/did/resolution/DidResolutionV03.kt), [DereferenceResult](https://github.com/trustweave/trustweave/blob/main/did/did-core/src/main/kotlin/org/trustweave/did/resolution/DidResolutionV03.kt) added for API alignment; full dereference(didUrl) not yet implemented. Use **`application/did`** for Accept/Content-Type where applicable. |
+| G8 | **DID Resolution 1.0** | Resolver APIs, metadata, dereferencing, options. | **Substantially addressed, dereferencing still open:** [DidResolutionResult](https://github.com/trustweave/trustweave/blob/main/did/did-core/src/main/kotlin/org/trustweave/did/resolver/DidResolutionResult.kt) is a three-way sealed result (`Success` / `Deactivated` / `Failure`, the latter with an RFC 9457 `DidResolutionError`) matching §4's `resolve` output; [ResolutionOptions](https://github.com/trustweave/trustweave/blob/main/did/did-core/src/main/kotlin/org/trustweave/did/resolution/ResolutionOptions.kt) models §4.1 input options (`versionId`, `versionTime`, `noCache`, `accept`, `expandRelativeUrls`). **Still a gap:** no `dereference(didUrl, options)` — §5/§10 DID URL dereferencing is unimplemented (the WG marks both sections Feature at Risk); no DID method overrides the options-aware `resolveDid` to serve `versionId`/`versionTime` (all return `FEATURE_NOT_SUPPORTED`); no §12.1 HTTP(S) binding server. Default `contentType` is **`application/did`** (`DidMediaTypes.DID`); legacy `application/did+ld+json`/`application/did+json` remain accepted on input. See [Migrating to DID Resolution 1.0](../releases/did-resolution-1.0-migration.md). |
 | G9 | **Fragment resolution** | CID §3.4 extended by DID 1.1 for fragments. | **No general-purpose DID URL dereferencer** documented as CID/1.1-aligned. |
 | G10 | **Conformance evidence** | CR exit requires interoperable implementations + tests. | **No checked-in W3C DID test suite results** or formal conformance report for TrustWeave. |
 
@@ -104,7 +104,7 @@ Plugins that produce or consume DID documents use the shared **DidDocumentJsonPr
 4. ~~**`DidService.type`**~~ — **`List<String>`**; parse/serialize with helpers.
 5. ~~**Align `DidValidator`**~~ — ABNF-aligned per §3.1; pct-encoded and colon tests.
 6. ~~**v1.1 context / application/did**~~ — **DidDocumentJsonProducer**, **APPLICATION_DID_MEDIA_TYPE**.
-7. ~~**DID Resolution v0.3**~~ — Result types align; ResolutionOptions, DereferenceResult added.
+7. ~~**DID Resolution 1.0 core**~~ — sealed `Success`/`Deactivated`/`Failure` result, RFC 9457 errors, `ResolutionOptions`; **remaining:** DID URL dereferencing (§5, §10 — Feature at Risk), §12.1 HTTP(S) binding server, per-method versioning.
 8. **Run [did-test-suite](https://github.com/w3c/did-test-suite/)** and publish an implementation report for claimed roles (see §7).
 
 ---
@@ -124,7 +124,7 @@ Until the test suite is run and the report is published, conformance is **self-a
 - [Decentralized Identifiers (DIDs) v1.1](https://www.w3.org/TR/did-1.1/) (W3C Candidate Recommendation)
 - [Decentralized Identifiers (DIDs) v1.0](https://www.w3.org/TR/did-core/) (W3C Recommendation)
 - [Controlled Identifiers v1.0](https://www.w3.org/TR/cid-1.0/)
-- [Decentralized Identifier Resolution v0.3](https://www.w3.org/TR/did-resolution/)
+- [Decentralized Identifier Resolution 1.0](https://www.w3.org/TR/2026/CR-did-resolution-1.0-20260806/) (W3C Candidate Recommendation; supersedes the earlier [v0.3 draft](https://www.w3.org/TR/did-resolution/))
 - [W3C DID Test Suite](https://github.com/w3c/did-test-suite/)
 
 ---
@@ -133,3 +133,4 @@ Until the test suite is run and the report is published, conformance is **self-a
 
 - [Decentralized Identifiers (DIDs) – core concepts](../../core-concepts/dids.md)
 - [trustweave-did module](../modules/trustweave-did.md)
+- [Migrating to DID Resolution 1.0](../releases/did-resolution-1.0-migration.md)

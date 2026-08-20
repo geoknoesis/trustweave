@@ -105,6 +105,12 @@ when (val result = trustWeave.resolveDid("did:key:z6Mk...")) {
     is DidResolutionResult.Success -> {
         println("Resolved: ${result.document.id}")
     }
+    is DidResolutionResult.Deactivated -> {
+        // Per DID Resolution 1.0 §4.4, a deactivated DID resolves to no document at all.
+        // This is NOT the same as "not found" — treat it as a rejection, e.g. for
+        // verification/authorization the identity must not be trusted.
+        println("DID is deactivated: ${result.did.value}")
+    }
     is DidResolutionResult.Failure.NotFound -> {
         println("DID not found - may be created later")
     }
@@ -116,6 +122,9 @@ when (val result = trustWeave.resolveDid("did:key:z6Mk...")) {
     }
     is DidResolutionResult.Failure.ResolutionError -> {
         println("Resolution error - retry later")
+    }
+    is DidResolutionResult.Failure.OptionsError -> {
+        println("Unsupported/invalid resolution options: ${result.reason}")
     }
 }
 ```

@@ -20,7 +20,7 @@ class DidCore11ConformanceTest {
     private val method = KeyDidMethod(kms)
 
     @Test
-    fun `TC-01 did-key resolution returns a DID document`() = runBlocking {
+    fun `TC-01 did-key resolution returns a DID document`(): Unit = runBlocking {
         val doc = method.createDid(DidCreationOptions(algorithm = KeyAlgorithm.ED25519))
         val result = method.resolveDid(doc.id)
         val success = result as? DidResolutionResult.Success
@@ -43,7 +43,7 @@ class DidCore11ConformanceTest {
     }
 
     @Test
-    fun `TC-04 DID document verification method has required fields`() = runBlocking {
+    fun `TC-04 DID document verification method has required fields`(): Unit = runBlocking {
         val doc = method.createDid(DidCreationOptions(algorithm = KeyAlgorithm.ED25519))
         val success = method.resolveDid(doc.id) as DidResolutionResult.Success
         val document = success.document

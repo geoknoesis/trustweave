@@ -31,7 +31,7 @@ TrustWeave is a Kotlin library for decentralized identity and trust management. 
 
 | Domain | Core Module | What it does |
 |---|---|---|
-| **DID** | `did:did-core` | DID CRUD, resolution, batch ops, registrar |
+| **DID** | `did:did-core` | DID CRUD, resolution (W3C DID Resolution 1.0 CR), batch ops, registrar |
 | **Wallet** | `wallet:wallet-core` | Credential storage, presentation, lifecycle |
 | **KMS** | `kms:kms-core` | Key management (sign, verify, generate) |
 | **Anchors** | `anchors:anchor-core` | Blockchain anchoring for DIDs/credentials |
@@ -108,7 +108,11 @@ Blockchain plugins: `anchors:plugins:<chain>` (e.g., `anchors:plugins:ethereum`,
 
 ## Coding Conventions
 
-- KTLint is enforced in CI — always run `./gradlew ktlintFormat` before committing
+- KTLint is **not currently enforced**: the `org.jlleitschuh.gradle.ktlint` plugin is applied only
+  to the root project (`build.gradle.kts`'s `plugins {}` block), never inside `subprojects {}`, so
+  `ktlintCheck`/`ktlintFormat` do not check or format module sources — and `.github/workflows/ci.yml`
+  runs only `./gradlew build`, no ktlint task. Applying it repo-wide is a separate, larger decision;
+  until that happens, don't rely on `./gradlew ktlintFormat` to catch style issues before committing
 - Compiler flags: `-Xjsr305=strict` (strict null-safety for JSR-305 annotations)
 - Conventional Commits are required for PRs
 - Configuration cache is enabled; the Kotlin circular dep is mitigated via `kotlin.build.archivesTaskOutputAsFriendModule=false` in `gradle.properties`

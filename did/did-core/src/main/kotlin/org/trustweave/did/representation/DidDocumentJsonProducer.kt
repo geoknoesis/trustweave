@@ -11,7 +11,11 @@ import kotlinx.serialization.json.*
  * Media type for DID documents per DID 1.1 / IANA registration.
  * Conforming producers SHOULD report this as Content-Type when serving or returning DID documents.
  */
-const val APPLICATION_DID_MEDIA_TYPE: String = "application/did"
+@Deprecated(
+    "Use DidMediaTypes.DID",
+    ReplaceWith("DidMediaTypes.DID", "org.trustweave.did.representation.DidMediaTypes")
+)
+const val APPLICATION_DID_MEDIA_TYPE: String = DidMediaTypes.DID
 
 /** DID 1.1 JSON-LD context (first context entry per §6.2.3). */
 const val DID_1_1_CONTEXT: String = "https://www.w3.org/ns/did/v1.1"
@@ -70,11 +74,11 @@ object DidDocumentJsonProducer {
      *
      * @param document The DID document
      * @param useV1_1Context If true, use v1.1 @context
-     * @return Pair of (utf-8 bytes, APPLICATION_DID_MEDIA_TYPE)
+     * @return Pair of (utf-8 bytes, [DidMediaTypes.DID])
      */
     fun toBytesWithMediaType(document: DidDocument, useV1_1Context: Boolean = true): Pair<ByteArray, String> {
         val json = toJsonObject(document, useV1_1Context)
-        return json.toString().toByteArray(Charsets.UTF_8) to APPLICATION_DID_MEDIA_TYPE
+        return json.toString().toByteArray(Charsets.UTF_8) to DidMediaTypes.DID
     }
 
     private fun putController(builder: JsonObjectBuilder, document: DidDocument) {

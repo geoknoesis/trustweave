@@ -277,13 +277,26 @@ Being explicit about scope, because it's part of the deliverable:
   it back either — a §9 round-trip through that path silently loses a resolver-attached document
   proof. `DidResolutionMetadata` (§4.2 resolution metadata) does **not** have this gap: its own
   `proof` list round-trips correctly through both `fromJson` and `fromMap`.
-- **`AbstractWebDidMethod.resolveFromHttp`'s live-fetch path never sets `deactivated`** — it
-  consults the locally stored document's `deactivated` flag only on its offline-fallback path (the
-  `IOException` branch, when the live HTTP fetch itself fails); the ordinary HTTP-200 path calls
-  `DidMethodUtils.createSuccessResolutionResult(document, method)` without a `deactivated`
-  argument, which defaults to `false`. So **did:web never returns `Deactivated` from a live
-  fetch** — only from a fallback to a previously-stored, already-flagged document. §10 above
-  should not be read as covering did:web's live-fetch path.
+- **Resolved: `AbstractWebDidMethod.resolveFromHttp` now honours local deactivation state on
+  every path, not just the offline fallback.** Previously the live-fetch (HTTP-200) path never
+  consulted the `deactivated` flag TrustWeave had recorded locally — it called
+  `DidMethodUtils.createSuccessResolutionResult(document, method)` with no `deactivated` argument,
+  so a did:web DID this instance had deactivated could still resolve to `Success` as long as the
+  endpoint kept serving the document. This is now fixed, with an explicit fail-safe policy:
+  **local deactivation state is authoritative for did:web, even over a live endpoint response.**
+  Once an instance has recorded a did:web DID as deactivated (via `deactivateDocumentOnHttp`),
+  every subsequent `resolveFromHttp` call returns `Deactivated` for that DID — whether the endpoint
+  is unreachable (the pre-existing fallback path) or still serves a live 200 with the
+  still-published document (the ordinary path, fixed here). The CR does not settle where a
+  web-hosted method should learn of deactivation from, and treating the hosted endpoint as
+  authoritative over local state would let a did:web controller — or an attacker who compromises
+  the host after deactivation — silently resurrect a DID TrustWeave believes is dead; a revoked DID
+  must never verify. **Accepted tradeoff**: because deactivation state here is local and is neither
+  fetched from nor propagated to the hosted endpoint, a DID deactivated on one TrustWeave instance
+  still resolves live on another instance that never observed the deactivation. Consumers who need
+  deactivation to be consistent across instances must replicate that state themselves (e.g. via a
+  shared store behind `deactivateDocumentOnHttp`/`getDocumentMetadata`) rather than relying on the
+  hosted document alone.
 
 ## See also
 

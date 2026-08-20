@@ -128,6 +128,20 @@ abstract class AbstractWebDidMethod(
     /**
      * Resolves a DID document from an HTTP endpoint.
      *
+     * **Local deactivation is authoritative for did:web, even over a live endpoint response.**
+     * The DID Resolution 1.0 CR does not settle where a web-hosted method should learn of
+     * deactivation from, so TrustWeave makes an explicit, fail-safe choice: once this instance
+     * has recorded a did:web DID as deactivated (via [deactivateDocumentOnHttp]), every
+     * subsequent [resolveFromHttp] call returns [DidResolutionResult.Deactivated] for that DID —
+     * on the ordinary HTTP-200 path just as much as on the offline-fallback path below — even if
+     * the hosted endpoint keeps serving a live 200 with the (still-published) document. A revoked
+     * DID must never verify; treating the endpoint as authoritative over local state would let a
+     * did:web controller (or an attacker who compromises the host after deactivation) silently
+     * resurrect a DID TrustWeave believes is dead. The accepted tradeoff is that a DID deactivated
+     * on one machine still resolves live on another instance that never observed the
+     * deactivation, since deactivation state here is local and is not fetched from, or propagated
+     * to, the hosted endpoint.
+     *
      * @param did The DID to resolve
      * @return DidResolutionResult
      * @throws NotFoundException if document not found
@@ -191,10 +205,21 @@ abstract class AbstractWebDidMethod(
                 )
             }
 
+            // Local state is authoritative for did:web (see KDoc above): capture whatever
+            // deactivation this instance has already recorded for the DID *before*
+            // storeDocument() below re-caches the freshly fetched document — storeDocument
+            // unconditionally replaces the stored DidDocumentMetadata, which would otherwise
+            // silently clear a prior deactivation just because the endpoint answered with 200.
+            val recordedDeactivated = getDocumentMetadata(did)?.deactivated ?: false
+
             // Store locally for caching
             storeDocument(document.id.value, document)
 
-            org.trustweave.did.base.DidMethodUtils.createSuccessResolutionResult(document, method)
+            org.trustweave.did.base.DidMethodUtils.createSuccessResolutionResult(
+                document,
+                method,
+                deactivated = recordedDeactivated
+            )
         } catch (e: TrustWeaveException.NotFound) {
             throw e
         } catch (e: TrustWeaveException) {

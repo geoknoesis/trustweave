@@ -3,7 +3,8 @@ package org.trustweave.anchor.algorand
 import com.algorand.algosdk.account.Account
 import com.algorand.algosdk.transaction.SignedTransaction
 import com.algorand.algosdk.transaction.Transaction
-import com.algorand.algosdk.util.Encoder
+import org.trustweave.core.exception.ConfigException
+import java.util.Base64
 
 /**
  * Resolves a sponsor DID to the on-chain account that pays the fee in an
@@ -46,21 +47,47 @@ data class SponsorEntry(
 class ConfigSponsorRegistry(
     private val options: Map<String, Any?>,
 ) : SponsorRegistry {
-
     override fun resolve(sponsorDid: String): SponsorEntry? {
         val mnemonic = options["sponsor.$sponsorDid.mnemonic"] as? String
         val privateKey = options["sponsor.$sponsorDid.privateKey"] as? String
-        val account: Account? = when {
-            mnemonic != null -> runCatching { Account(mnemonic) }.getOrNull()
-            privateKey != null -> runCatching { Account(Encoder.decodeFromBase64(privateKey)) }.getOrNull()
-            else -> null
-        }
-        if (account != null) {
-            return SponsorEntry(
-                address = account.address.toString(),
-                sign = { tx -> account.signTransaction(tx) },
+
+        // A sponsor that was configured but cannot be loaded is a deployment fault, not an absent
+        // sponsor. Returning null here would surface a mnemonic typo as SponsorNotAllowed, sending
+        // the operator after an authorization policy problem that does not exist.
+        val account: Account =
+            when {
+                mnemonic != null -> loadOrFail(sponsorDid, "mnemonic") { Account(mnemonic) }
+                // Strict JDK decoding on purpose: the Algorand SDK decoder silently skips characters
+                // outside the base64 alphabet, so a typo'd key decodes to different bytes and yields a
+                // real but unintended sponsor account instead of an error.
+                privateKey != null ->
+                    loadOrFail(sponsorDid, "privateKey") { Account(Base64.getDecoder().decode(privateKey)) }
+                else -> return null
+            }
+
+        return SponsorEntry(
+            address = account.address.toString(),
+            sign = { tx -> account.signTransaction(tx) },
+        )
+    }
+
+    /**
+     * Builds the sponsor account, converting any failure into a configuration error.
+     *
+     * The offending value is never echoed — it is sponsor key material, and exception messages and
+     * context are logged. The option name alone tells the operator what to fix.
+     */
+    private fun loadOrFail(
+        sponsorDid: String,
+        option: String,
+        load: () -> Account,
+    ): Account =
+        runCatching(load).getOrElse { cause ->
+            throw ConfigException.UnsupportedValue(
+                field = "sponsor.$sponsorDid.$option",
+                value = "<redacted>",
+                reason = "Sponsor key material could not be loaded; check the configured $option.",
+                cause = cause,
             )
         }
-        return null
-    }
 }

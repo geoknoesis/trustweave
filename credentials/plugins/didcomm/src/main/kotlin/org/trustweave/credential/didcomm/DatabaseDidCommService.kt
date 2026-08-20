@@ -1,11 +1,11 @@
 package org.trustweave.credential.didcomm
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.trustweave.credential.didcomm.models.DidCommMessage
 import org.trustweave.credential.didcomm.packing.DidCommPacker
 import org.trustweave.credential.didcomm.storage.DidCommMessageStorage
 import org.trustweave.did.model.DidDocument
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 /**
  * Database-backed DIDComm service implementation.
@@ -23,8 +23,9 @@ import kotlinx.coroutines.withContext
 class DatabaseDidCommService(
     private val packer: DidCommPacker,
     private val resolveDid: suspend (String) -> DidDocument?,
-    private val storage: DidCommMessageStorage
+    private val storage: DidCommMessageStorage,
 ) : DidCommService {
+    private val receiveGuards = DidCommReceiveGuards()
 
     override suspend fun sendMessage(
         message: DidCommMessage,
@@ -32,63 +33,60 @@ class DatabaseDidCommService(
         fromKeyId: String,
         toDid: String,
         toKeyId: String,
-        encrypt: Boolean
-    ): String = withContext(Dispatchers.IO) {
-        // Pack the message
-        val packed = packer.pack(
-            message = message,
-            fromDid = fromDid,
-            fromKeyId = fromKeyId,
-            toDid = toDid,
-            toKeyId = toKeyId,
-            encrypt = encrypt
-        )
+        encrypt: Boolean,
+    ): String =
+        withContext(Dispatchers.IO) {
+            // Pack the message
+            val packed =
+                packer.pack(
+                    message = message,
+                    fromDid = fromDid,
+                    fromKeyId = fromKeyId,
+                    toDid = toDid,
+                    toKeyId = toKeyId,
+                    encrypt = encrypt,
+                )
 
-        // Store the message
-        storage.store(message)
+            // Store the message
+            storage.store(message)
 
-        // In a real implementation, deliver via HTTP, WebSocket, etc.
-        // For now, we just store it
+            // In a real implementation, deliver via HTTP, WebSocket, etc.
+            // For now, we just store it
 
-        message.id
-    }
+            message.id
+        }
 
     override suspend fun receiveMessage(
         packedMessage: String,
         recipientDid: String,
         recipientKeyId: String,
         senderDid: String?,
-        requireSigned: Boolean
-    ): DidCommMessage = withContext(Dispatchers.IO) {
-        // Unpack the message
-        val message = packer.unpack(
-            packedMessage = packedMessage,
-            recipientDid = recipientDid,
-            recipientKeyId = recipientKeyId,
-            senderDid = senderDid,
-            requireSigned = requireSigned
-        )
+        requireSigned: Boolean,
+    ): DidCommMessage =
+        withContext(Dispatchers.IO) {
+            // Unpack the message
+            val message =
+                packer.unpack(
+                    packedMessage = packedMessage,
+                    recipientDid = recipientDid,
+                    recipientKeyId = recipientKeyId,
+                    senderDid = senderDid,
+                    requireSigned = requireSigned,
+                )
 
-        // Store the received message
-        storage.store(message)
+            receiveGuards.check(message)
 
-        message
-    }
+            // Store the received message
+            storage.store(message)
 
-    override suspend fun storeMessage(message: DidCommMessage): String {
-        return storage.store(message)
-    }
+            message
+        }
 
-    override suspend fun getMessage(messageId: String): DidCommMessage? {
-        return storage.get(messageId)
-    }
+    override suspend fun storeMessage(message: DidCommMessage): String = storage.store(message)
 
-    override suspend fun getMessagesForDid(did: String): List<DidCommMessage> {
-        return storage.getMessagesForDid(did)
-    }
+    override suspend fun getMessage(messageId: String): DidCommMessage? = storage.get(messageId)
 
-    override suspend fun getThreadMessages(thid: String): List<DidCommMessage> {
-        return storage.getThreadMessages(thid)
-    }
+    override suspend fun getMessagesForDid(did: String): List<DidCommMessage> = storage.getMessagesForDid(did)
+
+    override suspend fun getThreadMessages(thid: String): List<DidCommMessage> = storage.getThreadMessages(thid)
 }
-

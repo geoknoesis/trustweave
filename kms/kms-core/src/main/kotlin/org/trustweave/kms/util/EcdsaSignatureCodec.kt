@@ -272,6 +272,10 @@ object EcdsaSignatureCodec {
         require(len <= width) {
             "ECDSA signature component too large for curve: $len bytes > $width bytes"
         }
+        // Zero the leading pad instead of assuming [dest] is already zero there:
+        // normalizeSecp256k1LowS writes `n - s` over a COPY of the original signature, so a
+        // component shorter than [width] would otherwise inherit high bytes of the old value.
+        dest.fill(0, offset, offset + width - len)
         System.arraycopy(raw, start, dest, offset + (width - len), len)
     }
 }

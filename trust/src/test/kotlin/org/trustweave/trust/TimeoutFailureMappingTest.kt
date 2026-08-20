@@ -69,6 +69,22 @@ class TimeoutFailureMappingTest {
             return delegate.resolveDid(did)
         }
 
+        // `DidMethod by delegate` forwards any member this class does NOT override straight to
+        // [delegate] — including the two-argument resolveDid's *default* implementation, since
+        // Kotlin interface delegation is a static forward, not virtual dispatch back through this
+        // class. DidMethodRegistry.resolve(String) now goes through RegistryBasedResolver, which
+        // calls the two-argument form; without this override that call would silently reach
+        // delegate's fast resolveDid(did) instead of this class's own slow one, defeating every
+        // test in this file that resolves a DID through the facade.
+        override suspend fun resolveDid(
+            did: Did,
+            options: org.trustweave.did.resolution.ResolutionOptions
+        ): DidResolutionResult {
+            started?.complete(Unit)
+            delay(slowFor)
+            return delegate.resolveDid(did, options)
+        }
+
         override suspend fun updateDid(
             did: Did,
             updater: (DidDocument) -> DidDocument

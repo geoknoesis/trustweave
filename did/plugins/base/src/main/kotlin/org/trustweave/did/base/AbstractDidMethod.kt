@@ -92,6 +92,27 @@ abstract class AbstractDidMethod(
     protected val documentMetadata = ConcurrentHashMap<String, DidDocumentMetadata>()
 
     /**
+     * When this instance last fetched (or wrote) each DID's document — i.e. how old the cached
+     * copy in [documents] is.
+     *
+     * Deliberately **not** part of [DidDocumentMetadata]. §4.3 document metadata describes the
+     * *document* (when it was created, when it was last Updated, whether it is deactivated); "when
+     * did we last talk to the verifiable data registry" describes the *resolution process*, which
+     * is §4.2 territory. Keeping it in a private map here means the §4.3 surface stays exactly
+     * what the spec defines, and nothing about it can leak into a serialized document-metadata
+     * structure by accident.
+     *
+     * Read it via [getLastFetched] and hand it to
+     * [DidMethodUtils.createSuccessResolutionResult]'s `retrieved` parameter, which puts it on
+     * §4.2 [org.trustweave.did.resolver.DidResolutionMetadata.retrieved] — the pre-existing,
+     * spec-defined home for exactly this value, and where cache-freshness checks such as
+     * `DecentralizedResolutionStrategy.isFresh()` now read it from.
+     *
+     * Written only under [updateMutex], alongside the maps it describes.
+     */
+    private val lastFetched = ConcurrentHashMap<String, Instant>()
+
+    /**
      * Default implementation of updateDid using in-memory storage.
      *
      * Subclasses can override for methods that require external updates.
@@ -116,9 +137,12 @@ abstract class AbstractDidMethod(
                 val updatedDocument = updater(current)
                 documents[didString] = updatedDocument
                 val now = Clock.System.now()
+                // A genuine Update operation, so §4.3 `updated` moves. Contrast storeDocument,
+                // which is a cache-store and must leave `updated` alone.
                 documentMetadata[didString] =
                     (documentMetadata[didString] ?: DidDocumentMetadata(created = now))
                         .copy(updated = now)
+                lastFetched[didString] = now
                 updatedDocument
             }
         }
@@ -140,6 +164,7 @@ abstract class AbstractDidMethod(
             updateMutex.withLock {
                 removed = documents.remove(didString) != null
                 documentMetadata.remove(didString)
+                lastFetched.remove(didString)
             }
             removed
         }
@@ -170,17 +195,22 @@ abstract class AbstractDidMethod(
      *
      * Useful for methods that need to cache resolved documents.
      *
-     * Preserves any existing metadata for this DID (in particular `deactivated` and the
-     * original `created` timestamp) rather than replacing it outright. Re-caching a freshly
-     * fetched/read document (e.g. on every successful resolve) must never silently resurrect a
-     * DID this instance has recorded as deactivated.
+     * **A cache-store is not a DID operation, and this method never pretends otherwise.** It runs
+     * on every successful resolve, not only on writes, so it leaves existing [DidDocumentMetadata]
+     * completely untouched: `created`, `updated` and `deactivated` all keep the values the last
+     * real Create/Update/Deactivate operation gave them. Metadata is *seeded* (with `created`
+     * only) the first time a DID is stored and never rewritten afterwards.
      *
-     * `updated` is bumped to now on every store *unless* the existing metadata already has
-     * `deactivated = true`. Per DID Core §7.3, deactivation is terminal: no Update operation can
-     * follow it, and DID Resolution 1.0 §4.3 defines `updated` as the timestamp of the last
-     * Update operation — not of the last cache-store. `storeDocument` runs on every successful
-     * resolve, not only on writes, so once a DID is deactivated its `updated` stays pinned at the
-     * deactivation time instead of drifting forward to each subsequent resolve's fetch time.
+     * That is what DID Resolution 1.0 §4.3 requires: `updated` is "the timestamp of the last
+     * Update operation for the document version which was resolved", and is omitted entirely when
+     * no Update operation has ever happened. This method used to bump `updated` to now on every
+     * store, so a live DID reported a fabricated timestamp that advanced on every read. It also
+     * makes the §7.3 rule fall out for free — deactivation is terminal, so a deactivated DID's
+     * `updated` stays pinned at the deactivation time — rather than needing a special case, and it
+     * means a re-cache can never resurrect a DID this instance recorded as deactivated.
+     *
+     * The genuinely useful "when did we last fetch this?" signal is recorded separately in
+     * [lastFetched] and surfaced as §4.2 resolution metadata; see [getLastFetched].
      *
      * @param did The DID identifier (can be Did object or String)
      * @param document The DID document
@@ -204,18 +234,13 @@ abstract class AbstractDidMethod(
         // also closes a lost-update race: a concurrent deactivateDid can no longer be missed
         // (a stale pre-lock read) or clobbered (an unconditional overwrite) by this store.
         updateMutex.withLock {
-            val now = created ?: Clock.System.now()
+            val fetchedAt = Clock.System.now()
             documents[didString] = document
-            val existing = documentMetadata[didString]
-            documentMetadata[didString] =
-                if (existing?.deactivated == true) {
-                    // DID Core §7.3: deactivation is terminal. No Update operation can follow, so
-                    // `updated` stays pinned at the deactivation time rather than tracking each
-                    // cache-store triggered by a resolve.
-                    existing
-                } else {
-                    (existing ?: DidDocumentMetadata(created = now)).copy(updated = now)
-                }
+            lastFetched[didString] = fetchedAt
+            // Seed §4.3 metadata on first store only. Never rewrite it: a cache-store is not a
+            // Create, an Update or a Deactivate, so it has nothing to say about `created`,
+            // `updated` or `deactivated`.
+            documentMetadata.putIfAbsent(didString, DidDocumentMetadata(created = created ?: fetchedAt))
         }
     }
 
@@ -249,6 +274,29 @@ abstract class AbstractDidMethod(
                 else -> throw IllegalArgumentException("did must be Did or String, got ${did::class}")
             }
         return documentMetadata[didString]
+    }
+
+    /**
+     * When this instance last fetched or wrote the DID's document, or `null` if it has never
+     * stored one.
+     *
+     * This is the value to pass as `retrieved` to
+     * [DidMethodUtils.createSuccessResolutionResult]: it becomes §4.2
+     * [org.trustweave.did.resolver.DidResolutionMetadata.retrieved], which is how a caching
+     * resolver (e.g. `DecentralizedResolutionStrategy`) judges whether a locally cached answer is
+     * still fresh. Do not substitute §4.3 `updated` for it — `updated` moves only on a real Update
+     * operation and may be years old (or absent) on a document that was fetched a second ago.
+     *
+     * @param did The DID identifier (can be Did object or String)
+     */
+    protected fun getLastFetched(did: Any): Instant? {
+        val didString =
+            when (did) {
+                is Did -> did.value
+                is String -> did
+                else -> throw IllegalArgumentException("did must be Did or String, got ${did::class}")
+            }
+        return lastFetched[didString]
     }
 
     /**

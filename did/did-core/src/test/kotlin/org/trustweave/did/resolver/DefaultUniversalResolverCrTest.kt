@@ -112,6 +112,29 @@ class DefaultUniversalResolverCrTest {
         }
     }
 
+    // ─── Critical fix: an HTTP 200 body carrying BOTH a non-null didDocument AND
+    // didDocumentMetadata.deactivated: true must still yield Deactivated, never Success. Every
+    // pre-existing deactivation test in this class uses "didDocument": null, which is exactly why
+    // this composition — Success checked before deactivated — survived until now: a revoked DID's
+    // document would otherwise flow into a caller as a plain Success and could go on to verify a
+    // credential and be cached. ───
+
+    @Test
+    fun `HTTP 200 with a non-null document and deactivated true still produces Deactivated`() = runBlocking {
+        val body = """{"didDocument":{"id":"did:example:still-live"},"didDocumentMetadata":{"deactivated":true}}"""
+        val server = startServer(200, body)
+        try {
+            val resolver = DefaultUniversalResolver(baseUrl = "http://localhost:${server.address.port}", timeout = 5)
+
+            val result = resolver.resolveDid("did:example:still-live")
+
+            assertTrue(result is DidResolutionResult.Deactivated, "expected Deactivated, got $result")
+            assertTrue(result.documentMetadata.deactivated)
+        } finally {
+            server.stop(0)
+        }
+    }
+
     @Test
     fun `HTTP 501 maps to METHOD_NOT_SUPPORTED`() = runBlocking {
         val server = startServer(501, "")

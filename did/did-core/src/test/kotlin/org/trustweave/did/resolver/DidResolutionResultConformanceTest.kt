@@ -77,6 +77,29 @@ class DidResolutionResultConformanceTest {
     }
 
     @Test
+    fun `constructing any Failure with a null resolutionMetadata error is rejected`() {
+        assertFailsWith<IllegalArgumentException> {
+            DidResolutionResult.Failure.NotFound(did, resolutionMetadata = DidResolutionMetadata())
+        }
+        assertFailsWith<IllegalArgumentException> {
+            DidResolutionResult.Failure.InvalidFormat(
+                "did:",
+                "bad",
+                resolutionMetadata = DidResolutionMetadata()
+            )
+        }
+        assertFailsWith<IllegalArgumentException> {
+            DidResolutionResult.Failure.MethodNotRegistered("nope", resolutionMetadata = DidResolutionMetadata())
+        }
+        assertFailsWith<IllegalArgumentException> {
+            DidResolutionResult.Failure.ResolutionError(did, "boom", resolutionMetadata = DidResolutionMetadata())
+        }
+        assertFailsWith<IllegalArgumentException> {
+            DidResolutionResult.Failure.OptionsError(did, "nope", resolutionMetadata = DidResolutionMetadata())
+        }
+    }
+
+    @Test
     fun `every failure exposes a non-null error`() {
         val failures: List<DidResolutionResult.Failure> = listOf(
             DidResolutionResult.Failure.NotFound(did),

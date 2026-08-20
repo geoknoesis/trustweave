@@ -4,8 +4,10 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
+import org.trustweave.did.resolution.ResolutionOptions
 import kotlin.test.assertEquals
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 /**
  * Correctness tests for [DecentralizedResolutionStrategy]'s per-stage handling of
@@ -109,5 +111,57 @@ class DecentralizedResolutionStrategyTest {
         val result = strategy.resolve(did)
 
         assertSame(success, result)
+    }
+
+    // ─── ResolutionOptions forwarding (finding I1) ───
+
+    private class RecordingOptionsResolver(
+        private val result: suspend () -> DidResolutionResult
+    ) : DidResolver {
+        val optionCalls = mutableListOf<ResolutionOptions>()
+
+        override suspend fun resolve(did: Did): DidResolutionResult = result()
+
+        override suspend fun resolve(did: Did, options: ResolutionOptions): DidResolutionResult {
+            optionCalls.add(options)
+            return result()
+        }
+    }
+
+    @Test
+    fun `DecentralizedResolutionStrategy forwards options to whichever stage answers`() = runBlocking {
+        val options = ResolutionOptions(accept = "application/did+ld+json")
+        val local = RecordingOptionsResolver { DidResolutionResult.Failure.NotFound(did) }
+        val methodSpecific = RecordingOptionsResolver { DidResolutionResult.Success(DidDocument(id = did)) }
+        val universal = RecordingOptionsResolver { DidResolutionResult.Failure.NotFound(did) }
+
+        val strategy = DecentralizedResolutionStrategy(
+            localResolver = local,
+            universalResolver = universal,
+            methodSpecificResolvers = mapOf("test" to methodSpecific)
+        )
+
+        strategy.resolve(did, options)
+
+        assertEquals(listOf(options), local.optionCalls)
+        assertEquals(listOf(options), methodSpecific.optionCalls)
+        assertEquals(
+            emptyList<ResolutionOptions>(),
+            universal.optionCalls,
+            "universal resolver must not be consulted once the method-specific stage answers"
+        )
+    }
+
+    @Test
+    fun `ResolutionFallbackStrategy forwards options to every resolver it tries`() = runBlocking {
+        val options = ResolutionOptions(accept = "application/did+ld+json")
+        val first = RecordingOptionsResolver { DidResolutionResult.Failure.NotFound(did) }
+        val second = RecordingOptionsResolver { DidResolutionResult.Success(DidDocument(id = did)) }
+
+        val result = ResolutionFallbackStrategy(listOf(first, second)).resolve(did, options)
+
+        assertEquals(listOf(options), first.optionCalls)
+        assertEquals(listOf(options), second.optionCalls)
+        assertTrue(result is DidResolutionResult.Success)
     }
 }

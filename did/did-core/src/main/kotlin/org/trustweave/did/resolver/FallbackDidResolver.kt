@@ -2,6 +2,7 @@ package org.trustweave.did.resolver
 
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.exception.DidException
+import org.trustweave.did.resolution.ResolutionOptions
 
 /**
  * Composite resolver that delegates to [fallback] when the [primary] resolver does not
@@ -51,6 +52,18 @@ class FallbackDidResolver(
             else -> result
         }
     }
+
+    /**
+     * Resolves with DID Resolution 1.0 §4.1 options, forwarded unchanged to whichever of
+     * [primary] / [fallback] ends up handling the DID — same trigger rule as the single-argument
+     * [resolve].
+     */
+    override suspend fun resolve(did: Did, options: ResolutionOptions): DidResolutionResult {
+        return when (val result = primary.resolve(did, options)) {
+            is DidResolutionResult.Failure.MethodNotRegistered -> fallback.resolve(did, options)
+            else -> result
+        }
+    }
 }
 
 /**
@@ -71,7 +84,24 @@ class FallbackDidResolver(
  */
 fun UniversalResolver.asDidResolver(): DidResolver = DidResolver { did ->
     try {
-        resolveDid(did.value)
+        when (val result = resolveDid(did.value)) {
+            // §4.4 defence in depth. The two first-party UniversalResolver implementations
+            // (DefaultUniversalResolver, GodiddyResolver) both check documentMetadata.deactivated
+            // before returning Success, so this should be unreachable for them — but a
+            // third-party UniversalResolver on the classpath might not apply that ordering
+            // itself. Re-checking here means this adapter never hands a caller a Success that
+            // carries a revoked document, regardless of what the wrapped implementation does.
+            is DidResolutionResult.Success -> if (result.documentMetadata.deactivated) {
+                DidResolutionResult.Deactivated(
+                    did = did,
+                    documentMetadata = result.documentMetadata,
+                    resolutionMetadata = result.resolutionMetadata
+                )
+            } else {
+                result
+            }
+            else -> result
+        }
     } catch (e: kotlinx.coroutines.CancellationException) {
         throw e
     } catch (e: DidException) {

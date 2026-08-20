@@ -93,28 +93,38 @@ class GodiddyResolver(
                 .plus("provider" to "godiddy")
             val resolutionMetadata = DidResolutionMetadata.fromMap(resolutionMetadataMap)
 
-            if (document != null) {
-                DidResolutionResult.Success(
-                    document = document,
-                    documentMetadata = documentMetadata,
-                    resolutionMetadata = resolutionMetadata
-                )
-            } else if (documentMetadata.deactivated) {
-                // §4.4/§12.1: the upstream Universal Resolver signals a deactivated DID with
-                // didDocument: null plus didDocumentMetadata.deactivated: true (the body a
-                // conforming resolver would send with HTTP 410). Checking this before the
-                // NotFound fallback below preserves that distinction — otherwise a revocation
-                // is downgraded to "unknown DID" with a misleading "conversion failed" reason.
+            if (documentMetadata.deactivated) {
+                // §4.4/§12.1: deactivation is checked before document-presence. The upstream
+                // Universal Resolver may signal a deactivated DID either with `didDocument: null`
+                // plus `didDocumentMetadata.deactivated: true` (the body a conforming resolver
+                // would send with HTTP 410), or with a *non-null* `didDocument` alongside
+                // `deactivated: true` (the shape a DID Resolution v0.3-era resolver emits).
+                // Checking deactivation first — ahead of the document != null branch below —
+                // means both shapes yield Deactivated, never a Success carrying a revoked
+                // document.
                 DidResolutionResult.Deactivated(
                     did = Did(did),
                     documentMetadata = documentMetadata,
                     resolutionMetadata = resolutionMetadata
                 )
+            } else if (document != null) {
+                DidResolutionResult.Success(
+                    document = document,
+                    documentMetadata = documentMetadata,
+                    resolutionMetadata = resolutionMetadata
+                )
             } else {
+                // §4 / Failure's invariant: every Failure MUST carry a non-null error.
+                // `resolutionMetadata` here is parsed straight from an upstream body that may
+                // carry no structured error member at all — synthesize one rather than pass
+                // resolutionMetadata through unchanged.
                 DidResolutionResult.Failure.NotFound(
                     did = Did(did),
                     reason = "Document conversion failed",
-                    resolutionMetadata = resolutionMetadata
+                    resolutionMetadata = resolutionMetadata.copy(
+                        error = resolutionMetadata.error
+                            ?: DidResolutionError.notFound("Document conversion failed")
+                    )
                 )
             }
         } catch (e: TrustWeaveException) {

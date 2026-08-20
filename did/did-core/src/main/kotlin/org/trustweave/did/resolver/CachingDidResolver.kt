@@ -1,6 +1,7 @@
 package org.trustweave.did.resolver
 
 import org.trustweave.did.identifiers.Did
+import org.trustweave.did.resolution.ResolutionOptions
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import java.util.concurrent.ConcurrentHashMap
@@ -11,7 +12,7 @@ import kotlin.time.Duration.Companion.minutes
 /**
  * Caching decorator for any [DidResolver].
  *
- * Caches **successful** resolutions keyed by DID string, with:
+ * Caches **successful and deactivated** resolutions keyed by DID string, with:
  * - a configurable time-to-live ([ttl], default 5 minutes);
  * - a configurable maximum size ([maxSize], default 1000) with least-recently-used eviction;
  * - `documentMetadata.nextUpdate` honored when it is earlier than the TTL expiry
@@ -45,7 +46,7 @@ import kotlin.time.Duration.Companion.minutes
  * val resolver = CachingDidResolver(FallbackDidResolver(registry, universal))
  *
  * val result = resolver.resolve(Did("did:web:example.com"))   // miss → delegate
- * val cached = resolver.resolve(Did("did:web:example.com"))   // hit → cached Success
+ * val cached = resolver.resolve(Did("did:web:example.com"))   // hit → cached Success or Deactivated
  *
  * resolver.invalidate(Did("did:web:example.com"))             // drop one entry
  * resolver.clear()                                            // drop everything
@@ -92,17 +93,60 @@ class CachingDidResolver(
         val key = did.value
         val now = clock.now()
 
-        cache[key]?.let { entry ->
-            if (now < entry.expiresAt) {
-                entry.lastAccess = accessCounter.incrementAndGet()
-                return entry.result
-            }
-            // Expired — remove only if still the same entry (avoid clobbering a
-            // fresher entry written by a concurrent resolver).
-            cache.remove(key, entry)
-        }
+        readCache(key, now)?.let { return it }
 
         val result = delegate.resolve(did)
+        writeCache(key, now, result)
+        return result
+    }
+
+    /**
+     * Resolves with DID Resolution 1.0 §4.1 options.
+     *
+     * `noCache` (§13.2) is honoured by this layer directly — a `noCache` request bypasses the
+     * cached entry and is not itself cached-around, i.e. it forces a delegate round trip — while
+     * every other option, including any method-specific option this layer does not understand
+     * (`versionId`, `versionTime`), is forwarded to [delegate] unchanged. This layer has no basis
+     * to judge support for those; the delegate — ultimately the DID method — does.
+     */
+    override suspend fun resolve(did: Did, options: ResolutionOptions): DidResolutionResult {
+        options.validate()?.let { error ->
+            return DidResolutionResult.Failure.OptionsError(
+                did = did,
+                reason = error.detail ?: "Invalid resolution options",
+                errorType = error.type
+            )
+        }
+
+        val key = did.value
+        val now = clock.now()
+
+        if (!options.noCache) {
+            readCache(key, now)?.let { return it }
+        }
+
+        val result = delegate.resolve(did, options)
+        if (!options.noCache) {
+            writeCache(key, now, result)
+        }
+        return result
+    }
+
+    /** Returns the cached, still-fresh result for [key], if any; evicts an expired entry found. */
+    private fun readCache(key: String, now: Instant): DidResolutionResult? {
+        val entry = cache[key] ?: return null
+        if (now < entry.expiresAt) {
+            entry.lastAccess = accessCounter.incrementAndGet()
+            return entry.result
+        }
+        // Expired — remove only if still the same entry (avoid clobbering a
+        // fresher entry written by a concurrent resolver).
+        cache.remove(key, entry)
+        return null
+    }
+
+    /** Caches [result] for [key] if it is a cacheable variant and its expiry is in the future. */
+    private fun writeCache(key: String, now: Instant, result: DidResolutionResult) {
         if (result is DidResolutionResult.Success || result is DidResolutionResult.Deactivated) {
             val expiresAt = expiryFor(now, result)
             if (expiresAt > now) {
@@ -112,7 +156,6 @@ class CachingDidResolver(
                 evictLeastRecentlyUsed()
             }
         }
-        return result
     }
 
     /**

@@ -10,6 +10,7 @@ import org.trustweave.did.model.ServiceEndpoint
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolutionMetadata
+import org.trustweave.did.resolver.DidErrorType
 import org.trustweave.did.exception.DidException.InvalidDidFormat
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
@@ -143,13 +144,14 @@ class DidModelsTest {
 
     @Test
     fun `test DidResolutionResult with defaults`() {
-        val result = DidResolutionResult.Failure.NotFound(
-            did = Did("did:key:test"),
-            resolutionMetadata = DidResolutionMetadata()
-        )
+        // No resolutionMetadata passed at all — exercises NotFound's own default, which must
+        // synthesize a NOT_FOUND error (§4: every Failure carries a non-null error, enforced by
+        // an init check on each Failure subtype). This test previously overrode resolutionMetadata
+        // with an empty one and asserted error was null — the exact shape the invariant now rejects.
+        val result = DidResolutionResult.Failure.NotFound(did = Did("did:key:test"))
 
         assertTrue(result is DidResolutionResult.Failure.NotFound)
-        assertNull(result.resolutionMetadata.error)
+        assertEquals(DidErrorType.NOT_FOUND, result.resolutionMetadata.error?.type)
     }
 }
 

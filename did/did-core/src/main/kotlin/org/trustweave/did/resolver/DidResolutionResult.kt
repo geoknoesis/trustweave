@@ -59,7 +59,14 @@ sealed class DidResolutionResult {
     }
 
     /**
-     * Resolution failed. Every variant carries a non-null [DidResolutionMetadata.error].
+     * Resolution failed. Every variant carries a non-null [DidResolutionMetadata.error],
+     * enforced by each variant's own `init` block (§4).
+     *
+     * The check lives on each subtype rather than once here on [Failure] itself: [Failure] has
+     * no property of its own for `resolutionMetadata` — each subtype declares it independently
+     * as a `data class` constructor property — and a base-class `init` block runs *before* a
+     * derived `data class`'s own constructor properties are assigned, so it would observe an
+     * uninitialized value if it tried to read an override from here instead.
      */
     sealed class Failure : DidResolutionResult() {
 
@@ -70,7 +77,13 @@ sealed class DidResolutionResult {
             val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata(
                 error = DidResolutionError.notFound(reason ?: "DID not found: ${did.value}")
             )
-        ) : Failure()
+        ) : Failure() {
+            init {
+                require(resolutionMetadata.error != null) {
+                    "Failure.NotFound requires a non-null resolutionMetadata.error (DID Resolution 1.0 §4)"
+                }
+            }
+        }
 
         /** §4.4 step 1: the input does not conform to the DID syntax. */
         data class InvalidFormat(
@@ -79,7 +92,13 @@ sealed class DidResolutionResult {
             val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata(
                 error = DidResolutionError.invalidDid(reason)
             )
-        ) : Failure()
+        ) : Failure() {
+            init {
+                require(resolutionMetadata.error != null) {
+                    "Failure.InvalidFormat requires a non-null resolutionMetadata.error (DID Resolution 1.0 §4)"
+                }
+            }
+        }
 
         /** §4.4 step 2: the DID method is not supported by this resolver. */
         data class MethodNotRegistered(
@@ -88,7 +107,13 @@ sealed class DidResolutionResult {
             val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata(
                 error = DidResolutionError.methodNotSupported("DID method '$method' is not registered")
             )
-        ) : Failure()
+        ) : Failure() {
+            init {
+                require(resolutionMetadata.error != null) {
+                    "Failure.MethodNotRegistered requires a non-null resolutionMetadata.error (DID Resolution 1.0 §4)"
+                }
+            }
+        }
 
         /** §4.4 final step: an unexpected error during resolution. */
         data class ResolutionError(
@@ -98,7 +123,13 @@ sealed class DidResolutionResult {
             val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata(
                 error = DidResolutionError.internalError(reason)
             )
-        ) : Failure()
+        ) : Failure() {
+            init {
+                require(resolutionMetadata.error != null) {
+                    "Failure.ResolutionError requires a non-null resolutionMetadata.error (DID Resolution 1.0 §4)"
+                }
+            }
+        }
 
         /**
          * §4.4 steps 3 and 4: a resolution option is unsupported or invalid, or the requested
@@ -114,6 +145,12 @@ sealed class DidResolutionResult {
             val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata(
                 error = DidResolutionError.of(errorType, reason)
             )
-        ) : Failure()
+        ) : Failure() {
+            init {
+                require(resolutionMetadata.error != null) {
+                    "Failure.OptionsError requires a non-null resolutionMetadata.error (DID Resolution 1.0 §4)"
+                }
+            }
+        }
     }
 }

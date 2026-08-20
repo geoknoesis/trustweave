@@ -74,11 +74,11 @@ object DidDocumentJsonProducer {
      *
      * @param document The DID document
      * @param useV1_1Context If true, use v1.1 @context
-     * @return Pair of (utf-8 bytes, APPLICATION_DID_MEDIA_TYPE)
+     * @return Pair of (utf-8 bytes, [DidMediaTypes.DID])
      */
     fun toBytesWithMediaType(document: DidDocument, useV1_1Context: Boolean = true): Pair<ByteArray, String> {
         val json = toJsonObject(document, useV1_1Context)
-        return json.toString().toByteArray(Charsets.UTF_8) to APPLICATION_DID_MEDIA_TYPE
+        return json.toString().toByteArray(Charsets.UTF_8) to DidMediaTypes.DID
     }
 
     private fun putController(builder: JsonObjectBuilder, document: DidDocument) {

@@ -220,6 +220,70 @@ class DidMethodEdgeCasesTest {
         assertEquals(DidErrorType.NOT_FOUND, result.resolutionMetadata.error?.type)
     }
 
+    // ─── DidMethodRegistry.resolve(String) runs the full §4.4 algorithm (finding I2) ───
+    //
+    // Before the fix, this overload called method.resolveDid(parsed) directly: no deactivation
+    // conversion, no §4 id-equality check, and a thrown DidException would escape uncaught. It
+    // now delegates to RegistryBasedResolver over the same registry, so these three behaviours —
+    // previously only reachable via the Did-typed resolve(did) entry point — apply here too.
+
+    @Test
+    fun `test DidRegistry resolve string overload converts deactivated Success to Deactivated`() = runBlocking {
+        val method = object : DidMethod {
+            override val method = "test"
+            override suspend fun createDid(options: DidCreationOptions) = DidDocument(id = Did("did:test:123"))
+            override suspend fun resolveDid(did: Did) = DidResolutionResult.Success(
+                document = DidDocument(id = did),
+                documentMetadata = DidDocumentMetadata(deactivated = true)
+            )
+            override suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument) = DidDocument(id = did)
+            override suspend fun deactivateDid(did: Did) = true
+        }
+        registry.register(method)
+
+        val result = registry.resolve("did:test:revoked")
+
+        assertTrue(result is DidResolutionResult.Deactivated, "expected Deactivated, got $result")
+    }
+
+    @Test
+    fun `test DidRegistry resolve string overload rejects a mismatched document id`() = runBlocking {
+        val method = object : DidMethod {
+            override val method = "test"
+            override suspend fun createDid(options: DidCreationOptions) = DidDocument(id = Did("did:test:123"))
+            override suspend fun resolveDid(did: Did) = DidResolutionResult.Success(
+                document = DidDocument(id = Did("did:test:someone-else"))
+            )
+            override suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument) = DidDocument(id = did)
+            override suspend fun deactivateDid(did: Did) = true
+        }
+        registry.register(method)
+
+        val result = registry.resolve("did:test:requested")
+
+        assertTrue(result is DidResolutionResult.Failure.ResolutionError, "expected ResolutionError, got $result")
+        assertEquals(DidErrorType.INVALID_DID_DOCUMENT, result.resolutionMetadata.error?.type)
+    }
+
+    @Test
+    fun `test DidRegistry resolve string overload converts a thrown DidException instead of propagating it`() =
+        runBlocking {
+            val method = object : DidMethod {
+                override val method = "test"
+                override suspend fun createDid(options: DidCreationOptions) = DidDocument(id = Did("did:test:123"))
+                override suspend fun resolveDid(did: Did): DidResolutionResult =
+                    throw org.trustweave.did.exception.DidException.DidNotFound(did = did)
+                override suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument) = DidDocument(id = did)
+                override suspend fun deactivateDid(did: Did) = true
+            }
+            registry.register(method)
+
+            val result = registry.resolve("did:test:throws")
+
+            assertTrue(result is DidResolutionResult.Failure.ResolutionError, "expected ResolutionError, got $result")
+            assertEquals(DidErrorType.NOT_FOUND, result.resolutionMetadata.error?.type)
+        }
+
     @Test
     fun `test DidRegistry clear removes all methods`() {
         val method1 = createMockDidMethod("method1")

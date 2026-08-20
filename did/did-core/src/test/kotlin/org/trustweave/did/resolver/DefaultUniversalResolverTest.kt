@@ -244,9 +244,17 @@ class DefaultUniversalResolverTest {
     }
 
     // ─── Composed effect: a bare errorMessage on a failure response still surfaces as the
-    // reason, even though DidResolutionMetadata.fromMap (fix round 2) no longer synthesizes an
-    // error object for it. This exercises the actual resolveDid() HTTP path end-to-end, which
-    // round 1's tests never did — that gap is why the round-1 regression slipped through. ───
+    // reason, even though DidResolutionMetadata.fromMap (fix round 2) deliberately does not
+    // synthesize an error object for it (see fromMap's kdoc: it is shared and context-free, so it
+    // must stay silent on a bare errorMessage to avoid mislabeling a would-be Success). This
+    // exercises the actual resolveDid() HTTP path end-to-end, which round 1's tests never did —
+    // that gap is why the round-1 regression slipped through.
+    //
+    // What changed since: the caller here — the NotFound branch below — is already committed to
+    // a failure once document == null, so it now synthesizes a NOT_FOUND error object itself
+    // (finding I3: every Failure carries a non-null resolutionMetadata.error, enforced by an init
+    // check on DidResolutionResult.Failure since this round). fromMap's own no-synthesis
+    // behaviour is unchanged; only what the caller does with its output changed. ───
 
     @Test
     fun `resolveDid surfaces a bare errorMessage as the NotFound reason`() = runBlocking {
@@ -267,7 +275,12 @@ class DefaultUniversalResolverTest {
 
             assertTrue(result is DidResolutionResult.Failure.NotFound)
             assertEquals("DID did:x:y does not exist", (result as DidResolutionResult.Failure.NotFound).reason)
-            assertNull(result.resolutionMetadata.error, "no structured error code was in the response")
+            assertEquals(
+                DidErrorType.NOT_FOUND,
+                result.resolutionMetadata.error?.type,
+                "no structured error code was in the response, so the caller must synthesize one (§4)"
+            )
+            assertEquals("DID did:x:y does not exist", result.resolutionMetadata.error?.detail)
         } finally {
             server.stop(0)
         }

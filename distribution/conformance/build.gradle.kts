@@ -64,7 +64,7 @@ tasks.register<Test>("conformanceTest") {
     // Bump this number UP when intentionally adding conformance tests. If it fires unexpectedly,
     // do not just bump it — open the HTML report (reports/conformance/html/index.html) and check
     // its stderr panel for a "must not return a value. It will not be executed." warning first.
-    val minimumExpectedTestCount = 37
+    val minimumExpectedTestCount = 38
     afterSuite(
         KotlinClosure2<TestDescriptor, TestResult, Unit>({ descriptor, result ->
             if (descriptor.parent == null) {

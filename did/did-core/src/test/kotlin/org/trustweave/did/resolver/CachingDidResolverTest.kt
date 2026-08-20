@@ -3,6 +3,7 @@ package org.trustweave.did.resolver
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
+import org.trustweave.did.resolution.ResolutionOptions
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -299,5 +300,79 @@ class CachingDidResolverTest {
         val delegate = CountingResolver { success(it) }
         assertThrows<IllegalArgumentException> { CachingDidResolver(delegate, ttl = 0.seconds) }
         assertThrows<IllegalArgumentException> { CachingDidResolver(delegate, maxSize = 0) }
+    }
+
+    // ─── ResolutionOptions forwarding / noCache (finding I1) ───
+
+    /** Delegate stub that records both call counts and the options each 2-arg call received. */
+    private class RecordingOptionsResolver(
+        private val handler: (Did) -> DidResolutionResult
+    ) : DidResolver {
+        var oneArgCalls = 0
+        val optionCalls = mutableListOf<ResolutionOptions>()
+
+        override suspend fun resolve(did: Did): DidResolutionResult {
+            oneArgCalls++
+            return handler(did)
+        }
+
+        override suspend fun resolve(did: Did, options: ResolutionOptions): DidResolutionResult {
+            optionCalls.add(options)
+            return handler(did)
+        }
+    }
+
+    @Test
+    fun `resolve with options forwards them unchanged to the delegate`() = runBlocking {
+        val did = Did("did:example:a")
+        val delegate = RecordingOptionsResolver { success(it) }
+        val resolver = CachingDidResolver(delegate, clock = MutableClock(epoch))
+        val options = ResolutionOptions(accept = "application/did+ld+json")
+
+        resolver.resolve(did, options)
+
+        assertEquals(listOf(options), delegate.optionCalls)
+    }
+
+    @Test
+    fun `resolve with empty options still hits the cache`() = runBlocking {
+        val did = Did("did:example:a")
+        val delegate = RecordingOptionsResolver { success(it) }
+        val resolver = CachingDidResolver(delegate, clock = MutableClock(epoch))
+
+        resolver.resolve(did, ResolutionOptions.EMPTY)
+        resolver.resolve(did, ResolutionOptions.EMPTY)
+
+        assertEquals(1, delegate.optionCalls.size, "second call must be served from cache, not the delegate")
+    }
+
+    @Test
+    fun `noCache bypasses a fresh cache entry and forces a delegate round trip`() = runBlocking {
+        val did = Did("did:example:a")
+        val delegate = RecordingOptionsResolver { success(it) }
+        val resolver = CachingDidResolver(delegate, clock = MutableClock(epoch))
+
+        resolver.resolve(did) // 1-arg call populates the cache
+        resolver.resolve(did, ResolutionOptions(noCache = true))
+
+        assertEquals(1, delegate.oneArgCalls)
+        assertEquals(1, delegate.optionCalls.size, "noCache must not be served from the cache")
+    }
+
+    @Test
+    fun `invalid options short-circuit before touching cache or delegate`() = runBlocking {
+        val did = Did("did:example:a")
+        val delegate = RecordingOptionsResolver { success(it) }
+        val resolver = CachingDidResolver(delegate, clock = MutableClock(epoch))
+        val options = ResolutionOptions(
+            versionId = "3",
+            versionTime = Instant.parse("2021-05-10T17:00:00Z")
+        )
+
+        val result = resolver.resolve(did, options)
+
+        assertTrue(result is DidResolutionResult.Failure.OptionsError)
+        assertEquals(0, delegate.oneArgCalls)
+        assertEquals(0, delegate.optionCalls.size)
     }
 }

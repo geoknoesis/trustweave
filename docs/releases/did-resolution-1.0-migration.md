@@ -3,9 +3,10 @@
 TrustWeave's DID resolution layer now targets
 [DID Resolution 1.0 CR](https://www.w3.org/TR/2026/CR-did-resolution-1.0-20260806/),
 replacing the previous v0.3-era surface. The `distribution:conformance` module carries a
-`DidResolution10ConformanceTest` suite (16 tests) alongside the DID Core 1.1, VC Data Model 2.0,
-Presentation Exchange, and deactivated-DID-verification suites — 37 tests across 5 suites in
-total, enforced by a hard floor in the conformance test listener.
+`DidResolution10ConformanceTest` suite (17 tests, including TC-16 for §4.4 deactivation) alongside
+the DID Core 1.1, VC Data Model 2.0, Presentation Exchange, and deactivated-DID-verification
+suites — 38 tests across 5 suites in total, enforced by a hard floor in the conformance test
+listener.
 
 This release contains breaking changes. Read this whole document before upgrading — several of
 the changes interact (in particular #2 and #8 below).
@@ -32,6 +33,19 @@ upstream resolvers (e.g. public Universal Resolver instances) are still **parsed
 `DidErrorType.fromLegacyCode` upgrades them to their §11 URI form — but TrustWeave itself never
 **emits** the old string form anymore.
 
+The ergonomic accessors over `DidResolutionResult` itself (`org.trustweave.did.resolver`,
+`DidResolutionResultExtensions.kt`) changed too, separately from the `DidResolutionMetadata`
+members above:
+
+- `DidResolutionResult.errorCode` — the old short code (`"NOT_FOUND"`, `"INVALID_FORMAT"`,
+  `"METHOD_NOT_REGISTERED"`, `"RESOLUTION_ERROR"`) — is **removed**, with no replacement of the
+  same shape. This is a compile break, not a silent one.
+- `DidResolutionResult.errorMessage` still exists at the same name but changed what it derives
+  from: it used to read the `Failure` subtype's own `reason` field (e.g. `"DID not found"` as
+  `NotFound`'s default), and now reads `error?.detail` instead. Code that compared this string
+  against a specific message, rather than just logging it, may see a different value — this is a
+  **silent** behaviour change, not a compile error.
+
 ## 2. Deactivated DIDs no longer return a document
 
 `DidResolutionResult` gained a `Deactivated` variant, a sibling of `Success` and `Failure` — not
@@ -51,6 +65,13 @@ with "never registered" is the defect this migration exists to remove, and it is
 DID method now produces `Deactivated` via the shared
 `DidMethodUtils.createSuccessResolutionResult` factory (see #10) instead of returning a `Success`
 result whose metadata happens to say `deactivated: true`.
+
+The same conversion now also happens on the remote-resolver route: `DefaultUniversalResolver` and
+`GodiddyResolver` check `documentMetadata.deactivated` **before** document presence, so an
+upstream HTTP 200 carrying both a `didDocument` and `deactivated: true` — the shape a DID
+Resolution v0.3-era resolver emits — yields `Deactivated`, not a `Success` carrying the revoked
+document. `UniversalResolver.asDidResolver()` applies the same check again as defence in depth,
+so a third-party `UniversalResolver` implementation that skips it is still covered.
 
 ```kotlin
 when (val result = resolver.resolve(did)) {
@@ -101,12 +122,38 @@ options and returns `OptionsError` for anything method-specific (`versionId`, `v
 the two-argument `resolveDid`. **No shipped method currently does** — see "Not yet implemented"
 below.
 
+`CachingDidResolver`, `FallbackDidResolver`, `DecentralizedResolutionStrategy`, and
+`ResolutionFallbackStrategy` now all override the two-argument form too, forwarding `options` to
+their delegate(s) instead of silently dropping them via the interface's single-argument default.
+`CachingDidResolver` additionally honours `noCache` itself: a `noCache` request bypasses its cache
+read and is not cached around, since it is the one layer positioned to act on that option
+directly.
+
+**`org.trustweave.did.resolution.ResolutionOptions` was replaced at the same fully-qualified
+name**, not just extended. The pre-CR type (`did-resolution-v0.3`-aligned, a single `accept: String?`
+field defaulting to `"application/did"`) is gone; the CR type at the same FQN has a different
+shape (`accept` now defaults to `null`) and gains `expandRelativeUrls`, `versionId`, `versionTime`,
+`noCache`, `additional`. Existing code that constructed the old `ResolutionOptions(accept = ...)`
+still compiles against named or default arguments, but a positional-arg construction or an
+`accept`-defaulting call site now behaves differently. `DereferenceResult` and `DereferenceContent`
+— also in the removed `DidResolutionV03.kt` — are deleted outright with no replacement; §5/§10
+dereferencing is not implemented in this release (see "Not yet implemented" below).
+
 ## 6. Media types
 
 The default `contentType` on `DidResolutionMetadata` changed from `application/did+ld+json` to
 `application/did` (`DidMediaTypes.DID`). The legacy `application/did+ld+json` and
 `application/did+json` types remain accepted on input (`DidMediaTypes.SUPPORTED_DOCUMENT_TYPES`)
 and can still be requested explicitly via `ResolutionOptions.accept`.
+
+The same default change reaches `ContentNegotiationService.negotiateContentType`'s `defaultType`
+parameter — it changed from a literal `"application/did+ld+json"` default to
+`DidMediaTypes.DID` (`"application/did"`) — and `DefaultContentNegotiationService.SUPPORTED_TYPES`,
+which now reads `DidMediaTypes.SUPPORTED_DOCUMENT_TYPES` and so gained `application/did` as its
+first (most-preferred) entry rather than listing only the two legacy `+json` forms plus
+`application/json`. Both are call-site-invisible unless you read the value: a caller that
+previously relied on `negotiateContentType`'s implicit default, or iterated `SUPPORTED_TYPES` by
+position, now sees `application/did` where it used to see `application/did+ld+json`.
 
 ## 7. Metadata property moves
 
@@ -117,11 +164,24 @@ on document metadata; resolution metadata has its own separate `proof` list for 
 proofs). Code that read `result.resolutionMetadata.canonicalId` (etc.) must now read
 `result.documentMetadata.canonicalId`.
 
+The move also changed `canonicalId` and `equivalentId`'s types, not just their location:
+`canonicalId` was `String?` and is now `Did?`; `equivalentId` was `List<String>` and is now
+`List<Did>`. A read-only call site that only interpolated these into a string still compiles and
+behaves the same either way, but any code that compared them against a plain `String`, or passed
+them to a `String`-typed parameter, needs updating regardless of the property-owner move above.
+
 ## 8. `resolveOrNull` / `resolveOrDefault` now throw for a deactivated DID
 
-`Did.resolveOrThrow`, `Did.resolveOrNull`, and `Did.resolveOrDefault` (in
+`Did.resolveOrThrow`, `Did.resolveOrNull`, and `Did.resolveOrDefault` (`DidExtensions.kt`, in
 `org.trustweave.did.dsl`) all now treat a deactivated DID the same way: they throw
 `DidException.DidResolutionFailed`, converging with `resolveOrThrow`'s existing behaviour.
+
+`DidResolver.resolveOrThrow` and `DidResolver.resolveOrNull` (`ResolverExtensions.kt`, same
+package) are separate public functions — extensions on `DidResolver` rather than on `Did` — and
+changed identically: both now throw `DidException.DidResolutionFailed` for `Deactivated` instead
+of treating it as absence. If your code calls the `DidResolver` receiver forms rather than the
+`Did` receiver forms, audit those call sites too; the fix below does not cover them just because
+it covers the `Did.` ones.
 
 Before this change, `resolveOrNull` returned `null` for *any* non-`Success` result, so a
 deactivated DID and a DID that never existed were indistinguishable to the caller — both came
@@ -211,6 +271,19 @@ Being explicit about scope, because it's part of the deliverable:
   invert the intended dependency direction (leaf feature modules depending on the top-level
   distribution/conformance harness). Closing this gap needs either a different test-harness
   placement or per-module conformance smoke tests.
+- **§4.3 `proof` on document metadata is encode-only** — `DidDocumentMetadata.toJson()` emits
+  `proof`, but the class has no `fromJson`, and the one parser that builds a `DidDocumentMetadata`
+  from wire data (`DefaultUniversalResolver`'s internal `parseDidDocumentMetadata`) does not read
+  it back either — a §9 round-trip through that path silently loses a resolver-attached document
+  proof. `DidResolutionMetadata` (§4.2 resolution metadata) does **not** have this gap: its own
+  `proof` list round-trips correctly through both `fromJson` and `fromMap`.
+- **`AbstractWebDidMethod.resolveFromHttp`'s live-fetch path never sets `deactivated`** — it
+  consults the locally stored document's `deactivated` flag only on its offline-fallback path (the
+  `IOException` branch, when the live HTTP fetch itself fails); the ordinary HTTP-200 path calls
+  `DidMethodUtils.createSuccessResolutionResult(document, method)` without a `deactivated`
+  argument, which defaults to `false`. So **did:web never returns `Deactivated` from a live
+  fetch** — only from a fallback to a previously-stored, already-flagged document. §10 above
+  should not be read as covering did:web's live-fetch path.
 
 ## See also
 

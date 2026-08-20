@@ -268,7 +268,8 @@ class IssuanceBuilder(
                             "DID method '${resolution.method}' is not registered"
                         is org.trustweave.did.resolver.DidResolutionResult.Failure.ResolutionError ->
                             resolution.reason
-                        else -> resolution.toString()
+                        is org.trustweave.did.resolver.DidResolutionResult.Failure.OptionsError ->
+                            resolution.reason
                     }
                     return@withContext IssuanceResult.Failure.InvalidRequest(
                         field = "issuerDid",

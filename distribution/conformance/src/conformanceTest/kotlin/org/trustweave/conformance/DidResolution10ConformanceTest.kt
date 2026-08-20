@@ -77,6 +77,31 @@ class DidResolution10ConformanceTest {
         override suspend fun deactivateDid(did: Did): Boolean = false
     }
 
+    /**
+     * A method whose DIDs are always deactivated: it returns `Success` with
+     * `documentMetadata.deactivated = true`, the shape a `DidMethod` implementation naturally
+     * produces (see [org.trustweave.did.base.DidMethodUtils.createSuccessResolutionResult]).
+     * [org.trustweave.did.resolver.RegistryBasedResolver] converts that to
+     * [DidResolutionResult.Deactivated] before it reaches a caller (§4.4). This suite otherwise
+     * pins steps 2/3/4, NOT_FOUND, id-equality, contentType, the section 9 envelope, section 11
+     * URIs and section 3.1 — but not section 4.4 deactivation, the one behaviour this migration
+     * exists to establish. This method and TC-16 close that gap in the artifact that carries the
+     * claim.
+     */
+    private class DeactivatedDidMethod : DidMethod {
+        override val method: String = "deactivated"
+        override suspend fun createDid(options: DidCreationOptions): DidDocument =
+            throw UnsupportedOperationException("not needed")
+        override suspend fun resolveDid(did: Did): DidResolutionResult =
+            DidResolutionResult.Success(
+                document = DidDocument(id = did),
+                documentMetadata = DidDocumentMetadata(deactivated = true)
+            )
+        override suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument): DidDocument =
+            throw UnsupportedOperationException("not needed")
+        override suspend fun deactivateDid(did: Did): Boolean = true
+    }
+
     @Test
     fun `TC-01 section 4 a mismatched document id is rejected with INVALID_DID_DOCUMENT`() = runBlocking {
         val registry = DidMethodRegistry().apply { register(MismatchedIdDidMethod()) }
@@ -208,5 +233,17 @@ class DidResolution10ConformanceTest {
     @Test
     fun `TC-15 section 4 an empty options structure is accepted`() = runBlocking {
         assertTrue(resolver.resolve(newDid(), ResolutionOptions.EMPTY) is DidResolutionResult.Success)
+    }
+
+    @Test
+    fun `TC-16 section 4-4 a deactivated DID resolves to Deactivated with no document`() = runBlocking {
+        val registry = DidMethodRegistry().apply { register(DeactivatedDidMethod()) }
+        val result = RegistryBasedResolver(registry).resolve(Did("did:deactivated:123"))
+
+        // Deactivated is a sibling of Success, not a case of it (see DidResolutionResult's kdoc)
+        // — it structurally carries no `document` property at all, so proving the type is
+        // Deactivated already proves "no document" without a same-branch cast to Success.
+        assertTrue(result is DidResolutionResult.Deactivated, "expected Deactivated, got $result")
+        assertTrue(result.documentMetadata.deactivated)
     }
 }

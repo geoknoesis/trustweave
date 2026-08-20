@@ -52,6 +52,30 @@ class GodiddyResolverCrTest {
         }
     }
 
+    // Critical fix: an upstream body carrying BOTH a non-null didDocument AND
+    // didDocumentMetadata.deactivated: true must still yield Deactivated, never Success. The test
+    // above uses "didDocument": null; every pre-existing deactivation test for this class did the
+    // same, which is exactly why "document != null -> Success" being checked before
+    // "deactivated -> Deactivated" survived undetected — a revoked DID's document would otherwise
+    // flow into a caller as a plain Success and could go on to verify a credential and be cached.
+    @Test
+    fun `deactivated upstream body with a non-null document still maps to Deactivated`() = runBlocking {
+        val body = """{"didDocument":{"id":"did:example:still-live"},"didDocumentMetadata":{"deactivated":true}}"""
+        val server = startServer(body)
+        val client = GodiddyClient(GodiddyConfig(baseUrl = "http://localhost:${server.address.port}"))
+        try {
+            val resolver = GodiddyResolver(client)
+
+            val result = resolver.resolveDid("did:example:still-live")
+
+            assertTrue(result is DidResolutionResult.Deactivated, "expected Deactivated, got $result")
+            assertTrue(result.documentMetadata.deactivated)
+        } finally {
+            client.close()
+            server.stop(0)
+        }
+    }
+
     @Test
     fun `upstream nextVersionId lands in document metadata`() = runBlocking {
         val body =

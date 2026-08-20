@@ -268,31 +268,57 @@ class DefaultUniversalResolver(
                         resolutionMetadataMap.plus("provider" to protocolAdapter.providerName)
                     )
 
-                    if (document != null) {
-                        DidResolutionResult.Success(
-                            document = document,
-                            documentMetadata = documentMetadata,
-                            resolutionMetadata = resolutionMetadata
-                        )
-                    } else {
-                        // Prefer the human-readable detail/title over the raw §11 type URL —
-                        // `error?.type` is a machine identifier (e.g.
-                        // "https://www.w3.org/ns/did#NOT_FOUND"), not failure text. Fall back to
-                        // a bare errorMessage straight from the raw map: this branch is already
-                        // committed to a failure (document == null), so — unlike
-                        // DidResolutionMetadata.fromMap, which must stay silent on a bare
-                        // errorMessage to avoid mislabeling a successful resolution — it is safe
-                        // here to treat an upstream errorMessage with no structured error as the
-                        // failure reason.
-                        val upstreamReason = resolutionMetadata.error?.detail
-                            ?: (resolutionMetadataMap["errorMessage"] as? String)
-                            ?: resolutionMetadata.error?.title
-                            ?: "DID document not found in response"
-                        DidResolutionResult.Failure.NotFound(
-                            did = Did(did),
-                            reason = upstreamReason,
-                            resolutionMetadata = resolutionMetadata
-                        )
+                    when {
+                        // §4.4/§12.1: deactivation is checked before document-presence. An
+                        // upstream HTTP 200 can carry both a non-null `didDocument` and
+                        // `didDocumentMetadata.deactivated: true` — this is exactly the shape a
+                        // DID Resolution v0.3-era resolver emits (a 0.6 client behind a 0.5
+                        // server reproduces it directly), and the CR does not forbid it either.
+                        // Checking deactivation first means that shape still yields Deactivated,
+                        // never a Success carrying a revoked document — the same guarantee the
+                        // 410 branch below already provides, now also on the 200 path.
+                        documentMetadata.deactivated -> {
+                            DidResolutionResult.Deactivated(
+                                did = Did(did),
+                                documentMetadata = documentMetadata.copy(deactivated = true),
+                                resolutionMetadata = resolutionMetadata
+                            )
+                        }
+                        document != null -> {
+                            DidResolutionResult.Success(
+                                document = document,
+                                documentMetadata = documentMetadata,
+                                resolutionMetadata = resolutionMetadata
+                            )
+                        }
+                        else -> {
+                            // Prefer the human-readable detail/title over the raw §11 type URL —
+                            // `error?.type` is a machine identifier (e.g.
+                            // "https://www.w3.org/ns/did#NOT_FOUND"), not failure text. Fall back
+                            // to a bare errorMessage straight from the raw map: this branch is
+                            // already committed to a failure (document == null), so — unlike
+                            // DidResolutionMetadata.fromMap, which must stay silent on a bare
+                            // errorMessage to avoid mislabeling a successful resolution — it is
+                            // safe here to treat an upstream errorMessage with no structured error
+                            // as the failure reason.
+                            val upstreamReason = resolutionMetadata.error?.detail
+                                ?: (resolutionMetadataMap["errorMessage"] as? String)
+                                ?: resolutionMetadata.error?.title
+                                ?: "DID document not found in response"
+                            // §4 / Failure's invariant: every Failure MUST carry a non-null
+                            // error. `resolutionMetadata` here is parsed straight from an
+                            // upstream body that may carry no structured error member at all —
+                            // synthesize one from the reason we just computed rather than pass
+                            // resolutionMetadata through unchanged.
+                            DidResolutionResult.Failure.NotFound(
+                                did = Did(did),
+                                reason = upstreamReason,
+                                resolutionMetadata = resolutionMetadata.copy(
+                                    error = resolutionMetadata.error
+                                        ?: DidResolutionError.notFound(upstreamReason)
+                                )
+                            )
+                        }
                     }
                 }
                 404 -> {

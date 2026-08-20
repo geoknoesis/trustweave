@@ -8,8 +8,7 @@ import kotlin.collections.buildMap
 
 /**
  * Provider for SD-JWT-VC proof engine.
- */
-/**
+ *
  * Discovered via [java.util.ServiceLoader]; see META-INF/services.
  *
  * Public because [ProofEngineProvider] is a public SPI: an implementation nobody outside the
@@ -18,26 +17,24 @@ import kotlin.collections.buildMap
  * obtain a SD-JWT VC engine without reaching into internals.
  */
 class SdJwtProofEngineProvider : ProofEngineProvider {
-    
     override val name = "sdjwt"
-    
+
     override val supportedFormatIds = listOf(ProofSuiteId.SD_JWT_VC)
-    
-    override fun create(options: Map<String, Any?>): ProofEngine? {
-        return try {
+
+    override fun create(options: Map<String, Any?>): ProofEngine? =
+        try {
             // Convert Map<String, Any?> to Map<String, Any> by filtering out null values
-            val nonNullOptions = buildMap<String, Any> {
-                options.forEach { (key, value) ->
-                    if (value != null) {
-                        put(key, value)
+            val nonNullOptions =
+                buildMap<String, Any> {
+                    options.forEach { (key, value) ->
+                        if (value != null) {
+                            put(key, value)
+                        }
                     }
                 }
-            }
             val config = ProofEngineConfig(properties = nonNullOptions)
             SdJwtProofEngine(config)
         } catch (e: Exception) {
             null
         }
-    }
 }
-

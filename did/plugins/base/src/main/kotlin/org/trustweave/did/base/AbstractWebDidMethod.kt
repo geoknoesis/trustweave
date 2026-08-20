@@ -355,6 +355,7 @@ abstract class AbstractWebDidMethod(
                         documentMetadata[didString] =
                             (documentMetadata[didString] ?: DidDocumentMetadata(created = now))
                                 .copy(updated = now, deactivated = true)
+                        lastFetched[didString] = now
                     }
                 }
 

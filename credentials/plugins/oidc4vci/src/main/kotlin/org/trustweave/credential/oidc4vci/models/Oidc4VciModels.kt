@@ -1,8 +1,8 @@
 package org.trustweave.credential.oidc4vci.models
 
-import org.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.trustweave.credential.model.vc.VerifiableCredential
 
 /**
  * OIDC4VCI credential offer.
@@ -91,9 +91,14 @@ data class Oidc4VciNotification(
 /** Notification event type. */
 @Serializable
 enum class NotificationEvent {
-    @SerialName("credential_accepted") CREDENTIAL_ACCEPTED,
-    @SerialName("credential_failure") CREDENTIAL_FAILURE,
-    @SerialName("credential_deleted") CREDENTIAL_DELETED,
+    @SerialName("credential_accepted")
+    CREDENTIAL_ACCEPTED,
+
+    @SerialName("credential_failure")
+    CREDENTIAL_FAILURE,
+
+    @SerialName("credential_deleted")
+    CREDENTIAL_DELETED,
 }
 
 /**

@@ -1,5 +1,6 @@
 package org.trustweave.credential.oidc4vci.exchange
 
+import kotlinx.serialization.json.*
 import org.trustweave.credential.exchange.*
 import org.trustweave.credential.exchange.capability.ExchangeProtocolCapabilities
 import org.trustweave.credential.exchange.model.ExchangeMessageEnvelope
@@ -10,8 +11,6 @@ import org.trustweave.credential.identifiers.ExchangeProtocolName
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.vc.VerifiablePresentation
 import org.trustweave.credential.oidc4vci.Oidc4VciService
-import org.trustweave.credential.oidc4vci.exception.Oidc4VciException
-import kotlinx.serialization.json.*
 
 /**
  * OIDC4VCI (OpenID Connect for Verifiable Credential Issuance) implementation
@@ -41,47 +40,56 @@ import kotlinx.serialization.json.*
  * ```
  */
 class Oidc4VciExchangeProtocol(
-    private val oidc4vciService: Oidc4VciService
+    private val oidc4vciService: Oidc4VciService,
 ) : CredentialExchangeProtocol {
-
     override val protocolName = ExchangeProtocolName.Oidc4Vci
 
-    override val capabilities = ExchangeProtocolCapabilities(
-        supportedOperations = setOf(
-            ExchangeOperation.OFFER_CREDENTIAL,
-            ExchangeOperation.REQUEST_CREDENTIAL,
-            ExchangeOperation.ISSUE_CREDENTIAL
-            // Note: OIDC4VCI doesn't typically support proof operations
-            // Use DIDComm or OIDC4VP for proof presentations
-        ),
-        supportsAsync = false,  // OIDC4VCI is synchronous HTTP-based
-        supportsMultipleCredentials = true,
-        supportsSelectiveDisclosure = false,
-        requiresTransportSecurity = true
-    )
+    override val capabilities =
+        ExchangeProtocolCapabilities(
+            supportedOperations =
+                setOf(
+                    ExchangeOperation.OFFER_CREDENTIAL,
+                    ExchangeOperation.REQUEST_CREDENTIAL,
+                    ExchangeOperation.ISSUE_CREDENTIAL,
+                    // Note: OIDC4VCI doesn't typically support proof operations
+                    // Use DIDComm or OIDC4VP for proof presentations
+                ),
+            supportsAsync = false, // OIDC4VCI is synchronous HTTP-based
+            supportsMultipleCredentials = true,
+            supportsSelectiveDisclosure = false,
+            requiresTransportSecurity = true,
+        )
 
     override suspend fun offer(request: ExchangeRequest.Offer): ExchangeMessageEnvelope {
         // Extract DID strings from typed DIDs
         val issuerDid = request.issuerDid.value
-        
+
         // Extract credential types from preview or options
-        val credentialTypes = request.options.metadata["credentialTypes"]?.jsonArray
-            ?.mapNotNull { it.jsonPrimitive.content }
-            ?: request.credentialPreview.attributes.map { it.name }
+        val credentialTypes =
+            request.options.metadata["credentialTypes"]
+                ?.jsonArray
+                ?.mapNotNull { it.jsonPrimitive.content }
+                ?: request.credentialPreview.attributes.map { it.name }
 
-        val credentialIssuer = request.options.metadata["credentialIssuer"]?.jsonPrimitive?.content
-            ?: throw IllegalArgumentException("credentialIssuer required in options.metadata for OIDC4VCI offer")
+        val credentialIssuer =
+            request.options.metadata["credentialIssuer"]
+                ?.jsonPrimitive
+                ?.content
+                ?: throw IllegalArgumentException("credentialIssuer required in options.metadata for OIDC4VCI offer")
 
-        val grants = request.options.metadata["grants"]?.jsonObject
-            ?.mapValues { it.value }
+        val grants =
+            request.options.metadata["grants"]
+                ?.jsonObject
+                ?.mapValues { it.value }
 
         // Create OIDC4VCI credential offer
-        val offer = oidc4vciService.createCredentialOffer(
-            issuerDid = issuerDid,
-            credentialTypes = credentialTypes,
-            credentialIssuer = credentialIssuer,
-            grants = grants ?: emptyMap()
-        )
+        val offer =
+            oidc4vciService.createCredentialOffer(
+                issuerDid = issuerDid,
+                credentialTypes = credentialTypes,
+                credentialIssuer = credentialIssuer,
+                grants = grants ?: emptyMap(),
+            )
 
         // Convert OIDC4VCI offer to JSON
         val offerJson = Json { ignoreUnknownKeys = true }.encodeToJsonElement(offer) as JsonObject
@@ -90,30 +98,38 @@ class Oidc4VciExchangeProtocol(
             protocolName = protocolName,
             messageType = ExchangeMessageType.Offer,
             messageData = offerJson,
-            metadata = mapOf(
-                "offerId" to JsonPrimitive(offer.offerId),
-                "offerUri" to JsonPrimitive(offer.offerUri)
-            )
+            metadata =
+                mapOf(
+                    "offerId" to JsonPrimitive(offer.offerId),
+                    "offerUri" to JsonPrimitive(offer.offerUri),
+                ),
         )
     }
 
     override suspend fun request(request: ExchangeRequest.Request): ExchangeMessageEnvelope {
         // Extract DID string from typed DID
         val holderDid = request.holderDid.value
-        
+
         // Extract offer ID
         val offerId = request.offerId.value
-        
-        val redirectUri = request.options.metadata["redirectUri"]?.jsonPrimitive?.content
-        val authorizationCode = request.options.metadata["authorizationCode"]?.jsonPrimitive?.content
+
+        val redirectUri =
+            request.options.metadata["redirectUri"]
+                ?.jsonPrimitive
+                ?.content
+        val authorizationCode =
+            request.options.metadata["authorizationCode"]
+                ?.jsonPrimitive
+                ?.content
 
         // Create OIDC4VCI credential request
-        val credentialRequest = oidc4vciService.createCredentialRequest(
-            holderDid = holderDid,
-            offerId = offerId,
-            redirectUri = redirectUri,
-            authorizationCode = authorizationCode
-        )
+        val credentialRequest =
+            oidc4vciService.createCredentialRequest(
+                holderDid = holderDid,
+                offerId = offerId,
+                redirectUri = redirectUri,
+                authorizationCode = authorizationCode,
+            )
 
         // Convert OIDC4VCI request to JSON
         val requestJson = Json { ignoreUnknownKeys = true }.encodeToJsonElement(credentialRequest) as JsonObject
@@ -122,9 +138,10 @@ class Oidc4VciExchangeProtocol(
             protocolName = protocolName,
             messageType = ExchangeMessageType.Request,
             messageData = requestJson,
-            metadata = mapOf(
-                "requestId" to JsonPrimitive(credentialRequest.requestId)
-            )
+            metadata =
+                mapOf(
+                    "requestId" to JsonPrimitive(credentialRequest.requestId),
+                ),
         )
     }
 
@@ -132,29 +149,32 @@ class Oidc4VciExchangeProtocol(
         // Extract DID strings from typed DIDs
         val issuerDid = request.issuerDid.value
         val holderDid = request.holderDid.value
-        
+
         // Extract request ID
         val requestId = request.requestId.value
 
         // Issue via OIDC4VCI. The returned credential is the issuer's own, parsed and
         // cryptographically verified by the service - not the caller's request envelope.
-        val issueResult = oidc4vciService.issueCredential(
-            issuerDid = issuerDid,
-            holderDid = holderDid,
-            requestId = requestId
-        )
+        val issueResult =
+            oidc4vciService.issueCredential(
+                issuerDid = issuerDid,
+                holderDid = holderDid,
+                requestId = requestId,
+            )
 
         // Convert issue result to JSON
         val issueJson = Json { ignoreUnknownKeys = true }.encodeToJsonElement(issueResult.credentialResponse) as JsonObject
 
-        val envelope = ExchangeMessageEnvelope(
-            protocolName = protocolName,
-            messageType = ExchangeMessageType.Issue,
-            messageData = issueJson,
-            metadata = mapOf(
-                "issueId" to JsonPrimitive(issueResult.issueId)
+        val envelope =
+            ExchangeMessageEnvelope(
+                protocolName = protocolName,
+                messageType = ExchangeMessageType.Issue,
+                messageData = issueJson,
+                metadata =
+                    mapOf(
+                        "issueId" to JsonPrimitive(issueResult.issueId),
+                    ),
             )
-        )
 
         // Return the VerifiableCredential from the issue result
         // If transactionId is present the issuer deferred — callers must use pollDeferredCredential
@@ -168,27 +188,27 @@ class Oidc4VciExchangeProtocol(
         )
     }
 
-    override suspend fun requestProof(request: ProofExchangeRequest.Request): ExchangeMessageEnvelope {
+    override suspend fun requestProof(request: ProofExchangeRequest.Request): ExchangeMessageEnvelope =
         throw org.trustweave.core.exception.TrustWeaveException.InvalidOperation(
             code = "OPERATION_NOT_SUPPORTED",
             message = "Operation REQUEST_PROOF not supported for protocol ${protocolName.value}",
-            context = mapOf(
-                "protocolName" to protocolName.value,
-                "operation" to "REQUEST_PROOF",
-                "supportedOperations" to capabilities.supportedOperations.map { it.name }
-            )
+            context =
+                mapOf(
+                    "protocolName" to protocolName.value,
+                    "operation" to "REQUEST_PROOF",
+                    "supportedOperations" to capabilities.supportedOperations.map { it.name },
+                ),
         )
-    }
 
-    override suspend fun presentProof(request: ProofExchangeRequest.Presentation): Pair<VerifiablePresentation, ExchangeMessageEnvelope> {
+    override suspend fun presentProof(request: ProofExchangeRequest.Presentation): Pair<VerifiablePresentation, ExchangeMessageEnvelope> =
         throw org.trustweave.core.exception.TrustWeaveException.InvalidOperation(
             code = "OPERATION_NOT_SUPPORTED",
             message = "Operation PRESENT_PROOF not supported for protocol ${protocolName.value}",
-            context = mapOf(
-                "protocolName" to protocolName.value,
-                "operation" to "PRESENT_PROOF",
-                "supportedOperations" to capabilities.supportedOperations.map { it.name }
-            )
+            context =
+                mapOf(
+                    "protocolName" to protocolName.value,
+                    "operation" to "PRESENT_PROOF",
+                    "supportedOperations" to capabilities.supportedOperations.map { it.name },
+                ),
         )
-    }
 }

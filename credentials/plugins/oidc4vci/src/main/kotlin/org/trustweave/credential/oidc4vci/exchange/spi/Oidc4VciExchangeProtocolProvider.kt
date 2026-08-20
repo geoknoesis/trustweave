@@ -1,11 +1,11 @@
 package org.trustweave.credential.oidc4vci.exchange.spi
 
+import okhttp3.OkHttpClient
 import org.trustweave.credential.exchange.CredentialExchangeProtocol
-import org.trustweave.credential.spi.exchange.CredentialExchangeProtocolProvider
 import org.trustweave.credential.oidc4vci.Oidc4VciService
 import org.trustweave.credential.oidc4vci.exchange.Oidc4VciExchangeProtocol
+import org.trustweave.credential.spi.exchange.CredentialExchangeProtocolProvider
 import org.trustweave.kms.KeyManagementService
-import okhttp3.OkHttpClient
 
 /**
  * SPI Provider for OIDC4VCI exchange protocol.
@@ -25,31 +25,35 @@ class Oidc4VciExchangeProtocolProvider : CredentialExchangeProtocolProvider {
 
     override fun create(
         protocolName: String,
-        options: Map<String, Any?>
+        options: Map<String, Any?>,
     ): CredentialExchangeProtocol? {
         if (protocolName != "oidc4vci") return null
 
-        val credentialIssuerUrl = options["credentialIssuerUrl"] as? String
-            ?: throw IllegalArgumentException("Missing 'credentialIssuerUrl' in options")
+        val credentialIssuerUrl =
+            options["credentialIssuerUrl"] as? String
+                ?: throw IllegalArgumentException("Missing 'credentialIssuerUrl' in options")
 
-        val kms = options["kms"] as? KeyManagementService
-            ?: throw IllegalArgumentException("Missing 'kms' in options")
+        val kms =
+            options["kms"] as? KeyManagementService
+                ?: throw IllegalArgumentException("Missing 'kms' in options")
 
-        val httpClient = options["httpClient"] as? OkHttpClient
-            ?: org.trustweave.core.net.ssrfGuardedOkHttpClient()
+        val httpClient =
+            options["httpClient"] as? OkHttpClient
+                ?: org.trustweave.core.net
+                    .ssrfGuardedOkHttpClient()
 
         // Without a resolver the service cannot verify issuer-returned credentials and
         // issuance fails closed, so callers that issue must supply one.
         val didResolver = options["didResolver"] as? org.trustweave.did.resolver.DidResolver
 
-        val oidc4vciService = Oidc4VciService(
-            credentialIssuerUrl = credentialIssuerUrl,
-            kms = kms,
-            httpClient = httpClient,
-            didResolver = didResolver
-        )
+        val oidc4vciService =
+            Oidc4VciService(
+                credentialIssuerUrl = credentialIssuerUrl,
+                kms = kms,
+                httpClient = httpClient,
+                didResolver = didResolver,
+            )
 
         return Oidc4VciExchangeProtocol(oidc4vciService)
     }
 }
-

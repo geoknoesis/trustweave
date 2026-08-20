@@ -267,4 +267,72 @@ class FallbackDidResolverTest {
         assertEquals(listOf(options), primary.optionCalls)
         assertEquals(listOf(options), fallback.optionCalls)
     }
+
+    // ─── F1: `accept` must not be silently dropped on the universal-fallback leg ───
+    //
+    // UniversalResolver.asDidResolver() previously returned a SAM implementing only the
+    // one-arg resolve(did) form, so DidResolver's two-arg default applied and *discarded*
+    // `accept`/`expandRelativeUrls` before delegating — meaning an unsupported `accept` could
+    // slip through as Success instead of failing with REPRESENTATION_NOT_SUPPORTED (§4.4 step 3).
+
+    @Test
+    fun `asDidResolver two-arg resolve rejects an unsupported accept`() = runBlocking {
+        val did = Did("did:test:example")
+        val universal = object : UniversalResolver {
+            override val baseUrl: String = "https://resolver.example"
+            override suspend fun resolveDid(did: String): DidResolutionResult =
+                DidResolutionResult.Success(document = DidDocument(id = Did(did)))
+            override suspend fun getSupportedMethods(): List<String>? = null
+        }
+        val resolver = universal.asDidResolver()
+
+        val result = resolver.resolve(did, ResolutionOptions(accept = "application/did+cbor"))
+
+        assertTrue(result is DidResolutionResult.Failure.OptionsError, "expected OptionsError, got $result")
+        assertEquals(
+            DidErrorType.REPRESENTATION_NOT_SUPPORTED,
+            (result as DidResolutionResult.Failure.OptionsError).errorType
+        )
+    }
+
+    @Test
+    fun `unsupported accept survives CachingDidResolver over FallbackDidResolver to the universal leg`() =
+        runBlocking {
+            // The documented composition from the class docs: CachingDidResolver wraps
+            // FallbackDidResolver(registry, universal). A method not known to the registry
+            // reaches the universal-resolver adapter, which must still honor `accept`.
+            val did = Did("did:ion:EiDexample")
+            val registry = RecordingOptionsResolver { methodNotRegistered(it) }
+            val universal = object : UniversalResolver {
+                override val baseUrl: String = "https://resolver.example"
+                override suspend fun resolveDid(did: String): DidResolutionResult =
+                    DidResolutionResult.Success(document = DidDocument(id = Did(did)))
+                override suspend fun getSupportedMethods(): List<String>? = null
+            }
+            val resolver = CachingDidResolver(FallbackDidResolver(registry, universal.asDidResolver()))
+
+            val result = resolver.resolve(did, ResolutionOptions(accept = "application/did+cbor"))
+
+            assertTrue(result is DidResolutionResult.Failure.OptionsError, "expected OptionsError, got $result")
+            assertEquals(
+                DidErrorType.REPRESENTATION_NOT_SUPPORTED,
+                (result as DidResolutionResult.Failure.OptionsError).errorType
+            )
+        }
+
+    @Test
+    fun `asDidResolver two-arg resolve still succeeds for a supported accept`() = runBlocking {
+        val did = Did("did:test:example")
+        val universal = object : UniversalResolver {
+            override val baseUrl: String = "https://resolver.example"
+            override suspend fun resolveDid(did: String): DidResolutionResult =
+                DidResolutionResult.Success(document = DidDocument(id = Did(did)))
+            override suspend fun getSupportedMethods(): List<String>? = null
+        }
+        val resolver = universal.asDidResolver()
+
+        val result = resolver.resolve(did, ResolutionOptions(accept = "application/did+ld+json"))
+
+        assertTrue(result is DidResolutionResult.Success, "expected Success, got $result")
+    }
 }

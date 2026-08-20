@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<baseline version="1.0">
+    <file name="build.gradle.kts">
+        <error line="11" column="1" source="standard:no-trailing-spaces" />
+        <error line="26" column="1" source="standard:no-consecutive-blank-lines" />
+    </file>
+    <file name="src/main/kotlin/org/trustweave/kms/utimaco/UtimacoKeyManagementService.kt">
+        <error line="27" column="61" source="standard:trailing-comma-on-declaration-site" />
+        <error line="29" column="1" source="standard:no-empty-first-line-in-class-body" />
+        <error line="39" column="36" source="standard:multiline-expression-wrapping" />
+        <error line="47" column="35" source="standard:trailing-comma-on-call-site" />
+        <error line="55" column="35" source="standard:trailing-comma-on-declaration-site" />
+        <error line="56" column="28" source="standard:multiline-expression-wrapping" />
+        <error line="56" column="28" source="standard:function-signature" />
+        <error line="58" column="33" source="standard:trailing-comma-on-call-site" />
+        <error line="64" column="37" source="standard:trailing-comma-on-call-site" />
+        <error line="70" column="30" source="standard:trailing-comma-on-declaration-site" />
+        <error line="71" column="21" source="standard:multiline-expression-wrapping" />
+        <error line="71" column="21" source="standard:function-signature" />
+        <error line="73" column="33" source="standard:trailing-comma-on-call-site" />
+        <error line="79" column="37" source="standard:trailing-comma-on-call-site" />
+    </file>
+    <file name="src/main/kotlin/org/trustweave/kms/utimaco/UtimacoKeyManagementServiceProvider.kt">
+        <error line="18" column="1" source="standard:no-consecutive-blank-lines" />
+    </file>
+    <file name="src/main/kotlin/org/trustweave/kms/utimaco/UtimacoKmsConfig.kt">
+        <error line="9" column="34" source="standard:trailing-comma-on-declaration-site" />
+        <error line="21" column="30" source="standard:multiline-expression-wrapping" />
+        <error line="23" column="31" source="standard:multiline-expression-wrapping" />
+        <error line="25" column="37" source="standard:multiline-expression-wrapping" />
+        <error line="65" column="1" source="standard:no-consecutive-blank-lines" />
+    </file>
+</baseline>

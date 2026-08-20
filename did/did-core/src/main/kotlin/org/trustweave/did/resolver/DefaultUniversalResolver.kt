@@ -565,6 +565,9 @@ class DefaultUniversalResolver(
                 try { Did(id) } catch (e: Exception) { null }
             }
         } ?: emptyList()
+        // §4.3 `proof`: controller/VDR proofs. toJson() has always emitted this; read it back too
+        // so a §9 round-trip does not silently drop it.
+        val proof = (metadataJson["proof"] as? JsonArray)?.filterIsInstance<JsonObject>() ?: emptyList()
 
         return DidDocumentMetadata(
             created = created,
@@ -574,7 +577,8 @@ class DefaultUniversalResolver(
             nextUpdate = nextUpdate,
             nextVersionId = nextVersionId,
             canonicalId = canonicalId,
-            equivalentId = equivalentId
+            equivalentId = equivalentId,
+            proof = proof
         )
     }
 

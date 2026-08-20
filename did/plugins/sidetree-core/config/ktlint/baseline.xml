@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<baseline version="1.0">
+    <file name="src/main/kotlin/org/trustweave/did/sidetree/FileSidetreeKeyStore.kt">
+        <error line="60" column="1" source="standard:no-empty-first-line-in-class-body" />
+        <error line="62" column="31" source="standard:statement-wrapping" />
+        <error line="62" column="53" source="standard:statement-wrapping" />
+        <error line="62" column="74" source="standard:statement-wrapping" />
+        <error line="68" column="30" source="standard:function-signature" />
+        <error line="68" column="49" source="standard:function-signature" />
+        <error line="68" column="70" source="standard:function-signature" />
+        <error line="68" column="80" source="standard:multiline-expression-wrapping" />
+        <error line="68" column="80" source="standard:function-signature" />
+        <error line="83" column="69" source="standard:multiline-expression-wrapping" />
+        <error line="83" column="69" source="standard:function-signature" />
+        <error line="93" column="60" source="standard:multiline-expression-wrapping" />
+        <error line="93" column="60" source="standard:function-signature" />
+        <error line="104" column="33" source="standard:multiline-expression-wrapping" />
+        <error line="104" column="33" source="standard:function-signature" />
+        <error line="108" column="23" source="standard:chain-method-continuation" />
+        <error line="122" column="61" source="standard:multiline-expression-wrapping" />
+        <error line="122" column="61" source="standard:function-signature" />
+        <error line="130" column="60" source="standard:multiline-expression-wrapping" />
+        <error line="130" column="60" source="standard:function-signature" />
+        <error line="137" column="70" source="standard:function-signature" />
+        <error line="140" column="62" source="standard:multiline-expression-wrapping" />
+        <error line="140" column="62" source="standard:function-signature" />
+        <error line="142" column="27" source="standard:wrapping" />
+        <error line="142" column="29" source="standard:multiline-expression-wrapping" />
+    </file>
+    <file name="src/main/kotlin/org/trustweave/did/sidetree/SidetreeCommitment.kt">
+        <error line="12" column="1" source="standard:no-empty-first-line-in-class-body" />
+    </file>
+    <file name="src/main/kotlin/org/trustweave/did/sidetree/SidetreeHttpClient.kt">
+        <error line="30" column="1" source="standard:no-empty-first-line-in-class-body" />
+        <error line="47" column="77" source="standard:multiline-expression-wrapping" />
+        <error line="47" column="77" source="standard:function-signature" />
+        <error line="49" column="23" source="standard:multiline-expression-wrapping" />
+        <error line="49" column="30" source="standard:chain-method-continuation" />
+        <error line="68" column="35" source="standard:multiline-expression-wrapping" />
+        <error line="70" column="45" source="standard:chain-method-continuation" />
+        <error line="70" column="65" source="standard:chain-method-continuation" />
+        <error line="71" column="36" source="standard:chain-method-continuation" />
+        <error line="71" column="51" source="standard:chain-method-continuation" />
+        <error line="91" column="63" source="standard:multiline-expression-wrapping" />
+        <error line="91" column="63" source="standard:function-signature" />
+        <error line="92" column="23" source="standard:multiline-expression-wrapping" />
+        <error line="92" column="30" source="standard:chain-method-continuation" />
+        <error line="119" column="30" source="standard:multiline-expression-wrapping" />
+    </file>
+    <file name="src/main/kotlin/org/trustweave/did/sidetree/SidetreeJcs.kt">
+        <error line="22" column="1" source="standard:no-empty-first-line-in-class-body" />
+        <error line="23" column="51" source="standard:function-signature" />
+        <error line="26" column="58" source="standard:function-signature" />
+        <error line="29" column="46" source="standard:function-signature" />
+        <error line="57" column="55" source="standard:multiline-expression-wrapping" />
+        <error line="57" column="55" source="standard:function-signature" />
+        <error line="58" column="24" source="standard:wrapping" />
+        <error line="58" column="26" source="standard:multiline-expression-wrapping" />
+        <error line="71" column="63" source="standard:multiline-expression-wrapping" />
+        <error line="71" column="63" source="standard:function-signature" />
+        <error line="75" column="57" source="standard:multiline-expression-wrapping" />
+        <error line="75" column="57" source="standard:function-signature" />
+    </file>
+    <file name="src/main/kotlin/org/trustweave/did/sidetree/SidetreeJwsCompact.kt">
+        <error line="22" column="1" source="standard:no-empty-first-line-in-class-body" />
+        <error line="31" column="19" source="standard:function-signature" />
+        <error line="31" column="40" source="standard:function-signature" />
+        <error line="31" column="69" source="standard:function-signature" />
+        <error line="34" column="17" source="standard:multiline-expression-wrapping" />
+        <error line="60" column="22" source="standard:multiline-expression-wrapping" />
+        <error line="73" column="37" source="standard:function-signature" />
+        <error line="73" column="53" source="standard:function-signature" />
+        <error line="73" column="69" source="standard:function-signature" />
+        <error line="101" column="37" source="standard:function-signature" />
+        <error line="101" column="55" source="standard:function-signature" />
+        <error line="101" column="66" source="standard:function-signature" />
+        <error line="102" column="24" source="standard:multiline-expression-wrapping" />
+    </file>
+    <file name="src/main/kotlin/org/trustweave/did/sidetree/SidetreeKeyStore.kt">
+        <error line="20" column="21" source="standard:function-signature" />
+        <error line="20" column="40" source="standard:function-signature" />
+        <error line="20" column="61" source="standard:function-signature" />
+        <error line="21" column="5" source="standard:blank-line-before-declaration" />
+        <error line="22" column="5" source="standard:blank-line-before-declaration" />
+        <error line="48" column="30" source="standard:function-signature" />
+        <error line="48" column="49" source="standard:function-signature" />
+        <error line="48" column="70" source="standard:function-signature" />
+    </file>
+    <file name="src/main/kotlin/org/trustweave/did/sidetree/SidetreeMethodSpec.kt">
+        <error line="42" column="39" source="standard:multiline-expression-wrapping" />
+        <error line="48" column="39" source="standard:multiline-expression-wrapping" />
+    </file>
+    <file name="src/main/kotlin/org/trustweave/did/sidetree/SidetreeOperationBuilder.kt">
+        <error line="12" column="1" source="standard:no-unused-imports" />
+        <error line="34" column="32" source="standard:class-signature" />
+        <error line="34" column="74" source="standard:class-signature" />
+        <error line="35" column="1" source="standard:no-empty-first-line-in-class-body" />
+        <error line="53" column="9" source="standard:function-signature" />
+        <error line="53" column="41" source="standard:function-signature" />
+        <error line="54" column="32" source="standard:multiline-expression-wrapping" />
+        <error line="54" column="32" source="standard:function-signature" />
+        <error line="61" column="21" source="standard:multiline-expression-wrapping" />
+        <error line="95" column="26" source="standard:multiline-expression-wrapping" />
+        <error line="102" column="31" source="standard:multiline-expression-wrapping" />
+        <error line="106" column="34" source="standard:multiline-expression-wrapping" />
+        <error line="111" column="24" source="standard:multiline-expression-wrapping" />
+        <error line="134" column="21" source="standard:multiline-expression-wrapping" />
+        <error line="134" column="21" source="standard:function-signature" />
+        <error line="136" column="27" source="standard:multiline-expression-wrapping" />
+        <error line="140" column="21" source="standard:multiline-expression-wrapping" />
+        <error line="146" column="29" source="standard:multiline-expression-wrapping" />
+        <error line="185" column="21" source="standard:multiline-expression-wrapping" />
+        <error line="185" column="21" source="standard:function-signature" />
+        <error line="188" column="27" source="standard:multiline-expression-wrapping" />
+        <error line="192" column="21" source="standard:multiline-expression-wrapping" />
+        <error line="198" column="29" source="standard:multiline-expression-wrapping" />
+        <error line="221" column="21" source="standard:multiline-expression-wrapping" />
+        <error line="221" column="21" source="standard:function-signature" />
+        <error line="222" column="27" source="standard:multiline-expression-wrapping" />
+        <error line="227" column="29" source="standard:multiline-expression-wrapping" />
+        <error line="271" column="61" source="standard:function-signature" />
+        <error line="338" column="48" source="standard:multiline-expression-wrapping" />
+        <error line="366" column="61" source="standard:binary-expression-wrapping" />
+        <error line="366" column="79" source="standard:argument-list-wrapping" />
+        <error line="366" column="95" source="standard:argument-list-wrapping" />
+        <error line="366" column="117" source="standard:function-literal" />
+        <error line="366" column="136" source="standard:function-literal" />
+        <error line="366" column="141" source="standard:max-line-length" />
+        <error line="366" column="142" source="standard:argument-list-wrapping" />
+        <error line="366" column="144" source="standard:argument-list-wrapping" />
+        <error line="366" column="146" source="standard:function-literal" />
+        <error line="366" column="148" source="standard:function-literal" />
+    </file>
+    <file name="src/main/kotlin/org/trustweave/did/sidetree/SidetreeP256KeyPair.kt">
+        <error line="24" column="1" source="standard:no-empty-first-line-in-class-body" />
+        <error line="42" column="48" source="standard:multiline-expression-wrapping" />
+        <error line="52" column="55" source="standard:multiline-expression-wrapping" />
+        <error line="52" column="55" source="standard:function-signature" />
+        <error line="64" column="61" source="standard:function-signature" />
+    </file>
+    <file name="src/test/kotlin/org/trustweave/did/sidetree/SidetreeJwsCompactTest.kt">
+        <error line="26" column="1" source="standard:no-empty-first-line-in-class-body" />
+        <error line="32" column="23" source="standard:multiline-expression-wrapping" />
+        <error line="46" column="29" source="standard:multiline-expression-wrapping" />
+        <error line="102" column="22" source="standard:multiline-expression-wrapping" />
+    </file>
+    <file name="src/test/kotlin/org/trustweave/did/sidetree/SidetreeKeyStoreContractTest.kt">
+        <error line="18" column="1" source="standard:no-empty-first-line-in-class-body" />
+        <error line="19" column="40" source="standard:multiline-expression-wrapping" />
+        <error line="19" column="40" source="standard:function-signature" />
+        <error line="26" column="56" source="standard:multiline-expression-wrapping" />
+        <error line="26" column="56" source="standard:function-signature" />
+        <error line="60" column="52" source="standard:parameter-list-wrapping" />
+        <error line="60" column="52" source="standard:function-signature" />
+        <error line="60" column="70" source="standard:parameter-list-wrapping" />
+        <error line="60" column="70" source="standard:function-signature" />
+        <error line="65" column="86" source="standard:parameter-list-wrapping" />
+        <error line="65" column="86" source="standard:function-signature" />
+        <error line="65" column="104" source="standard:parameter-list-wrapping" />
+        <error line="65" column="104" source="standard:function-signature" />
+        <error line="65" column="108" source="standard:multiline-expression-wrapping" />
+        <error line="65" column="108" source="standard:function-signature" />
+        <error line="75" column="65" source="standard:parameter-list-wrapping" />
+        <error line="75" column="65" source="standard:function-signature" />
+        <error line="75" column="83" source="standard:parameter-list-wrapping" />
+        <error line="75" column="83" source="standard:function-signature" />
+        <error line="75" column="87" source="standard:multiline-expression-wrapping" />
+        <error line="75" column="87" source="standard:function-signature" />
+    </file>
+    <file name="src/test/kotlin/org/trustweave/did/sidetree/SidetreeOperationBuilderTest.kt">
+        <error line="6" column="1" source="standard:no-unused-imports" />
+        <error line="36" column="1" source="standard:no-empty-first-line-in-class-body" />
+        <error line="43" column="72" source="standard:multiline-expression-wrapping" />
+        <error line="43" column="72" source="standard:function-signature" />
+        <error line="47" column="24" source="standard:multiline-expression-wrapping" />
+        <error line="62" column="47" source="standard:chain-method-continuation" />
+        <error line="62" column="59" source="standard:chain-method-continuation" />
+        <error line="62" column="84" source="standard:chain-method-continuation" />
+        <error line="62" column="99" source="standard:chain-method-continuation" />
+        <error line="73" column="83" source="standard:multiline-expression-wrapping" />
+        <error line="73" column="83" source="standard:function-signature" />
+        <error line="77" column="24" source="standard:multiline-expression-wrapping" />
+        <error line="90" column="85" source="standard:multiline-expression-wrapping" />
+        <error line="90" column="85" source="standard:function-signature" />
+        <error line="94" column="24" source="standard:multiline-expression-wrapping" />
+        <error line="108" column="83" source="standard:multiline-expression-wrapping" />
+        <error line="108" column="83" source="standard:function-signature" />
+        <error line="112" column="24" source="standard:multiline-expression-wrapping" />
+        <error line="121" column="23" source="standard:multiline-expression-wrapping" />
+        <error line="137" column="116" source="standard:multiline-expression-wrapping" />
+        <error line="137" column="116" source="standard:function-signature" />
+        <error line="142" column="25" source="standard:multiline-expression-wrapping" />
+        <error line="160" column="31" source="standard:chain-method-continuation" />
+        <error line="160" column="43" source="standard:chain-method-continuation" />
+        <error line="160" column="68" source="standard:chain-method-continuation" />
+        <error line="160" column="83" source="standard:chain-method-continuation" />
+        <error line="172" column="23" source="standard:multiline-expression-wrapping" />
+        <error line="193" column="92" source="standard:multiline-expression-wrapping" />
+        <error line="193" column="92" source="standard:function-signature" />
+        <error line="196" column="28" source="standard:multiline-expression-wrapping" />
+        <error line="218" column="89" source="standard:multiline-expression-wrapping" />
+        <error line="218" column="89" source="standard:function-signature" />
+        <error line="219" column="28" source="standard:multiline-expression-wrapping" />
+        <error line="249" column="57" source="standard:function-expression-body" />
+        <error line="254" column="5" source="standard:blank-line-before-declaration" />
+        <error line="255" column="5" source="standard:blank-line-before-declaration" />
+        <error line="256" column="5" source="standard:blank-line-before-declaration" />
+        <error line="258" column="34" source="standard:function-signature" />
+        <error line="258" column="47" source="standard:function-signature" />
+        <error line="258" column="75" source="standard:function-signature" />
+        <error line="272" column="22" source="standard:multiline-expression-wrapping" />
+    </file>
+</baseline>

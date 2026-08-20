@@ -54,9 +54,8 @@ import java.util.concurrent.ConcurrentHashMap
  */
 abstract class AbstractDidMethod(
     override val method: String,
-    protected val kms: KeyManagementService
+    protected val kms: KeyManagementService,
 ) : DidMethod {
-
     /**
      * In-memory storage for DID documents (for testing and fallback).
      * Used by default implementations of updateDid and deactivateDid.
@@ -77,47 +76,51 @@ abstract class AbstractDidMethod(
      */
     override suspend fun updateDid(
         did: Did,
-        updater: (DidDocument) -> DidDocument
-    ): DidDocument = withContext(Dispatchers.IO) {
-        validateDidFormat(did)
+        updater: (DidDocument) -> DidDocument,
+    ): DidDocument =
+        withContext(Dispatchers.IO) {
+            validateDidFormat(did)
 
-        val didString = did.value
+            val didString = did.value
 
-        // Atomically read-compute-write both documents and metadata to avoid lost-update races.
-        updateMutex.withLock {
-            val current = documents[didString]
-                ?: throw org.trustweave.did.exception.DidException.DidNotFound(
-                    did = did,
-                    availableMethods = listOf(method)
-                )
-            val updatedDocument = updater(current)
-            documents[didString] = updatedDocument
-            val now = Clock.System.now()
-            documentMetadata[didString] = (documentMetadata[didString] ?: DidDocumentMetadata(created = now))
-                .copy(updated = now)
-            updatedDocument
+            // Atomically read-compute-write both documents and metadata to avoid lost-update races.
+            updateMutex.withLock {
+                val current =
+                    documents[didString]
+                        ?: throw org.trustweave.did.exception.DidException.DidNotFound(
+                            did = did,
+                            availableMethods = listOf(method),
+                        )
+                val updatedDocument = updater(current)
+                documents[didString] = updatedDocument
+                val now = Clock.System.now()
+                documentMetadata[didString] =
+                    (documentMetadata[didString] ?: DidDocumentMetadata(created = now))
+                        .copy(updated = now)
+                updatedDocument
+            }
         }
-    }
 
     /**
      * Default implementation of deactivateDid using in-memory storage.
      *
      * Subclasses can override for methods that require external deactivation.
      */
-    override suspend fun deactivateDid(did: Did): Boolean = withContext(Dispatchers.IO) {
-        validateDidFormat(did)
+    override suspend fun deactivateDid(did: Did): Boolean =
+        withContext(Dispatchers.IO) {
+            validateDidFormat(did)
 
-        val didString = did.value
-        // Both maps must be updated atomically under updateMutex so a concurrent
-        // storeDocument/updateDid cannot observe a state where the document is gone
-        // but the metadata still exists (or vice versa).
-        var removed = false
-        updateMutex.withLock {
-            removed = documents.remove(didString) != null
-            documentMetadata.remove(didString)
+            val didString = did.value
+            // Both maps must be updated atomically under updateMutex so a concurrent
+            // storeDocument/updateDid cannot observe a state where the document is gone
+            // but the metadata still exists (or vice versa).
+            var removed = false
+            updateMutex.withLock {
+                removed = documents.remove(didString) != null
+                documentMetadata.remove(didString)
+            }
+            removed
         }
-        removed
-    }
 
     /**
      * Validates that the DID matches this method's format.
@@ -129,13 +132,13 @@ abstract class AbstractDidMethod(
         if (!did.value.startsWith("did:$method:")) {
             throw DidException.InvalidDidFormat(
                 did = did.value,
-                reason = "Expected did:$method:*, got ${did.value}"
+                reason = "Expected did:$method:*, got ${did.value}",
             )
         }
         if (did.method != method) {
             throw DidException.InvalidDidFormat(
                 did = did.value,
-                reason = "Method mismatch: expected $method, got ${did.method}"
+                reason = "Method mismatch: expected $method, got ${did.method}",
             )
         }
     }
@@ -145,25 +148,38 @@ abstract class AbstractDidMethod(
      *
      * Useful for methods that need to cache resolved documents.
      *
+     * Preserves any existing metadata for this DID (in particular `deactivated` and the
+     * original `created` timestamp) rather than replacing it outright — only `updated` is
+     * bumped. Re-caching a freshly fetched/read document (e.g. on every successful resolve)
+     * must never silently resurrect a DID this instance has recorded as deactivated.
+     *
      * @param did The DID identifier (can be Did object or String)
      * @param document The DID document
-     * @param created Optional creation timestamp (defaults to now)
+     * @param created Optional creation timestamp (defaults to now); only used to seed metadata
+     *   the first time this DID is stored — ignored once metadata already exists
      */
-    protected suspend fun storeDocument(did: Any, document: DidDocument, created: Instant? = null) {
-        val didString = when (did) {
-            is Did -> did.value
-            is String -> did
-            else -> throw IllegalArgumentException("did must be Did or String, got ${did::class}")
-        }
+    protected suspend fun storeDocument(
+        did: Any,
+        document: DidDocument,
+        created: Instant? = null,
+    ) {
+        val didString =
+            when (did) {
+                is Did -> did.value
+                is String -> did
+                else -> throw IllegalArgumentException("did must be Did or String, got ${did::class}")
+            }
         // Acquire updateMutex so that both map writes are atomic with respect to
-        // concurrent updateDid / deactivateDid / storeDocument calls (RACE-1).
+        // concurrent updateDid / deactivateDid / storeDocument calls (RACE-1). Reading existing
+        // metadata and merging it here — rather than callers pre-reading it outside the lock —
+        // also closes a lost-update race: a concurrent deactivateDid can no longer be missed
+        // (a stale pre-lock read) or clobbered (an unconditional overwrite) by this store.
         updateMutex.withLock {
             val now = created ?: Clock.System.now()
             documents[didString] = document
-            documentMetadata[didString] = DidDocumentMetadata(
-                created = now,
-                updated = now
-            )
+            documentMetadata[didString] =
+                (documentMetadata[didString] ?: DidDocumentMetadata(created = now))
+                    .copy(updated = now)
         }
     }
 
@@ -174,11 +190,12 @@ abstract class AbstractDidMethod(
      * @return The DID document or null if not found
      */
     protected fun getStoredDocument(did: Any): DidDocument? {
-        val didString = when (did) {
-            is Did -> did.value
-            is String -> did
-            else -> throw IllegalArgumentException("did must be Did or String, got ${did::class}")
-        }
+        val didString =
+            when (did) {
+                is Did -> did.value
+                is String -> did
+                else -> throw IllegalArgumentException("did must be Did or String, got ${did::class}")
+            }
         return documents[didString]
     }
 
@@ -189,11 +206,12 @@ abstract class AbstractDidMethod(
      * @return The document metadata or null if not found
      */
     protected fun getDocumentMetadata(did: Any): DidDocumentMetadata? {
-        val didString = when (did) {
-            is Did -> did.value
-            is String -> did
-            else -> throw IllegalArgumentException("did must be Did or String, got ${did::class}")
-        }
+        val didString =
+            when (did) {
+                is Did -> did.value
+                is String -> did
+                else -> throw IllegalArgumentException("did must be Did or String, got ${did::class}")
+            }
         return documentMetadata[didString]
     }
 
@@ -202,12 +220,11 @@ abstract class AbstractDidMethod(
      *
      * @return Map of resolution metadata
      */
-    protected fun createSuccessResolutionMetadata(): Map<String, Any?> {
-        return mapOf(
+    protected fun createSuccessResolutionMetadata(): Map<String, Any?> =
+        mapOf(
             "method" to method,
-            "driver" to this.javaClass.simpleName
+            "driver" to this.javaClass.simpleName,
         )
-    }
 
     /**
      * Creates resolution metadata for error cases.
@@ -216,15 +233,17 @@ abstract class AbstractDidMethod(
      * @param message Error message
      * @return Map of resolution metadata
      */
-    protected fun createErrorResolutionMetadata(error: String, message: String? = null): Map<String, Any?> {
-        return buildMap {
+    protected fun createErrorResolutionMetadata(
+        error: String,
+        message: String? = null,
+    ): Map<String, Any?> =
+        buildMap {
             put("error", error)
             if (message != null) {
                 put("errorMessage", message)
             }
             put("method", method)
         }
-    }
 
     /**
      * Serialises a [DidDocument] to a JSON representation (DID 1.1, v1.1 @context).
@@ -241,8 +260,7 @@ abstract class AbstractDidMethod(
      * Replaces the duplicated hand-rolled parsing that previously lived in
      * [AbstractWebDidMethod] and [AbstractBlockchainDidMethod].
      */
-    protected fun jsonElementToDocument(json: JsonElement): DidDocument =
-        DidDocumentJsonParser.parse(json.jsonObject)
+    protected fun jsonElementToDocument(json: JsonElement): DidDocument = DidDocumentJsonParser.parse(json.jsonObject)
 
     /**
      * Generates a key via the KMS and returns the [KeyHandle].
@@ -255,28 +273,29 @@ abstract class AbstractDidMethod(
      * @param options   Additional properties forwarded to the KMS (e.g. from [DidCreationOptions.additionalProperties]).
      * @return The [KeyHandle] for the generated key.
      */
-    protected suspend fun generateKey(algorithm: String, options: Map<String, Any?> = emptyMap()): KeyHandle {
-        return when (val result = kms.generateKey(algorithm, options)) {
+    protected suspend fun generateKey(
+        algorithm: String,
+        options: Map<String, Any?> = emptyMap(),
+    ): KeyHandle =
+        when (val result = kms.generateKey(algorithm, options)) {
             is GenerateKeyResult.Success -> result.keyHandle
             is GenerateKeyResult.Failure.UnsupportedAlgorithm -> throw TrustWeaveException.Unknown(
                 code = "UNSUPPORTED_ALGORITHM",
-                message = result.reason ?: "Algorithm not supported: $algorithm"
+                message = result.reason ?: "Algorithm not supported: $algorithm",
             )
             is GenerateKeyResult.Failure.InvalidOptions -> throw TrustWeaveException.Unknown(
                 code = "INVALID_OPTIONS",
                 message = result.reason,
-                cause = result.cause
+                cause = result.cause,
             )
             is GenerateKeyResult.Failure.DuplicateKeyId -> throw TrustWeaveException.Unknown(
                 code = "DUPLICATE_KEY_ID",
-                message = "Key with ID '${result.keyId.value}' already exists"
+                message = "Key with ID '${result.keyId.value}' already exists",
             )
             is GenerateKeyResult.Failure.Error -> throw TrustWeaveException.Unknown(
                 code = "KEY_GENERATION_ERROR",
                 message = result.reason,
-                cause = result.cause
+                cause = result.cause,
             )
         }
-    }
 }
-

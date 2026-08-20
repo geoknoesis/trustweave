@@ -21,6 +21,25 @@ allprojects {
 
 subprojects {
 
+    // Apply ktlint to every subproject so module Kotlin sources are actually linted.
+    // The root project's plugins {} block above requests the plugin (and applies it to the root
+    // project itself, e.g. for this file's own *.gradle.kts), which also resolves it onto this
+    // script's classpath. That lets us reuse the same already-resolved plugin here via the legacy
+    // `apply(plugin = ...)` form — mirroring how `maven-publish` is applied further below — without
+    // re-declaring a version (already pinned in settings.gradle.kts' pluginManagement block).
+    apply(plugin = "org.jlleitschuh.gradle.ktlint")
+
+    // Baseline the pre-existing lint backlog instead of reformatting 86 modules in one pass (which
+    // would blow up git blame and every in-flight branch). Violations recorded in each module's
+    // config/ktlint/baseline.xml are treated as known/allowed; anything new must be clean.
+    // This mirrors the plugin's own default convention for `baseline`
+    // (projectDir/config/ktlint/baseline.xml) - set explicitly here so the location is documented
+    // and doesn't silently change if the plugin's convention default ever changes.
+    // Regenerate with: ./gradlew ktlintGenerateBaseline --max-workers 3
+    extensions.configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+        baseline.set(layout.projectDirectory.file("config/ktlint/baseline.xml"))
+    }
+
     // Configure all subprojects to build into the root project's build directory.
     // This centralizes all build outputs under the project root for easier cleanup and organization.
     // Each subproject's build output will be in build/<project-path>/ (e.g., build/did/core/)

@@ -277,13 +277,30 @@ Being explicit about scope, because it's part of the deliverable:
   it back either — a §9 round-trip through that path silently loses a resolver-attached document
   proof. `DidResolutionMetadata` (§4.2 resolution metadata) does **not** have this gap: its own
   `proof` list round-trips correctly through both `fromJson` and `fromMap`.
-- **`AbstractWebDidMethod.resolveFromHttp`'s live-fetch path never sets `deactivated`** — it
-  consults the locally stored document's `deactivated` flag only on its offline-fallback path (the
-  `IOException` branch, when the live HTTP fetch itself fails); the ordinary HTTP-200 path calls
-  `DidMethodUtils.createSuccessResolutionResult(document, method)` without a `deactivated`
-  argument, which defaults to `false`. So **did:web never returns `Deactivated` from a live
-  fetch** — only from a fallback to a previously-stored, already-flagged document. §10 above
-  should not be read as covering did:web's live-fetch path.
+- **Resolved: local deactivation state is now authoritative on every resolution path, for both
+  did:web and blockchain-backed methods — not just their offline/fallback paths.** Both
+  `AbstractWebDidMethod.resolveFromHttp` and `AbstractBlockchainDidMethod.resolveFromBlockchain`
+  had the same gap: their primary success path (a live HTTP 200, or a successful chain read)
+  never consulted the `deactivated` flag TrustWeave had recorded locally — each called
+  `DidMethodUtils.createSuccessResolutionResult(document, method)` with no `deactivated` argument,
+  so a DID this instance had deactivated could still resolve to `Success` as long as the remote
+  source (hosted endpoint, or a still-anchored on-chain record) kept serving the document. Both are
+  now fixed, with the same explicit, fail-safe policy: **local deactivation state is authoritative,
+  even over a live remote read.** Once an instance has recorded a DID as deactivated (via
+  `deactivateDocumentOnHttp` for did:web, `deactivateDocumentOnBlockchain` for blockchain-backed
+  methods), every subsequent resolution call returns `Deactivated` for that DID — whether the
+  remote source is unreachable (the pre-existing fallback path) or still returns a live, valid,
+  still-published/still-anchored document (the ordinary path, fixed here). The CR does not settle
+  where a web-hosted or blockchain-backed method should learn of deactivation from, and treating
+  the remote source as authoritative over local state would let a did:web controller, a stale or
+  unpruned on-chain anchor, or an attacker who compromises the host after deactivation, silently
+  resurrect a DID TrustWeave believes is dead; a revoked DID must never verify. **Accepted
+  tradeoff**: because deactivation state here is local and is neither fetched from nor propagated
+  to the remote source, a DID deactivated on one TrustWeave instance still resolves live on another
+  instance that never observed the deactivation. Consumers who need deactivation to be consistent
+  across instances must replicate that state themselves (e.g. via a shared store behind
+  `deactivateDocumentOnHttp`/`deactivateDocumentOnBlockchain` and `getDocumentMetadata`) rather than
+  relying on the remote document/anchor alone.
 
 ## See also
 

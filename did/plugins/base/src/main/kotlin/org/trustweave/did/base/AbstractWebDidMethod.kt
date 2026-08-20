@@ -214,25 +214,21 @@ abstract class AbstractWebDidMethod(
                     )
                 }
 
-                // Capture the currently recorded `updated` timestamp before storeDocument's cache
-                // refresh below bumps it to now. Used only if this DID turns out to be deactivated,
-                // so a Deactivated result's documentMetadata.updated reflects the deactivation time
-                // (DID Core §7.3 / DID Resolution 1.0 §4.3) rather than this resolve's fetch time.
-                // This does not gate the deactivated determination itself (see below), so it carries
-                // none of the lost-update race the pre-store `deactivated` capture used to have.
-                val recordedUpdated = getDocumentMetadata(did)?.updated
-
                 // Store locally for caching. storeDocument() preserves any deactivation this instance
-                // has already recorded for the DID (see its KDoc) instead of resetting it, so local
+                // has already recorded for the DID (see its KDoc) instead of resetting it — and, once
+                // deactivated, leaves `updated` pinned at the deactivation time rather than bumping it
+                // to this resolve's fetch time (DID Core §7.3 / DID Resolution 1.0 §4.3) — so local
                 // state stays authoritative for did:web even though the endpoint just answered with a
-                // live 200 — no separate before/after capture of `deactivated` is needed.
+                // live 200. No separate before/after capture of `deactivated`/`updated` is needed: a
+                // single post-store metadata read already reflects the correct values either way.
                 storeDocument(document.id.value, document)
 
-                val deactivated = getDocumentMetadata(did)?.deactivated ?: false
+                val metadata = getDocumentMetadata(did)
+                val deactivated = metadata?.deactivated ?: false
                 org.trustweave.did.base.DidMethodUtils.createSuccessResolutionResult(
                     document,
                     method,
-                    updated = if (deactivated) recordedUpdated else null,
+                    updated = if (deactivated) metadata.updated else null,
                     deactivated = deactivated,
                 )
             } catch (e: TrustWeaveException.NotFound) {

@@ -2,9 +2,11 @@ package org.trustweave.kms.util
 
 import java.math.BigInteger
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -186,6 +188,93 @@ class Secp256k1SignatureAuditTest {
         assertFailsWith<IllegalArgumentException> {
             Secp256k1SignatureAudit.classify(validSignature, ByteArray(10), digest)
         }
+    }
+
+    // ------------------------------------------------------------------------------------
+    // repair(): the reconstructed signature must (a) verify and (b) be bit-identical to what
+    // the fixed EcdsaSignatureCodec.normalizeSecp256k1LowS would have produced from the original
+    // high-s signature — never merely "some signature that happens to verify".
+    // ------------------------------------------------------------------------------------
+
+    @Test
+    fun `repair reconstructs the exact original low-s signature for a genuine victim`() {
+        val repaired = Secp256k1SignatureAudit.repair(corruptedSignature, q1Uncompressed, digest)
+        assertNotNull(repaired)
+        assertContentEquals(validSignature, repaired)
+    }
+
+    @Test
+    fun `repair equals what the fixed codec produces from the original high-s signature`() {
+        // corruptedSignature is what the pre-fix writeFixedWidth produced from highSSignature.
+        // The repair must match normalizeSecp256k1LowS(highSSignature) bit-for-bit, not just
+        // verify independently — that is the actual guarantee this feature makes.
+        val fixedCodecOutput = EcdsaSignatureCodec.normalizeSecp256k1LowS(highSSignature)
+        val repaired = Secp256k1SignatureAudit.repair(corruptedSignature, q1Uncompressed, digest)
+        assertNotNull(repaired)
+        assertContentEquals(fixedCodecOutput, repaired)
+    }
+
+    @Test
+    fun `repair reconstructs correctly for vector B (multi-candidate search)`() {
+        // Vector B needs more than one candidate length before the loop's reconstruction
+        // verifies (see the class comment above); the winning candidate must still land on
+        // exactly the genuine low-s value, not an earlier spurious match.
+        val repaired = Secp256k1SignatureAudit.repair(corruptedSignatureB, q1Uncompressed, digest)
+        assertNotNull(repaired)
+        assertContentEquals(validSignatureB, repaired)
+        // And it must be idempotent under the fixed codec: the codec must treat the repair as
+        // already-canonical low-s and pass it through unchanged.
+        assertContentEquals(repaired, EcdsaSignatureCodec.normalizeSecp256k1LowS(repaired))
+    }
+
+    @Test
+    fun `repair returns null for a signature that already verifies`() {
+        assertNull(Secp256k1SignatureAudit.repair(validSignature, q1Uncompressed, digest))
+        assertNull(Secp256k1SignatureAudit.repair(highSSignature, q1Uncompressed, digest))
+    }
+
+    @Test
+    fun `repair returns null rather than a spurious value for a wrong-key failure`() {
+        // corruptedSignature's bytes are exactly what the defect produces, but checked against
+        // the wrong key the reconstruction cannot verify, so repair must yield nothing rather
+        // than a plausible-looking guess.
+        assertNull(Secp256k1SignatureAudit.repair(corruptedSignature, q2Uncompressed, digest))
+        assertNull(Secp256k1SignatureAudit.repair(validSignature, q2Uncompressed, digest))
+    }
+
+    @Test
+    fun `repair returns null rather than a spurious value for an altered-digest failure`() {
+        assertNull(Secp256k1SignatureAudit.repair(corruptedSignature, q1Uncompressed, wrongDigest))
+        assertNull(Secp256k1SignatureAudit.repair(validSignature, q1Uncompressed, wrongDigest))
+    }
+
+    @Test
+    fun `repair returns null for a signature outside the defect's numeric range`() {
+        assertNull(Secp256k1SignatureAudit.repair(garbageSignature, q1Uncompressed, digest))
+    }
+
+    @Test
+    fun `auditBatch surfaces the repaired signature only on corrupted records, and it verifies`() {
+        val records =
+            listOf(
+                Secp256k1AuditRecord("valid", validSignature, q1Uncompressed, digest),
+                Secp256k1AuditRecord("corrupted", corruptedSignature, q1Uncompressed, digest),
+                Secp256k1AuditRecord("wrong-key", validSignature, q2Uncompressed, digest),
+            )
+        val summary = Secp256k1SignatureAudit.auditBatch(records)
+        val byId = summary.outcomes.associateBy { it.id }
+
+        assertNull(byId.getValue("valid").repairedSignature)
+        assertNull(byId.getValue("wrong-key").repairedSignature)
+
+        val repaired = byId.getValue("corrupted").repairedSignature
+        assertNotNull(repaired)
+        assertContentEquals(validSignature, repaired)
+        // The repaired bytes must themselves verify — not merely be returned.
+        assertEquals(
+            Secp256k1AuditVerdict.VALID,
+            Secp256k1SignatureAudit.classify(repaired, q1Uncompressed, digest),
+        )
     }
 
     // ------------------------------------------------------------------------------------

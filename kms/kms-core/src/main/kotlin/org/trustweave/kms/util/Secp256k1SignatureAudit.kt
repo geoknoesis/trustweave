@@ -52,11 +52,22 @@ data class Secp256k1AuditRecord(
  * [Secp256k1SignatureAudit.auditBatch] had to fall back to [Secp256k1AuditVerdict.INVALID_OTHER]
  * because the record itself was malformed (wrong-length signature/digest, undecodable public
  * key) rather than because a well-formed signature failed to verify.
+ *
+ * [repairedSignature] is populated **if and only if** [verdict] is
+ * [Secp256k1AuditVerdict.CORRUPTED_BY_PADDING_DEFECT]: the 64-byte P1363 signature
+ * (`originalR || reconstructedLowS`) that [Secp256k1SignatureAudit] proved verifies against this
+ * record's [Secp256k1AuditRecord.publicKey] and [Secp256k1AuditRecord.messageDigest] *before*
+ * returning it. See [Secp256k1SignatureAudit]'s class KDoc, "Repair, not just detection", for the
+ * proof that a value in this field is never merely plausible — it is proven valid by construction.
+ * For every other verdict this is `null`: there is nothing to substitute in for a signature that
+ * already verifies, and for [Secp256k1AuditVerdict.INVALID_OTHER] no candidate that verifies was
+ * found, so there is nothing safe to offer.
  */
 data class Secp256k1AuditOutcome(
     val id: String,
     val verdict: Secp256k1AuditVerdict,
     val detail: String? = null,
+    val repairedSignature: ByteArray? = null,
 )
 
 /**
@@ -75,8 +86,13 @@ data class Secp256k1AuditSummary(
  * Audits persisted secp256k1 signatures for the `writeFixedWidth` padding defect fixed in commit
  * `cbd1e616` (see that commit message and `EcdsaSignatureCodecTest` for the root cause). The
  * defect corrupted roughly 1 in 256 signatures normalized through [EcdsaSignatureCodec]'s
- * pre-fix `normalizeSecp256k1LowS`; a library upgrade does not repair signatures already
- * persisted before the fix, so they must be found and re-signed.
+ * pre-fix `normalizeSecp256k1LowS`. A library upgrade does not retroactively fix bytes already
+ * persisted before the fix — but this tool can: for the defect's specific corruption pattern, the
+ * correct signature is byte-for-byte recoverable from the corrupted one with no private key and no
+ * re-signing. [classify] and [repair] surface that repair directly (see [repair] and
+ * [Secp256k1AuditOutcome.repairedSignature]); re-signing from the underlying data remains the
+ * fallback only for records this tool cannot repair (anything classified
+ * [Secp256k1AuditVerdict.INVALID_OTHER]).
  *
  * **What this tool needs.** [classify] and [auditBatch] take the public key and message digest
  * alongside the signature — they perform full ECDSA verification, in pure Kotlin/[BigInteger]
@@ -135,6 +151,42 @@ data class Secp256k1AuditSummary(
  * export row, or a completely different bug. Do not read `INVALID_OTHER` as "safe" or
  * "unaffected by any problem"; it only rules out *this* defect.
  *
+ * **Repair, not just detection.** A `CORRUPTED_BY_PADDING_DEFECT` verdict does not just diagnose
+ * the record — [classify] (and [repair]) hand back the exact 64-byte signature that fixes it, in
+ * [Secp256k1AuditOutcome.repairedSignature] / as [repair]'s return value. This is not a heuristic
+ * guess:
+ *
+ * 1. **The candidate that wins the reconstruction loop is unconditionally the low-s value.** ECDSA
+ *    verification checks `(u1*G + u2*Q).x mod n == r`; for a *fixed* `(r, digest, Q)` there are at
+ *    most two points on the curve whose `x`-coordinate reduces to `r` — a point and its negation —
+ *    which (via `Secp256k1Curve.verifySignature`'s equation) means there are at most two values of
+ *    `s` in `[1, n)` for which the signature verifies, and they are always `s0` and `n - s0` for
+ *    some `s0`. That is precisely the well-known malleability pair, and exactly one of the two is
+ *    `<= n/2` (canonical low-s).
+ * 2. **The search space is too small to reach the high root.** Every candidate this loop tries is
+ *    `s mod 256^len` for `len <= 31`, so every candidate is strictly less than `256^31 = 2^248` —
+ *    far below `n/2 ~= 2^255`. The high root `n - s0` is, by construction, `> n/2`, so no candidate
+ *    this loop can ever construct is numerically capable of equalling it. That leaves exactly one
+ *    value a candidate could possibly equal to verify at all: `s0`, the canonical low-s root.
+ * 3. **`s0` is reachable, and only at `len = L`.** Writing `L` for `s0`'s own minimal byte length,
+ *    algebra on the padding defect's construction (worked through in the paragraphs above) shows
+ *    `corrupted_s mod 256^L == s0` exactly, and — because `s0`'s top byte at position `L-1` is by
+ *    definition non-zero — `corrupted_s mod 256^len` for any `len < L` strictly truncates that
+ *    byte away, producing a value `< s0` and therefore never equal to `s0` (or, per point 2, to
+ *    `n - s0`). So the loop cannot verify early on a different value before reaching `L`; the
+ *    first (and, generically, only) length at which it verifies is `L`, and the candidate found
+ *    there is `s0` bit-for-bit.
+ *
+ * Put together: **the only value [classify]'s loop can ever return as verifying is the canonical
+ * low-s root of `(r, digest, Q)`** — the same value [EcdsaSignatureCodec.normalizeSecp256k1LowS]
+ * computes from any high-s signature sharing that `r`, digest, and key. This holds independent of
+ * whether the padding defect is actually what produced the stored bytes (the algebra in point 3
+ * explains *why* a genuine victim reconstructs cleanly, but points 1–2 are what make the returned
+ * value trustworthy even without that assumption) — the only way [repair] could ever hand back
+ * something other than the true low-s repair is if it handed back nothing (`null`). It never
+ * fabricates plausible-looking bytes: every non-null return has already been checked against
+ * [Secp256k1Curve.verifySignature] with this record's own key and digest before being returned.
+ *
  * **Performance.** [Secp256k1Curve] does affine-coordinate double-and-add, optimized for
  * correctness and auditability rather than throughput. Each [classify] call does one scalar-mult
  * pair for the direct check, and — only for the small fraction of signatures that fail direct
@@ -182,7 +234,40 @@ object Secp256k1SignatureAudit {
         signature: ByteArray,
         publicKey: ByteArray,
         messageDigest: ByteArray,
-    ): Secp256k1AuditVerdict {
+    ): Secp256k1AuditVerdict = classifyDetailed(signature, publicKey, messageDigest).verdict
+
+    /**
+     * Classifies one persisted signature and, if it is a genuine victim of the padding defect,
+     * repairs it: returns the 64-byte P1363 signature (`r || low-s`) that
+     * [Secp256k1Curve.verifySignature] has already confirmed verifies against [publicKey] and
+     * [messageDigest]. Returns `null` in every other case — the signature already verifies as-is
+     * ([Secp256k1AuditVerdict.VALID]), or no reconstruction attempt verified
+     * ([Secp256k1AuditVerdict.INVALID_OTHER]) — so a non-null return is always proof, never a
+     * guess. See the class KDoc, "Repair, not just detection", for why this is safe to trust
+     * unconditionally rather than merely probably correct.
+     *
+     * @param signature 64-byte P1363 (`r || s`) secp256k1 signature.
+     * @param publicKey SEC 1-encoded point (65-byte uncompressed or 33-byte compressed).
+     * @param messageDigest the 32-byte digest the signature was computed over.
+     * @throws IllegalArgumentException if [signature] is not 64 bytes, [messageDigest] is not 32
+     *   bytes, or [publicKey] is not a validly-encoded, on-curve secp256k1 point.
+     */
+    fun repair(
+        signature: ByteArray,
+        publicKey: ByteArray,
+        messageDigest: ByteArray,
+    ): ByteArray? = classifyDetailed(signature, publicKey, messageDigest).repairedSignature
+
+    /**
+     * Shared implementation behind [classify] and [repair]: verifies once, and only continues into
+     * the reconstruction search when direct verification fails, so callers never pay for the
+     * search twice.
+     */
+    private fun classifyDetailed(
+        signature: ByteArray,
+        publicKey: ByteArray,
+        messageDigest: ByteArray,
+    ): ClassificationResult {
         require(signature.size == SIGNATURE_SIZE_BYTES) {
             "secp256k1 P1363 signature must be $SIGNATURE_SIZE_BYTES bytes, got ${signature.size}"
         }
@@ -200,26 +285,38 @@ object Secp256k1SignatureAudit {
         val digest = BigInteger(1, messageDigest)
 
         if (Secp256k1Curve.verifySignature(point, digest, r, s)) {
-            return Secp256k1AuditVerdict.VALID
+            return ClassificationResult(Secp256k1AuditVerdict.VALID, repairedSignature = null)
         }
 
-        val lowerBoundLength = vulnerablePadLength(s) ?: return Secp256k1AuditVerdict.INVALID_OTHER
+        val lowerBoundLength =
+            vulnerablePadLength(s)
+                ?: return ClassificationResult(Secp256k1AuditVerdict.INVALID_OTHER, repairedSignature = null)
 
         for (len in lowerBoundLength..MAX_VULNERABLE_LENGTH) {
             val candidate = s.mod(BigInteger.ONE.shiftLeft(8 * len))
             if (candidate.signum() == 0) continue
             if (Secp256k1Curve.verifySignature(point, digest, r, candidate)) {
-                return Secp256k1AuditVerdict.CORRUPTED_BY_PADDING_DEFECT
+                val repaired = signature.copyOfRange(0, FIELD_SIZE_BYTES) + toFixedWidth(candidate)
+                return ClassificationResult(Secp256k1AuditVerdict.CORRUPTED_BY_PADDING_DEFECT, repaired)
             }
         }
-        return Secp256k1AuditVerdict.INVALID_OTHER
+        return ClassificationResult(Secp256k1AuditVerdict.INVALID_OTHER, repairedSignature = null)
     }
+
+    /** Result of [classifyDetailed]: the verdict, plus the proven-valid repair when one exists. */
+    private data class ClassificationResult(
+        val verdict: Secp256k1AuditVerdict,
+        val repairedSignature: ByteArray?,
+    )
 
     /**
      * Audits a batch of exported signatures and returns a summary an operator can act on
      * directly: how many verify untouched, how many carry this defect's fingerprint, and how
      * many are invalid for some other reason. [Secp256k1AuditSummary.outcomes] carries the
-     * per-record verdict so specific records can be located for re-signing.
+     * per-record verdict, and — for every [Secp256k1AuditVerdict.CORRUPTED_BY_PADDING_DEFECT]
+     * record — [Secp256k1AuditOutcome.repairedSignature], the proven-valid replacement bytes.
+     * Records this tool cannot repair (verdict [Secp256k1AuditVerdict.INVALID_OTHER]) still need
+     * to be located and re-signed from the underlying data.
      *
      * A record that is itself malformed (wrong-length signature/digest, an undecodable public
      * key) is reported as [Secp256k1AuditVerdict.INVALID_OTHER] with a
@@ -245,8 +342,8 @@ object Secp256k1SignatureAudit {
 
     private fun classifyOrMalformed(record: Secp256k1AuditRecord): Secp256k1AuditOutcome =
         try {
-            val verdict = classify(record.signature, record.publicKey, record.messageDigest)
-            Secp256k1AuditOutcome(record.id, verdict)
+            val result = classifyDetailed(record.signature, record.publicKey, record.messageDigest)
+            Secp256k1AuditOutcome(record.id, result.verdict, repairedSignature = result.repairedSignature)
         } catch (e: IllegalArgumentException) {
             Secp256k1AuditOutcome(
                 record.id,
@@ -258,6 +355,24 @@ object Secp256k1SignatureAudit {
     private fun extractR(signature: ByteArray): BigInteger = BigInteger(1, signature.copyOfRange(0, FIELD_SIZE_BYTES))
 
     private fun extractS(signature: ByteArray): BigInteger = BigInteger(1, signature.copyOfRange(FIELD_SIZE_BYTES, SIGNATURE_SIZE_BYTES))
+
+    /**
+     * Writes the unsigned big-endian representation of [value] as a fresh, zero-padded
+     * [FIELD_SIZE_BYTES]-byte array. Unlike the pre-fix defect this repairs, the destination here
+     * is always a brand-new [ByteArray] (zero-filled by the JVM by construction), so there is no
+     * stale-byte hazard to guard against.
+     */
+    private fun toFixedWidth(value: BigInteger): ByteArray {
+        val raw = value.toByteArray()
+        val start = if (raw.size > 1 && raw[0] == 0.toByte()) 1 else 0
+        val len = raw.size - start
+        require(len <= FIELD_SIZE_BYTES) {
+            "ECDSA signature component too large for curve: $len bytes > $FIELD_SIZE_BYTES bytes"
+        }
+        val out = ByteArray(FIELD_SIZE_BYTES)
+        System.arraycopy(raw, start, out, FIELD_SIZE_BYTES - len, len)
+        return out
+    }
 
     /**
      * Returns the minimal byte length of `n - s` when it is `<= 31` (i.e. has a leading zero byte

@@ -23,11 +23,15 @@ through the same codec: `aws`, `azure`, `cyberark`, `fortanix`, `google`, `hashi
 never exposed to this bug, and non-secp256k1 algorithms never call `normalizeSecp256k1LowS` at
 all.
 
-The defect is fixed on `main` as of commit `cbd1e616`. **Upgrading the library does not repair
-signatures that were already persisted before the fix.** A corrupted signature is permanently
-invalid; there is no way to derive the correct one from it after the fact (the original high-`s`
-value that got partially overwritten is gone). Every corrupted signature must be identified and
-re-signed from the underlying data.
+The defect is fixed on `main` as of commit `cbd1e616`. **Upgrading the library does not
+retroactively touch signatures that were already persisted before the fix — but for this specific
+defect, they do not need re-signing.** The corruption is a deterministic byte-level transformation,
+not a loss of information: the correct low-`s` value is recoverable from the corrupted bytes with
+no private key and no re-signing. `Secp256k1SignatureAudit.repair()` computes it, and only ever
+returns it after independently re-verifying it against the record's public key and digest — see
+"Repairing a corrupted signature" below. Every corrupted signature this tool identifies should be
+**repaired**, not re-signed; re-signing from the underlying data is the fallback only for records
+the audit could not repair (`INVALID_OTHER`).
 
 ## Are you affected?
 
@@ -75,6 +79,71 @@ log search for failed-and-unretried anchoring operations instead — the audit t
 a specific stored signature is bad if you want byte-level certainty, but the failed submission
 already told you it was.
 
+## Where TrustWeave persists secp256k1 signatures
+
+Before you can sweep anything you need to know where to point the export. This is the concrete
+list of places this codebase writes a secp256k1 P1363 signature, traced from the source:
+
+1. **Verifiable Credential / Presentation proofs — `Proof.proofValue`.** This is the primary
+   off-chain exposure and where most sweeps should start. Two encodings appear depending on the
+   proof suite, both produced in `credentials/credential-api`:
+   - **`JsonWebSignature2020`**: `proofValue` is a *detached JWS compact serialization*
+     (`<header>..<signature>`, ES256K when the signing key is secp256k1). Produced/verified in
+     `credentials/credential-api/src/main/kotlin/org/trustweave/credential/proof/internal/engines/VcLdProofEngine.kt`
+     and
+     `credentials/credential-api/src/main/kotlin/org/trustweave/credential/internal/infrastructure/DefaultJsonWebSignature2020Adapter.kt`.
+     The JWS signature segment, base64url-decoded, is the 64-byte P1363 signature to feed the
+     audit; the JWS payload (document + proof-options digest) is what you need to hash to get
+     `messageDigest`.
+   - **Data-Integrity-style suites** (raw signature bytes, not a JWS): produced via
+     `EcdsaSignatureCodec` directly and multibase/base64url-encoded into `proofValue` — see
+     `credentials/credential-api/src/main/kotlin/org/trustweave/credential/proof/internal/engines/ProofEngineUtils.kt`.
+
+   These `proofValue` strings live wherever the VC/VP JSON itself is stored:
+   - **Wallet (holder-side) storage** — `wallet:wallet-core`'s `CredentialStorage.store()` /
+     `get()` (`wallet/wallet-core/src/main/kotlin/org/trustweave/wallet/CredentialStorage.kt`),
+     backed by whichever storage plugin is configured. If you use `wallet:plugins:database`, the
+     concrete location is the `credentials` table's `credential_data` column (see
+     `wallet/plugins/database/src/main/kotlin/org/trustweave/wallet/database/DatabaseWallet.kt`) —
+     `SELECT id, credential_data FROM credentials` and parse `proof.proofValue` out of each row.
+     `wallet:plugins:file` and `wallet:plugins:cloud` store the same VC JSON in file- or
+     cloud-object form instead of a SQL column.
+   - **Status list credentials**, which are themselves ordinary VCs signed through the same proof
+     engines: `credentials/plugins/status-list/bitstring/src/main/kotlin/org/trustweave/revocation/bitstring/BitstringStatusListManager.kt`
+     and `credentials/plugins/status-list/token/src/main/kotlin/org/trustweave/revocation/token/TokenStatusListManager.kt`.
+   - **Issuer-side records and exchange logs** — anywhere your own issuance service persisted the
+     credential JSON after calling into TrustWeave (a database, an OIDC4VCI issuance log, a
+     DIDComm message store, a presentation-exchange transcript). TrustWeave does not mandate a
+     specific issuer-side schema, so this list item is a pointer, not a table name — check your own
+     issuance pipeline for where it kept a copy of what it issued.
+
+2. **On-chain secp256k1 transactions — EVM anchoring and `did:ethr` operations.** Signed in
+   `anchors/plugins/evm-base/src/main/kotlin/org/trustweave/anchor/evm/AbstractEvmAnchorClient.kt`
+   (shared by the `ethereum`, `polygon`, `arbitrum`, `optimism`, `zksync`, and `ganache` anchor
+   plugins) and by `did/plugins/ethr`. TrustWeave does not persist these signatures separately as
+   standalone `r || s` bytes — the signature is embedded in the raw transaction it submits to the
+   chain. As covered above, a corrupted signature here fails submission immediately rather than
+   silently persisting, so this is lower priority for the byte-level sweep; if you keep your own
+   pre-submission outbox/audit log of raw signed transactions, that log is the only place a
+   corrupted-but-never-submitted signature could be sitting, and it is not something TrustWeave
+   defines the schema for.
+
+**Confirmed not affected (do not need sweeping):** the Indy anchor plugin signs exclusively with
+Ed25519 (`anchors/plugins/indy/src/main/kotlin/org/trustweave/anchor/indy/IndySigner.kt`), and the
+SD-JWT-VC proof engine hardcodes `JWSAlgorithm.EdDSA`
+(`credentials/credential-api/src/main/kotlin/org/trustweave/credential/proof/internal/engines/SdJwtProofEngine.kt`)
+— neither path can produce a secp256k1 signature regardless of what key algorithm is configured
+elsewhere.
+
+**Could not be determined from source in this pass:** whether the `bitcoin`, `algorand`,
+`cardano`, and `starknet` anchor plugins route their signing through `EcdsaSignatureCodec` (and
+therefore could carry this defect) or sign through a separate path (e.g. `bitcoinj`'s own signer)
+that never touched the buggy code. Bitcoin uses secp256k1 by protocol, so if its plugin does share
+the codec it belongs in this list; Algorand and Cardano use Ed25519 by protocol and are likely
+unaffected the same way Indy is, but this was not verified against their source in this pass. If
+you anchor through any of these four, check the relevant plugin's signing path directly before
+concluding either way — do not assume from this document alone.
+
 ## The audit tool
 
 `org.trustweave.kms.util.Secp256k1SignatureAudit` (`kms:kms-core`, alongside `EcdsaSignatureCodec`)
@@ -120,8 +189,11 @@ val summary = Secp256k1SignatureAudit.auditBatch(records)
 println("total=${summary.total} verified=${summary.verified} " +
     "corrupted=${summary.corruptedByPaddingDefect} other=${summary.invalidOther}")
 
-val toResign = summary.outcomes.filter {
+val toRepair = summary.outcomes.filter {
     it.verdict == org.trustweave.kms.util.Secp256k1AuditVerdict.CORRUPTED_BY_PADDING_DEFECT
+}
+val toResign = summary.outcomes.filter {
+    it.verdict == org.trustweave.kms.util.Secp256k1AuditVerdict.INVALID_OTHER
 }
 ```
 
@@ -131,13 +203,52 @@ only the signature bytes and rules out (with certainty) anything that structural
 victim of this bug — see "How the pre-filter works" below. It will not tell you whether a
 surviving candidate actually *is* corrupted; only `classify`/`auditBatch` can do that.
 
+### Repairing a corrupted signature (do this first — re-signing is the fallback)
+
+Every `CORRUPTED_BY_PADDING_DEFECT` outcome already carries its own fix:
+`Secp256k1AuditOutcome.repairedSignature` is the 64-byte P1363 signature to write back in place of
+the corrupted one. It requires **no private key and no re-signing** — write the bytes directly:
+
+```kotlin
+for (outcome in toRepair) {
+    val fixedBytes = outcome.repairedSignature!! // non-null: verdict is CORRUPTED_BY_PADDING_DEFECT
+    writeBackSignature(outcome.id, fixedBytes)    // your own storage update, not part of this tool
+}
+```
+
+Or, if you don't need the full `auditBatch` summary, call `repair()` directly on one record:
+
+```kotlin
+val fixed = Secp256k1SignatureAudit.repair(row.signatureBytes, row.publicKeyBytes, row.digestBytes)
+if (fixed != null) {
+    writeBackSignature(row.id, fixed)
+}
+```
+
+**Why this is safe to apply without a second verification pass.** `repair()` (and
+`repairedSignature`) never return bytes speculatively — the tool has already run
+`Secp256k1Curve.verifySignature` against the returned bytes, this record's own public key, and this
+record's own digest, and only returns non-null because that check passed. A non-null return is a
+signature already proven to verify, not a plausible-looking guess; see
+`Secp256k1SignatureAudit`'s KDoc ("Repair, not just detection") for the proof that the value found
+is unconditionally the canonical low-s signature — the same bytes
+`EcdsaSignatureCodec.normalizeSecp256k1LowS` would have produced from the original, pre-corruption
+high-s signature, bit for bit. `repair()` returning `null` is not a maybe — it means no candidate
+verified, so there is nothing to write back and the record needs `INVALID_OTHER`'s treatment
+(investigate, then re-sign) instead.
+
+**Re-signing from the underlying data is the fallback**, used only for records that come back
+`INVALID_OTHER` after investigation confirms they are genuinely unrecoverable this way (wrong key,
+tampered payload, or corruption from something other than this defect) — never as the first
+response to a `CORRUPTED_BY_PADDING_DEFECT` verdict.
+
 ### Interpreting each outcome
 
 | Verdict | What it means | What to do |
 |---|---|---|
 | `VALID` | The signature verifies against the given key and digest. | Nothing — this signature was never affected, including any that happen to be in non-canonical high-`s` form (that's a policy convention, not a validity requirement). |
-| `CORRUPTED_BY_PADDING_DEFECT` | The signature does not verify, **and** reconstructing what the pre-fix code would have overwritten yields a signature that *does* verify against this key and digest. | Re-sign. See "Confidence" below for exactly what this verdict does and doesn't establish. |
-| `INVALID_OTHER` | The signature does not verify, and it's either outside the numeric range this defect can produce, or reconstruction didn't yield anything that verifies. | Investigate before re-signing — this is not necessarily "safe." It covers wrong keys, tampered payloads, truncated export rows, and any corruption from a cause other than this specific defect. `Secp256k1AuditOutcome.detail` is populated when the record itself was malformed (e.g. wrong-length signature) rather than a well-formed signature that failed to verify. |
+| `CORRUPTED_BY_PADDING_DEFECT` | The signature does not verify, **and** reconstructing what the pre-fix code would have overwritten yields a signature that *does* verify against this key and digest. | **Repair** — write back `outcome.repairedSignature`. See "Repairing a corrupted signature" above and "Confidence" below. |
+| `INVALID_OTHER` | The signature does not verify, and it's either outside the numeric range this defect can produce, or reconstruction didn't yield anything that verifies. | Investigate before re-signing — this is not necessarily "safe." It covers wrong keys, tampered payloads, truncated export rows, and any corruption from a cause other than this specific defect. `Secp256k1AuditOutcome.detail` is populated when the record itself was malformed (e.g. wrong-length signature) rather than a well-formed signature that failed to verify. If investigation rules out a repairable cause, this is where **re-signing** applies. |
 
 `verified + corruptedByPaddingDefect + invalidOther == total` always holds.
 
@@ -162,6 +273,18 @@ opposed to any conceivable equivalent one.
 
 Likewise, `INVALID_OTHER` only rules out *this* defect. It is not a certificate that the signature
 is safe or explainable by something benign — it means this particular fingerprint wasn't found.
+
+**The repair guarantee is stronger than the causal-attribution point above, and does not depend on
+it.** The paragraph above is about *why* the bytes are shaped the way they are — a question the
+tool cannot answer with certainty because it never observes the original signing call. Whether the
+*returned repair is valid* is a different, fully decidable question, and the answer is
+unconditional: ECDSA has at most two `s` values that verify for a given `(r, digest, key)` (the
+malleability pair `s0`/`n - s0`), every candidate the reconstruction loop can construct is too
+small in magnitude to ever equal the high one, and the loop only returns a candidate after
+`Secp256k1Curve.verifySignature` confirms it against this record's own key and digest. So a
+returned `repairedSignature` is never "probably the fix, contingent on this being the padding
+defect" — it is a signature the tool has already proven verifies, full stop. See
+`Secp256k1SignatureAudit`'s KDoc for the complete argument.
 
 ### How the pre-filter works
 
@@ -188,13 +311,18 @@ determination.
   digest for a signature that was actually made over a Keccak-256 digest (or vice versa), a
   genuinely valid signature will come back `INVALID_OTHER`. Confirm which hash your signing path
   used before trusting a large batch of `INVALID_OTHER` results.
-- **A corrupted signature cannot be repaired after the fact.** The original high-`s` value that
-  got partially overwritten is gone; there is nothing to recover it from. The only remedy is
-  re-signing from the underlying data.
+- **`CORRUPTED_BY_PADDING_DEFECT` records repair in place; they do not need re-signing.** This
+  reverses what earlier drafts of this runbook said. The corrupted `s` value is not the original
+  and is not simply lost — it is a deterministic, reversible transformation of the correct one, and
+  `repair()` / `Secp256k1AuditOutcome.repairedSignature` recovers it with no private key involved.
+  Re-signing is the fallback for `INVALID_OTHER` records only, after investigation confirms the
+  cause is not something this tool can repair.
+- **The repair is a byte-level substitution you still have to apply.** This tool computes the
+  correct bytes; it does not have access to (or opinions about) your storage layer, so writing
+  `repairedSignature` back over the corrupted value in place of the original — updating the row,
+  re-serializing the credential, whatever your storage requires — is on you. See "Repairing a
+  corrupted signature" above.
 - **Performance is offline-tool-grade, not hot-path-grade.** Verification uses affine-coordinate
   BigInteger arithmetic, chosen for correctness and auditability over raw speed. Expect roughly
   single-digit milliseconds per record; a corpus in the tens of thousands should complete in well
   under a minute, but this is not meant to run inline on a request path.
-- **Re-signing is a separate step.** This tool identifies which records are corrupt; it does not
-  re-sign anything (it never has access to a private key). Re-sign each `CORRUPTED_BY_PADDING_DEFECT`
-  record through your normal issuance/anchoring path once you've upgraded past `cbd1e616`.

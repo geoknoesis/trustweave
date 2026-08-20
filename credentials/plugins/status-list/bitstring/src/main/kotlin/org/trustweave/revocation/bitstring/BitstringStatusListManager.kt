@@ -1,26 +1,5 @@
 package org.trustweave.revocation.bitstring
 
-import org.trustweave.credential.identifiers.StatusListId
-import org.trustweave.credential.model.CredentialType
-import org.trustweave.credential.model.StatusPurpose
-import org.trustweave.credential.model.vc.CredentialSubject
-import org.trustweave.credential.model.vc.Issuer
-import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.credential.jsonld.JsonLdContexts
-import org.trustweave.credential.proof.ProofOptions
-import org.trustweave.credential.requests.IssuanceRequest
-import org.trustweave.credential.revocation.CredentialRevocationManager
-import org.trustweave.credential.revocation.RevocationStatus
-import org.trustweave.credential.revocation.StatusListMetadata
-import org.trustweave.credential.revocation.StatusListStatistics
-import org.trustweave.credential.revocation.StatusUpdate
-import org.trustweave.credential.spi.proof.ProofEngine
-import org.trustweave.core.exception.ConfigException
-import org.trustweave.core.exception.TrustWeaveException
-import org.trustweave.core.identifiers.Iri
-import org.trustweave.core.serialization.SerializationModule
-import org.trustweave.did.identifiers.VerificationMethodId
-import org.trustweave.kms.KeyManagementService
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -30,6 +9,27 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.slf4j.LoggerFactory
+import org.trustweave.core.exception.ConfigException
+import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.core.identifiers.Iri
+import org.trustweave.core.serialization.SerializationModule
+import org.trustweave.credential.identifiers.StatusListId
+import org.trustweave.credential.jsonld.JsonLdContexts
+import org.trustweave.credential.model.CredentialType
+import org.trustweave.credential.model.StatusPurpose
+import org.trustweave.credential.model.vc.CredentialSubject
+import org.trustweave.credential.model.vc.Issuer
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.proof.ProofOptions
+import org.trustweave.credential.requests.IssuanceRequest
+import org.trustweave.credential.revocation.CredentialRevocationManager
+import org.trustweave.credential.revocation.RevocationStatus
+import org.trustweave.credential.revocation.StatusListMetadata
+import org.trustweave.credential.revocation.StatusListStatistics
+import org.trustweave.credential.revocation.StatusUpdate
+import org.trustweave.credential.spi.proof.ProofEngine
+import org.trustweave.did.identifiers.VerificationMethodId
+import org.trustweave.kms.KeyManagementService
 import java.io.ByteArrayOutputStream
 import java.sql.Connection
 import java.sql.SQLException
@@ -94,9 +94,8 @@ class BitstringStatusListManager(
     private val bitsPerEntry: Int = 1,
     private val proofEngine: ProofEngine? = null,
     private val issuerKeyId: VerificationMethodId? = null,
-    private val baseUrl: String? = null
+    private val baseUrl: String? = null,
 ) : CredentialRevocationManager {
-
     companion object {
         /**
          * Spec minimum: the uncompressed bitstring MUST be at least 16KB (131,072 bits).
@@ -120,10 +119,11 @@ class BitstringStatusListManager(
          */
         private const val MAX_INDEX_ASSIGNMENT_RETRIES: Int = 5
 
-        private val vcJson = Json {
-            serializersModule = SerializationModule.default
-            ignoreUnknownKeys = true
-        }
+        private val vcJson =
+            Json {
+                serializersModule = SerializationModule.default
+                ignoreUnknownKeys = true
+            }
     }
 
     private val logger = LoggerFactory.getLogger(BitstringStatusListManager::class.java)
@@ -146,16 +146,17 @@ class BitstringStatusListManager(
      * data). Rejecting at construction time keeps the bypass closed before any VC is issued.
      */
     private fun validateBaseUrl(baseUrl: String) {
-        val uri = try {
-            java.net.URI(baseUrl)
-        } catch (e: java.net.URISyntaxException) {
-            throw IllegalArgumentException(
-                "baseUrl must be a valid absolute http(s) URL; '$baseUrl' is not a valid URI " +
-                    "(${e.reason}). The status list VC's credentialSubject.id is derived from it " +
-                    "as \"<baseUrl>/<id>\"; a malformed baseUrl would yield an invalid IRI whose " +
-                    "triples JSON-LD toRdf drops, leaving the status (encodedList) unsigned."
-            )
-        }
+        val uri =
+            try {
+                java.net.URI(baseUrl)
+            } catch (e: java.net.URISyntaxException) {
+                throw IllegalArgumentException(
+                    "baseUrl must be a valid absolute http(s) URL; '$baseUrl' is not a valid URI " +
+                        "(${e.reason}). The status list VC's credentialSubject.id is derived from it " +
+                        "as \"<baseUrl>/<id>\"; a malformed baseUrl would yield an invalid IRI whose " +
+                        "triples JSON-LD toRdf drops, leaving the status (encodedList) unsigned.",
+                )
+            }
         val scheme = uri.scheme?.lowercase()
         require(uri.isAbsolute && (scheme == "http" || scheme == "https")) {
             "baseUrl must be a valid absolute http(s) URL; '$baseUrl' is not " +
@@ -174,57 +175,61 @@ class BitstringStatusListManager(
         dataSource.connection.use { conn ->
             conn.autoCommit = false
             try {
-                conn.prepareStatement(
-                    """
-                    CREATE TABLE IF NOT EXISTS bitstring_status_lists (
-                        id VARCHAR(255) PRIMARY KEY,
-                        issuer_did VARCHAR(255) NOT NULL,
-                        purpose VARCHAR(50) NOT NULL,
-                        size INT NOT NULL,
-                        bits_per_entry INT NOT NULL DEFAULT 1,
-                        encoded_list TEXT NOT NULL,
-                        status_list_vc TEXT,
-                        created_at TIMESTAMP NOT NULL,
-                        updated_at TIMESTAMP NOT NULL
-                    )
-                    """.trimIndent()
-                ).execute()
+                conn
+                    .prepareStatement(
+                        """
+                        CREATE TABLE IF NOT EXISTS bitstring_status_lists (
+                            id VARCHAR(255) PRIMARY KEY,
+                            issuer_did VARCHAR(255) NOT NULL,
+                            purpose VARCHAR(50) NOT NULL,
+                            size INT NOT NULL,
+                            bits_per_entry INT NOT NULL DEFAULT 1,
+                            encoded_list TEXT NOT NULL,
+                            status_list_vc TEXT,
+                            created_at TIMESTAMP NOT NULL,
+                            updated_at TIMESTAMP NOT NULL
+                        )
+                        """.trimIndent(),
+                    ).execute()
 
-                conn.prepareStatement(
-                    """
-                    CREATE TABLE IF NOT EXISTS bitstring_credential_indices (
-                        credential_id VARCHAR(255) NOT NULL,
-                        status_list_id VARCHAR(255) NOT NULL REFERENCES bitstring_status_lists(id),
-                        entry_index INT NOT NULL,
-                        PRIMARY KEY (credential_id, status_list_id)
-                    )
-                    """.trimIndent()
-                ).execute()
+                conn
+                    .prepareStatement(
+                        """
+                        CREATE TABLE IF NOT EXISTS bitstring_credential_indices (
+                            credential_id VARCHAR(255) NOT NULL,
+                            status_list_id VARCHAR(255) NOT NULL REFERENCES bitstring_status_lists(id),
+                            entry_index INT NOT NULL,
+                            PRIMARY KEY (credential_id, status_list_id)
+                        )
+                        """.trimIndent(),
+                    ).execute()
 
                 // Each bit position may be bound to at most ONE credential: two concurrent
                 // assignments racing to the same index must not both succeed (one retries).
-                conn.prepareStatement(
-                    """
-                    CREATE UNIQUE INDEX IF NOT EXISTS ux_bitstring_indices_list_entry
-                    ON bitstring_credential_indices (status_list_id, entry_index)
-                    """.trimIndent()
-                ).execute()
+                conn
+                    .prepareStatement(
+                        """
+                        CREATE UNIQUE INDEX IF NOT EXISTS ux_bitstring_indices_list_entry
+                        ON bitstring_credential_indices (status_list_id, entry_index)
+                        """.trimIndent(),
+                    ).execute()
 
-                conn.prepareStatement(
-                    """
-                    CREATE TABLE IF NOT EXISTS bitstring_next_index (
-                        status_list_id VARCHAR(255) PRIMARY KEY REFERENCES bitstring_status_lists(id),
-                        next_index INT NOT NULL DEFAULT 0
-                    )
-                    """.trimIndent()
-                ).execute()
+                conn
+                    .prepareStatement(
+                        """
+                        CREATE TABLE IF NOT EXISTS bitstring_next_index (
+                            status_list_id VARCHAR(255) PRIMARY KEY REFERENCES bitstring_status_lists(id),
+                            next_index INT NOT NULL DEFAULT 0
+                        )
+                        """.trimIndent(),
+                    ).execute()
 
                 conn.commit()
             } catch (e: Exception) {
                 conn.rollback()
                 throw TrustWeaveException.InvalidState(
                     message = "Failed to initialise bitstring status list schema: ${e.message}",
-                    cause = e
+                    cause = e,
                 )
             }
         }
@@ -238,291 +243,325 @@ class BitstringStatusListManager(
         issuerDid: String,
         purpose: StatusPurpose,
         size: Int,
-        customId: String?
-    ): StatusListId = withContext(Dispatchers.IO) {
-        val id = customId ?: UUID.randomUUID().toString()
-        val effectiveSize = if (size < MIN_STATUS_LIST_SIZE_BITS) {
-            logger.warn(
-                "Requested status list size {} is below the W3C Bitstring Status List minimum of {} bits; " +
-                    "using the minimum instead",
-                size,
-                MIN_STATUS_LIST_SIZE_BITS
-            )
-            MIN_STATUS_LIST_SIZE_BITS
-        } else {
-            size
-        }
-        val bitSet = BitSet(effectiveSize)
-        val encodedList = encodeBitSet(bitSet, effectiveSize)
-        val now = Clock.System.now()
+        customId: String?,
+    ): StatusListId =
+        withContext(Dispatchers.IO) {
+            val id = customId ?: UUID.randomUUID().toString()
+            val effectiveSize =
+                if (size < MIN_STATUS_LIST_SIZE_BITS) {
+                    logger.warn(
+                        "Requested status list size {} is below the W3C Bitstring Status List minimum of {} bits; " +
+                            "using the minimum instead",
+                        size,
+                        MIN_STATUS_LIST_SIZE_BITS,
+                    )
+                    MIN_STATUS_LIST_SIZE_BITS
+                } else {
+                    size
+                }
+            val bitSet = BitSet(effectiveSize)
+            val encodedList = encodeBitSet(bitSet, effectiveSize)
+            val now = Clock.System.now()
 
-        dataSource.connection.use { conn ->
-            conn.autoCommit = false
-            try {
-                conn.prepareStatement(
-                    """
-                    INSERT INTO bitstring_status_lists
-                        (id, issuer_did, purpose, size, bits_per_entry, encoded_list, status_list_vc, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?)
-                    """.trimIndent()
-                ).apply {
-                    setString(1, id)
-                    setString(2, issuerDid)
-                    setString(3, purpose.name)
-                    setInt(4, effectiveSize)
-                    setInt(5, bitsPerEntry)
-                    setString(6, encodedList)
-                    setTimestamp(7, Timestamp(now.toEpochMilliseconds()))
-                    setTimestamp(8, Timestamp(now.toEpochMilliseconds()))
-                }.executeUpdate()
+            dataSource.connection.use { conn ->
+                conn.autoCommit = false
+                try {
+                    conn
+                        .prepareStatement(
+                            """
+                            INSERT INTO bitstring_status_lists
+                                (id, issuer_did, purpose, size, bits_per_entry, encoded_list, status_list_vc, created_at, updated_at)
+                            VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?)
+                            """.trimIndent(),
+                        ).apply {
+                            setString(1, id)
+                            setString(2, issuerDid)
+                            setString(3, purpose.name)
+                            setInt(4, effectiveSize)
+                            setInt(5, bitsPerEntry)
+                            setString(6, encodedList)
+                            setTimestamp(7, Timestamp(now.toEpochMilliseconds()))
+                            setTimestamp(8, Timestamp(now.toEpochMilliseconds()))
+                        }.executeUpdate()
 
-                conn.prepareStatement(
-                    "INSERT INTO bitstring_next_index (status_list_id, next_index) VALUES (?, 0)"
-                ).apply {
-                    setString(1, id)
-                }.executeUpdate()
+                    conn
+                        .prepareStatement(
+                            "INSERT INTO bitstring_next_index (status_list_id, next_index) VALUES (?, 0)",
+                        ).apply {
+                            setString(1, id)
+                        }.executeUpdate()
 
-                conn.commit()
-            } catch (e: CancellationException) {
-                conn.rollback()
-                throw e
-            } catch (e: Exception) {
-                conn.rollback()
-                throw TrustWeaveException.InvalidState(
-                    message = "Failed to create bitstring status list: ${e.message}",
-                    cause = e
-                )
+                    conn.commit()
+                } catch (e: CancellationException) {
+                    conn.rollback()
+                    throw e
+                } catch (e: Exception) {
+                    conn.rollback()
+                    throw TrustWeaveException.InvalidState(
+                        message = "Failed to create bitstring status list: ${e.message}",
+                        cause = e,
+                    )
+                }
             }
-        }
 
-        StatusListId(id)
-    }
+            StatusListId(id)
+        }
 
     override suspend fun revokeCredential(
         credentialId: String,
-        statusListId: StatusListId
-    ): Boolean = withContext(Dispatchers.IO) {
-        updateCredentialStatus(credentialId, statusListId.toString(), revoked = true, suspended = null)
-    }
+        statusListId: StatusListId,
+    ): Boolean =
+        withContext(Dispatchers.IO) {
+            updateCredentialStatus(credentialId, statusListId.toString(), revoked = true, suspended = null)
+        }
 
     override suspend fun suspendCredential(
         credentialId: String,
-        statusListId: StatusListId
-    ): Boolean = withContext(Dispatchers.IO) {
-        updateCredentialStatus(credentialId, statusListId.toString(), revoked = null, suspended = true)
-    }
+        statusListId: StatusListId,
+    ): Boolean =
+        withContext(Dispatchers.IO) {
+            updateCredentialStatus(credentialId, statusListId.toString(), revoked = null, suspended = true)
+        }
 
     override suspend fun unrevokeCredential(
         credentialId: String,
-        statusListId: StatusListId
-    ): Boolean = withContext(Dispatchers.IO) {
-        updateCredentialStatus(credentialId, statusListId.toString(), revoked = false, suspended = null)
-    }
+        statusListId: StatusListId,
+    ): Boolean =
+        withContext(Dispatchers.IO) {
+            updateCredentialStatus(credentialId, statusListId.toString(), revoked = false, suspended = null)
+        }
 
     override suspend fun unsuspendCredential(
         credentialId: String,
-        statusListId: StatusListId
-    ): Boolean = withContext(Dispatchers.IO) {
-        updateCredentialStatus(credentialId, statusListId.toString(), revoked = null, suspended = false)
-    }
+        statusListId: StatusListId,
+    ): Boolean =
+        withContext(Dispatchers.IO) {
+            updateCredentialStatus(credentialId, statusListId.toString(), revoked = null, suspended = false)
+        }
 
-    override suspend fun checkRevocationStatus(
-        credential: VerifiableCredential
-    ): RevocationStatus = withContext(Dispatchers.IO) {
-        val credentialStatus = credential.credentialStatus
-            ?: return@withContext RevocationStatus(revoked = false, suspended = false)
+    override suspend fun checkRevocationStatus(credential: VerifiableCredential): RevocationStatus =
+        withContext(Dispatchers.IO) {
+            val credentialStatus =
+                credential.credentialStatus
+                    ?: return@withContext RevocationStatus(revoked = false, suspended = false)
 
-        // Fail closed: once a credential declares a status entry, an undeterminable
-        // index or an unknown status list must surface as an error, never as "valid".
-        val statusListId = credentialStatus.statusListCredential ?: credentialStatus.id
-        val index = credentialStatus.statusListIndex?.toIntOrNull()
-            ?: credential.id?.toString()?.let { getCredentialIndex(it, statusListId) }
-            ?: throw TrustWeaveException.InvalidState(
-                code = "STATUS_LIST_INDEX_UNKNOWN",
-                message = "Credential declares a status entry in status list $statusListId " +
-                    "but its status list index cannot be determined; " +
-                    "failing closed instead of reporting a valid status",
-                context = mapOf(
-                    "statusListId" to statusListId.toString(),
-                    "credentialId" to credential.id?.toString()
-                )
-            )
+            // Fail closed: once a credential declares a status entry, an undeterminable
+            // index or an unknown status list must surface as an error, never as "valid".
+            val statusListId = credentialStatus.statusListCredential ?: credentialStatus.id
+            val index =
+                credentialStatus.statusListIndex?.toIntOrNull()
+                    ?: credential.id?.toString()?.let { getCredentialIndex(it, statusListId) }
+                    ?: throw TrustWeaveException.InvalidState(
+                        code = "STATUS_LIST_INDEX_UNKNOWN",
+                        message =
+                            "Credential declares a status entry in status list $statusListId " +
+                                "but its status list index cannot be determined; " +
+                                "failing closed instead of reporting a valid status",
+                        context =
+                            mapOf(
+                                "statusListId" to statusListId.toString(),
+                                "credentialId" to credential.id?.toString(),
+                            ),
+                    )
 
-        checkStatusByIndex(statusListId, index)
-    }
+            checkStatusByIndex(statusListId, index)
+        }
 
     override suspend fun checkStatusByIndex(
         statusListId: StatusListId,
-        index: Int
-    ): RevocationStatus = withContext(Dispatchers.IO) {
-        val row = loadStatusListRow(statusListId.toString())
-            ?: throw statusListUnavailable(statusListId)
+        index: Int,
+    ): RevocationStatus =
+        withContext(Dispatchers.IO) {
+            val row =
+                loadStatusListRow(statusListId.toString())
+                    ?: throw statusListUnavailable(statusListId)
 
-        requireIndexInRange(index, row, statusListId)
+            requireIndexInRange(index, row, statusListId)
 
-        val bitSet = decodeBitSet(row.encodedList)
-        val purpose = parsePurpose(row.purpose)
+            val bitSet = decodeBitSet(row.encodedList)
+            val purpose = parsePurpose(row.purpose)
 
-        val (revoked, suspended) = when {
-            row.bitsPerEntry == 2 -> {
-                val revBit = index * 2
-                val susBit = index * 2 + 1
-                Pair(bitSet.get(revBit), bitSet.get(susBit))
-            }
-            purpose == StatusPurpose.REVOCATION -> Pair(bitSet.get(index), false)
-            else -> Pair(false, bitSet.get(index))
+            val (revoked, suspended) =
+                when {
+                    row.bitsPerEntry == 2 -> {
+                        val revBit = index * 2
+                        val susBit = index * 2 + 1
+                        Pair(bitSet.get(revBit), bitSet.get(susBit))
+                    }
+                    purpose == StatusPurpose.REVOCATION -> Pair(bitSet.get(index), false)
+                    else -> Pair(false, bitSet.get(index))
+                }
+
+            RevocationStatus(
+                revoked = revoked,
+                suspended = suspended,
+                statusListId = statusListId,
+                index = index,
+            )
         }
-
-        RevocationStatus(
-            revoked = revoked,
-            suspended = suspended,
-            statusListId = statusListId,
-            index = index
-        )
-    }
 
     override suspend fun checkStatusByCredentialId(
         credentialId: String,
-        statusListId: StatusListId
-    ): RevocationStatus = withContext(Dispatchers.IO) {
-        if (loadStatusListRow(statusListId.toString()) == null) {
-            throw statusListUnavailable(statusListId)
+        statusListId: StatusListId,
+    ): RevocationStatus =
+        withContext(Dispatchers.IO) {
+            if (loadStatusListRow(statusListId.toString()) == null) {
+                throw statusListUnavailable(statusListId)
+            }
+            // Fail closed: without an index assignment the status cannot be determined.
+            val index =
+                getCredentialIndex(credentialId, statusListId)
+                    ?: throw TrustWeaveException.NotFound(
+                        resource =
+                            "status list index for credential '$credentialId' " +
+                                "in status list '$statusListId'",
+                    )
+            checkStatusByIndex(statusListId, index)
         }
-        // Fail closed: without an index assignment the status cannot be determined.
-        val index = getCredentialIndex(credentialId, statusListId)
-            ?: throw TrustWeaveException.NotFound(
-                resource = "status list index for credential '$credentialId' " +
-                    "in status list '$statusListId'"
-            )
-        checkStatusByIndex(statusListId, index)
-    }
 
     override suspend fun getCredentialIndex(
         credentialId: String,
-        statusListId: StatusListId
-    ): Int? = withContext(Dispatchers.IO) {
-        dataSource.connection.use { conn ->
-            conn.prepareStatement(
-                "SELECT entry_index FROM bitstring_credential_indices WHERE credential_id = ? AND status_list_id = ?"
-            ).apply {
-                setString(1, credentialId)
-                setString(2, statusListId.toString())
-            }.executeQuery().let { rs ->
-                if (rs.next()) rs.getInt("entry_index") else null
+        statusListId: StatusListId,
+    ): Int? =
+        withContext(Dispatchers.IO) {
+            dataSource.connection.use { conn ->
+                conn
+                    .prepareStatement(
+                        "SELECT entry_index FROM bitstring_credential_indices WHERE credential_id = ? AND status_list_id = ?",
+                    ).apply {
+                        setString(1, credentialId)
+                        setString(2, statusListId.toString())
+                    }.executeQuery()
+                    .let { rs ->
+                        if (rs.next()) rs.getInt("entry_index") else null
+                    }
             }
         }
-    }
 
     override suspend fun assignCredentialIndex(
         credentialId: String,
         statusListId: StatusListId,
-        index: Int?
-    ): Int = withContext(Dispatchers.IO) {
-        val row = loadStatusListRow(statusListId.toString())
-            ?: throw IllegalArgumentException("Status list not found: $statusListId")
-        index?.let { requireIndexInRange(it, row, statusListId) }
+        index: Int?,
+    ): Int =
+        withContext(Dispatchers.IO) {
+            val row =
+                loadStatusListRow(statusListId.toString())
+                    ?: throw IllegalArgumentException("Status list not found: $statusListId")
+            index?.let { requireIndexInRange(it, row, statusListId) }
 
-        dataSource.connection.use { conn ->
-            conn.autoCommit = false
-            try {
-                val sid = statusListId.toString()
-                // Idempotent: return existing index if already assigned
-                val existing = conn.prepareStatement(
-                    "SELECT entry_index FROM bitstring_credential_indices WHERE credential_id = ? AND status_list_id = ?"
-                ).apply {
-                    setString(1, credentialId)
-                    setString(2, sid)
-                }.executeQuery()
-                if (existing.next()) {
-                    conn.rollback()
-                    return@withContext existing.getInt("entry_index")
-                }
-
-                val assignedIndex = if (index != null) {
-                    val count = conn.prepareStatement(
-                        "SELECT COUNT(*) AS cnt FROM bitstring_credential_indices WHERE status_list_id = ? AND entry_index = ?"
-                    ).apply {
-                        setString(1, sid)
-                        setInt(2, index)
-                    }.executeQuery().let { rs -> rs.next(); rs.getInt("cnt") }
-                    if (count > 0) {
-                        throw IllegalArgumentException("Index $index is already assigned in status list $statusListId")
+            dataSource.connection.use { conn ->
+                conn.autoCommit = false
+                try {
+                    val sid = statusListId.toString()
+                    // Idempotent: return existing index if already assigned
+                    val existing =
+                        conn
+                            .prepareStatement(
+                                "SELECT entry_index FROM bitstring_credential_indices WHERE credential_id = ? AND status_list_id = ?",
+                            ).apply {
+                                setString(1, credentialId)
+                                setString(2, sid)
+                            }.executeQuery()
+                    if (existing.next()) {
+                        conn.rollback()
+                        return@withContext existing.getInt("entry_index")
                     }
-                    conn.prepareStatement(
-                        "INSERT INTO bitstring_credential_indices (credential_id, status_list_id, entry_index) VALUES (?, ?, ?)"
-                    ).apply {
-                        setString(1, credentialId)
-                        setString(2, sid)
-                        setInt(3, index)
-                    }.executeUpdate()
-                    index
-                } else {
-                    insertNextAvailableIndex(credentialId, sid, row, conn)
-                }
 
-                conn.commit()
-                assignedIndex
-            } catch (e: Exception) {
-                conn.rollback()
-                throw e
+                    val assignedIndex =
+                        if (index != null) {
+                            val count =
+                                conn
+                                    .prepareStatement(
+                                        "SELECT COUNT(*) AS cnt FROM bitstring_credential_indices WHERE status_list_id = ? AND entry_index = ?",
+                                    ).apply {
+                                        setString(1, sid)
+                                        setInt(2, index)
+                                    }.executeQuery()
+                                    .let { rs ->
+                                        rs.next()
+                                        rs.getInt("cnt")
+                                    }
+                            if (count > 0) {
+                                throw IllegalArgumentException("Index $index is already assigned in status list $statusListId")
+                            }
+                            conn
+                                .prepareStatement(
+                                    "INSERT INTO bitstring_credential_indices (credential_id, status_list_id, entry_index) VALUES (?, ?, ?)",
+                                ).apply {
+                                    setString(1, credentialId)
+                                    setString(2, sid)
+                                    setInt(3, index)
+                                }.executeUpdate()
+                            index
+                        } else {
+                            insertNextAvailableIndex(credentialId, sid, row, conn)
+                        }
+
+                    conn.commit()
+                    assignedIndex
+                } catch (e: Exception) {
+                    conn.rollback()
+                    throw e
+                }
             }
         }
-    }
 
     override suspend fun revokeCredentials(
         credentialIds: List<String>,
-        statusListId: StatusListId
-    ): Map<String, Boolean> = withContext(Dispatchers.IO) {
-        val row = loadStatusListRow(statusListId.toString())
-            ?: return@withContext credentialIds.associateWith { false }
+        statusListId: StatusListId,
+    ): Map<String, Boolean> =
+        withContext(Dispatchers.IO) {
+            val row =
+                loadStatusListRow(statusListId.toString())
+                    ?: return@withContext credentialIds.associateWith { false }
 
-        if (parsePurpose(row.purpose) != StatusPurpose.REVOCATION) {
-            return@withContext credentialIds.associateWith { false }
-        }
+            if (parsePurpose(row.purpose) != StatusPurpose.REVOCATION) {
+                return@withContext credentialIds.associateWith { false }
+            }
 
-        dataSource.connection.use { conn ->
-            conn.autoCommit = false
-            try {
-                // Lock the status list row and re-read encoded_list AND size INSIDE this
-                // transaction: decoding a pre-transaction snapshot would let a concurrent
-                // update be silently overwritten (lost update), and re-encoding at a stale
-                // size would truncate a concurrently expanded tail region.
-                val locked = lockAndReadStatusList(statusListId.toString(), conn)
-                val lockedRow = row.copy(size = locked.size, encodedList = locked.encodedList)
-                val bitSet = decodeBitSet(locked.encodedList)
-                val results = mutableMapOf<String, Boolean>()
+            dataSource.connection.use { conn ->
+                conn.autoCommit = false
+                try {
+                    // Lock the status list row and re-read encoded_list AND size INSIDE this
+                    // transaction: decoding a pre-transaction snapshot would let a concurrent
+                    // update be silently overwritten (lost update), and re-encoding at a stale
+                    // size would truncate a concurrently expanded tail region.
+                    val locked = lockAndReadStatusList(statusListId.toString(), conn)
+                    val lockedRow = row.copy(size = locked.size, encodedList = locked.encodedList)
+                    val bitSet = decodeBitSet(locked.encodedList)
+                    val results = mutableMapOf<String, Boolean>()
 
-                for (credentialId in credentialIds) {
-                    val entryIndex = getOrAssignIndex(credentialId, statusListId.toString(), lockedRow, conn)
-                    requireIndexInRange(entryIndex, lockedRow, statusListId)
-                    val bitIndex = if (lockedRow.bitsPerEntry == 2) entryIndex * 2 else entryIndex
-                    bitSet.set(bitIndex, true)
-                    results[credentialId] = true
+                    for (credentialId in credentialIds) {
+                        val entryIndex = getOrAssignIndex(credentialId, statusListId.toString(), lockedRow, conn)
+                        requireIndexInRange(entryIndex, lockedRow, statusListId)
+                        val bitIndex = if (lockedRow.bitsPerEntry == 2) entryIndex * 2 else entryIndex
+                        bitSet.set(bitIndex, true)
+                        results[credentialId] = true
+                    }
+
+                    val newEncodedList = encodeBitSet(bitSet, locked.size)
+                    persistEncodedList(statusListId.toString(), newEncodedList, conn)
+
+                    conn.commit()
+                    results
+                } catch (e: CancellationException) {
+                    conn.rollback()
+                    throw e
+                } catch (e: Exception) {
+                    conn.rollback()
+                    logger.error(
+                        "Failed to revoke credentials in bitstring status list {}: {}",
+                        statusListId,
+                        e.message,
+                        e,
+                    )
+                    throw TrustWeaveException.InvalidState(
+                        message = "Failed to revoke credentials in bitstring status list $statusListId: ${e.message}",
+                        cause = e,
+                    )
                 }
-
-                val newEncodedList = encodeBitSet(bitSet, locked.size)
-                persistEncodedList(statusListId.toString(), newEncodedList, conn)
-
-                conn.commit()
-                results
-            } catch (e: CancellationException) {
-                conn.rollback()
-                throw e
-            } catch (e: Exception) {
-                conn.rollback()
-                logger.error(
-                    "Failed to revoke credentials in bitstring status list {}: {}",
-                    statusListId,
-                    e.message,
-                    e
-                )
-                throw TrustWeaveException.InvalidState(
-                    message = "Failed to revoke credentials in bitstring status list $statusListId: ${e.message}",
-                    cause = e
-                )
             }
         }
-    }
 
     /**
      * Apply a batch of status updates in a single transaction.
@@ -541,10 +580,11 @@ class BitstringStatusListManager(
      */
     override suspend fun updateStatusListBatch(
         statusListId: StatusListId,
-        updates: List<StatusUpdate>
+        updates: List<StatusUpdate>,
     ) = withContext(Dispatchers.IO) {
-        val row = loadStatusListRow(statusListId.toString())
-            ?: throw IllegalArgumentException("Status list not found: $statusListId")
+        val row =
+            loadStatusListRow(statusListId.toString())
+                ?: throw IllegalArgumentException("Status list not found: $statusListId")
 
         val purpose = parsePurpose(row.purpose)
         // Validate every index before opening the transaction so RANGE_ERROR surfaces
@@ -589,118 +629,137 @@ class BitstringStatusListManager(
                     "Failed to apply batch status updates to bitstring status list {}: {}",
                     statusListId,
                     e.message,
-                    e
+                    e,
                 )
                 throw TrustWeaveException.InvalidState(
-                    message = "Failed to apply batch status updates to bitstring status list " +
-                        "$statusListId: ${e.message}",
-                    cause = e
+                    message =
+                        "Failed to apply batch status updates to bitstring status list " +
+                            "$statusListId: ${e.message}",
+                    cause = e,
                 )
             }
         }
     }
 
-    override suspend fun getStatusListStatistics(
-        statusListId: StatusListId
-    ): StatusListStatistics? = withContext(Dispatchers.IO) {
-        val row = loadStatusListRow(statusListId.toString()) ?: return@withContext null
+    override suspend fun getStatusListStatistics(statusListId: StatusListId): StatusListStatistics? =
+        withContext(Dispatchers.IO) {
+            val row = loadStatusListRow(statusListId.toString()) ?: return@withContext null
 
-        val usedIndices = dataSource.connection.use { conn ->
-            conn.prepareStatement(
-                "SELECT COUNT(*) AS cnt FROM bitstring_credential_indices WHERE status_list_id = ?"
-            ).apply {
-                setString(1, statusListId.toString())
-            }.executeQuery().let { rs -> rs.next(); rs.getInt("cnt") }
+            val usedIndices =
+                dataSource.connection.use { conn ->
+                    conn
+                        .prepareStatement(
+                            "SELECT COUNT(*) AS cnt FROM bitstring_credential_indices WHERE status_list_id = ?",
+                        ).apply {
+                            setString(1, statusListId.toString())
+                        }.executeQuery()
+                        .let { rs ->
+                            rs.next()
+                            rs.getInt("cnt")
+                        }
+                }
+
+            val bitSet = decodeBitSet(row.encodedList)
+            val purpose = parsePurpose(row.purpose)
+
+            StatusListStatistics(
+                statusListId = statusListId,
+                issuerDid = row.issuerDid,
+                purpose = purpose,
+                totalCapacity = if (row.bitsPerEntry == 2) bitSet.size() / 2 else bitSet.size(),
+                usedIndices = usedIndices,
+                revokedCount =
+                    if (purpose == StatusPurpose.REVOCATION || row.bitsPerEntry == 2) {
+                        countBits(bitSet, row.bitsPerEntry, revocationBit = true)
+                    } else {
+                        0
+                    },
+                suspendedCount =
+                    if (purpose == StatusPurpose.SUSPENSION || row.bitsPerEntry == 2) {
+                        countBits(bitSet, row.bitsPerEntry, revocationBit = false)
+                    } else {
+                        0
+                    },
+                availableIndices = (if (row.bitsPerEntry == 2) bitSet.size() / 2 else bitSet.size()) - usedIndices,
+                lastUpdated = row.updatedAt,
+            )
         }
 
-        val bitSet = decodeBitSet(row.encodedList)
-        val purpose = parsePurpose(row.purpose)
+    override suspend fun getStatusList(statusListId: StatusListId): StatusListMetadata? =
+        withContext(Dispatchers.IO) {
+            val row = loadStatusListRow(statusListId.toString()) ?: return@withContext null
+            StatusListMetadata(
+                id = statusListId,
+                issuerDid = row.issuerDid,
+                purpose = parsePurpose(row.purpose),
+                size = row.size,
+                createdAt = row.createdAt,
+                lastUpdated = row.updatedAt,
+            )
+        }
 
-        StatusListStatistics(
-            statusListId = statusListId,
-            issuerDid = row.issuerDid,
-            purpose = purpose,
-            totalCapacity = if (row.bitsPerEntry == 2) bitSet.size() / 2 else bitSet.size(),
-            usedIndices = usedIndices,
-            revokedCount = if (purpose == StatusPurpose.REVOCATION || row.bitsPerEntry == 2) {
-                countBits(bitSet, row.bitsPerEntry, revocationBit = true)
-            } else {
-                0
-            },
-            suspendedCount = if (purpose == StatusPurpose.SUSPENSION || row.bitsPerEntry == 2) {
-                countBits(bitSet, row.bitsPerEntry, revocationBit = false)
-            } else {
-                0
-            },
-            availableIndices = (if (row.bitsPerEntry == 2) bitSet.size() / 2 else bitSet.size()) - usedIndices,
-            lastUpdated = row.updatedAt
-        )
-    }
+    override suspend fun listStatusLists(issuerDid: String?): List<StatusListMetadata> =
+        withContext(Dispatchers.IO) {
+            dataSource.connection.use { conn ->
+                val sql =
+                    if (issuerDid != null) {
+                        "SELECT id, issuer_did, purpose, size, created_at, updated_at FROM bitstring_status_lists WHERE issuer_did = ?"
+                    } else {
+                        "SELECT id, issuer_did, purpose, size, created_at, updated_at FROM bitstring_status_lists"
+                    }
+                val stmt = conn.prepareStatement(sql)
+                if (issuerDid != null) stmt.setString(1, issuerDid)
 
-    override suspend fun getStatusList(statusListId: StatusListId): StatusListMetadata? = withContext(Dispatchers.IO) {
-        val row = loadStatusListRow(statusListId.toString()) ?: return@withContext null
-        StatusListMetadata(
-            id = statusListId,
-            issuerDid = row.issuerDid,
-            purpose = parsePurpose(row.purpose),
-            size = row.size,
-            createdAt = row.createdAt,
-            lastUpdated = row.updatedAt
-        )
-    }
-
-    override suspend fun listStatusLists(issuerDid: String?): List<StatusListMetadata> = withContext(Dispatchers.IO) {
-        dataSource.connection.use { conn ->
-            val sql = if (issuerDid != null) {
-                "SELECT id, issuer_did, purpose, size, created_at, updated_at FROM bitstring_status_lists WHERE issuer_did = ?"
-            } else {
-                "SELECT id, issuer_did, purpose, size, created_at, updated_at FROM bitstring_status_lists"
-            }
-            val stmt = conn.prepareStatement(sql)
-            if (issuerDid != null) stmt.setString(1, issuerDid)
-
-            val rs = stmt.executeQuery()
-            val results = mutableListOf<StatusListMetadata>()
-            while (rs.next()) {
-                val createdAt = rs.getTimestamp("created_at")?.toKotlinInstant() ?: Clock.System.now()
-                val updatedAt = rs.getTimestamp("updated_at")?.toKotlinInstant() ?: Clock.System.now()
-                results.add(
-                    StatusListMetadata(
-                        id = StatusListId(rs.getString("id")),
-                        issuerDid = rs.getString("issuer_did"),
-                        purpose = parsePurpose(rs.getString("purpose")),
-                        size = rs.getInt("size"),
-                        createdAt = createdAt,
-                        lastUpdated = updatedAt
+                val rs = stmt.executeQuery()
+                val results = mutableListOf<StatusListMetadata>()
+                while (rs.next()) {
+                    val createdAt = rs.getTimestamp("created_at")?.toKotlinInstant() ?: Clock.System.now()
+                    val updatedAt = rs.getTimestamp("updated_at")?.toKotlinInstant() ?: Clock.System.now()
+                    results.add(
+                        StatusListMetadata(
+                            id = StatusListId(rs.getString("id")),
+                            issuerDid = rs.getString("issuer_did"),
+                            purpose = parsePurpose(rs.getString("purpose")),
+                            size = rs.getInt("size"),
+                            createdAt = createdAt,
+                            lastUpdated = updatedAt,
+                        ),
                     )
-                )
+                }
+                results
             }
-            results
         }
-    }
 
-    override suspend fun deleteStatusList(statusListId: StatusListId): Boolean = withContext(Dispatchers.IO) {
-        dataSource.connection.use { conn ->
-            conn.autoCommit = false
-            try {
-                val id = statusListId.toString()
-                conn.prepareStatement(
-                    "DELETE FROM bitstring_credential_indices WHERE status_list_id = ?"
-                ).apply { setString(1, id) }.executeUpdate()
-                conn.prepareStatement(
-                    "DELETE FROM bitstring_next_index WHERE status_list_id = ?"
-                ).apply { setString(1, id) }.executeUpdate()
-                val deleted = conn.prepareStatement(
-                    "DELETE FROM bitstring_status_lists WHERE id = ?"
-                ).apply { setString(1, id) }.executeUpdate() > 0
-                conn.commit()
-                deleted
-            } catch (e: Exception) {
-                conn.rollback()
-                false
+    override suspend fun deleteStatusList(statusListId: StatusListId): Boolean =
+        withContext(Dispatchers.IO) {
+            dataSource.connection.use { conn ->
+                conn.autoCommit = false
+                try {
+                    val id = statusListId.toString()
+                    conn
+                        .prepareStatement(
+                            "DELETE FROM bitstring_credential_indices WHERE status_list_id = ?",
+                        ).apply { setString(1, id) }
+                        .executeUpdate()
+                    conn
+                        .prepareStatement(
+                            "DELETE FROM bitstring_next_index WHERE status_list_id = ?",
+                        ).apply { setString(1, id) }
+                        .executeUpdate()
+                    val deleted =
+                        conn
+                            .prepareStatement(
+                                "DELETE FROM bitstring_status_lists WHERE id = ?",
+                            ).apply { setString(1, id) }
+                            .executeUpdate() > 0
+                    conn.commit()
+                    deleted
+                } catch (e: Exception) {
+                    conn.rollback()
+                    false
+                }
             }
         }
-    }
 
     /**
      * Grow the status list by [additionalSize] bits, preserving all existing bits.
@@ -715,7 +774,7 @@ class BitstringStatusListManager(
      */
     override suspend fun expandStatusList(
         statusListId: StatusListId,
-        additionalSize: Int
+        additionalSize: Int,
     ) = withContext(Dispatchers.IO) {
         if (loadStatusListRow(statusListId.toString()) == null) {
             throw IllegalArgumentException("Status list not found: $statusListId")
@@ -740,12 +799,13 @@ class BitstringStatusListManager(
 
                 val newEncodedList = encodeBitSet(newBitSet, newSize)
                 persistEncodedList(statusListId.toString(), newEncodedList, conn)
-                conn.prepareStatement(
-                    "UPDATE bitstring_status_lists SET size = ? WHERE id = ?"
-                ).apply {
-                    setInt(1, newSize)
-                    setString(2, statusListId.toString())
-                }.executeUpdate()
+                conn
+                    .prepareStatement(
+                        "UPDATE bitstring_status_lists SET size = ? WHERE id = ?",
+                    ).apply {
+                        setInt(1, newSize)
+                        setString(2, statusListId.toString())
+                    }.executeUpdate()
                 conn.commit()
             } catch (e: Exception) {
                 conn.rollback()
@@ -775,107 +835,124 @@ class BitstringStatusListManager(
      *   configured key does not belong to the status list's issuer DID
      * @throws IllegalArgumentException if the status list does not exist
      */
-    suspend fun buildStatusListVc(statusListId: StatusListId): VerifiableCredential = withContext(Dispatchers.IO) {
-        val engine = proofEngine ?: throw ConfigException.InvalidFormat(
-            parseError = "No proof engine configured for signing status list credentials. " +
-                "Provide a ProofEngine (wired to the issuer's KMS) when constructing " +
-                "BitstringStatusListManager; status list credentials are never signed " +
-                "with fabricated keys.",
-            field = "proofEngine"
-        )
-        val signingKeyId = issuerKeyId ?: throw ConfigException.InvalidFormat(
-            parseError = "No issuer signing key configured for status list credentials. " +
-                "Provide the issuer's verification method ID (issuerKeyId) when " +
-                "constructing BitstringStatusListManager.",
-            field = "issuerKeyId"
-        )
-
-        val row = loadStatusListRow(statusListId.toString())
-            ?: throw IllegalArgumentException("Status list not found: $statusListId")
-
-        if (signingKeyId.did.value != row.issuerDid) {
-            throw ConfigException.InvalidFormat(
-                parseError = "Configured issuerKeyId belongs to '${signingKeyId.did.value}' " +
-                    "but the status list is issued by '${row.issuerDid}'; refusing to sign.",
-                field = "issuerKeyId"
-            )
-        }
-
-        val purpose = parsePurpose(row.purpose)
-
-        val subjectClaims = buildJsonObject {
-            put("type", "BitstringStatusList")
-            put("statusPurpose", purpose.stringValue)
-            put("encodedList", row.encodedList)
-        }
-
-        // SECURITY: the credentialSubject.id MUST be an ABSOLUTE IRI. JSON-LD RDFC-1.0
-        // canonicalization (JsonLd.toRdf) DROPS every triple whose subject is a relative IRI;
-        // a bare status-list id (e.g. a raw UUID with no scheme) would therefore leave the
-        // subject's statusPurpose/encodedList triples UNSIGNED while the VC still verifies —
-        // forgeable revocation data. We always derive an absolute IRI:
-        //   - baseUrl set  -> "<baseUrl>/<id>" (an absolute http(s) URL where the list is hosted)
-        //   - baseUrl null -> "urn:uuid:<id>"  (StatusListId is a UUID by default; urn:uuid is
-        //                      an absolute IRI whose triples ARE emitted and signed)
-        val subjectId = baseUrl?.let { "${it.trimEnd('/')}/$statusListId" }
-            ?: "urn:uuid:$statusListId"
-
-        val request = IssuanceRequest(
-            format = engine.format,
-            issuer = Issuer.from(row.issuerDid),
-            issuerKeyId = signingKeyId,
-            credentialSubject = CredentialSubject.fromIri(
-                Iri(subjectId),
-                claims = subjectClaims
-            ),
-            type = listOf(
-                CredentialType.VerifiableCredential,
-                CredentialType.Custom("BitstringStatusListCredential")
-            ),
-            // The W3C Bitstring Status List terms (BitstringStatusList, statusPurpose,
-            // encodedList) are defined only in the VC 2.0 base context. Declare it so the
-            // proof engine does not drop these subject claims at JSON-LD canonicalization
-            // (which would otherwise fail closed, since dropped claims are not signed).
-            proofOptions = ProofOptions(
-                additionalOptions = mapOf(
-                    JsonLdContexts.CONTEXTS_PROOF_OPTION to listOf(VC_2_0_CONTEXT)
+    suspend fun buildStatusListVc(statusListId: StatusListId): VerifiableCredential =
+        withContext(Dispatchers.IO) {
+            val engine =
+                proofEngine ?: throw ConfigException.InvalidFormat(
+                    parseError =
+                        "No proof engine configured for signing status list credentials. " +
+                            "Provide a ProofEngine (wired to the issuer's KMS) when constructing " +
+                            "BitstringStatusListManager; status list credentials are never signed " +
+                            "with fabricated keys.",
+                    field = "proofEngine",
                 )
-            )
-        )
+            val signingKeyId =
+                issuerKeyId ?: throw ConfigException.InvalidFormat(
+                    parseError =
+                        "No issuer signing key configured for status list credentials. " +
+                            "Provide the issuer's verification method ID (issuerKeyId) when " +
+                            "constructing BitstringStatusListManager.",
+                    field = "issuerKeyId",
+                )
 
-        val signedVc = engine.issue(request)
-        // Post-check: never trust the engine to have honored the request — the published
-        // status list VC must be issued by the status list's issuer DID.
-        if (signedVc.issuer.id.value != row.issuerDid) {
-            throw TrustWeaveException.InvalidState(
-                code = "STATUS_LIST_VC_ISSUER_MISMATCH",
-                message = "Proof engine returned a status list credential issued by " +
-                    "'${signedVc.issuer.id.value}' but status list $statusListId is issued by " +
-                    "'${row.issuerDid}'; refusing to publish"
-            )
+            val row =
+                loadStatusListRow(statusListId.toString())
+                    ?: throw IllegalArgumentException("Status list not found: $statusListId")
+
+            if (signingKeyId.did.value != row.issuerDid) {
+                throw ConfigException.InvalidFormat(
+                    parseError =
+                        "Configured issuerKeyId belongs to '${signingKeyId.did.value}' " +
+                            "but the status list is issued by '${row.issuerDid}'; refusing to sign.",
+                    field = "issuerKeyId",
+                )
+            }
+
+            val purpose = parsePurpose(row.purpose)
+
+            val subjectClaims =
+                buildJsonObject {
+                    put("type", "BitstringStatusList")
+                    put("statusPurpose", purpose.stringValue)
+                    put("encodedList", row.encodedList)
+                }
+
+            // SECURITY: the credentialSubject.id MUST be an ABSOLUTE IRI. JSON-LD RDFC-1.0
+            // canonicalization (JsonLd.toRdf) DROPS every triple whose subject is a relative IRI;
+            // a bare status-list id (e.g. a raw UUID with no scheme) would therefore leave the
+            // subject's statusPurpose/encodedList triples UNSIGNED while the VC still verifies —
+            // forgeable revocation data. We always derive an absolute IRI:
+            //   - baseUrl set  -> "<baseUrl>/<id>" (an absolute http(s) URL where the list is hosted)
+            //   - baseUrl null -> "urn:uuid:<id>"  (StatusListId is a UUID by default; urn:uuid is
+            //                      an absolute IRI whose triples ARE emitted and signed)
+            val subjectId =
+                baseUrl?.let { "${it.trimEnd('/')}/$statusListId" }
+                    ?: "urn:uuid:$statusListId"
+
+            val request =
+                IssuanceRequest(
+                    format = engine.format,
+                    issuer = Issuer.from(row.issuerDid),
+                    issuerKeyId = signingKeyId,
+                    credentialSubject =
+                        CredentialSubject.fromIri(
+                            Iri(subjectId),
+                            claims = subjectClaims,
+                        ),
+                    type =
+                        listOf(
+                            CredentialType.VerifiableCredential,
+                            CredentialType.Custom("BitstringStatusListCredential"),
+                        ),
+                    // The W3C Bitstring Status List terms (BitstringStatusList, statusPurpose,
+                    // encodedList) are defined only in the VC 2.0 base context. Declare it so the
+                    // proof engine does not drop these subject claims at JSON-LD canonicalization
+                    // (which would otherwise fail closed, since dropped claims are not signed).
+                    proofOptions =
+                        ProofOptions(
+                            additionalOptions =
+                                mapOf(
+                                    JsonLdContexts.CONTEXTS_PROOF_OPTION to listOf(VC_2_0_CONTEXT),
+                                ),
+                        ),
+                )
+
+            val signedVc = engine.issue(request)
+            // Post-check: never trust the engine to have honored the request — the published
+            // status list VC must be issued by the status list's issuer DID.
+            if (signedVc.issuer.id.value != row.issuerDid) {
+                throw TrustWeaveException.InvalidState(
+                    code = "STATUS_LIST_VC_ISSUER_MISMATCH",
+                    message =
+                        "Proof engine returned a status list credential issued by " +
+                            "'${signedVc.issuer.id.value}' but status list $statusListId is issued by " +
+                            "'${row.issuerDid}'; refusing to publish",
+                )
+            }
+            if (signedVc.proof == null) {
+                throw TrustWeaveException.InvalidState(
+                    code = "STATUS_LIST_VC_UNSIGNED",
+                    message =
+                        "Proof engine returned an unsigned status list credential " +
+                            "for $statusListId; refusing to publish",
+                )
+            }
+
+            val signedVcJson = vcJson.encodeToString(VerifiableCredential.serializer(), signedVc)
+
+            dataSource.connection.use { conn ->
+                conn
+                    .prepareStatement(
+                        "UPDATE bitstring_status_lists SET status_list_vc = ?, updated_at = ? WHERE id = ?",
+                    ).apply {
+                        setString(1, signedVcJson)
+                        setTimestamp(2, Timestamp(Clock.System.now().toEpochMilliseconds()))
+                        setString(3, statusListId.toString())
+                    }.executeUpdate()
+            }
+
+            signedVc
         }
-        if (signedVc.proof == null) {
-            throw TrustWeaveException.InvalidState(
-                code = "STATUS_LIST_VC_UNSIGNED",
-                message = "Proof engine returned an unsigned status list credential " +
-                    "for $statusListId; refusing to publish"
-            )
-        }
-
-        val signedVcJson = vcJson.encodeToString(VerifiableCredential.serializer(), signedVc)
-
-        dataSource.connection.use { conn ->
-            conn.prepareStatement(
-                "UPDATE bitstring_status_lists SET status_list_vc = ?, updated_at = ? WHERE id = ?"
-            ).apply {
-                setString(1, signedVcJson)
-                setTimestamp(2, Timestamp(Clock.System.now().toEpochMilliseconds()))
-                setString(3, statusListId.toString())
-            }.executeUpdate()
-        }
-
-        signedVc
-    }
 
     // -------------------------------------------------------------------------
     // Private helpers
@@ -885,7 +962,7 @@ class BitstringStatusListManager(
         credentialId: String,
         statusListId: String,
         revoked: Boolean?,
-        suspended: Boolean?
+        suspended: Boolean?,
     ): Boolean {
         val row = loadStatusListRow(statusListId) ?: return false
         val purpose = parsePurpose(row.purpose)
@@ -933,12 +1010,13 @@ class BitstringStatusListManager(
                     credentialId,
                     statusListId,
                     e.message,
-                    e
+                    e,
                 )
                 throw TrustWeaveException.InvalidState(
-                    message = "Failed to update status entry for credential $credentialId " +
-                        "in bitstring status list $statusListId: ${e.message}",
-                    cause = e
+                    message =
+                        "Failed to update status entry for credential $credentialId " +
+                            "in bitstring status list $statusListId: ${e.message}",
+                    cause = e,
                 )
             }
         }
@@ -948,14 +1026,16 @@ class BitstringStatusListManager(
         credentialId: String,
         statusListId: String,
         row: StatusListRow,
-        conn: Connection
+        conn: Connection,
     ): Int {
-        val existing = conn.prepareStatement(
-            "SELECT entry_index FROM bitstring_credential_indices WHERE credential_id = ? AND status_list_id = ?"
-        ).apply {
-            setString(1, credentialId)
-            setString(2, statusListId)
-        }.executeQuery()
+        val existing =
+            conn
+                .prepareStatement(
+                    "SELECT entry_index FROM bitstring_credential_indices WHERE credential_id = ? AND status_list_id = ?",
+                ).apply {
+                    setString(1, credentialId)
+                    setString(2, statusListId)
+                }.executeQuery()
 
         if (existing.next()) return existing.getInt("entry_index")
 
@@ -975,20 +1055,21 @@ class BitstringStatusListManager(
         credentialId: String,
         statusListId: String,
         row: StatusListRow,
-        conn: Connection
+        conn: Connection,
     ): Int {
         repeat(MAX_INDEX_ASSIGNMENT_RETRIES) {
             val next = getNextAvailableIndex(statusListId, conn)
             requireIndexInRange(next, row, StatusListId(statusListId))
             val savepoint = conn.setSavepoint()
             try {
-                conn.prepareStatement(
-                    "INSERT INTO bitstring_credential_indices (credential_id, status_list_id, entry_index) VALUES (?, ?, ?)"
-                ).apply {
-                    setString(1, credentialId)
-                    setString(2, statusListId)
-                    setInt(3, next)
-                }.executeUpdate()
+                conn
+                    .prepareStatement(
+                        "INSERT INTO bitstring_credential_indices (credential_id, status_list_id, entry_index) VALUES (?, ?, ?)",
+                    ).apply {
+                        setString(1, credentialId)
+                        setString(2, statusListId)
+                        setInt(3, next)
+                    }.executeUpdate()
                 return next
             } catch (e: SQLException) {
                 if (!isUniqueViolation(e)) throw e
@@ -999,26 +1080,33 @@ class BitstringStatusListManager(
         }
         throw TrustWeaveException.InvalidState(
             code = "STATUS_LIST_INDEX_CONTENTION",
-            message = "Could not assign a status list index for credential '$credentialId' " +
-                "in status list '$statusListId' after $MAX_INDEX_ASSIGNMENT_RETRIES attempts " +
-                "due to concurrent index assignments",
-            context = mapOf(
-                "statusListId" to statusListId,
-                "credentialId" to credentialId
-            )
+            message =
+                "Could not assign a status list index for credential '$credentialId' " +
+                    "in status list '$statusListId' after $MAX_INDEX_ASSIGNMENT_RETRIES attempts " +
+                    "due to concurrent index assignments",
+            context =
+                mapOf(
+                    "statusListId" to statusListId,
+                    "credentialId" to credentialId,
+                ),
         )
     }
 
     private fun isUniqueViolation(e: SQLException): Boolean =
         e is SQLIntegrityConstraintViolationException || e.sqlState?.startsWith("23") == true
 
-    private fun getNextAvailableIndex(statusListId: String, conn: Connection): Int {
+    private fun getNextAvailableIndex(
+        statusListId: String,
+        conn: Connection,
+    ): Int {
         // FOR UPDATE serializes concurrent assigners on the per-list counter row.
-        val rs = conn.prepareStatement(
-            "SELECT next_index FROM bitstring_next_index WHERE status_list_id = ? FOR UPDATE"
-        ).apply {
-            setString(1, statusListId)
-        }.executeQuery()
+        val rs =
+            conn
+                .prepareStatement(
+                    "SELECT next_index FROM bitstring_next_index WHERE status_list_id = ? FOR UPDATE",
+                ).apply {
+                    setString(1, statusListId)
+                }.executeQuery()
 
         val next = if (rs.next()) rs.getInt("next_index") else 0
 
@@ -1028,20 +1116,23 @@ class BitstringStatusListManager(
         // This form is portable across all three, and it is safe here because the SELECT above
         // took a FOR UPDATE lock on the counter row inside the caller's transaction: no concurrent
         // assigner can slip between the UPDATE and the INSERT.
-        val updated = conn.prepareStatement(
-            "UPDATE bitstring_next_index SET next_index = ? WHERE status_list_id = ?"
-        ).apply {
-            setInt(1, next + 1)
-            setString(2, statusListId)
-        }.executeUpdate()
+        val updated =
+            conn
+                .prepareStatement(
+                    "UPDATE bitstring_next_index SET next_index = ? WHERE status_list_id = ?",
+                ).apply {
+                    setInt(1, next + 1)
+                    setString(2, statusListId)
+                }.executeUpdate()
 
         if (updated == 0) {
-            conn.prepareStatement(
-                "INSERT INTO bitstring_next_index (status_list_id, next_index) VALUES (?, ?)"
-            ).apply {
-                setString(1, statusListId)
-                setInt(2, next + 1)
-            }.executeUpdate()
+            conn
+                .prepareStatement(
+                    "INSERT INTO bitstring_next_index (status_list_id, next_index) VALUES (?, ?)",
+                ).apply {
+                    setString(1, statusListId)
+                    setInt(2, next + 1)
+                }.executeUpdate()
         }
 
         return next
@@ -1053,7 +1144,7 @@ class BitstringStatusListManager(
      */
     private data class LockedStatusListState(
         val encodedList: String,
-        val size: Int
+        val size: Int,
     )
 
     /**
@@ -1067,27 +1158,37 @@ class BitstringStatusListManager(
      *   [expandStatusList] would truncate the expanded tail region (and any bits a
      *   third party set there), shrinking `encoded_list` below the committed `size`.
      */
-    private fun lockAndReadStatusList(statusListId: String, conn: Connection): LockedStatusListState {
-        val rs = conn.prepareStatement(
-            "SELECT encoded_list, size FROM bitstring_status_lists WHERE id = ? FOR UPDATE"
-        ).apply {
-            setString(1, statusListId)
-        }.executeQuery()
+    private fun lockAndReadStatusList(
+        statusListId: String,
+        conn: Connection,
+    ): LockedStatusListState {
+        val rs =
+            conn
+                .prepareStatement(
+                    "SELECT encoded_list, size FROM bitstring_status_lists WHERE id = ? FOR UPDATE",
+                ).apply {
+                    setString(1, statusListId)
+                }.executeQuery()
         if (!rs.next()) throw statusListUnavailable(StatusListId(statusListId))
         return LockedStatusListState(
             encodedList = rs.getString("encoded_list"),
-            size = rs.getInt("size")
+            size = rs.getInt("size"),
         )
     }
 
-    private fun persistEncodedList(statusListId: String, encodedList: String, conn: Connection) {
-        conn.prepareStatement(
-            "UPDATE bitstring_status_lists SET encoded_list = ?, updated_at = ? WHERE id = ?"
-        ).apply {
-            setString(1, encodedList)
-            setTimestamp(2, Timestamp(Clock.System.now().toEpochMilliseconds()))
-            setString(3, statusListId)
-        }.executeUpdate()
+    private fun persistEncodedList(
+        statusListId: String,
+        encodedList: String,
+        conn: Connection,
+    ) {
+        conn
+            .prepareStatement(
+                "UPDATE bitstring_status_lists SET encoded_list = ?, updated_at = ? WHERE id = ?",
+            ).apply {
+                setString(1, encodedList)
+                setTimestamp(2, Timestamp(Clock.System.now().toEpochMilliseconds()))
+                setString(3, statusListId)
+            }.executeUpdate()
     }
 
     // -------------------------------------------------------------------------
@@ -1101,7 +1202,10 @@ class BitstringStatusListManager(
      * Bit ordering follows the W3C spec: the LEFT-MOST bit of each byte (the most
      * significant bit) is the lowest index, i.e. entry 0 = bit 7 of byte 0 (0x80).
      */
-    private fun encodeBitSet(bitSet: BitSet, size: Int): String {
+    private fun encodeBitSet(
+        bitSet: BitSet,
+        size: Int,
+    ): String {
         val byteCount = (size + 7) / 8
         val bytes = ByteArray(byteCount)
         // TODO: cancellation gap — this loop iterates over the full status list (default 131072)
@@ -1113,10 +1217,11 @@ class BitstringStatusListManager(
             }
         }
 
-        val gzipped = ByteArrayOutputStream().use { baos ->
-            GZIPOutputStream(baos).use { gzip -> gzip.write(bytes) }
-            baos.toByteArray()
-        }
+        val gzipped =
+            ByteArrayOutputStream().use { baos ->
+                GZIPOutputStream(baos).use { gzip -> gzip.write(bytes) }
+                baos.toByteArray()
+            }
 
         return MULTIBASE_BASE64URL_NO_PAD_PREFIX +
             Base64.getUrlEncoder().withoutPadding().encodeToString(gzipped)
@@ -1139,17 +1244,21 @@ class BitstringStatusListManager(
         if (!encoded.startsWith(MULTIBASE_BASE64URL_NO_PAD_PREFIX)) {
             throw TrustWeaveException.InvalidState(
                 code = "STATUS_LIST_LEGACY_FORMAT",
-                message = "Stored encodedList lacks the multibase 'u' prefix that marks the " +
-                    "current MSB-first bitstring format. Un-prefixed values were written by a " +
-                    "legacy version of this library using the opposite (LSB-first) bit order; " +
-                    "reading them with the current decoder would invert bit positions and could " +
-                    "report revoked credentials as valid. Failing closed: regenerate or migrate " +
-                    "this status list to the current format."
+                message =
+                    "Stored encodedList lacks the multibase 'u' prefix that marks the " +
+                        "current MSB-first bitstring format. Un-prefixed values were written by a " +
+                        "legacy version of this library using the opposite (LSB-first) bit order; " +
+                        "reading them with the current decoder would invert bit positions and could " +
+                        "report revoked credentials as valid. Failing closed: regenerate or migrate " +
+                        "this status list to the current format.",
             )
         }
         val payload = encoded.substring(MULTIBASE_BASE64URL_NO_PAD_PREFIX.length)
         val gzipped = Base64.getUrlDecoder().decode(payload)
-        val bytes = java.util.zip.GZIPInputStream(gzipped.inputStream()).use { it.readBytes() }
+        val bytes =
+            java.util.zip
+                .GZIPInputStream(gzipped.inputStream())
+                .use { it.readBytes() }
         val bitSet = BitSet(bytes.size * 8)
         // TODO: cancellation gap — this nested loop iterates over the full status list
         // without checking for cooperative cancellation. As a plain non-suspend function it cannot
@@ -1178,28 +1287,35 @@ class BitstringStatusListManager(
     private fun statusListUnavailable(statusListId: StatusListId): TrustWeaveException =
         TrustWeaveException.InvalidState(
             code = "STATUS_LIST_UNAVAILABLE",
-            message = "Status list $statusListId could not be retrieved and verified " +
-                "(unknown locally; remote fetch and verification is not supported). " +
-                "Failing closed: credential status is unknown, not valid.",
-            context = mapOf("statusListId" to statusListId.toString())
+            message =
+                "Status list $statusListId could not be retrieved and verified " +
+                    "(unknown locally; remote fetch and verification is not supported). " +
+                    "Failing closed: credential status is unknown, not valid.",
+            context = mapOf("statusListId" to statusListId.toString()),
         )
 
     /**
      * Validate that [index] addresses an entry within the status list (RANGE_ERROR
      * per W3C Bitstring Status List v1.0 otherwise).
      */
-    private fun requireIndexInRange(index: Int, row: StatusListRow, statusListId: StatusListId) {
+    private fun requireIndexInRange(
+        index: Int,
+        row: StatusListRow,
+        statusListId: StatusListId,
+    ) {
         val capacity = row.size / row.bitsPerEntry
         if (index < 0 || index >= capacity) {
             throw TrustWeaveException.InvalidOperation(
                 code = "RANGE_ERROR",
-                message = "Status list index $index is out of range [0, ${capacity - 1}] " +
-                    "for status list $statusListId",
-                context = mapOf(
-                    "statusListId" to statusListId.toString(),
-                    "index" to index,
-                    "capacity" to capacity
-                )
+                message =
+                    "Status list index $index is out of range [0, ${capacity - 1}] " +
+                        "for status list $statusListId",
+                context =
+                    mapOf(
+                        "statusListId" to statusListId.toString(),
+                        "index" to index,
+                        "capacity" to capacity,
+                    ),
             )
         }
     }
@@ -1216,19 +1332,21 @@ class BitstringStatusListManager(
         val bitsPerEntry: Int,
         val encodedList: String,
         val createdAt: Instant,
-        val updatedAt: Instant
+        val updatedAt: Instant,
     )
 
     private fun loadStatusListRow(statusListId: String): StatusListRow? {
         return dataSource.connection.use { conn ->
-            val rs = conn.prepareStatement(
-                """
-                SELECT id, issuer_did, purpose, size, bits_per_entry, encoded_list, created_at, updated_at
-                FROM bitstring_status_lists WHERE id = ?
-                """.trimIndent()
-            ).apply {
-                setString(1, statusListId)
-            }.executeQuery()
+            val rs =
+                conn
+                    .prepareStatement(
+                        """
+                        SELECT id, issuer_did, purpose, size, bits_per_entry, encoded_list, created_at, updated_at
+                        FROM bitstring_status_lists WHERE id = ?
+                        """.trimIndent(),
+                    ).apply {
+                        setString(1, statusListId)
+                    }.executeQuery()
 
             if (!rs.next()) return@use null
 
@@ -1240,7 +1358,7 @@ class BitstringStatusListManager(
                 bitsPerEntry = rs.getInt("bits_per_entry"),
                 encodedList = rs.getString("encoded_list"),
                 createdAt = rs.getTimestamp("created_at")?.toKotlinInstant() ?: Clock.System.now(),
-                updatedAt = rs.getTimestamp("updated_at")?.toKotlinInstant() ?: Clock.System.now()
+                updatedAt = rs.getTimestamp("updated_at")?.toKotlinInstant() ?: Clock.System.now(),
             )
         }
     }
@@ -1249,14 +1367,19 @@ class BitstringStatusListManager(
     // Utility
     // -------------------------------------------------------------------------
 
-    private fun parsePurpose(value: String): StatusPurpose = try {
-        StatusPurpose.valueOf(value.uppercase())
-    } catch (e: IllegalArgumentException) {
-        logger.warn("Unknown status purpose '{}' in stored status list; defaulting to REVOCATION", value)
-        StatusPurpose.REVOCATION
-    }
+    private fun parsePurpose(value: String): StatusPurpose =
+        try {
+            StatusPurpose.valueOf(value.uppercase())
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Unknown status purpose '{}' in stored status list; defaulting to REVOCATION", value)
+            StatusPurpose.REVOCATION
+        }
 
-    private fun countBits(bitSet: BitSet, bitsPerEntry: Int, revocationBit: Boolean): Int {
+    private fun countBits(
+        bitSet: BitSet,
+        bitsPerEntry: Int,
+        revocationBit: Boolean,
+    ): Int {
         if (bitsPerEntry == 1) return bitSet.cardinality()
         var count = 0
         val offset = if (revocationBit) 0 else 1
@@ -1268,6 +1391,5 @@ class BitstringStatusListManager(
         return count
     }
 
-    private fun Timestamp.toKotlinInstant(): Instant =
-        Instant.fromEpochMilliseconds(this.time)
+    private fun Timestamp.toKotlinInstant(): Instant = Instant.fromEpochMilliseconds(this.time)
 }

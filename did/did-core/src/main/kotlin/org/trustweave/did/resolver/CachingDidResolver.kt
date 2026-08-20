@@ -121,12 +121,26 @@ class CachingDidResolver(
         val key = did.value
         val now = clock.now()
 
-        if (!options.noCache) {
+        // Options that change the shape of the returned document or its contentType make a result
+        // unsafe to share under a DID-only cache key: caching an `expandRelativeUrls` result would
+        // serve expanded documents to callers who did not ask for expansion, and vice versa.
+        // Such requests bypass the cache entirely rather than poison it.
+        val cacheable = options.accept == null && !options.expandRelativeUrls
+
+        if (cacheable && !options.noCache) {
             readCache(key, now)?.let { return it }
         }
 
-        val result = delegate.resolve(did, options)
-        if (!options.noCache) {
+        // `noCache` has been honoured above, so it is stripped before delegating: the delegate is
+        // ultimately a DID method, which would otherwise reject it as an unsupported
+        // method-specific option (§4.4 step 3) even though this layer already acted on it.
+        val result = delegate.resolve(did, options.copy(noCache = false))
+
+        if (cacheable) {
+            // A `noCache` request must not leave a stale entry behind for other callers: if the
+            // fresh answer is Deactivated while the cache holds a Success, everyone else would keep
+            // receiving the revoked document until TTL expiry.
+            if (options.noCache) invalidate(did)
             writeCache(key, now, result)
         }
         return result

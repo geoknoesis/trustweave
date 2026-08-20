@@ -211,6 +211,7 @@ class EbsiDidMethod(
                     method,
                     getDocumentMetadata(did)?.created,
                     getDocumentMetadata(did)?.updated,
+                    retrieved = getLastFetched(did),
                 )
             }
 
@@ -223,6 +224,7 @@ class EbsiDidMethod(
                         method,
                         getDocumentMetadata(did)?.created,
                         getDocumentMetadata(did)?.updated,
+                        retrieved = getLastFetched(did),
                     )
                 } else {
                     val cause = apiResult.exceptionOrNull()
@@ -315,10 +317,7 @@ class EbsiDidMethod(
             }
 
             // Remove from local cache regardless
-            val wasPresent = getStoredDocument(did) != null
-            documents.remove(did.value)
-            documentMetadata.remove(did.value)
-            wasPresent
+            removeStoredDocument(did)
         } catch (e: EbsiException) {
             throw e
         } catch (e: TrustWeaveException) {

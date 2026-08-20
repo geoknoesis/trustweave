@@ -140,7 +140,8 @@ class PolygonDidMethod(
                             polygonDocument,
                             method,
                             ethrResult.documentMetadata.created,
-                            ethrResult.documentMetadata.updated
+                            ethrResult.documentMetadata.updated,
+                            retrieved = getLastFetched(polygonDocument.id),
                         )
                     }
                     is DidResolutionResult.Failure.NotFound -> {
@@ -261,8 +262,7 @@ class PolygonDidMethod(
             val deactivated = delegate.deactivateDid(ethrDid)
 
             if (deactivated) {
-                documents.remove(didString)
-                documentMetadata.remove(didString)
+                removeStoredDocument(didString)
             }
 
             deactivated

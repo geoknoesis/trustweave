@@ -74,10 +74,15 @@ abstract class AbstractDidMethod(
      * guarantee that a deactivated DID resolves to no document.
      *
      * The writers held to this invariant are [updateDid], [deactivateDid], [storeDocument],
+     * [removeStoredDocument] (the [deactivateDid] override used by `did:peer`, `did:plc`,
+     * `did:orb`, `did:ebsi`, `did:ion` and `did:polygon`, which model deactivation as local-cache
+     * eviction against an externally-authoritative registry),
      * [AbstractWebDidMethod.updateDocumentOnHttp], [AbstractWebDidMethod.deactivateDocumentOnHttp],
      * [AbstractBlockchainDidMethod.updateDocumentOnBlockchain],
      * [AbstractBlockchainDidMethod.deactivateDocumentOnBlockchain] and the inline cache-store in
-     * `KeyDidMethod.resolveDid`.
+     * `KeyDidMethod.resolveDid`. This list is the complete set as of this writing; a subclass that
+     * writes to [documents] or [documentMetadata] any other way (rather than calling one of the
+     * above) breaks the invariant and must take [updateMutex] itself.
      *
      * The `Mutex` is **not reentrant**: a holder that calls another lock-taking helper
      * self-deadlocks. Keep remote I/O (HTTP publish, chain anchor) and any call that reaches
@@ -108,9 +113,13 @@ abstract class AbstractDidMethod(
      * spec-defined home for exactly this value, and where cache-freshness checks such as
      * `DecentralizedResolutionStrategy.isFresh()` now read it from.
      *
-     * Written only under [updateMutex], alongside the maps it describes.
+     * Written only under [updateMutex], alongside the maps it describes. `protected` rather than
+     * `private` for the same reason [documents] and [documentMetadata] are: [AbstractWebDidMethod]
+     * and [AbstractBlockchainDidMethod] write it directly (already holding [updateMutex]) from
+     * `updateDocumentOnHttp`/`updateDocumentOnBlockchain` so a genuine Update operation also
+     * counts as a fetch, per this property's own contract above.
      */
-    private val lastFetched = ConcurrentHashMap<String, Instant>()
+    protected val lastFetched = ConcurrentHashMap<String, Instant>()
 
     /**
      * Default implementation of updateDid using in-memory storage.
@@ -168,6 +177,33 @@ abstract class AbstractDidMethod(
             }
             removed
         }
+
+    /**
+     * Removes [did]'s document, metadata and fetch-timestamp atomically under [updateMutex].
+     *
+     * Building block for a [deactivateDid] override that models deactivation as local-cache
+     * eviction rather than an in-memory-authoritative delete — the pattern used by DID methods
+     * whose real deactivation authority is a remote registry (`did:peer`, `did:plc`, `did:orb`,
+     * `did:ebsi`, `did:ion`, `did:polygon`). Those overrides used to write [documents] and
+     * [documentMetadata] directly, outside [updateMutex], which is exactly the race the invariant
+     * above forbids; calling this instead closes it the same way [storeDocument] does.
+     *
+     * @return whether an entry was present and removed.
+     */
+    protected suspend fun removeStoredDocument(did: Any): Boolean {
+        val didString =
+            when (did) {
+                is Did -> did.value
+                is String -> did
+                else -> throw IllegalArgumentException("did must be Did or String, got ${did::class}")
+            }
+        return updateMutex.withLock {
+            val removed = documents.remove(didString) != null
+            documentMetadata.remove(didString)
+            lastFetched.remove(didString)
+            removed
+        }
+    }
 
     /**
      * Validates that the DID matches this method's format.

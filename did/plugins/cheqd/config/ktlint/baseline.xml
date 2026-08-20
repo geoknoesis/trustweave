@@ -56,32 +56,31 @@
         <error line="122" column="26" source="standard:trailing-comma-on-call-site" />
         <error line="127" column="70" source="standard:multiline-expression-wrapping" />
         <error line="127" column="70" source="standard:function-signature" />
-        <error line="143" column="58" source="standard:trailing-comma-on-call-site" />
-        <error line="159" column="30" source="standard:trailing-comma-on-call-site" />
-        <error line="167" column="26" source="standard:trailing-comma-on-call-site" />
-        <error line="174" column="26" source="standard:trailing-comma-on-call-site" />
-        <error line="181" column="46" source="standard:trailing-comma-on-declaration-site" />
-        <error line="182" column="22" source="standard:multiline-expression-wrapping" />
-        <error line="182" column="22" source="standard:function-signature" />
-        <error line="189" column="35" source="standard:multiline-expression-wrapping" />
-        <error line="192" column="67" source="standard:trailing-comma-on-call-site" />
-        <error line="212" column="26" source="standard:trailing-comma-on-call-site" />
-        <error line="217" column="61" source="standard:multiline-expression-wrapping" />
-        <error line="217" column="61" source="standard:function-signature" />
-        <error line="225" column="35" source="standard:multiline-expression-wrapping" />
-        <error line="231" column="39" source="standard:multiline-expression-wrapping" />
-        <error line="237" column="51" source="standard:trailing-comma-on-call-site" />
-        <error line="250" column="26" source="standard:trailing-comma-on-call-site" />
-        <error line="260" column="20" source="standard:multiline-expression-wrapping" />
-        <error line="260" column="47" source="standard:chain-method-continuation" />
-        <error line="262" column="39" source="standard:chain-method-continuation" />
-        <error line="262" column="55" source="standard:chain-method-continuation" />
-        <error line="262" column="72" source="standard:chain-method-continuation" />
-        <error line="270" column="74" source="standard:multiline-expression-wrapping" />
-        <error line="270" column="74" source="standard:function-signature" />
-        <error line="278" column="27" source="standard:multiline-expression-wrapping" />
-        <error line="278" column="34" source="standard:chain-method-continuation" />
-        <error line="310" column="1" source="standard:no-consecutive-blank-lines" />
+        <error line="160" column="30" source="standard:trailing-comma-on-call-site" />
+        <error line="168" column="26" source="standard:trailing-comma-on-call-site" />
+        <error line="175" column="26" source="standard:trailing-comma-on-call-site" />
+        <error line="182" column="46" source="standard:trailing-comma-on-declaration-site" />
+        <error line="183" column="22" source="standard:multiline-expression-wrapping" />
+        <error line="183" column="22" source="standard:function-signature" />
+        <error line="190" column="35" source="standard:multiline-expression-wrapping" />
+        <error line="193" column="67" source="standard:trailing-comma-on-call-site" />
+        <error line="213" column="26" source="standard:trailing-comma-on-call-site" />
+        <error line="218" column="61" source="standard:multiline-expression-wrapping" />
+        <error line="218" column="61" source="standard:function-signature" />
+        <error line="226" column="35" source="standard:multiline-expression-wrapping" />
+        <error line="232" column="39" source="standard:multiline-expression-wrapping" />
+        <error line="238" column="51" source="standard:trailing-comma-on-call-site" />
+        <error line="251" column="26" source="standard:trailing-comma-on-call-site" />
+        <error line="261" column="20" source="standard:multiline-expression-wrapping" />
+        <error line="261" column="47" source="standard:chain-method-continuation" />
+        <error line="263" column="39" source="standard:chain-method-continuation" />
+        <error line="263" column="55" source="standard:chain-method-continuation" />
+        <error line="263" column="72" source="standard:chain-method-continuation" />
+        <error line="271" column="74" source="standard:multiline-expression-wrapping" />
+        <error line="271" column="74" source="standard:function-signature" />
+        <error line="279" column="27" source="standard:multiline-expression-wrapping" />
+        <error line="279" column="34" source="standard:chain-method-continuation" />
+        <error line="311" column="1" source="standard:no-consecutive-blank-lines" />
     </file>
     <file name="src/main/kotlin/org/trustweave/cheqddid/spi/CheqdDidMethodProvider.kt">
         <error line="3" column="1" source="standard:import-ordering" />

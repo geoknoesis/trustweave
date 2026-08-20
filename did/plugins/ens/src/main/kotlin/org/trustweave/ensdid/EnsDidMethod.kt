@@ -105,7 +105,8 @@ class EnsDidMethod(
                         ensDocument,
                         method,
                         ethrResult.documentMetadata.created,
-                        ethrResult.documentMetadata.updated
+                        ethrResult.documentMetadata.updated,
+                        retrieved = getLastFetched(ensDocument.id),
                     )
                 }
                 else -> {

@@ -57,7 +57,10 @@ val httpClient = OkHttpClient()
 val oidc4vciService = Oidc4VciService(
     credentialIssuerUrl = "https://issuer.example.com",
     kms = kms,
-    httpClient = httpClient
+    httpClient = httpClient,
+    // Required to verify the credential the issuer returns. Without a resolver,
+    // issuance fails closed rather than trusting an unverified credential.
+    didResolver = didResolver
 )
 
 val protocol = Oidc4VciExchangeProtocol(oidc4vciService)
@@ -177,6 +180,30 @@ val issue = when (issueResult) {
 }
 ```
 
+### Issued-Credential Verification
+
+`Oidc4VciService` parses and cryptographically verifies the credential the **issuer**
+returns, before handing it back:
+
+- the proof is verified against the issuer DID resolved through `didResolver`;
+- `credential.issuer` must equal the issuer the offer was pinned to;
+- `credentialSubject.id` must equal the holder DID.
+
+Any failure — including no `didResolver` being configured — raises
+`Oidc4VciException.CredentialVerificationFailed`. The service never returns a credential
+it could not verify.
+
+Note that the `credential` field on `ExchangeRequest.Issue` is *not* what comes back. The
+returned credential is the issuer's own, freshly verified; the request field is carried by
+the generic exchange API and is unused by this protocol.
+
+Only VC-LD (JSON-LD) credentials are verified today. Compact formats (JWT, SD-JWT-VC) are
+rejected rather than trusted, because `credential-api` has no compact-to-model parser yet.
+
+Deferred issuance (`pollDeferredCredential`) runs a returned credential through the same
+checks. Supply `issuerDid` and `holderDid` on `DeferredCredentialRequest` so it has
+something to verify against; without them, a returned credential is refused.
+
 ## OIDC4VCI Flow
 
 1. **Credential Offer**: Issuer creates an offer URI or object
@@ -225,8 +252,10 @@ This implementation is designed to work with walt.id's `waltid-openid4vc` librar
 ## Limitations
 
 - Proof requests and presentations are not supported (use DIDComm or OIDC4VP)
-- Currently uses a simplified implementation; full OIDC4VCI flow requires additional HTTP calls
-- Token exchange and proof of possession need to be implemented for production use
+- Only VC-LD issued credentials are verified; compact JWT / SD-JWT-VC responses are
+  rejected until `credential-api` gains a compact-to-model parser
+- Issuance fails closed without a `didResolver`, so the service cannot be used to fetch
+  credentials you intend to verify yourself later
 
 ## References
 

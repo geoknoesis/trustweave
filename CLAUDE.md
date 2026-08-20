@@ -108,11 +108,15 @@ Blockchain plugins: `anchors:plugins:<chain>` (e.g., `anchors:plugins:ethereum`,
 
 ## Coding Conventions
 
-- KTLint is **not currently enforced**: the `org.jlleitschuh.gradle.ktlint` plugin is applied only
-  to the root project (`build.gradle.kts`'s `plugins {}` block), never inside `subprojects {}`, so
-  `ktlintCheck`/`ktlintFormat` do not check or format module sources — and `.github/workflows/ci.yml`
-  runs only `./gradlew build`, no ktlint task. Applying it repo-wide is a separate, larger decision;
-  until that happens, don't rely on `./gradlew ktlintFormat` to catch style issues before committing
+- KTLint **is enforced**: the `org.jlleitschuh.gradle.ktlint` plugin is applied to every subproject
+  (`build.gradle.kts`'s `subprojects {}` block), and `.github/workflows/ci.yml` runs
+  `./gradlew ktlintCheck` on every PR. Each module carries a `config/ktlint/baseline.xml` recording
+  the pre-existing violations from before the gate was wired up (~35.7k entries repo-wide) — those
+  are grandfathered in and won't fail the build. New and changed code is held to the real ktlint
+  rules with no baseline cover, so `ktlintCheck` fails on anything you introduce. Run
+  `./gradlew ktlintFormat` before committing to auto-fix what it can; regenerate a module's baseline
+  with `./gradlew :<module>:ktlintGenerateBaseline` only when deliberately re-baselining, never to
+  hide new violations
 - Compiler flags: `-Xjsr305=strict` (strict null-safety for JSR-305 annotations)
 - Conventional Commits are required for PRs
 - Configuration cache is enabled; the Kotlin circular dep is mitigated via `kotlin.build.archivesTaskOutputAsFriendModule=false` in `gradle.properties`

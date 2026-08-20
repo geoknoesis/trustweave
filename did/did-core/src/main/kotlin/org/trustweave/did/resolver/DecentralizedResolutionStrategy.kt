@@ -81,14 +81,14 @@ class DecentralizedResolutionStrategy(
     }
 
     /**
-     * Checks if a cached resolution result is still fresh.
+     * Checks if a cached result is fresh — dated by §4.2 `retrieved` (when the answer was obtained),
+     * falling back to §4.3 `updated`/`created` for resolvers that omit it; those date the document.
      */
     private fun isFresh(result: DidResolutionResult.Success): Boolean {
-        val metadata = result.documentMetadata
-        val updated = metadata.updated ?: metadata.created ?: return false
-        
-        val age = Clock.System.now() - updated
-        return age < maxCacheAge
+        val obtainedAt =
+            result.resolutionMetadata.retrieved
+                ?: result.documentMetadata.updated ?: result.documentMetadata.created ?: return false
+        return Clock.System.now() - obtainedAt < maxCacheAge
     }
 }
 

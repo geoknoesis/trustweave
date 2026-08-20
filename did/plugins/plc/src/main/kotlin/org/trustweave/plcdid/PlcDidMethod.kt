@@ -132,7 +132,8 @@ class PlcDidMethod(
                             stored,
                             method,
                             getDocumentMetadata(did)?.created,
-                            getDocumentMetadata(did)?.updated
+                            getDocumentMetadata(did)?.updated,
+                            retrieved = getLastFetched(did),
                         )
                     }
 
@@ -259,8 +260,7 @@ class PlcDidMethod(
             }
 
             // Remove from local storage
-            documents.remove(didString)
-            documentMetadata.remove(didString)
+            removeStoredDocument(didString)
 
             true
         } catch (e: TrustWeaveException.NotFound) {

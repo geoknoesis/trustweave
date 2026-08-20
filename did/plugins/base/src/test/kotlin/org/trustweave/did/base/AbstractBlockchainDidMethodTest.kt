@@ -1,7 +1,10 @@
 package org.trustweave.did.base
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonElement
 import org.junit.jupiter.api.Test
@@ -18,6 +21,7 @@ import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -60,6 +64,12 @@ class AbstractBlockchainDidMethodTest {
             did: String,
             deactivatedDocument: DidDocument,
         ): Boolean = deactivateDocumentOnBlockchain(did, deactivatedDocument)
+
+        suspend fun openStoreWindow() = updateMutex.lock()
+
+        fun closeStoreWindow() = updateMutex.unlock()
+
+        fun metadataOf(did: String) = getDocumentMetadata(did)
     }
 
     /** Anchor client whose reads always fail, to force the exception-fallback path. */
@@ -294,6 +304,56 @@ class AbstractBlockchainDidMethodTest {
                 deactivationTimestamp,
                 thirdResult.documentMetadata.updated,
                 "updated must stay pinned at the deactivation time across a 3rd resolve, not drift further",
+            )
+        }
+
+    /**
+     * Forward guard — **deliberately weaker than its did:web sibling.**
+     *
+     * `deactivateDocumentOnBlockchain` used to write `documents`/`documentMetadata` outside
+     * `updateMutex`, the same defect
+     * `AbstractWebDidMethodDeactivationTest.deactivateDocumentOnHttp waits for an open store window`
+     * pins for did:web. It cannot be pinned the same discriminating way here: this helper calls
+     * `anchorDocument()` first, and `anchorDocument` itself calls `storeDocument`, which takes
+     * `updateMutex`. So with the store window held the deactivation parks on the mutex *inside
+     * anchorDocument* both before and after the fix, and the two versions are indistinguishable
+     * from outside. Reaching the discriminating interleaving would require instrumenting a
+     * suspension point between `anchorDocument` and the metadata write — i.e. changing production
+     * code purely for the test — so it is deliberately not attempted.
+     *
+     * What this test still buys: it fails if a future change moves the anchoring step after the
+     * local write, or drops the lock while removing the `anchorDocument` call, either of which
+     * would reopen the same window.
+     */
+    @Test
+    fun `deactivateDocumentOnBlockchain performs no local write while a store window is open`() =
+        runBlocking {
+            val method =
+                TestBlockchainDidMethod(
+                    InMemoryKeyManagementService(),
+                    InMemoryBlockchainAnchorClient(chainId = CHAIN_ID),
+                )
+            val doc = document(DID)
+            method.anchor(doc)
+
+            method.openStoreWindow()
+            val deactivation = launch(Dispatchers.Default) { method.deactivate(DID, deactivatedCopy(doc)) }
+
+            assertNull(
+                withTimeoutOrNull(500) { deactivation.join() },
+                "deactivation must not run to completion while a store window is open",
+            )
+            assertFalse(
+                method.metadataOf(DID)?.deactivated ?: false,
+                "deactivation must not write documentMetadata while another writer holds updateMutex",
+            )
+
+            method.closeStoreWindow()
+            deactivation.join()
+
+            assertTrue(
+                method.metadataOf(DID)?.deactivated == true,
+                "deactivation must land once the store window closes",
             )
         }
 }

@@ -175,19 +175,15 @@ object DidMethodUtils {
     }
 
     /**
-     * Creates a DID resolution result for a document that was found on the method's backing
-     * store.
+     * Creates a DID resolution result for a document found on the method's backing store.
      *
-     * Per DID Resolution 1.0 §4.4, a deactivated DID resolves to **no document at all** — the
-     * caller learns of the deactivation from `documentMetadata.deactivated` only. Accordingly,
-     * when [deactivated] is `true` this returns [DidResolutionResult.Deactivated] (which carries
-     * no document); otherwise it returns [DidResolutionResult.Success] carrying [document].
-     *
+     * §4.4: [deactivated] = `true` yields [DidResolutionResult.Deactivated], which carries no document at all.
      * @param document The resolved DID document (discarded when [deactivated] is true)
      * @param method The DID method name
      * @param created Optional creation timestamp (defaults to now)
-     * @param updated Optional update timestamp (defaults to now)
+     * @param updated Last Update operation (§4.3), passed through verbatim including `null`; never defaulted to now
      * @param deactivated Whether the DID has been deactivated (defaults to false)
+     * @param retrieved When the document was fetched (§4.2); see [AbstractDidMethod.getLastFetched]
      * @return [DidResolutionResult.Deactivated] if [deactivated] is true, else [DidResolutionResult.Success]
      */
     fun createSuccessResolutionResult(
@@ -195,18 +191,22 @@ object DidMethodUtils {
         method: String,
         created: Instant? = null,
         updated: Instant? = null,
-        deactivated: Boolean = false
+        deactivated: Boolean = false,
+        retrieved: Instant? = null,
     ): DidResolutionResult {
         val now = Clock.System.now()
-        val documentMetadata = DidDocumentMetadata(
-            created = created ?: now,
-            updated = updated ?: now,
-            deactivated = deactivated
-        )
-        val resolutionMetadata = DidResolutionMetadata(
-            pattern = method,
-            properties = mapOf("driver" to "TrustWeave")
-        )
+        val documentMetadata =
+            DidDocumentMetadata(
+                created = created ?: now,
+                updated = updated,
+                deactivated = deactivated,
+            )
+        val resolutionMetadata =
+            DidResolutionMetadata(
+                pattern = method,
+                retrieved = retrieved,
+                properties = mapOf("driver" to "TrustWeave"),
+            )
 
         // DID Resolution 1.0 §4.4: a deactivated DID resolves to no document at all. The caller
         // learns of the deactivation from documentMetadata.

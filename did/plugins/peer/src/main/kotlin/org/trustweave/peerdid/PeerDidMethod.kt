@@ -100,7 +100,8 @@ class PeerDidMethod(
                 return@withContext DidMethodUtils.createSuccessResolutionResult(
                     stored, method,
                     getDocumentMetadata(did)?.created,
-                    getDocumentMetadata(did)?.updated
+                    getDocumentMetadata(did)?.updated,
+                    retrieved = getLastFetched(did),
                 )
             }
 
@@ -144,12 +145,7 @@ class PeerDidMethod(
 
     override suspend fun deactivateDid(did: Did): Boolean = withContext(Dispatchers.IO) {
         validateDidFormat(did)
-        val exists = getStoredDocument(did) != null
-        if (exists) {
-            documents.remove(did.value)
-            documentMetadata.remove(did.value)
-        }
-        exists
+        removeStoredDocument(did)
     }
 
     // ─── Numalgo implementations ────────────────────────────────────────────────

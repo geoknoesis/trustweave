@@ -203,7 +203,8 @@ class EthrDidMethod(
                         stored,
                         method,
                         getDocumentMetadata(did)?.created,
-                        getDocumentMetadata(did)?.updated
+                        getDocumentMetadata(did)?.updated,
+                        retrieved = getLastFetched(did),
                     )
                 }
 

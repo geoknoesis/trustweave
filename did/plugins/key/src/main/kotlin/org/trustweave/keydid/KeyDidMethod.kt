@@ -191,15 +191,17 @@ class KeyDidMethod(
                 )
 
                 // Cache the derived document (already inside the lock, writes directly).
+                // did:key is self-certifying and can never be the subject of a real Update
+                // operation, so §4.3 `updated` is omitted rather than fabricated from `now`
+                // (the same defect this branch fixed for the shared storeDocument() path).
                 val didString = didStr
                 val now = kotlinx.datetime.Clock.System.now()
                 documents[didString] = document
                 documentMetadata[didString] = org.trustweave.did.model.DidDocumentMetadata(
-                    created = now,
-                    updated = now
+                    created = now
                 )
 
-                DidMethodUtils.createSuccessResolutionResult(document, method, now, now)
+                DidMethodUtils.createSuccessResolutionResult(document, method, now)
             }
         } catch (e: CancellationException) {
             throw e

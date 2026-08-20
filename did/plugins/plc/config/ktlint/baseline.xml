@@ -49,24 +49,23 @@
         <error line="110" column="70" source="standard:function-signature" />
         <error line="118" column="27" source="standard:multiline-expression-wrapping" />
         <error line="118" column="34" source="standard:chain-method-continuation" />
-        <error line="135" column="62" source="standard:trailing-comma-on-call-site" />
-        <error line="143" column="34" source="standard:trailing-comma-on-call-site" />
-        <error line="149" column="97" source="standard:trailing-comma-on-call-site" />
-        <error line="153" column="24" source="standard:multiline-expression-wrapping" />
-        <error line="155" column="48" source="standard:trailing-comma-on-call-site" />
-        <error line="178" column="26" source="standard:trailing-comma-on-call-site" />
-        <error line="185" column="26" source="standard:trailing-comma-on-call-site" />
-        <error line="192" column="46" source="standard:trailing-comma-on-declaration-site" />
-        <error line="193" column="22" source="standard:multiline-expression-wrapping" />
-        <error line="193" column="22" source="standard:function-signature" />
-        <error line="200" column="35" source="standard:multiline-expression-wrapping" />
-        <error line="203" column="67" source="standard:trailing-comma-on-call-site" />
-        <error line="228" column="26" source="standard:trailing-comma-on-call-site" />
-        <error line="233" column="61" source="standard:multiline-expression-wrapping" />
-        <error line="233" column="61" source="standard:function-signature" />
-        <error line="241" column="35" source="standard:multiline-expression-wrapping" />
-        <error line="247" column="39" source="standard:multiline-expression-wrapping" />
-        <error line="253" column="51" source="standard:trailing-comma-on-call-site" />
+        <error line="144" column="34" source="standard:trailing-comma-on-call-site" />
+        <error line="150" column="97" source="standard:trailing-comma-on-call-site" />
+        <error line="154" column="24" source="standard:multiline-expression-wrapping" />
+        <error line="156" column="48" source="standard:trailing-comma-on-call-site" />
+        <error line="179" column="26" source="standard:trailing-comma-on-call-site" />
+        <error line="186" column="26" source="standard:trailing-comma-on-call-site" />
+        <error line="193" column="46" source="standard:trailing-comma-on-declaration-site" />
+        <error line="194" column="22" source="standard:multiline-expression-wrapping" />
+        <error line="194" column="22" source="standard:function-signature" />
+        <error line="201" column="35" source="standard:multiline-expression-wrapping" />
+        <error line="204" column="67" source="standard:trailing-comma-on-call-site" />
+        <error line="229" column="26" source="standard:trailing-comma-on-call-site" />
+        <error line="234" column="61" source="standard:multiline-expression-wrapping" />
+        <error line="234" column="61" source="standard:function-signature" />
+        <error line="242" column="35" source="standard:multiline-expression-wrapping" />
+        <error line="248" column="39" source="standard:multiline-expression-wrapping" />
+        <error line="254" column="51" source="standard:trailing-comma-on-call-site" />
         <error line="272" column="26" source="standard:trailing-comma-on-call-site" />
         <error line="283" column="20" source="standard:multiline-expression-wrapping" />
         <error line="283" column="47" source="standard:chain-method-continuation" />

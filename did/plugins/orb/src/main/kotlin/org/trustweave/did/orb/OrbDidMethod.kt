@@ -171,6 +171,7 @@ class OrbDidMethod(
                 method,
                 getDocumentMetadata(did)?.created,
                 getDocumentMetadata(did)?.updated,
+                retrieved = getLastFetched(did),
             )
         }
 
@@ -182,6 +183,7 @@ class OrbDidMethod(
                 method,
                 getDocumentMetadata(did)?.created,
                 getDocumentMetadata(did)?.updated,
+                retrieved = getLastFetched(did),
             )
         }
 
@@ -368,8 +370,7 @@ class OrbDidMethod(
             }
 
             keyStore.remove(suffix)
-            documents.remove(did.value)
-            documentMetadata.remove(did.value)
+            removeStoredDocument(did)
             true
         } catch (e: OrbException) {
             throw e

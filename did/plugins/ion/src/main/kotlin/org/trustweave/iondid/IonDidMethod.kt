@@ -332,8 +332,7 @@ class IonDidMethod(
 
             keyStore.remove(suffix)
             // Remove from local storage
-            documents.remove(didString)
-            documentMetadata.remove(didString)
+            removeStoredDocument(didString)
 
             true
         } catch (e: TrustWeaveException.NotFound) {

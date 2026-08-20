@@ -62,6 +62,17 @@ object DidValidator {
     private val METHOD_SPECIFIC_ID_PATTERN = Regex("^([A-Za-z0-9._-]|%[0-9A-Fa-f]{2})+(:([A-Za-z0-9._-]|%[0-9A-Fa-f]{2})+)*\$")
 
     /**
+     * Upper bound on a DID string, in characters.
+     *
+     * DID Core sets no maximum, but decoding a method-specific-id is not always linear: did:key
+     * base58-decodes it with repeated bignum multiply-add, which is quadratic in length, so an
+     * unbounded identifier is a CPU denial-of-service reachable from any caller-supplied DID
+     * (an issuer DID, a holder DID, a controller reference). Real DIDs are far below this —
+     * a did:key P-521 identifier is about 110 characters — so the cap only excludes abuse.
+     */
+    const val MAX_DID_LENGTH: Int = 2048
+
+    /**
      * Validates DID format.
      *
      * @param did The DID string to validate
@@ -73,7 +84,17 @@ object DidValidator {
                 code = ErrorCodes.DID_EMPTY,
                 message = "DID cannot be empty",
                 field = "did",
-                value = did
+                value = did,
+            )
+        }
+
+        // Checked before any pattern matching or decoding so an oversized identifier costs O(1).
+        if (did.length > MAX_DID_LENGTH) {
+            return ValidationResult.Invalid(
+                code = ErrorCodes.INVALID_DID_FORMAT,
+                message = "DID exceeds the maximum supported length of $MAX_DID_LENGTH characters",
+                field = "did",
+                value = did.take(64),
             )
         }
 
@@ -82,7 +103,7 @@ object DidValidator {
                 code = ErrorCodes.INVALID_DID_FORMAT,
                 message = "DID must start with 'did:'",
                 field = "did",
-                value = did
+                value = did,
             )
         }
 
@@ -93,7 +114,7 @@ object DidValidator {
                 code = ErrorCodes.INVALID_DID_FORMAT,
                 message = "DID must have method and method-specific-id: did:<method>:<method-specific-id>",
                 field = "did",
-                value = did
+                value = did,
             )
         }
 
@@ -105,7 +126,7 @@ object DidValidator {
                 code = ErrorCodes.INVALID_DID_FORMAT,
                 message = "DID method name must be one or more lowercase letters or digits (a-z, 0-9)",
                 field = "did.method",
-                value = did
+                value = did,
             )
         }
 
@@ -114,7 +135,7 @@ object DidValidator {
                 code = ErrorCodes.INVALID_DID_FORMAT,
                 message = "DID method-specific-id cannot be empty",
                 field = "did",
-                value = did
+                value = did,
             )
         }
 
@@ -123,7 +144,7 @@ object DidValidator {
                 code = ErrorCodes.INVALID_DID_FORMAT,
                 message = "DID method-specific-id must match ABNF: idchar = ALPHA/DIGIT/'.'/'-'/'_'/pct-encoded; segments separated by ':'",
                 field = "did",
-                value = did
+                value = did,
             )
         }
 
@@ -137,7 +158,10 @@ object DidValidator {
      * @param availableMethods List of available DID method names
      * @return ValidationResult indicating if the DID method is supported
      */
-    fun validateMethod(did: String, availableMethods: List<String>): ValidationResult {
+    fun validateMethod(
+        did: String,
+        availableMethods: List<String>,
+    ): ValidationResult {
         val formatResult = validateFormat(did)
         if (!formatResult.isValid()) {
             return formatResult
@@ -149,7 +173,7 @@ object DidValidator {
                 code = ErrorCodes.DID_METHOD_EXTRACTION_FAILED,
                 message = "Failed to extract method from DID: $did",
                 field = "did.method",
-                value = did
+                value = did,
             )
         }
 
@@ -158,7 +182,7 @@ object DidValidator {
                 code = ErrorCodes.UNSUPPORTED_DID_METHOD,
                 message = "DID method '$method' is not supported. Available methods: $availableMethods",
                 field = "did.method",
-                value = method
+                value = method,
             )
         }
 

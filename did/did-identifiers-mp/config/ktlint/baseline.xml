@@ -35,19 +35,6 @@
         <error line="387" column="59" source="standard:function-signature" />
         <error line="391" column="56" source="standard:function-expression-body" />
     </file>
-    <file name="src/commonMain/kotlin/org/trustweave/did/validation/DidValidator.kt">
-        <error line="76" column="28" source="standard:trailing-comma-on-call-site" />
-        <error line="85" column="28" source="standard:trailing-comma-on-call-site" />
-        <error line="96" column="28" source="standard:trailing-comma-on-call-site" />
-        <error line="108" column="28" source="standard:trailing-comma-on-call-site" />
-        <error line="117" column="28" source="standard:trailing-comma-on-call-site" />
-        <error line="126" column="28" source="standard:trailing-comma-on-call-site" />
-        <error line="140" column="24" source="standard:function-signature" />
-        <error line="140" column="37" source="standard:function-signature" />
-        <error line="140" column="67" source="standard:function-signature" />
-        <error line="152" column="28" source="standard:trailing-comma-on-call-site" />
-        <error line="161" column="31" source="standard:trailing-comma-on-call-site" />
-    </file>
     <file name="src/commonTest/kotlin/org/trustweave/did/identifiers/DidUrlParsingTest.kt">
         <error line="10" column="1" source="standard:no-empty-first-line-in-class-body" />
     </file>

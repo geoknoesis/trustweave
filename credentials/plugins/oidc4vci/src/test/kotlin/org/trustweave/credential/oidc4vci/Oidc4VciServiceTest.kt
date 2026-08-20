@@ -1,5 +1,8 @@
 package org.trustweave.credential.oidc4vci
 
+import org.trustweave.core.identifiers.Iri
+import org.trustweave.credential.CredentialServices
+import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.CredentialSubject
@@ -7,8 +10,15 @@ import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.oidc4vci.exception.Oidc4VciException
 import org.trustweave.credential.oidc4vci.models.TxCode
+import org.trustweave.credential.requests.IssuanceRequest
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.transform.toJsonLd
 import org.trustweave.did.identifiers.Did
+import org.trustweave.did.model.DidDocument
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidResolver
 import org.trustweave.kms.Algorithm
+import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
@@ -16,6 +26,7 @@ import kotlinx.serialization.json.*
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import kotlin.test.*
+import kotlin.time.Duration.Companion.days
 import java.util.Base64
 
 /**
@@ -28,9 +39,12 @@ class Oidc4VciServiceTest {
     private lateinit var kms: InMemoryKeyManagementService
     private lateinit var service: Oidc4VciService
     private lateinit var issuerUrl: String
-    private val issuerDid = "did:key:issuer"
-    private val holderDid = "did:key:holder"
-    private val holderKeyId = "$holderDid#key-1"
+    private lateinit var didMethod: DidKeyMockMethod
+    private lateinit var didResolver: DidResolver
+    private lateinit var issuerDocument: DidDocument
+    private lateinit var issuerDid: String
+    private lateinit var holderDid: String
+    private lateinit var holderKeyId: String
 
     @BeforeTest
     fun setUp() = runBlocking {
@@ -39,13 +53,26 @@ class Oidc4VciServiceTest {
         issuerUrl = mockWebServer.url("").toString().trimEnd('/')
 
         kms = InMemoryKeyManagementService()
+
+        // Real did:key issuer and holder: the service now verifies the issuer's proof rather
+        // than trusting the response, so the fixtures have to be genuinely signable.
+        didMethod = DidKeyMockMethod(kms)
+        didResolver = object : DidResolver {
+            override suspend fun resolve(did: Did): DidResolutionResult = didMethod.resolveDid(did)
+        }
+        issuerDocument = didMethod.createDid()
+        issuerDid = issuerDocument.id.value
+        holderDid = didMethod.createDid().id.value
+        holderKeyId = "$holderDid#key-1"
+
         // Register the holder key under the key ID the service derives from the holder DID
         kms.generateKey(Algorithm.Ed25519, mapOf("keyId" to holderKeyId))
 
         service = Oidc4VciService(
             credentialIssuerUrl = issuerUrl,
             kms = kms,
-            httpClient = okhttp3.OkHttpClient()
+            httpClient = okhttp3.OkHttpClient(),
+            didResolver = didResolver
         )
     }
 
@@ -184,9 +211,7 @@ class Oidc4VciServiceTest {
 
         enqueueMetadata()
         enqueueTokenResponse(accessToken = "tok-1", cNonce = "nonce-abc")
-        mockWebServer.enqueue(
-            jsonResponse(buildJsonObject { put("credential", "issued-credential-jwt") }.toString())
-        )
+        enqueueCredential(mintVcLd(issuerDocument, holderDid))
 
         val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
         val result = service.issueCredential(issuerDid, holderDid, request.requestId)
@@ -237,9 +262,7 @@ class Oidc4VciServiceTest {
                 .setHeader("Content-Type", "application/json")
         )
         // Retry succeeds
-        mockWebServer.enqueue(
-            jsonResponse(buildJsonObject { put("credential", "issued-credential-jwt") }.toString())
-        )
+        enqueueCredential(mintVcLd(issuerDocument, holderDid))
 
         val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
         val result = service.issueCredential(issuerDid, holderDid, request.requestId)
@@ -731,6 +754,21 @@ class Oidc4VciServiceTest {
         return "openid-credential-offer://?credential_offer=$encoded"
     }
 
+    // ========== Issued-credential verification ==========
+
+    @Test
+    fun `immediate issuance verifies and returns the issuer's own credential`() = runBlocking<Unit> {
+        val requestId = preparePreAuthorizedRequest()
+        enqueueCredential(mintVcLd(issuerDocument, holderDid))
+
+        val result = service.issueCredential(issuerDid, holderDid, requestId)
+
+        val credential = assertNotNull(result.credential, "Immediate issuance must return a credential")
+        assertEquals(issuerDid, credential.issuer.id.value, "Returned credential must be the issuer's")
+        assertEquals(holderDid, credential.credentialSubject.id?.value, "Credential must bind to the holder")
+        assertNotNull(credential.proof, "Returned credential must carry the issuer's proof")
+    }
+
     private fun enqueueMetadata() {
         val metadataJson = buildJsonObject {
             put("credential_issuer", issuerUrl)
@@ -766,18 +804,59 @@ class Oidc4VciServiceTest {
         return decodeJwtPart(proofJwt.split(".")[1])["nonce"]?.jsonPrimitive?.contentOrNull
     }
 
-    private fun createTestCredential(): VerifiableCredential {
-        val issuer = Did(issuerDid)
-        val subject = Did(holderDid)
-        return VerifiableCredential(
-            id = CredentialId("https://example.com/credential/1"),
-            type = listOf(CredentialType.VerifiableCredential, CredentialType.Person),
-            issuer = Issuer.fromDid(issuer),
-            issuanceDate = Clock.System.now(),
-            credentialSubject = CredentialSubject.fromDid(
-                did = subject,
-                claims = mapOf("name" to JsonPrimitive("Test User"))
+    /**
+     * Mints a genuine VC-LD credential signed by [issuerDoc]'s assertion key and serializes it the
+     * way an issuer's credential endpoint returns it.
+     *
+     * Claims are deliberately empty: undefined JSON-LD terms trip the dropped-claim guard at
+     * issuance, and this module cannot reach credential-api's internal test-context loader to
+     * register a vocabulary. The binding under test is issuer/holder, not claim content.
+     */
+    private suspend fun mintVcLd(issuerDoc: DidDocument, subjectDid: String): JsonObject {
+        val credentialService = CredentialServices.createCredentialService(
+            kms = kms,
+            didResolver = didResolver,
+            formats = listOf(ProofSuiteId.VC_LD)
+        )
+        val result = credentialService.issue(
+            IssuanceRequest(
+                format = ProofSuiteId.VC_LD,
+                issuer = Issuer.IriIssuer(Iri(issuerDoc.id.value)),
+                issuerKeyId = issuerDoc.verificationMethod.first().id,
+                credentialSubject = CredentialSubject(id = Iri(subjectDid)),
+                type = listOf(CredentialType.VerifiableCredential),
+                issuedAt = Clock.System.now(),
+                validUntil = Clock.System.now().plus(365.days)
             )
         )
+        val success = result as? IssuanceResult.Success
+            ?: fail("Minting the fixture credential must succeed, got: $result")
+        return success.credential.toJsonLd()
+    }
+
+    /** Enqueues an issuer credential-endpoint response carrying [credential]. */
+    private fun enqueueCredential(credential: JsonElement) {
+        mockWebServer.enqueue(
+            jsonResponse(buildJsonObject { put("credential", credential) }.toString())
+        )
+    }
+
+    /** Drives the pre-authorized flow up to the point where issueCredential can be called. */
+    private suspend fun preparePreAuthorizedRequest(): String {
+        val offer = service.createCredentialOffer(
+            issuerDid = issuerDid,
+            credentialTypes = listOf("PersonCredential"),
+            credentialIssuer = issuerUrl,
+            grants = mapOf(
+                Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123")
+            ),
+        )
+        enqueueMetadata()
+        enqueueTokenResponse(accessToken = "tok-1", cNonce = "nonce-abc")
+        return service.createCredentialRequest(
+            holderDid = holderDid,
+            offerId = offer.offerId,
+            txCodeValue = "1234",
+        ).requestId
     }
 }

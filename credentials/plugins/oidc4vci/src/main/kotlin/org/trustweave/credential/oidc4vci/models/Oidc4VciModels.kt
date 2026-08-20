@@ -1,8 +1,8 @@
 package org.trustweave.credential.oidc4vci.models
 
-import org.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.trustweave.credential.model.vc.VerifiableCredential
 
 /**
  * OIDC4VCI credential offer.
@@ -62,6 +62,16 @@ data class Oidc4VciIssueResult(
 data class DeferredCredentialRequest(
     val transactionId: String,
     val accessToken: String,
+    /**
+     * Issuer DID the deferred credential is verified against. Required once the issuer
+     * actually returns a credential - polling fails closed without it.
+     */
+    val issuerDid: String? = null,
+    /**
+     * Holder DID the deferred credential must be bound to. Required once the issuer
+     * actually returns a credential - polling fails closed without it.
+     */
+    val holderDid: String? = null,
 )
 
 /**
@@ -81,9 +91,14 @@ data class Oidc4VciNotification(
 /** Notification event type. */
 @Serializable
 enum class NotificationEvent {
-    @SerialName("credential_accepted") CREDENTIAL_ACCEPTED,
-    @SerialName("credential_failure") CREDENTIAL_FAILURE,
-    @SerialName("credential_deleted") CREDENTIAL_DELETED,
+    @SerialName("credential_accepted")
+    CREDENTIAL_ACCEPTED,
+
+    @SerialName("credential_failure")
+    CREDENTIAL_FAILURE,
+
+    @SerialName("credential_deleted")
+    CREDENTIAL_DELETED,
 }
 
 /**

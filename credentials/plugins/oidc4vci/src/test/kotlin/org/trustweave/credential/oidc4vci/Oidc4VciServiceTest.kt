@@ -1,53 +1,81 @@
 package org.trustweave.credential.oidc4vci
 
-import org.trustweave.credential.identifiers.CredentialId
+import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Clock
+import kotlinx.serialization.json.*
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
+import org.trustweave.core.identifiers.Iri
+import org.trustweave.credential.CredentialServices
+import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.CredentialSubject
 import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.oidc4vci.exception.Oidc4VciException
 import org.trustweave.credential.oidc4vci.models.TxCode
+import org.trustweave.credential.requests.IssuanceRequest
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.transform.toJsonLd
 import org.trustweave.did.identifiers.Did
+import org.trustweave.did.model.DidDocument
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidResolver
 import org.trustweave.kms.Algorithm
+import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
-import kotlinx.serialization.json.*
-import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.MockWebServer
-import kotlin.test.*
 import java.util.Base64
+import kotlin.test.*
+import kotlin.time.Duration.Companion.days
 
 /**
  * Tests for OIDC4VCI Service: pre-authorized code flow, c_nonce threading,
  * EdDSA proof-of-possession JWTs, and credential_offer URI round-trips.
  */
 class Oidc4VciServiceTest {
-
     private lateinit var mockWebServer: MockWebServer
     private lateinit var kms: InMemoryKeyManagementService
     private lateinit var service: Oidc4VciService
     private lateinit var issuerUrl: String
-    private val issuerDid = "did:key:issuer"
-    private val holderDid = "did:key:holder"
-    private val holderKeyId = "$holderDid#key-1"
+    private lateinit var didMethod: DidKeyMockMethod
+    private lateinit var didResolver: DidResolver
+    private lateinit var issuerDocument: DidDocument
+    private lateinit var issuerDid: String
+    private lateinit var holderDid: String
+    private lateinit var holderKeyId: String
 
     @BeforeTest
-    fun setUp() = runBlocking {
-        mockWebServer = MockWebServer()
-        mockWebServer.start()
-        issuerUrl = mockWebServer.url("").toString().trimEnd('/')
+    fun setUp() =
+        runBlocking {
+            mockWebServer = MockWebServer()
+            mockWebServer.start()
+            issuerUrl = mockWebServer.url("").toString().trimEnd('/')
 
-        kms = InMemoryKeyManagementService()
-        // Register the holder key under the key ID the service derives from the holder DID
-        kms.generateKey(Algorithm.Ed25519, mapOf("keyId" to holderKeyId))
+            kms = InMemoryKeyManagementService()
 
-        service = Oidc4VciService(
-            credentialIssuerUrl = issuerUrl,
-            kms = kms,
-            httpClient = okhttp3.OkHttpClient()
-        )
-    }
+            // Real did:key issuer and holder: the service now verifies the issuer's proof rather
+            // than trusting the response, so the fixtures have to be genuinely signable.
+            didMethod = DidKeyMockMethod(kms)
+            didResolver =
+                object : DidResolver {
+                    override suspend fun resolve(did: Did): DidResolutionResult = didMethod.resolveDid(did)
+                }
+            issuerDocument = didMethod.createDid()
+            issuerDid = issuerDocument.id.value
+            holderDid = didMethod.createDid().id.value
+            holderKeyId = "$holderDid#key-1"
+
+            // Register the holder key under the key ID the service derives from the holder DID
+            kms.generateKey(Algorithm.Ed25519, mapOf("keyId" to holderKeyId))
+
+            service =
+                Oidc4VciService(
+                    credentialIssuerUrl = issuerUrl,
+                    kms = kms,
+                    httpClient = okhttp3.OkHttpClient(),
+                    didResolver = didResolver,
+                )
+        }
 
     @AfterTest
     fun tearDown() {
@@ -57,57 +85,63 @@ class Oidc4VciServiceTest {
     // ========== Pre-authorized code flow ==========
 
     @Test
-    fun `pre-authorized code flow exchanges the code at the token endpoint`() = runBlocking {
-        val offer = service.createCredentialOffer(
-            issuerDid = issuerDid,
-            credentialTypes = listOf("PersonCredential"),
-            credentialIssuer = issuerUrl,
-            grants = mapOf(
-                Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123")
-            ),
-        )
+    fun `pre-authorized code flow exchanges the code at the token endpoint`() =
+        runBlocking {
+            val offer =
+                service.createCredentialOffer(
+                    issuerDid = issuerDid,
+                    credentialTypes = listOf("PersonCredential"),
+                    credentialIssuer = issuerUrl,
+                    grants =
+                        mapOf(
+                            Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123"),
+                        ),
+                )
 
-        enqueueMetadata()
-        enqueueTokenResponse(accessToken = "tok-1", cNonce = "nonce-abc")
+            enqueueMetadata()
+            enqueueTokenResponse(accessToken = "tok-1", cNonce = "nonce-abc")
 
-        val request = service.createCredentialRequest(
-            holderDid = holderDid,
-            offerId = offer.offerId,
-            txCodeValue = "1234",
-        )
+            val request =
+                service.createCredentialRequest(
+                    holderDid = holderDid,
+                    offerId = offer.offerId,
+                    txCodeValue = "1234",
+                )
 
-        assertEquals("tok-1", request.accessToken, "Pre-auth flow must yield an access token")
+            assertEquals("tok-1", request.accessToken, "Pre-auth flow must yield an access token")
 
-        // First recorded request: metadata fetch; second: token exchange
-        mockWebServer.takeRequest()
-        val tokenRequest = mockWebServer.takeRequest()
-        assertEquals("POST", tokenRequest.method)
-        val tokenBody = tokenRequest.body.readUtf8()
-        assertTrue(
-            tokenBody.contains("grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Apre-authorized_code"),
-            "Token request must use the pre-authorized_code grant type, got: $tokenBody"
-        )
-        assertTrue(tokenBody.contains("pre-authorized_code=code-123"))
-        assertTrue(tokenBody.contains("tx_code=1234"))
-    }
+            // First recorded request: metadata fetch; second: token exchange
+            mockWebServer.takeRequest()
+            val tokenRequest = mockWebServer.takeRequest()
+            assertEquals("POST", tokenRequest.method)
+            val tokenBody = tokenRequest.body.readUtf8()
+            assertTrue(
+                tokenBody.contains("grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Apre-authorized_code"),
+                "Token request must use the pre-authorized_code grant type, got: $tokenBody",
+            )
+            assertTrue(tokenBody.contains("pre-authorized_code=code-123"))
+            assertTrue(tokenBody.contains("tx_code=1234"))
+        }
 
     @Test
-    fun `pre-authorized code flow without token leaves issueCredential failing with TokenExchangeFailed`() = runBlocking<Unit> {
-        // Offer without any grant — no token can be obtained
-        val offer = service.createCredentialOffer(
-            issuerDid = issuerDid,
-            credentialTypes = listOf("PersonCredential"),
-            credentialIssuer = issuerUrl,
-        )
+    fun `pre-authorized code flow without token leaves issueCredential failing with TokenExchangeFailed`() =
+        runBlocking<Unit> {
+            // Offer without any grant — no token can be obtained
+            val offer =
+                service.createCredentialOffer(
+                    issuerDid = issuerDid,
+                    credentialTypes = listOf("PersonCredential"),
+                    credentialIssuer = issuerUrl,
+                )
 
-        enqueueMetadata()
-        val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
-        assertNull(request.accessToken)
+            enqueueMetadata()
+            val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+            assertNull(request.accessToken)
 
-        assertFailsWith<Oidc4VciException.TokenExchangeFailed> {
-            service.issueCredential(issuerDid, holderDid, createTestCredential(), request.requestId)
+            assertFailsWith<Oidc4VciException.TokenExchangeFailed> {
+                service.issueCredential(issuerDid, holderDid, request.requestId)
+            }
         }
-    }
 
     // ========== Authorization-code flow PKCE (RFC 7636) ==========
 
@@ -124,628 +158,857 @@ class Oidc4VciServiceTest {
     }
 
     @Test
-    fun `authorization-code flow without a PKCE code_verifier is rejected`() = runBlocking {
-        val offer = service.createCredentialOffer(
-            issuerDid = issuerDid,
-            credentialTypes = listOf("PersonCredential"),
-            credentialIssuer = issuerUrl,
-        )
-        val ex = assertFailsWith<IllegalArgumentException> {
+    fun `authorization-code flow without a PKCE code_verifier is rejected`() =
+        runBlocking {
+            val offer =
+                service.createCredentialOffer(
+                    issuerDid = issuerDid,
+                    credentialTypes = listOf("PersonCredential"),
+                    credentialIssuer = issuerUrl,
+                )
+            val ex =
+                assertFailsWith<IllegalArgumentException> {
+                    service.createCredentialRequest(
+                        holderDid = holderDid,
+                        offerId = offer.offerId,
+                        redirectUri = "https://wallet.example/cb",
+                        authorizationCode = "auth-xyz",
+                    )
+                }
+            assertTrue(
+                ex.message?.contains("code_verifier", ignoreCase = true) == true,
+                "rejection must be the PKCE check, got: ${ex.message}",
+            )
+        }
+
+    @Test
+    fun `authorization-code flow sends the PKCE code_verifier to the token endpoint`() =
+        runBlocking {
+            val offer =
+                service.createCredentialOffer(
+                    issuerDid = issuerDid,
+                    credentialTypes = listOf("PersonCredential"),
+                    credentialIssuer = issuerUrl,
+                )
+            enqueueMetadata()
+            enqueueTokenResponse(accessToken = "tok-1", cNonce = "nonce-abc")
+
+            val verifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
             service.createCredentialRequest(
                 holderDid = holderDid,
                 offerId = offer.offerId,
                 redirectUri = "https://wallet.example/cb",
                 authorizationCode = "auth-xyz",
+                codeVerifier = verifier,
             )
+
+            mockWebServer.takeRequest() // metadata fetch
+            val tokenBody = mockWebServer.takeRequest().body.readUtf8()
+            assertTrue(tokenBody.contains("grant_type=authorization_code"), "got: $tokenBody")
+            assertTrue(tokenBody.contains("code_verifier=$verifier"), "code_verifier must be sent, got: $tokenBody")
         }
-        assertTrue(
-            ex.message?.contains("code_verifier", ignoreCase = true) == true,
-            "rejection must be the PKCE check, got: ${ex.message}",
-        )
-    }
-
-    @Test
-    fun `authorization-code flow sends the PKCE code_verifier to the token endpoint`() = runBlocking {
-        val offer = service.createCredentialOffer(
-            issuerDid = issuerDid,
-            credentialTypes = listOf("PersonCredential"),
-            credentialIssuer = issuerUrl,
-        )
-        enqueueMetadata()
-        enqueueTokenResponse(accessToken = "tok-1", cNonce = "nonce-abc")
-
-        val verifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
-        service.createCredentialRequest(
-            holderDid = holderDid,
-            offerId = offer.offerId,
-            redirectUri = "https://wallet.example/cb",
-            authorizationCode = "auth-xyz",
-            codeVerifier = verifier,
-        )
-
-        mockWebServer.takeRequest() // metadata fetch
-        val tokenBody = mockWebServer.takeRequest().body.readUtf8()
-        assertTrue(tokenBody.contains("grant_type=authorization_code"), "got: $tokenBody")
-        assertTrue(tokenBody.contains("code_verifier=$verifier"), "code_verifier must be sent, got: $tokenBody")
-    }
 
     // ========== c_nonce threading + EdDSA alg ==========
 
     @Test
-    fun `proof of possession JWT uses token endpoint c_nonce, EdDSA alg and issuer audience`() = runBlocking {
-        val offer = service.createCredentialOffer(
-            issuerDid = issuerDid,
-            credentialTypes = listOf("PersonCredential"),
-            credentialIssuer = issuerUrl,
-            grants = mapOf(
-                Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123")
-            ),
-        )
+    fun `proof of possession JWT uses token endpoint c_nonce, EdDSA alg and issuer audience`() =
+        runBlocking {
+            val offer =
+                service.createCredentialOffer(
+                    issuerDid = issuerDid,
+                    credentialTypes = listOf("PersonCredential"),
+                    credentialIssuer = issuerUrl,
+                    grants =
+                        mapOf(
+                            Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123"),
+                        ),
+                )
 
-        enqueueMetadata()
-        enqueueTokenResponse(accessToken = "tok-1", cNonce = "nonce-abc")
-        mockWebServer.enqueue(
-            jsonResponse(buildJsonObject { put("credential", "issued-credential-jwt") }.toString())
-        )
+            enqueueMetadata()
+            enqueueTokenResponse(accessToken = "tok-1", cNonce = "nonce-abc")
+            enqueueCredential(mintVcLd(issuerDocument, holderDid))
 
-        val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
-        val result = service.issueCredential(issuerDid, holderDid, createTestCredential(), request.requestId)
-        assertNotNull(result.credential)
+            val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+            val result = service.issueCredential(issuerDid, holderDid, request.requestId)
+            assertNotNull(result.credential)
 
-        mockWebServer.takeRequest() // metadata
-        mockWebServer.takeRequest() // token
-        val credentialRequest = mockWebServer.takeRequest()
-        assertEquals("Bearer tok-1", credentialRequest.getHeader("Authorization"))
+            mockWebServer.takeRequest() // metadata
+            mockWebServer.takeRequest() // token
+            val credentialRequest = mockWebServer.takeRequest()
+            assertEquals("Bearer tok-1", credentialRequest.getHeader("Authorization"))
 
-        val requestJson = Json.parseToJsonElement(credentialRequest.body.readUtf8()).jsonObject
-        val proofJwt = requestJson["proof"]!!.jsonObject["jwt"]!!.jsonPrimitive.content
-        val parts = proofJwt.split(".")
-        assertEquals(3, parts.size, "Proof must be a compact JWS")
+            val requestJson = Json.parseToJsonElement(credentialRequest.body.readUtf8()).jsonObject
+            val proofJwt = requestJson["proof"]!!.jsonObject["jwt"]!!.jsonPrimitive.content
+            val parts = proofJwt.split(".")
+            assertEquals(3, parts.size, "Proof must be a compact JWS")
 
-        val header = decodeJwtPart(parts[0])
-        assertEquals("EdDSA", header["alg"]!!.jsonPrimitive.content, "JOSE alg for Ed25519 keys is EdDSA")
-        assertEquals("openid4vci-proof+jwt", header["typ"]!!.jsonPrimitive.content)
-        assertEquals(holderKeyId, header["kid"]!!.jsonPrimitive.content)
+            val header = decodeJwtPart(parts[0])
+            assertEquals("EdDSA", header["alg"]!!.jsonPrimitive.content, "JOSE alg for Ed25519 keys is EdDSA")
+            assertEquals("openid4vci-proof+jwt", header["typ"]!!.jsonPrimitive.content)
+            assertEquals(holderKeyId, header["kid"]!!.jsonPrimitive.content)
 
-        val payload = decodeJwtPart(parts[1])
-        assertEquals("nonce-abc", payload["nonce"]!!.jsonPrimitive.content, "PoP nonce must be the token endpoint c_nonce")
-        assertEquals(issuerUrl, payload["aud"]!!.jsonPrimitive.content, "PoP audience must be the credential issuer identifier")
-        assertEquals(holderDid, payload["iss"]!!.jsonPrimitive.content)
-    }
-
-    @Test
-    fun `credential endpoint invalid_proof error refreshes c_nonce and retries once`() = runBlocking {
-        val offer = service.createCredentialOffer(
-            issuerDid = issuerDid,
-            credentialTypes = listOf("PersonCredential"),
-            credentialIssuer = issuerUrl,
-            grants = mapOf(
-                Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123")
-            ),
-        )
-
-        enqueueMetadata()
-        enqueueTokenResponse(accessToken = "tok-1", cNonce = "n1")
-        // First credential call fails with a fresh c_nonce
-        mockWebServer.enqueue(
-            MockResponse()
-                .setResponseCode(400)
-                .setBody(buildJsonObject {
-                    put("error", "invalid_proof")
-                    put("c_nonce", "n2")
-                }.toString())
-                .setHeader("Content-Type", "application/json")
-        )
-        // Retry succeeds
-        mockWebServer.enqueue(
-            jsonResponse(buildJsonObject { put("credential", "issued-credential-jwt") }.toString())
-        )
-
-        val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
-        val result = service.issueCredential(issuerDid, holderDid, createTestCredential(), request.requestId)
-        assertNotNull(result.credential)
-
-        mockWebServer.takeRequest() // metadata
-        mockWebServer.takeRequest() // token
-        val firstAttempt = extractProofNonce(mockWebServer.takeRequest().body.readUtf8())
-        val secondAttempt = extractProofNonce(mockWebServer.takeRequest().body.readUtf8())
-        assertEquals("n1", firstAttempt)
-        assertEquals("n2", secondAttempt, "Retry must use the refreshed c_nonce from the error response")
-    }
+            val payload = decodeJwtPart(parts[1])
+            assertEquals("nonce-abc", payload["nonce"]!!.jsonPrimitive.content, "PoP nonce must be the token endpoint c_nonce")
+            assertEquals(issuerUrl, payload["aud"]!!.jsonPrimitive.content, "PoP audience must be the credential issuer identifier")
+            assertEquals(holderDid, payload["iss"]!!.jsonPrimitive.content)
+        }
 
     @Test
-    fun `second invalid_proof failure surfaces as CredentialRequestFailed not a raw RuntimeException`() = runBlocking {
-        val offer = service.createCredentialOffer(
-            issuerDid = issuerDid,
-            credentialTypes = listOf("PersonCredential"),
-            credentialIssuer = issuerUrl,
-            grants = mapOf(
-                Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123")
-            ),
-        )
+    fun `credential endpoint invalid_proof error refreshes c_nonce and retries once`() =
+        runBlocking {
+            val offer =
+                service.createCredentialOffer(
+                    issuerDid = issuerDid,
+                    credentialTypes = listOf("PersonCredential"),
+                    credentialIssuer = issuerUrl,
+                    grants =
+                        mapOf(
+                            Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123"),
+                        ),
+                )
 
-        enqueueMetadata()
-        enqueueTokenResponse(accessToken = "tok-1", cNonce = "n1")
-        // Both the initial call AND the retry fail with invalid_proof + fresh c_nonce
-        repeat(2) { attempt ->
+            enqueueMetadata()
+            enqueueTokenResponse(accessToken = "tok-1", cNonce = "n1")
+            // First credential call fails with a fresh c_nonce
             mockWebServer.enqueue(
                 MockResponse()
                     .setResponseCode(400)
-                    .setBody(buildJsonObject {
-                        put("error", "invalid_proof")
-                        put("c_nonce", "n${attempt + 2}")
-                    }.toString())
-                    .setHeader("Content-Type", "application/json")
+                    .setBody(
+                        buildJsonObject {
+                            put("error", "invalid_proof")
+                            put("c_nonce", "n2")
+                        }.toString(),
+                    ).setHeader("Content-Type", "application/json"),
             )
-        }
+            // Retry succeeds
+            enqueueCredential(mintVcLd(issuerDocument, holderDid))
 
-        val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
-        // Must be the public typed exception — the private FreshNonceRequired signal
-        // must not escape issueCredential on the second failure.
-        assertFailsWith<Oidc4VciException.CredentialRequestFailed> {
-            service.issueCredential(issuerDid, holderDid, createTestCredential(), request.requestId)
+            val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+            val result = service.issueCredential(issuerDid, holderDid, request.requestId)
+            assertNotNull(result.credential)
+
+            mockWebServer.takeRequest() // metadata
+            mockWebServer.takeRequest() // token
+            val firstAttempt = extractProofNonce(mockWebServer.takeRequest().body.readUtf8())
+            val secondAttempt = extractProofNonce(mockWebServer.takeRequest().body.readUtf8())
+            assertEquals("n1", firstAttempt)
+            assertEquals("n2", secondAttempt, "Retry must use the refreshed c_nonce from the error response")
         }
-        assertEquals(4, mockWebServer.requestCount, "Exactly one retry: metadata + token + 2 credential calls")
-    }
 
     @Test
-    fun `non invalid_proof error with stray c_nonce does not trigger a retry`() = runBlocking {
-        val offer = service.createCredentialOffer(
-            issuerDid = issuerDid,
-            credentialTypes = listOf("PersonCredential"),
-            credentialIssuer = issuerUrl,
-            grants = mapOf(
-                Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123")
-            ),
-        )
+    fun `second invalid_proof failure surfaces as CredentialRequestFailed not a raw RuntimeException`() =
+        runBlocking {
+            val offer =
+                service.createCredentialOffer(
+                    issuerDid = issuerDid,
+                    credentialTypes = listOf("PersonCredential"),
+                    credentialIssuer = issuerUrl,
+                    grants =
+                        mapOf(
+                            Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123"),
+                        ),
+                )
 
-        enqueueMetadata()
-        enqueueTokenResponse(accessToken = "tok-1", cNonce = "n1")
-        // HTTP 500 whose body happens to contain a c_nonce — must NOT be treated as
-        // an invalid_proof retry trigger.
-        mockWebServer.enqueue(
-            MockResponse()
-                .setResponseCode(500)
-                .setBody(buildJsonObject {
-                    put("error", "server_error")
-                    put("c_nonce", "stray-nonce")
-                }.toString())
-                .setHeader("Content-Type", "application/json")
-        )
+            enqueueMetadata()
+            enqueueTokenResponse(accessToken = "tok-1", cNonce = "n1")
+            // Both the initial call AND the retry fail with invalid_proof + fresh c_nonce
+            repeat(2) { attempt ->
+                mockWebServer.enqueue(
+                    MockResponse()
+                        .setResponseCode(400)
+                        .setBody(
+                            buildJsonObject {
+                                put("error", "invalid_proof")
+                                put("c_nonce", "n${attempt + 2}")
+                            }.toString(),
+                        ).setHeader("Content-Type", "application/json"),
+                )
+            }
 
-        val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
-        assertFailsWith<Oidc4VciException.CredentialRequestFailed> {
-            service.issueCredential(issuerDid, holderDid, createTestCredential(), request.requestId)
+            val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+            // Must be the public typed exception — the private FreshNonceRequired signal
+            // must not escape issueCredential on the second failure.
+            assertFailsWith<Oidc4VciException.CredentialRequestFailed> {
+                service.issueCredential(issuerDid, holderDid, request.requestId)
+            }
+            assertEquals(4, mockWebServer.requestCount, "Exactly one retry: metadata + token + 2 credential calls")
         }
-        assertEquals(3, mockWebServer.requestCount, "No retry: metadata + token + a single credential call")
-    }
+
+    @Test
+    fun `non invalid_proof error with stray c_nonce does not trigger a retry`() =
+        runBlocking {
+            val offer =
+                service.createCredentialOffer(
+                    issuerDid = issuerDid,
+                    credentialTypes = listOf("PersonCredential"),
+                    credentialIssuer = issuerUrl,
+                    grants =
+                        mapOf(
+                            Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123"),
+                        ),
+                )
+
+            enqueueMetadata()
+            enqueueTokenResponse(accessToken = "tok-1", cNonce = "n1")
+            // HTTP 500 whose body happens to contain a c_nonce — must NOT be treated as
+            // an invalid_proof retry trigger.
+            mockWebServer.enqueue(
+                MockResponse()
+                    .setResponseCode(500)
+                    .setBody(
+                        buildJsonObject {
+                            put("error", "server_error")
+                            put("c_nonce", "stray-nonce")
+                        }.toString(),
+                    ).setHeader("Content-Type", "application/json"),
+            )
+
+            val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+            assertFailsWith<Oidc4VciException.CredentialRequestFailed> {
+                service.issueCredential(issuerDid, holderDid, request.requestId)
+            }
+            assertEquals(3, mockWebServer.requestCount, "No retry: metadata + token + a single credential call")
+        }
 
     // ========== Token endpoint discovery (OID4VCI §11.2.3 / RFC 8414) ==========
 
     @Test
-    fun `token endpoint is discovered from authorization server metadata when not inline`() = runBlocking {
-        val offer = service.createCredentialOffer(
-            issuerDid = issuerDid,
-            credentialTypes = listOf("PersonCredential"),
-            credentialIssuer = issuerUrl,
-            grants = mapOf(
-                Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123")
-            ),
-        )
+    fun `token endpoint is discovered from authorization server metadata when not inline`() =
+        runBlocking {
+            val offer =
+                service.createCredentialOffer(
+                    issuerDid = issuerDid,
+                    credentialTypes = listOf("PersonCredential"),
+                    credentialIssuer = issuerUrl,
+                    grants =
+                        mapOf(
+                            Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123"),
+                        ),
+                )
 
-        // Issuer metadata without token_endpoint, delegating to an authorization server
-        mockWebServer.enqueue(
-            jsonResponse(buildJsonObject {
-                put("credential_issuer", issuerUrl)
-                put("credential_endpoint", "$issuerUrl/credential")
-                put("authorization_servers", JsonArray(listOf(JsonPrimitive(issuerUrl))))
-            }.toString())
-        )
-        // RFC 8414 authorization server metadata carrying the token endpoint
-        mockWebServer.enqueue(
-            jsonResponse(buildJsonObject {
-                put("issuer", issuerUrl)
-                put("token_endpoint", "$issuerUrl/as-token")
-            }.toString())
-        )
-        enqueueTokenResponse(accessToken = "tok-as", cNonce = null)
+            // Issuer metadata without token_endpoint, delegating to an authorization server
+            mockWebServer.enqueue(
+                jsonResponse(
+                    buildJsonObject {
+                        put("credential_issuer", issuerUrl)
+                        put("credential_endpoint", "$issuerUrl/credential")
+                        put("authorization_servers", JsonArray(listOf(JsonPrimitive(issuerUrl))))
+                    }.toString(),
+                ),
+            )
+            // RFC 8414 authorization server metadata carrying the token endpoint
+            mockWebServer.enqueue(
+                jsonResponse(
+                    buildJsonObject {
+                        put("issuer", issuerUrl)
+                        put("token_endpoint", "$issuerUrl/as-token")
+                    }.toString(),
+                ),
+            )
+            enqueueTokenResponse(accessToken = "tok-as", cNonce = null)
 
-        val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
-        assertEquals("tok-as", request.accessToken)
+            val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+            assertEquals("tok-as", request.accessToken)
 
-        mockWebServer.takeRequest() // issuer metadata
-        val asMetadataRequest = mockWebServer.takeRequest()
-        assertEquals(
-            "/.well-known/oauth-authorization-server",
-            asMetadataRequest.path,
-            "AS metadata must be fetched from the RFC 8414 well-known path"
-        )
-        val tokenRequest = mockWebServer.takeRequest()
-        assertEquals("/as-token", tokenRequest.path, "Token exchange must hit the AS metadata token_endpoint")
-    }
-
-    @Test
-    fun `inline token_endpoint takes precedence and skips AS metadata discovery`() = runBlocking {
-        val offer = service.createCredentialOffer(
-            issuerDid = issuerDid,
-            credentialTypes = listOf("PersonCredential"),
-            credentialIssuer = issuerUrl,
-            grants = mapOf(
-                Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123")
-            ),
-        )
-
-        // Legacy issuer metadata with an inline token_endpoint AND authorization_servers
-        mockWebServer.enqueue(
-            jsonResponse(buildJsonObject {
-                put("credential_issuer", issuerUrl)
-                put("credential_endpoint", "$issuerUrl/credential")
-                put("token_endpoint", "$issuerUrl/token")
-                put("authorization_servers", JsonArray(listOf(JsonPrimitive("https://as.example.com"))))
-            }.toString())
-        )
-        enqueueTokenResponse(accessToken = "tok-inline", cNonce = null)
-
-        val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
-        assertEquals("tok-inline", request.accessToken)
-
-        assertEquals(2, mockWebServer.requestCount, "Inline token_endpoint must not trigger an AS metadata fetch")
-        mockWebServer.takeRequest() // issuer metadata
-        assertEquals("/token", mockWebServer.takeRequest().path)
-    }
-
-    @Test
-    fun `missing token_endpoint and authorization_servers fails with TokenEndpointResolutionFailed`() = runBlocking<Unit> {
-        val offer = service.createCredentialOffer(
-            issuerDid = issuerDid,
-            credentialTypes = listOf("PersonCredential"),
-            credentialIssuer = issuerUrl,
-            grants = mapOf(
-                Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123")
-            ),
-        )
-
-        // Issuer metadata with neither token_endpoint nor authorization_servers
-        mockWebServer.enqueue(
-            jsonResponse(buildJsonObject {
-                put("credential_issuer", issuerUrl)
-                put("credential_endpoint", "$issuerUrl/credential")
-            }.toString())
-        )
-
-        assertFailsWith<Oidc4VciException.TokenEndpointResolutionFailed> {
-            service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+            mockWebServer.takeRequest() // issuer metadata
+            val asMetadataRequest = mockWebServer.takeRequest()
+            assertEquals(
+                "/.well-known/oauth-authorization-server",
+                asMetadataRequest.path,
+                "AS metadata must be fetched from the RFC 8414 well-known path",
+            )
+            val tokenRequest = mockWebServer.takeRequest()
+            assertEquals("/as-token", tokenRequest.path, "Token exchange must hit the AS metadata token_endpoint")
         }
-    }
 
     @Test
-    fun `AS metadata without token_endpoint fails with TokenEndpointResolutionFailed`() = runBlocking<Unit> {
-        val offer = service.createCredentialOffer(
-            issuerDid = issuerDid,
-            credentialTypes = listOf("PersonCredential"),
-            credentialIssuer = issuerUrl,
-            grants = mapOf(
-                Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123")
-            ),
-        )
+    fun `inline token_endpoint takes precedence and skips AS metadata discovery`() =
+        runBlocking {
+            val offer =
+                service.createCredentialOffer(
+                    issuerDid = issuerDid,
+                    credentialTypes = listOf("PersonCredential"),
+                    credentialIssuer = issuerUrl,
+                    grants =
+                        mapOf(
+                            Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123"),
+                        ),
+                )
 
-        mockWebServer.enqueue(
-            jsonResponse(buildJsonObject {
-                put("credential_issuer", issuerUrl)
-                put("credential_endpoint", "$issuerUrl/credential")
-                put("authorization_servers", JsonArray(listOf(JsonPrimitive(issuerUrl))))
-            }.toString())
-        )
-        // AS metadata lacking token_endpoint
-        mockWebServer.enqueue(jsonResponse(buildJsonObject { put("issuer", issuerUrl) }.toString()))
+            // Legacy issuer metadata with an inline token_endpoint AND authorization_servers
+            mockWebServer.enqueue(
+                jsonResponse(
+                    buildJsonObject {
+                        put("credential_issuer", issuerUrl)
+                        put("credential_endpoint", "$issuerUrl/credential")
+                        put("token_endpoint", "$issuerUrl/token")
+                        put("authorization_servers", JsonArray(listOf(JsonPrimitive("https://as.example.com"))))
+                    }.toString(),
+                ),
+            )
+            enqueueTokenResponse(accessToken = "tok-inline", cNonce = null)
 
-        assertFailsWith<Oidc4VciException.TokenEndpointResolutionFailed> {
-            service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+            val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+            assertEquals("tok-inline", request.accessToken)
+
+            assertEquals(2, mockWebServer.requestCount, "Inline token_endpoint must not trigger an AS metadata fetch")
+            mockWebServer.takeRequest() // issuer metadata
+            assertEquals("/token", mockWebServer.takeRequest().path)
         }
-    }
+
+    @Test
+    fun `missing token_endpoint and authorization_servers fails with TokenEndpointResolutionFailed`() =
+        runBlocking<Unit> {
+            val offer =
+                service.createCredentialOffer(
+                    issuerDid = issuerDid,
+                    credentialTypes = listOf("PersonCredential"),
+                    credentialIssuer = issuerUrl,
+                    grants =
+                        mapOf(
+                            Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123"),
+                        ),
+                )
+
+            // Issuer metadata with neither token_endpoint nor authorization_servers
+            mockWebServer.enqueue(
+                jsonResponse(
+                    buildJsonObject {
+                        put("credential_issuer", issuerUrl)
+                        put("credential_endpoint", "$issuerUrl/credential")
+                    }.toString(),
+                ),
+            )
+
+            assertFailsWith<Oidc4VciException.TokenEndpointResolutionFailed> {
+                service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+            }
+        }
+
+    @Test
+    fun `AS metadata without token_endpoint fails with TokenEndpointResolutionFailed`() =
+        runBlocking<Unit> {
+            val offer =
+                service.createCredentialOffer(
+                    issuerDid = issuerDid,
+                    credentialTypes = listOf("PersonCredential"),
+                    credentialIssuer = issuerUrl,
+                    grants =
+                        mapOf(
+                            Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123"),
+                        ),
+                )
+
+            mockWebServer.enqueue(
+                jsonResponse(
+                    buildJsonObject {
+                        put("credential_issuer", issuerUrl)
+                        put("credential_endpoint", "$issuerUrl/credential")
+                        put("authorization_servers", JsonArray(listOf(JsonPrimitive(issuerUrl))))
+                    }.toString(),
+                ),
+            )
+            // AS metadata lacking token_endpoint
+            mockWebServer.enqueue(jsonResponse(buildJsonObject { put("issuer", issuerUrl) }.toString()))
+
+            assertFailsWith<Oidc4VciException.TokenEndpointResolutionFailed> {
+                service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+            }
+        }
 
     // ========== Token endpoint discovery: https-or-loopback + RFC 8414 hardening ==========
 
     @Test
-    fun `authorization server URL over http to a non-loopback host is rejected without fetching it`() = runBlocking {
-        val offer = createPreAuthOffer()
+    fun `authorization server URL over http to a non-loopback host is rejected without fetching it`() =
+        runBlocking {
+            val offer = createPreAuthOffer()
 
-        // Issuer metadata steering AS discovery to a cleartext metadata-service address
-        mockWebServer.enqueue(
-            jsonResponse(buildJsonObject {
-                put("credential_issuer", issuerUrl)
-                put("credential_endpoint", "$issuerUrl/credential")
-                put("authorization_servers", JsonArray(listOf(JsonPrimitive("http://169.254.169.254"))))
-            }.toString())
-        )
+            // Issuer metadata steering AS discovery to a cleartext metadata-service address
+            mockWebServer.enqueue(
+                jsonResponse(
+                    buildJsonObject {
+                        put("credential_issuer", issuerUrl)
+                        put("credential_endpoint", "$issuerUrl/credential")
+                        put("authorization_servers", JsonArray(listOf(JsonPrimitive("http://169.254.169.254"))))
+                    }.toString(),
+                ),
+            )
 
-        assertFailsWith<Oidc4VciException.TokenEndpointResolutionFailed> {
-            service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+            assertFailsWith<Oidc4VciException.TokenEndpointResolutionFailed> {
+                service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+            }
+            assertEquals(
+                1,
+                mockWebServer.requestCount,
+                "Only the issuer metadata fetch is allowed; the rejected AS URL must never be contacted",
+            )
         }
-        assertEquals(
-            1, mockWebServer.requestCount,
-            "Only the issuer metadata fetch is allowed; the rejected AS URL must never be contacted"
-        )
-    }
 
     @Test
-    fun `inline token_endpoint over http to a non-loopback host is rejected without a token call`() = runBlocking {
-        val offer = createPreAuthOffer()
+    fun `inline token_endpoint over http to a non-loopback host is rejected without a token call`() =
+        runBlocking {
+            val offer = createPreAuthOffer()
 
-        mockWebServer.enqueue(
-            jsonResponse(buildJsonObject {
-                put("credential_issuer", issuerUrl)
-                put("credential_endpoint", "$issuerUrl/credential")
-                put("token_endpoint", "http://attacker.example.com/token")
-            }.toString())
-        )
+            mockWebServer.enqueue(
+                jsonResponse(
+                    buildJsonObject {
+                        put("credential_issuer", issuerUrl)
+                        put("credential_endpoint", "$issuerUrl/credential")
+                        put("token_endpoint", "http://attacker.example.com/token")
+                    }.toString(),
+                ),
+            )
 
-        assertFailsWith<Oidc4VciException.TokenEndpointResolutionFailed> {
-            service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+            assertFailsWith<Oidc4VciException.TokenEndpointResolutionFailed> {
+                service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+            }
+            assertEquals(1, mockWebServer.requestCount, "No token request may be sent to a rejected endpoint")
         }
-        assertEquals(1, mockWebServer.requestCount, "No token request may be sent to a rejected endpoint")
-    }
 
     @Test
-    fun `AS-resolved token_endpoint over http to a non-loopback host is rejected before use`() = runBlocking {
-        val offer = createPreAuthOffer()
+    fun `AS-resolved token_endpoint over http to a non-loopback host is rejected before use`() =
+        runBlocking {
+            val offer = createPreAuthOffer()
 
-        mockWebServer.enqueue(
-            jsonResponse(buildJsonObject {
-                put("credential_issuer", issuerUrl)
-                put("credential_endpoint", "$issuerUrl/credential")
-                put("authorization_servers", JsonArray(listOf(JsonPrimitive(issuerUrl))))
-            }.toString())
-        )
-        // AS metadata passes the RFC 8414 issuer check but advertises a cleartext token endpoint
-        mockWebServer.enqueue(
-            jsonResponse(buildJsonObject {
-                put("issuer", issuerUrl)
-                put("token_endpoint", "http://attacker.example.com/token")
-            }.toString())
-        )
+            mockWebServer.enqueue(
+                jsonResponse(
+                    buildJsonObject {
+                        put("credential_issuer", issuerUrl)
+                        put("credential_endpoint", "$issuerUrl/credential")
+                        put("authorization_servers", JsonArray(listOf(JsonPrimitive(issuerUrl))))
+                    }.toString(),
+                ),
+            )
+            // AS metadata passes the RFC 8414 issuer check but advertises a cleartext token endpoint
+            mockWebServer.enqueue(
+                jsonResponse(
+                    buildJsonObject {
+                        put("issuer", issuerUrl)
+                        put("token_endpoint", "http://attacker.example.com/token")
+                    }.toString(),
+                ),
+            )
 
-        assertFailsWith<Oidc4VciException.TokenEndpointResolutionFailed> {
-            service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+            assertFailsWith<Oidc4VciException.TokenEndpointResolutionFailed> {
+                service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+            }
+            assertEquals(
+                2,
+                mockWebServer.requestCount,
+                "Issuer metadata + AS metadata only; the rejected token endpoint must never be called",
+            )
         }
-        assertEquals(
-            2, mockWebServer.requestCount,
-            "Issuer metadata + AS metadata only; the rejected token endpoint must never be called"
-        )
-    }
 
     @Test
-    fun `AS metadata with mismatching issuer is rejected per RFC 8414`() = runBlocking {
-        val offer = createPreAuthOffer()
+    fun `AS metadata with mismatching issuer is rejected per RFC 8414`() =
+        runBlocking {
+            val offer = createPreAuthOffer()
 
-        mockWebServer.enqueue(
-            jsonResponse(buildJsonObject {
-                put("credential_issuer", issuerUrl)
-                put("credential_endpoint", "$issuerUrl/credential")
-                put("authorization_servers", JsonArray(listOf(JsonPrimitive(issuerUrl))))
-            }.toString())
-        )
-        // Mix-up attack shape: metadata fetched from issuerUrl claims to be another issuer
-        mockWebServer.enqueue(
-            jsonResponse(buildJsonObject {
-                put("issuer", "https://evil.example.com")
-                put("token_endpoint", "$issuerUrl/as-token")
-            }.toString())
-        )
+            mockWebServer.enqueue(
+                jsonResponse(
+                    buildJsonObject {
+                        put("credential_issuer", issuerUrl)
+                        put("credential_endpoint", "$issuerUrl/credential")
+                        put("authorization_servers", JsonArray(listOf(JsonPrimitive(issuerUrl))))
+                    }.toString(),
+                ),
+            )
+            // Mix-up attack shape: metadata fetched from issuerUrl claims to be another issuer
+            mockWebServer.enqueue(
+                jsonResponse(
+                    buildJsonObject {
+                        put("issuer", "https://evil.example.com")
+                        put("token_endpoint", "$issuerUrl/as-token")
+                    }.toString(),
+                ),
+            )
 
-        val failure = assertFailsWith<Oidc4VciException.TokenEndpointResolutionFailed> {
-            service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+            val failure =
+                assertFailsWith<Oidc4VciException.TokenEndpointResolutionFailed> {
+                    service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+                }
+            assertTrue(
+                failure.reason.contains("issuer mismatch"),
+                "Failure must name the RFC 8414 issuer mismatch, got: ${failure.reason}",
+            )
+            assertEquals(2, mockWebServer.requestCount, "No token request after an issuer mismatch")
         }
-        assertTrue(
-            failure.reason.contains("issuer mismatch"),
-            "Failure must name the RFC 8414 issuer mismatch, got: ${failure.reason}"
-        )
-        assertEquals(2, mockWebServer.requestCount, "No token request after an issuer mismatch")
-    }
 
     @Test
-    fun `AS metadata issuer differing only by trailing slash is accepted`() = runBlocking {
-        val offer = createPreAuthOffer()
+    fun `AS metadata issuer differing only by trailing slash is accepted`() =
+        runBlocking {
+            val offer = createPreAuthOffer()
 
-        mockWebServer.enqueue(
-            jsonResponse(buildJsonObject {
-                put("credential_issuer", issuerUrl)
-                put("credential_endpoint", "$issuerUrl/credential")
-                put("authorization_servers", JsonArray(listOf(JsonPrimitive(issuerUrl))))
-            }.toString())
-        )
-        mockWebServer.enqueue(
-            jsonResponse(buildJsonObject {
-                put("issuer", "$issuerUrl/") // trailing slash only
-                put("token_endpoint", "$issuerUrl/as-token")
-            }.toString())
-        )
-        enqueueTokenResponse(accessToken = "tok-slash", cNonce = null)
+            mockWebServer.enqueue(
+                jsonResponse(
+                    buildJsonObject {
+                        put("credential_issuer", issuerUrl)
+                        put("credential_endpoint", "$issuerUrl/credential")
+                        put("authorization_servers", JsonArray(listOf(JsonPrimitive(issuerUrl))))
+                    }.toString(),
+                ),
+            )
+            mockWebServer.enqueue(
+                jsonResponse(
+                    buildJsonObject {
+                        put("issuer", "$issuerUrl/") // trailing slash only
+                        put("token_endpoint", "$issuerUrl/as-token")
+                    }.toString(),
+                ),
+            )
+            enqueueTokenResponse(accessToken = "tok-slash", cNonce = null)
 
-        val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
-        assertEquals("tok-slash", request.accessToken)
-    }
+            val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+            assertEquals("tok-slash", request.accessToken)
+        }
 
     @Test
-    fun `path-bearing authorization server URL puts the well-known segment between host and path`() = runBlocking {
-        val offer = createPreAuthOffer()
+    fun `path-bearing authorization server URL puts the well-known segment between host and path`() =
+        runBlocking {
+            val offer = createPreAuthOffer()
 
-        // AS identifier with a path component (multi-tenant issuer)
-        val authorizationServer = "$issuerUrl/tenants/acme"
-        mockWebServer.enqueue(
-            jsonResponse(buildJsonObject {
-                put("credential_issuer", issuerUrl)
-                put("credential_endpoint", "$issuerUrl/credential")
-                put("authorization_servers", JsonArray(listOf(JsonPrimitive(authorizationServer))))
-            }.toString())
-        )
-        mockWebServer.enqueue(
-            jsonResponse(buildJsonObject {
-                put("issuer", authorizationServer)
-                put("token_endpoint", "$issuerUrl/as-token")
-            }.toString())
-        )
-        enqueueTokenResponse(accessToken = "tok-tenant", cNonce = null)
+            // AS identifier with a path component (multi-tenant issuer)
+            val authorizationServer = "$issuerUrl/tenants/acme"
+            mockWebServer.enqueue(
+                jsonResponse(
+                    buildJsonObject {
+                        put("credential_issuer", issuerUrl)
+                        put("credential_endpoint", "$issuerUrl/credential")
+                        put("authorization_servers", JsonArray(listOf(JsonPrimitive(authorizationServer))))
+                    }.toString(),
+                ),
+            )
+            mockWebServer.enqueue(
+                jsonResponse(
+                    buildJsonObject {
+                        put("issuer", authorizationServer)
+                        put("token_endpoint", "$issuerUrl/as-token")
+                    }.toString(),
+                ),
+            )
+            enqueueTokenResponse(accessToken = "tok-tenant", cNonce = null)
 
-        val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
-        assertEquals("tok-tenant", request.accessToken)
+            val request = service.createCredentialRequest(holderDid = holderDid, offerId = offer.offerId)
+            assertEquals("tok-tenant", request.accessToken)
 
-        mockWebServer.takeRequest() // issuer metadata
-        assertEquals(
-            "/.well-known/oauth-authorization-server/tenants/acme",
-            mockWebServer.takeRequest().path,
-            "RFC 8414 §3.1: well-known segment goes between host and path, not after the path"
-        )
-    }
+            mockWebServer.takeRequest() // issuer metadata
+            assertEquals(
+                "/.well-known/oauth-authorization-server/tenants/acme",
+                mockWebServer.takeRequest().path,
+                "RFC 8414 §3.1: well-known segment goes between host and path, not after the path",
+            )
+        }
 
     // ========== credential_offer URI round-trip ==========
 
     @Test
-    fun `credential offer URI uses a single credential_offer query parameter`() = runBlocking {
-        val offer = service.createCredentialOffer(
-            issuerDid = issuerDid,
-            credentialTypes = listOf("PersonCredential", "EducationCredential"),
-            credentialIssuer = issuerUrl,
-        )
+    fun `credential offer URI uses a single credential_offer query parameter`() =
+        runBlocking {
+            val offer =
+                service.createCredentialOffer(
+                    issuerDid = issuerDid,
+                    credentialTypes = listOf("PersonCredential", "EducationCredential"),
+                    credentialIssuer = issuerUrl,
+                )
 
-        assertTrue(
-            offer.offerUri.startsWith("openid-credential-offer://?credential_offer="),
-            "Offer must be carried in a single credential_offer parameter, got: ${offer.offerUri}"
-        )
-        assertFalse(offer.offerUri.contains("credential_issuer="), "Raw top-level params are not spec-compliant")
-        assertFalse(offer.offerUri.contains("credential_configuration_ids="))
-    }
-
-    @Test
-    fun `credential offer URI round-trips through parseCredentialOfferUri`() = runBlocking {
-        val txCode = TxCode(inputMode = "numeric", length = 4, description = "PIN from SMS")
-        val offer = service.createCredentialOffer(
-            issuerDid = issuerDid,
-            credentialTypes = listOf("PersonCredential"),
-            credentialIssuer = issuerUrl,
-            grants = mapOf(
-                Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-xyz")
-            ),
-            txCode = txCode,
-        )
-
-        val parsed = service.parseCredentialOfferUri(offer.offerUri)
-
-        assertEquals(issuerUrl, parsed.credentialIssuer)
-        assertEquals(listOf("PersonCredential"), parsed.credentialTypes)
-        assertEquals(txCode, parsed.txCode)
-
-        @Suppress("UNCHECKED_CAST")
-        val preAuthGrant = parsed.grants[Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE] as? Map<String, Any?>
-        assertNotNull(preAuthGrant, "Pre-authorized grant must survive the round-trip")
-        assertEquals("code-xyz", preAuthGrant["pre-authorized_code"])
-    }
-
-    @Test
-    fun `parseCredentialOfferUri rejects URIs without credential_offer`() = runBlocking<Unit> {
-        assertFailsWith<Oidc4VciException.OfferParseFailed> {
-            service.parseCredentialOfferUri("openid-credential-offer://?credential_issuer=$issuerUrl")
+            assertTrue(
+                offer.offerUri.startsWith("openid-credential-offer://?credential_offer="),
+                "Offer must be carried in a single credential_offer parameter, got: ${offer.offerUri}",
+            )
+            assertFalse(offer.offerUri.contains("credential_issuer="), "Raw top-level params are not spec-compliant")
+            assertFalse(offer.offerUri.contains("credential_configuration_ids="))
         }
-    }
 
     @Test
-    fun `parseCredentialOfferUri rejects offers for a different credential issuer`() = runBlocking {
-        // One service instance == one issuer: a scanned offer naming a foreign issuer
-        // must not poison this instance's pinned metadata / token-endpoint caches.
-        val foreignOfferUri = offerUriFor(credentialIssuer = "https://other-issuer.example.com")
+    fun `credential offer URI round-trips through parseCredentialOfferUri`() =
+        runBlocking {
+            val txCode = TxCode(inputMode = "numeric", length = 4, description = "PIN from SMS")
+            val offer =
+                service.createCredentialOffer(
+                    issuerDid = issuerDid,
+                    credentialTypes = listOf("PersonCredential"),
+                    credentialIssuer = issuerUrl,
+                    grants =
+                        mapOf(
+                            Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-xyz"),
+                        ),
+                    txCode = txCode,
+                )
 
-        val failure = assertFailsWith<Oidc4VciException.OfferParseFailed> {
-            service.parseCredentialOfferUri(foreignOfferUri)
+            val parsed = service.parseCredentialOfferUri(offer.offerUri)
+
+            assertEquals(issuerUrl, parsed.credentialIssuer)
+            assertEquals(listOf("PersonCredential"), parsed.credentialTypes)
+            assertEquals(txCode, parsed.txCode)
+
+            @Suppress("UNCHECKED_CAST")
+            val preAuthGrant = parsed.grants[Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE] as? Map<String, Any?>
+            assertNotNull(preAuthGrant, "Pre-authorized grant must survive the round-trip")
+            assertEquals("code-xyz", preAuthGrant["pre-authorized_code"])
         }
-        assertTrue(
-            failure.reason.contains("cross-issuer"),
-            "Failure must name the cross-issuer rejection, got: ${failure.reason}"
-        )
-    }
 
     @Test
-    fun `parseCredentialOfferUri accepts the configured issuer with a trailing slash`() = runBlocking {
-        val parsed = service.parseCredentialOfferUri(offerUriFor(credentialIssuer = "$issuerUrl/"))
-        assertEquals("$issuerUrl/", parsed.credentialIssuer)
-    }
+    fun `parseCredentialOfferUri rejects URIs without credential_offer`() =
+        runBlocking<Unit> {
+            assertFailsWith<Oidc4VciException.OfferParseFailed> {
+                service.parseCredentialOfferUri("openid-credential-offer://?credential_issuer=$issuerUrl")
+            }
+        }
+
+    @Test
+    fun `parseCredentialOfferUri rejects offers for a different credential issuer`() =
+        runBlocking {
+            // One service instance == one issuer: a scanned offer naming a foreign issuer
+            // must not poison this instance's pinned metadata / token-endpoint caches.
+            val foreignOfferUri = offerUriFor(credentialIssuer = "https://other-issuer.example.com")
+
+            val failure =
+                assertFailsWith<Oidc4VciException.OfferParseFailed> {
+                    service.parseCredentialOfferUri(foreignOfferUri)
+                }
+            assertTrue(
+                failure.reason.contains("cross-issuer"),
+                "Failure must name the cross-issuer rejection, got: ${failure.reason}",
+            )
+        }
+
+    @Test
+    fun `parseCredentialOfferUri accepts the configured issuer with a trailing slash`() =
+        runBlocking {
+            val parsed = service.parseCredentialOfferUri(offerUriFor(credentialIssuer = "$issuerUrl/"))
+            assertEquals("$issuerUrl/", parsed.credentialIssuer)
+        }
 
     // ========== credential_offer_uri https enforcement ==========
 
     @Test
-    fun `credential_offer_uri over http to a non-loopback host is rejected without any request`() = runBlocking {
-        val before = mockWebServer.requestCount
-        assertFailsWith<Oidc4VciException.OfferParseFailed> {
-            service.parseCredentialOfferUri(
-                "openid-credential-offer://?credential_offer_uri=http://169.254.169.254/x"
-            )
+    fun `credential_offer_uri over http to a non-loopback host is rejected without any request`() =
+        runBlocking {
+            val before = mockWebServer.requestCount
+            assertFailsWith<Oidc4VciException.OfferParseFailed> {
+                service.parseCredentialOfferUri(
+                    "openid-credential-offer://?credential_offer_uri=http://169.254.169.254/x",
+                )
+            }
+            assertEquals(before, mockWebServer.requestCount, "Rejected URIs must never be fetched")
         }
-        assertEquals(before, mockWebServer.requestCount, "Rejected URIs must never be fetched")
-    }
 
     @Test
-    fun `credential_offer_uri with absurd scheme is rejected as OfferParseFailed`() = runBlocking<Unit> {
-        assertFailsWith<Oidc4VciException.OfferParseFailed> {
-            service.parseCredentialOfferUri(
-                "openid-credential-offer://?credential_offer_uri=ftp://issuer.example.com/offer"
-            )
+    fun `credential_offer_uri with absurd scheme is rejected as OfferParseFailed`() =
+        runBlocking<Unit> {
+            assertFailsWith<Oidc4VciException.OfferParseFailed> {
+                service.parseCredentialOfferUri(
+                    "openid-credential-offer://?credential_offer_uri=ftp://issuer.example.com/offer",
+                )
+            }
         }
-    }
 
     @Test
-    fun `credential_offer_uri over http to localhost is allowed`() = runBlocking {
-        val offerJson = buildJsonObject {
-            put("credential_issuer", issuerUrl)
-            put("credential_configuration_ids", JsonArray(listOf(JsonPrimitive("PersonCredential"))))
+    fun `credential_offer_uri over http to localhost is allowed`() =
+        runBlocking {
+            val offerJson =
+                buildJsonObject {
+                    put("credential_issuer", issuerUrl)
+                    put("credential_configuration_ids", JsonArray(listOf(JsonPrimitive("PersonCredential"))))
+                }
+            mockWebServer.enqueue(jsonResponse(offerJson.toString()))
+
+            // MockWebServer serves over http on a loopback host
+            val byReferenceUri = "$issuerUrl/offer"
+            val parsed =
+                service.parseCredentialOfferUri(
+                    "openid-credential-offer://?credential_offer_uri=$byReferenceUri",
+                )
+
+            assertEquals(issuerUrl, parsed.credentialIssuer)
+            assertEquals(listOf("PersonCredential"), parsed.credentialTypes)
         }
-        mockWebServer.enqueue(jsonResponse(offerJson.toString()))
-
-        // MockWebServer serves over http on a loopback host
-        val byReferenceUri = "$issuerUrl/offer"
-        val parsed = service.parseCredentialOfferUri(
-            "openid-credential-offer://?credential_offer_uri=$byReferenceUri"
-        )
-
-        assertEquals(issuerUrl, parsed.credentialIssuer)
-        assertEquals(listOf("PersonCredential"), parsed.credentialTypes)
-    }
 
     // ========== Helpers ==========
 
     /** Creates an offer for [issuerUrl] carrying a pre-authorized code grant. */
-    private suspend fun createPreAuthOffer() = service.createCredentialOffer(
-        issuerDid = issuerDid,
-        credentialTypes = listOf("PersonCredential"),
-        credentialIssuer = issuerUrl,
-        grants = mapOf(
-            Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123")
-        ),
-    )
+    private suspend fun createPreAuthOffer() =
+        service.createCredentialOffer(
+            issuerDid = issuerDid,
+            credentialTypes = listOf("PersonCredential"),
+            credentialIssuer = issuerUrl,
+            grants =
+                mapOf(
+                    Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123"),
+                ),
+        )
 
     /** Builds an offer-by-value URI whose `credential_offer` names [credentialIssuer]. */
     private fun offerUriFor(credentialIssuer: String): String {
-        val offerJson = buildJsonObject {
-            put("credential_issuer", credentialIssuer)
-            put("credential_configuration_ids", JsonArray(listOf(JsonPrimitive("PersonCredential"))))
-        }
+        val offerJson =
+            buildJsonObject {
+                put("credential_issuer", credentialIssuer)
+                put("credential_configuration_ids", JsonArray(listOf(JsonPrimitive("PersonCredential"))))
+            }
         val encoded = java.net.URLEncoder.encode(offerJson.toString(), "UTF-8")
         return "openid-credential-offer://?credential_offer=$encoded"
     }
 
-    private fun enqueueMetadata() {
-        val metadataJson = buildJsonObject {
-            put("credential_issuer", issuerUrl)
-            put("credential_endpoint", "$issuerUrl/credential")
-            put("token_endpoint", "$issuerUrl/token")
+    // ========== Issued-credential verification ==========
+
+    @Test
+    fun `immediate issuance verifies and returns the issuer's own credential`() =
+        runBlocking<Unit> {
+            val requestId = preparePreAuthorizedRequest()
+            enqueueCredential(mintVcLd(issuerDocument, holderDid))
+
+            val result = service.issueCredential(issuerDid, holderDid, requestId)
+
+            val credential = assertNotNull(result.credential, "Immediate issuance must return a credential")
+            assertEquals(issuerDid, credential.issuer.id.value, "Returned credential must be the issuer's")
+            assertEquals(holderDid, credential.credentialSubject.id?.value, "Credential must bind to the holder")
+            assertNotNull(credential.proof, "Returned credential must carry the issuer's proof")
         }
+
+    @Test
+    fun `issuance without a DID resolver fails closed`() =
+        runBlocking<Unit> {
+            // No didResolver — the service has no way to check the issuer's proof.
+            val unverifying =
+                Oidc4VciService(
+                    credentialIssuerUrl = issuerUrl,
+                    kms = kms,
+                    httpClient = okhttp3.OkHttpClient(),
+                )
+            val requestId = preparePreAuthorizedRequest(unverifying)
+            enqueueCredential(mintVcLd(issuerDocument, holderDid))
+
+            val failure =
+                assertFailsWith<Oidc4VciException.CredentialVerificationFailed> {
+                    unverifying.issueCredential(issuerDid, holderDid, requestId)
+                }
+            assertTrue(
+                failure.reason.contains("no DID resolver"),
+                "Expected the missing-resolver reason, got: ${failure.reason}",
+            )
+        }
+
+    @Test
+    fun `a credential signed by a different issuer is rejected`() =
+        runBlocking<Unit> {
+            // Validly signed, but by an issuer the offer was never pinned to.
+            val rogueIssuer = didMethod.createDid()
+            val requestId = preparePreAuthorizedRequest()
+            enqueueCredential(mintVcLd(rogueIssuer, holderDid))
+
+            val failure =
+                assertFailsWith<Oidc4VciException.CredentialVerificationFailed> {
+                    service.issueCredential(issuerDid, holderDid, requestId)
+                }
+            assertTrue(
+                failure.reason.contains("does not match the offer issuer"),
+                "Expected an issuer-mismatch reason, got: ${failure.reason}",
+            )
+        }
+
+    @Test
+    fun `a credential bound to a different holder is rejected`() =
+        runBlocking<Unit> {
+            val otherHolder = didMethod.createDid().id.value
+            val requestId = preparePreAuthorizedRequest()
+            enqueueCredential(mintVcLd(issuerDocument, otherHolder))
+
+            val failure =
+                assertFailsWith<Oidc4VciException.CredentialVerificationFailed> {
+                    service.issueCredential(issuerDid, holderDid, requestId)
+                }
+            assertTrue(
+                failure.reason.contains("is not the holder"),
+                "Expected a holder-mismatch reason, got: ${failure.reason}",
+            )
+        }
+
+    @Test
+    fun `a tampered credential fails proof verification`() =
+        runBlocking<Unit> {
+            // Mutate a signed field after issuance: the issuer's proof no longer covers the document.
+            val minted = mintVcLd(issuerDocument, holderDid)
+            val tampered =
+                buildJsonObject {
+                    minted.forEach { (key, value) ->
+                        if (key == "credentialSubject") {
+                            put(
+                                key,
+                                buildJsonObject {
+                                    value.jsonObject.forEach { (k, v) -> put(k, v) }
+                                    put("id", "did:key:zTamperedSubjectIdentifier")
+                                },
+                            )
+                        } else {
+                            put(key, value)
+                        }
+                    }
+                }
+            val requestId = preparePreAuthorizedRequest()
+            enqueueCredential(tampered)
+
+            val failure =
+                assertFailsWith<Oidc4VciException.CredentialVerificationFailed> {
+                    service.issueCredential(issuerDid, holderDid, requestId)
+                }
+            assertTrue(
+                failure.reason.contains("failed verification"),
+                "Tampering must fail the proof check before the issuer/holder checks, got: ${failure.reason}",
+            )
+        }
+
+    @Test
+    fun `a compact JWT credential is rejected rather than trusted`() =
+        runBlocking<Unit> {
+            val requestId = preparePreAuthorizedRequest()
+            enqueueCredential(JsonPrimitive("eyJhbGciOiJFZERTQSJ9.eyJzdWIiOiJob2xkZXIifQ.c2ln"))
+
+            val failure =
+                assertFailsWith<Oidc4VciException.CredentialVerificationFailed> {
+                    service.issueCredential(issuerDid, holderDid, requestId)
+                }
+            assertTrue(
+                failure.reason.contains("compact"),
+                "Expected the unsupported-compact-format reason, got: ${failure.reason}",
+            )
+        }
+
+    @Test
+    fun `an issuer response with no credential is rejected`() =
+        runBlocking<Unit> {
+            val requestId = preparePreAuthorizedRequest()
+            mockWebServer.enqueue(jsonResponse("{}"))
+
+            val failure =
+                assertFailsWith<Oidc4VciException.CredentialVerificationFailed> {
+                    service.issueCredential(issuerDid, holderDid, requestId)
+                }
+            assertTrue(
+                failure.reason.contains("no 'credential'"),
+                "Expected the missing-credential reason, got: ${failure.reason}",
+            )
+        }
+
+    private fun enqueueMetadata() {
+        val metadataJson =
+            buildJsonObject {
+                put("credential_issuer", issuerUrl)
+                put("credential_endpoint", "$issuerUrl/credential")
+                put("token_endpoint", "$issuerUrl/token")
+            }
         mockWebServer.enqueue(jsonResponse(metadataJson.toString()))
     }
 
-    private fun enqueueTokenResponse(accessToken: String, cNonce: String?) {
-        val tokenJson = buildJsonObject {
-            put("access_token", accessToken)
-            put("token_type", "Bearer")
-            cNonce?.let { put("c_nonce", it) }
-        }
+    private fun enqueueTokenResponse(
+        accessToken: String,
+        cNonce: String?,
+    ) {
+        val tokenJson =
+            buildJsonObject {
+                put("access_token", accessToken)
+                put("token_type", "Bearer")
+                cNonce?.let { put("c_nonce", it) }
+            }
         mockWebServer.enqueue(jsonResponse(tokenJson.toString()))
     }
 
@@ -766,18 +1029,68 @@ class Oidc4VciServiceTest {
         return decodeJwtPart(proofJwt.split(".")[1])["nonce"]?.jsonPrimitive?.contentOrNull
     }
 
-    private fun createTestCredential(): VerifiableCredential {
-        val issuer = Did(issuerDid)
-        val subject = Did(holderDid)
-        return VerifiableCredential(
-            id = CredentialId("https://example.com/credential/1"),
-            type = listOf(CredentialType.VerifiableCredential, CredentialType.Person),
-            issuer = Issuer.fromDid(issuer),
-            issuanceDate = Clock.System.now(),
-            credentialSubject = CredentialSubject.fromDid(
-                did = subject,
-                claims = mapOf("name" to JsonPrimitive("Test User"))
+    /**
+     * Mints a genuine VC-LD credential signed by [issuerDoc]'s assertion key and serializes it the
+     * way an issuer's credential endpoint returns it.
+     *
+     * Claims are deliberately empty: undefined JSON-LD terms trip the dropped-claim guard at
+     * issuance, and this module cannot reach credential-api's internal test-context loader to
+     * register a vocabulary. The binding under test is issuer/holder, not claim content.
+     */
+    private suspend fun mintVcLd(
+        issuerDoc: DidDocument,
+        subjectDid: String,
+    ): JsonObject {
+        val credentialService =
+            CredentialServices.createCredentialService(
+                kms = kms,
+                didResolver = didResolver,
+                formats = listOf(ProofSuiteId.VC_LD),
             )
+        val result =
+            credentialService.issue(
+                IssuanceRequest(
+                    format = ProofSuiteId.VC_LD,
+                    issuer = Issuer.IriIssuer(Iri(issuerDoc.id.value)),
+                    issuerKeyId = issuerDoc.verificationMethod.first().id,
+                    credentialSubject = CredentialSubject(id = Iri(subjectDid)),
+                    type = listOf(CredentialType.VerifiableCredential),
+                    issuedAt = Clock.System.now(),
+                    validUntil = Clock.System.now().plus(365.days),
+                ),
+            )
+        val success =
+            result as? IssuanceResult.Success
+                ?: fail("Minting the fixture credential must succeed, got: $result")
+        return success.credential.toJsonLd()
+    }
+
+    /** Enqueues an issuer credential-endpoint response carrying [credential]. */
+    private fun enqueueCredential(credential: JsonElement) {
+        mockWebServer.enqueue(
+            jsonResponse(buildJsonObject { put("credential", credential) }.toString()),
         )
+    }
+
+    /** Drives the pre-authorized flow up to the point where issueCredential can be called. */
+    private suspend fun preparePreAuthorizedRequest(target: Oidc4VciService = service): String {
+        val offer =
+            target.createCredentialOffer(
+                issuerDid = issuerDid,
+                credentialTypes = listOf("PersonCredential"),
+                credentialIssuer = issuerUrl,
+                grants =
+                    mapOf(
+                        Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE to mapOf("pre-authorized_code" to "code-123"),
+                    ),
+            )
+        enqueueMetadata()
+        enqueueTokenResponse(accessToken = "tok-1", cNonce = "nonce-abc")
+        return target
+            .createCredentialRequest(
+                holderDid = holderDid,
+                offerId = offer.offerId,
+                txCodeValue = "1234",
+            ).requestId
     }
 }

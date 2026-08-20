@@ -74,9 +74,8 @@ import kotlinx.serialization.json.*
  */
 abstract class AbstractBlockchainDidMethod(
     method: String,
-    kms: KeyManagementService
+    kms: KeyManagementService,
 ) : AbstractDidMethod(method, kms) {
-
     /**
      * Gets the blockchain anchor client for this method.
      *
@@ -114,31 +113,32 @@ abstract class AbstractBlockchainDidMethod(
      * @return Transaction hash or anchor reference
      * @throws TrustWeaveException if anchoring fails
      */
-    protected suspend fun anchorDocument(document: DidDocument): String = withContext(Dispatchers.IO) {
-        try {
-            val anchorClient = getBlockchainAnchorClient()
+    protected suspend fun anchorDocument(document: DidDocument): String =
+        withContext(Dispatchers.IO) {
+            try {
+                val anchorClient = getBlockchainAnchorClient()
 
-            // Convert document to JsonElement
-            val payload = documentToJsonElement(document)
+                // Convert document to JsonElement
+                val payload = documentToJsonElement(document)
 
-            // Anchor to blockchain
-            val result = anchorClient.writePayload(payload, "application/json")
+                // Anchor to blockchain
+                val result = anchorClient.writePayload(payload, "application/json")
 
-            // Store locally for fallback
-            storeDocument(document.id.value, document)
+                // Store locally for fallback
+                storeDocument(document.id.value, document)
 
-            // Return transaction hash
-            result.ref.txHash
-        } catch (e: TrustWeaveException) {
-            throw e
-        } catch (e: Exception) {
-            throw TrustWeaveException(
-                code = "DID_ANCHOR_FAILED",
-                message = "Failed to anchor DID document to blockchain: ${e.message}",
-                cause = e
-            )
+                // Return transaction hash
+                result.ref.txHash
+            } catch (e: TrustWeaveException) {
+                throw e
+            } catch (e: Exception) {
+                throw TrustWeaveException(
+                    code = "DID_ANCHOR_FAILED",
+                    message = "Failed to anchor DID document to blockchain: ${e.message}",
+                    cause = e,
+                )
+            }
         }
-    }
 
     /**
      * Resolves a DID document from the blockchain.
@@ -155,7 +155,10 @@ abstract class AbstractBlockchainDidMethod(
      * @return DidResolutionResult
      * @throws NotFoundException if document not found
      */
-    protected suspend fun resolveFromBlockchain(did: String, txHash: String? = null): DidResolutionResult =
+    protected suspend fun resolveFromBlockchain(
+        did: String,
+        txHash: String? = null,
+    ): DidResolutionResult =
         withContext(Dispatchers.IO) {
             validateDidFormat(Did(did))
 
@@ -176,41 +179,49 @@ abstract class AbstractBlockchainDidMethod(
                             method,
                             metadata?.created,
                             metadata?.updated,
-                            metadata?.deactivated ?: false
+                            metadata?.deactivated ?: false,
                         )
                     }
 
                     throw TrustWeaveException.NotFound(
-                        resource = "DID document: $did"
+                        resource = "DID document: $did",
                     )
                 }
 
                 // Read from blockchain
-                val anchorRef = org.trustweave.anchor.AnchorRef(
-                    chainId = chainId,
-                    txHash = hash
-                )
+                val anchorRef =
+                    org.trustweave.anchor.AnchorRef(
+                        chainId = chainId,
+                        txHash = hash,
+                    )
 
                 val result = anchorClient.readPayload(anchorRef)
 
                 // Convert JsonElement to DidDocument
                 val document = jsonElementToDocument(result.payload)
 
-                // Local state is authoritative for blockchain-backed methods (see KDoc above):
-                // capture whatever deactivation this instance has already recorded for the DID
-                // *before* storeDocument() below re-caches the freshly read document —
-                // storeDocument unconditionally replaces the stored DidDocumentMetadata, which
-                // would otherwise silently clear a prior deactivation just because the chain
-                // read succeeded.
-                val recordedDeactivated = getDocumentMetadata(did)?.deactivated ?: false
+                // Capture the currently recorded `updated` timestamp before storeDocument's cache
+                // refresh below bumps it to now. Used only if this DID turns out to be
+                // deactivated, so a Deactivated result's documentMetadata.updated reflects the
+                // deactivation time (DID Core §7.3 / DID Resolution 1.0 §4.3) rather than this
+                // resolve's read time. This does not gate the deactivated determination itself
+                // (see below), so it carries none of the lost-update race the pre-store
+                // `deactivated` capture used to have.
+                val recordedUpdated = getDocumentMetadata(did)?.updated
 
-                // Store locally for caching
+                // Store locally for caching. storeDocument() preserves any deactivation this
+                // instance has already recorded for the DID (see its KDoc) instead of resetting
+                // it, so local state stays authoritative for blockchain-backed methods even
+                // though the chain read just succeeded — no separate before/after capture of
+                // `deactivated` is needed.
                 storeDocument(document.id.value, document)
 
+                val deactivated = getDocumentMetadata(did)?.deactivated ?: false
                 org.trustweave.did.base.DidMethodUtils.createSuccessResolutionResult(
                     document,
                     method,
-                    deactivated = recordedDeactivated
+                    updated = if (deactivated) recordedUpdated else null,
+                    deactivated = deactivated,
                 )
             } catch (e: TrustWeaveException.NotFound) {
                 throw e
@@ -226,14 +237,14 @@ abstract class AbstractBlockchainDidMethod(
                         method,
                         metadata?.created,
                         metadata?.updated,
-                        metadata?.deactivated ?: false
+                        metadata?.deactivated ?: false,
                     )
                 }
 
                 throw TrustWeaveException(
                     code = "DID_RESOLUTION_FAILED",
                     message = "Failed to resolve DID from blockchain: ${e.message}",
-                    cause = e
+                    cause = e,
                 )
             }
         }
@@ -261,16 +272,22 @@ abstract class AbstractBlockchainDidMethod(
      * @param document The updated document
      * @return Transaction hash
      */
-    protected suspend fun updateDocumentOnBlockchain(did: String, document: DidDocument): String {
+    protected suspend fun updateDocumentOnBlockchain(
+        did: String,
+        document: DidDocument,
+    ): String {
         validateDidFormat(Did(did))
 
         // Anchor updated document
         val txHash = anchorDocument(document)
 
         // Update local storage
-        val now = kotlinx.datetime.Clock.System.now()
-        documentMetadata[did] = (documentMetadata[did] ?: DidDocumentMetadata(created = now))
-            .copy(updated = now)
+        val now =
+            kotlinx.datetime.Clock.System
+                .now()
+        documentMetadata[did] =
+            (documentMetadata[did] ?: DidDocumentMetadata(created = now))
+                .copy(updated = now)
 
         return txHash
     }
@@ -284,7 +301,7 @@ abstract class AbstractBlockchainDidMethod(
      */
     protected suspend fun deactivateDocumentOnBlockchain(
         did: String,
-        deactivatedDocument: DidDocument
+        deactivatedDocument: DidDocument,
     ): Boolean {
         validateDidFormat(Did(did))
 
@@ -295,19 +312,21 @@ abstract class AbstractBlockchainDidMethod(
             // Keep the deactivated document locally and flag the metadata as
             // deactivated (W3C DID Core §7.3) so subsequent resolutions can
             // surface the deactivation instead of silently "losing" the DID.
-            val now = kotlinx.datetime.Clock.System.now()
+            val now =
+                kotlinx.datetime.Clock.System
+                    .now()
             documents[did] = deactivatedDocument
-            documentMetadata[did] = (documentMetadata[did] ?: DidDocumentMetadata(created = now))
-                .copy(updated = now, deactivated = true)
+            documentMetadata[did] =
+                (documentMetadata[did] ?: DidDocumentMetadata(created = now))
+                    .copy(updated = now, deactivated = true)
 
             return true
         } catch (e: Exception) {
             throw TrustWeaveException(
                 code = "DID_DEACTIVATION_FAILED",
                 message = "Failed to deactivate DID on blockchain: ${e.message}",
-                cause = e
+                cause = e,
             )
         }
     }
 }
-

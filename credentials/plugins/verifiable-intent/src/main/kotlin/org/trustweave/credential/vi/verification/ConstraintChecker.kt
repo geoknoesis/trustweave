@@ -1,8 +1,8 @@
 package org.trustweave.credential.vi.verification
 
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.int
-import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.long
+import kotlinx.serialization.json.longOrNull
 import org.trustweave.credential.vi.crypto.Disclosures
 import org.trustweave.credential.vi.crypto.contentOrNull
 import org.trustweave.credential.vi.model.Constraint
@@ -30,7 +30,6 @@ public data class ConstraintCheckResult(
  * or under [StrictnessMode.STRICT]; otherwise skipped.
  */
 public object ConstraintChecker {
-
     public fun check(
         constraints: List<Constraint>,
         fulfillment: JsonObject,
@@ -47,17 +46,26 @@ public object ConstraintChecker {
             when (c) {
                 is Constraint.AmountRange -> {
                     checked += c.type
-                    checkAmount(c, fulfillment)?.let { satisfied = false; violations += it }
+                    checkAmount(c, fulfillment)?.let {
+                        satisfied = false
+                        violations += it
+                    }
                 }
                 is Constraint.AllowedPayees -> {
                     checked += c.type
                     matchAllowlist(c.allowed, fulfillment["payee"] as? JsonObject, disclosuresByHash, isOpenMandate)
-                        ?.let { satisfied = false; violations += it }
+                        ?.let {
+                            satisfied = false
+                            violations += it
+                        }
                 }
                 is Constraint.AllowedMerchants -> {
                     checked += c.type
                     matchAllowlist(c.allowed, fulfillment["merchant"] as? JsonObject, disclosuresByHash, isOpenMandate)
-                        ?.let { satisfied = false; violations += it }
+                        ?.let {
+                            satisfied = false
+                            violations += it
+                        }
                 }
                 is Constraint.LineItems -> checked += c.type // TODO: port acceptable-id + quantity-cap matching
                 is Constraint.Reference,
@@ -65,6 +73,13 @@ public object ConstraintChecker {
                 is Constraint.Recurrence,
                 is Constraint.AgentRecurrence,
                 -> checked += c.type // integrity-/network-enforced; acknowledged here
+                is Constraint.Malformed -> {
+                    // A recognized constraint the verifier cannot evaluate always fails closed,
+                    // regardless of strictness: the issuer declared a bound that would
+                    // otherwise stop binding.
+                    satisfied = false
+                    violations += "Malformed constraint ${c.type}: ${c.reason}"
+                }
                 is Constraint.Unknown -> {
                     if (isOpenMandate || mode == StrictnessMode.STRICT) {
                         satisfied = false
@@ -78,10 +93,14 @@ public object ConstraintChecker {
         return ConstraintCheckResult(satisfied, violations, checked, skipped)
     }
 
-    private fun checkAmount(c: Constraint.AmountRange, fulfillment: JsonObject): String? {
+    private fun checkAmount(
+        c: Constraint.AmountRange,
+        fulfillment: JsonObject,
+    ): String? {
         val pa = fulfillment["payment_amount"] as? JsonObject ?: return "Missing or invalid payment_amount in fulfillment"
-        val amount = pa["amount"]?.let { runCatching { it.intValue() }.getOrNull() }
-            ?: return "Missing/invalid amount in fulfillment payment_amount"
+        val amount =
+            pa["amount"]?.let { runCatching { it.longValue() }.getOrNull() }
+                ?: return "Missing/invalid amount in fulfillment payment_amount"
         c.min?.let { if (amount < it) return "Amount below minimum: $amount < $it ${c.currency}" }
         c.max?.let { if (amount > it) return "Amount exceeds maximum: $amount > $it ${c.currency}" }
         val currency = pa["currency"]?.contentOrNull() ?: c.currency
@@ -136,16 +155,21 @@ public object ConstraintChecker {
         return "Target not in allowlist (id=${target["id"]?.contentOrNull()})"
     }
 
-    private fun matches(candidate: JsonObject, target: JsonObject): Boolean {
+    private fun matches(
+        candidate: JsonObject,
+        target: JsonObject,
+    ): Boolean {
         val cid = candidate["id"]?.contentOrNull()
         val tid = target["id"]?.contentOrNull()
         if (!cid.isNullOrEmpty() && !tid.isNullOrEmpty()) return cid == tid
         val cName = candidate["name"]?.contentOrNull()
         val cSite = candidate["website"]?.contentOrNull()
-        return !cName.isNullOrEmpty() && cName == target["name"]?.contentOrNull() &&
-            !cSite.isNullOrEmpty() && cSite == target["website"]?.contentOrNull()
+        return !cName.isNullOrEmpty() &&
+            cName == target["name"]?.contentOrNull() &&
+            !cSite.isNullOrEmpty() &&
+            cSite == target["website"]?.contentOrNull()
     }
 }
 
-private fun kotlinx.serialization.json.JsonElement.intValue(): Int =
-    (this as kotlinx.serialization.json.JsonPrimitive).let { it.intOrNull ?: it.int }
+private fun kotlinx.serialization.json.JsonElement.longValue(): Long =
+    (this as kotlinx.serialization.json.JsonPrimitive).let { it.longOrNull ?: it.long }

@@ -215,6 +215,49 @@ class EcdsaSignatureCodecTest {
     }
 
     @Test
+    fun `high-s normalization zero-pads a short n minus s instead of leaving stale bytes`() {
+        // Regression: normalizeSecp256k1LowS right-aligned `n - s` into a COPY of the original
+        // signature, so whenever `n - s` needed fewer than 32 bytes the leading bytes of the old
+        // (high) s survived. That produced a signature that was still high-s AND no longer valid.
+        // `n - s` is shorter than 32 bytes for ~1 in 256 real signatures.
+        for (byteLength in 1..32) {
+            val delta = BigInteger.ONE.shiftLeft(8 * (byteLength - 1)) // exactly `byteLength` bytes
+            val highS = secp256k1Order.subtract(delta)
+            assertTrue(highS > halfOrder, "fixture must be high-s for byteLength=$byteLength")
+
+            val normalized =
+                EcdsaSignatureCodec.normalizeSecp256k1LowS(p1363Of(BigInteger.valueOf(7), highS))
+            val actualS = BigInteger(1, normalized.copyOfRange(32, 64))
+
+            assertEquals(delta, actualS, "s must be exactly n - s (byteLength=$byteLength)")
+            assertTrue(actualS <= halfOrder, "normalized s must be low-s (byteLength=$byteLength)")
+            assertContentEquals(
+                p1363Of(BigInteger.valueOf(7), delta),
+                normalized,
+                "the s half must be zero-padded, not overlaid on the old s (byteLength=$byteLength)",
+            )
+        }
+    }
+
+    @Test
+    fun `normalize always yields low-s for every high-s secp256k1 input`() {
+        // Sweep DER inputs the way a JCA/KMS backend produces them, covering the short `n - s`
+        // cases that a right-aligned in-place write would corrupt.
+        for (byteLength in 1..32) {
+            val delta = BigInteger.ONE.shiftLeft(8 * (byteLength - 1))
+            val highS = secp256k1Order.subtract(delta)
+            val der = EcdsaSignatureCodec.p1363ToDer(p1363Of(BigInteger.valueOf(11), highS))
+
+            val normalized = EcdsaSignatureCodec.normalize(der, Algorithm.Secp256k1)
+
+            assertEquals(64, normalized.size)
+            val actualS = BigInteger(1, normalized.copyOfRange(32, 64))
+            assertTrue(actualS <= halfOrder, "normalize must emit low-s (byteLength=$byteLength)")
+            assertEquals(delta, actualS)
+        }
+    }
+
+    @Test
     fun `low-s secp256k1 signature is returned unchanged`() {
         val sig = p1363Of(BigInteger.valueOf(99), halfOrder) // s == n/2 is allowed
         assertSame(sig, EcdsaSignatureCodec.normalizeSecp256k1LowS(sig))

@@ -2,6 +2,7 @@ package org.trustweave.did.resolver
 
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.exception.DidException
+import org.trustweave.did.model.expandRelativeDidUrls
 import org.trustweave.did.representation.DidMediaTypes
 import org.trustweave.did.resolution.ResolutionOptions
 
@@ -97,7 +98,9 @@ fun UniversalResolver.asDidResolver(): DidResolver = object : DidResolver {
      * Without this override, [DidResolver]'s two-arg default would silently discard `accept`
      * and `expandRelativeUrls` before falling through to [resolve], letting an unsupported
      * `accept` slip through as [DidResolutionResult.Success] instead of failing with
-     * `REPRESENTATION_NOT_SUPPORTED`.
+     * `REPRESENTATION_NOT_SUPPORTED`. `expandRelativeUrls` itself — once past those checks — is
+     * honoured below by expanding the returned document, mirroring [RegistryBasedResolver]'s
+     * identical post-processing step for the local-registry route.
      */
     override suspend fun resolve(did: Did, options: ResolutionOptions): DidResolutionResult {
         options.validate()?.let { error ->
@@ -124,26 +127,67 @@ fun UniversalResolver.asDidResolver(): DidResolver = object : DidResolver {
                 )
             }
         }
-        return resolveViaUniversal(did)
+        val result = resolveViaUniversal(did)
+        // §4.4 — expandRelativeUrls post-processing, mirroring RegistryBasedResolver.
+        return if (options.expandRelativeUrls && result is DidResolutionResult.Success) {
+            result.copy(document = result.document.expandRelativeDidUrls())
+        } else {
+            result
+        }
     }
 
+    /**
+     * Adapts [resolveDid]'s result to the [DidResolver] contract, applying the same §4/§4.4
+     * defence-in-depth [RegistryBasedResolver] applies to the local-registry route — this is the
+     * single choke point both first-party [UniversalResolver] implementations
+     * ([DefaultUniversalResolver], [org.trustweave.godiddy.resolver.GodiddyResolver]) flow
+     * through when used as a [DidResolver] via [asDidResolver], so fixing it here covers both
+     * without duplicating the checks at each implementation.
+     */
     private suspend fun resolveViaUniversal(did: Did): DidResolutionResult = try {
         when (val result = resolveDid(did.value)) {
-            // §4.4 defence in depth. The two first-party UniversalResolver implementations
-            // (DefaultUniversalResolver, GodiddyResolver) both check documentMetadata.deactivated
-            // before returning Success, so this should be unreachable for them — but a
-            // third-party UniversalResolver on the classpath might not apply that ordering
-            // itself. Re-checking here means this adapter never hands a caller a Success that
-            // carries a revoked document, regardless of what the wrapped implementation does.
-            is DidResolutionResult.Success -> if (result.documentMetadata.deactivated) {
-                DidResolutionResult.Deactivated(
-                    did = did,
-                    documentMetadata = result.documentMetadata,
-                    resolutionMetadata = result.resolutionMetadata
-                )
-            } else {
-                result
-            }
+            is DidResolutionResult.Success ->
+                when {
+                    // §4.4 defence in depth. The two first-party UniversalResolver
+                    // implementations (DefaultUniversalResolver, GodiddyResolver) both check
+                    // documentMetadata.deactivated before returning Success, so this should be
+                    // unreachable for them — but a third-party UniversalResolver on the
+                    // classpath might not apply that ordering itself. Re-checking here means
+                    // this adapter never hands a caller a Success that carries a revoked
+                    // document, regardless of what the wrapped implementation does. Checked
+                    // before the id-equality check below for the same reason
+                    // RegistryBasedResolver orders them this way: a tombstone document a
+                    // method may leave minimal must still report Deactivated/410, not
+                    // INVALID_DID_DOCUMENT.
+                    result.documentMetadata.deactivated ->
+                        DidResolutionResult.Deactivated(
+                            did = did,
+                            documentMetadata = result.documentMetadata,
+                            resolutionMetadata = result.resolutionMetadata,
+                        )
+                    // §4 — the resolved document's `id` MUST be string-equal to the DID that
+                    // was resolved. Without this, a wrong — or compromised — upstream
+                    // UniversalResolver could hand back a completely different DID's document
+                    // and it would surface as Success, with no signal to the caller that the
+                    // document does not belong to the DID it asked for. Mirrors
+                    // RegistryBasedResolver's identical guard.
+                    result.document.id != did ->
+                        DidResolutionResult.Failure.ResolutionError(
+                            did = did,
+                            reason =
+                                "Resolved document id '${result.document.id.value}' does not match " +
+                                    "requested DID '${did.value}'",
+                            resolutionMetadata =
+                                DidResolutionMetadata(
+                                    error =
+                                        DidResolutionError.invalidDidDocument(
+                                            "Resolved document id '${result.document.id.value}' does not " +
+                                                "match requested DID '${did.value}'",
+                                        ),
+                                ),
+                        )
+                    else -> result
+                }
             else -> result
         }
     } catch (e: kotlinx.coroutines.CancellationException) {

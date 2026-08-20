@@ -257,7 +257,27 @@ class DefaultUniversalResolver(
 
                     // Use protocol adapter to extract data
                     val didDocumentJson = protocolAdapter.extractDidDocument(jsonResponse)
-                    val document = didDocumentJson?.let { parseDidDocumentFromJson(it) }
+                    // §4.4: a non-null didDocumentJson means the upstream *did* return a document
+                    // — DidDocumentJsonParser.parse throws DidException.InvalidDidFormat (missing
+                    // `id`) or IllegalArgumentException (malformed `id` value) for a malformed one.
+                    // Left unguarded, that throw escapes resolveDid() and gets misclassified as
+                    // INVALID_DID (400) upstream — blaming the caller's well-formed requested DID
+                    // for an upstream document defect. Catch it here instead, mirroring
+                    // GodiddyResolver's identical guard, and record why so the failure branch below
+                    // can report INVALID_DID_DOCUMENT rather than folding this into "not found".
+                    var malformedDocumentReason: String? = null
+                    val document =
+                        didDocumentJson?.let {
+                            try {
+                                parseDidDocumentFromJson(it)
+                            } catch (e: DidException) {
+                                malformedDocumentReason = e.message ?: "Malformed DID document in resolver response"
+                                null
+                            } catch (e: IllegalArgumentException) {
+                                malformedDocumentReason = e.message ?: "Malformed DID document in resolver response"
+                                null
+                            }
+                        }
                     val documentMetadata = parseDidDocumentMetadata(
                         protocolAdapter.extractDocumentMetadata(jsonResponse)
                     )
@@ -289,6 +309,23 @@ class DefaultUniversalResolver(
                                 document = document,
                                 documentMetadata = documentMetadata,
                                 resolutionMetadata = resolutionMetadata
+                            )
+                        }
+                        malformedDocumentReason != null -> {
+                            // The upstream *did* return a document under `didDocument` — it just
+                            // failed to parse. This is an upstream data defect, not "this DID does
+                            // not exist" (NotFound would be dishonest) and not "the requested DID is
+                            // invalid" (the caller's DID was fine). INVALID_DID_DOCUMENT names what
+                            // actually happened, mirroring GodiddyResolver's identical
+                            // document-conversion-failure guard.
+                            val reason = malformedDocumentReason ?: "Malformed DID document in resolver response"
+                            DidResolutionResult.Failure.ResolutionError(
+                                did = Did(did),
+                                reason = reason,
+                                resolutionMetadata =
+                                    resolutionMetadata.copy(
+                                        error = DidResolutionError.invalidDidDocument(reason),
+                                    ),
                             )
                         }
                         else -> {

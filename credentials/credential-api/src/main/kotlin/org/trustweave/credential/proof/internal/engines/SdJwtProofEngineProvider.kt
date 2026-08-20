@@ -9,7 +9,15 @@ import kotlin.collections.buildMap
 /**
  * Provider for SD-JWT-VC proof engine.
  */
-internal class SdJwtProofEngineProvider : ProofEngineProvider {
+/**
+ * Discovered via [java.util.ServiceLoader]; see META-INF/services.
+ *
+ * Public because [ProofEngineProvider] is a public SPI: an implementation nobody outside the
+ * module can reach or discover is not an SPI implementation. Applications that compose their own
+ * signing stack — publishing status-list credentials, for instance — need a supported way to
+ * obtain a SD-JWT VC engine without reaching into internals.
+ */
+class SdJwtProofEngineProvider : ProofEngineProvider {
     
     override val name = "sdjwt"
     

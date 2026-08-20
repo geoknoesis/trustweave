@@ -746,16 +746,23 @@ class TokenStatusListManager(
 
         val next = if (rs.next()) rs.getInt("next_index") else 0
 
-        conn.prepareStatement(
-            """
-            MERGE INTO token_next_index (status_list_id, next_index)
-            KEY (status_list_id)
-            VALUES (?, ?)
-            """.trimIndent()
+        // Portable upsert: `MERGE ... KEY (...)` is H2-only and is a syntax error on PostgreSQL.
+        // See BitstringStatusListManager.getNextAvailableIndex for the same fix.
+        val updated = conn.prepareStatement(
+            "UPDATE token_next_index SET next_index = ? WHERE status_list_id = ?"
         ).apply {
-            setString(1, statusListId)
-            setInt(2, next + 1)
+            setInt(1, next + 1)
+            setString(2, statusListId)
         }.executeUpdate()
+
+        if (updated == 0) {
+            conn.prepareStatement(
+                "INSERT INTO token_next_index (status_list_id, next_index) VALUES (?, ?)"
+            ).apply {
+                setString(1, statusListId)
+                setInt(2, next + 1)
+            }.executeUpdate()
+        }
 
         return next
     }

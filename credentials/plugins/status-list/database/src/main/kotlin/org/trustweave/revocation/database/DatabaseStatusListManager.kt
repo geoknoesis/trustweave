@@ -22,7 +22,7 @@ import javax.sql.DataSource
  * Database-backed status list manager implementation.
  *
  * Provides persistent status list management using a relational database.
- * Supports PostgreSQL, MySQL, and H2 databases.
+ * Supports PostgreSQL, MySQL, and H2: the schema uses portable DDL only.
  *
  * **Example:**
  * ```kotlin
@@ -53,12 +53,24 @@ class DatabaseStatusListManager(
     /**
      * Initialize database schema.
      */
+    /**
+     * Creates the schema.
+     *
+     * Indexes are declared as separate `CREATE INDEX` statements rather than inline `INDEX name
+     * (col)` clauses. The inline form is MySQL-only: PostgreSQL rejects it with "syntax error at
+     * or near \"(\"", so every caller on Postgres — the database this manager is most often
+     * pointed at — failed at construction, since [initializeSchema] runs from `init`.
+     *
+     * `CREATE INDEX IF NOT EXISTS` is supported by PostgreSQL 9.5+, MySQL 8.0.29+ and H2. Index
+     * creation is deliberately outside the transaction guard below only in the sense that it is
+     * idempotent; a partially-created schema re-runs cleanly.
+     */
     private fun initializeSchema() {
         dataSource.connection.use { conn ->
             conn.autoCommit = false
             try {
-                // Status lists table
-                conn.prepareStatement("""
+                conn.prepareStatement(
+                    """
                     CREATE TABLE IF NOT EXISTS status_lists (
                         id VARCHAR(255) PRIMARY KEY,
                         issuer_did VARCHAR(255) NOT NULL,
@@ -67,34 +79,40 @@ class DatabaseStatusListManager(
                         encoded_list TEXT NOT NULL,
                         status_list_data TEXT NOT NULL,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        INDEX idx_issuer (issuer_did),
-                        INDEX idx_purpose (purpose)
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
-                """).execute()
+                    """.trimIndent()
+                ).execute()
 
-                // Credential indices table
-                conn.prepareStatement("""
+                conn.prepareStatement(
+                    """
                     CREATE TABLE IF NOT EXISTS credential_indices (
                         credential_id VARCHAR(255) NOT NULL,
                         status_list_id VARCHAR(255) NOT NULL,
                         index_value INT NOT NULL,
                         PRIMARY KEY (credential_id, status_list_id),
-                        FOREIGN KEY (status_list_id) REFERENCES status_lists(id) ON DELETE CASCADE,
-                        INDEX idx_status_list (status_list_id),
-                        INDEX idx_index (status_list_id, index_value),
-                        INDEX idx_credential (credential_id)
+                        FOREIGN KEY (status_list_id) REFERENCES status_lists(id) ON DELETE CASCADE
                     )
-                """).execute()
+                    """.trimIndent()
+                ).execute()
 
-                // Next index tracking
-                conn.prepareStatement("""
+                conn.prepareStatement(
+                    """
                     CREATE TABLE IF NOT EXISTS status_list_next_index (
                         status_list_id VARCHAR(255) PRIMARY KEY,
                         next_index INT NOT NULL DEFAULT 0,
                         FOREIGN KEY (status_list_id) REFERENCES status_lists(id) ON DELETE CASCADE
                     )
-                """).execute()
+                    """.trimIndent()
+                ).execute()
+
+                listOf(
+                    "CREATE INDEX IF NOT EXISTS idx_status_lists_issuer ON status_lists (issuer_did)",
+                    "CREATE INDEX IF NOT EXISTS idx_status_lists_purpose ON status_lists (purpose)",
+                    "CREATE INDEX IF NOT EXISTS idx_credential_indices_list ON credential_indices (status_list_id)",
+                    "CREATE INDEX IF NOT EXISTS idx_credential_indices_entry ON credential_indices (status_list_id, index_value)",
+                    "CREATE INDEX IF NOT EXISTS idx_credential_indices_credential ON credential_indices (credential_id)",
+                ).forEach { conn.prepareStatement(it).execute() }
 
                 conn.commit()
             } catch (e: Exception) {

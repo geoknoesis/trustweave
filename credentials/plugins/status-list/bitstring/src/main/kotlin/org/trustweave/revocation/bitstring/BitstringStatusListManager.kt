@@ -1022,16 +1022,27 @@ class BitstringStatusListManager(
 
         val next = if (rs.next()) rs.getInt("next_index") else 0
 
-        conn.prepareStatement(
-            """
-            MERGE INTO bitstring_next_index (status_list_id, next_index)
-            KEY (status_list_id)
-            VALUES (?, ?)
-            """.trimIndent()
+        // UPDATE-then-INSERT rather than an upsert: `MERGE ... KEY (...)` is H2-only and is a
+        // syntax error on PostgreSQL ("syntax error at or near \"(\""), while `ON CONFLICT` and
+        // `ON DUPLICATE KEY UPDATE` are each specific to one of the other two supported databases.
+        // This form is portable across all three, and it is safe here because the SELECT above
+        // took a FOR UPDATE lock on the counter row inside the caller's transaction: no concurrent
+        // assigner can slip between the UPDATE and the INSERT.
+        val updated = conn.prepareStatement(
+            "UPDATE bitstring_next_index SET next_index = ? WHERE status_list_id = ?"
         ).apply {
-            setString(1, statusListId)
-            setInt(2, next + 1)
+            setInt(1, next + 1)
+            setString(2, statusListId)
         }.executeUpdate()
+
+        if (updated == 0) {
+            conn.prepareStatement(
+                "INSERT INTO bitstring_next_index (status_list_id, next_index) VALUES (?, ?)"
+            ).apply {
+                setString(1, statusListId)
+                setInt(2, next + 1)
+            }.executeUpdate()
+        }
 
         return next
     }
